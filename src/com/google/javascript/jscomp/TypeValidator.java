@@ -48,7 +48,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -911,48 +910,5 @@ class TypeValidator {
   private JSError report(JSError error) {
     compiler.report(error);
     return error;
-  }
-
-  /**
-   * Signals that the first type and the second type have been
-   * used interchangeably.
-   *
-   * Type-based optimizations should take this into account
-   * so that they don't wreck code with type warnings.
-   */
-  static class TypeMismatch {
-    final JSType typeA;
-    final JSType typeB;
-    final JSError src;
-
-    /**
-     * It's the responsibility of the class that creates the
-     * {@code TypeMismatch} to ensure that {@code a} and {@code b} are
-     * non-matching types.
-     */
-    TypeMismatch(JSType a, JSType b, JSError src) {
-      this.typeA = a;
-      this.typeB = b;
-      this.src = src;
-    }
-
-    @Override public boolean equals(Object object) {
-      if (object instanceof TypeMismatch) {
-        TypeMismatch that = (TypeMismatch) object;
-        return (that.typeA.isEquivalentTo(this.typeA)
-                && that.typeB.isEquivalentTo(this.typeB))
-            || (that.typeB.isEquivalentTo(this.typeA)
-                && that.typeA.isEquivalentTo(this.typeB));
-      }
-      return false;
-    }
-
-    @Override public int hashCode() {
-      return Objects.hash(typeA, typeB);
-    }
-
-    @Override public String toString() {
-      return "(" + typeA + ", " + typeB + ")";
-    }
   }
 }

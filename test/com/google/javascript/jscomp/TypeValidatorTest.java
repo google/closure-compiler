@@ -22,12 +22,10 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-
 import java.util.Collections;
 import java.util.List;
 

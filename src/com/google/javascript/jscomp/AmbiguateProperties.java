@@ -22,7 +22,6 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
 import com.google.javascript.jscomp.graph.AdjacencyGraph;
 import com.google.javascript.jscomp.graph.Annotation;
 import com.google.javascript.jscomp.graph.GraphColoring;
@@ -30,6 +29,7 @@ import com.google.javascript.jscomp.graph.GraphColoring.GreedyGraphColoring;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.SubGraph;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -119,7 +119,7 @@ class AmbiguateProperties implements CompilerPass {
   private Map<JSType, JSTypeBitSet> relatedBitsets = new HashMap<>();
 
   /** A set of types that invalidate properties from ambiguation. */
-  private final Set<JSType> invalidatingTypes;
+  private final Set<TypeI> invalidatingTypes;
 
   /**
    * Prefix of properties to skip renaming.  These should be renamed in the
@@ -137,7 +137,7 @@ class AmbiguateProperties implements CompilerPass {
     this.reservedNonFirstCharacters = reservedNonFirstCharacters;
 
     JSTypeRegistry r = compiler.getTypeRegistry();
-    invalidatingTypes = new HashSet<>(ImmutableSet.of(
+    invalidatingTypes = new HashSet<>(ImmutableSet.<TypeI>of(
         r.getNativeType(JSTypeNative.ALL_TYPE),
         r.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE),
         r.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
@@ -174,16 +174,16 @@ class AmbiguateProperties implements CompilerPass {
   /**
    * Invalidates the given type, so that no properties on it will be renamed.
    */
-  private void addInvalidatingType(JSType type) {
+  private void addInvalidatingType(TypeI type) {
     type = type.restrictByNotNullOrUndefined();
     if (type.isUnionType()) {
-      for (JSType alt : type.toMaybeUnionType().getAlternatesWithoutStructuralTyping()) {
+      for (TypeI alt : type.getUnionMembers()) {
         addInvalidatingType(alt);
       }
     }
 
     invalidatingTypes.add(type);
-    ObjectType objType = ObjectType.cast(type);
+    ObjectType objType = (ObjectType) type.toMaybeObjectType();
     if (objType != null && objType.isInstanceType()) {
       invalidatingTypes.add(objType.getImplicitPrototype());
     }

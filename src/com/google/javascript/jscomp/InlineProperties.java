@@ -18,16 +18,15 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.TypeValidator.TypeMismatch;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.ObjectType;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -65,7 +64,7 @@ final class InlineProperties implements CompilerPass {
 
   private final Map<String, PropertyInfo> props = new HashMap<>();
 
-  private Set<JSType> invalidatingTypes;
+  private Set<TypeI> invalidatingTypes;
 
   InlineProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -78,7 +77,7 @@ final class InlineProperties implements CompilerPass {
   // we should move it to a common location.
   private void buildInvalidatingTypeSet() {
     TypeIRegistry registry = compiler.getTypeIRegistry();
-    invalidatingTypes = new HashSet<>(ImmutableSet.of(
+    invalidatingTypes = new HashSet<>(ImmutableSet.<TypeI>of(
         (JSType) registry.getNativeType(JSTypeNative.ALL_TYPE),
         (JSType) registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
         (JSType) registry.getNativeType(JSTypeNative.NO_TYPE),
@@ -110,16 +109,16 @@ final class InlineProperties implements CompilerPass {
   /**
    * Invalidates the given type, so that no properties on it will be renamed.
    */
-  private void addInvalidatingType(JSType type) {
+  private void addInvalidatingType(TypeI type) {
     type = type.restrictByNotNullOrUndefined();
     if (type.isUnionType()) {
-      for (JSType alt : type.toMaybeUnionType().getAlternatesWithoutStructuralTyping()) {
+      for (TypeI alt : type.getUnionMembers()) {
         addInvalidatingType(alt);
       }
     }
 
     invalidatingTypes.add(type);
-    ObjectType objType = ObjectType.cast(type);
+    ObjectType objType = (ObjectType) type.toMaybeObjectType();
     if (objType != null && objType.isInstanceType()) {
       invalidatingTypes.add(objType.getImplicitPrototype());
     }
