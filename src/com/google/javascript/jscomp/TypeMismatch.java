@@ -15,7 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.rhino.FunctionTypeI;
+import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -39,6 +43,62 @@ class TypeMismatch {
     this.typeA = a;
     this.typeB = b;
     this.src = src;
+  }
+
+  static void registerIfMismatch(
+      List<TypeMismatch> mismatches, List<TypeMismatch> implicitInterfaceUses,
+      TypeI found, TypeI required, JSError error) {
+    if (found != null && required != null && !found.isSubtypeWithoutStructuralTyping(required)) {
+      registerMismatch(mismatches, implicitInterfaceUses, found, required, error);
+    }
+  }
+
+  static void registerMismatch(
+      List<TypeMismatch> mismatches, List<TypeMismatch> implicitInterfaceUses,
+      TypeI found, TypeI required, JSError error) {
+    // Don't register a mismatch for differences in null or undefined or if the
+    // code didn't downcast.
+    found = found.restrictByNotNullOrUndefined();
+    required = required.restrictByNotNullOrUndefined();
+
+    if (found.isSubtypeOf(required) || required.isSubtypeOf(found)) {
+      boolean strictMismatch =
+          !found.isSubtypeWithoutStructuralTyping(required)
+          && !required.isSubtypeWithoutStructuralTyping(found);
+      if (strictMismatch) {
+        implicitInterfaceUses.add(new TypeMismatch(found, required, error));
+      }
+      return;
+    }
+
+    mismatches.add(new TypeMismatch(found, required, error));
+
+    if (found.isFunctionType() && required.isFunctionType()) {
+      FunctionTypeI fnTypeA = found.toMaybeFunctionType();
+      FunctionTypeI fnTypeB = required.toMaybeFunctionType();
+      Iterator<TypeI> paramItA = fnTypeA.getParameterTypes().iterator();
+      Iterator<TypeI> paramItB = fnTypeB.getParameterTypes().iterator();
+      while (paramItA.hasNext() && paramItB.hasNext()) {
+        TypeMismatch.registerIfMismatch(
+            mismatches, implicitInterfaceUses, paramItA.next(), paramItB.next(), error);
+      }
+      TypeMismatch.registerIfMismatch(
+          mismatches, implicitInterfaceUses,
+          fnTypeA.getReturnType(), fnTypeB.getReturnType(), error);
+    }
+  }
+
+  static void recordImplicitUseOfNativeObject(
+      List<TypeMismatch> mismatches, Node src, TypeI sourceType, TypeI targetType) {
+    sourceType = sourceType.restrictByNotNullOrUndefined();
+    targetType = targetType.restrictByNotNullOrUndefined();
+    if (sourceType.isInstanceofObject() && !targetType.isInstanceofObject()) {
+      // We don't report a type error, but we still need to construct a JSError,
+      // for people who enable the invalidation diagnostics in DisambiguateProperties.
+      String msg = "Implicit use of Object type: " + sourceType + " as type: " + targetType;
+      JSError err = JSError.make(src, TypeValidator.TYPE_MISMATCH_WARNING, msg);
+      mismatches.add(new TypeMismatch(sourceType, targetType, err));
+    }
   }
 
   @Override public boolean equals(Object object) {

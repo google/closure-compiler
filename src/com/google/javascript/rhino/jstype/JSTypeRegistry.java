@@ -736,16 +736,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   // we don't need to store these properties in the propertyIndex separately.
   private static boolean isObjectLiteralThatCanBeSkipped(JSType t) {
     t = t.restrictByNotNullOrUndefined();
-    // Inline-record type declaration
-    if (t.toMaybeRecordType() != null) {
-      return true;
-    }
-    // Type of an object-literal value
-    else if (t instanceof PrototypeObjectType) {
-      PrototypeObjectType tObj = (PrototypeObjectType) t;
-      return tObj.isAnonymous();
-    }
-    return false;
+    return t.isRecordType() || t.isLiteralObject();
   }
 
   void registerDroppedPropertiesInUnion(RecordType subtype, RecordType supertype) {

@@ -76,6 +76,8 @@ public interface TypeI {
 
   boolean isSubtypeOf(TypeI type);
 
+  boolean isSubtypeWithoutStructuralTyping(TypeI type);
+
   boolean containsArray();
 
   boolean isUnknownType();
@@ -83,6 +85,13 @@ public interface TypeI {
   boolean isSomeUnknownType();
 
   boolean isObjectType();
+
+  /**
+   * True when the nominal type of this type is Object. The name is not great, because objects
+   * with a different nominal type can flow to places that treat them as Object. But I'm not
+   * sure what a better name would be.
+   */
+  boolean isInstanceofObject();
 
   boolean isUnionType();
 
@@ -96,7 +105,7 @@ public interface TypeI {
 
   boolean isPrototypeObject();
 
-  boolean isInstanceofObject();
+  boolean isLiteralObject();
 
   boolean isEnumElement();
 

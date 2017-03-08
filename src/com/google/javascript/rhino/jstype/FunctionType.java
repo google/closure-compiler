@@ -310,6 +310,15 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
   }
 
+  @Override
+  public Iterable<TypeI> getParameterTypes() {
+    List<TypeI> types = new ArrayList<>();
+    for (Node n : getParameters()) {
+      types.add(n.getJSType());
+    }
+    return types;
+  }
+
   /** Gets an LP node that contains all params. May be null. */
   public Node getParametersNode() {
     return call.parameters;
