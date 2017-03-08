@@ -139,9 +139,6 @@ public class JsAst implements SourceAst {
   }
 
   private void parse(AbstractCompiler compiler) {
-    ErrorManager errorManager = compiler.getErrorManager();
-    int startErrorCount = errorManager.getErrorCount();
-
     RecordingReporterProxy reporter = new RecordingReporterProxy(
         compiler.getDefaultErrorReporter());
 
@@ -150,8 +147,8 @@ public class JsAst implements SourceAst {
           sourceFile,
           sourceFile.getCode(),
           compiler.getParserConfig(sourceFile.isExtern()
-                        ? AbstractCompiler.ConfigContext.EXTERNS
-                        : AbstractCompiler.ConfigContext.DEFAULT),
+              ? AbstractCompiler.ConfigContext.EXTERNS
+              : AbstractCompiler.ConfigContext.DEFAULT),
           reporter);
       root = result.ast;
       features = result.features;
@@ -170,18 +167,7 @@ public class JsAst implements SourceAst {
           JSError.make(AbstractCompiler.READ_ERROR, sourceFile.getName()));
     }
 
-    if (root == null
-        // Most passes try to report as many errors as possible,
-        // so there may already be errors. We only care if there were
-        // errors in the code we just parsed.
-        // Note: we use the ErrorManager here rather than the ErrorReporter as
-        // we don't want to fail if the error was excluded by a warning guard, conversely
-        // we do want to fail if a warning was promoted to an error.
-        || (errorManager.getErrorCount() > startErrorCount
-            && !compiler.getOptions().canContinueAfterErrors())) {
-      // There was a parse error or IOException, so use a dummy block.
-
-
+    if (root == null) {
       root = IR.script();
     } else {
       compiler.prepareAst(root);
