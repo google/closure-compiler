@@ -2509,6 +2509,21 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("var abc\\t", "Invalid escape sequence");
   }
 
+  public void testUnnecessaryEscape() {
+    parseWarning("var str = '\\a'", "Unnecessary escape: '\\a' is equivalent to just 'a'");
+    parse("var str = '\\b'");
+    parseWarning("var str = '\\c'", "Unnecessary escape: '\\c' is equivalent to just 'c'");
+    parseWarning("var str = '\\d'", "Unnecessary escape: '\\d' is equivalent to just 'd'");
+    parseWarning("var str = '\\e'", "Unnecessary escape: '\\e' is equivalent to just 'e'");
+    parse("var str = '\\f'");
+    parseWarning("var str = '\\/'", "Unnecessary escape: '\\/' is equivalent to just '/'");
+    parse("var str = '\\0'");
+    parseWarning("var str = '\\1'", "Unnecessary escape: '\\1' is equivalent to just '1'");
+    parseWarning("var str = '\\2'", "Unnecessary escape: '\\2' is equivalent to just '2'");
+    parseWarning("var str = '\\3'", "Unnecessary escape: '\\3' is equivalent to just '3'");
+    parseWarning("var str = '\\%'", "Unnecessary escape: '\\%' is equivalent to just '%'");
+  }
+
   public void testEOFInUnicodeEscape() {
     parseError("var \\u1", "Invalid escape sequence");
     parseError("var \\u12", "Invalid escape sequence");

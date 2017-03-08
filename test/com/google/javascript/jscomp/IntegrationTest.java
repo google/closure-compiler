@@ -4025,6 +4025,22 @@ public final class IntegrationTest extends IntegrationTestCase {
         "window._customData.foo=\"bar\";");
   }
 
+  public void testUnnecessaryBackslashInStringLiteral() {
+    CompilerOptions options = createCompilerOptions();
+    test(options,
+        "var str = '\\q';",
+        "var str = 'q';");
+  }
+
+  public void testWarnUnnecessaryBackslashInStringLiteral() {
+    CompilerOptions options = createCompilerOptions();
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+    test(options,
+        "var str = '\\q';",
+        "var str = 'q';",
+        RhinoErrorReporter.UNNECESSARY_ESCAPE);
+  }
+
   public void testAngularPropertyNameRestrictions() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);

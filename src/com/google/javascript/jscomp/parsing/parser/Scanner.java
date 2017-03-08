@@ -888,7 +888,8 @@ public class Scanner {
       return true;
     }
 
-    switch (nextChar()) {
+    char next = nextChar();
+    switch (next) {
     case '\'':
     case '"':
     case '`':
@@ -919,8 +920,18 @@ public class Scanner {
       } else {
         return skipHexDigit() && skipHexDigit() && skipHexDigit() && skipHexDigit();
       }
-    default:
-      return true;
+      default:
+        {
+          String warning;
+          if (next == '%') {
+            // Need to special-case this because the warning string is treated as a format string.
+            warning = "Unnecessary escape: '\\%%' is equivalent to just '%%'";
+          } else {
+            warning = "Unnecessary escape: '\\" + next + "' is equivalent to just '" + next + "'";
+          }
+          reportWarning(warning);
+          return true;
+        }
     }
   }
 
