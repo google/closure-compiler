@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -90,11 +89,11 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
   /*
    * Feel free to increase this to a reasonable number if you are finding that
-   * more and more passes need more than 400000 steps before finding a
+   * more and more passes need more than 600000 steps before finding a
    * fixed-point. If you just have a special case, consider calling
    * {@link #analyse(int)} instead.
    */
-  public static final int MAX_STEPS = 400000;
+  public static final int MAX_STEPS = 600000;
 
   /**
    * Constructs a data flow analysis.

@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +30,7 @@ import java.util.Map;
  */
 class TypeInferencePass implements CompilerPass {
 
-  static final DiagnosticType DATAFLOW_ERROR = DiagnosticType.warning(
+  static final DiagnosticType DATAFLOW_ERROR = DiagnosticType.error(
       "JSC_INTERNAL_ERROR_DATAFLOW",
       "non-monotonic data-flow analysis");
 
