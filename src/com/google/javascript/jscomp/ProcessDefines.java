@@ -48,11 +48,10 @@ import java.util.Set;
 class ProcessDefines implements CompilerPass {
 
   /**
-   * Defines in this set will not be flagged with "unknown define" warnings.
-   * There are legacy flags that always set these defines, even when they
-   * might not be in the binary.
+   * Defines in this set will not be flagged with "unknown define" warnings. There are legacy flags
+   * that always set these defines, even when they might not be in the binary.
    */
-  private static final Set<String> KNOWN_DEFINES = ImmutableSet.of("COMPILED");
+  private static final ImmutableSet<String> KNOWN_DEFINES = ImmutableSet.of("COMPILED");
 
   private final AbstractCompiler compiler;
   private final Map<String, Node> dominantReplacements;

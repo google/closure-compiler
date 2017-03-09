@@ -36,7 +36,7 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
           "goog.require = function(x) {};",
           "goog.provide = function(x) {};");
 
-  protected static final List<SourceFile> EXTERNS =
+  protected static final ImmutableList<SourceFile> EXTERNS =
       ImmutableList.of(SourceFile.fromCode("externs", "var extVar = 3;"));
 
   /**

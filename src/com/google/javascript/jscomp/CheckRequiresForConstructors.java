@@ -102,8 +102,9 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
   public static final DiagnosticType EXTRA_REQUIRE_WARNING = DiagnosticType.disabled(
       "JSC_EXTRA_REQUIRE_WARNING", "extra require: ''{0}''");
 
-  private static final Set<String> DEFAULT_EXTRA_NAMESPACES = ImmutableSet.of(
-      "goog.testing.asserts", "goog.testing.jsunit", "goog.testing.JsTdTestCaseAdapter");
+  private static final ImmutableSet<String> DEFAULT_EXTRA_NAMESPACES =
+      ImmutableSet.of(
+          "goog.testing.asserts", "goog.testing.jsunit", "goog.testing.JsTdTestCaseAdapter");
 
   CheckRequiresForConstructors(AbstractCompiler compiler, Mode mode) {
     this.compiler = compiler;

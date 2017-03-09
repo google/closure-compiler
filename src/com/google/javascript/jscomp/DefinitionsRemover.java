@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.Set;
 
 /**
  * Models an assignment that defines a variable and the removal of it.
@@ -169,7 +168,7 @@ class DefinitionsRemover {
    * RHS is missing.
    */
   abstract static class IncompleteDefinition extends Definition {
-    private static final Set<Token> ALLOWED_TYPES =
+    private static final ImmutableSet<Token> ALLOWED_TYPES =
         ImmutableSet.of(Token.NAME, Token.GETPROP, Token.GETELEM);
     private final Node lValue;
 
