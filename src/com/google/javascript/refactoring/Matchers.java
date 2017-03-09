@@ -340,7 +340,7 @@ public final class Matchers {
         JSDocInfo jsDoc = node.getParent().isVar()
             ? node.getParent().getJSDocInfo() : node.getJSDocInfo();
         JSType jsType = node.getJSType();
-        return jsDoc != null && jsType != null
+        return jsDoc != null && jsDoc.hasType() && jsType != null
             && providedJsType.isEquivalentTo(jsType.restrictByNotNullOrUndefined());
       }
     };

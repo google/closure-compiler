@@ -465,17 +465,20 @@ public final class SuggestedFix {
       String originalComment = info.getOriginalCommentString();
       int originalPosition = info.getOriginalCommentPosition();
 
-      // TODO(mknichel): Support multiline @type annotations.
-      Pattern typeDocPattern = Pattern.compile(
-          "@(type|private|protected|public|const|return) *\\{?[^\\s}]+\\}?");
-      Matcher m = typeDocPattern.matcher(originalComment);
-      while (m.find()) {
-        replacements.put(
-            n.getSourceFileName(),
-            new CodeReplacement(
-                originalPosition + m.start(),
-                m.end() - m.start(),
-                "@" + m.group(1) + " {" + type + "}"));
+      // If there isn't an original comment, then it is generated and we can't make a change.
+      if (originalComment != null) {
+        // TODO(mknichel): Support multiline @type annotations.
+        Pattern typeDocPattern = Pattern.compile(
+            "@(type|private|protected|public|const|return) *\\{?[^\\s}@]+\\}?");
+        Matcher m = typeDocPattern.matcher(originalComment);
+        while (m.find()) {
+          replacements.put(
+              n.getSourceFileName(),
+              new CodeReplacement(
+                  originalPosition + m.start(),
+                  m.end() - m.start(),
+                  "@" + m.group(1) + " {" + type + "}"));
+        }
       }
 
       return this;

@@ -271,12 +271,52 @@ public class MatchersTest {
   }
 
   @Test
-  public void testJsDocType() {
+  public void testJsDocType1() {
     String input = "/** @type {number} */ var foo = 1;";
     Compiler compiler = getCompiler(input);
     Node root = compileToScriptRoot(compiler);
     Node node = root.getFirstFirstChild();
     assertTrue(Matchers.jsDocType("number").matches(node, new NodeMetadata(compiler)));
+    assertFalse(Matchers.jsDocType("string").matches(node, new NodeMetadata(compiler)));
+  }
+
+  @Test
+  public void testJsDocType2() {
+    String input = "/** @type {number} */ let foo = 1;";
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    Node node = root.getFirstFirstChild();
+    assertTrue(Matchers.jsDocType("number").matches(node, new NodeMetadata(compiler)));
+    assertFalse(Matchers.jsDocType("string").matches(node, new NodeMetadata(compiler)));
+  }
+
+  @Test
+  public void testJsDocType3() {
+    String input = "/** @type {number} */ const foo = 1;";
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    Node node = root.getFirstFirstChild();
+    assertTrue(Matchers.jsDocType("number").matches(node, new NodeMetadata(compiler)));
+    assertFalse(Matchers.jsDocType("string").matches(node, new NodeMetadata(compiler)));
+  }
+
+  @Test
+  public void testJsDocTypeNoMatch1() {
+    String input = "/** @const */ var foo = 1;";
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    Node node = root.getFirstFirstChild();
+    assertFalse(Matchers.jsDocType("number").matches(node, new NodeMetadata(compiler)));
+    assertFalse(Matchers.jsDocType("string").matches(node, new NodeMetadata(compiler)));
+  }
+
+  @Test
+  public void testJsDocTypeNoMatch2() {
+    String input = "const foo = 1;";
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    Node node = root.getFirstFirstChild();
+    assertFalse(Matchers.jsDocType("number").matches(node, new NodeMetadata(compiler)));
     assertFalse(Matchers.jsDocType("string").matches(node, new NodeMetadata(compiler)));
   }
 
