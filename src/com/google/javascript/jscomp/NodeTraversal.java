@@ -511,7 +511,7 @@ public class NodeTraversal {
    * Gets the current input source.
    */
   public CompilerInput getInput() {
-    if (compilerInput == null) {
+    if (compilerInput == null && inputId != null) {
       compilerInput = compiler.getInput(inputId);
     }
     return compilerInput;
