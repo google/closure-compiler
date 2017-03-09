@@ -320,7 +320,7 @@ IDBObjectStore.prototype.clear = function() {};
 
 /**
  * @param {IDBKeyRange=} range The range of the cursor.
- * @param {(number|string)=} direction The direction of cursor enumeration.
+ * @param {string=} direction The direction of cursor enumeration.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBObjectStore.prototype.openCursor = function(range, direction) {};
@@ -385,14 +385,14 @@ IDBIndex.prototype.unique;
 
 /**
  * @param {IDBKeyRange=} range The range of the cursor.
- * @param {(number|string)=} direction The direction of cursor enumeration.
+ * @param {string=} direction The direction of cursor enumeration.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBIndex.prototype.openCursor = function(range, direction) {};
 
 /**
  * @param {IDBKeyRange=} range The range of the cursor.
- * @param {(number|string)=} direction The direction of cursor enumeration.
+ * @param {string=} direction The direction of cursor enumeration.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBIndex.prototype.openKeyCursor = function(range, direction) {};
@@ -477,7 +477,7 @@ webkitIDBCursor.PREV_NO_DUPLICATE;
 IDBCursor.prototype.source;
 
 /**
- * @type {number}
+ * @type {string}
  * @const
  */
 IDBCursor.prototype.direction;
