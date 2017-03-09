@@ -18,7 +18,13 @@
 'require es6/object/getownpropertysymbols';
 
 
-$jscomp.polyfill('Reflect.ownKeys', function(orig) {
+$jscomp.polyfill('Reflect.ownKeys',
+    /**
+     * @param {*} orig
+     * @return {*}
+     * @suppress {reportUnknownTypes}
+     */
+    function(orig) {
   if (orig) return orig;
 
   var symbolPrefix = 'jscomp_symbol_';

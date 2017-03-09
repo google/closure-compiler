@@ -20,7 +20,13 @@
 'require util/owns';
 'require util/polyfill';
 
-$jscomp.polyfill('WeakMap', function(NativeWeakMap) {
+$jscomp.polyfill('WeakMap',
+    /**
+     * @param {*} NativeWeakMap
+     * @return {*}
+     * @suppress {reportUnknownTypes}
+     */
+    function(NativeWeakMap) {
   /**
    * Checks conformance of the existing WeakMap.
    * @return {boolean} True if the browser's implementation conforms.

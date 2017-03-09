@@ -55,8 +55,13 @@ $jscomp.MapEntry.prototype.value;
  */
 $jscomp.ASSUME_NO_NATIVE_MAP = false;
 
-$jscomp.polyfill('Map', function(NativeMap) {
-
+$jscomp.polyfill('Map',
+    /**
+     * @param {*} NativeMap
+     * @return {*}
+     * @suppress {reportUnknownTypes}
+     */
+    function(NativeMap) {
   // Perform a conformance check to ensure correct native implementation.
   var isConformant = !$jscomp.ASSUME_NO_NATIVE_MAP && (function() {
     if (!NativeMap ||

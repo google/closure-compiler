@@ -35,7 +35,13 @@ $jscomp.EXPOSE_ASYNC_EXECUTOR = true;
 $jscomp.FORCE_POLYFILL_PROMISE = false;
 
 
-$jscomp.polyfill('Promise', function(NativePromise) {
+$jscomp.polyfill('Promise',
+    /**
+     * @param {*} NativePromise
+     * @return {*}
+     * @suppress {reportUnknownTypes}
+     */
+    function(NativePromise) {
   // TODO(bradfordcsmith): Do we need to add checks for standards conformance?
   //     e.g. The version of FireFox we currently use for testing has a Promise
   //     that fails to reject attempts to fulfill it with itself, but that
@@ -94,7 +100,8 @@ $jscomp.polyfill('Promise', function(NativePromise) {
 
   // NOTE: We want to make sure AsyncExecutor will work as expected even if
   // testing code should override setTimeout()
-  /** @const */ var nativeSetTimeout = $jscomp.global['setTimeout'];
+  /** @const {function(!Function, number)} */
+  var nativeSetTimeout = $jscomp.global['setTimeout'];
 
   /**
    * Schedule a function to execute asynchronously as soon as possible.

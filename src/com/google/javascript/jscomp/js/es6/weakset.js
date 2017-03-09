@@ -19,7 +19,13 @@
 'require util/polyfill';
 'require es6/weakmap';
 
-$jscomp.polyfill('WeakSet', function(NativeWeakSet) {
+$jscomp.polyfill('WeakSet',
+    /**
+     * @param {*} NativeWeakSet
+     * @return {*}
+     * @suppress {reportUnknownTypes}
+     */
+    function(NativeWeakSet) {
   /**
    * Checks conformance of the existing WeakSet.
    * @return {boolean} True if the browser's implementation conforms.

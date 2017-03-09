@@ -24,7 +24,13 @@
  */
 $jscomp.ASSUME_NO_NATIVE_SET = false;
 
-$jscomp.polyfill('Set', function(NativeSet) {
+$jscomp.polyfill('Set',
+    /**
+     * @param {*} NativeSet
+     * @return {*}
+     * @suppress {reportUnknownTypes}
+     */
+    function(NativeSet) {
 
   // Perform a conformance check to ensure correct native implementation.
   var isConformant = !$jscomp.ASSUME_NO_NATIVE_SET && (function() {

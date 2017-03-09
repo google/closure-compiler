@@ -16,6 +16,7 @@
 
 /**
  * @fileoverview Provides methods to polyfill native objects.
+ * @suppress {reportUnknownTypes}
  */
 'require base';
 
