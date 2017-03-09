@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
-
 import java.io.IOException;
 
 /**
@@ -40,6 +39,7 @@ public final class CheckTemplateParamsTest extends CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     // No-op. We're just checking for warnings during JSDoc parsing.
     return new CompilerPass() {
+      @Override
       public void process(Node externs, Node root) {}
     };
   }
@@ -47,7 +47,7 @@ public final class CheckTemplateParamsTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions(CompilerOptions options) {
     super.getOptions(options);
-    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, CheckLevel.WARNING);
 
     return options;
   }
