@@ -1433,7 +1433,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   Iterable<TypeMismatch> getTypeMismatches() {
-    return getTypeValidator().getMismatches();
+    switch (this.mostRecentTypechecker) {
+      case OTI:
+        return getTypeValidator().getMismatches();
+      case NTI:
+        return getSymbolTable().getMismatches();
+      default:
+        throw new RuntimeException("Can't ask for type mismatches before type checking.");
+    }
   }
 
   @Override

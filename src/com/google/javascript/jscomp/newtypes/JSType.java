@@ -1854,8 +1854,17 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public boolean isInstanceofObject() {
+  public boolean isLiteralObject() {
     return isSingletonObj() && getNominalTypeIfSingletonObj().isLiteralObject();
+  }
+
+  @Override
+  public boolean isInstanceofObject() {
+    if (isSingletonObj()) {
+      NominalType nt = getNominalTypeIfSingletonObj();
+      return nt.isLiteralObject() || nt.isBuiltinObject();
+    }
+    return false;
   }
 
   public boolean mayContainUnknownObject() {
@@ -2014,6 +2023,16 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
       return this.commonTypes.fromFunctionType(getObjTypeIfSingletonObj().getOwnerFunction());
     }
     return null;
+  }
+
+  @Override
+  public boolean isSubtypeWithoutStructuralTyping(TypeI other) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Iterable<TypeI> getParameterTypes() {
+    return Preconditions.checkNotNull(getFunType()).getParameterTypes();
   }
 }
 
