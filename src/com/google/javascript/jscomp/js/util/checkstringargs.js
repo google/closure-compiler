@@ -23,6 +23,7 @@
  * @param {*} arg The first argument of the function, which mustn't be a RegExp.
  * @param {string} func Name of the function, for reporting.
  * @return {string} The thisArg, coerced to a string.
+ * @suppress {reportUnknownTypes}
  */
 $jscomp.checkStringArgs = function(thisArg, arg, func) {
   if (thisArg == null) {

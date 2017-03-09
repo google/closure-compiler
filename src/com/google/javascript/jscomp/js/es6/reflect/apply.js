@@ -33,6 +33,7 @@ $jscomp.polyfill('Reflect.apply', function(orig) {
    * @param {!Array} argList The arguments as a list.
    * @return {RESULT} The result of the function call.
    * @template THIS, RESULT
+   * @suppress {reportUnknownTypes}
    */
   var polyfill = function(target, thisArg, argList) {
     return apply.call(target, thisArg, argList);

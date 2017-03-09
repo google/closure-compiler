@@ -33,6 +33,7 @@ $jscomp.polyfill('Reflect.construct', function(orig) {
    * @param {function(new: TARGET, ...?)=} opt_newTarget The constructor to instantiate.
    * @return {TARGET} The result of the function call.
    * @template TARGET
+   * @suppress {reportUnknownTypes}
    */
   var polyfill = function(target, argList, opt_newTarget) {
     // if (arguments.length < 3 || opt_newTarget == target) {

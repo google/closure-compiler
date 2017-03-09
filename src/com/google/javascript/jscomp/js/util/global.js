@@ -25,7 +25,7 @@
 /**
  * @param {!Object} maybeGlobal
  * @return {!Object} The global object.
- * @suppress {undefinedVars}
+ * @suppress {undefinedVars|reportUnknownTypes}
  */
 $jscomp.getGlobal = function(maybeGlobal) {
   return (typeof window != 'undefined' && window === maybeGlobal) ?

@@ -29,6 +29,7 @@ $jscomp.polyfill('Array.prototype.find', function(orig) {
    * @param {THIS=} opt_thisArg
    * @return {VALUE|undefined} The found value, or undefined.
    * @template VALUE, THIS
+   * @suppress {reportUnknownTypes}
    */
   var polyfill = function(callback, opt_thisArg) {
     return $jscomp.findInternal(this, callback, opt_thisArg).v;

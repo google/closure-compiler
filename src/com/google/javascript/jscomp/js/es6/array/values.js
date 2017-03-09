@@ -26,6 +26,7 @@ $jscomp.polyfill('Array.prototype.values', function(orig) {
    * @this {!IArrayLike<VALUE>}
    * @return {!IteratorIterable<VALUE>}
    * @template VALUE
+   * @suppress {reportUnknownTypes}
    */
   var polyfill = function() {
     return $jscomp.iteratorFromArray(this, function(k, v) { return v; });

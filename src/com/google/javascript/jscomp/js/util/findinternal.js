@@ -30,6 +30,7 @@
  * @param {THIS} thisArg
  * @return {{i: number, v: (VALUE|undefined)}}
  * @template THIS, VALUE
+ * @suppress {reportUnknownTypes}
  */
 $jscomp.findInternal = function(array, callback, thisArg) {
   if (array instanceof String) {

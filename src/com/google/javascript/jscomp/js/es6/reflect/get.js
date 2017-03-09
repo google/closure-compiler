@@ -31,6 +31,7 @@ $jscomp.polyfill('Reflect.get', function(orig) {
    * @param {string} propertyKey Name of the property to get.
    * @param {!Object=} opt_receiver An optional 'this' to use for a getter.
    * @return {*} The value of the property.
+   * @suppress {reportUnknownTypes}
    */
   var polyfill = function(target, propertyKey, opt_receiver) {
     if (arguments.length <= 2) {

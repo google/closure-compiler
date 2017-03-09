@@ -36,6 +36,7 @@
  * ```
  * @param {!Generator<?>} generator
  * @return {!Promise<?>}
+ * @suppress {reportUnknownTypes}
  */
 $jscomp.executeAsyncGenerator = function(generator) {
   function passValueToGenerator(value) {

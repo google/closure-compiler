@@ -28,6 +28,7 @@
  * @param {!Iterator<T>} iterator
  * @return {!Array<T>}
  * @template T
+ * @suppress {reportUnknownTypes}
  */
 $jscomp.arrayFromIterator = function(iterator) {
   var i;

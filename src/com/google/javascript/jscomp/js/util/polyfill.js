@@ -26,6 +26,7 @@
  * @param {?function(*): *} polyfill
  * @param {string} fromLang
  * @param {string} toLang
+ * @suppress {reportUnknownTypes}
  */
 $jscomp.polyfill = function(target, polyfill, fromLang, toLang) {
   if (!polyfill) return;

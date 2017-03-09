@@ -20,16 +20,13 @@
 'require es6/symbol';
 
 
-$jscomp.array = $jscomp.array || {};
-
-
 /**
  * Creates an iterator from an array-like, with a transformation function.
  * @param {!IArrayLike<INPUT>} array
  * @param {function(number, INPUT): OUTPUT} transform
  * @return {!IteratorIterable<OUTPUT>}
  * @template INPUT, OUTPUT
- * @suppress {checkTypes}
+ * @suppress {checkTypes|reportUnknownTypes}
  */
 $jscomp.iteratorFromArray = function(array, transform) {
   $jscomp.initSymbolIterator();

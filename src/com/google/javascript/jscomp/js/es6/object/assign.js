@@ -29,6 +29,7 @@ $jscomp.polyfill('Object.assign', function(orig) {
    * @param {!Object} target The target object onto which to copy.
    * @param {...?Object} var_args The source objects.
    * @return {!Object} The target object is returned.
+   * @suppress {reportUnknownTypes}
    */
   var polyfill = function(target, var_args) {
     for (var i = 1; i < arguments.length; i++) {

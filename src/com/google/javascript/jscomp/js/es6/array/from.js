@@ -36,6 +36,7 @@ $jscomp.polyfill('Array.from', function(orig) {
    *     Object to use as 'this' when calling mapFn.
    * @return {!Array<OUTPUT>}
    * @template INPUT, OUTPUT, THIS
+   * @suppress {reportUnknownTypes}
    */
   var polyfill = function(arrayLike, opt_mapFn, opt_thisArg) {
     $jscomp.initSymbolIterator();
