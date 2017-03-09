@@ -66,26 +66,15 @@ IDBFactory.prototype.deleteDatabase = function(name) {};
  */
 function IDBRequest() {}
 
-/**
- * @param {boolean=} opt_useCapture
- * @override
- * @return {undefined}
- */
-IDBRequest.prototype.addEventListener =
-    function(type, listener, opt_useCapture) {};
+/** @override */
+IDBRequest.prototype.addEventListener = function(type, listener, opt_options) {
+};
 
-/**
- * @param {boolean=} opt_useCapture
- * @override
- * @return {undefined}
- */
-IDBRequest.prototype.removeEventListener =
-    function(type, listener, opt_useCapture) {};
+/** @override */
+IDBRequest.prototype.removeEventListener = function(
+    type, listener, opt_options) {};
 
-/**
- * @override
- * @return {boolean}
- */
+/** @override */
 IDBRequest.prototype.dispatchEvent = function(evt) {};
 
 /**
@@ -251,26 +240,15 @@ IDBDatabase.prototype.onerror = function() {};
  */
 IDBDatabase.prototype.onversionchange = function() {};
 
-/**
- * @param {boolean=} opt_useCapture
- * @override
- * @return {undefined}
- */
-IDBDatabase.prototype.addEventListener =
-    function(type, listener, opt_useCapture) {};
+/** @override */
+IDBDatabase.prototype.addEventListener = function(type, listener, opt_options) {
+};
 
-/**
- * @param {boolean=} opt_useCapture
- * @override
- * @return {undefined}
- */
-IDBDatabase.prototype.removeEventListener =
-    function(type, listener, opt_useCapture) {};
+/** @override */
+IDBDatabase.prototype.removeEventListener = function(
+    type, listener, opt_options) {};
 
-/**
- * @override
- * @return {boolean}
- */
+/** @override */
 IDBDatabase.prototype.dispatchEvent = function(evt) {};
 
 /**

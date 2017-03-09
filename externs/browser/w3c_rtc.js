@@ -163,17 +163,13 @@ MediaStreamTrackEvent.prototype.track;
 function MediaStream(streamOrTracks) {}
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
- * @return {undefined}
  */
 MediaStream.prototype.addEventListener = function(type, listener,
     opt_useCapture) {};
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
- * @return {undefined}
  */
 MediaStream.prototype.removeEventListener = function(type, listener,
     opt_useCapture) {};
@@ -1016,17 +1012,13 @@ function RTCPeerConnection(configuration, constraints) {}
 RTCPeerConnection.generateCertificate = function (keygenAlgorithm) {};
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
- * @return {undefined}
  */
 RTCPeerConnection.prototype.addEventListener = function(
     type, listener, opt_useCapture) {};
 
 /**
- * @param {boolean=} opt_useCapture
  * @override
- * @return {undefined}
  */
 RTCPeerConnection.prototype.removeEventListener = function(
     type, listener, opt_useCapture) {};
