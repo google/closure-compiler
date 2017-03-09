@@ -22,8 +22,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.javascript.rhino.TypeI;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -767,17 +765,6 @@ public final class FunctionType {
 
   public List<String> getTypeParameters() {
     return typeParameters;
-  }
-
-  List<TypeI> getParameterTypes() {
-    int howmanyTypes = getMaxArityWithoutRestFormals() + (hasRestFormals() ? 1 : 0);
-    ArrayList<TypeI> types = new ArrayList<>(howmanyTypes);
-    types.addAll(this.requiredFormals);
-    types.addAll(this.optionalFormals);
-    if (hasRestFormals()) {
-      types.add(this.restFormals);
-    }
-    return types;
   }
 
   boolean unifyWithSubtype(FunctionType other, List<String> typeParameters,

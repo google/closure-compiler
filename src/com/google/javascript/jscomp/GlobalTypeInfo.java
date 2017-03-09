@@ -282,7 +282,6 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   private final List<NTIScope> scopes = new ArrayList<>();
   private NTIScope globalScope;
   private WarningReporter warnings;
-  private final List<TypeMismatch> mismatches;
   private final JSTypeCreatorFromJSDoc typeParser;
   private final AbstractCompiler compiler;
   private final CodingConvention convention;
@@ -326,7 +325,6 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         compiler.getOptions().disables(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS);
 
     this.warnings = new WarningReporter(compiler);
-    this.mismatches = new ArrayList<>();
     this.compiler = compiler;
     this.unknownTypeNames = unknownTypeNames;
     this.convention = compiler.getCodingConvention();
@@ -356,10 +354,6 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
   JSTypes getCommonTypes() {
     return this.commonTypes;
-  }
-
-  List<TypeMismatch> getMismatches() {
-    return this.mismatches;
   }
 
   JSType getCastType(Node n) {

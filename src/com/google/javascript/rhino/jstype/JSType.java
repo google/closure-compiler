@@ -366,10 +366,7 @@ public abstract class JSType implements TypeI, Serializable {
   }
 
   @Override
-  public final boolean isLiteralObject() {
-    if (this instanceof PrototypeObjectType) {
-      return ((PrototypeObjectType) this).isAnonymous();
-    }
+  public boolean isInstanceofObject() {
     return false;
   }
 
@@ -568,16 +565,6 @@ public abstract class JSType implements TypeI, Serializable {
   @Override
   public final boolean isObjectType() {
     return isObject();
-  }
-
-  @Override
-  public final boolean isInstanceofObject() {
-    // Some type whose class is Object
-    if (this instanceof InstanceObjectType) {
-      InstanceObjectType iObj = (InstanceObjectType) this;
-      return iObj.isNativeObjectType() && "Object".equals(iObj.getReferenceName());
-    }
-    return isRecordType() || isLiteralObject();
   }
 
   /**
@@ -1383,10 +1370,8 @@ public abstract class JSType implements TypeI, Serializable {
    * This function is added for disambiguate properties,
    * and is deprecated for the other use cases.
    */
-  @Override
-  public boolean isSubtypeWithoutStructuralTyping(TypeI that) {
-    return isSubtype(
-        (JSType) that, ImplCache.createWithoutStructuralTyping(), SubtypingMode.NORMAL);
+  public boolean isSubtypeWithoutStructuralTyping(JSType that) {
+    return isSubtype(that, ImplCache.createWithoutStructuralTyping(), SubtypingMode.NORMAL);
   }
 
   /**

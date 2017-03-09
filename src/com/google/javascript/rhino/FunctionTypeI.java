@@ -86,6 +86,4 @@ public interface FunctionTypeI extends TypeI {
   Collection<ObjectTypeI> getAncestorInterfaces();
 
   ObjectTypeI getPrototypeProperty();
-
-  Iterable<TypeI> getParameterTypes();
 }
