@@ -382,16 +382,72 @@ public class SuggestedFixTest {
   }
 
   @Test
-  public void testChangeJsDocType_privateType() {
+  public void testChangeJsDocType_packageType1() {
     String before = "/** ";
-    String after = "@private Foo */\nvar foo = new Foo()";
+    String after = "@package {Foo} */\nvar foo = new Foo()";
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);
     SuggestedFix fix = new SuggestedFix.Builder()
         .changeJsDocType(root.getFirstChild(), compiler, "Object")
         .build();
     CodeReplacement replacement = new CodeReplacement(
-        before.length(), "@private Foo".length(), "@private {Object}");
+        before.length(), "@package {Foo}".length(), "@package {Object}");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
+  public void testChangeJsDocType_privateType1() {
+    String before = "/** ";
+    String after = "@private {Foo} */\nvar foo = new Foo()";
+    Compiler compiler = getCompiler(before + after);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .changeJsDocType(root.getFirstChild(), compiler, "Object")
+        .build();
+    CodeReplacement replacement = new CodeReplacement(
+        before.length(), "@private {Foo}".length(), "@private {Object}");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
+  public void testChangeJsDocType_privateType2() {
+    String before = "/** @private ";
+    String after = "@const {Foo} */\nvar foo = new Foo()";
+    Compiler compiler = getCompiler(before + after);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .changeJsDocType(root.getFirstChild(), compiler, "Object")
+        .build();
+    CodeReplacement replacement = new CodeReplacement(
+        before.length(), "@const {Foo}".length(), "@const {Object}");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
+  public void testChangeJsDocType_privateType3() {
+    String before = "/** @private ";
+    String after = "@const {Foo} */\nvar foo = new Foo()";
+    Compiler compiler = getCompiler(before + after);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .changeJsDocType(root.getFirstChild(), compiler, "Object")
+        .build();
+    CodeReplacement replacement = new CodeReplacement(
+        before.length(), "@const {Foo}".length(), "@const {Object}");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
+  public void testChangeJsDocType_privateType4() {
+    String before = "/** ";
+    String after = "@const {Foo} */\nvar foo = new Foo()";
+    Compiler compiler = getCompiler(before + after);
+    Node root = compileToScriptRoot(compiler);
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .changeJsDocType(root.getFirstChild(), compiler, "Object")
+        .build();
+    CodeReplacement replacement = new CodeReplacement(
+        before.length(), "@const {Foo}".length(), "@const {Object}");
     assertReplacement(fix, replacement);
   }
 

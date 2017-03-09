@@ -452,8 +452,6 @@ public final class SuggestedFix {
      * Changes the JS Doc Type of the given node.
      */
     public Builder changeJsDocType(Node n, AbstractCompiler compiler, String type) {
-      JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
-      Preconditions.checkNotNull(info, "Node %s does not have JS Doc associated with it.", n);
       Node typeNode = JsDocInfoParser.parseTypeString(type);
       Preconditions.checkNotNull(typeNode, "Invalid type: %s", type);
       JSTypeExpression typeExpr = new JSTypeExpression(typeNode, "jsflume");
@@ -462,15 +460,30 @@ public final class SuggestedFix {
         throw new RuntimeException("JS Compiler does not recognize type: " + type);
       }
 
+      // TODO(mknichel): Use the JSDocInfoParser to find the end of the type declaration. This
+      // would also handle multiple lines, and record types (which contain '{')
+
+      // Only "@type" allows type names without "{}"
+      replaceTypePattern(n, type, Pattern.compile(
+          "@(type) *\\{?[^@\\s}]+\\}?"));
+
+      // Text following other annotations may be a comment, not a type.
+      replaceTypePattern(n, type, Pattern.compile(
+          "@(export|package|private|protected|public|const|return) *\\{[^}]+\\}"));
+
+      return this;
+    }
+
+    // The pattern supplied here should have one matching group, the annotation with
+    // associated the type expression, the entire pattern should match the annotation and
+    // the type expression to be replaced.
+    private void replaceTypePattern(Node n, String type, Pattern pattern) {
+      JSDocInfo info = NodeUtil.getBestJSDocInfo(n);
+      Preconditions.checkNotNull(info, "Node %s does not have JS Doc associated with it.", n);
       String originalComment = info.getOriginalCommentString();
       int originalPosition = info.getOriginalCommentPosition();
-
-      // If there isn't an original comment, then it is generated and we can't make a change.
       if (originalComment != null) {
-        // TODO(mknichel): Support multiline @type annotations.
-        Pattern typeDocPattern = Pattern.compile(
-            "@(type|private|protected|public|const|return) *\\{?[^\\s}@]+\\}?");
-        Matcher m = typeDocPattern.matcher(originalComment);
+        Matcher m = pattern.matcher(originalComment);
         while (m.find()) {
           replacements.put(
               n.getSourceFileName(),
@@ -480,8 +493,6 @@ public final class SuggestedFix {
                   "@" + m.group(1) + " {" + type + "}"));
         }
       }
-
-      return this;
     }
 
     /**
