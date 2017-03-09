@@ -56,7 +56,7 @@ class InferConsts implements CompilerPass {
 
     Scope globalExternsScope =
         new Es6SyntacticScopeCreator(compiler).createScope(externs, null);
-    for (Var v : globalExternsScope.getAllSymbols()) {
+    for (Var v : globalExternsScope.getVarIterable()) {
       considerVar(v, null);
     }
   }

@@ -24,7 +24,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -216,11 +215,6 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType> {
   @Override
   public Iterable<TypedVar> getVarIterable() {
     return vars.values();
-  }
-
-  @Override
-  public Iterable<TypedVar> getAllSymbols() {
-    return Collections.unmodifiableCollection(vars.values());
   }
 
   @Override
