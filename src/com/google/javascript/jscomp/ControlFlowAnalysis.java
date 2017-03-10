@@ -917,7 +917,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
    */
   static boolean isContinueTarget(
       Node target, String label) {
-    return isContinueStructure(target) && matchLabel(target.getParent(), label);
+    return NodeUtil.isLoopStructure(target) && matchLabel(target.getParent(), label);
   }
 
   /**
@@ -984,22 +984,6 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
       case IF:
       case TRY:
         return labeled;
-      default:
-        return false;
-    }
-  }
-
-  /**
-   * Determines whether the given node can be advanced with a CONTINUE node.
-   */
-  static boolean isContinueStructure(Node n) {
-    switch (n.getToken()) {
-      case FOR:
-      case FOR_IN:
-      case FOR_OF:
-      case DO:
-      case WHILE:
-        return true;
       default:
         return false;
     }
