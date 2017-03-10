@@ -623,8 +623,10 @@ class CollapseProperties implements CompilerPass {
   private void checkForHosedThisReferences(Node function, JSDocInfo docInfo,
       final Name name) {
     // A function is getting collapsed. Make sure that if it refers to
-    // "this", it must be a constructor or documented with @this.
-    if (docInfo == null || (!docInfo.isConstructor() && !docInfo.hasThisType())) {
+    // "this", it must be a constructor, interface, record, or documented with @this.
+    boolean isAllowedToReferenceThis =
+        docInfo != null && (docInfo.isConstructorOrInterface() || docInfo.hasThisType());
+    if (!isAllowedToReferenceThis) {
       NodeTraversal.traverseEs6(compiler, function.getLastChild(),
           new NodeTraversal.AbstractShallowCallback() {
             @Override

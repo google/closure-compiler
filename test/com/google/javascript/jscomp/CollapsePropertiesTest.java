@@ -911,6 +911,12 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
          "/** @constructor */ var a$b = function() { this.a = 3; };");
   }
 
+  public void testRecordReferencingThis() {
+    test("/** @const */ var a = {}; "
+         + "/** @record */ a.b = function() { /** @type {string} */ this.a; };",
+         "/** @record */ var a$b = function() { /** @type {string} */ this.a; };");
+  }
+
   public void testSafeReferenceOfThis() {
     test(
         "var a = {}; /** @this {Object} */ a.b = function() { this.a = 3; };",
