@@ -59,7 +59,9 @@ unit tests too).
 6. In Package Explorer, remove from the build path:
     - `src/com/google/javascript/jscomp/debugger/DebuggerGwtMain.java`
     - `src/com/google/javascript/jscomp/gwt/`
-7. See *Using Maven* above to build the JAR.
+7. [Exclude the files](http://stackoverflow.com/questions/1187868/how-can-i-exclude-some-folders-from-my-eclipse-project) in the directory `src/com/google/debugging/sourcemap/super` from the project.
+8. Build project in Eclipse (right click on the project `closure-compiler-parent` and select `Build Project`).
+9. See *Using Maven* above to build the JAR.
 
 ## Running
 
