@@ -70,7 +70,7 @@ class MemoizedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVar, 
   public Iterable<TypedVar> getAllSymbols() {
     List<TypedVar> vars = new ArrayList<>();
     for (TypedScope s : scopes.values()) {
-      Iterables.addAll(vars, s.getVarIterable());
+      Iterables.addAll(vars, s.getAllSymbols());
     }
     return vars;
   }

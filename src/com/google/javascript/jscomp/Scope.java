@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -203,6 +204,9 @@ public class Scope implements StaticScope {
     return vars.values();
   }
 
+  public Iterable<? extends Var> getAllSymbols() {
+    return Collections.unmodifiableCollection(vars.values());
+  }
 
   /**
    * Returns number of variables in this scope (excluding the special 'arguments' variable)

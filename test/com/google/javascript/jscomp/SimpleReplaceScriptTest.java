@@ -939,7 +939,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
 
   private void assertScopeAndThisForScopeSimilar(TypedScope scope) {
     ObjectType typeOfThis = scope.getTypeOfThis().toObjectType();
-    for (TypedVar v : scope.getVarIterable()) {
+    for (TypedVar v : scope.getAllSymbols()) {
       if (!v.getName().contains(".")) {
         assertEquals(v.getNameNode(), typeOfThis.getPropertyNode(v.getName()));
       }
