@@ -4901,7 +4901,7 @@ public final class NodeUtil {
     return keyName.equals("get") || keyName.equals("set");
   }
 
-  static boolean isCallTo(Node n, String qualifiedName) {
+  public static boolean isCallTo(Node n, String qualifiedName) {
     return n.isCall() && n.getFirstChild().matchesQualifiedName(qualifiedName);
   }
 }

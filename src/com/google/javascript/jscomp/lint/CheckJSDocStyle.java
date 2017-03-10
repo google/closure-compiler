@@ -32,10 +32,8 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-
 import java.util.List;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -287,6 +285,11 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
       } else if (memberNode.isGetterDef() || memberNode.isSetterDef()) {
         return true;
       }
+    }
+
+    if (function.getGrandparent().isObjectLit()
+        && NodeUtil.isCallTo(function.getGrandparent().getParent(), "Polymer")) {
+      return true;
     }
 
     return false;
