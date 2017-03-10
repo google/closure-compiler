@@ -13,9 +13,9 @@ The [Closure Compiler](https://developers.google.com/closure/compiler/) is a too
  * See the [Google Developers Site](https://developers.google.com/closure/compiler/docs/gettingstarted_app) for documentation including instructions for running the compiler from the command line.
 
 ## Options for Getting Help
-1. Post in the [Closure Compiler Discuss Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss)
-2. Ask a question on [Stack Overflow](http://stackoverflow.com/questions/tagged/google-closure-compiler)
-3. Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ)
+1. Post in the [Closure Compiler Discuss Group](https://groups.google.com/forum/#!forum/closure-compiler-discuss).
+2. Ask a question on [Stack Overflow](http://stackoverflow.com/questions/tagged/google-closure-compiler).
+3. Consult the [FAQ](https://github.com/google/closure-compiler/wiki/FAQ).
 
 ## Building it Yourself
 
@@ -41,7 +41,7 @@ Note: The Closure Compiler requires [Java 7 or higher](http://www.java.com/).
    </profile>
    ```
 
-3. Run `mvn -DskipTests` (omit the `-DskipTests` if you want to run all the
+3. On the command line, at the root of this project, run `mvn -DskipTests` (omit the `-DskipTests` if you want to run all the
 unit tests too).
 
     This will produce a jar file called `target/closure-compiler-1.0-SNAPSHOT.jar`.
@@ -52,8 +52,8 @@ unit tests too).
 ### Using [Eclipse](http://www.eclipse.org/)
 
 1. Download and open the [Eclipse IDE](http://www.eclipse.org/).
-2. Run `mvn eclipse:eclipse -DdownloadSources=true` to download JARs and build Eclipse project configuration.
-3. Navigate to `File > Import > Maven > Existing Maven Projects` and browse to closure-compiler.
+2. On the command line, at the root of this project, run `mvn eclipse:eclipse -DdownloadSources=true` to download JARs and build Eclipse project configuration.
+3. Navigate to `File > Import > Maven > Existing Maven Projects` and browse to closure-compiler inside of Eclipse.
 4. Import both closure-compiler and the nested externs project.
 5. Disregard the warnings about maven-antrun-plugin and build errors.
 6. In Package Explorer, remove from the build path:
