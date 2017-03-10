@@ -2516,7 +2516,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseWarning("var str = '\\d'", "Unnecessary escape: '\\d' is equivalent to just 'd'");
     parseWarning("var str = '\\e'", "Unnecessary escape: '\\e' is equivalent to just 'e'");
     parse("var str = '\\f'");
-    parseWarning("var str = '\\/'", "Unnecessary escape: '\\/' is equivalent to just '/'");
+    parse("var str = '\\/'");
     parse("var str = '\\0'");
     parseWarning("var str = '\\1'", "Unnecessary escape: '\\1' is equivalent to just '1'");
     parseWarning("var str = '\\2'", "Unnecessary escape: '\\2' is equivalent to just '2'");
