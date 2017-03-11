@@ -425,13 +425,10 @@ webCrypto.SubtleCrypto.prototype.unwrapKey = function(format, wrappedKey,
 
 
 /**
- * Web Cryptography API
- * @see http://www.w3.org/TR/WebCryptoAPI/
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Crypto
+ * @interface
  */
-
-/** @see https://developer.mozilla.org/en/DOM/window.crypto */
-Window.prototype.crypto;
-
+webCrypto.Crypto = function() {};
 
 /**
  * @see https://developer.mozilla.org/en/DOM/window.crypto.getRandomValues
@@ -439,11 +436,24 @@ Window.prototype.crypto;
  * @return {!ArrayBufferView}
  * @throws {Error}
  */
-Window.prototype.crypto.getRandomValues = function(typedArray) {};
-
+webCrypto.Crypto.prototype.getRandomValues = function(typedArray) {};
 
 /**
- * @type {webCrypto.SubtleCrypto}
+ * @type {?webCrypto.SubtleCrypto}
  * @see http://www.w3.org/TR/WebCryptoAPI/#Crypto-attribute-subtle
  */
-Window.prototype.crypto.subtle;
+webCrypto.Crypto.prototype.subtle;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/window.crypto
+ * @type {!webCrypto.Crypto|undefined}
+ */
+Window.prototype.crypto;
+
+/**
+ * @see https://developer.mozilla.org/en/DOM/window.crypto
+ * @type {!webCrypto.Crypto|undefined}
+ */
+WorkerGlobalScope.prototype.crypto;
+
+
