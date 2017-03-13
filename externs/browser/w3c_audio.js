@@ -106,7 +106,7 @@ AudioContext.prototype.createScriptProcessor = function(bufferSize,
     numberOfInputChannels_opt, numberOfOutputChannels_opt) {};
 
 /**
- * @return {!RealtimeAnalyserNode}
+ * @return {!AnalyserNode}
  */
 AudioContext.prototype.createAnalyser = function() {};
 
