@@ -300,6 +300,14 @@ RTCRtpSender.prototype.track;
  */
 RTCRtpSender.prototype.replaceTrack = function(track) {};
 
+
+/**
+ * @param {!Object} params
+ * @return {!Promise<undefined>}
+ */
+RTCRtpSender.prototype.setParameters = function(params) {};
+
+
 /**
  * @interface
  * @see http://w3c.github.io/webrtc-pc/#rtcrtpreceiver-interface
