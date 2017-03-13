@@ -81,7 +81,7 @@ GeolocationCoordinates.prototype.speed;
 function GeolocationPosition() {}
 /** @type {GeolocationCoordinates} */
 GeolocationPosition.prototype.coords;
-/** @type {Date} */
+/** @type {number} */
 GeolocationPosition.prototype.timestamp;
 
 
