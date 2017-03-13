@@ -354,11 +354,13 @@ Window.prototype.offscreenBuffering;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms534389(VS.85).aspx
+ * @type {number|undefined}
  */
 Window.prototype.screenLeft;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms534389(VS.85).aspx
+ * @type {number|undefined}
  */
 Window.prototype.screenTop;
 
@@ -843,6 +845,7 @@ Document.prototype.fileSize;
 
 /**
  * @see http://msdn.microsoft.com/en-us/library/ms534331(VS.85).aspx
+ * @type {?Window}
  */
 Document.prototype.parentWindow;
 
