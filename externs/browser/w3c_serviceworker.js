@@ -44,6 +44,35 @@ ServiceWorker.prototype.onstatechange;
 var ServiceWorkerState ;
 
 /**
+ * @see https://w3c.github.io/ServiceWorker/#navigationpreloadmanager
+ * @constructor
+ */
+function NavigationPreloadManager() {}
+
+/** @return {!Promise<void>} */
+NavigationPreloadManager.prototype.enable = function() {};
+
+/** @return {!Promise<void>} */
+NavigationPreloadManager.prototype.disable = function() {};
+
+/**
+ * @param {string=} value
+ * @return {!Promise<void>}
+ */
+NavigationPreloadManager.prototype.setHeaderValue = function(value) {};
+
+/** @return {!Promise<NavigationPreloadState>} */
+NavigationPreloadManager.prototype.getState = function() {};
+
+/**
+ *  @typedef {{
+ *   enabled: (boolean|undefined),
+ *   headerValue: (string|undefined)
+ * }}
+ */
+var NavigationPreloadState;
+
+/**
  * @see https://w3c.github.io/push-api/
  * @constructor
  */
@@ -144,6 +173,9 @@ ServiceWorkerRegistration.prototype.waiting;
 
 /** @type {ServiceWorker} */
 ServiceWorkerRegistration.prototype.active;
+
+/** @type {NavigationPreloadManager} */
+ServiceWorkerRegistration.prototype.navigationPreload;
 
 /** @type {string} */
 ServiceWorkerRegistration.prototype.scope;
@@ -513,6 +545,11 @@ function FetchEvent(type, opt_eventInitDict) {}
 /** @type {!Request} */
 FetchEvent.prototype.request;
 
+/**
+ * @type {!Promise<Response>}
+ */
+FetchEvent.prototype.preloadResponse;
+
 /** @type {!ServiceWorkerClient} */
 FetchEvent.prototype.client;
 
@@ -541,6 +578,7 @@ FetchEvent.prototype.default = function() {};
  *   bubbles: (boolean|undefined),
  *   cancelable: (boolean|undefined),
  *   request: (!Request|undefined),
+ *   preloadResponse: (!Promise<Response>),
  *   client: (!ServiceWorkerClient|undefined),
  *   isReload: (!boolean|undefined)
  * }}
