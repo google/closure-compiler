@@ -1427,7 +1427,7 @@ var GetRootNodeOptions;
 /**
  * @see https://dom.spec.whatwg.org/#dom-node-getrootnode
  * @param {GetRootNodeOptions=} opt_options
- * @return {?Node}
+ * @return {!Node}
  */
 Node.prototype.getRootNode = function(opt_options) {};
 
