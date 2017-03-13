@@ -2818,13 +2818,15 @@ public class Parser {
       return parseYield(expressionIn);
     }
 
-    if (peekAsyncArrowFunction()) {
-      return parseAsyncArrowFunction(expressionIn);
-    }
-
     SourcePosition start = getTreeStartLocation();
     // TODO(blickly): Allow TypeScript syntax in arrow function parameters
     ParseTree left = parseConditional(expressionIn);
+
+    if (isStartOfAsyncArrowFunction(left)) {
+      // re-evaluate as an async arrow function.
+      resetScanner(left);
+      return parseAsyncArrowFunction(expressionIn);
+    }
     if (peek(TokenType.ARROW)) {
       return completeAssignmentExpressionParseAtArrow(left, expressionIn);
     }
@@ -2844,14 +2846,30 @@ public class Parser {
     return left;
   }
 
-  private boolean peekAsyncArrowFunction() {
-    if (!peekPredefinedString(ASYNC)) {
-      return false;
-    } else if (peekImplicitSemiColon(1)) {
-      // No newline allowed between `async` and argument list.
-      return false;
+  private boolean isStartOfAsyncArrowFunction(ParseTree partialExpression) {
+    if (partialExpression.type == ParseTreeType.IDENTIFIER_EXPRESSION) {
+      final IdentifierToken identifierToken =
+          partialExpression.asIdentifierExpression().identifierToken;
+      // partialExpression is `async`
+      // followed by `[no newline] bindingIdentifier [no newline] =>`
+      return identifierToken.value.equals(ASYNC)
+          && !peekImplicitSemiColon(0)
+          && peekId()
+          && !peekImplicitSemiColon(1)
+          && peek(1, TokenType.ARROW);
+    } else if (partialExpression.type == ParseTreeType.CALL_EXPRESSION) {
+      final CallExpressionTree callExpression = partialExpression.asCallExpression();
+      ParseTree callee = callExpression.operand;
+      ParseTree arguments = callExpression.arguments;
+      // partialExpression is `async [no newline] (parameters)`
+      // followed by `[no newline] =>`
+      return callee.type == ParseTreeType.IDENTIFIER_EXPRESSION
+          && callee.asIdentifierExpression().identifierToken.value.equals(ASYNC)
+          && callee.location.end.line == arguments.location.start.line
+          && !peekImplicitSemiColon()
+          && peek(TokenType.ARROW);
     } else {
-      return peek(1, TokenType.OPEN_PAREN) || peek(1, TokenType.IDENTIFIER);
+      return false;
     }
   }
 
@@ -2860,7 +2878,7 @@ public class Parser {
     if (leftOfArrow.type == ParseTreeType.CALL_EXPRESSION) {
       //   ... someAssignmentExpression // implicit semicolon
       //   (args) =>
-      return completeAssignmentExpressionParseAtArrow(leftOfArrow.asCallExpression(), expressionIn);
+      return completeAssignmentExpressionParseAtArrow(leftOfArrow.asCallExpression());
     } else {
       return completeArrowFunctionParseAtArrow(leftOfArrow, expressionIn);
     }
@@ -2910,8 +2928,7 @@ public class Parser {
     return arrowParameterList;
   }
 
-  private ParseTree completeAssignmentExpressionParseAtArrow(
-      CallExpressionTree callExpression, Expression expressionIn) {
+  private ParseTree completeAssignmentExpressionParseAtArrow(CallExpressionTree callExpression) {
     ParseTree operand = callExpression.operand;
     ParseTree arguments = callExpression.arguments;
     ParseTree result;

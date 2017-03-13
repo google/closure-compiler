@@ -3002,6 +3002,18 @@ public final class ParserTest extends BaseJSTypeTestCase {
     }
   }
 
+  public void testAsyncNamedFunction() {
+    mode = LanguageMode.ECMASCRIPT6;
+    expectFeatures(Feature.CLASSES, Feature.CONST_DECLARATIONS);
+    parse(LINE_JOINER.join(
+        "class C {",
+        "  async(x) { return x; }",
+        "}",
+        "const c = new C();",
+        "c.async(1);",
+        "let foo = async(5);"));
+  }
+
   public void testInvalidAsyncFunction() {
     mode = LanguageMode.ECMASCRIPT8;
     strictMode = STRICT;
