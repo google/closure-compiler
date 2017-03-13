@@ -64,7 +64,7 @@ testSuite({
   testConstruct_newTarget() {
     /** @constructor */
     let X = function() { this.target = null; };
-    /** @preserveTry */
+
     try {
       X = noCheck(eval('class { constructor() { this.target = new.target; } ' +
                        'x() { return 42; }}'));
