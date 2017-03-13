@@ -43,25 +43,28 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   @Override
   public void setUp() {
     enableNormalize();
-    compareJsDoc = false;
   }
 
   public void test_b19179602() {
     test(
-        "var a = {};"
-            + "/** @constructor */ a.b = function() {};"
-            + "a.b.staticProp = 5;"
-            + "function f() { "
-            + "  while (true) { "
-            + "    var b = a.b;"
-            + "    alert(b.staticProp); } }",
-        "var a = {};"
-            + "a.b = function() {};"
-            + "a.b.staticProp = 5;"
-            + "function f() {"
-            + "  for(; true; ) {"
-            + "    var b = a.b;"
-            + "    alert(b.staticProp); } }",
+    	LINE_JOINER.join(
+        "var a = {};",
+        "/** @constructor */ a.b = function() {};",
+        "a.b.staticProp = 5;",
+        "/** @constructor */",
+        "function f() { ",
+        "  while (true) { ",
+        "    var b = a.b;",
+        "    alert(b.staticProp); } }"),
+    	LINE_JOINER.join(
+        "var a = {};",
+        "/** @constructor */ a.b = function() {};",
+        "a.b.staticProp = 5;",
+        "/** @constructor */",
+        "function f() {",
+        "  for(; true; ) {",
+        "    var b = a.b;",
+        "    alert(b.staticProp); } }"),
         null,
         AggressiveInlineAliases.UNSAFE_CTOR_ALIASING);
   }
@@ -134,21 +137,21 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testAddPropertyToChildTypeOfUncollapsibleObjectInLocalScope() {
     test(
         LINE_JOINER.join(
-            "var a = {};",
-            "a.b = function () {};",
-            "a.b.x = 0;",
-            "var c = a;",
-            "(function() { a.b.y = 1; })();",
-            "a.b.x;",
-            "a.b.y;"),
+        "var a = {};",
+        "a.b = function () {};",
+        "a.b.x = 0;",
+        "var c = a;",
+        "(function() { a.b.y = 1; })();",
+        "a.b.x;",
+        "a.b.y;"),
         LINE_JOINER.join(
-            "var a = {};",
-            "a.b = function() {};",
-            "a.b.x = 0;",
-            "var c = null;",
-            "(function() { a.b.y = 1; })();",
-            "a.b.x;",
-            "a.b.y;"));
+        "var a = {};",
+        "a.b = function() {};",
+        "a.b.x = 0;",
+        "var c = null;",
+        "(function() { a.b.y = 1; })();",
+        "a.b.x;",
+        "a.b.y;"));
   }
 
   public void testAddPropertyToUncollapsibleCtorInLocalScopeDepth1() {
@@ -288,27 +291,32 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   public void testCollapsePropertiesOfClass1() {
     test(
-        "var namespace = function() {};"
-            + "goog.inherits(namespace, Object);"
-            + "namespace.includeExtraParam = true;"
-            + "/** @enum { number } */"
-            + "namespace.Param = { param1: 1, param2: 2 };"
-            + "if (namespace.includeExtraParam) namespace.Param.optParam = 3;"
-            + "function f() { "
-            + "  var Param = namespace.Param;"
-            + "  log(namespace.Param.optParam);"
-            + "  log(Param.optParam);"
-            + "}",
-        "var namespace = function() {};"
-            + "goog.inherits(namespace,Object);"
-            + "namespace.includeExtraParam = true;"
-            + "namespace.Param = { param1: 1,param2: 2 };"
-            + "if(namespace.includeExtraParam) namespace.Param.optParam = 3;"
-            + "function f() {"
-            + "  var Param = null;"
-            + "  log(namespace.Param.optParam);"
-            + "  log(namespace.Param.optParam);"
-            + "}");
+    	LINE_JOINER.join(
+        "/** @constructor */ var namespace = function() {};",
+        "goog.inherits(namespace, Object);",
+        "namespace.includeExtraParam = true;",
+        "/** @enum { number } */",
+        "namespace.Param = { param1: 1, param2: 2 };",
+        "if (namespace.includeExtraParam) namespace.Param.optParam = 3;",
+        "/** @constructor */",
+        "function f() { ",
+        "  var Param = namespace.Param;",
+        "  log(namespace.Param.optParam);",
+        "  log(Param.optParam);",
+        "}"),
+    	LINE_JOINER.join(
+        "/** @constructor */ var namespace = function() {};",
+        "goog.inherits(namespace,Object);",
+        "namespace.includeExtraParam = true;",
+        "/** @enum { number } */",
+        "namespace.Param = { param1: 1,param2: 2 };",
+        "if(namespace.includeExtraParam) namespace.Param.optParam = 3;",
+        "/** @constructor */",
+        "function f() {",
+        "  var Param = null;",
+        "  log(namespace.Param.optParam);",
+        "  log(namespace.Param.optParam);",
+        "}"));
   }
 
   public void testCollapsePropertiesOfClass2() {
@@ -357,12 +365,18 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   public void testDontCrashCtorAliasWithEnum() {
     test(
-        "var ns = {};"
-            + "ns.Foo = function () {};"
-            + "var Bar = ns.Foo;"
-            + "/** @const @enum */"
-            + "Bar.prop = { A: 1 };",
-        "var ns = {};" + "ns.Foo = function() {};" + "var Bar = null;" + "ns.Foo.prop = { A: 1 }");
+    	LINE_JOINER.join(
+        "var ns = {};",
+        "/** @constructor */ ns.Foo = function () {};",
+        "var Bar = ns.Foo;",
+        "/** @const @enum */",
+        "Bar.prop = { A: 1 };"),
+    	LINE_JOINER.join(
+        "var ns = {};",
+        "/** @constructor */ ns.Foo = function() {};",
+        "var Bar = null;",
+        "/** @const @enum */",
+        "ns.Foo.prop = { A: 1 }"));
   }
 
   public void testFunctionAlias2() {
@@ -525,21 +539,24 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   public void testLocalAliasOfEnumWithInstanceofCheck() {
     test(
-        "var Enums = function() {};"
-            + "/** @enum { number } */"
-            + "Enums.Fruit = { APPLE: 1, BANANA: 2 };"
-            + "function foo(f) {"
-            + "if (f instanceof Enums) { alert('what?'); return; }"
-            + "var Fruit = Enums.Fruit;"
-            + "if (f == Fruit.APPLE) alert('apple');"
-            + "if (f == Fruit.BANANA) alert('banana'); }",
-        "var Enums = function() {};"
-            + "Enums.Fruit = { APPLE: 1,BANANA: 2 };"
-            + "function foo(f) {"
-            + "if (f instanceof Enums) { alert('what?'); return; }"
-            + "var Fruit = null;"
-            + "if(f == Enums.Fruit.APPLE) alert('apple');"
-            + "if(f == Enums.Fruit.BANANA) alert('banana'); }");
+    	LINE_JOINER.join(
+        "/** @constructor */ var Enums = function() {};",
+        "/** @enum { number } */",
+        "Enums.Fruit = { APPLE: 1, BANANA: 2 };",
+        "/** @constructor */ function foo(f) {",
+        "if (f instanceof Enums) { alert('what?'); return; }",
+        "var Fruit = Enums.Fruit;",
+        "if (f == Fruit.APPLE) alert('apple');",
+        "if (f == Fruit.BANANA) alert('banana'); }"),
+    	LINE_JOINER.join(
+        "/** @constructor */ var Enums = function() {};",
+        "/** @enum { number } */",
+        "Enums.Fruit = { APPLE: 1,BANANA: 2 };",
+        "/** @constructor */ function foo(f) {",
+        "if (f instanceof Enums) { alert('what?'); return; }",
+        "var Fruit = null;",
+        "if(f == Enums.Fruit.APPLE) alert('apple');",
+        "if(f == Enums.Fruit.BANANA) alert('banana'); }"));
   }
 
   public void testLocalAliasOfFunction() {

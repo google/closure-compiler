@@ -35,7 +35,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
-    compareJsDoc = false;
+	//unused
   }
 
   @Override
@@ -857,13 +857,14 @@ public final class InlineVariablesTest extends CompilerTestCase {
   public void testLocalsOnly2() {
     inlineLocalsOnly = true;
     test(
-        "/** @const */\n" +
-        "var X=1; X;\n" +
-        "function f() {\n" +
-        "  /** @const */\n" +
-        "  var X = 1; X;\n" +
-        "}",
-        "var X=1; X; function f() {1;}");
+    	LINE_JOINER.join(
+		"/** @const */\n",
+		"var X=1; X;\n",
+		"function f() {\n",
+		"  /** @const */\n",
+		"  var X = 1; X;\n",
+		"}"),
+        "/** @const */var X=1; X; function f() {1;}");
   }
 
   public void testInlineUndefined1() {
@@ -1161,15 +1162,16 @@ public final class InlineVariablesTest extends CompilerTestCase {
 
   // GitHub issue #1234: https://github.com/google/closure-compiler/issues/1234
   public void testSwitchGithubIssue1234() {
-    testSame(LINE_JOINER.join(
-      "var x;",
-      "switch ('a') {",
-      "  case 'a':",
-      "    break;",
-      "  default:",
-      "    x = 1;",
-      "    break;",
-      "}",
-      "use(x);"));
+    testSame(
+    	LINE_JOINER.join(
+		"var x;",
+		"switch ('a') {",
+		"  case 'a':",
+		"    break;",
+		"  default:",
+		"    x = 1;",
+		"    break;",
+		"}",
+		"use(x);"));
   }
 }
