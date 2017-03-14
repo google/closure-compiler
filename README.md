@@ -96,7 +96,7 @@ More detailed information about running the Closure Compiler is available in the
 [documentation](http://code.google.com/closure/compiler/docs/gettingstarted_app.html).
 
 
-###Run using Eclipse
+### Run using Eclipse
 
 1. Open the class `src/com/google/javascript/jscomp/CommandLineRunner.java` or create your own extended version of the class.
 2. Run the class in Eclipse.
