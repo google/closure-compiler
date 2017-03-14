@@ -1424,4 +1424,91 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
   }
+
+  /**
+   * Ban {@code goog.dom.createDom} and {@code goog.dom.DomHelper#createDom} with parameters
+   * specified in {@code value} in the format tagname.attribute, e.g. {@code value: 'iframe.src'}.
+   */
+  public static final class BanCreateDom extends AbstractRule {
+    private List<String[]> bannedTagAttrs;
+
+    public BanCreateDom(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+      bannedTagAttrs = new ArrayList<>();
+      for (String value : requirement.getValueList()) {
+        String[] tagAttr = value.toLowerCase().split("\\.");
+        if (tagAttr.length != 2 || tagAttr[0].isEmpty() || tagAttr[1].isEmpty()) {
+          throw new InvalidRequirementSpec("Values must be in the format tagname.attribute.");
+        }
+        bannedTagAttrs.add(tagAttr);
+      }
+      if (bannedTagAttrs.isEmpty()) {
+        throw new InvalidRequirementSpec("Specify one or more values.");
+      }
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      if (!isCreateDomCall(n)) {
+        return ConformanceResult.CONFORMANCE;
+      }
+      if (n.getChildCount() < 3) {
+        // goog.dom.createDom('iframe') is fine.
+        return ConformanceResult.CONFORMANCE;
+      }
+
+      String tagName = getTagName(n.getSecondChild());
+      Node attrs = n.getChildAtIndex(2);
+
+      for (String[] tagAttr : bannedTagAttrs) {
+        if (tagName != null && !tagAttr[0].equals(tagName)) {
+          continue;
+        }
+        if (!attrs.isObjectLit()) {
+          // Attrs is not an object literal and tagName matches or is unknown.
+          return ConformanceResult.POSSIBLE_VIOLATION;
+        }
+        if (NodeUtil.getFirstPropMatchingKey(attrs, tagAttr[1]) != null) {
+          return tagName == null
+              ? ConformanceResult.POSSIBLE_VIOLATION
+              : ConformanceResult.VIOLATION;
+        }
+      }
+
+      return ConformanceResult.CONFORMANCE;
+    }
+
+    private String getTagName(Node tag) {
+      if (tag.isString()) {
+        return tag.getString().toLowerCase();
+      } else if (tag.isGetProp()
+          && tag.getFirstChild().getQualifiedName().equals("goog.dom.TagName")) {
+        return tag.getLastChild().getString().toLowerCase();
+      }
+      return null;
+    }
+
+    private boolean isCreateDomCall(Node n) {
+      if (NodeUtil.isCallTo(n, "goog.dom.createDom")) {
+        return true;
+      }
+      if (!n.isCall()) {
+        return false;
+      }
+      Node function = n.getFirstChild();
+      if (!function.isGetProp()) {
+        return false;
+      }
+      TypeI type = function.getFirstChild().getTypeI();
+      if (type == null) {
+        return false;
+      }
+      if ("goog.dom.DomHelper".equals(type.getDisplayName()) && function.getLastChild().isString()
+          && "createDom".equals(function.getLastChild().getString())) {
+        return true;
+      }
+      return false;
+    }
+  }
 }
