@@ -177,6 +177,10 @@ public final class NominalType {
     return this.rawType.getDefSite();
   }
 
+  public JSType getPrototypeObject() {
+    return this.rawType.getPrototypeObject();
+  }
+
   public FunctionType getConstructorFunction() {
     if (this.typeMap.isEmpty()) {
       return this.rawType.getConstructorFunction();
@@ -254,6 +258,10 @@ public final class NominalType {
     return this.rawType;
   }
 
+  Set<RawNominalType> getSubtypes() {
+    return this.rawType.getSubtypes();
+  }
+
   public boolean isClass() {
     return this.rawType.isClass();
   }
@@ -328,6 +336,20 @@ public final class NominalType {
       }
     }
     return result.build();
+  }
+
+  NominalType getTopDefiningInterface(String pname) {
+    Preconditions.checkState(isInterface(), "Expected interface, found: %s", this);
+    NominalType result = null;
+    if (getOwnProp(pname) != null) {
+      result = this;
+    }
+    for (NominalType nt : this.getInstantiatedInterfaces()) {
+      if (nt.getOwnProp(pname) != null) {
+        result = nt.getTopDefiningInterface(pname);
+      }
+    }
+    return result;
   }
 
   Property getProp(String pname) {

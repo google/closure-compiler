@@ -2389,6 +2389,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  x < 'str';",
         "}"),
         NewTypeInference.INVALID_OPERAND_TYPE);
+
     // An example of how record types can hide away the extra properties and
     // allow type misuse.
     typeCheck(LINE_JOINER.join(
@@ -19605,5 +19606,30 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}",
         "f(new FakeWindow);"),
         NewTypeInference.INEXISTENT_PROPERTY);
+  }
+
+  public void testInferUndeclaredPrototypeProperty() {
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @constructor */",
+        "ns.Foo = function() {};",
+        "ns.Foo.prototype.a = 123;",
+        "function f() {",
+        "  var /** null */ n = ns.Foo.prototype.a;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // TODO(dimvar): ideally, we'd warn here because the inferred type of a is (number|string)
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @constructor */",
+        "ns.Foo = function() {};",
+        "ns.Foo.prototype.a = 'asdf';",
+        "ns.Foo.prototype.a = 123;",
+        "function f() {",
+        "  var /** string */ s = ns.Foo.prototype.a;",
+        "}"));
   }
 }

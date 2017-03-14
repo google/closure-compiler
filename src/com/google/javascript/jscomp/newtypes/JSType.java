@@ -30,6 +30,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -1796,7 +1797,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
       // Object.prototype is the only case where we are equal to our own prototype.
       // In this case, we should return null.
       Preconditions.checkState(
-          this.isUnknownObject(),
+          isBuiltinObjectPrototype(),
           "Failed to reach Object.prototype in prototype chain, unexpected self-link found at %s",
           this);
       return null;
@@ -1850,7 +1851,18 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public boolean isUnknownObject() {
-    return isSingletonObj() && getNominalTypeIfSingletonObj().isBuiltinObject();
+    if (isSingletonObj()) {
+      ObjectType obj = getObjTypeIfSingletonObj();
+      NominalType nt = getNominalTypeIfSingletonObj();
+      return (nt.isBuiltinObject() || nt.isLiteralObject())
+          && !obj.isEnumObject() && !obj.isPrototypeObject();
+    }
+    return false;
+  }
+
+  boolean isBuiltinObjectPrototype() {
+    ObjectType obj = getObjTypeIfSingletonObj();
+    return obj != null && obj.getNominalType().isBuiltinObject() && obj.isPrototypeObject();
   }
 
   @Override
@@ -1949,11 +1961,13 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
       return ImmutableSet.of();
     }
     NominalType nt = funType.getInstanceTypeOfCtor().getNominalTypeIfSingletonObj();
-    ImmutableSet.Builder<ObjectTypeI> builder = new ImmutableSet.Builder<>();
+    Set<ObjectTypeI> interfaces = new HashSet<>();
     for (NominalType i : nt.getInstantiatedInterfaces()) {
-      builder.add(this.commonTypes.fromFunctionType(i.getConstructorFunction()));
+      if (!i.isBuiltinObject()) { // interfaces inherit from Object, remove it here?
+        interfaces.add(i.getInstanceAsJSType());
+      }
     }
-    return builder.build();
+    return interfaces;
   }
 
   @Override
@@ -1965,7 +1979,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   @Override
   public boolean hasOwnProperty(String propertyName) {
     ObjectType obj = getObjTypeIfSingletonObj();
-    return obj != null && obj.hasOwnPropery(new QualifiedName(propertyName));
+    return obj != null && obj.hasOwnProperty(new QualifiedName(propertyName));
   }
 
   @Override
@@ -1973,6 +1987,15 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     NominalType nt = getNominalTypeIfSingletonObj();
     return nt.isGeneric()
         ? nt.getRawNominalTypeAfterTypeChecking().getInstanceAsJSType() : null;
+  }
+
+  @Override
+  public ObjectTypeI instantiateGenericsWithUnknown() {
+    NominalType nt = getNominalTypeIfSingletonObj();
+    if (nt != null && nt.isGeneric()) {
+      return nt.instantiateGenericsWithUnknown().getInstanceAsJSType();
+    }
+    return this;
   }
 
   @Override
@@ -2004,17 +2027,29 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public Collection<JSType> getDirectImplementors() {
-    throw new UnsupportedOperationException();
+    Set<JSType> result = new HashSet<>();
+    NominalType nt = getNominalTypeIfSingletonObj();
+    if (nt != null) {
+      for (RawNominalType rawType : nt.getSubtypes()) {
+        result.add(this.commonTypes.fromFunctionType(rawType.getConstructorFunction()));
+      }
+    }
+    return result;
   }
 
   @Override
   public ObjectTypeI getPrototypeProperty() {
-    throw new UnsupportedOperationException();
+    return getProp(new QualifiedName("prototype"));
   }
 
   @Override
-  public ObjectTypeI getTopDefiningInterface(String propName) {
-    throw new UnsupportedOperationException();
+  public JSType getTopDefiningInterface(String pname) {
+    NominalType nt = getNominalTypeIfSingletonObj();
+    if (nt != null && nt.isInterface()) {
+      nt = nt.getTopDefiningInterface(pname);
+      return nt == null ? null : nt.getInstanceAsJSType();
+    }
+    return null;
   }
 
   @Override
@@ -2027,7 +2062,12 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public boolean isSubtypeWithoutStructuralTyping(TypeI other) {
-    throw new UnsupportedOperationException();
+    if (!isSubtypeOf(other)) {
+      return false;
+    }
+    NominalType thisNt = getNominalTypeIfSingletonObj();
+    NominalType otherNt = ((JSType) other).getNominalTypeIfSingletonObj();
+    return thisNt == null || otherNt == null || thisNt.isNominalSubtypeOf(otherNt);
   }
 
   @Override

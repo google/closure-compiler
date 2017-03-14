@@ -81,6 +81,8 @@ public interface ObjectTypeI extends TypeI {
 
   ObjectTypeI getRawType();
 
+  ObjectTypeI instantiateGenericsWithUnknown();
+
   boolean hasProperty(String propertyName);
 
   boolean hasOwnProperty(String propertyName);
@@ -114,7 +116,16 @@ public interface ObjectTypeI extends TypeI {
 
   Collection<? extends FunctionTypeI> getDirectImplementors();
 
+  /**
+   * Given an interface and a property, finds a top-most super interface
+   * that has the property defined (including this interface).
+   * If more than one interfaces have the property, the result is order-specific.
+   * Returns a type representing an instance of the interface, not the constructor.
+   */
   ObjectTypeI getTopDefiningInterface(String propName);
 
+  /**
+   * If this type represents the object in a function's prototype property, return that function.
+   */
   FunctionTypeI getOwnerFunction();
 }

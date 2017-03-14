@@ -283,6 +283,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   private NTIScope globalScope;
   private WarningReporter warnings;
   private final List<TypeMismatch> mismatches;
+  private final List<TypeMismatch> implicitInterfaceUses;
   private final JSTypeCreatorFromJSDoc typeParser;
   private final AbstractCompiler compiler;
   private final CodingConvention convention;
@@ -327,6 +328,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
     this.warnings = new WarningReporter(compiler);
     this.mismatches = new ArrayList<>();
+    this.implicitInterfaceUses = new ArrayList<>();
     this.compiler = compiler;
     this.unknownTypeNames = unknownTypeNames;
     this.convention = compiler.getCodingConvention();
@@ -360,6 +362,10 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
   List<TypeMismatch> getMismatches() {
     return this.mismatches;
+  }
+
+  List<TypeMismatch> getImplicitInterfaceUses() {
+    return this.implicitInterfaceUses;
   }
 
   JSType getCastType(Node n) {
@@ -504,6 +510,21 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     for (NTIScope s : scopes) {
       s.finalizeScope();
     }
+
+    // Traverse the externs and annotate them with types.
+    // Only works for the top level, not inside function bodies.
+    NodeTraversal.traverseEs6(
+        this.compiler, externs, new NodeTraversal.AbstractShallowCallback(){
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            if (n.isQualifiedName()) {
+              Declaration d = globalScope.getDeclaration(QualifiedName.fromNode(n), false);
+              JSType type = simpleInferDeclaration(d);
+              n.setTypeI(type);
+            }
+          }
+        });
+
     Map<Node, String> unknownTypes = typeParser.getUnknownTypesMap();
     for (Map.Entry<Node, String> unknownTypeEntry : unknownTypes.entrySet()) {
       this.warnings.add(JSError.make(unknownTypeEntry.getKey(),
@@ -524,6 +545,38 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     Collections.reverse(scopes);
 
     this.compiler.setExternProperties(ImmutableSet.copyOf(this.externPropertyNames));
+  }
+
+  private JSType simpleInferDeclaration(Declaration decl) {
+    if (decl == null) {
+      return null;
+    }
+    // Namespaces (literals, enums, constructors) get populated during ProcessScope,
+    // so it's generally NOT safe to convert them to jstypes until after ProcessScope is done.
+    // However, we've seen examples where it is useful to use the constructor type
+    // during inference, e.g., to get the type of the instance from it.
+    // We allow this use case but add a marker property to make sure that the constructor type
+    // itself doesn't leak into the result.
+    if (decl.getNominal() != null) {
+      FunctionType ctorFn = decl.getNominal().getConstructorFunction();
+      if (ctorFn == null) {
+        return null;
+      }
+      return commonTypes.fromFunctionType(ctorFn)
+          .withProperty(CONST_INFERENCE_MARKER, commonTypes.UNKNOWN);
+    }
+    if (decl.getTypeOfSimpleDecl() != null) {
+      return decl.getTypeOfSimpleDecl();
+    }
+    NTIScope funScope = (NTIScope) decl.getFunctionScope();
+    if (funScope != null) {
+      DeclaredFunctionType dft = funScope.getDeclaredFunctionType();
+      if (dft == null) {
+        return null;
+      }
+      return commonTypes.fromFunctionType(dft.toFunctionType());
+    }
+    return null;
   }
 
   private Collection<PropertyDef> getPropDefsFromInterface(NominalType nominalType, String pname) {
@@ -819,8 +872,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
             visitEnum(nameNode);
           } else if (isAliasedNamespaceDefinition(nameNode)) {
             visitAliasedNamespace(nameNode);
-          } else if (varName.equals(WINDOW_INSTANCE)
-              && nameNode.isFromExterns()) {
+          } else if (varName.equals(WINDOW_INSTANCE) && nameNode.isFromExterns()) {
             visitWindowVar(nameNode);
           } else if (isCtorDefinedByCall(nameNode)) {
             visitNewCtorDefinedByCall(nameNode);
@@ -1220,7 +1272,11 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
             || mayCreateFunctionNamespace(firstChild)
             || mayCreateWindowNamespace(firstChild)) {
           if (nameNode.isGetProp()) {
-            defSite.getParent().getFirstChild().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+            if (defSite.isFunction()) {
+              defSite.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+            } else {
+              defSite.getParent().getFirstChild().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+            }
           } else if (currentScope.isTopLevel()) {
             maybeRecordBuiltinType(qname, rawType);
           }
@@ -1234,8 +1290,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       }
     }
 
-    private void maybeRecordBuiltinType(
-        String name, RawNominalType rawType) {
+    private void maybeRecordBuiltinType(String name, RawNominalType rawType) {
       switch (name) {
         case "Arguments":
           commonTypes.setArgumentsType(rawType);
@@ -1358,8 +1413,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       if (currentScope.isNamespace(lendsQname)) {
         processLendsToNamespace(lendsQname, lendsName, objlit);
       } else {
-        RawNominalType rawType = checkValidLendsToPrototypeAndGetClass(
-            lendsQname, lendsName, objlit);
+        RawNominalType rawType =
+            checkValidLendsToPrototypeAndGetClass(lendsQname, lendsName, objlit);
         if (rawType != null) {
           for (Node prop : objlit.children()) {
             String pname =  NodeUtil.getObjectLitKeyName(prop);
@@ -2263,38 +2318,6 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       return null;
     }
 
-    private JSType simpleInferDeclaration(Declaration decl) {
-      if (decl == null) {
-        return null;
-      }
-      // Namespaces (literals, enums, constructors) get populated during ProcessScope,
-      // so it's generally NOT safe to convert them to jstypes until after ProcessScope is done.
-      // However, we've seen examples where it is useful to use the constructor type
-      // during inference, e.g., to get the type of the instance from it.
-      // We allow this use case but add a marker property to make sure that the constructor type
-      // itself doesn't leak into the result.
-      if (decl.getNominal() != null) {
-        FunctionType ctorFn = decl.getNominal().getConstructorFunction();
-        if (ctorFn == null) {
-          return null;
-        }
-        return commonTypes.fromFunctionType(ctorFn)
-            .withProperty(CONST_INFERENCE_MARKER, commonTypes.UNKNOWN);
-      }
-      if (decl.getTypeOfSimpleDecl() != null) {
-        return decl.getTypeOfSimpleDecl();
-      }
-      NTIScope funScope = (NTIScope) decl.getFunctionScope();
-      if (funScope != null) {
-        DeclaredFunctionType dft = funScope.getDeclaredFunctionType();
-        if (dft == null) {
-          return null;
-        }
-        return commonTypes.fromFunctionType(dft.toFunctionType());
-      }
-      return null;
-    }
-
     private JSType simpleInferAndOrType(Node n) {
       Preconditions.checkState(n.isOr() || n.isAnd());
       JSType lhs = simpleInferExprTypeRecur(n.getFirstChild());
@@ -2591,7 +2614,14 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           }
         }
       } else {
-        rawType.addUndeclaredProtoProperty(pname, defSite);
+        JSType inferredType = null;
+        if (initializer != null) {
+          inferredType = simpleInferExprType(initializer);
+        }
+        if (inferredType == null) {
+          inferredType = commonTypes.UNKNOWN;
+        }
+        rawType.addUndeclaredProtoProperty(pname, defSite, inferredType);
       }
     }
 

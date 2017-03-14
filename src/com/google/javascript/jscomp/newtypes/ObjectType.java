@@ -830,7 +830,14 @@ final class ObjectType implements TypeWithProperties {
     if (this.ns != null) {
       return specializeNamespace(other);
     }
-    NominalType resultNomType = NominalType.pickSubclass(this.nominalType, other.nominalType);
+    NominalType resultNomType;
+    // Don't turn an inline-record type to a @record, because doing this hides implicit type flows
+    // needed for property disambiguation. In all other cases, use the result of pickSubclass.
+    if (this.nominalType.isBuiltinObject() && other.nominalType.isStructuralInterface()) {
+      resultNomType = this.nominalType;
+    } else {
+      resultNomType = NominalType.pickSubclass(this.nominalType, other.nominalType);
+    }
     if (resultNomType.isClassy()) {
       Preconditions.checkState(this.fn == null && other.fn == null);
       PersistentMap<String, Property> newProps =
@@ -1209,9 +1216,18 @@ final class ObjectType implements TypeWithProperties {
     return p != null;
   }
 
-  boolean hasOwnPropery(QualifiedName qname) {
+  boolean hasOwnProperty(QualifiedName qname) {
     Preconditions.checkArgument(qname.isIdentifier());
-    return getLeftmostOwnProp(qname) != null;
+    Property p = getLeftmostOwnProp(qname);
+    String pname = qname.getLeftmostName();
+    // Try getters and setters specially.
+    if (p == null) {
+      p = getLeftmostOwnProp(new QualifiedName(JSType.createGetterPropName(pname)));
+    }
+    if (p == null) {
+      p = getLeftmostProp(new QualifiedName(JSType.createSetterPropName(pname)));
+    }
+    return p != null;
   }
 
   @Override
@@ -1377,7 +1393,7 @@ final class ObjectType implements TypeWithProperties {
 
   StringBuilder appendTo(StringBuilder builder) {
     if (isPrototypeObject()) {
-      return builder.append(getOwnerFunction().getInstanceTypeOfCtor()).append(".prototype");
+      return builder.append(getOwnerFunction().getThisType()).append(".prototype");
     }
     if (!hasNonPrototypeProperties()) {
       if (fn != null) {

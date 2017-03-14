@@ -36,7 +36,8 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   private static String renameFunctionDefinition =
       "/** @const */ var goog = {};\n"
           + "/** @const */ goog.reflect = {};\n"
-          + "/** @return {string} */ goog.reflect.objectProperty = function(prop, obj) {};\n";
+          + "/** @return {string} */\n"
+          + "goog.reflect.objectProperty = function(prop, obj) { return ''; };\n";
 
   public DisambiguatePropertiesTest() {
     super(DEFAULT_EXTERNS);
@@ -47,7 +48,13 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     super.enableNormalize();
-    this.mode = TypeInferenceMode.OTI_ONLY;
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setWarningLevel(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
+    return options;
   }
 
   @Override
@@ -381,11 +388,11 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "/** @type {Bar} */ var B=new Bar;"
         + "B.Bar_prototype$a=0;"
         + "B.Bar_prototype$b=0";
-    testSets(js, output, "{a=[[Bar.prototype], [Foo.prototype]],"
-                                + " b=[[Bar.prototype], [Foo.prototype]]}");
+    testSets(js, output,
+        "{a=[[Bar.prototype], [Foo.prototype]], b=[[Bar.prototype], [Foo.prototype]]}");
   }
 
-  public void testUnionType() {
+  public void testUnionType_1() {
     String js = ""
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype.a = 0;"
@@ -393,6 +400,27 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "Bar.prototype.a = 0;"
         + "/** @type {Bar|Foo} */\n"
         + "var B = new Bar;\n"
+        + "B.a = 0;\n"
+        + "B = new Foo;\n"
+        + "B.a = 0;\n"
+        + "/** @constructor */ function Baz() {}\n"
+        + "Baz.prototype.a = 0;\n";
+
+    this.mode = TypeInferenceMode.OTI_ONLY;
+    testSets(js, "{a=[[Bar.prototype, Foo.prototype], [Baz.prototype]]}");
+
+    // NTI knows that B has type Bar
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSets(js, "{a=[[Bar.prototype], [Baz.prototype], [Foo.prototype]]}");
+  }
+
+  public void testUnionType_2() {
+    String js = ""
+        + "/** @constructor */ function Foo() {}\n"
+        + "Foo.prototype.a = 0;"
+        + "/** @constructor */ function Bar() {}\n"
+        + "Bar.prototype.a = 0;"
+        + "var B = /** @type {Bar|Foo} */ (new Bar);\n"
         + "B.a = 0;\n"
         + "B = new Foo;\n"
         + "B.a = 0;\n"
@@ -417,10 +445,17 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "/** @type {Foo} */"
         + "var F = new Foo;F.blah=0;"
         + "var U=function(){return{}};U().blah()";
+
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, expected, "{}");
+
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSets("", js, expected, "{}", NewTypeInference.INEXISTENT_PROPERTY,
+        "Property blah never defined on Object{}");
   }
 
   public void testIgnoreUnknownType1() {
+    this.mode = TypeInferenceMode.OTI_ONLY;
     String js = ""
         + "/** @constructor */\n"
         + "function Foo() {}\n"
@@ -477,8 +512,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "/** @constructor */ function Bar() {}\n"
         + "Bar.prototype.a = 0;\n"
         + "Bar.prototype.b = 0;\n"
-        + "/** @type {Foo|Bar} */\n"
-        + "var B = new Bar;\n"
+        + "var B = /** @type {Foo|Bar} */ (new Bar);\n"
         + "B.a = 0;\n"
         + "B.b = 0;\n"
         + "B = new Foo;\n"
@@ -495,16 +529,14 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "Foo.prototype.a = 0;"
         + "/** @constructor */ function Bar() {}\n"
         + "Bar.prototype.a = 0;"
-        + "/** @type {Foo|Bar} */\n"
-        + "var F = new Foo;\n"
+        + "var F = /** @type {Foo|Bar} */ (new Foo);\n"
         + "(/** @type {Bar} */(F)).a = 0;";
     String output = ""
         + "/** @constructor */ function Foo(){}\n"
         + "Foo.prototype.Foo_prototype$a=0;\n"
         + "/** @constructor */ function Bar(){}\n"
         + "Bar.prototype.Bar_prototype$a=0;\n"
-        + "/** @type {Foo|Bar} */\n"
-        + "var F=new Foo;\n"
+        + "var F = /** @type {Foo|Bar} */ (new Foo);\n"
         + "/** @type {Bar} */ (F).Bar_prototype$a=0;";
     testSets(js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
   }
@@ -530,7 +562,10 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
       + "/** @constructor */ function Bar() {}\n"
       + "Foo.a = 0;"
       + "Bar.a = 0;";
-    String output = ""
+    String output;
+
+    this.mode = TypeInferenceMode.OTI_ONLY;
+    output = ""
         + "/** @constructor */ function Foo(){}"
         + "/** @constructor */ function Bar(){}"
         + "Foo.function__new_Foo___undefined$a = 0;"
@@ -538,6 +573,16 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
 
     testSets(js, output, "{a=[[function (new:Bar): undefined]," +
     " [function (new:Foo): undefined]]}");
+
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    output = ""
+        + "/** @constructor */ function Foo(){}"
+        + "/** @constructor */ function Bar(){}"
+        + "Foo.Foo__function_new_Foo__undefined__$a = 0;"
+        + "Bar.Bar__function_new_Bar__undefined__$a = 0;";
+
+    testSets(js, output,
+        "{a=[[Bar<|function(new:Bar):undefined|>], [Foo<|function(new:Foo):undefined|>]]}");
   }
 
   public void testSupertypeWithSameField() {
@@ -568,17 +613,18 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
 
   public void testScopedType() {
     String js = ""
-        + "var g = {};\n"
-        + "/** @constructor */ g.Foo = function() {}\n"
+        + "/** @const */ var g = {};\n"
+        + "/** @constructor */ g.Foo = function() {};\n"
         + "g.Foo.prototype.a = 0;"
-        + "/** @constructor */ g.Bar = function() {}\n"
+        + "/** @constructor */ g.Bar = function() {};\n"
         + "g.Bar.prototype.a = 0;";
     String output = ""
-        + "var g={};"
+        + "/** @const */ var g={};"
         + "/** @constructor */ g.Foo=function(){};"
         + "g.Foo.prototype.g_Foo_prototype$a=0;"
         + "/** @constructor */ g.Bar=function(){};"
         + "g.Bar.prototype.g_Bar_prototype$a=0;";
+
     testSets(js, output, "{a=[[g.Bar.prototype], [g.Foo.prototype]]}");
   }
 
@@ -604,14 +650,14 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
 
   public void testNamedType() {
     String js = ""
-        + "var g = {};"
+        + "/** @const */ var g = {};"
         + "/** @constructor \n @extends {g.Late} */ var Foo = function() {}\n"
         + "Foo.prototype.a = 0;"
         + "/** @constructor */ var Bar = function() {}\n"
         + "Bar.prototype.a = 0;"
         + "/** @constructor */ g.Late = function() {}";
     String output = ""
-        + "var g={};"
+        + "/** @const */ var g={};"
         + "/** @constructor @extends {g.Late} */ var Foo=function(){};"
         + "Foo.prototype.Foo_prototype$a=0;"
         + "/** @constructor */ var Bar=function(){};"
@@ -648,7 +694,17 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "var arr = [new Foo, new Bar];\n"
         + "var /** !Foo */z = arr[1];\n"
         + "z.Foo$p1;\n";
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, output, "{p1=[[Bar], [Foo]]}");
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSets("", js, output, "{p1=[[Bar], [Foo]]}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS,
+        LINE_JOINER.join(
+        "The right side in the assignment is not a subtype of the left side.",
+        "Expected : Foo",
+        "Found    : Bar|Foo",
+        "More details:",
+        "The found type is a union that includes an unexpected type: Bar"));
   }
 
   // When objects flow to untyped code, it is the programmer's responsibility to
@@ -797,74 +853,70 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testUntypedExterns() {
-    String externs = "var window; window.alert = function() {x};";
+    String externs = "var untypedvar; untypedvar.alert = function() {x};";
     String js = ""
         + "/** @constructor */ function Foo() {}\n"
         + "Foo.prototype.a = 0;\n"
         + "Foo.prototype.alert = 0;\n"
-        + "Foo.prototype.window = 0;\n"
+        + "Foo.prototype.untypedvar = 0;\n"
         + "/** @constructor */ function Bar() {}\n"
         + "Bar.prototype.a = 0;\n"
         + "Bar.prototype.alert = 0;\n"
-        + "Bar.prototype.window = 0;\n"
-        + "window.alert();";
+        + "Bar.prototype.untypedvar = 0;\n"
+        + "untypedvar.alert();";
     String output = ""
         + "/** @constructor */ function Foo(){}"
         + "Foo.prototype.Foo_prototype$a=0;"
         + "Foo.prototype.alert=0;"
-        + "Foo.prototype.Foo_prototype$window=0;"
+        + "Foo.prototype.Foo_prototype$untypedvar=0;"
         + "/** @constructor */ function Bar(){}"
         + "Bar.prototype.Bar_prototype$a=0;"
         + "Bar.prototype.alert=0;"
-        + "Bar.prototype.Bar_prototype$window=0;"
-        + "window.alert();";
+        + "Bar.prototype.Bar_prototype$untypedvar=0;"
+        + "untypedvar.alert();";
 
     testSets(externs, js, output, "{a=[[Bar.prototype], [Foo.prototype]]"
-             + ", window=[[Bar.prototype], [Foo.prototype]]}");
+             + ", untypedvar=[[Bar.prototype], [Foo.prototype]]}");
   }
 
-  public void testUnionTypeInvalidation() {
-    String externs = ""
-        + "/** @constructor */ function Baz() {}"
-        + "Baz.prototype.a";
-    String js = ""
-        + "/** @constructor */ function Ind() {this.a=0}\n"
-        + "/** @constructor */ function Foo() {}\n"
-        + "Foo.prototype.a = 0;\n"
-        + "/** @constructor */ function Bar() {}\n"
-        + "Bar.prototype.a = 0;\n"
-        + "/** @type {Foo|Bar} */\n"
-        + "var F = new Foo;\n"
-        + "F.a = 1;\n"
-        + "F = new Bar;\n"
-        + "/** @type {Baz} */\n"
-        + "var Z = new Baz;\n"
-        + "Z.a = 1;\n"
-        + "/** @type {Bar|Baz} */\n"
-        + "var B = new Baz;\n"
-        + "B.a = 1;\n"
-        + "B = new Bar;\n";
-    // Only the constructor field a of Ind is renamed, as Foo is related to Baz
-    // through Bar in the unions Bar|Baz and Foo|Bar.
-    String output = ""
-        + "/** @constructor */ function Ind() { this.Ind$a = 0; }\n"
-        + "/** @constructor */ function Foo() {}\n"
-        + "Foo.prototype.a = 0;\n"
-        + "/** @constructor */ function Bar() {}\n"
-        + "Bar.prototype.a = 0;\n"
-        + "/** @type {Foo|Bar} */\n"
-        + "var F = new Foo;\n"
-        + "F.a = 1;\n"
-        + "F = new Bar;\n"
-        + "/** @type {Baz} */\n"
-        + "var Z = new Baz;\n"
-        + "Z.a = 1;\n"
-        + "/** @type {Bar|Baz} */"
-        + "var B = new Baz;"
-        + "B.a = 1;"
-        + "B = new Bar;";
-    testSets(externs, js, output, "{a=[[Ind]]}");
-  }
+ public void testUnionTypeInvalidation() {
+   String externs = ""
+       + "/** @constructor */ function Baz() {}"
+       + "Baz.prototype.a";
+   String js = ""
+       + "/** @constructor */ function Ind() {this.a=0}\n"
+       + "/** @constructor */ function Foo() {}\n"
+       + "Foo.prototype.a = 0;\n"
+       + "/** @constructor */ function Bar() {}\n"
+       + "Bar.prototype.a = 0;\n"
+       + "var F = /** @type {Foo|Bar} */ (new Foo);\n"
+       + "F.a = 1;\n"
+       + "F = new Bar;\n"
+       + "/** @type {Baz} */\n"
+       + "var Z = new Baz;\n"
+       + "Z.a = 1;\n"
+       + "var B = /** @type {Bar|Baz} */ (new Baz);\n"
+       + "B.a = 1;\n"
+       + "B = new Bar;\n";
+   // Only the constructor field a of Ind is renamed, as Foo is related to Baz
+   // through Bar in the unions Bar|Baz and Foo|Bar.
+   String output = ""
+       + "/** @constructor */ function Ind() { this.Ind$a = 0; }\n"
+       + "/** @constructor */ function Foo() {}\n"
+       + "Foo.prototype.a = 0;\n"
+       + "/** @constructor */ function Bar() {}\n"
+       + "Bar.prototype.a = 0;\n"
+       + "var F = /** @type {Foo|Bar} */ (new Foo);\n"
+       + "F.a = 1;\n"
+       + "F = new Bar;\n"
+       + "/** @type {Baz} */\n"
+       + "var Z = new Baz;\n"
+       + "Z.a = 1;\n"
+       + "var B = /** @type {Bar|Baz} */ (new Baz);"
+       + "B.a = 1;"
+       + "B = new Bar;";
+   testSets(externs, js, output, "{a=[[Ind]]}");
+ }
 
   public void testUnionAndExternTypes() {
     String externs = ""
@@ -876,20 +928,28 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
       + "/** @constructor */ function Buz() { this.a = 4; }\n"
       + "/** @constructor */ function T1() { this.a = 3; }\n"
       + "/** @constructor */ function T2() { this.a = 3; }\n"
-      + "/** @type {Bar|Baz} */ var b;\n"
-      + "/** @type {Baz|Buz} */ var c;\n"
-      + "/** @type {Buz|Foo} */ var d;\n"
-      + "b.a = 5; c.a = 6; d.a = 7;";
+      + "/**\n"
+      + " * @param {(Bar|Baz)} b\n"
+      + " * @param {(Baz|Buz)} c\n"
+      + " * @param {(Buz|Foo)} d\n"
+      + " */\n"
+      + "function f(b, c, d) {\n"
+      + "  b.a = 5; c.a = 6; d.a = 7;\n"
+      + "}";
     String output = ""
       + "/** @constructor */ function Bar() { this.a = 2; }\n"
       + "/** @constructor */ function Baz() { this.a = 3; }\n"
       + "/** @constructor */ function Buz() { this.a = 4; }\n"
       + "/** @constructor */ function T1() { this.T1$a = 3; }\n"
       + "/** @constructor */ function T2() { this.T2$a = 3; }\n"
-      + "/** @type {Bar|Baz} */ var b;\n"
-      + "/** @type {Baz|Buz} */ var c;\n"
-      + "/** @type {Buz|Foo} */ var d;\n"
-      + "b.a = 5; c.a = 6; d.a = 7;";
+      + "/**\n"
+      + " * @param {Bar|Baz} b\n"
+      + " * @param {Baz|Buz} c\n"
+      + " * @param {Buz|Foo} d\n"
+      + " */\n"
+      + "function f(b, c, d) {\n"
+      + "  b.a = 5; c.a = 6; d.a = 7;\n"
+      + "}";
 
     // We are testing the skipping of multiple types caused by unionizing with
     // extern types.
@@ -914,6 +974,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testSubtypesWithSameField() {
+    this.mode = TypeInferenceMode.OTI_ONLY;
     String js = ""
         + "/** @constructor */ function Top() {}\n"
         + "/** @constructor \n@extends Top*/ function Foo() {}\n"
@@ -960,8 +1021,9 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testObjectLiteralReflected() {
+    this.mode = TypeInferenceMode.OTI_ONLY;
     String js = ""
-        + "var goog = {};"
+        + "/** @const */ var goog = {};"
         + "goog.reflect = {};"
         + "goog.reflect.object = function(x, y) { return y; };"
         + "/** @constructor */ function F() {}"
@@ -970,7 +1032,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "/** @type {number} */ G.prototype.foo = 3;"
         + "goog.reflect.object(F, {foo: 5});";
     String result = ""
-        + "var goog = {};"
+        + "/** @const */ var goog = {};"
         + "goog.reflect = {};"
         + "goog.reflect.object = function(x, y) { return y; };"
         + "/** @constructor */ function F() {}"
@@ -979,6 +1041,17 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "/** @type {number} */ G.prototype.G_prototype$foo = 3;"
         + "goog.reflect.object(F, {F_prototype$foo: 5});";
     testSets(js, result, "{foo=[[F.prototype], [G.prototype]]}");
+  }
+
+  public void testObjectLiteralBlocksPropertiesOnOtherTypes() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.myprop = 123;",
+        "}",
+        "var x = (new Foo).myprop;",
+        "var y = { myprop: 'asdf' };");
+    testSets(js, js, "{}");
   }
 
   public void testObjectLiteralDefineProperties() {
@@ -1218,7 +1291,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "/** @interface */\n"
         + "function Z() {}\n"
         + "Z.prototype.Z_prototype$a;\n"
-        + "Z.prototype.Z_prototype$b";
+        + "Z.prototype.Z_prototype$b;";
     testSets(
         js,
         output,
@@ -1284,7 +1357,10 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "(new Foo).a = 0;"
         + "/** @interface */ function I() {};\n"
         + "I.prototype.a;\n";
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, "{}", TypeValidator.TYPE_MISMATCH_WARNING);
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSets(js, "{}", NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testMultipleInterfaces() {
@@ -1443,7 +1519,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   public void testAliasedTypeIsNotDisambiguated() {
     String js = LINE_JOINER.join(
         "/** @return {SecondAlias} */",
-        "function f() {}",
+        "function f() { return new Second; }",
         "function g() { f().blah; }",
         "",
         "/** @constructor */",
@@ -1471,9 +1547,21 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "",
         "(new Bar()).alias();");
 
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets("", js, js, "{}", TypeValidator.TYPE_MISMATCH_WARNING, "assignment\n"
             + "found   : function (new:Foo): undefined\n"
             + "required: function (new:Bar): undefined");
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSets("", js, js, "{}",
+        NewTypeInference.MISTYPED_ASSIGN_RHS,
+        LINE_JOINER.join(
+            "The right side in the assignment is not a subtype of the left side.",
+            "Expected : Bar<|function(new:Bar):?|>",
+            "Found    : Foo<|function(new:Foo):undefined|>",
+            "More details:",
+            "Incompatible types for property prototype.",
+            "Expected : Bar.prototype",
+            "Found    : Foo.prototype"));
   }
 
   public void testStructuralTypingWithDisambiguatePropertyRenaming1() {
@@ -1652,7 +1740,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "/** @type {!Function} */ I.prototype.addEventListener;",
         "/** @constructor */ function C() {}",
         "/** @type {!Function} */ C.prototype.addEventListener;",
-        "/** @type {I} */ var x",
+        "/** @type {I} */ var x;",
         "x = new C()");
 
     testSets(js, js, "{}");
@@ -1678,40 +1766,49 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testDontInvalidateForGenericsMismatch() {
-    testSets(
+    String js = LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "function Foo() {",
+        "  this.prop = 123;",
+        "}",
+        "/** @param {!Foo<number>} x */",
+        "function f(x) {",
+        "  return (/** @type {!Foo<string>} */ (x)).prop;",
+        "}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.prop = 123;",
+        "}");
+
+    String output = LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "function Foo() {",
+        "  this.Foo$prop = 123;",
+        "}",
+        "/** @param {!Foo<number>} x */",
+        "function f(x) {",
+        "  return (/** @type {!Foo<string>} */ (x)).Foo$prop;",
+        "}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.Bar$prop = 123;",
+        "}");
+
+    this.mode = TypeInferenceMode.OTI_ONLY;
+    testSets(js, output, "{prop=[[Bar], [Foo]]}");
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSets("", js, output, "{prop=[[Bar], [Foo]]}",
+        NewTypeInference.INVALID_CAST,
         LINE_JOINER.join(
-            "/**",
-            " * @constructor",
-            " * @template T",
-            " */",
-            "function Foo() {",
-            "  this.prop = 123;",
-            "}",
-            "/** @param {!Foo<number>} x */",
-            "function f(x) {",
-            "  return (/** @type {!Foo<string>} */ (x)).prop;",
-            "}",
-            "/** @constructor */",
-            "function Bar() {",
-            "  this.prop = 123;",
-            "}"),
-        LINE_JOINER.join(
-            "/**",
-            " * @constructor",
-            " * @template T",
-            " */",
-            "function Foo() {",
-            "  this.Foo$prop = 123;",
-            "}",
-            "/** @param {!Foo<number>} x */",
-            "function f(x) {",
-            "  return (/** @type {!Foo<string>} */ (x)).Foo$prop;",
-            "}",
-            "/** @constructor */",
-            "function Bar() {",
-            "  this.Bar$prop = 123;",
-            "}"),
-        "{prop=[[Bar], [Foo]]}");
+            "invalid cast - the types do not have a common subtype",
+            "from: Foo<number>",
+            "to  : Foo<string>"));
   }
 
   public void testStructuralTypingWithDisambiguatePropertyRenaming2() {
@@ -1864,10 +1961,19 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "var F = new Bar;\n"
         + "F.a = 0;";
 
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets("", js, js, "{}", TypeValidator.TYPE_MISMATCH_WARNING,
-        "initializing variable\n"
-     + "found   : Bar\n"
-     + "required: (Foo|null)");
+        LINE_JOINER.join(
+            "initializing variable",
+            "found   : Bar",
+            "required: (Foo|null)"));
+
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSets("", js, js, "{}", NewTypeInference.MISTYPED_ASSIGN_RHS,
+        LINE_JOINER.join(
+            "The right side in the assignment is not a subtype of the left side.",
+            "Expected : Foo|null",
+            "Found    : Bar\n"));
   }
 
   public void testBadCast() {
@@ -1877,8 +1983,14 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "Bar.prototype.a = 0;\n"
         + "var a = /** @type {!Foo} */ (new Bar);\n"
         + "a.a = 4;";
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets("", js, js, "{}", TypeValidator.INVALID_CAST,
              "invalid cast - must be a subtype or supertype\n"
+             + "from: Bar\n"
+             + "to  : Foo");
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSets("", js, js, "{}", NewTypeInference.INVALID_CAST,
+             "invalid cast - the types do not have a common subtype\n"
              + "from: Bar\n"
              + "to  : Foo");
   }
@@ -1922,7 +2034,11 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "Bar.prototype.Bar_prototype$a;\n"
         + "var F = /** @type {Foo} */ ({ Foo_prototype$a: 'a' });";
 
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, output, "{a=[[Bar.prototype], [Foo.prototype]]}");
+
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSets(js, "{}", NewTypeInference.INVALID_CAST);
   }
 
   public void testCustomInherits() {
@@ -1961,7 +2077,9 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSets(js, output, "{}");
   }
 
+  // NOTE(dimvar): why back off here even though Bar and Foo are never used as I?
   public void testStructuralInterfacesInExterns() {
+    this.mode = TypeInferenceMode.OTI_ONLY;
     String externs =
         LINE_JOINER.join(
             "/** @record */",
@@ -2097,7 +2215,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "Z.foobar = 1\n;";
 
     test(
-        externs, js, (String) null,
+        DEFAULT_EXTERNS + externs, js, (String) null,
         DisambiguateProperties.Warnings.INVALIDATION_ON_TYPE, null);
     assertThat(getLastCompiler().getErrors()[0].toString()).contains("foobar");
   }
@@ -2107,25 +2225,22 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "function f(x) { return x; }",
         "f.prototype.method = function() {};");
 
-    test(externs, "" , "", null, null);
+    test(DEFAULT_EXTERNS + externs, "" , "", null, null);
   }
 
   private void testSets(String js, String expected, String fieldTypes) {
     test(js, expected);
-    assertEquals(
-        fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }
 
-  private void testSets(String externs, String js, String expected,
-       String fieldTypes) {
+  private void testSets(String externs, String js, String expected, String fieldTypes) {
     testSets(externs, js, expected, fieldTypes, null, null);
   }
 
   private void testSets(String externs, String js, String expected,
        String fieldTypes, DiagnosticType warning, String description) {
     test(DEFAULT_EXTERNS + externs, js, expected, null, warning, description);
-    assertEquals(
-        fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }
 
   /**

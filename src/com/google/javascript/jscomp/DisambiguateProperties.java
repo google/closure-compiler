@@ -522,16 +522,14 @@ class DisambiguateProperties implements CompilerPass {
 
         // We should never see a mix of numbers and strings.
         String name = child.getString();
-        TypeI type = getType(n);
-
+        TypeI objlitType = getType(n);
         Property prop = getProperty(name);
-        if (!prop.scheduleRenaming(child,
-                                   processProperty(t, prop, type, null))) {
+        if (!prop.scheduleRenaming(child, processProperty(t, prop, objlitType, null))) {
           // TODO(user): It doesn't look like the user can do much in this
           // case right now.
           if (propertiesToErrorFor.containsKey(name)) {
             compiler.report(JSError.make(child, propertiesToErrorFor.get(name),
-                Warnings.INVALIDATION, name, String.valueOf(type), n.toString(), ""));
+                Warnings.INVALIDATION, name, String.valueOf(objlitType), n.toString(), ""));
           }
         }
       }
@@ -825,7 +823,19 @@ class DisambiguateProperties implements CompilerPass {
       return true;
     }
     ObjectTypeI objType = type.toMaybeObjectType();
-    return objType != null && objType.isUnknownObject();
+    if (objType != null) {
+      FunctionTypeI ft = objType.toMaybeFunctionType();
+      // TODO(dimvar): types of most object literals are considered anonymous objects, and as such,
+      // a property of an object literal prevents all properties with the same name from being
+      // disambiguated. In OTI, this might be hard to change, but in NTI, it is easy to change
+      // isUnknownObject to return false for object literals. I deliberately followed the behavior
+      // of OTI to help with the migration, but can revisit in the future to improve
+      // disambiguation.
+      return objType.isUnknownObject()
+          // Invalidate constructors of already-invalidated types
+          || (ft != null && ft.isConstructor() && isInvalidatingType(ft.getInstanceType()));
+    }
+    return false;
   }
 
   /**
@@ -940,7 +950,7 @@ class DisambiguateProperties implements CompilerPass {
         && objType.getConstructor().isInterface()) {
       ObjectTypeI topInterface = objType.getTopDefiningInterface(field);
       if (topInterface != null && topInterface.getConstructor() != null) {
-        foundType = topInterface.getConstructor().getPrototypeProperty();
+        foundType = topInterface.getPrototypeObject();
       }
     } else {
       while (objType != null && !Objects.equals(objType.getPrototypeObject(), objType)) {

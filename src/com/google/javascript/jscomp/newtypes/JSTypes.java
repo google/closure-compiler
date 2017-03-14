@@ -414,14 +414,16 @@ public final class JSTypes {
         return getArrayInstance();
       case OBJECT_TYPE:
         return getTopObject();
+      case OBJECT_FUNCTION_TYPE:
+        return fromFunctionType(getObjectType().getConstructorFunction());
       case TRUTHY:
         return TRUTHY;
       case NO_OBJECT_TYPE:
         return JSType.fromObjectType(getBottomObject());
       case FUNCTION_PROTOTYPE:
-        return getFunctionType().getPrototypePropertyOfCtor();
+        return getFunctionType().getPrototypeObject();
       case FUNCTION_INSTANCE_TYPE:
-        return getFunctionType().getInstanceAsJSType();
+        return fromFunctionType(QMARK_FUNCTION);
       case OBJECT_PROTOTYPE:
       case TOP_LEVEL_PROTOTYPE:
         return getTopObject().getNominalTypeIfSingletonObj().getPrototypePropertyOfCtor();

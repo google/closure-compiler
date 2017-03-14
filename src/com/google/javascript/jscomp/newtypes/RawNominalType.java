@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -74,6 +73,7 @@ public final class RawNominalType extends Namespace {
   // Not final b/c interfaces that inherit from IObject mutate this during GTI
   private ObjectKind objectKind;
   private FunctionType ctorFn;
+  private JSType protoObject;
 
   private enum Kind {
     CLASS,
@@ -157,6 +157,11 @@ public final class RawNominalType extends Namespace {
 
   JSTypes getCommonTypes() {
     return this.commonTypes;
+  }
+
+  JSType getPrototypeObject() {
+    Preconditions.checkState(this.isFinalized);
+    return this.protoObject;
   }
 
   private static boolean isBuiltinHelper(
@@ -256,7 +261,11 @@ public final class RawNominalType extends Namespace {
 
   Set<JSType> getSubtypesWithProperty(String pname) {
     if (mayHaveProp(pname)) {
-      return ImmutableSet.of(getInstanceAsJSType());
+      if (this.protoProps.containsKey(pname)) {
+        return ImmutableSet.of(this.protoObject);
+      } else {
+        return ImmutableSet.of(getInstanceAsJSType());
+      }
     }
     HashSet<JSType> typesWithProp = new HashSet<>();
     for (RawNominalType subtype : this.subtypes) {
@@ -334,6 +343,10 @@ public final class RawNominalType extends Namespace {
 
   public ImmutableSet<NominalType> getInterfaces() {
     return this.interfaces == null ? ImmutableSet.<NominalType>of() : this.interfaces;
+  }
+
+  Set<RawNominalType> getSubtypes() {
+    return this.subtypes;
   }
 
   // Checks for subtyping without taking generics into account
@@ -569,12 +582,16 @@ public final class RawNominalType extends Namespace {
   }
 
   /** Add a new undeclared prototype property to this class */
-  public void addUndeclaredProtoProperty(String pname, Node defSite) {
+  public void addUndeclaredProtoProperty(String pname, Node defSite, JSType inferredType) {
     Preconditions.checkState(!this.isFinalized);
-    if (!this.protoProps.containsKey(pname)
-        || this.protoProps.get(pname).getDeclaredType() == null) {
+    Property existingProp = this.protoProps.get(pname);
+    if (existingProp == null || !existingProp.isDeclared()) {
+      JSType oldType = existingProp == null ? null : existingProp.getType();
+      if (oldType != null) {
+        inferredType = JSType.join(oldType, inferredType);
+      }
       this.protoProps = this.protoProps.with(pname,
-          Property.makeWithDefsite(defSite, this.commonTypes.UNKNOWN, null));
+          Property.makeWithDefsite(defSite, inferredType, null));
       if (this.randomProps.containsKey(pname)) {
         this.randomProps = this.randomProps.without(pname);
       }
@@ -651,7 +668,7 @@ public final class RawNominalType extends Namespace {
       protoNT = protoNT.instantiateGenericsWithUnknown();
     }
     JSType ctorJstype = this.commonTypes.fromFunctionType(ctorFn);
-    JSType protoObject = JSType.fromObjectType(ObjectType.makeObjectType(
+    this.protoObject = JSType.fromObjectType(ObjectType.makeObjectType(
         this.commonTypes, protoNT,
         // NOTE(dimvar): We add the "constructor" property to the prototype object, but we
         // don't update the this.protoProps map. As a result, for a class Foo,
@@ -663,15 +680,12 @@ public final class RawNominalType extends Namespace {
         // record Bar, you don't want to include the "constructor" property in the comparison.
         this.protoProps.with("constructor", Property.make(ctorJstype, ctorJstype)),
         null, null, false, ObjectKind.UNRESTRICTED));
-    addCtorProperty("prototype", null, protoObject, false);
+    addCtorProperty("prototype", null, this.protoObject, false);
     this.isFinalized = true;
   }
 
   StringBuilder appendTo(StringBuilder builder) {
     builder.append(name);
-    if (!this.typeParameters.isEmpty()) {
-      builder.append("<").append(Joiner.on(",").join(this.typeParameters)).append(">");
-    }
     return builder;
   }
 

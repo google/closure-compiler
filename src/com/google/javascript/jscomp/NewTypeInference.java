@@ -376,6 +376,8 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private WarningReporter warnings;
+  private List<TypeMismatch> mismatches;
+  private List<TypeMismatch> implicitInterfaceUses;
   private final AbstractCompiler compiler;
   private final CodingConvention convention;
   private Map<DiGraphEdge<Node, ControlFlowGraph.Branch>, TypeEnv> envs;
@@ -459,6 +461,8 @@ final class NewTypeInference implements CompilerPass {
     try {
       this.symbolTable = (GlobalTypeInfo) compiler.getSymbolTable();
       this.commonTypes = symbolTable.getCommonTypes();
+      this.mismatches = symbolTable.getMismatches();
+      this.implicitInterfaceUses = symbolTable.getImplicitInterfaceUses();
 
       this.BOOLEAN = this.commonTypes.BOOLEAN;
       this.BOTTOM = this.commonTypes.BOTTOM;
@@ -511,6 +515,17 @@ final class NewTypeInference implements CompilerPass {
       }
       System.out.println(b);
     }
+  }
+
+  private void registerMismatchAndWarn(JSError error, JSType found, JSType required) {
+    TypeMismatch.registerMismatch(
+        this.mismatches, this.implicitInterfaceUses, found, required, error);
+    warnings.add(error);
+  }
+
+  private void registerImplicitUses(Node src, JSType from, JSType to) {
+    TypeMismatch.recordImplicitInterfaceUses(this.implicitInterfaceUses, src, from, to);
+    TypeMismatch.recordImplicitUseOfNativeObject(this.mismatches, src, from, to);
   }
 
   private TypeEnv getInEnv(DiGraphNode<Node, ControlFlowGraph.Branch> dn) {
@@ -1005,8 +1020,9 @@ final class NewTypeInference implements CompilerPass {
             outEnv = envPutType(retPair.env, RETVAL_ID, actualRetType);
           }
           if (!actualRetType.isSubtypeOf(declRetType)) {
-            warnings.add(JSError.make(n, RETURN_NONDECLARED_TYPE,
-                    errorMsgWithTypeDiff(declRetType, actualRetType)));
+            registerMismatchAndWarn(JSError.make(
+                n, RETURN_NONDECLARED_TYPE, errorMsgWithTypeDiff(declRetType, actualRetType)),
+                actualRetType, declRetType);
           }
           break;
         }
@@ -1307,12 +1323,13 @@ final class NewTypeInference implements CompilerPass {
     }
     if (declType != null && rhs != null) {
       if (!rhsType.isSubtypeOf(declType)) {
-        warnings.add(JSError.make(
-            rhs, MISTYPED_ASSIGN_RHS,
-            errorMsgWithTypeDiff(declType, rhsType)));
+        registerMismatchAndWarn(
+            JSError.make(rhs, MISTYPED_ASSIGN_RHS, errorMsgWithTypeDiff(declType, rhsType)),
+            rhsType, declType);
         // Don't flow the wrong initialization
         rhsType = declType;
       } else {
+        registerImplicitUses(rhs, rhsType, declType);
         // We do this to preserve type attributes like declaredness of
         // a property
         rhsType = declType.specialize(rhsType);
@@ -1455,6 +1472,9 @@ final class NewTypeInference implements CompilerPass {
             !NodeUtil.isAssignmentOp(expr.getParent()) ||
             !NodeUtil.isLValue(expr));
         if (expr.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
+          if (expr.isQualifiedName() && !NodeUtil.isTypedefDecl(expr)) {
+            markAndGetTypeOfPreanalyzedNode(expr, inEnv, true);
+          }
           expr.removeProp(Node.ANALYZED_DURING_GTI);
           resultPair = new EnvTypePair(inEnv, requiredType);
         } else {
@@ -1810,22 +1830,27 @@ final class NewTypeInference implements CompilerPass {
         return new EnvTypePair(inEnv, requiredType);
       }
       EnvTypePair rhsPair = analyzeExprFwd(rhs, inEnv, declType);
-      if (!rhsPair.type.isSubtypeOf(declType)
-          && !NodeUtil.isPrototypeAssignment(lhs)) {
-        warnings.add(JSError.make(expr, MISTYPED_ASSIGN_RHS,
-                errorMsgWithTypeDiff(declType, rhsPair.type)));
+      if (rhsPair.type.isSubtypeOf(declType)) {
+        registerImplicitUses(expr, rhsPair.type, declType);
+      } else if (!NodeUtil.isPrototypeAssignment(lhs)) {
+        registerMismatchAndWarn(
+            JSError.make(expr, MISTYPED_ASSIGN_RHS, errorMsgWithTypeDiff(declType, rhsPair.type)),
+            rhsPair.type, declType);
       }
       return rhsPair;
     }
     LValueResultFwd lvalue = analyzeLValueFwd(lhs, inEnv, requiredType);
     JSType declType = lvalue.declType;
-    EnvTypePair rhsPair =
-        analyzeExprFwd(rhs, lvalue.env, requiredType, specializedType);
-    if (declType != null && !rhsPair.type.isSubtypeOf(declType)) {
-      warnings.add(JSError.make(expr, MISTYPED_ASSIGN_RHS,
-              errorMsgWithTypeDiff(declType, rhsPair.type)));
-    } else {
+    EnvTypePair rhsPair = analyzeExprFwd(rhs, lvalue.env, requiredType, specializedType);
+    if (declType == null) {
       rhsPair.env = updateLvalueTypeInEnv(rhsPair.env, lhs, lvalue.ptr, rhsPair.type);
+    } else if (rhsPair.type.isSubtypeOf(declType)) {
+      registerImplicitUses(expr, rhsPair.type, declType);
+      rhsPair.env = updateLvalueTypeInEnv(rhsPair.env, lhs, lvalue.ptr, rhsPair.type);
+    } else {
+      registerMismatchAndWarn(
+          JSError.make(expr, MISTYPED_ASSIGN_RHS, errorMsgWithTypeDiff(declType, rhsPair.type)),
+          rhsPair.type, declType);
     }
     return rhsPair;
   }
@@ -2130,10 +2155,12 @@ final class NewTypeInference implements CompilerPass {
         argTypeForDeferredCheck = null; // No deferred check needed.
       } else if (!pair.type.isSubtypeOf(formalType)) {
         String fnName = getReadableCalleeName(call.getFirstChild());
-        warnings.add(JSError.make(arg, INVALID_ARGUMENT_TYPE,
-                Integer.toString(i + 1), fnName,
-                errorMsgWithTypeDiff(formalType, pair.type)));
+        JSError error = JSError.make(arg, INVALID_ARGUMENT_TYPE,
+            Integer.toString(i + 1), fnName, errorMsgWithTypeDiff(formalType, pair.type));
+        registerMismatchAndWarn(error, pair.type, formalType);
         argTypeForDeferredCheck = null; // No deferred check needed.
+      } else {
+        registerImplicitUses(arg, pair.type, formalType);
       }
       argTypesForDeferredCheck.add(argTypeForDeferredCheck);
       env = pair.env;
@@ -2275,18 +2302,21 @@ final class NewTypeInference implements CompilerPass {
     if ((parent.isOr() || parent.isAnd()) && expr == parent.getFirstChild()) {
       newSpecType = specializedType;
     }
-    EnvTypePair pair =
-        analyzeExprFwd(expr.getFirstChild(), inEnv, this.commonTypes.UNKNOWN, newSpecType);
+    Node insideCast = expr.getFirstChild();
+    EnvTypePair pair = analyzeExprFwd(insideCast, inEnv, this.commonTypes.UNKNOWN, newSpecType);
     JSType fromType = pair.type;
     JSType toType = symbolTable.getCastType(expr);
     if (!fromType.isInterfaceInstance()
         && !toType.isInterfaceInstance()
         && !JSType.haveCommonSubtype(fromType, toType)
         && !fromType.hasTypeVariable()) {
-      warnings.add(JSError.make(
-          expr, INVALID_CAST, fromType.toString(), toType.toString()));
+      JSError error = JSError.make(expr, INVALID_CAST, fromType.toString(), toType.toString());
+      registerMismatchAndWarn(error, fromType, toType);
+    } else {
+      registerImplicitUses(expr, fromType, toType);
     }
-    expr.getFirstChild().putProp(Node.TYPE_BEFORE_CAST, fromType);
+    insideCast.putProp(Node.TYPE_BEFORE_CAST, fromType);
+    insideCast.setTypeI(toType);
     pair.type = toType;
     return pair;
   }
@@ -2318,10 +2348,16 @@ final class NewTypeInference implements CompilerPass {
 
     EnvTypePair lhsPair = analyzeExprFwd(lhs, inEnv);
     EnvTypePair rhsPair = analyzeExprFwd(rhs, lhsPair.env);
-
-    if (!rhsPair.type.isNullOrUndef() && !JSType.haveCommonSubtype(lhsPair.type, rhsPair.type)) {
-      warnings.add(JSError.make(
-          lhs, INCOMPATIBLE_STRICT_COMPARISON, lhsPair.type.toString(), rhsPair.type.toString()));
+    JSType rhstype = rhsPair.type;
+    JSType lhstype = lhsPair.type;
+    if (!rhstype.isNullOrUndef()) {
+      if (JSType.haveCommonSubtype(lhstype, rhstype)) {
+        registerImplicitUses(lhs, lhstype, rhstype);
+      } else {
+        JSError error = JSError.make(
+            lhs, INCOMPATIBLE_STRICT_COMPARISON, lhstype.toString(), rhstype.toString());
+        registerMismatchAndWarn(error, lhstype, rhstype);
+      }
     }
 
     // This env may contain types that have been tightened after nullable deref.
@@ -2710,7 +2746,37 @@ final class NewTypeInference implements CompilerPass {
         env = pair.env;
       }
     }
+    result = mayAdjustObjLitType(objLit, jsdoc, inEnv, result);
     return new EnvTypePair(env, result);
+  }
+
+  /**
+   * If the object literal is lended, or assigned to a prototype, find a better
+   * type for it than the object-literal type.
+   */
+  private JSType mayAdjustObjLitType(
+      Node objLit, JSDocInfo jsdoc, TypeEnv env, JSType originalType) {
+    Node parent = objLit.getParent();
+    QualifiedName classqname = null;
+    if (parent.isAssign() && NodeUtil.isPrototypeAssignment(parent.getFirstChild())) {
+      classqname = QualifiedName.fromNode(parent.getFirstFirstChild());
+    } else if (jsdoc != null && jsdoc.getLendsName() != null) {
+      QualifiedName lendsQname = QualifiedName.fromQualifiedString(jsdoc.getLendsName());
+      if (lendsQname.getRightmostName().equals("prototype")) {
+        classqname = lendsQname.getAllButRightmost();
+      }
+    }
+    if (classqname != null) {
+      JSType classType = envGetTypeOfQname(env, classqname);
+      if (classType != null) {
+        FunctionType clazz = classType.getFunTypeIfSingletonObj();
+        JSType instance = clazz == null ? null : clazz.getInstanceTypeOfCtor();
+        if (instance != null) {
+          return instance.getPrototypeObject();
+        }
+      }
+    }
+    return originalType;
   }
 
   private EnvTypePair analyzeEnumObjLitFwd(
@@ -3940,6 +4006,14 @@ final class NewTypeInference implements CompilerPass {
     return env.getType(pname);
   }
 
+  private static JSType envGetTypeOfQname(TypeEnv env, QualifiedName qname) {
+    JSType leftmostType = envGetType(env, qname.getLeftmostName());
+    if (qname.isIdentifier()) {
+      return leftmostType;
+    }
+    return leftmostType == null ? null : leftmostType.getProp(qname.getAllButLeftmost());
+  }
+
   private static TypeEnv envPutType(TypeEnv env, String varName, JSType type) {
     Preconditions.checkArgument(!varName.contains("."));
     return env.putType(varName, type);
@@ -4348,7 +4422,7 @@ final class NewTypeInference implements CompilerPass {
     return getOutEnv(this.cfg.getEntry());
   }
 
-  private static class DeferredCheck {
+  private class DeferredCheck {
     final Node callSite;
     final NTIScope callerScope;
     final NTIScope calleeScope;
@@ -4404,11 +4478,14 @@ final class NewTypeInference implements CompilerPass {
         if (argNode.isName() && callerScope.isKnownFunction(argNode.getString())) {
           argType = summaries.get(callerScope.getScope(argNode.getString()));
         }
-        if (argType != null && !argType.isSubtypeOf(formalType)) {
-          warnings.add(JSError.make(
-              argNode, INVALID_ARGUMENT_TYPE,
-              Integer.toString(i + 1), calleeScope.getReadableName(),
-              errorMsgWithTypeDiff(formalType, argType)));
+        if (argType != null) {
+          if (argType.isSubtypeOf(formalType)) {
+            registerImplicitUses(argNode, argType, formalType);
+          } else {
+            JSError error = JSError.make(argNode, INVALID_ARGUMENT_TYPE, Integer.toString(i + 1),
+                calleeScope.getReadableName(), errorMsgWithTypeDiff(formalType, argType));
+            registerMismatchAndWarn(error, argType, formalType);
+          }
         }
         i++;
         argNode = argNode.getNext();

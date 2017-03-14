@@ -363,7 +363,7 @@ class TypeValidator {
         && (caseType.autoboxesTo() == null
         || !caseType.autoboxesTo()
         .isSubtypeWithoutStructuralTyping(switchType))) {
-      recordImplicitInterfaceUses(n, caseType, switchType);
+      TypeMismatch.recordImplicitInterfaceUses(this.implicitInterfaceUses, n, caseType, switchType);
       TypeMismatch.recordImplicitUseOfNativeObject(this.mismatches, n, caseType, switchType);
     }
   }
@@ -450,7 +450,7 @@ class TypeValidator {
           rightType, leftType);
       return false;
     } else if (!leftType.isNoType() && !rightType.isSubtypeWithoutStructuralTyping(leftType)){
-      recordImplicitInterfaceUses(n, rightType, leftType);
+      TypeMismatch.recordImplicitInterfaceUses(this.implicitInterfaceUses, n, rightType, leftType);
       TypeMismatch.recordImplicitUseOfNativeObject(this.mismatches, n, rightType, leftType);
     }
     return true;
@@ -473,7 +473,7 @@ class TypeValidator {
       mismatch(t, n, msg, rightType, leftType);
       return false;
     } else if (!rightType.isSubtypeWithoutStructuralTyping(leftType)) {
-      recordImplicitInterfaceUses(n, rightType, leftType);
+      TypeMismatch.recordImplicitInterfaceUses(this.implicitInterfaceUses, n, rightType, leftType);
       TypeMismatch.recordImplicitUseOfNativeObject(this.mismatches, n, rightType, leftType);
     }
     return true;
@@ -499,7 +499,7 @@ class TypeValidator {
               typeRegistry.getReadableTypeNameNoDeref(callNode.getFirstChild())),
           argType, paramType);
     } else if (!argType.isSubtypeWithoutStructuralTyping(paramType)){
-      recordImplicitInterfaceUses(n, argType, paramType);
+      TypeMismatch.recordImplicitInterfaceUses(this.implicitInterfaceUses, n, argType, paramType);
       TypeMismatch.recordImplicitUseOfNativeObject(this.mismatches, n, argType, paramType);
     }
   }
@@ -556,7 +556,8 @@ class TypeValidator {
           this.mismatches, this.implicitInterfaceUses, sourceType, targetType,
           report(t.makeError(n, INVALID_CAST, sourceType.toString(), targetType.toString())));
     } else if (!sourceType.isSubtypeWithoutStructuralTyping(targetType)){
-      recordImplicitInterfaceUses(n, sourceType, targetType);
+      TypeMismatch.recordImplicitInterfaceUses(
+          this.implicitInterfaceUses, n, sourceType, targetType);
     }
   }
 
@@ -774,8 +775,7 @@ class TypeValidator {
     mismatch(n, msg, found, required);
   }
 
-  private void mismatch(NodeTraversal t, Node n,
-                        String msg, JSType found, JSTypeNative required) {
+  private void mismatch(NodeTraversal t, Node n, String msg, JSType found, JSTypeNative required) {
     mismatch(t, n, msg, found, getNativeType(required));
   }
 
@@ -786,31 +786,6 @@ class TypeValidator {
       TypeMismatch.registerMismatch(
           this.mismatches, this.implicitInterfaceUses, found, required, err);
       report(err);
-    }
-  }
-
-  private JSType removeNullUndefinedAndTemplates(JSType t) {
-    JSType result = t.restrictByNotNullOrUndefined();
-    if (result.isTemplatizedType()) {
-      return result.toMaybeTemplatizedType().getReferencedType();
-    }
-    return result;
-  }
-
-  private void recordImplicitInterfaceUses(Node src, JSType sourceType, JSType targetType) {
-    sourceType = removeNullUndefinedAndTemplates(sourceType);
-    targetType = removeNullUndefinedAndTemplates(targetType);
-    boolean strictMismatch =
-        !sourceType.isSubtypeWithoutStructuralTyping(targetType)
-        && !targetType.isSubtypeWithoutStructuralTyping(sourceType);
-    boolean mismatch = !sourceType.isSubtype(targetType) && !targetType.isSubtype(sourceType);
-    if (strictMismatch || mismatch) {
-      // We don't report a type error, but we still need to construct a JSError,
-      // for people who enable the invalidation diagnostics in DisambiguateProperties.
-      // Use the empty string as the error string. Creating an actual error message can be slow
-      // for large types; we create an error string lazily in DisambiguateProperties.
-      JSError err = JSError.make(src, TYPE_MISMATCH_WARNING, "");
-      implicitInterfaceUses.add(new TypeMismatch(sourceType, targetType, err));
     }
   }
 

@@ -425,8 +425,7 @@ final class NTIScope implements DeclaredTypeRegistry {
   // If a variable is declared many times in a scope, the last definition
   // overwrites the previous ones. For correctness, we rely on the fact that
   // the var-check passes run before type checking.
-  void addLocal(String name, JSType declType,
-      boolean isConstant, boolean isFromExterns) {
+  void addLocal(String name, JSType declType, boolean isConstant, boolean isFromExterns) {
     Preconditions.checkArgument(!name.contains("."));
     if (isConstant) {
       constVars.add(name);
@@ -658,8 +657,7 @@ final class NTIScope implements DeclaredTypeRegistry {
   }
 
   void finalizeScope() {
-    Preconditions.checkNotNull(
-        this.declaredType, "No declared type for scope: %s", this.root);
+    Preconditions.checkNotNull(this.declaredType, "No declared type for scope: %s", this.root);
     unknownTypeNames = ImmutableSet.of();
     // For now, we put types of namespaces directly into the locals.
     // Alternatively, we could move this into NewTypeInference.initEdgeEnvs

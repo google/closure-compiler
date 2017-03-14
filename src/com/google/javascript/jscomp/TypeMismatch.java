@@ -17,6 +17,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
 import java.util.Iterator;
 import java.util.List;
@@ -58,9 +59,8 @@ class TypeMismatch {
       TypeI found, TypeI required, JSError error) {
     // Don't register a mismatch for differences in null or undefined or if the
     // code didn't downcast.
-    found = found.restrictByNotNullOrUndefined();
-    required = required.restrictByNotNullOrUndefined();
-
+    found = removeNullUndefinedAndTemplates(found);
+    required = removeNullUndefinedAndTemplates(required);
     if (found.isSubtypeOf(required) || required.isSubtypeOf(found)) {
       boolean strictMismatch =
           !found.isSubtypeWithoutStructuralTyping(required)
@@ -92,13 +92,44 @@ class TypeMismatch {
       List<TypeMismatch> mismatches, Node src, TypeI sourceType, TypeI targetType) {
     sourceType = sourceType.restrictByNotNullOrUndefined();
     targetType = targetType.restrictByNotNullOrUndefined();
-    if (sourceType.isInstanceofObject() && !targetType.isInstanceofObject()) {
+    if (sourceType.isInstanceofObject()
+        && !targetType.isInstanceofObject() && !targetType.isUnknownType()) {
       // We don't report a type error, but we still need to construct a JSError,
       // for people who enable the invalidation diagnostics in DisambiguateProperties.
       String msg = "Implicit use of Object type: " + sourceType + " as type: " + targetType;
       JSError err = JSError.make(src, TypeValidator.TYPE_MISMATCH_WARNING, msg);
       mismatches.add(new TypeMismatch(sourceType, targetType, err));
     }
+  }
+
+  static void recordImplicitInterfaceUses(
+      List<TypeMismatch> implicitInterfaceUses, Node src, TypeI sourceType, TypeI targetType) {
+    sourceType = removeNullUndefinedAndTemplates(sourceType);
+    targetType = removeNullUndefinedAndTemplates(targetType);
+    if (targetType.isUnknownType()) {
+      return;
+    }
+    boolean strictMismatch =
+        !sourceType.isSubtypeWithoutStructuralTyping(targetType)
+        && !targetType.isSubtypeWithoutStructuralTyping(sourceType);
+    boolean mismatch = !sourceType.isSubtypeOf(targetType) && !targetType.isSubtypeOf(sourceType);
+    if (strictMismatch || mismatch) {
+      // We don't report a type error, but we still need to construct a JSError,
+      // for people who enable the invalidation diagnostics in DisambiguateProperties.
+      // Use the empty string as the error string. Creating an actual error message can be slow
+      // for large types; we create an error string lazily in DisambiguateProperties.
+      JSError err = JSError.make(src, TypeValidator.TYPE_MISMATCH_WARNING, "");
+      implicitInterfaceUses.add(new TypeMismatch(sourceType, targetType, err));
+    }
+  }
+
+  private static TypeI removeNullUndefinedAndTemplates(TypeI t) {
+    TypeI result = t.restrictByNotNullOrUndefined();
+    ObjectTypeI obj = result.toMaybeObjectType();
+    if (obj != null && obj.isGeneric()) {
+      return obj.instantiateGenericsWithUnknown();
+    }
+    return result;
   }
 
   @Override public boolean equals(Object object) {

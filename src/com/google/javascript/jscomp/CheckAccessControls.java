@@ -1045,7 +1045,8 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    */
   private static ObjectTypeI getSuperClassInstanceIfFinal(TypeI type) {
     if (type != null) {
-      FunctionTypeI ctor = castToObject(type).getSuperClassConstructor();
+      ObjectTypeI obj = castToObject(type);
+      FunctionTypeI ctor = obj == null ? null : obj.getSuperClassConstructor();
       JSDocInfo doc = ctor == null ? null : ctor.getJSDocInfo();
       if (doc != null && doc.isFinal()) {
         return ctor.getInstanceType();

@@ -260,6 +260,11 @@ public abstract class ObjectType
   }
 
   @Override
+  public ObjectTypeI instantiateGenericsWithUnknown() {
+    return this.registry.instantiateGenericsWithUnknown(this);
+  }
+
+  @Override
   public TernaryValue testForEquality(JSType that) {
     // super
     TernaryValue result = super.testForEquality(that);
@@ -293,10 +298,7 @@ public abstract class ObjectType
     return iproto == null ? null : iproto.getConstructor();
   }
 
-  /**
-   * Given an interface and a property, finds the top-most super interface
-   * that has the property defined (including this interface).
-   */
+  @Override
   public ObjectType getTopDefiningInterface(String propertyName) {
     ObjectType foundType = null;
     if (hasProperty(propertyName)) {
@@ -776,7 +778,7 @@ public abstract class ObjectType
     return getOwnerFunction() != null;
   }
 
-  /** Gets the owner of this if it's a function prototype. */
+  @Override
   public FunctionType getOwnerFunction() {
     return null;
   }
