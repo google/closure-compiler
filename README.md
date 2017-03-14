@@ -44,7 +44,9 @@ Note: The Closure Compiler requires [Java 7 or higher](http://www.java.com/).
 3. On the command line, at the root of this project, run `mvn -DskipTests` (omit the `-DskipTests` if you want to run all the
 unit tests too).
 
-    This will produce a jar file called `target/closure-compiler-1.0-SNAPSHOT.jar`.
+    This will produce a jar file called `target/closure-compiler-1.0-SNAPSHOT.jar`. You can run this jar
+    as per the [Running section](#running) of this Readme. If you want to depend on the compiler via
+    Maven in another Java project, use the `com.google.javascript/closure-compiler-unshaded` artifact.
 
     Running `mvn -DskipTests -pl externs/pom.xml,pom-main.xml,pom-main-shaded.xml`
     will skip building the GWT version of the compiler. This can speed up the build process significantly.
