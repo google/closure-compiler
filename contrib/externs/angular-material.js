@@ -896,7 +896,8 @@ md.$panel = function() {};
  *   onOpenComplete: (Function|undefined),
  *   onRemoving: (Function|undefined),
  *   onDomRemoved: (Function|undefined),
- *   origin: (!angular.JQLite|!Element|undefined)
+ *   origin: (!angular.JQLite|!Element|undefined),
+ *   onCloseSuccess: (function(md.$panel.MdPanelRef, string)|undefined)
  * }}
  */
 md.$panel.config;
@@ -953,6 +954,15 @@ md.$panel.prototype.animation = {
   FADE: 'md-panel-animate-fade'
 };
 
+/**
+ * Possible default closeReasons for the close function.
+ * @enum {string}
+ */
+md.$panel.prototype.closeReasons = {
+  CLICK_OUTSIDE: 'clickOutsideToClose',
+  ESCAPE: 'escapeToClose',
+};
+
 
 /**
  * @param {!md.$panel.config} config
@@ -970,8 +980,11 @@ md.$panel.MdPanelRef.prototype.isAttached;
 /** @return {!angular.$q.Promise<!md.$panel.MdPanelRef>} */
 md.$panel.MdPanelRef.prototype.open = function() {};
 
-/** @return {!angular.$q.Promise<!md.$panel.MdPanelRef>} */
-md.$panel.MdPanelRef.prototype.close = function() {};
+/**
+ * @param {string=} opt_closeReason
+ * @return {!angular.$q.Promise<!md.$panel.MdPanelRef>}
+ */
+md.$panel.MdPanelRef.prototype.close = function(opt_closeReason) {};
 
 /** @return {!angular.$q.Promise<!md.$panel.MdPanelRef>} */
 md.$panel.MdPanelRef.prototype.attach = function() {};
@@ -985,6 +998,7 @@ md.$panel.MdPanelRef.prototype.show = function() {};
 /** @return {!angular.$q.Promise<!md.$panel.MdPanelRef>} */
 md.$panel.MdPanelRef.prototype.hide = function() {};
 
+/** @return {void} */
 md.$panel.MdPanelRef.prototype.destroy = function() {};
 
 /** @param {string} classToAdd */
