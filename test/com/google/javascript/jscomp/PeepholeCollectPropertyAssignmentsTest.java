@@ -24,6 +24,29 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
         compiler, new PeepholeCollectPropertyAssignments());
   }
 
+  public void test36122565a() {
+    testSame(
+        LINE_JOINER.join(
+            "var foo = { bar: g(), baz: 4 };",
+            "foo.bar = 3;",
+            "foo.baz = 3;",
+            "console.log(foo.bar);",
+            "console.log(foo.baz);"));
+
+    test(
+        LINE_JOINER.join(
+            "var foo = { bar: g(), baz: 4 };",
+            "foo.baz = 3;",
+            "foo.bar = 3;",
+            "console.log(foo.bar);",
+            "console.log(foo.baz);"),
+        LINE_JOINER.join(
+            "var foo = { bar: g(), baz: 3 };",
+            "foo.bar = 3;",
+            "console.log(foo.bar);",
+            "console.log(foo.baz);"));
+  }
+
   public final void testArrayOptimization1() {
     test("var a = []; a[0] = 1; a[1] = 2; a[2] = 3;",
          "var a = [1, 2, 3];");

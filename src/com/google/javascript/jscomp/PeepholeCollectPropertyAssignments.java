@@ -223,7 +223,8 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
   private static boolean collectObjectProperty(
       Node objectLiteral, Node propertyCandidate) {
     Node assignment = propertyCandidate.getFirstChild();
-    Node lhs = assignment.getFirstChild(), rhs = lhs.getNext();
+    Node lhs = assignment.getFirstChild();
+    Node rhs = lhs.getNext();
     Node obj = lhs.getFirstChild();
     Node property = obj.getNext();
 
@@ -241,6 +242,29 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
       propertyName = property.getString();
     }
 
+    // Check if the new property already exists in the object literal
+    // Note: Duplicate keys are invalid in strict mode
+    Node existingProperty = null;
+    for (Node currentProperty : objectLiteral.children()) {
+      // Get the name of the current property
+      String currentPropertyName = currentProperty.getString();
+      // Get the value of the property
+      Node currentValue = currentProperty.getFirstChild();
+      // Compare the current property name with the new property name
+      if (currentPropertyName.equals(propertyName)) {
+        existingProperty = currentProperty;
+        // Check if the current value and the new value are side-effect
+        boolean isCurrentValueSideEffect = NodeUtil.canBeSideEffected(currentValue);
+        boolean isNewValueSideEffect = NodeUtil.canBeSideEffected(rhs);
+        // If they are side-effect free then replace the current value with the new one
+        if (isCurrentValueSideEffect || isNewValueSideEffect) {
+          return false;
+        }
+        // Break the loop if the property exists
+        break;
+      }
+    }
+
     Node newProperty = IR.stringKey(propertyName)
         .useSourceInfoIfMissingFrom(property);
     // Preserve the quotedness of a property reference
@@ -249,35 +273,12 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     }
     Node newValue = rhs.detach();
     newProperty.addChildToBack(newValue);
-    // Check if the new property already exists in the object literal
-    // Note: Duplicate keys are invalid in strict mode
-    boolean propertyExists = false;
-    for (Node currentProperty : objectLiteral.children()) {
-      // Get the name of the current property
-      String currentPropertyName = currentProperty.getString();
-      // Get the value of the property
-      Node currentValue = currentProperty.getFirstChild();
-      // Compare the current property name with the new property name
-      if (currentPropertyName.equals(propertyName)) {
-        propertyExists = true;
-        // Check if the current value and the new value are side-effect
-        boolean isCurrentValueSideEffect = NodeUtil.canBeSideEffected(currentValue);
-        boolean isNewValueSideEffect = NodeUtil.canBeSideEffected(newValue);
-        // If they are side-effect free then replace the current value with the new one
-        if (!isCurrentValueSideEffect && !isNewValueSideEffect) {
-          objectLiteral.removeChild(currentProperty);
-          objectLiteral.addChildToBack(newProperty);
-          propertyCandidate.detach();
-          return true;
-        }
-        // Break the loop if the property exists
-        break;
-      }
+
+    if (existingProperty != null) {
+       objectLiteral.removeChild(existingProperty);
     }
     // If the property does not already exist we can safely add it
-    if (!propertyExists) {
-      objectLiteral.addChildToBack(newProperty);
-    }
+    objectLiteral.addChildToBack(newProperty);
     propertyCandidate.detach();
     return true;
   }
