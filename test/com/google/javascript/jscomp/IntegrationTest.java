@@ -3698,43 +3698,45 @@ public final class IntegrationTest extends IntegrationTestCase {
     WarningLevel warnings = WarningLevel.DEFAULT;
     warnings.setOptionsForWarningLevel(options);
 
-    String code = "" +
-        "function some_function() {\n" +
-        "  var fn1;\n" +
-        "  var fn2;\n" +
-        "\n" +
-        "  if (any_expression) {\n" +
-        "    fn2 = external_ref;\n" +
-        "    fn1 = function (content) {\n" +
-        "      return fn2();\n" +
-        "    }\n" +
-        "  }\n" +
-        "\n" +
-        "  return {\n" +
-        "    method1: function () {\n" +
-        "      if (fn1) fn1();\n" +
-        "      return true;\n" +
-        "    },\n" +
-        "    method2: function () {\n" +
-        "      return false;\n" +
-        "    }\n" +
-        "  }\n" +
-        "}";
+    String code = LINE_JOINER.join(
+        "function some_function() {",
+        "  var fn1;",
+        "  var fn2;",
+        "",
+        "  if (any_expression) {",
+        "    fn2 = external_ref;",
+        "    fn1 = function (content) {",
+        "      return fn2();",
+        "    }",
+        "  }",
+        "",
+        "  return {",
+        "    method1: function () {",
+        "      if (fn1) fn1();",
+        "      return true;",
+        "    },",
+        "    method2: function () {",
+        "      return false;",
+        "    }",
+        "  }",
+        "}");
 
-    String result = "" +
-        "function some_function() {\n" +
-        "  var a, b;\n" +
-        "  any_expression && (b = external_ref, a = function(a) {\n" +
-        "    return b()\n" +
-        "  });\n" +
-        "  return{method1:function() {\n" +
-        "    a && a();\n" +
-        "    return !0\n" +
-        "  }, method2:function() {\n" +
-        "    return !1\n" +
-        "  }}\n" +
-        "}\n" +
-        "";
+    String result = LINE_JOINER.join(
+        "function some_function() {",
+        "  var a, b;",
+        "  any_expression && (b = external_ref, a = function(a) {",
+        "    return b()",
+        "  });",
+        "  return {",
+        "    method1: function() {",
+        "      a && a();",
+        "      return !0",
+        "    },",
+        "    method2: function() {",
+        "      return !1",
+        "    }",
+        "  };",
+        "}");
 
     test(options, code, result);
   }
