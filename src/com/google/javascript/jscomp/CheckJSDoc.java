@@ -135,7 +135,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     if (n.isMemberFunctionDef()) {
       return n.getFirstChild();
     }
-    if (n.isVar()
+    if (NodeUtil.isNameDeclaration(n)
         && n.getFirstFirstChild() != null
         && n.getFirstFirstChild().isFunction()) {
       return n.getFirstFirstChild();
