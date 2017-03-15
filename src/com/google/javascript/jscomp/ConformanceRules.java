@@ -1428,6 +1428,8 @@ public final class ConformanceRules {
   /**
    * Ban {@code goog.dom.createDom} and {@code goog.dom.DomHelper#createDom} with parameters
    * specified in {@code value} in the format tagname.attribute, e.g. {@code value: 'iframe.src'}.
+   * Note that string literal values assigned to banned attributes are allowed as they couldn't be
+   * attacker controlled.
    */
   public static final class BanCreateDom extends AbstractRule {
     private List<String[]> bannedTagAttrs;
@@ -1469,7 +1471,12 @@ public final class ConformanceRules {
           // Attrs is not an object literal and tagName matches or is unknown.
           return ConformanceResult.POSSIBLE_VIOLATION;
         }
-        if (NodeUtil.getFirstPropMatchingKey(attrs, tagAttr[1]) != null) {
+        Node prop = NodeUtil.getFirstPropMatchingKey(attrs, tagAttr[1]);
+        if (prop != null) {
+          if (NodeUtil.isStringLiteralValue(prop)) {
+            // Ignore string literal values.
+            continue;
+          }
           return tagName == null
               ? ConformanceResult.POSSIBLE_VIOLATION
               : ConformanceResult.VIOLATION;

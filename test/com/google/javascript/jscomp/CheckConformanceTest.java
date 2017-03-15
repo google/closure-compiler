@@ -1682,24 +1682,24 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "}";
 
     testWarning(
-        "goog.dom.createDom('iframe', {'src': ''});",
+        "goog.dom.createDom('iframe', {'src': src});",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateDom Message");
 
     testWarning(
-        "goog.dom.createDom('iframe', {'src': '', 'name': ''}, '');",
+        "goog.dom.createDom('iframe', {'src': src, 'name': ''}, '');",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateDom Message");
 
     testWarning(
-        "goog.dom.createDom(goog.dom.TagName.IFRAME, {'src': ''});",
+        "goog.dom.createDom(goog.dom.TagName.IFRAME, {'src': src});",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateDom Message");
 
     // TODO(jakubvrana): Add a test for goog.dom.DomHelper.
 
     testWarning(
-        "goog.dom.createDom(tag, {'src': ''});",
+        "goog.dom.createDom(tag, {'src': src});",
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION,
         "Possible violation: BanCreateDom Message");
 
@@ -1714,8 +1714,9 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "Possible violation: BanCreateDom Message");
 
     testSame("goog.dom.createDom('iframe');");
-    testSame("goog.dom.createDom('iframe', {'name': ''});");
-    testSame("goog.dom.createDom('img', {'src': ''});");
+    testSame("goog.dom.createDom('iframe', {'src': ''});");
+    testSame("goog.dom.createDom('iframe', {'name': name});");
+    testSame("goog.dom.createDom('img', {'src': src});");
     testSame("goog.dom.createDom('img', attrs);");
     testSame("goog.dom.createDom(tag, {});");
   }
