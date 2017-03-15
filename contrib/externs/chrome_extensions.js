@@ -4501,6 +4501,13 @@ chrome.identity.onSignInChanged;
 
 
 /**
+ * @param {string=} opt_path
+ * @return {string}
+ */
+chrome.identity.getRedirectURL = function(opt_path) {};
+
+
+/**
  * @const
  * @see https://developer.chrome.com/extensions/input.ime.html
  */
