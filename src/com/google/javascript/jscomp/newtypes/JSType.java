@@ -764,8 +764,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
    */
   public boolean unifyWith(JSType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
-    return unifyWithSubtype(
-        other, typeParameters, typeMultimap, SubtypeCache.create());
+    return unifyWithSubtype(other, typeParameters, typeMultimap, SubtypeCache.create());
   }
 
   boolean unifyWithSubtype(JSType other, List<String> typeParameters,
@@ -782,7 +781,10 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     } else if (other.isUnknown() || other.isTrueOrTruthy()) {
       return true;
     } else if (other.isTop()) {
-      // T|number doesn't unify with TOP
+      if (hasTypeVariable() && typeParameters.contains(getTypeVar())) {
+        updateTypemap(typeMultimap, getTypeVar(), other);
+        return true;
+      }
       return false;
     }
 

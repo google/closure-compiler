@@ -6095,8 +6095,19 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " */",
         "function f(x) {}",
         "/** @return {*} */ function g() { return 1; }",
-        "f(g());"),
-        NewTypeInference.FAILED_TO_UNIFY);
+        "f(g());"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {T=} x",
+        " * @return {T}",
+        " */",
+        "function f(x) {",
+        "  return /** @type {?} */ (x);",
+        "}",
+        "/** @param {*} x */",
+        "function g(x) { f(x); }"));
 
     typeCheck(LINE_JOINER.join(
         "/**",
@@ -15425,8 +15436,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function f() {};",
         "/** @return {*} */",
         "function g() { return null; }",
-        "f.bind(g());"),
-        NewTypeInference.FAILED_TO_UNIFY);
+        "f.bind(g());"));
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
