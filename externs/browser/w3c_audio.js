@@ -26,25 +26,25 @@
 /**
  * @constructor
  */
-function AudioContext() {}
+function BaseAudioContext() {}
 
 /** @type {!AudioDestinationNode} */
-AudioContext.prototype.destination;
+BaseAudioContext.prototype.destination;
 
 /** @type {number} */
-AudioContext.prototype.sampleRate;
+BaseAudioContext.prototype.sampleRate;
 
 /** @type {number} */
-AudioContext.prototype.currentTime;
+BaseAudioContext.prototype.currentTime;
 
 /** @type {!AudioListener} */
-AudioContext.prototype.listener;
+BaseAudioContext.prototype.listener;
 
 /**
  * @type {string}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/state
  */
-AudioContext.prototype.state;
+BaseAudioContext.prototype.state;
 
 /**
  * @param {number} numberOfChannels
@@ -52,7 +52,7 @@ AudioContext.prototype.state;
  * @param {number} sampleRate
  * @return {!AudioBuffer}
  */
-AudioContext.prototype.createBuffer =
+BaseAudioContext.prototype.createBuffer =
     function(numberOfChannels, length, sampleRate) {};
 
 /**
@@ -61,30 +61,30 @@ AudioContext.prototype.createBuffer =
  * @param {function(?)=} errorCallback
  * @return {!Promise<AudioBuffer>}
  */
-AudioContext.prototype.decodeAudioData =
+BaseAudioContext.prototype.decodeAudioData =
     function(audioData, successCallback, errorCallback) {};
 
 /**
  * @return {!AudioBufferSourceNode}
  */
-AudioContext.prototype.createBufferSource = function() {};
+BaseAudioContext.prototype.createBufferSource = function() {};
 
 /**
  * @param {HTMLMediaElement} mediaElement
  * @return {!MediaElementAudioSourceNode}
  */
-AudioContext.prototype.createMediaElementSource = function(mediaElement) {};
+BaseAudioContext.prototype.createMediaElementSource = function(mediaElement) {};
 
 /**
  * @param {MediaStream} mediaStream
  * @return {!MediaStreamAudioSourceNode}
  */
-AudioContext.prototype.createMediaStreamSource = function(mediaStream) {};
+BaseAudioContext.prototype.createMediaStreamSource = function(mediaStream) {};
 
 /**
  * @return {!MediaStreamAudioDestinationNode}
  */
-AudioContext.prototype.createMediaStreamDestination = function() {};
+BaseAudioContext.prototype.createMediaStreamDestination = function() {};
 
 /**
  * To be deprecated. Use createScriptProcessor instead.
@@ -93,7 +93,7 @@ AudioContext.prototype.createMediaStreamDestination = function() {};
  * @param {number} numberOfOuputs
  * @return {!ScriptProcessorNode}
  */
-AudioContext.prototype.createJavaScriptNode = function(bufferSize,
+BaseAudioContext.prototype.createJavaScriptNode = function(bufferSize,
     numberOfInputs, numberOfOuputs) {};
 
 /**
@@ -102,123 +102,129 @@ AudioContext.prototype.createJavaScriptNode = function(bufferSize,
  * @param {number=} numberOfOutputChannels_opt
  * @return {!ScriptProcessorNode}
  */
-AudioContext.prototype.createScriptProcessor = function(bufferSize,
+BaseAudioContext.prototype.createScriptProcessor = function(bufferSize,
     numberOfInputChannels_opt, numberOfOutputChannels_opt) {};
 
 /**
  * @return {!AnalyserNode}
  */
-AudioContext.prototype.createAnalyser = function() {};
+BaseAudioContext.prototype.createAnalyser = function() {};
 
 /**
  * @deprecated Use createGain instead.
  * @return {!GainNode}
  */
-AudioContext.prototype.createGainNode = function() {};
+BaseAudioContext.prototype.createGainNode = function() {};
 
 /**
  * @return {!GainNode}
  */
-AudioContext.prototype.createGain = function() {};
+BaseAudioContext.prototype.createGain = function() {};
 
 /**
  * To be deprecated. Use createDelay instead.
  * @param {number=} maxDelayTime
  * @return {!DelayNode}
  */
-AudioContext.prototype.createDelayNode = function(maxDelayTime) {};
+BaseAudioContext.prototype.createDelayNode = function(maxDelayTime) {};
 
 /**
  * @param {number=} maxDelayTime
  * @return {!DelayNode}
  */
-AudioContext.prototype.createDelay = function(maxDelayTime) {};
+BaseAudioContext.prototype.createDelay = function(maxDelayTime) {};
 
 /**
  * @return {!BiquadFilterNode}
  */
-AudioContext.prototype.createBiquadFilter = function() {};
+BaseAudioContext.prototype.createBiquadFilter = function() {};
 
 /**
  * @param {!IArrayLike<number>} feedforward
  * @param {!IArrayLike<number>} feedback
  * @return {!IIRFilterNode}
  */
-AudioContext.prototype.createIIRFilter = function(feedforward, feedback) {};
+BaseAudioContext.prototype.createIIRFilter = function(feedforward, feedback) {};
 
 /**
  * @return {!WaveShaperNode}
  */
-AudioContext.prototype.createWaveShaper = function() {};
+BaseAudioContext.prototype.createWaveShaper = function() {};
 
 /**
  * @return {!AudioPannerNode}
  */
-AudioContext.prototype.createPanner = function() {};
+BaseAudioContext.prototype.createPanner = function() {};
 
 /**
  * @return {!StereoPannerNode}
  */
-AudioContext.prototype.createStereoPanner = function() {};
+BaseAudioContext.prototype.createStereoPanner = function() {};
 
 /**
  * @return {!ConvolverNode}
  */
-AudioContext.prototype.createConvolver = function() {};
+BaseAudioContext.prototype.createConvolver = function() {};
 
 /**
  * @param {number=} numberOfOutputs
  * @return {!AudioChannelSplitter}
  */
-AudioContext.prototype.createChannelSplitter = function(numberOfOutputs) {};
+BaseAudioContext.prototype.createChannelSplitter = function(numberOfOutputs) {};
 
 /**
  * @param {number=} numberOfInputs
  * @return {!AudioChannelMerger}
  */
-AudioContext.prototype.createChannelMerger = function(numberOfInputs) {};
+BaseAudioContext.prototype.createChannelMerger = function(numberOfInputs) {};
 
 /**
  * @return {!DynamicsCompressorNode}
  */
-AudioContext.prototype.createDynamicsCompressor = function() {};
+BaseAudioContext.prototype.createDynamicsCompressor = function() {};
 
 /**
  * @return {!OscillatorNode}
  */
-AudioContext.prototype.createOscillator = function() {};
+BaseAudioContext.prototype.createOscillator = function() {};
 
 /**
  * @param {Float32Array} real
  * @param {Float32Array} imag
  * @return {!PeriodicWave}
  */
-AudioContext.prototype.createPeriodicWave = function(real, imag) {};
+BaseAudioContext.prototype.createPeriodicWave = function(real, imag) {};
 
 /**
  * @return {!Promise<void>}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/resume
  */
-AudioContext.prototype.resume = function() {};
+BaseAudioContext.prototype.resume = function() {};
 
 /**
  * @return {!Promise<void>}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/suspend
  */
-AudioContext.prototype.suspend = function() {};
+BaseAudioContext.prototype.suspend = function() {};
 
 /**
  * @return {!Promise<void>}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/close
  */
-AudioContext.prototype.close = function() {};
+BaseAudioContext.prototype.close = function() {};
+
+/**
+ * @constructor
+ * @extends {BaseAudioContext}
+ */
+function AudioContext() {}
 
 /**
  * @param {number} numberOfChannels
  * @param {number} length
  * @param {number} sampleRate
  * @constructor
- * @extends {AudioContext}
+ * @extends {BaseAudioContext}
  */
 function OfflineAudioContext(numberOfChannels, length, sampleRate) {}
 
