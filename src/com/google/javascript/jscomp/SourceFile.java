@@ -381,7 +381,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
     return builder()
         .withCharset(inputCharset)
-        .withOriginalPath(originalZipPath + "!/" + entryPath)
+        .withOriginalPath(originalZipPath + BANG_SLASH + entryPath)
         .buildFromUrl(zipEntryUrl);
   }
 
