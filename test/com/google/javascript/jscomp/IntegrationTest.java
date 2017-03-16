@@ -2771,14 +2771,11 @@ public final class IntegrationTest extends IntegrationTestCase {
         "};" +
         "goog.addSingletonGetter(Foo);" +
         "alert(Foo.f());";
-    String expected =
-        "function Foo(){} Foo.f=function(){Foo.i=new Foo}; alert(Foo.f());";
+    String expected = "function Foo(){} Foo.f=function(){Foo.i=new Foo}; alert(Foo.f());";
 
     CompilerOptions options = createCompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS
-        .setOptionsForCompilationLevel(options);
-    options.setRenamingPolicy(
-        VariableRenamingPolicy.OFF, PropertyRenamingPolicy.OFF);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setRenamingPolicy(VariableRenamingPolicy.OFF, PropertyRenamingPolicy.OFF);
     test(options, source, expected);
   }
 
@@ -3241,8 +3238,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "function $init() {" +
         "  impl_0 = {};" +
         "}";
-    String result =
-        "window.f = {};";
+    String result = "window.f = {};";
     test(options, code, result);
   }
 

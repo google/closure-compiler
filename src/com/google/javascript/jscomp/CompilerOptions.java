@@ -534,6 +534,8 @@ public class CompilerOptions {
   /** Use type information to enable additional optimization opportunities. */
   boolean useTypesForLocalOptimization;
 
+  boolean useSizeHeuristicToStopOptimizationLoop = true;
+
   //--------------------------------
   // Renaming
   //--------------------------------
@@ -2202,6 +2204,10 @@ public class CompilerOptions {
 
   public void setUseTypesForLocalOptimization(boolean useTypesForLocalOptimization) {
     this.useTypesForLocalOptimization = useTypesForLocalOptimization;
+  }
+
+  public void setUseSizeHeuristicToStopOptimizationLoop(boolean mayStopEarly) {
+    this.useSizeHeuristicToStopOptimizationLoop = mayStopEarly;
   }
 
   @Deprecated

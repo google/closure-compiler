@@ -1548,7 +1548,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Various peephole optimizations. */
   private final PassFactory peepholeOptimizations =
-      new PassFactory("peepholeOptimizations", false /* oneTimePass */) {
+      new PassFactory(Compiler.PEEPHOLE_PASS_NAME, false /* oneTimePass */) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return createPeepholeOptimizationsPass(compiler);
@@ -1557,7 +1557,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Various peephole optimizations. */
   private final PassFactory peepholeOptimizationsOnce =
-      new PassFactory("peepholeOptimizations", true /* oneTimePass */) {
+      new PassFactory(Compiler.PEEPHOLE_PASS_NAME, true /* oneTimePass */) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return createPeepholeOptimizationsPass(compiler);
@@ -2220,7 +2220,7 @@ public final class DefaultPassConfig extends PassConfig {
    * Use data flow analysis to remove dead branches.
    */
   private final PassFactory removeUnreachableCode =
-      new PassFactory("removeUnreachableCode", false) {
+      new PassFactory(Compiler.UNREACHABLE_CODE_ELIM_NAME, false) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new UnreachableCodeElimination(compiler, true);

@@ -72,8 +72,8 @@ public final class PhaseOptimizerTest extends TestCase {
     Loop loop = optimizer.addFixedPointLoop();
     addLoopedPass(loop, "x", 3);
     addLoopedPass(loop, "y", 1);
-    // The pass iterations can be grouped as: [x y] [x y] [x] [x]
-    assertPasses("x", "y", "x", "y", "x", "x");
+    // The pass iterations can be grouped as: [x y] [x y] [x] [x] [y]
+    assertPasses("x", "y", "x", "y", "x", "x", "y");
   }
 
   public void testNotInfiniteLoop() {
@@ -101,7 +101,7 @@ public final class PhaseOptimizerTest extends TestCase {
     addLoopedPass(loop, "x", 3);
     addLoopedPass(loop, "y", 1);
     addOneTimePass("z");
-    assertPasses("a", "x", "y", "x", "y", "x", "x", "z");
+    assertPasses("a", "x", "y", "x", "y", "x", "x", "y", "z");
   }
 
   public void testSchedulingOfAnyKindOfPasses2() {
@@ -115,7 +115,7 @@ public final class PhaseOptimizerTest extends TestCase {
             createPassFactory("f", 0, true)));
     // The pass iterations can be grouped as:
     // [a] [b c d] [b c d] [c] [b d] [e] [f]
-    assertPasses("a", "b", "c", "d", "b", "c", "d", "c", "e", "f");
+    assertPasses("a", "b", "c", "d", "b", "c", "d", "c", "b", "d", "e", "f");
   }
 
   public void testSchedulingOfAnyKindOfPasses3() {

@@ -104,8 +104,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   static final String READING_PASS_NAME = "readInputs";
   static final String PARSING_PASS_NAME = "parseInputs";
   static final String CROSS_MODULE_CODE_MOTION_NAME = "crossModuleCodeMotion";
-  static final String CROSS_MODULE_METHOD_MOTION_NAME =
-      "crossModuleMethodMotion";
+  static final String CROSS_MODULE_METHOD_MOTION_NAME = "crossModuleMethodMotion";
+  static final String PEEPHOLE_PASS_NAME = "peepholeOptimizations";
+  static final String UNREACHABLE_CODE_ELIM_NAME = "removeUnreachableCode";
 
   private static final String CONFIG_RESOURCE =
       "com.google.javascript.jscomp.parsing.ParserConfig";
