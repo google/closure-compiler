@@ -319,6 +319,21 @@ function RTCRtpReceiver() {}
  */
 RTCRtpReceiver.prototype.track;
 
+/**
+ * @interface
+ * @see https://www.w3.org/TR/webrtc/#idl-def-rtcrtptransceiver
+ */
+function RTCRtpTransceiver() {}
+
+/**
+ * @const {?RTCRtpSender}
+ */
+RTCRtpTransceiver.prototype.sender;
+
+/**
+ * @const {?RTCRtpReceiver}
+ */
+RTCRtpTransceiver.prototype.receiver;
 
 /**
  * This interface defines the available constraint attributes.  These are the
@@ -516,6 +531,38 @@ function MediaStreamEvent(type, eventInitDict) {}
  * @const
  */
 MediaStreamEvent.prototype.stream;
+
+/**
+ * @see https://www.w3.org/TR/webrtc/#rtctrackevent
+ * @param {string} type
+ * @param {!Object} eventInitDict
+ * @constructor
+ */
+function RTCTrackEvent(type, eventInitDict) {}
+
+/**
+ * @type {?RTCRtpReceiver}
+ * @const
+ */
+RTCTrackEvent.prototype.receiver;
+
+/**
+ * @type {?MediaStreamTrack}
+ * @const
+ */
+RTCTrackEvent.prototype.track;
+
+/**
+ * @type {?Array<!MediaStream>}
+ * @const
+ */
+RTCTrackEvent.prototype.streams;
+
+/**
+ * @type {?RTCRtpTransceiver}
+ * @const
+ */
+RTCTrackEvent.prototype.transceiver;
 
 /**
  * @typedef {string}
@@ -1216,6 +1263,11 @@ RTCPeerConnection.prototype.onsignalingstatechange;
  * @type {?function(!MediaStreamEvent)}
  */
 RTCPeerConnection.prototype.onaddstream;
+
+/**
+ * @type {?function(!RTCTrackEvent)}
+ */
+RTCPeerConnection.prototype.ontrack;
 
 /**
  * @type {?function(!MediaStreamEvent)}
