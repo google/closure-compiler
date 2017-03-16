@@ -2181,6 +2181,88 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSets(js, output, "{iterator=[[MyAbstractCollection.prototype, MyIterable.prototype]]}");
   }
 
+  // In function subtyping, the type of THIS should be contravariant, like the argument types.
+  // Because it's not, we get wrong disambiguation.
+  // On top of that, this can happen in OTI when types are joined during generics instantiation.
+  // Just documenting the behavior here.
+  public void testUnsafeTypingOfThis() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.myprop = 123;",
+        "}",
+        "Foo.prototype.method = function() { this.myprop++; };",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.myprop = 123;",
+        "}",
+        "/**",
+        " * @param {function(this:T)} callback",
+        " * @param {T} thisobj",
+        " * @template T",
+        " */",
+        "function myArrayPrototypeMap(callback, thisobj) {",
+        "  callback.call(thisobj);",
+        "}",
+        "myArrayPrototypeMap(Foo.prototype.method, new Bar);");
+
+    String output = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.Foo$myprop = 123;",
+        "}",
+        "Foo.prototype.method = function() { this.Foo$myprop++; };",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.Bar$myprop = 123;",
+        "}",
+        "/**",
+        " * @param {function(this:T)} callback",
+        " * @param {T} thisobj",
+        " * @template T",
+        " */",
+        "function myArrayPrototypeMap(callback, thisobj) {",
+        "  callback.call(thisobj);",
+        "}",
+        "myArrayPrototypeMap(Foo.prototype.method, new Bar);");
+
+    testSets(js, output, "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}");
+
+    js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.myprop = 123;",
+        "}",
+        "Foo.prototype.method = function() { this.myprop++; };",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.myprop = 123;",
+        "}",
+        "/** @param {function(this:(!Foo|!Bar))} callback */",
+        "function f(callback) {",
+        "  callback.call(new Bar);",
+        "}",
+        "f(Foo.prototype.method);");
+
+    output = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.Foo$myprop = 123;",
+        "}",
+        "Foo.prototype.method = function() { this.Foo$myprop++; };",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.Bar$myprop = 123;",
+        "}",
+        "/** @param {function(this:(!Foo|!Bar))} callback */",
+        "function f(callback) {",
+        "  callback.call(new Bar);",
+        "}",
+        "f(Foo.prototype.method);");
+
+    testSets(js, output, "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}");
+  }
+
   public void testErrorOnProtectedProperty() {
     testError("function addSingletonGetter(foo) { foo.foobar = 'a'; };",
          DisambiguateProperties.Warnings.INVALIDATION);
