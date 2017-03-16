@@ -58,14 +58,17 @@ $jscomp.inherits = function(childCtor, parentCtor) {
   /** @override */
     childCtor.prototype.constructor = childCtor;
 
-  for (var p in parentCtor) {
-    if (Object.defineProperties) {
-      var descriptor = Object.getOwnPropertyDescriptor(parentCtor, p);
-      if (descriptor) {
-        Object.defineProperty(childCtor, p, descriptor);
+  if (Object.defineProperties) {
+    var propNames = Object.getOwnPropertyNames(parentCtor);
+    for (var i = 0; i < propNames.length; i++) {
+      var descriptor = Object.getOwnPropertyDescriptor(parentCtor, propNames[i]);
+      if (descriptor && (descriptor.enumerable || descriptor.configurable)) {
+        Object.defineProperty(childCtor, propNames[i], descriptor);
       }
-    } else {
-      // Pre-ES5 browser. Just copy with an assignment.
+    }
+  } else {
+    // Pre-ES5 browser. Just copy with an assignment.
+    for (var p in parentCtor) {
       childCtor[p] = parentCtor[p];
     }
   }
