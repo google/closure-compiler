@@ -109,6 +109,12 @@ public interface TypeI {
 
   boolean isEnumElement();
 
+  /**
+   * Whether the type is a scalar string. In OTI, the isString method returns true for String
+   * objects as well.
+   */
+  boolean isStringValueType();
+
   ObjectTypeI autoboxAndGetObject();
 
   JSDocInfo getJSDocInfo();

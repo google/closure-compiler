@@ -327,6 +327,11 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return STRING_MASK == getMask();
   }
 
+  @Override
+  public boolean isStringValueType() {
+    return isString();
+  }
+
   public boolean isNumber() {
     return NUMBER_MASK == getMask();
   }
