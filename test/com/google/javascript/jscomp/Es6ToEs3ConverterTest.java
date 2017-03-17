@@ -2236,6 +2236,29 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testForOfJSDoc() {
+    test(
+        "for (/** @type {string} */ let x of []) {}",
+        LINE_JOINER.join(
+            "for(var $jscomp$iter$0=$jscomp.makeIterator([]),",
+            "    $jscomp$key$x=$jscomp$iter$0.next();",
+            "    !$jscomp$key$x.done;$jscomp$key$x=$jscomp$iter$0.next()) {",
+            "  /** @type {string} */",
+            "  var x = $jscomp$key$x.value;",
+            "  {}",
+            "}"));
+    test(
+        "for (/** @type {string} */ x of []) {}",
+        LINE_JOINER.join(
+            "for(var $jscomp$iter$0=$jscomp.makeIterator([]),",
+            "    $jscomp$key$x=$jscomp$iter$0.next();",
+            "    !$jscomp$key$x.done;$jscomp$key$x=$jscomp$iter$0.next()) {",
+            "  /** @type {string} */",
+            "  x = $jscomp$key$x.value;",
+            "  {}",
+            "}"));
+  }
+
   public void testSpreadArray() {
     test("var arr = [1, 2, ...mid, 4, 5];",
         "var arr = [].concat([1, 2], $jscomp.arrayFromIterable(mid), [4, 5]);");

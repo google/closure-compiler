@@ -281,6 +281,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     Node variable = node.removeFirstChild();
     Node iterable = node.removeFirstChild();
     Node body = node.removeFirstChild();
+    JSDocInfo varJSDocInfo = variable.getJSDocInfo();
 
     Node iterName = IR.name(ITER_BASE + compiler.getUniqueNameIdSupplier().get());
     iterName.makeNonIndexable();
@@ -309,15 +310,18 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
     Node declarationOrAssign;
     if (declType == Token.NAME) {
-      declarationOrAssign = IR.exprResult(IR.assign(
+      declarationOrAssign = IR.assign(
           IR.name(variableName).useSourceInfoFrom(variable),
-          IR.getprop(iterResult.cloneTree(), IR.string("value"))));
+          IR.getprop(iterResult.cloneTree(), IR.string("value")));
+      declarationOrAssign.setJSDocInfo(varJSDocInfo);
+      declarationOrAssign = IR.exprResult(declarationOrAssign);
     } else {
       declarationOrAssign = new Node(
           declType,
           IR.name(variableName).useSourceInfoFrom(variable.getFirstChild()));
       declarationOrAssign.getFirstChild().addChildToBack(
           IR.getprop(iterResult.cloneTree(), IR.string("value")));
+      declarationOrAssign.setJSDocInfo(varJSDocInfo);
     }
     Node newBody = IR.block(declarationOrAssign, body).useSourceInfoFrom(body);
     Node newFor = IR.forNode(init, cond, incr, newBody);
