@@ -94,15 +94,25 @@ class AggressiveInlineAliases implements CompilerPass {
   }
 
   private AbstractCompiler compiler;
+  private boolean codeChanged;
 
   AggressiveInlineAliases(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.codeChanged = true;
+  }
+
+  private void reportCodeChange() {
+    this.codeChanged = true;
+    this.compiler.reportCodeChange();
   }
 
   @Override
   public void process(Node externs, Node root) {
-    GlobalNamespace namespace = new GlobalNamespace(compiler, root);
-    inlineAliases(namespace);
+    while (this.codeChanged) {
+      this.codeChanged = false;
+      GlobalNamespace namespace = new GlobalNamespace(compiler, root);
+      inlineAliases(namespace);
+    }
   }
 
   private JSModule getRefModule(ReferenceCollectingCallback.Reference ref) {
@@ -229,7 +239,7 @@ class AggressiveInlineAliases implements CompilerPass {
 
         // just set the original alias to null.
         aliasParent.replaceChild(alias.node, IR.nullNode());
-        compiler.reportCodeChange();
+        reportCodeChange();
 
         // Inlining the variable may have introduced new references
         // to descendants of {@code name}. So those need to be collected now.
@@ -297,7 +307,7 @@ class AggressiveInlineAliases implements CompilerPass {
 
         // just set the original alias to null.
         aliasParent.replaceChild(alias.node, IR.nullNode());
-        compiler.reportCodeChange();
+        reportCodeChange();
 
         // Inlining the variable may have introduced new references
         // to descendants of {@code name}. So those need to be collected now.

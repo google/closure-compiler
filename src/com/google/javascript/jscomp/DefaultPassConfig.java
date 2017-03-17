@@ -1389,7 +1389,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Inlines type aliases if they are explicitly or effectively const. */
   private final PassFactory aggressiveInlineAliases =
-      new PassFactory("aggressiveInlineAliases", false) {
+      new PassFactory("aggressiveInlineAliases", true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new AggressiveInlineAliases(compiler);

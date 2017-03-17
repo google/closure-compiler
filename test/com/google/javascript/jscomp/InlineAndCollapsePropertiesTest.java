@@ -788,7 +788,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "var $jscomp$scope$Foo = function() {}",
             "var exports = null;",
             "var $jscomp$scope$Foo$staticprop$A = 1;",
-            "var y = $jscomp$scope$Foo$staticprop$A;"));
+            "var y = null;"));
 
     // The static property is added to the constructor
     test(
@@ -805,7 +805,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "var $jscomp$scope$Foo = function() {}",
             "var $jscomp$scope$Foo$staticprop$A = 1;",
             "var exports = null;",
-            "var y = $jscomp$scope$Foo$staticprop$A;"));
+            "var y = null;"));
   }
 
   public void testInlineCtorInObjLit() {

@@ -258,7 +258,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             + "$jscomp.scope.Foo = function() {};"
             + "var exports = null;"
             + "$jscomp.scope.Foo.staticprop = { A: 1 };"
-            + "var y = $jscomp.scope.Foo.staticprop.A");
+            + "var y = null;");
 
     test(
         "var $jscomp = {};"
@@ -272,7 +272,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             + "$jscomp.scope.Foo = function() {};"
             + "$jscomp.scope.Foo.staticprop = { A: 1 };"
             + "var exports = null;"
-            + "var y = $jscomp.scope.Foo.staticprop.A");
+            + "var y = null;");
   }
 
   public void testCollapse() {
