@@ -2226,7 +2226,16 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "}",
         "myArrayPrototypeMap(Foo.prototype.method, new Bar);");
 
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, output, "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}");
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSets("", js, output,
+        "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}",
+        NewTypeInference.INVALID_ARGUMENT_TYPE,
+        LINE_JOINER.join(
+            "Invalid type for parameter 1 of function myArrayPrototypeMap.",
+            "Expected : function(this:Bar|Foo):?",
+            "Found    : function(this:Foo):?\n"));
 
     js = LINE_JOINER.join(
         "/** @constructor */",
@@ -2260,7 +2269,13 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "}",
         "f(Foo.prototype.method);");
 
-    testSets(js, output, "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}");
+    testSets("", js, output,
+        "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}",
+        NewTypeInference.INVALID_ARGUMENT_TYPE,
+        LINE_JOINER.join(
+            "Invalid type for parameter 1 of function f.",
+            "Expected : function(this:Bar|Foo):?",
+            "Found    : function(this:Foo):?\n"));
   }
 
   public void testErrorOnProtectedProperty() {

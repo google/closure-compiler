@@ -546,11 +546,7 @@ public final class FunctionType {
       }
       if (this.receiverType != null && other.receiverType != null
           // Contravariance for the receiver type
-          && !other.receiverType.isSubtypeOf(this.receiverType, subSuperMap)
-          // NOTE(dimvar): Covariance for the receiver type.
-          // Not correct, but allowed to make migration easier.
-          // After bounded generics, we could probably drop support for this.
-          && !this.receiverType.isSubtypeOf(other.receiverType, subSuperMap)) {
+          && !other.receiverType.isSubtypeOf(this.receiverType, subSuperMap)) {
         return false;
       }
     }

@@ -103,7 +103,8 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         "}",
         "/** @param {{always: function(this:Controller)}} spec */",
         "function vsyncMethod(spec) {}",
-        "vsyncMethod({always: (new SubController).method});"));
+        "vsyncMethod({always: (new SubController).method});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testDetectPropertyDefinitionOnNullableObject() {
