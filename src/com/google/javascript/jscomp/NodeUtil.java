@@ -1167,10 +1167,8 @@ public final class NodeUtil {
           // a) The RHS has side effects, or
           // b) The LHS has side effects, or
           // c) A name on the LHS will exist beyond the life of this statement.
-          if (checkForStateChangeHelper(
-                  n.getFirstChild(), checkForNewObjects, compiler) ||
-              checkForStateChangeHelper(
-                  n.getLastChild(), checkForNewObjects, compiler)) {
+          if (checkForStateChangeHelper(n.getFirstChild(), checkForNewObjects, compiler)
+              || checkForStateChangeHelper(n.getLastChild(), checkForNewObjects, compiler)) {
             return true;
           }
 
@@ -2640,7 +2638,7 @@ public final class NodeUtil {
         || isSwitchCase(node)) {
       // A statement in a block can simply be removed.
       parent.removeChild(node);
-    } else if (parent.isVar() || parent.isExprResult()) {
+    } else if (isNameDeclaration(parent) || parent.isExprResult()) {
       if (parent.hasMoreThanOneChild()) {
         parent.removeChild(node);
       } else {
@@ -2945,8 +2943,7 @@ public final class NodeUtil {
    * @return True if n is the left hand of an assign
    */
   static boolean isVarOrSimpleAssignLhs(Node n, Node parent) {
-    return (parent.isAssign() && parent.getFirstChild() == n) ||
-           parent.isVar();
+    return (parent.isAssign() && parent.getFirstChild() == n) || parent.isVar();
   }
 
   /**
@@ -3271,8 +3268,8 @@ public final class NodeUtil {
     // make sure that the adding root looks ok
     Preconditions.checkState(
         addingRoot.isNormalBlock() || addingRoot.isModuleBody() || addingRoot.isScript());
-    Preconditions.checkState(addingRoot.getFirstChild() == null ||
-        !addingRoot.getFirstChild().isScript());
+    Preconditions.checkState(
+        addingRoot.getFirstChild() == null || !addingRoot.getFirstChild().isScript());
     return addingRoot;
   }
 
@@ -3471,15 +3468,15 @@ public final class NodeUtil {
    * Determines whether the given name is a valid variable name.
    */
   static boolean isValidSimpleName(String name) {
-    return TokenStream.isJSIdentifier(name) &&
-        !TokenStream.isKeyword(name) &&
+    return TokenStream.isJSIdentifier(name)
+        && !TokenStream.isKeyword(name)
         // no Unicode escaped characters - some browsers are less tolerant
         // of Unicode characters that might be valid according to the
         // language spec.
         // Note that by this point, Unicode escapes have been converted
         // to UTF-16 characters, so we're only searching for character
         // values, not escapes.
-        isLatin(name);
+        && isLatin(name);
   }
 
   /**
@@ -3646,8 +3643,7 @@ public final class NodeUtil {
    *     some constructor.
    */
   public static boolean isPrototypePropertyDeclaration(Node n) {
-    return isExprAssign(n) &&
-        isPrototypeProperty(n.getFirstFirstChild());
+    return isExprAssign(n) && isPrototypeProperty(n.getFirstFirstChild());
   }
 
   /**
@@ -4314,8 +4310,7 @@ public final class NodeUtil {
         }
 
         throw new IllegalStateException(
-            "Unexpected expression node" + value +
-            "\n parent:" + value.getParent());
+            "Unexpected expression node" + value + "\n parent:" + value.getParent());
     }
   }
 
@@ -4448,11 +4443,10 @@ public final class NodeUtil {
       return parent.getFirstChild();
     } else if (isObjectLitKey(parent)) {
       return parent;
-    } else if (
-        (parent.isHook() && parent.getFirstChild() != n) ||
-        parent.isOr() ||
-        parent.isAnd() ||
-        (parent.isComma() && parent.getFirstChild() != n)) {
+    } else if ((parent.isHook() && parent.getFirstChild() != n)
+        || parent.isOr()
+        || parent.isAnd()
+        || (parent.isComma() && parent.getFirstChild() != n)) {
       return getBestLValue(parent);
     } else if (parent.isCast()) {
       return getBestLValue(parent);

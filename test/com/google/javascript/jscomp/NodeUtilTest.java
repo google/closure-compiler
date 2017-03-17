@@ -912,7 +912,6 @@ public final class NodeUtilTest extends TestCase {
       fail("Nodes do not match:\n" + difference);
     }
 
-
     // Test removing the second child.
     actual = parse("var foo, goo, hoo");
 
@@ -946,6 +945,60 @@ public final class NodeUtilTest extends TestCase {
     nameNode = varNode.getFirstChild();
 
     NodeUtil.removeChild(varNode, nameNode);
+    expected = "";
+    difference = parse(expected).checkTreeEquals(actual);
+    if (difference != null) {
+      fail("Nodes do not match:\n" + difference);
+    }
+  }
+
+  public void testRemoveLetChild() {
+    // Test removing the first child.
+    Node actual = parse("let foo, goo, hoo");
+
+    Node letNode = actual.getFirstChild();
+    Node nameNode = letNode.getFirstChild();
+
+    NodeUtil.removeChild(letNode, nameNode);
+    String expected = "let goo, hoo";
+    String difference = parse(expected).checkTreeEquals(actual);
+    if (difference != null) {
+      fail("Nodes do not match:\n" + difference);
+    }
+
+    // Test removing the second child.
+    actual = parse("let foo, goo, hoo");
+
+    letNode = actual.getFirstChild();
+    nameNode = letNode.getSecondChild();
+
+    NodeUtil.removeChild(letNode, nameNode);
+    expected = "let foo, hoo";
+    difference = parse(expected).checkTreeEquals(actual);
+    if (difference != null) {
+      fail("Nodes do not match:\n" + difference);
+    }
+
+    // Test removing the last child of several children.
+    actual = parse("let foo, hoo");
+
+    letNode = actual.getFirstChild();
+    nameNode = letNode.getSecondChild();
+
+    NodeUtil.removeChild(letNode, nameNode);
+    expected = "let foo";
+    difference = parse(expected).checkTreeEquals(actual);
+    if (difference != null) {
+      fail("Nodes do not match:\n" + difference);
+    }
+
+    // Test removing the last.
+    actual = parse("let hoo");
+
+    letNode = actual.getFirstChild();
+    nameNode = letNode.getFirstChild();
+
+    NodeUtil.removeChild(letNode, nameNode);
     expected = "";
     difference = parse(expected).checkTreeEquals(actual);
     if (difference != null) {
