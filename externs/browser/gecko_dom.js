@@ -365,6 +365,11 @@ Document.prototype.compatMode;
 
 Document.prototype.contentType;
 /** @type {string} */ Document.prototype.cookie;
+
+/**
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Document/defaultView
+ * @type {?Window}
+ */
 Document.prototype.defaultView;
 
 /**
