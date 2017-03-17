@@ -25,28 +25,20 @@
  * Internal record type for entries.
  * @record
  * @template KEY, VALUE
+ * @suppress {reportUnknownTypes}
  */
-$jscomp.MapEntry = function() {};
-
-
-/** @type {!$jscomp.MapEntry<KEY, VALUE>} */
-$jscomp.MapEntry.prototype.previous;
-
-
-/** @type {!$jscomp.MapEntry<KEY, VALUE>} */
-$jscomp.MapEntry.prototype.next;
-
-
-/** @type {?Object} */
-$jscomp.MapEntry.prototype.head;
-
-
-/** @type {KEY} */
-$jscomp.MapEntry.prototype.key;
-
-
-/** @type {VALUE} */
-$jscomp.MapEntry.prototype.value;
+$jscomp.MapEntry = function() {
+  /** @type {!$jscomp.MapEntry<KEY, VALUE>} */
+  this.previous;
+  /** @type {!$jscomp.MapEntry<KEY, VALUE>} */
+  this.next;
+  /** @type {?Object} */
+  this.head;
+  /** @type {KEY} */
+  this.key;
+  /** @type {VALUE} */
+  this.value;
+};
 
 
 /**

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.parsing.parser;
 
 import java.io.Serializable;
 import java.util.Objects;
+import javax.annotation.concurrent.Immutable;
 
 /**
  * Represents various aspects of language version and support.
@@ -35,6 +36,7 @@ import java.util.Objects;
  *
  * <p>Instances of this class are immutable.
  */
+@Immutable
 public final class FeatureSet implements Serializable {
 
   /** The number of the language version: 3, 5, or 6. */
@@ -259,6 +261,10 @@ public final class FeatureSet implements Serializable {
         return ES6_IMPL;
       case "es6":
         return ES6;
+      case "es7":
+        return ES7;
+      case "es8":
+        return ES8;
       case "ts":
         return TYPESCRIPT;
       default:

@@ -15,6 +15,7 @@
  */
 
 'require base';
+'require es6/promise';
 
 /**
  * Handle the execution of an async function.
