@@ -1679,6 +1679,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'\n" +
         "  error_message: 'BanCreateDom Message'\n" +
         "  value: 'iframe.src'\n" +
+        "  value: 'div.class'\n" +
         "}";
 
     testWarning(
@@ -1693,6 +1694,16 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
 
     testWarning(
         "goog.dom.createDom(goog.dom.TagName.IFRAME, {'src': src});",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateDom Message");
+
+    testWarning(
+        "goog.dom.createDom('div', 'red');",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateDom Message");
+
+    testWarning(
+        "goog.dom.createDom('div', ['red']);",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateDom Message");
 
@@ -1716,6 +1727,8 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame("goog.dom.createDom('iframe');");
     testSame("goog.dom.createDom('iframe', {'src': ''});");
     testSame("goog.dom.createDom('iframe', {'name': name});");
+    testSame("goog.dom.createDom('iframe', 'red' + '');");
+    testSame("goog.dom.createDom('iframe', ['red']);");
     testSame("goog.dom.createDom('img', {'src': src});");
     testSame("goog.dom.createDom('img', attrs);");
     testSame("goog.dom.createDom(tag, {});");

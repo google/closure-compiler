@@ -1467,6 +1467,17 @@ public final class ConformanceRules {
         if (tagName != null && !tagAttr[0].equals(tagName)) {
           continue;
         }
+        TypeI attrsType = attrs.getTypeI();
+        if (attrsType != null
+            && (attrsType.isStringValueType() || attrsType.containsArray())) {
+          // String or array attribute sets the class.
+          if (!tagAttr[1].equals("class")) {
+            continue;
+          }
+          return tagName == null
+              ? ConformanceResult.POSSIBLE_VIOLATION
+              : ConformanceResult.VIOLATION;
+        }
         if (!attrs.isObjectLit()) {
           // Attrs is not an object literal and tagName matches or is unknown.
           return ConformanceResult.POSSIBLE_VIOLATION;
