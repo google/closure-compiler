@@ -1998,7 +1998,7 @@ final class NewTypeInference implements CompilerPass {
           callee.isGetProp() ? callee.getFirstChild() : null,
           expr.getSecondChild(), funType, envAfterCallee);
       funType = funType.instantiateGenerics(typeMap);
-      println("Instantiated function type: " + funType);
+      println("Instantiated function type: ", funType);
     }
     // argTypes collects types of actuals for deferred checks.
     List<JSType> argTypes = new ArrayList<>();
@@ -2557,10 +2557,14 @@ final class NewTypeInference implements CompilerPass {
     Multimap<String, JSType> typeMultimap = LinkedHashMultimap.create();
     JSType funRecvType = funType.getThisType();
     if (receiver != null && funRecvType != null && !funRecvType.isSingletonObj()) {
-      EnvTypePair pair = analyzeExprFwd(receiver, typeEnv);
-      unifyWithSubtypeWarnIfFail(funRecvType, pair.type, typeParameters,
-          typeMultimap, receiver, isFwd);
-      typeEnv = pair.env;
+      JSType recvType = (JSType) receiver.getTypeI();
+      if (recvType == null) {
+        EnvTypePair pair = analyzeExprFwd(receiver, typeEnv);
+        recvType = pair.type;
+        typeEnv = pair.env;
+      }
+      unifyWithSubtypeWarnIfFail(
+          funRecvType, recvType, typeParameters, typeMultimap, receiver, isFwd);
     }
     Node arg = firstArg;
     int i = 0;
@@ -3185,8 +3189,7 @@ final class NewTypeInference implements CompilerPass {
       recvSpecType = reqObjType.withProperty(propQname, specializedType);
     }
     pair = analyzeExprFwd(receiver, inEnv, recvReqType, recvSpecType);
-    pair = mayWarnAboutNullableReferenceAndTighten(
-        receiver, pair.type, recvSpecType, pair.env);
+    pair = mayWarnAboutNullableReferenceAndTighten(receiver, pair.type, recvSpecType, pair.env);
     JSType recvType = pair.type.autobox();
     if (recvType.isUnknown() || recvType.isTrueOrTruthy()) {
       mayWarnAboutInexistentProp(propAccessNode, recvType, propQname);
