@@ -23,7 +23,7 @@
  */
 
 /** @const */
-var $jscomp = {};
+var $jscomp = $jscomp || {};
 
 /** @const Locals for goog.scope */
 $jscomp.scope = {};

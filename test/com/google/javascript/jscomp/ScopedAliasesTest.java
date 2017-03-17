@@ -43,7 +43,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   private static final String GOOG_SCOPE_END_BLOCK = "});";
 
   private static final String SCOPE_NAMESPACE =
-      "/** @const */ var $jscomp = {}; /** @const */ $jscomp.scope = {};";
+      "/** @const */ var $jscomp = $jscomp || {}; /** @const */ $jscomp.scope = {};";
 
   private static final String EXTERNS = "var window;";
 
@@ -735,7 +735,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         "  var /** ?A */ b = null;",
         "});"),
          LINE_JOINER.join(
-        "/** @const */ var $jscomp = {};",
+        "/** @const */ var $jscomp = $jscomp || {};",
         "/** @const */ $jscomp.scope = {};",
         "/** @const */ var ns = {};",
         "/** @constructor */ ns.A = function() {};",
@@ -754,7 +754,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         "  function /** ?A */ b() {}",
         "});"),
          LINE_JOINER.join(
-        "/** @const */ var $jscomp = {};",
+        "/** @const */ var $jscomp = $jscomp || {};",
         "/** @const */ $jscomp.scope = {};",
         "/** @const */ var ns = {};",
         "/** @constructor */ ns.A = function() {};",
@@ -774,7 +774,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         "  function b(/** ?A */ bee) {}",
         "});"),
          LINE_JOINER.join(
-        "/** @const */ var $jscomp = {};",
+        "/** @const */ var $jscomp = $jscomp || {};",
         "/** @const */ $jscomp.scope = {};",
         "/** @const */ var ns = {};",
         "/** @constructor */ ns.A = function() {};",

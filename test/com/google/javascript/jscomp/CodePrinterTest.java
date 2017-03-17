@@ -2483,7 +2483,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         + "}\n"
         + "}); // goog.scope\n";
     String expectedCode = ""
-        + "/** @const */ var $jscomp = {};\n"
+        + "/** @const */ var $jscomp = $jscomp || {};\n"
         + "/** @const */ $jscomp.scope = {};\n"
         + "/** @const */ var foo = {};\n"
         + "/** @const */ foo.bar = {};\n"
