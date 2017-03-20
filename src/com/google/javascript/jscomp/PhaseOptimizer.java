@@ -86,11 +86,16 @@ class PhaseOptimizer implements CompilerPass {
     RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER
   }
 
-  // NOTE(dimvar): There used to be some code that tried various orderings of
-  // loopable passes and picked the fastest one. This code became stale
-  // gradually and I decided to remove it. It was also never tried after the
-  // new pass scheduler was written. If we need to revisit this order in the
-  // future, we should write new code to do it.
+  /**
+   * NOTE(dimvar): There used to be some code that tried various orderings of loopable passes
+   * and picked the fastest one. This code became stale gradually and I decided to remove it.
+   * It was also never tried after the new pass scheduler was written.
+   * If we need to revisit this order in the future, we should write new code to do it.
+   *
+   * It is important that inlineVariables and peepholeOptimizations run after inlineFunctions,
+   * because inlineFunctions relies on them to clean up patterns it introduces. This affects our
+   * size-based loop-termination heuristic.
+   */
   @VisibleForTesting
   static final ImmutableList<String> OPTIMAL_ORDER =
       ImmutableList.of(
@@ -101,7 +106,7 @@ class PhaseOptimizer implements CompilerPass {
           "removeUnusedVars",
           "removeUnusedPrototypeProperties",
           "removeUnusedClassProperties",
-          "peepholeOptimizations",
+          Compiler.PEEPHOLE_PASS_NAME,
           "minimizeExitPoints",
           "removeUnreachableCode");
 
@@ -424,6 +429,7 @@ class PhaseOptimizer implements CompilerPass {
     private final Set<String> myNames = new HashSet<>();
     private ScopedChangeHandler scopeHandler;
     private boolean isCodeRemovalLoop = false;
+    private int howmanyIterationsUnderThreshold = 0;
 
     void addLoopedPass(PassFactory factory) {
       String name = factory.getName();
@@ -502,14 +508,14 @@ class PhaseOptimizer implements CompilerPass {
           previousAstSize = astSize;
           astSize = NodeUtil.countAstSize(root);
           if (state == State.RUN_PASSES_NOT_RUN_IN_PREV_ITER) {
-            if (lastIterMadeChanges && astChangesAreOverThreshold(previousAstSize, astSize)) {
+            if (lastIterMadeChanges && isAstSufficientlyChanging(previousAstSize, astSize)) {
               state = State.RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER;
             } else {
               return;
             }
           } else {
             Preconditions.checkState(state == State.RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER);
-            if (!lastIterMadeChanges || !astChangesAreOverThreshold(previousAstSize, astSize)) {
+            if (!lastIterMadeChanges || !isAstSufficientlyChanging(previousAstSize, astSize)) {
               state = State.RUN_PASSES_NOT_RUN_IN_PREV_ITER;
             }
           }
@@ -521,8 +527,8 @@ class PhaseOptimizer implements CompilerPass {
     }
 
     /**
-     * If this loop batch made the code less than 0.05% smaller than the previous loop
-     * batch, stop before the fixpoint.
+     * If two loop batches in a row made the code less than 0.05% smaller than the previous
+     * batches, stop before the fixpoint.
      * The 0.05% threshold is based on the following heuristic: 1% size difference matters
      * to our users. 0.1% size difference is borderline relevant. 0.05% difference
      * between loop batches is unlikely to grow the final output more than 0.1%.
@@ -530,19 +536,23 @@ class PhaseOptimizer implements CompilerPass {
      * Use this criterion only for the two code-removing loops.
      * The code-motion loop may move code around but not remove code, so this criterion
      * is not correct for stopping early.
-     * (AggressiveInlineAliases is in a loop by itself, and we should fix that; don't use the
-     *  size heuristic for that loop either.)
      *
      * NOTE: the size heuristic is not robust when passes in the code-removing loop increase
      * the AST size; all passes in the loop must make the code smaller. Otherwise, what may seem
      * like a small size difference may indeed be big changes, and we miss it because we don't
-     * compute the AST size after each pass. This can currently happen with inlineFunctions,
-     * which is why we put this heuristic under a flag, rather than enable it unconditionally.
+     * compute the AST size after each pass. This can happen because inlineFunctions may increase
+     * code size, and relies on peephole and inlineVariables to clean up. As long as these passes
+     * run after it in the loop, we should be OK.
      */
-    private boolean astChangesAreOverThreshold(int oldAstSize, int newAstSize) {
+    private boolean isAstSufficientlyChanging(int oldAstSize, int newAstSize) {
       if (useSizeHeuristicToStopOptimizationLoop && this.isCodeRemovalLoop) {
         float percentChange = 100 * (Math.abs(newAstSize - oldAstSize) / (float) oldAstSize);
-        return percentChange > 0.05;
+        if (percentChange < 0.05) {
+          this.howmanyIterationsUnderThreshold++;
+        } else {
+          this.howmanyIterationsUnderThreshold = 0;
+        }
+        return this.howmanyIterationsUnderThreshold < 2;
       }
       return true;
     }
