@@ -19644,4 +19644,44 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  var /** string */ s = ns.Foo.prototype.a;",
         "}"));
   }
+
+  public void testDontWarnForBreakAfterReturn() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {number} value",
+        " * @return {number}",
+        " */",
+        "function check(value) {",
+        "  switch (value) {",
+        "    case 2:",
+        "      return 2;",
+        "      break;",
+        "    case 4:",
+        "      return 4;",
+        "      break;",
+        "    default:",
+        "      return 42;",
+        "  }",
+        "}",
+        "check(12);"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {number} value",
+        " * @return {number}",
+        " */",
+        "function check(value) {",
+        "  switch (value) {",
+        "    case 2:",
+        "      return 2;",
+        "      break;",
+        "    case 4:",
+        "      break;",
+        "    default:",
+        "      return 42;",
+        "  }",
+        "}",
+        "check(12);"),
+        NewTypeInference.MISSING_RETURN_STATEMENT);
+  }
 }

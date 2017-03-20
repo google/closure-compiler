@@ -1287,6 +1287,11 @@ final class NewTypeInference implements CompilerPass {
         if (!(cond != null && NodeUtil.isImpureTrue(cond))) {
           return true;
         }
+      } else if (stm.isBreak()) {
+        // Allow break after return in switches.
+        if (!cfg.getDirectedPredNodes(dn).isEmpty()) {
+          return true;
+        }
       } else if (!stm.isReturn()) {
         return true;
       }
