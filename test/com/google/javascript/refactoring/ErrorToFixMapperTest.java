@@ -1035,7 +1035,7 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
-  public void testShortRequireInGoogModule() {
+  public void testShortRequireInGoogModule1() {
     assertChanges(
         LINE_JOINER.join(
             "goog.module('m');",
@@ -1049,6 +1049,40 @@ public class ErrorToFixMapperTest {
             "var c = goog.require('a.b.c');",
             "",
             "alert(c);"));
+  }
+
+  @Test
+  public void testShortRequireInGoogModule2() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var Classname = goog.require('a.b.Classname');",
+            "",
+            "alert(a.b.Classname.instance_.foo());"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var Classname = goog.require('a.b.Classname');",
+            "",
+            "alert(Classname.instance_.foo());"));
+  }
+
+  @Test
+  public void testShortRequireInGoogModule3() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var Classname = goog.require('a.b.Classname');",
+            "",
+            "alert(a.b.Classname.INSTANCE_.foo());"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var Classname = goog.require('a.b.Classname');",
+            "",
+            "alert(Classname.INSTANCE_.foo());"));
   }
 
   @Test

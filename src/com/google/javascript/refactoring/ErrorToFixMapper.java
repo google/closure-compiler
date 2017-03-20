@@ -312,7 +312,7 @@ public final class ErrorToFixMapper {
         nodeToReplace = error.node;
       }
 
-      if (nodeToReplace != null) {
+      if (nodeToReplace != null && nodeToReplace.matchesQualifiedName(namespaceToRequire)) {
         String shortName = getShortNameForRequire(namespaceToRequire);
         fix.replace(nodeToReplace, IR.name(shortName), compiler);
       }
