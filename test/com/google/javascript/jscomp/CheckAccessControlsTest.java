@@ -392,22 +392,22 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
 
   public void testPrivateAccessForProperties5() {
     test(
-        new String[] {
-          LINE_JOINER.join(
-              "/** @constructor */",
-              "function Parent () {",
-              "  /** @private */",
-              "  this.prop = 'foo';",
-              "};"),
-          LINE_JOINER.join(
-              "/**",
-              " * @constructor",
-              " * @extends {Parent}",
-              " */",
-              "function Child() {",
-              "  this.prop = 'asdf';",
-              "}",
-              "Child.prototype = new Parent();")
+    	new String[] {
+    		LINE_JOINER.join(
+    		"/** @constructor */",
+    		"function Parent () {",
+    		"  /** @private */",
+    		"  this.prop = 'foo';",
+    		"};"),
+    		LINE_JOINER.join(
+    		"/**",
+    		" * @constructor",
+    		" * @extends {Parent}",
+    		" */",
+    		"function Child() {",
+    		"  this.prop = 'asdf';",
+    		"}",
+    		"Child.prototype = new Parent();")
         },
         null,
         BAD_PRIVATE_PROPERTY_ACCESS,
@@ -418,25 +418,25 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   public void testPrivateAccessForProperties6() {
     test(
         new String[] {
-          LINE_JOINER.join(
-              "goog.provide('x.y.z.Parent');",
-              "",
-              "/** @constructor */",
-              "x.y.z.Parent = function() {",
-              "  /** @private */",
-              "  this.prop = 'foo';",
-              "};"),
-          LINE_JOINER.join(
-              "goog.require('x.y.z.Parent');",
-              "",
-              "/**",
-              " * @constructor",
-              " * @extends {x.y.z.Parent}",
-              " */",
-              "function Child() {",
-              "  this.prop = 'asdf';",
-              "}",
-              "Child.prototype = new x.y.z.Parent();")
+        	LINE_JOINER.join(
+            "goog.provide('x.y.z.Parent');",
+            "",
+            "/** @constructor */",
+            "x.y.z.Parent = function() {",
+            "  /** @private */",
+            "  this.prop = 'foo';",
+            "};"),
+        	LINE_JOINER.join(
+            "goog.require('x.y.z.Parent');",
+            "",
+            "/**",
+            " * @constructor",
+            " * @extends {x.y.z.Parent}",
+            " */",
+            "function Child() {",
+            "  this.prop = 'asdf';",
+            "}",
+            "Child.prototype = new x.y.z.Parent();")
         },
         null,
         BAD_PRIVATE_PROPERTY_ACCESS,
@@ -447,14 +447,14 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   public void testPrivateAccess_googModule() {
     String[] js = new String[] {
           LINE_JOINER.join(
-              "goog.module('example.One');",
-              "/** @constructor */ function One() {}",
-              "/** @private */ One.prototype.m = function() {};",
-              "exports = One;"),
+          "goog.module('example.One');",
+          "/** @constructor */ function One() {}",
+          "/** @private */ One.prototype.m = function() {};",
+          "exports = One;"),
           LINE_JOINER.join(
-              "goog.module('example.two');",
-              "var One = goog.require('example.One');",
-              "(new One()).m();"),
+          "goog.module('example.two');",
+          "var One = goog.require('example.One');",
+          "(new One()).m();"),
         };
 
     this.mode = TypeInferenceMode.OTI_ONLY;
@@ -712,15 +712,15 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         SourceFile.fromCode(
             "foo.js",
             LINE_JOINER.join(
-                "goog.provide('Foo');",
-                "/** @interface */ Foo = function() {};",
-                "/** @protected */ Foo.prop = {};")),
+            "goog.provide('Foo');",
+            "/** @interface */ Foo = function() {};",
+            "/** @protected */ Foo.prop = {};")),
         SourceFile.fromCode(
             "bar.js",
             LINE_JOINER.join(
-                "goog.require('Foo');",
-                "/** @constructor @implements {Foo} */",
-                "function Bar() { Foo.prop; };"))),
+            "goog.require('Foo');",
+            "/** @constructor @implements {Foo} */",
+            "function Bar() { Foo.prop; };"))),
         null, null);
 }
 
@@ -729,27 +729,27 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         SourceFile.fromCode(
             "a.js",
             LINE_JOINER.join(
-                "goog.provide('A');",
-                "/** @constructor */",
-                "var A = function() {",
-                "  /**",
-                "   * @type {?String}",
-                "   * @protected",
-                "   */",
-                "  this.prop;",
-                "}")),
+            "goog.provide('A');",
+            "/** @constructor */",
+            "var A = function() {",
+            "  /**",
+            "   * @type {?String}",
+            "   * @protected",
+            "   */",
+            "  this.prop;",
+            "}")),
         SourceFile.fromCode(
             "b.js",
             LINE_JOINER.join(
-                "goog.require('A');",
-                "/**",
-                " * @constructor",
-                " * @extends {A}",
-                " */",
-                "var B = function() {",
-                "  this.prop.length;",
-                "  this.prop.length;",
-                "};"))),
+            "goog.require('A');",
+            "/**",
+            " * @constructor",
+            " * @extends {A}",
+            " */",
+            "var B = function() {",
+            "  this.prop.length;",
+            "  this.prop.length;",
+            "};"))),
         null, null);
   }
 
@@ -761,42 +761,42 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         SourceFile.fromCode(
             "a.js",
             LINE_JOINER.join(
-                "goog.provide('A');",
-                "/** @constructor */",
-                "var A = function() {}",
-                "/** @protected */",
-                "A.prototype.method = function() {};")),
+            "goog.provide('A');",
+            "/** @constructor */",
+            "var A = function() {}",
+            "/** @protected */",
+            "A.prototype.method = function() {};")),
         SourceFile.fromCode(
             "b1.js",
             LINE_JOINER.join(
-                "goog.require('A');",
-                "goog.provide('B1');",
-                "/** @constructor @extends {A} */",
-                "var B1 = function() {};",
-                "/** @override */",
-                "B1.prototype.method = function() {};")),
+            "goog.require('A');",
+            "goog.provide('B1');",
+            "/** @constructor @extends {A} */",
+            "var B1 = function() {};",
+            "/** @override */",
+            "B1.prototype.method = function() {};")),
         SourceFile.fromCode(
             "b2.js",
             LINE_JOINER.join(
-                "goog.require('A');",
-                "goog.provide('B2');",
-                "/** @constructor @extends {A} */",
-                "var B2 = function() {};",
-                "/** @override */",
-                "B2.prototype.method = function() {};")),
+            "goog.require('A');",
+            "goog.provide('B2');",
+            "/** @constructor @extends {A} */",
+            "var B2 = function() {};",
+            "/** @override */",
+            "B2.prototype.method = function() {};")),
         SourceFile.fromCode(
             "c.js",
             LINE_JOINER.join(
-                "goog.require('B1');",
-                "goog.require('B2');",
-                "/**",
-                " * @param {!B1} b1",
-                " * @constructor",
-                " * @extends {B2}",
-                " */",
-                "var C = function(b1) {",
-                "  var x = b1.method();",
-                "};"))),
+            "goog.require('B1');",
+            "goog.require('B2');",
+            "/**",
+            " * @param {!B1} b1",
+            " * @constructor",
+            " * @extends {B2}",
+            " */",
+            "var C = function(b1) {",
+            "  var x = b1.method();",
+            "};"))),
         null, null);
   }
 
@@ -1226,82 +1226,94 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace1() {
-    // Don't compare the generated JsDoc. It includes annotations we're not interested in,
-    // like @inherited.
-    compareJsDoc = false;
-
     test(
         ImmutableList.of(
             SourceFile.fromCode("foo.js", "goog.provide('foo');"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/**\n"
-                + "  * @fileoverview\n"
-                + "  * @package\n"
-                + "  */\n"
-                + "goog.provide('foo.bar');"),
+                LINE_JOINER.join(
+                "/**\n",
+                "  * @fileoverview\n",
+                "  * @package\n",
+                "  */\n",
+                "goog.provide('foo.bar');")),
             SourceFile.fromCode("bar.js", "goog.require('foo')")),
-        ImmutableList.of(SourceFile.fromCode("foo.js", "var foo={};"),
-            SourceFile.fromCode(Compiler.joinPathParts("foo", "bar.js"), "foo.bar={};"),
+        ImmutableList.of(
+        	SourceFile.fromCode("foo.js", "/** @const */ var foo={};"),
+            SourceFile.fromCode(
+            	Compiler.joinPathParts("foo", "bar.js"),
+            	LINE_JOINER.join(
+                "/**\n",
+                "  * @fileoverview\n",
+                "  * @package\n",
+                "  */\n",
+            	"/** @const */ foo.bar={};")),
             SourceFile.fromCode("bar.js", "")),
         null, null);
-
-    compareJsDoc = true;
   }
 
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace2() {
-    // Don't compare the generated JsDoc. It includes annotations we're not interested in,
-    // like @inherited.
-    compareJsDoc = false;
-
     test(
         ImmutableList.of(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/**\n"
-                + "  * @fileoverview\n"
-                + "  * @package\n"
-                + "  */\n"
-                + "goog.provide('foo.bar');"),
+                LINE_JOINER.join(
+                "/**\n",
+                "  * @fileoverview\n",
+                "  * @package\n",
+                "  */\n",
+                "goog.provide('foo.bar');")),
             SourceFile.fromCode("foo.js", "goog.provide('foo');"),
             SourceFile.fromCode(
                 "bar.js",
-                "goog.require('foo');\n"
-                + "var x = foo;")),
-        ImmutableList.of(SourceFile.fromCode(Compiler.joinPathParts("foo", "bar.js"),
-                "var foo={};foo.bar={};"),
-            SourceFile.fromCode("foo.js", ""), SourceFile.fromCode("bar.js", "var x=foo")),
+                LINE_JOINER.join(
+                "goog.require('foo');\n",
+                "var x = foo;"))),
+        ImmutableList.of(
+        	SourceFile.fromCode(
+        		Compiler.joinPathParts("foo", "bar.js"),
+        		LINE_JOINER.join(
+                "/** @const */var foo={};",
+                "/**\n",
+                "  * @fileoverview\n",
+                "  * @package\n",
+                "  */\n",
+        		"/** @const */foo.bar={};")),
+            SourceFile.fromCode("foo.js", ""),
+            SourceFile.fromCode("bar.js", "var x=foo")),
         null, null);
-
-    compareJsDoc = true;
   }
 
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace3() {
-    // Don't compare the generated JsDoc. It includes annotations we're not interested in,
-    // like @inherited.
-    compareJsDoc = false;
-
     test(
         ImmutableList.of(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/**\n"
-                + " * @fileoverview\n"
-                + " * @package\n"
-                + " */\n"
-                + "goog.provide('one.two');\n"
-                + "one.two.three = function(){};"),
+                LINE_JOINER.join(
+                "/**\n",
+                " * @fileoverview\n",
+                " * @package\n",
+                " */\n",
+                "goog.provide('one.two');\n",
+                "one.two.three = function(){};")),
             SourceFile.fromCode(
                 "baz.js",
-                "goog.require('one.two');\n"
-                + "var x = one.two;")),
+                LINE_JOINER.join(
+                "goog.require('one.two');\n",
+                "var x = one.two;"))),
         ImmutableList.of(
-            SourceFile.fromCode(Compiler.joinPathParts("foo", "bar.js"),
-                "var one={};one.two={};one.two.three=function(){};"),
+            SourceFile.fromCode(
+            	Compiler.joinPathParts("foo", "bar.js"),
+                LINE_JOINER.join(
+                "/** @const */ var one={};",
+                "/**\n",
+                " * @fileoverview\n",
+                " * @package\n",
+                " */\n",
+                "/** @const */ one.two={};",
+                "one.two.three=function(){};")),
             SourceFile.fromCode("baz.js", "var x=one.two")),
         null, null);
-
-    compareJsDoc = true;
   }
 
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace4() {
@@ -1941,38 +1953,38 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   public void testFinalClassCannotBeSubclassed() {
     testError(
         LINE_JOINER.join(
-            "/**",
-            " * @constructor",
-            " * @final",
-            " */ var Foo = function() {};",
-            "/**",
-            " * @constructor",
-            " * @extends {Foo}*",
-            " */ var Bar = function() {};"),
+        "/**",
+        " * @constructor",
+        " * @final",
+        " */ var Foo = function() {};",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo}*",
+        " */ var Bar = function() {};"),
         EXTEND_FINAL_CLASS);
 
     testError(
         LINE_JOINER.join(
-            "/**",
-            " * @constructor",
-            " * @final",
-            " */ function Foo() {};",
-            "/**",
-            " * @constructor",
-            " * @extends {Foo}*",
-            " */ function Bar() {};"),
+        "/**",
+        " * @constructor",
+        " * @final",
+        " */ function Foo() {};",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo}*",
+        " */ function Bar() {};"),
         EXTEND_FINAL_CLASS);
 
     testSame(
         LINE_JOINER.join(
-            "/**",
-            " * @constructor",
-            " * @const",
-            " */ var Foo = function() {};",
-            "/**",
-            " * @constructor",
-            " * @extends {Foo}",
-            " */ var Bar = function() {};"));
+        "/**",
+        " * @constructor",
+        " * @const",
+        " */ var Foo = function() {};",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo}",
+        " */ var Bar = function() {};"));
   }
 
   public void testCircularPrototypeLink() {
@@ -1981,9 +1993,9 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
     // This warning already has a test: TypeCheckTest::testPrototypeLoop.
     testError(
         LINE_JOINER.join(
-            "/** @constructor @extends {Foo} */ function Foo() {}",
-            "/** @const */ Foo.prop = 1;",
-            "Foo.prop = 2;"),
+        "/** @constructor @extends {Foo} */ function Foo() {}",
+        "/** @const */ Foo.prop = 1;",
+        "Foo.prop = 2;"),
         CONST_PROPERTY_REASSIGNED_VALUE);
 
     // In OTI this next test causes a stack overflow.
@@ -1991,10 +2003,10 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
 
     testError(
         LINE_JOINER.join(
-            "/** @constructor */ function Foo() {}",
-            "/** @type {!Foo} */ Foo.prototype = new Foo();",
-            "/** @const */ Foo.prop = 1;",
-            "Foo.prop = 2;"),
+        "/** @constructor */ function Foo() {}",
+        "/** @type {!Foo} */ Foo.prototype = new Foo();",
+        "/** @const */ Foo.prop = 1;",
+        "Foo.prop = 2;"),
         CONST_PROPERTY_REASSIGNED_VALUE);
   }
 }

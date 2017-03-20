@@ -80,7 +80,6 @@ public final class ReplaceStringsTest extends CompilerTestCase {
     super(EXTERNS, true);
     enableNormalize();
     parseTypeInfo = true;
-    compareJsDoc = false;
   }
 
   @Override
@@ -229,28 +228,30 @@ public final class ReplaceStringsTest extends CompilerTestCase {
 
   public void testThrowError4() {
     testDebugStrings(
-        "/** @constructor */\n" +
-        "var A = function() {};\n" +
-        "A.prototype.m = function(child) {\n" +
-        "  if (this.haveChild(child)) {\n" +
-        "    throw Error('Node: ' + this.getDataPath() +\n" +
-        "                ' already has a child named ' + child);\n" +
-        "  } else if (child.parentNode) {\n" +
-        "    throw Error('Node: ' + child.getDataPath() +\n" +
-        "                ' already has a parent');\n" +
-        "  }\n" +
-        "  child.parentNode = this;\n" +
-        "};",
-
-        "var A = function(){};\n" +
-        "A.prototype.m = function(child) {\n" +
-        "  if (this.haveChild(child)) {\n" +
-        "    throw Error('a' + '`' + this.getDataPath() + '`' + child);\n" +
-        "  } else if (child.parentNode) {\n" +
-        "    throw Error('b' + '`' + child.getDataPath());\n" +
-        "  }\n" +
-        "  child.parentNode = this;\n" +
-        "};",
+    	LINE_JOINER.join(
+        "/** @constructor */\n",
+        "var A = function() {};\n",
+        "A.prototype.m = function(child) {\n",
+        "  if (this.haveChild(child)) {\n",
+        "    throw Error('Node: ' + this.getDataPath() +\n",
+        "                ' already has a child named ' + child);\n",
+        "  } else if (child.parentNode) {\n",
+        "    throw Error('Node: ' + child.getDataPath() +\n",
+        "                ' already has a parent');\n",
+        "  }\n",
+        "  child.parentNode = this;\n", 
+        "};"),
+    	LINE_JOINER.join(
+    	"/** @constructor */\n",
+        "var A = function(){};\n",
+        "A.prototype.m = function(child) {\n",
+        "  if (this.haveChild(child)) {\n",
+        "    throw Error('a' + '`' + this.getDataPath() + '`' + child);\n",
+        "  } else if (child.parentNode) {\n",
+        "    throw Error('b' + '`' + child.getDataPath());\n",
+        "  }\n",
+        "  child.parentNode = this;\n",
+        "};"),
         (new String[] {
             "a",
             "Node: ` already has a child named `",
@@ -512,37 +513,53 @@ public final class ReplaceStringsTest extends CompilerTestCase {
     builder.add("C.prototype.f(?)");
     functionsToInspect = builder.build();
 
-    String js =
-        "/** @constructor */function A() {}\n"
-        + "/** @param {string} p\n"
-        + "  * @return {string} */\n"
-        + "A.prototype.f = function(p) {return 'a' + p;};\n"
-        + "/** @constructor */function B() {}\n"
-        + "/** @param {string} p\n"
-        + "  * @return {string} */\n"
-        + "B.prototype.f = function(p) {return p + 'b';};\n"
-        + "/** @constructor */function C() {}\n"
-        + "/** @param {string} p\n"
-        + "  * @return {string} */\n"
-        + "C.prototype.f = function(p) {return 'c' + p + 'c';};\n"
-        + "/** @type {A|B} */var ab = 1 ? new B : new A;\n"
-        + "/** @type {string} */var n = ab.f('not replaced');\n"
-        + "(new A).f('replaced with a');"
-        + "(new C).f('replaced with b');";
-
-    String output =
-        "function A() {}\n"
-        + "A.prototype.A_prototype$f = function(p) { return'a'+p; };\n"
-        + "function B() {}\n"
-        + "B.prototype.A_prototype$f = function(p) { return p+'b'; };\n"
-        + "function C() {}\n"
-        + "C.prototype.C_prototype$f = function(p) { return'c'+p+'c'; };\n"
-        + "var ab = 1 ? new B : new A;\n"
-        + "var n = ab.A_prototype$f('not replaced');\n"
-        + "(new A).A_prototype$f('a');"
-        + "(new C).C_prototype$f('b');";
-
-    testDebugStrings(js, output,
+    testDebugStrings(
+    	LINE_JOINER.join(
+    	"/** @constructor */",
+        "function A() {}\n",
+        "/** @param {string} p\n",
+        "  * @return {string} */\n",
+        "A.prototype.f = function(p) {return 'a' + p;};\n",
+        "/** @constructor */",
+        "function B() {}\n",
+        "/** @param {string} p\n",
+        "  * @return {string} */\n",
+        "B.prototype.f = function(p) {return p + 'b';};\n",
+        "/** @constructor */",
+        "function C() {}\n",
+        "/** @param {string} p\n",
+        "  * @return {string} */\n",
+        "C.prototype.f = function(p) {return 'c' + p + 'c';};\n",
+        "/** @type {A|B} */",
+        "var ab = 1 ? new B : new A;\n",
+        "/** @type {string} */",
+        "var n = ab.f('not replaced');\n",
+        "(new A).f('replaced with a');",
+        "(new C).f('replaced with b');"),
+    	
+    	LINE_JOINER.join(
+    	"/** @constructor */",
+    	"function A() {}\n",
+    	"/** @param {string} p\n",
+    	"  * @return {string} */\n",
+    	"A.prototype.A_prototype$f = function(p) { return'a'+p; };\n",
+    	"/** @constructor */",
+    	"function B() {}\n",
+    	"/** @param {string} p\n",
+    	"  * @return {string} */\n",
+    	"B.prototype.A_prototype$f = function(p) { return p+'b'; };\n",
+    	"/** @constructor */",
+    	"function C() {}\n",
+    	"/** @param {string} p\n",
+    	"  * @return {string} */\n",
+    	"C.prototype.C_prototype$f = function(p) { return'c'+p+'c'; };\n",
+    	"/** @type {A|B} */",
+    	"var ab = 1 ? new B : new A;\n",
+    	"/** @type {string} */",
+    	"var n = ab.A_prototype$f('not replaced');\n",
+    	"(new A).A_prototype$f('a');",
+    	"(new C).C_prototype$f('b');"),
+        
         new String[] {
             "a", "replaced with a",
             "b", "replaced with b"});
