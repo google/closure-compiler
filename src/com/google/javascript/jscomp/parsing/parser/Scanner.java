@@ -778,8 +778,12 @@ public class Scanner {
     case '_':
       return true;
     default:
-      // TODO: UnicodeLetter also includes Letter Number (NI)
-      return Character.isLetter(ch);
+      // Workaround b/36459436
+      // When running under GWT, Character.isLetter only handles ASCII
+      // Angular relies heavily on U+0275 (Latin Barred O)
+      return ch == 0x0275
+        // TODO: UnicodeLetter also includes Letter Number (NI)
+        || Character.isLetter(ch);
     }
   }
 
