@@ -120,11 +120,11 @@ class TypeValidator {
 
   static final DiagnosticType HIDDEN_INTERFACE_PROPERTY_MISMATCH =
       DiagnosticType.warning(
-        "JSC_HIDDEN_INTERFACE_PROPERTY_MISMATCH",
-        "mismatch of the {0} property type and the type " +
-        "of the property it overrides from interface {1}\n" +
-        "original: {2}\n" +
-        "override: {3}");
+          "JSC_HIDDEN_INTERFACE_PROPERTY_MISMATCH",
+          "mismatch of the {0} property on type {1} and the type "
+              + "of the property it overrides from interface {2}\n"
+              + "original: {3}\n"
+              + "override: {4}");
 
   static final DiagnosticType ABSTRACT_METHOD_NOT_IMPLEMENTED =
       DiagnosticType.warning(
@@ -708,10 +708,15 @@ class TypeValidator {
         // Implemented, but not correctly typed
         FunctionType constructor =
             implementedInterface.toObjectType().getConstructor();
-        JSError err = t.makeError(propNode,
-            HIDDEN_INTERFACE_PROPERTY_MISMATCH, prop,
-            constructor.getTopMostDefiningType(prop).toString(),
-            required.toString(), found.toString());
+        JSError err =
+            t.makeError(
+                propNode,
+                HIDDEN_INTERFACE_PROPERTY_MISMATCH,
+                prop,
+                instance.toString(),
+                constructor.getTopMostDefiningType(prop).toString(),
+                required.toString(),
+                found.toString());
         TypeMismatch.registerMismatch(
             this.mismatches, this.implicitInterfaceUses, found, required, err);
         report(err);

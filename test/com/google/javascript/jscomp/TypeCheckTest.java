@@ -4283,7 +4283,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         + "  method: function() { return ''; }\n"
         + "}",
         ""
-        + "mismatch of the method property type and the type of the property "
+        + "mismatch of the method property on type MyClass and the type of the property "
         + "it overrides from interface MyInterface\n"
         + "original: function (): number\n"
         + "override: function (): string");
@@ -10102,42 +10102,40 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testInterfaceInheritanceCheck5() throws Exception {
     testTypes(
-        "/** @interface */function Super() {};" +
-        "/** @return {string} */Super.prototype.foo = function() {};" +
-        "/** @constructor\n @implements {Super} */function Sub() {};" +
-        "/** @override\n @return {number} */Sub.prototype.foo =\n" +
-        "function() { return 1; };",
-        "mismatch of the foo property type and the type of the property it " +
-        "overrides from interface Super\n" +
-        "original: function (this:Super): string\n" +
-        "override: function (this:Sub): number");
+        "/** @interface */function Super() {};"
+            + "/** @return {string} */Super.prototype.foo = function() {};"
+            + "/** @constructor\n @implements {Super} */function Sub() {};"
+            + "/** @override\n @return {number} */Sub.prototype.foo = function() { return 1; };",
+        "mismatch of the foo property on type Sub and the type of the property it "
+            + "overrides from interface Super\n"
+            + "original: function (this:Super): string\n"
+            + "override: function (this:Sub): number");
   }
 
   public void testInterfaceInheritanceCheck6() throws Exception {
     testTypes(
-        "/** @interface */function Root() {};" +
-        "/** @return {string} */Root.prototype.foo = function() {};" +
-        "/** @interface\n @extends {Root} */function Super() {};" +
-        "/** @constructor\n @implements {Super} */function Sub() {};" +
-        "/** @override\n @return {number} */Sub.prototype.foo =\n" +
-        "function() { return 1; };",
-        "mismatch of the foo property type and the type of the property it " +
-        "overrides from interface Root\n" +
-        "original: function (this:Root): string\n" +
-        "override: function (this:Sub): number");
+        "/** @interface */function Root() {};"
+            + "/** @return {string} */Root.prototype.foo = function() {};"
+            + "/** @interface\n @extends {Root} */function Super() {};"
+            + "/** @constructor\n @implements {Super} */function Sub() {};"
+            + "/** @override\n @return {number} */Sub.prototype.foo = function() { return 1; };",
+        "mismatch of the foo property on type Sub and the type of the property it "
+            + "overrides from interface Root\n"
+            + "original: function (this:Root): string\n"
+            + "override: function (this:Sub): number");
   }
 
   public void testInterfaceInheritanceCheck7() throws Exception {
     testTypes(
-        "/** @interface */function Super() {};" +
-        "/** @param {number} bar */Super.prototype.foo = function(bar) {};" +
-        "/** @constructor\n @implements {Super} */function Sub() {};" +
-        "/** @override\n  @param {string} bar */Sub.prototype.foo =\n" +
-        "function(bar) {};",
-        "mismatch of the foo property type and the type of the property it " +
-        "overrides from interface Super\n" +
-        "original: function (this:Super, number): undefined\n" +
-        "override: function (this:Sub, string): undefined");
+        "/** @interface */function Super() {};"
+            + "/** @param {number} bar */Super.prototype.foo = function(bar) {};"
+            + "/** @constructor\n @implements {Super} */function Sub() {};"
+            + "/** @override\n  @param {string} bar */Sub.prototype.foo =\n"
+            + "function(bar) {};",
+        "mismatch of the foo property on type Sub and the type of the property it "
+            + "overrides from interface Super\n"
+            + "original: function (this:Super, number): undefined\n"
+            + "override: function (this:Sub, string): undefined");
   }
 
   public void testInterfaceInheritanceCheck8() throws Exception {
@@ -10183,16 +10181,16 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testInterfaceInheritanceCheck12() throws Exception {
     testTypes(
-        "/** @interface */ function I() {};\n" +
-        "/** @type {string} */ I.prototype.foobar;\n" +
-        "/** \n * @constructor \n * @implements {I} */\n" +
-        "function C() {\n" +
-        "/** \n * @type {number} */ this.foobar = 2;};\n" +
-        "/** @type {I} */ \n var test = new C(); alert(test.foobar);",
-        "mismatch of the foobar property type and the type of the property" +
-        " it overrides from interface I\n" +
-        "original: string\n" +
-        "override: number");
+        "/** @interface */ function I() {};\n"
+            + "/** @type {string} */ I.prototype.foobar;\n"
+            + "/** \n * @constructor \n * @implements {I} */\n"
+            + "function C() {\n"
+            + "/** \n * @type {number} */ this.foobar = 2;};\n"
+            + "/** @type {I} */ \n var test = new C(); alert(test.foobar);",
+        "mismatch of the foobar property on type C and the type of the property"
+            + " it overrides from interface I\n"
+            + "original: string\n"
+            + "override: number");
   }
 
   public void testInterfaceInheritanceCheck13() throws Exception {
@@ -10275,14 +10273,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
    */
   public void testInterfacePropertyNotImplemented3() throws Exception {
     testTypes(
-        "/** @interface\n @template T */function Int() {};" +
-        "/** @return {T} */Int.prototype.foo = function() {};" +
-        "/** @constructor\n @implements {Int<string>} */function Foo() {};" +
-        "/** @return {number}\n @override */Foo.prototype.foo = function() {};",
-        "mismatch of the foo property type and the type of the property it " +
-        "overrides from interface Int\n" +
-        "original: function (this:Int): string\n" +
-        "override: function (this:Foo): number");
+        "/** @interface\n @template T */function Int() {};"
+            + "/** @return {T} */Int.prototype.foo = function() {};"
+            + "/** @constructor\n @implements {Int<string>} */function Foo() {};"
+            + "/** @return {number}\n @override */Foo.prototype.foo = function() {};",
+        "mismatch of the foo property on type Foo and the type of the property it "
+            + "overrides from interface Int\n"
+            + "original: function (this:Int): string\n"
+            + "override: function (this:Foo): number");
   }
 
   public void testStubConstructorImplementingInterface() throws Exception {
@@ -10536,38 +10534,40 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             + "function C() {}\n"
             + "/** @override */\n"
             + "C.prototype.x = 'foo';",
-        "mismatch of the x property type and the type of the property it "
+        "mismatch of the x property on type C and the type of the property it "
             + "overrides from interface T\n"
             + "original: number\n"
             + "override: string");
   }
 
   public void testDataPropertyOnInterface3() throws Exception {
-    testTypes("/** @interface */ function T() {};\n" +
-        "/** @type {number} */T.prototype.x;\n" +
-        "/** @constructor \n" +
-        " *  @implements {T} \n" +
-        " */\n" +
-        "function C() {}\n" +
-        "/** @override */\n" +
-        "C.prototype.x = 'foo';",
-        "mismatch of the x property type and the type of the property it " +
-        "overrides from interface T\n" +
-        "original: number\n" +
-        "override: string");
+    testTypes(
+        "/** @interface */ function T() {};\n"
+            + "/** @type {number} */T.prototype.x;\n"
+            + "/** @constructor \n"
+            + " *  @implements {T} \n"
+            + " */\n"
+            + "function C() {}\n"
+            + "/** @override */\n"
+            + "C.prototype.x = 'foo';",
+        "mismatch of the x property on type C and the type of the property it "
+            + "overrides from interface T\n"
+            + "original: number\n"
+            + "override: string");
   }
 
   public void testDataPropertyOnInterface4() throws Exception {
-    testTypes("/** @interface */ function T() {};\n" +
-        "/** @type {number} */T.prototype.x;\n" +
-        "/** @constructor \n" +
-        " *  @implements {T} \n" +
-        " */\n" +
-        "function C() { /** @type {string} */ \n this.x = 'foo'; }\n",
-        "mismatch of the x property type and the type of the property it " +
-        "overrides from interface T\n" +
-        "original: number\n" +
-        "override: string");
+    testTypes(
+        "/** @interface */ function T() {};\n"
+            + "/** @type {number} */T.prototype.x;\n"
+            + "/** @constructor \n"
+            + " *  @implements {T} \n"
+            + " */\n"
+            + "function C() { /** @type {string} */ \n this.x = 'foo'; }\n",
+        "mismatch of the x property on type C and the type of the property it "
+            + "overrides from interface T\n"
+            + "original: number\n"
+            + "override: string");
   }
 
   public void testWarnDataPropertyOnInterface3() throws Exception {
