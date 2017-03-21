@@ -2522,6 +2522,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseWarning("var str = '\\2'", "Unnecessary escape: '\\2' is equivalent to just '2'");
     parseWarning("var str = '\\3'", "Unnecessary escape: '\\3' is equivalent to just '3'");
     parseWarning("var str = '\\%'", "Unnecessary escape: '\\%' is equivalent to just '%'");
+
+    parse("var str = '\\$'");  // TODO(tbreisacher): We should warn for this case.
+
+    mode = LanguageMode.ECMASCRIPT6;
+    expectFeatures(Feature.TEMPLATE_LITERALS);
+    parse("var str = `\\$`");
   }
 
   public void testEOFInUnicodeEscape() {

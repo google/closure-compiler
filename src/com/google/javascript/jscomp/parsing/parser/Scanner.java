@@ -926,6 +926,9 @@ public class Scanner {
           reportWarning("Unnecessary escape: '\\%%' is equivalent to just '%%'");
         } else if (next == '/') {
           // Don't warn for '\/' (for now) since it's common in "<\/script>"
+        } else if (next == '$') {
+          // Don't warn for '\$' in template literal.
+          // TODO(tbreisacher): We should still warn for '\$' in a regular string literal.
         } else {
           reportWarning(
               "Unnecessary escape: '\\" + next + "' is equivalent to just '" + next + "'");
