@@ -122,7 +122,6 @@ public final class JsMessageExtractor {
    *     JS messages, or if two messages have the same key
    */
   public <T extends SourceFile> Collection<JsMessage> extractMessages(Iterable<T> inputs) {
-
     Compiler compiler = new Compiler();
     compiler.init(
         ImmutableList.<SourceFile>of(),
