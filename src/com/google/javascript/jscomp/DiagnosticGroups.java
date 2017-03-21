@@ -591,6 +591,7 @@ public class DiagnosticGroups {
               CheckUnusedLabels.UNUSED_LABEL,
               CheckUselessBlocks.USELESS_BLOCK,
               ClosureCheckModule.GOOG_MODULE_IN_NON_MODULE,
+              ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION,
               ClosureCheckModule.LET_GOOG_REQUIRE,
               ClosureCheckModule.JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME,
               ClosureCheckModule.JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,

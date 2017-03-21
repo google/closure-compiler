@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Ascii.isUpperCase;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.NodeTraversal.AbstractModuleCallback;
@@ -92,6 +94,11 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       DiagnosticType.error(
           "JSC_ONE_REQUIRE_PER_DECLARATION",
           "There may only be one goog.require() per var/let/const declaration.");
+
+  static final DiagnosticType INCORRECT_SHORTNAME_CAPITALIZATION =
+      DiagnosticType.disabled(
+          "JSC_INCORRECT_SHORTNAME_CAPITALIZATION",
+          "The capitalization of short name {0} is incorrect.");
 
   static final DiagnosticType EXPORT_NOT_A_MODULE_LEVEL_STATEMENT =
       DiagnosticType.error(
@@ -380,8 +387,13 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       return;
     }
     Node lhs = declaration.getFirstChild();
-    if (lhs.isDestructuringLhs() && !isValidDestructuringImport(lhs)) {
-      t.report(declaration, INVALID_DESTRUCTURING_REQUIRE);
+    if (lhs.isDestructuringLhs()) {
+      if (!isValidDestructuringImport(lhs)) {
+        t.report(declaration, INVALID_DESTRUCTURING_REQUIRE);
+      }
+    } else {
+      Preconditions.checkState(lhs.isName());
+      checkShortName(t, lhs, callNode.getLastChild().getString());
     }
     currentModule.importsByLongRequiredName.put(extractFirstArgumentName(callNode), lhs);
     for (Node nameNode : NodeUtil.getLhsNodesOfDeclaration(declaration)) {
@@ -389,6 +401,18 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       if (!currentModule.shortImportNames.add(name)) {
          t.report(nameNode, DUPLICATE_NAME_SHORT_REQUIRE, name);
       }
+    }
+  }
+
+  private static void checkShortName(NodeTraversal t, Node shortNameNode, String namespace) {
+    String shortName = shortNameNode.getString();
+    String lastSegment = namespace.substring(namespace.lastIndexOf('.') + 1);
+    if (shortName.equals(lastSegment)) {
+      return;
+    }
+
+    if (isUpperCase(shortName.charAt(0)) != isUpperCase(lastSegment.charAt(0))) {
+      t.report(shortNameNode, INCORRECT_SHORTNAME_CAPITALIZATION, shortName);
     }
   }
 

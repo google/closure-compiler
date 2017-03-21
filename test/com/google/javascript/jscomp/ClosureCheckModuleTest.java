@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.ClosureCheckModule.EXPORT_REPEATED_ER
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_REFERENCES_THIS;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_THROW;
+import static com.google.javascript.jscomp.ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION;
 import static com.google.javascript.jscomp.ClosureCheckModule.INVALID_DESTRUCTURING_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.LET_GOOG_REQUIRE;
@@ -152,13 +153,13 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
         LINE_JOINER.join(
             "goog.loadModule(function(exports){",
             "  'use strict';",
-            "  goog.module('xyz');",
+            "  goog.module('Xyz');",
             "  exports = class {}",
             "  return exports;",
             "});",
             "goog.loadModule(function(exports){",
             "  goog.module('abc');",
-            "  var Foo = goog.require('xyz');",
+            "  var Foo = goog.require('Xyz');",
             "  var x = new Foo;",
             "  return exports;",
             "});"));
@@ -556,6 +557,34 @@ public final class ClosureCheckModuleTest extends Es6CompilerTestCase {
             "goog.module('xyz');",
             "",
             "const {assert, fail} = goog.require('goog.asserts');"));
+  }
+
+  public void testShorthandNameConvention() {
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "const googAsserts = goog.require('goog.asserts');"));
+
+    testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "const GoogAsserts = goog.require('goog.asserts');"),
+        INCORRECT_SHORTNAME_CAPITALIZATION);
+
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "const Event = goog.require('goog.events.Event');"));
+
+    testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "const event = goog.require('goog.events.Event');"),
+        INCORRECT_SHORTNAME_CAPITALIZATION);
   }
 
   public void testIllegalExports() {
