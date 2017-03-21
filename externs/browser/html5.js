@@ -2681,6 +2681,13 @@ History.prototype.state;
 History.prototype.scrollRestoration;
 
 /**
+ * Add history property to Window.
+ *
+ * @type {!History}
+ */
+Window.prototype.history;
+
+/**
  * @see http://www.whatwg.org/specs/web-apps/current-work/#popstateevent
  * @constructor
  * @extends {Event}
