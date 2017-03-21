@@ -219,6 +219,8 @@ public abstract class CompilerTestCase extends TestCase {
           "/** @type {!Function} */ Function.prototype.call;",
           "/** @type {number} */",
           "Function.prototype.length;",
+          "/** @type {string} */",
+          "Function.prototype.name;",
           "/** @constructor",
           " * @param {*=} arg",
           " * @return {string} */",

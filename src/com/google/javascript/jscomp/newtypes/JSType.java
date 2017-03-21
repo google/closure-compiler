@@ -1108,19 +1108,19 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return isSubtypeOf(other, SubtypeCache.create());
   }
 
-  public static MismatchInfo whyNotSubtypeOf(JSType t1, JSType t2) {
-    if (t1.isSingletonObj() && t2.isSingletonObj()) {
+  public static MismatchInfo whyNotSubtypeOf(JSType found, JSType expected) {
+    if (found.isSingletonObj() && expected.isSingletonObj()) {
       MismatchInfo[] boxedInfo = new MismatchInfo[1];
       ObjectType.whyNotSubtypeOf(
-          t1.getObjTypeIfSingletonObj(),
-          t2.getObjTypeIfSingletonObj(),
+          found.getObjTypeIfSingletonObj(),
+          expected.getObjTypeIfSingletonObj(),
           boxedInfo);
       return boxedInfo[0];
     }
-    if (t1.isUnion()) {
+    if (found.isUnion()) {
       MismatchInfo[] boxedInfo = new MismatchInfo[1];
       boolean areSubtypes =
-          t1.isSubtypeOfHelper(true, t2, SubtypeCache.create(), boxedInfo);
+          found.isSubtypeOfHelper(true, expected, SubtypeCache.create(), boxedInfo);
       Preconditions.checkState(!areSubtypes);
       return boxedInfo[0];
     }

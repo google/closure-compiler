@@ -19684,4 +19684,21 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "check(12);"),
         NewTypeInference.MISSING_RETURN_STATEMENT);
   }
+
+  public void testDontSpecializeLooseObjectToLiteralType() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {T} x",
+        " * @param {T} y",
+        " * @return {T}",
+        " * @template T",
+        " */",
+        "function f(x, y) { return y; }",
+        "function g(x) {",
+        "  x.myprop = 123;",
+        // WAI: we drop the loose type during instantiation
+        "  return f({a: 123}, x).myprop;",
+        "}"),
+        NewTypeInference.INEXISTENT_PROPERTY);
+  }
 }
