@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.JsMessage.Style.RELAX;
 import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORMED;
 
 import com.google.javascript.jscomp.JsMessage.Style;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,7 +50,6 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     messages = new HashMap<>();
     strictReplacement = false;
     style = RELAX;
-    compareJsDoc = false;
   }
 
   public void testReplaceSimpleMessage() {
@@ -59,9 +57,9 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .appendStringPart("Hi\nthere")
         .build());
 
-    test("/** @desc d */\n" +
-         "var MSG_A = goog.getMsg('asdf');",
-         "var MSG_A=\"Hi\\nthere\"");
+    test(
+        "/** @desc d */\n var MSG_A = goog.getMsg('asdf');",
+        "/** @desc d */\n var MSG_A='Hi\\nthere'");
   }
 
   public void testNameReplacement()  {
@@ -71,9 +69,9 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .appendStringPart(" ph")
         .build());
 
-    test("/** @desc d */\n" +
-         "var MSG_B=goog.getMsg('asdf {$measly}', {measly: x});",
-         "var MSG_B=\"One \"+ (x +\" ph\" )");
+    test(
+        "/** @desc d */\n var MSG_B=goog.getMsg('asdf {$measly}', {measly: x});",
+        "/** @desc d */\n var MSG_B='One '+ (x +' ph' )");
   }
 
   public void testGetPropReplacement()  {
@@ -81,9 +79,9 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .appendPlaceholderReference("amount")
         .build());
 
-    test("/** @desc d */\n" +
-         "var MSG_C = goog.getMsg('${$amount}', {amount: a.b.amount});",
-         "var MSG_C=a.b.amount");
+    test(
+        "/** @desc d */\n var MSG_C = goog.getMsg('${$amount}', {amount: a.b.amount});",
+        "/** @desc d */\n var MSG_C=a.b.amount");
   }
 
   public void testFunctionCallReplacement()  {
@@ -91,9 +89,9 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .appendPlaceholderReference("amount")
         .build());
 
-    test("/** @desc d */\n" +
-         "var MSG_D = goog.getMsg('${$amount}', {amount: getAmt()});",
-         "var MSG_D=getAmt()");
+    test(
+        "/** @desc d */\n var MSG_D = goog.getMsg('${$amount}', {amount: getAmt()});",
+        "/** @desc d */\n var MSG_D=getAmt()");
   }
 
   public void testMethodCallReplacement()  {
@@ -101,9 +99,9 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .appendPlaceholderReference("amount")
         .build());
 
-    test("/** @desc d */\n" +
-         "var MSG_E = goog.getMsg('${$amount}', {amount: obj.getAmt()});",
-         "var MSG_E=obj.getAmt()");
+    test(
+        "/** @desc d */\n var MSG_E = goog.getMsg('${$amount}', {amount: obj.getAmt()});",
+        "/** @desc d */\n var MSG_E=obj.getAmt()");
   }
 
   public void testHookReplacement()  {
@@ -113,9 +111,9 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .appendStringPart(".")
         .build());
 
-    test("/** @desc d */\n" +
-         "var MSG_F = goog.getMsg('${$amount}', {amount: (a ? b : c)});",
-         "var MSG_F=\"#\"+((a?b:c)+\".\")");
+    test(
+        "/** @desc d */\n var MSG_F = goog.getMsg('${$amount}', {amount: (a ? b : c)});",
+        "/** @desc d */\n var MSG_F='#'+((a?b:c)+'.')");
   }
 
   public void testAddReplacement()  {
@@ -123,9 +121,9 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .appendPlaceholderReference("amount")
         .build());
 
-    test("/** @desc d */\n" +
-         "var MSG_G = goog.getMsg('${$amount}', {amount: x + ''});",
-         "var MSG_G=x+\"\"");
+    test(
+        "/** @desc d */\n var MSG_G = goog.getMsg('${$amount}', {amount: x + ''});",
+        "/** @desc d */\n var MSG_G=x+''");
   }
 
   public void testPlaceholderValueReferencedTwice()  {
@@ -137,9 +135,9 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .appendPlaceholderReference("jane")
         .build());
 
-    test("/** @desc d */\n" +
-         "var MSG_H = goog.getMsg('{$dick}{$jane}', {jane: x, dick: y});",
-         "var MSG_H=y+(\", \"+(y+(\" and \"+x)))");
+    test(
+        "/** @desc d */\n var MSG_H = goog.getMsg('{$dick}{$jane}', {jane: x, dick: y});",
+        "/** @desc d */\n var MSG_H = y + (', ' + (y + (' and ' + x)))");
   }
 
   public void testPlaceholderNameInLowerCamelCase()  {
@@ -148,9 +146,9 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .appendPlaceholderReference("amtEarned")
         .build());
 
-    test("/** @desc d */\n" +
-         "var MSG_I = goog.getMsg('${$amtEarned}', {amtEarned: x});",
-         "var MSG_I=\"Sum: $\"+x");
+    test(
+        "/** @desc d */\n var MSG_I = goog.getMsg('${$amtEarned}', {amtEarned: x});",
+        "/** @desc d */\n var MSG_I='Sum: $'+x");
   }
 
   public void testQualifiedMessageName()  {
@@ -160,9 +158,9 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .appendStringPart(" ph")
         .build());
 
-    test("/** @desc d */\n" +
-         "a.b.c.MSG_J = goog.getMsg('asdf {$measly}', {measly: x});",
-         "a.b.c.MSG_J=\"One \"+(x+\" ph\")");
+    test(
+        "/** @desc d */\n a.b.c.MSG_J = goog.getMsg('asdf {$measly}', {measly: x});",
+        "/** @desc d */\n a.b.c.MSG_J='One '+(x+' ph')");
   }
 
   public void testPlaceholderInPlaceholderValue()  {
@@ -172,22 +170,23 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .appendPlaceholderReference("b")
         .build());
 
-    test("/** @desc d */\n" +
-         "var MSG_L = goog.getMsg('{$a} has {$b}', {a: '{$b}', b: 1});",
-         "var MSG_L=\"{$b}\"+(\" has \"+1);");
+    test(
+        "/** @desc d */\n var MSG_L = goog.getMsg('{$a} has {$b}', {a: '{$b}', b: 1});",
+        "/** @desc d */\n var MSG_L='{$b}'+(' has '+1);");
   }
-  public void testSimpleMessageReplacementMissing()  {
+
+  public void testSimpleMessageReplacementMissing() {
     style = Style.LEGACY;
-    test("/** @desc d */\n" +
-         "var MSG_E = 'd*6a0@z>t';",
-         "var MSG_E = 'd*6a0@z>t'");
+    test(
+        "/** @desc d */\n var MSG_E = 'd*6a0@z>t';",
+        "/** @desc d */\n var MSG_E = 'd*6a0@z>t'");
   }
 
 
   public void testSimpleMessageReplacementMissingWithNewStyle()  {
-    test("/** @desc d */\n" +
-         "var MSG_E = goog.getMsg('missing');",
-         "var MSG_E = 'missing'");
+    test(
+        "/** @desc d */\n var MSG_E = goog.getMsg('missing');",
+        "/** @desc d */\n var MSG_E = 'missing'");
   }
 
   public void testStrictModeAndMessageReplacementAbsentInBundle()  {
@@ -216,14 +215,14 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
   public void testFunctionReplacementMissing()  {
     style = Style.LEGACY;
     test("var MSG_F = function() {return 'asdf'};",
-         "var MSG_F = function() {return\"asdf\"}");
+         "var MSG_F = function() {return'asdf'}");
   }
 
   public void testFunctionWithParamReplacementMissing()  {
     style = Style.LEGACY;
     test(
         "var MSG_G = function(measly) {return 'asdf' + measly};",
-        "var MSG_G=function(measly){return\"asdf\"+measly}");
+        "var MSG_G=function(measly){return'asdf'+measly}");
   }
 
   public void testPlaceholderNameInLowerUnderscoreCase()  {
@@ -262,7 +261,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .build());
     style = Style.LEGACY;
     test("var MSG_A = 'd*6a0@z>t';",
-         "var MSG_A=\"Hi\\nthere\"");
+         "var MSG_A='Hi\\nthere'");
   }
 
   public void testLegacyStyleNoPlaceholdersFunctionSyntax()  {
@@ -271,7 +270,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .build());
     style = Style.LEGACY;
     test("var MSG_B = function() {return 'asdf'};",
-         "var MSG_B=function(){return\"Hi\\nthere\"}");
+         "var MSG_B=function(){return'Hi\\nthere'}");
   }
 
   public void testLegacyStyleOnePlaceholder()  {
@@ -283,7 +282,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     style = Style.LEGACY;
     test(
         "var MSG_C = function(measly) {return 'asdf' + measly};",
-        "var MSG_C=function(measly){return\"One \"+(measly+\" ph\")}");
+        "var MSG_C=function(measly){return'One '+(measly+' ph')}");
   }
 
   public void testLegacyStyleTwoPlaceholders()  {
@@ -295,7 +294,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     style = Style.LEGACY;
     test(
         "var MSG_D = function(jane, dick) {return jane + dick};",
-        "var MSG_D=function(jane,dick){return dick+(\" and \"+jane)}");
+        "var MSG_D=function(jane,dick){return dick+(' and '+jane)}");
   }
 
   public void testLegacyStylePlaceholderNameInLowerCamelCase() {
@@ -306,7 +305,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     style = Style.LEGACY;
     test(
         "var MSG_E = function(amtEarned) {return amtEarned + 'x'};",
-        "var MSG_E=function(amtEarned){return\"Sum: $\"+amtEarned}");
+        "var MSG_E=function(amtEarned){return'Sum: $'+amtEarned}");
   }
 
   public void testLegacyStylePlaceholderNameInLowerUnderscoreCase() {
@@ -319,7 +318,7 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     style = Style.LEGACY;
     test(
         "var MSG_F = function(amt_earned) {return amt_earned + 'x'};",
-        "var MSG_F=function(amt_earned){return\"Sum: $\"+amt_earned}");
+        "var MSG_F=function(amt_earned){return'Sum: $'+amt_earned}");
   }
 
   public void testLegacyStyleBadPlaceholderReferenceInReplacemen() {
@@ -374,53 +373,73 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
     registerMessage(new JsMessage.Builder("MSG_B")
         .appendStringPart("translated")
         .build());
-    test("/** @desc d */\n" +
-         "var MSG_A = goog.getMsg('msg A');" +
-         "/** @desc d */\n" +
-         "var MSG_B = goog.getMsg('msg B');" +
-         "var x = goog.getMsgWithFallback(MSG_A, MSG_B);",
-         "var MSG_A = 'msg A';" +
-         "var MSG_B = 'translated';" +
-         "var x = MSG_B;");
+    test(
+        LINE_JOINER.join(
+            "/** @desc d */",
+            "var MSG_A = goog.getMsg('msg A');",
+            "/** @desc d */",
+            "var MSG_B = goog.getMsg('msg B');",
+            "var x = goog.getMsgWithFallback(MSG_A, MSG_B);"),
+        LINE_JOINER.join(
+            "/** @desc d */",
+            "var MSG_A = 'msg A';",
+            "/** @desc d */",
+            "var MSG_B = 'translated';",
+            "var x = MSG_B;"));
   }
 
   public void testFallbackEmptyBundle() {
-    test("/** @desc d */\n" +
-         "var MSG_A = goog.getMsg('msg A');" +
-         "/** @desc d */\n" +
-         "var MSG_B = goog.getMsg('msg B');" +
-         "var x = goog.getMsgWithFallback(MSG_A, MSG_B);",
-         "var MSG_A = 'msg A';" +
-         "var MSG_B = 'msg B';" +
-         "var x = MSG_A;");
+    test(
+        LINE_JOINER.join(
+            "/** @desc d */",
+            "var MSG_A = goog.getMsg('msg A');",
+            "/** @desc d */",
+            "var MSG_B = goog.getMsg('msg B');",
+            "var x = goog.getMsgWithFallback(MSG_A, MSG_B);"),
+        LINE_JOINER.join(
+            "/** @desc d */",
+            "var MSG_A = 'msg A';",
+            "/** @desc d */",
+            "var MSG_B = 'msg B';",
+            "var x = MSG_A;"));
   }
 
   public void testNoUseFallback() {
     registerMessage(new JsMessage.Builder("MSG_A")
         .appendStringPart("translated")
         .build());
-    test("/** @desc d */\n" +
-         "var MSG_A = goog.getMsg('msg A');" +
-         "/** @desc d */\n" +
-         "var MSG_B = goog.getMsg('msg B');" +
-         "var x = goog.getMsgWithFallback(MSG_A, MSG_B);",
-         "var MSG_A = 'translated';" +
-         "var MSG_B = 'msg B';" +
-         "var x = MSG_A;");
+    test(
+        LINE_JOINER.join(
+            "/** @desc d */",
+            "var MSG_A = goog.getMsg('msg A');",
+            "/** @desc d */",
+            "var MSG_B = goog.getMsg('msg B');",
+            "var x = goog.getMsgWithFallback(MSG_A, MSG_B);"),
+        LINE_JOINER.join(
+            "/** @desc d */",
+            "var MSG_A = 'translated';",
+            "/** @desc d */",
+            "var MSG_B = 'msg B';",
+            "var x = MSG_A;"));
   }
 
   public void testNoUseFallback2() {
     registerMessage(new JsMessage.Builder("MSG_C")
         .appendStringPart("translated")
         .build());
-    test("/** @desc d */\n" +
-         "var MSG_A = goog.getMsg('msg A');" +
-         "/** @desc d */\n" +
-         "var MSG_B = goog.getMsg('msg B');" +
-         "var x = goog.getMsgWithFallback(MSG_A, MSG_B);",
-         "var MSG_A = 'msg A';" +
-         "var MSG_B = 'msg B';" +
-         "var x = MSG_A;");
+    test(
+        LINE_JOINER.join(
+            "/** @desc d */",
+            "var MSG_A = goog.getMsg('msg A');",
+            "/** @desc d */",
+            "var MSG_B = goog.getMsg('msg B');",
+            "var x = goog.getMsgWithFallback(MSG_A, MSG_B);"),
+        LINE_JOINER.join(
+            "/** @desc d */",
+            "var MSG_A = 'msg A';",
+            "/** @desc d */",
+            "var MSG_B = 'msg B';",
+            "var x = MSG_A;"));
   }
 
   private void registerMessage(JsMessage message) {

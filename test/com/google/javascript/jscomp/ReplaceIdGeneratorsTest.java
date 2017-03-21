@@ -62,7 +62,6 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
     super.setUp();
     generatePseudoNames = false;
     previousMappings = null;
-    compareJsDoc = false;
   }
 
   @Override
@@ -87,43 +86,44 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
         "var y = 'b';"),
 
         LINE_JOINER.join(
-        "[goog.events.getUniqueId]",
-        "",
-        "a:testcode:1:32",
-        "b:testcode:2:32",
-        "", ""));
+            "[goog.events.getUniqueId]",
+            "",
+            "a:testcode:1:32",
+            "b:testcode:2:32",
+            "",
+            ""));
   }
 
   public void testSerialization2() {
     testMap(
         LINE_JOINER.join(
-        "/** @consistentIdGenerator */",
-        "id = function() {};",
-        "f1 = id('f1');",
-        "f1 = id('f1')"),
-
+            "/** @consistentIdGenerator */",
+            "id = function() {};",
+            "f1 = id('f1');",
+            "f1 = id('f1')"),
         LINE_JOINER.join(
-        "id = function() {};",
-        "f1 = 'a';",
-        "f1 = 'a'"),
-
+            "/** @consistentIdGenerator */",
+            "id = function() {};",
+            "f1 = 'a';",
+            "f1 = 'a'"),
         LINE_JOINER.join(
-        "[id]",
-        "",
-        "a:f1",
-        "", ""));
+            "[id]",
+            "",
+            "a:f1",
+            "",
+            ""));
   }
 
   public void testReusePreviousSerialization1() {
-    previousMappings =
-        LINE_JOINER.join(
+    previousMappings = LINE_JOINER.join(
         "[goog.events.getUniqueId]",
         "",
         "previous1:testcode:1:32",
         "previous2:testcode:2:32",
         "",
         "[goog.place.getUniqueId]",
-        "", "");
+        "",
+        "");
     testMap("var x = goog.events.getUniqueId('xxx');\n" +
             "var y = goog.events.getUniqueId('yyy');\n",
 
@@ -169,110 +169,106 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
         "a:f1\n" +
         "\n";
     testMap(
-        "/** @consistentIdGenerator */ id = function() {};" +
-        "f1 = id('f1');" +
-        "f1 = id('f1')",
-
-        "id = function() {};" +
-        "f1 = 'a';" +
-        "f1 = 'a'",
-
-        "[id]\n" +
-        "\n" +
-        "a:f1\n" +
-        "\n");
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ id = function() {};",
+            "f1 = id('f1');",
+            "f1 = id('f1')"),
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ id = function() {};",
+            "f1 = 'a';",
+            "f1 = 'a'"),
+        "[id]\n" + "\n" + "a:f1\n" + "\n");
   }
 
   public void testSimple() {
-    test("/** @idGenerator */ foo.getUniqueId = function() {};" +
-         "foo.bar = foo.getUniqueId('foo_bar')",
+    test(
+        LINE_JOINER.join(
+            "/** @idGenerator */ foo.getUniqueId = function() {};",
+            "foo.bar = foo.getUniqueId('foo_bar')"),
+        LINE_JOINER.join(
+            "/** @idGenerator */ foo.getUniqueId = function() {};",
+            "foo.bar = 'a'"),
+        LINE_JOINER.join(
+            "/** @idGenerator */ foo.getUniqueId = function() {};",
+            "foo.bar = 'foo_bar$0'"));
 
-         "foo.getUniqueId = function() {};" +
-         "foo.bar = 'a'",
-
-         "foo.getUniqueId = function() {};" +
-         "foo.bar = 'foo_bar$0'");
-
-    test("/** @idGenerator */ goog.events.getUniqueId = function() {};" +
-        "foo1 = goog.events.getUniqueId('foo1');" +
-        "foo1 = goog.events.getUniqueId('foo1');",
-
-        "goog.events.getUniqueId = function() {};" +
-        "foo1 = 'a';" +
-        "foo1 = 'b';",
-
-        "goog.events.getUniqueId = function() {};" +
-        "foo1 = 'foo1$0';" +
-        "foo1 = 'foo1$1';");
+    test(
+        LINE_JOINER.join(
+            "/** @idGenerator */ goog.events.getUniqueId = function() {};",
+            "foo1 = goog.events.getUniqueId('foo1');",
+            "foo1 = goog.events.getUniqueId('foo1');"),
+        LINE_JOINER.join(
+            "/** @idGenerator */ goog.events.getUniqueId = function() {};",
+            "foo1 = 'a';",
+            "foo1 = 'b';"),
+        LINE_JOINER.join(
+            "/** @idGenerator */ goog.events.getUniqueId = function() {};",
+            "foo1 = 'foo1$0';",
+            "foo1 = 'foo1$1';"));
   }
 
   public void testObjectLit() {
-    test(LINE_JOINER.join(
-        "/** @idGenerator */ goog.id = function() {};",
-        "things = goog.id({foo1: 'test', 'foo bar': 'test'})"),
+    test(
         LINE_JOINER.join(
-        "goog.id = function() {};",
-        "things = {'a': 'test', 'b': 'test'}"),
+            "/** @idGenerator */ goog.id = function() {};",
+            "things = goog.id({foo1: 'test', 'foo bar': 'test'})"),
         LINE_JOINER.join(
-        "goog.id = function() {};",
-        "things = {'foo1$0': 'test', 'foo bar$1': 'test'}"));
+            "/** @idGenerator */ goog.id = function() {};",
+            "things = {'a': 'test', 'b': 'test'}"),
+        LINE_JOINER.join(
+            "/** @idGenerator */ goog.id = function() {};",
+            "things = {'foo1$0': 'test', 'foo bar$1': 'test'}"));
   }
 
   public void testObjectLit_mapped() {
     testNonPseudoSupportingGenerator(
         LINE_JOINER.join(
-        "/** @idGenerator {mapped} */ id = function() {};",
-        "things = id({foo: 'test', 'bar': 'test'})"),
-         LINE_JOINER.join(
-        "id = function() {};",
-        "things = {':foo:': 'test', ':bar:': 'test'}"));
+            "/** @idGenerator {mapped} */ id = function() {};",
+            "things = id({foo: 'test', 'bar': 'test'})"),
+        LINE_JOINER.join(
+            "/** @idGenerator {mapped} */ id = function() {};",
+            "things = {':foo:': 'test', ':bar:': 'test'}"));
   }
 
   public void testObjectLit_xid() {
     testNonPseudoSupportingGenerator(
         LINE_JOINER.join(
-        "/** @idGenerator {xid} */ xid.object = function() {};",
-        "things = xid.object({foo: 'test', 'value': 'test'})"),
+            "/** @idGenerator {xid} */ xid.object = function() {};",
+            "things = xid.object({foo: 'test', 'value': 'test'})"),
         LINE_JOINER.join(
-        "xid.object = function() {};",
-        "things = {'QB6rXc': 'test', 'b6Lt6c': 'test'}"));
+            "/** @idGenerator {xid} */ xid.object = function() {};",
+            "things = {'QB6rXc': 'test', 'b6Lt6c': 'test'}"));
   }
 
   public void testObjectLit_empty() {
     test(
-        LINE_JOINER.join(
-        "/** @idGenerator */ goog.id = function() {};",
-        "things = goog.id({})"),
-        LINE_JOINER.join(
-        "goog.id = function() {};",
-        "things = {}"),
-        LINE_JOINER.join(
-        "goog.id = function() {};",
-        "things = {}"));
+        "/** @idGenerator */ goog.id = function() {}; things = goog.id({})",
+        "/** @idGenerator */ goog.id = function() {}; things = {}",
+        "/** @idGenerator */ goog.id = function() {}; things = {}");
   }
 
   public void testObjectLit_function() {
     test(
         LINE_JOINER.join(
-        "/** @idGenerator */ goog.id = function() {};",
-        "things = goog.id({foo: function() {}})"),
+            "/** @idGenerator */ goog.id = function() {};",
+            "things = goog.id({foo: function() {}})"),
         LINE_JOINER.join(
-        "goog.id = function() {};",
-        "things = {'a': function() {}}"),
+            "/** @idGenerator */ goog.id = function() {};",
+            "things = {'a': function() {}}"),
         LINE_JOINER.join(
-        "goog.id = function() {};",
-        "things = {'foo$0': function() {}}"));
+            "/** @idGenerator */ goog.id = function() {};",
+            "things = {'foo$0': function() {}}"));
 
     testEs6(
         LINE_JOINER.join(
-        "/** @idGenerator */ goog.id = function() {};",
-        "things = goog.id({foo: function*() {}})"),
+            "/** @idGenerator */ goog.id = function() {};",
+            "things = goog.id({foo: function*() {}})"),
         LINE_JOINER.join(
-        "goog.id = function() {};",
-        "things = {'a': function*() {}}"),
+            "/** @idGenerator */ goog.id = function() {};",
+            "things = {'a': function*() {}}"),
         LINE_JOINER.join(
-        "goog.id = function() {};",
-        "things = {'foo$0': function*() {}}"));
+            "/** @idGenerator */ goog.id = function() {};",
+            "things = {'foo$0': function*() {}}"));
   }
 
   public void testObjectLit_ES6() {
@@ -304,273 +300,224 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
   }
 
   public void testSimpleConsistent() {
-    test("/** @consistentIdGenerator */ id = function() {};" +
-         "foo.bar = id('foo_bar')",
+    test(
+        "/** @consistentIdGenerator */ id = function() {}; foo.bar = id('foo_bar')",
+        "/** @consistentIdGenerator */ id = function() {}; foo.bar = 'a'",
+        "/** @consistentIdGenerator */ id = function() {}; foo.bar = 'foo_bar$0'");
 
-         "id = function() {};" +
-         "foo.bar = 'a'",
+    test(
+        "/** @consistentIdGenerator */ id = function() {}; f1 = id('f1'); f1 = id('f1')",
+        "/** @consistentIdGenerator */ id = function() {}; f1 = 'a'; f1 = 'a'",
+        "/** @consistentIdGenerator */ id = function() {}; f1 = 'f1$0'; f1 = 'f1$0'");
 
-         "id = function() {};" +
-         "foo.bar = 'foo_bar$0'");
-
-    test("/** @consistentIdGenerator */ id = function() {};" +
-         "f1 = id('f1');" +
-         "f1 = id('f1')",
-
-         "id = function() {};" +
-         "f1 = 'a';" +
-         "f1 = 'a'",
-
-         "id = function() {};" +
-         "f1 = 'f1$0';" +
-         "f1 = 'f1$0'");
-
-    test("/** @consistentIdGenerator */ id = function() {};" +
-        "f1 = id('f1');" +
-        "f1 = id('f1');" +
-        "f1 = id('f1')",
-
-        "id = function() {};" +
-        "f1 = 'a';" +
-        "f1 = 'a';" +
-        "f1 = 'a'",
-
-        "id = function() {};" +
-        "f1 = 'f1$0';" +
-        "f1 = 'f1$0';" +
-        "f1 = 'f1$0'");
+    test(
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ id = function() {};",
+            "f1 = id('f1');",
+            "f1 = id('f1');",
+            "f1 = id('f1')"),
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ id = function() {};",
+            "f1 = 'a';",
+            "f1 = 'a';",
+            "f1 = 'a'"),
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ id = function() {};",
+            "f1 = 'f1$0';",
+            "f1 = 'f1$0';",
+            "f1 = 'f1$0'"));
   }
 
   public void testSimpleStable() {
     testNonPseudoSupportingGenerator(
-        "/** @stableIdGenerator */ id = function() {};" +
-        "foo.bar = id('foo_bar')",
-
-        "id = function() {};" +
-        "foo.bar = '125lGg'");
+        "/** @stableIdGenerator */ id = function() {};" + "foo.bar = id('foo_bar')",
+        "/** @stableIdGenerator */ id = function() {};" + "foo.bar = '125lGg'");
 
     testNonPseudoSupportingGenerator(
-        "/** @stableIdGenerator */ id = function() {};" +
-        "f1 = id('f1');" +
-        "f1 = id('f1')",
-
-        "id = function() {};" +
-        "f1 = 'AAAMiw';" +
-        "f1 = 'AAAMiw'");
+        "/** @stableIdGenerator */ id = function() {};" + "f1 = id('f1');" + "f1 = id('f1')",
+        "/** @stableIdGenerator */ id = function() {};" + "f1 = 'AAAMiw';" + "f1 = 'AAAMiw'");
   }
 
   public void testSimpleXid() {
     testNonPseudoSupportingGenerator(
-        LINE_JOINER.join(
-        "/** @idGenerator {xid} */ id = function() {};",
-        "foo.bar = id('foo')"),
-        LINE_JOINER.join(
-        "id = function() {};",
-        "foo.bar = 'QB6rXc'"));
+        LINE_JOINER.join("/** @idGenerator {xid} */ id = function() {};", "foo.bar = id('foo')"),
+        LINE_JOINER.join("/** @idGenerator {xid} */ id = function() {};", "foo.bar = 'QB6rXc'"));
 
     testNonPseudoSupportingGenerator(
         LINE_JOINER.join(
-        "/** @idGenerator {xid} */ id = function() {};",
-        "f1 = id('foo');",
-        "f1 = id('foo')"),
+            "/** @idGenerator {xid} */ id = function() {};", "f1 = id('foo');", "f1 = id('foo')"),
         LINE_JOINER.join(
-        "id = function() {};",
-        "f1 = 'QB6rXc';",
-        "f1 = 'QB6rXc'"));
+            "/** @idGenerator {xid} */ id = function() {};", "f1 = 'QB6rXc';", "f1 = 'QB6rXc'"));
   }
 
   public void testVar() {
-    test("/** @consistentIdGenerator */ var id = function() {};" +
-         "foo.bar = id('foo_bar')",
-
-         "var id = function() {};" +
-         "foo.bar = 'a'",
-
-         "var id = function() {};" +
-         "foo.bar = 'foo_bar$0'");
+    test(
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ var id = function() {};", "foo.bar = id('foo_bar')"),
+        LINE_JOINER.join("/** @consistentIdGenerator */ var id = function() {};", "foo.bar = 'a'"),
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ var id = function() {};", "foo.bar = 'foo_bar$0'"));
 
     testNonPseudoSupportingGenerator(
-        "/** @stableIdGenerator */ var id = function() {};" +
-        "foo.bar = id('foo_bar')",
-
-        "var id = function() {};" +
-        "foo.bar = '125lGg'");
+        LINE_JOINER.join(
+            "/** @stableIdGenerator */ var id = function() {};", "foo.bar = id('foo_bar')"),
+        LINE_JOINER.join(
+            "/** @stableIdGenerator */ var id = function() {};", "foo.bar = '125lGg'"));
   }
 
   public void testLet() {
     testEs6(
-        "/** @consistentIdGenerator */ let id = function() {};" +
-        "foo.bar = id('foo_bar')",
-
-        "let id = function() {};" +
-        "foo.bar = 'a'",
-
-        "let id = function() {};" +
-        "foo.bar = 'foo_bar$0'");
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ let id = function() {};", "foo.bar = id('foo_bar')"),
+        LINE_JOINER.join("/** @consistentIdGenerator */ let id = function() {};", "foo.bar = 'a'"),
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ let id = function() {};", "foo.bar = 'foo_bar$0'"));
 
     testNonPseudoSupportingGeneratorEs6(
-        "/** @stableIdGenerator */ let id = function() {};" +
-        "foo.bar = id('foo_bar')",
-
-        "let id = function() {};" +
-        "foo.bar = '125lGg'");
+        "/** @stableIdGenerator */ let id = function() {};" + "foo.bar = id('foo_bar')",
+        "/** @stableIdGenerator */ let id = function() {};" + "foo.bar = '125lGg'");
   }
 
   public void testConst() {
     testEs6(
-        "/** @consistentIdGenerator */ const id = function() {};" +
-        "foo.bar = id('foo_bar')",
-
-        "const id = function() {};" +
-        "foo.bar = 'a'",
-
-        "const id = function() {};" +
-        "foo.bar = 'foo_bar$0'");
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ const id = function() {};", "foo.bar = id('foo_bar')"),
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ const id = function() {};", "foo.bar = 'a'"),
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ const id = function() {};", "foo.bar = 'foo_bar$0'"));
 
     testNonPseudoSupportingGeneratorEs6(
-        "/** @stableIdGenerator */ const id = function() {};" +
-        "foo.bar = id('foo_bar')",
-
-        "const id = function() {};" +
-        "foo.bar = '125lGg'");
+        LINE_JOINER.join(
+            "/** @stableIdGenerator */ const id = function() {};", "foo.bar = id('foo_bar')"),
+        LINE_JOINER.join(
+            "/** @stableIdGenerator */ const id = function() {};", "foo.bar = '125lGg'"));
   }
 
   public void testInObjLit() {
-    test("/** @consistentIdGenerator */ get.id = function() {};" +
-         "foo.bar = {a: get.id('foo_bar')}",
-
-         "get.id = function() {};" +
-         "foo.bar = {a: 'a'}",
-
-         "get.id = function() {};" +
-         "foo.bar = {a: 'foo_bar$0'}");
-
-    testNonPseudoSupportingGenerator(
-        "/** @stableIdGenerator */ get.id = function() {};" +
-        "foo.bar = {a: get.id('foo_bar')}",
-
-        "get.id = function() {};" +
-        "foo.bar = {a: '125lGg'}");
+    test(
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ get.id = function() {};",
+            "foo.bar = {a: get.id('foo_bar')}"),
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ get.id = function() {};", "foo.bar = {a: 'a'}"),
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ get.id = function() {};", "foo.bar = {a: 'foo_bar$0'}"));
 
     testNonPseudoSupportingGenerator(
         LINE_JOINER.join(
-        "/** @idGenerator {xid} */ get.id = function() {};",
-        "foo.bar = {a: get.id('foo')}"),
+            "/** @stableIdGenerator */ get.id = function() {};",
+            "foo.bar = {a: get.id('foo_bar')}"),
         LINE_JOINER.join(
-        "get.id = function() {};",
-        "foo.bar = {a: 'QB6rXc'}"));
+            "/** @stableIdGenerator */ get.id = function() {};", "foo.bar = {a: '125lGg'}"));
+
+    testNonPseudoSupportingGenerator(
+        LINE_JOINER.join(
+            "/** @idGenerator {xid} */ get.id = function() {};", "foo.bar = {a: get.id('foo')}"),
+        LINE_JOINER.join(
+            "/** @idGenerator {xid} */ get.id = function() {};", "foo.bar = {a: 'QB6rXc'}"));
   }
 
   public void testInObjLit_mapped() {
     test(
         LINE_JOINER.join(
-        "/** @idGenerator {mapped}*/ id = function() {};",
-        "foo.bar = {a: id('foo')}"),
+            "/** @idGenerator {mapped}*/ id = function() {};", "foo.bar = {a: id('foo')}"),
         LINE_JOINER.join(
-        "id = function() {};",
-        "foo.bar = {a: ':foo:'}"),
+            "/** @idGenerator {mapped}*/ id = function() {};", "foo.bar = {a: ':foo:'}"),
         LINE_JOINER.join(
-        "id = function() {};",
-        "foo.bar = {a: ':foo:'}"));
+            "/** @idGenerator {mapped}*/ id = function() {};", "foo.bar = {a: ':foo:'}"));
   }
 
   public void testMapped() {
     test(
-        LINE_JOINER.join(
-        "/** @idGenerator {mapped}*/ id = function() {};",
-        "foo.bar = id('foo');"),
-        LINE_JOINER.join(
-        "id = function() {};",
-        "foo.bar = ':foo:';"),
-        LINE_JOINER.join(
-        "id = function() {};",
-        "foo.bar = ':foo:';"));
+        LINE_JOINER.join("/** @idGenerator {mapped}*/ id = function() {};", "foo.bar = id('foo');"),
+        LINE_JOINER.join("/** @idGenerator {mapped}*/ id = function() {};", "foo.bar = ':foo:';"),
+        LINE_JOINER.join("/** @idGenerator {mapped}*/ id = function() {};", "foo.bar = ':foo:';"));
   }
 
   public void testMappedMap() {
     testMap(
         LINE_JOINER.join(
-        "/** @idGenerator {mapped}*/ id = function() {};",
-        "foo.bar = id('foo');",
-        "foo.bar = id('foo');"),
+            "/** @idGenerator {mapped}*/ id = function() {};",
+            "foo.bar = id('foo');",
+            "foo.bar = id('foo');"),
         LINE_JOINER.join(
-        "id = function() {};",
-        "foo.bar = ':foo:';",
-        "foo.bar = ':foo:';"),
-        LINE_JOINER.join(
-        "[id]",
-        "",
-        ":foo::foo",
-        "",
-        ""));
+            "/** @idGenerator {mapped}*/id = function() {};",
+            "foo.bar = ':foo:';",
+            "foo.bar = ':foo:';"),
+        LINE_JOINER.join("[id]", "", ":foo::foo", "", ""));
   }
 
   public void testMapped2() {
     test(
         LINE_JOINER.join(
-        "/** @idGenerator {mapped}*/ id = function() {};",
-        "foo.bar = function() { return id('foo'); };"),
+            "/** @idGenerator {mapped}*/ id = function() {};",
+            "foo.bar = function() { return id('foo'); };"),
         LINE_JOINER.join(
-        "id = function() {};",
-        "foo.bar = function() { return ':foo:'; };"),
+            "/** @idGenerator {mapped}*/ id = function() {};",
+            "foo.bar = function() { return ':foo:'; };"),
         LINE_JOINER.join(
-        "id = function() {};",
-        "foo.bar = function() { return ':foo:'; };"));
+            "/** @idGenerator {mapped}*/ id = function() {};",
+            "foo.bar = function() { return ':foo:'; };"));
   }
 
   public void testTwoGenerators() {
-    test("/** @idGenerator */ var id1 = function() {};" +
-         "/** @idGenerator */ var id2 = function() {};" +
-         "f1 = id1('1');" +
-         "f2 = id1('1');" +
-         "f3 = id2('1');" +
-         "f4 = id2('1');",
-
-         "var id1 = function() {};" +
-         "var id2 = function() {};" +
-         "f1 = 'a';" +
-         "f2 = 'b';" +
-         "f3 = 'a';" +
-         "f4 = 'b';",
-
-         "var id1 = function() {};" +
-         "var id2 = function() {};" +
-         "f1 = '1$0';" +
-         "f2 = '1$1';" +
-         "f3 = '1$0';" +
-         "f4 = '1$1';");
+    test(
+        LINE_JOINER.join(
+            "/** @idGenerator */ var id1 = function() {};",
+            "/** @idGenerator */ var id2 = function() {};",
+            "f1 = id1('1');",
+            "f2 = id1('1');",
+            "f3 = id2('1');",
+            "f4 = id2('1');"),
+        LINE_JOINER.join(
+            "/** @idGenerator */ var id1 = function() {};",
+            "/** @idGenerator */ var id2 = function() {};",
+            "f1 = 'a';",
+            "f2 = 'b';",
+            "f3 = 'a';",
+            "f4 = 'b';"),
+        LINE_JOINER.join(
+            "/** @idGenerator */ var id1 = function() {};",
+            "/** @idGenerator */ var id2 = function() {};",
+            "f1 = '1$0';",
+            "f2 = '1$1';",
+            "f3 = '1$0';",
+            "f4 = '1$1';"));
   }
 
   public void testMixedGenerators() {
-    test("/** @idGenerator */ var id1 = function() {};" +
-         "/** @consistentIdGenerator */ var id2 = function() {};" +
-         "/** @stableIdGenerator */ var id3 = function() {};" +
-         "f1 = id1('1');" +
-         "f2 = id1('1');" +
-         "f3 = id2('1');" +
-         "f4 = id2('1');" +
-         "f5 = id3('1');" +
-         "f6 = id3('1');",
-
-         "var id1 = function() {};" +
-         "var id2 = function() {};" +
-         "var id3 = function() {};" +
-         "f1 = 'a';" +
-         "f2 = 'b';" +
-         "f3 = 'a';" +
-         "f4 = 'a';" +
-         "f5 = 'AAAAMQ';" +
-         "f6 = 'AAAAMQ';",
-
-         "var id1 = function() {};" +
-         "var id2 = function() {};" +
-         "var id3 = function() {};" +
-         "f1 = '1$0';" +
-         "f2 = '1$1';" +
-         "f3 = '1$0';" +
-         "f4 = '1$0';" +
-         "f5 = 'AAAAMQ';" +
-         "f6 = 'AAAAMQ';");
+    test(
+        LINE_JOINER.join(
+            "/** @idGenerator */ var id1 = function() {};",
+            "/** @consistentIdGenerator */ var id2 = function() {};",
+            "/** @stableIdGenerator */ var id3 = function() {};",
+            "f1 = id1('1');",
+            "f2 = id1('1');",
+            "f3 = id2('1');",
+            "f4 = id2('1');",
+            "f5 = id3('1');",
+            "f6 = id3('1');"),
+        LINE_JOINER.join(
+            "/** @idGenerator */ var id1 = function() {};",
+            "/** @consistentIdGenerator */ var id2 = function() {};",
+            "/** @stableIdGenerator */ var id3 = function() {};",
+            "f1 = 'a';",
+            "f2 = 'b';",
+            "f3 = 'a';",
+            "f4 = 'a';",
+            "f5 = 'AAAAMQ';",
+            "f6 = 'AAAAMQ';"),
+        LINE_JOINER.join(
+            "/** @idGenerator */ var id1 = function() {};",
+            "/** @consistentIdGenerator */ var id2 = function() {};",
+            "/** @stableIdGenerator */ var id3 = function() {};",
+            "f1 = '1$0';",
+            "f2 = '1$1';",
+            "f3 = '1$0';",
+            "f4 = '1$0';",
+            "f5 = 'AAAAMQ';",
+            "f6 = 'AAAAMQ';"));
   }
 
   public void testNonLiteralParam1() {
@@ -593,37 +540,37 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
   }
 
   public void testConditionalCall() {
-    testError(LINE_JOINER.join(
-        "/** @idGenerator */",
-        "var id = function() {}; ",
-        "while(0){ id('foo');}"),
-    ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
+    testError(
+        LINE_JOINER.join(
+            "/** @idGenerator */", "var id = function() {}; ", "while(0){ id('foo');}"),
+        ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
 
-    testError(LINE_JOINER.join(
-        "/** @idGenerator */",
-        "var id = function() {}; ",
-        "for(;;){ id('foo');}"),
-    ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
+    testError(
+        LINE_JOINER.join("/** @idGenerator */", "var id = function() {}; ", "for(;;){ id('foo');}"),
+        ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
 
     testError("/** @idGenerator */ var id = function() {}; "
             + "if(x) id('foo');",
         ReplaceIdGenerators.CONDITIONAL_ID_GENERATOR_CALL);
 
-    test("/** @consistentIdGenerator */ var id = function() {};" +
-        "function fb() {foo.bar = id('foo_bar')}",
-
-        "var id = function() {};" +
-        "function fb() {foo.bar = 'a'}",
-
-        "var id = function() {};" +
-        "function fb() {foo.bar = 'foo_bar$0'}");
+    test(
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ var id = function() {};",
+            "function fb() {foo.bar = id('foo_bar')}"),
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ var id = function() {};",
+            "function fb() {foo.bar = 'a'}"),
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ var id = function() {};",
+            "function fb() {foo.bar = 'foo_bar$0'}"));
 
     testNonPseudoSupportingGenerator(
-        "/** @stableIdGenerator */ var id = function() {};" +
-        "function fb() {foo.bar = id('foo_bar')}",
-
-        "var id = function() {};" +
-        "function fb() {foo.bar = '125lGg'}");
+        LINE_JOINER.join(
+            "/** @stableIdGenerator */ var id = function() {};",
+            "function fb() {foo.bar = id('foo_bar')}"),
+        LINE_JOINER.join(
+            "/** @stableIdGenerator */ var id = function() {};",
+            "function fb() {foo.bar = '125lGg'}"));
 
     testErrorEs6(
         LINE_JOINER.join(
@@ -647,14 +594,15 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
             + "var id = function() {}; ",
         ReplaceIdGenerators.CONFLICTING_GENERATOR_TYPE);
 
-    test("/** @consistentIdGenerator */ var id = function() {};" +
-        "if (x) {foo.bar = id('foo_bar')}",
-
-        "var id = function() {};" +
-        "if (x) {foo.bar = 'a'}",
-
-        "var id = function() {};" +
-        "if (x) {foo.bar = 'foo_bar$0'}");
+    test(
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ var id = function() {};",
+            "if (x) {foo.bar = id('foo_bar')}"),
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ var id = function() {};", "if (x) {foo.bar = 'a'}"),
+        LINE_JOINER.join(
+            "/** @consistentIdGenerator */ var id = function() {};",
+            "if (x) {foo.bar = 'foo_bar$0'}"));
   }
 
   public void testUnknownMapping() {

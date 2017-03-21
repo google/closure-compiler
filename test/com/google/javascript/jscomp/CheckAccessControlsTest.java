@@ -708,96 +708,102 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testProtectedAccessForProperties11() {
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "foo.js",
-            LINE_JOINER.join(
-                "goog.provide('Foo');",
-                "/** @interface */ Foo = function() {};",
-                "/** @protected */ Foo.prop = {};")),
-        SourceFile.fromCode(
-            "bar.js",
-            LINE_JOINER.join(
-                "goog.require('Foo');",
-                "/** @constructor @implements {Foo} */",
-                "function Bar() { Foo.prop; };"))),
-        null, null);
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "foo.js",
+                LINE_JOINER.join(
+                    "goog.provide('Foo');",
+                    "/** @interface */ Foo = function() {};",
+                    "/** @protected */ Foo.prop = {};")),
+            SourceFile.fromCode(
+                "bar.js",
+                LINE_JOINER.join(
+                    "goog.require('Foo');",
+                    "/** @constructor @implements {Foo} */",
+                    "function Bar() { Foo.prop; };"))),
+        null,
+        null);
 }
 
   public void testProtectedAccessForProperties12() {
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "a.js",
-            LINE_JOINER.join(
-                "goog.provide('A');",
-                "/** @constructor */",
-                "var A = function() {",
-                "  /**",
-                "   * @type {?String}",
-                "   * @protected",
-                "   */",
-                "  this.prop;",
-                "}")),
-        SourceFile.fromCode(
-            "b.js",
-            LINE_JOINER.join(
-                "goog.require('A');",
-                "/**",
-                " * @constructor",
-                " * @extends {A}",
-                " */",
-                "var B = function() {",
-                "  this.prop.length;",
-                "  this.prop.length;",
-                "};"))),
-        null, null);
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "a.js",
+                LINE_JOINER.join(
+                    "goog.provide('A');",
+                    "/** @constructor */",
+                    "var A = function() {",
+                    "  /**",
+                    "   * @type {?String}",
+                    "   * @protected",
+                    "   */",
+                    "  this.prop;",
+                    "}")),
+            SourceFile.fromCode(
+                "b.js",
+                LINE_JOINER.join(
+                    "goog.require('A');",
+                    "/**",
+                    " * @constructor",
+                    " * @extends {A}",
+                    " */",
+                    "var B = function() {",
+                    "  this.prop.length;",
+                    "  this.prop.length;",
+                    "};"))),
+        null,
+        null);
   }
 
   // FYI: Java warns for the b1.method access in c.js.
   // Instead of following that in NTI, we chose to follow the behavior of
   // the old JSCompiler type checker, to make migration easier.
   public void testProtectedAccessForProperties13() {
-    test(ImmutableList.of(
-        SourceFile.fromCode(
-            "a.js",
-            LINE_JOINER.join(
-                "goog.provide('A');",
-                "/** @constructor */",
-                "var A = function() {}",
-                "/** @protected */",
-                "A.prototype.method = function() {};")),
-        SourceFile.fromCode(
-            "b1.js",
-            LINE_JOINER.join(
-                "goog.require('A');",
-                "goog.provide('B1');",
-                "/** @constructor @extends {A} */",
-                "var B1 = function() {};",
-                "/** @override */",
-                "B1.prototype.method = function() {};")),
-        SourceFile.fromCode(
-            "b2.js",
-            LINE_JOINER.join(
-                "goog.require('A');",
-                "goog.provide('B2');",
-                "/** @constructor @extends {A} */",
-                "var B2 = function() {};",
-                "/** @override */",
-                "B2.prototype.method = function() {};")),
-        SourceFile.fromCode(
-            "c.js",
-            LINE_JOINER.join(
-                "goog.require('B1');",
-                "goog.require('B2');",
-                "/**",
-                " * @param {!B1} b1",
-                " * @constructor",
-                " * @extends {B2}",
-                " */",
-                "var C = function(b1) {",
-                "  var x = b1.method();",
-                "};"))),
-        null, null);
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "a.js",
+                LINE_JOINER.join(
+                    "goog.provide('A');",
+                    "/** @constructor */",
+                    "var A = function() {}",
+                    "/** @protected */",
+                    "A.prototype.method = function() {};")),
+            SourceFile.fromCode(
+                "b1.js",
+                LINE_JOINER.join(
+                    "goog.require('A');",
+                    "goog.provide('B1');",
+                    "/** @constructor @extends {A} */",
+                    "var B1 = function() {};",
+                    "/** @override */",
+                    "B1.prototype.method = function() {};")),
+            SourceFile.fromCode(
+                "b2.js",
+                LINE_JOINER.join(
+                    "goog.require('A');",
+                    "goog.provide('B2');",
+                    "/** @constructor @extends {A} */",
+                    "var B2 = function() {};",
+                    "/** @override */",
+                    "B2.prototype.method = function() {};")),
+            SourceFile.fromCode(
+                "c.js",
+                LINE_JOINER.join(
+                    "goog.require('B1');",
+                    "goog.require('B2');",
+                    "/**",
+                    " * @param {!B1} b1",
+                    " * @constructor",
+                    " * @extends {B2}",
+                    " */",
+                    "var C = function(b1) {",
+                    "  var x = b1.method();",
+                    "};"))),
+        null,
+        null);
   }
 
   public void testNoProtectedAccessForProperties1() {
@@ -1226,82 +1232,97 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   }
 
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace1() {
-    // Don't compare the generated JsDoc. It includes annotations we're not interested in,
-    // like @inherited.
-    compareJsDoc = false;
-
     test(
         ImmutableList.of(
             SourceFile.fromCode("foo.js", "goog.provide('foo');"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/**\n"
-                + "  * @fileoverview\n"
-                + "  * @package\n"
-                + "  */\n"
-                + "goog.provide('foo.bar');"),
+                LINE_JOINER.join(
+                    "/**\n",
+                    "  * @fileoverview\n",
+                    "  * @package\n",
+                    "  */\n",
+                    "goog.provide('foo.bar');")),
             SourceFile.fromCode("bar.js", "goog.require('foo')")),
-        ImmutableList.of(SourceFile.fromCode("foo.js", "var foo={};"),
-            SourceFile.fromCode(Compiler.joinPathParts("foo", "bar.js"), "foo.bar={};"),
+        ImmutableList.of(
+            SourceFile.fromCode("foo.js", "/** @const */ var foo={};"),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                LINE_JOINER.join(
+                    "/**\n",
+                    "  * @fileoverview\n",
+                    "  * @package\n",
+                    "  */\n",
+                    "/** @const */ foo.bar={};")),
             SourceFile.fromCode("bar.js", "")),
-        null, null);
-
-    compareJsDoc = true;
+        null,
+        null);
   }
 
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace2() {
-    // Don't compare the generated JsDoc. It includes annotations we're not interested in,
-    // like @inherited.
-    compareJsDoc = false;
-
     test(
         ImmutableList.of(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/**\n"
-                + "  * @fileoverview\n"
-                + "  * @package\n"
-                + "  */\n"
-                + "goog.provide('foo.bar');"),
+                LINE_JOINER.join(
+                    "/**",
+                    " * @fileoverview",
+                    " * @package",
+                    " */",
+                    "goog.provide('foo.bar');")),
             SourceFile.fromCode("foo.js", "goog.provide('foo');"),
             SourceFile.fromCode(
                 "bar.js",
-                "goog.require('foo');\n"
-                + "var x = foo;")),
-        ImmutableList.of(SourceFile.fromCode(Compiler.joinPathParts("foo", "bar.js"),
-                "var foo={};foo.bar={};"),
-            SourceFile.fromCode("foo.js", ""), SourceFile.fromCode("bar.js", "var x=foo")),
-        null, null);
-
-    compareJsDoc = true;
+                LINE_JOINER.join(
+                    "goog.require('foo');",
+                    "var x = foo;"))),
+        ImmutableList.of(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                LINE_JOINER.join(
+                    "/** @const */var foo={};",
+                    "/**",
+                    " * @fileoverview",
+                    " * @package",
+                    " */",
+                    "/** @const */foo.bar={};")),
+            SourceFile.fromCode("foo.js", ""),
+            SourceFile.fromCode("bar.js", "var x=foo")),
+        null,
+        null);
   }
 
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace3() {
-    // Don't compare the generated JsDoc. It includes annotations we're not interested in,
-    // like @inherited.
-    compareJsDoc = false;
-
     test(
         ImmutableList.of(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                "/**\n"
-                + " * @fileoverview\n"
-                + " * @package\n"
-                + " */\n"
-                + "goog.provide('one.two');\n"
-                + "one.two.three = function(){};"),
+                LINE_JOINER.join(
+                    "/**",
+                    " * @fileoverview",
+                    " * @package",
+                    " */",
+                    "goog.provide('one.two');",
+                    "one.two.three = function(){};")),
             SourceFile.fromCode(
                 "baz.js",
-                "goog.require('one.two');\n"
-                + "var x = one.two;")),
+                LINE_JOINER.join(
+                    "goog.require('one.two');",
+                    "var x = one.two;"))),
         ImmutableList.of(
-            SourceFile.fromCode(Compiler.joinPathParts("foo", "bar.js"),
-                "var one={};one.two={};one.two.three=function(){};"),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("foo", "bar.js"),
+                LINE_JOINER.join(
+                    "/** @const */ var one={};",
+                    "/**",
+                    " * @fileoverview",
+                    " * @package",
+                    " */",
+                    "/** @const */ one.two={};",
+                    "one.two.three=function(){};")),
             SourceFile.fromCode("baz.js", "var x=one.two")),
-        null, null);
-
-    compareJsDoc = true;
+        null,
+        null);
   }
 
   public void testFileoverviewVisibilityDoesNotApplyToGoogProvidedNamespace4() {
