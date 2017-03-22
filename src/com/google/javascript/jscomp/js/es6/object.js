@@ -18,6 +18,9 @@
  * @fileoverview Brings in all ES6 Object polyfills.
  */
 'require es6/object/assign';
+'require es6/object/entries';
+'require es6/object/getownpropertydescriptors';
 'require es6/object/getownpropertysymbols';
 'require es6/object/is';
 'require es6/object/setprototypeof';
+'require es6/object/values';

@@ -5,6 +5,7 @@ Array.prototype.entries es6-impl es3 es6/array/entries
 Array.prototype.fill es6-impl es3 es6/array/fill
 Array.prototype.find es6-impl es3 es6/array/find
 Array.prototype.findIndex es6-impl es3 es6/array/findindex
+Array.prototype.includes es7 es3 es6/array/includes
 Array.prototype.keys es6-impl es3 es6/array/keys
 Array.prototype.values es6 es3 es6/array/values
 Map es6-impl es3 es6/map
@@ -32,9 +33,12 @@ Number.isInteger es6-impl es3 es6/number/isinteger
 Number.isNaN es6-impl es3 es6/number/isnan
 Number.isSafeInteger es6-impl es3 es6/number/issafeinteger
 Object.assign es6-impl es3 es6/object/assign
+Object.entries es8 es3 es6/object/entries
+Object.getOwnPropertyDescriptors es8 es5 es6/object/getownpropertydescriptors
 Object.getOwnPropertySymbols es6-impl es5 es6/object/getownpropertysymbols
 Object.is es6-impl es3 es6/object/is
 Object.setPrototypeOf es6 es5 es6/object/setprototypeof
+Object.values es8 es3 es6/object/values
 Promise es6-impl es3 es6/promise
 Proxy es6 es6
 Reflect.apply es6 es3 es6/reflect/apply
@@ -56,6 +60,8 @@ String.prototype.codePointAt es6-impl es3 es6/string/codepointat
 String.prototype.endsWith es6-impl es3 es6/string/endswith
 String.prototype.includes es6-impl es3 es6/string/includes
 String.prototype.normalize es6-impl es6-impl
+String.prototype.padEnd es8 es3 es6/string/padend
+String.prototype.padStart es8 es3 es6/string/padstart
 String.prototype.repeat es6-impl es3 es6/string/repeat
 String.prototype.startsWith es6-impl es3 es6/string/startswith
 String.raw es6-impl es6-impl

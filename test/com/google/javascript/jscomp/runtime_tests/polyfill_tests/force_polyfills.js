@@ -32,6 +32,7 @@ delete Array.prototype.copyWithin;
 delete Array.prototype.fill;
 delete Array.prototype.find;
 delete Array.prototype.findIndex;
+delete Array.prototype.includes;
 
 delete Map;
 
@@ -61,19 +62,25 @@ delete Number.isNaN;
 delete Number.isSafeInteger;
 
 delete Object.assign;
+delete Object.entries;
+delete Object.getOwnPropertyDescriptors;
 delete Object.getOwnPropertySymbols;
 delete Object.is;
 delete Object.setPrototypeOf;
+delete Object.values;
 
+delete Promise;
 delete Reflect;
 delete Set;
 
 delete String.fromCodePoint;
-delete String.prototype.repeat;
 delete String.prototype.codePointAt;
-delete String.prototype.includes;
-delete String.prototype.startsWith;
 delete String.prototype.endsWith;
+delete String.prototype.includes;
+delete String.prototype.padEnd;
+delete String.prototype.padStart;
+delete String.prototype.repeat;
+delete String.prototype.startsWith;
 
 delete Symbol;
 
