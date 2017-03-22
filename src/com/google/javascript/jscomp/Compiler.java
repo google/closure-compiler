@@ -157,7 +157,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private CompilerOptions.LanguageMode languageMode =
       CompilerOptions.LanguageMode.ECMASCRIPT3;
 
-  private Map<InputId, CompilerInput> inputsById;
+  private final Map<InputId, CompilerInput> inputsById = new ConcurrentHashMap<>();
 
   // Function to load source files from disk or memory.
   private Function<String, SourceFile> originalSourcesLoader =
@@ -177,7 +177,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       new ConcurrentHashMap<>();
 
   // Map from filenames to lists of all the comments in each file.
-  private Map<String, List<Comment>> commentsPerFile = new HashMap<>();
+  private Map<String, List<Comment>> commentsPerFile = new ConcurrentHashMap<>();
 
   /** The source code map */
   private SourceMap sourceMap;
@@ -207,7 +207,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   CodingConvention defaultCodingConvention = new ClosureCodingConvention();
 
   private JSTypeRegistry typeRegistry;
-  private Config parserConfig = null;
+  private volatile Config parserConfig = null;
   private Config externsParserConfig = null;
 
   private ReverseAbstractInterpreter abstractInterpreter;
@@ -293,7 +293,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public void setErrorManager(ErrorManager errorManager) {
     Preconditions.checkNotNull(
         errorManager, "the error manager cannot be null");
-    this.errorManager = errorManager;
+    this.errorManager = new ThreadSafeDelegatingErrorManager(errorManager);
   }
 
   /**
@@ -508,6 +508,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     this.inputs = getAllInputsFromModules(modules);
+    this.commentsPerFile = new ConcurrentHashMap<>(inputs.size());
     initBasedOnOptions();
 
     initInputsByIdMap();
@@ -645,7 +646,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * duplicate inputs.
    */
   void initInputsByIdMap() {
-    inputsById = new HashMap<>();
+    inputsById.clear();
     for (CompilerInput input : externs) {
       InputId id = input.getInputId();
       CompilerInput previous = putCompilerInput(id, input);
@@ -1166,6 +1167,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   public CompilerInput getInput(InputId id) {
+    // TODO(bradfordcsmith): Allowing null id is less ideal. Add checkNotNull(id) here and fix
+    // call sites that break.
+    if (id == null) {
+      return null;
+    }
     return inputsById.get(id);
   }
 
@@ -1211,9 +1217,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   CompilerInput putCompilerInput(InputId id, CompilerInput input) {
-    if (inputsById == null) {
-      inputsById = new HashMap<>();
-    }
     input.setCompiler(this);
     return inputsById.put(id, input);
   }
@@ -1536,6 +1539,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           return null;
         }
         externsRoot.addChildToBack(n);
+      }
+
+      if (options.numParallelThreads > 1) {
+        // Pre-build AST using multiple thread if we can.
+        new PrebuildAst(this, options.numParallelThreads).prebuild(inputs);
       }
 
       if (options.lowerFromEs6()
@@ -1904,9 +1912,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     initBasedOnOptions();
     CompilerInput input = new CompilerInput(
         SourceFile.fromCode("[testcode]", js));
-    if (inputsById == null) {
-      inputsById = new HashMap<>();
-    }
     putCompilerInput(input.getInputId(), input);
     return input.getAstRoot(this);
   }
@@ -2399,15 +2404,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   Config getParserConfig(ConfigContext context) {
     if (parserConfig == null) {
-      Config.LanguageMode configLanguageMode = getParserConfigLanguageMode(options.getLanguageIn());
-      Config.StrictMode strictMode =
-          expectStrictModeInput() ? Config.StrictMode.STRICT : Config.StrictMode.SLOPPY;
-      parserConfig = createConfig(configLanguageMode, strictMode);
-      // Externs must always be parsed with at least ES5 language mode.
-      externsParserConfig =
-          configLanguageMode.equals(Config.LanguageMode.ECMASCRIPT3)
-          ? createConfig(Config.LanguageMode.ECMASCRIPT5, strictMode)
-          : parserConfig;
+      synchronized (this) {
+        if (parserConfig == null) {
+          Config.LanguageMode configLanguageMode = getParserConfigLanguageMode(
+              options.getLanguageIn());
+          Config.StrictMode strictMode =
+              expectStrictModeInput() ? Config.StrictMode.STRICT : Config.StrictMode.SLOPPY;
+          parserConfig = createConfig(configLanguageMode, strictMode);
+          // Externs must always be parsed with at least ES5 language mode.
+          externsParserConfig =
+              configLanguageMode.equals(Config.LanguageMode.ECMASCRIPT3)
+                  ? createConfig(Config.LanguageMode.ECMASCRIPT5, strictMode)
+                  : parserConfig;
+        }
+      }
     }
     switch (context) {
       case EXTERNS:
@@ -2687,7 +2697,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   public ErrorManager getErrorManager() {
     if (options == null) {
-      initOptions(newCompilerOptions());
+      initOptions(new CompilerOptions());
     }
     return errorManager;
   }

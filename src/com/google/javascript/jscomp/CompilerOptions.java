@@ -359,6 +359,23 @@ public class CompilerOptions {
     this.legacyCodeCompile = legacy;
   }
 
+  // TODO(bradfordcsmith): Resolve the closure managed dependencies case where we don't really want
+  // to fully parse all input files, then investigate how can we use multi-threads as default.
+  int numParallelThreads = 1;
+
+  /**
+   * Sets the level of parallelism for compilation passes that can exploit multi-threading.
+   *
+   * <p>Some compiler passes may take advantage of multi-threading, for example, parsing inputs.
+   * This sets the level of parallelism. The compiler will not start more than this number of
+   * threads.
+   *
+   * @param parallelism up to this number of parallel threads may be created.
+   */
+  public void setNumParallelThreads(int parallelism) {
+    numParallelThreads = parallelism;
+  }
+
   //--------------------------------
   // Optimizations
   //--------------------------------
