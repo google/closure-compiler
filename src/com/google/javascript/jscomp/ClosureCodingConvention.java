@@ -371,7 +371,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
 
   @Override
   public ObjectLiteralCast getObjectLiteralCast(Node callNode) {
-    Preconditions.checkArgument(callNode.isCall());
+    Preconditions.checkArgument(callNode.isCall(), "Expected call node but found %s", callNode);
     ObjectLiteralCast proxyCast = super.getObjectLiteralCast(callNode);
     if (proxyCast != null) {
       return proxyCast;
@@ -393,8 +393,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
       return new ObjectLiteralCast(null, null, OBJECTLIT_EXPECTED);
     }
 
-    return new ObjectLiteralCast(
-        typeNode.getQualifiedName(), typeNode.getNext(), null);
+    return new ObjectLiteralCast(typeNode.getQualifiedName(), typeNode.getNext(), null);
   }
 
   @Override

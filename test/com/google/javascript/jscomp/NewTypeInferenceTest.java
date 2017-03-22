@@ -19701,4 +19701,50 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"),
         NewTypeInference.INEXISTENT_PROPERTY);
   }
+
+  public void testGoogReflectObject() {
+    typeCheck(LINE_JOINER.join(
+        CLOSURE_BASE,
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {number} */",
+        "Foo.prototype.myprop;",
+        "goog.reflect.object(Foo, {myprop: 'asdf'});",
+        "var /** string */ s = (new Foo).myprop;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        CLOSURE_BASE,
+        "/** @constructor */",
+        "function Foo() {}",
+        "goog.reflect.object(Foo, 123);"),
+        ClosureCodingConvention.OBJECTLIT_EXPECTED);
+
+    typeCheck(LINE_JOINER.join(
+        CLOSURE_BASE,
+        "function f() {}",
+        "goog.reflect.object(f, {myprop: 123});"),
+        NewTypeInference.REFLECT_CONSTRUCTOR_EXPECTED);
+
+    typeCheck(LINE_JOINER.join(
+        CLOSURE_BASE,
+        "/** @constructor */",
+        "function Foo() {}",
+        "var /** !Object */ n = goog.reflect.object(Foo, {myprop: 'asdf'});"));
+
+    typeCheck(LINE_JOINER.join(
+        CLOSURE_BASE,
+        "/** @constructor */",
+        "function Foo() {}",
+        "var /** null */ n = goog.reflect.object(Foo, {myprop: 'asdf'});"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // Test that the object literal itself is analyzed
+    typeCheck(LINE_JOINER.join(
+        CLOSURE_BASE,
+        "/** @constructor */",
+        "function Foo() {}",
+        "goog.reflect.object(Foo, {myprop: 1 - 'asdf'});"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
 }

@@ -24,6 +24,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.CodingConvention.Bind;
+import com.google.javascript.jscomp.CodingConvention.ObjectLiteralCast;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.newtypes.DeclaredFunctionType;
@@ -297,6 +298,11 @@ final class NewTypeInference implements CompilerPass {
           "JSC_NTI_ABSTRACT_SUPER_METHOD_NOT_CALLABLE",
           "Abstract super method {0} cannot be called");
 
+  static final DiagnosticType REFLECT_CONSTRUCTOR_EXPECTED =
+      DiagnosticType.warning(
+          "JSC_NTI_REFLECT_CONSTRUCTOR_EXPECTED",
+          "Constructor expected as first argument");
+
   // Not part of ALL_DIAGNOSTICS because it should not be enabled with
   // --jscomp_error=newCheckTypes. It should only be enabled explicitly.
 
@@ -318,6 +324,7 @@ final class NewTypeInference implements CompilerPass {
       CONST_PROPERTY_DELETED,
       CONST_PROPERTY_REASSIGNED,
       CONST_REASSIGNED,
+      REFLECT_CONSTRUCTOR_EXPECTED,
       CONSTRUCTOR_NOT_CALLABLE,
       FAILED_TO_UNIFY,
       FORIN_EXPECTS_STRING_KEY,
@@ -1941,10 +1948,25 @@ final class NewTypeInference implements CompilerPass {
     return EnvTypePair.join(thenPair, elsePair);
   }
 
+  private EnvTypePair analyzeObjLitCastFwd(ObjectLiteralCast cast, Node call, TypeEnv inEnv) {
+    if (cast.objectNode == null) {
+      warnings.add(JSError.make(call, ClosureCodingConvention.OBJECTLIT_EXPECTED));
+      return new EnvTypePair(inEnv, TOP_OBJECT);
+    }
+    EnvTypePair pair = analyzeExprFwd(cast.objectNode, inEnv);
+    if (!pair.type.isPrototypeObject()) {
+      warnings.add(JSError.make(call, REFLECT_CONSTRUCTOR_EXPECTED));
+    }
+    return new EnvTypePair(pair.env, TOP_OBJECT);
+  }
+
   private EnvTypePair analyzeCallNewFwd(
       Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
     if (isPropertyTestCall(expr)) {
       return analyzePropertyTestCallFwd(expr, inEnv, specializedType);
+    }
+    if (expr.isCall() && this.convention.getObjectLiteralCast(expr) != null) {
+      return analyzeObjLitCastFwd(this.convention.getObjectLiteralCast(expr), expr, inEnv);
     }
     Node callee = expr.getFirstChild();
     if (isFunctionBind(callee, inEnv, true)) {
@@ -1961,8 +1983,7 @@ final class NewTypeInference implements CompilerPass {
         callee, calleePair.type, null, envAfterCallee);
     JSType calleeType = calleePair.type;
     if (calleeType.isBottom() || !calleeType.isSubtypeOf(commonTypes.topFunction())) {
-      warnings.add(JSError.make(
-          expr, NOT_CALLABLE, calleeType.toString()));
+      warnings.add(JSError.make(expr, NOT_CALLABLE, calleeType.toString()));
     }
     FunctionType funType = calleeType.getFunTypeIfSingletonObj();
     if (funType == null
@@ -2773,6 +2794,11 @@ final class NewTypeInference implements CompilerPass {
       QualifiedName lendsQname = QualifiedName.fromQualifiedString(jsdoc.getLendsName());
       if (lendsQname.getRightmostName().equals("prototype")) {
         classqname = lendsQname.getAllButRightmost();
+      }
+    } else if (parent.isCall() && this.convention.getObjectLiteralCast(parent) != null) {
+      ObjectLiteralCast cast = this.convention.getObjectLiteralCast(parent);
+      if (cast.typeName != null) {
+        classqname = QualifiedName.fromQualifiedString(cast.typeName);
       }
     }
     if (classqname != null) {

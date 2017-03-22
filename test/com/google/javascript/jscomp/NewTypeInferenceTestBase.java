@@ -47,6 +47,8 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
           "goog.asserts.assertInstanceOf;",
           "goog.getMsg;",
           "goog.addSingletonGetter;",
+          "goog.reflect;",
+          "goog.reflect.object;",
           "Object.prototype.superClass_;");
 
   protected static final String DEFAULT_EXTERNS =
