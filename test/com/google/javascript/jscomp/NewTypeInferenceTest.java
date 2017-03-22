@@ -8690,6 +8690,23 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "Bar.prototype.m = function(x) {};",
         "(new Bar).m(123);"),
         GlobalTypeInfo.UNKNOWN_OVERRIDE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "var MassObject = function() {};",
+        "/** @return {number} */",
+        "MassObject.prototype.getBottomBody;",
+        "/**",
+        "* @constructor",
+        "* @abstract",
+        "* @implements {MassObject}",
+        "*/",
+        "var AbstractMassObject = function() {};",
+        "/**",
+        " * @override",
+        " * @abstract",
+        " */",
+        "AbstractMassObject.prototype.getBottomBody = function() {};"));
   }
 
   public void testOverrideNoInitializer() {

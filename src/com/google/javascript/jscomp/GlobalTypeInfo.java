@@ -682,8 +682,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
             superMethodType.toFunctionType().toString(),
             localMethodType.toFunctionType().toString()));
       }
-      DeclaredFunctionType updatedMethodType = localMethodType
-          .withTypeInfoFromSuper(superMethodType, getsTypeFromParent);
+      DeclaredFunctionType updatedMethodType =
+          localMethodType.withTypeInfoFromSuper(superMethodType, getsTypeFromParent);
       localPropDef.updateMethodType(updatedMethodType);
       propTypesToProcess.put(pname,
           commonTypes.fromFunctionType(updatedMethodType.toFunctionType()));
@@ -740,8 +740,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         Node propDefsite = propDef.defSite;
         JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(propDefsite);
         if (jsdoc != null && jsdoc.isOverride()) {
-          warnings.add(JSError.make(propDefsite, UNKNOWN_OVERRIDE,
-                  pname, rawType.getName()));
+          warnings.add(JSError.make(propDefsite, UNKNOWN_OVERRIDE, pname, rawType.getName()));
         }
       }
     }
@@ -1691,8 +1690,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(fn);
       DeclaredFunctionType declFunType = fnScope.getDeclaredFunctionType();
       if (declFunType == null) {
-        declFunType = computeFnDeclaredType(
-            jsdoc, internalName, fn, ownerType, currentScope);
+        declFunType = computeFnDeclaredType(jsdoc, internalName, fn, ownerType, currentScope);
         fnScope.setDeclaredType(declFunType);
       }
       return fnScope;

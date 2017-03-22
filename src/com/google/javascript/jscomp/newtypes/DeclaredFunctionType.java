@@ -248,7 +248,7 @@ public final class DeclaredFunctionType {
           superType.restFormals, superType.returnType,
           nt == null ? null : nt.getInstanceAsJSType(),
           rt == null ? null : rt.getInstanceAsJSType(),
-          superType.typeParameters, false);
+          superType.typeParameters, this.isAbstract);
     }
 
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
