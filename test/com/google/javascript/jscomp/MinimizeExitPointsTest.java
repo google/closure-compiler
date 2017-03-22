@@ -68,6 +68,9 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
          "");
     fold("f:g:{if(a()){break f;}else{break f;} break f;}",
          "f:g:{if(a()){}else{}}");
+    fold(
+        "function f() { a: break a; }",
+        "function f() {}");
   }
 
   public void testFunctionReturnOptimization1() throws Exception {
@@ -94,10 +97,12 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
          "function f(){if(a()){}else{}}");
     fold("function f(){if(a()){return;}else{return;} b();}",
          "function f(){if(a()){}else{return;b()}}");
-    fold("function f(){ if (x) return; if (y) return; if (z) return; w(); }",
-        " function f() {" +
-        "   if (x) {} else { if (y) {} else { if (z) {} else w(); }}" +
-        " }");
+    fold(
+        "function f(){ if (x) return; if (y) return; if (z) return; w(); }",
+        LINE_JOINER.join(
+            "function f() {",
+            "  if (x) {} else { if (y) {} else { if (z) {} else w(); }}",
+            "}"));
 
     fold("function f(){while(a())return;}",
          "function f(){while(a())return}");
@@ -154,8 +159,7 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
 
     fold("while(true){try{continue;}catch(e){continue;}}",
          "while(true){try{}catch(e){}}");
-    fold("while(true){try{if(a()){continue;}else{continue;}" +
-         "continue;}catch(e){}}",
+    fold("while(true){try{if(a()){continue;}else{continue;} continue;}catch(e){}}",
          "while(true){try{if(a()){}else{}}catch(e){}}");
 
     fold("while(true){g:continue}",
@@ -195,8 +199,7 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
 
     fold("do{try{continue;}catch(e){continue;}}while(true)",
          "do{try{}catch(e){}}while(true)");
-    fold("do{try{if(a()){continue;}else{continue;}" +
-         "continue;}catch(e){}}while(true)",
+    fold("do{try{if(a()){continue;}else{continue;} continue;}catch(e){}}while(true)",
          "do{try{if(a()){}else{}}catch(e){}}while(true)");
 
     fold("do{g:continue}while(true)",
@@ -245,8 +248,7 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
 
     fold("for(x=0;x<y;x++){try{continue;}catch(e){continue;}}",
          "for(x=0;x<y;x++){try{}catch(e){}}");
-    fold("for(x=0;x<y;x++){try{if(a()){continue;}else{continue;}" +
-         "continue;}catch(e){}}",
+    fold("for(x=0;x<y;x++){try{if(a()){continue;}else{continue;} continue;}catch(e){}}",
          "for(x=0;x<y;x++){try{if(a()){}else{}}catch(e){}}");
 
     fold("for(x=0;x<y;x++){g:continue}",
