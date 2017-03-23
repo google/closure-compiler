@@ -27,6 +27,10 @@ import junit.framework.TestCase;
 /** Tests for {@link ModuleLoader}. */
 
 public final class ModuleLoaderTest extends TestCase {
+  private ImmutableMap<String, String> packageJsonMainEntries =
+      ImmutableMap.of(
+          "/B/package.json", "/B/lib/b",
+          "/node_modules/B/package.json", "/node_modules/B/lib/b.js");
 
   public void testWindowsAddresses() {
     ModuleLoader loader =
@@ -84,10 +88,6 @@ public final class ModuleLoaderTest extends TestCase {
             "/node_modules/B/package.json",
             "/node_modules/B/lib/b.js");
 
-    ImmutableMap<String, String> packageJsonMainEntries =
-        ImmutableMap.of(
-            "/B/package.json", "/B/lib/b",
-            "/node_modules/B/package.json", "/node_modules/B/lib/b.js");
 
     ModuleLoader loader =
         new ModuleLoader(
@@ -95,7 +95,6 @@ public final class ModuleLoaderTest extends TestCase {
             (new ImmutableList.Builder<String>()).build(),
             compilerInputs,
             ModuleLoader.ResolutionMode.LEGACY);
-    loader.setPackageJsonMainEntries(packageJsonMainEntries);
 
     assertUri("/A.js", loader.resolve("/foo.js").resolveJsModule("/A"));
     assertUri("/A/index.js", loader.resolve("/foo.js").resolveJsModule("/A/index.js"));
@@ -122,7 +121,9 @@ public final class ModuleLoaderTest extends TestCase {
             null,
             ImmutableList.of("."),
             inputs("js/a.js", "js/b.js"),
-            ModuleLoader.ResolutionMode.NODE);
+            ModuleLoader.PathResolver.RELATIVE,
+            ModuleLoader.ResolutionMode.NODE,
+            packageJsonMainEntries);
     assertUri("js/a.js", loader.resolve("js/a.js"));
     assertUri("js/b.js", loader.resolve("js/a.js").resolveJsModule("./b"));
     assertUri("js/b.js", loader.resolve("js/a.js").resolveJsModule("./b.js"));
@@ -134,13 +135,16 @@ public final class ModuleLoaderTest extends TestCase {
             null,
             ImmutableList.of("."),
             inputs("A/index.js", "B/index.js", "app.js"),
-            ModuleLoader.ResolutionMode.NODE);
+            ModuleLoader.PathResolver.RELATIVE,
+            ModuleLoader.ResolutionMode.NODE,
+            packageJsonMainEntries);
 
     input("A/index.js");
     input("B/index.js");
     input("app.js");
     assertUri("A/index.js", loader.resolve("A/index.js"));
     assertUri("A/index.js", loader.resolve("B/index.js").resolveJsModule("../A"));
+    assertUri("A/index.js", loader.resolve("B/index.js").resolveJsModule("../A/"));
     assertUri("A/index.js", loader.resolve("B/index.js").resolveJsModule("../A/index"));
     assertUri("A/index.js", loader.resolve("app.js").resolveJsModule("./A/index"));
     assertNull(loader.resolve("app.js").resolveJsModule("A/index"));
@@ -161,18 +165,14 @@ public final class ModuleLoaderTest extends TestCase {
             "/node_modules/B/package.json",
             "/node_modules/B/lib/b.js");
 
-    ImmutableMap<String, String> packageJsonMainEntries =
-        ImmutableMap.of(
-            "/B/package.json", "/B/lib/b",
-            "/node_modules/B/package.json", "/node_modules/B/lib/b.js");
-
     ModuleLoader loader =
         new ModuleLoader(
             null,
             (new ImmutableList.Builder<String>()).build(),
             compilerInputs,
-            ModuleLoader.ResolutionMode.NODE);
-    loader.setPackageJsonMainEntries(packageJsonMainEntries);
+            ModuleLoader.PathResolver.RELATIVE,
+            ModuleLoader.ResolutionMode.NODE,
+            packageJsonMainEntries);
 
     assertUri("/A/index.js", loader.resolve(" /foo.js").resolveJsModule("/A"));
     assertUri("/A/index.js", loader.resolve("/foo.js").resolveJsModule("/A/index.js"));
@@ -191,6 +191,7 @@ public final class ModuleLoaderTest extends TestCase {
         loader.resolve("/node_modules/A/index.js").resolveJsModule("./foo"));
 
     assertUri("/B/lib/b.js", loader.resolve("/app.js").resolveJsModule("/B"));
+    assertUri("/B/lib/b.js", loader.resolve("/app.js").resolveJsModule("/B/"));
 
     assertUri("/node_modules/B/lib/b.js", loader.resolve("/app.js").resolveJsModule("B"));
   }
@@ -246,18 +247,12 @@ public final class ModuleLoaderTest extends TestCase {
             "/node_modules/B/package.json",
             "/node_modules/B/lib/b.js");
 
-    ImmutableMap<String, String> packageJsonMainEntries =
-        ImmutableMap.of(
-            "/B/package.json", "/B/lib/b",
-            "/node_modules/B/package.json", "/node_modules/B/lib/b.js");
-
     ModuleLoader loader =
         new ModuleLoader(
             null,
             (new ImmutableList.Builder<String>()).build(),
             compilerInputs,
             ModuleLoader.ResolutionMode.BROWSER);
-    loader.setPackageJsonMainEntries(packageJsonMainEntries);
 
     assertNull(loader.resolve("/foo.js").resolveJsModule("/A"));
     assertUri("/A/index.js", loader.resolve("/foo.js").resolveJsModule("/A/index.js"));
@@ -336,18 +331,14 @@ public final class ModuleLoaderTest extends TestCase {
             "node_modules/B/package.json",
             "node_modules/B/lib/b.js");
 
-    ImmutableMap<String, String> packageJsonMainEntries =
-        ImmutableMap.of(
-            "/B/package.json", "/B/lib/b",
-            "node_modules/B/package.json", "node_modules/B/lib/b.js");
-
     ModuleLoader loader =
         new ModuleLoader(
             null,
             (new ImmutableList.Builder<String>()).build(),
             compilerInputs,
-            ModuleLoader.ResolutionMode.NODE);
-    loader.setPackageJsonMainEntries(packageJsonMainEntries);
+            ModuleLoader.PathResolver.RELATIVE,
+            ModuleLoader.ResolutionMode.NODE,
+            packageJsonMainEntries);
 
     assertUri("/A/index.js", loader.resolve(" /foo.js").resolveJsModule("/A"));
     assertUri("/A/index.js", loader.resolve("/foo.js").resolveJsModule("/A/index.js"));
@@ -367,7 +358,7 @@ public final class ModuleLoaderTest extends TestCase {
 
     assertUri("/B/lib/b.js", loader.resolve("/app.js").resolveJsModule("/B"));
 
-    assertUri("node_modules/B/lib/b.js", loader.resolve("/app.js").resolveJsModule("B"));
+    assertUri("/node_modules/B/lib/b.js", loader.resolve("/app.js").resolveJsModule("B"));
   }
 
   CompilerInput input(String name) {

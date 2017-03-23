@@ -1534,10 +1534,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                 options.moduleRoots,
                 inputs,
                 ModuleLoader.PathResolver.RELATIVE,
-                options.moduleResolutionMode);
+                options.moduleResolutionMode,
+                null);
 
         if (options.moduleResolutionMode == ModuleLoader.ResolutionMode.NODE) {
-          this.moduleLoader.setPackageJsonMainEntries(processJsonInputs(inputs));
+          // processJsonInputs requires a module loader to already be defined
+          // so we redefine it afterwards with the package.json inputs
+          this.moduleLoader =
+              new ModuleLoader(
+                  this,
+                  options.moduleRoots,
+                  inputs,
+                  ModuleLoader.PathResolver.RELATIVE,
+                  options.moduleResolutionMode,
+                  processJsonInputs(inputs));
         }
 
         if (options.lowerFromEs6()) {
