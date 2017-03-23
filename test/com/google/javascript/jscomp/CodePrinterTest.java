@@ -139,6 +139,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // Label
     assertPrint("foo:for(;;){break foo;}", "foo:for(;;)break foo");
     assertPrint("foo:while(1){continue foo;}", "foo:while(1)continue foo");
+    assertPrintSame("foo:;");
+    assertPrint("foo: {}", "foo:;");
 
     // Object literals.
     assertPrint("({})", "({})");
@@ -816,6 +818,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         "myLabel: {\n" +
         "  alert();\n" +
         "}\n");
+    assertPrettyPrint("myLabel: {}", "myLabel: {\n}\n");
+    assertPrettyPrint("myLabel: ;", "myLabel: ;\n");
 
     // Don't move the label on a loop, because then break {label} and
     // continue {label} won't work.
