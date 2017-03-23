@@ -1820,6 +1820,31 @@ HTMLMediaElement.prototype.addTextTrack =
 /** @type {TextTrackList} */
 HTMLMediaElement.prototype.textTracks;
 
+/**
+ * The ID of the audio device through which output is being delivered, or an
+ * empty string if using the default device.
+ *
+ * Implemented as a draft spec in Chrome 49+.
+ *
+ * @see https://w3c.github.io/mediacapture-output/#htmlmediaelement-extensions
+ * @type {string}
+ */
+HTMLMediaElement.prototype.sinkId;
+
+/**
+ * Sets the audio device through which output should be delivered.
+ *
+ * Implemented as a draft spec in Chrome 49+.
+ *
+ * @param {string} sinkId The ID of the audio output device, or empty string
+ * for default device.
+ *
+ * @see https://w3c.github.io/mediacapture-output/#htmlmediaelement-extensions
+ * @return {!Promise<void>}
+ */
+HTMLMediaElement.prototype.setSinkId = function(sinkId) {};
+
+
 
 /**
  * @see http://www.w3.org/TR/shadow-dom/
