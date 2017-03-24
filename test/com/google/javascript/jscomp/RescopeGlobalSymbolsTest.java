@@ -26,8 +26,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
 
   private boolean assumeCrossModuleNames = true;
 
-  public RescopeGlobalSymbolsTest() {
-  }
+  public RescopeGlobalSymbolsTest() {}
 
   @Override protected CompilerPass getProcessor(Compiler compiler) {
     return new RescopeGlobalSymbols(
@@ -258,6 +257,90 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "Object;Function;Array;String;Boolean;Number;Math;"
         + "Date;RegExp;JSON;Error;EvalError;ReferenceError;"
         + "SyntaxError;TypeError;URIError;");
+  }
+
+  public void testSameVarDeclaredInExternsAndSource() {
+    test(
+        "/** @const */ var ns = {}; function f() {}",
+        "/** @const */ var ns = ns || {};",
+        "/** @const */ window.ns = window.ns || {};", null, null);
+
+    test(
+        "var x;",
+        "var x = 1; x = 2;",
+        "window.x = 1; window.x = 2;", null, null);
+
+    test(
+        "var x;",
+        "var x; x = 1;",
+        "window.x = 1;", null, null);
+
+    test(
+        "var x;",
+        "function f() { var x; x = 1; }",
+        "_.f = function() { var x; x = 1; }", null, null);
+
+    test(
+        "var x, y;",
+        "var x = 1, y = 2;",
+        "window.x = 1; window.y = 2;", null, null);
+
+    test(
+        "var x, y;",
+        "var x, y = 2;",
+        "window.y = 2;", null, null);
+
+    test(
+        "var x;",
+        "var x = 1, y = 2;",
+        "window.x = 1; _.y = 2;", null, null);
+
+    test(
+        "var x;",
+        "var y = 2, x = 1;",
+        "_.y = 2; window.x = 1;", null, null);
+
+    test(
+        "var x;",
+        "var y, x = 1;",
+        "window.x = 1;", null, null);
+
+    test(
+        "var foo;",
+        "var foo = function(x) { if (x > 0) { var y = foo; } };",
+        "window.foo = function(x) { if (x > 0) { var y = window.foo; } };",
+        null, null);
+  }
+
+  public void testSameVarDeclaredInExternsAndSource2() {
+    assumeCrossModuleNames = false;
+
+    test(createModules(
+        LINE_JOINER.join(
+            "Foo = function() { this.b = ns; };",
+            "var f = function(a) {",
+            "  if (a instanceof Foo && a.b === ns) {}",
+            "},",
+            "ns = {},",
+            "g = function(a) { var b = new Foo; };"),
+        "f; g;"),
+        new String[] {
+            LINE_JOINER.join(
+                "var ns;",
+                "window.Foo = function() { this.b = ns; };",
+                "_.f = function(a) {",
+                "  if (a instanceof window.Foo && a.b === ns) {}",
+                "};",
+                "ns = {};",
+                "_.g = function(a) { var b = new window.Foo; };"),
+            "_.f; _.g;"
+        });
+
+    test(
+        "var y;",
+        "var x = 1, y = 2; function f() { return x + window.y; }",
+        "var x; x = 1; window.y = 2; var f = function() { return x + window.y; }",
+        null, null);
   }
 
   private class StringCompare extends CompilerTestCase {

@@ -85,6 +85,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private final boolean assumeCrossModuleNames;
   private final Set<String> crossModuleNames = new HashSet<>();
   private final Set<String> maybeReferencesThis = new HashSet<>();
+  private final Set<String> externsNames = new HashSet<>();
 
   /**
    * Constructor for the RescopeGlobalSymbols compiler pass.
@@ -130,6 +131,15 @@ final class RescopeGlobalSymbols implements CompilerPass {
         || compiler.getCodingConvention().isExported(name, false);
   }
 
+  private boolean isExternVar(String varname, NodeTraversal t) {
+    if (varname.isEmpty()) {
+      return false;
+    }
+    Var v = t.getScope().getVar(varname);
+    return v == null || v.isExtern()
+        || (v.scope.isGlobal() && this.externsNames.contains(varname));
+  }
+
   private void addExternForGlobalSymbolNamespace() {
     Node varNode = IR.var(IR.name(globalSymbolNamespace));
     CompilerInput input = compiler.getSynthesizedExternsInput();
@@ -137,42 +147,52 @@ final class RescopeGlobalSymbols implements CompilerPass {
     compiler.reportCodeChange();
   }
 
+  private void collectExternVariableNames(Node externs) {
+    ReferenceCollectingCallback externsRefs = new ReferenceCollectingCallback(
+        this.compiler,
+        ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
+        new Es6SyntacticScopeCreator(this.compiler));
+    externsRefs.process(externs);
+    for (Var v : externsRefs.getAllSymbols()) {
+      this.externsNames.add(v.getName());
+    }
+  }
+
   @Override
   public void process(Node externs, Node root) {
+    // Collect variables in externs; they can be shadowed by the same names in global scope.
+    collectExternVariableNames(externs);
+
     // Make the name of the globalSymbolNamespace an extern.
     if (addExtern) {
       addExternForGlobalSymbolNamespace();
     }
-    // Rewrite all references to global symbols to properties of a
-    // single symbol by:
-    // (If necessary the 4 traversals could be combined. They are left
-    // separate for readability reasons.)
-    // 1. turning global named function statements into var assignments.
+
+    // Rewrite all references to global symbols to properties of a single symbol:
+
+    // Turn global named function statements into var assignments.
     NodeTraversal.traverseEs6(
         compiler,
         root,
         new RewriteGlobalFunctionStatementsToVarAssignmentsCallback());
-    // 2. find global names that are used in more than one module. Those that
-    //    are have to be rewritten.
+
+    // Find global names that are used in more than one module. Those that
+    // are have to be rewritten.
     List<Callback> nonMutatingPasses = new ArrayList<>();
     nonMutatingPasses.add(new FindCrossModuleNamesCallback());
-    //    and find names that may refering functions that reference this.
+
+    // And find names that may refer to functions that reference this.
     nonMutatingPasses.add(new FindNamesReferencingThis());
     CombinedCompilerPass.traverse(compiler, root, nonMutatingPasses);
-    // 3. rewriting all references to be property accesses of the single symbol.
+
+    // Rewrite all references to be property accesses of the single symbol.
     RewriteScopeCallback rewriteScope = new RewriteScopeCallback();
     NodeTraversal.traverseEs6(compiler, root, rewriteScope);
-    // 4. removing the var from statements in global scope if the declared names
-    //    have been rewritten in the previous pass.
+
+    // Remove the var from statements in global scope if the declared names have been rewritten
+    // in the previous pass.
     NodeTraversal.traverseEs6(compiler, root, new RemoveGlobalVarCallback());
     rewriteScope.declareModuleGlobals();
-
-    // Extra pass which makes all extern global symbols reference window
-    // explicitly.
-    NodeTraversal.traverseEs6(
-        compiler,
-        root,
-        new MakeExternsReferenceWindowExplicitly());
   }
 
   /**
@@ -287,8 +307,8 @@ final class RescopeGlobalSymbols implements CompilerPass {
 
   /**
    * Visits each NAME token and checks whether it refers to a global variable.
-   * If yes, rewrites the name to be a property access on the
-   * "globalSymbolNamespace".
+   * If yes, rewrites the name to be a property access on the "globalSymbolNamespace".
+   * If the NAME is an extern variable, it becomes a property access on window.
    *
    * <pre>var a = 1, b = 2, c = 3;</pre>
    * becomes
@@ -302,11 +322,9 @@ final class RescopeGlobalSymbols implements CompilerPass {
    * <pre>a()</pre>
    * becomes
    * <pre>(0,NS.a)()</pre>
-   * Notice the special syntax here to preserve the *this* semantics in the
-   * function call.
+   * Notice the special syntax here to preserve the *this* semantics in the function call.
    */
   private class RewriteScopeCallback extends AbstractPostOrderCallback {
-
     List<ModuleGlobal> preDeclarations = new ArrayList<>();
 
     @Override
@@ -319,22 +337,18 @@ final class RescopeGlobalSymbols implements CompilerPass {
       if (parent.isFunction() && name.isEmpty()) {
         return;
       }
-      Var var = t.getScope().getVar(name);
-      if (var == null) {
-        return;
-      }
-      // Don't touch externs.
-      if (var.isExtern()) {
+      if (isExternVar(name, t)) {
+        visitExtern(n, parent);
         return;
       }
       // When the globalSymbolNamespace is used as a local variable name
       // add suffix to avoid shadowing the namespace. Also add a suffix
       // if a name starts with the name of the globalSymbolNamespace and
       // the suffix.
-      if (!var.isExtern() && !var.isGlobal()
+      Var var = t.getScope().getVar(name);
+      if (!var.isGlobal()
           && (name.equals(globalSymbolNamespace)
-              || name.startsWith(
-                  globalSymbolNamespace + DISAMBIGUATION_SUFFIX))) {
+              || name.startsWith(globalSymbolNamespace + DISAMBIGUATION_SUFFIX))) {
         n.setString(name + DISAMBIGUATION_SUFFIX);
         compiler.reportCodeChange();
       }
@@ -344,14 +358,13 @@ final class RescopeGlobalSymbols implements CompilerPass {
       }
       Node nameNode = var.getNameNode();
       // The exception variable (e in try{}catch(e){}) should not be rewritten.
-      if (nameNode != null && nameNode.getParent() != null
-          && nameNode.getParent().isCatch()) {
+      if (nameNode != null && nameNode.getParent() != null && nameNode.getParent().isCatch()) {
         return;
       }
-      replaceSymbol(n, name, t.getInput());
+      replaceSymbol(t, n, name, t.getInput());
     }
 
-    private void replaceSymbol(Node node, String name, CompilerInput input) {
+    private void replaceSymbol(NodeTraversal t, Node node, String name, CompilerInput input) {
       Node parent = node.getParent();
       boolean isCrossModule = isCrossModuleName(name);
       if (!isCrossModule) {
@@ -360,18 +373,15 @@ final class RescopeGlobalSymbols implements CompilerPass {
         if (!parent.isVar()) {
           return;
         }
-        // If it is a var declaration, but no cross module names are declared
-        // we also don't have to do anything.
-        boolean hasCrossModuleChildren = false;
+        boolean hasInterestingChildren = false;
         for (Node c : parent.children()) {
-          // Var child is no longer a name means it was transformed already
-          // which means there was a cross module name.
-          if (!c.isName() || isCrossModuleName(c.getString())) {
-            hasCrossModuleChildren = true;
+          // VAR child is no longer a name means it was transformed already.
+          if (!c.isName() || isCrossModuleName(c.getString()) || isExternVar(c.getString(), t)) {
+            hasInterestingChildren = true;
             break;
           }
         }
-        if (!hasCrossModuleChildren) {
+        if (!hasInterestingChildren) {
           return;
         }
       }
@@ -412,6 +422,27 @@ final class RescopeGlobalSymbols implements CompilerPass {
     }
 
     /**
+     * Rewrites extern names to be explicit children of window instead of only implicitly
+     * referencing it. This enables injecting window into a scope and make all global symbols
+     * depend on the injected object.
+     */
+    private void visitExtern(Node nameNode, Node parent) {
+      String name = nameNode.getString();
+      if (globalSymbolNamespace.equals(name) || SPECIAL_EXTERNS.contains(name)) {
+        return;
+      }
+      Node windowPropAccess = IR.getprop(IR.name(WINDOW), IR.string(name));
+      if (parent.isVar() && nameNode.hasOneChild()) {
+        Node assign = IR.assign(windowPropAccess, nameNode.getFirstChild().detachFromParent());
+        assign.setJSDocInfo(parent.getJSDocInfo());
+        parent.replaceChild(nameNode, assign.srcrefTree(parent));
+      } else {
+        parent.replaceChild(nameNode, windowPropAccess.srcrefTree(nameNode));
+      }
+      compiler.reportCodeChange();
+    }
+
+    /**
      * Adds back declarations for variables that do not cross module boundaries.
      * Must be called after RemoveGlobalVarCallback.
      */
@@ -421,8 +452,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
             && global.root.getFirstChild().isVar()) {
           global.root.getFirstChild().addChildToBack(global.name);
         } else {
-          global.root.addChildToFront(
-              IR.var(global.name).srcref(global.name));
+          global.root.addChildToFront(IR.var(global.name).srcref(global.name));
         }
         compiler.reportCodeChange();
       }
@@ -513,34 +543,6 @@ final class RescopeGlobalSymbols implements CompilerPass {
         comma = nextComma;
       }
       return comma;
-    }
-  }
-
-  /**
-   * Rewrites extern names to be explicit children of window instead of only
-   * implicitly referencing it.
-   * This enables injecting window into a scope and make all global symbol
-   * depend on the injected object.
-   */
-  private class MakeExternsReferenceWindowExplicitly extends
-      AbstractPostOrderCallback {
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!n.isName()) {
-        return;
-      }
-      String name = n.getString();
-      if (globalSymbolNamespace.equals(name)
-          || SPECIAL_EXTERNS.contains(name)) {
-        return;
-      }
-      Var var = t.getScope().getVar(name);
-      if (name.length() > 0 && (var == null || var.isExtern())) {
-        parent.replaceChild(n, IR.getprop(IR.name(WINDOW), IR.string(name))
-            .srcrefTree(n));
-        compiler.reportCodeChange();
-      }
     }
   }
 }
