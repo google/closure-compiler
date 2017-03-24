@@ -52,6 +52,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -1101,6 +1102,24 @@ public final class SymbolTable {
     Symbol(String name, JSType type, boolean inferred, SymbolScope scope) {
       super(name, type, inferred);
       this.scope = scope;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (!(o instanceof Symbol)) {
+        return false;
+      }
+      Symbol other = (Symbol) o;
+
+      return isTypeInferred() == other.isTypeInferred()
+          && Objects.equals(getName(), other.getName())
+          && Objects.equals(getType(), other.getType())
+          && Objects.equals(scope, other.scope);
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hash(Boolean.valueOf(isTypeInferred()), getName(), getType(), scope);
     }
 
     @Override
