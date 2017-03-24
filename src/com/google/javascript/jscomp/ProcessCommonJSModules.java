@@ -95,7 +95,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
     NodeTraversal.traverseEs6(compiler, root, finder);
 
     ImmutableList.Builder<ExportInfo> exports = ImmutableList.builder();
-    Node hoistInsertionReference = null;
     if (finder.isCommonJsModule()) {
       finder.reportModuleErrors();
 
@@ -122,14 +121,14 @@ public final class ProcessCommonJSModules implements CompilerPass {
         }
       }
 
-      hoistInsertionReference = finder.addGoogProvide();
+      finder.initializeModule();
       compiler.reportCodeChange();
     }
 
     NodeTraversal.traverseEs6(
-        compiler,
-        root,
-        new RewriteModule(finder.isCommonJsModule(), exports.build(), hoistInsertionReference));
+        compiler, root, new RewriteModule(finder.isCommonJsModule(), exports.build()));
+
+    finder.addGoogProvideAndRequires();
   }
 
   /**
@@ -232,27 +231,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
   }
 
   /**
-   * Given a scope root, return an insertion reference after any goog.require or goot.provide
-   * functions.
-   */
-  private static Node getScopeInsertionPoint(Node scopeRoot, Node startPoint) {
-    Node insertionPoint = startPoint;
-    for (Node next = startPoint != null ? startPoint.getNext() : scopeRoot.getFirstChild();
-        next != null
-            && next.getFirstChild().isCall()
-            && (next.getFirstFirstChild().matchesQualifiedName("goog.require")
-                || next.getFirstFirstChild().matchesQualifiedName("goog.provide"));
-        next = next.getNext()) {
-      insertionPoint = next;
-    }
-
-    return insertionPoint;
-  }
-
-  /**
    * Traverse the script. Find all references to CommonJS require (import) and module.exports or
-   * export statements. Add goog.require statements for any require statements. Rewrites any require
-   * calls to reference the rewritten module name.
+   * export statements. Rewrites any require calls to reference the rewritten module name.
    */
   class FindImportsAndExports implements NodeTraversal.Callback {
     private boolean hasGoogProvideOrModule = false;
@@ -399,17 +379,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         parent.getParent().removeChild(parent);
       }
 
-      if (imports.add(moduleName)) {
-        if (reportDependencies) {
-          t.getInput().addRequire(moduleName);
-        }
-        this.script.addChildToFront(
-            IR.exprResult(
-                    IR.call(
-                        IR.getprop(IR.name("goog"), IR.string("require")), IR.string(moduleName)))
-                .useSourceInfoIfMissingFromForTree(require));
-        compiler.reportCodeChange();
-      }
+      imports.add(moduleName);
     }
 
     /**
@@ -481,32 +451,20 @@ public final class ProcessCommonJSModules implements CompilerPass {
     }
 
     /**
-     * Add a goog.provide statement for the module. If the export is directly assigned more than
-     * once, or the assignments are not global, declare the module name variable.
+     * If the export is directly assigned more than once, or the assignments are not global, declare
+     * the module name variable.
      *
      * <p>If all of the assignments are simply property assignments, initialize the module name
      * variable as a namespace.
-     *
-     * <p>Returns a node reference after which hoisted functions within the module should be
-     * inserted.
      */
-    Node addGoogProvide() {
+    void initializeModule() {
       CompilerInput ci = compiler.getInput(this.script.getInputId());
       ModulePath modulePath = ci.getPath();
       if (modulePath == null) {
-        return null;
+        return;
       }
 
       String moduleName = modulePath.toModuleName();
-
-      // Add goog.provide calls.
-      if (reportDependencies) {
-        ci.addProvide(moduleName);
-      }
-      this.script.addChildToFront(
-          IR.exprResult(
-                  IR.call(IR.getprop(IR.name("goog"), IR.string("provide")), IR.string(moduleName)))
-              .useSourceInfoIfMissingFromForTree(this.script));
 
       // The default declaration for the goog.provide is a constant so
       // we need to declare the variable if we have more than one
@@ -553,16 +511,50 @@ public final class ProcessCommonJSModules implements CompilerPass {
         }
         initModule.useSourceInfoIfMissingFromForTree(this.script);
 
-        Node refChild = getScopeInsertionPoint(this.script, null);
-        if (refChild == null) {
-          this.script.addChildToFront(initModule);
-        } else {
-          this.script.addChildAfter(initModule, refChild);
-        }
-        return initModule;
+        this.script.addChildToFront(initModule);
+      }
+    }
+
+    /**
+     * Add goog.require statements for any require statements and a goog.provide statement for the
+     * module
+     */
+    void addGoogProvideAndRequires() {
+      CompilerInput ci = compiler.getInput(this.script.getInputId());
+      ModulePath modulePath = ci.getPath();
+      if (modulePath == null) {
+        return;
       }
 
-      return script.getFirstChild();
+      String moduleName = modulePath.toModuleName();
+
+      for (String importName : imports) {
+        // Add goog.provide calls.
+        if (reportDependencies) {
+          ci.addRequire(importName);
+        }
+
+        this.script.addChildToFront(
+            IR.exprResult(
+                    IR.call(
+                        IR.getprop(IR.name("goog"), IR.string("require")), IR.string(importName)))
+                .useSourceInfoIfMissingFromForTree(this.script));
+      }
+
+      if (isCommonJsModule()) {
+        // Add goog.provide calls.
+        if (reportDependencies) {
+          ci.addProvide(moduleName);
+        }
+        this.script.addChildToFront(
+            IR.exprResult(
+                    IR.call(
+                        IR.getprop(IR.name("goog"), IR.string("provide")), IR.string(moduleName)))
+                .useSourceInfoIfMissingFromForTree(this.script));
+        compiler.reportCodeChange();
+      } else if (imports.size() > 0) {
+        compiler.reportCodeChange();
+      }
     }
 
     /** Find the outermost if node ancestor for a node without leaving the function scope */
@@ -638,15 +630,10 @@ public final class ProcessCommonJSModules implements CompilerPass {
     private final List<Node> imports = new ArrayList<>();
     private final List<Node> rewrittenClassExpressions = new ArrayList<>();
     private final List<Node> functionsToHoist = new ArrayList<>();
-    private final Node hoistInsertionPoint;
 
-    public RewriteModule(
-        boolean allowFullRewrite,
-        ImmutableCollection<ExportInfo> exports,
-        Node hoistInsertionPoint) {
+    public RewriteModule(boolean allowFullRewrite, ImmutableCollection<ExportInfo> exports) {
       this.allowFullRewrite = allowFullRewrite;
       this.exports = exports;
-      this.hoistInsertionPoint = hoistInsertionPoint;
     }
 
     @Override
@@ -661,17 +648,22 @@ public final class ProcessCommonJSModules implements CompilerPass {
             compiler.reportCodeChange();
           }
 
+          CompilerInput ci = compiler.getInput(n.getInputId());
+          ModulePath modulePath = ci.getPath();
+          String moduleName = modulePath.toModuleName();
+
           // Hoist functions in reverse order so that they maintain the same relative
           // order after hoisting.
           for (int i = functionsToHoist.size() - 1; i >= 0; i--) {
             Node functionExpr = functionsToHoist.get(i);
             Node scopeRoot = t.getClosestHoistScope().getRootNode();
-            Node insertionRef = null;
-            if (hoistInsertionPoint != null
-                && t.getEnclosingFunction() == NodeUtil.getEnclosingFunction(hoistInsertionPoint)) {
-              insertionRef = hoistInsertionPoint;
+            Node insertionPoint = scopeRoot.getFirstChild();
+            if (insertionPoint == null
+                || !(insertionPoint.isVar()
+                    && insertionPoint.getFirstChild().getString().equals(moduleName))) {
+              insertionPoint = null;
             }
-            Node insertionPoint = getScopeInsertionPoint(scopeRoot, insertionRef);
+
             if (insertionPoint == null) {
               if (scopeRoot.getFirstChild() != functionExpr) {
                 scopeRoot.addChildToFront(functionExpr.detach());
