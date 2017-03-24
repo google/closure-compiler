@@ -16,6 +16,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Ascii.isUpperCase;
+import static com.google.common.base.Ascii.toLowerCase;
+import static com.google.common.base.Ascii.toUpperCase;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -98,7 +100,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
   static final DiagnosticType INCORRECT_SHORTNAME_CAPITALIZATION =
       DiagnosticType.disabled(
           "JSC_INCORRECT_SHORTNAME_CAPITALIZATION",
-          "The capitalization of short name {0} is incorrect.");
+          "The capitalization of short name {0} is incorrect; it should be {1}.");
 
   static final DiagnosticType EXPORT_NOT_A_MODULE_LEVEL_STATEMENT =
       DiagnosticType.error(
@@ -412,7 +414,12 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     }
 
     if (isUpperCase(shortName.charAt(0)) != isUpperCase(lastSegment.charAt(0))) {
-      t.report(shortNameNode, INCORRECT_SHORTNAME_CAPITALIZATION, shortName);
+      char newStartChar =
+          isUpperCase(shortName.charAt(0))
+              ? toLowerCase(shortName.charAt(0))
+              : toUpperCase(shortName.charAt(0));
+      String correctedName = newStartChar + shortName.substring(1);
+      t.report(shortNameNode, INCORRECT_SHORTNAME_CAPITALIZATION, shortName, correctedName);
     }
   }
 

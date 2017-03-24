@@ -578,7 +578,8 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "goog.module('xyz');",
             "",
             "const GoogAsserts = goog.require('goog.asserts');"),
-        INCORRECT_SHORTNAME_CAPITALIZATION);
+        INCORRECT_SHORTNAME_CAPITALIZATION,
+        "The capitalization of short name GoogAsserts is incorrect; it should be googAsserts.");
 
     testSame(
         LINE_JOINER.join(
@@ -591,7 +592,8 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "goog.module('xyz');",
             "",
             "const event = goog.require('goog.events.Event');"),
-        INCORRECT_SHORTNAME_CAPITALIZATION);
+        INCORRECT_SHORTNAME_CAPITALIZATION,
+        "The capitalization of short name event is incorrect; it should be Event.");
   }
 
   public void testIllegalExports() {
