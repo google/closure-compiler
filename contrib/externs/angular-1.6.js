@@ -393,13 +393,16 @@ angular.Directive;
 
 
 
-/** @interface */
+/**
+ * @interface
+ * @template T
+ */
 angular.Change = function() {};
 
-/** @type {*} */
+/** @type {T} */
 angular.Change.prototype.currentValue;
 
-/** @type {*} */
+/** @type {T} */
 angular.Change.prototype.previousValue;
 
 /** @return {boolean} */
