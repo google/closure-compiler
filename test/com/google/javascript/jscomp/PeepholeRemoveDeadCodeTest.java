@@ -66,6 +66,14 @@ public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
     test(js, expected);
   }
 
+  public void testRemoveNoOpLabelledStatement() {
+    fold("a: break a;", "");
+    fold("a: { break a; }", "");
+
+    foldSame("a: { break a; console.log('unreachable'); }");
+    foldSame("a: { break a; var x = 1; } x = 2;");
+  }
+
   public void testFoldBlock() {
     fold("{{foo()}}", "foo()");
     fold("{foo();{}}", "foo()");
@@ -533,7 +541,7 @@ public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
             "    case 'y': throw f;",
             "  }",
             "}"),
-        "function f() { label: { break label; } }");
+        "function f() { }");
 
     test(
         LINE_JOINER.join(
@@ -544,7 +552,7 @@ public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
             "    default: throw f;",
             "  }",
             "}"),
-        "function f() { label: { break label; } }");
+        "function f() { }");
   }
 
   public void testOptimizeSwitchWithReturn() {
@@ -927,7 +935,7 @@ public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
   }
 
   public void testRemoveFromLabel1() {
-    test("LBL: void 0", "LBL: {}");
+    test("LBL: void 0", "");
   }
 
   public void testRemoveFromLabel2() {

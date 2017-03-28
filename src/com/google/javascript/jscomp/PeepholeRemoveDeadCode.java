@@ -75,9 +75,31 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
       case TRY:
         return tryFoldTry(subtree);
+      case LABEL:
+        return tryFoldLabel(subtree);
       default:
           return subtree;
     }
+  }
+
+  private Node tryFoldLabel(Node n) {
+    String labelName = n.getFirstChild().getString();
+    Node stmt = n.getLastChild();
+    if (stmt.isEmpty() || (stmt.isNormalBlock() && !stmt.hasChildren())) {
+      n.detach();
+      reportCodeChange();
+      return null;
+    }
+
+    if (stmt.isNormalBlock() && stmt.hasOneChild()) {
+      stmt = stmt.getFirstChild();
+    }
+    if (stmt.isBreak() && stmt.getFirstChild().getString().equals(labelName)) {
+      n.detach();
+      reportCodeChange();
+      return null;
+    }
+    return n;
   }
 
   /**
