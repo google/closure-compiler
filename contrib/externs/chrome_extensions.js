@@ -2385,6 +2385,16 @@ chrome.runtime.requestUpdateCheck = function(callback) {};
 chrome.runtime.restart = function() {};
 
 
+/**
+ * @see https://developer.chrome.com/extensions/runtime#method-restartAfterDelay
+ * @param {number} seconds Time to wait in seconds before rebooting the device,
+ *     or -1 to cancel a scheduled reboot.
+ * @param {function():void=} opt_callback A callback to be invoked when a
+ *     restart request was successfully rescheduled.
+ * @return {undefined}
+ */
+chrome.runtime.restartAfterDelay = function(seconds, opt_callback) {};
+
 
 /**
  * @see http://developer.chrome.com/extensions/runtime.html#method-connectNative
