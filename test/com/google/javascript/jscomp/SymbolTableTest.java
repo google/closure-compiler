@@ -1090,6 +1090,42 @@ public final class SymbolTableTest extends TestCase {
         getGlobalVar(table, "SubFoo.prototype.plugh").getVisibility());
   }
 
+  public void testPrototypeSymbolEqualityForTwoPathsToSamePrototype() {
+    String input =
+        LINE_JOINER.join(
+            "/**\n",
+            "* An employer.\n",
+            "*\n",
+            "* @param {String} name name of employer.\n",
+            "* @param {String} address address of employer.\n",
+            "* @constructor\n",
+            "*/\n",
+            "function Employer(name, address) {\n",
+            "this.name = name;\n",
+            "this.address = address;\n",
+            "}\n",
+            "\n",
+            "/**\n",
+            "* @return {String} information about an employer.\n",
+            "*/\n",
+            "Employer.prototype.getInfo = function() {\n",
+            "return this.name + '.' + this.address;\n",
+            "};");
+    SymbolTable table = createSymbolTable(input);
+    Symbol employer = getGlobalVar(table, "Employer");
+    assertNotNull(employer);
+    SymbolScope propertyScope = employer.getPropertyScope();
+    assertNotNull(propertyScope);
+    Symbol prototypeOfEmployer = propertyScope.getQualifiedSlot("prototype");
+    assertNotNull(prototypeOfEmployer);
+
+    Symbol employerPrototype = getGlobalVar(table, "Employer.prototype");
+    assertNotNull(employerPrototype);
+
+    assertEquals(employerPrototype.hashCode(), prototypeOfEmployer.hashCode());
+    assertEquals(employerPrototype, prototypeOfEmployer);
+  }
+
   private void assertSymmetricOrdering(
       Ordering<Symbol> ordering, Symbol first, Symbol second) {
     assertEquals(0, ordering.compare(first, first));
