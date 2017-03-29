@@ -1847,6 +1847,17 @@ HTMLMediaElement.prototype.setSinkId = function(sinkId) {};
 
 
 /**
+ * @constructor
+ * @extends {HTMLElement}
+ * @see https://html.spec.whatwg.org/multipage/dom.html#htmlunknownelement
+ * @see https://html.spec.whatwg.org/multipage/scripting.html#customized-built-in-element-restrictions
+ * @see https://w3c.github.io/webcomponents/spec/custom/#custom-elements-api
+ */
+function HTMLUnknownElement() {}
+
+
+
+/**
  * @see http://www.w3.org/TR/shadow-dom/
  * @return {!NodeList<!Node>}
  */
