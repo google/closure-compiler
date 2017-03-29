@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +34,9 @@ import java.util.concurrent.TimeUnit;
  * in parallel and already available during the rest of the compilation.
  */
 class PrebuildAst {
+  // We use many recursive algorithms that use O(d) memory in the depth
+  // of the tree.
+  private static final long COMPILER_STACK_SIZE = (1 << 21); // About 2MB
 
   private final AbstractCompiler compiler;
   private final int numParallelThreads;
@@ -43,12 +47,21 @@ class PrebuildAst {
   }
 
   void prebuild(List<CompilerInput> inputList) {
+    ThreadFactory threadFactory = new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+          Thread t = new Thread(null, r, "jscompiler-PrebuildAst", COMPILER_STACK_SIZE);
+          t.setDaemon(true);  // Do not prevent the JVM from exiting.
+          return t;
+        }
+    };
     ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(
         numParallelThreads,
         numParallelThreads,
         Integer.MAX_VALUE,
         TimeUnit.SECONDS,
-        new LinkedBlockingQueue<Runnable>());
+        new LinkedBlockingQueue<Runnable>(),
+        threadFactory);
     ListeningExecutorService executorService = MoreExecutors.listeningDecorator(poolExecutor);
     List<ListenableFuture<?>> futureList = new ArrayList<>(inputList.size());
     for (final CompilerInput input : inputList) {
