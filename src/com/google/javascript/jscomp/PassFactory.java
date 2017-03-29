@@ -48,6 +48,11 @@ public abstract class PassFactory {
     return name;
   }
 
+  @Override
+  public String toString() {
+    return name;
+  }
+
   /**
    * @return Whether the pass produced by this factory can only be run once.
    */
