@@ -22,6 +22,9 @@ import com.google.javascript.jscomp.ErrorHandler;
 import java.util.Map;
 import javax.annotation.Nullable;
 
+/**
+ * Base class for algorithms that resolve JavaScript module references to input files.
+ */
 public abstract class ModuleResolver {
   /** The set of all known input module URIs (including trailing .js), after normalization. */
   protected final ImmutableSet<String> modulePaths;
