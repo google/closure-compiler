@@ -2738,23 +2738,19 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testAddFunctionProperties3() throws Exception {
     String source =
-        "/** @constructor */ function F() {}" +
-        "var x = new F();" +
-        "/** @this {F} */" +
-        "function g(y) { y.bar = function() { alert(3); }; }" +
-        "g(x);" +
-        "x.bar();";
+        LINE_JOINER.join(
+            "/** @constructor */ function F() {}",
+            "var x = new F();",
+            "/** @this {F} */",
+            "function g(y) { y.bar = function() { alert(3); }; }",
+            "g(x);",
+            "x.bar();");
     String expected =
-        "var x = new function() {};" +
-        "/** @this {F} */" +
-        "(function (y) { y.bar = function() { alert(3); }; })(x);" +
-        "x.bar();";
+        "var x = new function() {};x.bar = function(){ alert(3); };x.bar();";
 
     CompilerOptions options = createCompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS
-        .setOptionsForCompilationLevel(options);
-    options.setRenamingPolicy(
-        VariableRenamingPolicy.OFF, PropertyRenamingPolicy.OFF);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setRenamingPolicy(VariableRenamingPolicy.OFF, PropertyRenamingPolicy.OFF);
     options.setCheckTypes(false);
     test(options, source, expected);
   }
