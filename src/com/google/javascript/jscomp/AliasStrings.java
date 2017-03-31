@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -131,9 +130,7 @@ class AliasStrings extends AbstractPostOrderCallback
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isString() &&
-        !parent.isGetProp() &&
-        !parent.isRegExp()) {
+    if (n.isString() && !parent.isGetProp() && !parent.isRegExp()) {
 
       String str = n.getString();
 
@@ -160,14 +157,13 @@ class AliasStrings extends AbstractPostOrderCallback
         if (info.numOccurrences != 1) {
           // Check whether the current module depends on the module containing
           // the declaration.
-          if (module != null &&
-              info.moduleToContainDecl != null &&
-              module != info.moduleToContainDecl &&
-              !moduleGraph.dependsOn(module, info.moduleToContainDecl)) {
+          if (module != null
+              && info.moduleToContainDecl != null
+              && module != info.moduleToContainDecl) {
             // We need to declare this string in the deepest module in the
             // module dependency graph that both of these modules depend on.
-            module = moduleGraph.getDeepestCommonDependency(
-                module, info.moduleToContainDecl);
+            module =
+                moduleGraph.getDeepestCommonDependencyInclusive(module, info.moduleToContainDecl);
           } else {
             // use the previously saved insertion location.
             return;

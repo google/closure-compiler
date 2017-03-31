@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Set;
 
 /**
@@ -420,6 +419,41 @@ public final class AliasStringsTest extends CompilerTestCase {
           // m3
           "h($$S_ciaociaociaociaociao + 'adios');",
           // m4
+          "g();",
+        });
+    moduleGraph = null;
+  }
+
+  public void testAliasInCommonModuleInclusive() {
+    strings = ALL_STRINGS;
+
+    JSModule[] modules =
+        createModuleBush(
+            // m0
+            "",
+            // m1
+            "function g() { alert('ciaociaociaociaociao'); }",
+            // m2
+            "h('ciaociaociaociaociao' + 'adios');",
+            // m3
+            "g();");
+
+    moduleGraph = new JSModuleGraph(modules);
+
+    // The "ciao" string is used in m1 and m2.
+    // Since m2 depends on m1, we should create the module there and not force it into m0.
+    test(
+        modules,
+        new String[] {
+          // m0
+          "",
+          // m1
+          LINE_JOINER.join(
+              "var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';",
+              "function g() { alert($$S_ciaociaociaociaociao); }"),
+          // m2
+          "h($$S_ciaociaociaociaociao + 'adios');",
+          // m3
           "g();",
         });
     moduleGraph = null;
