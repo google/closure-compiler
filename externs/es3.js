@@ -89,7 +89,8 @@ IIterableResult.prototype.value;
  */
 function Iterable() {}
 
-// TODO(johnlenz): remove this when the compiler understands "symbol" natively
+// TODO(johnlenz): remove the suppression when the compiler understands
+// "symbol" natively
 /**
  * @return {Iterator<VALUE>}
  * @suppress {externsValidation}
