@@ -114,7 +114,7 @@ public final class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testInlineEmptyFunction6() {
-    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     test("if (window) { f(); function f() {} }",
         "if (window) { void 0; }");
   }

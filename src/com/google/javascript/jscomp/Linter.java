@@ -77,7 +77,7 @@ public class Linter {
  static void lint(Path path, Compiler compiler) throws IOException {
     SourceFile file = SourceFile.fromFile(path.toString());
     CompilerOptions options = new CompilerOptions();
-    options.setLanguage(LanguageMode.ECMASCRIPT8);
+    options.setLanguage(LanguageMode.ECMASCRIPT_NEXT);
 
     // For a full compile, this would cause a crash, as the method name implies. But the passes
     // in LintPassConfig can all handle untranspiled ES6.

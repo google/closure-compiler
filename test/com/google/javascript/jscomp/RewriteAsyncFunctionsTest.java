@@ -23,7 +23,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT8);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     runTypeCheckAfterProcessing = true;
   }

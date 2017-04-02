@@ -243,23 +243,23 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
   }
 
   public void testArrowFunction1() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testFailure("var a = () => this.foo;");
   }
 
   public void testArrowFunction2() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testFailure("(() => this.foo)();");
   }
 
   public void testArrowFunction3() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testFailure("function Foo() {} " +
         "Foo.prototype.getFoo = () => this.foo;");
   }
 
   public void testArrowFunction4() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testFailure("function Foo() {} " +
         "Foo.prototype.setFoo = (f) => { this.foo = f; };");
   }
@@ -290,7 +290,7 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
 
   public void testInnerFunctionInEs6ClassMethod() {
     // TODO(user): It would be nice to warn for using 'this' here
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(LINE_JOINER.join(
         "class Foo {",
         "  constructor() {",

@@ -63,7 +63,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   // b/27531865
   public void testLetInSwitch() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.ERROR);
     String before = LINE_JOINER.join(
@@ -103,7 +103,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testExplicitBlocksInSwitch() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.ERROR);
     String before = LINE_JOINER.join(
@@ -128,7 +128,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testMultipleAliasesInlined_bug31437418() {
     CompilerOptions options = createCompilerOptions();
     options.setCollapseProperties(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     test(
         options,
@@ -368,7 +368,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testWindowIsTypedEs6() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setCheckTypes(true);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
@@ -383,7 +383,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testConstPolymerNotAllowed() {
     CompilerOptions options = createCompilerOptions();
     options.setPolymerVersion(1);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     externs = ImmutableList.of(SourceFile.fromCode("<externs>",
@@ -634,7 +634,7 @@ public final class IntegrationTest extends IntegrationTestCase {
    */
   public void testES6Modules() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setModuleResolutionMode(ResolutionMode.LEGACY);
     test(
@@ -654,7 +654,7 @@ public final class IntegrationTest extends IntegrationTestCase {
    */
   public void testES6Modules_missing() {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setModuleResolutionMode(ResolutionMode.LEGACY);
     test(
@@ -1646,7 +1646,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "{e:{a:!0,b:!0,d:function(){}},",  // renamed from init
         "f:{a:!0,b:!0,g:function(){}}})");  // renamed from prop
 
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setExtraSmartNameRemoval(false);
@@ -3617,7 +3617,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testES5toES6() throws Exception {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     options.setSkipTranspilationAndCrash(true);
     CompilationLevel.SIMPLE_OPTIMIZATIONS
         .setOptionsForCompilationLevel(options);
@@ -3628,7 +3628,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   // Tests that unused classes are removed, even if they are passed to $jscomp.inherits.
   private void testES6UnusedClassesAreRemoved(CodingConvention convention) {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setCodingConvention(convention);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -3653,7 +3653,7 @@ public final class IntegrationTest extends IntegrationTestCase {
    */
   private void testES6StaticsAreRemoved(String js) {
     CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     Compiler compiler = compile(options, js);
@@ -3898,7 +3898,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testEs6OutDoesntCrash() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setSkipTranspilationAndCrash(true);
     test(options, "function f(x) { if (x) var x=5; }", "function f(x) { if (x) x=5; }");
   }

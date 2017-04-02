@@ -66,9 +66,7 @@ public final class TypeSyntaxTest extends TestCase {
 
   private void testNotEs6TypedFullError(String source, String error) {
     expectErrors(error);
-    parse(source, LanguageMode.ECMASCRIPT6);
-    expectErrors(error);
-    parse(source, LanguageMode.ECMASCRIPT6_STRICT);
+    parse(source, LanguageMode.ECMASCRIPT_2015);
   }
 
   private void testNotEs6Typed(String source, String... features) {
@@ -79,9 +77,7 @@ public final class TypeSyntaxTest extends TestCase {
               + ". Use --language_in=ECMASCRIPT6_TYPED to enable ES6 typed features.";
     }
     expectErrors(features);
-    parse(source, LanguageMode.ECMASCRIPT6);
-    expectErrors(features);
-    parse(source, LanguageMode.ECMASCRIPT6_STRICT);
+    parse(source, LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testVariableDeclaration() {

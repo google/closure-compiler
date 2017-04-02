@@ -218,7 +218,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   }
 
   public void testNoRewriteIfNotInGlobalScope1() throws Exception {
-    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     testSame("if(true){" + NoRewriteIfNotInGlobalScopeTestInput.INPUT + "}");
   }
 

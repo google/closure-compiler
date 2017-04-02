@@ -126,13 +126,13 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   public void testValidRestParameter() {
-    setLanguage(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     valid("function f(a,...rest){}");
     valid("function f(a,...[re,...st]){}");
   }
 
   public void testAwaitExpression() {
-    setLanguage(LanguageMode.ECMASCRIPT8, LanguageMode.ECMASCRIPT5);
+    setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
     Node awaitNode = new Node(Token.AWAIT);
     awaitNode.addChildToBack(IR.number(1));
     Node parentFunction =
@@ -142,7 +142,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   public void testAwaitExpressionNonAsyncFunction() {
-    setLanguage(LanguageMode.ECMASCRIPT8, LanguageMode.ECMASCRIPT5);
+    setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
     Node awaitNode = new Node(Token.AWAIT);
     awaitNode.addChildToBack(IR.number(1));
     Node parentFunction =
@@ -152,7 +152,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   public void testAwaitExpressionNoFunction() {
-    setLanguage(LanguageMode.ECMASCRIPT8, LanguageMode.ECMASCRIPT5);
+    setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
     Node n = new Node(Token.AWAIT);
     n.addChildToBack(IR.number(1));
     expectInvalid(n, Check.EXPRESSION);

@@ -28,7 +28,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase {
   @Override
   public void setUp() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     runTypeCheckAfterProcessing = true;
     compareJsDoc = true;
   }

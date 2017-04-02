@@ -211,7 +211,7 @@ public class JsfileParser implements EntryPoint {
     Config config =
         ParserRunner.createConfig(
             // TODO(sdh): ES6 STRICT, with a non-strict fallback - then give warnings.
-            Config.LanguageMode.ECMASCRIPT6,
+            Config.LanguageMode.ECMASCRIPT_2015,
             Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE,
             Config.RunMode.KEEP_GOING,
             /* extraAnnotationNames */ ImmutableSet.<String>of(),

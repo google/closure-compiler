@@ -323,12 +323,12 @@ public final class VarCheckTest extends Es6CompilerTestCase {
   }
 
   public void testLegalLetReferenceBetweenModules() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testDependentModules("let x = 10;", "let y = x++;", null);
   }
 
   public void testLegalConstReferenceBetweenModules() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testDependentModules("const x = 10;", "const y = x + 1;", null);
   }
 
@@ -338,7 +338,7 @@ public final class VarCheckTest extends Es6CompilerTestCase {
   }
 
   public void testMissingModuleDependencyLetAndConst() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testIndependentModules("let x = 10;", "let y = x++;",
         null, VarCheck.MISSING_MODULE_DEP_ERROR);
     testIndependentModules("const x = 10;", "const y = x + 1;",
@@ -351,7 +351,7 @@ public final class VarCheckTest extends Es6CompilerTestCase {
   }
 
   public void testViolatedModuleDependencyLetAndConst() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testDependentModules("let y = x++;", "let x = 10;",
         VarCheck.VIOLATED_MODULE_DEP_ERROR);
     testDependentModules("const y = x + 1;", "const x = 10;",

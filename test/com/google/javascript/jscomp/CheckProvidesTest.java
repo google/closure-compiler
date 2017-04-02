@@ -49,7 +49,7 @@ public final class CheckProvidesTest extends Es6CompilerTestCase {
   }
 
   public void testMissingProvideEs6Class() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     String js = "goog.require('Y'); class X {};";
     String warning = "missing goog.provide('X')";
     test(js, js, null, MISSING_PROVIDE_WARNING, warning);
