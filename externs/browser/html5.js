@@ -2164,12 +2164,45 @@ MessagePort.prototype.onmessage;
 
 // HTML5 MessageEvent class
 /**
- * @see http://dev.w3.org/html5/spec/comms.html#messageevent
+ * @typedef {Window|MessagePort|ServiceWorker}
+ * @see https://html.spec.whatwg.org/multipage/comms.html#messageeventsource
+ */
+var MessageEventSource;
+
+
+/**
+ * @record
+ * @extends {EventInit}
+ * @template T
+ * @see https://html.spec.whatwg.org/multipage/comms.html#messageeventinit
+ */
+function MessageEventInit() {}
+
+/** @type {T|undefined} */
+MessageEventInit.prototype.data;
+
+/** @type {(string|undefined)} */
+MessageEventInit.prototype.origin;
+
+/** @type {(string|undefined)} */
+MessageEventInit.prototype.lastEventId;
+
+/** @type {(?MessageEventSource|undefined)} */
+MessageEventInit.prototype.source;
+
+/** @type {(!Array<MessagePort>|undefined)} */
+MessageEventInit.prototype.ports;
+
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/comms.html#messageevent
  * @constructor
  * @extends {Event}
+ * @param {string} type
+ * @param {MessageEventInit<T>=} opt_eventInitDict
  * @template T
  */
-function MessageEvent() {}
+function MessageEvent(type, opt_eventInitDict) {}
 
 /**
  * The data payload of the message.
@@ -2207,13 +2240,13 @@ MessageEvent.prototype.ports;
  * Initializes the event in a manner analogous to the similarly-named methods in
  * the DOM Events interfaces.
  * @param {string} typeArg
- * @param {boolean} canBubbleArg
- * @param {boolean} cancelableArg
- * @param {T} dataArg
- * @param {string} originArg
- * @param {string} lastEventIdArg
- * @param {Window} sourceArg
- * @param {Array<MessagePort>} portsArg
+ * @param {boolean=} canBubbleArg
+ * @param {boolean=} cancelableArg
+ * @param {T=} dataArg
+ * @param {string=} originArg
+ * @param {string=} lastEventIdArg
+ * @param {?MessageEventSource=} sourceArg
+ * @param {!Array<MessagePort>=} portsArg
  * @return {undefined}
  */
 MessageEvent.prototype.initMessageEvent = function(typeArg, canBubbleArg,
@@ -2223,19 +2256,20 @@ MessageEvent.prototype.initMessageEvent = function(typeArg, canBubbleArg,
  * Initializes the event in a manner analogous to the similarly-named methods in
  * the DOM Events interfaces.
  * @param {string} namespaceURI
- * @param {string} typeArg
- * @param {boolean} canBubbleArg
- * @param {boolean} cancelableArg
- * @param {T} dataArg
- * @param {string} originArg
- * @param {string} lastEventIdArg
- * @param {Window} sourceArg
- * @param {Array<MessagePort>} portsArg
+ * @param {string=} typeArg
+ * @param {boolean=} canBubbleArg
+ * @param {boolean=} cancelableArg
+ * @param {T=} dataArg
+ * @param {string=} originArg
+ * @param {string=} lastEventIdArg
+ * @param {?MessageEventSource=} sourceArg
+ * @param {!Array<MessagePort>=} portsArg
  * @return {undefined}
  */
 MessageEvent.prototype.initMessageEventNS = function(namespaceURI, typeArg,
     canBubbleArg, cancelableArg, dataArg, originArg, lastEventIdArg, sourceArg,
     portsArg) {};
+
 
 /**
  * HTML5 BroadcastChannel class.
