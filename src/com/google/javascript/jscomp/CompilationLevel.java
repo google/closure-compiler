@@ -165,7 +165,7 @@ public enum CompilationLevel {
     options.setRemoveAbstractMethods(true);
     options.setRemoveSuperMethods(true);
     options.setReserveRawExports(true);
-    options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.ALL_UNQUOTED);
+    options.setRenamingPolicy(VariableRenamingPolicy.ALL, PropertyRenamingPolicy.OFF);
     options.setShadowVariables(true);
     options.setRemoveUnusedPrototypeProperties(true);
     options.setRemoveUnusedPrototypePropertiesInExterns(false);
