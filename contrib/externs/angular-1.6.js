@@ -1565,6 +1565,9 @@ angular.$http.Config.prototype.data
 angular.$http.Config.prototype.headers;
 
 /** @type {(string|undefined)} */
+angular.$http.Config.prototype.jsonpCallbackParam;
+
+/** @type {(string|undefined)} */
 angular.$http.Config.prototype.method;
 
 /** @type {(?Object<(boolean|number|string|Object)>|undefined)} */
