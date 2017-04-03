@@ -73,7 +73,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    */
   @Override
   public void test(String js, String expected) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     super.test(js, expected);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     super.test(js, expected);
