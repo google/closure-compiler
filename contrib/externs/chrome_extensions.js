@@ -2064,23 +2064,31 @@ chrome.enterprise.Token.prototype.subtleCrypto;
 /**
  * @param {!ArrayBuffer} challenge A challenge as emitted by the Verified Access
  *     Web API.
- * @param {function(!ArrayBuffer): void=} callback Called back with the
- *     challenge response.
+ * @param {boolean|function(!ArrayBuffer): void} registerKeyOrCallback Either a
+ *     flag indicating whether to register the key, in which case the callback
+ *     is passed as the next arg, or the callback. If a flag is set, the current
+ *     Enterprise Machine Key is registered with the "system" token and
+ *     relinquishes the Enterprise Machine Key role. The key can then be
+ *     associated with a certificate and used like any other signing key. This
+ *     key is 2048-bit RSA. Subsequent calls to this function will then generate
+ *     a new Enterprise Machine Key.
+ * @param {function(!ArrayBuffer=): void=} callback The callback (called back
+ *     with the challenge response), if arg2 was the registerKey flag.
  * @return {undefined}
  */
 chrome.enterprise.platformKeys.challengeMachineKey =
-    function(challenge, callback) {};
+    function(challenge, registerKeyOrCallback, callback) {};
 
 
 /**
  * @param {!ArrayBuffer} challenge A challenge as emitted by the Verified Access
  *     Web API.
  * @param {boolean} registerKey If set, the current Enterprise User Key is
- *     registered with the "user"> token and relinquishes the Enterprise User
+ *     registered with the "user" token and relinquishes the Enterprise User
  *     Key role. The key can then be associated with a certificate and used like
  *     any other signing key. This key is 2048-bit RSA. Subsequent calls to this
  *     function will then generate a new Enterprise User Key.
- * @param {function(!ArrayBuffer): void=} callback Called back with the
+ * @param {function(!ArrayBuffer): void} callback Called back with the
  *     challenge response.
  * @return {undefined}
  */
