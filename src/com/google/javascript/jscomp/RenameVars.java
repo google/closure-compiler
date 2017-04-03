@@ -64,7 +64,7 @@ final class RenameVars implements CompilerPass {
   private final Map<Node, String> pseudoNameMap;
 
   /** Set of extern variable names */
-  private final Set<String> externNames = new HashSet<>();
+  private Set<String> externNames;
 
   /** Set of reserved variable names */
   private final Set<String> reservedNames;
@@ -181,10 +181,7 @@ final class RenameVars implements CompilerPass {
    * Iterate through the nodes, collect all the NAME nodes that need to be
    * renamed, and count how many times each variable name is referenced.
    *
-   * There are 2 passes:
-   * - externs: keep track of the global vars in the externNames_ map.
-   * - source: keep track of all name references in globalNameNodes_, and
-   *   localNameNodes_.
+   * Keep track of all name references in globalNameNodes_, and localNameNodes_.
    *
    * To get shorter local variable renaming, we rename local variables to a
    * temporary name "LOCAL_VAR_PREFIX + index" where index is the index of the
@@ -200,13 +197,7 @@ final class RenameVars implements CompilerPass {
    * function x(a,b) { ... }
    * function y(a,b,c) { ... }
    */
-  class ProcessVars extends AbstractPostOrderCallback
-      implements ScopedCallback {
-    private final boolean isExternsPass_;
-
-    ProcessVars(boolean isExterns) {
-      isExternsPass_ = isExterns;
-    }
+  class ProcessVars extends AbstractPostOrderCallback implements ScopedCallback {
 
     @Override
     public void enterScope(NodeTraversal t) {
@@ -281,14 +272,6 @@ final class RenameVars implements CompilerPass {
         return;
       }
 
-      if (isExternsPass_) {
-        // Keep track of extern globals.
-        if (!local) {
-          externNames.add(name);
-        }
-        return;
-      }
-
       if (pseudoNameMap != null) {
         recordPseudoName(n);
       }
@@ -350,11 +333,12 @@ final class RenameVars implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    this.externNames = NodeUtil.collectExternVariableNames(this.compiler, externs);
+
     assignmentLog = new StringBuilder();
 
     // Do variable reference counting.
-    NodeTraversal.traverseEs6(compiler, externs, new ProcessVars(true));
-    NodeTraversal.traverseEs6(compiler, root, new ProcessVars(false));
+    NodeTraversal.traverseEs6(compiler, root, new ProcessVars());
 
     // Make sure that new names don't overlap with extern names.
     reservedNames.addAll(externNames);

@@ -4906,4 +4906,18 @@ public final class NodeUtil {
   public static boolean isCallTo(Node n, String qualifiedName) {
     return n.isCall() && n.getFirstChild().matchesQualifiedName(qualifiedName);
   }
+
+  static Set<String> collectExternVariableNames(AbstractCompiler compiler, Node externs) {
+    ReferenceCollectingCallback externsRefs =
+        new ReferenceCollectingCallback(
+            compiler,
+            ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
+            new Es6SyntacticScopeCreator(compiler));
+    externsRefs.process(externs);
+    ImmutableSet.Builder<String> externsNames = ImmutableSet.builder();
+    for (Var v : externsRefs.getAllSymbols()) {
+      externsNames.add(v.getName());
+    }
+    return externsNames.build();
+  }
 }
