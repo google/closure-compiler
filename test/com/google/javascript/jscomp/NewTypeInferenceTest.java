@@ -19764,4 +19764,11 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "goog.reflect.object(Foo, {myprop: 1 - 'asdf'});"),
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
+
+  public void testDontCrashWhenGettingDeclaredTypeFromCallee() {
+    typeCheck(LINE_JOINER.join(
+        "function f(/** number */ x) {}",
+        "f(123, function(x) { return x + 1; });"),
+        NewTypeInference.WRONG_ARGUMENT_COUNT);
+  }
 }

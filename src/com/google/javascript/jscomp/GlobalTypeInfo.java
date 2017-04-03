@@ -2445,8 +2445,10 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         Node declNode, JSType declaredTypeAsJSType) {
       Preconditions.checkArgument(declNode.isFunction());
       Preconditions.checkArgument(declNode.getParent().isCall());
-      Preconditions.checkNotNull(declaredTypeAsJSType);
 
+      if (declaredTypeAsJSType == null) {
+        return null;
+      }
       FunctionType funType = declaredTypeAsJSType.getFunType();
       if (funType == null
           || funType.isUniqueConstructor()
