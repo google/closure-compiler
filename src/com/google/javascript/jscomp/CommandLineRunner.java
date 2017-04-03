@@ -690,6 +690,12 @@ public class CommandLineRunner extends
         usage = "Allow injecting runtime libraries.")
     private boolean injectLibraries = true;
 
+    @Option(name = "--force_inject_library",
+        usage = "Force injection of named runtime libraries. "
+        + "The format is <name> where <name> is the name of a runtime library. "
+        + "Possible libraries include: base, es6_runtime, runtime_type_check")
+    private List<String> forceInjectLibraries = new ArrayList<>();
+
     @Option(
       name = "--dependency_mode",
       usage = "Specifies how the compiler should determine the set and order "
@@ -819,7 +825,8 @@ public class CommandLineRunner extends
                 ImmutableList.of(
                     "angular_pass",
                     "dart_pass",
-                    "noinject_library",
+                    "force_inject_library",
+                    "inject_libraries",
                     "polymer_pass",
                     "process_closure_primitives",
                     "rewrite_polyfills"))
@@ -1656,6 +1663,10 @@ public class CommandLineRunner extends
     options.setPreserveTypeAnnotations(flags.preserveTypeAnnotations);
 
     options.setPreventLibraryInjection(!flags.injectLibraries);
+
+    if (!flags.forceInjectLibraries.isEmpty()) {
+      options.setForceLibraryInjection(flags.forceInjectLibraries);
+    }
 
     options.rewritePolyfills = flags.rewritePolyfills && options.getLanguageIn().isEs6OrHigher();
 
