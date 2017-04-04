@@ -4916,7 +4916,9 @@ public final class NodeUtil {
     externsRefs.process(externs);
     ImmutableSet.Builder<String> externsNames = ImmutableSet.builder();
     for (Var v : externsRefs.getAllSymbols()) {
-      externsNames.add(v.getName());
+      if (!v.isParam()) {
+        externsNames.add(v.getName());
+      }
     }
     return externsNames.build();
   }
