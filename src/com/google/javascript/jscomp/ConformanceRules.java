@@ -1463,12 +1463,17 @@ public final class ConformanceRules {
 
       String tagName = getTagName(n.getSecondChild());
       Node attrs = n.getChildAtIndex(2);
+      TypeI attrsType = attrs.getTypeI();
+
+      if (attrs.isNull() || (attrsType != null && attrsType.isVoidType())) {
+        // goog.dom.createDom('iframe', null) is fine.
+        return ConformanceResult.CONFORMANCE;
+      }
 
       for (String[] tagAttr : bannedTagAttrs) {
         if (tagName != null && !tagAttr[0].equals(tagName)) {
           continue;
         }
-        TypeI attrsType = attrs.getTypeI();
         if (attrsType != null
             && (attrsType.isStringValueType() || attrsType.containsArray())) {
           // String or array attribute sets the class.

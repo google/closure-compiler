@@ -1729,6 +1729,8 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame("goog.dom.createDom('iframe', {'name': name});");
     testSame("goog.dom.createDom('iframe', 'red' + '');");
     testSame("goog.dom.createDom('iframe', ['red']);");
+    testSame("goog.dom.createDom('iframe', undefined);");
+    testSame("goog.dom.createDom('iframe', null);");
     testSame("goog.dom.createDom('img', {'src': src});");
     testSame("goog.dom.createDom('img', attrs);");
     testSame("goog.dom.createDom(tag, {});");
