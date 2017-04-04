@@ -377,6 +377,10 @@ public class DiagnosticGroups {
           NewTypeInference.UNKNOWN_TYPEOF_VALUE);
   }
 
+  public static final DiagnosticGroup TOO_MANY_TYPE_PARAMS =
+      DiagnosticGroups.registerGroup("tooManyTypeParams",
+          RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
+
   public static final DiagnosticGroup CHECK_EVENTFUL_OBJECT_DISPOSAL =
       DiagnosticGroups.registerGroup("checkEventfulObjectDisposal",
           CheckEventfulObjectDisposal.EVENTFUL_OBJECT_NOT_DISPOSED,
