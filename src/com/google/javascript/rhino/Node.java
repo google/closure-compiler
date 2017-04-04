@@ -2017,8 +2017,7 @@ public class Node implements Serializable {
       case NAME:
       case MEMBER_FUNCTION_DEF:
         String name = getString();
-        return start == 0 && !name.isEmpty() &&
-           name.length() == endIndex && qname.startsWith(name);
+        return start == 0 && !name.isEmpty() && name.length() == endIndex && qname.startsWith(name);
       case THIS:
         return start == 0 && 4 == endIndex && qname.startsWith("this");
       case SUPER:
@@ -3018,8 +3017,16 @@ public class Node implements Serializable {
     return this.token == Token.IMPORT;
   }
 
+  public boolean isImportStar() {
+    return this.token == Token.IMPORT_STAR;
+  }
+
   public boolean isImportSpec() {
     return this.token == Token.IMPORT_SPEC;
+  }
+
+  public boolean isImportSpecs() {
+    return this.token == Token.IMPORT_SPECS;
   }
 
   public boolean isIn() {

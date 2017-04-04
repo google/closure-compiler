@@ -189,7 +189,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
         // Namespace imports' default export is the namespace itself.
         String name = isNamespaceImport ? "" : "default";
         importMap.put(child.getString(), new ModuleOriginalNamePair(moduleName, name));
-      } else if (child.getToken() == Token.IMPORT_SPECS) {
+      } else if (child.isImportSpecs()) {
         for (Node grandChild : child.children()) {
           String origName = grandChild.getFirstChild().getString();
           if (grandChild.hasTwoChildren()) { // import {a as foo} from "mod"
@@ -205,9 +205,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
       } else {
         // import * as ns from "mod"
         Preconditions.checkState(
-            child.getToken() == Token.IMPORT_STAR,
-            "Expected an IMPORT_STAR node, but was: %s",
-            child);
+            child.isImportStar(), "Expected an IMPORT_STAR node, but was: %s", child);
         // Namespace imports cannot be imported "as *".
         if (isNamespaceImport) {
           compiler.report(t.makeError(importDecl, NAMESPACE_IMPORT_CANNOT_USE_STAR,
@@ -279,7 +277,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
     } else if (export.hasTwoChildren()) {
       //   export {x, y as z} from 'moduleIdentifier';
       Node moduleIdentifier = export.getLastChild();
-      Node importNode = new Node(Token.IMPORT, moduleIdentifier.cloneNode());
+      Node importNode = IR.importNode(IR.empty(), IR.empty(), moduleIdentifier.cloneNode());
       importNode.useSourceInfoFrom(export);
       parent.addChildBefore(importNode, export);
       visit(t, importNode, parent);

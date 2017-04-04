@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -408,7 +407,7 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
       visitRequire(defaultImport.getString(), importNode);
     }
     Node namedImports = defaultImport.getNext();
-    if (namedImports.getToken() == Token.IMPORT_SPECS) {
+    if (namedImports.isImportSpecs()) {
       for (Node importSpec : namedImports.children()) {
         visitRequire(importSpec.getLastChild().getString(), importNode);
       }

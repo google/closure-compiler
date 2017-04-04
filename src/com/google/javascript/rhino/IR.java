@@ -53,6 +53,19 @@ public class IR {
     return new Node(Token.EMPTY);
   }
 
+  public static Node importNode(Node name, Node importSpecs, Node moduleIdentifier) {
+    Preconditions.checkState(name.isName() || name.isEmpty(), name);
+    Preconditions.checkState(
+        importSpecs.isImportSpec() || importSpecs.isImportStar() || importSpecs.isEmpty(),
+        importSpecs);
+    Preconditions.checkState(moduleIdentifier.isString(), moduleIdentifier);
+    return new Node(Token.IMPORT, name, importSpecs, moduleIdentifier);
+  }
+
+  public static Node importStar(String name) {
+    return Node.newString(Token.IMPORT_STAR, name);
+  }
+
   public static Node function(Node name, Node params, Node body) {
     Preconditions.checkState(name.isName());
     Preconditions.checkState(params.isParamList());
@@ -519,8 +532,10 @@ public class IR {
     Node objectlit = new Node(Token.OBJECTLIT);
     for (Node propdef : propdefs) {
       Preconditions.checkState(
-          propdef.isStringKey() || propdef.isMemberFunctionDef() ||
-          propdef.isGetterDef() || propdef.isSetterDef());
+          propdef.isStringKey()
+              || propdef.isMemberFunctionDef()
+              || propdef.isGetterDef()
+              || propdef.isSetterDef());
       if (!propdef.isStringKey()) {
         Preconditions.checkState(propdef.hasOneChild());
       }
