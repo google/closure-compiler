@@ -1866,7 +1866,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   // Separate from testNumericKeys() so we can set allowWarnings.
   public void testOctalNumericKey() {
     allowWarnings = true;
-    languageMode = LanguageMode.ECMASCRIPT_2015;
+    languageMode = LanguageMode.ECMASCRIPT5;
 
     assertPrint("var x = {010: 1};", "var x={8:1}");
   }

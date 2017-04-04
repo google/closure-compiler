@@ -321,7 +321,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    * @param warning Expected warning
    */
   public void testWarningEs6(String js, DiagnosticType warning) {
-    testWarning(js, warning, LanguageMode.ECMASCRIPT_2015);
+    testWarning(js, warning, LanguageMode.ECMASCRIPT6);
   }
 
   /**
