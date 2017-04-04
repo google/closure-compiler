@@ -20,6 +20,12 @@ package com.google.javascript.jscomp;
 public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
 
   @Override
+  protected CompilerOptions getOptions(CompilerOptions options) {
+    options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, CheckLevel.WARNING);
+    return options;
+  }
+
+  @Override
   public CompilerPass getProcessor(Compiler compiler) {
     return new ImplicitNullabilityCheck(compiler);
   }

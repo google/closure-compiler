@@ -40,7 +40,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
   @Override
   protected CompilerOptions getOptions(CompilerOptions options) {
     super.getOptions(options);
-    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.ANALYZER_CHECKS, CheckLevel.WARNING);
     return options;
   }
 

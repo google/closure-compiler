@@ -27,7 +27,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
-
 import java.util.List;
 
 /**
@@ -38,7 +37,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
     implements CompilerPass {
 
   public static final DiagnosticType IMPLICITLY_NULLABLE_JSDOC =
-    DiagnosticType.warning(
+    DiagnosticType.disabled(
         "JSC_IMPLICITLY_NULLABLE_JSDOC",
         "Name {0} in JSDoc is implicitly nullable, and is discouraged by the style guide.\n"
         + "Please add a '!' to make it non-nullable, or a '?' to make it explicitly nullable.");
@@ -103,7 +102,7 @@ public final class ImplicitNullabilityCheck extends AbstractPostOrderCallback
                         return; // Inside an explicitly nullable union
                       }
                       for (Node child : parent.children()) {
-                        if (child.isString() && child.getString().equals("null")
+                        if ((child.isString() && child.getString().equals("null"))
                             || child.getToken() == Token.QMARK) {
                           return; // Inside a union that contains null or nullable type
                         }
