@@ -303,6 +303,14 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     assertNode(call).hasType(Token.CALL);
     assertNode(call).hasLineno(2);
+    assertNode(call).hasCharno(4);
+  }
+
+  public void testLinenoCharnoCall2() throws Exception {
+    Node call = parse("(function(){})\n ();").getFirstFirstChild();
+
+    assertNode(call).hasType(Token.CALL);
+    assertNode(call).hasLineno(2);
     assertNode(call).hasCharno(1);
   }
 
@@ -345,7 +353,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     assertNode(call).hasType(Token.GETELEM);
     assertNode(call).hasLineno(3);
-    assertNode(call).hasCharno(1);
+    assertNode(call).hasCharno(6);
   }
 
   public void testLinenoCharnoGetelem3() throws Exception {

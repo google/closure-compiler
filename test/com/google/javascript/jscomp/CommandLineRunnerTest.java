@@ -1891,7 +1891,7 @@ public final class CommandLineRunnerTest extends TestCase {
     assertThat(output).isEqualTo("[{\"src\":\"alert(\\\"foo\\\");\\n\","
         + "\"path\":\"compiled.js\",\"source_map\":\"{\\n\\\"version\\\":3,"
         + "\\n\\\"file\\\":\\\"compiled.js\\\",\\n\\\"lineCount\\\":1,"
-        + "\\n\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\","
+        + "\\n\\\"mappings\\\":\\\"AAAAA,KAAK,CAAC,KAAD;\\\","
         + "\\n\\\"sources\\\":[\\\"stdin\\\"],"
         + "\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"}]");
   }
@@ -1919,7 +1919,7 @@ public final class CommandLineRunnerTest extends TestCase {
     assertThat(output).isEqualTo("[{\"src\":\"alert(\\\"foo\\\");\\n\","
         + "\"path\":\"bar.js\",\"source_map\":\"{\\n\\\"version\\\":3,"
         + "\\n\\\"file\\\":\\\"bar.js\\\",\\n\\\"lineCount\\\":1,"
-        + "\\n\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\","
+        + "\\n\\\"mappings\\\":\\\"AAAAA,KAAK,CAAC,KAAD;\\\","
         + "\\n\\\"sources\\\":[\\\"foo.js\\\"],"
         + "\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"}]");
   }
@@ -1997,7 +1997,7 @@ public final class CommandLineRunnerTest extends TestCase {
     assertThat(output).isEqualTo("[{\"src\":\"alert(\\\"foo\\\");\\n\","
         + "\"path\":\"./foo--bar.baz.js\",\"source_map\":\"{\\n\\\"version\\\":3,"
         + "\\n\\\"file\\\":\\\"./foo--bar.baz.js\\\",\\n\\\"lineCount\\\":1,"
-        + "\\n\\\"mappings\\\":\\\"AAAAA,KAAA,CAAM,KAAN;\\\","
+        + "\\n\\\"mappings\\\":\\\"AAAAA,KAAK,CAAC,KAAD;\\\","
         + "\\n\\\"sources\\\":[\\\"foo.js\\\"],"
         + "\\n\\\"names\\\":[\\\"alert\\\"]\\n}\\n\"}]");
   }

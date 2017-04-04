@@ -2824,7 +2824,7 @@ public class Parser {
 
     if (isStartOfAsyncArrowFunction(left)) {
       // re-evaluate as an async arrow function.
-      resetScanner(left);
+      resetScanner(start);
       return parseAsyncArrowFunction(expressionIn);
     }
     if (peek(TokenType.ARROW)) {
@@ -3016,12 +3016,16 @@ public class Parser {
     return parsePattern(PatternKind.ANY);
   }
 
+  private void resetScanner(SourcePosition pos) {
+    lastSourcePosition = pos;
+    scanner.setOffset(lastSourcePosition.offset);
+  }
+
   private void resetScanner(ParseTree tree) {
     // TODO(bradfordcsmith): lastSourcePosition should really point to the end of the last token
     //     before the tree to correctly detect implicit semicolons, but it doesn't matter for the
     //     current use case.
-    lastSourcePosition = tree.location.start;
-    scanner.setOffset(lastSourcePosition.offset);
+    resetScanner(tree.location.start);
   }
 
   private void resetScannerAfter(ParseTree parseTree) {
@@ -3381,6 +3385,7 @@ public class Parser {
 
       // The Call expression productions
       while (peekCallSuffix()) {
+        start = getTreeStartLocation();
         switch (peekType()) {
           case OPEN_PAREN:
             ArgumentListTree arguments = parseArguments();
