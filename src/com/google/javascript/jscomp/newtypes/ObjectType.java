@@ -985,6 +985,11 @@ final class ObjectType implements TypeWithProperties {
     }
     if (obj1.equals(obj2)) {
       return obj1;
+    } else if (obj1.isPrototypeObject() && obj2.isPrototypeObject()) {
+      // When Bar and Baz extend Foo, joining Bar.prototype and Baz.prototype returns Foo.
+      return join(
+          obj1.getNominalType().getInstanceAsObjectType(),
+          obj2.getNominalType().getInstanceAsObjectType());
     }
     NominalType nt1 = obj1.nominalType;
     NominalType nt2 = obj2.nominalType;

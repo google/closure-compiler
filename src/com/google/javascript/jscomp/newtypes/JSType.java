@@ -1979,8 +1979,12 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public boolean isStructuralInterface() {
-    NominalType nt = getNominalTypeIfSingletonObj();
-    return nt != null && nt.isStructuralInterface();
+    FunctionType ft = getFunTypeIfSingletonObj();
+    if (ft != null && ft.isSomeConstructorOrInterface()) {
+      NominalType nt = ft.getThisType().getNominalTypeIfSingletonObj();
+      return nt != null && nt.isStructuralInterface();
+    }
+    return false;
   }
 
   @Override

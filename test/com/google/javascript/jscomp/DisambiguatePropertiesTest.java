@@ -455,26 +455,22 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testIgnoreUnknownType1() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.blah = 3;",
+        "/** @type {Foo} */",
+        "var F = new Foo;",
+        "F.blah = 0;",
+        "/** @return {Object} */",
+        "var U = function() { return {} };",
+        "U().blah();");
+
     this.mode = TypeInferenceMode.OTI_ONLY;
-    String js = ""
-        + "/** @constructor */\n"
-        + "function Foo() {}\n"
-        + "Foo.prototype.blah = 3;\n"
-        + "/** @type {Foo} */\n"
-        + "var F = new Foo;\n"
-        + "F.blah = 0;\n"
-        + "/** @return {Object} */\n"
-        + "var U = function() { return {} };\n"
-        + "U().blah();";
-    String expected = ""
-        + "/** @constructor */ function Foo(){}"
-        + "Foo.prototype.blah=3;"
-        + "/** @type {Foo} */ var F = new Foo;"
-        + "F.blah=0;"
-        + "/** @return {Object} */"
-        + "var U=function(){return{}};"
-        + "U().blah()";
-    testSets(js, expected, "{blah=[[Foo.prototype]]}");
+    testSets(js, "{blah=[[Foo.prototype]]}");
+
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSets(js, "{}");
   }
 
   public void testIgnoreUnknownType2() {
@@ -491,17 +487,24 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "/** @return {Object} */\n"
         + "var U = function() { return {} };\n"
         + "U().blah();";
-    String expected = ""
-        + "/** @constructor */ function Foo(){}"
-        + "Foo.prototype.blah=3;"
-        + "/** @type {Foo} */"
-        + "var F = new Foo;"
-        + "F.blah=0;"
-        + "/** @constructor */ function Bar(){}"
-        + "Bar.prototype.blah=3;"
-        + "/** @return {Object} */"
-        + "var U=function(){return{}};U().blah()";
-    testSets(js, expected, "{}");
+    testSets(js, "{}");
+  }
+
+  public void testIgnoreUnknownType3() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.blah = 3;",
+        "/** @type {Foo} */",
+        "var F = new Foo;",
+        "F.blah = 0;",
+        "/** @constructor */",
+        "function Bar() {}",
+        "Bar.prototype.blah = 3;",
+        "/** @return {Object} */",
+        "var U = function() { return new Bar; };",
+        "U().blah();");
+    testSets(js, "{}");
   }
 
   public void testUnionTypeTwoFields() {
@@ -974,19 +977,21 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testSubtypesWithSameField() {
-    this.mode = TypeInferenceMode.OTI_ONLY;
-    String js = ""
-        + "/** @constructor */ function Top() {}\n"
-        + "/** @constructor \n@extends Top*/ function Foo() {}\n"
-        + "Foo.prototype.a;\n"
-        + "/** @constructor \n@extends Top*/ function Bar() {}\n"
-        + "Bar.prototype.a;\n"
-        + "/** @param {Top} top */"
-        + "function foo(top) {\n"
-        + "  var x = top.a;\n"
-        + "}\n"
-        + "foo(new Foo);\n"
-        + "foo(new Bar);\n";
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Top() {}",
+        "/** @constructor @extends Top */",
+        "function Foo() {}",
+        "Foo.prototype.a;",
+        "/** @constructor @extends Top */",
+        "function Bar() {}",
+        "Bar.prototype.a;",
+        "/** @param {Top} top */",
+        "function foo(top) {",
+        "  var x = top.a;",
+        "}",
+        "foo(new Foo);",
+        "foo(new Bar);");
     testSets(js, "{}");
   }
 
@@ -1021,7 +1026,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testObjectLiteralReflected() {
-    this.mode = TypeInferenceMode.OTI_ONLY;
     String js = ""
         + "/** @const */ var goog = {};"
         + "goog.reflect = {};"
@@ -2077,9 +2081,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSets(js, output, "{}");
   }
 
-  // NOTE(dimvar): why back off here even though Bar and Foo are never used as I?
   public void testStructuralInterfacesInExterns() {
-    this.mode = TypeInferenceMode.OTI_ONLY;
     String externs =
         LINE_JOINER.join(
             "/** @record */",

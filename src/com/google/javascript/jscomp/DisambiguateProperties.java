@@ -437,6 +437,8 @@ class DisambiguateProperties implements CompilerPass {
         Node recv = n.getFirstChild();
         TypeI recvType = getType(recv);
         Property prop = getProperty(n.getLastChild().getString());
+        // TODO(dimvar): invalidating here when isStructuralInterfacePrototype is true is
+        // kind of arbitrary. We should only do it when the @record is implicitly implemented.
         if (isInvalidatingType(recvType) || isStructuralInterfacePrototype(recv)) {
           prop.invalidate();
         } else if (!prop.skipRenaming) {
@@ -478,11 +480,8 @@ class DisambiguateProperties implements CompilerPass {
     private void handleGetProp(NodeTraversal t, Node n) {
       String name = n.getLastChild().getString();
       TypeI type = getType(n.getFirstChild());
-
       Property prop = getProperty(name);
-      if (!prop.scheduleRenaming(
-             n.getLastChild(),
-             processProperty(t, prop, type, null))
+      if (!prop.scheduleRenaming(n.getLastChild(), processProperty(t, prop, type, null))
           && propertiesToErrorFor.containsKey(name)) {
         String suggestion = "";
         if (type.isTop() || type.isUnknownType()) {
@@ -664,8 +663,7 @@ class DisambiguateProperties implements CompilerPass {
      *   case of a union type, it will be the highest type on the prototype
      *   chain of one of the members of the union.
      */
-    private TypeI processProperty(
-        NodeTraversal t, Property prop, TypeI type, TypeI relatedType) {
+    private TypeI processProperty(NodeTraversal t, Property prop, TypeI type, TypeI relatedType) {
       type = type.restrictByNotNullOrUndefined();
       if (prop.skipRenaming || isInvalidatingType(type)) {
         return null;

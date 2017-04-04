@@ -80,6 +80,12 @@ public final class NominalType {
         : this.rawType.getInstanceAsJSType();
   }
 
+  ObjectType getInstanceAsObjectType() {
+    return (this.rawType.isGeneric() && !typeMap.isEmpty())
+        ? ObjectType.fromNominalType(this)
+        : this.rawType.getInstanceAsJSType().getObjTypeIfSingletonObj();
+  }
+
   JSTypes getCommonTypes() {
     return this.rawType.getCommonTypes();
   }
