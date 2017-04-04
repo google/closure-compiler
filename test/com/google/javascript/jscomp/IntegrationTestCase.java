@@ -198,7 +198,7 @@ abstract class IntegrationTestCase extends TestCase {
         "Warnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
         0, compiler.getErrors().length + compiler.getWarnings().length);
 
-    Node root = compiler.getRoot().getLastChild();
+    Node root = compiler.getJsRoot();
     Node expectedRoot = parseExpectedCode(compiled, options, normalizeResults);
     String explanation = expectedRoot.checkTreeEquals(root);
     assertNull("\n"
@@ -371,7 +371,8 @@ abstract class IntegrationTestCase extends TestCase {
         compiler, "synStart", "synEnd")).process(externs, n);
 
     if (normalize) {
-      compiler.normalize();
+      new Normalize(compiler, false)
+          .process(compiler.getExternsRoot(), compiler.getJsRoot());
     }
 
     return n;

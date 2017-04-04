@@ -159,8 +159,8 @@ public final class InferConstsTest extends TestCase {
     assertNotNull("Unexpected parse error(s): " + Joiner.on('\n').join(compiler.getErrors()), root);
     CompilerPass inferConsts = new InferConsts(compiler);
     inferConsts.process(
-        compiler.getRoot().getFirstChild(),
-        compiler.getRoot().getLastChild());
+        compiler.getExternsRoot(),
+        compiler.getJsRoot());
 
     Node n = compiler.getRoot().getLastChild();
 

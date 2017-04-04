@@ -907,16 +907,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     phaseOptimizer = null;
   }
 
-  private void externExports() {
-    logger.fine("Creating extern file for exports");
-    startPass("externExports");
-
-    ExternExportsPass pass = new ExternExportsPass(this);
-    process(pass);
-
-    externExports = pass.getGeneratedExterns();
-
-    endPass("externExports");
+  @Override
+  void setExternExports(String externExports) {
+    this.externExports = externExports;
   }
 
   @Override
@@ -2223,18 +2216,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return;
     }
 
-    // Ideally, this pass should be the first pass run, however:
-    // 1) VariableReferenceCheck reports unexpected warnings if Normalize
-    // is done first.
-    // 2) ReplaceMessages, stripCode, and potentially custom passes rely on
-    // unmodified local names.
-    normalize();
-
-    // Create extern exports after the normalize because externExports depends on unique names.
-    if (options.isExternExportsEnabled()
-        || options.externExportsPath != null) {
-      externExports();
-    }
 
     phaseOptimizer = new PhaseOptimizer(this, tracker, null);
     if (options.devMode == DevMode.EVERY_PASS) {
@@ -2266,13 +2247,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     process(cfa);
     stopTracer(tracer, "computeCFG");
     return cfa.getCfg();
-  }
-
-  public void normalize() {
-    logger.fine("Normalizing");
-    startPass("normalize");
-    process(new Normalize(this, false));
-    endPass("normalize");
   }
 
   @Override
@@ -2324,6 +2298,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (phaseOptimizer != null) {
       phaseOptimizer.setScope(n);
     }
+  }
+
+  Node getExternsRoot() {
+    return externsRoot;
   }
 
   @Override

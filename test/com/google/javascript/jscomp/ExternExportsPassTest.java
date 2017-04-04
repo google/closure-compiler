@@ -28,6 +28,7 @@ import junit.framework.TestCase;
  * Tests for {@link ExternExportsPass}.
  *
  */
+// TODO(tbreisacher): Convert this to use CompilerTestCase.
 
 public final class ExternExportsPassTest extends TestCase {
 

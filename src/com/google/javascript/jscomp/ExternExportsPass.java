@@ -332,7 +332,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
           }
           break;
         default:
-            return null;
+          return null;
       }
 
       if (!definition.isFunction() && !definition.isObjectLit()) {
@@ -453,23 +453,22 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     for (Export export : sorted) {
       export.generateExterns();
     }
+
+    setGeneratedExternsOnCompiler();
   }
 
-  /**
-   * Returns the generated externs.
-   */
-  public String getGeneratedExterns() {
+  private void setGeneratedExternsOnCompiler() {
     CodePrinter.Builder builder = new CodePrinter.Builder(externsRoot)
       .setPrettyPrint(true)
       .setOutputTypes(true)
       .setTypeRegistry(compiler.getTypeIRegistry());
 
-    return "/**"
-        + "\n * @fileoverview Generated externs."
-        + "\n * @externs"
-        + "\n */"
-        + "\n"
-        + builder.build();
+    compiler.setExternExports(Joiner.on("\n").join(
+        "/**",
+        " * @fileoverview Generated externs.",
+        " * @externs",
+        " */",
+        builder.build()));
   }
 
   @Override

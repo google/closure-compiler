@@ -535,6 +535,13 @@ public final class DefaultPassConfig extends PassConfig {
       return passes;
     }
 
+    passes.add(normalize);
+
+    // Create extern exports after the normalize because externExports depends on unique names.
+    if (options.isExternExportsEnabled() || options.externExportsPath != null) {
+      passes.add(externExports);
+    }
+
     // Gather property names in externs so they can be queried by the
     // optimizing passes.
     passes.add(gatherExternProperties);
@@ -2580,6 +2587,20 @@ public final class DefaultPassConfig extends PassConfig {
           compiler.setLifeCycleStage(LifeCycleStage.RAW);
         }
       };
+    }
+  };
+
+  private final PassFactory normalize = new PassFactory("normalize", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new Normalize(compiler, false);
+    }
+  };
+
+  private final PassFactory externExports = new PassFactory("externExports", true) {
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new ExternExportsPass(compiler);
     }
   };
 

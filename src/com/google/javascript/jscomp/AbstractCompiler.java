@@ -197,6 +197,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
   abstract void setDefinitionFinder(DefinitionUseSiteFinder defFinder);
 
+  abstract void setExternExports(String externExports);
+
   /**
    * Parses code for injecting.
    */
