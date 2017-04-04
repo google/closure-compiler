@@ -62,7 +62,6 @@ class Normalize implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final boolean assertOnChange;
-  private static final boolean CONVERT_WHILE_TO_FOR = true;
 
   Normalize(AbstractCompiler compiler, boolean assertOnChange) {
     this.compiler = compiler;
@@ -347,15 +346,13 @@ class Normalize implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
         case WHILE:
-          if (CONVERT_WHILE_TO_FOR) {
-            Node expr = n.getFirstChild();
-            n.setToken(Token.FOR);
-            Node empty = IR.empty();
-            empty.useSourceInfoIfMissingFrom(n);
-            n.addChildBefore(empty, expr);
-            n.addChildAfter(empty.cloneNode(), expr);
-            reportCodeChange("WHILE node");
-          }
+          Node expr = n.getFirstChild();
+          n.setToken(Token.FOR);
+          Node empty = IR.empty();
+          empty.useSourceInfoIfMissingFrom(n);
+          n.addChildBefore(empty, expr);
+          n.addChildAfter(empty.cloneNode(), expr);
+          reportCodeChange("WHILE node");
           break;
 
         case FUNCTION:
