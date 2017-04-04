@@ -30,7 +30,6 @@ import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 /**
  * Analyzes properties on prototypes.
@@ -192,7 +191,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     //    name are given a special [anonymous] context.
     // 2) Every assignment of a prototype property of a non-function is
     //    given a name context. These contexts do not have scopes.
-    private final Stack<NameContext> symbolStack = new Stack<>();
+    private final Deque<NameContext> symbolStack = new ArrayDeque<>();
 
     @Override
     public void enterScope(NodeTraversal t) {
@@ -314,8 +313,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
           // scope. If that's the case the functions between the variable's
           // declaring scope and the variable reference scope cannot be moved.
           } else if (var.getScope() != t.getScope()) {
-            for (int i = symbolStack.size() - 1; i >= 0; i--) {
-              NameContext context = symbolStack.get(i);
+            for (NameContext context : symbolStack) {
               if (context.scope == var.getScope()) {
                 break;
               }
@@ -336,8 +334,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
       NameInfo info = getNameInfoForName(name, type);
       NameInfo def = null;
       // Skip all anonymous nodes. We care only about symbols with names.
-      for (int i = symbolStack.size() - 1; i >= 0; i--) {
-        def = symbolStack.get(i).name;
+      for (NameContext context : symbolStack) {
+        def = context.name;
         if (def != anonymousNode) {
           break;
         }
