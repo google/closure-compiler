@@ -356,18 +356,18 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testEs6GettersWithoutTranspilation() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     test("class C { get value() { return 0; } }", "class C {}");
     testSame("class C { get value() { return 0; } } const x = (new C()).value");
   }
 
   public void testES6ClassComputedProperty() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame("class C { ['test' + 3]() { return 0; } }");
   }
 
   public void testEs6SettersWithoutTranspilation() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     test("class C { set value(val) { this.internalVal = val; } }", "class C {}");
 
     test(
@@ -391,7 +391,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   // All object literal fields are not removed, but the following
   // tests assert that the pass does not fail.
   public void testEs6EnhancedObjLiteralsComputedValuesNotRemoved() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(
         LINE_JOINER.join(
             "function getCar(make, model, value) {",
@@ -402,7 +402,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testEs6EnhancedObjLiteralsMethodShortHandNotRemoved() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(
         LINE_JOINER.join(
             "function getCar(make, model, value) {",
@@ -415,7 +415,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testEs6EnhancedObjLiteralsPropertyShorthand() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame("function getCar(make, model, value) { return {model}; }");
   }
 

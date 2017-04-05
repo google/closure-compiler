@@ -102,7 +102,7 @@ public final class CompileTask
   private boolean applyInputSourceMaps;
 
   public CompileTask() {
-    this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT6;
+    this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT_2015;
     this.languageOut = CompilerOptions.LanguageMode.ECMASCRIPT3;
     this.warningLevel = WarningLevel.DEFAULT;
     this.debugOptions = false;
@@ -129,7 +129,7 @@ public final class CompileTask
     switch (value) {
       case "ECMASCRIPT6_STRICT":
       case "ES6_STRICT":
-        return CompilerOptions.LanguageMode.ECMASCRIPT6_STRICT;
+        return CompilerOptions.LanguageMode.ECMASCRIPT_2015;
       case "ECMASCRIPT6":
       case "ES6":
         return CompilerOptions.LanguageMode.ECMASCRIPT6;

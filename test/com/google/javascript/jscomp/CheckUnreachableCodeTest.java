@@ -212,7 +212,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   }
 
   public void testES6FeaturesInIfExpression() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     // class X{} always eval to true by toBoolean();
     assertUnreachable("if(!class {}) x = 1;");
     assertUnreachable("if(!class A{}) x = 1;");
@@ -231,7 +231,7 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   }
 
   public void testES6FeaturesInTryCatch() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     assertUnreachable("try { let x = 1; } catch(e) {}");
     assertUnreachable("try { const x = 1; } catch(e) {}");
     assertUnreachable("try {()=>42;} catch(e) {}");
@@ -244,14 +244,14 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   }
 
   public void testCorrectForOfBreakAndContinues() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame("for(x of [1, 2, 3]) {foo();}");
     testSame("for(x of [1, 2, 3]) {foo(); break;}");
     testSame("for(x of [1, 2, 3]) {foo(); continue;}");
   }
 
   public void testInCorrectForOfBreakAndContinues() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     assertUnreachable("for(x of [1, 2, 3]) {foo(); break; bar();}");
     assertUnreachable("for(x of [1, 2, 3]) {foo(); continue; bar();}");
 
@@ -260,13 +260,13 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   }
 
   public void testForLoopsEs6() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     assertUnreachable("for(;;) {if(x) {continue; bar();}}");
     assertUnreachable("for(x in y) {if(x) {continue; bar();}}");
   }
 
   public void testReturnsInShorthandFunctionOfObjLit() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(LINE_JOINER.join(
         "var obj = {",
         "  f() { ",
@@ -297,12 +297,12 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   }
 
   public void testObjLit() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     assertUnreachable("var a = {c(){if(true){return;}x = 1;}};");
   }
 
   public void testClass() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame("class C{func(){}}");
     assertUnreachable("class C{func(){if (true){return;} else {return;}}}");
     assertUnreachable("class C{func(){if (true){return;} x = 1;}}");

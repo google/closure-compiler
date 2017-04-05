@@ -30,7 +30,7 @@ import java.util.List;
  */
 public final class DefinitionsRemoverTest extends CompilerTestCase {
   public void testRemoveFunction() {
-    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     testSame("{(function (){bar()})}");
     test("{function a(){bar()}}", "{}");
     test("foo(); function a(){} bar()", "foo(); bar();");

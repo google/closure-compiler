@@ -131,7 +131,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
         "    return new SomeType();",
         "  }",
         "}"));
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testError(LINE_JOINER.join(
         "var obj = {",
         "  /** @return {SomeType} */",
@@ -155,7 +155,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
         "    return new SomeType();",
         "  }",
         "}"));
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testError(LINE_JOINER.join(
         "var obj = {",
         "  /** @return {SomeType} */",
@@ -211,7 +211,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
     testOk(LINE_JOINER.join(
         "/** @return {SomeType} */",
         "function f() {}"));
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testOk(LINE_JOINER.join(
         "var obj = {",
         "  /** @return {SomeType} */\n",
@@ -228,7 +228,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
         "function f4(arr) {",
         "  return arr[0] || null;",
         "}"));
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testOk(LINE_JOINER.join(
         "var obj = {",
         "  /**",
@@ -268,13 +268,13 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
 
   private void testBodyOk(String body) {
     testOk(createFunction(body));
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testOk(createShorthandFunctionInObjLit(body));
   }
 
   private void testBodyError(String body) {
     testError(createFunction(body));
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testError(createShorthandFunctionInObjLit(body));
   }
 }

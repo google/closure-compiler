@@ -39,7 +39,7 @@ public final class FunctionNamesTest extends CompilerTestCase {
   }
 
   public void testFunctionsNamesAndIds() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     final String jsSource = LINE_JOINER.join(
         "goog.widget = function(str) {",
         "  this.member_fn = function() {};",

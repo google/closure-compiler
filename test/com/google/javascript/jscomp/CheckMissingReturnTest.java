@@ -246,13 +246,13 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   }
 
   private void testMissingInShorthandFunction(String returnType, String body) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     String js = createShorthandFunctionInObjLit(returnType, body);
     testWarning(js, CheckMissingReturn.MISSING_RETURN_STATEMENT);
   }
 
   private void testNotMissingInShorthandFunction(String returnType, String body) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(createShorthandFunctionInObjLit(returnType, body));
   }
 

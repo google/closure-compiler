@@ -264,7 +264,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
   }
 
   public void testRedundantClinit_let() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6_STRICT);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     test(
         LINE_JOINER.join(
             "var foo = function() {",
@@ -284,7 +284,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
   }
 
   public void testRedundantClinit_const() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6_STRICT);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     test(
         LINE_JOINER.join(
             "var foo = function() {",

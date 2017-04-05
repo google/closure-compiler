@@ -79,7 +79,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
   public void testWindowProperty5c() {
     testExternChanges("var window; var x = ()=>{}", "var b",
         "var window;var x=()=>{};window.x;",
-        LanguageMode.ECMASCRIPT6);
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testWindowProperty6() {

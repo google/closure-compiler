@@ -70,7 +70,7 @@ public final class ObjectPropertyStringPreprocessTest extends CompilerTestCase {
   }
 
   public void testTemplateStringError() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testError("new goog.testing.ObjectPropertyString(foo, `bar`)",
         ObjectPropertyStringPreprocess.STRING_LITERAL_EXPECTED_ERROR);
     testError("new goog.testing.ObjectPropertyString(foo, `${A}bar`)",
@@ -80,7 +80,7 @@ public final class ObjectPropertyStringPreprocessTest extends CompilerTestCase {
   }
 
   public void testTaggedTemplateError() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testError("new goog.testing.ObjectPropertyString(foo, tagged`bar`)",
         ObjectPropertyStringPreprocess.STRING_LITERAL_EXPECTED_ERROR);
     testError("new goog.testing.ObjectPropertyString(foo, tagged`${Foo}bar`)",

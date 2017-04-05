@@ -23,8 +23,8 @@ public class WhitespaceWrapGoogModulesTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
-    languageOut = LanguageMode.ECMASCRIPT6;
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    languageOut = LanguageMode.ECMASCRIPT_2015;
     disableTypeCheck();
 
     enableCompareAsTree(false);

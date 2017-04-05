@@ -46,7 +46,7 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
   }
 
   private void testSameEs6Strict(String js) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6_STRICT);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     test(js, js, null, null);
   }
 

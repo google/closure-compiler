@@ -73,7 +73,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    */
   @Override
   public void test(String js, String expected) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     super.test(js, expected);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     super.test(js, expected);
@@ -113,7 +113,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    * @param expected Expected JS output
    */
   public void testEs6(String js, String expected) {
-    test(js, expected, LanguageMode.ECMASCRIPT6);
+    test(js, expected, LanguageMode.ECMASCRIPT_2015);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
 
@@ -125,7 +125,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    * @param expected Expected JS outputs
    */
   public void testEs6(String[] js, String[] expected) {
-    test(js, expected, LanguageMode.ECMASCRIPT6);
+    test(js, expected, LanguageMode.ECMASCRIPT_2015);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
 
@@ -137,7 +137,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    * @param expected Expected JS outputs (one per module)
    */
   public void testModule(String[] moduleInputs, String[] expected) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     super.test(createModuleStar(moduleInputs), expected, null);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     super.test(createModuleStar(moduleInputs), expected, null);
@@ -151,7 +151,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    */
   @Override
   public void testSame(String js) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     super.test(js, js);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     super.test(js, js);
@@ -164,7 +164,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    * @param js Input and output
    */
   public void testSameEs6(String js) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     super.test(js, js);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
@@ -178,7 +178,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    * @param warning Expected warning, or null if no warning is expected
    */
   public void testSameEs6(String externs, String js, DiagnosticType warning) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     super.testSame(externs, js, warning);
   }
 
@@ -193,7 +193,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    * @param error true if diag is an error, false if it is a warning
    */
   public void testSameEs6(String externs, String js, DiagnosticType diag, boolean error) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(externs, js, diag, error);
   }
 
@@ -206,7 +206,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    */
   @Override
   public void testError(String js, DiagnosticType error) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     super.testError(js, error);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     super.testError(js, error);
@@ -221,7 +221,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    * @param es6Error Expected error in es6
    */
   public void testError(String js, DiagnosticType es5Error, DiagnosticType es6Error) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     super.testError(js, es6Error);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     super.testError(js, es5Error);
@@ -250,7 +250,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    * @param error Expected error
    */
   public void testErrorEs6(String js, DiagnosticType error) {
-    testError(js, error, LanguageMode.ECMASCRIPT6);
+    testError(js, error, LanguageMode.ECMASCRIPT_2015);
   }
 
 
@@ -263,7 +263,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    */
   @Override
   public void testError(String[] js, DiagnosticType error) {
-    testError(js, error, LanguageMode.ECMASCRIPT6);
+    testError(js, error, LanguageMode.ECMASCRIPT_2015);
     testError(js, error, LanguageMode.ECMASCRIPT5);
   }
 
@@ -275,7 +275,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    * @param error Expected error
    */
   public void testErrorEs6(String[] js, DiagnosticType error) {
-    testError(js, error, LanguageMode.ECMASCRIPT6);
+    testError(js, error, LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testError(String[] js, DiagnosticType error, LanguageMode mode) {
@@ -293,7 +293,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    */
   @Override
   public void testWarning(String js, DiagnosticType warning) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     super.testWarning(js, warning);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     super.testWarning(js, warning);
@@ -333,7 +333,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    * @param warning Expected warning
    */
   public void testWarning(String js, String expected, DiagnosticType warning) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     super.test(js, expected, null, warning);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     super.test(js, expected, null, warning);
@@ -343,7 +343,7 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    * Verifies that the compiler generates the given warning for the given input, under just ES6.
    */
   public void testWarningEs6(String js, DiagnosticType warning, String warningMessage) {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     super.testWarning(js, warning, warningMessage);
   }
 
@@ -373,12 +373,12 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
    * @param warning Expected warning
    */
   public void testWarningEs6(String js, String expected, DiagnosticType warning) {
-    testWarning(js, expected, warning, LanguageMode.ECMASCRIPT6);
+    testWarning(js, expected, warning, LanguageMode.ECMASCRIPT_2015);
   }
 
   @Override
   protected void testExternChanges(String extern, String input, String expectedExtern) {
-    testExternChanges(extern, input, expectedExtern, LanguageMode.ECMASCRIPT6);
+    testExternChanges(extern, input, expectedExtern, LanguageMode.ECMASCRIPT_2015);
     testExternChanges(extern, input, expectedExtern, LanguageMode.ECMASCRIPT5);
   }
 

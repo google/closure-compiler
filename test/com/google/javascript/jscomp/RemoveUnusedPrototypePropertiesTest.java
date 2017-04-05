@@ -42,7 +42,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
 
   @Override
   public void setUp() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     anchorUnusedVars = false;
     canRemoveExterns = false;
   }

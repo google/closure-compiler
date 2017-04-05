@@ -50,7 +50,7 @@ public final class CoverageInstrumentationPassTest extends TestCase {
 
   public void testFunction() throws Exception {
     compareFunctionOneMode(LanguageMode.ECMASCRIPT5);
-    compareFunctionOneMode(LanguageMode.ECMASCRIPT6);
+    compareFunctionOneMode(LanguageMode.ECMASCRIPT_2015);
   }
 
   private void compareArrowOneMode(LanguageMode mode, String prefix) throws Exception {
@@ -60,14 +60,14 @@ public final class CoverageInstrumentationPassTest extends TestCase {
 
   // If the body of the arrow function is a block, it is instrumented.
   public void testArrowFunction_block() throws Exception {
-    compareArrowOneMode(LanguageMode.ECMASCRIPT6, "CoverageInstrumentationPassTest/ArrowBlock");
+    compareArrowOneMode(LanguageMode.ECMASCRIPT_2015, "CoverageInstrumentationPassTest/ArrowBlock");
   }
 
   // If the body of the arrow function is an expression, it is converted to a block,
   // then instrumented.
   public void testArrowFunction_expression() throws Exception {
     compareArrowOneMode(
-        LanguageMode.ECMASCRIPT6, "CoverageInstrumentationPassTest/ArrowExpression");
+        LanguageMode.ECMASCRIPT_2015, "CoverageInstrumentationPassTest/ArrowExpression");
   }
 
   private void compareIfBranch(LanguageMode mode) throws Exception {
@@ -79,7 +79,7 @@ public final class CoverageInstrumentationPassTest extends TestCase {
 
   public void testIfBranch() throws Exception {
     compareIfBranch(LanguageMode.ECMASCRIPT5);
-    compareIfBranch(LanguageMode.ECMASCRIPT6);
+    compareIfBranch(LanguageMode.ECMASCRIPT_2015);
   }
 
   private void compareIfElseBranch(LanguageMode mode) throws Exception {
@@ -91,7 +91,7 @@ public final class CoverageInstrumentationPassTest extends TestCase {
 
   public void testIfElseBranch() throws Exception {
     compareIfElseBranch(LanguageMode.ECMASCRIPT5);
-    compareIfElseBranch(LanguageMode.ECMASCRIPT6);
+    compareIfElseBranch(LanguageMode.ECMASCRIPT_2015);
   }
 
   private void compareForLoopBranch(LanguageMode mode) throws Exception {
@@ -103,7 +103,7 @@ public final class CoverageInstrumentationPassTest extends TestCase {
 
   public void testForLoopBranch() throws Exception {
     compareForLoopBranch(LanguageMode.ECMASCRIPT5);
-    compareForLoopBranch(LanguageMode.ECMASCRIPT6);
+    compareForLoopBranch(LanguageMode.ECMASCRIPT_2015);
   }
 
   private void compareDoWhileLoopBranch(LanguageMode mode) throws Exception {
@@ -115,7 +115,7 @@ public final class CoverageInstrumentationPassTest extends TestCase {
 
   public void testDoWhileLoopBranch() throws Exception {
     compareDoWhileLoopBranch(LanguageMode.ECMASCRIPT5);
-    compareDoWhileLoopBranch(LanguageMode.ECMASCRIPT6);
+    compareDoWhileLoopBranch(LanguageMode.ECMASCRIPT_2015);
   }
 
   private void compareDoWhileLoopMultiLineBranch(LanguageMode mode) throws Exception {
@@ -127,7 +127,7 @@ public final class CoverageInstrumentationPassTest extends TestCase {
 
   public void testDoWhileLoopMultiLineBranch() throws Exception {
     compareDoWhileLoopMultiLineBranch(LanguageMode.ECMASCRIPT5);
-    compareDoWhileLoopMultiLineBranch(LanguageMode.ECMASCRIPT6);
+    compareDoWhileLoopMultiLineBranch(LanguageMode.ECMASCRIPT_2015);
   }
 
   private void compareWhileLoopBranch(LanguageMode mode) throws Exception {
@@ -139,7 +139,7 @@ public final class CoverageInstrumentationPassTest extends TestCase {
 
   public void testWhileLoopBranch() throws Exception {
     compareWhileLoopBranch(LanguageMode.ECMASCRIPT5);
-    compareWhileLoopBranch(LanguageMode.ECMASCRIPT6);
+    compareWhileLoopBranch(LanguageMode.ECMASCRIPT_2015);
   }
 
 }

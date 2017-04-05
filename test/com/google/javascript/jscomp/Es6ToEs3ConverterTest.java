@@ -115,7 +115,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     runTypeCheckAfterProcessing = true;
   }
@@ -273,12 +273,12 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testExponentiationOperator() {
-    setLanguage(LanguageMode.ECMASCRIPT7, LanguageMode.ECMASCRIPT5);
+    setLanguage(LanguageMode.ECMASCRIPT_2016, LanguageMode.ECMASCRIPT5);
     test("2 ** 2;", "Math.pow(2,2)");
   }
 
   public void testExponentiationAssignmentOperator() {
-    setLanguage(LanguageMode.ECMASCRIPT7, LanguageMode.ECMASCRIPT5);
+    setLanguage(LanguageMode.ECMASCRIPT_2016, LanguageMode.ECMASCRIPT5);
     test("x **= 2;", "x=Math.pow(x,2)");
   }
 
@@ -287,7 +287,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testAsyncFunction() {
-    setLanguage(LanguageMode.ECMASCRIPT8, LanguageMode.ECMASCRIPT5);
+    setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
     testError("f = async function() {};", CANNOT_CONVERT_YET);
     testError("async function f() {};", CANNOT_CONVERT_YET);
   }

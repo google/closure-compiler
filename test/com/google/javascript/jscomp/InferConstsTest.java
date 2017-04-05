@@ -153,8 +153,8 @@ public final class InferConstsTest extends TestCase {
     compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.of(input),
         new CompilerOptions());
 
-    compiler.options.setLanguageIn(LanguageMode.ECMASCRIPT6);
-    compiler.setLanguageMode(LanguageMode.ECMASCRIPT6);
+    compiler.options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    compiler.setLanguageMode(LanguageMode.ECMASCRIPT_2015);
     Node root = compiler.parseInputs();
     assertNotNull("Unexpected parse error(s): " + Joiner.on('\n').join(compiler.getErrors()), root);
     CompilerPass inferConsts = new InferConsts(compiler);
