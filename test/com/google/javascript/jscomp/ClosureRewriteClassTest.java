@@ -70,7 +70,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
 
   private void testRewrite(String code, String expected){
     testRewrite(code, expected, LanguageMode.ECMASCRIPT3);
-    testRewrite(code, expected, LanguageMode.ECMASCRIPT6);
+    testRewrite(code, expected, LanguageMode.ECMASCRIPT_2015);
   }
 
   private void testRewriteError(String js, DiagnosticType error, LanguageMode lang) {
@@ -80,7 +80,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
 
   private void testRewriteError(String js, DiagnosticType error){
     testRewriteError(js, error, LanguageMode.ECMASCRIPT3);
-    testRewriteError(js, error, LanguageMode.ECMASCRIPT6);
+    testRewriteError(js, error, LanguageMode.ECMASCRIPT_2015);
   }
 
   private void testRewriteWarning(String code, String expected,
@@ -91,7 +91,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
 
   private void testRewriteWarning(String code, String expected, DiagnosticType warning) {
     testRewriteWarning(code, expected, warning, LanguageMode.ECMASCRIPT3);
-    testRewriteWarning(code, expected, warning, LanguageMode.ECMASCRIPT6);
+    testRewriteWarning(code, expected, warning, LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testBasic1() {
@@ -129,26 +129,16 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
 
   public void testLet() {
     testRewrite(
-        "let x = goog.defineClass(null, {\n"
-        + "  constructor: function(){}\n"
-        + "});",
-
-        "/** @constructor @struct */"
-        + "let x = function() {};",
-
-        LanguageMode.ECMASCRIPT6);
+        "let x = goog.defineClass(null, {\n" + "  constructor: function(){}\n" + "});",
+        "/** @constructor @struct */" + "let x = function() {};",
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testConst() {
     testRewrite(
-        "const x = goog.defineClass(null, {\n"
-        + "  constructor: function(){}\n"
-        + "});",
-
-        "/** @constructor @struct */"
-        + "const x = function() {};",
-
-        LanguageMode.ECMASCRIPT6);
+        "const x = goog.defineClass(null, {\n" + "  constructor: function(){}\n" + "});",
+        "/** @constructor @struct */" + "const x = function() {};",
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testAnnotations1() {
@@ -537,7 +527,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @constructor @struct */",
             "var FancyClass = function({a, b, c}) {};"),
-        LanguageMode.ECMASCRIPT6);
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testDefaultParamOnFunction() {
@@ -546,22 +536,15 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "var FancyClass = goog.defineClass(null, {",
             "  constructor: function(a = 1) {}",
             "});"),
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var FancyClass = function(a = 1) {};"),
-        LanguageMode.ECMASCRIPT6);
+        LINE_JOINER.join("/** @constructor @struct */", "var FancyClass = function(a = 1) {};"),
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testExtendedObjLitMethodDefinition1() {
     testRewrite(
-        LINE_JOINER.join(
-            "var FancyClass = goog.defineClass(null, {",
-            "  constructor() {}",
-            "});"),
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var FancyClass = function() {};"),
-        LanguageMode.ECMASCRIPT6);
+        LINE_JOINER.join("var FancyClass = goog.defineClass(null, {", "  constructor() {}", "});"),
+        LINE_JOINER.join("/** @constructor @struct */", "var FancyClass = function() {};"),
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testExtendedObjLitMethodDefinition2() {
@@ -577,7 +560,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "var FancyClass = function() {};",
             "FancyClass.prototype.someMethod1 = function() {};",
             "FancyClass.prototype.someMethod2 = function() {};"),
-        LanguageMode.ECMASCRIPT6);
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testExtendedObjLitMethodDefinition3() {
@@ -593,7 +576,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "var FancyClass = function() {};",
             "FancyClass.prototype.someMethod1 = function() {};",
             "FancyClass.prototype.someMethod2 = function() {};"),
-        LanguageMode.ECMASCRIPT6);
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testExtendedObjLitMethodDefinition4() {
@@ -611,7 +594,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "var FancyClass = function() {};",
             "FancyClass.someMethod1 = function() {};",
             "FancyClass.prototype.someMethod2 = function() {};"),
-        LanguageMode.ECMASCRIPT6);
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testExtendedObjLitArrowFunction1() {
@@ -621,7 +604,8 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "  constructor: function() {},",
             "  someArrowFunc: value => value",
             "});"),
-        GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED, LanguageMode.ECMASCRIPT6);
+        GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED,
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testExtendedObjLitArrowFunction2() {
@@ -633,7 +617,8 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "    someArrowFunc: value => value",
             "  }",
             "});"),
-        GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED, LanguageMode.ECMASCRIPT6);
+        GOOG_CLASS_ES6_ARROW_FUNCTION_NOT_SUPPORTED,
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testExtendedObjLitArrowFunction3() {
@@ -653,7 +638,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "  FancyClass.someFunction = function() {",
             "    return () => 42",
             "  };"),
-        LanguageMode.ECMASCRIPT6);
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testExtendedObjLitArrowFunction4() {
@@ -671,7 +656,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "  FancyClass.prototype.someFunction = function(){",
             "    return () => 42",
             "  };"),
-        LanguageMode.ECMASCRIPT6);
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testExtendedObjLitComputedPropName1() {
@@ -682,7 +667,8 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "  someMember: 49,",
             "  constructor: function() {},",
             "});"),
-        GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED, LanguageMode.ECMASCRIPT6);
+        GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED,
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testExtendedObjLitComputedPropName2() {
@@ -694,7 +680,8 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "    ['someCompProp_' + 1999]: 47",
             "  }",
             "});"),
-        GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED, LanguageMode.ECMASCRIPT6);
+        GOOG_CLASS_ES6_COMPUTED_PROP_NAMES_NOT_SUPPORTED,
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testExtendedObjLitShorthandAssignment1() {
@@ -705,7 +692,8 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "  constructor: function(){},",
             "  someMethod: function() {}",
             "});"),
-        GOOG_CLASS_ES6_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED, LanguageMode.ECMASCRIPT6);
+        GOOG_CLASS_ES6_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED,
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testExtendedObjShorthandAssignment2() {
@@ -717,7 +705,8 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "    someShorthand",
             "  }",
             "});"),
-        GOOG_CLASS_ES6_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED, LanguageMode.ECMASCRIPT6);
+        GOOG_CLASS_ES6_SHORTHAND_ASSIGNMENT_NOT_SUPPORTED,
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testExtendedObjLitSuperCall1() {
@@ -735,7 +724,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "  FancyClass.prototype.someMethod = function() {",
             "    super.someMethod();",
             "  };"),
-        LanguageMode.ECMASCRIPT6);
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testExtendedObjLitSuperCall2() {
@@ -749,7 +738,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "/** @constructor @struct */",
             "  var FancyClass = function() {super();};",
             "  FancyClass.prototype.someMethod = function() {};"),
-        LanguageMode.ECMASCRIPT6);
+        LanguageMode.ECMASCRIPT_2015);
   }
 
   public void testExtendedObjLitSuperCall3() {
@@ -763,25 +752,25 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
             "/** @constructor @struct */",
             "var FancyClass = function() {};",
             "FancyClass.prototype.someMethod = function() {super();};"),
-        LanguageMode.ECMASCRIPT6);
+        LanguageMode.ECMASCRIPT_2015);
   }
 
-//public void testNestedObjectLiteral(){
-//testRewriteError(
-//    LINE_JOINER.join(
-//        "var FancyClass = goog.defineClass(null, {",
-//        "  constructor: function() {},",
-//        "  someNestedObjLit:{}",
-//        "});"),
-//    GOOG_CLASS_NESTED_OBJECT_LITERAL_FOUND, LanguageMode.ECMASCRIPT6);
-//testRewriteError(
-//    LINE_JOINER.join(
-//        "var FancyClass = goog.defineClass(null, {",
-//        "  constructor() {},",
-//        "  statics:{",
-//        "    someNestedObjLit:{}",
-//        "  }",
-//        "});"),
-//    GOOG_CLASS_NESTED_OBJECT_LITERAL_FOUND, LanguageMode.ECMASCRIPT6);
-//}
+  //public void testNestedObjectLiteral(){
+  //testRewriteError(
+  //    LINE_JOINER.join(
+  //        "var FancyClass = goog.defineClass(null, {",
+  //        "  constructor: function() {},",
+  //        "  someNestedObjLit:{}",
+  //        "});"),
+  //    GOOG_CLASS_NESTED_OBJECT_LITERAL_FOUND, LanguageMode.ECMASCRIPT_2015);
+  //testRewriteError(
+  //    LINE_JOINER.join(
+  //        "var FancyClass = goog.defineClass(null, {",
+  //        "  constructor() {},",
+  //        "  statics:{",
+  //        "    someNestedObjLit:{}",
+  //        "  }",
+  //        "});"),
+  //    GOOG_CLASS_NESTED_OBJECT_LITERAL_FOUND, LanguageMode.ECMASCRIPT_2015);
+  //}
 }

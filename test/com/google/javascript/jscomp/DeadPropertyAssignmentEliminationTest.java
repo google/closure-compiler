@@ -664,7 +664,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   }
 
   public void testEs6Constrcutor() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
 
     testSame(
         LINE_JOINER.join(

@@ -32,11 +32,9 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.JsMessage.Style;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-
-import junit.framework.TestCase;
-
 import java.util.LinkedList;
 import java.util.List;
+import junit.framework.TestCase;
 
 /**
  * Test for {@link JsMessageVisitor}.
@@ -89,7 +87,7 @@ public final class JsMessageVisitorTest extends TestCase {
 
   public void testJsMessageOnLet() {
     compilerOptions = new CompilerOptions();
-    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     extractMessagesSafely(
         "/** @desc Hello */ let MSG_HELLO = goog.getMsg('a')");
     assertThat(compiler.getWarnings()).isEmpty();
@@ -103,7 +101,7 @@ public final class JsMessageVisitorTest extends TestCase {
 
   public void testJsMessageOnConst() {
     compilerOptions = new CompilerOptions();
-    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     extractMessagesSafely(
         "/** @desc Hello */ const MSG_HELLO = goog.getMsg('a')");
     assertThat(compiler.getWarnings()).isEmpty();

@@ -25,7 +25,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     disableTypeCheck();
     runTypeCheckAfterProcessing = true;
   }

@@ -29,7 +29,7 @@ import java.util.Map;
 /** Unit tests for the RewritePolyfills compiler pass. */
 public final class RewritePolyfillsTest extends CompilerTestCase {
 
-  private static final LanguageMode ES6 = LanguageMode.ECMASCRIPT6_STRICT;
+  private static final LanguageMode ES6 = LanguageMode.ECMASCRIPT_2015;
   private static final LanguageMode ES5 = LanguageMode.ECMASCRIPT5_STRICT;
   private static final LanguageMode ES3 = LanguageMode.ECMASCRIPT3;
 

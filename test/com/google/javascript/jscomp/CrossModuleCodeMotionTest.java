@@ -269,7 +269,7 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
     // 2) if it's in an if statement, we can't move it
     // 3) if it's in an while statement, we can't move it [with some extra
     // block elements]
-    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     testSame(createModuleStar(
       // m1
       "function f(){};f.prototype.bar=new f;" +

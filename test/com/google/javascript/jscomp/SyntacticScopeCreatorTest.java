@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import junit.framework.TestCase;
 
 /**
@@ -52,7 +51,7 @@ public final class SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testFunctionScope() {
-    compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT6);
+    compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     Scope scope = getScope("function foo() {}\n" +
         "var x = function bar(a1) {};" +
         "[function bar2() { var y; }];" +

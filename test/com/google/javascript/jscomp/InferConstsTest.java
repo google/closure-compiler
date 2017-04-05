@@ -21,11 +21,9 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
-
-import junit.framework.TestCase;
-
 import java.util.HashMap;
 import java.util.Map;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link InferConsts}.
@@ -153,8 +151,8 @@ public final class InferConstsTest extends TestCase {
     compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.of(input),
         new CompilerOptions());
 
-    compiler.options.setLanguageIn(LanguageMode.ECMASCRIPT6);
-    compiler.setLanguageMode(LanguageMode.ECMASCRIPT6);
+    compiler.options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    compiler.setLanguageMode(LanguageMode.ECMASCRIPT_2015);
     Node root = compiler.parseInputs();
     assertNotNull("Unexpected parse error(s): " + Joiner.on('\n').join(compiler.getErrors()), root);
     CompilerPass inferConsts = new InferConsts(compiler);

@@ -4044,7 +4044,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testGoodSuperCall() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "class A {",
@@ -4064,7 +4064,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testBadSuperCall() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "class A {",
@@ -8532,7 +8532,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testAbstractMethodCall_Es6Class() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "/** @abstract */",
@@ -8554,7 +8554,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testAbstractMethodCall_Es6Class_prototype() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "/** @abstract */",
@@ -8572,7 +8572,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testAbstractMethodCall_Es6Class_prototype_warning() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "/** @abstract */",
@@ -8591,7 +8591,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testNonAbstractMethodCall_Es6Class_prototype() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "/** @abstract */",
@@ -8612,7 +8612,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   // GitHub issue #2262: https://github.com/google/closure-compiler/issues/2262
   public void testAbstractMethodCall_Es6ClassWithSpread() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "/** @abstract */",
@@ -8977,7 +8977,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     // Some code assumes that an object literal must have a object type,
     // while because of the cast, it could have any type (including
     // a union).
-    compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT6);
+    compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     testTypes(
         "for (var i = 0; i < 10; i++) {" +
           "var x = /** @type {Object|number} */ ({foo: 3});" +
@@ -9299,7 +9299,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testConstDecl2() throws Exception {
-    compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT6);
+    compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     testTypes(
         "/** @param {?number} x */" +
         "function f(x) { " +
@@ -17499,7 +17499,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testEs5ClassExtendingEs6Class() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "class Foo {}",
@@ -17508,7 +17508,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testEs5ClassExtendingEs6Class_noWarning() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "class A {}",

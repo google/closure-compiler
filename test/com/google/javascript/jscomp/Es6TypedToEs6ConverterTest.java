@@ -29,7 +29,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT6_TYPED);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT6);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     return options;
   }
 

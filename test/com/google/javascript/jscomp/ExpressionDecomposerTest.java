@@ -20,14 +20,11 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
-import junit.framework.TestCase;
-
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.annotation.Nullable;
+import junit.framework.TestCase;
 
 /**
  * Unit tests for ExpressionDecomposer
@@ -737,7 +734,7 @@ public final class ExpressionDecomposerTest extends TestCase {
   private Compiler getCompiler() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguage(LanguageMode.ECMASCRIPT6_STRICT);
+    options.setLanguage(LanguageMode.ECMASCRIPT_2015);
     options.setCodingConvention(new GoogleCodingConvention());
     compiler.initOptions(options);
     return compiler;

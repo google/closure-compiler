@@ -422,7 +422,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
   }
 
   public void testInlineIntoNestedNonHoistedNamedFunctions() {
-    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     test("f(); var x = false; if (false) function f() { alert(x); };",
          "f(); if (false) function f() { alert(false); };");
   }

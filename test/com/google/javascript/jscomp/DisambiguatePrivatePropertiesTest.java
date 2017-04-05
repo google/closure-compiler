@@ -76,7 +76,7 @@ public final class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
     testSame("({prop_: 1});");
     testSame("({get prop_(){ return 1} });");
     testSame("({set prop_(a){ this.a = 1} });");
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame("({prop_(){ return 1} });");
     testSame("class A{method_(){return 1} }");
   }
@@ -99,7 +99,7 @@ public final class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
     test(
         "({set prop_(a){ this.a = 1} });",
         "({set prop_$0(a){ this.a = 1} });");
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     test(
         "({prop_(){ return 1} });",
         "({prop_$0(){ return 1} });");
@@ -115,7 +115,7 @@ public final class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
     testSame("({superClass_: 1});");
     testSame("({get superClass_(){ return 1} });");
     testSame("({set superClass_(a){this.a = 1} });");
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame("({superClass_(){ return 1} });");
   }
 }

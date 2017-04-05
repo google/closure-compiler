@@ -350,7 +350,7 @@ public class J2clPassTest extends CompilerTestCase {
   }
 
   public void testInlineNativeAlias_const() {
-    setLanguage(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     test(
         LINE_JOINER.join(
             "/** @constructor */ const $RegExp = window.RegExp;",
@@ -361,7 +361,7 @@ public class J2clPassTest extends CompilerTestCase {
   }
 
   public void testInlineNativeAlias_let() {
-    setLanguage(LanguageMode.ECMASCRIPT6, LanguageMode.ECMASCRIPT5);
+    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     test(
         LINE_JOINER.join(
             "/** @constructor */ let $RegExp = window.RegExp;",

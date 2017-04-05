@@ -363,8 +363,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   }
 
   public void testEs6ObjectShorthand() {
-    setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6,
-        CompilerOptions.LanguageMode.ECMASCRIPT5);
+    setLanguage(
+        CompilerOptions.LanguageMode.ECMASCRIPT_2015, CompilerOptions.LanguageMode.ECMASCRIPT5);
     setFilename("test");
     testModules(
         LINE_JOINER.join(
@@ -499,7 +499,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   }
 
   public void testClassRewriting() {
-    setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6, CompilerOptions.LanguageMode.ECMASCRIPT5);
+    setLanguage(
+        CompilerOptions.LanguageMode.ECMASCRIPT_2015, CompilerOptions.LanguageMode.ECMASCRIPT5);
     setFilename("test");
     testModules(
         LINE_JOINER.join(
@@ -541,7 +542,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   }
 
   public void testMultipleAssignments() {
-    setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6, CompilerOptions.LanguageMode.ECMASCRIPT5);
+    setLanguage(
+        CompilerOptions.LanguageMode.ECMASCRIPT_2015, CompilerOptions.LanguageMode.ECMASCRIPT5);
     setExpectParseWarningsThisTest();
     setFilename("test");
     testModules(
@@ -560,7 +562,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   }
 
   public void testDestructuringImports() {
-    setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6, CompilerOptions.LanguageMode.ECMASCRIPT5);
+    setLanguage(
+        CompilerOptions.LanguageMode.ECMASCRIPT_2015, CompilerOptions.LanguageMode.ECMASCRIPT5);
     setFilename("test");
     testModules(
         LINE_JOINER.join(
@@ -573,7 +576,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   }
 
   public void testAnnotationsCopied() {
-    setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6, CompilerOptions.LanguageMode.ECMASCRIPT5);
+    setLanguage(
+        CompilerOptions.LanguageMode.ECMASCRIPT_2015, CompilerOptions.LanguageMode.ECMASCRIPT5);
     setFilename("test");
     testModules(
         LINE_JOINER.join(

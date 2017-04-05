@@ -325,7 +325,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
         "  dest: 3;",
         "}"));
 
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     // Source makes a taggedTemplate Call.
     assertUnsafeMoveVisibility(LINE_JOINER.join(
         "function taggedTemplate(){};",

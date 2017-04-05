@@ -37,7 +37,7 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
   private PropertyRenamingPolicy propertyRenaming;
   @Override
   public void setUp() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     runTypeCheckAfterProcessing = true;
     propertyRenaming = PropertyRenamingPolicy.ALL_UNQUOTED;
   }

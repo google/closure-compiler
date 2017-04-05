@@ -55,7 +55,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testRemoveUnusedVars() {
-    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     // Test lots of stuff
     test("var a;var b=3;var c=function(){};var x=A();var y; var z;" +
          "function A(){B()} function B(){C(b)} function C(){} " +

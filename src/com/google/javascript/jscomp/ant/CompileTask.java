@@ -34,17 +34,6 @@ import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMap.Format;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.jscomp.WarningLevel;
-
-import org.apache.tools.ant.BuildException;
-import org.apache.tools.ant.Project;
-import org.apache.tools.ant.Task;
-import org.apache.tools.ant.types.FileList;
-import org.apache.tools.ant.types.Parameter;
-import org.apache.tools.ant.types.Path;
-import org.apache.tools.ant.types.Resource;
-import org.apache.tools.ant.types.ResourceCollection;
-import org.apache.tools.ant.types.resources.FileResource;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -59,6 +48,15 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
+import org.apache.tools.ant.BuildException;
+import org.apache.tools.ant.Project;
+import org.apache.tools.ant.Task;
+import org.apache.tools.ant.types.FileList;
+import org.apache.tools.ant.types.Parameter;
+import org.apache.tools.ant.types.Path;
+import org.apache.tools.ant.types.Resource;
+import org.apache.tools.ant.types.ResourceCollection;
+import org.apache.tools.ant.types.resources.FileResource;
 
 /**
  * This class implements a simple Ant task to do almost the same as
@@ -102,7 +100,7 @@ public final class CompileTask
   private boolean applyInputSourceMaps;
 
   public CompileTask() {
-    this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT6;
+    this.languageIn = CompilerOptions.LanguageMode.ECMASCRIPT_2015;
     this.languageOut = CompilerOptions.LanguageMode.ECMASCRIPT3;
     this.warningLevel = WarningLevel.DEFAULT;
     this.debugOptions = false;
@@ -129,7 +127,7 @@ public final class CompileTask
     switch (value) {
       case "ECMASCRIPT6_STRICT":
       case "ES6_STRICT":
-        return CompilerOptions.LanguageMode.ECMASCRIPT6_STRICT;
+        return CompilerOptions.LanguageMode.ECMASCRIPT_2015;
       case "ECMASCRIPT6":
       case "ES6":
         return CompilerOptions.LanguageMode.ECMASCRIPT6;

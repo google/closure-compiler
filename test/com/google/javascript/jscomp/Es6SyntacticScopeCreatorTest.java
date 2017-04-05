@@ -63,7 +63,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   protected void setUp() {
     compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT6);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     compiler.initOptions(options);
     redeclarations = HashMultiset.create();
     RedeclarationHandler handler = new RecordingRedeclarationHandler();

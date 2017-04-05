@@ -23,7 +23,7 @@ public final class SubstituteEs6SyntaxTest extends CompilerTestCase {
 
   @Override
   public void setUp() {
-    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
   }
 
   @Override

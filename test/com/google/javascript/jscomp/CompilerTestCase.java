@@ -151,6 +151,8 @@ public abstract class CompilerTestCase extends TestCase {
 
   private LanguageMode languageOut = LanguageMode.ECMASCRIPT5;
 
+  private boolean emitUseStrict = false;
+
   /**
    * Whether externs changes should be allowed for this pass.
    */
@@ -382,6 +384,7 @@ public abstract class CompilerTestCase extends TestCase {
    */
   protected CompilerOptions getOptions(CompilerOptions options) {
     options.setLanguageIn(acceptedLanguage);
+    options.setEmitUseStrict(emitUseStrict);
     options.setLanguageOut(languageOut);
 
     // This doesn't affect whether checkSymbols is run--it just affects
@@ -444,6 +447,10 @@ public abstract class CompilerTestCase extends TestCase {
 
   protected void setLanguageOut(LanguageMode acceptedLanguage) {
     this.languageOut = acceptedLanguage;
+  }
+
+  protected void setEmitUseStrict(boolean emitUseStrict) {
+    this.emitUseStrict = emitUseStrict;
   }
 
   /**

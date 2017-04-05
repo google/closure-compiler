@@ -41,7 +41,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
   public CheckUnusedPrivatePropertiesTest() {
     super(EXTERNS);
     enableGatherExternProperties();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
   }
 
   @Override
