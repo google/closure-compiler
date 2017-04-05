@@ -429,14 +429,34 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
   }
 
   public void testVarParamSameName() {
-    test("function f(x) { if (!x) var x = 6; }",
-         "function f$jscomp$unique_0(x$jscomp$unique_1) {"
-         + "  if (!x$jscomp$unique_1) var x$jscomp$unique_1 = 6; }");
-    test("function f(x) { if (!x) x = 6; }",
-         "function f$jscomp$unique_0(x$jscomp$unique_1) {"
-         + "  if (!x$jscomp$unique_1) x$jscomp$unique_1 = 6; }");
-    testEs6("function f(x) { if (!x) { let x = 6; } }",
-            "function f$jscomp$unique_0(x$jscomp$unique_1) {"
-            + "  if (!x$jscomp$unique_1) { let x$jscomp$unique_2 = 6; } }");
+    test(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  if (!x) var x = 6;",
+            "}"),
+        LINE_JOINER.join(
+             "function f$jscomp$unique_0(x$jscomp$unique_1) {",
+             "  if (!x$jscomp$unique_1) var x$jscomp$unique_1 = 6;",
+             "}"));
+
+    test(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  if (!x) x = 6;",
+            "}"),
+        LINE_JOINER.join(
+             "function f$jscomp$unique_0(x$jscomp$unique_1) {",
+             "  if (!x$jscomp$unique_1) x$jscomp$unique_1 = 6; ",
+             "}"));
+
+    testEs6(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  if (!x) { let x = 6; }",
+            "}"),
+        LINE_JOINER.join(
+            "function f$jscomp$unique_0(x$jscomp$unique_1) {",
+            "  if (!x$jscomp$unique_1) { let x$jscomp$unique_2 = 6; }",
+            "}"));
   }
 }
