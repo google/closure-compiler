@@ -425,7 +425,12 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
    * @see Normalize
    */
   static class ContextualRenamer implements Renamer {
+    // This multiset is shared between this ContextualRenamer and its parent (and its parent's
+    // parent, etc.) because it tracks counts of variables across the entire JS program.
     private final Multiset<String> nameUsage;
+
+    // By contrast, this is a different map for each ContextualRenamer because it's just keeping
+    // track of the names used by this renamer.
     private final Map<String, String> declarations = new HashMap<>();
     private final boolean global;
 
