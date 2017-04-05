@@ -1441,7 +1441,7 @@ public abstract class CompilerTestCase extends TestCase {
       }
 
       if (warning == null) {
-        assertThat(aggregateWarnings).isEmpty();
+        assertThat(aggregateWarnings).named("aggregate warnings").isEmpty();
       } else {
         assertEquals(
             "There should be one warning, repeated "
