@@ -30,31 +30,28 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The goal with this pass is to simplify the other passes,
- * by making less complex statements.
+ * The goal with this pass is to simplify the other passes, by making less complex statements.
  *
- * Starting with statements like:
- *   var a = 0, b = foo();
+ * <p>Starting with statements like: {@code var a = 0, b = foo();}
  *
- * Which become:
- *   var a = 0;
- *   var b = foo();
+ * <p>Which become: {@code var a = 0; var b = foo();}
  *
- * The key here is only to break down things that help the other passes
- * and can be put back together in a form that is at least as small when
- * all is said and done.
+ * <p>The key here is only to break down things that help the other passes and can be put back
+ * together in a form that is at least as small when all is said and done.
  *
- * This pass currently does the following:
- * 1) Simplifies the AST by splitting var statements, moving initializers
- *    out of for loops, and converting whiles to fors.
- * 2) Moves hoisted functions to the top of function scopes.
- * 3) Rewrites unhoisted named function declarations to be var declarations.
- * 4) Makes all variable names globally unique (extern or otherwise) so that
- *    no value is ever shadowed (note: "arguments" may require special
- *    handling).
- * 5) Removes duplicate variable declarations.
- * 6) Marks constants with the IS_CONSTANT_NAME annotation.
- * 7) Finds properties marked @expose, and rewrites them in [] notation.
+ * <p>This pass currently does the following:
+ *
+ * <ol>
+ *   <li>Simplifies the AST by splitting var/let/const statements, moving initializers out of for
+ *       loops, and converting whiles to fors.
+ *   <li>Moves hoisted functions to the top of function scopes.
+ *   <li>Rewrites unhoisted named function declarations to be var declarations.
+ *   <li>Makes all variable names globally unique (extern or otherwise) so that no value is ever
+ *       shadowed (note: "arguments" may require special handling).
+ *   <li>Removes duplicate variable declarations.
+ *   <li>Marks constants with the IS_CONSTANT_NAME annotation.
+ *   <li>Finds properties marked @expose, and rewrites them in [] notation.
+ * </ol>
  *
  * @author johnlenz@google.com (johnlenz)
  */
@@ -428,8 +425,7 @@ class Normalize implements CompilerPass {
      */
     static boolean maybeNormalizeFunctionDeclaration(Node n) {
       Preconditions.checkState(n.isFunction(), n);
-      if (!NodeUtil.isFunctionExpression(n)
-          && !NodeUtil.isHoistedFunctionDeclaration(n)) {
+      if (NodeUtil.isFunctionDeclaration(n) && !NodeUtil.isHoistedFunctionDeclaration(n)) {
         rewriteFunctionDeclaration(n);
         return true;
       }

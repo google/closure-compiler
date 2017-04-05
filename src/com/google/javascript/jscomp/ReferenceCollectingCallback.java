@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.MoreObjects.toStringHelper;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -584,7 +586,12 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
 
     @Override
     public String toString() {
-      return "<ReferenceCollection for " + getInitializingReference() + ">";
+      return toStringHelper(this)
+          .add("initRef", getInitializingReference())
+          .add("references", references)
+          .add("wellDefined", isWellDefined())
+          .add("assignedOnce", isAssignedOnceInLifetime())
+          .toString();
     }
   }
 
@@ -609,8 +616,7 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
     private final Scope scope;
     private final InputId inputId;
 
-    Reference(Node nameNode, NodeTraversal t,
-        BasicBlock basicBlock) {
+    Reference(Node nameNode, NodeTraversal t, BasicBlock basicBlock) {
       this(nameNode, basicBlock, t.getScope(), t.getInput().getInputId());
     }
 
@@ -626,12 +632,10 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
      */
     @VisibleForTesting
     static Reference createRefForTest(CompilerInput input) {
-      return new Reference(new Node(Token.NAME), null, null,
-          input.getInputId());
+      return new Reference(new Node(Token.NAME), null, null, input.getInputId());
     }
 
-    private Reference(Node nameNode,
-        BasicBlock basicBlock, Scope scope, InputId inputId) {
+    private Reference(Node nameNode, BasicBlock basicBlock, Scope scope, InputId inputId) {
       this.nameNode = nameNode;
       this.basicBlock = basicBlock;
       this.scope = scope;
