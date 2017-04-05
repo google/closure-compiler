@@ -540,7 +540,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
               functionType = functionType.getProp(qname.getAllButLeftmost());
             }
             com.google.javascript.jscomp.newtypes.FunctionType ctorType =
-                functionType.getFunTypeIfSingletonObj();
+                functionType == null ? null : functionType.getFunTypeIfSingletonObj();
             if (ctorType != null && ctorType.isUniqueConstructor()) {
               return ctorType.getInstanceTypeOfCtor();
             }

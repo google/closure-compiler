@@ -2176,6 +2176,15 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  s = goog.asserts.assertString(123);",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "goog.forwardDeclare('ns.Foo');",
+        "function f(x) {",
+        "  return goog.asserts.assertInstanceof(x, ns.Foo);",
+        "}"),
+        NewTypeInference.UNKNOWN_ASSERTION_TYPE);
   }
 
   public void testDontInferBottom() {
