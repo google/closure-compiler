@@ -21,7 +21,6 @@ import static com.google.common.base.Strings.nullToEmpty;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,7 +32,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import javax.annotation.Nullable;
 
 /**
@@ -489,15 +487,16 @@ final class Tracer {
     // a different package that happens to call Tracer without knowledge of the
     // application authors.
     if (!trace.isInitialized()) {
-      logger.log(Level.WARNING,
-                 "Tracer log requested for this thread but was not "
-                 + "initialized using Tracer.initCurrentThreadTrace().",
-                 new Throwable());
+      logger.log(
+          Level.INFO,
+          "Tracer log requested for this thread but was not "
+              + "initialized using Tracer.initCurrentThreadTrace().",
+          new Throwable());
       return;
     }
 
     if (!trace.isEmpty()) {
-      logger.log(Level.WARNING, "timers:\n{0}", getCurrentThreadTraceReport());
+      logger.log(Level.INFO, "timers:\n{0}", getCurrentThreadTraceReport());
     }
   }
 
