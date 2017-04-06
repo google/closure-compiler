@@ -30,7 +30,7 @@ import java.util.concurrent.TimeoutException;
 final class CompilerExecutor {
   // We use many recursive algorithms that use O(d) memory in the depth
   // of the tree.
-  private static final long COMPILER_STACK_SIZE = (1 << 21); // About 2MB
+  private static final long COMPILER_STACK_SIZE = (1 << 23); // About 8MB
 
   /**
    * Under JRE 1.6, the JS Compiler overflows the stack when running on some
