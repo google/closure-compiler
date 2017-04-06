@@ -303,17 +303,30 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
          "function foo$jscomp$unique_1(){var b$jscomp$unique_3;a$jscomp$unique_0}"
          + "function boo$jscomp$unique_2(){var b$jscomp$unique_4;a$jscomp$unique_0}");
 
-    testEs6("let a;"
-            + "function foo(a){let b;a}",
-            "let a$jscomp$unique_0;"
-            + "function foo$jscomp$unique_1(a$jscomp$unique_2){" +
-            "  let b$jscomp$unique_3;a$jscomp$unique_2}");
-    testEs6("let a;"
-            + "function foo(){let b;a}"
-            + "function boo(){let b;a}",
-            "let a$jscomp$unique_0;"
-            + "function foo$jscomp$unique_1(){let b$jscomp$unique_3;a$jscomp$unique_0}"
-            + "function boo$jscomp$unique_2(){let b$jscomp$unique_4;a$jscomp$unique_0}");
+    testEs6(
+        "let a; function foo(a) {let b; a; }",
+        LINE_JOINER.join(
+            "let a$jscomp$unique_0;",
+            "function foo$jscomp$unique_1(a$jscomp$unique_2) {",
+            "  let b$jscomp$unique_3;",
+            "  a$jscomp$unique_2;",
+            "}"));
+
+    testEs6(
+        LINE_JOINER.join(
+            "let a;",
+            "function foo() { let b; a; }",
+            "function boo() { let b; a; }"),
+        LINE_JOINER.join(
+            "let a$jscomp$unique_0;",
+            "function foo$jscomp$unique_1() {",
+            "  let b$jscomp$unique_3;",
+            "  a$jscomp$unique_0;",
+            "}",
+            "function boo$jscomp$unique_2() {",
+            "  let b$jscomp$unique_4;",
+            "  a$jscomp$unique_0;",
+            "}"));
 
     // Verify function expressions are renamed.
     test("var a = function foo(){foo()};",
