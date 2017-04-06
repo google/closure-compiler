@@ -4302,9 +4302,32 @@ public final class NodeUtil {
                || locals.apply(value);
       case FUNCTION:
       case REGEXP:
+      case EMPTY:
+        return true;
       case ARRAYLIT:
+        for (Node entry : value.children()) {
+          if (!evaluatesToLocalValue(entry, locals)) {
+            return false;
+          }
+        }
+        return true;
       case OBJECTLIT:
-        // Literals objects with non-literal children are allowed.
+        for (Node key : value.children()) {
+          Preconditions.checkState(
+              key.isGetterDef() || key.isSetterDef() || key.isStringKey() || key.isComputedProp(),
+              "Unexpected obj literal key:",
+              key);
+
+          if (key.isGetterDef() || key.isSetterDef()) {
+            continue;
+          }
+          if (key.isComputedProp() && !evaluatesToLocalValue(key.getSecondChild(), locals)) {
+            return false;
+          }
+          if (key.isStringKey() && !evaluatesToLocalValue(key.getFirstChild(), locals)) {
+            return false;
+          }
+        }
         return true;
       case DELPROP:
       case IN:
