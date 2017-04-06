@@ -35,6 +35,40 @@ public final class DenormalizeTest extends CompilerTestCase {
     return 1;
   }
 
+  public void testInlineVarKeyword1() {
+    test(
+        LINE_JOINER.join(
+            "function f() {",
+            "  var x;",
+            "  function g() { x = 2; }",
+            "  if (y) { x = -1; }",
+            "  alert(x);",
+            "}"),
+        LINE_JOINER.join(
+            "function f() {",
+            "  function g() { x = 2; }",
+            "  if (y) { var x = -1; }",
+            "  alert(x);",
+            "}"));
+  }
+
+  public void testInlineVarKeyword2() {
+    test(
+        LINE_JOINER.join(
+            "function f() {",
+            "  var x;",
+            "  function g() { x = 2; }",
+            "  if (y) { x = -1; } else { x = 3; }",
+            "  alert(x);",
+            "}"),
+        LINE_JOINER.join(
+            "function f() {",
+            "  function g() { x = 2; }",
+            "  if (y) { var x = -1; } else { x = 3; }",
+            "  alert(x);",
+            "}"));
+  }
+
   public void testFor() {
     // Verify assignments are moved into the FOR init node.
     test("a = 0; for(; a < 2 ; a++) foo()",
@@ -137,7 +171,7 @@ public final class DenormalizeTest extends CompilerTestCase {
     @Override
     public void process(Node externs, Node root) {
       NodeTraversal.traverseEs6(compiler, root, normalizePass);
-      NodeTraversal.traverseEs6(compiler, root, denormalizePass);
+      denormalizePass.process(externs, root);
     }
   }
 

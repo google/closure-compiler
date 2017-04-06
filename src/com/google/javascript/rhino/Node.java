@@ -872,7 +872,7 @@ public class Node implements Serializable {
     checkArgument(newChild.next == null, "The new child node has next siblings.");
     checkArgument(newChild.previous == null, "The new child node has previous siblings.");
     checkArgument(newChild.parent == null, "The new child node already has a parent.");
-    checkState(child.parent == this);
+    checkState(child.parent == this, "", child, parent);
 
     // Copy over important information.
     newChild.useSourceInfoIfMissingFrom(child);
@@ -1562,6 +1562,18 @@ public class Node implements Serializable {
       node = node.getParent();
     }
     return node;
+  }
+
+  /**
+   * @return True if this Node is {@code node} or a descendant of {@code node}.
+   */
+  public boolean isDescendantOf(Node node) {
+    for (Node n = this; n != null; n = n.parent) {
+      if (n == node) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

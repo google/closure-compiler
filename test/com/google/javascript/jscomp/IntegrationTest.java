@@ -1195,12 +1195,14 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
 
     options.collapseObjectLiterals = true;
-    test(options, code,
-        "function f(){" +
-        "var JSCompiler_object_inline_FOO_0;" +
-        "var JSCompiler_object_inline_bar_1;" +
-        "JSCompiler_object_inline_FOO_0=5;" +
-        "JSCompiler_object_inline_bar_1=3}");
+    test(
+        options,
+        code,
+        LINE_JOINER.join(
+            "function f() {",
+            "  var JSCompiler_object_inline_FOO_0 = 5;",
+            "  var JSCompiler_object_inline_bar_1 = 3;",
+            "}"));
   }
 
   public void testDisambiguateProperties() {
@@ -1819,7 +1821,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
 
     options.setRemoveUnusedVariables(Reach.ALL);
-    test(options, code, "function f() { var x; 3; 4; x = 5; return x; } f();");
+    test(options, code, "function f() { 3; 4; var x = 5; return x; } f();");
   }
 
   public void testPreservesCastInformation() {
@@ -2308,6 +2310,31 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options,
          "function f() { try { } catch(e) { break; } }",
          RhinoErrorReporter.PARSE_ERROR);
+  }
+
+  public void testNoCrash_varInCatch() {
+    CompilerOptions options = createCompilerOptions();
+    options.setInlineFunctions(true);
+
+    test(
+        options,
+        LINE_JOINER.join(
+            "(function() {",
+            "  try {",
+            "    x = 2;",
+            "  } catch (e) {",
+            "    var x = 1;",
+            "  }",
+            "})();"),
+        LINE_JOINER.join(
+            "{",
+            "  var x$jscomp$inline_0;",
+            "  try {",
+            "    x$jscomp$inline_0 = 2;",
+            "  } catch (e) {",
+            "    x$jscomp$inline_0 = 1;",
+            "  }",
+            "}"));
   }
 
   public void testIssue63SourceMap() {
@@ -3713,22 +3740,25 @@ public final class IntegrationTest extends IntegrationTestCase {
         "  }",
         "}");
 
-    String result = LINE_JOINER.join(
-        "function some_function() {",
-        "  var a, b;",
-        "  any_expression && (b = external_ref, a = function(a) {",
-        "    return b()",
-        "  });",
-        "  return {",
-        "    method1: function() {",
-        "      a && a();",
-        "      return !0",
-        "    },",
-        "    method2: function() {",
-        "      return !1",
-        "    }",
-        "  };",
-        "}");
+    String result =
+        LINE_JOINER.join(
+            "function some_function() {",
+            "  if (any_expression) {",
+            "    var b = external_ref;",
+            "    var a = function(a) {",
+            "      return b()",
+            "    };",
+            "  }",
+            "  return {",
+            "    method1:function() {",
+            "      a && a();",
+            "      return !0",
+            "    },",
+            "    method2: function() {",
+            "      return !1",
+            "    }",
+            "  }",
+            "}");
 
     test(options, code, result);
   }

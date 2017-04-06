@@ -2173,6 +2173,10 @@ public final class NodeUtil {
     return getEnclosingType(n, Token.BLOCK);
   }
 
+  public static Node getEnclosingBlockScopeRoot(Node n) {
+    return getEnclosingNode(n, createsBlockScope);
+  }
+
   public static boolean isInFunction(Node n) {
     return getEnclosingFunction(n) != null;
   }
@@ -2535,6 +2539,13 @@ public final class NodeUtil {
         return false;
     }
   }
+
+  private static final Predicate<Node> createsBlockScope = new Predicate<Node>() {
+    @Override
+    public boolean apply(Node n) {
+      return createsBlockScope(n);
+    }
+  };
 
   private static final Set<Token> DEFINITE_CFG_ROOTS =
       EnumSet.of(Token.FUNCTION, Token.SCRIPT, Token.MODULE_BODY, Token.ROOT);
