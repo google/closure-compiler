@@ -85,7 +85,6 @@ final class RescopeGlobalSymbols implements CompilerPass {
   private final boolean assumeCrossModuleNames;
   private final Set<String> crossModuleNames = new HashSet<>();
   private final Set<String> maybeReferencesThis = new HashSet<>();
-  private Set<String> externNames;
 
   /**
    * Constructor for the RescopeGlobalSymbols compiler pass.
@@ -131,13 +130,12 @@ final class RescopeGlobalSymbols implements CompilerPass {
         || compiler.getCodingConvention().isExported(name, false);
   }
 
-  private boolean isExternVar(String varname, NodeTraversal t) {
+  private static boolean isExternVar(String varname, NodeTraversal t) {
     if (varname.isEmpty()) {
       return false;
     }
     Var v = t.getScope().getVar(varname);
-    return v == null || v.isExtern()
-        || (v.scope.isGlobal() && this.externNames.contains(varname));
+    return v == null || v.isExtern();
   }
 
   private void addExternForGlobalSymbolNamespace() {
@@ -149,9 +147,6 @@ final class RescopeGlobalSymbols implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    // Collect variables in externs; they can be shadowed by the same names in global scope.
-    this.externNames = NodeUtil.collectExternVariableNames(this.compiler, externs);
-
     // Make the name of the globalSymbolNamespace an extern.
     if (addExtern) {
       addExternForGlobalSymbolNamespace();
@@ -350,10 +345,10 @@ final class RescopeGlobalSymbols implements CompilerPass {
       if (nameNode != null && nameNode.getParent() != null && nameNode.getParent().isCatch()) {
         return;
       }
-      replaceSymbol(t, n, name, t.getInput());
+      replaceSymbol(n, name, t.getInput());
     }
 
-    private void replaceSymbol(NodeTraversal t, Node node, String name, CompilerInput input) {
+    private void replaceSymbol(Node node, String name, CompilerInput input) {
       Node parent = node.getParent();
       boolean isCrossModule = isCrossModuleName(name);
       if (!isCrossModule) {
@@ -365,7 +360,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         boolean hasInterestingChildren = false;
         for (Node c : parent.children()) {
           // VAR child is no longer a name means it was transformed already.
-          if (!c.isName() || isCrossModuleName(c.getString()) || isExternVar(c.getString(), t)) {
+          if (!c.isName() || isCrossModuleName(c.getString())) {
             hasInterestingChildren = true;
             break;
           }
