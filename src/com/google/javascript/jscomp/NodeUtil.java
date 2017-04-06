@@ -2356,14 +2356,6 @@ public final class NodeUtil {
         && n.getFirstChild().isCall();
   }
 
-  static boolean isIIFE(Node n) {
-    Node parent = n.getParent();
-    return n.isFunction()
-        && parent.isCall()
-        && parent.getFirstChild() == n
-        && parent.getParent().isExprResult();
-  }
-
   static boolean isVanillaFunction(Node n) {
     return n.isFunction() && !n.isArrowFunction();
   }
