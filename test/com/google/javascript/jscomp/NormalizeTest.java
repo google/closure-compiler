@@ -105,6 +105,22 @@ public final class NormalizeTest extends Es6CompilerTestCase {
     testEs6("for (let a = 0, b = 1;;) {}", "for (let a$jscomp$1 = 0, b$jscomp$1 = 1;;) {}");
   }
 
+  public void testLetManyBlocks() {
+    testEs6(
+        LINE_JOINER.join(
+            "let a = 'outer';",
+            "{ let a = 'inner1'; }",
+            "{ let a = 'inner2'; }",
+            "{ let a = 'inner3'; }",
+            "{ let a = 'inner4'; }"),
+        LINE_JOINER.join(
+            "let a = 'outer';",
+            "{ let a$jscomp$1 = 'inner1'; }",
+            "{ let a$jscomp$2 = 'inner2'; }",
+            "{ let a$jscomp$3 = 'inner3'; }",
+            "{ let a$jscomp$4 = 'inner4'; }"));
+  }
+
   public void testLetOutsideAndInsideForLoop() {
     testEs6(
         "let a = 'outer'; for (let a = 'inner';;) { break; } alert(a);",
