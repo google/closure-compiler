@@ -2337,6 +2337,37 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}"));
   }
 
+  // https://github.com/google/closure-compiler/issues/2364
+  public void testNoCrash_varInCatch2() {
+    CompilerOptions options = createCompilerOptions();
+    options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
+
+    test(
+        options,
+        LINE_JOINER.join(
+            "function foo() {",
+            "  var msg;",
+            "}",
+            "",
+            "function bar() {",
+            "  msg;",
+            "  try {}",
+            "  catch(err) {",
+            "    var msg;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function foo() {",
+            "  var msg;",
+            "}",
+            "function bar(){",
+            "  var msg;",
+            "  msg;",
+            "  try{}",
+            "  catch(err){}",
+            "}"));
+  }
+
   public void testIssue63SourceMap() {
     CompilerOptions options = createCompilerOptions();
     String code = "var a;";
