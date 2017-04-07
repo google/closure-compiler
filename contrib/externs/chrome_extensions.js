@@ -4468,8 +4468,19 @@ chrome.history.onVisited;
 chrome.identity = {};
 
 
+/** @typedef {?{id: string}} */
+chrome.identity.AccountInfo;
+
+
 /**
- * @param {(chrome.identity.TokenDetails|function(string=): void)}
+ * @param {function(!Array<!chrome.identity.AccountInfo>): void} callback
+ * @return {undefined}
+ */
+chrome.identity.getAccounts = function(callback) {};
+
+
+/**
+ * @param {(!chrome.identity.TokenDetails|function(string=): void)}
  *     detailsOrCallback Token options or a callback function if no options are
  *     specified.
  * @param {function(string=): void=} opt_callback A callback function if options
@@ -4479,31 +4490,37 @@ chrome.identity = {};
 chrome.identity.getAuthToken = function(detailsOrCallback, opt_callback) {};
 
 
-/** @typedef {{interactive: (boolean|undefined)}} */
+/**
+ * @typedef {?{
+ *   interactive: (boolean|undefined),
+ *   account: (!chrome.identity.AccountInfo|undefined),
+ *   scopes: (!Array<string>|undefined)
+ * }}
+ */
 chrome.identity.TokenDetails;
 
 
 /**
- * @param {chrome.identity.InvalidTokenDetails} details
- * @param {function(): void} callback
+ * @param {!chrome.identity.InvalidTokenDetails} details
+ * @param {function(): void=} opt_callback
  * @return {undefined}
  */
-chrome.identity.removeCachedAuthToken = function(details, callback) {};
+chrome.identity.removeCachedAuthToken = function(details, opt_callback) {};
 
 
-/** @typedef {{token: string}} */
+/** @typedef {?{token: string}} */
 chrome.identity.InvalidTokenDetails;
 
 
 /**
- * @param {chrome.identity.WebAuthFlowDetails} details
+ * @param {!chrome.identity.WebAuthFlowDetails} details
  * @param {function(string=): void} callback
  * @return {undefined}
  */
 chrome.identity.launchWebAuthFlow = function(details, callback) {};
 
 
-/** @typedef {{url: string, interactive: (boolean|undefined)}} */
+/** @typedef {?{url: string, interactive: (boolean|undefined)}} */
 chrome.identity.WebAuthFlowDetails;
 
 
@@ -4514,7 +4531,41 @@ chrome.identity.WebAuthFlowDetails;
 chrome.identity.getProfileUserInfo = function(callback) {};
 
 
-/** @type {!ChromeEvent} */
+
+/** @constructor */
+chrome.identity.OnSignInChangedEvent = function() {}
+
+
+/**
+ * @param {function(!chrome.identity.AccountInfo, boolean):void} callback
+ * @return {undefined}
+ */
+chrome.identity.OnSignInChangedEvent.prototype.addListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(!chrome.identity.AccountInfo, boolean):void} callback
+ * @return {undefined}
+ */
+chrome.identity.OnSignInChangedEvent.prototype.removeListener =
+    function(callback) {};
+
+
+/**
+ * @param {function(!chrome.identity.AccountInfo, boolean):void} callback
+ * @return {boolean}
+ */
+chrome.identity.OnSignInChangedEvent.prototype.hasListener =
+    function(callback) {};
+
+
+/** @return {boolean} */
+chrome.identity.OnSignInChangedEvent.prototype.hasListeners =
+    function() {};
+
+
+/** @type {!chrome.identity.OnSignInChangedEvent} */
 chrome.identity.onSignInChanged;
 
 
