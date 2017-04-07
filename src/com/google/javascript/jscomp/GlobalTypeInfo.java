@@ -478,9 +478,6 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         continue;
       }
       checkAndFinalizeNominalType(rawType);
-      if (rawType.isBuiltinObject()) {
-        this.commonTypes.getLiteralObjNominalType().getRawNominalType().finalize();
-      }
     }
     JSType globalThisType;
     if (win != null) {
@@ -747,6 +744,12 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
     // Finalize nominal type once all properties are added.
     rawType.finalize();
+    if (rawType.isBuiltinObject()) {
+      NominalType literalObj = this.commonTypes.getLiteralObjNominalType();
+      if (!literalObj.isFinalized()) {
+        literalObj.getRawNominalType().finalize();
+      }
+    }
   }
 
   // TODO(dimvar): the finalization method and this one should be cleaned up;

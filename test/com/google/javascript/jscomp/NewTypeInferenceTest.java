@@ -19780,4 +19780,15 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "f(123, function(x) { return x + 1; });"),
         NewTypeInference.WRONG_ARGUMENT_COUNT);
   }
+
+  public void testDontCrashWithDuplicateObjectDefinition() {
+    typeCheckCustomExterns(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Object() {}",
+        "/** @constructor */",
+        "function Object() {}",
+        "/** @constructor */",
+        "function Function() {}"),
+        "");
+  }
 }
