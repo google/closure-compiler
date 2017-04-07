@@ -623,7 +623,7 @@ public final class RawNominalType extends Namespace {
   @Override
   public void finalize() {
     Preconditions.checkState(
-        !this.isFinalized, "Raw type not finalized: %s", this.defSite);
+        !this.isFinalized, "Raw type already finalized: %s", this.defSite);
     Preconditions.checkNotNull(
         this.ctorFn, "Null constructor function for raw type: %s", this.defSite);
     if (this.interfaces == null) {
