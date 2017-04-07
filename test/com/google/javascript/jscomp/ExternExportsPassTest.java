@@ -13,46 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
-import java.util.List;
-import junit.framework.TestCase;
 
 /**
  * Tests for {@link ExternExportsPass}.
  *
  */
-// TODO(tbreisacher): Convert this to use CompilerTestCase.
-
-public final class ExternExportsPassTest extends TestCase {
-  private static final Joiner LINE_JOINER = Joiner.on('\n');
-
-  /**
-   * ExternExportsPass relies on type information to emit JSDoc annotations for
-   * exported externs. However, the user can disable type checking and still
-   * ask for externs to be exported. Set this flag to enable or disable checking
-   * of types during a test.
-   */
-  private boolean runCheckTypes = true;
-
-  private void enableTypeCheck() {
-    runCheckTypes = true;
-  }
-
-  private void disableTypeCheck() {
-    runCheckTypes = false;
-  }
+public final class ExternExportsPassTest extends CompilerTestCase {
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
+    enableNormalize();
     enableTypeCheck();
+  }
+
+  @Override
+  public CompilerOptions getOptions(CompilerOptions options) {
+    options.externExportsPath = "externs.js";
+    // Check types so we can make sure our exported externs have type information.
+    options.setCheckSymbols(true);
+    return options;
+  }
+
+  @Override
+  public CompilerPass getProcessor(Compiler compiler) {
+    return new ExternExportsPass(compiler);
   }
 
   public void testExportSymbol() throws Exception {
@@ -571,24 +559,22 @@ public final class ExternExportsPassTest extends TestCase {
     String librarySource =
         LINE_JOINER.join(
             "/**",
-            " * @param {number} a",
+            " * @param {number} n",
             " * @constructor",
             " */",
-            "var InternalName = function(a) {",
+            "var InternalName = function(n) {",
             "};",
             "goog.exportSymbol('ExternalName', InternalName)");
 
     String clientSource =
         LINE_JOINER.join(
-            "var a = new ExternalName(6);",
+            "var foo = new ExternalName(6);",
             "/**",
             " * @param {ExternalName} x",
             " */",
-            "var b = function(x) {};");
+            "var bar = function(x) {};");
 
-    Result libraryCompileResult = compileAndExportExterns(librarySource);
-
-    String generatedExterns = libraryCompileResult.externExport;
+    String generatedExterns = compileAndExportExterns(librarySource);
 
     compileAndExportExterns(clientSource, generatedExterns);
   }
@@ -873,7 +859,7 @@ public final class ExternExportsPassTest extends TestCase {
   }
 
   private void compileAndCheck(String js, String expected) {
-    Result result = compileAndExportExterns(js);
+    String generatedExterns = compileAndExportExterns(js);
 
     String fileoverview = LINE_JOINER.join(
         "/**",
@@ -882,7 +868,7 @@ public final class ExternExportsPassTest extends TestCase {
         " */",
         "");
 
-    assertEquals(fileoverview + expected, result.externExport);
+    assertThat(generatedExterns).isEqualTo(fileoverview + expected);
   }
 
   public void testDontWarnOnExportFunctionWithUnknownParameterTypes() {
@@ -900,7 +886,13 @@ public final class ExternExportsPassTest extends TestCase {
     compileAndExportExterns(librarySource);
   }
 
-  private Result compileAndExportExterns(String js) {
+  /**
+   * Compiles the passed in JavaScript and returns the new externs exported by the this pass.
+   *
+   * @param js the source to be compiled
+   * @return the externs generated from {@code js}
+   */
+  private String compileAndExportExterns(String js) {
     return compileAndExportExterns(js, "");
   }
 
@@ -912,38 +904,15 @@ public final class ExternExportsPassTest extends TestCase {
    * @param externs the externs the {@code js} source needs
    * @return the externs generated from {@code js}
    */
-  private Result compileAndExportExterns(String js, String externs) {
-    Compiler compiler = new Compiler();
-    BlackHoleErrorManager.silence(compiler);
-    CompilerOptions options = new CompilerOptions();
-    options.externExportsPath = "externs.js";
-    options.declaredGlobalExternsOnWindow = false;
+  private String compileAndExportExterns(String js, String externs) {
+    js = LINE_JOINER.join(
+        "var goog = {};",
+        "goog.exportSymbol = function(a, b) {};",
+        "goog.exportProperty = function(a, b, c) {};",
+        js);
 
-    /* Check types so we can make sure our exported externs have
-     * type information.
-     */
-    options.setCheckSymbols(true);
-    options.setCheckTypes(runCheckTypes);
+    testSame(externs, js, null);
 
-    List<SourceFile> inputs =
-        ImmutableList.of(
-            SourceFile.fromCode(
-                "testcode",
-                LINE_JOINER.join(
-                    "var goog = {};",
-                    "goog.exportSymbol = function(a, b) {};",
-                    "goog.exportProperty = function(a, b, c) {};",
-                    js)));
-
-    List<SourceFile> externFiles = ImmutableList.of(
-        SourceFile.fromCode("externs", externs));
-
-    Result result = compiler.compile(externFiles, inputs, options);
-
-    assertThat(result.warnings).isEmpty();
-    assertThat(result.errors).isEmpty();
-    assertThat(result.success).isTrue();
-
-    return result;
+    return getLastCompiler().getResult().externExport;
   }
 }
