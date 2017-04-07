@@ -16,38 +16,28 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
-import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
-import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
-import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
-import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 /**
- * The goal with this pass is to reverse the simplifications done in the normalization pass that are
- * not handled by other passes (such as CollapseVariableDeclarations) to avoid making the resulting
- * code larger.
+ * The goal with this pass is to reverse the simplifications done in the
+ * normalization pass that are not handled by other passes (such as
+ * CollapseVariableDeclarations) to avoid making the resulting code larger.
  *
- * <p>Currently this pass only does a few things:
+ * Currently this pass only does two things:
  *
- * <p>1. Push statements into for-loop initializer. This: var a = 0; for(;a<0;a++) {} becomes:
- * for(var a = 0;a<0;a++) {}
+ * 1. Push statements into for-loop initializer. This:
+ *   var a = 0; for(;a<0;a++) {}
+ * becomes:
+ *   for(var a = 0;a<0;a++) {}
  *
- * <p>2. Fold assignments like x = x + 1 into x += 1
- *
- * <p>3. Inline 'var' keyword. For instance: <code>
- *   var x;
- *   if (y) { x = 0; }
- * </code> becomes <code>if (y) { var x = 0; }</code>, effectively undoing what {@link
- * Normalize.HoistVarsOutOfBlocks} does.
+ * 2. Fold assignments like x = x + 1 into x += 1
  *
  * @author johnlenz@google.com (johnlenz)
  */
-class Denormalize implements CompilerPass, Callback, Behavior {
+class Denormalize implements CompilerPass, Callback {
 
   private final AbstractCompiler compiler;
 
@@ -58,57 +48,11 @@ class Denormalize implements CompilerPass, Callback, Behavior {
   @Override
   public void process(Node externs, Node root) {
     NodeTraversal.traverseEs6(compiler, root, this);
-    // Don't inline the VAR declaration if this compilation involves old-style ctemplates.
-    if (compiler.getOptions().syntheticBlockStartMarker == null) {
-      (new ReferenceCollectingCallback(compiler, this, new Es6SyntacticScopeCreator(compiler)))
-          .process(root);
-    }
   }
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     return true;
-  }
-
-  /**
-   * Implements step 3 (inlining the var keyword).
-   */
-  @Override
-  public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {
-    if (t.getScopeRoot().isNormalBlock() && t.getScopeRoot().getParent().isFunction()) {
-      for (Var v : t.getScope().getVarIterable()) {
-        ReferenceCollection references = referenceMap.getReferences(v);
-        Reference declaration = null;
-        Reference assign = null;
-        for (Reference r : references) {
-          if (r.isVarDeclaration()
-              && NodeUtil.isStatement(r.getNode().getParent())
-              && !r.isInitializingDeclaration()) {
-            declaration = r;
-          } else if (assign == null
-              && r.isSimpleAssignmentToName()
-              && r.getScope().getClosestHoistScope().equals(t.getScope())) {
-            assign = r;
-          }
-        }
-        if (declaration != null && assign != null) {
-          Node lhs = assign.getNode();
-          Node assignNode = lhs.getParent();
-          if (assignNode.getParent().isExprResult()) {
-            Node rhs = lhs.getNext();
-            assignNode
-                .getGrandparent()
-                .replaceChild(assignNode.getParent(), IR.var(lhs.detach(), rhs.detach()));
-
-            checkState(
-                declaration.getNode().getParent().isVar(), declaration.getNode().getParent());
-            NodeUtil.removeChild(declaration.getNode().getParent(), declaration.getNode());
-
-            compiler.reportCodeChange();
-          }
-        }
-      }
-    }
   }
 
   @Override
@@ -173,7 +117,7 @@ class Denormalize implements CompilerPass, Callback, Behavior {
         newInitializer = n;
       } else {
         // Extract the expression from EXPR_RESULT node.
-        checkState(n.hasOneChild(), n);
+        Preconditions.checkState(n.hasOneChild(), n);
         newInitializer = n.getFirstChild();
         n.removeChild(newInitializer);
       }
