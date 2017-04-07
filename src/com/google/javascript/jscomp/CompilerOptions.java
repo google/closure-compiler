@@ -33,6 +33,10 @@ import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,9 +48,10 @@ import javax.annotation.Nullable;
 
 /**
  * Compiler options
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class CompilerOptions {
+public class CompilerOptions implements Serializable {
   // The number of characters after which we insert a line break in the code
   static final int DEFAULT_LINE_LENGTH_THRESHOLD = 500;
 
@@ -1093,7 +1098,7 @@ public class CompilerOptions {
   private ImmutableList<ConformanceConfig> conformanceConfigs = ImmutableList.of();
 
   /**
-   * For use in {@value CompilationLevel#WHITESPACE_ONLY} mode, when using goog.module.
+   * For use in {@link CompilationLevel#WHITESPACE_ONLY} mode, when using goog.module.
    */
   boolean wrapGoogModulesForWhitespaceOnly = true;
 
@@ -2687,6 +2692,19 @@ public class CompilerOptions {
 
   public void setModuleResolutionMode(ModuleLoader.ResolutionMode mode) {
     this.moduleResolutionMode = mode;
+  }
+
+  /** Serializes compiler options to a stream. */
+  @GwtIncompatible("ObjectOutputStream")
+  public void serialize(OutputStream objectOutputStream) throws IOException {
+    new java.io.ObjectOutputStream(objectOutputStream).writeObject(this);
+  }
+
+  /** Deserializes compiler options from a stream. */
+  @GwtIncompatible("ObjectInputStream")
+  public static CompilerOptions deserialize(InputStream objectInputStream)
+      throws IOException, ClassNotFoundException {
+    return (CompilerOptions) new java.io.ObjectInputStream(objectInputStream).readObject();
   }
 
   @Override

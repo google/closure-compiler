@@ -21,6 +21,10 @@ import static junit.framework.TestCase.assertNull;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import junit.framework.TestCase;
 
@@ -54,5 +58,31 @@ public final class CompilerOptionsTest extends TestCase {
     // with 'ECMASCRIPT'.
     assertEquals(LanguageMode.ECMASCRIPT3, LanguageMode.fromString("  es3  "));
     assertNull(LanguageMode.fromString("junk"));
+  }
+
+  public void testSerialization() throws Exception {
+    CompilerOptions options = new CompilerOptions();
+    options.setDefineToBooleanLiteral("trueVar", true);
+    options.setDefineToBooleanLiteral("falseVar", false);
+    options.setDefineToNumberLiteral("threeVar", 3);
+    options.setDefineToStringLiteral("strVar", "str");
+    options.setAliasableStrings(new HashSet<>(Arrays.asList("AliasA", "AliasB")));
+    options.setOptimizeArgumentsArray(true);
+    options.setAmbiguateProperties(false);
+
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    options.serialize(byteArrayOutputStream);
+
+    options =
+        CompilerOptions.deserialize(new ByteArrayInputStream(byteArrayOutputStream.toByteArray()));
+
+    Map<String, Node> actual = options.getDefineReplacements();
+    assertEquivalent(new Node(Token.TRUE), actual.get("trueVar"));
+    assertEquivalent(new Node(Token.FALSE), actual.get("falseVar"));
+    assertEquivalent(Node.newNumber(3), actual.get("threeVar"));
+    assertEquivalent(Node.newString("str"), actual.get("strVar"));
+    assertEquals(new HashSet<>(Arrays.asList("AliasA", "AliasB")), options.aliasableStrings);
+    assertFalse(options.shouldAmbiguateProperties());
+    assertTrue(options.optimizeArgumentsArray);
   }
 }

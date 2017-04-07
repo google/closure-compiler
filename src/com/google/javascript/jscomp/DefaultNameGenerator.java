@@ -20,6 +20,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Chars;
 import com.google.javascript.rhino.TokenStream;
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -35,10 +36,10 @@ import javax.annotation.Nullable;
 final class DefaultNameGenerator implements NameGenerator {
 
   /**
-   * Represents a char that can be used in renaming as well as how often
-   * that char appears in the generated code.
+   * Represents a char that can be used in renaming as well as how often that char appears in the
+   * generated code.
    */
-  private static final class CharPriority implements Comparable<CharPriority>{
+  private static final class CharPriority implements Comparable<CharPriority>, Serializable {
     final char name;
     int occurrence;
 
