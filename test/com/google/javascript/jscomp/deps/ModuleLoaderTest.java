@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 /** Tests for {@link ModuleLoader}. */
 
 public final class ModuleLoaderTest extends TestCase {
-  private ImmutableMap<String, String> packageJsonMainEntries =
+  private final ImmutableMap<String, String> packageJsonMainEntries =
       ImmutableMap.of(
           "/B/package.json", "/B/lib/b",
           "/node_modules/B/package.json", "/node_modules/B/lib/b.js");
