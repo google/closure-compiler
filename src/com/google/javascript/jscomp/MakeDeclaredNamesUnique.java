@@ -75,7 +75,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
   @Override
   public void enterScope(NodeTraversal t) {
     Node declarationRoot = t.getScopeRoot();
-    // ES6 function blocks are handled along with PARAM_LIST
+    // Function bodies are handled along with PARAM_LIST
     if (NodeUtil.isFunctionBlock(declarationRoot)) {
       return;
     }
@@ -94,7 +94,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
 
     if (!declarationRoot.isFunction()) {
       // Add the block declarations
-      findDeclaredNames(declarationRoot, renamer, false);
+      findDeclaredNames(t, declarationRoot, renamer, false);
     }
     nameStack.push(renamer);
   }
@@ -138,7 +138,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         }
 
         Node functionBody = n.getNext();
-        findDeclaredNames(functionBody, renamer, false);
+        findDeclaredNames(t, functionBody, renamer, false);
 
         nameStack.push(renamer);
         break;
@@ -200,19 +200,14 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
   }
 
   /**
-   * Traverses the current scope and collects declared names.  Does not
-   * descend into functions or add CATCH exceptions.
+   * Traverses the current scope and collects declared names.
+   *
    * @param recursive Whether this is being called recursively.
    */
-  private void findDeclaredNames(Node n, Renamer renamer, boolean recursive) {
+  private void findDeclaredNames(NodeTraversal t, Node n, Renamer renamer, boolean recursive) {
     Node parent = n.getParent();
 
-    // Don't traverse into the block containing the CATCH node.
-    if (recursive && n.isNormalBlock() && parent.isTry() && n == parent.getSecondChild()) {
-      return;
-    }
-
-    // Don't traverse into function declarations, except for the name of the function itself.
+    // Do a shallow traversal: Don't traverse into the function param list or body; just its name.
     if (recursive && parent.isFunction() && n != parent.getFirstChild()) {
       return;
     }
@@ -220,14 +215,22 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     if (NodeUtil.isVarDeclaration(n)) {
       renamer.addDeclaredName(n.getString(), true);
     } else if (NodeUtil.isBlockScopedDeclaration(n)) {
-      renamer.addDeclaredName(n.getString(), false);
+      if (t.getScopeRoot() == NodeUtil.getEnclosingScopeRoot(n)) {
+        renamer.addDeclaredName(n.getString(), false);
+        // For functions, findDeclaredNames is called from enterScope when entering the function
+        // scope, rather than when entering the function body scope, so we need to check for that
+        // case as well.
+      } else if (t.getScopeRoot().isFunction()
+          && NodeUtil.getEnclosingScopeRoot(n) == NodeUtil.getFunctionBody(t.getScopeRoot())) {
+        renamer.addDeclaredName(n.getString(), false);
+      }
     } else if (NodeUtil.isFunctionDeclaration(n)) {
       Node nameNode = n.getFirstChild();
       renamer.addDeclaredName(nameNode.getString(), true);
     }
 
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      findDeclaredNames(c, renamer, true);
+      findDeclaredNames(t, c, renamer, true);
     }
   }
 
@@ -414,14 +417,14 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
   }
 
   /**
-   * Rename every locally name to be unique, the first encountered declaration
-   * (specifically global names) are left in their original form. Those that are
-   * renamed are made unique by giving them a unique suffix based on
-   * the number of declarations of the name.
+   * Renames every local name to be unique. The first encountered declaration of a given name
+   * (specifically a global declaration) is left in its original form. Those that are renamed are
+   * made unique by giving them a unique suffix based on the number of declarations of the name.
    *
-   * The root ContextualRenamer is assumed to be in GlobalScope.
+   * <p>The root ContextualRenamer is assumed to be in GlobalScope.
    *
-   * Used by the Normalize pass.
+   * <p>Used by the Normalize pass.
+   *
    * @see Normalize
    */
   static class ContextualRenamer implements Renamer {

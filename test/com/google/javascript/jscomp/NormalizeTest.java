@@ -102,7 +102,7 @@ public final class NormalizeTest extends Es6CompilerTestCase {
     testEs6("let a = 0, b = 1, c = 2", "let a = 0; let b = 1; let c = 2");
     testEs6(
         "let a = foo(1), b = foo(2), c = foo(3)", "let a = foo(1); let b = foo(2); let c = foo(3)");
-    testEs6("for (let a = 0, b = 1;;) {}", "for (let a$jscomp$1 = 0, b$jscomp$1 = 1;;) {}");
+    testSameEs6("for (let a = 0, b = 1;;) {}");
   }
 
   public void testLetManyBlocks() {
@@ -123,13 +123,54 @@ public final class NormalizeTest extends Es6CompilerTestCase {
 
   public void testLetOutsideAndInsideForLoop() {
     testEs6(
-        "let a = 'outer'; for (let a = 'inner';;) { break; } alert(a);",
-        "let a = 'outer'; for (let a$jscomp$1 = 'inner';;) { break; } alert(a);");
+        LINE_JOINER.join(
+            "let a = 'outer';",
+            "for (let a = 'inner';;) {",
+            "  break;",
+            "}",
+            "alert(a);"),
+        LINE_JOINER.join(
+            "let a = 'outer';",
+            "for (let a$jscomp$1 = 'inner';;) {",
+            "  break;",
+            "}",
+            "alert(a);"));
+  }
+
+  public void testLetOutsideAndInsideBlock() {
+    testEs6(
+        LINE_JOINER.join(
+            "let a = 'outer';",
+            "{",
+            "  let a = 'inner';",
+            "}",
+            "alert(a);"),
+        LINE_JOINER.join(
+            "let a = 'outer';",
+            "{",
+            "  let a$jscomp$1 = 'inner';",
+            "}",
+            "alert(a);"));
+  }
+
+  public void testLetOutsideAndInsideFn() {
+    testEs6(
+        LINE_JOINER.join(
+            "let a = 'outer';",
+            "function f() {",
+            "  let a = 'inner';",
+            "}",
+            "alert(a);"),
+        LINE_JOINER.join(
+            "let a = 'outer';",
+            "function f() {",
+            "  let a$jscomp$1 = 'inner';",
+            "}",
+            "alert(a);"));
   }
 
   public void testClassInForLoop() {
-    // TODO(tbreisacher): Can we avoid renaming this, like we do for testFunctionInForLoop below?
-    testEs6("for (class a {};;) { break; }", "for (class a$jscomp$2 {};;) { break; }");
+    testSameEs6("for (class a {};;) { break; }");
   }
 
   public void testFunctionInForLoop() {
@@ -137,14 +178,10 @@ public final class NormalizeTest extends Es6CompilerTestCase {
   }
 
   public void testLetInGlobalHoistScope() {
-    testEs6(
+    testSameEs6(
         LINE_JOINER.join(
             "if (true) {",
             "  let x = 1; alert(x);",
-            "}"),
-        LINE_JOINER.join(
-            "if (true) {",
-            "  let x$jscomp$1 = 1; alert(x$jscomp$1);",
             "}"));
 
     testEs6(
@@ -156,21 +193,17 @@ public final class NormalizeTest extends Es6CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "if (true) {",
-            "  let x$jscomp$1 = 1; alert(x$jscomp$1);",
+            "  let x = 1; alert(x);",
             "} else {",
-            "  let x$jscomp$2 = 1; alert(x$jscomp$2);",
+            "  let x$jscomp$1 = 1; alert(x$jscomp$1);",
             "}"));
   }
 
   public void testConstInGlobalHoistScope() {
-    testEs6(
+    testSameEs6(
         LINE_JOINER.join(
             "if (true) {",
             "  const x = 1; alert(x);",
-            "}"),
-        LINE_JOINER.join(
-            "if (true) {",
-            "  const x$jscomp$1 = 1; alert(x$jscomp$1);",
             "}"));
 
     testEs6(
@@ -182,9 +215,9 @@ public final class NormalizeTest extends Es6CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "if (true) {",
-            "  const x$jscomp$1 = 1; alert(x$jscomp$1);",
+            "  const x = 1; alert(x);",
             "} else {",
-            "  const x$jscomp$2 = 1; alert(x$jscomp$2);",
+            "  const x$jscomp$1 = 1; alert(x$jscomp$1);",
             "}"));
   }
 
@@ -426,10 +459,10 @@ public final class NormalizeTest extends Es6CompilerTestCase {
          "function f() { var a = 1; a = 2 }");
     test("var a = 1; function f(){ var a = 2 }",
          "var a = 1; function f(){ var a$jscomp$1 = 2 }");
-    test("function f() { var a = 1; label1:var a = 2 }",
-         "function f() { var a = 1; label1:{a = 2}}");
-    test("function f() { var a = 1; label1:var a }",
-         "function f() { var a = 1; label1:{} }");
+    test(
+        "function f() { var a = 1; label1:var a = 2 }",
+        "function f() { var a = 1; label1:{a = 2}}");
+    test("function f() { var a = 1; label1:var a }", "function f() { var a = 1; label1:{} }");
     test("function f() { var a = 1; for(var a in b); }",
          "function f() { var a = 1; for(a in b); }");
   }
@@ -536,12 +569,12 @@ public final class NormalizeTest extends Es6CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "if (x) {",
-            "  let e$jscomp$1;",
-            "  alert(e$jscomp$1);",
+            "  let e;",
+            "  alert(e);",
             "}",
             "if (y) {",
-            "  let e$jscomp$2;",
-            "  alert(e$jscomp$2);",
+            "  let e$jscomp$1;",
+            "  alert(e$jscomp$1);",
             "}"));
   }
 

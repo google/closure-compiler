@@ -2177,6 +2177,10 @@ public final class NodeUtil {
     return getEnclosingNode(n, createsBlockScope);
   }
 
+  public static Node getEnclosingScopeRoot(Node n) {
+    return getEnclosingNode(n, createsScope);
+  }
+
   public static boolean isInFunction(Node n) {
     return getEnclosingFunction(n) != null;
   }
@@ -2532,10 +2536,21 @@ public final class NodeUtil {
     }
   }
 
-  private static final Predicate<Node> createsBlockScope = new Predicate<Node>() {
+  static final Predicate<Node> createsBlockScope = new Predicate<Node>() {
     @Override
     public boolean apply(Node n) {
       return createsBlockScope(n);
+    }
+  };
+
+  static final Predicate<Node> createsScope = new Predicate<Node>() {
+    @Override
+    public boolean apply(Node n) {
+      return createsBlockScope(n) || n.isFunction()
+          // The ROOT nodes that are the root of the externs tree or main JS tree do not
+          // create scopes. The parent of those two, which is the root of the entire AST and
+          // therefore has no parent, is the only ROOT node that creates a scope.
+          || (n.isRoot() && n.getParent() == null);
     }
   };
 

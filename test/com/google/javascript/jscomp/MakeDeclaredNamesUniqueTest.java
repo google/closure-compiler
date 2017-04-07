@@ -278,6 +278,62 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
         "function foo(){var arguments$jscomp$0;}");
   }
 
+  public void testClassInForLoop() {
+    useDefaultRenamer = true;
+    testSameEs6("for (class a {};;) { break; }");
+  }
+
+  public void testFunctionInForLoop() {
+    useDefaultRenamer = true;
+    testSameEs6("for (function a() {};;) { break; }");
+  }
+
+  public void testLetsInSeparateBlocks() {
+    useDefaultRenamer = true;
+    testEs6(
+        LINE_JOINER.join(
+            "if (x) {",
+            "  let e;",
+            "  alert(e);",
+            "}",
+            "if (y) {",
+            "  let e;",
+            "  alert(e);",
+            "}"),
+        LINE_JOINER.join(
+            "if (x) {",
+            "  let e;",
+            "  alert(e);",
+            "}",
+            "if (y) {",
+            "  let e$jscomp$1;",
+            "  alert(e$jscomp$1);",
+            "}"));
+  }
+
+  public void testConstInGlobalHoistScope() {
+    useDefaultRenamer = true;
+    testSameEs6(
+        LINE_JOINER.join(
+            "if (true) {",
+            "  const x = 1; alert(x);",
+            "}"));
+
+    testEs6(
+        LINE_JOINER.join(
+            "if (true) {",
+            "  const x = 1; alert(x);",
+            "} else {",
+            "  const x = 1; alert(x);",
+            "}"),
+        LINE_JOINER.join(
+            "if (true) {",
+            "  const x = 1; alert(x);",
+            "} else {",
+            "  const x$jscomp$1 = 1; alert(x$jscomp$1);",
+            "}"));
+  }
+
   public void testMakeLocalNamesUniqueWithoutContext() {
     // Set the test type
     this.useDefaultRenamer = false;
