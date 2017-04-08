@@ -42,17 +42,15 @@ public class BrowserModuleResolver extends ModuleResolver {
       String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno) {
 
     if (ModuleLoader.isAmbiguousIdentifier(moduleAddress)) {
-      if (errorHandler != null) {
-        errorHandler.report(
-            CheckLevel.WARNING,
-            JSError.make(
-                sourcename,
-                lineno,
-                colno,
-                ModuleLoader.INVALID_MODULE_PATH,
-                moduleAddress,
-                "BROWSER"));
-      }
+      errorHandler.report(
+          CheckLevel.WARNING,
+          JSError.make(
+              sourcename,
+              lineno,
+              colno,
+              ModuleLoader.INVALID_MODULE_PATH,
+              moduleAddress,
+              "BROWSER"));
       return null;
     }
 
