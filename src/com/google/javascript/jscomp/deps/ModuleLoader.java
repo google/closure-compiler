@@ -24,8 +24,10 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.ErrorHandler;
+import com.google.javascript.jscomp.JSError;
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Map;
@@ -56,7 +58,7 @@ public final class ModuleLoader {
       DiagnosticType.warning(
           "JSC_INVALID_MODULE_PATH", "Invalid module path \"{0}\" for resolution mode \"{1}\"");
 
-  @Nullable private final ErrorHandler errorHandler;
+  private final ErrorHandler errorHandler;
 
   /** Root URIs to match module roots against. */
   private final ImmutableList<String> moduleRootPaths;
@@ -84,7 +86,7 @@ public final class ModuleLoader {
     checkNotNull(inputs);
     checkNotNull(pathResolver);
     this.pathResolver = pathResolver;
-    this.errorHandler = errorHandler;
+    this.errorHandler = errorHandler == null ? new NoopErrorHandler() : errorHandler;
     this.moduleRootPaths = createRootPaths(moduleRoots, pathResolver);
     this.modulePaths =
         resolvePaths(
@@ -386,5 +388,9 @@ public final class ModuleLoader {
      * Exact match, then ".js", then ".json" file extensions are searched.
      */
     NODE
+  }
+
+  private final class NoopErrorHandler implements ErrorHandler {
+    public void report(CheckLevel level, JSError error) {}
   }
 }

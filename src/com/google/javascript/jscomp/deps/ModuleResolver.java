@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.deps;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.ErrorHandler;
 import java.util.Map;
@@ -42,7 +43,7 @@ public abstract class ModuleResolver {
   }
 
   Map<String, String> getPackageJsonMainEntries() {
-    return null;
+    return ImmutableMap.of();
   }
 
   @Nullable

@@ -57,7 +57,7 @@ public class BrowserModuleResolver extends ModuleResolver {
     }
 
     String loadAddress = locate(scriptAddress, moduleAddress);
-    if (loadAddress == null && errorHandler != null) {
+    if (loadAddress == null) {
       errorHandler.report(
           CheckLevel.WARNING,
           JSError.make(sourcename, lineno, colno, ModuleLoader.LOAD_WARNING, moduleAddress));

@@ -48,11 +48,9 @@ public class LegacyModuleResolver extends ModuleResolver {
     String loadAddress = locate(scriptAddress, moduleAddress);
 
     if (loadAddress == null) {
-      if (errorHandler != null) {
-        errorHandler.report(
-            CheckLevel.WARNING,
-            JSError.make(sourcename, lineno, colno, ModuleLoader.LOAD_WARNING, moduleAddress));
-      }
+      errorHandler.report(
+          CheckLevel.WARNING,
+          JSError.make(sourcename, lineno, colno, ModuleLoader.LOAD_WARNING, moduleAddress));
       return canonicalizePath(scriptAddress, moduleAddress);
     }
     return loadAddress;

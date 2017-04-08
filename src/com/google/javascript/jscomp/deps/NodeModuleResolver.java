@@ -155,7 +155,7 @@ public class NodeModuleResolver extends ModuleResolver {
       loadAddress = resolveJsModuleFromRegistry(scriptAddress, moduleAddress);
     }
 
-    if (loadAddress == null && errorHandler != null) {
+    if (loadAddress == null) {
       errorHandler.report(
           CheckLevel.WARNING,
           JSError.make(sourcename, lineno, colno, ModuleLoader.LOAD_WARNING, moduleAddress));
