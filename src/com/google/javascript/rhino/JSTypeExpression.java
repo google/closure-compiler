@@ -111,7 +111,7 @@ public final class JSTypeExpression implements Serializable {
 
   @Override
   public int hashCode() {
-    return root.toStringTree().hashCode();
+    return root.hashCode();
   }
 
   /**
