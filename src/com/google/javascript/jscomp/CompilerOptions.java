@@ -727,8 +727,9 @@ public class CompilerOptions implements Serializable {
   /** A CodingConvention to use during the compile. */
   private CodingConvention codingConvention;
 
+  @Nullable
   public String syntheticBlockStartMarker;
-
+  @Nullable
   public String syntheticBlockEndMarker;
 
   /** Compiling locale */

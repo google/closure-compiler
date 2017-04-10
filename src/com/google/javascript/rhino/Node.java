@@ -872,7 +872,7 @@ public class Node implements Serializable {
     checkArgument(newChild.next == null, "The new child node has next siblings.");
     checkArgument(newChild.previous == null, "The new child node has previous siblings.");
     checkArgument(newChild.parent == null, "The new child node already has a parent.");
-    checkState(child.parent == this);
+    checkState(child.parent == this, "", child, parent);
 
     // Copy over important information.
     newChild.useSourceInfoIfMissingFrom(child);

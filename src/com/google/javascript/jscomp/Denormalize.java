@@ -16,24 +16,23 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 /**
- * The goal with this pass is to reverse the simplifications done in the
- * normalization pass that are not handled by other passes (such as
- * CollapseVariableDeclarations) to avoid making the resulting code larger.
+ * The goal with this pass is to reverse the simplifications done in the normalization pass that are
+ * not handled by other passes (such as CollapseVariableDeclarations) to avoid making the resulting
+ * code larger.
  *
- * Currently this pass only does two things:
+ * <p>Currently this pass only does two things:
  *
- * 1. Push statements into for-loop initializer. This:
- *   var a = 0; for(;a<0;a++) {}
- * becomes:
- *   for(var a = 0;a<0;a++) {}
+ * <p>1. Push statements into for-loop initializer. This: <pre>var a = 0; for(;a<0;a++) {}</pre>
+ * becomes: <pre>for(var a = 0;a<0;a++) {}</pre>
  *
- * 2. Fold assignments like x = x + 1 into x += 1
+ * <p>2. Fold assignments like x = x + 1 into x += 1
  *
  * @author johnlenz@google.com (johnlenz)
  */
@@ -117,7 +116,7 @@ class Denormalize implements CompilerPass, Callback {
         newInitializer = n;
       } else {
         // Extract the expression from EXPR_RESULT node.
-        Preconditions.checkState(n.hasOneChild(), n);
+        checkState(n.hasOneChild(), n);
         newInitializer = n.getFirstChild();
         n.removeChild(newInitializer);
       }
