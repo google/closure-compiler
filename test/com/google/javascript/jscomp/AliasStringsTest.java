@@ -29,7 +29,6 @@ public final class AliasStringsTest extends CompilerTestCase {
   private static final Set<String> ALL_STRINGS = null;
 
   private Set<String> strings = ALL_STRINGS;
-  private JSModuleGraph moduleGraph = null;
   private boolean hashReduction = false;
 
   public AliasStringsTest() {
@@ -39,7 +38,7 @@ public final class AliasStringsTest extends CompilerTestCase {
   @Override
   public CompilerPass getProcessor(Compiler compiler) {
     AliasStrings pass =
-        new AliasStrings(compiler, moduleGraph, strings, "(?i)secret", false);
+        new AliasStrings(compiler, compiler.getModuleGraph(), strings, "(?i)secret", false);
     if (hashReduction) {
       pass.unitTestHashReductionMask = 0;
     }
@@ -343,8 +342,6 @@ public final class AliasStringsTest extends CompilerTestCase {
             "f('---------hi---------'); alert('--------adios-------');"
                 + "h('-------peaches------'); h('-------peaches------');");
 
-    moduleGraph = new JSModuleGraph(modules);
-
     test(
         modules,
         new String[] {
@@ -376,7 +373,6 @@ public final class AliasStringsTest extends CompilerTestCase {
               + "h($$S_$2d$2d$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d$2d);"
               + "h($$S_$2d$2d$2d$2d$2d$2d$2dpeaches$2d$2d$2d$2d$2d$2d);",
         });
-    moduleGraph = null;
   }
 
   public void testStringsInModules2() {
@@ -400,8 +396,6 @@ public final class AliasStringsTest extends CompilerTestCase {
             // m3
             "g();");
 
-    moduleGraph = new JSModuleGraph(modules);
-
     test(
         modules,
         new String[] {
@@ -421,7 +415,6 @@ public final class AliasStringsTest extends CompilerTestCase {
           // m4
           "g();",
         });
-    moduleGraph = null;
   }
 
   public void testAliasInCommonModuleInclusive() {
@@ -437,8 +430,6 @@ public final class AliasStringsTest extends CompilerTestCase {
             "h('ciaociaociaociaociao' + 'adios');",
             // m3
             "g();");
-
-    moduleGraph = new JSModuleGraph(modules);
 
     // The "ciao" string is used in m1 and m2.
     // Since m2 depends on m1, we should create the module there and not force it into m0.
@@ -456,7 +447,6 @@ public final class AliasStringsTest extends CompilerTestCase {
           // m3
           "g();",
         });
-    moduleGraph = null;
   }
 
 
@@ -470,7 +460,6 @@ public final class AliasStringsTest extends CompilerTestCase {
             // m2
             "function foo() { f('goodgoodgoodgoodgood') }");
 
-    moduleGraph = new JSModuleGraph(modules);
     test(
         modules,
         new String[] {
@@ -481,7 +470,5 @@ public final class AliasStringsTest extends CompilerTestCase {
           // m2
           "function foo() {f($$S_goodgoodgoodgoodgood)}",
         });
-
-    moduleGraph = null;
   }
 }
