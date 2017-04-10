@@ -38,7 +38,7 @@ import java.util.Set;
  */
 public final class RawNominalType extends Namespace {
   // If true, we can't add more properties to this type.
-  private boolean isFinalized;
+  private boolean isFrozen;
   // Each instance of the class has these properties by default
   private PersistentMap<String, Property> classProps = PersistentMap.create();
   // The object pointed to by the prototype property of the constructor of
@@ -160,7 +160,7 @@ public final class RawNominalType extends Namespace {
   }
 
   JSType getPrototypeObject() {
-    Preconditions.checkState(this.isFinalized);
+    Preconditions.checkState(this.isFrozen);
     return this.protoObject;
   }
 
@@ -196,7 +196,7 @@ public final class RawNominalType extends Namespace {
 
   public boolean isStruct() {
     // The objectKind of interfaces can change during GTI.
-    Preconditions.checkState(isFinalized() || isClass());
+    Preconditions.checkState(isFrozen() || isClass());
     return this.objectKind.isStruct();
   }
 
@@ -208,8 +208,8 @@ public final class RawNominalType extends Namespace {
     return this.isAbstractClass;
   }
 
-  public boolean isFinalized() {
-    return this.isFinalized;
+  public boolean isFrozen() {
+    return this.isFrozen;
   }
 
   ImmutableList<String> getTypeParameters() {
@@ -225,7 +225,7 @@ public final class RawNominalType extends Namespace {
   }
 
   public void setCtorFunction(FunctionType ctorFn) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isFrozen);
     this.ctorFn = ctorFn;
   }
 
@@ -242,7 +242,7 @@ public final class RawNominalType extends Namespace {
 
   /** @return Whether the superclass can be added without creating a cycle. */
   public boolean addSuperClass(NominalType superclass) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isFrozen);
     Preconditions.checkState(this.superclass == null);
     if (superclass.hasAncestorClass(this)) {
       return false;
@@ -253,7 +253,7 @@ public final class RawNominalType extends Namespace {
   }
 
   private void addSubtype(RawNominalType subtype) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isFrozen);
     if (!isBuiltinObject()) {
       this.subtypes.add(subtype);
     }
@@ -314,7 +314,7 @@ public final class RawNominalType extends Namespace {
 
   /** @return Whether the interface can be added without creating a cycle. */
   public boolean addInterfaces(ImmutableSet<NominalType> interfaces) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isFrozen);
     Preconditions.checkState(this.interfaces == null);
     Preconditions.checkNotNull(interfaces);
     if (this.isInterface()) {
@@ -471,7 +471,7 @@ public final class RawNominalType extends Namespace {
   }
 
   ImmutableSet<String> getAllPropsOfInterface() {
-    if (!this.isFinalized) {
+    if (!this.isFrozen) {
       // During GlobalTypeInfo, we sometimes try to check subtyping between
       // structural interfaces, but it's not possible because we may have not
       // seen all their properties yet.
@@ -495,7 +495,7 @@ public final class RawNominalType extends Namespace {
 
   ImmutableSet<String> getAllPropsOfClass() {
     Preconditions.checkState(isClass());
-    Preconditions.checkState(this.isFinalized);
+    Preconditions.checkState(this.isFrozen);
     if (this.allProps == null) {
       ImmutableSet.Builder<String> builder = ImmutableSet.builder();
       if (this.superclass != null) {
@@ -507,7 +507,7 @@ public final class RawNominalType extends Namespace {
   }
 
   public void addPropertyWhichMayNotBeOnAllInstances(String pname, JSType type) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isFrozen);
     if (this.classProps.containsKey(pname) || this.protoProps.containsKey(pname)) {
       return;
     }
@@ -521,7 +521,7 @@ public final class RawNominalType extends Namespace {
 
   /** Add a new non-optional declared property to instances of this class */
   public void addClassProperty(String pname, Node defSite, JSType type, boolean isConstant) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isFrozen);
     if (type == null && isConstant) {
       type = this.commonTypes.UNKNOWN;
     }
@@ -539,7 +539,7 @@ public final class RawNominalType extends Namespace {
 
   /** Add a new undeclared property to instances of this class */
   public void addUndeclaredClassProperty(String pname, JSType type, Node defSite) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isFrozen);
     // Only do so if there isn't a declared prop already.
     if (mayHaveProp(pname)) {
       return;
@@ -551,7 +551,7 @@ public final class RawNominalType extends Namespace {
 
   /** Add a new declared prototype property to this class */
   public void addProtoProperty(String pname, Node defSite, JSType type, boolean isConstant) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isFrozen);
     if (type == null && isConstant) {
       type = this.commonTypes.UNKNOWN;
     }
@@ -583,7 +583,7 @@ public final class RawNominalType extends Namespace {
 
   /** Add a new undeclared prototype property to this class */
   public void addUndeclaredProtoProperty(String pname, Node defSite, JSType inferredType) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isFrozen);
     Property existingProp = this.protoProps.get(pname);
     if (existingProp == null || !existingProp.isDeclared()) {
       JSType oldType = existingProp == null ? null : existingProp.getType();
@@ -606,13 +606,13 @@ public final class RawNominalType extends Namespace {
 
   /** Add a new non-optional declared property to this class's constructor */
   public void addCtorProperty(String pname, Node defSite, JSType type, boolean isConstant) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isFrozen);
     super.addProperty(pname, defSite, type, isConstant);
   }
 
   /** Add a new undeclared property to this class's constructor */
   public void addUndeclaredCtorProperty(String pname, Node defSite) {
-    Preconditions.checkState(!this.isFinalized);
+    Preconditions.checkState(!this.isFrozen);
     super.addUndeclaredProperty(pname, defSite, this.commonTypes.UNKNOWN, false);
   }
 
@@ -620,10 +620,9 @@ public final class RawNominalType extends Namespace {
     return super.getPropDeclaredType(pname);
   }
 
-  @Override
-  public void finalize() {
+  public void freeze() {
     Preconditions.checkState(
-        !this.isFinalized, "Raw type already finalized: %s", this.defSite);
+        !this.isFrozen, "Raw type already frozen: %s", this.defSite);
     Preconditions.checkNotNull(
         this.ctorFn, "Null constructor function for raw type: %s", this.defSite);
     if (this.interfaces == null) {
@@ -681,7 +680,7 @@ public final class RawNominalType extends Namespace {
         this.protoProps.with("constructor", Property.make(ctorJstype, ctorJstype)),
         null, null, false, ObjectKind.UNRESTRICTED));
     addCtorProperty("prototype", null, this.protoObject, false);
-    this.isFinalized = true;
+    this.isFrozen = true;
   }
 
   StringBuilder appendTo(StringBuilder builder) {
@@ -696,7 +695,7 @@ public final class RawNominalType extends Namespace {
 
   @Override
   protected JSType computeJSType() {
-    Preconditions.checkState(this.isFinalized, "Unexpected not-finalized type: %s", this);
+    Preconditions.checkState(this.isFrozen, "Unexpected not-frozen type: %s", this);
     Preconditions.checkState(this.namespaceType == null);
     return JSType.fromObjectType(ObjectType.makeObjectType(
         this.commonTypes, this.commonTypes.getFunctionType(), null, this.ctorFn,

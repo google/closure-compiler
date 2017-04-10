@@ -477,7 +477,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         win = rawType;
         continue;
       }
-      checkAndFinalizeNominalType(rawType);
+      checkAndFreezeNominalType(rawType);
     }
     JSType globalThisType;
     if (win != null) {
@@ -485,13 +485,13 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       // people pass window around rather than using it directly.
       // Copying the properties is correct only when there is a single object
       // of type Window in the program. But in very rare cases, people subclass Window.
-      // Then, win is finalized here and we don't copy the properties.
-      // Window has been subclassed iff it is already finalized here.
+      // Then, win is frozen here and we don't copy the properties.
+      // Window has been subclassed iff it is already frozen here.
       Namespace winNs = this.globalScope.getNamespace(WINDOW_INSTANCE);
-      if (winNs != null && !win.isFinalized()) {
+      if (winNs != null && !win.isFrozen()) {
         winNs.copyWindowProperties(this.commonTypes, win);
       }
-      checkAndFinalizeNominalType(win);
+      checkAndFreezeNominalType(win);
       // Type the global THIS as window
       globalThisType = win.getInstanceAsJSType();
     } else {
@@ -505,7 +505,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     nominaltypesByNode = null;
     propertyDefs = null;
     for (NTIScope s : scopes) {
-      s.finalizeScope();
+      s.freezeScope();
     }
 
     // Traverse the externs and annotate them with types.
@@ -577,7 +577,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   }
 
   private Collection<PropertyDef> getPropDefsFromInterface(NominalType nominalType, String pname) {
-    Preconditions.checkArgument(nominalType.isFinalized());
+    Preconditions.checkArgument(nominalType.isFrozen());
     Preconditions.checkArgument(nominalType.isInterface() || nominalType.isBuiltinObject());
     if (nominalType.getPropDeclaredType(pname) == null) {
       return ImmutableSet.of();
@@ -595,7 +595,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
   private PropertyDef getPropDefFromClass(NominalType nominalType, String pname) {
     while (nominalType.getPropDeclaredType(pname) != null) {
-      Preconditions.checkArgument(nominalType.isFinalized());
+      Preconditions.checkArgument(nominalType.isFrozen());
       Preconditions.checkArgument(nominalType.isClass());
 
       if (propertyDefs.get(nominalType.getId(), pname) != null) {
@@ -607,18 +607,18 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     return null;
   }
 
-  private void checkAndFinalizeNominalType(RawNominalType rawType) {
-    if (rawType.isFinalized()) {
+  private void checkAndFreezeNominalType(RawNominalType rawType) {
+    if (rawType.isFrozen()) {
       return;
     }
     NominalType superClass = rawType.getSuperClass();
     Set<String> nonInheritedPropNames = rawType.getAllOwnProps();
-    if (superClass != null && !superClass.isFinalized()) {
-      checkAndFinalizeNominalType(superClass.getRawNominalType());
+    if (superClass != null && !superClass.isFrozen()) {
+      checkAndFreezeNominalType(superClass.getRawNominalType());
     }
     for (NominalType superInterf : rawType.getInterfaces()) {
-      if (!superInterf.isFinalized()) {
-        checkAndFinalizeNominalType(superInterf.getRawNominalType());
+      if (!superInterf.isFrozen()) {
+        checkAndFreezeNominalType(superInterf.getRawNominalType());
       }
     }
 
@@ -627,7 +627,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     Multimap<String, JSType> propTypesToProcess = LinkedHashMultimap.create();
     // Collect inherited types for extended classes
     if (superClass != null) {
-      Preconditions.checkState(superClass.isFinalized());
+      Preconditions.checkState(superClass.isFrozen());
       // TODO(blickly): Can we optimize this to skip unnecessary iterations?
       for (String pname : superClass.getAllPropsOfClass()) {
         if (superClass.isAbstractClass()
@@ -646,7 +646,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
     // Collect inherited types for extended/implemented interfaces
     for (NominalType superInterf : rawType.getInterfaces()) {
-      Preconditions.checkState(superInterf.isFinalized());
+      Preconditions.checkState(superInterf.isFrozen());
       for (String pname : superInterf.getAllPropsOfInterface()) {
         nonInheritedPropNames.remove(pname);
         checkSuperProperty(rawType, superInterf, pname,
@@ -742,12 +742,12 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       }
     }
 
-    // Finalize nominal type once all properties are added.
-    rawType.finalize();
+    // Freeze nominal type once all properties are added.
+    rawType.freeze();
     if (rawType.isBuiltinObject()) {
       NominalType literalObj = this.commonTypes.getLiteralObjNominalType();
-      if (!literalObj.isFinalized()) {
-        literalObj.getRawNominalType().finalize();
+      if (!literalObj.isFrozen()) {
+        literalObj.getRawNominalType().freeze();
       }
     }
   }

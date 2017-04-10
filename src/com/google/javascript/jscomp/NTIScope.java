@@ -52,8 +52,8 @@ final class NTIScope implements DeclaredTypeRegistry {
   // Name on the function AST node; null for top scope & anonymous functions
   private final String name;
   private final JSTypes commonTypes;
-  // Becomes true after finalizeScope is run; so it's true during NTI.
-  private boolean isFinalized = false;
+  // Becomes true after freezeScope is run; so it's true during NTI.
+  private boolean isFrozen = false;
 
   // A local w/out declared type is mapped to null, not to this.commonTypes.UNKNOWN.
   private final Map<String, JSType> locals = new LinkedHashMap<>();
@@ -66,7 +66,7 @@ final class NTIScope implements DeclaredTypeRegistry {
   // and are defined in an outer scope.
   private final Set<String> outerVars = new LinkedHashSet<>();
   // When a function is also used as a namespace, we add entries to both
-  // localFunDefs and localNamespaces. After finalizeScope (when NTI runs),
+  // localFunDefs and localNamespaces. After freezeScope (when NTI runs),
   // the function has an entry in localFunDefs, and in locals or externs.
   private final Map<String, NTIScope> localFunDefs = new LinkedHashMap<>();
   private ImmutableSet<String> unknownTypeNames = ImmutableSet.of();
@@ -187,7 +187,7 @@ final class NTIScope implements DeclaredTypeRegistry {
 
   boolean isFunctionNamespace(String name) {
     Preconditions.checkArgument(!name.contains("."));
-    Preconditions.checkState(isFinalized);
+    Preconditions.checkState(isFrozen);
     Declaration d = getDeclaration(name, false);
     if (d == null || d.getFunctionScope() == null || d.getTypeOfSimpleDecl() == null) {
       return false;
@@ -573,7 +573,7 @@ final class NTIScope implements DeclaredTypeRegistry {
     } else if (localFunDefs.containsKey(name)) {
       // After finalization, the externs contain the correct type for
       // external function namespaces, don't rely on localFunDefs
-      if (isFinalized && externs.containsKey(name)) {
+      if (isFrozen && externs.containsKey(name)) {
         type = externs.get(name);
       }
     } else if (localTypedefs.containsKey(name) || localNamespaces.containsKey(name)) {
@@ -656,7 +656,7 @@ final class NTIScope implements DeclaredTypeRegistry {
     localEnums = null;
   }
 
-  void finalizeScope() {
+  void freezeScope() {
     Preconditions.checkNotNull(this.declaredType, "No declared type for scope: %s", this.root);
     unknownTypeNames = ImmutableSet.of();
     // For now, we put types of namespaces directly into the locals.
@@ -690,7 +690,7 @@ final class NTIScope implements DeclaredTypeRegistry {
     localNamespaces = ImmutableMap.of();
     localTypedefs = ImmutableMap.of();
     escapedVars = ImmutableSet.of();
-    isFinalized = true;
+    isFrozen = true;
   }
 
   // A scope must know about the free variables used in outer scopes,

@@ -55,8 +55,8 @@ public final class NominalType {
   // expect fully-instantiated types for properties defined on types, etc., but by accessing
   // the raw nominal type directly they will get the uninstantiated generic types instead.
   public RawNominalType getRawNominalType() {
-    // If the raw nominal type is finalized, then we are not in GlobalTypeInfo any more.
-    Preconditions.checkState(!this.rawType.isFinalized());
+    // If the raw nominal type is frozen, then we are not in GlobalTypeInfo any more.
+    Preconditions.checkState(!this.rawType.isFrozen());
     return this.rawType;
   }
 
@@ -284,8 +284,8 @@ public final class NominalType {
     return this.rawType.isStructuralInterface();
   }
 
-  public boolean isFinalized() {
-    return this.rawType.isFinalized();
+  public boolean isFrozen() {
+    return this.rawType.isFrozen();
   }
 
   boolean hasAncestorClass(RawNominalType ancestor) {
@@ -309,7 +309,7 @@ public final class NominalType {
   }
 
   public NominalType getInstantiatedSuperclass() {
-    Preconditions.checkState(this.rawType.isFinalized());
+    Preconditions.checkState(this.rawType.isFrozen());
     if (this.rawType.getSuperClass() == null) {
       return null;
     }
@@ -317,14 +317,14 @@ public final class NominalType {
   }
 
   public JSType getPrototypePropertyOfCtor() {
-    Preconditions.checkState(this.rawType.isFinalized());
+    Preconditions.checkState(this.rawType.isFrozen());
     return this.rawType.getCtorPropDeclaredType("prototype");
   }
 
   // We require finalization for the interfaces here because the inheritance
-  // chain of each type may not be correct until after the type is finalized.
+  // chain of each type may not be correct until after the type is frozen.
   public ImmutableSet<NominalType> getInstantiatedInterfaces() {
-    Preconditions.checkState(this.rawType.isFinalized());
+    Preconditions.checkState(this.rawType.isFrozen());
     ImmutableSet.Builder<NominalType> result = ImmutableSet.builder();
     for (NominalType interf : this.rawType.getInterfaces()) {
       result.add(interf.instantiateGenerics(typeMap));
@@ -333,7 +333,7 @@ public final class NominalType {
   }
 
   // The main difference from getInstantiatedInterfaces is that this method
-  // can be used on non-finalized types.
+  // can be used on non-frozen types.
   private ImmutableSet<NominalType> getInstantiatedIObjectInterfaces() {
     ImmutableSet.Builder<NominalType> result = ImmutableSet.builder();
     for (NominalType interf : this.rawType.getInterfaces()) {
@@ -437,7 +437,7 @@ public final class NominalType {
       return true;
     }
     if (other.isInterface()) {
-      // If thisRaw is not finalized, thisRaw.interfaces may be null.
+      // If thisRaw is not frozen, thisRaw.interfaces may be null.
       for (NominalType i : thisRaw.getInterfaces()) {
         if (i.instantiateGenerics(this.typeMap).isNominalSubtypeOf(other)) {
           return true;

@@ -1331,7 +1331,7 @@ final class ObjectType implements TypeWithProperties {
     }
     Set<String> thisProps = !thisNt.isBuiltinObject() && thisNt.isStructuralInterface()
         ? thisNt.getAllPropsOfInterface() : this.props.keySet();
-    if (thisProps == null) {// Can happen during GTI when types aren't finalized yet.
+    if (thisProps == null) {// Can happen during GTI when types aren't frozen yet.
       return true;
     }
     return unifyPropsWithSubtype(other, thisProps, typeParameters, typeMultimap, subSuperMap);

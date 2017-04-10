@@ -33,7 +33,7 @@ import java.util.Set;
  */
 public abstract class Namespace {
   private Map<String, Namespace> namespaces = ImmutableMap.of();
-  // Finalize the namespace after GTI and null-out the typedefs.
+  // Freeze the namespace after GTI and null-out the typedefs.
   private Map<String, Typedef> typedefs = ImmutableMap.of();
   // "Simple type" properties (i.e. represented as JSTypes rather than something
   // more specific).
@@ -257,9 +257,9 @@ public abstract class Namespace {
       if (ns instanceof RawNominalType) {
         RawNominalType rawType = (RawNominalType) ns;
         // Hack: circular namespace here, skip adding Window.
-        if (!rawType.isFinalized()) {
+        if (!rawType.isFrozen()) {
           Preconditions.checkState(rawType.getName().equals("Window"),
-              "Unexpected unfinalized type %s", rawType.getName());
+              "Unexpected unfrozen type %s", rawType.getName());
           continue;
         }
       }
