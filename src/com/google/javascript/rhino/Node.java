@@ -54,6 +54,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
 /**
@@ -1203,7 +1204,7 @@ public class Node implements Serializable {
     }
   }
 
-
+  @CheckReturnValue
   public String toStringTree() {
     return toStringTreeImpl();
   }
