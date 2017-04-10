@@ -47,7 +47,13 @@ public class Scope implements StaticScope {
    */
   Scope(Scope parent, Node rootNode) {
     Preconditions.checkNotNull(parent);
-    Preconditions.checkNotNull(rootNode);
+    // TODO(tbreisacher): Can we tighten this to just NodeUtil.createsScope?
+    Preconditions.checkState(
+        NodeUtil.createsScope(rootNode)
+            || rootNode.isScript()
+            || rootNode.isRoot()
+            || rootNode.isNormalBlock(),
+        rootNode);
     Preconditions.checkArgument(
         rootNode != parent.rootNode, "rootNode should not be the parent's root node", rootNode);
 
@@ -57,7 +63,13 @@ public class Scope implements StaticScope {
   }
 
   protected Scope(Node rootNode) {
-    Preconditions.checkNotNull(rootNode);
+    // TODO(tbreisacher): Can we tighten this to just NodeUtil.createsScope?
+    Preconditions.checkState(
+        NodeUtil.createsScope(rootNode)
+            || rootNode.isScript()
+            || rootNode.isRoot()
+            || rootNode.isNormalBlock(),
+        rootNode);
     this.parent = null;
     this.rootNode = rootNode;
     this.depth = 0;

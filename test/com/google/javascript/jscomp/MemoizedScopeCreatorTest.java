@@ -30,30 +30,30 @@ import junit.framework.TestCase;
 public final class MemoizedScopeCreatorTest extends TestCase {
 
   public void testMemoization() throws Exception {
-    Node trueNode = new Node(Token.TRUE);
-    Node falseNode = new Node(Token.FALSE);
+    Node block1 = new Node(Token.BLOCK);
+    Node block2 = new Node(Token.BLOCK);
     // Wow, is there really a circular dependency between JSCompiler and
     // SyntacticScopeCreator?
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
     ScopeCreator creator = new MemoizedScopeCreator(
         SyntacticScopeCreator.makeTyped(compiler));
-    Scope scopeA = creator.createScope(trueNode, null);
-    assertSame(scopeA, creator.createScope(trueNode, null));
-    assertNotSame(scopeA, creator.createScope(falseNode, null));
+    Scope scopeA = creator.createScope(block1, null);
+    assertSame(scopeA, creator.createScope(block1, null));
+    assertNotSame(scopeA, creator.createScope(block2, null));
   }
 
   public void testPreconditionCheck() throws Exception {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
-    Node trueNode = new Node(Token.TRUE);
+    Node block = new Node(Token.BLOCK);
     ScopeCreator creator = new MemoizedScopeCreator(
         SyntacticScopeCreator.makeTyped(compiler));
-    Scope scopeA = creator.createScope(trueNode, null);
+    Scope scopeA = creator.createScope(block, null);
 
     boolean handled = false;
     try {
-      creator.createScope(trueNode, scopeA);
+      creator.createScope(block, scopeA);
     } catch (IllegalStateException e) {
       handled = true;
     }

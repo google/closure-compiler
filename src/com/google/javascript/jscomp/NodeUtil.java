@@ -2543,14 +2543,18 @@ public final class NodeUtil {
     }
   };
 
+  static boolean createsScope(Node n) {
+    return createsBlockScope(n) || n.isFunction() || n.isModuleBody()
+        // The ROOT nodes that are the root of the externs tree or main JS tree do not
+        // create scopes. The parent of those two, which is the root of the entire AST and
+        // therefore has no parent, is the only ROOT node that creates a scope.
+        || (n.isRoot() && n.getParent() == null);
+  }
+
   static final Predicate<Node> createsScope = new Predicate<Node>() {
     @Override
     public boolean apply(Node n) {
-      return createsBlockScope(n) || n.isFunction() || n.isModuleBody()
-          // The ROOT nodes that are the root of the externs tree or main JS tree do not
-          // create scopes. The parent of those two, which is the root of the entire AST and
-          // therefore has no parent, is the only ROOT node that creates a scope.
-          || (n.isRoot() && n.getParent() == null);
+      return createsScope(n);
     }
   };
 
