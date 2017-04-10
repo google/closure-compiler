@@ -20,10 +20,8 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -274,39 +272,6 @@ public final class JSModuleGraph {
     for (JSModule dep : m.getDependencies()) {
       deps.add(dep);
       addDeps(deps, dep);
-    }
-  }
-
-  /**
-   * Replaces any files that are found multiple times with a single instance in
-   * the closest parent module that is common to all modules where it appears.
-   *
-   * JSCompiler normally errors if you attempt to compile modules containing the
-   * same file.  This method can be used to remove duplicates before compiling
-   * to avoid such an error.
-   */
-  public void coalesceDuplicateFiles() {
-    Multimap<String, JSModule> fileRefs = LinkedHashMultimap.create();
-    for (JSModule module : modules) {
-      for (CompilerInput jsFile : module.getInputs()) {
-        fileRefs.put(jsFile.getName(), module);
-      }
-    }
-
-    for (String path : fileRefs.keySet()) {
-      Collection<JSModule> refModules = fileRefs.get(path);
-      if (refModules.size() > 1) {
-        JSModule depModule = getDeepestCommonDependencyInclusive(refModules);
-        CompilerInput file = refModules.iterator().next().getByName(path);
-        for (JSModule module : refModules) {
-          if (module != depModule) {
-            module.removeByName(path);
-          }
-        }
-        if (!refModules.contains(depModule)) {
-          depModule.add(file);
-        }
-      }
     }
   }
 

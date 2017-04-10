@@ -126,30 +126,6 @@ public final class JSModuleGraphTest extends TestCase {
     assertTransitiveDepsDeepestFirst(F, E, C, B, A);
   }
 
-  public void testCoalesceDuplicateFiles() {
-    A.add(SourceFile.fromCode("a.js", ""));
-
-    B.add(SourceFile.fromCode("a.js", ""));
-    B.add(SourceFile.fromCode("b.js", ""));
-
-    C.add(SourceFile.fromCode("b.js", ""));
-    C.add(SourceFile.fromCode("c.js", ""));
-
-    E.add(SourceFile.fromCode("c.js", ""));
-    E.add(SourceFile.fromCode("d.js", ""));
-
-    graph.coalesceDuplicateFiles();
-
-    assertThat(A.getInputs()).hasSize(2);
-    assertEquals("a.js", A.getInputs().get(0).getName());
-    assertEquals("b.js", A.getInputs().get(1).getName());
-    assertThat(B.getInputs()).isEmpty();
-    assertThat(C.getInputs()).hasSize(1);
-    assertEquals("c.js", C.getInputs().get(0).getName());
-    assertThat(E.getInputs()).hasSize(1);
-    assertEquals("d.js", E.getInputs().get(0).getName());
-  }
-
   public void testManageDependencies1() throws Exception {
     List<CompilerInput> inputs = setUpManageDependenciesTest();
     DependencyOptions depOptions = new DependencyOptions();
