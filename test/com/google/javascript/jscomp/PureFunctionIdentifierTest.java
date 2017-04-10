@@ -713,11 +713,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         prefix + "return externObj.foo" + suffix, ImmutableList.<String>of());
   }
 
-  /**
-   * Note that this works because object literals are always seen as local according to {@link
-   * NodeUtil#evaluatesToLocalValue}
-   */
-  public void testReturnLocalityTaintLiteralWithGlobal() {
+  public void testReturnLocalityTaintObjectLiteralWithGlobal() {
     // return empty object literal.  This is completely local
     String source = LINE_JOINER.join(
         "function f() { return {} }",
@@ -726,11 +722,27 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     checkLocalityOfMarkedCalls(source, ImmutableList.of("f"));
     // return obj literal with global taint.
     source = LINE_JOINER.join(
+        "var global = new Object();",
+        "function f() { return {'asdf': global} }",
+        "f();");
+    checkLocalityOfMarkedCalls(source, ImmutableList.<String>of());
+  }
+
+  public void testReturnLocalityTaintArrayLiteralWithGlobal() {
+    String source =
+        LINE_JOINER.join(
+            "function f() { return []; }",
+            "f();",
+            "function g() { return [1, {}]; }",
+            "g();");
+    checkLocalityOfMarkedCalls(source, ImmutableList.of("f", "g"));
+    // return obj literal with global taint.
+    source =
+        LINE_JOINER.join(
             "var global = new Object();",
-            "function f() { return {'asdf': global} }",
-            "f();"
-        );
-    checkLocalityOfMarkedCalls(source, ImmutableList.of("f"));
+            "function f() { return [2 ,global]; }",
+            "f();");
+    checkLocalityOfMarkedCalls(source, ImmutableList.<String>of());
   }
 
   public void testReturnLocalityMultipleDefinitionsSameName() {
@@ -944,14 +956,14 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   public void testLocalizedSideEffects8() throws Exception {
     // Returning a local object that has been modified
     // is not a global side-effect.
-    // TODO(johnlenz): Not yet. Propagate local object information.
-    String source = LINE_JOINER.join(
-        "/** @constructor A */ function A() {};",
-        "function f() {",
-        "  var a = new A; a.foo = 1; return a;",
-        "}",
-        "f()"
-    );
+    // TODO(tdeegan): Not yet. Propagate local object information.
+    String source =
+        LINE_JOINER.join(
+            "/** @constructor A */ function A() {};",
+            "function f() {",
+            "  var a = new A; a.foo = 1; return a;",
+            "}",
+            "f()");
     assertPureCallsMarked(source, ImmutableList.of("A"));
   }
 
@@ -984,20 +996,25 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testLocalizedSideEffects11() throws Exception {
+    // TODO(tdeegan): updateA is side effect free.
     // Calling a function of a local object that taints this.
-    String source = LINE_JOINER.join(
-        "/** @constructor */ function A() {}",
-        "A.prototype.update = function() { this.x = 1; };",
-        "/** @constructor */ function B() { ",
-        "  this.a_ = new A();",
-        "}",
-        "B.prototype.updateA = function() {",
-        "  var b = this.a_;",
-        "  b.update();",
-        "};",
-        "var x = new B();",
-        "x.updateA();"
-    );
+    String source =
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function A() {}",
+            "A.prototype.update = function() { this.x = 1; };",
+            "",
+            "/** @constructor */",
+            "function B() { ",
+            "  this.a_ = new A();",
+            "}",
+            "B.prototype.updateA = function() {",
+            "  var b = this.a_;",
+            "  b.update();",
+            "};",
+            "",
+            "var x = new B();",
+            "x.updateA();");
     assertPureCallsMarked(source, ImmutableList.of("A", "B"));
   }
 

@@ -1172,9 +1172,10 @@ public final class NodeUtilTest extends TestCase {
 
     // We can't know if new objects are local unless we know
     // that they don't alias themselves.
+    // TODO(tdeegan): Revisit this.
     assertFalse(testLocalValue("new x()"));
 
-    // property references are assume to be non-local
+    // property references are assumed to be non-local
     assertFalse(testLocalValue("(new x()).y"));
     assertFalse(testLocalValue("(new x())['y']"));
 
@@ -1190,9 +1191,17 @@ public final class NodeUtilTest extends TestCase {
     assertTrue(testLocalValue("[]"));
     assertTrue(testLocalValue("{}"));
 
-    // The contents of arrays and objects don't matter
-    assertTrue(testLocalValue("[x]"));
-    assertTrue(testLocalValue("{'a':x}"));
+    assertFalse(testLocalValue("[x]"));
+    assertFalse(testLocalValue("{'a':x}"));
+    assertTrue(testLocalValue("{'a': {'b': 2}}"));
+    assertFalse(testLocalValue("{'a': {'b': global}}"));
+    assertTrue(testLocalValue("{get someGetter() { return 1; }}"));
+    assertTrue(testLocalValue("{get someGetter() { return global; }}"));
+    assertTrue(testLocalValue("{set someSetter(value) {}}"));
+    assertTrue(testLocalValue("{[someComputedProperty]: {}}"));
+    assertFalse(testLocalValue("{[someComputedProperty]: global}"));
+    assertFalse(testLocalValue("{[someComputedProperty]: {'a':x}}"));
+    assertTrue(testLocalValue("{[someComputedProperty]: {'a':1}}"));
 
     // increment/decrement results in primitive number, the previous value is
     // always coersed to a number (even in the post.
