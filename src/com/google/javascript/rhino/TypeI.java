@@ -109,11 +109,20 @@ public interface TypeI {
 
   boolean isEnumElement();
 
+  // TODO(sdh): When OTI is gone, these can be renamed to simply isString and isNumber
+  // (provided we have sufficiently clear JavaDoc to specify that it does *not* include
+  // the object wrapper type).
   /**
    * Whether the type is a scalar string. In OTI, the isString method returns true for String
    * objects as well.
    */
   boolean isStringValueType();
+
+  /**
+   * Whether the type is a scalar number. In OTI, the isNumber method returns true for Number
+   * objects as well.
+   */
+  boolean isNumberValueType();
 
   ObjectTypeI autoboxAndGetObject();
 

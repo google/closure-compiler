@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.MinimizedCondition.MinimizationStyle;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.jstype.TernaryValue;
 
 /**
@@ -1036,13 +1036,13 @@ class PeepholeMinimizeConditions
     }
 
     Token op = n.getToken();
-    Preconditions.checkArgument(
-        op == Token.EQ || op == Token.NE || op == Token.SHEQ || op == Token.SHNE);
+    boolean isShallow = op == Token.SHEQ || op == Token.SHNE;
+    Preconditions.checkArgument(op == Token.EQ || op == Token.NE || isShallow);
 
     Node left = n.getFirstChild();
     Node right = n.getLastChild();
     BooleanCoercability booleanCoercability =
-        canConvertComparisonToBooleanCoercion(left, right, op);
+        canConvertComparisonToBooleanCoercion(left, right, isShallow);
     if (booleanCoercability != BooleanCoercability.NONE) {
       n.detachChildren();
       Node objExpression = booleanCoercability == BooleanCoercability.LEFT ? left : right;
@@ -1071,8 +1071,14 @@ class PeepholeMinimizeConditions
     RIGHT
   }
 
+  /**
+   * Determines whether the types on either side of an (in)equality operation
+   * are amenable to converting to a simple truthiness check.  Specifically,
+   * this is the case when comparing an object type against null or undefined,
+   * or when comparing a numeric type against zero.
+   */
   private static BooleanCoercability canConvertComparisonToBooleanCoercion(
-      Node left, Node right, Token op) {
+      Node left, Node right, boolean isShallow) {
     // Convert null or undefined check of an object to coercion.
     boolean leftIsNull = left.isNull();
     boolean rightIsNull = right.isNull();
@@ -1083,9 +1089,10 @@ class PeepholeMinimizeConditions
 
     boolean leftIsObjectType = isObjectType(left);
     boolean rightIsObjectType = isObjectType(right);
-    if (op == Token.SHEQ || op == Token.SHNE) {
-      if ((leftIsObjectType && !left.getJSType().isNullable() && rightIsUndefined)
-          || (rightIsObjectType && !right.getJSType().isNullable() && leftIsUndefined)) {
+    if (isShallow) {
+      // Shallow compare: must guarantee object cannot be the other type of null/undefined.
+      if ((leftIsObjectType && !left.getTypeI().isNullable() && rightIsUndefined)
+          || (rightIsObjectType && !right.getTypeI().isNullable() && leftIsUndefined)) {
         return leftIsNullOrUndefined ? BooleanCoercability.RIGHT : BooleanCoercability.LEFT;
       }
     } else {
@@ -1107,28 +1114,36 @@ class PeepholeMinimizeConditions
     return BooleanCoercability.NONE;
   }
 
+  /**
+   * Returns whether the node's type is an object type, which can be
+   * reduced to a truthiness check when compared against null or undefined.
+   */
   private static boolean isObjectType(Node n) {
-    JSType jsType = n.getJSType();
-    if (jsType == null) {
+    TypeI type = n.getTypeI();
+    if (type == null) {
       return false;
     }
-    jsType = jsType.restrictByNotNullOrUndefined();
-    return !jsType.isUnknownType()
-        && !jsType.isNoType()
-        && !jsType.isAllType()
-        && jsType.isObject();
+    type = type.restrictByNotNullOrUndefined();
+    return !type.isUnknownType()
+        && !type.isBottom()
+        && !type.isTop()
+        && type.isObjectType();
   }
 
+  /**
+   * Returns whether the node's type is a numeric type, which can be reduced
+   * to a truthiness check when compared against zero.
+   */
   private static boolean isNumberType(Node n) {
-    JSType jsType = n.getJSType();
-    if (jsType == null) {
+    TypeI type = n.getTypeI();
+    if (type == null) {
       return false;
     }
     // Don't restrict by nullable. Nullable numbers are not coercable.
-    return !jsType.isUnknownType()
-        && !jsType.isNoType()
-        && !jsType.isAllType()
-        && jsType.isNumberValueType();
+    return !type.isUnknownType()
+        && !type.isBottom()
+        && !type.isTop()
+        && type.isNumberValueType();
   }
 
   private Node replaceNode(Node lhs, MinimizedCondition.MeasuredNode rhs) {
