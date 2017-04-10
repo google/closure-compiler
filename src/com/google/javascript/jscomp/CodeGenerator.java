@@ -530,7 +530,6 @@ public class CodeGenerator {
       case MEMBER_FUNCTION_DEF:
       case MEMBER_VARIABLE_DEF:
         {
-          n.getParent().toStringTree();
           Preconditions.checkState(
               n.getParent().isObjectLit()
                   || n.getParent().isClassMembers()
