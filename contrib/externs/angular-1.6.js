@@ -1369,6 +1369,7 @@ angular.$cacheFactory;
 angular.$cacheFactory_;
 
 /**
+ * @param {string} cacheId
  * @return {!angular.cacheFactory.Cache|undefined}
  */
 angular.$cacheFactory_.get;
