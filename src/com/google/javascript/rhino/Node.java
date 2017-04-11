@@ -1565,6 +1565,16 @@ public class Node implements Serializable {
     return node;
   }
 
+  /** @return True if this Node is {@code node} or a descendant of {@code node}. */
+  public boolean isDescendantOf(Node node) {
+    for (Node n = this; n != null; n = n.parent) {
+      if (n == node) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /**
    * Iterates all of the node's ancestors excluding itself.
    */
