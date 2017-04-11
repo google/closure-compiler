@@ -156,5 +156,15 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
       super.test(compiler, expected, error, warning);
     }
   }
+
+  void testWarningOtiNti(
+      String js, DiagnosticType otiWarning, DiagnosticType ntiWarning) {
+    TypeInferenceMode saved = this.mode;
+    this.mode = TypeInferenceMode.OTI_ONLY;
+    testWarning(js, otiWarning);
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testWarning(js, ntiWarning);
+    this.mode = saved;
+  }
 }
 
