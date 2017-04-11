@@ -254,7 +254,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
           n.isAssign()) {
         n.removeChild(rhs);
         n.replaceWith(rhs);
-        compiler.reportCodeChange();
+        compiler.reportChangeToEnclosingScope(rhs);
         return;
       }
 
@@ -307,7 +307,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
         throw new IllegalStateException("Unknown statement");
       }
 
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(parent);
       return;
     } else {
       for (Node c = n.getFirstChild(); c != null;) {
