@@ -143,6 +143,7 @@ public enum CompilationLevel {
     // Do not call applySafeCompilationOptions(options) because the call can
     // create possible conflicts between multiple diagnostic groups.
 
+    options.setCheckSymbols(true);
     options.setCheckTypes(true);
 
     // All the safe optimizations.

@@ -265,6 +265,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testReflectedMethods() {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    args.add("--jscomp_off=checkVars");
     test(
         "/** @constructor */" +
         "function Foo() {}" +
@@ -281,6 +282,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testInlineVariables() {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    args.add("--jscomp_off=checkVars");
     // Verify local var "val" in method "bar" is not inlined over the "inc"
     // method call (which has side-effects) but "c" is inlined (which can't be
     // modified by the call).
@@ -517,6 +519,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testIssue81() {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    args.add("--jscomp_off=checkVars");
     useStringComparison = true;
     test("eval('1'); var x = eval; x('2');",
          "eval(\"1\");(0,eval)(\"2\");");
@@ -550,6 +553,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testHiddenSideEffect() {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    args.add("--jscomp_off=checkVars");
     test("element.offsetWidth;",
          "element.offsetWidth", CheckSideEffects.USELESS_CODE_ERROR);
   }
@@ -1429,6 +1433,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testGoogAssertStripping() {
     args.add("--compilation_level=ADVANCED_OPTIMIZATIONS");
+    args.add("--jscomp_off=checkVars");
     test("goog.asserts.assert(false)", "");
     args.add("--debug");
     test("goog.asserts.assert(false)", "goog.$asserts$.$assert$(!1)");
