@@ -32,6 +32,7 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import junit.framework.TestCase;
 
@@ -2488,6 +2489,24 @@ public final class NodeUtilTest extends TestCase {
         getCallNode("Object.defineProperty(this);")));
     assertFalse(NodeUtil.isObjectDefinePropertyDefinition(
         getCallNode("Object.defineProperty();")));
+  }
+
+  public void testCorrectValidationOfScriptWithChangeAfterFunction() {
+    Node script = parse("function A() {} if (0) { A(); }");
+    Preconditions.checkState(script.isScript());
+
+    Node clone = script.cloneTree();
+    Map<Node, Node> mtoc = NodeUtil.mapMainToClone(script, clone);
+
+    // Here we make a change in that doesn't change the script node
+    // child count.
+    getCallNode(script).detach();
+
+    // Mark the script as changed
+    script.setChangeTime(100);
+
+    // will throw if no change is detected.
+    NodeUtil.verifyScopeChanges("test", mtoc, script);
   }
 
   private boolean executedOnceTestCase(String code) {

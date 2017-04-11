@@ -4735,18 +4735,9 @@ public final class NodeUtil {
 
   /** Checks that the scope roots marked as changed have indeed changed */
   public static void verifyScopeChanges(
-      String passName, Map<Node, Node> map, Node main) {
+      String passName, final Map<Node, Node> mtoc, Node main) {
     final String passNameMsg = passName.isEmpty() ? "" : passName + ": ";
 
-    // compiler is passed only to call compiler.toSource during debugging to see
-    // mismatches in scopes
-
-    // If verifyUnchangedNodes is false, we are comparing the initial AST to the
-    // final AST. Don't check unmarked nodes b/c they may have been changed by
-    // non-loopable passes.
-    // If verifyUnchangedNodes is true, we are comparing the ASTs before & after
-    // a pass. Check all scope roots.
-    final Map<Node, Node> mtoc = map;
     Node clone = mtoc.get(main);
     if (main.getChangeTime() > clone.getChangeTime()) {
       Preconditions.checkState(!isEquivalentToExcludingFunctions(main, clone));
@@ -4820,9 +4811,10 @@ public final class NodeUtil {
     while (thisChild != null && thatChild != null) {
       if (thisChild.isFunction() || thisChild.isScript()) {
         //  don't compare function name, parameters or bodies.
-        return thatChild.getToken() == thisChild.getToken();
-      }
-      if (!isEquivalentToExcludingFunctions(thisChild, thatChild)) {
+        if (thatChild.getToken() != thisChild.getToken()) {
+          return false;
+        }
+      } else if (!isEquivalentToExcludingFunctions(thisChild, thatChild)) {
         return false;
       }
       thisChild = thisChild.getNext();
