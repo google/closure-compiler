@@ -25,11 +25,18 @@ import com.google.javascript.rhino.Node;
 
 public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
+  private ImmutableList<String> moduleRoots = null;
+
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     // Trigger module processing after parsing.
     options.setProcessCommonJSModules(true);
+
+    if (moduleRoots != null) {
+      options.setModuleRoots(moduleRoots);
+    }
+
     return options;
   }
 
@@ -784,5 +791,31 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module$test.y = null;",
             "var x$$module$test;",
             "x$$module$test = module$test.y"));
+  }
+
+  public void testAbsoluteImportsWithModuleRoots() {
+    moduleRoots = ImmutableList.of("/base");
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(Compiler.joinPathParts("base", "mod", "name.js"), ""),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("base", "test", "sub.js"),
+                LINE_JOINER.join(
+                    "var name = require('/mod/name');",
+                    "(function() { module$mod$name(); })();"))),
+        ImmutableList.of(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("base", "mod", "name.js"),
+                LINE_JOINER.join(
+                    "/** @fileoverview",
+                    " * @suppress {missingProvide|missingRequire}",
+                    " */",
+                    "goog.provide('module$mod$name');")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("base", "test", "sub.js"),
+                LINE_JOINER.join(
+                    "goog.require('module$mod$name');",
+                    "var name = module$mod$name;",
+                    "(function() { module$mod$name(); })();"))));
   }
 }
