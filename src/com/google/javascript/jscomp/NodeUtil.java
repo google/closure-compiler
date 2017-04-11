@@ -4720,7 +4720,8 @@ public final class NodeUtil {
   }
 
   private static void mtocHelper(Map<Node, Node> map, Node main, Node clone) {
-    if (main.isFunction()) {
+    // TODO(johnlenz): determine if MODULE_BODY is useful here.
+    if (main.isFunction() || main.isScript()) {
       map.put(main, clone);
     }
     Node mchild = main.getFirstChild();
@@ -4733,8 +4734,10 @@ public final class NodeUtil {
   }
 
   /** Checks that the scope roots marked as changed have indeed changed */
-  public static void verifyScopeChanges(Map<Node, Node> map, Node main,
-      boolean verifyUnchangedNodes) {
+  public static void verifyScopeChanges(
+      String passName, Map<Node, Node> map, Node main) {
+    final String passNameMsg = passName.isEmpty() ? "" : passName + ": ";
+
     // compiler is passed only to call compiler.toSource during debugging to see
     // mismatches in scopes
 
@@ -4744,25 +4747,28 @@ public final class NodeUtil {
     // If verifyUnchangedNodes is true, we are comparing the ASTs before & after
     // a pass. Check all scope roots.
     final Map<Node, Node> mtoc = map;
-    final boolean checkUnchanged = verifyUnchangedNodes;
     Node clone = mtoc.get(main);
     if (main.getChangeTime() > clone.getChangeTime()) {
       Preconditions.checkState(!isEquivalentToExcludingFunctions(main, clone));
-    } else if (checkUnchanged) {
+    } else {
       Preconditions.checkState(isEquivalentToExcludingFunctions(main, clone));
     }
     visitPreOrder(main,
         new Visitor() {
           @Override
           public void visit(Node n) {
-            if (n.isFunction() && mtoc.containsKey(n)) {
+            if ((n.isScript() || n.isFunction()) && mtoc.containsKey(n)) {
               Node clone = mtoc.get(n);
               if (n.getChangeTime() > clone.getChangeTime()) {
                 Preconditions.checkState(
-                    !isEquivalentToExcludingFunctions(n, clone));
-              } else if (checkUnchanged) {
+                    !isEquivalentToExcludingFunctions(n, clone),
+                    "%sunchanged scope marked as changed",
+                    passNameMsg);
+              } else {
                 Preconditions.checkState(
-                    isEquivalentToExcludingFunctions(n, clone));
+                    isEquivalentToExcludingFunctions(n, clone),
+                    "%schange scope not marked as changed",
+                    passNameMsg);
               }
             }
           }
@@ -4803,7 +4809,7 @@ public final class NodeUtil {
     if (thisNode == null || thatNode == null) {
       return thisNode == null && thatNode == null;
     }
-    if (!thisNode.isEquivalentToShallow(thatNode)) {
+    if (!thisNode.isEquivalentWithSideEffectsToShallow(thatNode)) {
       return false;
     }
     if (thisNode.getChildCount() != thatNode.getChildCount()) {

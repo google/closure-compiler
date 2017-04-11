@@ -56,19 +56,11 @@ class PhaseOptimizer implements CompilerPass {
   private NamedPass currentPass;
   // For each pass, remember the time at the end of the pass's last run.
   private Map<NamedPass, Integer> lastRuns;
-  private Node currentScope;
-  // Starts at 0, increases as "interesting" things happen.
-  // Nothing happens at time START_TIME, the first pass starts at time 1.
-  // The correctness of scope-change tracking relies on Node/getIntProp
-  // returning 0 if the custom attribute on a node hasn't been set.
-  private int timestamp;
   // The time of the last change made to the program by any pass.
   private int lastChange;
   private static final int START_TIME = 0;
   private final Node jsRoot;
-  // Compiler/reportChangeToScope must call reportCodeChange to update all
-  // change handlers. This flag prevents double update in ScopedChangeHandler.
-  private boolean crossScopeReporting;
+
   private final boolean useSizeHeuristicToStopOptimizationLoop;
 
   // Used for sanity checks between loopable passes
@@ -130,8 +122,7 @@ class PhaseOptimizer implements CompilerPass {
     this.passes = new ArrayList<>();
     this.progressRange = range;
     this.inLoop = false;
-    this.crossScopeReporting = false;
-    this.timestamp = this.lastChange = START_TIME;
+    this.lastChange = START_TIME;
     this.useSizeHeuristicToStopOptimizationLoop =
         comp.getOptions().useSizeHeuristicToStopOptimizationLoop;
   }
@@ -198,6 +189,7 @@ class PhaseOptimizer implements CompilerPass {
   }
 
   private void setSanityCheckState() {
+    // TODO(johnlenz): change this to always validate. See b/37164291
     if (inLoop) {
       lastAst = jsRoot.cloneTree();
       mtoc = NodeUtil.mapMainToClone(jsRoot, lastAst);
@@ -242,8 +234,8 @@ class PhaseOptimizer implements CompilerPass {
 
   private void maybePrintAstHashcodes(String passName, Node root) {
     if (printAstHashcodes) {
-      String hashCodeMsg = "AST hashCode after " + passName + ": " +
-          compiler.toSource(root).hashCode();
+      String hashCodeMsg = "AST hashCode after " + passName + ": "
+          + compiler.toSource(root).hashCode();
       System.err.println(hashCodeMsg);
       compiler.addToDebugLog(hashCodeMsg);
     }
@@ -252,7 +244,7 @@ class PhaseOptimizer implements CompilerPass {
   /**
    * Runs the sanity check if it is available.
    */
-  private void maybeSanityCheck(Node externs, Node root) {
+  private void maybeSanityCheck(String passName, Node externs, Node root) {
     if (sanityCheck != null) {
       sanityCheck.create(compiler).process(externs, root);
       // The cross-module passes are loopable and ran together, but do not
@@ -261,7 +253,7 @@ class PhaseOptimizer implements CompilerPass {
       if (inLoop
           && !currentPass.name.equals(Compiler.CROSS_MODULE_CODE_MOTION_NAME)
           && !currentPass.name.equals(Compiler.CROSS_MODULE_METHOD_MOTION_NAME)) {
-        NodeUtil.verifyScopeChanges(mtoc, jsRoot, true);
+        NodeUtil.verifyScopeChanges(passName, mtoc, jsRoot);
       }
     }
   }
@@ -320,7 +312,7 @@ class PhaseOptimizer implements CompilerPass {
           tracker.recordPassStop(name, traceRuntime);
         }
         maybePrintAstHashcodes(name, root);
-        maybeSanityCheck(externs, root);
+        maybeSanityCheck(name, externs, root);
       } catch (IllegalStateException e) {
         // TODO(johnlenz): Remove this once the normalization checks report
         // errors instead of exceptions.
@@ -331,14 +323,6 @@ class PhaseOptimizer implements CompilerPass {
     @Override
     public String toString() {
       return "pass: " + name;
-    }
-  }
-
-  void setScope(Node n) {
-    // NodeTraversal causes setScope calls outside loops; ignore them.
-    if (inLoop) {
-      // Find the top-level node in the scope.
-      currentScope = n.isFunction() ? n : getEnclosingScope(n);
     }
   }
 
@@ -353,37 +337,6 @@ class PhaseOptimizer implements CompilerPass {
         || n.getChangeTime() > timeOfLastRun;
   }
 
-  private Node getEnclosingScope(Node n) {
-    while (n.getParent() != null) {
-      n = n.getParent();
-      if (n.isFunction() || n.isScript()) {
-        return n;
-      }
-    }
-    return n;
-  }
-
-  void reportChangeToEnclosingScope(Node n) {
-    lastChange = timestamp;
-    getEnclosingScope(n).setChangeTime(timestamp);
-    // Every code change happens at a different time
-    timestamp++;
-  }
-
-  /**
-   * Records that the currently-running pass may report cross-scope changes.
-   * When this happens, we don't want to falsely report the current scope as
-   * changed when reportChangeToScope is called from Compiler.
-   */
-  void startCrossScopeReporting() {
-    crossScopeReporting = true;
-  }
-
-  /** The currently-running pass won't report cross-scope changes. */
-  void endCrossScopeReporting() {
-    crossScopeReporting = false;
-  }
-
   /**
    * A change handler that marks scopes as changed when reportChange is called.
    */
@@ -391,27 +344,19 @@ class PhaseOptimizer implements CompilerPass {
     private int lastCodeChangeQuery;
 
     ScopedChangeHandler() {
-      this.lastCodeChangeQuery = timestamp;
+      this.lastCodeChangeQuery = compiler.getChangeStamp();
     }
 
     @Override
     public void reportChange() {
-      if (crossScopeReporting) {
-        // This call was caused by Compiler/reportChangeToEnclosingScope,
-        // do nothing.
-        return;
-      }
-      lastChange = timestamp;
-      currentScope.setChangeTime(timestamp);
-      // Every code change happens at a different time
-      timestamp++;
+      lastChange = compiler.getChangeStamp();
     }
 
     private boolean hasCodeChangedSinceLastCall() {
       boolean result = lastChange > lastCodeChangeQuery;
-      lastCodeChangeQuery = timestamp;
+      lastCodeChangeQuery = compiler.getChangeStamp();
       // The next call to the method will happen at a different time
-      timestamp++;
+      compiler.incrementChangeStamp();
       return result;
     }
   }
@@ -449,7 +394,11 @@ class PhaseOptimizer implements CompilerPass {
       // Set up function-change tracking
       scopeHandler = new ScopedChangeHandler();
       compiler.addChangeHandler(scopeHandler);
-      setScope(root);
+
+      // TODO(johnlenz): It is unclear why "setScope" is called here. Try to remove
+      // this.
+      compiler.setScope(root);
+
       // lastRuns is initialized before each loop. This way, when a pass is run
       // in the 2nd loop for the 1st time, it looks at all scopes.
       lastRuns = new HashMap<>();
@@ -487,11 +436,11 @@ class PhaseOptimizer implements CompilerPass {
                     && !runInPrevIter.contains(pass))
                 || (state == State.RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER
                         && madeChanges.contains(pass))) {
-              timestamp++;
+              compiler.incrementChangeStamp();
               currentPass = pass;
               pass.process(externs, root);
               runInPrevIter.add(pass);
-              lastRuns.put(pass, timestamp);
+              lastRuns.put(pass, compiler.getChangeStamp());
               if (hasHaltingErrors()) {
                 return;
               } else if (scopeHandler.hasCodeChangedSinceLastCall()) {

@@ -265,6 +265,12 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /** Let the PhaseOptimizer know which scope a pass is currently analyzing */
   abstract void setScope(Node n);
 
+  /** A monotonically increasing value to identify a change */
+  abstract int getChangeStamp();
+
+  /** Called to indicate that the current change stamp has been used */
+  abstract void incrementChangeStamp();
+
   /** Returns the root of the source tree, ignoring externs */
   abstract Node getJsRoot();
 

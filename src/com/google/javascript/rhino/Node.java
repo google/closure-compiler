@@ -1779,14 +1779,19 @@ public class Node implements Serializable {
     return isEquivalentTo(node, false, true, false, false);
   }
 
+  /** Checks equivalence without going into child nodes */
+  public final boolean isEquivalentToShallow(Node node) {
+    return isEquivalentTo(node, false, false, false, false);
+  }
+
   /** Returns true if this node is equivalent semantically to another including side efffects. */
   public final boolean isEquivalentWithSideEffectsTo(Node node) {
     return isEquivalentTo(node, false, true, false, true);
   }
 
-  /** Checks equivalence without going into child nodes */
-  public final boolean isEquivalentToShallow(Node node) {
-    return isEquivalentTo(node, false, false, false, false);
+  /** Returns true if this node is equivalent semantically to another including side efffects. */
+  public final boolean isEquivalentWithSideEffectsToShallow(Node node) {
+    return isEquivalentTo(node, false, false, false, true);
   }
 
   /**

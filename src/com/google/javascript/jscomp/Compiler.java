@@ -262,6 +262,19 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private static final Joiner pathJoiner = Joiner.on(File.separator);
 
+  // TODO(johnlenz): remove "currentScope".
+  // Used as a shortcut for change tracking.  This is the current scope being
+  // visited by the "current" NodeTraversal.  This can't be thread safe so
+  // we should move it into the NodeTraversal and require explicit changed
+  // nodes elsewhere so we aren't blocked from doing this elsewhere.
+  private Node currentScope = null;
+
+  // Starts at 0, increases as "interesting" things happen.
+  // Nothing happens at time START_TIME, the first pass starts at time 1.
+  // The correctness of scope-change tracking relies on Node/getIntProp
+  // returning 0 if the custom attribute on a node hasn't been set.
+  private int changeStamp = 1;
+
   /**
    * Creates a Compiler that reports errors and warnings to its logger.
    */
@@ -2293,13 +2306,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     codeChangeHandlers.remove(handler);
   }
 
-  @Override
-  void setScope(Node n) {
-    if (phaseOptimizer != null) {
-      phaseOptimizer.setScope(n);
-    }
-  }
-
   Node getExternsRoot() {
     return externsRoot;
   }
@@ -2307,26 +2313,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   Node getJsRoot() {
     return jsRoot;
-  }
-
-  @Override
-  boolean hasScopeChanged(Node n) {
-    if (phaseOptimizer == null) {
-      return true;
-    }
-    return phaseOptimizer.hasScopeChanged(n);
-  }
-
-  @Override
-  void reportChangeToEnclosingScope(Node n) {
-    if (phaseOptimizer != null) {
-      phaseOptimizer.reportChangeToEnclosingScope(n);
-      phaseOptimizer.startCrossScopeReporting();
-      reportCodeChange();
-      phaseOptimizer.endCrossScopeReporting();
-    } else {
-      reportCodeChange();
-    }
   }
 
   /**
@@ -2340,7 +2326,62 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
+  public int getChangeStamp() {
+    return changeStamp;
+  }
+
+  @Override
+  public void incrementChangeStamp() {
+    changeStamp++;
+  }
+
+  @Override
+  void setScope(Node n) {
+    currentScope = (n.isFunction() || n.isScript()) ? n : getEnclosingChangeScope(n);
+  }
+
+  private Node getEnclosingChangeScope(Node n) {
+    while (n.getParent() != null) {
+      n = n.getParent();
+      if (n.isFunction() || n.isScript()) {
+        return n;
+      }
+    }
+    return n;
+  }
+
+  private void recordChange(Node n) {
+    n.setChangeTime(changeStamp);
+    // Every code change happens at a different time
+    changeStamp++;
+  }
+
+  @Override
+  boolean hasScopeChanged(Node n) {
+    if (phaseOptimizer == null) {
+      return true;
+    }
+    return phaseOptimizer.hasScopeChanged(n);
+  }
+
+  @Override
   public void reportCodeChange() {
+    // TODO(johnlenz): if this is called with a null scope we need to invalidate everything
+    // but this isn't done, so we need to make this illegal or record this as having
+    // invalidated everything.
+    if (currentScope != null) {
+      recordChange(currentScope);
+      notifyChangeHandlers();
+    }
+  }
+
+  @Override
+  void reportChangeToEnclosingScope(Node n) {
+    recordChange(getEnclosingChangeScope(n));
+    notifyChangeHandlers();
+  }
+
+  private void notifyChangeHandlers() {
     for (CodeChangeHandler handler : codeChangeHandlers) {
       handler.reportChange();
     }

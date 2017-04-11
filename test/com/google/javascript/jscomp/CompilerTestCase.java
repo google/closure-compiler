@@ -122,6 +122,9 @@ public abstract class CompilerTestCase extends TestCase {
   /** Whether to check that all line number information is preserved. */
   private boolean checkLineNumbers = true;
 
+  /** Whether to check that changed scopes are marked as changed */
+  private boolean checkAstChangeMarking = false;
+
   /** Whether we expect parse warnings in the current test. */
   private boolean expectParseWarningsThisTest = false;
 
@@ -499,6 +502,13 @@ public abstract class CompilerTestCase extends TestCase {
    */
   public void enableLineNumberCheck(boolean newVal) {
     checkLineNumbers = newVal;
+  }
+
+  /**
+   * @param newVal Whether to validate AST change marking.
+   */
+  public void validateAstChangeMarking(boolean newVal) {
+    checkAstChangeMarking = newVal;
   }
 
   /**
@@ -1312,7 +1322,6 @@ public abstract class CompilerTestCase extends TestCase {
     Node rootClone = root.cloneTree();
     Node externsRootClone = rootClone.getFirstChild();
     Node mainRootClone = rootClone.getLastChild();
-    Map<Node, Node> mtoc = NodeUtil.mapMainToClone(mainRoot, mainRootClone);
 
     int numRepetitions = getNumRepetitions();
     ErrorManager[] errorManagers = new ErrorManager[numRepetitions];
@@ -1394,7 +1403,20 @@ public abstract class CompilerTestCase extends TestCase {
 
         recentChange.reset();
 
+        Map<Node, Node> mtoc = null;
+        if (checkAstChangeMarking) {
+          mtoc = NodeUtil.mapMainToClone(mainRoot, mainRoot.cloneTree());
+        }
+
         getProcessor(compiler).process(externsRoot, mainRoot);
+
+        if (checkAstChangeMarking) {
+          // TODO(johnlenz): add support for multiple passes in getProcessor so that we can
+          // check the AST marking after each pass runs.
+          // Verify that changes to the AST are properly marked on the AST.
+          NodeUtil.verifyScopeChanges("", mtoc, mainRoot);
+        }
+
         if (astValidationEnabled) {
           (new AstValidator(compiler)).validateRoot(root);
         }
@@ -1504,9 +1526,6 @@ public abstract class CompilerTestCase extends TestCase {
                 + mainRoot.toStringTree(),
             hasCodeChanged);
       }
-
-      // Check correctness of the changed-scopes-only traversal
-      NodeUtil.verifyScopeChanges(mtoc, mainRoot, false);
 
       if (expected != null) {
         if (compareAsTree) {
