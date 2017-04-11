@@ -485,6 +485,19 @@ enum CompilationParam {
     }
   },
 
+  /** Enables a number of peephole optimizations */
+  USE_TYPES_FOR_LOCAL_OPTIMIZATION(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
+    @Override
+    void apply(CompilerOptions options, boolean value) {
+      options.setUseTypesForLocalOptimization(value);
+    }
+
+    @Override
+    String getJavaInfo() {
+      return "options.setUseTypesForLocalOptimization(true)";
+    }
+  },
+
   //--------------------------------
   // Renaming
   //--------------------------------
