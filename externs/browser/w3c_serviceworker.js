@@ -121,6 +121,23 @@ PushManager.prototype.getSubscription = function() {};
 // PushManager.prototype.hasPermission = function() {};
 
 /**
+ * @see https://wicg.github.io/BackgroundSync/spec/#sync-manager-interface
+ * @constructor
+ */
+function SyncManager() {}
+
+/**
+ * @param {string} tag
+ * @return {!Promise<void>}
+ */
+SyncManager.prototype.register = function(tag) {}
+
+/**
+ * @return {!Promise<Array<string>>}
+ */
+SyncManager.prototype.getTags = function() {}
+
+/**
  * @typedef {{userVisibleOnly: (boolean|undefined)}}
  * @see https://w3c.github.io/push-api/#idl-def-PushSubscriptionOptions
  */
@@ -210,6 +227,12 @@ ServiceWorkerRegistration.prototype.showNotification =
  * @return {!Promise<?Array<?Notification>>}
  */
 ServiceWorkerRegistration.prototype.getNotifications = function(opt_filter) {};
+
+/**
+ * @see https://wicg.github.io/BackgroundSync/spec/#service-worker-registration-extensions
+ * @type {!SyncManager}
+ */
+ServiceWorkerRegistration.prototype.sync;
 
 /**
  * @see http://www.w3.org/TR/service-workers/#service-worker-container-interface
