@@ -168,6 +168,19 @@ public final class Es6ExtractClassesTest extends CompilerTestCase {
                     "alert(unusual$name$classdecl$var0);"))));
   }
 
+  public void testFilenameContainsPlus() {
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode("+some/+path/file", "alert(class {});")),
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "+path/file",
+                LINE_JOINER.join(
+                    "const $some$$path$file$classdecl$var0 = class{};",
+                    "alert($some$$path$file$classdecl$var0);"))));
+
+  }
+
   public void testConditionalBlocksExtractionFromCall() {
     testError("maybeTrue() && f(class{});", CANNOT_CONVERT);
   }
