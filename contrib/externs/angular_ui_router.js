@@ -322,6 +322,26 @@ ui.router.$state.prototype.transitionTo = function(
 /**
  * @interface
  */
+ui.router.$urlRouter = function() {};
+
+
+/**
+ * @param {*=} opt_event
+ * @return {void}
+ */
+ui.router.$urlRouter.prototype.sync = function(opt_event) {};
+
+
+/**
+ * @param {boolean=} opt_enabled
+ * @return {function(...)}
+ */
+ui.router.$urlRouter.prototype.listen = function(opt_enabled) {};
+
+
+/**
+ * @interface
+ */
 ui.router.$urlMatcherFactory = function() {};
 
 
@@ -356,6 +376,13 @@ ui.router.$urlRouterProvider.prototype.otherwise = function(path) {};
  * @param {function(...)} rule
  */
 ui.router.$urlRouterProvider.prototype.rule = function(rule) {};
+
+
+/**
+ * @param {boolean=} opt_defer
+ * @return {void}
+ */
+ui.router.$urlRouterProvider.prototype.deferIntercept = function(opt_defer) {};
 
 
 /**
