@@ -27,6 +27,8 @@ import com.google.javascript.rhino.Node;
  */
 
 public final class ProcessEs6ModulesTest extends CompilerTestCase {
+  private ImmutableList<String> moduleRoots = null;
+
   @Override
   public void setUp() {
     // ECMASCRIPT5 to trigger module processing after parsing.
@@ -40,6 +42,11 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
     // ECMASCRIPT5 to Trigger module processing after parsing.
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+
+    if (moduleRoots != null) {
+      options.setModuleRoots(moduleRoots);
+    }
+
     return options;
   }
 
@@ -660,5 +667,27 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
     testSame(LINE_JOINER.join(
         "'use strict';",
         "var x;"));
+  }
+
+  public void testAbsoluteImportsWithModuleRoots() {
+    moduleRoots = ImmutableList.of("/base");
+    compareJsDoc = false;
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(Compiler.joinPathParts("base", "mod", "name.js"), ""),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("base", "test", "sub.js"),
+                "import * as foo from '/mod/name';")),
+        ImmutableList.of(
+            SourceFile.fromCode(
+                Compiler.joinPathParts("base", "mod", "name.js"),
+                LINE_JOINER.join(
+                    "/** @fileoverview",
+                    " * @suppress {missingProvide|missingRequire}",
+                    " */",
+                    "goog.provide('module$mod$name');")),
+            SourceFile.fromCode(
+                Compiler.joinPathParts("base", "test", "sub.js"),
+                "goog.require('module$mod$name');")));
   }
 }

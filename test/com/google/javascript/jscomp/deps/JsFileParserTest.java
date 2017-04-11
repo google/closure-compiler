@@ -170,12 +170,15 @@ public final class JsFileParserTest extends TestCase {
         + "import '../a/z';\n"
         + "import '../c/w';\n";
 
-    DependencyInfo expected = new SimpleDependencyInfo("../../a/b.js", "/foo/bar/a/b.js",
-        ImmutableList.of("module$$foo$bar$a$b"),
-        ImmutableList.of(
-            "module$$foo$bar$a$x", "module$$foo$bar$y",
-            "module$$foo$bar$a$z", "module$$foo$bar$c$w"),
-        ImmutableMap.of("module", "es6"));
+    DependencyInfo expected =
+        new SimpleDependencyInfo(
+            "../../a/b.js",
+            "/foo/bar/a/b.js",
+            ImmutableList.of("module$foo$bar$a$b"),
+            ImmutableList.of(
+                "module$foo$bar$a$x", "module$foo$bar$y",
+                "module$foo$bar$a$z", "module$foo$bar$c$w"),
+            ImmutableMap.of("module", "es6"));
 
     DependencyInfo result = parser.parseFile("/foo/bar/a/b.js", "../../a/b.js", contents);
 

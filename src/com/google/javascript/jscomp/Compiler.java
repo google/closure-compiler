@@ -1549,10 +1549,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                 options.moduleRoots,
                 inputs,
                 ModuleLoader.PathResolver.RELATIVE,
-                options.moduleResolutionMode);
+                options.moduleResolutionMode,
+                null);
 
         if (options.moduleResolutionMode == ModuleLoader.ResolutionMode.NODE) {
-          this.moduleLoader.setPackageJsonMainEntries(processJsonInputs(inputs));
+          // processJsonInputs requires a module loader to already be defined
+          // so we redefine it afterwards with the package.json inputs
+          this.moduleLoader =
+              new ModuleLoader(
+                  this,
+                  options.moduleRoots,
+                  inputs,
+                  ModuleLoader.PathResolver.RELATIVE,
+                  options.moduleResolutionMode,
+                  processJsonInputs(inputs));
         }
 
         if (options.lowerFromEs6()) {
@@ -1569,10 +1579,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         Map<String, CompilerInput> inputModuleIdentifiers = new HashMap<>();
         for (CompilerInput input : inputs) {
           if (input.getKnownProvides().isEmpty()) {
-            ModuleIdentifier modInfo =
-                ModuleIdentifier.forFile(input.getSourceFile().getOriginalPath());
-
-            inputModuleIdentifiers.put(modInfo.getClosureNamespace(), input);
+            ModuleLoader.ModulePath modPath =
+                moduleLoader.resolve(input.getSourceFile().getOriginalPath());
+            inputModuleIdentifiers.put(modPath.toModuleName(), input);
           }
         }
 
