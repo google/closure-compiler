@@ -48,6 +48,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     super.enableNormalize();
+    validateAstChangeMarking(false);
   }
 
   @Override

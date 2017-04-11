@@ -23,6 +23,12 @@ package com.google.javascript.jscomp;
 public final class MoveFunctionDeclarationsTest extends CompilerTestCase {
 
   @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    validateAstChangeMarking(false);
+  }
+
+  @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new MoveFunctionDeclarations(compiler);
   }

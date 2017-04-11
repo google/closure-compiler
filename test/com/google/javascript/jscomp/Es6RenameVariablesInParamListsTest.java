@@ -26,7 +26,9 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
+    validateAstChangeMarking(false);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     runTypeCheckAfterProcessing = true;
   }

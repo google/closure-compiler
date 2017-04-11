@@ -23,6 +23,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6_TYPED);
+    validateAstChangeMarking(false);
   }
 
   @Override

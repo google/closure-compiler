@@ -43,6 +43,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   @Override
   public void setUp() {
     enableNormalize();
+    validateAstChangeMarking(false);
   }
 
   public void test_b19179602() {

@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 import com.google.protobuf.TextFormat;
-
 import java.io.IOException;
 import java.util.List;
 
@@ -37,6 +36,7 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
   @Override
   protected void setUp() {
     this.instrumentationPb = null;
+    validateAstChangeMarking(false);
   }
 
   @Override

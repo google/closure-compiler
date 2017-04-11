@@ -30,7 +30,10 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
+  public void setUp() throws Exception {
+    super.setUp();
+    validateAstChangeMarking(false);
+
     parentModuleCanSeeSymbolsDeclaredInChildren = false;
   }
 

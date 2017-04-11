@@ -39,6 +39,7 @@ public final class ExportTestFunctionsTest extends Es6CompilerTestCase {
   @Override
   public void setUp() {
     super.enableLineNumberCheck(false);
+    validateAstChangeMarking(false);
   }
 
   @Override

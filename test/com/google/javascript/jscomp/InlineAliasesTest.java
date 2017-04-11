@@ -22,6 +22,12 @@ import static com.google.javascript.jscomp.InlineAliases.ALIAS_CYCLE;
 public class InlineAliasesTest extends Es6CompilerTestCase {
 
   @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    validateAstChangeMarking(false);
+  }
+
+  @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new InlineAliases(compiler);
   }

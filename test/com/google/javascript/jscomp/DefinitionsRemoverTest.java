@@ -29,6 +29,11 @@ import java.util.List;
  *
  */
 public final class DefinitionsRemoverTest extends CompilerTestCase {
+  @Override
+  public void setUp() {
+    validateAstChangeMarking(false);
+  }
+
   public void testRemoveFunction() {
     setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     testSame("{(function (){bar()})}");

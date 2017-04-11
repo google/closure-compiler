@@ -49,6 +49,7 @@ public final class PhaseOptimizerTest extends TestCase {
     compiler.initCompilerOptionsIfTesting();
     tracker = new PerformanceTracker(dummyExternsRoot, dummyRoot, TracerMode.TIMING_ONLY, null);
     optimizer = new PhaseOptimizer(compiler, tracker, null);
+    compiler.setPhaseOptimizer(optimizer);
   }
 
   public void testOneRun() {

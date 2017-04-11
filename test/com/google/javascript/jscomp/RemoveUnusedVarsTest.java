@@ -31,7 +31,9 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
+    validateAstChangeMarking(false);
     removeGlobal = true;
     preserveFunctionExpressionNames = false;
     modifyCallSites = false;

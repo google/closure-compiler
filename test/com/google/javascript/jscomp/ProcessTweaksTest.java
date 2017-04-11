@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,8 +36,9 @@ public final class ProcessTweaksTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() throws Exception {
+  protected void setUp() throws Exception {
     super.setUp();
+    validateAstChangeMarking(false);
     defaultValueOverrides = new HashMap<>();
     stripTweaks = false;
   }

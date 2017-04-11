@@ -33,6 +33,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   protected void setUp() {
     super.enableLineNumberCheck(false);
     enableNormalize();
+    validateAstChangeMarking(false);
   }
 
   public void testValue() {

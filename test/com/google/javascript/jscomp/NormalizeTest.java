@@ -38,6 +38,12 @@ public final class NormalizeTest extends Es6CompilerTestCase {
   }
 
   @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    validateAstChangeMarking(false);
+  }
+
+  @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     return new Normalize(compiler, false);
   }
@@ -740,18 +746,29 @@ public final class NormalizeTest extends Es6CompilerTestCase {
     return set;
   }
 
-  public void testRenamingConstantProperties() {
+  public void testRenamingConstantProperties() throws Exception {
     // In order to detect that foo.BAR is a constant, we need collapse
     // properties to run first so that we can tell if the initial value is
     // non-null and immutable. The Normalize pass doesn't modify the code
     // in these examples, it just infers const-ness of some variables, so
     // we call enableNormalize to make the Normalize.VerifyConstants pass run.
-    new WithCollapse().testConstantProperties();
+
+    // TODO(johnlenz): fix this so it is just another test case.
+    WithCollapse testCase = new WithCollapse();
+    testCase.setUp();
+    testCase.testConstantProperties();
+    testCase.tearDown();
   }
 
-  private static class WithCollapse extends CompilerTestCase {
+  public static class WithCollapse extends CompilerTestCase {
     WithCollapse() {
       enableNormalize();
+    }
+
+    @Override
+    protected void setUp() throws Exception {
+      super.setUp();
+      validateAstChangeMarking(false);
     }
 
     private void testConstantProperties() {

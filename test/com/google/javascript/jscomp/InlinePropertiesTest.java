@@ -35,6 +35,7 @@ public final class InlinePropertiesTest extends CompilerTestCase {
     enableTypeCheck();
     enableClosurePass();
     enableGatherExternProperties();
+    validateAstChangeMarking(false);
   }
 
   @Override

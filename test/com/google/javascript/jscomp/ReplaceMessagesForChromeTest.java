@@ -42,7 +42,9 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp()  {
+  protected void setUp() throws Exception {
+    super.setUp();
+    validateAstChangeMarking(false);
     style = RELAX;
   }
 

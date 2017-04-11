@@ -48,6 +48,7 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
+    validateAstChangeMarking(false);
     injectableLibraries.clear();
     polyfillTable.clear();
   }

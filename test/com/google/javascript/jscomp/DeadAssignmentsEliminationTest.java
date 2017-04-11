@@ -29,6 +29,11 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   }
 
   @Override
+  public void setUp() {
+    validateAstChangeMarking(false);
+  }
+
+  @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       @Override

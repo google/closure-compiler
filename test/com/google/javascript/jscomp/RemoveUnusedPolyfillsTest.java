@@ -65,6 +65,12 @@ public final class RemoveUnusedPolyfillsTest extends TypeICompilerTestCase {
   }
 
   @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    validateAstChangeMarking(false);
+  }
+
+  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new RemoveUnusedPolyfills(compiler);
   }

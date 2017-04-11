@@ -50,6 +50,7 @@ public final class InlineFunctionsTest extends CompilerTestCase {
     allowBlockInlining = true;
     assumeStrictThis = false;
     assumeMinimumCapture = false;
+    validateAstChangeMarking(false);
   }
 
   @Override

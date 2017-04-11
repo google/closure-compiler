@@ -25,6 +25,11 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
   }
 
   @Override
+  public void setUp() {
+    validateAstChangeMarking(false);
+  }
+
+  @Override
   protected int getNumRepetitions() {
     return 1;
   }

@@ -48,6 +48,7 @@ public final class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     useGoogleCodingConvention = true;
+    validateAstChangeMarking(false);
   }
 
   public void testNoRenaming1() {

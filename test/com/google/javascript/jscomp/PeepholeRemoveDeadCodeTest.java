@@ -245,8 +245,11 @@ public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
     fold("(1 + 2 + ''), foo()", "foo()");
   }
 
+  public void testRemoveUselessOps1() {
+    foldSame("(function () { f(); })();");
+  }
 
-  public void testRemoveUselessOps() {
+  public void testRemoveUselessOps2() {
     // There are four place where expression results are discarded:
     //  - a top-level expression EXPR_RESULT
     //  - the LHS of a COMMA

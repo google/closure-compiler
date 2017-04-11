@@ -40,6 +40,12 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
 
   @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    validateAstChangeMarking(false);
+  }
+
+  @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new ClosureRewriteModule(compiler, null, null);
   }

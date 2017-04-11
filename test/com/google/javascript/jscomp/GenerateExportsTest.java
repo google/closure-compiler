@@ -47,6 +47,7 @@ public final class GenerateExportsTest extends Es6CompilerTestCase {
   public void setUp() throws Exception {
     super.setUp();
     this.allowNonGlobalExports  = true;
+    validateAstChangeMarking(false);
   }
 
   @Override

@@ -93,6 +93,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     super.enableTypeCheck();
+    validateAstChangeMarking(false);
     functionsToInspect = defaultFunctionsToInspect;
     reserved = Collections.emptySet();
     previous = null;

@@ -45,6 +45,7 @@ public final class CrossModuleMethodMotionTest extends CompilerTestCase {
   public void setUp() {
     canMoveExterns = false;
     noStubs = false;
+    validateAstChangeMarking(false);
   }
 
   public void testMovePrototypeMethod1() {

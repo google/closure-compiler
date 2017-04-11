@@ -46,7 +46,6 @@ import com.google.javascript.jscomp.testing.NodeSubject;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Node.TypeDeclarationNode;
-
 import java.util.LinkedHashMap;
 
 /**
@@ -60,6 +59,7 @@ public final class JsdocToEs6TypedConverterTest extends CompilerTestCase {
   public void setUp() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT6_TYPED);
     compareJsDoc = false;
+    validateAstChangeMarking(false);
   }
 
   @Override

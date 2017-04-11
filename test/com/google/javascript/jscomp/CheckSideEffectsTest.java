@@ -23,6 +23,12 @@ public final class CheckSideEffectsTest extends Es6CompilerTestCase {
   }
 
   @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    validateAstChangeMarking(false);
+  }
+
+  @Override
   protected int getNumRepetitions() {
     return 1;
   }

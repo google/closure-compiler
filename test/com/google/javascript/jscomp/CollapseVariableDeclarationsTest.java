@@ -21,6 +21,13 @@ package com.google.javascript.jscomp;
  *
  */
 public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    validateAstChangeMarking(false);
+  }
+
   public void testCollapsing() throws Exception {
     // Basic collapsing
     test("var a;var b;",

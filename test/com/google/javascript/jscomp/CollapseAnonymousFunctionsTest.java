@@ -27,6 +27,12 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
   }
 
   @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    validateAstChangeMarking(false);
+  }
+
+  @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CollapseAnonymousFunctions(compiler);
   }

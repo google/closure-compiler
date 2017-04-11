@@ -62,6 +62,7 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
     removeConst = false;
     invert = false;
     useDefaultRenamer = false;
+    validateAstChangeMarking(false);
   }
 
   private void testWithInversion(String original, String expected) {

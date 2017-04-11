@@ -123,7 +123,7 @@ public abstract class CompilerTestCase extends TestCase {
   private boolean checkLineNumbers = true;
 
   /** Whether to check that changed scopes are marked as changed */
-  private boolean checkAstChangeMarking = false;
+  private boolean checkAstChangeMarking = true;
 
   /** Whether we expect parse warnings in the current test. */
   private boolean expectParseWarningsThisTest = false;

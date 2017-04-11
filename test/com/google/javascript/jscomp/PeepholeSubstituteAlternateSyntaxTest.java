@@ -46,6 +46,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     super.setUp();
     late = true;
     disableNormalize();
+    validateAstChangeMarking(false);
   }
 
   @Override

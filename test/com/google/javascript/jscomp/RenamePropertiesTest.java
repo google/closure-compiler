@@ -40,6 +40,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     super(EXTERNS);
     enableNormalize();
     enableGatherExternProperties();
+    validateAstChangeMarking(false);
   }
 
   @Override

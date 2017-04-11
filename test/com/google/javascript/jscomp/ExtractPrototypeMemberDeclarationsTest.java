@@ -30,6 +30,7 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
   protected void setUp() {
     enableNormalize();
     pattern = Pattern.USE_GLOBAL_TEMP;
+    validateAstChangeMarking(false);
   }
 
   @Override

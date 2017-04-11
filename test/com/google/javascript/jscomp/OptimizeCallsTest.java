@@ -26,6 +26,12 @@ import com.google.javascript.rhino.Node;
 public final class OptimizeCallsTest extends CompilerTestCase {
 
   @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    validateAstChangeMarking(false);
+  }
+
+  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     final OptimizeCalls passes = new OptimizeCalls(compiler);
     passes.addPass(new OptimizeReturns(compiler));

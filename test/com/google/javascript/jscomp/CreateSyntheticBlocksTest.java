@@ -32,8 +32,10 @@ public final class CreateSyntheticBlocksTest extends Es6CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
-    super.enableLineNumberCheck(false);
+  public void setUp() throws Exception {
+    super.setUp();
+    enableLineNumberCheck(false);
+    validateAstChangeMarking(false);
   }
 
   @Override

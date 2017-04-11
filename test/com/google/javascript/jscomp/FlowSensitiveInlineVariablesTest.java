@@ -33,6 +33,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
   @Override
   public void setUp() {
     enableNormalize();
+    validateAstChangeMarking(false);
   }
 
   @Override

@@ -20,7 +20,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -92,6 +91,7 @@ public final class RenameVarsTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    validateAstChangeMarking(false);
     previouslyUsedMap = new VariableMap(ImmutableMap.<String, String>of());
     prefix = DEFAULT_PREFIX;
     withClosurePass = false;

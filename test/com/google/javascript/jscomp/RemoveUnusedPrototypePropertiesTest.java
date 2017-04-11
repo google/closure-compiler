@@ -41,7 +41,9 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
   }
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
+    validateAstChangeMarking(false);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     anchorUnusedVars = false;
     canRemoveExterns = false;

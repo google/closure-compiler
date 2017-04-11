@@ -42,6 +42,7 @@ public final class VarCheckTest extends Es6CompilerTestCase {
     super.setUp();
     // Setup value set by individual tests to the appropriate defaults.
     super.allowExternsChanges(true);
+    validateAstChangeMarking(false);
     strictModuleDepErrorLevel = CheckLevel.OFF;
     externValidationErrorLevel = null;
     sanityCheck = false;

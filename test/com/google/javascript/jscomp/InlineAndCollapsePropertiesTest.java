@@ -55,6 +55,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   @Override
   public void setUp() {
     enableNormalize();
+    validateAstChangeMarking(false);
   }
 
   @Override public int getNumRepetitions() {

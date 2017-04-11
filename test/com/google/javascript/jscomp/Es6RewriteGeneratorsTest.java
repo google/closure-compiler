@@ -29,6 +29,7 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     runTypeCheckAfterProcessing = true;
     compareJsDoc = true;
+    validateAstChangeMarking(false);
   }
 
   @Override

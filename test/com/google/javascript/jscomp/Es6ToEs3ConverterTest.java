@@ -118,6 +118,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     runTypeCheckAfterProcessing = true;
+    validateAstChangeMarking(false);
   }
 
   protected final PassFactory makePassFactory(

@@ -43,6 +43,7 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     previous = null;
+    validateAstChangeMarking(false);
   }
 
   @Override

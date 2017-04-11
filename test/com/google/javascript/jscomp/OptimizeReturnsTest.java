@@ -44,6 +44,7 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     disableTypeCheck();
+    validateAstChangeMarking(false);
   }
 
   /**

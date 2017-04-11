@@ -34,6 +34,12 @@ public final class InlineVariablesTest extends CompilerTestCase {
   }
 
   @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    validateAstChangeMarking(false);
+  }
+
+  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new InlineVariables(
         compiler,

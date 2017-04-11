@@ -28,6 +28,12 @@ public class J2clPassTest extends CompilerTestCase {
     this.enableNormalize();
   }
 
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    validateAstChangeMarking(false);
+  }
+
   private void testDoesntChange(List<SourceFile> js) {
     test(js, js);
   }

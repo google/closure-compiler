@@ -45,6 +45,7 @@ public final class RenameLocalVarsTest extends CompilerTestCase {
   @Override
   protected void setUp() {
     nameGenerator = null;
+    validateAstChangeMarking(false);
   }
 
   public void testRenameSimple() {
