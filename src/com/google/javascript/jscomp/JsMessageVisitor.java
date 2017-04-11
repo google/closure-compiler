@@ -547,6 +547,13 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     switch (node.getToken()) {
       case STRING:
         return node.getString();
+      case TEMPLATELIT:
+        if (node.hasOneChild()) {
+          return node.getFirstChild().getString();
+        } else {
+          throw new MalformedException(
+              "Template literals with substitutions are not allowed.", node);
+        }
       case ADD:
         StringBuilder sb = new StringBuilder();
         for (Node child : node.children()) {

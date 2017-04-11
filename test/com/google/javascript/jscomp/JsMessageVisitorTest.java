@@ -239,6 +239,36 @@ public final class JsMessageVisitorTest extends TestCase {
         malformedTreeError.description);
   }
 
+  public void testTemplateLiteral() {
+    compilerOptions = new CompilerOptions();
+    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+
+    extractMessages("/** @desc Hello */ var MSG_HELLO = goog.getMsg(`hello`);");
+    assertThat(compiler.getErrors()).isEmpty();
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(messages).hasSize(1);
+
+    JsMessage msg = messages.get(0);
+    assertThat(msg.getKey()).isEqualTo("MSG_HELLO");
+    assertThat(msg.toString()).isEqualTo("hello");
+  }
+
+  public void testTemplateLiteralWithSubstitution() {
+    compilerOptions = new CompilerOptions();
+    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+
+    extractMessages("/** @desc Hello */ var MSG_HELLO = goog.getMsg(`hello ${name}`);");
+    assertThat(compiler.getErrors()).hasLength(1);
+    assertThat(compiler.getWarnings()).isEmpty();
+    assertThat(messages).isEmpty();
+
+    JSError malformedTreeError = compiler.getErrors()[0];
+    assertError(malformedTreeError).hasType(JsMessageVisitor.MESSAGE_TREE_MALFORMED);
+    assertThat(malformedTreeError.description).isEqualTo(
+        "Message parse tree malformed."
+            + " Template literals with substitutions are not allowed.");
+  }
+
   public void testEmptyMessage() {
     // This is an edge case. Empty messages are useless, but shouldn't fail
     extractMessagesSafely("var MSG_EMPTY = '';");
