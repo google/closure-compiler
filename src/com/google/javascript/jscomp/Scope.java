@@ -181,6 +181,13 @@ public class Scope implements StaticScope {
    * Get a unique VAR object to represents "arguments" within this scope
    */
   public Var getArgumentsVar() {
+    if (isGlobal() || isModuleScope()) {
+      throw new IllegalStateException("No arguments var for scope: " + this);
+    }
+    if (!isFunctionScope() || rootNode.isArrowFunction()) {
+      return parent.getArgumentsVar();
+    }
+
     if (arguments == null) {
       arguments = Var.makeArgumentsVar(this);
     }

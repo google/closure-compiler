@@ -560,11 +560,36 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node fBlock = NodeUtil.getFunctionBody(function);
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
     assertThat(fBlockScope.getVar("arguments")).isSameAs(arguments);
+    assertThat(fBlockScope.getArgumentsVar()).isSameAs(arguments);
 
     Node ifBlock = fBlock.getFirstChild().getLastChild();
     Scope blockScope = scopeCreator.createScope(ifBlock, fBlockScope);
     assertTrue(blockScope.isDeclared("arguments", false));
+    assertThat(blockScope.getArgumentsVar()).isSameAs(arguments);
     assertThat(blockScope.getVar("arguments")).isNotEqualTo(arguments);
+  }
+
+  public void testArgumentsVariableInArrowFunction() {
+    String js = "function outer() { var inner = () => { alert(0); } }";
+    Node root = getRoot(js);
+    Scope global = scopeCreator.createScope(root, null);
+
+    Node outer = root.getFirstChild();
+    checkState(outer.isFunction(), outer);
+    checkState(!outer.isArrowFunction(), outer);
+    Scope outerFunctionScope = scopeCreator.createScope(outer, global);
+    Var arguments = outerFunctionScope.getArgumentsVar();
+
+    Node outerBody = NodeUtil.getFunctionBody(outer);
+    Scope outerBodyScope = scopeCreator.createScope(outerBody, outerFunctionScope);
+
+    Node inner = outerBody.getFirstChild()   // VAR
+                          .getFirstChild()   // NAME
+                          .getFirstChild();  // FUNCTION
+    checkState(inner.isFunction(), inner);
+    checkState(inner.isArrowFunction(), inner);
+    Scope innerFunctionScope = scopeCreator.createScope(inner, outerBodyScope);
+    assertThat(innerFunctionScope.getArgumentsVar()).isSameAs(arguments);
   }
 
   public void testIsFunctionBlockScoped() {

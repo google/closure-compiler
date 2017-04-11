@@ -172,12 +172,7 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isName() || (n.isStringKey() && !n.hasChildren())) {
-      Var v;
-      if (n.getString().equals("arguments")) {
-        v = t.getScope().getArgumentsVar();
-      } else {
-        v = t.getScope().getVar(n.getString());
-      }
+      Var v = t.getScope().getVar(n.getString());
 
       if (v != null) {
         if (varFilter.apply(v)) {

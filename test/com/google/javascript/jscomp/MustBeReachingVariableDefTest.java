@@ -170,9 +170,11 @@ public final class MustBeReachingVariableDefTest extends TestCase {
   private void computeDefUse(String src) {
     Compiler compiler = new Compiler();
     src = "function _FUNCTION(param1, param2){" + src + "}";
-    Node root = compiler.parseTestCode(src).getFirstChild();
+    Node script = compiler.parseTestCode(src);
+    Node root = script.getFirstChild();
     assertEquals(0, compiler.getErrorCount());
-    Scope scope = SyntacticScopeCreator.makeUntyped(compiler).createScope(root, null);
+    Scope globalScope = SyntacticScopeCreator.makeUntyped(compiler).createScope(script, null);
+    Scope scope = SyntacticScopeCreator.makeUntyped(compiler).createScope(root, globalScope);
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
     cfa.process(null, root);
     ControlFlowGraph<Node> cfg = cfa.getCfg();

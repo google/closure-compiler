@@ -101,7 +101,7 @@ public final class InferConstsTest extends TestCase {
   }
 
   public void testArguments() {
-    testNotConsts("var arguments = 3;", "arguments");
+    testConsts("var arguments = 3;", "arguments");
   }
 
   public void testDestructuring() {
