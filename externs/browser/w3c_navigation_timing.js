@@ -82,6 +82,8 @@ PerformanceResourceTiming.prototype.transferSize;
 PerformanceResourceTiming.prototype.encodedBodySize;
 /** @type {number|undefined} */
 PerformanceResourceTiming.prototype.decodedBodySize;
+/** @type {number|undefined} */
+PerformanceResourceTiming.prototype.workerStart;
 
 /** @constructor */
 function PerformanceNavigation() {}
