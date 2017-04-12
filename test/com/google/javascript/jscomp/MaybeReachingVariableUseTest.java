@@ -20,12 +20,10 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-
-import junit.framework.TestCase;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link MaybeReachingVariableUse}.
@@ -114,10 +112,10 @@ public final class MaybeReachingVariableUseTest extends TestCase {
   }
 
   public void testTryCatch() {
-    assertMatch(
-        "D: var x = 1; " +
-        "try { U: var y = foo() + x; } catch (e) {} " +
-        "U: var z = x;");
+    assertMatch(""
+        + "D: var x = 1; "
+        + "try { U: var y = foo() + x; } catch (e) {} "
+        + "U: var z = x;");
   }
 
   /**
@@ -143,18 +141,21 @@ public final class MaybeReachingVariableUseTest extends TestCase {
    */
   private void computeUseDef(String src) {
     Compiler compiler = new Compiler();
+    SyntacticScopeCreator scopeCreator = SyntacticScopeCreator.makeUntyped(compiler);
     src = "function _FUNCTION(param1, param2){" + src + "}";
-    Node n = compiler.parseTestCode(src).getFirstChild();
+    Node script = compiler.parseTestCode(src);
+    Node root = script.getFirstChild();
     assertEquals(0, compiler.getErrorCount());
-    Scope scope = SyntacticScopeCreator.makeUntyped(compiler).createScope(n, null);
+    Scope globalScope = scopeCreator.createScope(script, null);
+    Scope scope = scopeCreator.createScope(root, globalScope);
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
-    cfa.process(null, n);
+    cfa.process(null, root);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
     useDef = new MaybeReachingVariableUse(cfg, scope, compiler);
     useDef.analyze();
     def = null;
     uses = new ArrayList<>();
-    new NodeTraversal(compiler,new LabelFinder()).traverse(n);
+    new NodeTraversal(compiler, new LabelFinder(), scopeCreator).traverse(root);
     assertNotNull("Code should have an instruction labeled D", def);
     assertFalse("Code should have an instruction labeled starting withing U",
         uses.isEmpty());

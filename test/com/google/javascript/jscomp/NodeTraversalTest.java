@@ -298,8 +298,9 @@ public final class NodeTraversalTest extends TestCase {
         "var x;");
 
     Node tree = parse(compiler, code);
+    Scope globalScope = creator.createScope(tree, null);
     Node moduleBody = tree.getFirstChild();
-    Scope moduleScope = creator.createScope(moduleBody, null);
+    Scope moduleScope = creator.createScope(moduleBody, globalScope);
 
     callback.expect(moduleBody, moduleBody);
 

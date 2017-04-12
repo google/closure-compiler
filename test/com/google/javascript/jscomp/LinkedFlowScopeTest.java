@@ -29,9 +29,9 @@ import com.google.javascript.rhino.jstype.JSType;
 
 public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
 
-  private final Node blockNode = new Node(Token.BLOCK);
+  private final Node rootNode = new Node(Token.ROOT);
   private final Node functionNode = new Node(Token.FUNCTION);
-  private final int LONG_CHAIN_LENGTH = 1050;
+  private static final int LONG_CHAIN_LENGTH = 1050;
 
   private TypedScope globalScope;
   private TypedScope localScope;
@@ -43,7 +43,7 @@ public final class LinkedFlowScopeTest extends CompilerTypeTestCase {
   public void setUp() throws Exception {
     super.setUp();
 
-    globalScope = TypedScope.createGlobalScope(blockNode);
+    globalScope = TypedScope.createGlobalScope(rootNode);
     globalScope.declare("globalA", null, null, null);
     globalScope.declare("globalB", null, null, null);
 
