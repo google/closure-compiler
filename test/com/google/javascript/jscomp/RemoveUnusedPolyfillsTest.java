@@ -59,15 +59,8 @@ public final class RemoveUnusedPolyfillsTest extends TypeICompilerTestCase {
   private static final String ARRAY_FROM =
       "$jscomp.polyfill('Array.from', function() {}, 'es6', 'es3');\n";
 
-
   public RemoveUnusedPolyfillsTest() {
     super(EXTERNS);
-  }
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    validateAstChangeMarking(false);
   }
 
   @Override

@@ -59,8 +59,9 @@ class RemoveUnusedPolyfills implements CompilerPass {
     CollectUnusedPolyfills collector = new CollectUnusedPolyfills();
     NodeTraversal.traverseEs6(compiler, root, collector);
     for (Node node : collector.removableNodes()) {
-      NodeUtil.removeChild(node.getParent(), node);
-      compiler.reportCodeChange();
+      Node parent = node.getParent();
+      NodeUtil.removeChild(parent, node);
+      compiler.reportChangeToEnclosingScope(parent);
     }
   }
 
