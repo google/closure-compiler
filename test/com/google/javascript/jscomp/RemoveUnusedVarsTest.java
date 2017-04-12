@@ -33,7 +33,6 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    validateAstChangeMarking(false);
     removeGlobal = true;
     preserveFunctionExpressionNames = false;
     modifyCallSites = false;
@@ -56,7 +55,27 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     };
   }
 
-  public void testRemoveUnusedVars() {
+  public void testRemoveUnusedVarsFn0() {
+    // Test with function expressions in another function call
+    test("function A(){}" +
+         "if(0){function B(){}}win.setTimeout(function(){A()})",
+         "function A(){}" +
+         "if(0);win.setTimeout(function(){A()})");
+  }
+
+  public void testRemoveUnusedVarsFn1s() {
+    // Test with function expressions in another function call
+    test(LINE_JOINER.join(
+            "function A(){}",
+            "if(0){var B = function(){}}",
+            "A();"),
+        LINE_JOINER.join(
+            "function A(){}",
+            "if(0){}",
+            "A();"));
+  }
+
+  public void testRemoveUnusedVars1() {
     setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     // Test lots of stuff
     test("var a;var b=3;var c=function(){};var x=A();var y; var z;" +
@@ -89,12 +108,6 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
          "for(var i in booyah){if(i>0)x+=\", \";" +
          "var arg=\"foo\";if(arg.length>40)arg=arg.substr(0,40)+\"...\";" +
          "x+=arg}");
-
-    // Test with function expressions in another function call
-    test("function A(){}" +
-         "if(0){function B(){}}win.setTimeout(function(){A()})",
-         "function A(){}" +
-         "if(0);win.setTimeout(function(){A()})");
 
     // Test with recursive functions
     test("function A(){A()}function B(){B()}B()",

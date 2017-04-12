@@ -231,8 +231,8 @@ class RemoveUnusedVars
             assignsByVar.put(var, maybeAssign);
             assignsByNode.put(maybeAssign.nameNode, maybeAssign);
 
-            if (isRemovableVar(var) &&
-                !maybeAssign.mayHaveSecondarySideEffects) {
+            if (isRemovableVar(var)
+                && !maybeAssign.mayHaveSecondarySideEffects) {
               // If the var is unreferenced and performing this assign has
               // no secondary side effects, then we can create a continuation
               // for it instead of traversing immediately.
@@ -820,27 +820,27 @@ class RemoveUnusedVars
       Node parent = toRemove.getParent();
 
       Preconditions.checkState(
-          toRemove.isVar() ||
-          toRemove.isFunction() ||
-          toRemove.isParamList() &&
-          parent.isFunction(),
+          toRemove.isVar()
+              || toRemove.isFunction()
+              || toRemove.isParamList() && parent.isFunction(),
           "We should only declare vars and functions and function args");
 
-      if (toRemove.isParamList() &&
-          parent.isFunction()) {
+      if (toRemove.isParamList()
+          && parent.isFunction()) {
         // Don't remove function arguments here. That's a special case
         // that's taken care of in removeUnreferencedFunctionArgs.
       } else if (NodeUtil.isFunctionExpression(toRemove)) {
         if (!preserveFunctionExpressionNames) {
-          compiler.reportChangeToEnclosingScope(toRemove);
-          toRemove.getFirstChild().setString("");
+          Node fnNameNode = toRemove.getFirstChild();
+          compiler.reportChangeToEnclosingScope(fnNameNode);
+          fnNameNode.setString("");
         }
         // Don't remove bleeding functions.
       } else if (parent.isForIn()) {
         // foreach iterations have 3 children. Leave them alone.
-      } else if (toRemove.isVar() &&
-          nameNode.hasChildren() &&
-          NodeUtil.mayHaveSideEffects(nameNode.getFirstChild(), compiler)) {
+      } else if (toRemove.isVar()
+          && nameNode.hasChildren()
+          && NodeUtil.mayHaveSideEffects(nameNode.getFirstChild(), compiler)) {
         // If this is a single var declaration, we can at least remove the
         // declaration itself and just leave the value, e.g.,
         // var a = foo(); => foo();
