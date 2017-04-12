@@ -206,6 +206,6 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
             IR.call(executeAsyncGenerator, NodeUtil.newCallNode(IR.name(ASYNC_GENERATOR_NAME)))));
 
     newBody.useSourceInfoIfMissingFromForTree(originalBody);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(newBody);
   }
 }
