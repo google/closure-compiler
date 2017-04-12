@@ -138,6 +138,19 @@ SyncManager.prototype.register = function(tag) {}
 SyncManager.prototype.getTags = function() {}
 
 /**
+ * @see https://wicg.github.io/BackgroundSync/spec/#sync-event
+ * @constructor
+ * @extends{ExtendableEvent}
+ */
+function SyncEvent() {}
+
+/** @type {string} */
+SyncEvent.prototype.tag;
+
+/** @type {boolean} */
+SyncEvent.prototype.lastChance;
+
+/**
  * @typedef {{userVisibleOnly: (boolean|undefined)}}
  * @see https://w3c.github.io/push-api/#idl-def-PushSubscriptionOptions
  */
