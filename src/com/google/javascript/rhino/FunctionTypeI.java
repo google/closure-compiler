@@ -55,8 +55,13 @@ public interface FunctionTypeI extends TypeI {
    */
   TypeI convertMethodToFunction();
 
+  /** Returns whether {@code this} type represents a constructor. */
   boolean hasInstanceType();
 
+  /**
+   * Returns a type representing an instance of {@code this} constructor,
+   * or null if {@code this} is not a constructor.
+   */
   ObjectTypeI getInstanceType();
 
   TypeI getReturnType();
