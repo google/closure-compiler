@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 class PrebuildAst {
   // We use many recursive algorithms that use O(d) memory in the depth
   // of the tree.
-  private static final long COMPILER_STACK_SIZE = (1 << 21); // About 2MB
+  private static final long COMPILER_STACK_SIZE = (1 << 23); // About 8MB
 
   private final AbstractCompiler compiler;
   private final int numParallelThreads;

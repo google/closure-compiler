@@ -1566,6 +1566,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     try {
       // Parse externs sources.
+      if (options.numParallelThreads > 1) {
+        new PrebuildAst(this, options.numParallelThreads).prebuild(externs);
+      }
       for (CompilerInput input : externs) {
         Node n = input.getAstRoot(this);
         if (hasErrors()) {
