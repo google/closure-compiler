@@ -265,8 +265,9 @@ class VarCheck extends AbstractPostOrderCallback implements
       nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
     }
 
-    getSynthesizedExternsRoot(compiler).addChildToBack(IR.var(nameNode));
-    compiler.reportCodeChange();
+    Node syntheticExternVar = IR.var(nameNode);
+    getSynthesizedExternsRoot(compiler).addChildToBack(syntheticExternVar);
+    compiler.reportChangeToEnclosingScope(syntheticExternVar);
   }
 
   /**
