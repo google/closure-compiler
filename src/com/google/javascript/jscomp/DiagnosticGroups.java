@@ -50,6 +50,7 @@ public class DiagnosticGroups {
       ImmutableSet.of(
           "reportUnknownTypes",
           "analyzerChecks",
+          "analyzerChecksInternal",
           "oldReportUnknownTypes",
           "newCheckTypes",
           "newCheckTypesCompatibility",
