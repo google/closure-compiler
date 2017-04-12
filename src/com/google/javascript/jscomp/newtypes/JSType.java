@@ -1723,7 +1723,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public String getReferenceName() {
-    throw new UnsupportedOperationException("getReferenceName not implemented yet");
+    return isConstructor() ? getInstanceType().toString() : null;
   }
 
   @Override
@@ -1795,6 +1795,9 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public FunctionTypeI getSuperClassConstructor() {
+    if (equals(this.commonTypes.getTopObject())) {
+      return null;
+    }
     ObjectTypeI proto = getPrototypeObject();
     return proto == null ? null : proto.getConstructor();
   }

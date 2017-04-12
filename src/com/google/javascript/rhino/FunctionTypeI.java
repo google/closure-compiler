@@ -61,6 +61,10 @@ public interface FunctionTypeI extends TypeI {
 
   TypeI getReturnType();
 
+  /**
+   * For a constructor function, returns the name of the instances.
+   * For other functions, returns null.
+   */
   String getReferenceName();
 
   /** Gets the AST Node where this function was defined. */
