@@ -2377,6 +2377,17 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   private Node getEnclosingChangeScope(Node n) {
+    /**
+     * Compiler change reporting usually occurs after the AST change has already occurred. In the
+     * case of node removals those nodes are already removed from the tree and so have no parent
+     * chain to walk. In these situations changes are reported instead against what (used to be)
+     * their parent. If that parent is itself a script node then it's important to be able to
+     * recognize it as the enclosing scope without first stepping to its parent as well.
+     */
+    if (n.isScript()) {
+      return n;
+    }
+
     while (n.getParent() != null) {
       n = n.getParent();
       if (n.isFunction() || n.isScript()) {

@@ -4758,7 +4758,7 @@ public final class NodeUtil {
               } else {
                 Preconditions.checkState(
                     isEquivalentToExcludingFunctions(n, clone),
-                    "%schange scope not marked as changed",
+                    "%schanged scope not marked as changed",
                     passNameMsg);
               }
             }

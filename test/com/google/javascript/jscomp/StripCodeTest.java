@@ -31,12 +31,6 @@ public final class StripCodeTest extends CompilerTestCase {
     super(EXTERNS, true);
   }
 
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    validateAstChangeMarking(false);
-  }
-
   /**
    * Creates an instance for removing logging code.
    *
@@ -71,7 +65,8 @@ public final class StripCodeTest extends CompilerTestCase {
         stripNamePrefixes);
   }
 
-  @Override public CompilerPass getProcessor(Compiler compiler) {
+  @Override
+  public CompilerPass getProcessor(Compiler compiler) {
     return createLoggerInstance(compiler);
   }
 

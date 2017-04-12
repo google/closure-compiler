@@ -261,20 +261,21 @@ class StripCode implements CompilerPass {
     void replaceHighestNestedCallWithNull(Node node, Node parent) {
       Node ancestor = parent;
       Node ancestorChild = node;
+      Node ancestorParent;
       while (true) {
+        ancestorParent = ancestor.getParent();
+
         if (ancestor.getFirstChild() != ancestorChild) {
           replaceWithNull(ancestorChild, ancestor);
           break;
         }
         if (ancestor.isExprResult()) {
           // Remove the entire expression statement.
-          Node ancParent = ancestor.getParent();
-          replaceWithEmpty(ancestor, ancParent);
+          replaceWithEmpty(ancestor, ancestorParent);
           break;
         }
         if (ancestor.isAssign()) {
-          Node ancParent = ancestor.getParent();
-          ancParent.replaceChild(ancestor, ancestor.getLastChild().detach());
+          ancestorParent.replaceChild(ancestor, ancestor.getLastChild().detach());
           break;
         }
         if (!NodeUtil.isGet(ancestor)
@@ -282,10 +283,12 @@ class StripCode implements CompilerPass {
           replaceWithNull(ancestorChild, ancestor);
           break;
         }
+
+        // Is not executed on the last iteration so can't be used for change reporting.
         ancestorChild = ancestor;
-        ancestor = ancestor.getParent();
+        ancestor = ancestorParent;
       }
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(ancestorParent);
     }
 
     /**
@@ -312,7 +315,7 @@ class StripCode implements CompilerPass {
         if (parent.isExprResult()) {
           Node grandparent = parent.getParent();
           replaceWithEmpty(parent, grandparent);
-          compiler.reportCodeChange();
+          compiler.reportChangeToEnclosingScope(grandparent);
         } else {
           t.report(n, STRIP_ASSIGNMENT_ERROR, lvalue.getQualifiedName());
         }
@@ -341,10 +344,11 @@ class StripCode implements CompilerPass {
         if (parent.isExprResult()) {
           Node grandparent = parent.getParent();
           replaceWithEmpty(parent, grandparent);
+          compiler.reportChangeToEnclosingScope(grandparent);
         } else {
           replaceWithEmpty(n, parent);
+          compiler.reportChangeToEnclosingScope(parent);
         }
-        compiler.reportCodeChange();
       }
     }
 
@@ -384,7 +388,7 @@ class StripCode implements CompilerPass {
           Node next = key.getNext();
           n.removeChild(key);
           key = next;
-          compiler.reportCodeChange();
+          compiler.reportChangeToEnclosingScope(n);
         } else {
           key = key.getNext();
         }

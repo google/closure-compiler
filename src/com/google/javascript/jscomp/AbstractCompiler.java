@@ -277,7 +277,10 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /** True iff a function changed since the last time a pass was run */
   abstract boolean hasScopeChanged(Node n);
 
-  /** Passes that do cross-scope modifications use this (eg, InlineVariables) */
+  /**
+   * Passes that make modifications in a scope that is different than the Compiler.currentScope use
+   * this (eg, InlineVariables and many others)
+   */
   abstract void reportChangeToEnclosingScope(Node n);
 
   /**
