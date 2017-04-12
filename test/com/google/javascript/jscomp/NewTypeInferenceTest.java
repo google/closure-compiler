@@ -19791,4 +19791,11 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function Function() {}"),
         "");
   }
+
+  public void testDontCrashOnWeirdPrototypePropertyDeclaration() {
+    typeCheck(LINE_JOINER.join(
+        "function f(arr, i) {",
+        "  arr[i].prototype.bar = function(asdf) { return asdf; };",
+        "}"));
+  }
 }

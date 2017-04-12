@@ -1483,8 +1483,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           // computation later.
           if (grandparent == null
               || (!isPrototypePropertyDeclaration(grandparent)
-                  && !isClassPropertyDeclaration(
-                      parent.getFirstChild(), currentScope))) {
+                  && !isClassPropertyDeclaration(parent.getFirstChild(), currentScope))) {
             RawNominalType ownerType = maybeGetOwnerType(n, parent);
             visitFunctionLate(n, ownerType);
           }
@@ -2702,7 +2701,10 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
   private static boolean isPrototypePropertyDeclaration(Node n) {
     if (NodeUtil.isExprAssign(n)
-        && isPrototypeProperty(n.getFirstFirstChild())) {
+        && isPrototypeProperty(n.getFirstFirstChild())
+        // When the prototype property is not on a qualified name, we can't generally
+        // find the name of the class, so we don't do anything.
+        && n.getFirstFirstChild().isQualifiedName()) {
       return true;
     }
     // We are looking for either an object literal being assigned to a
