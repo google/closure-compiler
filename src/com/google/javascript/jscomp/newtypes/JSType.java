@@ -539,6 +539,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
         return this.commonTypes.getBooleanInstance();
       case STRING_MASK:
         return this.commonTypes.getStringInstance();
+      default:
+        // Not a scalar type: handled below.
     }
     // For each set bit, add the corresponding obj to the new objs
     // construct and return the new type.
@@ -619,7 +621,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   public final JSType substituteGenerics(Map<String, JSType> concreteTypes) {
     if (isTop()
         || isUnknown()
-        || getObjs().isEmpty() && getTypeVar() == null
+        || (getObjs().isEmpty() && getTypeVar() == null)
         || concreteTypes.isEmpty()) {
       return this;
     }
@@ -862,6 +864,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return t.isLoose() ? ObjectType.mayTurnLooseObjectToScalar(t, this.commonTypes) : t;
   }
 
+  @SuppressWarnings("ReferenceEquality")
   private JSType specializeHelper(JSType other) {
     if (other.isTop() || other.isUnknown() || this == other) {
       return this;
@@ -1062,8 +1065,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   public static JSType plus(JSType lhs, JSType rhs) {
     JSTypes commonTypes = lhs.commonTypes;
-    if (!lhs.isUnknown() && !lhs.isBottom() && lhs.isSubtypeOf(commonTypes.STRING)
-        || !rhs.isUnknown() && !rhs.isBottom() && rhs.isSubtypeOf(commonTypes.STRING)) {
+    if ((!lhs.isUnknown() && !lhs.isBottom() && lhs.isSubtypeOf(commonTypes.STRING))
+        || (!rhs.isUnknown() && !rhs.isBottom() && rhs.isSubtypeOf(commonTypes.STRING))) {
       return commonTypes.STRING;
     }
     if (lhs.isUnknown() || lhs.isTop() || rhs.isUnknown() || rhs.isTop()) {
@@ -1433,12 +1436,12 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     }
     // For simplicity, if this type has scalars with pname, return bottom.
     // If it has enums, return bottom.
-    if (this.commonTypes.NUMBER.isSubtypeOf(this)
-        && this.commonTypes.getNumberInstance().mayHaveProp(pname)
-        || this.commonTypes.STRING.isSubtypeOf(this)
-        && this.commonTypes.getNumberInstance().mayHaveProp(pname)
-        || this.commonTypes.BOOLEAN.isSubtypeOf(this)
-        && this.commonTypes.getBooleanInstance().mayHaveProp(pname)) {
+    if ((this.commonTypes.NUMBER.isSubtypeOf(this)
+            && this.commonTypes.getNumberInstance().mayHaveProp(pname))
+        || (this.commonTypes.STRING.isSubtypeOf(this)
+            && this.commonTypes.getNumberInstance().mayHaveProp(pname))
+        || (this.commonTypes.BOOLEAN.isSubtypeOf(this)
+            && this.commonTypes.getBooleanInstance().mayHaveProp(pname))) {
       return this.commonTypes.BOTTOM;
     }
     if ((getMask() & ENUM_MASK) != 0) {
@@ -1557,6 +1560,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
                 tags &= ~ENUM_MASK;
                 continue;
               }
+              default:
+                throw new AssertionError("Impossible: " + tag);
             }
           }
         }
