@@ -65,7 +65,8 @@ class SubstituteEs6Syntax extends AbstractPostOrderCallback implements HotSwapCo
       return;
     }
     Node returnValue = body.getFirstChild().removeFirstChild();
-    arrowFunction.replaceChild(body, returnValue != null ? returnValue : IR.name("undefined"));
-    compiler.reportCodeChange();
+    Node replacement = returnValue != null ? returnValue : IR.name("undefined");
+    arrowFunction.replaceChild(body, replacement);
+    compiler.reportChangeToEnclosingScope(replacement);
   }
 }
