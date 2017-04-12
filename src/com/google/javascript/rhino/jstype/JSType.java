@@ -689,6 +689,9 @@ public abstract class JSType implements TypeI, Serializable {
     if (this == that) {
       return true;
     }
+    if (this.isNoResolvedType() && that.isNoResolvedType()) {
+      return true;
+    }
 
     boolean thisUnknown = isUnknownType();
     boolean thatUnknown = that.isUnknownType();

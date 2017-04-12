@@ -54,10 +54,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.FileSystems;
+import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -222,7 +224,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private DefinitionUseSiteFinder defFinder = null;
 
   // Types that have been forward declared
-  private final Set<String> forwardDeclaredTypes = new HashSet<>();
+  private Set<String> forwardDeclaredTypes = new HashSet<>();
 
   // For use by the new type inference
   private GlobalTypeInfo symbolTable;
@@ -361,6 +363,31 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       options.setDisambiguateProperties(false);
       options.setAmbiguateProperties(false);
       options.useNonStrictWarningsGuard();
+    }
+
+    if (options.assumeForwardDeclaredForMissingTypes) {
+      this.forwardDeclaredTypes =
+          new AbstractSet<String>() {
+            @Override
+            public boolean contains(Object o) {
+              return true; // Report all types as forward declared types.
+            }
+
+            @Override
+            public boolean add(String e) {
+              return false;
+            }
+
+            @Override
+            public Iterator<String> iterator() {
+              return Collections.<String>emptySet().iterator();
+            }
+
+            @Override
+            public int size() {
+              return 0;
+            }
+          };
     }
 
     initWarningsGuard(options.getWarningsGuard());

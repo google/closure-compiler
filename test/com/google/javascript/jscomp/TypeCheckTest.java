@@ -12608,6 +12608,64 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "initializing variable\n" + "found   : Array<Object>\n" + "required: null");
   }
 
+  public void testTemplateTypeForwardReference() throws Exception {
+    // TODO(martinprobst): the test below asserts incorrect behavior for backwards compatibility.
+    testTypes(
+        LINE_JOINER.join(
+            "/** @param {!Foo<string>} x */",
+            "function f(x) {}",
+            "",
+            "/**",
+            " * @template T",
+            " * @constructor",
+            " */",
+            "function Foo() {}",
+            "",
+            "/** @param {!Foo<number>} x */",
+            "function g(x) {",
+            "  f(x);",
+            "}"));
+  }
+
+  public void testTemplateTypeForwardReference_declared() throws Exception {
+    compiler.forwardDeclareType("Foo");
+    testTypes(
+        LINE_JOINER.join(
+            "/** @param {!Foo<string>} x */",
+            "function f(x) {}",
+            "",
+            "/**",
+            " * @template T",
+            " * @constructor",
+            " */",
+            "function Foo() {}",
+            "",
+            "/** @param {!Foo<number>} x */",
+            "function g(x) {",
+            "  f(x);",
+            "}"));
+  }
+
+  public void testTemplateTypeForwardReference_declaredMissing() throws Exception {
+    compiler.forwardDeclareType("Foo");
+    testTypes(
+        LINE_JOINER.join(
+            "/** @param {!Foo<DoesNotExist>} x */",
+            "function f(x) {}"));
+  }
+
+  public void testTemplateTypeForwardReference_extends() throws Exception {
+    compiler.forwardDeclareType("Bar");
+    compiler.forwardDeclareType("Baz");
+    testTypes(
+        LINE_JOINER.join(
+            "/** @constructor @extends {Bar<Baz>} */",
+            "function Foo() {}",
+            "/** @constructor */",
+            "function Bar() {}"
+            ));
+  }
+
   public void testSubtypeNotTemplated1() throws Exception {
     testTypes(
         LINE_JOINER.join(

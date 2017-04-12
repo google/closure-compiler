@@ -895,6 +895,16 @@ public class CompilerOptions implements Serializable {
   /** Runtime libraries to never inject. */
   boolean preventLibraryInjection = false;
 
+  boolean assumeForwardDeclaredForMissingTypes = false;
+
+  /**
+   * If {@code true}, considers all missing types to be forward declared (useful for partial
+   * compilation).
+   */
+  public void setAssumeForwardDeclaredForMissingTypes(
+      boolean assumeForwardDeclaredForMissingTypes) {
+    this.assumeForwardDeclaredForMissingTypes = assumeForwardDeclaredForMissingTypes;
+  }
 
   //--------------------------------
   // Output options

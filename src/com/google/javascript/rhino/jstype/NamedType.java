@@ -41,10 +41,12 @@ package com.google.javascript.rhino.jstype;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * A {@code NamedType} is a named reference to some other type.  This provides
@@ -97,6 +99,13 @@ public class NamedType extends ProxyObjectType {
   private List<PropertyContinuation> propertyContinuations = null;
 
   /**
+   * Template types defined on a named, not yet resolved type, or {@code null} if none. These are
+   * ignored during resolution, for backwards compatibility with existing usage.
+   * This field is not used for JSCompiler's type checking; it is only needed by Clutz.
+   */
+  @Nullable private ImmutableList<JSType> templateTypes;
+
+  /**
    * Create a named type based on the reference.
    */
   NamedType(JSTypeRegistry registry, String reference,
@@ -108,6 +117,22 @@ public class NamedType extends ProxyObjectType {
     this.sourceName = sourceName;
     this.lineno = lineno;
     this.charno = charno;
+  }
+
+  NamedType(
+      JSTypeRegistry registry,
+      String reference,
+      String sourceName,
+      int lineno,
+      int charno,
+      ImmutableList<JSType> templateTypes) {
+    this(registry, reference, sourceName, lineno, charno);
+    this.templateTypes = templateTypes;
+  }
+
+  @Override
+  public ImmutableList<JSType> getTemplateTypes() {
+    return templateTypes;
   }
 
   @Override
@@ -336,10 +361,7 @@ public class NamedType extends ProxyObjectType {
     if (!isForwardDeclared) {
       warning(t, "Bad type annotation. Unknown type " + reference);
     } else {
-      setReferencedType(
-          registry.getNativeObjectType(
-              JSTypeNative.NO_RESOLVED_TYPE));
-
+      setReferencedType(new NoResolvedType(registry, getReferenceName(), getTemplateTypes()));
       if (validator != null) {
         validator.apply(getReferencedType());
       }

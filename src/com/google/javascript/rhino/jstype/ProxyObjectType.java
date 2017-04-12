@@ -40,6 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -90,6 +91,13 @@ public class ProxyObjectType extends ObjectType {
     } else {
       this.referencedObjType = null;
     }
+  }
+
+  @Override
+  public boolean setValidator(Predicate<JSType> validator) {
+    // The referenced type might have specialized behavior for validation, e.g. {@link NamedType}
+    // defers validation until after named type resolution.
+    return referencedType.setValidator(validator);
   }
 
   @Override
