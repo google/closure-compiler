@@ -1307,7 +1307,7 @@ public abstract class CompilerTestCase extends TestCase {
     }
     assertWithMessage("Unexpected parse error(s): " + errorMsg).that(root).isNotNull();
     if (!expectParseWarningsThisTest) {
-      assertThat(compiler.getWarnings()).named("parser warnings").isEmpty();
+      assertWithMessage("Unexpected parser warning(s)").that(compiler.getWarnings()).isEmpty();
     } else {
       assertThat(compiler.getWarningCount()).isGreaterThan(0);
     }
