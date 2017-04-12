@@ -637,7 +637,7 @@ public abstract class CompilerTestCase extends TestCase {
     return new TypeCheck(compiler, rai, compiler.getTypeRegistry());
   }
 
-  private static void runNewTypeInference(Compiler compiler, Node externs, Node js) {
+  static void runNewTypeInference(Compiler compiler, Node externs, Node js) {
     GlobalTypeInfo gti = compiler.getSymbolTable();
     gti.process(externs, js);
     NewTypeInference nti = new NewTypeInference(compiler);
