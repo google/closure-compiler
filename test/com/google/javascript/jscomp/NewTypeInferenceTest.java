@@ -19798,4 +19798,30 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  arr[i].prototype.bar = function(asdf) { return asdf; };",
         "}"));
   }
+
+  // TODO(dimvar): we skip the backwards analysis of g (and thus the creation of deferred checks)
+  // when the return type of a function is declared (see NTIScope#hasUndeclaredFormalsOrOuters).
+  // Is it worth having a more accurate test for determining whether a DeclaredFunctionType is
+  // missing information, to catch cases like this one?
+  // It should be uncommon in practice to declare the return and not declare the parameters.
+  public void testMissedWarningDueToNoDeferredCheck() {
+    typeCheck(LINE_JOINER.join(
+        "/** @return {number} */",
+        "function f(x) {",
+        "  var /** string */ s = x;",
+        "  return 123;",
+        "}",
+        "function g() {",
+        "  f(123);", // missed warning
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @return {number} */",
+        "function f(x) {",
+        "  var /** string */ s = x;",
+        "  return 123;",
+        "}",
+        "f(123);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
 }

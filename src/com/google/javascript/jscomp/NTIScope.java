@@ -380,6 +380,7 @@ final class NTIScope implements DeclaredTypeRegistry {
           // Undeclared functions have a non-null declared type,
           //  but they always have a return type of unknown
           || (declType.getFunType() != null
+              && !declType.getFunType().isSomeConstructorOrInterface()
               && declType.getFunType().getReturnType().isUnknown())) {
         return true;
       }
