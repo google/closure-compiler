@@ -42,7 +42,6 @@ final class ReplaceMessages extends JsMessageVisitor {
   ReplaceMessages(AbstractCompiler compiler, MessageBundle bundle,
       boolean checkDuplicatedMessages, JsMessage.Style style,
       boolean strictReplacement) {
-
     super(compiler, checkDuplicatedMessages, style, bundle.idGenerator());
 
     this.bundle = bundle;
@@ -96,7 +95,7 @@ final class ReplaceMessages extends JsMessageVisitor {
     if (newValue != msgNode) {
       newValue.useSourceInfoIfMissingFromForTree(msgNode);
       msgNode.replaceWith(newValue);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(newValue);
     }
   }
 
@@ -124,7 +123,7 @@ final class ReplaceMessages extends JsMessageVisitor {
         String newString = message.toString();
         if (!origValueNode.getString().equals(newString)) {
           origValueNode.setString(newString);
-          compiler.reportCodeChange();
+          compiler.reportChangeToEnclosingScope(origValueNode);
         }
         return origValueNode;
       case ADD:
@@ -186,7 +185,7 @@ final class ReplaceMessages extends JsMessageVisitor {
     if (newBlockNode.checkTreeEquals(oldBlockNode) != null) {
       newBlockNode.useSourceInfoIfMissingFromForTree(oldBlockNode);
       functionNode.replaceChild(oldBlockNode, newBlockNode);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(newBlockNode);
     }
   }
 
