@@ -182,11 +182,6 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     super(TEST_EXTERNS);
   }
 
-  protected void setUp() throws Exception {
-    super.setUp();
-    validateAstChangeMarking(false);
-  }
-
   @Override
   protected int getNumRepetitions() {
     // run pass once.

@@ -73,17 +73,20 @@ class PureFunctionIdentifier implements CompilerPass {
   private final Map<String, FunctionInformation> functionInfoByName = new HashMap<>();
 
   /**
-   * <p>Mapping from function node to side effects for all names associated with that node.
+   * Mapping from function node to side effects for all names associated with that node.
+   *
    * <p>This is a multimap because you can construct situations in which a function node represents
-   * the side effects for two different FunctionInformation instances.  For example:
+   * the side effects for two different FunctionInformation instances. For example:
+   *
    * <pre>
    *   // Not enough type information to collapse/disambiguate properties on "staticMethod".
    *   SomeClass.staticMethod = function anotherName() {};
    *   OtherClass.staticMethod = function() {global++}
    * </pre>
+   *
    * <p>In this situation we want to keep the side effects for "X.staticMethod()" which are "global"
-   * separate from "anotherName()". Hence the function node should point to the
-   * {@link FunctionInformation} for both "staticMethod" and "anotherName".
+   * separate from "anotherName()". Hence the function node should point to the {@link
+   * FunctionInformation} for both "staticMethod" and "anotherName".
    */
   private final Multimap<Node, FunctionInformation> functionSideEffectMap;
 
@@ -129,8 +132,11 @@ class PureFunctionIdentifier implements CompilerPass {
 
   /**
    * Compute debug report that includes:
-   *  - List of all pure functions.
-   *  - Reasons we think the remaining functions have side effects.
+   *
+   * <ul>
+   *   <li>List of all pure functions.
+   *   <li>Reasons we think the remaining functions have side effects.
+   * </ul>
    */
   @VisibleForTesting
   String getDebugReport() {
@@ -597,8 +603,7 @@ class PureFunctionIdentifier implements CompilerPass {
         FunctionInformation sideEffectInfo, Scope scope, Node op, Node enclosingFunction) {
       Node lhs = op.getFirstChild();
       Preconditions.checkState(
-        lhs.isName() || NodeUtil.isGet(lhs),
-        "Unexpected LHS expression:", lhs);
+          lhs.isName() || NodeUtil.isGet(lhs), "Unexpected LHS expression:", lhs);
       if (lhs.isName()) {
         Var var = scope.getVar(lhs.getString());
         if (isVarDeclaredInScope(var, scope)) {
