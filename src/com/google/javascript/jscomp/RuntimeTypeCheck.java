@@ -161,7 +161,7 @@ class RuntimeTypeCheck implements CompilerPass {
           IR.trueNode()));
 
       nodeToInsertAfter.getParent().addChildAfter(assign, nodeToInsertAfter);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(assign);
       nodeToInsertAfter = assign;
       return nodeToInsertAfter;
     }
@@ -265,7 +265,7 @@ class RuntimeTypeCheck implements CompilerPass {
           block.addChildAfter(checkNode, insertionPoint);
         }
 
-        compiler.reportCodeChange();
+        compiler.reportChangeToEnclosingScope(block);
         paramName = paramName.getNext();
         insertionPoint = checkNode;
       }
