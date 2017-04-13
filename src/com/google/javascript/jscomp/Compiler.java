@@ -32,6 +32,7 @@ import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.WarningsGuard.DiagnosticGroupState;
+import com.google.javascript.jscomp.deps.JsFileParser;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.parsing.Config;
@@ -1577,11 +1578,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         externsRoot.addChildToBack(n);
       }
 
-      if (options.numParallelThreads > 1) {
-        // Pre-build AST using multiple thread if we can.
-        new PrebuildAst(this, options.numParallelThreads).prebuild(inputs);
-      }
-
       if (options.lowerFromEs6()
           || options.transformAMDToCJSModules
           || options.processCommonJSModules) {
@@ -1656,6 +1652,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
 
       // Build the AST.
+      if (options.numParallelThreads > 1) {
+        new PrebuildAst(this, options.numParallelThreads).prebuild(inputs);
+      }
+
       for (CompilerInput input : inputs) {
         Node n = input.getAstRoot(this);
         if (n == null) {
@@ -1878,7 +1878,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   void processEs6Modules(List<CompilerInput> inputsToProcess, boolean forceRewrite) {
+    List<CompilerInput> filteredInputs = new ArrayList<>();
     for (CompilerInput input : inputsToProcess) {
+      // Only process files that are detected as ES6 modules or forced to be rewritten
+      if (forceRewrite
+          || !JsFileParser.isSupported()
+          || (input.getLoadFlags().containsKey("module")
+              && input.getLoadFlags().get("module").equals("es6"))) {
+        filteredInputs.add(input);
+      }
+    }
+    if (options.numParallelThreads > 1) {
+      new PrebuildAst(this, options.numParallelThreads).prebuild(filteredInputs);
+    }
+    for (CompilerInput input : filteredInputs) {
       input.setCompiler(this);
       Node root = input.getAstRoot(this);
       if (root == null) {

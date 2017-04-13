@@ -306,4 +306,8 @@ public final class JsFileParser extends JsFileLineParser {
         || line.contains("goog.setTestOnly")
         || line.contains("goog.module.declareLegacyNamespace");
   }
+
+  public static boolean isSupported() {
+    return true;
+  }
 }

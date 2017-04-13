@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import java.util.List;
 
 /** Gwt-compatible no-op version for {@code PrebuildAst}. */
+// TODO(moz): Implement this using GWT's emulation of ListenableFuture and friends
 class PrebuildAst {
 
   PrebuildAst(AbstractCompiler compiler, int numParalleThreads) {

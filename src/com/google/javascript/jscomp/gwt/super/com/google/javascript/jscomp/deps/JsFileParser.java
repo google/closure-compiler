@@ -31,4 +31,8 @@ public final class JsFileParser {
       String fileContents) {
     throw new UnsupportedOperationException("JsFileParser.parseFile not implemented");
   }
+
+  public static boolean isSupported() {
+    return false;
+  }
 }

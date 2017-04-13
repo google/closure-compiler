@@ -64,6 +64,7 @@ class PrebuildAst {
         threadFactory);
     ListeningExecutorService executorService = MoreExecutors.listeningDecorator(poolExecutor);
     List<ListenableFuture<?>> futureList = new ArrayList<>(inputList.size());
+    // TODO(moz): Support canceling all parsing on the first halting error
     for (final CompilerInput input : inputList) {
       futureList.add(executorService.submit(new Runnable() {
         @Override

@@ -364,8 +364,7 @@ public class CompilerOptions implements Serializable {
     this.legacyCodeCompile = legacy;
   }
 
-  // TODO(bradfordcsmith): Resolve the closure managed dependencies case where we don't really want
-  // to fully parse all input files, then investigate how can we use multi-threads as default.
+  // TODO(bradfordcsmith): Investigate how can we use multi-threads as default.
   int numParallelThreads = 1;
 
   /**
