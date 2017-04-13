@@ -257,7 +257,7 @@ Path2D.prototype.arc = function(
     x, y, radius, startAngle, endAngle, optAnticlockwise) {};
 
 /**
- * @param {!Path2D} path
+ * @param {Path2D} path
  * @return {undefined}
  */
 Path2D.prototype.addPath = function(path) {}
@@ -490,20 +490,20 @@ CanvasRenderingContext2D.prototype.ellipse = function(
 };
 
 /**
- * @param {!Path2D|string=} optFillRuleOrPath
+ * @param {Path2D|string=} optFillRuleOrPath
  * @param {string=} optFillRule
  * @return {undefined}
  */
 CanvasRenderingContext2D.prototype.fill = function(optFillRuleOrPath, optFillRule) {};
 
 /**
- * @param {!Path2D=} optStroke
+ * @param {Path2D=} optStroke
  * @return {undefined}
  */
 CanvasRenderingContext2D.prototype.stroke = function(optStroke) {};
 
 /**
- * @param {!Path2D|string=} optFillRuleOrPath
+ * @param {Path2D|string=} optFillRuleOrPath
  * @param {string=} optFillRule
  * @return {undefined}
  */
@@ -556,7 +556,7 @@ CanvasRenderingContext2D.prototype.strokeText = function(
 CanvasRenderingContext2D.prototype.measureText = function(text) {};
 
 /**
- * @param {!HTMLImageElement|!HTMLCanvasElement|!Image|!HTMLVideoElement} image
+ * @param {HTMLImageElement|HTMLCanvasElement|Image|HTMLVideoElement} image
  * @param {number} dx Destination x coordinate.
  * @param {number} dy Destination y coordinate.
  * @param {number=} opt_dw Destination box width.  Defaults to the image width.
@@ -595,7 +595,7 @@ CanvasRenderingContext2D.prototype.createImageData = function(sw, sh) {};
 CanvasRenderingContext2D.prototype.getImageData = function(sx, sy, sw, sh) {};
 
 /**
- * @param {!ImageData} imagedata
+ * @param {ImageData} imagedata
  * @param {number} dx
  * @param {number} dy
  * @param {number=} opt_dirtyX
@@ -879,7 +879,7 @@ SQLResultSet.prototype.insertId;
 SQLResultSet.prototype.rowsAffected;
 
 /**
- * @type {SQLResultSetRowList}
+ * @type {!SQLResultSetRowList}
  */
 SQLResultSet.prototype.rows;
 
@@ -908,7 +908,7 @@ SQLResultSetRowList.prototype.item = function(index) {};
  * @param {string} description
  * @param {number} size
  * @param {(DatabaseCallback|function(Database))=} opt_callback
- * @return {Database}
+ * @return {!Database}
  */
 function openDatabase(name, version, description, size, opt_callback) {}
 
@@ -918,7 +918,7 @@ function openDatabase(name, version, description, size, opt_callback) {}
  * @param {string} description
  * @param {number} size
  * @param {(DatabaseCallback|function(Database))=} opt_callback
- * @return {Database}
+ * @return {!Database}
  */
 Window.prototype.openDatabase =
     function(name, version, description, size, opt_callback) {};
@@ -1281,10 +1281,10 @@ WorkerLocation.prototype.hash;
  */
 function WorkerGlobalScope() {}
 
-/** @type {WorkerGlobalScope} */
+/** @type {!WorkerGlobalScope} */
 WorkerGlobalScope.prototype.self;
 
-/** @type {WorkerLocation} */
+/** @type {!WorkerLocation} */
 WorkerGlobalScope.prototype.location;
 
 /**
@@ -1645,7 +1645,7 @@ HTMLMediaElement.prototype.networkState;
 /** @type {boolean} */
 HTMLMediaElement.prototype.autobuffer;
 
-/** @type {TimeRanges} */
+/** @type {!TimeRanges} */
 HTMLMediaElement.prototype.buffered;
 
 /**
@@ -1814,12 +1814,12 @@ HTMLMediaElement.prototype.muted;
  * @param {string} kind Kind of the text track.
  * @param {string=} opt_label Label of the text track.
  * @param {string=} opt_language Language of the text track.
- * @return {TextTrack} TextTrack object added to the media element.
+ * @return {!TextTrack} TextTrack object added to the media element.
  */
 HTMLMediaElement.prototype.addTextTrack =
     function(kind, opt_label, opt_language) {};
 
-/** @type {TextTrackList} */
+/** @type {!TextTrackList} */
 HTMLMediaElement.prototype.textTracks;
 
 /**
@@ -2308,10 +2308,10 @@ DataTransfer.prototype.dropEffect;
 /** @type {string} */
 DataTransfer.prototype.effectAllowed;
 
-/** @type {Array<string>} */
+/** @type {!Array<string>} */
 DataTransfer.prototype.types;
 
-/** @type {FileList} */
+/** @type {!FileList} */
 DataTransfer.prototype.files;
 
 /**
@@ -2945,7 +2945,7 @@ function Image(opt_width, opt_height) {}
  * Dataset collection.
  * This is really a DOMStringMap but it behaves close enough to an object to
  * pass as an object.
- * @type {Object<string, string>}
+ * @type {!Object<string, string>}
  * @const
  */
 HTMLElement.prototype.dataset;
@@ -3071,8 +3071,10 @@ ValidityState.prototype.valueMissing;
 HTMLButtonElement.prototype.autofocus;
 
 /**
+ * Can return null when hidden.
+ * See https://html.spec.whatwg.org/multipage/forms.html#dom-lfe-labels
  * @const
- * @type {NodeList<!HTMLLabelElement>}
+ * @type {?NodeList<!HTMLLabelElement>}
  */
 HTMLButtonElement.prototype.labels;
 
@@ -3155,8 +3157,10 @@ HTMLInputElement.prototype.formMethod;
 HTMLInputElement.prototype.formTarget;
 
 /**
+ * Can return null when hidden.
+ * See https://html.spec.whatwg.org/multipage/forms.html#dom-lfe-labels
  * @const
- * @type {NodeList<!HTMLLabelElement>}
+ * @type {?NodeList<!HTMLLabelElement>}
  */
 HTMLInputElement.prototype.labels;
 
@@ -3191,8 +3195,10 @@ HTMLLabelElement.prototype.control;
 HTMLSelectElement.prototype.autofocus;
 
 /**
+ * Can return null when hidden.
+ * See https://html.spec.whatwg.org/multipage/forms.html#dom-lfe-labels
  * @const
- * @type {NodeList<!HTMLLabelElement>}
+ * @type {?NodeList<!HTMLLabelElement>}
  */
 HTMLSelectElement.prototype.labels;
 
@@ -3227,8 +3233,10 @@ HTMLSelectElement.prototype.setCustomValidity = function(message) {};
 HTMLTextAreaElement.prototype.autofocus;
 
 /**
+ * Can return null when hidden.
+ * See https://html.spec.whatwg.org/multipage/forms.html#dom-lfe-labels
  * @const
- * @type {NodeList<!HTMLLabelElement>}
+ * @type {?NodeList<!HTMLLabelElement>}
  */
 HTMLTextAreaElement.prototype.labels;
 
@@ -3410,16 +3418,16 @@ MutationRecord.prototype.type;
 /** @type {Node} */
 MutationRecord.prototype.target;
 
-/** @type {NodeList<!Node>} */
+/** @type {!NodeList<!Node>} */
 MutationRecord.prototype.addedNodes;
 
-/** @type {NodeList<!Node>} */
+/** @type {!NodeList<!Node>} */
 MutationRecord.prototype.removedNodes;
 
-/** @type {Node} */
+/** @type {?Node} */
 MutationRecord.prototype.previousSibling;
 
-/** @type {Node} */
+/** @type {?Node} */
 MutationRecord.prototype.nextSibling;
 
 /** @type {?string} */
@@ -4047,7 +4055,7 @@ HTMLOutputElement.prototype.defaultValue;
 HTMLOutputElement.prototype.value;
 
 /**
- * @const {NodeList<!HTMLLabelElement>}
+ * @const {?NodeList<!HTMLLabelElement>}
  */
 HTMLOutputElement.prototype.labels;
 
@@ -4093,7 +4101,7 @@ HTMLProgressElement.prototype.max;
 HTMLProgressElement.prototype.position;
 
 
-/** @type {NodeList<!Node>} */
+/** @type {?NodeList<!Node>} */
 HTMLProgressElement.prototype.labels;
 
 
@@ -4130,7 +4138,7 @@ HTMLTrackElement.prototype.default;
 HTMLTrackElement.prototype.readyState;
 
 
-/** @const {TextTrack} */
+/** @const {!TextTrack} */
 HTMLTrackElement.prototype.track;
 
 
@@ -4167,7 +4175,7 @@ HTMLMeterElement.prototype.high;
 HTMLMeterElement.prototype.optimum;
 
 
-/** @type {NodeList<!Node>} */
+/** @type {?NodeList<!Node>} */
 HTMLMeterElement.prototype.labels;
 
 
@@ -4267,13 +4275,13 @@ Navigator.prototype.unregisterProtocolHandler = function(scheme, url) {}
 Navigator.prototype.unregisterContentHandler = function(mimeType, url) {}
 
 /**
- * @type {MimeTypeArray}
+ * @type {!MimeTypeArray}
  * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-mimetypes
  */
 Navigator.prototype.mimeTypes;
 
 /**
- * @type {PluginArray}
+ * @type {!PluginArray}
  * @see https://www.w3.org/TR/html5/webappapis.html#dom-navigator-plugins
  */
 Navigator.prototype.plugins;
