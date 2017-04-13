@@ -257,7 +257,7 @@ Path2D.prototype.arc = function(
     x, y, radius, startAngle, endAngle, optAnticlockwise) {};
 
 /**
- * @param {Path2D} path
+ * @param {!Path2D} path
  * @return {undefined}
  */
 Path2D.prototype.addPath = function(path) {}
@@ -332,7 +332,7 @@ CanvasRenderingContext2D.prototype.setTransform = function(
  * @param {number} y0
  * @param {number} x1
  * @param {number} y1
- * @return {CanvasGradient}
+ * @return {!CanvasGradient}
  * @throws {Error}
  */
 CanvasRenderingContext2D.prototype.createLinearGradient = function(
@@ -345,7 +345,7 @@ CanvasRenderingContext2D.prototype.createLinearGradient = function(
  * @param {number} x1
  * @param {number} y1
  * @param {number} r1
- * @return {CanvasGradient}
+ * @return {!CanvasGradient}
  * @throws {Error}
  */
 CanvasRenderingContext2D.prototype.createRadialGradient = function(
@@ -354,8 +354,9 @@ CanvasRenderingContext2D.prototype.createRadialGradient = function(
 /**
  * @param {HTMLImageElement|HTMLCanvasElement} image
  * @param {string} repetition
- * @return {CanvasPattern}
+ * @return {?CanvasPattern}
  * @throws {Error}
+ * @see https://html.spec.whatwg.org/multipage/scripting.html#dom-context-2d-createpattern
  */
 CanvasRenderingContext2D.prototype.createPattern = function(
     image, repetition) {};
@@ -489,20 +490,20 @@ CanvasRenderingContext2D.prototype.ellipse = function(
 };
 
 /**
- * @param {Path2D|string=} optFillRuleOrPath
+ * @param {!Path2D|string=} optFillRuleOrPath
  * @param {string=} optFillRule
  * @return {undefined}
  */
 CanvasRenderingContext2D.prototype.fill = function(optFillRuleOrPath, optFillRule) {};
 
 /**
- * @param {Path2D=} optStroke
+ * @param {!Path2D=} optStroke
  * @return {undefined}
  */
 CanvasRenderingContext2D.prototype.stroke = function(optStroke) {};
 
 /**
- * @param {Path2D|string=} optFillRuleOrPath
+ * @param {!Path2D|string=} optFillRuleOrPath
  * @param {string=} optFillRule
  * @return {undefined}
  */
@@ -549,13 +550,13 @@ CanvasRenderingContext2D.prototype.strokeText = function(
 
 /**
  * @param {string} text
- * @return {TextMetrics}
+ * @return {!TextMetrics}
  * @nosideeffects
  */
 CanvasRenderingContext2D.prototype.measureText = function(text) {};
 
 /**
- * @param {HTMLImageElement|HTMLCanvasElement|Image|HTMLVideoElement} image
+ * @param {!HTMLImageElement|!HTMLCanvasElement|!Image|!HTMLVideoElement} image
  * @param {number} dx Destination x coordinate.
  * @param {number} dy Destination y coordinate.
  * @param {number=} opt_dw Destination box width.  Defaults to the image width.
@@ -578,6 +579,7 @@ CanvasRenderingContext2D.prototype.drawImage = function(
  * @param {number} sw
  * @param {number} sh
  * @return {!ImageData}
+ * @throws {Error}
  * @nosideeffects
  */
 CanvasRenderingContext2D.prototype.createImageData = function(sw, sh) {};
@@ -593,7 +595,7 @@ CanvasRenderingContext2D.prototype.createImageData = function(sw, sh) {};
 CanvasRenderingContext2D.prototype.getImageData = function(sx, sy, sw, sh) {};
 
 /**
- * @param {ImageData} imagedata
+ * @param {!ImageData} imagedata
  * @param {number} dx
  * @param {number} dy
  * @param {number=} opt_dirtyX
@@ -630,12 +632,12 @@ CanvasRenderingContext2D.prototype.setFillColor;
 CanvasRenderingContext2D.prototype.setStrokeColor;
 
 /**
- * @return {Array<number>}
+ * @return {!Array<number>}
  */
 CanvasRenderingContext2D.prototype.getLineDash;
 
 /**
- * @param {Array<number>} segments
+ * @param {!Array<number>} segments
  * @return {undefined}
  */
 CanvasRenderingContext2D.prototype.setLineDash;
