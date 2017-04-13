@@ -21,16 +21,21 @@ package com.google.javascript.jscomp;
  * Tests for the interaction of multiple peephole passes are in
  * PeepholeIntegrationTest.
  */
-public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
+public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase {
 
   private boolean late = true;
   private boolean useTypes = true;
+
+  public PeepholeMinimizeConditionsTest() {
+    super(DEFAULT_EXTERNS);
+  }
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
     late = true;
     useTypes = true;
+    this.mode = TypeInferenceMode.NEITHER;
   }
 
   @Override
@@ -44,6 +49,14 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   @Override
   protected int getNumRepetitions() {
     return 1;
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    // NTI warns about property accesses on *
+    options.setWarningLevel(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
+    return options;
   }
 
   private void foldSame(String js) {
@@ -743,7 +756,7 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   }
 
   public void testCoercionSubstitution_disabled() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     useTypes = false;
     testSame("var x = {}; if (x != null) throw 'a';");
     testSame("var x = {}; var y = x != null;");
@@ -753,7 +766,7 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   }
 
   public void testCoercionSubstitution_booleanResult() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     test("var x = {}; var y = x != null;", "var x = {}; var y = !!x;");
     test("var x = {}; var y = x == null;", "var x = {}; var y = !x;");
     testSame("var x = {}; var y = x !== null;");
@@ -768,7 +781,7 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   }
 
   public void testCoercionSubstitution_if() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     test("var x = {};\nif (x != null) throw 'a';\n", "var x = {};\nif (x) throw 'a';\n");
     test("var x = {};\nif (x == null) throw 'a';\n", "var x = {};\nif (!x) throw 'a';\n");
     testSame("var x = {};\nif (x !== null) throw 'a';\n");
@@ -789,7 +802,7 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   }
 
   public void testCoercionSubstitution_expression() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     test(
         "var x = {}; x != null && alert('b');",
         "var x = {}; x && alert('b');");
@@ -799,25 +812,25 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   }
 
   public void testCoercionSubstitution_hook() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     test("var x = {};\nvar y = x != null ? 1 : 2;\n", "var x = {};\nvar y = x ? 1 : 2;\n");
     test("var x = 1;\nvar y = x != 0 ? 1 : 2;\n", "var x = 1;\nvar y = x ? 1 : 2;\n");
   }
 
   public void testCoercionSubstitution_not() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     test("var x = {};\nvar y = !(x != null) ? 1 : 2;\n", "var x = {};\nvar y = x ? 2 : 1;\n");
     test("var x = 1;\nvar y = !(x != 0) ? 1 : 2;\n", "var x = 1;\nvar y = x ? 2 : 1;\n");
   }
 
   public void testCoercionSubstitution_while() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     test("var x = {};\nwhile (x != null) throw 'a'\n", "var x = {};\nwhile (x) throw 'a';\n");
     test("var x = 1;\nwhile (x != 0) throw 'a'\n", "var x = 1;\nwhile (x) throw 'a';\n");
   }
 
   public void testCoercionSubstitution_nullableType() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     test(
         "var x = /** @type {?Object} */ ({}); if (x != null) throw 'a';",
         "var x = /** @type {?Object} */ ({}); if (x) throw 'a';");
@@ -871,38 +884,38 @@ public final class PeepholeMinimizeConditionsTest extends CompilerTestCase {
   }
 
   public void testCoercionSubstitution_unknownType() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     testSame("var x = /** @type {?} */ ({});\nif (x != null) throw 'a';\n");
     testSame("var x = /** @type {?} */ (1);\nif (x != 0) throw 'a';\n");
   }
 
   public void testCoercionSubstitution_allType() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     testSame("var x = /** @type {*} */ ({});\nif (x != null) throw 'a';\n");
     testSame("var x = /** @type {*} */ (1);\nif (x != 0) throw 'a';\n");
   }
 
   public void testCoercionSubstitution_primitivesVsNull() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     testSame("var x = 0;\nif (x != null) throw 'a';\n");
     testSame("var x = '';\nif (x != null) throw 'a';\n");
     testSame("var x = false;\nif (x != null) throw 'a';\n");
   }
 
   public void testCoercionSubstitution_nonNumberVsZero() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     testSame("var x = {};\nif (x != 0) throw 'a';\n");
     testSame("var x = '';\nif (x != 0) throw 'a';\n");
     testSame("var x = false;\nif (x != 0) throw 'a';\n");
   }
 
   public void testCoercionSubstitution_boxedNumberVsZero() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     testSame("var x = new Number(0);\nif (x != 0) throw 'a';\n");
   }
 
   public void testCoercionSubstitution_boxedPrimitives() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     test(
         "var x = new Number();\nif (x != null) throw 'a';\n",
         "var x = new Number();\nif (x) throw 'a';\n");
