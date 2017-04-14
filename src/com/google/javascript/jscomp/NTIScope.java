@@ -181,6 +181,11 @@ final class NTIScope implements DeclaredTypeRegistry {
     return formals.contains(name);
   }
 
+  boolean isFormalParamInAnyAncestorScope(String name) {
+    return isFormalParam(name)
+        || (this.parent != null && this.parent.isFormalParamInAnyAncestorScope(name));
+  }
+
   boolean isLocalFunDef(String name) {
     return localFunDefs.containsKey(name);
   }

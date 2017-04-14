@@ -19824,4 +19824,38 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "f(123);"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
+
+  public void testDontWarnForFirstClassInterfaceConstructors() {
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "var Bar = Foo;",
+        "var x = new Bar;"),
+        NewTypeInference.NOT_A_CONSTRUCTOR);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @interface */",
+        "ns.Foo = function() {};",
+        "var x = new ns.Foo;"),
+        NewTypeInference.NOT_A_CONSTRUCTOR);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "/** @constructor @implements {Foo} */",
+        "function Bar() {}",
+        "function f(/** function(new: Foo) */ ctor) {",
+        "  var x = new ctor;",
+        "}",
+        "f(Bar);"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "function f(/** { ctor: function(new: Foo) } */ ns) {",
+        "  var x = new ns.ctor;",
+        "}"));
+  }
 }

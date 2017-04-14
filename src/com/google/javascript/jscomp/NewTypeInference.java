@@ -1999,7 +1999,18 @@ final class NewTypeInference implements CompilerPass {
       return analyzeCallNodeArgsFwdWhenError(expr, envAfterCallee);
     } else if (expr.isNew()) {
       if (!funType.isSomeConstructorOrInterface() || funType.isInterfaceDefinition()) {
-        warnings.add(JSError.make(expr, NOT_A_CONSTRUCTOR, funType.toString()));
+        // When Foo is an interface type, we don't want to warn when someone passes around
+        // a first-class function of type function(new:Foo); we only want to warn when someone
+        // directly calls: new Foo.
+        // But there is no distinction between these two types in the type system, so we use
+        // a heuristic here: if the function was passed as a formal parameter (either directly
+        // or as an arbitrarily nested property), don't warn.
+        if (callee.isQualifiedName()) {
+          String qnameRoot = QualifiedName.fromNode(callee).getLeftmostName();
+          if (!currentScope.isFormalParamInAnyAncestorScope(qnameRoot)) {
+            warnings.add(JSError.make(expr, NOT_A_CONSTRUCTOR, funType.toString()));
+          }
+        }
         return analyzeCallNodeArgsFwdWhenError(expr, envAfterCallee);
       } else if (funType.isConstructorOfAbstractClass()) {
         warnings.add(JSError.make(expr, CANNOT_INSTANTIATE_ABSTRACT_CLASS, funType.toString()));
