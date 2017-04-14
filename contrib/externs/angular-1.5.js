@@ -2203,8 +2203,16 @@ angular.FormController.prototype.$valid;
  */
 angular.$parse;
 
+/** @const */
+angular.parse = {};
+
 /**
  * @typedef {function((!angular.Scope|!Object), Object=):*}
+ */
+angular.parse.Expression;
+
+/**
+ * @typedef {angular.parse.Expression}
  */
 angular.$parse.Expression;
 
