@@ -1882,6 +1882,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     for (CompilerInput input : inputsToProcess) {
       // Only process files that are detected as ES6 modules or forced to be rewritten
       if (forceRewrite
+          || !options.dependencyOptions.shouldPruneDependencies()
           || !JsFileParser.isSupported()
           || (input.getLoadFlags().containsKey("module")
               && input.getLoadFlags().get("module").equals("es6"))) {
