@@ -93,7 +93,7 @@ public  final class ConformanceConfig extends
             com.google.javascript.jscomp.ConformanceConfig.class, com.google.javascript.jscomp.ConformanceConfig.Builder.class);
   }
 
-  public static com.google.protobuf.Parser<ConformanceConfig> PARSER =
+  public static final com.google.protobuf.Parser<ConformanceConfig> PARSER =
       new com.google.protobuf.AbstractParser<ConformanceConfig>() {
     public ConformanceConfig parsePartialFrom(
         com.google.protobuf.CodedInputStream input,

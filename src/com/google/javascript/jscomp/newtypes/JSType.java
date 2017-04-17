@@ -91,7 +91,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   // Used only for development, to test performance of the code without the cost
   // of printing the error messages.
-  public static boolean mockToString = false;
+  public static final boolean mockToString = false;
 
   private JSType(JSTypes commonTypes) {
     Preconditions.checkNotNull(commonTypes);

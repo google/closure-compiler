@@ -18,7 +18,7 @@ package java.io;
 
 /** GWT compatible no-op replacement for {@code File} */
 public class File {
-  public static String separator = "/";
+  public static final String separator = "/";
 
   public File(String pathname) {
   }

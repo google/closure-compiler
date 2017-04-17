@@ -120,7 +120,7 @@ public  final class Instrumentation extends
             com.google.javascript.jscomp.Instrumentation.class, com.google.javascript.jscomp.Instrumentation.Builder.class);
   }
 
-  public static com.google.protobuf.Parser<Instrumentation> PARSER =
+  public static final com.google.protobuf.Parser<Instrumentation> PARSER =
       new com.google.protobuf.AbstractParser<Instrumentation>() {
     public Instrumentation parsePartialFrom(
         com.google.protobuf.CodedInputStream input,

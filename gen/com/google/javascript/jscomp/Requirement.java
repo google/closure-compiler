@@ -173,7 +173,7 @@ public  final class Requirement extends
             com.google.javascript.jscomp.Requirement.class, com.google.javascript.jscomp.Requirement.Builder.class);
   }
 
-  public static com.google.protobuf.Parser<Requirement> PARSER =
+  public static final com.google.protobuf.Parser<Requirement> PARSER =
       new com.google.protobuf.AbstractParser<Requirement>() {
     public Requirement parsePartialFrom(
         com.google.protobuf.CodedInputStream input,
