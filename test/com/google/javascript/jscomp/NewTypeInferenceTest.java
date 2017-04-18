@@ -2175,7 +2175,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  var /** string */ s;",
         "  s = goog.asserts.assertString(123);",
         "}"),
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        NewTypeInference.ASSERT_FALSE);
 
     typeCheck(LINE_JOINER.join(
         "/** @const */",
@@ -2185,6 +2185,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  return goog.asserts.assertInstanceof(x, ns.Foo);",
         "}"),
         NewTypeInference.UNKNOWN_ASSERTION_TYPE);
+
+    typeCheck("goog.asserts.assert(false, 'this code should not run');");
   }
 
   public void testDontInferBottom() {
@@ -8977,10 +8979,13 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
   }
 
   public void testBottomPropAccessDoesntCrash() {
+    // Questionable whether or not we should warn here. We just do it because obj being null
+    // (instead of bottom) in the THEN branch makes other more useful cases behave better.
     typeCheck(LINE_JOINER.join(
         "Object.prototype.prop;",
         "var obj = null;",
-        "if (obj) obj.prop += 7;"));
+        "if (obj) obj.prop += 7;"),
+        NewTypeInference.ADDING_PROPERTY_TO_NON_OBJECT);
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
@@ -19856,6 +19861,54 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function Foo() {}",
         "function f(/** { ctor: function(new: Foo) } */ ns) {",
         "  var x = new ns.ctor;",
+        "}"));
+  }
+
+  public void testDontTurnKnownObjectIntoLooseBecauseOfBottomSpecialization() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Bar(x) {}",
+        "/** @constructor */",
+        "function Foo(x) {",
+        "  /** @type {boolean} */",
+        "  this.mybool = false;",
+        "  if (this.mybool) {",
+        "    this.prop1 = 123;",
+        "  }",
+        "  var /** !Bar */ b = this;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "function f() {",
+        "  var /** number */ n;",
+        "  var obj = new Foo;",
+        "  obj.mybool = false;",
+        "  if (obj.mybool) {",
+        "    n = obj;",
+        "  }",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // this.prop becomes non-null in the prototype method, and NTI doesn't see it.
+    // So, at the IF test in the constructor, it thinks the property is null, and the truthy
+    // test is always false, so the specialization goes to bottom.
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  /** @type {?Foo} */",
+        "  this.prop = null;",
+        "  this.init();",
+        "  if (this.prop) {",
+        "    var /** !Foo */ x = this.prop;",
+        "  }",
+        "}",
+        "Bar.prototype.init = function() {",
+        "  this.prop = new Foo;",
         "}"));
   }
 }

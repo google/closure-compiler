@@ -318,7 +318,6 @@ final class NewTypeInference implements CompilerPass {
 
   static final DiagnosticGroup COMPATIBLE_DIAGNOSTICS = new DiagnosticGroup(
       ABSTRACT_SUPER_METHOD_NOT_CALLABLE,
-      ASSERT_FALSE,
       CANNOT_BIND_CTOR,
       CANNOT_INSTANTIATE_ABSTRACT_CLASS,
       CONST_PROPERTY_DELETED,
@@ -354,6 +353,7 @@ final class NewTypeInference implements CompilerPass {
   // to the join of the types.
   static final DiagnosticGroup NEW_DIAGNOSTICS = new DiagnosticGroup(
       ADDING_PROPERTY_TO_NON_OBJECT,
+      ASSERT_FALSE,
       BOTTOM_INDEX_TYPE,
       BOTTOM_PROP,
       CROSS_SCOPE_GOTCHA,
@@ -1623,16 +1623,33 @@ final class NewTypeInference implements CompilerPass {
     // If preciseType is bottom, there is a condition that can't be true,
     // but that's not necessarily a type error.
     JSType preciseType = inferredType.specialize(specializedType);
+    if (preciseType.isBottom()) {
+      preciseType = pickFallbackTypeAfterBottom(varName, inferredType, specializedType);
+    }
     println(varName, "'s preciseType: ", preciseType);
-    if (!preciseType.isBottom()
-        && (currentScope.isUndeclaredFormal(varName)
-            || currentScope.isUndeclaredOuterVar(varName))
+    if ((currentScope.isUndeclaredFormal(varName)
+        || currentScope.isUndeclaredOuterVar(varName))
         && preciseType.hasNonScalar()) {
       // In the bwd direction, we may infer a loose type and then join w/
       // top and forget it. That's why we also loosen types going fwd.
       preciseType = preciseType.withLoose();
     }
     return EnvTypePair.addBinding(inEnv, varName, preciseType);
+  }
+
+  /**
+   * Specialization of a name or of THIS may go to bottom, e.g., as a result of an IF test that NTI
+   * thinks is always false. When this happens, we pick a different type to flow around,
+   * because bottom may cause unintuitive warnings down the line.
+   */
+  private JSType pickFallbackTypeAfterBottom(
+      String name, JSType inferredType, JSType specializedType) {
+    JSType declType = currentScope.getDeclaredTypeOf(name);
+    if (declType == null) {
+      return inferredType;
+    }
+    JSType preciseType = declType.specialize(specializedType);
+    return preciseType.isBottom() ? declType : preciseType;
   }
 
   private EnvTypePair analyzeLogicalOpFwd(
@@ -2222,19 +2239,21 @@ final class NewTypeInference implements CompilerPass {
       warnings.add(JSError.make(callNode, UNKNOWN_ASSERTION_TYPE));
     }
     EnvTypePair pair = analyzeExprFwd(assertedNode, env, UNKNOWN, assertedType);
-    if (!pair.type.isSubtypeOf(assertedType)
-        && JSType.haveCommonSubtype(assertedType, pair.type)) {
+    boolean haveCommonSubtype = JSType.haveCommonSubtype(assertedType, pair.type);
+    if (!pair.type.isSubtypeOf(assertedType) && haveCommonSubtype) {
       // We do this because the assertion needs to return a subtype of the
       // asserted type to its context, but sometimes the asserted expression
       // can't be specialized.
       pair.type = assertedType;
     }
-    if (pair.type.isBottom()) {
+    if (!haveCommonSubtype) {
       JSType t = analyzeExprFwd(assertedNode, env).type.substituteGenericsWithUnknown();
       if (t.isSubtypeOf(assertedType)) {
         pair.type = t;
       } else {
-        warnings.add(JSError.make(assertedNode, ASSERT_FALSE));
+        if (!firstParam.isFalse()) { // Don't warn for an explicit: assert(false);
+          warnings.add(JSError.make(assertedNode, ASSERT_FALSE));
+        }
         pair.type = UNKNOWN;
         pair.env = env;
       }
@@ -2459,6 +2478,9 @@ final class NewTypeInference implements CompilerPass {
       return new EnvTypePair(inEnv, inferredType);
     }
     JSType preciseType = inferredType.specialize(specializedType);
+    if (preciseType.isBottom()) {
+      preciseType = pickFallbackTypeAfterBottom(THIS_ID, inferredType, specializedType);
+    }
     return EnvTypePair.addBinding(inEnv, THIS_ID, preciseType);
   }
 
