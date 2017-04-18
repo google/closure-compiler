@@ -59,7 +59,6 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
     addAdditionalNamespace = false;
     preserveGoogProvidesAndRequires = false;
     banGoogBase = false;
-    validateAstChangeMarking(false);
   }
 
   @Override

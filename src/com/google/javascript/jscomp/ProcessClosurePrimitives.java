@@ -218,8 +218,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
 
     for (Node closureRequire : requiresToBeRemoved) {
+      compiler.reportChangeToEnclosingScope(closureRequire);
       closureRequire.detach();
-      compiler.reportCodeChange();
     }
   }
 
@@ -236,7 +236,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         compiler, name, value, n.getJSDocInfo());
     replacement.useSourceInfoIfMissingFromForTree(parent);
     parent.replaceWith(replacement);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(replacement);
   }
 
   @Override
@@ -627,13 +627,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       }
 
       // We're good to go.
-      n.replaceChild(
-          callee,
+      Node newCallee =
           NodeUtil.newQName(
-            compiler,
-            baseClassNode.getQualifiedName() + ".call",
-            callee, "goog.base"));
-      compiler.reportCodeChange();
+              compiler, baseClassNode.getQualifiedName() + ".call", callee, "goog.base");
+      n.replaceChild(callee, newCallee);
+      compiler.reportChangeToEnclosingScope(newCallee);
     } else {
       // Handle methods.
       Node methodNameNode = thisArg.getNext();
@@ -660,7 +658,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             className.getQualifiedName() + ".superClass_." + methodName + ".call",
             callee, "goog.base"));
       n.removeChild(methodNameNode);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(n);
     }
   }
 
@@ -782,7 +780,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             baseClassNode.getQualifiedName() + ".call",
             callee, enclosingQname + ".base"));
       n.removeChild(methodNameNode);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(n);
     } else {
       if (!knownClosureSubclasses.contains(baseContainer)) {
         // Can't determine if this is a known "class" that has a known "base"
@@ -834,7 +832,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             className.getQualifiedName() + ".superClass_." + methodName + ".call",
             callee, enclosingQname + ".base"));
       n.removeChild(methodNameNode);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(n);
     }
   }
 
@@ -901,7 +899,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       Node expr = new Node(Token.EXPR_RESULT);
       expr.useSourceInfoWithoutLengthIfMissingFromForTree(parent);
       parent.getParent().addChildBefore(expr, parent);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(expr);
 
       JSModule module = t.getModule();
       registerAnyProvidedPrefixes(name, expr, module);
@@ -913,8 +911,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       // Remove this provide if it came from a previous pass since we have an
       // replacement already.
       if (isNamespacePlaceholder(parent)) {
+        compiler.reportChangeToEnclosingScope(parent);
         parent.getParent().removeChild(parent);
-        compiler.reportCodeChange();
       }
     }
   }
@@ -1014,8 +1012,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         }
       };
       compiler.setCssRenamingMap(cssRenamingMap);
+      compiler.reportChangeToEnclosingScope(parent);
       parent.getParent().removeChild(parent);
-      compiler.reportCodeChange();
     }
   }
 
@@ -1096,8 +1094,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
     // We can't modify parent, so just create a node that will
     // get compiled out.
-    parent.replaceChild(n, IR.number(0));
-    compiler.reportCodeChange();
+    Node emptyNode = IR.number(0);
+    parent.replaceChild(n, emptyNode);
+    compiler.reportChangeToEnclosingScope(emptyNode);
   }
 
   /**
@@ -1122,8 +1121,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     if (typeDeclaration != null) {
       compiler.forwardDeclareType(typeDeclaration);
       // Forward declaration was recorded and we can remove the call.
+      compiler.reportChangeToEnclosingScope(parent);
       parent.detach();
-      compiler.reportCodeChange();
     }
   }
 
@@ -1383,7 +1382,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             varNode.useSourceInfoFrom(candidateDefinition);
             candidateDefinition.replaceWith(varNode);
             varNode.setJSDocInfo(assignNode.getJSDocInfo());
-            compiler.reportCodeChange();
+            compiler.reportChangeToEnclosingScope(varNode);
             replacementNode = varNode;
           }
         }
@@ -1410,14 +1409,14 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
                 replacementNode, parentName.replacementNode);
           }
         }
-        compiler.reportCodeChange();
+        compiler.reportChangeToEnclosingScope(replacementNode);
       }
       if (explicitNode != null) {
         if (preserveGoogProvidesAndRequires && explicitNode.hasChildren()) {
           return;
         }
+        compiler.reportChangeToEnclosingScope(explicitNode);
         explicitNode.detach();
-        compiler.reportCodeChange();
       }
     }
 

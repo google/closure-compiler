@@ -39,7 +39,6 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   @Override
   protected void setUp() {
     super.enableNormalize();
-    validateAstChangeMarking(false);
   }
 
   @Override

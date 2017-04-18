@@ -153,6 +153,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
       argumentsVar.setJSDocInfo(jsdoc.build());
       argumentsVar.useSourceInfoIfMissingFromForTree(scopeBody);
       scopeBody.addChildToFront(argumentsVar);
+      compiler.reportChangeToEnclosingScope(argumentsVar);
     }
     if (thisContext.needsThisVar) {
       Node name = IR.name(THIS_VAR);
@@ -166,8 +167,8 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
         //     if (...) { super(); arrow function } else { super(); }
         scopeBody.addChildAfter(thisVar, thisContext.lastSuperStatement);
       }
+      compiler.reportChangeToEnclosingScope(thisVar);
     }
-    compiler.reportCodeChange();
   }
 
   private static class UpdateThisAndArgumentsReferences implements NodeTraversal.Callback {

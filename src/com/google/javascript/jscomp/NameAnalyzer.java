@@ -1102,8 +1102,8 @@ final class NameAnalyzer implements CompilerPass {
 
   private class RemoveListener implements AstChangeProxy.ChangeListener {
     @Override
-    public void nodeRemoved(Node n) {
-      compiler.reportCodeChange();
+    public void nodeRemoved(Node n, Node parent) {
+      compiler.reportChangeToEnclosingScope(parent);
     }
   }
 

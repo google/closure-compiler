@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,10 +37,8 @@ class AstChangeProxy {
    */
   interface ChangeListener {
 
-    /**
-     * Notifies clients about node removals.
-     */
-    void nodeRemoved(Node node);
+    /** Notifies clients about node removals. */
+    void nodeRemoved(Node node, Node parent);
   }
 
   private final List<ChangeListener> listeners;
@@ -66,10 +63,12 @@ class AstChangeProxy {
 
   /**
    * Notifies listeners about a removal.
+   *
+   * @param parent
    */
-  private void notifyOfRemoval(Node node) {
+  private void notifyOfRemoval(Node node, Node parent) {
     for (ChangeListener listener : listeners) {
-      listener.nodeRemoved(node);
+      listener.nodeRemoved(node, parent);
     }
   }
 
@@ -79,7 +78,7 @@ class AstChangeProxy {
   final void removeChild(Node parent, Node node) {
     parent.removeChild(node);
 
-    notifyOfRemoval(node);
+    notifyOfRemoval(node, parent);
   }
 
   /**
@@ -123,6 +122,6 @@ class AstChangeProxy {
       }
       parent.removeChild(node);
     }
-    notifyOfRemoval(node);
+    notifyOfRemoval(node, parent);
   }
 }

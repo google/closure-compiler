@@ -237,7 +237,7 @@ class CollapseProperties implements CompilerPass {
     Node parent = ref.node.getParent();
     Node grandparent = parent.getParent();
     grandparent.replaceChild(parent, varNode);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(varNode);
   }
 
   /**
@@ -376,7 +376,7 @@ class CollapseProperties implements CompilerPass {
     }
 
     parent.replaceChild(n, ref);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(ref);
   }
 
   /**
@@ -462,6 +462,7 @@ class CollapseProperties implements CompilerPass {
 
       Node varNode = IR.var(nameNode);
       greatGrandparent.replaceChild(grandparent, varNode);
+      compiler.reportChangeToEnclosingScope(varNode);
     } else {
       // This must be a complex assignment.
       Preconditions.checkNotNull(ref.getTwin());
@@ -486,9 +487,8 @@ class CollapseProperties implements CompilerPass {
       currentParent.addChildBefore(stubVar, current);
 
       parent.replaceChild(ref.node, nameNode);
+      compiler.reportChangeToEnclosingScope(nameNode);
     }
-
-    compiler.reportCodeChange();
   }
 
   /**
@@ -568,13 +568,14 @@ class CollapseProperties implements CompilerPass {
       varParent.replaceChild(grandparent, varNode);
       ref.node = null;
       insertedVarNode = true;
-
+      compiler.reportChangeToEnclosingScope(varNode);
     } else if (!n.isSimpleName()) {
       // Create a VAR node to declare the name.
       if (rvalue.isFunction()) {
         checkForHosedThisReferences(rvalue, n.docInfo, n);
       }
 
+      compiler.reportChangeToEnclosingScope(rvalue);
       ref.node.getParent().removeChild(rvalue);
 
       Node nameNode = NodeUtil.newName(compiler,
@@ -596,6 +597,7 @@ class CollapseProperties implements CompilerPass {
       // Update the node ancestry stored in the reference.
       ref.node = nameNode;
       insertedVarNode = true;
+      compiler.reportChangeToEnclosingScope(varNode);
     }
 
     if (canCollapseChildNames) {
@@ -612,7 +614,6 @@ class CollapseProperties implements CompilerPass {
       if (!varNode.hasChildren()) {
         varParent.removeChild(varNode);
       }
-      compiler.reportCodeChange();
     }
   }
 
@@ -660,30 +661,23 @@ class CollapseProperties implements CompilerPass {
     Node grandparent = varNode.getParent();
 
     boolean isObjLit = rvalue.isObjectLit();
-    int numChanges = 0;
 
     if (isObjLit) {
-      numChanges += declareVarsForObjLitValues(
-          n, name, rvalue, varNode, varNode.getPrevious(),
-          grandparent);
+      declareVarsForObjLitValues(n, name, rvalue, varNode, varNode.getPrevious(), grandparent);
     }
 
-    numChanges += addStubsForUndeclaredProperties(n, name, grandparent, varNode);
+    addStubsForUndeclaredProperties(n, name, grandparent, varNode);
 
     if (isObjLit && n.canEliminate()) {
       varNode.removeChild(ref.node);
+      compiler.reportChangeToEnclosingScope(varNode);
       if (!varNode.hasChildren()) {
         grandparent.removeChild(varNode);
       }
-      numChanges++;
 
       // Clear out the object reference, since we've eliminated it from the
       // parse tree.
       ref.node = null;
-    }
-
-    if (numChanges > 0) {
-      compiler.reportCodeChange();
     }
   }
 
@@ -707,22 +701,23 @@ class CollapseProperties implements CompilerPass {
   }
 
   /**
-   * Declares global variables to serve as aliases for the values in an object
-   * literal, optionally removing all of the object literal's keys and values.
+   * Declares global variables to serve as aliases for the values in an object literal, optionally
+   * removing all of the object literal's keys and values.
    *
    * @param alias The object literal's flattened name (e.g. "a$b$c")
    * @param objlit The OBJLIT node
-   * @param varNode The VAR node to which new global variables should be added
-   *     as children
-   * @param nameToAddAfter The child of {@code varNode} after which new
-   *     variables should be added (may be null)
+   * @param varNode The VAR node to which new global variables should be added as children
+   * @param nameToAddAfter The child of {@code varNode} after which new variables should be added
+   *     (may be null)
    * @param varParent {@code varNode}'s parent
-   * @return The number of variables added
    */
-  private int declareVarsForObjLitValues(
-      Name objlitName, String alias, Node objlit, Node varNode,
-      Node nameToAddAfter, Node varParent) {
-    int numVars = 0;
+  private void declareVarsForObjLitValues(
+      Name objlitName,
+      String alias,
+      Node objlit,
+      Node varNode,
+      Node nameToAddAfter,
+      Node varParent) {
     int arbitraryNameCounter = 0;
     boolean discardKeys = !objlitName.shouldKeepKeys();
 
@@ -754,6 +749,7 @@ class CollapseProperties implements CompilerPass {
       String propAlias = appendPropForAlias(alias, propName);
       Node refNode = null;
       if (discardKeys) {
+        compiler.reportChangeToEnclosingScope(objlit);
         objlit.removeChild(key);
         value.detach();
       } else {
@@ -764,6 +760,7 @@ class CollapseProperties implements CompilerPass {
         }
 
         key.replaceChild(value, refNode);
+        compiler.reportChangeToEnclosingScope(refNode);
       }
 
       // Declare the collapsed name as a variable with the original value.
@@ -778,7 +775,7 @@ class CollapseProperties implements CompilerPass {
       } else {
         varParent.addChildBefore(newVar, varNode);
       }
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(newVar);
       nameToAddAfter = newVar;
 
       // Update the global name's node ancestry if it hasn't already been
@@ -798,34 +795,26 @@ class CollapseProperties implements CompilerPass {
           checkForHosedThisReferences(value, key.getJSDocInfo(), p);
         }
       }
-
-      numVars++;
     }
-    return numVars;
   }
 
   /**
-   * Adds global variable "stubs" for any properties of a global name that are
-   * only set in a local scope or read but never set.
+   * Adds global variable "stubs" for any properties of a global name that are only set in a local
+   * scope or read but never set.
    *
    * @param n An object representing a global name (e.g. "a", "a.b.c")
-   * @param alias The flattened name of the object whose properties we are
-   *     adding stubs for (e.g. "a$b$c")
-   * @param parent The node to which new global variables should be added
-   *     as children
-   * @param addAfter The child of after which new
-   *     variables should be added
-   * @return The number of variables added
+   * @param alias The flattened name of the object whose properties we are adding stubs for (e.g.
+   *     "a$b$c")
+   * @param parent The node to which new global variables should be added as children
+   * @param addAfter The child of after which new variables should be added
    */
-  private int addStubsForUndeclaredProperties(
-      Name n, String alias, Node parent, Node addAfter) {
+  private void addStubsForUndeclaredProperties(Name n, String alias, Node parent, Node addAfter) {
     Preconditions.checkState(n.canCollapseUnannotatedChildNames(), n);
     Preconditions.checkArgument(NodeUtil.isStatementBlock(parent), parent);
     Preconditions.checkNotNull(addAfter);
     if (n.props == null) {
-      return 0;
+      return;
     }
-    int numStubs = 0;
     for (Name p : n.props) {
       if (p.needsToBeStubbed()) {
         String propAlias = appendPropForAlias(alias, p.getBaseName());
@@ -833,17 +822,16 @@ class CollapseProperties implements CompilerPass {
         Node newVar = IR.var(nameNode).useSourceInfoIfMissingFromForTree(addAfter);
         parent.addChildAfter(newVar, addAfter);
         addAfter = newVar;
-        numStubs++;
-        compiler.reportCodeChange();
+        compiler.reportChangeToEnclosingScope(newVar);
         // Determine if this is a constant var by checking the first
         // reference to it. Don't check the declaration, as it might be null.
         if (p.getRefs().get(0).node.getLastChild().getBooleanProp(
             Node.IS_CONSTANT_NAME)) {
           nameNode.putBooleanProp(Node.IS_CONSTANT_NAME, true);
+          compiler.reportChangeToEnclosingScope(nameNode);
         }
       }
     }
-    return numStubs;
   }
 
   private String appendPropForAlias(String root, String prop) {
