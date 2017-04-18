@@ -324,12 +324,12 @@ class Normalize implements CompilerPass {
       this.assertOnChange = assertOnChange;
     }
 
-    private void reportCodeChange(String changeDescription) {
+    private void reportCodeChange(Node n, String changeDescription) {
       if (assertOnChange) {
         throw new IllegalStateException(
             "Normalize constraints violated:\n" + changeDescription);
       }
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(n);
     }
 
     @Override
@@ -349,12 +349,12 @@ class Normalize implements CompilerPass {
           empty.useSourceInfoIfMissingFrom(n);
           n.addChildBefore(empty, expr);
           n.addChildAfter(empty.cloneNode(), expr);
-          reportCodeChange("WHILE node");
+          reportCodeChange(n, "WHILE node");
           break;
 
         case FUNCTION:
           if (maybeNormalizeFunctionDeclaration(n)) {
-            reportCodeChange("Function declaration");
+            reportCodeChange(n, "Function declaration");
           }
           break;
 
@@ -522,7 +522,7 @@ class Normalize implements CompilerPass {
           block.useSourceInfoIfMissingFrom(last);
           n.replaceChild(last, block);
           block.addChildToFront(last);
-          reportCodeChange("LABEL normalization");
+          reportCodeChange(n, "LABEL normalization");
           return;
       }
     }
@@ -561,7 +561,7 @@ class Normalize implements CompilerPass {
               Node name = newStatement.getFirstChild().cloneNode();
               first.replaceWith(name);
               insertBeforeParent.addChildBefore(newStatement, insertBefore);
-              reportCodeChange("FOR-IN var declaration");
+              reportCodeChange(n, "FOR-IN var declaration");
             }
             break;
           case FOR:
@@ -586,7 +586,7 @@ class Normalize implements CompilerPass {
               }
 
               insertBeforeParent.addChildBefore(newStatement, insertBefore);
-              reportCodeChange("FOR initializer");
+              reportCodeChange(n, "FOR initializer");
             }
             break;
           default:
@@ -616,7 +616,7 @@ class Normalize implements CompilerPass {
             c.removeChild(name);
             Node newVar = new Node(c.getToken(), name).srcref(n);
             n.addChildBefore(newVar, c);
-            reportCodeChange("VAR with multiple children");
+            reportCodeChange(n, "VAR with multiple children");
           }
         }
       }
@@ -649,7 +649,7 @@ class Normalize implements CompilerPass {
           // Read the function at the top of the function body (after any
           // previous declarations).
           insertAfter = addToFront(functionBody, current, insertAfter);
-          reportCodeChange("Move function declaration not at top of function");
+          reportCodeChange(functionBody, "Move function declaration not at top of function");
         }
         current = next;
       }
