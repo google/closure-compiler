@@ -476,7 +476,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Analyzer checks must be run after typechecking.
-    if (options.enables(DiagnosticGroups.ANALYZER_CHECKS)) {
+    if (options.enables(DiagnosticGroups.ANALYZER_CHECKS) && options.checkTypes) {
       checks.add(analyzerChecks);
     }
 
