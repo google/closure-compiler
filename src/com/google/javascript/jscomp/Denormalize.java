@@ -92,7 +92,7 @@ class Denormalize implements CompilerPass, Callback {
           // initializer. Move it into the loop.
           parent.removeChild(n);
           forNode.replaceChild(forVar, n);
-          compiler.reportCodeChange();
+          compiler.reportChangeToEnclosingScope(parent);
         }
       }
     } else if (nextSibling.isVanillaFor() && nextSibling.getFirstChild().isEmpty()) {
@@ -123,7 +123,7 @@ class Denormalize implements CompilerPass, Callback {
 
       forNode.replaceChild(oldInitializer, newInitializer);
 
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(forNode);
     }
   }
 
@@ -138,7 +138,7 @@ class Denormalize implements CompilerPass, Callback {
         Node opDetached = op.detach();
         opDetached.setJSDocInfo(n.getJSDocInfo());
         parent.replaceChild(n, opDetached);
-        compiler.reportCodeChange();
+        compiler.reportChangeToEnclosingScope(parent);
       }
     }
   }

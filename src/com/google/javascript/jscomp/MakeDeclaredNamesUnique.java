@@ -163,7 +163,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
             n.removeProp(Node.IS_CONSTANT_NAME);
           }
           n.setString(newName);
-          t.getCompiler().reportCodeChange();
+          t.getCompiler().reportChangeToEnclosingScope(n);
         }
         break;
 
@@ -361,8 +361,8 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         for (Node n : references) {
           Preconditions.checkState(n.isName(), n);
           n.setString(newName);
+          compiler.reportChangeToEnclosingScope(n);
         }
-        compiler.reportCodeChange();
         nameMap.removeAll(name);
       }
     }

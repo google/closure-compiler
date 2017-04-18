@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * @author moz@google.com (Michael Zhou)
  */
 public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase {
+
   @Override
   public void setUp() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);

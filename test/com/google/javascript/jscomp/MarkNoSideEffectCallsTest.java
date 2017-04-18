@@ -54,12 +54,6 @@ public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    validateAstChangeMarking(false);
-  }
-
-  @Override
   protected void tearDown() throws Exception {
     super.tearDown();
     noSideEffectCalls.clear();

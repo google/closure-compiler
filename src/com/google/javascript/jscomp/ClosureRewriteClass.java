@@ -526,7 +526,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     parent.addChildrenAfter(stmts, exprRoot);
     parent.removeChild(exprRoot);
 
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(parent);
   }
 
   private static Node fixupSrcref(Node node) {

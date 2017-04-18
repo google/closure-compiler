@@ -114,7 +114,6 @@ class AngularPass extends AbstractPostOrderCallback
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     // Traverses AST looking for nodes annotated with @ngInject.
     NodeTraversal.traverseEs6(compiler, scriptRoot, this);
-    boolean codeChanged = false;
     // iterates through annotated nodes adding $inject property to elements.
     for (NodeContext entry : injectables) {
       String name = entry.getName();
@@ -154,10 +153,7 @@ class AngularPass extends AbstractPostOrderCallback
       }
 
       insertionPoint.getParent().addChildAfter(statement, insertionPoint);
-      codeChanged = true;
-    }
-    if (codeChanged) {
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(statement);
     }
   }
 

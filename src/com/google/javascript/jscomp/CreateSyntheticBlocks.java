@@ -123,7 +123,7 @@ class CreateSyntheticBlocks implements CompilerPass {
     // and finally the end node.
     outerBlock.addChildToBack(outerBlock.getNext().detach());
 
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(outerBlock);
   }
 
   /**

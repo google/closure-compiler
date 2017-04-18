@@ -472,6 +472,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
         while (defParent.getParent().isLabel()) {
           defParent = defParent.getParent();
         }
+        compiler.reportChangeToEnclosingScope(defParent);
         defParent.detach();
         useParent.replaceChild(use, rhs);
       } else if (defParent.isVar()) {
@@ -481,7 +482,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       } else {
         throw new IllegalStateException("No other definitions can be inlined.");
       }
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(useParent);
     }
 
     /**

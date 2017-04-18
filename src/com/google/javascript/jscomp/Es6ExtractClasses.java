@@ -115,7 +115,7 @@ public final class Es6ExtractClasses
           if (needsInnerNameRewriting(n, parent)) {
             classStack.removeFirst();
             n.replaceChild(n.getFirstChild(), IR.empty().useSourceInfoFrom(n.getFirstChild()));
-            compiler.reportCodeChange();
+            compiler.reportChangeToEnclosingScope(n);
           }
           break;
         case NAME:
@@ -131,8 +131,9 @@ public final class Es6ExtractClasses
         if (nameNode != klass.nameNode && nameNode.matchesQualifiedName(klass.nameNode)) {
           Var var = t.getScope().getVar(nameNode.getString());
           if (var != null && var.getNameNode() == klass.nameNode) {
-            parent.replaceChild(nameNode, IR.name(klass.outerName).useSourceInfoFrom(nameNode));
-            compiler.reportCodeChange();
+            Node newNameNode = IR.name(klass.outerName).useSourceInfoFrom(nameNode);
+            parent.replaceChild(nameNode, newNameNode);
+            compiler.reportChangeToEnclosingScope(newNameNode);
             return;
           }
         }
@@ -178,6 +179,6 @@ public final class Es6ExtractClasses
         .useSourceInfoIfMissingFromForTree(classNode);
     classDeclaration.setJSDocInfo(JSDocInfoBuilder.maybeCopyFrom(info).build());
     statement.getParent().addChildBefore(classDeclaration, statement);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(classDeclaration);
   }
 }

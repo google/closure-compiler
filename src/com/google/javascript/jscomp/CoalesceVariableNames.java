@@ -161,7 +161,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
       // Rename.
       n.setString(coalescedVar.name);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(n);
 
       if (parent.isVar()) {
         removeVarDeclaration(n);
@@ -193,7 +193,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       }
 
       n.setString(pseudoName);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(n);
 
       if (!vNode.getValue().equals(coalescedVar) && parent.isVar()) {
         removeVarDeclaration(n);

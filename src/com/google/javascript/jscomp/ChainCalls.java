@@ -55,7 +55,7 @@ class ChainCalls implements CompilerPass {
       callSite.n.removeChild(callSite.callNode);
       callSite.nextGetPropNode.replaceChild(callSite.nextGetPropFirstChildNode,
                                             callSite.callNode);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(callSite.parent);
     }
   }
 

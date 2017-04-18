@@ -97,7 +97,7 @@ public final class JsdocToEs6TypedConverter
             if (parameterType.getRoot().getToken() == Token.ELLIPSIS) {
               attachTypeExpr = IR.rest(n.getString());
               n.replaceWith(attachTypeExpr);
-              compiler.reportCodeChange();
+              compiler.reportChangeToEnclosingScope(attachTypeExpr);
             }
             setTypeExpression(attachTypeExpr, parameterType);
           }
@@ -112,7 +112,7 @@ public final class JsdocToEs6TypedConverter
     TypeDeclarationNode node = TypeDeclarationsIRFactory.convert(type);
     if (node != null) {
       n.setDeclaredTypeExpression(node);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(n);
     }
   }
 

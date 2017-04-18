@@ -98,9 +98,11 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
       // A call to super() shouldn't actually exist for a stub and is problematic to transpile,
       // so just drop it.
       for (Node superCall : superCalls) {
-        NodeUtil.getEnclosingStatement(superCall).detach();
+        Node enclosingStatement = NodeUtil.getEnclosingStatement(superCall);
+        Node enclosingScope = enclosingStatement.getParent();
+        enclosingStatement.detach();
+        compiler.reportChangeToEnclosingScope(enclosingScope);
       }
-      compiler.reportCodeChange();
     } else {
       String superClassQName = getSuperClassQName(constructor);
       if (isNativeObjectClass(t, superClassQName)) {
@@ -109,9 +111,10 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
         // TODO(bradfordcsmith): Although unlikely, super() could have argument expressions with
         //     side-effects.
         for (Node superCall : superCalls) {
-          superCall.replaceWith(IR.thisNode().useSourceInfoFrom(superCall));
+          Node thisNode = IR.thisNode().useSourceInfoFrom(superCall);
+          superCall.replaceWith(thisNode);
+          compiler.reportChangeToEnclosingScope(thisNode);
         }
-        compiler.reportCodeChange();
       } else if (isUnextendableNativeClass(t, superClassQName)) {
         compiler.report(
             JSError.make(
@@ -136,6 +139,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
                 IR.comma(newSuperCall, IR.thisNode().useSourceInfoFrom(superCall))
                     .useSourceInfoFrom(superCall));
           }
+          compiler.reportChangeToEnclosingScope(superCallParent);
         }
       } else {
         Node constructorBody = checkNotNull(constructor.getChildAtIndex(2));
@@ -172,7 +176,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
                     .useSourceInfoIfMissingFromForTree(superCall));
           }
         }
-        compiler.reportCodeChange();
+        compiler.reportChangeToEnclosingScope(constructorBody);
       }
     }
   }
@@ -330,6 +334,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
         IR.comma(IR.comma(IR.comma(getTmpError, copyMessage), setStack), IR.thisNode())
             .useSourceInfoIfMissingFromForTree(superCall);
     superCall.replaceWith(superErrorExpr);
+    compiler.reportChangeToEnclosingScope(superErrorExpr);
   }
 
   private boolean isNativeObjectClass(NodeTraversal t, String className) {

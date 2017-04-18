@@ -45,7 +45,6 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    validateAstChangeMarking(false);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
 

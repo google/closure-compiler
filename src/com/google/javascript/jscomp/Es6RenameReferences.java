@@ -62,7 +62,7 @@ final class Es6RenameReferences extends AbstractPostOrderCallback {
       String newName = renameTable.get(current.getRootNode(), oldName);
       if (newName != null) {
         n.setString(newName);
-        t.getCompiler().reportCodeChange();
+        t.getCompiler().reportChangeToEnclosingScope(n);
         return;
       } else if (current.isDeclared(oldName, false)) {
         return;

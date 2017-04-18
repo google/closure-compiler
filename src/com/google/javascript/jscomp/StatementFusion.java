@@ -66,7 +66,7 @@ class StatementFusion extends AbstractPeepholeOptimization {
       Node end = n.getLastChild();
       Node result = fuseIntoOneStatement(n, start, end);
       fuseExpressionIntoControlFlowStatement(result, n.getLastChild());
-      reportCodeChange();
+      compiler.reportCodeChange();
     }
     return n;
   }
@@ -88,12 +88,12 @@ class StatementFusion extends AbstractPeepholeOptimization {
       }
       if (cur.getNext() != next) {
         cur = fuseIntoOneStatement(n, cur, next);
-        reportCodeChange();
+        compiler.reportCodeChange();
       }
       if (cur.isExprResult() &&
           next != null && isFusableControlStatement(next)) {
         fuseExpressionIntoControlFlowStatement(cur, next);
-        reportCodeChange();
+        compiler.reportCodeChange();
         next = next.getNext();
       }
       cur = next;

@@ -110,7 +110,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
         objNode.addChildToBack(IR.propdef(keyNode, valueNode));
       }
       callNode.replaceWith(objNode);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(objNode);
     }
   }
 
@@ -126,7 +126,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
       Node propName = NodeUtil.getArgumentForCallOrNew(callNode, 0);
       if (propName != null) {
         callNode.replaceWith(propName.detach());
-        compiler.reportCodeChange();
+        compiler.reportChangeToEnclosingScope(propName);
         return;
       }
     }
@@ -141,7 +141,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
 
     callNode.replaceChild(nameNode, newTarget);
     callNode.putBooleanProp(Node.FREE_CALL, true);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(callNode);
   }
 
   /**
@@ -190,7 +190,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
         objNode.addChildToBack(IR.propdef(keyNode, valueNode));
       }
       callNode.replaceWith(objNode);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(objNode);
     }
   }
 
@@ -236,6 +236,6 @@ final class ClosureOptimizePrimitives implements CompilerPass {
     }
     Node stringNode = IR.string(tagName).srcref(n);
     n.replaceWith(stringNode);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(stringNode);
   }
 }

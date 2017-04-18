@@ -36,12 +36,6 @@ public final class AliasStringsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    validateAstChangeMarking(false);
-  }
-
-  @Override
   public CompilerPass getProcessor(Compiler compiler) {
     AliasStrings pass =
         new AliasStrings(compiler, compiler.getModuleGraph(), strings, "(?i)secret", false);

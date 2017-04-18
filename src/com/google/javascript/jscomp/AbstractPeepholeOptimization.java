@@ -27,7 +27,7 @@ import com.google.javascript.rhino.Node;
  */
 abstract class AbstractPeepholeOptimization {
 
-  private AbstractCompiler compiler;
+  protected AbstractCompiler compiler;
 
   /**
    * Given a node to optimize and a traversal, optimize the node. Subclasses
@@ -50,15 +50,6 @@ abstract class AbstractPeepholeOptimization {
   protected void report(DiagnosticType diagnostic, Node n) {
     JSError error = JSError.make(n, diagnostic, n.toString());
     compiler.report(error);
-  }
-
-  /**
-   * Helper method for telling the compiler that something has changed.
-   * Subclasses must call these if they have changed the AST.
-   */
-  protected void reportCodeChange() {
-    Preconditions.checkNotNull(compiler);
-    compiler.reportCodeChange();
   }
 
   /**

@@ -81,6 +81,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
       }
       undefined.useSourceInfoFromForTree(nameNode);
       nameNode.addChildToFront(undefined);
+      compiler.reportChangeToEnclosingScope(undefined);
     }
 
     String oldName = nameNode.getString();
@@ -95,9 +96,9 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
           newName = oldName + "$" + compiler.getUniqueNameIdSupplier().get();
         } while (hoistScope.isDeclared(newName, true));
         nameNode.setString(newName);
+        compiler.reportChangeToEnclosingScope(nameNode);
         Node scopeRoot = scope.getRootNode();
         renameTable.put(scopeRoot, oldName, newName);
-        compiler.reportCodeChange();
       }
       Var oldVar = scope.getVar(oldName);
       scope.undeclare(oldVar);
@@ -174,24 +175,26 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     }
   }
 
-  private static void handleDeclarationList(Node declarationList, Node parent) {
+  private void handleDeclarationList(Node declarationList, Node parent) {
     // Normalize: "const i = 0, j = 0;" becomes "/** @const */ var i = 0; /** @const */ var j = 0;"
     while (declarationList.hasMoreThanOneChild()) {
       Node name = declarationList.getLastChild();
       Node newDeclaration = IR.var(name.detach()).useSourceInfoFrom(declarationList);
       maybeAddConstJSDoc(declarationList, parent, name, newDeclaration);
       parent.addChildAfter(newDeclaration, declarationList);
+      compiler.reportChangeToEnclosingScope(parent);
     }
     maybeAddConstJSDoc(declarationList, parent, declarationList.getFirstChild(), declarationList);
     declarationList.setToken(Token.VAR);
   }
 
-  private static void addNodeBeforeLoop(Node newNode, Node loopNode) {
+  private void addNodeBeforeLoop(Node newNode, Node loopNode) {
     Node insertSpot = loopNode;
     while (insertSpot.getParent().isLabel()) {
       insertSpot = insertSpot.getParent();
     }
     insertSpot.getParent().addChildBefore(newNode, insertSpot);
+    compiler.reportChangeToEnclosingScope(newNode);
   }
 
   private void varify() {
@@ -201,8 +204,8 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
           handleDeclarationList(n, n.getParent());
         }
         n.setToken(Token.VAR);
+        compiler.reportChangeToEnclosingScope(n);
       }
-      compiler.reportCodeChange();
     }
   }
 
@@ -364,6 +367,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
           loopNode.getLastChild().addChildToBack(IR.exprResult(updateLoopObject)
               .useSourceInfoIfMissingFromForTree(loopNode));
         }
+        compiler.reportChangeToEnclosingScope(loopNode);
 
         // For captured variables, change declarations to assignments on the
         // corresponding field of the introduced object. Rename all references
@@ -402,7 +406,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                   grandParent.removeChild(declaration);
                 }
                 letConsts.remove(declaration);
-                compiler.reportCodeChange();
+                compiler.reportChangeToEnclosingScope(grandParent);
               }
 
               if (reference.getParent().isCall()
@@ -446,6 +450,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
         }
         function.replaceWith(replacement);
         returnNode.addChildToFront(function);
+        compiler.reportChangeToEnclosingScope(replacement);
       }
     }
 

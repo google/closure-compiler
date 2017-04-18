@@ -149,7 +149,7 @@ class PeepholeSubstituteAlternateSyntax
         if (parentNode.isCall()) {
           parentNode.putBooleanProp(Node.FREE_CALL, true);
         }
-        reportCodeChange();
+        compiler.reportCodeChange();
         return newNameNode;
       }
     }
@@ -172,7 +172,7 @@ class PeepholeSubstituteAlternateSyntax
       Node newLhs = new Node(n.getToken(), first, second).useSourceInfoIfMissingFrom(n);
       Node newRoot = new Node(rhs.getToken(), newLhs, third).useSourceInfoIfMissingFrom(rhs);
       n.replaceWith(newRoot);
-      reportCodeChange();
+      compiler.reportCodeChange();
       return newRoot;
     } else if (NodeUtil.isCommutative(n.getToken()) && !NodeUtil.mayHaveSideEffects(n)) {
       // Transform a * (b / c) to b / c * a
@@ -187,7 +187,7 @@ class PeepholeSubstituteAlternateSyntax
         n.removeChild(rhs);
         lhs.replaceWith(rhs);
         n.addChildToBack(lhs);
-        reportCodeChange();
+        compiler.reportCodeChange();
         return n;
       }
     }
@@ -221,7 +221,7 @@ class PeepholeSubstituteAlternateSyntax
               replacement = IR.not(IR.not(value).srcref(n));
             }
             n.replaceWith(replacement);
-            reportCodeChange();
+            compiler.reportCodeChange();
           }
           break;
         }
@@ -238,7 +238,7 @@ class PeepholeSubstituteAlternateSyntax
           if (value != null && value.getNext() == null && NodeUtil.isImmutableValue(value)) {
             Node addition = IR.add(IR.string("").srcref(callTarget), value.detach());
             n.replaceWith(addition);
-            reportCodeChange();
+            compiler.reportCodeChange();
             return addition;
           }
           break;
@@ -278,7 +278,7 @@ class PeepholeSubstituteAlternateSyntax
       } else {
         n.putBooleanProp(Node.FREE_CALL, true);
       }
-      reportCodeChange();
+      compiler.reportCodeChange();
     }
     return n;
   }
@@ -312,7 +312,7 @@ class PeepholeSubstituteAlternateSyntax
       //This modifies outside the subtree, which is not
       //desirable in a peephole optimization.
       parent.getParent().addChildAfter(newStatement, parent);
-      reportCodeChange();
+      compiler.reportCodeChange();
       return left;
     } else {
       return n;
@@ -329,7 +329,7 @@ class PeepholeSubstituteAlternateSyntax
         && !NodeUtil.isLValue(n)) {
       Node replacement = NodeUtil.newUndefinedNode(n);
       n.replaceWith(replacement);
-      reportCodeChange();
+      compiler.reportCodeChange();
       return replacement;
     }
     return n;
@@ -349,14 +349,14 @@ class PeepholeSubstituteAlternateSyntax
           Node operand = result.getFirstChild();
           if (!mayHaveSideEffects(operand)) {
             n.removeFirstChild();
-            reportCodeChange();
+            compiler.reportCodeChange();
           }
           break;
         case NAME:
           String name = result.getString();
           if (name.equals("undefined")) {
             n.removeFirstChild();
-            reportCodeChange();
+            compiler.reportCodeChange();
           }
           break;
         default:
@@ -386,7 +386,7 @@ class PeepholeSubstituteAlternateSyntax
     if (canFoldStandardConstructors(n)) {
       n.setToken(Token.CALL);
       n.putBooleanProp(Node.FREE_CALL, true);
-      reportCodeChange();
+      compiler.reportCodeChange();
     }
 
     return n;
@@ -463,7 +463,7 @@ class PeepholeSubstituteAlternateSyntax
 
         if (newLiteralNode != null) {
           n.replaceWith(newLiteralNode);
-          reportCodeChange();
+          compiler.reportCodeChange();
           return newLiteralNode;
         }
       }
@@ -555,7 +555,7 @@ class PeepholeSubstituteAlternateSyntax
       }
 
       parent.replaceChild(n, regexLiteral);
-      reportCodeChange();
+      compiler.reportCodeChange();
       return regexLiteral;
     }
 
@@ -568,12 +568,12 @@ class PeepholeSubstituteAlternateSyntax
       if (right.getDouble() == 1) {
         Node newNode = IR.dec(n.removeFirstChild(), false);
         n.replaceWith(newNode);
-        reportCodeChange();
+        compiler.reportCodeChange();
         return newNode;
       } else if (right.getDouble() == -1) {
         Node newNode = IR.inc(n.removeFirstChild(), false);
         n.replaceWith(newNode);
-        reportCodeChange();
+        compiler.reportCodeChange();
         return newNode;
       }
     }
@@ -591,7 +591,7 @@ class PeepholeSubstituteAlternateSyntax
         case NE:
           Node number = IR.number(n.isTrue() ? 1 : 0);
           n.getParent().replaceChild(n, number);
-          reportCodeChange();
+          compiler.reportCodeChange();
           return number;
         default:
           break;
@@ -600,7 +600,7 @@ class PeepholeSubstituteAlternateSyntax
       Node not = IR.not(IR.number(n.isTrue() ? 0 : 1));
       not.useSourceInfoIfMissingFromForTree(n);
       n.replaceWith(not);
-      reportCodeChange();
+      compiler.reportCodeChange();
       return not;
     }
     return n;
@@ -651,7 +651,7 @@ class PeepholeSubstituteAlternateSyntax
           IR.string("" + delimiter));
       call.useSourceInfoIfMissingFromForTree(n);
       n.replaceWith(call);
-      reportCodeChange();
+      compiler.reportCodeChange();
       return call;
     }
     return n;

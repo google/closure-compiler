@@ -49,7 +49,7 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback
       case STRING_KEY:
         if (NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, n.getString())) {
           n.putBooleanProp(Node.QUOTED_PROP, false);
-          compiler.reportCodeChange();
+          compiler.reportChangeToEnclosingScope(n);
         }
         break;
 
@@ -60,8 +60,9 @@ class ConvertToDottedProperties extends AbstractPostOrderCallback
             NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, right.getString())) {
           n.removeChild(left);
           n.removeChild(right);
-          parent.replaceChild(n, IR.getprop(left, right));
-          compiler.reportCodeChange();
+          Node newGetProp = IR.getprop(left, right);
+          parent.replaceChild(n, newGetProp);
+          compiler.reportChangeToEnclosingScope(newGetProp);
         }
         break;
       default:

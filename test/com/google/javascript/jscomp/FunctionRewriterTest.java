@@ -50,7 +50,6 @@ public final class FunctionRewriterTest extends CompilerTestCase {
   @Override
   protected void setUp() {
     super.enableLineNumberCheck(false);
-    validateAstChangeMarking(false);
   }
 
   @Override

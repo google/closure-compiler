@@ -178,8 +178,8 @@ final class CheckSideEffects extends AbstractPostOrderCallback
         replacement.putBooleanProp(Node.FREE_CALL, true);
         n.replaceWith(replacement);
         replacement.addChildToBack(n);
+        compiler.reportChangeToEnclosingScope(replacement);
       }
-      compiler.reportCodeChange();
     }
   }
 
@@ -195,7 +195,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
     name.setStaticSourceFile(input.getSourceFile());
     var.setStaticSourceFile(input.getSourceFile());
     input.getAstRoot(compiler).addChildToBack(var);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(var);
   }
 
   /**

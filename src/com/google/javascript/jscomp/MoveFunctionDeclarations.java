@@ -91,7 +91,7 @@ class MoveFunctionDeclarations implements Callback, CompilerPass {
 
     if (NodeUtil.isFunctionDeclaration(n)) {
       parent.removeChild(n);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(parent);
 
       functions.put(t.getModule(), n);
     }

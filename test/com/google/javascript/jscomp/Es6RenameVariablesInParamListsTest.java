@@ -28,7 +28,6 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    validateAstChangeMarking(false);
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     runTypeCheckAfterProcessing = true;
   }

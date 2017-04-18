@@ -52,9 +52,9 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
       if (instrumentationData.get(fileName) != null) {
         // Add instrumentation code
         node.addChildrenToFront(newHeaderNode(traversal, node).removeChildren());
+        compiler.reportChangeToEnclosingScope(node);
         instrumentBranchCoverage(traversal, instrumentationData.get(fileName));
       }
-      compiler.reportCodeChange();
     }
 
     if (node.isIf()) {
@@ -127,6 +127,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
           Node block = data.getBranchNode(lineIdx, branchIdx);
           block.addChildToFront(
               newBranchInstrumentationNode(traversal, block, branchCoverageOffset + branchIdx - 1));
+          compiler.reportChangeToEnclosingScope(block);
         }
         branchCoverageOffset += numBranches;
       }

@@ -87,7 +87,7 @@ class DisambiguatePrivateProperties
     if (!n.getBooleanProp(Node.QUOTED_PROP) && this.convention.isPrivate(prop)
         && !blacklist.contains(prop)) {
       n.setString(prop + fileid);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(n);
     }
   }
 }

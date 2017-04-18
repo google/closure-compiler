@@ -126,7 +126,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
             Node assignNode = lhs.getParent();
             rhs.detach();
             assignNode.replaceWith(rhs);
-            compiler.reportCodeChange();
+            compiler.reportChangeToEnclosingScope(rhs);
           }
         }
       }

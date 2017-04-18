@@ -132,7 +132,8 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
         IR.thisNode().srcref(superGet),
         superGet.isGetProp() ? renameProperty(name) : name);
     replace(superGet, callSuperGet);
-    reportEs6Change();
+    compiler.ensureLibraryInjected("es6_dart_runtime", false);
+    compiler.reportChangeToEnclosingScope(callSuperGet);
   }
 
   private void visitSuperSet(Node superSet) {
@@ -151,12 +152,8 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
         superGet.isGetProp() ? renameProperty(name) : name,
         rhs.cloneTree());
     replace(superSet, callSuperSet);
-    reportEs6Change();
-  }
-
-  private void reportEs6Change() {
     compiler.ensureLibraryInjected("es6_dart_runtime", false);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(callSuperSet);
   }
 
   private static Node replace(Node original, Node replacement) {

@@ -31,7 +31,6 @@ public final class ReorderConstantExpressionTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    validateAstChangeMarking(false);
     disableTypeCheck();
   }
 

@@ -37,9 +37,9 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         assumeCrossModuleNames);
   }
 
-  @Override public void setUp() throws Exception {
+  @Override
+  public void setUp() throws Exception {
     super.setUp();
-    validateAstChangeMarking(false);
     assumeCrossModuleNames = true;
   }
 
@@ -153,7 +153,6 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
 
   public void testFunctionStatements2() throws Exception {
     StringCompare testCase = new StringCompare();
-    testCase.setUp();
     testCase.testFreeCallSemantics();
     testCase.tearDown();
   }
@@ -271,12 +270,6 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
 
     StringCompare() {
       super("", false);
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-      super.setUp();
-      validateAstChangeMarking(false);
     }
 
     @Override protected CompilerPass getProcessor(Compiler compiler) {

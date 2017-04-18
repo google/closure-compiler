@@ -291,7 +291,7 @@ final class InlineProperties implements CompilerPass {
             replacement = IR.comma(n.removeFirstChild(), replacement).srcref(n);
           }
           parent.replaceChild(n, replacement);
-          compiler.reportCodeChange();
+          compiler.reportChangeToEnclosingScope(replacement);
         }
       }
     }

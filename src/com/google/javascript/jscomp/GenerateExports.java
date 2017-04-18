@@ -92,7 +92,7 @@ class GenerateExports implements CompilerPass {
     propstmt.useSourceInfoFromForTree(getSynthesizedExternsRoot());
     propstmt.setOriginalName(export);
     getSynthesizedExternsRoot().addChildToBack(propstmt);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(propstmt);
   }
 
   private void recordExportSymbol(String qname) {
@@ -171,8 +171,6 @@ class GenerateExports implements CompilerPass {
     annotate(expression);
 
     addStatement(context, expression);
-
-    compiler.reportCodeChange();
   }
 
   private void addStatement(Node context, Node stmt) {
@@ -199,6 +197,7 @@ class GenerateExports implements CompilerPass {
 
     Node block = exprRoot.getParent();
     block.addChildAfter(stmt, exprRoot);
+    compiler.reportChangeToEnclosingScope(stmt);
   }
 
   private void annotate(Node node) {

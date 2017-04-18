@@ -616,6 +616,7 @@ public class NodeTraversal {
     Token type = n.getToken();
     if (type == Token.SCRIPT) {
       setInputId(n.getInputId(), getSourceName(n));
+      compiler.setScope(n);
     }
 
     curNode = n;

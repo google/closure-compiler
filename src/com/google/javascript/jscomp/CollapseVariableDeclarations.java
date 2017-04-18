@@ -116,7 +116,6 @@ class CollapseVariableDeclarations implements CompilerPass {
 
     if (!collapses.isEmpty()) {
       applyCollapses();
-      compiler.reportCodeChange();
     }
   }
 
@@ -220,10 +219,10 @@ class CollapseVariableDeclarations implements CompilerPass {
 
   private void applyCollapses() {
     for (Collapse collapse : collapses) {
-
       Node var = new Node(Token.VAR);
       var.useSourceInfoIfMissingFrom(collapse.startNode);
       collapse.parent.addChildBefore(var, collapse.startNode);
+      compiler.reportChangeToEnclosingScope(var);
 
       boolean redeclaration = false;
       for (Node n = collapse.startNode; n != collapse.endNode;) {

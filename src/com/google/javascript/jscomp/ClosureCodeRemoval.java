@@ -220,6 +220,7 @@ final class ClosureCodeRemoval implements CompilerPass {
 
     for (Node call : assertionCalls) {
       // If the assertion is an expression, just strip the whole thing.
+      compiler.reportChangeToEnclosingScope(call);
       Node parent = call.getParent();
       if (parent.isExprResult()) {
         parent.getParent().removeChild(parent);
@@ -235,7 +236,6 @@ final class ClosureCodeRemoval implements CompilerPass {
           parent.replaceChild(call, replacement);
         }
       }
-      compiler.reportCodeChange();
     }
   }
 }

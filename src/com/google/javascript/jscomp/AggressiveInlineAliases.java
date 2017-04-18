@@ -101,11 +101,6 @@ class AggressiveInlineAliases implements CompilerPass {
     this.codeChanged = true;
   }
 
-  private void reportCodeChange() {
-    this.codeChanged = true;
-    this.compiler.reportCodeChange();
-  }
-
   @Override
   public void process(Node externs, Node root) {
     while (this.codeChanged) {
@@ -239,7 +234,8 @@ class AggressiveInlineAliases implements CompilerPass {
 
         // just set the original alias to null.
         aliasParent.replaceChild(alias.node, IR.nullNode());
-        reportCodeChange();
+        codeChanged = true;
+        compiler.reportChangeToEnclosingScope(aliasParent);
 
         // Inlining the variable may have introduced new references
         // to descendants of {@code name}. So those need to be collected now.
@@ -307,7 +303,8 @@ class AggressiveInlineAliases implements CompilerPass {
 
         // just set the original alias to null.
         aliasParent.replaceChild(alias.node, IR.nullNode());
-        reportCodeChange();
+        codeChanged = true;
+        compiler.reportChangeToEnclosingScope(aliasParent);
 
         // Inlining the variable may have introduced new references
         // to descendants of {@code name}. So those need to be collected now.

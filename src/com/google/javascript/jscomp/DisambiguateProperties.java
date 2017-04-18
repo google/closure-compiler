@@ -715,7 +715,7 @@ class DisambiguateProperties implements CompilerPass {
           if (prop.shouldRename(rootType)) {
             String newName = propNames.get(pTypes.find(rootType));
             node.setString(newName);
-            compiler.reportCodeChange();
+            compiler.reportChangeToEnclosingScope(node);
             ++instancesRenamed;
           } else {
             ++instancesSkipped;

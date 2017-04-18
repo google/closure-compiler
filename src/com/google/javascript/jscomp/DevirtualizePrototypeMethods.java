@@ -345,7 +345,7 @@ class DevirtualizePrototypeMethods
       parent.addChildToFront(IR.name(newMethodName).srcref(node));
       Preconditions.checkState(parent.isCall());
       parent.putBooleanProp(Node.FREE_CALL, true);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(parent);
     }
   }
 
@@ -389,6 +389,7 @@ class DevirtualizePrototypeMethods
       newNameNode.addChildToFront(functionNode);
       block.addChildAfter(newVarNode, expr);
     }
+    compiler.reportChangeToEnclosingScope(newVarNode);
 
     // add extra argument
     String self = newMethodName + "$self";
@@ -398,12 +399,12 @@ class DevirtualizePrototypeMethods
 
     // rewrite body
     Node body = functionNode.getLastChild();
-    replaceReferencesToThis(body, self);
+    if (replaceReferencesToThis(body, self)) {
+      compiler.reportChangeToEnclosingScope(body);
+    }
 
     // fix type
     fixFunctionType(functionNode);
-
-    compiler.reportCodeChange();
   }
 
   /**
@@ -426,19 +427,23 @@ class DevirtualizePrototypeMethods
    * Replaces references to "this" with references to name.  Do not
    * traverse function boundaries.
    */
-  private static void replaceReferencesToThis(Node node, String name) {
+  private static boolean replaceReferencesToThis(Node node, String name) {
     if (node.isFunction()) {
-      return;
+      return false;
     }
 
+    boolean changed = false;
     for (Node child : node.children()) {
       if (child.isThis()) {
         Node newName = IR.name(name);
         newName.setTypeI(child.getTypeI());
         node.replaceChild(child, newName);
+        changed = true;
       } else {
-        replaceReferencesToThis(child, name);
+        changed |= replaceReferencesToThis(child, name);
       }
     }
+
+    return changed;
   }
 }

@@ -261,7 +261,7 @@ class AmbiguateProperties implements CompilerPass {
         Preconditions.checkState(oldName.equals(p.oldName));
         if (!p.newName.equals(oldName)) {
           n.setString(p.newName);
-          compiler.reportCodeChange();
+          compiler.reportChangeToEnclosingScope(n);
         }
       }
     }

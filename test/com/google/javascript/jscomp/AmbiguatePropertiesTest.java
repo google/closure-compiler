@@ -43,7 +43,6 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
     enableTypeCheck();
     enableClosurePass();
     enableGatherExternProperties();
-    validateAstChangeMarking(false);
   }
 
   @Override

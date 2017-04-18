@@ -194,7 +194,7 @@ class CrossModuleMethodMotion implements CompilerPass {
                         unstubCall))
                     .useSourceInfoIfMissingFromForTree(value));
 
-            compiler.reportCodeChange();
+            compiler.reportChangeToEnclosingScope(unstubParent);
           } else {
             Node assignmentParent = valueParent.getParent();
             valueParent.removeChild(value);
@@ -212,7 +212,7 @@ class CrossModuleMethodMotion implements CompilerPass {
                             IR.string(nameInfo.name)),
                         value))
                     .useSourceInfoIfMissingFromForTree(value));
-            compiler.reportCodeChange();
+            compiler.reportChangeToEnclosingScope(destParent);
           }
         }
       }

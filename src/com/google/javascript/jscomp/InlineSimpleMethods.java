@@ -236,7 +236,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
     Node getProp = returnedValue.cloneTree();
     replaceThis(getProp, call.getFirstChild().removeFirstChild());
     parent.replaceChild(call, getProp);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(getProp);
   }
 
   /**
@@ -248,7 +248,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
       Node returnedValue) {
     Node retValue = returnedValue.cloneTree();
     parent.replaceChild(call, retValue);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(retValue);
   }
 
   /**
@@ -263,7 +263,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
       Node srcLocation = call;
       parent.replaceChild(call, NodeUtil.newUndefinedNode(srcLocation));
     }
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(parent);
   }
 
   /**

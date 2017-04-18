@@ -132,12 +132,13 @@ class CrossModuleCodeMotion implements CompilerPass {
                 "AST not normalized.");
 
             // Remove it
+            compiler.reportChangeToEnclosingScope(declParent);
             declParent.detach();
 
             // Add it to the new spot
             destParent.addChildToFront(declParent);
 
-            compiler.reportCodeChange();
+            compiler.reportChangeToEnclosingScope(declParent);
           }
         }
       }
@@ -540,7 +541,7 @@ class CrossModuleCodeMotion implements CompilerPass {
       );
       and.useSourceInfoIfMissingFromForTree(n);
       tmp.replaceWith(and);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(and);
     }
   }
 

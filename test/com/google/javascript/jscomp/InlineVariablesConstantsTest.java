@@ -27,7 +27,6 @@ public final class InlineVariablesConstantsTest extends CompilerTestCase {
 
   public InlineVariablesConstantsTest() {
     enableNormalize();
-    validateAstChangeMarking(false);
   }
 
   @Override

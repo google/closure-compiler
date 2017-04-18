@@ -229,7 +229,7 @@ class AliasStrings extends AbstractPostOrderCallback
         info.parentForNewVarDecl.addChildBefore(
             var, info.siblingToInsertVarDeclBefore);
       }
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(var);
     }
   }
 
@@ -267,10 +267,11 @@ class AliasStrings extends AbstractPostOrderCallback
   private void replaceStringWithAliasName(StringOccurrence occurrence,
                                           String name,
                                           StringInfo info) {
+    Node nameNode = IR.name(name);
     occurrence.parent.replaceChild(occurrence.node,
-                                   IR.name(name));
+                                   nameNode);
     info.isAliased = true;
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(nameNode);
   }
 
   /**

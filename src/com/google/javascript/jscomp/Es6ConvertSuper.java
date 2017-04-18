@@ -152,8 +152,10 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
         // implementation that should be instantiated.
         // A call to super() shouldn't actually exist for these cases and is problematic to
         // transpile, so just drop it.
-        NodeUtil.getEnclosingStatement(node).detach();
-        compiler.reportCodeChange();
+        Node enclosingStatement = NodeUtil.getEnclosingStatement(node);
+        Node enclosingScope = enclosingStatement.getParent();
+        enclosingStatement.detach();
+        compiler.reportChangeToEnclosingScope(enclosingScope);
       }
       // Calls to super() constructors will be transpiled by Es6ConvertSuperConstructorCalls
       // later.
@@ -177,7 +179,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       enclosingCall.addChildToFront(callTarget);
       enclosingCall.addChildAfter(IR.thisNode(), callTarget);
       enclosingCall.useSourceInfoIfMissingFromForTree(enclosingCall);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(enclosingCall);
       return;
     }
 
@@ -194,7 +196,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
         superName.getQualifiedName(), methodName, enclosingCall.removeChildren());
     baseCall.useSourceInfoIfMissingFromForTree(enclosingCall);
     enclosingCall.replaceWith(baseCall);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(baseCall);
   }
 
   private Node baseCall(String baseClass, String methodName, Node arguments) {
