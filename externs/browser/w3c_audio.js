@@ -56,8 +56,7 @@ BaseAudioContext.prototype.createBuffer =
     function(numberOfChannels, length, sampleRate) {};
 
 /**
- * TODO(bradfordcsmith): audioData should be {!ArrayBuffer}.
- * @param {?ArrayBuffer} audioData
+ * @param {!ArrayBuffer} audioData
  * @param {function(!AudioBuffer)=} successCallback
  * @param {function(?)=} errorCallback
  * @return {!Promise<!AudioBuffer>}
@@ -123,16 +122,14 @@ BaseAudioContext.prototype.createStereoPanner = function() {};
 BaseAudioContext.prototype.createConvolver = function() {};
 
 /**
- * TODO(bradfordcsmith): This should return {!ChannelSplitterNode}
  * @param {number=} numberOfOutputs
- * @return {!AudioChannelSplitter}
+ * @return {!ChannelSplitterNode}
  */
 BaseAudioContext.prototype.createChannelSplitter = function(numberOfOutputs) {};
 
 /**
- * TODO(bradfordcsmith): This should return {!ChannelMergerNode}.
  * @param {number=} numberOfInputs
- * @return {!AudioChannelMerger}
+ * @return {!ChannelMergerNode}
  */
 BaseAudioContext.prototype.createChannelMerger = function(numberOfInputs) {};
 
@@ -196,8 +193,7 @@ BaseAudioContext.prototype.createSpatialPanner = function() {};
 function AudioContext() {}
 
 /**
- * TODO(bradfordcsmith): This should require {!HTMLMediaElement}.
- * @param {?HTMLMediaElement} mediaElement
+ * @param {!HTMLMediaElement} mediaElement
  * @return {!MediaElementAudioSourceNode}
  */
 AudioContext.prototype.createMediaElementSource = function(mediaElement) {};
