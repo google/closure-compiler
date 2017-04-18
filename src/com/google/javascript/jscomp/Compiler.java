@@ -560,7 +560,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /**
    * Do any initialization that is dependent on the compiler options.
    */
-  private void initBasedOnOptions() {
+  public void initBasedOnOptions() {
     inputSourceMaps.putAll(options.inputSourceMaps);
     // Create the source map if necessary.
     if (options.sourceMapOutputPath != null) {
@@ -2164,8 +2164,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           }
         }
         return null;
-      }
-    });
+       }
+     });
   }
 
   /**
