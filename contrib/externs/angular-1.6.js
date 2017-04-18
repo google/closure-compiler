@@ -2241,6 +2241,19 @@ angular.$parse_;
  */
 angular.$parse_.assign = function(scope, newValue) {};
 
+/******************************************************************************
+ * $qProvider
+ *****************************************************************************/
+/** @interface */
+angular.$qProvider = function() {};
+
+/**
+ * @param {boolean=} value Retrieves or overrides whether to generate an error
+ *     when a rejected promise is not handled. This feature is enabled by
+ *     default.
+ * @return {boolean}
+ */
+angular.$qProvider.prototype.errorOnUnhandledRejections = function(value) {};
 
 /******************************************************************************
  * $rootScopeProvider
