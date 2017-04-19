@@ -35,6 +35,8 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
@@ -1082,7 +1084,7 @@ public class CompilerOptions implements Serializable {
   /**
    * Charset to use when generating code.  If null, then output ASCII.
    */
-  Charset outputCharset;
+  transient Charset outputCharset;
 
   /**
    * Transitional option.
@@ -1841,8 +1843,8 @@ public class CompilerOptions implements Serializable {
   /**
    * Sets the output charset.
    */
-  public void setOutputCharset(Charset charsetName) {
-    this.outputCharset = charsetName;
+  public void setOutputCharset(Charset charset) {
+    this.outputCharset = charset;
   }
 
   /**
@@ -3322,5 +3324,20 @@ public class CompilerOptions implements Serializable {
       }
     }
     return reservedChars;
+  }
+
+  @GwtIncompatible("ObjectOutputStream")
+  private void writeObject(ObjectOutputStream out) throws IOException, ClassNotFoundException {
+    out.defaultWriteObject();
+    out.writeObject(outputCharset == null ? null : outputCharset.name());
+  }
+
+  @GwtIncompatible("ObjectInputStream")
+  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    in.defaultReadObject();
+    String outputCharsetName = (String) in.readObject();
+    if (outputCharsetName != null) {
+      outputCharset = Charset.forName(outputCharsetName);
+    }
   }
 }

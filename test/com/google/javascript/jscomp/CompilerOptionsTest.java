@@ -23,6 +23,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -69,6 +70,7 @@ public final class CompilerOptionsTest extends TestCase {
     options.setAliasableStrings(new HashSet<>(Arrays.asList("AliasA", "AliasB")));
     options.setOptimizeArgumentsArray(true);
     options.setAmbiguateProperties(false);
+    options.setOutputCharset(StandardCharsets.US_ASCII);
 
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     options.serialize(byteArrayOutputStream);
@@ -84,5 +86,6 @@ public final class CompilerOptionsTest extends TestCase {
     assertEquals(new HashSet<>(Arrays.asList("AliasA", "AliasB")), options.aliasableStrings);
     assertFalse(options.shouldAmbiguateProperties());
     assertTrue(options.optimizeArgumentsArray);
+    assertEquals(StandardCharsets.US_ASCII, options.getOutputCharset());
   }
 }
