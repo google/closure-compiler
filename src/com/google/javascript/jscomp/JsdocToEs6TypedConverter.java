@@ -112,7 +112,11 @@ public final class JsdocToEs6TypedConverter
     TypeDeclarationNode node = TypeDeclarationsIRFactory.convert(type);
     if (node != null) {
       n.setDeclaredTypeExpression(node);
-      compiler.reportChangeToEnclosingScope(n);
+      if (n.isFunction()) {
+        compiler.reportChangeToEnclosingScope(n.getFirstChild());
+      } else {
+        compiler.reportChangeToEnclosingScope(n);
+      }
     }
   }
 

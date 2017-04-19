@@ -353,7 +353,7 @@ class Normalize implements CompilerPass {
           break;
 
         case FUNCTION:
-          if (maybeNormalizeFunctionDeclaration(n)) {
+          if (maybeNormalizeFunctionDeclaration(n, compiler)) {
             reportCodeChange(n, "Function declaration");
           }
           break;
@@ -423,10 +423,10 @@ class Normalize implements CompilerPass {
      *
      * @see https://github.com/google/closure-compiler/pull/429
      */
-    static boolean maybeNormalizeFunctionDeclaration(Node n) {
+    static boolean maybeNormalizeFunctionDeclaration(Node n, AbstractCompiler compiler) {
       Preconditions.checkState(n.isFunction(), n);
       if (NodeUtil.isFunctionDeclaration(n) && !NodeUtil.isHoistedFunctionDeclaration(n)) {
-        rewriteFunctionDeclaration(n);
+        rewriteFunctionDeclaration(n, compiler);
         return true;
       }
       return false;
@@ -448,7 +448,7 @@ class Normalize implements CompilerPass {
      *         PARAM_LIST
      *         BLOCK
      */
-    private static void rewriteFunctionDeclaration(Node n) {
+    private static void rewriteFunctionDeclaration(Node n, AbstractCompiler compiler) {
       // Prepare a spot for the function.
       Node oldNameNode = n.getFirstChild();
       Node fnNameNode = oldNameNode.cloneNode();
@@ -456,6 +456,7 @@ class Normalize implements CompilerPass {
 
       // Prepare the function
       oldNameNode.setString("");
+      compiler.reportChangeToEnclosingScope(oldNameNode);
 
       // Move the function if it's not the child of a label node
       Node parent = n.getParent();
@@ -465,6 +466,7 @@ class Normalize implements CompilerPass {
         parent.removeChild(n);
         parent.addChildToFront(var);
       }
+      compiler.reportChangeToEnclosingScope(var);
       fnNameNode.addChildToFront(n);
     }
 

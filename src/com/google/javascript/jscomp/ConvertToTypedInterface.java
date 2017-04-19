@@ -258,26 +258,27 @@ class ConvertToTypedInterface implements CompilerPass {
             currentFile.markNameProcessed(n.getFirstChild().getString());
           }
           break;
-        case FUNCTION: {
-          if (parent.isCall()) {
-            Preconditions.checkState(!parent.getFirstChild().matchesQualifiedName("goog.scope"),
-                parent);
-          }
-          if (NodeUtil.isStatementParent(parent)) {
-            currentFile.markNameProcessed(n.getFirstChild().getString());
-          }
-          processFunctionParameters(n.getSecondChild());
-          Node body = n.getLastChild();
-          if (body.isNormalBlock() && body.hasChildren()) {
-            if (isConstructor(n)) {
-              currentFile.markConstructorToProcess(n);
-              return false;
+        case FUNCTION:
+          {
+            if (parent.isCall()) {
+              Preconditions.checkState(
+                  !parent.getFirstChild().matchesQualifiedName("goog.scope"), parent);
             }
-            n.getLastChild().removeChildren();
-            compiler.reportCodeChange();
+            if (NodeUtil.isStatementParent(parent)) {
+              currentFile.markNameProcessed(n.getFirstChild().getString());
+            }
+            processFunctionParameters(n.getSecondChild());
+            Node body = n.getLastChild();
+            if (body.isNormalBlock() && body.hasChildren()) {
+              if (isConstructor(n)) {
+                currentFile.markConstructorToProcess(n);
+                return false;
+              }
+              body.removeChildren();
+              compiler.reportChangeToEnclosingScope(body);
+            }
+            break;
           }
-          break;
-        }
         case EXPR_RESULT:
           Node expr = n.getFirstChild();
           switch (expr.getToken()) {
@@ -384,7 +385,7 @@ class ConvertToTypedInterface implements CompilerPass {
               parent.addChildBefore(initializer.detach(), body);
               processName(initializer.getFirstChild(), initializer);
             }
-            compiler.reportCodeChange();
+            compiler.reportChangeToEnclosingScope(parent);
             break;
           }
         case LABEL:
@@ -418,7 +419,7 @@ class ConvertToTypedInterface implements CompilerPass {
           Node replacement = arg.getFirstChild().detach();
           arg.replaceWith(replacement);
           arg = replacement;
-          compiler.reportCodeChange();
+          compiler.reportChangeToEnclosingScope(replacement);
         }
       }
     }
@@ -457,7 +458,7 @@ class ConvertToTypedInterface implements CompilerPass {
                 newProtoAssignStmt.useSourceInfoIfMissingFromForTree(expr);
                 // TODO(blickly): Preserve the declaration order of the this properties.
                 insertionPoint.getParent().addChildAfter(newProtoAssignStmt, insertionPoint);
-                compiler.reportCodeChange();
+                compiler.reportChangeToEnclosingScope(newProtoAssignStmt);
                 currentFile.markNameProcessed(fullyQualifiedName);
               }
             }
@@ -465,7 +466,7 @@ class ConvertToTypedInterface implements CompilerPass {
       final Node functionBody = function.getLastChild();
       Preconditions.checkState(functionBody.isNormalBlock());
       functionBody.removeChildren();
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(functionBody);
     }
 
     enum RemovalType {
@@ -550,12 +551,12 @@ class ConvertToTypedInterface implements CompilerPass {
     }
 
     private void removeNode(Node n) {
+      compiler.reportChangeToEnclosingScope(n);
       if (NodeUtil.isStatement(n)) {
         n.detach();
       } else {
         n.replaceWith(IR.empty().srcref(n));
       }
-      compiler.reportCodeChange();
     }
 
     private void maybeRemoveRhs(Node nameNode, Node statement, JSDocInfo jsdoc) {

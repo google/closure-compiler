@@ -212,8 +212,8 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
   private class RewriteBlockScopedFunctionDeclaration extends AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isFunction() && NormalizeStatements.maybeNormalizeFunctionDeclaration(n)) {
-        compiler.reportCodeChange();
+      if (n.isFunction()) {
+        NormalizeStatements.maybeNormalizeFunctionDeclaration(n, compiler);
       }
     }
   }
@@ -414,6 +414,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                 reference.getParent().putBooleanProp(Node.FREE_CALL, false);
               }
               // Change reference to GETPROP.
+              compiler.reportChangeToEnclosingScope(reference);
               reference.replaceWith(
                   IR.getprop(IR.name(object.name), IR.string(var.name))
                       .useSourceInfoIfMissingFromForTree(reference));

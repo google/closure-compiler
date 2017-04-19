@@ -56,7 +56,6 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
     disableTypeCheck();
     runTypeCheckAfterProcessing = true;
     compareJsDoc = true;
-    validateAstChangeMarking(false);
   }
 
   @Override

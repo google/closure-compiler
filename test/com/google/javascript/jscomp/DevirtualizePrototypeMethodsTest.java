@@ -49,7 +49,6 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     disableTypeCheck();
-    validateAstChangeMarking(false);
   }
 
   /**

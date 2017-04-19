@@ -100,6 +100,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     }
     memberDef.useSourceInfoIfMissingFromForTree(classNode);
     classMembers.addChildToFront(memberDef);
+    compiler.reportChangeToEnclosingScope(memberDef);
   }
 
   private boolean isInterface(Node classNode) {

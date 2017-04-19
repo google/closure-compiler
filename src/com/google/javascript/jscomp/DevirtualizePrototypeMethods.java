@@ -396,6 +396,7 @@ class DevirtualizePrototypeMethods
     Node argList = functionNode.getSecondChild();
     argList.addChildToFront(IR.name(self)
         .useSourceInfoIfMissingFrom(functionNode));
+    compiler.reportChangeToEnclosingScope(argList);
 
     // rewrite body
     Node body = functionNode.getLastChild();

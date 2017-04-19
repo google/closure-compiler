@@ -26,7 +26,6 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -501,12 +500,16 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       Node argList = cls.classModifier.getSecondChild();
       Node arg = argList.getFirstChild();
       final String argName = arg.getString();
-      NodeTraversal.traverseEs6(compiler, cls.classModifier.getLastChild(),
+      NodeTraversal.traverseEs6(
+          compiler,
+          cls.classModifier.getLastChild(),
           new AbstractPostOrderCallback() {
             @Override
             public void visit(NodeTraversal t, Node n, Node parent) {
               if (n.isName() && n.getString().equals(argName)) {
-                parent.replaceChild(n, cls.name.cloneTree());
+                Node newName = cls.name.cloneTree();
+                parent.replaceChild(n, newName);
+                compiler.reportChangeToEnclosingScope(newName);
               }
             }
           });

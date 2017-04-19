@@ -307,7 +307,7 @@ public final class Es6RewriteGenerators
     }
 
     parent.useSourceInfoIfMissingFromForTree(parent);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(genBlock);
   }
 
   /** Returns {@code true} if a new case node should be added */

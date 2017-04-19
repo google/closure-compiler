@@ -216,7 +216,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     Node statement = NodeUtil.getEnclosingStatement(n);
     Node initSymbol = IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbol")));
     statement.getParent().addChildBefore(initSymbol.useSourceInfoFromForTree(statement), statement);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(initSymbol);
   }
 
   private void visitExponentiationExpression(Node n, Node parent) {
@@ -226,7 +226,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         IR.call(NodeUtil.newQName(compiler, "Math.pow"), left, right)
             .useSourceInfoIfMissingFromForTree(n);
     parent.replaceChild(n, mathDotPowCall);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(mathDotPowCall);
   }
 
   private void visitExponentiationAssignmentExpression(Node n, Node parent) {
@@ -235,7 +235,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     Node mathDotPowCall = IR.call(NodeUtil.newQName(compiler, "Math.pow"), left.cloneTree(), right);
     Node assign = IR.assign(left, mathDotPowCall).useSourceInfoIfMissingFromForTree(n);
     parent.replaceChild(n, assign);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(assign);
   }
 
   // TODO(tbreisacher): Do this for all well-known symbols.
@@ -248,7 +248,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       Node statement = NodeUtil.getEnclosingStatement(n);
       Node init = IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbolIterator")));
       statement.getParent().addChildBefore(init.useSourceInfoFromForTree(statement), statement);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(init);
     }
   }
 
@@ -261,7 +261,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     Node stringKey = IR.stringKey(name, n.getFirstChild().detach());
     stringKey.setJSDocInfo(n.getJSDocInfo());
     parent.replaceChild(n, stringKey);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(stringKey);
   }
 
   /**
@@ -273,7 +273,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       Node name = IR.name(n.getString());
       name.useSourceInfoIfMissingFrom(n);
       n.addChildToBack(name);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(name);
     }
   }
 
@@ -327,7 +327,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     Node newFor = IR.forNode(init, cond, incr, newBody);
     newFor.useSourceInfoIfMissingFromForTree(node);
     parent.replaceChild(node, newFor);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(newFor);
   }
 
   private void checkClassReassignment(Node clazz) {
@@ -410,7 +410,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     functionBody.addChildAfter(IR.forNode(init, cond, incr, body)
         .useSourceInfoIfMissingFromForTree(restParam), newArr);
     functionBody.addChildToBack(newBlock);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(newBlock);
 
     // For now, we are running transpilation before type-checking, so we'll
     // need to make sure changes don't invalidate the JSDoc annotations.
@@ -487,7 +487,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     }
     result.useSourceInfoIfMissingFromForTree(node);
     parent.replaceChild(node, result);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(result);
   }
 
   private void visitObject(Node obj) {
@@ -558,7 +558,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     Node var = IR.var(IR.name(objName), obj);
     var.useSourceInfoIfMissingFromForTree(statement);
     statement.getParent().addChildBefore(var, statement);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(var);
   }
 
   /**
