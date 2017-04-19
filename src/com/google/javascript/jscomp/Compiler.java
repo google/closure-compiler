@@ -2164,8 +2164,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           }
         }
         return null;
-       }
-     });
+      }
+    });
   }
 
   /**
