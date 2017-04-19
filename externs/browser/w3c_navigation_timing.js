@@ -94,13 +94,6 @@ function PerformanceNavigation() {}
 /** @type {number} */ PerformanceNavigation.prototype.type;
 /** @type {number} */ PerformanceNavigation.prototype.redirectCount;
 
-// Only available in WebKit, and only with the --enable-memory-info flag.
-/** @constructor */
-function PerformanceMemory() {}
-/** @type {number} */ PerformanceMemory.prototype.jsHeapSizeLimit;
-/** @type {number} */ PerformanceMemory.prototype.totalJSHeapSize;
-/** @type {number} */ PerformanceMemory.prototype.usedJSHeapSize;
-
 /** @constructor */
 function Performance() {}
 /** @type {PerformanceTiming} */ Performance.prototype.timing;
@@ -153,8 +146,9 @@ Performance.prototype.getEntriesByType = function(entryType) {};
  */
 Performance.prototype.getEntriesByName = function(name, opt_entryType) {};
 
-// Only available in WebKit, and only with the --enable-memory-info flag.
-/** @type {PerformanceMemory} */ Performance.prototype.memory;
+// Nonstandard. Only available in Blink.
+// Returns more granular results with the --enable-memory-info flag.
+/** @type {MemoryInfo} */ Performance.prototype.memory;
 
 /**
  * @return {number}
