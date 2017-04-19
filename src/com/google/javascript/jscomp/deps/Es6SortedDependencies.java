@@ -48,6 +48,7 @@ import java.util.Set;
  * Also exposes other information about the inputs, like which inputs
  * do not provide symbols.
  *
+ * @author stalcup@google.com (John Stalcup)
  */
 public final class Es6SortedDependencies<INPUT extends DependencyInfo>
     implements SortedDependencies<INPUT> {

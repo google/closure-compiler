@@ -36,6 +36,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 /**
  * Unit tests for ClosureRewriteModule
  * @author johnlenz@google.com (John Lenz)
+ * @author stalcup@google.com (John Stalcup)
  */
 public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
 

@@ -77,6 +77,7 @@ import javax.annotation.Nullable;
  * </pre>
  *
  * @author johnlenz@google.com (John Lenz)
+ * @author stalcup@google.com (John Stalcup)
  */
 final class ClosureRewriteModule implements HotSwapCompilerPass {
 

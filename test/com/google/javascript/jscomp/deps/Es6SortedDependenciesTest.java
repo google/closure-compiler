@@ -24,6 +24,7 @@ import junit.framework.TestCase;
 /**
  * Tests for {@link Es6SortedDependencies}
  * @author nicksantos@google.com (Nick Santos)
+ * @author stalcup@google.com (John Stalcup)
  */
 public class Es6SortedDependenciesTest extends TestCase {
   private static SortedDependencies<SimpleDependencyInfo> createSortedDependencies(

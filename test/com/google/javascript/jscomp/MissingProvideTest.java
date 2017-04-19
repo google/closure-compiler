@@ -24,6 +24,7 @@ import com.google.javascript.rhino.Node;
  * Tests for the "missing provides" checks in {@link ProcessClosurePrimitives} and {@link
  * ClosureRewriteModule}.
  *
+ * @author stalcup@google.com (John Stalcup)
  */
 
 public final class MissingProvideTest extends Es6CompilerTestCase {
