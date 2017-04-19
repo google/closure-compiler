@@ -355,6 +355,9 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
 
   public void testUsedInShorthandObjLit() {
     enableUnusedLocalAssignmentCheck = true;
+    assertUndeclaredEs6("var z = {x}; z(); var x;");
+    testSameEs6("var {x} = foo();");
+    testSameEs6("var {x} = {};"); // TODO(moz): Maybe add a warning for this case
     testSameEs6("function f() { var x = 1; return {x}; }");
   }
 
@@ -504,6 +507,7 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
 
   public void testIllegalBlockScopedEarlyReference() {
     assertEarlyReferenceError("let x = x");
+    assertEarlyReferenceError("let [x] = x");
     assertEarlyReferenceError("const x = x");
     assertEarlyReferenceError("let x = x || 0");
     assertEarlyReferenceError("const x = x || 0");
@@ -705,6 +709,8 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
 
   public void testObjectPattern_defaultValue() {
     assertUndeclaredEs6("alert(b); var {a: b = c} = {a: 1};");
+    assertUndeclaredEs6("alert(b); var c; var {a: b = c} = {a: 1};");
+    assertUndeclaredEs6("var {a: b = c} = {a: 1}; var c;");
     assertUndeclaredEs6("alert(b); var {a: b = c} = {};");
     assertUndeclaredEs6("alert(a); var {a = c} = {a: 1};");
     assertUndeclaredEs6("alert(a); var {a = c} = {};");
@@ -723,6 +729,10 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     assertEarlyReferenceError("function f(x=a()) { function a() {} }");
     assertEarlyReferenceError("function f(x=[a]) { var a; }");
     assertEarlyReferenceError("function f(x=y, y=2) {}");
+    assertEarlyReferenceError("function f(x=x) {}");
+    assertEarlyReferenceError("function f([x]=x) {}");
+    // x within a function isn't referenced at the time the default value for x is evaluated.
+    assertNoWarningEs6("function f(x=()=>x) {}");
     assertNoWarningEs6("function f(x=a) {}");
     assertNoWarningEs6("function f(x=a) {} var a;");
     assertNoWarningEs6("let b; function f(x=b) { var b; }");

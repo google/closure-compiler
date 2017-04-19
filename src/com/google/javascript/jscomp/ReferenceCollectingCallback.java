@@ -284,6 +284,15 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
     if (isBlockBoundary(n, parent)) {
       blockStack.add(new BasicBlock(peek(blockStack), n));
     }
+
+    // Add the second x before the first one in "let [x] = x;". VariableReferenceCheck
+    // relies on reference order to give a warning.
+    if ((n.isDefaultValue() || n.isDestructuringLhs()) && n.hasTwoChildren()) {
+      Scope scope = nodeTraversal.getScope();
+      nodeTraversal.traverseInnerNode(n.getSecondChild(), n, scope);
+      nodeTraversal.traverseInnerNode(n.getFirstChild(), n, scope);
+      return false;
+    }
     return true;
   }
 
