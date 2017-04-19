@@ -839,6 +839,32 @@ public class CompilerOptions implements Serializable {
 
   boolean exportLocalPropertyDefinitions;
 
+  private String continueSavedCompilation = null;
+
+  /**
+   * Set the compiler to resume a saved compilation.
+   */
+  public void setContinueSavedCompilation(String fileName) {
+    continueSavedCompilation = fileName;
+  }
+
+  String getContinueSavedCompilation() {
+    return continueSavedCompilation;
+  }
+
+  private String saveAfterChecks = null;
+
+  /**
+   * Set the compiler to to only type check and save state.
+   */
+  public void setSaveAfterChecks(String fileName) {
+    saveAfterChecks = fileName;
+  }
+
+  public String getSaveAfterChecks() {
+    return saveAfterChecks;
+  }
+
   /** Map used in the renaming of CSS class names. */
   public CssRenamingMap cssRenamingMap;
 
@@ -2756,6 +2782,7 @@ public class CompilerOptions implements Serializable {
             .add("computeFunctionSideEffects", computeFunctionSideEffects)
             .add("conformanceConfigs", getConformanceConfigs())
             .add("continueAfterErrors", canContinueAfterErrors())
+            .add("continueSavedCompilation", continueSavedCompilation)
             .add("convertToDottedProperties", convertToDottedProperties)
             .add("crossModuleCodeMotion", crossModuleCodeMotion)
             .add("crossModuleCodeMotionNoStubMethods", crossModuleCodeMotionNoStubMethods)
@@ -2890,6 +2917,7 @@ public class CompilerOptions implements Serializable {
             .add("shadowVariables", shadowVariables)
             .add("skipNonTranspilationPasses", skipNonTranspilationPasses)
             .add("skipTranspilationAndCrash", skipTranspilationAndCrash)
+            .add("saveAfterChecks", saveAfterChecks)
             .add("smartNameRemoval", smartNameRemoval)
             .add("sourceMapDetailLevel", sourceMapDetailLevel)
             .add("sourceMapFormat", sourceMapFormat)
