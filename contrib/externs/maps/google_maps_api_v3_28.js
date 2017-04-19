@@ -2930,7 +2930,7 @@ google.maps.MVCObject.prototype.addListener = function(eventName, handler) {};
 
 /**
  * @param {string} key
- * @param {?} target
+ * @param {google.maps.MVCObject} target
  * @param {?string=} opt_targetKey
  * @param {boolean=} opt_noNotify
  * @return {undefined}
@@ -3009,9 +3009,10 @@ google.maps.Map.prototype.overlayMapTypes;
 
 /**
  * @param {google.maps.LatLngBounds|google.maps.LatLngBoundsLiteral} bounds
+ * @param {number=} opt_padding
  * @return {undefined}
  */
-google.maps.Map.prototype.fitBounds = function(bounds) {};
+google.maps.Map.prototype.fitBounds = function(bounds, opt_padding) {};
 
 /**
  * @nosideeffects
@@ -3259,7 +3260,7 @@ google.maps.MapOptions.prototype.mapTypeControl;
 google.maps.MapOptions.prototype.mapTypeControlOptions;
 
 /**
- * @type {google.maps.MapTypeId}
+ * @type {google.maps.MapTypeId|string}
  */
 google.maps.MapOptions.prototype.mapTypeId;
 
@@ -4931,6 +4932,11 @@ google.maps.StreetViewPanoramaOptions.prototype.motionTracking;
 google.maps.StreetViewPanoramaOptions.prototype.motionTrackingControl;
 
 /**
+ * @type {google.maps.MotionTrackingControlOptions}
+ */
+google.maps.StreetViewPanoramaOptions.prototype.motionTrackingControlOptions;
+
+/**
  * @type {boolean}
  */
 google.maps.StreetViewPanoramaOptions.prototype.panControl;
@@ -4969,6 +4975,11 @@ google.maps.StreetViewPanoramaOptions.prototype.showRoadLabels;
  * @type {boolean}
  */
 google.maps.StreetViewPanoramaOptions.prototype.visible;
+
+/**
+ * @type {number}
+ */
+google.maps.StreetViewPanoramaOptions.prototype.zoom;
 
 /**
  * @type {boolean}
@@ -5875,6 +5886,12 @@ google.maps.places.Autocomplete.prototype.setBounds = function(bounds) {};
  * @return {undefined}
  */
 google.maps.places.Autocomplete.prototype.setComponentRestrictions = function(restrictions) {};
+
+/**
+ * @param {google.maps.places.AutocompleteOptions} options
+ * @return {undefined}
+ */
+google.maps.places.Autocomplete.prototype.setOptions = function(options) {};
 
 /**
  * @param {Array<string>} types
