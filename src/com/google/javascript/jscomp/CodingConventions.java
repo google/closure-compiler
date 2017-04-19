@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.RawNominalType;
 import com.google.javascript.rhino.Node;
@@ -83,6 +84,7 @@ public final class CodingConventions {
    * coding convention by creating a jQueryCodingConvention that delegates
    * to a ClosureCodingConvention that delegates to a DefaultCodingConvention.
    */
+  @Immutable
   public static class Proxy implements CodingConvention {
 
     protected final CodingConvention nextConvention;
@@ -330,6 +332,7 @@ public final class CodingConventions {
    * The default coding convention.
    * Should be at the bottom of all proxy chains.
    */
+  @Immutable
   private static class DefaultCodingConvention implements CodingConvention {
 
     private static final long serialVersionUID = 1L;
