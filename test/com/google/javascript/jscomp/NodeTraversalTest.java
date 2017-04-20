@@ -23,10 +23,12 @@ import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractNodeTypePruningCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import junit.framework.TestCase;
 
@@ -156,6 +158,72 @@ public final class NodeTraversalTest extends TestCase {
         }
     );
   }
+
+  private static class NameChangingCallback implements NodeTraversal.Callback {
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      return true;
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isName() && n.getString().equals("change")) {
+        n.setString("xx");
+        t.reportCodeChange();
+      }
+    }
+  }
+
+  public void testReportChange1() {
+    String code = LINE_JOINER.join(
+        "var change;",
+        "function foo() {",
+        "  var b",
+        "}");
+    assertChangesRecorded(code, new NameChangingCallback());
+  }
+
+  public void testReportChange2() {
+    String code = LINE_JOINER.join(
+        "var a;",
+        "function foo() {",
+        "  var change",
+        "}");
+    assertChangesRecorded(code, new NameChangingCallback());
+  }
+
+   public void testReportChange3() {
+    String code = LINE_JOINER.join(
+        "var a;",
+        "function foo() {",
+        "  var b",
+        "}",
+        "var change");
+    assertChangesRecorded(code, new NameChangingCallback());
+  }
+
+  public void testReportChange4() {
+    String code = LINE_JOINER.join(
+        "function foo() {",
+        "  function bar() {",
+        "    var change",
+        "  }",
+        "}");
+    assertChangesRecorded(code, new NameChangingCallback());
+  }
+  
+  private void assertChangesRecorded(String code, NodeTraversal.Callback callback) {
+    final String externs = "";
+    Compiler compiler = new Compiler();
+    Node tree = parseRoots(compiler, externs, code);
+    System.out.println("parse done");
+    Node clone = tree.cloneTree();
+    Map<Node, Node> map = NodeUtil.mapMainToClone(tree, clone);
+    NodeTraversal.traverseRootsEs6(
+        compiler, callback,  tree.getFirstChild(), tree.getSecondChild());
+    NodeUtil.verifyScopeChanges("test", map, tree);
+  }
+
 
   public void testGetLineNoAndGetCharno() {
     Compiler compiler = new Compiler();
@@ -347,5 +415,12 @@ public final class NodeTraversalTest extends TestCase {
     Node n = compiler.parseTestCode(js);
     assertThat(compiler.getErrors()).isEmpty();
     return n;
+  }
+
+  private static Node parseRoots(Compiler compiler, String externs, String js) {
+    Node extern = parse(compiler, externs);
+    Node main = parse(compiler, js);
+
+    return IR.root(IR.root(extern), IR.root(main));
   }
 }

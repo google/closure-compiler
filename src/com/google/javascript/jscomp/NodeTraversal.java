@@ -38,6 +38,12 @@ public class NodeTraversal {
   /** Contains the current node*/
   private Node curNode;
 
+  /** The current script being visited */
+  private Node curScript;
+
+  /** The change scope for the current node being visiteds */
+  private Node currentChangeScope;
+
   /**
    * Stack containing the Scopes that have been created. The Scope objects
    * are lazily created; so the {@code scopeRoots} stack contains the
@@ -269,7 +275,6 @@ public class NodeTraversal {
       this.scopeCallback = (ScopedCallback) cb;
     }
     this.compiler = compiler;
-    setInputId(null, "");
     this.scopeCreator = scopeCreator;
     this.useBlockScope = scopeCreator.hasBlockScope();
   }
@@ -304,7 +309,7 @@ public class NodeTraversal {
    */
   public void traverse(Node root) {
     try {
-      setInputId(NodeUtil.getInputId(root), "");
+      initTraversal(root);
       curNode = root;
       pushScope(root);
       // null parent ensures that the shallow callbacks will traverse root
@@ -320,7 +325,7 @@ public class NodeTraversal {
       Node scopeRoot = externs.getParent();
       Preconditions.checkNotNull(scopeRoot);
 
-      setInputId(NodeUtil.getInputId(scopeRoot), "");
+      initTraversal(scopeRoot);
       curNode = scopeRoot;
       pushScope(scopeRoot);
 
@@ -360,7 +365,7 @@ public class NodeTraversal {
   void traverseWithScope(Node root, Scope s) {
     Preconditions.checkState(s.isGlobal() || s.isModuleScope());
     try {
-      setInputId(null, "");
+      initTraversal(root);
       curNode = root;
       pushScope(s);
       traverseBranch(root, null);
@@ -376,6 +381,7 @@ public class NodeTraversal {
    */
   void traverseAtScope(Scope s) {
     Node n = s.getRootNode();
+    initTraversal(n);
     curNode = n;
     Deque<Scope> parentScopes = new ArrayDeque<>();
     Scope temp = s.getParent();
@@ -387,11 +393,6 @@ public class NodeTraversal {
       pushScope(parentScopes.pop(), true);
     }
     if (n.isFunction()) {
-      // We need to do some extra magic to make sure that the scope doesn't
-      // get re-created when we dive into the function.
-      if (inputId == null) {
-        setInputId(NodeUtil.getInputId(n), getSourceName(n));
-      }
       pushScope(s);
 
       Node args = n.getSecondChild();
@@ -401,9 +402,6 @@ public class NodeTraversal {
 
       popScope();
     } else if (n.isNormalBlock()) {
-      if (inputId == null) {
-        setInputId(NodeUtil.getInputId(n), getSourceName(n));
-      }
       pushScope(s);
 
       // traverseBranch is not called here to avoid re-creating the block scope.
@@ -428,9 +426,7 @@ public class NodeTraversal {
     Preconditions.checkNotNull(scope);
     Preconditions.checkState(node.isFunction());
     Preconditions.checkState(scope.getRootNode() != null);
-    if (inputId == null) {
-      setInputId(NodeUtil.getInputId(node), getSourceName(node));
-    }
+    initTraversal(node);
     curNode = node.getParent();
     pushScope(scope, true /* quietly */);
     traverseBranch(node, curNode);
@@ -449,9 +445,7 @@ public class NodeTraversal {
    */
   void traverseInnerNode(Node node, Node parent, Scope refinedScope) {
     Preconditions.checkNotNull(parent);
-    if (inputId == null) {
-      setInputId(NodeUtil.getInputId(node), getSourceName(node));
-    }
+    initTraversal(node);
     if (refinedScope != null && getScope() != refinedScope) {
       curNode = node;
       pushScope(refinedScope);
@@ -541,8 +535,8 @@ public class NodeTraversal {
    * doesn't know which scope changed. We keep track of the current scope by
    * calling Compiler.setScope inside pushScope and popScope.
    * The automatic tracking can be wrong in rare cases when a pass changes scope
-   * w/out causing a call to pushScope or popScope. It's very hard to find the
-   * places where this happens unless a bug is triggered.
+   * w/out causing a call to pushScope or popScope.
+   *
    * Passes that do cross-scope modifications call
    * Compiler.reportChangeToEnclosingScope(Node n).
    */
@@ -609,14 +603,44 @@ public class NodeTraversal {
     t.traverseRoots(externs, root);
   }
 
+  private void handleScript(Node n, Node parent) {
+    setChangeScope(n);
+    curScript = n;
+    setInputId(n.getInputId(), getSourceName(n));
+
+    curNode = n;
+    if (callback.shouldTraverse(this, n, parent)) {
+      traverseChildren(n);
+      curNode = n;
+      callback.visit(this, n, parent);
+    }
+    curScript = null;
+    setChangeScope(null);
+  }
+
+  private void handleFunction(Node n, Node parent) {
+    Node changeScope = this.currentChangeScope;
+    setChangeScope(n);
+    curNode = n;
+    if (callback.shouldTraverse(this, n, parent)) {
+      traverseFunction(n, parent);
+      curNode = n;
+      callback.visit(this, n, parent);
+    }
+    setChangeScope(changeScope);
+  }
+
   /**
    * Traverses a branch.
    */
   private void traverseBranch(Node n, Node parent) {
     Token type = n.getToken();
     if (type == Token.SCRIPT) {
-      setInputId(n.getInputId(), getSourceName(n));
-      compiler.setScope(n);
+      handleScript(n, parent);
+      return;
+    } else if (type == Token.FUNCTION) {
+      handleFunction(n, parent);
+      return;
     }
 
     curNode = n;
@@ -738,7 +762,6 @@ public class NodeTraversal {
 
   /** Sets the given node as the current scope and pushes the relevant frames on the CFG stacks. */
   private void recordScopeRoot(Node node) {
-    compiler.setScope(node);
     if (NodeUtil.isValidCfgRoot(node)) {
       cfgs.push(node);
     }
@@ -791,10 +814,6 @@ public class NodeTraversal {
     }
     if (NodeUtil.isValidCfgRoot(scopeRoot)) {
       cfgs.pop();
-    }
-    Node newScopeRoot = getScopeRoot();
-    if (newScopeRoot != null) {
-      compiler.setScope(newScopeRoot);
     }
   }
 
@@ -927,9 +946,49 @@ public class NodeTraversal {
     compiler.report(error);
   }
 
+  public void reportCodeChange() {
+    Node changeScope = this.currentChangeScope;
+    Preconditions.checkState(changeScope != null && NodeUtil.isChangeScopeRoot(changeScope));
+    compiler.reportChangeToChangeScope(changeScope);
+  }
+
+  public void reportCodeChange(Node n) {
+    compiler.reportChangeToEnclosingScope(n);
+  }
+
   private static String getSourceName(Node n) {
     String name = n.getSourceFileName();
     return nullToEmpty(name);
+  }
+
+  /**
+   * @param n The current change scope, should be null when the traversal is complete.
+   */
+  private void setChangeScope(Node n) {
+    this.currentChangeScope = n;
+    // TODO(johnlenz): the compiler is a bad place to store this value
+    // multiple traversals can interfer with each other
+    // (even on the same thread).
+    compiler.setChangeScope(n);
+  }
+
+  private Node getEnclosingScript(Node n) {
+    while (n != null && !n.isScript()) {
+      n = n.getParent();
+    }
+    return n;
+  }
+
+  private void initTraversal(Node traversalRoot) {
+    Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(traversalRoot);
+    setChangeScope(changeScope);
+    Node script = getEnclosingScript(changeScope);
+    if (script != null) {
+      setInputId(script.getInputId(), script.getSourceFileName());
+    } else {
+      setInputId(null, "");
+    }
+    this.curScript = script;
   }
 
   private void setInputId(InputId id, String sourceName) {

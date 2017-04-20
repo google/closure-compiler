@@ -4708,6 +4708,26 @@ public final class NodeUtil {
   }
 
   /**
+   * A change scope does not directly correspond to a language scope but is an internal
+   * grouping of changes.
+   *
+   * @return Whether the node represents a change scope root.
+   */
+  static boolean isChangeScopeRoot(Node n) {
+    return (n.isScript() || n.isFunction());
+  }
+
+  /**
+   * @return the change scope root
+   */
+  static Node getEnclosingChangeScopeRoot(Node n) {
+    while (n != null && !isChangeScopeRoot(n)) {
+      n = n.getParent();
+    }
+    return n;
+  }
+
+  /**
    * Given an AST and its copy, map the root node of each scope of main to the
    * corresponding root node of clone
    */
@@ -4739,32 +4759,36 @@ public final class NodeUtil {
     final String passNameMsg = passName.isEmpty() ? "" : passName + ": ";
 
     Node clone = mtoc.get(main);
-    if (main.getChangeTime() > clone.getChangeTime()) {
-      Preconditions.checkState(!isEquivalentToExcludingFunctions(main, clone));
-    } else {
-      Preconditions.checkState(isEquivalentToExcludingFunctions(main, clone));
-    }
+    verifyNodeChange(passNameMsg, main, clone);
     visitPreOrder(main,
         new Visitor() {
           @Override
           public void visit(Node n) {
             if ((n.isScript() || n.isFunction()) && mtoc.containsKey(n)) {
               Node clone = mtoc.get(n);
-              if (n.getChangeTime() > clone.getChangeTime()) {
-                Preconditions.checkState(
-                    !isEquivalentToExcludingFunctions(n, clone),
-                    "%sunchanged scope marked as changed",
-                    passNameMsg);
-              } else {
-                Preconditions.checkState(
-                    isEquivalentToExcludingFunctions(n, clone),
-                    "%schanged scope not marked as changed",
-                    passNameMsg);
-              }
+              verifyNodeChange(passNameMsg, n, clone);
             }
           }
         },
         Predicates.<Node>alwaysTrue());
+  }
+
+  static void verifyNodeChange(final String passNameMsg, Node n, Node clone) {
+    if (n.getChangeTime() > clone.getChangeTime()) {
+      if (isEquivalentToExcludingFunctions(n, clone)) {
+        throw new IllegalStateException(
+           passNameMsg
+           + "unchanged scope marked as changed: "
+            + n.toStringTree());
+      }
+    } else {
+      if (!isEquivalentToExcludingFunctions(n, clone)) {
+        throw new IllegalStateException(
+            passNameMsg
+            + "change scope not marked as changed: "
+            + n.toStringTree());
+      }
+    }
   }
 
   static int countAstSizeUpToLimit(Node n, final int limit) {

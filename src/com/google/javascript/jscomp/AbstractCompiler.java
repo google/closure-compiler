@@ -139,6 +139,18 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   public abstract void reportCodeChange();
 
   /**
+   * Passes that make modifications in a scope that is different than the Compiler.currentScope use
+   * this (eg, InlineVariables and many others)
+   */
+  abstract void reportChangeToEnclosingScope(Node n);
+
+  /**
+   * Make modifications in a scope that is different than the Compiler.currentScope use
+   * this (eg, InlineVariables and many others)
+   */
+  abstract void reportChangeToChangeScope(Node changeScopeRoot);
+
+  /**
    * Logs a message under a central logger.
    */
   abstract void addToDebugLog(String message);
@@ -263,7 +275,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract void removeChangeHandler(CodeChangeHandler handler);
 
   /** Let the PhaseOptimizer know which scope a pass is currently analyzing */
-  abstract void setScope(Node n);
+  abstract void setChangeScope(Node n);
 
   /** A monotonically increasing value to identify a change */
   abstract int getChangeStamp();
@@ -276,12 +288,6 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
   /** True iff a function changed since the last time a pass was run */
   abstract boolean hasScopeChanged(Node n);
-
-  /**
-   * Passes that make modifications in a scope that is different than the Compiler.currentScope use
-   * this (eg, InlineVariables and many others)
-   */
-  abstract void reportChangeToEnclosingScope(Node n);
 
   /**
    * Represents the different contexts for which the compiler could have

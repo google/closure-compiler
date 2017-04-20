@@ -395,9 +395,7 @@ class PhaseOptimizer implements CompilerPass {
       scopeHandler = new ScopedChangeHandler();
       compiler.addChangeHandler(scopeHandler);
 
-      // TODO(johnlenz): It is unclear why "setScope" is called here. Try to remove
-      // this.
-      compiler.setScope(root);
+      compiler.setChangeScope(null);
 
       // lastRuns is initialized before each loop. This way, when a pass is run
       // in the 2nd loop for the 1st time, it looks at all scopes.
