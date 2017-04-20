@@ -532,7 +532,6 @@ public final class FunctionType {
 
     // covariance for the new: type
     if (this.nominalType == null && other.nominalType != null
-        || this.nominalType != null && other.nominalType == null
         || this.nominalType != null && other.nominalType != null
            && !this.nominalType.isSubtypeOf(other.nominalType, subSuperMap)) {
       return false;

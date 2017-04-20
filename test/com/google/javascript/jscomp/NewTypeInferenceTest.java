@@ -19911,4 +19911,18 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  this.prop = new Foo;",
         "}"));
   }
+
+  public void testAllowConstructorWithReturnToBeTypedAsFunction() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @param {number} x",
+        " * @return {number}",
+        " */",
+        "function Foo(x) { return x; }",
+        "function f(/** function(number):number */ x) {",
+        "  x(123);",
+        "}",
+        "f(Foo);"));
+  }
 }
