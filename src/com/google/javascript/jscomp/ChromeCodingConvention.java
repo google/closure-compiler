@@ -24,7 +24,10 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Collection;
 import java.util.Set;
 
-public class ChromeCodingConvention extends CodingConventions.Proxy {
+/**
+ * Coding convention used by the Chrome team to compile Chrome's JS.
+ */
+public final class ChromeCodingConvention extends CodingConventions.Proxy {
   private final Set<String> indirectlyDeclaredProperties;
 
   public ChromeCodingConvention() {
