@@ -1973,10 +1973,10 @@ public final class CommandLineRunnerTest extends TestCase {
                 + "\"src\":\"function log(a){console.log(a)}log(\\\"one.js\\\");\\n\","
                 + "\"path\":\"bar.js\","
                 + "\"source_map\":\"{\\n\\\"version\\\":3,\\n\\\"file\\\":\\\"bar.js\\\",\\n"
-                + "\\\"lineCount\\\":1,\\n\\\"mappings\\\":\\\"AAAAA,QAASA,IAAG,CAACC,CAAD,CAAI,CACdC,"
-                + "OAAAF,IAAA,CAAYC,CAAZ,CADc,CAGhBD,GAAA,CAAI,QAAJ;\\\",\\n"
-                + "\\\"sources\\\":[\\\"one.js\\\"],\\n\\\"names\\\":[\\\"log\\\",\\\"a\\\","
-                + "\\\"console\\\"]\\n}\\n\"}]");
+                + "\\\"lineCount\\\":1,\\n\\\"mappings\\\":\\\"AAAAA,QAASA,IAAGC,CAACC,CAADD,CAAIA,"
+                + "CACdE,OAAAA,IAAAA,CAAYD,CAAZC,CADcF,CAGhBD,GAAAA,CAAIC,QAAJD;\\\",\\n"
+                + "\\\"sources\\\":[\\\"one.js\\\"],\\n\\\"names\\\":[\\\"log\\\",\\\"\\\","
+                + "\\\"a\\\",\\\"console\\\"]\\n}\\n\"}]");
   }
 
   public void testOutputModuleNaming() {

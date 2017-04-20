@@ -142,18 +142,19 @@ public final class SourceMap {
 
     int lineNo = node.getLineno();
     int charNo = node.getCharno();
+    String originalName = node.getOriginalName();
+
     if (mapping != null) {
       OriginalMapping sourceMapping = mapping.getSourceMapping(sourceFile, lineNo, charNo);
       if (sourceMapping != null) {
         sourceFile = sourceMapping.getOriginalFile();
         lineNo = sourceMapping.getLineNumber();
         charNo = sourceMapping.getColumnPosition();
+        originalName = sourceMapping.getIdentifier();
       }
     }
 
     sourceFile = fixupSourceLocation(sourceFile);
-
-    String originalName = node.getOriginalName();
 
     // Rhino source lines are one based but for v3 source maps, we make
     // them zero based.

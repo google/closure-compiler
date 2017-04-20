@@ -164,6 +164,7 @@ public final class CompilerTest extends TestCase {
             .setOriginalFile(origSourceName)
             .setLineNumber(18)
             .setColumnPosition(25)
+            .setIdentifier("testSymbolName")
             .build(),
         compiler.getSourceMapping(normalize("generated_js/example.js"), 3, 3));
     assertEquals("<div ng-show='foo()'>",
@@ -173,7 +174,7 @@ public final class CompilerTest extends TestCase {
   private SourceMapInput sourcemap(String sourceMapPath, String originalSource,
       FilePosition originalSourcePosition) throws Exception {
     SourceMapGeneratorV3 sourceMap = new SourceMapGeneratorV3();
-    sourceMap.addMapping(originalSource, null, originalSourcePosition,
+    sourceMap.addMapping(originalSource, "testSymbolName", originalSourcePosition,
         new FilePosition(1, 1), new FilePosition(100, 1));
     StringBuilder output = new StringBuilder();
     sourceMap.appendTo(output, "unused.js");
@@ -225,6 +226,7 @@ public final class CompilerTest extends TestCase {
     // FilePosition above is 0-based, whereas OriginalMapping is 1-based, thus 18 & 26.
     assertThat(mapping.getLineNumber()).isEqualTo(18);
     assertThat(mapping.getColumnPosition()).isEqualTo(26);
+    assertThat(mapping.getIdentifier()).isEqualTo("testSymbolName");
   }
 
   private Compiler initCompilerForCommonJS(
