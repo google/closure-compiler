@@ -30,7 +30,6 @@ public final class OptimizeParametersTest extends CompilerTestCase {
   @Override
   public void setUp() {
     enableNormalize();
-    validateAstChangeMarking(false);
   }
 
   public void testNoRemoval() {

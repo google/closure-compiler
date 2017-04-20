@@ -38,12 +38,6 @@ public final class NormalizeTest extends Es6CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    validateAstChangeMarking(false);
-  }
-
-  @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     return new Normalize(compiler, false);
   }
@@ -755,7 +749,6 @@ public final class NormalizeTest extends Es6CompilerTestCase {
 
     // TODO(johnlenz): fix this so it is just another test case.
     WithCollapse testCase = new WithCollapse();
-    testCase.setUp();
     testCase.testConstantProperties();
     testCase.tearDown();
   }
@@ -763,12 +756,6 @@ public final class NormalizeTest extends Es6CompilerTestCase {
   public static class WithCollapse extends CompilerTestCase {
     WithCollapse() {
       enableNormalize();
-    }
-
-    @Override
-    protected void setUp() throws Exception {
-      super.setUp();
-      validateAstChangeMarking(false);
     }
 
     private void testConstantProperties() {

@@ -138,6 +138,7 @@ final class PolymerClassRewriter {
         parent.addChildrenAfter(statements, beforeRoot);
       }
     }
+    compiler.reportChangeToEnclosingScope(statements);
 
     // Since behavior files might contain more language features than the class file, we need to
     // update the feature sets.
@@ -146,14 +147,14 @@ final class PolymerClassRewriter {
       Node scriptNode = NodeUtil.getEnclosingScript(parent);
       FeatureSet oldFeatures = (FeatureSet) scriptNode.getProp(Node.FEATURE_SET);
       scriptNode.putProp(Node.FEATURE_SET, oldFeatures.union(newFeatures));
+      compiler.reportChangeToEnclosingScope(scriptNode);
     }
 
     if (NodeUtil.isNameDeclaration(exprRoot)) {
       Node assignExpr = varToAssign(exprRoot);
       parent.replaceChild(exprRoot, assignExpr);
+      compiler.reportChangeToEnclosingScope(assignExpr);
     }
-
-    compiler.reportCodeChange();
   }
 
   /**
@@ -402,7 +403,7 @@ final class PolymerClassRewriter {
     Node stmts = block.removeChildren();
     parent.addChildrenToBack(stmts);
 
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(stmts);
   }
 
   private static boolean hasShorthandAssignment(Node objLit) {

@@ -19,7 +19,6 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.regex.Pattern;
 
 /**
@@ -96,7 +95,7 @@ public class ExportTestFunctions implements CompilerPass {
         for (Node c : n.children()) {
           if (c.isStringKey() && !c.isQuotedString()) {
             c.setQuotedString();
-            compiler.reportCodeChange();
+            compiler.reportChangeToEnclosingScope(c);
           } else if (c.isMemberFunctionDef()) {
             rewriteMemberDefInObjLit(c, n);
           }
@@ -130,7 +129,7 @@ public class ExportTestFunctions implements CompilerPass {
             Node expression = IR.exprResult(call);
 
             scriptNode.addChildAfter(expression, classNode);
-            compiler.reportCodeChange();
+            compiler.reportChangeToEnclosingScope(expression);
           }
         }
       }
@@ -141,7 +140,7 @@ public class ExportTestFunctions implements CompilerPass {
       Node stringKey = IR.stringKey(name, memberDef.getFirstChild().detach());
       objLit.replaceChild(memberDef, stringKey);
       stringKey.setQuotedString();
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(objLit);
     }
 
     // TODO(johnlenz): move test suite declaration into the
@@ -192,7 +191,7 @@ public class ExportTestFunctions implements CompilerPass {
     Node expression = IR.exprResult(call);
 
     scriptNode.addChildAfter(expression, node);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(expression);
   }
 
 
@@ -216,7 +215,7 @@ public class ExportTestFunctions implements CompilerPass {
     exportCall.useSourceInfoFromForTree(scriptNode);
 
     scriptNode.addChildrenAfter(exportCall, parent);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(exportCall);
   }
 
 

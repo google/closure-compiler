@@ -29,7 +29,6 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -165,7 +164,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     Node stmts = block.removeChildren();
     parent.addChildrenAfter(stmts, polymerElementExterns);
 
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(stmts);
   }
 
   /**

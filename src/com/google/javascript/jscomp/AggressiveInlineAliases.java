@@ -53,8 +53,7 @@ class AggressiveInlineAliases implements CompilerPass {
    * @param depth The chain depth.
    * @param newNodes Expression nodes that have been updated.
    */
-  private void rewriteAliasProps(
-      Name name, Node value, int depth, Set<AstChange> newNodes) {
+  private void rewriteAliasProps(Name name, Node value, int depth, Set<AstChange> newNodes) {
     if (name.props == null) {
       return;
     }

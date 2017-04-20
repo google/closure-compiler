@@ -88,7 +88,7 @@ class NameAnonymousFunctions implements CompilerPass {
       Node fnNameNode = fnNode.getFirstChild();
       String uniqueName = getLikelyNonConflictingName(name);
       fnNameNode.setString(uniqueName);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(fnNameNode);
       namedCount++;
       bytesUsed += uniqueName.length();
     }

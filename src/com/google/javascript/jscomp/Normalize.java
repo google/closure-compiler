@@ -89,12 +89,12 @@ class Normalize implements CompilerPass {
     return js;
   }
 
-  private void reportCodeChange(String changeDescription) {
+  private void reportCodeChange(String changeDescription, Node n) {
     if (assertOnChange) {
       throw new IllegalStateException(
           "Normalize constraints violated:\n" + changeDescription);
     }
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(n);
   }
 
   @Override
@@ -158,20 +158,21 @@ class Normalize implements CompilerPass {
       this.exposedProperties = exposedProperties;
     }
 
-    @Override public void visit(NodeTraversal t, Node n, Node parent) {
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isGetProp()) {
         String propName = n.getLastChild().getString();
         if (exposedProperties.contains(propName)) {
           Node obj = n.removeFirstChild();
           Node prop = n.removeFirstChild();
+          compiler.reportChangeToEnclosingScope(n);
           n.replaceWith(IR.getelem(obj, prop));
-          compiler.reportCodeChange();
         }
       } else if (n.isStringKey()) {
         String propName = n.getString();
         if (exposedProperties.contains(propName)) {
           n.setQuotedString();
-          compiler.reportCodeChange();
+          compiler.reportChangeToEnclosingScope(n);
         }
       }
     }
@@ -669,7 +670,7 @@ class Normalize implements CompilerPass {
         assign.setJSDocInfo(shorthand.getJSDocInfo());
         shorthand.setJSDocInfo(null);
         parent.replaceChild(insertPoint, assign);
-        compiler.reportCodeChange();
+        compiler.reportChangeToEnclosingScope(assign);
       }
     }
 
@@ -770,7 +771,9 @@ class Normalize implements CompilerPass {
         Node replacement = IR.assign(n, value);
         replacement.setJSDocInfo(parent.getJSDocInfo());
         replacement.useSourceInfoIfMissingFrom(parent);
-        grandparent.replaceChild(parent, NodeUtil.newExpr(replacement));
+        Node statement = NodeUtil.newExpr(replacement);
+        grandparent.replaceChild(parent, statement);
+        reportCodeChange("Duplicate VAR declaration", statement);
       } else {
         // It is an empty reference remove it.
         if (NodeUtil.isStatementBlock(grandparent)) {
@@ -787,8 +790,8 @@ class Normalize implements CompilerPass {
           // already have been normalized to have a BLOCK.
           throw new IllegalStateException("Unexpected LABEL");
         }
+        reportCodeChange("Duplicate VAR declaration", grandparent);
       }
-      reportCodeChange("Duplicate VAR declaration");
     }
   }
 

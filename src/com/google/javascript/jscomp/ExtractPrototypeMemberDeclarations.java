@@ -147,7 +147,6 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
    * through all ExtractInstance and performs extraction there.
    */
   private void doExtraction(GatherExtractionInfo info) {
-
     // Insert a global temp if we are using the USE_GLOBAL_TEMP pattern.
     if (pattern == Pattern.USE_GLOBAL_TEMP) {
       Node injectionPoint = compiler.getNodeForCodeInsertion(null);
@@ -156,6 +155,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
           .useSourceInfoIfMissingFromForTree(injectionPoint);
 
       injectionPoint.addChildToFront(var);
+      compiler.reportChangeToEnclosingScope(var);
     }
     // Go through all extraction instances and extract each of them.
     for (ExtractionInstance instance : info.instances) {
@@ -186,6 +186,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
               .useSourceInfoIfMissingFromForTree(first.node);
 
       instance.parent.addChildBefore(stmt, first.node);
+      compiler.reportChangeToEnclosingScope(stmt);
     } else if (pattern == Pattern.USE_IIFE){
       Node block = IR.block();
       Node func = IR.function(
@@ -202,7 +203,9 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
       Node stmt = new Node(first.node.getToken(), call);
       stmt.useSourceInfoIfMissingFromForTree(first.node);
       instance.parent.addChildBefore(stmt, first.node);
+      compiler.reportChangeToEnclosingScope(stmt);
       for (PrototypeMemberDeclaration declar : instance.declarations) {
+        compiler.reportChangeToEnclosingScope(declar.node);
         block.addChildToBack(declar.node.detach());
       }
     }
@@ -238,6 +241,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     name.getFirstChild().setOriginalName(className + ".prototype");
 
     assignment.replaceChild(lhs, name);
+    compiler.reportChangeToEnclosingScope(name);
   }
 
   /**

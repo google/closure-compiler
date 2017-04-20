@@ -485,7 +485,7 @@ class OptimizeParameters
       stmt = IR.exprResult(value).useSourceInfoFrom(value);
     }
     block.addChildToFront(stmt);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(stmt);
   }
 
   /**
@@ -506,10 +506,11 @@ class OptimizeParameters
     if (argNode != null) {
       // Keep the args in the same order, do the last first.
       eliminateParamsAfter(fnNode, argNode.getNext());
+      compiler.reportChangeToEnclosingScope(argNode);
       argNode.detach();
       Node var = IR.var(argNode).useSourceInfoIfMissingFrom(argNode);
       fnNode.getLastChild().addChildToFront(var);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(var);
       return true;
     }
     return false;
@@ -517,11 +518,12 @@ class OptimizeParameters
 
   /**
    * Eliminates the parameter from a function definition.
+   *
    * @param function The function node
    * @param argIndex The index of the the argument to remove.
    * @return The Node of the argument removed.
    */
-  private static Node eliminateFunctionParamAt(Node function, int argIndex) {
+  private Node eliminateFunctionParamAt(Node function, int argIndex) {
     Preconditions.checkArgument(function.isFunction(),
         "Node must be a function.");
 
@@ -529,6 +531,7 @@ class OptimizeParameters
         function, argIndex);
 
     if (formalArgPtr != null) {
+      compiler.reportChangeToEnclosingScope(formalArgPtr);
       function.getSecondChild().removeChild(formalArgPtr);
     }
     return formalArgPtr;
@@ -552,13 +555,13 @@ class OptimizeParameters
 
     if (formalArgPtr != null) {
       call.removeChild(formalArgPtr);
+      compiler.reportChangeToEnclosingScope(call);
       // The value in the parameter object is the one that is being moved into
       // function definition leave that one's references.  For everything else,
       // remove any references.
       if (p.getArg() != formalArgPtr) {
         removedNodes.add(formalArgPtr);
       }
-      compiler.reportCodeChange();
     }
     return formalArgPtr;
   }

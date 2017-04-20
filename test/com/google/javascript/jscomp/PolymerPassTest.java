@@ -159,7 +159,6 @@ public class PolymerPassTest extends Es6CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    validateAstChangeMarking(false);
     allowExternsChanges(true);
     enableTypeCheck();
     enableCheckAccessControls(false);

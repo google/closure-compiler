@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.AnalyzePrototypeProperties.Property;
 import com.google.javascript.jscomp.AnalyzePrototypeProperties.Symbol;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
@@ -161,6 +160,16 @@ class CrossModuleMethodMotion implements CompilerPass {
           }
 
           Node valueParent = value.getParent();
+          /**
+           * The logic here moves methods from some starting script node to some other script node.
+           * Both scripts need to be marked as changed. Locally the removal point in the starting
+           * script node is called 'valueParent' and the insertion point in the destination script
+           * is sometimes called 'unstubParent' and sometimes 'destParent'. The change on
+           * 'valueParent' is being reported before the change occurs since the change is guaranteed
+           * to occur and since after the change the 'valueParent' node has sometimes already been
+           * detached.
+           */
+          compiler.reportChangeToEnclosingScope(valueParent);
           Node proto = prop.getPrototype();
           int stubId = idGenerator.newId();
 
@@ -222,8 +231,9 @@ class CrossModuleMethodMotion implements CompilerPass {
         .hasGeneratedAnyIds()) {
       // Declare stub functions in the top-most module.
       Node declarations = compiler.parseSyntheticCode(STUB_DECLARATIONS);
-      compiler.getNodeForCodeInsertion(null).addChildrenToFront(
-          declarations.removeChildren());
+      Node firstScript = compiler.getNodeForCodeInsertion(null);
+      firstScript.addChildrenToFront(declarations.removeChildren());
+      compiler.reportChangeToEnclosingScope(firstScript);
     }
   }
 

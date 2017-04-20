@@ -50,7 +50,7 @@ final class PolymerPassStaticUtils {
                     && n.getGrandparent().isGetProp()) {
                   Node dollarChildProp = n.getGrandparent();
                   dollarChildProp.setToken(Token.GETELEM);
-                  compiler.reportCodeChange();
+                  compiler.reportChangeToEnclosingScope(dollarChildProp);
                 }
               }
             },

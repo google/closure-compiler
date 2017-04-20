@@ -29,12 +29,7 @@ public final class NameAnonymousFunctionsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    validateAstChangeMarking(false);
-  }
-
-  @Override public CompilerPass getProcessor(Compiler compiler) {
+  public CompilerPass getProcessor(Compiler compiler) {
     return new NameAnonymousFunctions(compiler);
   }
 
