@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -49,11 +47,7 @@ public final class JSModule implements DependencyInfo, Serializable {
   /** Modules that this module depends on */
   private final List<JSModule> deps = new ArrayList<>();
 
-  /** The length of the longest path starting from this module */
   private int depth;
-  /** The position of this module relative to all others in the AST. */
-  private int index;
-
   /**
    * Creates an instance.
    *
@@ -61,10 +55,7 @@ public final class JSModule implements DependencyInfo, Serializable {
    */
   public JSModule(String name) {
     this.name = name;
-    // Depth and index will be set to their correct values by the JSModuleGraph into which they
-    // are placed.
     this.depth = -1;
-    this.index = -1;
   }
 
   /** Gets the module name. */
@@ -286,14 +277,5 @@ public final class JSModule implements DependencyInfo, Serializable {
    */
   public int getDepth() {
     return depth;
-  }
-
-  public void setIndex(int index) {
-    checkArgument(index >= 0, "Invalid module index: %s", index);
-    this.index = index;
-  }
-
-  public int getIndex() {
-    return index;
   }
 }
