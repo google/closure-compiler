@@ -1169,7 +1169,7 @@ public class ErrorToFixMapperTest {
         LINE_JOINER.join(
             "goog.module('x');",
             "",
-            "const {foo, } = goog.require('goog.util');",
+            "const {foo} = goog.require('goog.util');",
             "",
             "alert(foo(7));"));
   }
@@ -1191,8 +1191,11 @@ public class ErrorToFixMapperTest {
             "alert(foo(qux(7)));"));
   }
 
+  /**
+   * Because of overlapping replacements, it takes two runs to fully fix this case.
+   */
   @Test
-  public void testExtraRequire_destructuring4() {
+  public void testExtraRequire_destructuring4a() {
     assertChanges(
         LINE_JOINER.join(
             "goog.module('x');",
@@ -1201,7 +1204,20 @@ public class ErrorToFixMapperTest {
         LINE_JOINER.join(
             "goog.module('x');",
             "",
-            // TODO(tbreisacher): Remove the entire statement instead?
+            "const {qux} = goog.require('goog.util');"));
+  }
+
+  @Test
+  public void testExtraRrequire_destructuring4b() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {qux} = goog.require('goog.util');"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            // TODO(tbreisacher): Remove the entire const statement instead?
             "const {} = goog.require('goog.util');"));
   }
 
@@ -1234,9 +1250,23 @@ public class ErrorToFixMapperTest {
         LINE_JOINER.join(
             "goog.module('x');",
             "",
-            "const {foo: googUtilFoo, } = goog.require('goog.util');",
+            "const {foo: googUtilFoo} = goog.require('goog.util');",
             "",
             "alert(googUtilFoo(7));"));
+  }
+
+  @Test
+  public void testExtraRequire_destructuring7() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {foo: googUtilFoo} = goog.require('goog.util');"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            // TODO(tbreisacher): Remove the entire const statement instead?
+            "const {} = goog.require('goog.util');"));
   }
 
   @Test

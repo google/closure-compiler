@@ -251,14 +251,13 @@ public final class SuggestedFix {
         length += (startPosition - jsDoc.getOriginalCommentPosition());
         startPosition = jsDoc.getOriginalCommentPosition();
       }
-      // Variable declarations require special handling since the NAME node doesn't contain enough
-      // information if the variable is declared in a multi-variable declaration. The NAME node
-      // in a VAR declaration doesn't include its child in its length if there is an inline
-      // assignment, and the code needs to know how to delete the commas. See SuggestedFixTest for
-      // more information.
+      // Variable declarations and string keys require special handling since the node doesn't
+      // contain enough if it has a child. The NAME node in a var/let/const declaration doesn't
+      // include its child in its length, and the code needs to know how to delete the commas.
+      // The same is true for string keys in object literals and object destructuring patterns.
       // TODO(mknichel): Move this logic and the start position logic to a helper function
       // so that it can be reused in other methods.
-      if (n.isName() && NodeUtil.isNameDeclaration(n.getParent())) {
+      if ((n.isName() && NodeUtil.isNameDeclaration(n.getParent())) || n.isStringKey()) {
         if (n.getNext() != null) {
           length = n.getNext().getSourceOffset() - startPosition;
         } else if (n.hasChildren()) {
