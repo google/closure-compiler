@@ -30,8 +30,9 @@ import java.io.IOException;
  * Check for statements that should end with a semicolon according to the Google style guide.
  */
 public final class CheckMissingSemicolon extends AbstractPostOrderCallback implements CompilerPass {
-  public static final DiagnosticType MISSING_SEMICOLON =
-      DiagnosticType.disabled("JSC_MISSING_SEMICOLON", "Missing semicolon");
+  public static final DiagnosticType MISSING_SEMICOLON = DiagnosticType.disabled(
+      "JSC_MISSING_SEMICOLON",
+      "Missing semicolon");
 
   private final AbstractCompiler compiler;
 
