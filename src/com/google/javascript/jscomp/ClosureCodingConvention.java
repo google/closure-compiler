@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
@@ -32,12 +33,12 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 /**
  * This describes the Closure-specific JavaScript coding conventions.
  *
  */
+@Immutable
 public final class ClosureCodingConvention extends CodingConventions.Proxy {
 
   private static final long serialVersionUID = 1L;
@@ -46,7 +47,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
       "JSC_REFLECT_OBJECTLIT_EXPECTED",
       "Object literal expected as second argument");
 
-  private final Set<String> indirectlyDeclaredProperties;
+  private final ImmutableSet<String> indirectlyDeclaredProperties;
 
   public ClosureCodingConvention() {
     this(CodingConventions.getDefault());
@@ -345,7 +346,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
     return CodingConventions.isAliasingGlobalThis(this, n);
   }
 
-  private final Set<String> propertyTestFunctions = ImmutableSet.of(
+  private final ImmutableSet<String> propertyTestFunctions = ImmutableSet.of(
       "goog.isDef", "goog.isNull", "goog.isDefAndNotNull",
       "goog.isString", "goog.isNumber", "goog.isBoolean",
       "goog.isFunction", "goog.isArray", "goog.isArrayLike", "goog.isObject");

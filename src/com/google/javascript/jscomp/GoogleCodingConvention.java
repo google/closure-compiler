@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import java.util.regex.Matcher;
@@ -26,6 +27,7 @@ import java.util.regex.Pattern;
  * Within Google, variable names are semantically significant.
  *
  */
+@Immutable
 public class GoogleCodingConvention extends CodingConventions.Proxy {
 
   private static final long serialVersionUID = 1L;
