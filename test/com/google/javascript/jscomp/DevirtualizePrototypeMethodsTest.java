@@ -16,27 +16,23 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSType;
-import java.util.ArrayList;
-import java.util.List;
+import com.google.javascript.rhino.TypeI;
 
 /**
  * Tests for {@link DevirtualizePrototypeMethods}
  *
  */
-public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
+public final class DevirtualizePrototypeMethodsTest extends TypeICompilerTestCase {
   private static final String EXTERNAL_SYMBOLS =
-      "var extern;extern.externalMethod";
-  private final List<String> typeInformation;
+      DEFAULT_EXTERNS + "var extern;extern.externalMethod";
 
   public DevirtualizePrototypeMethodsTest() {
     super(EXTERNAL_SYMBOLS);
-    typeInformation = new ArrayList<>();
   }
 
   @Override
@@ -48,7 +44,7 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    disableTypeCheck();
+    this.mode = TypeInferenceMode.NEITHER;
   }
 
   /**
@@ -58,28 +54,25 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     return Joiner.on(";").join(parts);
   }
 
-  /**
-   * Inputs for prototype method tests.
-   */
-  private static class RewritePrototypeMethodTestInput {
-    static final String INPUT =
+  public void testRewritePrototypeMethodsWithCorrectTypes() throws Exception {
+    String input =
         LINE_JOINER.join(
             "/** @constructor */",
-            "function a() { this.x = 3; }",
+            "function A() { this.x = 3; }",
             "/** @return {number} */",
-            "a.prototype.foo = function() { return this.x; };",
-            "/** @param {number} p\n@return {number} */",
-            "a.prototype.bar = function(p) { return this.x; };",
-            "a.prototype.baz = function() {};",
-            "var o = new a;",
+            "A.prototype.foo = function() { return this.x; };",
+            "/** @param {number} p",
+            "    @return {number} */",
+            "A.prototype.bar = function(p) { return this.x; };",
+            "A.prototype.baz = function() {};",
+            "var o = new A();",
             "o.foo();",
             "o.bar(2);",
             "o.baz()");
-
-    static final String EXPECTED =
+    String expected =
         LINE_JOINER.join(
             "/** @constructor */",
-            "function a(){ this.x = 3; }",
+            "function A(){ this.x = 3; }",
             "var JSCompiler_StaticMethods_foo = ",
             "function(JSCompiler_StaticMethods_foo$self) {",
             "  return JSCompiler_StaticMethods_foo$self.x",
@@ -91,55 +84,69 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
             "var JSCompiler_StaticMethods_baz = ",
             "function(JSCompiler_StaticMethods_baz$self) {",
             "};",
-            "var o = new a;",
+            "var o = new A();",
             "JSCompiler_StaticMethods_foo(o);",
             "JSCompiler_StaticMethods_bar(o, 2);",
             "JSCompiler_StaticMethods_baz(o)");
 
-    static final ImmutableList<String> EXPECTED_TYPE_CHECKING_OFF =
-        ImmutableList.of(
-            "FUNCTION a = null",
-            "NAME JSCompiler_StaticMethods_foo$self = null",
-            "FUNCTION JSCompiler_StaticMethods_foo = null",
-            "NAME JSCompiler_StaticMethods_bar$self = null",
-            "FUNCTION JSCompiler_StaticMethods_bar = null",
-            "FUNCTION JSCompiler_StaticMethods_baz = null",
-            "NEW a = null",
-            "CALL JSCompiler_StaticMethods_foo = null",
-            "CALL JSCompiler_StaticMethods_bar = null",
-            "CALL JSCompiler_StaticMethods_baz = null");
+    this.mode = TypeInferenceMode.OTI_ONLY;
+    test(input, expected);
+    checkTypeOfRewrittenMethods();
 
-    static final ImmutableList<String> EXPECTED_TYPE_CHECKING_ON =
-        ImmutableList.of(
-            "FUNCTION a = function (new:a): undefined",
-            "NAME JSCompiler_StaticMethods_foo$self = a",
-            "FUNCTION JSCompiler_StaticMethods_foo = function (a): number",
-            "NAME JSCompiler_StaticMethods_bar$self = a",
-            "FUNCTION JSCompiler_StaticMethods_bar = function (a, number): number",
-            "FUNCTION JSCompiler_StaticMethods_baz = function (a): undefined",
-            "NEW a = a",
-            "CALL JSCompiler_StaticMethods_foo = number",
-            "CALL JSCompiler_StaticMethods_bar = number",
-            "CALL JSCompiler_StaticMethods_baz = undefined");
-
-    private RewritePrototypeMethodTestInput() {}
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    test(input, expected);
+    checkTypeOfRewrittenMethods();
   }
 
-  public void testRewritePrototypeMethods1() throws Exception {
-    // type checking off
-    disableTypeCheck();
-    checkTypes(RewritePrototypeMethodTestInput.INPUT,
-               RewritePrototypeMethodTestInput.EXPECTED,
-               RewritePrototypeMethodTestInput.EXPECTED_TYPE_CHECKING_OFF);
+  private void checkTypeOfRewrittenMethods() {
+    TypeI thisType = getTypeAtPosition(0).toMaybeFunctionType().getInstanceType();
+    FunctionTypeI fooType = getTypeAtPosition(1, 0, 0).toMaybeFunctionType();
+    FunctionTypeI barType = getTypeAtPosition(2, 0, 0).toMaybeFunctionType();
+    FunctionTypeI bazType = getTypeAtPosition(3, 0, 0).toMaybeFunctionType();
+    TypeI fooResultType = getTypeAtPosition(5, 0);
+    TypeI barResultType = getTypeAtPosition(6, 0);
+    TypeI bazResultType = getTypeAtPosition(7, 0);
+
+    TypeI number = fooResultType;
+    TypeI receiver = fooType.getTypeOfThis();
+    assertTrue("Expected number: " + number, number.isNumberValueType());
+    // NOTE: OTI has the receiver as unknown, NTI has it as null.
+    assertTrue(
+        "Expected null or unknown: " + receiver, receiver == null || receiver.isUnknownType());
+    assertThat(barResultType).isEqualTo(number);
+
+    // Check that foo's type is {function(A): number}
+    assertThat(fooType.getParameterTypes()).containsExactly(thisType);
+    assertThat(fooType.getReturnType()).isEqualTo(number);
+    assertThat(fooType.getTypeOfThis()).isEqualTo(receiver);
+
+    // Check that bar's type is {function(A, number): number}
+    assertThat(barType.getParameterTypes()).containsExactly(thisType, number).inOrder();
+    assertThat(barType.getReturnType()).isEqualTo(number);
+    assertThat(barType.getTypeOfThis()).isEqualTo(receiver);
+
+    // Check that baz's type is {function(A): undefined} in OTI and {function(A): ?} in NTI
+    assertThat(bazType.getParameterTypes()).containsExactly(thisType);
+    assertThat(bazType.getTypeOfThis()).isEqualTo(receiver);
+
+    // TODO(sdh): NTI currently fails to infer the result of the baz() call (b/37351897)
+    // so we handle it more carefully.  When methods are deferred, this should be changed
+    // to check that it's exactly unknown.
+    assertTrue(
+        "Expected undefined or unknown: " + bazResultType,
+        bazResultType.isVoidType() || bazResultType.isUnknownType());
+    assertTrue(
+        "Expected undefined: " + bazType.getReturnType(), bazType.getReturnType().isVoidType());
   }
 
-  public void testRewritePrototypeMethods2() throws Exception {
-    // type checking on
-    enableTypeCheck();
-    checkTypes(RewritePrototypeMethodTestInput.INPUT,
-               RewritePrototypeMethodTestInput.EXPECTED,
-               RewritePrototypeMethodTestInput.EXPECTED_TYPE_CHECKING_ON);
+  private TypeI getTypeAtPosition(int... indices) {
+    Node node = getLastCompiler().getJsRoot().getFirstChild();
+    for (int index : indices) {
+      node = node.getChildAtIndex(index);
+    }
+    return node.getTypeI();
   }
+
 
   public void testRewriteChained() throws Exception {
     String source =
@@ -619,111 +626,8 @@ public final class DevirtualizePrototypeMethodsTest extends CompilerTestCase {
     testSame(modules);
   }
 
-  /**
-   * Verifies that the compiler pass's output matches the expected
-   * output, and that nodes are annotated with the expected jstype
-   * information.
-   */
-  private void checkTypes(String source,
-                          String expected,
-                          List<String> expectedTypes) {
-    typeInformation.clear();
-    test(source, expected);
-    assertEquals(expectedTypes, typeInformation);
-  }
-
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new TypeInformationGatherer(
-        compiler, new DevirtualizePrototypeMethods(compiler), typeInformation);
-  }
-
-  /**
-   * Wrapper that gathers function, call, and self variable type strings after
-   * the pass under test runs.  For use to test passes that modify JSType
-   * annotations.
-   */
-  private static class TypeInformationGatherer
-      implements CompilerPass {
-    private final Compiler compiler;
-    private final CompilerPass passUnderTest;
-    private final List<String> typeInformation;
-
-    TypeInformationGatherer(Compiler compiler,
-                                    CompilerPass passUnderTest,
-                                    List<String> typeInformation) {
-      this.compiler = compiler;
-      this.passUnderTest = passUnderTest;
-      this.typeInformation = typeInformation;
-    }
-
-    @Override
-    public void process(Node externs, Node root) {
-      passUnderTest.process(externs, root);
-      NodeTraversal.traverseEs6(compiler, externs, new GatherCallback());
-      NodeTraversal.traverseEs6(compiler, root, new GatherCallback());
-    }
-
-    public String getNameString(Node n) {
-      Token type = n.getToken();
-      if (type == Token.NAME) {
-        return n.getString();
-      } else if (type == Token.GETPROP) {
-        String left = getNameString(n.getFirstChild());
-        if (left == null) {
-          return null;
-        }
-        return left + "." + n.getLastChild().getString();
-      } else if (type == Token.GETELEM) {
-        String left = getNameString(n.getFirstChild());
-        if (left == null) {
-          return null;
-        }
-        return left + "[" + n.getLastChild().getString() + "]";
-      } else if (type == Token.THIS) {
-        return "this";
-      } else if (type == Token.FUNCTION){
-        return "{ANON FUNCTION}";
-      } else {
-        // I wonder if we should just die on this.
-        return null;
-      }
-    }
-
-    private class GatherCallback extends AbstractPostOrderCallback {
-      @Override
-      public void visit(NodeTraversal traversal, Node node, Node parent) {
-        Node nameNode = null;
-        if (node.isFunction()) {
-          if (parent.isName()) {
-            nameNode = parent;
-          } else if (parent.isAssign()) {
-            nameNode = parent.getFirstChild();
-          } else {
-            nameNode = node.getFirstChild();
-          }
-        } else if (node.isCall() || node.isNew()) {
-          nameNode = node.getFirstChild();
-        }
-
-        if (nameNode != null) {
-          JSType type = node.getJSType();
-          typeInformation.add(
-              Joiner.on("")
-                  .join(
-                      node.getToken(), " ", getNameString(nameNode), " = ", String.valueOf(type)));
-        }
-
-        if (node.isGetProp()) {
-          Node child = node.getFirstChild();
-          if (child.isName() && child.getString().endsWith("$self")) {
-            JSType type = child.getJSType();
-            typeInformation.add(
-                Joiner.on("")
-                    .join(child.getToken(), " ", child.getString(), " = ", String.valueOf(type)));
-          }
-        }
-      }
-    }
+    return new DevirtualizePrototypeMethods(compiler);
   }
 }

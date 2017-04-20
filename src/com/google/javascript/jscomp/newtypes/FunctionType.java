@@ -1095,6 +1095,22 @@ public final class FunctionType {
     return substituteParametricGenerics(builder.build());
   }
 
+  /** Returns a new FunctionType with the receiverType promoted to the first argument type. */
+  FunctionType devirtualize() {
+    return new FunctionType(
+        commonTypes,
+        ImmutableList.<JSType>builder().add(receiverType).addAll(requiredFormals).build(),
+        optionalFormals,
+        restFormals,
+        returnType,
+        nominalType,
+        null,
+        outerVarPreconditions,
+        typeParameters,
+        isLoose,
+        isAbstract);
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (obj == null) {

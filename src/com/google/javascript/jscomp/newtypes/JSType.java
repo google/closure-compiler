@@ -1707,7 +1707,9 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public final TypeI convertMethodToFunction() {
-    throw new UnsupportedOperationException("convertMethodToFunction not implemented yet");
+    Preconditions.checkState(this.isFunctionType());
+    FunctionType devirtualized = getFunTypeIfSingletonObj().devirtualize();
+    return commonTypes.fromFunctionType(devirtualized);
   }
 
   @Override
