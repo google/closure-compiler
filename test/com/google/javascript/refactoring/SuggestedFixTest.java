@@ -132,6 +132,64 @@ public class SuggestedFixTest {
   }
 
   @Test
+  public void testDelete_multipleLetDeclaration() {
+    String input = "let foo = 3, bar, baz;";
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+
+    // Delete the 1st variable on the line. Make sure the deletion includes the assignment and the
+    // trailing comma.
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .delete(root.getFirstFirstChild())
+        .build();
+    CodeReplacement replacement = new CodeReplacement(4, "foo = 3, ".length(), "");
+    assertReplacement(fix, replacement);
+
+    // Delete the 2nd variable.
+    fix = new SuggestedFix.Builder()
+        .delete(root.getFirstChild().getSecondChild())
+        .build();
+    replacement = new CodeReplacement(13, "bar, ".length(), "");
+    assertReplacement(fix, replacement);
+
+    // Delete the last variable. Make sure it removes the leading comma.
+    fix = new SuggestedFix.Builder()
+        .delete(root.getFirstChild().getLastChild())
+        .build();
+    replacement = new CodeReplacement(16, ", baz".length(), "");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
+  public void testDelete_multipleConstDeclaration() {
+    String input = "const foo = 3, bar = 4, baz = 5;";
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+
+    // Delete the 1st variable on the line. Make sure the deletion includes the assignment and the
+    // trailing comma.
+    SuggestedFix fix = new SuggestedFix.Builder()
+        .delete(root.getFirstFirstChild())
+        .build();
+    CodeReplacement replacement = new CodeReplacement(6, "foo = 3, ".length(), "");
+    assertReplacement(fix, replacement);
+
+    // Delete the 2nd variable.
+    fix = new SuggestedFix.Builder()
+        .delete(root.getFirstChild().getSecondChild())
+        .build();
+    replacement = new CodeReplacement(15, "bar = 4, ".length(), "");
+    assertReplacement(fix, replacement);
+
+    // Delete the last variable. Make sure it removes the leading comma.
+    fix = new SuggestedFix.Builder()
+        .delete(root.getFirstChild().getLastChild())
+        .build();
+    replacement = new CodeReplacement(22, ", baz = 5".length(), "");
+    assertReplacement(fix, replacement);
+  }
+
+  @Test
   public void testRenameStringKey() {
     String input = "var obj = {foo: 'bar'};";
     Compiler compiler = getCompiler(input);

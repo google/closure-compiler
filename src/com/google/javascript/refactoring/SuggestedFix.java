@@ -258,7 +258,7 @@ public final class SuggestedFix {
       // more information.
       // TODO(mknichel): Move this logic and the start position logic to a helper function
       // so that it can be reused in other methods.
-      if (n.isName() && n.getParent().isVar()) {
+      if (n.isName() && NodeUtil.isNameDeclaration(n.getParent())) {
         if (n.getNext() != null) {
           length = n.getNext().getSourceOffset() - startPosition;
         } else if (n.hasChildren()) {
