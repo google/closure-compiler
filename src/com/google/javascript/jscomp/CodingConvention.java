@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.RawNominalType;
@@ -36,7 +35,6 @@ import java.util.Map;
  * Compiler for a specific team/company.
  *
  */
-@Immutable
 public interface CodingConvention extends Serializable {
 
   /**

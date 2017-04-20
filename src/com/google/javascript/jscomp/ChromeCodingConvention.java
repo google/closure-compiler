@@ -17,16 +17,15 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.ClosureCodingConvention.AssertInstanceofSpec;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.Collection;
+import java.util.Set;
 
-@Immutable
-public final class ChromeCodingConvention extends CodingConventions.Proxy {
-  private final ImmutableSet<String> indirectlyDeclaredProperties;
+public class ChromeCodingConvention extends CodingConventions.Proxy {
+  private final Set<String> indirectlyDeclaredProperties;
 
   public ChromeCodingConvention() {
     this(CodingConventions.getDefault());
