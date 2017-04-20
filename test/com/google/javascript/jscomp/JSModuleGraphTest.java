@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -25,6 +26,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import junit.framework.TestCase;
 
@@ -58,6 +60,42 @@ public final class JSModuleGraphTest extends TestCase {
     F.addDependency(E);
     graph = new JSModuleGraph(new JSModule[] {A, B, C, D, E, F});
     compiler = new Compiler();
+  }
+
+  public void testSmallerTreeBeatsDeeperTree() {
+    final JSModule a = new JSModule("a");
+    final JSModule b = new JSModule("b");
+    final JSModule c = new JSModule("c");
+    final JSModule d = new JSModule("d");
+    final JSModule e = new JSModule("e");
+    final JSModule f = new JSModule("f");
+    final JSModule g = new JSModule("g");
+    final JSModule h = new JSModule("h");
+    //   a
+    //  / \
+    // b   c
+    b.addDependency(a);
+    c.addDependency(a);
+    //   b
+    //  /|\
+    // e f g
+    e.addDependency(b);
+    f.addDependency(b);
+    g.addDependency(b);
+    //     c
+    //     |
+    //     d
+    //   // \\
+    //  / | | \
+    // e  f g  h
+    d.addDependency(c);
+    e.addDependency(d);
+    f.addDependency(d);
+    g.addDependency(d);
+    h.addDependency(d);
+    JSModuleGraph graph = new JSModuleGraph(new JSModule[] {a, b, c, d, e, f, g, h});
+    // d is deeper, but it also has an extra dependent node, so b is the better choice.
+    assertSmallestCoveringDependency(b, graph, e, f, g);
   }
 
   public void testModuleDepth() {
@@ -115,6 +153,30 @@ public final class JSModuleGraphTest extends TestCase {
     assertDeepestCommonDepInclusive(E, E, E);
     assertDeepestCommonDepInclusive(E, E, F);
     assertDeepestCommonDepInclusive(F, F, F);
+  }
+
+  public void testSmallestCoveringDependency() {
+    assertSmallestCoveringDependency(A, A, A);
+    assertSmallestCoveringDependency(A, A, B);
+    assertSmallestCoveringDependency(A, A, C);
+    assertSmallestCoveringDependency(A, A, D);
+    assertSmallestCoveringDependency(A, A, E);
+    assertSmallestCoveringDependency(A, A, F);
+    assertSmallestCoveringDependency(B, B, B);
+    assertSmallestCoveringDependency(A, B, C);
+    assertSmallestCoveringDependency(B, B, D);
+    assertSmallestCoveringDependency(B, B, E);
+    assertSmallestCoveringDependency(B, B, F);
+    assertSmallestCoveringDependency(C, C, C);
+    assertSmallestCoveringDependency(A, C, D);
+    assertSmallestCoveringDependency(C, C, E);
+    assertSmallestCoveringDependency(C, C, F);
+    assertSmallestCoveringDependency(D, D, D);
+    assertSmallestCoveringDependency(B, D, E);
+    assertSmallestCoveringDependency(B, D, F);
+    assertSmallestCoveringDependency(E, E, E);
+    assertSmallestCoveringDependency(E, E, F);
+    assertSmallestCoveringDependency(F, F, F);
   }
 
   public void testGetTransitiveDepsDeepestFirst() {
@@ -329,6 +391,24 @@ public final class JSModuleGraphTest extends TestCase {
 
   private List<String> requires(String ... strings) {
     return ImmutableList.copyOf(strings);
+  }
+
+  private void assertSmallestCoveringDependency(JSModule expected, JSModule... modules) {
+    assertSmallestCoveringDependency(expected, graph, Arrays.asList(modules));
+  }
+
+  private void assertSmallestCoveringDependency(
+      JSModule expected, JSModuleGraph graph, JSModule... modules) {
+    assertSmallestCoveringDependency(expected, graph, Arrays.asList(modules));
+  }
+
+  private void assertSmallestCoveringDependency(
+      JSModule expected, JSModuleGraph graph, Collection<JSModule> modules) {
+    JSModule actual = graph.getSmallestCoveringDependency(modules);
+    assertWithMessage(
+            "Smallest covering dep of %s should be %s but was %s", modules, expected, actual)
+        .that(actual)
+        .isEqualTo(expected);
   }
 
   private void assertDeepestCommonDepInclusive(

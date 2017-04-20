@@ -16,9 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.ListMultimap;
@@ -32,10 +36,10 @@ import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideExcept
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -43,15 +47,34 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A {@link JSModule} dependency graph that assigns a depth to each module and
- * can answer depth-related queries about them. For the purposes of this class,
- * a module's depth is defined as the number of hops in the longest (non cyclic)
- * path from the module to a module with no dependencies.
- *
+ * A {@link JSModule} dependency graph that assigns a depth to each module and can answer
+ * depth-related queries about them. For the purposes of this class, a module's depth is defined as
+ * the number of hops in the longest (non cyclic) path from the module to a module with no
+ * dependencies.
  */
 public final class JSModuleGraph {
 
-  private final List<JSModule> modules;
+  /** Summarizes the dependency information for a single module. */
+  private static final class DepSummary {
+    private final int moduleIndex;
+    private final ImmutableSet<JSModule> transitiveDependencies;
+    private final BitSet selfPlusTransitiveDeps;
+    // Cannot be final because we create this object before all modules are examined.
+    private int numDependentModules = 0;
+
+    DepSummary(int moduleIndex, Set<JSModule> transitiveDependencies) {
+      this.moduleIndex = moduleIndex;
+      this.transitiveDependencies = ImmutableSet.copyOf(transitiveDependencies);
+      selfPlusTransitiveDeps = new BitSet(moduleIndex + 1);
+      selfPlusTransitiveDeps.set(moduleIndex);
+      for (JSModule dep : transitiveDependencies) {
+        selfPlusTransitiveDeps.set(dep.getIndex());
+      }
+    }
+  }
+
+  private final JSModule[] modules;
+  private final DepSummary[] depSummaries;
 
   /**
    * Lists of modules at each depth. <code>modulesByDepth.get(3)</code> is a list of the modules at
@@ -59,44 +82,44 @@ public final class JSModuleGraph {
    */
   private final List<List<JSModule>> modulesByDepth;
 
-  /**
-   * dependencyMap is a cache of dependencies that makes the dependsOn function faster. Each map
-   * entry associates a starting JSModule with the set of JSModules that are transitively dependent
-   * on the starting module.
-   *
-   * <p>If the cache returns null, then the entry hasn't been filled in for that module.
-   *
-   * <p>NOTE: JSModule has identity semantics so this map implementation is safe
-   */
-  private final Map<JSModule, Set<JSModule>> dependencyMap = new IdentityHashMap<>();
-
-  /**
-   * Creates a module graph from a list of modules in dependency order.
-   */
+  /** Creates a module graph from a list of modules in dependency order. */
   public JSModuleGraph(JSModule[] modulesInDepOrder) {
-    this(ImmutableList.copyOf(modulesInDepOrder));
+    this(Arrays.asList(modulesInDepOrder));
   }
 
-  /**
-   * Creates a module graph from a list of modules in dependency order.
-   */
+  /** Creates a module graph from a list of modules in dependency order. */
   public JSModuleGraph(List<JSModule> modulesInDepOrder) {
-    Preconditions.checkState(
-        modulesInDepOrder.size() == new HashSet<>(modulesInDepOrder).size(),
-        "Found duplicate modules");
-    modules = ImmutableList.copyOf(modulesInDepOrder);
-    modulesByDepth = new ArrayList<>();
+    // Copy modules and create dependency summaries.
+    int numModules = modulesInDepOrder.size();
+    modules = new JSModule[numModules];
+    depSummaries = new DepSummary[numModules];
+    for (int i = 0; i < numModules; ++i) {
+      JSModule m = modulesInDepOrder.get(i);
+      checkState(m.getIndex() == -1, "Module used in more than one graph: %s", m.getName());
+      m.setIndex(i);
+      modules[i] = m;
+      final Set<JSModule> transitiveDependencies = m.getAllDependencies();
+      for (JSModule dep : transitiveDependencies) {
+        if (dep.getIndex() < 0) {
+          // JSModule constructor initializes index to -1, so a value less than 0 indicates
+          // we haven't seen it yet to set its index.
+          throw new ModuleDependenceException(SimpleFormat.format(
+              "Modules not in dependency order: %s preceded %s",
+              m.getName(), dep.getName()),
+              m, dep);
+        }
+        depSummaries[dep.getIndex()].numDependentModules++;
+      }
+      depSummaries[i] = new DepSummary(i, transitiveDependencies);
+    }
 
+    // Populate depth fields of modules and build lists of modules at each depth.
+    modulesByDepth = new ArrayList<>();
     for (JSModule module : modulesInDepOrder) {
       int depth = 0;
       for (JSModule dep : module.getDependencies()) {
         int depDepth = dep.getDepth();
-        if (depDepth < 0) {
-          throw new ModuleDependenceException(SimpleFormat.format(
-              "Modules not in dependency order: %s preceded %s",
-              module.getName(), dep.getName()),
-              module, dep);
-        }
+        // This module is one level deeper than the deepest module it depends on.
         depth = Math.max(depth, depDepth + 1);
       }
 
@@ -112,7 +135,7 @@ public final class JSModuleGraph {
    * Gets an iterable over all modules in dependency order.
    */
   Iterable<JSModule> getAllModules() {
-    return modules;
+    return Arrays.asList(modules);
   }
 
   /**
@@ -130,7 +153,7 @@ public final class JSModuleGraph {
    * Gets the total number of modules.
    */
   int getModuleCount() {
-    return modules.size();
+    return depSummaries.length;
   }
 
   /**
@@ -181,7 +204,56 @@ public final class JSModuleGraph {
    * module never depends on itself, as that dependency would be cyclic.
    */
   public boolean dependsOn(JSModule src, JSModule m) {
-    return getTransitiveDeps(src).contains(m);
+    return src != m && depSummaries[src.getIndex()].selfPlusTransitiveDeps.get(m.getIndex());
+  }
+
+  /**
+   * Finds the module with the fewest transitive dependents on which all of the given modules
+   * depend.
+   *
+   * <p>If multiple candidates have the same number of dependents, the module farthest down in the
+   * total ordering of modules will be chosen.
+   *
+   * @param dependentModules to consider
+   * @return A module on which all of the argument modules depend
+   */
+  public JSModule getSmallestCoveringDependency(Collection<JSModule> dependentModules) {
+    checkState(!dependentModules.isEmpty());
+    if (dependentModules.size() == 1) {
+      return Iterables.getOnlyElement(dependentModules);
+    }
+    final Iterator<JSModule> dependentIterator = dependentModules.iterator();
+    JSModule dependentModule = dependentIterator.next();
+    // Any common dependency must have an index <= every index in dependentModules.
+    int maxCandidateIndex = dependentModule.getIndex();
+    // Initially consider this module and all of its dependencies as candidates.
+    final BitSet commonDeps = new BitSet(maxCandidateIndex);
+    commonDeps.or(depSummaries[maxCandidateIndex].selfPlusTransitiveDeps);
+    while (dependentIterator.hasNext()) {
+      final int dependentIndex = dependentIterator.next().getIndex();
+      if (dependentIndex < maxCandidateIndex) {
+        // Common dependency cannot come later than this dependent.
+        maxCandidateIndex = dependentIndex;
+      }
+      // Common dependency must also be something this dependent depends on or itself.
+      commonDeps.and(depSummaries[dependentIndex].selfPlusTransitiveDeps);
+    }
+    // Find the smallest and deepest result.
+    int candidateIndex = commonDeps.previousSetBit(maxCandidateIndex);
+    checkState(candidateIndex >= 0, "No common dependency found for %s", dependentModules);
+    DepSummary bestCandidateSummary = depSummaries[candidateIndex];
+    // This candidate is a better choice than anything it depends on.
+    commonDeps.andNot(bestCandidateSummary.selfPlusTransitiveDeps);
+    for (candidateIndex = commonDeps.previousSetBit(candidateIndex - 1);
+        candidateIndex >= 0;
+        candidateIndex = commonDeps.previousSetBit(candidateIndex - 1)) {
+      final DepSummary candidateSummary = depSummaries[candidateIndex];
+      commonDeps.andNot(candidateSummary.selfPlusTransitiveDeps);
+      if (candidateSummary.numDependentModules < bestCandidateSummary.numDependentModules) {
+        bestCandidateSummary = candidateSummary;
+      }
+    }
+    return modules[bestCandidateSummary.moduleIndex];
   }
 
   /**
@@ -251,28 +323,14 @@ public final class JSModuleGraph {
    * @param m A module in this graph
    * @return The transitive dependencies of module {@code m}
    */
+  @VisibleForTesting
   List<JSModule> getTransitiveDepsDeepestFirst(JSModule m) {
     return InverseDepthComparator.INSTANCE.sortedCopy(getTransitiveDeps(m));
   }
 
   /** Returns the transitive dependencies of the module. */
-  private Set<JSModule> getTransitiveDeps(JSModule m) {
-    Set<JSModule> deps = dependencyMap.get(m);
-    if (deps == null) {
-      deps = m.getAllDependencies();
-      dependencyMap.put(m, deps);
-    }
-    return deps;
-  }
-
-  /**
-   * Adds a module's transitive dependencies to a set.
-   */
-  private static void addDeps(Set<JSModule> deps, JSModule m) {
-    for (JSModule dep : m.getDependencies()) {
-      deps.add(dep);
-      addDeps(deps, dep);
-    }
+  private ImmutableSet<JSModule> getTransitiveDeps(JSModule m) {
+    return depSummaries[m.getIndex()].transitiveDependencies;
   }
 
   /**

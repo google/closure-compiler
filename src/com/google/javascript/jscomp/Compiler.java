@@ -127,6 +127,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // The graph of the JS source modules. Must be null if there are less than
   // 2 modules, because we use this as a signal for which passes to run.
   private JSModuleGraph moduleGraph;
+  // Will be set non-null only if moduleGraph is null and getDegenerateModuleGraph is called.
+  private JSModuleGraph degenerateModuleGraph;
 
   // The module loader for resolving paths into module URIs.
   private ModuleLoader moduleLoader;
@@ -1344,7 +1346,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * in the degenerate case when there's only one module.
    */
   JSModuleGraph getDegenerateModuleGraph() {
-    return moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph;
+    if (degenerateModuleGraph == null) {
+      degenerateModuleGraph = (moduleGraph == null) ? new JSModuleGraph(modules) : moduleGraph;
+    }
+    return degenerateModuleGraph;
   }
 
   @Override
