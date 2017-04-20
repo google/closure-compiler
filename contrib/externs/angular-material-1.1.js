@@ -172,6 +172,12 @@ md.$dialog.AlertConfig_.prototype.clickOutsideToClose = function(close) {};
 md.$dialog.AlertConfig_.prototype.escapeToClose = function(close) {};
 
 /**
+ * @param {boolean} multiple
+ * @return {!md.$dialog.AlertConfig_}
+ */
+md.$dialog.AlertConfig_.prototype.multiple = function(multiple) {};
+
+/**
  * @param {Object|undefined} event
  * @return {!md.$dialog.AlertConfig_}
  */
@@ -254,6 +260,12 @@ md.$dialog.ConfirmConfig_.prototype.clickOutsideToClose = function(close) {};
  * @return {!md.$dialog.ConfirmConfig_}
  */
 md.$dialog.ConfirmConfig_.prototype.escapeToClose = function(close) {};
+
+/**
+ * @param {boolean} multiple
+ * @return {!md.$dialog.ConfirmConfig_}
+ */
+md.$dialog.ConfirmConfig_.prototype.multiple = function(multiple) {};
 
 /**
  * @param {Object|undefined} event
@@ -350,6 +362,12 @@ md.$dialog.PromptConfig_.prototype.clickOutsideToClose = function(close) {};
  * @return {!md.$dialog.PromptConfig_}
  */
 md.$dialog.PromptConfig_.prototype.escapeToClose = function(close) {};
+
+/**
+ * @param {boolean} multiple
+ * @return {!md.$dialog.PromptConfig_}
+ */
+md.$dialog.PromptConfig_.prototype.multiple = function(multiple) {};
 
 /**
  * @param {Object|undefined} event
