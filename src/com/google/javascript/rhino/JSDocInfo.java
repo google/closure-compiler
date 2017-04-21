@@ -559,7 +559,7 @@ public class JSDocInfo implements Serializable {
 
   private static JSTypeExpression cloneType(JSTypeExpression expr, boolean cloneTypeNodes) {
     if (expr != null) {
-      return cloneTypeNodes ? expr.clone() : expr;
+      return cloneTypeNodes ? expr.copy() : expr;
     }
     return null;
   }

@@ -833,7 +833,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
       return;
     }
 
-    JSTypeExpression typeExpr = getTypeFromGetterOrSetter(member).clone();
+    JSTypeExpression typeExpr = getTypeFromGetterOrSetter(member).copy();
     addToDefinePropertiesObject(metadata, member);
 
     Map<String, JSDocInfo> membersToDeclare;
