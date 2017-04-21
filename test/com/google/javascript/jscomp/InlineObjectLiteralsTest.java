@@ -30,7 +30,6 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    validateAstChangeMarking(false);
   }
 
   @Override
@@ -333,8 +332,11 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
          "new JSCompiler_object_inline_b_0.c");
   }
 
-  public void testBug545() {
+  public void testBug545a() {
     testLocal("var a = {}", "");
+  }
+
+  public void testBug545b() {
     testLocal("var a; a = {}", "true");
   }
 

@@ -426,15 +426,17 @@ class InlineObjectLiterals implements CompilerPass {
       }
 
       if (defined) {
+        compiler.reportChangeToEnclosingScope(vnode.getParent());
         vnode.getParent().removeChild(vnode);
       }
 
       for (Reference ref : referenceInfo.references) {
-        compiler.reportChangeToEnclosingScope(ref.getNode());
+
         // The init/decl have already been converted.
         if (defined && ref == init) {
           continue;
         }
+        compiler.reportChangeToEnclosingScope(ref.getNode());
 
         if (ref.isLvalue()) {
           // Assignments have to be handled specially, since they
