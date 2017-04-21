@@ -43,7 +43,6 @@ public final class ShadowVariablesTest extends Es6CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     generatePseudoNames = false;
-    validateAstChangeMarking(false);
   }
 
   @Override

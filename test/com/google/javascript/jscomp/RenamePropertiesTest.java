@@ -40,7 +40,6 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     super(EXTERNS);
     enableNormalize();
     enableGatherExternProperties();
-    validateAstChangeMarking(false);
   }
 
   @Override
@@ -50,7 +49,8 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     prevUsedPropertyMap = null;
   }
 
-  @Override protected int getNumRepetitions() {
+  @Override
+  protected int getNumRepetitions() {
     // The RenameProperties pass should only be run once over a parse tree.
     return 1;
   }

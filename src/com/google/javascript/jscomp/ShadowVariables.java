@@ -103,7 +103,6 @@ class ShadowVariables implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-
     // The algorithm is divided into two stages:
     //
     // 1. Information gathering (variable usage, upward referencing)

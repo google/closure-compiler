@@ -54,12 +54,6 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    validateAstChangeMarking(false);
-  }
-
-  @Override
   public void tearDown() throws Exception {
     super.tearDown();
     disableTypeCheck();

@@ -362,15 +362,13 @@ final class RenameVars implements CompilerPass {
     // Assign names, sorted by descending frequency to minimize code size.
     assignNames(varsByFrequency);
 
-    boolean changed = false;
-
     // Rename the globals!
     for (Node n : globalNameNodes) {
       String newName = getNewGlobalName(n);
       // Note: if newName is null, then oldName is an extern.
       if (newName != null) {
         n.setString(newName);
-        changed = true;
+        compiler.reportChangeToEnclosingScope(n);
       }
     }
 
@@ -379,12 +377,8 @@ final class RenameVars implements CompilerPass {
       String newName = getNewLocalName(n);
       if (newName != null) {
         n.setString(newName);
-        changed = true;
+        compiler.reportChangeToEnclosingScope(n);
       }
-    }
-
-    if (changed) {
-      compiler.reportCodeChange();
     }
 
     // Lastly, write the name assignments to the debug log.

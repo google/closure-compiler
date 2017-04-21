@@ -371,22 +371,22 @@ class RenameProperties implements CompilerPass {
           if (NodeUtil.isFunctionDeclaration(n)) {
             String name = n.getFirstChild().getString();
               if (NodeUtil.JSC_PROPERTY_NAME_FN.equals(name)) {
+                t.reportCodeChange(parent);
                 if (parent.isExprResult()) {
                   parent.detach();
                 } else {
                   parent.removeChild(n);
                 }
-                t.reportCodeChange();
               }
             } else if (parent.isName()
                 && NodeUtil.JSC_PROPERTY_NAME_FN.equals(parent.getString())) {
               Node varNode = parent.getParent();
               if (varNode.isVar()) {
                 varNode.removeChild(parent);
+                t.reportCodeChange(varNode);
                 if (!varNode.hasChildren()) {
                   varNode.detach();
                 }
-                t.reportCodeChange();
               }
             } else if (NodeUtil.isFunctionExpression(n)
                 && parent.isAssign()
@@ -398,8 +398,8 @@ class RenameProperties implements CompilerPass {
               if (exprResult.isExprResult()
                   && NodeUtil.isStatementBlock(exprResult.getParent())
                   && exprResult.getFirstChild().isAssign()) {
+                t.reportCodeChange(exprResult);
                 exprResult.detach();
-                t.reportCodeChange();
               }
           }
           break;

@@ -154,7 +154,7 @@ class ScopedAliases implements HotSwapCompilerPass {
           if (aliasUsage.referencesOtherAlias()) {
             newQueue.add(aliasUsage);
           } else {
-            aliasUsage.applyAlias();
+            aliasUsage.applyAlias(compiler);
           }
         }
 
@@ -171,6 +171,7 @@ class ScopedAliases implements HotSwapCompilerPass {
 
       // Remove the alias definitions.
       for (Node aliasDefinition : traversal.getAliasDefinitionsInOrder()) {
+        compiler.reportChangeToEnclosingScope(aliasDefinition);
         if (NodeUtil.isNameDeclaration(aliasDefinition.getParent())
             && aliasDefinition.getParent().hasOneChild()) {
           aliasDefinition.getParent().detach();
@@ -185,12 +186,8 @@ class ScopedAliases implements HotSwapCompilerPass {
         Node scopeClosureBlock = scopeCall.getLastChild().getLastChild();
         scopeClosureBlock.detach();
         expressionWithScopeCall.replaceWith(scopeClosureBlock);
+        compiler.reportChangeToEnclosingScope(scopeClosureBlock);
         NodeUtil.tryMergeBlock(scopeClosureBlock);
-      }
-
-      if (!traversal.getAliasUsages().isEmpty() || !traversal.getAliasDefinitionsInOrder().isEmpty()
-          || !traversal.getScopeCalls().isEmpty()) {
-        compiler.reportCodeChange();
       }
     }
   }
@@ -212,7 +209,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       return otherAliasVar != null;
     }
 
-    public abstract void applyAlias();
+    public abstract void applyAlias(AbstractCompiler compiler);
   }
 
   private static class AliasedNode extends AliasUsage {
@@ -221,7 +218,7 @@ class ScopedAliases implements HotSwapCompilerPass {
     }
 
     @Override
-    public void applyAlias() {
+    public void applyAlias(AbstractCompiler compiler) {
       Node aliasDefinition = aliasVar.getInitialValue();
       Node replacement = aliasDefinition.cloneTree();
       replacement.useSourceInfoFromForTree(aliasReference);
@@ -231,6 +228,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       } else {
         aliasReference.replaceWith(replacement);
       }
+      compiler.reportChangeToEnclosingScope(replacement);
     }
   }
 
@@ -240,7 +238,7 @@ class ScopedAliases implements HotSwapCompilerPass {
     }
 
     @Override
-    public void applyAlias() {
+    public void applyAlias(AbstractCompiler compiler) {
       Node aliasDefinition = aliasVar.getInitialValue();
       String aliasName = aliasVar.getName();
       String typeName = aliasReference.getString();
@@ -464,7 +462,10 @@ class ScopedAliases implements HotSwapCompilerPass {
           String globalName =
               "$jscomp.scope." + name + (nameCount == 0 ? "" : ("$jscomp$" + nameCount));
 
-          compiler.ensureLibraryInjected("base", false);
+          Node lastInjectedNode = compiler.ensureLibraryInjected("base", false);
+          if (lastInjectedNode != null) {
+            compiler.reportChangeToEnclosingScope(lastInjectedNode);
+          }
 
           // First, we need to free up the function expression (EXPR)
           // to be used in another expression.
@@ -487,6 +488,7 @@ class ScopedAliases implements HotSwapCompilerPass {
             }
             newName.useSourceInfoFrom(n);
             value.replaceChild(n, newName);
+            compiler.reportChangeToEnclosingScope(newName);
 
             varNode = IR.var(n).useSourceInfoFrom(n);
             grandparent.replaceChild(parent, varNode);
@@ -516,6 +518,7 @@ class ScopedAliases implements HotSwapCompilerPass {
             } else {
               grandparent.addChildBefore(newDecl, varNode);
             }
+            compiler.reportChangeToEnclosingScope(newDecl);
             injectedDecls.add(newDecl.getFirstChild());
           }
 
