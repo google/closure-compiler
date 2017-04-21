@@ -89,7 +89,7 @@ class ObjectPropertyStringPostprocess implements CompilerPass {
         n.replaceChild(secondArgument,
             IR.string(secondArgument.getString()));
       }
-      compiler.reportCodeChange();
+      t.reportCodeChange();
     }
   }
 }

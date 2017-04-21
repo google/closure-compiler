@@ -115,7 +115,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case REST:
-        visitRestParam(n, parent);
+        visitRestParam(t, n, parent);
         break;
       case GETTER_DEF:
       case SETTER_DEF:
@@ -166,7 +166,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         visitStringKey(n);
         break;
       case CLASS:
-        visitClass(n, parent);
+        visitClass(t, n, parent);
         break;
       case ARRAYLIT:
       case NEW:
@@ -343,7 +343,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
   /**
    * Processes a rest parameter
    */
-  private void visitRestParam(Node restParam, Node paramList) {
+  private void visitRestParam(NodeTraversal t, Node restParam, Node paramList) {
     Node functionBody = paramList.getNext();
     int restIndex = paramList.getIndexOfChild(restParam);
     String paramName = restParam.getFirstChild().getString();
@@ -370,7 +370,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
 
     if (!functionBody.hasChildren()) {
       // If function has no body, we are done!
-      compiler.reportCodeChange();
+      t.reportCodeChange();
       return;
     }
 
@@ -569,7 +569,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    *   <li>The constructor is built.
    * </ol>
    */
-  private void visitClass(final Node classNode, final Node parent) {
+  private void visitClass(final NodeTraversal t, final Node classNode, final Node parent) {
     checkClassReassignment(classNode);
     // Collect Metadata
     ClassDeclarationMetadata metadata = ClassDeclarationMetadata.create(classNode, parent);
@@ -711,7 +711,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     }
 
     constructor.putBooleanProp(Node.IS_ES6_CLASS, true);
-    compiler.reportCodeChange();
+    t.reportCodeChange();
   }
 
   /**

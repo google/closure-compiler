@@ -134,7 +134,7 @@ class HoistVarsOutOfBlocks extends AbstractPostOrderCallback
         NodeUtil.replaceDeclarationChild(lhs, exprAssign);
       }
       hoistRoot.addChildToFront(IR.var(lhs.cloneNode()).useSourceInfoIfMissingFromForTree(lhs));
-      compiler.reportCodeChange();
+      t.reportCodeChange();
     }
   }
 }

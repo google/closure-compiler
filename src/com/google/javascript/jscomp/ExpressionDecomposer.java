@@ -99,7 +99,7 @@ class ExpressionDecomposer {
     Node expressionRoot = findExpressionRoot(expression);
     Preconditions.checkState(expressionRoot != null);
     exposeExpression(expressionRoot, expression);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(expressionRoot);
   }
 
   // TODO(johnlenz): This is not currently used by the function inliner,
@@ -126,7 +126,8 @@ class ExpressionDecomposer {
     // Re-add the expression at the appropriate place.
     Node newExpressionRoot = NodeUtil.newVarNode(resultName, expression);
     injectionPointParent.addChildBefore(newExpressionRoot, injectionPoint);
-    compiler.reportCodeChange();
+
+    compiler.reportChangeToEnclosingScope(injectionPointParent);
   }
 
   /**

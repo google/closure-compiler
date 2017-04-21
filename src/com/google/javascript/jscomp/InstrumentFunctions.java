@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.List;
 
 /**
@@ -226,7 +225,7 @@ class InstrumentFunctions implements CompilerPass {
       Node returnRhs = n.removeFirstChild();
       Node call = newReportFunctionExitNode(n, returnRhs);
       n.addChildToFront(call);
-      compiler.reportCodeChange();
+      t.reportCodeChange();
     }
 
     private Node newReportFunctionExitNode(Node infoNode, Node returnRhs) {
@@ -288,7 +287,7 @@ class InstrumentFunctions implements CompilerPass {
         Node expr = IR.exprResult(call);
         expr.useSourceInfoFromForTree(n);
         body.addChildToFront(expr);
-        compiler.reportCodeChange();
+        t.reportCodeChange();
       }
 
       if (!reportFunctionExitName.isEmpty()) {
@@ -321,7 +320,7 @@ class InstrumentFunctions implements CompilerPass {
           }
           addingRoot.addChildBefore(expr, beforeChild);
         }
-        compiler.reportCodeChange();
+        t.reportCodeChange();
       }
     }
   }

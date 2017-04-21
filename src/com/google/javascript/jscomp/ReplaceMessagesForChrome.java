@@ -57,7 +57,7 @@ class ReplaceMessagesForChrome extends JsMessageVisitor {
       newValue.useSourceInfoIfMissingFromForTree(msgNode);
 
       msgNode.replaceWith(newValue);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(newValue);
     } catch (MalformedException e) {
       compiler.report(JSError.make(e.getNode(),
           MESSAGE_TREE_MALFORMED, e.getMessage()));

@@ -116,14 +116,14 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
     ThisContext thisContext = thisContextStack.peek();
 
     if (n.isArrowFunction()) {
-      visitArrowFunction(n, checkNotNull(thisContext));
+      visitArrowFunction(t, n, checkNotNull(thisContext));
     } else if (thisContext != null && thisContext.scopeBody == n) {
       thisContextStack.pop();
       addVarDecls(thisContext);
     }
   }
 
-  private void visitArrowFunction(Node n, ThisContext thisContext) {
+  private void visitArrowFunction(NodeTraversal t, Node n, ThisContext thisContext) {
     n.setIsArrowFunction(false);
     n.makeNonIndexable();
     Node body = n.getLastChild();
@@ -138,7 +138,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
     thisContext.needsThisVar = thisContext.needsThisVar || updater.changedThis;
     thisContext.needsArgumentsVar = thisContext.needsArgumentsVar || updater.changedArguments;
 
-    compiler.reportCodeChange();
+    t.reportCodeChange();
   }
 
   private void addVarDecls(ThisContext thisContext) {

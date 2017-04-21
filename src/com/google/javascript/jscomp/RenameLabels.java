@@ -175,15 +175,15 @@ final class RenameLabels implements CompilerPass {
      * {@inheritDoc}
      */
     @Override
-    public void visit(NodeTraversal nodeTraversal, Node node, Node parent) {
+    public void visit(NodeTraversal t, Node node, Node parent) {
       switch (node.getToken()) {
         case LABEL:
-          visitLabel(node, parent);
+          visitLabel(t, node, parent);
           break;
 
         case BREAK:
         case CONTINUE:
-          visitBreakOrContinue(node);
+          visitBreakOrContinue(t, node);
           break;
         default:
           break;
@@ -194,7 +194,7 @@ final class RenameLabels implements CompilerPass {
      * Rename label references in breaks and continues.
      * @param node The break or continue node.
      */
-    private void visitBreakOrContinue(Node node) {
+    private void visitBreakOrContinue(NodeTraversal t, Node node) {
       Node nameNode = node.getFirstChild();
       if (nameNode != null) {
         // This is a named break or continue;
@@ -208,7 +208,7 @@ final class RenameLabels implements CompilerPass {
           if (!name.equals(newName)) {
             // Give it the short name.
             nameNode.setString(newName);
-            compiler.reportCodeChange();
+            t.reportCodeChange();
           }
         }
       }
@@ -219,7 +219,7 @@ final class RenameLabels implements CompilerPass {
      * @param node  The label node.
      * @param parent The parent of the label node.
      */
-    private void visitLabel(Node node, Node parent) {
+    private void visitLabel(NodeTraversal t, Node node, Node parent) {
       Node nameNode = node.getFirstChild();
       Preconditions.checkState(nameNode != null);
       String name = nameNode.getString();
@@ -230,7 +230,7 @@ final class RenameLabels implements CompilerPass {
         if (!name.equals(newName)) {
           // ... and it is used, give it the short name.
           nameNode.setString(newName);
-          compiler.reportCodeChange();
+          t.reportCodeChange();
         }
       } else {
         // ... and it is not referenced, just remove it.
@@ -240,7 +240,7 @@ final class RenameLabels implements CompilerPass {
         if (newChild.isNormalBlock()) {
           NodeUtil.tryMergeBlock(newChild);
         }
-        compiler.reportCodeChange();
+        t.reportCodeChange();
       }
 
       // Remove the label from the current stack of labels.

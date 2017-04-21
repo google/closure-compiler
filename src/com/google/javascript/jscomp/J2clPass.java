@@ -45,11 +45,11 @@ public class J2clPass implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (isUtilGetDefineCall(n)) {
-        substituteUtilGetDefine(n);
+        substituteUtilGetDefine(t, n);
       }
     }
 
-    private void substituteUtilGetDefine(Node callNode) {
+    private void substituteUtilGetDefine(NodeTraversal t, Node callNode) {
       Node firstExpr = callNode.getSecondChild();
       Node secondExpr = callNode.getLastChild();
 
@@ -63,7 +63,7 @@ public class J2clPass implements CompilerPass {
       Node replacement = getDefineReplacement(firstExpr, secondExpr);
       replacement.useSourceInfoIfMissingFromForTree(callNode);
       callNode.replaceWith(replacement);
-      compiler.reportCodeChange();
+      t.reportCodeChange();
     }
 
     private Node getDefineReplacement(Node firstExpr, Node secondExpr) {
@@ -103,7 +103,7 @@ public class J2clPass implements CompilerPass {
             && declaringNode.getFirstChild() != n
             && isNativeAlias(declaringNode)) {
           parent.replaceChild(n, declaringNode.getFirstFirstChild().cloneTree());
-          compiler.reportCodeChange();
+          t.reportCodeChange();
         }
       }
     }

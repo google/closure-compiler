@@ -152,7 +152,7 @@ class PeepholeMinimizeConditions
           replacement.addChildToBack(fixedIfCondition);
         }
 
-        compiler.reportCodeChange();
+        reportCodeChange();
       }
     }
   }
@@ -188,7 +188,7 @@ class PeepholeMinimizeConditions
             Node newCond = new Node(Token.OR, cond);
             nextNode.replaceChild(nextCond, newCond);
             newCond.addChildToBack(nextCond);
-            compiler.reportCodeChange();
+            reportCodeChange();
           } else if (nextElse != null
               && thenBranch.isEquivalentToTyped(nextElse)) {
             // Transform
@@ -201,7 +201,7 @@ class PeepholeMinimizeConditions
                 IR.not(cond).srcref(cond));
             nextNode.replaceChild(nextCond, newCond);
             newCond.addChildToBack(nextCond);
-            compiler.reportCodeChange();
+            reportCodeChange();
           }
         } else if (nextNode != null && elseBranch == null &&
             isReturnBlock(thenBranch) && isReturnExpression(nextNode)) {
@@ -224,13 +224,13 @@ class PeepholeMinimizeConditions
                                     .srcref(child));
           n.replaceChild(child, returnNode);
           n.removeChild(nextNode);
-          compiler.reportCodeChange();
+          reportCodeChange();
           // everything else in the block is dead code.
           break;
         } else if (elseBranch != null && statementMustExitParent(thenBranch)) {
           child.removeChild(elseBranch);
           n.addChildAfter(elseBranch, child);
-          compiler.reportCodeChange();
+          reportCodeChange();
         }
       }
     }
@@ -312,7 +312,7 @@ class PeepholeMinimizeConditions
     if (follow == null || areMatchingExits(n, follow)) {
       Node replacement = IR.breakNode();
       n.replaceWith(replacement);
-      this.compiler.reportCodeChange();
+      this.reportCodeChange();
       return replacement;
     }
 
@@ -355,7 +355,7 @@ class PeepholeMinimizeConditions
     // end of a function. This means a break is same as return.
     if (follow == null || areMatchingExits(n, follow)) {
       n.detach();
-      compiler.reportCodeChange();
+      reportCodeChange();
       return null;
     }
 
@@ -438,7 +438,7 @@ class PeepholeMinimizeConditions
     Node newOperator = n.removeFirstChild();
     newOperator.setToken(complementOperator);
     parent.replaceChild(n, newOperator);
-    compiler.reportCodeChange();
+    reportCodeChange();
     return newOperator;
   }
 
@@ -458,7 +458,7 @@ class PeepholeMinimizeConditions
     if (mNode.getNode().isNot()) {
       // Remove the leading NOT in the EXPR_RESULT.
       n.replaceChild(placeholder, mNode.getNode().removeFirstChild());
-      compiler.reportCodeChange();
+      reportCodeChange();
     } else {
       replaceNode(placeholder, mNode);
     }
@@ -483,7 +483,7 @@ class PeepholeMinimizeConditions
       n.replaceChild(placeholder, mNode.getNode().removeFirstChild());
       n.removeChild(thenBranch);
       n.addChildToBack(thenBranch);
-      compiler.reportCodeChange();
+      reportCodeChange();
     } else {
       replaceNode(placeholder, mNode);
     }
@@ -546,7 +546,7 @@ class PeepholeMinimizeConditions
               expr.removeFirstChild()).srcref(n);
           Node newExpr = NodeUtil.newExpr(or);
           parent.replaceChild(n, newExpr);
-          compiler.reportCodeChange();
+          reportCodeChange();
 
           return newExpr;
         }
@@ -569,7 +569,7 @@ class PeepholeMinimizeConditions
         Node and = IR.and(shortCond.getNode(), expr.removeFirstChild()).srcref(n);
         Node newExpr = NodeUtil.newExpr(and);
         parent.replaceChild(n, newExpr);
-        compiler.reportCodeChange();
+        reportCodeChange();
 
         return newExpr;
       } else {
@@ -594,7 +594,7 @@ class PeepholeMinimizeConditions
                       innerCond.detach())
                       .srcref(placeholder));
               n.addChildToBack(innerThenBranch.detach());
-              compiler.reportCodeChange();
+              reportCodeChange();
               // Not worth trying to fold the current IF-ELSE into && because
               // the inner IF-ELSE wasn't able to be folded into && anyways.
               return n;
@@ -617,7 +617,7 @@ class PeepholeMinimizeConditions
       n.replaceChild(placeholder, shortCond.getNode().removeFirstChild());
       n.removeChild(thenBranch);
       n.addChildToBack(thenBranch);
-      compiler.reportCodeChange();
+      reportCodeChange();
       return n;
     }
 
@@ -636,7 +636,7 @@ class PeepholeMinimizeConditions
                             IR.hook(shortCond.getNode(), thenExpr, elseExpr)
                                 .srcref(n));
       parent.replaceChild(n, returnNode);
-      compiler.reportCodeChange();
+      reportCodeChange();
       return returnNode;
     }
 
@@ -670,7 +670,7 @@ class PeepholeMinimizeConditions
             Node assign = new Node(thenOp.getToken(), assignName, hookNode).srcref(thenOp);
             Node expr = NodeUtil.newExpr(assign);
             parent.replaceChild(n, expr);
-            compiler.reportCodeChange();
+            reportCodeChange();
 
             return expr;
           }
@@ -683,7 +683,7 @@ class PeepholeMinimizeConditions
       Node expr = IR.exprResult(
           IR.hook(shortCond.getNode(), thenOp, elseOp).srcref(n));
       parent.replaceChild(n, expr);
-      compiler.reportCodeChange();
+      reportCodeChange();
       return expr;
     }
 
@@ -712,7 +712,7 @@ class PeepholeMinimizeConditions
         var.detach();
         name1.addChildToBack(hookNode);
         parent.replaceChild(n, var);
-        compiler.reportCodeChange();
+        reportCodeChange();
         return var;
       }
 
@@ -738,7 +738,7 @@ class PeepholeMinimizeConditions
         var.detach();
         name2.addChildToBack(hookNode);
         parent.replaceChild(n, var);
-        compiler.reportCodeChange();
+        reportCodeChange();
 
         return var;
       }
@@ -796,7 +796,7 @@ class PeepholeMinimizeConditions
       lastTrue.detach();
       lastFalse.detach();
       parent.addChildAfter(lastTrue, n);
-      compiler.reportCodeChange();
+      reportCodeChange();
     }
   }
 
@@ -1053,7 +1053,7 @@ class PeepholeMinimizeConditions
         replacement = booleanResult ? IR.not(IR.not(objExpression)) : objExpression;
       }
       n.replaceWith(replacement);
-      compiler.reportCodeChange();
+      reportCodeChange();
       return replacement;
     }
     return n;
@@ -1150,7 +1150,7 @@ class PeepholeMinimizeConditions
     Node parent = lhs.getParent();
     parent.replaceChild(lhs, rhs.getNode());
     if (rhs.isChanged()) {
-      compiler.reportCodeChange();
+      reportCodeChange();
     }
     return rhs.getNode();
   }
@@ -1220,7 +1220,7 @@ class PeepholeMinimizeConditions
           if (replacement != null) {
             n.detachChildren();
             parent.replaceChild(n, replacement);
-            compiler.reportCodeChange();
+            reportCodeChange();
             return replacement;
           }
         }
@@ -1278,7 +1278,7 @@ class PeepholeMinimizeConditions
         if (replacement != null) {
           parent.replaceChild(n, replacement);
           n = replacement;
-          compiler.reportCodeChange();
+          reportCodeChange();
         }
 
         return n;
@@ -1307,7 +1307,7 @@ class PeepholeMinimizeConditions
     Node newNode = IR.number(num);
     if (!newNode.isEquivalentTo(n)) {
       parent.replaceChild(n, newNode);
-      compiler.reportCodeChange();
+      reportCodeChange();
 
       return newNode;
     }

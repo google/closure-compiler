@@ -165,19 +165,19 @@ class StripCode implements CompilerPass {
           nameNode = next) {
         next = nameNode.getNext();
         String name = nameNode.getString();
-        if (isStripName(name) ||
-            isCallWhoseReturnValueShouldBeStripped(nameNode.getFirstChild())) {
+        if (isStripName(name)
+            || isCallWhoseReturnValueShouldBeStripped(nameNode.getFirstChild())) {
           // Remove the NAME.
           Scope scope = t.getScope();
           varsToRemove.add(scope.getVar(name));
           n.removeChild(nameNode);
-          compiler.reportCodeChange();
+          t.reportCodeChange();
         }
       }
       if (!n.hasChildren()) {
         // Must also remove the VAR.
         replaceWithEmpty(n, parent);
-        compiler.reportCodeChange();
+        t.reportCodeChange();
       }
     }
 
@@ -227,18 +227,18 @@ class StripCode implements CompilerPass {
                 // Remove the assignment.
                 Node greatGrandparent = grandparent.getParent();
                 replaceWithEmpty(grandparent, greatGrandparent);
-                compiler.reportCodeChange();
+                t.reportCodeChange();
               } else {
                 // Substitute the r-value for the assignment.
                 Node rvalue = n.getNext();
                 parent.removeChild(rvalue);
                 grandparent.replaceChild(parent, rvalue);
-                compiler.reportCodeChange();
+                t.reportCodeChange();
               }
             } else {
               // The var reference is the r-value. Replace it with null.
               replaceWithNull(n, parent);
-              compiler.reportCodeChange();
+              t.reportCodeChange();
             }
           }
           break;
@@ -246,7 +246,7 @@ class StripCode implements CompilerPass {
         default:
           if (isReferenceToRemovedVar(t, n)) {
             replaceWithNull(n, parent);
-            compiler.reportCodeChange();
+            t.reportCodeChange();
           }
           break;
       }

@@ -56,16 +56,16 @@ public final class Es6SplitVariableDeclarations extends
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (NodeUtil.isDestructuringDeclaration(n)) {
-      splitDeclaration(n, parent);
+      splitDeclaration(t, n, parent);
     }
   }
 
-  public void splitDeclaration(Node n, Node parent) {
+  public void splitDeclaration(NodeTraversal t, Node n, Node parent) {
     while (n.getFirstChild() != n.getLastChild()) {
       Node child = n.getLastChild().detach();
       Node newVar = IR.declaration(child, n.getToken()).srcref(n);
       parent.addChildAfter(newVar, n);
-      compiler.reportCodeChange();
+      t.reportCodeChange();
     }
   }
 }

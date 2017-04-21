@@ -24,10 +24,8 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
-
 import java.util.Map;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -160,7 +158,7 @@ class ReplaceCssNames implements CompilerPass {
               processStringNode(t, first);
               n.removeChild(first);
               parent.replaceChild(n, first);
-              compiler.reportCodeChange();
+              t.reportCodeChange();
             } else {
               compiler.report(
                   t.makeError(n, STRING_LITERAL_EXPECTED_ERROR, first.getToken().toString()));
@@ -189,7 +187,7 @@ class ReplaceCssNames implements CompilerPass {
                   .useSourceInfoIfMissingFrom(n);
               replacement.setTypeI(getNativeStringType());
               parent.replaceChild(n, replacement);
-              compiler.reportCodeChange();
+              t.reportCodeChange();
             }
             break;
 

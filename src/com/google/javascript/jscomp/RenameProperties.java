@@ -206,14 +206,15 @@ class RenameProperties implements CompilerPass {
     generateNames(propsByFreq, reservedNames);
 
     // Update the string nodes.
-    boolean changed = false;
     for (Node n : stringNodesToRename) {
       String oldName = n.getString();
       Property p = propertyMap.get(oldName);
       if (p != null && p.newName != null) {
         Preconditions.checkState(oldName.equals(p.oldName));
         n.setString(p.newName);
-        changed = changed || !p.newName.equals(oldName);
+        if (!p.newName.equals(oldName)) {
+          compiler.reportChangeToEnclosingScope(n);
+        }
       }
     }
 
@@ -237,11 +238,7 @@ class RenameProperties implements CompilerPass {
         sb.append(replacement);
       }
       parent.replaceChild(nodeEntry.getKey(), IR.string(sb.toString()));
-      changed = true;
-    }
-
-    if (changed) {
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(parent);
     }
 
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED_OBFUSCATED);
@@ -379,7 +376,7 @@ class RenameProperties implements CompilerPass {
                 } else {
                   parent.removeChild(n);
                 }
-                compiler.reportCodeChange();
+                t.reportCodeChange();
               }
             } else if (parent.isName()
                 && NodeUtil.JSC_PROPERTY_NAME_FN.equals(parent.getString())) {
@@ -389,7 +386,7 @@ class RenameProperties implements CompilerPass {
                 if (!varNode.hasChildren()) {
                   varNode.detach();
                 }
-                compiler.reportCodeChange();
+                t.reportCodeChange();
               }
             } else if (NodeUtil.isFunctionExpression(n)
                 && parent.isAssign()
@@ -402,7 +399,7 @@ class RenameProperties implements CompilerPass {
                   && NodeUtil.isStatementBlock(exprResult.getParent())
                   && exprResult.getFirstChild().isAssign()) {
                 exprResult.detach();
-                compiler.reportCodeChange();
+                t.reportCodeChange();
               }
           }
           break;

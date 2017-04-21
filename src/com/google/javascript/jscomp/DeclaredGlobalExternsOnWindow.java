@@ -53,8 +53,8 @@ class DeclaredGlobalExternsOnWindow
     if (!nodes.isEmpty() && windowInExterns) {
       for (Node node : nodes) {
         addExtern(node);
+        compiler.reportChangeToEnclosingScope(node);
       }
-      compiler.reportCodeChange();
     }
   }
 

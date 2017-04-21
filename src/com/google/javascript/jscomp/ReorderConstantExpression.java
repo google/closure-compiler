@@ -56,7 +56,7 @@ class ReorderConstantExpression extends AbstractPeepholeOptimization {
 
         subtree.addChildToFront(lastNode);
         subtree.addChildToBack(firstNode);
-        compiler.reportCodeChange();
+        reportCodeChange();
       }
     }
     return subtree;

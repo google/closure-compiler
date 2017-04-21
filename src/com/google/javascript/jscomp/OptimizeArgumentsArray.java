@@ -20,7 +20,6 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.LinkedList;
@@ -130,7 +129,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
     // Attempt to replace the argument access and if the AST has been change,
     // report back to the compiler.
     if (tryReplaceArguments(traversal.getScope())) {
-      traversal.getCompiler().reportCodeChange();
+      traversal.reportCodeChange();
     }
 
     // After the attempt to replace the arguments. The currentArgumentsAccess

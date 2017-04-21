@@ -24,7 +24,6 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -188,7 +187,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
       declaration.useSourceInfoIfMissingFromForTree(inheritsCall);
       Node parent = inheritsCall.getParent();
       parent.getParent().addChildBefore(declaration, parent);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(parent);
 
       // Copy over field access so that subclasses of this subclass can also make the declarations
       if (!subClass.definedProperties.contains(memberName)) {

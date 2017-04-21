@@ -42,9 +42,9 @@ class RewriteBindThis extends AbstractPostOrderCallback implements CompilerPass{
   }
 
   @Override
-  public void visit(NodeTraversal traversal, Node node, Node parent) {
-    if (node.isFunction() && canRewriteBinding(node)) {
-      rewriteBinding(node);
+  public void visit(NodeTraversal t, Node n, Node parent) {
+    if (n.isFunction() && canRewriteBinding(n)) {
+      rewriteBinding(t, n);
     }
   }
 
@@ -62,7 +62,7 @@ class RewriteBindThis extends AbstractPostOrderCallback implements CompilerPass{
         && !NodeUtil.isVarArgsFunction(functionNode);
   }
 
-  private void rewriteBinding(Node functionNode) {
+  private void rewriteBinding(NodeTraversal t, Node functionNode) {
     Node parent = functionNode.getParent();
     Node grandparent = parent.getParent();
 
@@ -70,6 +70,6 @@ class RewriteBindThis extends AbstractPostOrderCallback implements CompilerPass{
     grandparent.replaceWith(functionNode);
     functionNode.putBooleanProp(Node.ARROW_FN, true);
 
-    compiler.reportCodeChange();
+    t.reportCodeChange();
   }
 }

@@ -45,7 +45,7 @@ public class WhitespaceWrapGoogModules implements HotSwapCompilerPass {
       return;
     }
     ClosureRewriteModule.inlineModuleIntoGlobal(scriptRoot);
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(scriptRoot);
 
     // As per ClosureBundler:
     /*
@@ -78,6 +78,6 @@ public class WhitespaceWrapGoogModules implements HotSwapCompilerPass {
     block.addChildToBack(IR.returnNode(IR.name("exports")).srcrefTree(scriptRoot));
 
     scriptRoot.addChildToBack(loadMod);
-    compiler.reportCodeChange();
+    compiler.reportChangeToChangeScope(scriptRoot);
   }
 }

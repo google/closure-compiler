@@ -132,9 +132,9 @@ public final class Es6RewriteGenerators
         if (n.isYieldFor()) {
           visitYieldFor(t, n, parent);
         } else if (!parent.isExprResult()) {
-          visitYieldExpr(n, parent);
+          visitYieldExpr(t, n, parent);
         } else {
-          visitYieldThrows(parent, parent.getParent());
+          visitYieldThrows(t, parent, parent.getParent());
         }
         break;
       default:
@@ -142,13 +142,13 @@ public final class Es6RewriteGenerators
     }
   }
 
-  private void visitYieldThrows(Node n, Node parent) {
+  private void visitYieldThrows(NodeTraversal t, Node n, Node parent) {
     Node ifThrows =
         IR.ifNode(
             IR.shne(IR.name(GENERATOR_THROW_ARG), IR.name("undefined")),
             IR.block(IR.throwNode(IR.name(GENERATOR_THROW_ARG))));
     parent.addChildAfter(ifThrows, n);
-    compiler.reportCodeChange();
+    t.reportCodeChange();
   }
 
   /**
@@ -198,11 +198,11 @@ public final class Es6RewriteGenerators
       parent.replaceChild(n, elemValue);
     }
 
-    visitYieldThrows(yieldStatement, yieldStatement.getParent());
-    compiler.reportCodeChange();
+    visitYieldThrows(t, yieldStatement, yieldStatement.getParent());
+    t.reportCodeChange();
   }
 
-  private void visitYieldExpr(Node n, Node parent) {
+  private void visitYieldExpr(NodeTraversal t, Node n, Node parent) {
     Node enclosingStatement = NodeUtil.getEnclosingStatement(n);
     Node yieldStatement =
         IR.exprResult(n.hasChildren() ? IR.yield(n.removeFirstChild()) : IR.yield());
@@ -213,8 +213,8 @@ public final class Es6RewriteGenerators
     enclosingStatement.getParent().addChildBefore(yieldStatement, enclosingStatement);
     enclosingStatement.getParent().addChildBefore(yieldResultDecl, enclosingStatement);
 
-    visitYieldThrows(yieldStatement, yieldStatement.getParent());
-    compiler.reportCodeChange();
+    visitYieldThrows(t, yieldStatement, yieldStatement.getParent());
+    t.reportCodeChange();
   }
 
   private void visitGenerator(Node n, Node parent) {
@@ -973,12 +973,12 @@ public final class Es6RewriteGenerators
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
         case YIELD:
-          visitYieldExpression(n);
+          visitYieldExpression(t, n);
           break;
         case DO:
         case FOR:
         case WHILE:
-          visitLoop(n);
+          visitLoop(t, n);
           break;
         case CASE:
           if (controlCanExit(n.getFirstChild())) {
@@ -996,21 +996,21 @@ public final class Es6RewriteGenerators
       return true;
     }
 
-    private void visitYieldExpression(Node n) {
+    private void visitYieldExpression(NodeTraversal t, Node n) {
       if (n.getParent().isExprResult()) {
         return;
       }
       if (decomposer.canExposeExpression(n)
           != ExpressionDecomposer.DecompositionType.UNDECOMPOSABLE) {
         decomposer.exposeExpression(n);
-        compiler.reportCodeChange();
+        t.reportCodeChange();
       } else {
         compiler.report(
             JSError.make(n, Es6ToEs3Converter.CANNOT_CONVERT, "Undecomposable expression"));
       }
     }
 
-    private void visitLoop(Node n) {
+    private void visitLoop(NodeTraversal t, Node n) {
       Node enclosingFunc = NodeUtil.getEnclosingFunction(n);
       if (enclosingFunc == null || !enclosingFunc.isGeneratorFunction() || n.isForIn()) {
         return;
@@ -1055,7 +1055,7 @@ public final class Es6RewriteGenerators
         n.addChildBefore(IR.block(IR.exprResult(incr.detach())), n.getLastChild());
       }
       enclosingBlock.addChildToFront(IR.var(guardName));
-      compiler.reportCodeChange();
+      t.reportCodeChange();
     }
   }
 

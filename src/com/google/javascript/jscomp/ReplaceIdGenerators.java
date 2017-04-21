@@ -25,7 +25,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -374,7 +373,7 @@ class ReplaceIdGenerators implements CompilerPass {
         String rename = getObfuscatedName(
             arg, callName, nameGenerator, arg.getString());
         parent.replaceChild(n, IR.string(rename));
-        compiler.reportCodeChange();
+        t.reportCodeChange();
       } else if (arg.isObjectLit()) {
         for (Node key : arg.children()) {
           if (key.isMemberFunctionDef()) {
@@ -398,7 +397,7 @@ class ReplaceIdGenerators implements CompilerPass {
         }
         arg.detach();
         parent.replaceChild(n, arg);
-        compiler.reportCodeChange();
+        t.reportCodeChange();
       } else {
         compiler.report(t.makeError(n, INVALID_GENERATOR_PARAMETER));
       }

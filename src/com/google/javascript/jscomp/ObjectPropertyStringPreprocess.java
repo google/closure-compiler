@@ -83,7 +83,7 @@ final class ObjectPropertyStringPreprocess implements CompilerPass {
         Node newName = IR.name(NodeUtil.EXTERN_OBJECT_PROPERTY_STRING);
         newName.useSourceInfoIfMissingFrom(n);
         parent.replaceChild(n, newName);
-        compiler.reportCodeChange();
+        t.reportCodeChange();
         return;
       }
 
@@ -136,7 +136,7 @@ final class ObjectPropertyStringPreprocess implements CompilerPass {
       n.replaceChild(firstArgument, newFirstArgument);
       n.replaceChild(secondArgument, newSecondArgument);
 
-      compiler.reportCodeChange();
+      t.reportCodeChange();
     }
   }
 }

@@ -69,7 +69,7 @@ class PeepholeSimplifyRegExp extends AbstractPeepholeOptimization {
         } else if (subtree.hasTwoChildren()) {
           subtree.getLastChild().detach();
         }
-        compiler.reportCodeChange();
+        reportCodeChange();
       }
     }
     return subtree;

@@ -51,10 +51,10 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   }
 
   @Override
-  public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case PARAM_LIST:
-        visitParamList(n, parent);
+        visitParamList(t, n, parent);
         break;
       case FOR_OF:
         visitForOf(n);
@@ -85,7 +85,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   /**
    * Processes trailing default and rest parameters.
    */
-  private void visitParamList(Node paramList, Node function) {
+  private void visitParamList(NodeTraversal t, Node paramList, Node function) {
     Node insertSpot = null;
     Node body = function.getLastChild();
     int i = 0;
@@ -135,17 +135,17 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         newParam.setOptionalArg(true);
         newParam.setJSDocInfo(jsDoc);
 
-        compiler.reportCodeChange();
+        t.reportCodeChange();
       } else if (param.isDestructuringPattern()) {
         insertSpot =
             replacePatternParamWithTempVar(
                 function, insertSpot, param, getTempParameterName(function, i));
-        compiler.reportCodeChange();
+        t.reportCodeChange();
       } else if (param.isRest() && param.getFirstChild().isDestructuringPattern()) {
         insertSpot =
             replacePatternParamWithTempVar(
                 function, insertSpot, param.getFirstChild(), getTempParameterName(function, i));
-        compiler.reportCodeChange();
+        t.reportCodeChange();
       }
     }
   }
@@ -310,7 +310,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     }
 
     nodeToDetach.detach();
-    compiler.reportCodeChange();
+    t.reportCodeChange();
   }
 
   private void visitArrayPattern(NodeTraversal t, Node arrayPattern, Node parent) {
@@ -420,7 +420,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     if (needsRuntime) {
       compiler.ensureLibraryInjected("es6/util/arrayfromiterator", false);
     }
-    compiler.reportCodeChange();
+    t.reportCodeChange();
   }
 
   private void visitDestructuringPatternInEnhancedFor(Node pattern) {

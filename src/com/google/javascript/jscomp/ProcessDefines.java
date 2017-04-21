@@ -343,7 +343,7 @@ class ProcessDefines implements CompilerPass {
           Preconditions.checkState(n.isName(), n);
           n.removeFirstChild();
         }
-        compiler.reportCodeChange();
+        t.reportCodeChange();
       }
 
       if (n.isCall()) {

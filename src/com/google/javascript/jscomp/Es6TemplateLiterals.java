@@ -64,7 +64,7 @@ class Es6TemplateLiterals {
         n.replaceWith(add.useSourceInfoIfMissingFromForTree(n));
       }
     }
-    t.getCompiler().reportCodeChange();
+    t.reportCodeChange();
   }
 
   /**
@@ -116,7 +116,7 @@ class Es6TemplateLiterals {
     call.useSourceInfoIfMissingFromForTree(templateLit);
     call.putBooleanProp(Node.FREE_CALL, !call.getFirstChild().isGetProp());
     n.replaceWith(call);
-    t.getCompiler().reportCodeChange();
+    t.reportCodeChange();
   }
 
   private static Node createRawStringArray(Node n) {

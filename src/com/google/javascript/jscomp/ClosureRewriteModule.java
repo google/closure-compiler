@@ -340,7 +340,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       if (NodeUtil.isGoogModuleFile(n)) {
         n.putBooleanProp(Node.GOOG_MODULE, true);
         inlineModuleIntoGlobal(n);
-        compiler.reportCodeChange();
+        t.reportCodeChange();
         checkAndSetStrictModeDirective(t, n);
       }
 
@@ -469,7 +469,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       switch (n.getToken()) {
         case EXPR_RESULT:
           if (isGoogLoadModuleStatement(n)) {
-            updateGoogLoadModuleLate(n);
+            updateGoogLoadModuleLate(t, n);
           }
           break;
 
@@ -947,7 +947,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     currentScript.rootNode = moduleScopeRoot;
   }
 
-  private void updateGoogLoadModuleLate(Node exprResultNode) {
+  private void updateGoogLoadModuleLate(NodeTraversal t, Node exprResultNode) {
     Node call = exprResultNode.removeFirstChild();
     Node moduleBlockNode = call.getLastChild().getLastChild();
 
@@ -955,7 +955,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     exprResultNode.addChildrenToBack(moduleBlockNode.removeChildren());
     currentScript.rootNode = exprResultNode;
     NodeUtil.tryMergeBlock(exprResultNode);
-    compiler.reportCodeChange();
+    t.reportCodeChange();
   }
 
   private void updateGoogModule(Node call) {

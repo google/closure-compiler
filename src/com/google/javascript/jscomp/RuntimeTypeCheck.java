@@ -288,7 +288,7 @@ class RuntimeTypeCheck implements CompilerPass {
       }
 
       n.replaceChild(retValue, checkNode);
-      compiler.reportCodeChange();
+      t.reportCodeChange();
     }
 
     /**
@@ -382,7 +382,7 @@ class RuntimeTypeCheck implements CompilerPass {
                   compiler,
                   logFunction)));
       newNode.getParent().addChildAfter(logOverride, newNode);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(newNode);
     }
   }
 

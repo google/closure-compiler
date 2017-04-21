@@ -152,7 +152,7 @@ class CoverageInstrumentationCallback extends
       if (instrumentationData.get(fileName) != null) {
         node.addChildrenToFront(newHeaderNode(traversal, node).removeChildren());
       }
-      compiler.reportCodeChange();
+      traversal.reportCodeChange();
       return;
     }
 
@@ -181,7 +181,7 @@ class CoverageInstrumentationCallback extends
       Node codeBlock = node.getLastChild();
       codeBlock.addChildToFront(
           newInstrumentationNode(traversal, node));
-      compiler.reportCodeChange();
+      traversal.reportCodeChange();
       return;
     }
 
@@ -190,7 +190,7 @@ class CoverageInstrumentationCallback extends
       Node firstChild = node.getFirstChild();
       firstChild.addChildToFront(
           newInstrumentationNode(traversal, node));
-      compiler.reportCodeChange();
+      traversal.reportCodeChange();
       return;
     }
 
@@ -199,7 +199,7 @@ class CoverageInstrumentationCallback extends
       parent.addChildBefore(
           newInstrumentationNode(traversal, node),
           node);
-      compiler.reportCodeChange();
+      traversal.reportCodeChange();
       return;
     }
   }

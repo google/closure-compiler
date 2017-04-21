@@ -110,7 +110,7 @@ class ConvertToTypedInterface implements CompilerPass {
       JSDocInfo newJsdoc = getJSDocForRhs(t, rhs, jsdoc);
       if (newJsdoc != null) {
         jsdocNode.setJSDocInfo(newJsdoc);
-        compiler.reportCodeChange();
+        t.reportCodeChange();
       }
     }
 
@@ -285,7 +285,7 @@ class ConvertToTypedInterface implements CompilerPass {
             case NUMBER:
             case STRING:
               n.detach();
-              compiler.reportCodeChange();
+              t.reportCodeChange();
               break;
             case CALL:
               Node callee = expr.getFirstChild();
@@ -298,28 +298,28 @@ class ConvertToTypedInterface implements CompilerPass {
                 while (null != (childBefore = n.getPrevious())
                     && childBefore.getBooleanProp(Node.IS_NAMESPACE)) {
                   parent.removeChild(childBefore);
-                  compiler.reportCodeChange();
+                  t.reportCodeChange();
                 }
               } else if (callee.matchesQualifiedName("goog.define")) {
                 expr.getLastChild().detach();
-                compiler.reportCodeChange();
+                t.reportCodeChange();
               } else if (callee.matchesQualifiedName("goog.require")) {
                 processRequire(expr);
               } else if (!callee.matchesQualifiedName("goog.module")) {
                 n.detach();
-                compiler.reportCodeChange();
+                t.reportCodeChange();
               }
               break;
             case ASSIGN:
-              processName(expr.getFirstChild(), n);
+              processName(t, expr.getFirstChild(), n);
               break;
             case GETPROP:
-              processName(expr, n);
+              processName(t, expr, n);
               break;
             default:
               if (expr.getJSDocInfo() == null) {
                 n.detach();
-                compiler.reportCodeChange();
+                t.reportCodeChange();
               }
               break;
           }
@@ -333,7 +333,7 @@ class ConvertToTypedInterface implements CompilerPass {
             if (rhs != null && isImportRhs(rhs)) {
               processRequire(rhs);
             } else {
-              processName(lhs, n);
+              processName(t, lhs, n);
             }
           }
           break;
@@ -343,7 +343,7 @@ class ConvertToTypedInterface implements CompilerPass {
         case CONTINUE:
         case DEBUGGER:
           NodeUtil.removeChild(parent, n);
-          compiler.reportCodeChange();
+          t.reportCodeChange();
           break;
         default:
           break;
@@ -360,7 +360,7 @@ class ConvertToTypedInterface implements CompilerPass {
         case TRY:
         case DEFAULT_CASE:
           parent.replaceChild(n, n.getFirstChild().detach());
-          compiler.reportCodeChange();
+          t.reportCodeChange();
           break;
         case IF:
         case SWITCH:
@@ -369,7 +369,7 @@ class ConvertToTypedInterface implements CompilerPass {
           Node children = n.removeChildren();
           parent.addChildrenAfter(children, n);
           NodeUtil.removeChild(parent, n);
-          compiler.reportCodeChange();
+          t.reportCodeChange();
           break;
         case FOR_OF:
         case DO:
@@ -383,7 +383,7 @@ class ConvertToTypedInterface implements CompilerPass {
             Node initializer = NodeUtil.isAnyFor(n) ? n.getFirstChild() : IR.empty();
             if (initializer.isVar() && initializer.hasOneChild()) {
               parent.addChildBefore(initializer.detach(), body);
-              processName(initializer.getFirstChild(), initializer);
+              processName(t, initializer.getFirstChild(), initializer);
             }
             compiler.reportChangeToEnclosingScope(parent);
             break;
@@ -391,7 +391,7 @@ class ConvertToTypedInterface implements CompilerPass {
         case LABEL:
           if (n.getParent() != null) {
             parent.replaceChild(n, n.getSecondChild().detach());
-            compiler.reportCodeChange();
+            t.reportCodeChange();
           }
           break;
         default:
@@ -529,7 +529,7 @@ class ConvertToTypedInterface implements CompilerPass {
       return RemovalType.REMOVE_RHS;
     }
 
-    private void processName(Node nameNode, Node statement) {
+    private void processName(NodeTraversal t, Node nameNode, Node statement) {
      Preconditions.checkState(NodeUtil.isStatement(statement), statement);
       if (!nameNode.isQualifiedName()) {
         // We don't track these. We can just remove them.
@@ -544,7 +544,7 @@ class ConvertToTypedInterface implements CompilerPass {
         case PRESERVE_ALL:
           break;
         case REMOVE_RHS:
-          maybeRemoveRhs(nameNode, statement, jsdocNode.getJSDocInfo());
+          maybeRemoveRhs(t, nameNode, statement, jsdocNode.getJSDocInfo());
           break;
       }
       currentFile.markNameProcessed(nameNode.getQualifiedName());
@@ -559,31 +559,31 @@ class ConvertToTypedInterface implements CompilerPass {
       }
     }
 
-    private void maybeRemoveRhs(Node nameNode, Node statement, JSDocInfo jsdoc) {
+    private void maybeRemoveRhs(NodeTraversal t, Node nameNode, Node statement, JSDocInfo jsdoc) {
       if (jsdoc != null && jsdoc.hasEnumParameterType()) {
-        removeEnumValues(NodeUtil.getRValueOfLValue(nameNode));
+        removeEnumValues(t, NodeUtil.getRValueOfLValue(nameNode));
         return;
       }
       if (nameNode.matchesQualifiedName("exports")) {
         replaceRhsWithUnknown(nameNode);
-        compiler.reportCodeChange();
+        t.reportCodeChange();
         return;
       }
       Node newStatement =
           NodeUtil.newQNameDeclaration(compiler, nameNode.getQualifiedName(), null, jsdoc);
       newStatement.useSourceInfoIfMissingFromForTree(nameNode);
       statement.replaceWith(newStatement);
-      compiler.reportCodeChange();
+      t.reportCodeChange();
     }
 
-    private void removeEnumValues(Node objLit) {
+    private void removeEnumValues(NodeTraversal t, Node objLit) {
       if (objLit.isObjectLit() && objLit.hasChildren()) {
         for (Node key : objLit.children()) {
           Node value = key.getFirstChild();
           Node replacementValue = IR.number(0).srcrefTree(value);
           key.replaceChild(value, replacementValue);
         }
-        compiler.reportCodeChange();
+        t.reportCodeChange();
       }
     }
   }

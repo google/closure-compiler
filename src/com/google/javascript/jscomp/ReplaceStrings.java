@@ -29,7 +29,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -358,7 +357,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
 
     replacement.useSourceInfoIfMissingFromForTree(expr);
     parent.replaceChild(expr, replacement);
-    compiler.reportCodeChange();
+    t.reportCodeChange();
     return replacement;
   }
 
