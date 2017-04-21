@@ -292,6 +292,11 @@ public abstract class JSType implements TypeI, Serializable {
   }
 
   @Override
+  public boolean hasUninstantiatedTypeVariables() {
+    return getTemplateTypeMap().hasUnfilledTemplateKeys();
+  }
+
+  @Override
   public boolean containsArray() {
     // Check if this is itself an array
     if (this.isArrayType()) {
@@ -474,6 +479,7 @@ public abstract class JSType implements TypeI, Serializable {
     return null;
   }
 
+  @Override
   public boolean isRecordType() {
     return toMaybeRecordType() != null;
   }
@@ -499,7 +505,8 @@ public abstract class JSType implements TypeI, Serializable {
     return toMaybeTemplatizedType() != null;
   }
 
-  public final boolean isGeneric() {
+  @Override
+  public final boolean isGenericObjectType() {
     return isTemplatizedType();
   }
 

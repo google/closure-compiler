@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
@@ -1968,7 +1969,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public final boolean isGeneric() {
+  public final boolean isGenericObjectType() {
     NominalType nt = getNominalTypeIfSingletonObj();
     return nt != null && nt.isGeneric();
   }
@@ -2096,6 +2097,26 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   @Override
   public final Iterable<TypeI> getParameterTypes() {
     return Preconditions.checkNotNull(getFunType()).getParameterTypes();
+  }
+
+  @Override
+  public TypeI getPropertyType(String propName) {
+    return isObjectType() ? getProp(new QualifiedName(propName)) : null;
+  }
+
+  @Override
+  public boolean isRecordType() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public boolean hasUninstantiatedTypeVariables() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ImmutableList<? extends TypeI> getTemplateTypes() {
+    throw new UnsupportedOperationException();
   }
 
   // Note: concrete subclasses follow below.  The above code in JSType

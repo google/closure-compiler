@@ -19,11 +19,13 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
-
+import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -45,7 +47,7 @@ import java.util.Map;
  * The reason for this is that we want to shadow methods from the parent class, to avoid calling
  * them accidentally.
  */
-public class TypedScope extends Scope implements StaticTypedScope<JSType> {
+public class TypedScope extends Scope implements StaticTypedScope<JSType>, TypeIEnv<JSType> {
   private final Map<String, TypedVar> vars = new LinkedHashMap<>();
   private final TypedScope parent;
   /** Whether this is a bottom scope for the purposes of type inference. */
@@ -276,5 +278,18 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType> {
   public Scope getClosestHoistScope() {
     throw new IllegalStateException(
         "Method getClosestHoistScope cannot be called on typed scopes.");
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public JSType getType(String typeName) {
+    StaticTypedSlot<JSType> slot = getSlot(typeName);
+    return slot == null ? null : slot.getType();
+  }
+
+  @Override
+  public JSDocInfo getJsdocOfTypeDeclaration(String typeName) {
+    StaticTypedSlot<JSType> slot = getSlot(typeName);
+    return slot == null ? null : slot.getJSDocInfo();
   }
 }

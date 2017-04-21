@@ -493,6 +493,7 @@ public abstract class ObjectType
    * @return the property's type or {@link UnknownType}. This method never
    *         returns {@code null}.
    */
+  @Override
   public JSType getPropertyType(String propertyName) {
     StaticTypedSlot<JSType> slot = getSlot(propertyName);
     if (slot == null) {

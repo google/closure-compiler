@@ -48,8 +48,10 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayList;
@@ -2884,7 +2886,28 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   }
 
   @Override
+  public TypeI evaluateTypeExpression(JSTypeExpression expr, TypeIEnv<TypeI> typeEnv) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public TypeI evaluateTypeExpressionInGlobalScope(JSTypeExpression expr) {
     return createTypeFromCommentNode(expr.getRoot());
+  }
+
+  @Override
+  public TypeI createRecordType(Map<String, ? extends TypeI> props) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public TypeI instantiateGenericType(
+      ObjectTypeI genericType, ImmutableList<? extends TypeI> typeArgs) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public TypeI buildRecordTypeFromObject(ObjectTypeI obj) {
+    throw new UnsupportedOperationException();
   }
 }

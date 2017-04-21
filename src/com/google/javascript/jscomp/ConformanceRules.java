@@ -511,7 +511,7 @@ public final class ConformanceRules {
               if (ownerFun.isConstructor()) {
                 foundType = ownerFun.getInstanceType();
               }
-            } else if (foundObj.isGeneric()) {
+            } else if (foundObj.isGenericObjectType()) {
               foundType = foundObj.getRawType();
             }
           }

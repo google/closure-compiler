@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino;
 
+import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 
 /**
@@ -77,9 +78,18 @@ public interface ObjectTypeI extends TypeI {
   // true for "classy" objects only?
   boolean isInstanceType();
 
-  boolean isGeneric();
-
   ObjectTypeI getRawType();
+
+  /**
+   * For an instantiated generic type, return the types that the type variables are mapped to.
+   *
+   * TODO(dimvar): this could have a better name, but it's used by non-compiler code.
+   * Rename in a follow-up CL.
+   *
+   * TODO(dimvar): After deleting the old type checker, change the signature of this and other
+   * methods in TypeI to stop using wildcards.
+   */
+  ImmutableList<? extends TypeI> getTemplateTypes();
 
   ObjectTypeI instantiateGenericsWithUnknown();
 
@@ -128,4 +138,9 @@ public interface ObjectTypeI extends TypeI {
    * If this type represents the object in a function's prototype property, return that function.
    */
   FunctionTypeI getOwnerFunction();
+
+  /**
+   * Returns the type of property propName on this object, or null if the property doesn't exist.
+   */
+  TypeI getPropertyType(String propName);
 }

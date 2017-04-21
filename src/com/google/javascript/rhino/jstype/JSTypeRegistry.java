@@ -48,6 +48,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
@@ -59,8 +60,8 @@ import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.TypeIRegistry;
-import com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -70,6 +71,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -1097,11 +1099,13 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   }
 
   /**
-   * Looks up a type by name.
+   * Looks up a native type by name.
    *
    * @param jsTypeName The name string.
    * @return the corresponding JSType object or {@code null} it cannot be found
    */
+  // Unchecked conversion of the return type, from JSType to TypeI.
+  @SuppressWarnings("unchecked")
   @Override
   public JSType getType(String jsTypeName) {
     // TODO(user): Push every local type name out of namesToTypes so that
@@ -1113,16 +1117,19 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     return namesToTypes.get(jsTypeName);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public JSType getNativeType(JSTypeNative typeId) {
     return nativeTypes[typeId.ordinal()];
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public ObjectType getNativeObjectType(JSTypeNative typeId) {
     return (ObjectType) getNativeType(typeId);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public FunctionType getNativeFunctionType(JSTypeNative typeId) {
     return (FunctionType) getNativeType(typeId);
@@ -1486,11 +1493,37 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
         .build();
   }
 
-  /**
-   * Creates a record type.
-   */
-  public RecordType createRecordType(Map<String, RecordProperty> properties) {
-    return new RecordType(this, properties);
+  @Override
+  public JSType buildRecordTypeFromObject(ObjectTypeI obj) {
+    ObjectType objType = (ObjectType) obj;
+    RecordType recType = objType.toMaybeRecordType();
+    // If it can be casted to a record type then return
+    if (recType != null) {
+      return recType;
+    }
+    // TODO(lpino): Handle inherited properties
+    Set<String> propNames = objType.getOwnPropertyNames();
+    // If the type has no properties then return Object
+    if (propNames.isEmpty()) {
+      return getNativeType(JSTypeNative.OBJECT_TYPE);
+    }
+    ImmutableMap.Builder<String, JSType> props = new ImmutableMap.Builder<>();
+    // Otherwise collect the properties and build a record type
+    for (String propName : propNames) {
+      props.put(propName, objType.getPropertyType(propName));
+    }
+    return createRecordType(props.build());
+  }
+
+  @Override
+  public JSType createRecordType(Map<String, ? extends TypeI> props) {
+    @SuppressWarnings("unchecked")
+    Map<String, JSType> propMap = (Map<String, JSType>) props;
+    RecordTypeBuilder builder = new RecordTypeBuilder(this);
+    for (Entry<String, JSType> e : propMap.entrySet()) {
+      builder.addProperty(e.getKey(), e.getValue(), null);
+    }
+    return builder.build();
   }
 
   /**
@@ -1620,6 +1653,13 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     return obj;
   }
 
+  @SuppressWarnings("unchecked")
+  @Override
+  public TypeI instantiateGenericType(
+      ObjectTypeI genericType, ImmutableList<? extends TypeI> typeArgs) {
+    return createTemplatizedType((ObjectType) genericType, (ImmutableList<JSType>) typeArgs);
+  }
+
   /**
    * Creates a templatized instance of the specified type.  Only ObjectTypes
    * can currently be templatized; extend the logic in this function when
@@ -1664,10 +1704,8 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * @param templatizedTypes a list of the template JSTypes. Will be matched by
    *     list order to the template keys on the base type.
    */
-  public TemplatizedType createTemplatizedType(
-      ObjectType baseType, JSType... templatizedTypes) {
-    return createTemplatizedType(
-        baseType, ImmutableList.copyOf(templatizedTypes));
+  public TemplatizedType createTemplatizedType(ObjectType baseType, JSType... templatizedTypes) {
+    return createTemplatizedType(baseType, ImmutableList.copyOf(templatizedTypes));
   }
 
   /**
@@ -1691,6 +1729,13 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
     nonNullableTypeNames.add(name);
   }
 
+  @SuppressWarnings("unchecked")
+  @Override
+  public JSType evaluateTypeExpression(JSTypeExpression expr, TypeIEnv<TypeI> scope) {
+    return createTypeFromCommentNode(
+        expr.getRoot(), expr.getSourceName(), (StaticTypedScope<JSType>) scope);
+  }
+
   @Override
   public JSType createTypeFromCommentNode(Node n) {
     return createTypeFromCommentNode(n, "[internal]", null);
@@ -1702,6 +1747,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    * @param sourceName The source file name.
    * @param scope A scope for doing type name lookups.
    */
+  @SuppressWarnings("unchecked")
   public JSType createTypeFromCommentNode(
       Node n, String sourceName, StaticTypedScope<? extends TypeI> scope) {
     return createFromTypeNodesInternal(n, sourceName, (StaticTypedScope<JSType>) scope, true);
@@ -1980,12 +2026,5 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
    */
   public void clearTemplateTypeNames() {
     templateTypes.clear();
-  }
-
-  /**
-   * @return Whether the type can be provided type arguements.
-   */
-  public boolean isTemplatizable(JSType type) {
-    return type.getTemplateTypeMap().hasUnfilledTemplateKeys();
   }
 }

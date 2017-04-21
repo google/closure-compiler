@@ -45,8 +45,10 @@ import com.google.javascript.rhino.jstype.StaticTypedScope;
 import java.io.Serializable;
 
 /**
- * Represents a type expression as a miniature Rhino AST, so that the
- * type expression can be evaluated later.
+ * When parsing a jsdoc, a type-annotation string is parsed to a type AST.
+ * Somewhat confusingly, we use the Node class both for type ASTs and for the source-code AST.
+ * JSTypeExpression wraps a type AST.
+ * During type checking, type ASTs are evaluated to JavaScript types.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
@@ -120,6 +122,10 @@ public final class JSTypeExpression implements Serializable {
    */
   public Node getRoot() {
     return root;
+  }
+
+  public String getSourceName() {
+    return this.sourceName;
   }
 
   @Override

@@ -973,7 +973,7 @@ class DisambiguateProperties implements CompilerPass {
     }
 
     // Unwrap templatized types, they are not unique at runtime.
-    if (foundType != null && foundType.isGeneric()) {
+    if (foundType != null && foundType.isGenericObjectType()) {
       foundType = foundType.getRawType();
     }
 

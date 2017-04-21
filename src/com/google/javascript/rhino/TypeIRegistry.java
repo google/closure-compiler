@@ -39,8 +39,10 @@
 
 package com.google.javascript.rhino;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author blickly@google.com (Ben Lickly)
@@ -51,6 +53,10 @@ public interface TypeIRegistry {
   // in compiler passes mixed with the old type system.
   // Polymorphism avoids the need for casting in many cases (fewer casts in java 8 than in java 7).
   // After all non-type-checking passes use TypeI, we should make these methods not polymorphic.
+  //
+  // We considered defining the interface as TypeIRegistry<T extends TypeI>, but it would only
+  // help with getNativeType and getType, not with the other methods, and it would increase
+  // verbosity in all places that use the interface.
 
   TypeI createTypeFromCommentNode(Node n);
 
@@ -66,5 +72,16 @@ public interface TypeIRegistry {
 
   TypeI createUnionType(List<? extends TypeI> variants);
 
+  /**
+   * Creates an anonymous structural type with the given properties.
+   */
+  TypeI createRecordType(Map<String, ? extends TypeI> props);
+
+  TypeI instantiateGenericType(ObjectTypeI genericType, ImmutableList<? extends TypeI> typeArgs);
+
   TypeI evaluateTypeExpressionInGlobalScope(JSTypeExpression expr);
+
+  TypeI evaluateTypeExpression(JSTypeExpression expr, TypeIEnv<TypeI> typeEnv);
+
+  TypeI buildRecordTypeFromObject(ObjectTypeI obj);
 }

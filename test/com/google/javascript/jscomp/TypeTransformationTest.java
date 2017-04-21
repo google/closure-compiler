@@ -23,7 +23,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.RecordTypeBuilder;
 import com.google.javascript.rhino.testing.TestErrorReporter;
-
 import java.util.Map.Entry;
 
 public final class TypeTransformationTest extends CompilerTypeTestCase {
@@ -960,7 +959,8 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
       // Evaluate the type transformation
       TypeTransformation typeTransformation =
           new TypeTransformation(compiler, scope);
-      JSType resultType = typeTransformation.eval(ast, typeVars, nameVars);
+      @SuppressWarnings({"rawtypes", "unchecked"})
+      JSType resultType = (JSType) typeTransformation.eval(ast, (ImmutableMap) typeVars, nameVars);
       checkReportedWarningsHelper(expectedWarnings);
       assertTypeEquals(expectedType, resultType);
     }

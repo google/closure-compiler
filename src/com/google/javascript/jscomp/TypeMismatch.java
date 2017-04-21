@@ -126,7 +126,7 @@ class TypeMismatch {
   private static TypeI removeNullUndefinedAndTemplates(TypeI t) {
     TypeI result = t.restrictByNotNullOrUndefined();
     ObjectTypeI obj = result.toMaybeObjectType();
-    if (obj != null && obj.isGeneric()) {
+    if (obj != null && obj.isGenericObjectType()) {
       return obj.instantiateGenericsWithUnknown();
     }
     return result;

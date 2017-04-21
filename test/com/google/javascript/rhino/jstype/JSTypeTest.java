@@ -52,16 +52,13 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SimpleErrorReporter;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.JSType.TypePair;
-import com.google.javascript.rhino.jstype.RecordTypeBuilder.RecordProperty;
 import com.google.javascript.rhino.testing.AbstractStaticScope;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import com.google.javascript.rhino.testing.MapBasedScope;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
 // TODO(nicksantos): Split some of this up into per-class unit tests.
 public class JSTypeTest extends BaseJSTypeTestCase {
@@ -5944,19 +5941,6 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     // t2Eq
     assertTypeEquals(t2Eq, p12.typeB);
     assertTypeEquals(t2Eq, p21.typeA);
-  }
-
-
-  /**
-   * Tests the factory method
-   * {@link JSTypeRegistry#createRecordType}.
-   */
-  public void testCreateRecordType() throws Exception {
-    Map<String, RecordProperty> properties = new HashMap<>();
-    properties.put("hello", new RecordProperty(NUMBER_TYPE, null));
-
-    JSType recordType = registry.createRecordType(properties);
-    assertEquals("{hello: number}", recordType.toString());
   }
 
   /**

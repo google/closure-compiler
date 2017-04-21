@@ -22,8 +22,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Bob Jervis
- *   Google Inc.
+ *   Dimitris Vardoulakis
  *
  * Alternatively, the contents of this file may be used under the terms of
  * the GNU General Public License Version 2 or later (the "GPL"), in which
@@ -37,38 +36,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-package com.google.javascript.rhino.jstype;
-
-import com.google.javascript.rhino.StaticScope;
+package com.google.javascript.rhino;
 
 /**
- * The {@code StaticTypedScope} interface must be implemented by any object that
- * defines variables for the purposes of static analysis.  It is distinguished
- * from the {@code Scriptable} class that Rhino normally uses to represent a
- * run-time scope.
- *
- * @param <T> The type of information stored about the slot
+ * A map from type names to types.
+ * In OTI, it is implemented by jscomp#TypedScope.
+ * In NTI, it will probably be implemented by NTIScope.
+ * TODO(dimvar): Remove the generic when OTI is gone.
  */
-public interface StaticTypedScope<T> extends StaticScope {
-  /** Returns the scope enclosing this one or null if none. */
-  @Override
-  StaticTypedScope<T> getParentScope();
+public interface TypeIEnv<T extends TypeI> {
+  /**
+   * Returns the type represented by typeName
+   */
+  T getType(String typeName);
 
   /**
-   * Returns any defined slot within this scope for this name.  This call
-   * continues searching through parent scopes if a slot with this name is not
-   * found in the current scope.
-   * @param name The name of the variable slot to look up.
-   * @return The defined slot for the variable, or {@code null} if no
-   *         definition exists.
+   * Returns the jsdoc at the definition site of the type represented by typeName.
    */
-  @Override
-  StaticTypedSlot<T> getSlot(String name);
-
-  /** Like {@code getSlot} but does not recurse into parent scopes. */
-  @Override
-  StaticTypedSlot<T> getOwnSlot(String name);
-
-  /** Returns the expected type of {@code this} in the current scope. */
-  T getTypeOfThis();
+  JSDocInfo getJsdocOfTypeDeclaration(String typeName);
 }

@@ -87,6 +87,11 @@ public interface TypeI {
   boolean isObjectType();
 
   /**
+   * True if this type represents a generic object (non function) type, instantiated or not.
+   */
+  boolean isGenericObjectType();
+
+  /**
    * True when the nominal type of this type is Object. The name is not great, because objects
    * with a different nominal type can flow to places that treat them as Object. But I'm not
    * sure what a better name would be.
@@ -117,6 +122,12 @@ public interface TypeI {
    * objects as well.
    */
   boolean isStringValueType();
+
+  /**
+   * Whether this type represents an anonymous structural type, e.g., { a: number, b: string }.
+   * Returns false for named structural types (i.e., types defined using @record).
+   */
+  boolean isRecordType();
 
   /**
    * Whether the type is a scalar number. In OTI, the isNumber method returns true for Number
@@ -161,4 +172,13 @@ public interface TypeI {
   TypeI getEnumeratedTypeOfEnumElement();
 
   boolean isEnumObject();
+
+  /**
+   * Returns true if this type is a generic object (non function) and some (or all) of its type
+   * variables are not instantiated.
+   * Note that in OTI it is possible to instantiate only some of the type variables of a
+   * generic type (bad implementation choice).
+   * In NTI, a generic type can only be uninstantiated or fully instantiated.
+   */
+  boolean hasUninstantiatedTypeVariables();
 }

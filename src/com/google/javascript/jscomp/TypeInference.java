@@ -1386,8 +1386,10 @@ class TypeInference
         }
         // Evaluate the type transformation expression using the current
         // known types for the template type variables
-        JSType transformedType = ttlObj.eval(type.getTypeTransformation(),
-                ImmutableMap.<String, JSType>copyOf(typeVars));
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        JSType transformedType = (JSType) ttlObj.eval(
+            type.getTypeTransformation(),
+            (ImmutableMap) ImmutableMap.copyOf(typeVars));
         result.put(type, transformedType);
         // Add the transformed type to the type variables
         typeVars.put(type.getReferenceName(), transformedType);
