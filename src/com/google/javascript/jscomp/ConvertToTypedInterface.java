@@ -65,15 +65,13 @@ class ConvertToTypedInterface implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, new PropagateConstJsdoc(compiler));
+    NodeTraversal.traverseEs6(compiler, root, new PropagateConstJsdoc());
     new RemoveCode(compiler).process(externs, root);
   }
 
   private static class PropagateConstJsdoc extends NodeTraversal.AbstractPostOrderCallback {
-    private final AbstractCompiler compiler;
 
-    PropagateConstJsdoc(AbstractCompiler compiler) {
-      this.compiler = compiler;
+    PropagateConstJsdoc() {
     }
 
     @Override
