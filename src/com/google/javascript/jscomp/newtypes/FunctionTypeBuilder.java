@@ -129,11 +129,19 @@ public final class FunctionTypeBuilder {
     return this;
   }
 
-  public FunctionTypeBuilder addTypeParameters(
-      ImmutableList<String> typeParameters) {
+  public FunctionTypeBuilder addTypeParameters(ImmutableList<String> typeParameters) {
     Preconditions.checkNotNull(typeParameters);
     Preconditions.checkState(this.typeParameters.isEmpty());
     this.typeParameters = typeParameters;
+    return this;
+  }
+
+  public FunctionTypeBuilder appendTypeParameters(ImmutableList<String> typeParameters) {
+    Preconditions.checkNotNull(typeParameters);
+    ImmutableList.Builder<String> newTypeParams = ImmutableList.builder();
+    newTypeParams.addAll(this.typeParameters);
+    newTypeParams.addAll(typeParameters);
+    this.typeParameters = newTypeParams.build();
     return this;
   }
 

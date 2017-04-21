@@ -16,7 +16,10 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import com.google.common.base.Function;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -329,12 +332,33 @@ public final class FunctionType {
     return this.receiverType != null ? this.receiverType : this.nominalType;
   }
 
+  /**
+   * Say a method f is defined on a generic type Foo&gt;T&lt;.
+   * When doing Foo.prototype.f.call (or also .apply), we transform the method type to a
+   * function F, which includes the type variables of Foo, in this case T.
+   */
+  private FunctionTypeBuilder transformCallApplyHelper() {
+    FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
+    if (this.receiverType == null) {
+      builder.addReqFormal(this.commonTypes.UNKNOWN);
+      return builder;
+    }
+    NominalType nt = this.receiverType.getNominalTypeIfSingletonObj();
+    if (nt != null && nt.isUninstantiatedGenericType()) {
+      builder.addTypeParameters(nt.getTypeParameters());
+      NominalType ntWithIdentity = nt.instantiateGenericsWithIdentity();
+      builder.addReqFormal(JSType.fromObjectType(ObjectType.fromNominalType(ntWithIdentity)));
+    } else {
+      builder.addReqFormal(this.receiverType);
+    }
+    return builder;
+  }
+
   public FunctionType transformByCallProperty() {
     if (isTopFunction() || isQmarkFunction() || isLoose) {
       return this.commonTypes.QMARK_FUNCTION;
     }
-    FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
-    builder.addReqFormal(this.receiverType == null ? this.commonTypes.UNKNOWN : this.receiverType);
+    FunctionTypeBuilder builder = transformCallApplyHelper();
     for (JSType type : this.requiredFormals) {
       builder.addReqFormal(type);
     }
@@ -343,7 +367,7 @@ public final class FunctionType {
     }
     builder.addRestFormals(this.restFormals);
     builder.addRetType(this.returnType);
-    builder.addTypeParameters(this.typeParameters);
+    builder.appendTypeParameters(this.typeParameters);
     builder.addAbstract(this.isAbstract);
     return builder.buildFunction();
   }
@@ -358,8 +382,7 @@ public final class FunctionType {
     if (isGeneric()) {
       return instantiateGenericsWithUnknown().transformByApplyProperty();
     }
-    FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
-    builder.addReqFormal(this.receiverType == null ? this.commonTypes.UNKNOWN : this.receiverType);
+    FunctionTypeBuilder builder = transformCallApplyHelper();
     JSType arrayContents;
     if (getMaxArityWithoutRestFormals() == 0 && hasRestFormals()) {
       arrayContents = getRestFormalsType();
@@ -1045,8 +1068,7 @@ public final class FunctionType {
       return substituteNominalGenerics(concreteTypes);
     }
     ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
-    for (Map.Entry<String, JSType> concreteTypeEntry
-             : concreteTypes.entrySet()) {
+    for (Map.Entry<String, JSType> concreteTypeEntry : concreteTypes.entrySet()) {
       if (!typeParameters.contains(concreteTypeEntry.getKey())) {
         builder.put(concreteTypeEntry);
       }
@@ -1139,6 +1161,17 @@ public final class FunctionType {
     return appendTo(new StringBuilder()).toString();
   }
 
+  private static Collection<String> getPrettyTypeParams(List<String> typeParams) {
+    return Collections2.transform(
+        typeParams,
+        new Function<String, String>() {
+          @Override
+          public String apply(String typeParam) {
+            return UniqueNameGenerator.getOriginalName(typeParam);
+          }
+        });
+  }
+
   public StringBuilder appendTo(StringBuilder builder) {
     if (this == this.commonTypes.LOOSE_TOP_FUNCTION) {
       return builder.append("LOOSE_TOP_FUNCTION");
@@ -1146,6 +1179,11 @@ public final class FunctionType {
       return builder.append("TOP_FUNCTION");
     } else if (isQmarkFunction()) {
       return builder.append("Function");
+    }
+    if (!this.typeParameters.isEmpty()) {
+      builder.append("<");
+      builder.append(Joiner.on(",").join(getPrettyTypeParams(this.typeParameters)));
+      builder.append(">");
     }
     builder.append("function(");
     if (nominalType != null) {

@@ -98,6 +98,10 @@ public final class NominalType {
     return typeMap;
   }
 
+  ImmutableList<String> getTypeParameters() {
+    return this.rawType.getTypeParameters();
+  }
+
   JSType getIndexType() {
     if (isIObject()) {
       return this.typeMap.get(this.rawType.getTypeParameters().get(0));
@@ -253,6 +257,15 @@ public final class NominalType {
   NominalType instantiateGenericsWithUnknown() {
     NominalType thisWithoutTypemap = this.rawType.getAsNominalType();
     return thisWithoutTypemap.instantiateGenerics(getCommonTypes().MAP_TO_UNKNOWN);
+  }
+
+  NominalType instantiateGenericsWithIdentity() {
+    Preconditions.checkState(isUninstantiatedGenericType());
+    Map<String, JSType> m = new LinkedHashMap<>();
+    for (String typeParam : this.getTypeParameters()) {
+      m.put(typeParam, JSType.fromTypeVar(this.getCommonTypes(), typeParam));
+    }
+    return instantiateGenerics(m);
   }
 
   public String getName() {

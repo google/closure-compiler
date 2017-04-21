@@ -299,6 +299,27 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         "  }",
         "}"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @template T */",
+        "class Collection {",
+        "  constructor() {",
+        "    /** @type {!Array<T>} */",
+        "    this.items = [];",
+        "  }",
+        "  /** @param {T} item */",
+        "  add(item) { this.items.push(item); }",
+        "}",
+        "/** @extends {Collection<number>} */",
+        "class NumberCollection extends Collection {",
+        "  constructor() {",
+        "    super();",
+        "  }",
+        "  /** @override */",
+        "  add(item) {",
+        "    super.add(item);",
+        "  }",
+        "}"));
   }
 
   public void testDefaultValuesForArguments() {
