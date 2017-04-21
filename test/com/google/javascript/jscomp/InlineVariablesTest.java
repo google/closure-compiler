@@ -844,6 +844,18 @@ public final class InlineVariablesTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testVarInBlock1() {
+    test(
+        "function f(x) { if (true) {var y = x; y; y;} }",
+        "function f(x) { if (true) {x; x;} }");
+  }
+
+  public void testVarInBlock2() {
+    test(
+        "function f(x) { switch (0) { case 0: { var y = x; y; y; } } }",
+        "function f(x) { switch (0) { case 0: { x; x; } } }");
+  }
+
   public void testLocalsOnly1() {
     inlineLocalsOnly = true;
     test(
