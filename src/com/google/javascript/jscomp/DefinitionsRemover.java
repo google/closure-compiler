@@ -119,19 +119,18 @@ class DefinitionsRemover {
      * This method should not be called on a definition for which isExtern()
      * is true.
      */
-    public void remove() {
+    public void remove(AbstractCompiler compiler) {
       if (!isExtern) {
-        performRemove();
+        performRemove(compiler);
       } else {
-        throw new IllegalStateException("Attempt to remove() an extern" +
-            " definition.");
+        throw new IllegalStateException("Attempt to remove() an extern definition.");
       }
     }
 
     /**
      * Subclasses should override to remove the definition from the AST.
      */
-    protected abstract void performRemove();
+    protected abstract void performRemove(AbstractCompiler compiler);
 
     /**
      * Variable or property name represented by this definition.
@@ -202,7 +201,7 @@ class DefinitionsRemover {
     }
 
     @Override
-    public void performRemove() {
+    public void performRemove(AbstractCompiler compiler) {
       throw new IllegalArgumentException("Can't remove an UnknownDefinition");
     }
   }
@@ -218,7 +217,7 @@ class DefinitionsRemover {
     }
 
     @Override
-    public void performRemove() {
+    public void performRemove(AbstractCompiler compiler) {
       throw new IllegalArgumentException(
           "Can't remove external name-only definition");
     }
@@ -237,7 +236,7 @@ class DefinitionsRemover {
     }
 
     @Override
-    public void performRemove() {
+    public void performRemove(AbstractCompiler compiler) {
       throw new IllegalArgumentException(
           "Can't remove a FunctionArgumentDefinition");
     }
@@ -277,7 +276,8 @@ class DefinitionsRemover {
     }
 
     @Override
-    public void performRemove() {
+    public void performRemove(AbstractCompiler compiler) {
+      compiler.reportChangeToEnclosingScope(function);
       function.detach();
     }
   }
@@ -294,9 +294,10 @@ class DefinitionsRemover {
     }
 
     @Override
-    public void performRemove() {
+    public void performRemove(AbstractCompiler compiler) {
       // replace internal name with ""
       function.replaceChild(function.getFirstChild(), IR.name(""));
+      compiler.reportChangeToEnclosingScope(function.getFirstChild());
     }
   }
 
@@ -313,12 +314,13 @@ class DefinitionsRemover {
     }
 
     @Override
-    public void performRemove() {
+    public void performRemove(AbstractCompiler compiler) {
       // A simple assignment. foo = bar() -> bar();
       Node parent = assignment.getParent();
       Node last = assignment.getLastChild();
       assignment.removeChild(last);
       parent.replaceChild(assignment, last);
+      compiler.reportChangeToEnclosingScope(parent);
     }
 
     @Override
@@ -344,7 +346,7 @@ class DefinitionsRemover {
     }
 
     @Override
-    public void performRemove() {
+    public void performRemove(AbstractCompiler compiler) {
       throw new UnsupportedOperationException("Can't remove RecordType def");
     }
   }
@@ -370,8 +372,9 @@ class DefinitionsRemover {
     }
 
     @Override
-    public void performRemove() {
+    public void performRemove(AbstractCompiler compiler) {
       literal.removeChild(name);
+      compiler.reportChangeToEnclosingScope(literal);
     }
 
     @Override
@@ -415,7 +418,7 @@ class DefinitionsRemover {
     }
 
     @Override
-    public void performRemove() {
+    public void performRemove(AbstractCompiler compiler) {
       Node var = name.getParent();
       Preconditions.checkState(var.getFirstChild() == var.getLastChild(),
           "AST should be normalized first");
@@ -423,6 +426,7 @@ class DefinitionsRemover {
       Node rValue = name.removeFirstChild();
       Preconditions.checkState(!NodeUtil.isLoopStructure(parent));
       parent.replaceChild(var, NodeUtil.newExpr(rValue));
+      compiler.reportChangeToEnclosingScope(parent);
     }
 
     @Override

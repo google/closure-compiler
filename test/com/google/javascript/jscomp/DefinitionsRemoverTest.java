@@ -29,10 +29,6 @@ import java.util.List;
  *
  */
 public final class DefinitionsRemoverTest extends CompilerTestCase {
-  @Override
-  public void setUp() {
-    validateAstChangeMarking(false);
-  }
 
   public void testRemoveFunction() {
     setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
@@ -74,8 +70,7 @@ public final class DefinitionsRemoverTest extends CompilerTestCase {
         DefinitionsGatherer definitionsGatherer = new DefinitionsGatherer();
         NodeTraversal.traverseEs6(compiler, root, definitionsGatherer);
         for (Definition def : definitionsGatherer.definitions) {
-          def.remove();
-          compiler.reportCodeChange();
+          def.remove(compiler);
         }
       }
     };
