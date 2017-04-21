@@ -34,7 +34,6 @@ import com.google.javascript.rhino.TokenStream;
 import com.google.javascript.rhino.TokenUtil;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.dtoa.DToA;
-import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.ArrayList;
@@ -317,7 +316,7 @@ public final class NodeUtil {
           return Double.POSITIVE_INFINITY;
         }
         if (useType) {
-          JSType type = n.getJSType();
+          TypeI type = n.getTypeI();
           if (type != null) {
             if (type.isVoidType()) {
               return Double.NaN;
@@ -1916,7 +1915,7 @@ public final class NodeUtil {
    */
   static boolean mayBeString(Node n, boolean useType) {
     if (useType) {
-      JSType type = n.getJSType();
+      TypeI type = n.getTypeI();
       if (type != null) {
         if (type.isStringValueType()) {
           return true;
@@ -4944,10 +4943,10 @@ public final class NodeUtil {
       return false;
     }
 
-    JSType jsType = fnNode.getJSType();
+    TypeI type = fnNode.getTypeI();
     JSDocInfo jsDocInfo = getBestJSDocInfo(fnNode);
 
-    return (jsType != null && jsType.isConstructor())
+    return (type != null && type.isConstructor())
         || (jsDocInfo != null && jsDocInfo.isConstructor())
         || isEs6Constructor(fnNode);
   }

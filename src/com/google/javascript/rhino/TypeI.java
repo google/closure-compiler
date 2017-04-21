@@ -135,6 +135,12 @@ public interface TypeI {
    */
   boolean isNumberValueType();
 
+  /**
+   * Whether the type is a scalar boolean. In OTI, the isBoolean method returns true for Boolean
+   * objects as well.
+   */
+  boolean isBooleanValueType();
+
   ObjectTypeI autoboxAndGetObject();
 
   JSDocInfo getJSDocInfo();

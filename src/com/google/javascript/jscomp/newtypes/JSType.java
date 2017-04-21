@@ -321,6 +321,11 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return (getMask() & ~BOOLEAN_MASK) == 0 && (getMask() & BOOLEAN_MASK) != 0;
   }
 
+  @Override
+  public final boolean isBooleanValueType() {
+    return isBoolean();
+  }
+
   public final boolean isString() {
     return STRING_MASK == getMask();
   }

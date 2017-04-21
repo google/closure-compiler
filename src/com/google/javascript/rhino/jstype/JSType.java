@@ -240,6 +240,7 @@ public abstract class JSType implements TypeI, Serializable {
     return false;
   }
 
+  @Override
   public boolean isBooleanValueType() {
     return false;
   }
