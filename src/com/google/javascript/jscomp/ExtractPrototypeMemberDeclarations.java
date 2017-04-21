@@ -138,7 +138,6 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     NodeTraversal.traverseEs6(compiler, root, extractionInfo);
     if (extractionInfo.shouldExtract()) {
       doExtraction(extractionInfo);
-      compiler.reportCodeChange();
     }
   }
 
