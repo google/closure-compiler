@@ -412,16 +412,25 @@ md.$dialog.prototype.hide = function(opt_response) {};
 md.$dialog.prototype.cancel = function(opt_response) {};
 
 
-/** @return {!md.$dialog.AlertConfig_} */
-md.$dialog.prototype.alert = function() {};
+/**
+ * @param {!md.$dialog.Config=} options
+ * @return {!md.$dialog.AlertConfig_}
+ */
+md.$dialog.prototype.alert = function(options) {};
 
 
-/** @return {!md.$dialog.ConfirmConfig_} */
-md.$dialog.prototype.confirm = function() {};
+/**
+ * @param {!md.$dialog.Config=} options
+ * @return {!md.$dialog.ConfirmConfig_}
+ */
+md.$dialog.prototype.confirm = function(options) {};
 
 
-/** @return {!md.$dialog.PromptConfig_} */
-md.$dialog.prototype.prompt = function() {};
+/**
+ * @param {!md.$dialog.Config=} options
+ * @return {!md.$dialog.PromptConfig_}
+*/
+md.$dialog.prototype.prompt = function(options) {};
 
 
 /******************************************************************************
