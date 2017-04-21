@@ -117,8 +117,10 @@ public class J2clConstantHoisterPass implements CompilerPass {
     Node declarationInClass = declarationAssignment.getFirstChild();
     Node declarationAssignedValue = declarationInClass.getFirstChild();
 
+    Node clinitChangeScope = NodeUtil.getEnclosingChangeScopeRoot(clinitAssignment);
     // Remove the clinit initialization
     NodeUtil.removeChild(clinitAssignment.getParent(), clinitAssignment);
+
 
     // Replace the assignment in declaration with the value from clinit
     clinitAssignedValue.detach();
@@ -128,7 +130,7 @@ public class J2clConstantHoisterPass implements CompilerPass {
     // Sanity check
     checkState(NodeUtil.isLiteralValue(declarationAssignedValue, false /* includeFunctions */));
 
-    compiler.reportChangeToEnclosingScope(clinitAssignment);
+    compiler.reportChangeToChangeScope(clinitChangeScope);
     compiler.reportChangeToEnclosingScope(declarationAssignment);
   }
 

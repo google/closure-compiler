@@ -110,7 +110,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
             if (logger.isLoggable(Level.FINE)) {
               logger.fine("Inlining empty method: " + callName);
             }
-            inlineEmptyMethod(parent, callNode);
+            inlineEmptyMethod(t, parent, callNode);
           }
         }
       } else {
@@ -254,16 +254,17 @@ class InlineSimpleMethods extends MethodCompilerPass {
   /**
    * Remove the provided object and its method call.
    */
-  private void inlineEmptyMethod(Node parent, Node call) {
+  private void inlineEmptyMethod(NodeTraversal t, Node parent, Node call) {
     // If the return value of the method call is read,
     // replace it with "void 0". Otherwise, remove the call entirely.
+
     if (NodeUtil.isExprCall(parent)) {
       parent.replaceWith(IR.empty());
     } else {
       Node srcLocation = call;
       parent.replaceChild(call, NodeUtil.newUndefinedNode(srcLocation));
     }
-    compiler.reportChangeToEnclosingScope(parent);
+    t.reportCodeChange();
   }
 
   /**

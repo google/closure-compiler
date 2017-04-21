@@ -21,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -128,8 +127,9 @@ class OptimizeReturns
   private void rewriteReturns(
       final DefinitionUseSiteFinder defFinder, Node fnNode) {
     Preconditions.checkState(fnNode.isFunction());
+    final Node body = fnNode.getLastChild();
     NodeUtil.visitPostOrder(
-      fnNode.getLastChild(),
+      body,
       new NodeUtil.Visitor() {
         @Override
         public void visit(Node node) {
@@ -144,7 +144,7 @@ class OptimizeReturns
               node.getParent().addChildBefore(
                 IR.exprResult(result).srcref(result), node);
             }
-            compiler.reportCodeChange();
+            compiler.reportChangeToEnclosingScope(body);
           }
         }
       },

@@ -76,9 +76,6 @@ class NameAnonymousFunctionsMapped implements CompilerPass {
     NodeTraversal.traverseEs6(compiler, root, namingCallback);
     logger.fine("Named " + namedCount + " anon functions using " +
         bytesUsed + " bytes");
-    if (namedCount > 0) {
-      compiler.reportCodeChange();
-    }
   }
 
   /**
@@ -110,6 +107,7 @@ class NameAnonymousFunctionsMapped implements CompilerPass {
       fnNameNode.setString(newName);
       namedCount++;
       bytesUsed += newName.length();
+      compiler.reportChangeToEnclosingScope(fnNameNode);
     }
 
     String getAlternateName(String name) {

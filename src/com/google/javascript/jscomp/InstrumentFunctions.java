@@ -119,13 +119,13 @@ class InstrumentFunctions implements CompilerPass {
 
       Node addingRoot = compiler.getNodeForCodeInsertion(null);
       addingRoot.addChildToFront(expr.useSourceInfoIfMissingFromForTree(addingRoot));
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(addingRoot);
     }
 
     if (initCode != null) {
       Node addingRoot = compiler.getNodeForCodeInsertion(null);
       addingRoot.addChildrenToFront(initCode);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(addingRoot);
     }
   }
 
@@ -207,7 +207,7 @@ class InstrumentFunctions implements CompilerPass {
         Node call = newReportFunctionExitNode(function, null);
         Node expr = IR.exprResult(call).useSourceInfoIfMissingFromForTree(function);
         body.addChildToBack(expr);
-        compiler.reportCodeChange();
+        compiler.reportChangeToEnclosingScope(body);
       }
     }
 
@@ -320,7 +320,7 @@ class InstrumentFunctions implements CompilerPass {
           }
           addingRoot.addChildBefore(expr, beforeChild);
         }
-        t.reportCodeChange();
+        compiler.reportChangeToEnclosingScope(addingRoot);
       }
     }
   }

@@ -49,12 +49,6 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    validateAstChangeMarking(false);
-  }
-
-  @Override
   public CompilerPass getProcessor(final Compiler compiler) {
     return new RemoveSuperMethodsPass(compiler);
   }

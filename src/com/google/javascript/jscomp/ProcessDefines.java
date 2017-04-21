@@ -117,7 +117,6 @@ class ProcessDefines implements CompilerPass {
   }
 
   private void overrideDefines(Map<String, DefineInfo> allDefines) {
-    boolean changed = false;
     for (Map.Entry<String, DefineInfo> def : allDefines.entrySet()) {
       String defineName = def.getKey();
       DefineInfo info = def.getValue();
@@ -125,18 +124,18 @@ class ProcessDefines implements CompilerPass {
       Node finalValue = inputValue != null ?
           inputValue : info.getLastValue();
       if (finalValue != info.initialValue) {
-        info.initialValueParent.replaceChild(
-            info.initialValue, finalValue.cloneTree());
         compiler.addToDebugLog("Overriding @define variable " + defineName);
-        changed =
-            changed
-                || finalValue.getToken() != info.initialValue.getToken()
-                || !finalValue.isEquivalentTo(info.initialValue);
+        boolean changed =
+            finalValue.getToken() != info.initialValue.getToken()
+            || !finalValue.isEquivalentTo(info.initialValue);
+        if (changed) {
+          info.initialValueParent.replaceChild(
+              info.initialValue, finalValue.cloneTree());
+          if (changed) {
+            compiler.reportChangeToEnclosingScope(info.initialValueParent);
+          }
+        }
       }
-    }
-
-    if (changed) {
-      compiler.reportCodeChange();
     }
 
     Set<String> unusedReplacements = Sets.difference(

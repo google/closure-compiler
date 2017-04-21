@@ -28,7 +28,6 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     allowExternsChanges(true);
-    validateAstChangeMarking(false);
   }
 
   @Override

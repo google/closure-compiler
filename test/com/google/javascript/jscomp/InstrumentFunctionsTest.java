@@ -36,7 +36,6 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
   @Override
   protected void setUp() {
     this.instrumentationPb = null;
-    validateAstChangeMarking(false);
   }
 
   @Override

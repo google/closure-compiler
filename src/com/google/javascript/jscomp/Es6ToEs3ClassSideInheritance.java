@@ -235,7 +235,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
       exprResult.useSourceInfoIfMissingFromForTree(sourceInfoNode);
       Node inheritsExpressionResult = inheritsCall.getParent();
       inheritsExpressionResult.getParent().addChildAfter(exprResult, inheritsExpressionResult);
-      compiler.reportCodeChange();
+      compiler.reportChangeToEnclosingScope(inheritsExpressionResult);
 
       // Add the static member to the subclass so that subclasses also copy this member.
       subClass.staticMembers.add(assign);
