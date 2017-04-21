@@ -41,7 +41,6 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    validateAstChangeMarking(false);
   }
 
   @Override

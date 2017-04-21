@@ -62,7 +62,6 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
     super.setUp();
     generatePseudoNames = false;
     previousMappings = null;
-    validateAstChangeMarking(false);
   }
 
   @Override

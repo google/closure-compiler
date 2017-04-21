@@ -29,12 +29,6 @@ public final class ClosureCodeRemovalTest extends CompilerTestCase {
     super(EXTERNS);
   }
 
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    validateAstChangeMarking(false);
-  }
-
   public void testRemoveAbstract() {
     test("function Foo() {}; Foo.prototype.doSomething = goog.abstractMethod;",
         "function Foo() {};");
