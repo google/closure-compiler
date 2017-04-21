@@ -915,7 +915,6 @@ public final class DefaultPassConfig extends PassConfig {
     // Raise to ES6, if allowed
     if (options.getLanguageOut().isEs6OrHigher()) {
       passes.add(optimizeToEs6);
-      passes.add(rewriteBindThis);
     }
 
     assertValidOrderForOptimizations(passes);
@@ -2903,14 +2902,6 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new SubstituteEs6Syntax(compiler);
-    }
-  };
-
-  private final PassFactory rewriteBindThis =
-      new PassFactory("rewriteBindThis", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new RewriteBindThis(compiler);
     }
   };
 
