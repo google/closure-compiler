@@ -89,6 +89,8 @@ class CollapseAnonymousFunctions implements CompilerPass {
           parent.addChildToFront(value.detach());
         }
 
+        // report changes to both the change scopes
+        compiler.reportChangeToChangeScope(value);
         t.reportCodeChange();
       }
     }
