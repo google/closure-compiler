@@ -27,7 +27,8 @@ import com.google.javascript.rhino.Node;
  */
 abstract class AbstractPeepholeOptimization {
 
-  protected AbstractCompiler compiler;
+  private NodeTraversal traversal;
+  private AbstractCompiler compiler;
 
   /**
    * Given a node to optimize and a traversal, optimize the node. Subclasses
@@ -57,8 +58,7 @@ abstract class AbstractPeepholeOptimization {
    * Subclasses must call these if they have changed the AST.
    */
   protected void reportCodeChange() {
-    Preconditions.checkNotNull(compiler);
-    compiler.reportCodeChange();
+    traversal.reportCodeChange();
   }
 
   /**
@@ -86,15 +86,16 @@ abstract class AbstractPeepholeOptimization {
   /**
    * Informs the optimization that a traversal will begin.
    */
-  void beginTraversal(AbstractCompiler compiler) {
-    this.compiler = compiler;
+  void beginTraversal(NodeTraversal traversal) {
+    this.traversal = traversal;
+    this.compiler = traversal.getCompiler();
   }
 
   /**
    * Informs the optimization that a traversal has completed.
-   * @param compiler The current compiler.
    */
-  void endTraversal(AbstractCompiler compiler) {
+  void endTraversal() {
+    this.traversal = null;
     this.compiler = null;
   }
 
@@ -147,5 +148,4 @@ abstract class AbstractPeepholeOptimization {
   final boolean areDeclaredGlobalExternsOnWindow() {
     return compiler != null && compiler.getOptions().declaredGlobalExternsOnWindow;
   }
-
 }

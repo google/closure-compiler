@@ -34,6 +34,9 @@ class PeepholeOptimizationsPass implements CompilerPass {
 
   private boolean retraverseOnChange;
   private RecentChange handler;
+  private FunctionCallback fnCallback;
+  private PeepCallback peepCallback;
+  private NodeTraversal traversal;
 
   /**
    * Creates a peephole optimization pass that runs the given
@@ -45,6 +48,10 @@ class PeepholeOptimizationsPass implements CompilerPass {
     this.peepholeOptimizations = optimizations;
     this.retraverseOnChange = true;
     this.handler = new RecentChange();
+    this.peepCallback = new PeepCallback();
+    this.traversal = new NodeTraversal(
+        compiler, peepCallback, new Es6SyntacticScopeCreator(compiler));
+    this.fnCallback = new ChangedFunctionCallback();
   }
 
   void setRetraverseOnChange(boolean retraverse) {
@@ -54,21 +61,23 @@ class PeepholeOptimizationsPass implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     compiler.addChangeHandler(handler);
-    beginTraversal();
-    NodeTraversal.traverseChangedFunctions(compiler, new FunctionCallback() {
-        @Override
-        public void enterFunction(AbstractCompiler compiler, Node root) {
-          if (root.isFunction()) {
-            root = root.getLastChild();
-          }
-          do {
-            handler.reset();
-            NodeTraversal.traverseEs6(compiler, root, new PeepCallback());
-          } while (retraverseOnChange && handler.hasCodeChanged());
-        }
-      });
+    beginTraversal(traversal);
+    NodeTraversal.traverseChangedFunctions(compiler, fnCallback);
     endTraversal();
     compiler.removeChangeHandler(handler);
+  }
+
+  private class ChangedFunctionCallback implements FunctionCallback {
+    @Override
+    public void enterFunction(AbstractCompiler compiler, Node root) {
+      if (root.isFunction()) {
+        root = root.getLastChild();
+      }
+      do {
+        handler.reset();
+        traversal.traverse(root);
+      } while (retraverseOnChange && handler.hasCodeChanged());
+    }
   }
 
   private class PeepCallback extends AbstractShallowCallback {
@@ -96,15 +105,15 @@ class PeepholeOptimizationsPass implements CompilerPass {
    * Make sure that all the optimizations have the current traversal so they
    * can report errors.
    */
-  private void beginTraversal() {
+  private void beginTraversal(NodeTraversal traversal) {
     for (AbstractPeepholeOptimization optimization : peepholeOptimizations) {
-      optimization.beginTraversal(compiler);
+      optimization.beginTraversal(traversal);
     }
   }
 
   private void endTraversal() {
     for (AbstractPeepholeOptimization optimization : peepholeOptimizations) {
-      optimization.endTraversal(compiler);
+      optimization.endTraversal();
     }
   }
 }
