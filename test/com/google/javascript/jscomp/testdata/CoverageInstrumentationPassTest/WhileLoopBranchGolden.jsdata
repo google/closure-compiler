@@ -13,7 +13,7 @@ __jscov.branchPresent.push("04");
 __jscov.branchesInLine.push(JSCompiler_lcov_branchesInLine);
 __jscov.fileNames.push("CoverageInstrumentationPassTest/WhileLoopBranch.jsdata");
 function IsPostive(x) {
-  for (var i = 0;i < x;) {
+  for (var i = 0; i < x;) {
     JSCompiler_lcov_branch_data_CoverageInstrumentationPassTest_WhileLoopBranch_jsdata[0] = true;
     return true;
   }

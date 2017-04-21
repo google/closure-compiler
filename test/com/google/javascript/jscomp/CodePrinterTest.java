@@ -770,10 +770,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         "if (1) {\n" +
         "  alert();\n" +
         "}\n");
-    assertPrettyPrint("for (;;) alert();",
-        "for (;;) {\n" +
-        "  alert();\n" +
-        "}\n");
+    assertPrettyPrint(
+        "for (;;) alert();",
+        "for (;;) {\n"
+        + "  alert();\n"
+        + "}\n");
 
     assertPrettyPrint("while (1) alert();",
         "while (1) {\n" +
@@ -795,17 +796,24 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
     // Do we put for bodies in blocks?
     assertPrettyPrint("for(;;) { alert();}",
-        "for (;;) {\n" +
-         "  alert();\n" +
-         "}\n");
+        "for (;;) {\n"
+        + "  alert();\n"
+        + "}\n");
     assertPrettyPrint("for(;;) {}",
-        "for (;;) {\n" +
-        "}\n");
-    assertPrettyPrint("for(;;) { alert(); alert(); }",
-        "for (;;) {\n" +
-        "  alert();\n" +
-        "  alert();\n" +
-        "}\n");
+        "for (;;) {\n"
+        + "}\n");
+    assertPrettyPrint(
+        "for(;;) { alert(); alert(); }",
+        "for (;;) {\n"
+        + "  alert();\n"
+        + "  alert();\n"
+        + "}\n");
+    assertPrettyPrint(
+        "for(var x=0;x<10;x++) { alert(); alert(); }",
+        "for (var x = 0; x < 10; x++) {\n"
+        + "  alert();\n"
+        + "  alert();\n"
+        + "}\n");
 
     // How about do loops?
     assertPrettyPrint("do { alert(); } while(true);",
@@ -823,10 +831,11 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
     // Don't move the label on a loop, because then break {label} and
     // continue {label} won't work.
-    assertPrettyPrint("myLabel: for(;;) continue myLabel;",
-        "myLabel: for (;;) {\n" +
-        "  continue myLabel;\n" +
-        "}\n");
+    assertPrettyPrint(
+        "myLabel: for(;;) continue myLabel;",
+        "myLabel: for (;;) {\n"
+        + "  continue myLabel;\n"
+        + "}\n");
 
     assertPrettyPrint("var a;", "var a;\n");
     assertPrettyPrint("i--", "i--;\n");
@@ -870,12 +879,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
     assertPrettyPrint(
         "if(true) f(); for(;;) g();",
-        "if (true) {\n" +
-        "  f();\n" +
-        "}\n" +
-        "for (;;) {\n" +
-        "  g();\n" +
-        "}\n");
+        "if (true) {\n"
+        + "  f();\n"
+        + "}\n"
+        + "for (;;) {\n"
+        + "  g();\n"
+        + "}\n");
   }
 
   public void testPrettyPrinter3() {

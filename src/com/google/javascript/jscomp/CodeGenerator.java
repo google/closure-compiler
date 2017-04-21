@@ -661,8 +661,14 @@ public class CodeGenerator {
           addExpr(first, 0, Context.IN_FOR_INIT_CLAUSE);
         }
         add(";");
+        if (!first.getNext().isEmpty()) {
+          cc.maybeInsertSpace();
+        }
         add(first.getNext());
         add(";");
+        if (!first.getNext().getNext().isEmpty()) {
+          cc.maybeInsertSpace();
+        }
         add(first.getNext().getNext());
         add(")");
         addNonEmptyStatement(last, getContextForNonEmptyExpression(context), false);
