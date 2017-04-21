@@ -541,16 +541,14 @@ public class NodeTraversal {
    * Compiler.reportChangeToEnclosingScope(Node n).
    */
   public static void traverseChangedFunctions(
-      AbstractCompiler compiler, FunctionCallback callback) {
-    final AbstractCompiler comp = compiler;
-    final FunctionCallback cb = callback;
-    final Node jsRoot = comp.getJsRoot();
-    NodeTraversal.traverseEs6(comp, jsRoot,
+      final AbstractCompiler compiler, final FunctionCallback callback) {
+    final Node jsRoot = compiler.getJsRoot();
+    NodeTraversal.traverseEs6(compiler, jsRoot,
         new AbstractPreOrderCallback() {
           @Override
-          public final boolean shouldTraverse(NodeTraversal t, Node n, Node p) {
-            if ((n.isScript() || n.isFunction()) && comp.hasScopeChanged(n)) {
-              cb.enterFunction(comp, n);
+          public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+            if (NodeUtil.isChangeScopeRoot(n) && compiler.hasScopeChanged(n)) {
+              callback.enterFunction(compiler, n);
             }
             return true;
           }
