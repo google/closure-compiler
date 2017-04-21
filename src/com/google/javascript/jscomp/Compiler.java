@@ -796,11 +796,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   private void compileInternal() {
-    parseAndPerformChecksInternal();
-    completeCompilationInternal();
-  }
-
-  private void parseAndPerformChecksInternal() {
     setProgress(0.0, null);
     CompilerOptionsPreprocessor.preprocess(options);
     read();
@@ -828,14 +823,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       if (hasErrors()) {
         return;
       }
-    }
-  }
 
-  private void completeCompilationInternal() {
-    if (!options.skipNonTranspilationPasses
-        && !options.checksOnly
-        && !options.shouldGenerateTypedExterns()) {
-      optimize();
+      if (!options.checksOnly && !options.shouldGenerateTypedExterns()) {
+        optimize();
+      }
     }
 
     if (options.recordFunctionInformation) {
