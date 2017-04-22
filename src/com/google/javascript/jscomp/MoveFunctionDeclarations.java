@@ -23,7 +23,6 @@ import com.google.common.collect.Multimaps;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -67,12 +66,17 @@ class MoveFunctionDeclarations implements Callback, CompilerPass {
     NodeTraversal.traverseEs6(compiler, root, this);
     for (Entry<JSModule, List<Node>> entry : Multimaps.asMap(functions).entrySet()) {
       Node addingRoot = compiler.getNodeForCodeInsertion(entry.getKey());
-      for (Node n : Lists.reverse(entry.getValue())) {
-        Node nameNode = n.getFirstChild();
-        String name = nameNode.getString();
-        nameNode.setString("");
-        addingRoot.addChildToFront(
-            IR.var(IR.name(name), n).useSourceInfoIfMissingFromForTree(n));
+      List<Node> fnNodes = Lists.reverse(entry.getValue());
+      if (!fnNodes.isEmpty()) {
+        for (Node n : fnNodes) {
+          Node nameNode = n.getFirstChild();
+          String name = nameNode.getString();
+          nameNode.setString("");
+          addingRoot.addChildToFront(
+              IR.var(IR.name(name), n).useSourceInfoIfMissingFromForTree(n));
+          compiler.reportChangeToEnclosingScope(nameNode);
+        }
+        compiler.reportChangeToEnclosingScope(addingRoot);
       }
     }
   }
