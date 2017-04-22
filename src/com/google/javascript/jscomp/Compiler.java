@@ -30,6 +30,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
+import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
+import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.WarningsGuard.DiagnosticGroupState;
 import com.google.javascript.jscomp.deps.JsFileParser;
@@ -808,7 +810,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return;
     }
 
-    if (!precheck()) {
+    if (options.getInstrumentForCoverageOnly()) {
+      instrumentForCoverage(options.instrumentBranchCoverage);
       return;
     }
 
@@ -841,6 +844,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (tracker != null) {
       tracker.outputTracerReport();
     }
+  }
+
+  private void instrumentForCoverage(boolean instrumentBranchCoverage) {
+    Tracer tracer = newTracer("instrumentationPass");
+    InstrumentOption instrumentOption = InstrumentOption.LINE_ONLY;
+    if (instrumentBranchCoverage) {
+      instrumentOption = InstrumentOption.BRANCH_ONLY;
+    }
+    process(new CoverageInstrumentationPass(this, CoverageReach.ALL, instrumentOption));
+    stopTracer(tracer, "instrumentationPass");
   }
 
   public void read() {
@@ -880,16 +893,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     Preconditions.checkNotNull(passes);
     Preconditions.checkState(this.passes == null, "setPassConfig was already called");
     this.passes = passes;
-  }
-
-  /**
-   * Carry out any special checks or procedures that need to be done before
-   * proceeding with rest of the compilation process.
-   *
-   * @return true, to continue with compilation
-   */
-  boolean precheck() {
-    return true;
   }
 
   public void whitespaceOnlyPasses() {
