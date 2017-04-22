@@ -22,16 +22,28 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * Unit tests for {#link {@link PeepholeReplaceKnownMethods}
  *
  */
-public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
+public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase {
 
   private boolean late = true;
   private boolean useTypes = true;
+
+  public PeepholeReplaceKnownMethodsTest() {
+    super(MINIMAL_EXTERNS + LINE_JOINER.join(
+        // NOTE: these are defined as variadic to avoid wrong-argument-count warnings in NTI,
+        // which enables testing that the pass does not touch calls with wrong argument count.
+        "/** @type {function(this: string, ...*): string} */ String.prototype.substring;",
+        "/** @type {function(this: string, ...*): string} */ String.prototype.substr;",
+        "/** @type {function(this: string, ...*): string} */ String.prototype.slice;",
+        "/** @type {function(this: string, ...*): string} */ String.prototype.charAt;",
+        "/** @type {function(this: Array, ...*): !Array} */ Array.prototype.slice;"));
+  }
 
   @Override
   public void setUp() throws Exception {
     super.setUp();
     late = true;
     useTypes = true;
+    this.mode = TypeInferenceMode.NEITHER;
   }
 
   @Override
@@ -326,7 +338,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   }
 
   public void testReplaceWithCharAt() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     foldStringTyped("a.substring(0, 1)", "a.charAt(0)");
     foldStringTyped("a.substring(-4, -3)", "a.charAt(-4)");
     foldSameStringTyped("a.substring(i, j + 1)");
@@ -339,6 +351,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSameStringTyped("a.substring(2, 1)");
     foldSameStringTyped("a.substring(3, 1)");
 
+    foldStringTyped("a.slice(4, 5)", "a.charAt(4)");
     foldStringTyped("var /** number */ i; a.slice(0, 1)", "var /** number */ i; a.charAt(0)");
     foldSameStringTyped("a.slice(i, j + 1)");
     foldSameStringTyped("a.slice(i, i + 1)");
@@ -362,13 +375,22 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
     foldSameStringTyped("a.substr(1, 2)");
     foldSameStringTyped("a.substr(1, 2, 3)");
 
-    foldSame("var /** ? */ a; a.substring(0, 1)");
+    this.mode = TypeInferenceMode.OTI_ONLY;
+    // TODO(sdh): NTI currently infers that a is a string, allowing the peephole pass
+    // to rewrite substring to charAt.  We need to figure out if this is desirable.
+    foldSame("function f(/** ? */ a) { a.substring(0, 1); }");
+    foldSame("function f(/** ? */ a) { a.substr(0, 1); }");
+    foldSame(LINE_JOINER.join(
+        "/** @constructor */ function A() {};",
+        "A.prototype.substring = function() {};",
+        "function f(/** ? */ a) { a.substring(0, 1); }"));
+    this.mode = TypeInferenceMode.BOTH;
+    foldSame("function f(/** ? */ a) { a.slice(0, 1); }");
 
     useTypes = false;
     foldSameStringTyped("a.substring(0, 1)");
     foldSameStringTyped("a.substr(0, 1)");
     foldSameStringTyped("''.substring(i, i + 1)");
-    disableTypeCheck();
   }
 
   private void foldSame(String js) {
@@ -384,6 +406,8 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   }
 
   private void foldStringTyped(String js, String expected) {
-    test("var /** string */ a;" + js, "var /** string */ a;" + expected);
+    test(
+        "function f(/** string */ a) {" + js + "}",
+        "function f(/** string */ a) {" + expected + "}");
   }
 }
