@@ -54,7 +54,7 @@ public final class Es6InlineTypesNotYetParsedTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new JsdocToEs6TypedConverter(compiler);
   }
 

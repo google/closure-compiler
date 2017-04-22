@@ -40,7 +40,7 @@ public final class Es6RenameVariablesInParamListsTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new Es6RenameVariablesInParamLists(compiler);
   }
 

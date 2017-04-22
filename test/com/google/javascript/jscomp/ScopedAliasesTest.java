@@ -1176,7 +1176,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
   }
 
   @Override
-  public int getNumRepetitions() {
+  protected int getNumRepetitions() {
     return 1;
   }
 

@@ -24,7 +24,7 @@ import com.google.javascript.jscomp.Es6CompilerTestCase;
 
 public class CheckMissingSemicolonTest extends Es6CompilerTestCase {
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckMissingSemicolon(compiler);
   }
 

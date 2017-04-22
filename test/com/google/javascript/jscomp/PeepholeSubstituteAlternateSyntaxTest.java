@@ -49,7 +49,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
   }
 
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
     PeepholeOptimizationsPass peepholePass = new PeepholeOptimizationsPass(
         compiler, new PeepholeSubstituteAlternateSyntax(late));
     peepholePass.setRetraverseOnChange(false);

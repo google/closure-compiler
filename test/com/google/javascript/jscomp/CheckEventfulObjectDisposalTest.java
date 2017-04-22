@@ -64,7 +64,7 @@ public final class CheckEventfulObjectDisposalTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     CheckEventfulObjectDisposal compilerPass =
         new CheckEventfulObjectDisposal(compiler, policy);
 

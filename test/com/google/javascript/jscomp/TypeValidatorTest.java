@@ -53,7 +53,10 @@ public final class TypeValidatorTest extends CompilerTestCase {
     };
   }
 
-  @Override public int getNumRepetitions() { return 1; }
+  @Override
+  protected int getNumRepetitions() {
+    return 1;
+  }
 
   public void testBasicMismatch() throws Exception {
     testSame("/** @param {number} x */ function f(x) {} f('a');",

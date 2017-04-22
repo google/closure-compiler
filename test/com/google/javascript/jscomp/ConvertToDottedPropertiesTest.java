@@ -29,7 +29,7 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
   }
 
-  @Override public CompilerPass getProcessor(Compiler compiler) {
+  @Override protected CompilerPass getProcessor(Compiler compiler) {
     return new ConvertToDottedProperties(compiler);
   }
 

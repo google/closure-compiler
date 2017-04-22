@@ -30,7 +30,7 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
   private final String localNamePrefix = "unique_";
 
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
     if (!invert) {
       return new CompilerPass() {
         @Override

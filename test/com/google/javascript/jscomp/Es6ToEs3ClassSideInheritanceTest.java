@@ -31,12 +31,12 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new Es6ToEs3ClassSideInheritance(compiler);
   }
 
   @Override
-  public int getNumRepetitions() {
+  protected int getNumRepetitions() {
     return 1;
   }
 

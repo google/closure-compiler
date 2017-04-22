@@ -58,7 +58,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
 
     return new CompilerPass() {
       @Override

@@ -31,12 +31,12 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   @Override
-  public int getNumRepetitions() {
+  protected int getNumRepetitions() {
     return 1;
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new AggressiveInlineAliases(compiler);
   }
 

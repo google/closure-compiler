@@ -35,7 +35,7 @@ public final class PeepholeReplaceKnownMethodsTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
     return new PeepholeOptimizationsPass(compiler, new PeepholeReplaceKnownMethods(late, useTypes));
   }
 

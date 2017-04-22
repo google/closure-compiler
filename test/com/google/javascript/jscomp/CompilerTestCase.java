@@ -24,6 +24,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
@@ -413,6 +414,7 @@ public abstract class CompilerTestCase extends TestCase {
     return options;
   }
 
+  @ForOverride
   protected CodingConvention getCodingConvention() {
     return new GoogleCodingConvention();
   }
@@ -429,6 +431,7 @@ public abstract class CompilerTestCase extends TestCase {
    * Returns the number of times the pass should be run before results are
    * verified.
    */
+  @ForOverride
   protected int getNumRepetitions() {
     // Since most compiler passes should be idempotent, we run each pass twice
     // by default.

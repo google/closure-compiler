@@ -39,7 +39,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       AggressiveInlineAliases aggressiveInlineAliases = new AggressiveInlineAliases(compiler);
       CollapseProperties collapseProperties = new CollapseProperties(compiler);
@@ -57,7 +57,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
     enableNormalize();
   }
 
-  @Override public int getNumRepetitions() {
+  @Override protected int getNumRepetitions() {
     return 1;
   }
 

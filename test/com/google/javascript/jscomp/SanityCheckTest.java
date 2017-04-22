@@ -42,7 +42,7 @@ public final class SanityCheckTest extends CompilerTestCase {
     return 1;
   }
 
-  @Override public CompilerPass getProcessor(final Compiler compiler) {
+  @Override protected CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       @Override public void process(Node externs, Node root) {
         otherPass.process(externs, root);

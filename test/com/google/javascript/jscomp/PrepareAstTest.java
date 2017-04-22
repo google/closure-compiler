@@ -26,7 +26,7 @@ import com.google.javascript.rhino.Node;
  */
 public final class PrepareAstTest extends CompilerTestCase {
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return null; // unused
   }
 

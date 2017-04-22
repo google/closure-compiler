@@ -27,7 +27,7 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
 
   private boolean propertyRenamingEnabled = true;
 
-  @Override public CompilerPass getProcessor(final Compiler compiler) {
+  @Override protected CompilerPass getProcessor(final Compiler compiler) {
     return new ClosureOptimizePrimitives(compiler, propertyRenamingEnabled);
   }
 

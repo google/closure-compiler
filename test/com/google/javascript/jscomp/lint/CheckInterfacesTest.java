@@ -28,7 +28,7 @@ import com.google.javascript.jscomp.DiagnosticGroups;
  */
 public final class CheckInterfacesTest extends CompilerTestCase {
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckInterfaces(compiler);
   }
 

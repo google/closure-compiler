@@ -22,7 +22,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  */
 public final class HoistVarsOutOfBlocksTest extends CompilerTestCase {
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
     return new HoistVarsOutOfBlocks(compiler);
   }
 

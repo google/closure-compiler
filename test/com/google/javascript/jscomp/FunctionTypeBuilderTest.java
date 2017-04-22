@@ -36,7 +36,7 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     // By turning on type checking, the FunctionTypeBuilder will be invoked.
     return new CompilerPass() {
           @Override
@@ -45,7 +45,7 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
   }
 
   @Override
-  public int getNumRepetitions() {
+  protected int getNumRepetitions() {
     return 1;
   }
 

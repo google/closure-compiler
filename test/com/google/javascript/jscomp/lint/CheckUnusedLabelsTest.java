@@ -30,7 +30,7 @@ import com.google.javascript.jscomp.Es6CompilerTestCase;
  */
 public final class CheckUnusedLabelsTest extends Es6CompilerTestCase {
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckUnusedLabels(compiler);
   }
 

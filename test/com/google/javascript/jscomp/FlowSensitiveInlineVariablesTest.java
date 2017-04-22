@@ -36,7 +36,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
   }
 
   @Override
-  public int getNumRepetitions() {
+  protected int getNumRepetitions() {
     // Test repeatedly inline.
     return 3;
   }

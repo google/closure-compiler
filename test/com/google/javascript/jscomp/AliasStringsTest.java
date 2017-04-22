@@ -36,7 +36,7 @@ public final class AliasStringsTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     AliasStrings pass =
         new AliasStrings(compiler, compiler.getModuleGraph(), strings, "(?i)secret", false);
     if (hashReduction) {

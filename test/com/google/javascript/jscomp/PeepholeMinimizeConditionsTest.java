@@ -39,7 +39,7 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
   }
 
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
     PeepholeOptimizationsPass peepholePass = new PeepholeOptimizationsPass(
         compiler, new PeepholeMinimizeConditions(late, useTypes));
     peepholePass.setRetraverseOnChange(false);

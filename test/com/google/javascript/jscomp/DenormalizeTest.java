@@ -25,7 +25,7 @@ import com.google.javascript.rhino.Node;
  */
 public final class DenormalizeTest extends CompilerTestCase {
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
     return new NormalizeAndDenormalizePass(compiler);
   }
 

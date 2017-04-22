@@ -35,7 +35,7 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
   private ImmutableList<AbstractPeepholeOptimization> currentPeepholePasses;
 
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
     return new PeepholeOptimizationsPass(
         compiler, currentPeepholePasses.toArray(new AbstractPeepholeOptimization[0]));
   }

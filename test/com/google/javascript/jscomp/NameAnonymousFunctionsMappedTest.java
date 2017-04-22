@@ -46,7 +46,7 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return pass = new NameAnonymousFunctionsMapped(compiler, previous);
   }
 

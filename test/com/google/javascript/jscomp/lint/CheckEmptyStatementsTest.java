@@ -27,7 +27,7 @@ import com.google.javascript.jscomp.DiagnosticGroups;
  */
 public class CheckEmptyStatementsTest extends CompilerTestCase {
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckEmptyStatements(compiler);
   }
 

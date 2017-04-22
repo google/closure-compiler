@@ -67,7 +67,7 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
   };
 
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {

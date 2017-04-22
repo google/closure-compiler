@@ -57,7 +57,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckJSDocStyle(compiler);
   }
 

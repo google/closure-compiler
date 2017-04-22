@@ -42,7 +42,7 @@ public final class Es6RewriteBlockScopedDeclarationTest extends CompilerTestCase
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new Es6RewriteBlockScopedDeclaration(compiler);
   }
 

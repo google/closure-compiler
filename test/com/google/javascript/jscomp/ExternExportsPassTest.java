@@ -39,7 +39,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new ExternExportsPass(compiler);
   }
 

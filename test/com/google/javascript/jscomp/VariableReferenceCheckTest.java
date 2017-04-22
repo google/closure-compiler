@@ -49,7 +49,7 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     // Treats bad reads as errors, and reports bad write warnings.
     return new VariableReferenceCheck(compiler);
   }

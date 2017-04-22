@@ -73,7 +73,7 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
     return options;
   }
 
-  @Override public CompilerPass getProcessor(final Compiler compiler) {
+  @Override protected CompilerPass getProcessor(final Compiler compiler) {
     if ((additionalCode == null) && (additionalEndCode == null)) {
       return new ProcessClosurePrimitives(
           compiler, null, CheckLevel.ERROR, preserveGoogProvidesAndRequires);
@@ -129,7 +129,7 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
     }
   }
 
-  @Override public int getNumRepetitions() {
+  @Override protected int getNumRepetitions() {
     return 1;
   }
 

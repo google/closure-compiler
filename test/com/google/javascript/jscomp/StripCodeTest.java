@@ -66,7 +66,7 @@ public final class StripCodeTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return createLoggerInstance(compiler);
   }
 

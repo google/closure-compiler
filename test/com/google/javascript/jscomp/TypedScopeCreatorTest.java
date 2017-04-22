@@ -52,7 +52,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   private TypedScope lastLocalScope;
 
   @Override
-  public int getNumRepetitions() {
+  protected int getNumRepetitions() {
     return 1;
   }
 
@@ -69,7 +69,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   };
 
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
     registry = compiler.getTypeRegistry();
     return new CompilerPass() {
       @Override

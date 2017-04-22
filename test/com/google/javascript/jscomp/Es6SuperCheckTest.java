@@ -29,7 +29,7 @@ public final class Es6SuperCheckTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new Es6SuperCheck(compiler);
   }
 

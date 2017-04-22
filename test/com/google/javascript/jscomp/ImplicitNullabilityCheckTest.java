@@ -26,7 +26,7 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new ImplicitNullabilityCheck(compiler);
   }
 

@@ -39,7 +39,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
     return new CollapseProperties(compiler);
   }
 
@@ -48,7 +48,8 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     enableNormalize();
   }
 
-  @Override public int getNumRepetitions() {
+  @Override
+  protected int getNumRepetitions() {
     return 1;
   }
 

@@ -38,7 +38,7 @@ public final class NormalizeTest extends Es6CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
     return new Normalize(compiler, false);
   }
 
@@ -787,7 +787,7 @@ public final class NormalizeTest extends Es6CompilerTestCase {
     }
 
     @Override
-    public CompilerPass getProcessor(Compiler compiler) {
+    protected CompilerPass getProcessor(Compiler compiler) {
       return new CollapseProperties(compiler);
     }
   }

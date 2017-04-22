@@ -49,7 +49,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
     return new RemoveSuperMethodsPass(compiler);
   }
 

@@ -27,7 +27,7 @@ public final class SubstituteEs6SyntaxTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
     return new SubstituteEs6Syntax(compiler);
   }
 

@@ -84,7 +84,6 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(
         DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
-    options.setCodingConvention(getCodingConvention());
     return options;
   }
 
@@ -96,7 +95,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(final Compiler compiler) {
+  protected CompilerPass getProcessor(final Compiler compiler) {
     ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
     try {
       TextFormat.merge(configuration, builder);
@@ -107,7 +106,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   }
 
   @Override
-  public int getNumRepetitions() {
+  protected int getNumRepetitions() {
     // This compiler pass is not idempotent and should only be run over a
     // parse tree once.
     return 1;

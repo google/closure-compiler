@@ -29,7 +29,7 @@ public final class NameAnonymousFunctionsTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new NameAnonymousFunctions(compiler);
   }
 

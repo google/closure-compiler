@@ -39,7 +39,7 @@ public final class Es6InlineTypesTest extends CompilerTestCase {
   }
 
   @Override
-  public CompilerPass getProcessor(Compiler compiler) {
+  protected CompilerPass getProcessor(Compiler compiler) {
     return new JsdocToEs6TypedConverter(compiler);
   }
 
