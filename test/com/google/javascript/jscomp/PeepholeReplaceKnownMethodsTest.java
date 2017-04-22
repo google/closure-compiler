@@ -258,14 +258,16 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
     foldSame("var x = [x,y].join();");
     foldSame("var x = [x,y,z].join();");
 
-    foldSame("shape['matrix'] = [\n" +
-            "    Number(headingCos2).toFixed(4),\n" +
-            "    Number(-headingSin2).toFixed(4),\n" +
-            "    Number(headingSin2 * yScale).toFixed(4),\n" +
-            "    Number(headingCos2 * yScale).toFixed(4),\n" +
-            "    0,\n" +
-            "    0\n" +
-            "  ].join()");
+    foldSame(
+        LINE_JOINER.join(
+            "shape['matrix'] = [",
+            "    Number(headingCos2).toFixed(4),",
+            "    Number(-headingSin2).toFixed(4),",
+            "    Number(headingSin2 * yScale).toFixed(4),",
+            "    Number(headingCos2 * yScale).toFixed(4),",
+            "    0,",
+            "    0",
+            "  ].join()"));
   }
 
   public void testToUpper() {
