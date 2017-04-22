@@ -16,19 +16,25 @@
 
 package com.google.javascript.jscomp.parsing.parser.util;
 
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 
 /**
  * A conduit for reporting errors and warnings to the user.
  */
 public abstract class ErrorReporter {
-  public final void reportError(SourcePosition location, String format, Object... arguments) {
+  @FormatMethod
+  public final void reportError(
+      SourcePosition location, @FormatString String format, Object... arguments) {
     hadError = true;
     String message = SimpleFormat.format(format, arguments);
     reportError(location, message);
   }
 
-  public final void reportWarning(SourcePosition location, String format, Object... arguments) {
+  @FormatMethod
+  public final void reportWarning(
+      SourcePosition location, @FormatString String format, Object... arguments) {
     String message = SimpleFormat.format(format, arguments);
     reportWarning(location, message);
   }

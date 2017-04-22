@@ -20,6 +20,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.trees.AmbientDeclarationTree;
 import com.google.javascript.jscomp.parsing.parser.trees.ArgumentListTree;
@@ -3659,7 +3661,7 @@ public class Parser {
         IdentifierToken idToken = (IdentifierToken) name;
         if (Keywords.isKeyword(idToken.value)
             && !Keywords.isTypeScriptSpecificKeyword(idToken.value)) {
-          reportError("cannot use keyword '" + name + "' here.");
+          reportError("cannot use keyword '%s' here.", name);
         }
         if (peek(TokenType.EQUAL)) {
           IdentifierExpressionTree idTree = new IdentifierExpressionTree(
@@ -4082,7 +4084,8 @@ public class Parser {
    * @param message The message to report in String.format style.
    * @param arguments The arguments to fill in the message format.
    */
-  private void reportError(Token token, String message, Object... arguments) {
+  @FormatMethod
+  private void reportError(Token token, @FormatString String message, Object... arguments) {
     if (token == null) {
       reportError(message, arguments);
     } else {
@@ -4097,7 +4100,8 @@ public class Parser {
    * @param message The message to report in String.format style.
    * @param arguments The arguments to fill in the message format.
    */
-  private void reportError(ParseTree parseTree, String message, Object... arguments) {
+  @FormatMethod
+  private void reportError(ParseTree parseTree, @FormatString String message, Object... arguments) {
     if (parseTree == null) {
       reportError(message, arguments);
     } else {
@@ -4110,7 +4114,8 @@ public class Parser {
    * @param message The message to report in String.format style.
    * @param arguments The arguments to fill in the message format.
    */
-  private void reportError(String message, Object... arguments) {
+  @FormatMethod
+  private void reportError(@FormatString String message, Object... arguments) {
     errorReporter.reportError(scanner.getPosition(), message, arguments);
   }
 }

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
+import com.google.errorprone.annotations.FormatMethod;
+import com.google.errorprone.annotations.FormatString;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.parsing.parser.util.ErrorReporter;
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
@@ -346,9 +348,10 @@ public class Scanner {
   }
 
   private void reportHtmlCommentWarning() {
-    reportWarning("In some cases, '<!--' and '-->' are treated as a '//' " +
-                  "for legacy reasons. Removing this from your code is " +
-                  "safe for all browsers currently in use.");
+    reportWarning(
+        "In some cases, '<!--' and '-->' are treated as a '//' "
+            + "for legacy reasons. Removing this from your code is "
+            + "safe for all browsers currently in use.");
   }
 
   private void skipSingleLineComment() {
@@ -679,7 +682,7 @@ public class Scanner {
       }
       // Update length of current Unicode escape.
       if (ch == '\\' || unicodeEscapeLen > 0) {
-        unicodeEscapeLen ++;
+        unicodeEscapeLen++;
       }
       // Enter Unicode point escape.
       if (ch == '{') {
@@ -763,9 +766,8 @@ public class Scanner {
         if (!isIdentifierPart(ch)) {
           return null;
         }
-        value = value.substring(0, escapeStart) + ch +
-            value.substring(escapeEnd);
-      } catch (NumberFormatException|StringIndexOutOfBoundsException e) {
+        value = value.substring(0, escapeStart) + ch + value.substring(escapeEnd);
+      } catch (NumberFormatException | StringIndexOutOfBoundsException e) {
         return null;
       }
     }
@@ -925,17 +927,13 @@ public class Scanner {
           return skipHexDigit() && skipHexDigit() && skipHexDigit() && skipHexDigit();
         }
       default:
-        if (next == '%') {
-          // Need to special-case this because the warning string is treated as a format string.
-          reportWarning("Unnecessary escape: '\\%%' is equivalent to just '%%'");
-        } else if (next == '/') {
+        if (next == '/') {
           // Don't warn for '\/' (for now) since it's common in "<\/script>"
         } else if (next == '$') {
           // Don't warn for '\$' in template literal.
           // TODO(tbreisacher): We should still warn for '\$' in a regular string literal.
         } else {
-          reportWarning(
-              "Unnecessary escape: '\\" + next + "' is equivalent to just '" + next + "'");
+          reportWarning("Unnecessary escape: '\\%s' is equivalent to just '%s'", next, next);
         }
         return true;
     }
@@ -1074,15 +1072,19 @@ public class Scanner {
     return !isValidIndex(index + offset) ? '\0' : source.contents.charAt(index + offset);
   }
 
-  private void reportError(String format, Object... arguments) {
+  @FormatMethod
+  private void reportError(@FormatString String format, Object... arguments) {
     reportError(getPosition(), format, arguments);
   }
 
-  private void reportError(SourcePosition position, String format, Object... arguments) {
+  @FormatMethod
+  private void reportError(
+      SourcePosition position, @FormatString String format, Object... arguments) {
     errorReporter.reportError(position, format, arguments);
   }
 
-  private void reportWarning(String format, Object... arguments) {
+  @FormatMethod
+  private void reportWarning(@FormatString String format, Object... arguments) {
     errorReporter.reportWarning(getPosition(), format, arguments);
   }
 
