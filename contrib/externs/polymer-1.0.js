@@ -646,6 +646,14 @@ PolymerElement.prototype.updateStyles = function(properties) {};
 PolymerElement.prototype.customStyle;
 
 /**
+ * Convenience method for creating an element and configuring it.
+ * @param {string} tagName HTML tag name
+ * @param {IObject<string, *>=} properties Object of properties to configure on the instance
+ * @return {!Element}
+ */
+PolymerElement.prototype.create = function(tagName, properties) {};
+
+/**
  * Returns the computed style value for the given property.
  * @param {string} property
  * @return {string} the computed value
