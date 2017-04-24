@@ -36,14 +36,14 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
       DiagnosticType.error("JSC_JSON_UNEXPECTED_TOKEN", "Unexpected JSON token");
 
   private final Map<String, String> packageJsonMainEntries;
-  private final Compiler compiler;
+  private final AbstractCompiler compiler;
 
   /**
    * Creates a new RewriteJsonToModule instance which can be used to rewrite JSON files to modules.
    *
    * @param compiler The compiler
    */
-  public RewriteJsonToModule(Compiler compiler) {
+  public RewriteJsonToModule(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.packageJsonMainEntries = new HashMap<>();
   }
@@ -103,7 +103,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
       // We wrapped the expression in parens so our first-line columns are off by one.
       // We need to correct for this.
       n.setCharno(n.getCharno() - 1);
-      compiler.reportCodeChange();
+      t.reportCodeChange();
     }
   }
 
@@ -142,6 +142,6 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
       }
     }
 
-    compiler.reportCodeChange();
+    t.reportCodeChange();
   }
 }

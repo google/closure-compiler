@@ -2444,6 +2444,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return phaseOptimizer.hasScopeChanged(n);
   }
 
+  /**
+   * @deprecated
+   * Use #reportChangeToEnclosingScope or NodeTraversal#reportCodeChange instead
+   */
+  @Deprecated
   @Override
   public void reportCodeChange() {
     // TODO(johnlenz): if this is called with a null scope we need to invalidate everything
@@ -3064,7 +3069,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     lastInjectedLibrary = lastChild;
     injectedLibraries.put(resourceName, lastChild);
 
-    reportCodeChange();
+    reportChangeToEnclosingScope(parent);
     return lastChild;
   }
 

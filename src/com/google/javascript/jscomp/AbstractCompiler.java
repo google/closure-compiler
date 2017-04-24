@@ -135,7 +135,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    *
    * Passes should call reportCodeChange when they alter the JS tree. This is
    * verified by CompilerTestCase. This allows us to optimize to a fixed point.
+   *
+   * @deprecated
+   * Use #reportChangeToEnclosingScope or NodeTraversal#reportCodeChange instead
    */
+  @Deprecated
   public abstract void reportCodeChange();
 
   /**

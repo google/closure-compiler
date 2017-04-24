@@ -122,7 +122,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
 
       finder.initializeModule();
-      compiler.reportCodeChange();
     }
 
     NodeTraversal.traverseEs6(
@@ -225,7 +224,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
     Node block = mutator.unwrapIifeInModule(iifeLabel, fnc, call);
     root.removeChildren();
     root.addChildrenToFront(block.removeChildren());
-    compiler.reportCodeChange();
+    compiler.reportChangeToEnclosingScope(root);
 
     return true;
   }
@@ -441,7 +440,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       call.putBooleanProp(Node.FREE_CALL, true);
       call.addChildToFront(callback);
 
-      compiler.reportCodeChange();
+      t.reportCodeChange();
     }
 
     void reportModuleErrors() {
@@ -512,6 +511,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         initModule.useSourceInfoIfMissingFromForTree(this.script);
 
         this.script.addChildToFront(initModule);
+        compiler.reportChangeToEnclosingScope(this.script);
       }
     }
 
@@ -551,9 +551,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
                     IR.call(
                         IR.getprop(IR.name("goog"), IR.string("provide")), IR.string(moduleName)))
                 .useSourceInfoIfMissingFromForTree(this.script));
-        compiler.reportCodeChange();
+        compiler.reportChangeToEnclosingScope(this.script);
       } else if (imports.size() > 0) {
-        compiler.reportCodeChange();
+        compiler.reportChangeToEnclosingScope(this.script);
       }
     }
 
@@ -582,11 +582,12 @@ public final class ProcessCommonJSModules implements CompilerPass {
     /** Remove a Universal Module Definition and leave just the commonjs export statement */
     void replaceUmdPatterns() {
       for (UmdPattern umdPattern : umdPatterns) {
-        Node p = umdPattern.ifRoot.getParent();
+        Node parent = umdPattern.ifRoot.getParent();
         Node newNode = umdPattern.activeBranch;
 
         if (newNode == null) {
-          p.removeChild(umdPattern.ifRoot);
+          parent.removeChild(umdPattern.ifRoot);
+          compiler.reportChangeToEnclosingScope(parent);
           return;
         }
 
@@ -598,12 +599,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
         } else {
           umdPattern.ifRoot.detachChildren();
         }
-        p.replaceChild(umdPattern.ifRoot, newNode);
-      }
-
-
-      if (!umdPatterns.isEmpty()) {
-        compiler.reportCodeChange();
+        parent.replaceChild(umdPattern.ifRoot, newNode);
+        compiler.reportChangeToEnclosingScope(parent);
       }
     }
   }
@@ -645,7 +642,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           for (Node clazz : rewrittenClassExpressions) {
             clazz.replaceChild(
                 clazz.getFirstChild(), IR.empty().useSourceInfoFrom(clazz.getFirstChild()));
-            compiler.reportCodeChange();
+            t.reportCodeChange();
           }
 
           CompilerInput ci = compiler.getInput(n.getInputId());
@@ -763,7 +760,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       Node moduleRef = IR.name(moduleName).srcref(require);
       parent.replaceChild(require, moduleRef);
 
-      compiler.reportCodeChange();
+      t.reportCodeChange();
     }
 
     /**
@@ -817,7 +814,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           && root.getParent().getParent().isExprResult()
           && rValueVar != null) {
         root.getParent().getParent().detachFromParent();
-        compiler.reportCodeChange();
+        t.reportCodeChange();
         return;
       }
 
@@ -837,7 +834,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         // Other references to "module.exports" are just replaced with the module name.
         export.replaceWith(updatedExport);
       }
-      compiler.reportCodeChange();
+      t.reportCodeChange();
     }
 
     /**
@@ -1103,7 +1100,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           }
       }
 
-      compiler.reportCodeChange();
+      t.reportCodeChange();
     }
 
     /**

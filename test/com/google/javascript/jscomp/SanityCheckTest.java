@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.rhino.Node;
@@ -54,9 +53,11 @@ public final class SanityCheckTest extends CompilerTestCase {
   public void testUnnormalizeNodeTypes() throws Exception {
     otherPass = new CompilerPass() {
       @Override public void process(Node externs, Node root) {
-        getLastCompiler().reportCodeChange();
+        AbstractCompiler compiler = getLastCompiler();
+        Node script = root.getFirstChild();
         root.getFirstChild().addChildToBack(
               new Node(Token.IF, new Node(Token.TRUE), new Node(Token.EMPTY)));
+        compiler.reportChangeToEnclosingScope(script);
       }
     };
 
@@ -86,11 +87,13 @@ public final class SanityCheckTest extends CompilerTestCase {
   public void testConstantAnnotationMismatch() throws Exception {
     otherPass = new CompilerPass() {
       @Override public void process(Node externs, Node root) {
-        getLastCompiler().reportCodeChange();
+        AbstractCompiler compiler = getLastCompiler();
+        Node script = root.getFirstChild();
         Node name = Node.newString(Token.NAME, "x");
         name.putBooleanProp(Node.IS_CONSTANT_NAME, true);
-        root.getFirstChild().addChildToBack(new Node(Token.EXPR_RESULT, name));
-        getLastCompiler().setLifeCycleStage(LifeCycleStage.NORMALIZED);
+        script.addChildToBack(new Node(Token.EXPR_RESULT, name));
+        compiler.reportChangeToEnclosingScope(script);
+        compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
       }
     };
 

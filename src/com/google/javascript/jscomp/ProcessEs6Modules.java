@@ -229,7 +229,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
     }
 
     parent.removeChild(importDecl);
-    compiler.reportCodeChange();
+    t.reportCodeChange();
   }
 
   private void visitExport(NodeTraversal t, Node export, Node parent) {
@@ -347,7 +347,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
         }
         parent.replaceChild(export, declaration.detach());
       }
-      compiler.reportCodeChange();
+      t.reportCodeChange();
     }
   }
 
@@ -428,7 +428,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
     script.setJSDocInfo(jsDocInfo.build());
 
     exportMap.clear();
-    compiler.reportCodeChange();
+    t.reportCodeChange();
   }
 
   private void rewriteRequires(Node script) {
@@ -603,7 +603,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
            child = child.getNext()) {
         fixTypeNode(t, child);
       }
-      compiler.reportCodeChange();
+      t.reportCodeChange();
     }
   }
 

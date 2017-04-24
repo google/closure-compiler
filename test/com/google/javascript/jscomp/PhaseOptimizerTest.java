@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.PhaseOptimizer.Loop;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ public final class PhaseOptimizerTest extends TestCase {
   private final List<String> passesRun = new ArrayList<>();
   private Node dummyExternsRoot;
   private Node dummyRoot;
+  Node dummyScript;
   private PhaseOptimizer optimizer;
   private Compiler compiler;
   private PerformanceTracker tracker;
@@ -44,7 +46,8 @@ public final class PhaseOptimizerTest extends TestCase {
   public void setUp() {
     passesRun.clear();
     dummyExternsRoot = new Node(Token.ROOT);
-    dummyRoot = new Node(Token.ROOT);
+    dummyScript = IR.script();
+    dummyRoot = IR.root(dummyScript);
     compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
     tracker = new PerformanceTracker(dummyExternsRoot, dummyRoot, TracerMode.TIMING_ONLY, null);
@@ -214,13 +217,14 @@ public final class PhaseOptimizerTest extends TestCase {
   }
 
   private CompilerPass createPass(final String name, int numChanges) {
+    final PhaseOptimizerTest self = this;
     final int[] numChangesClosure = new int[] {numChanges};
     return new CompilerPass() {
       @Override public void process(Node externs, Node root) {
         passesRun.add(name);
         if (numChangesClosure[0] > 0) {
-          compiler.reportCodeChange();
           numChangesClosure[0] = numChangesClosure[0] - 1;
+          compiler.reportChangeToEnclosingScope(self.dummyScript);
         }
       }
     };
