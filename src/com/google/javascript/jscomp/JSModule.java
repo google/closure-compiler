@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -240,13 +242,18 @@ public final class JSModule implements DependencyInfo, Serializable {
   }
 
   /**
-   * Removes any references to nodes of the AST.  This method is needed to
-   * allow the ASTs to be garbage collected if the modules are kept around.
+   * Removes any references to nodes of the AST and resets fields used by JSModuleGraph.
+   *
+   * <p>This method is needed by some tests to allow modules to be reused and their ASTs garbage
+   * collected.
+   * @deprecated Fix tests to avoid reusing modules.
    */
-  public void clearAsts() {
+  @Deprecated
+  void resetThisModuleSoItCanBeReused() {
     for (CompilerInput input : inputs) {
       input.clearAst();
     }
+    depth = -1;
   }
 
   /**
@@ -269,6 +276,7 @@ public final class JSModule implements DependencyInfo, Serializable {
    * @param dep the depth to set
    */
   public void setDepth(int dep) {
+    checkArgument(dep >= 0, "invalid depth: %s", dep);
     this.depth = dep;
   }
 

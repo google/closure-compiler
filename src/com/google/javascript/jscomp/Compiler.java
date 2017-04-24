@@ -126,8 +126,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // The JS source modules
   private List<JSModule> modules;
 
-  // The graph of the JS source modules. Must be null if there are less than
-  // 2 modules, because we use this as a signal for which passes to run.
   private JSModuleGraph moduleGraph;
 
   // The module loader for resolving paths into module URIs.
@@ -536,18 +534,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // Generate the module graph, and report any errors in the module
     // specification as errors.
     this.modules = modules;
-    if (modules.size() > 1) {
-      try {
-        this.moduleGraph = new JSModuleGraph(modules);
-      } catch (JSModuleGraph.ModuleDependenceException e) {
-        // problems with the module format.  Report as an error.  The
-        // message gives all details.
-        report(JSError.make(MODULE_DEPENDENCY_ERROR,
-                e.getModule().getName(), e.getDependentModule().getName()));
-        return;
-      }
-    } else {
-      this.moduleGraph = null;
+    try {
+      this.moduleGraph = new JSModuleGraph(modules);
+    } catch (JSModuleGraph.ModuleDependenceException e) {
+      // problems with the module format.  Report as an error.  The
+      // message gives all details.
+      report(JSError.make(MODULE_DEPENDENCY_ERROR,
+          e.getModule().getName(), e.getDependentModule().getName()));
+      return;
     }
 
     this.inputs = getAllInputsFromModules(modules);
@@ -557,6 +551,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     initInputsByIdMap();
 
     initAST();
+  }
+
+  /**
+   * Exists only for some tests that want to reuse JSModules.
+   * @deprecated Fix those tests.
+   */
+  @Deprecated
+  public void breakThisCompilerSoItsModulesCanBeReused() {
+    moduleGraph.breakThisGraphSoItsModulesCanBeReused();
+    moduleGraph = null;
   }
 
   /**
@@ -1342,9 +1346,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return true;
   }
 
+  /**
+   * The graph of the JS source modules.
+   *
+   * <p>Must return null if there are less than 2 modules,
+   * because we use this as a signal for which passes to run.
+   * TODO(bradfordcsmith): Just check for a single module instead of null.
+   */
   @Override
   JSModuleGraph getModuleGraph() {
-    return moduleGraph;
+    if (moduleGraph != null && modules.size() > 1) {
+      return moduleGraph;
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -1352,7 +1367,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * in the degenerate case when there's only one module.
    */
   JSModuleGraph getDegenerateModuleGraph() {
-    return moduleGraph == null ? new JSModuleGraph(modules) : moduleGraph;
+    return moduleGraph;
   }
 
   @Override

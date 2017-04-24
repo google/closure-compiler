@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -88,6 +90,7 @@ public final class JSModuleGraph {
     modulesByDepth = new ArrayList<>();
 
     for (JSModule module : modulesInDepOrder) {
+      checkState(module.getDepth() == -1, "Module already used in another graph: %s", module);
       int depth = 0;
       for (JSModule dep : module.getDependencies()) {
         int depDepth = dep.getDepth();
@@ -105,6 +108,17 @@ public final class JSModuleGraph {
         modulesByDepth.add(new ArrayList<JSModule>());
       }
       modulesByDepth.get(depth).add(module);
+    }
+  }
+
+  /**
+   * This only exists as a temprorary workaround.
+   * @deprecated Fix the tests that use this.
+   */
+  @Deprecated
+  public void breakThisGraphSoItsModulesCanBeReused() {
+    for (JSModule m : modules) {
+      m.resetThisModuleSoItCanBeReused();
     }
   }
 
