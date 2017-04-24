@@ -132,7 +132,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null, null);
+    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
     optimizer.addOneTimePass(
         makePassFactory("Es6RenameVariablesInParamLists",
             new Es6RenameVariablesInParamLists(compiler)));

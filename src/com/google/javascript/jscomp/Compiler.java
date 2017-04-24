@@ -919,30 +919,35 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  public void check() {
-    runCustomPasses(CustomPassExecutionTime.BEFORE_CHECKS);
-
-    // We are currently only interested in check-passes for progress reporting
-    // as it is used for IDEs, that's why the maximum progress is set to 1.0.
-    phaseOptimizer = new PhaseOptimizer(this, tracker,
-        new PhaseOptimizer.ProgressRange(getProgress(), 1.0));
+  private PhaseOptimizer createPhaseOptimizer() {
+    PhaseOptimizer phaseOptimizer = new PhaseOptimizer(this, tracker);
     if (options.devMode == DevMode.EVERY_PASS) {
       phaseOptimizer.setSanityCheck(sanityCheck);
     }
     if (options.getCheckDeterminism()) {
       phaseOptimizer.setPrintAstHashcodes(true);
     }
+    return phaseOptimizer;
+  }
+
+  public void check() {
+    runCustomPasses(CustomPassExecutionTime.BEFORE_CHECKS);
+
+    // We are currently only interested in check-passes for progress reporting
+    // as it is used for IDEs, that's why the maximum progress is set to 1.0.
+    phaseOptimizer = createPhaseOptimizer().withProgress(
+        new PhaseOptimizer.ProgressRange(getProgress(), 1.0));
     phaseOptimizer.consume(getPassConfig().getChecks());
     phaseOptimizer.process(externsRoot, jsRoot);
     if (hasErrors()) {
       return;
     }
 
-    if (options.getTweakProcessing().shouldStrip() ||
-        !options.stripTypes.isEmpty() ||
-        !options.stripNameSuffixes.isEmpty() ||
-        !options.stripTypePrefixes.isEmpty() ||
-        !options.stripNamePrefixes.isEmpty()) {
+    if (options.getTweakProcessing().shouldStrip()
+        || !options.stripTypes.isEmpty()
+        || !options.stripNameSuffixes.isEmpty()
+        || !options.stripTypePrefixes.isEmpty()
+        || !options.stripNamePrefixes.isEmpty()) {
       stripCode(options.stripTypes, options.stripNameSuffixes,
           options.stripTypePrefixes, options.stripNamePrefixes);
     }
@@ -2285,14 +2290,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return;
     }
 
-
-    phaseOptimizer = new PhaseOptimizer(this, tracker, null);
-    if (options.devMode == DevMode.EVERY_PASS) {
-      phaseOptimizer.setSanityCheck(sanityCheck);
-    }
-    if (options.getCheckDeterminism()) {
-      phaseOptimizer.setPrintAstHashcodes(true);
-    }
+    phaseOptimizer = createPhaseOptimizer();
     phaseOptimizer.consume(optimizations);
     phaseOptimizer.process(externsRoot, jsRoot);
     phaseOptimizer = null;

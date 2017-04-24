@@ -17838,7 +17838,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
       TranspilationPasses.addRewritePolyfillPass(passes);
-      PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null, null);
+      PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);
       phaseopt.consume(passes);
       phaseopt.process(externsNode, externAndJsRoot);
     }

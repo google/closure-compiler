@@ -47,7 +47,7 @@ class PhaseOptimizer implements CompilerPass {
 
   private double progress = 0.0;
   private double progressStep = 0.0;
-  private final ProgressRange progressRange;
+  private ProgressRange progressRange;
 
   // These fields are used during optimization loops.
   // They are declared here for two reasons:
@@ -115,16 +115,20 @@ class PhaseOptimizer implements CompilerPass {
    * @param range the progress range for the process function or null
    *        if progress should not be reported.
    */
-  PhaseOptimizer(AbstractCompiler comp, PerformanceTracker tracker, ProgressRange range) {
+  PhaseOptimizer(AbstractCompiler comp, PerformanceTracker tracker) {
     this.compiler = comp;
     this.jsRoot = comp.getJsRoot();
     this.tracker = tracker;
     this.passes = new ArrayList<>();
-    this.progressRange = range;
     this.inLoop = false;
     this.lastChange = START_TIME;
     this.useSizeHeuristicToStopOptimizationLoop =
         comp.getOptions().useSizeHeuristicToStopOptimizationLoop;
+  }
+
+  PhaseOptimizer withProgress(ProgressRange range) {
+    this.progressRange = range;
+    return this;
   }
 
   /**

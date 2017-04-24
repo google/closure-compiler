@@ -38,7 +38,7 @@ public final class MultiPassTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null, null);
+    PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);
     phaseopt.consume(passes);
     phaseopt.setSanityCheck(
         new PassFactory("sanityCheck", false) {

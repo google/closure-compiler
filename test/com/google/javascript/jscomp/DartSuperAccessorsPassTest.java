@@ -75,7 +75,7 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null, null);
+    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
     optimizer.addOneTimePass(
         makePassFactory("dartSuperAccessors", new DartSuperAccessorsPass(compiler)));
     return optimizer;

@@ -232,7 +232,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     passes.add(makePassFactory("GlobalTypeInfo", compiler.getSymbolTable()));
     passes.add(makePassFactory("NewTypeInference", new NewTypeInference(compiler)));
 
-    PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null, null);
+    PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);
     phaseopt.consume(passes);
     phaseopt.process(externsRoot, astRoot);
   }

@@ -48,7 +48,7 @@ public final class PhaseOptimizerTest extends TestCase {
     compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
     tracker = new PerformanceTracker(dummyExternsRoot, dummyRoot, TracerMode.TIMING_ONLY, null);
-    optimizer = new PhaseOptimizer(compiler, tracker, null);
+    optimizer = new PhaseOptimizer(compiler, tracker);
     compiler.setPhaseOptimizer(optimizer);
   }
 
@@ -169,7 +169,7 @@ public final class PhaseOptimizerTest extends TestCase {
       }
     };
     compiler.initCompilerOptionsIfTesting();
-    optimizer = new PhaseOptimizer(compiler, null,
+    optimizer = new PhaseOptimizer(compiler, null).withProgress(
         new PhaseOptimizer.ProgressRange(0, 100));
     addOneTimePass("x1");
     addOneTimePass("x2");
