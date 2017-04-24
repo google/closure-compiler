@@ -528,6 +528,7 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testIssue115() {
     args.add("--compilation_level=SIMPLE_OPTIMIZATIONS");
     args.add("--jscomp_off=es5Strict");
+    args.add("--strict_mode_input=false");
     args.add("--warning_level=VERBOSE");
     test("function f() { " +
          "  var arguments = Array.prototype.slice.call(arguments, 0);" +
@@ -1490,6 +1491,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testES3() {
     args.add("--language_in=ECMASCRIPT3");
+    args.add("--language_out=ECMASCRIPT3");
     useStringComparison = true;
     test(
         "var x = f.function",
@@ -1544,6 +1546,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testWithKeywordWithEs5ChecksOff() {
     args.add("--jscomp_off=es5Strict");
+    args.add("--strict_mode_input=false");
     testSame("var x = {}; with (x) {}");
   }
 
