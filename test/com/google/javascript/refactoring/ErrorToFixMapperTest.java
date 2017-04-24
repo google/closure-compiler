@@ -1217,7 +1217,6 @@ public class ErrorToFixMapperTest {
         LINE_JOINER.join(
             "goog.module('x');",
             "",
-            // TODO(tbreisacher): Remove the entire const statement instead?
             "const {} = goog.require('goog.util');"));
   }
 
@@ -1265,8 +1264,20 @@ public class ErrorToFixMapperTest {
         LINE_JOINER.join(
             "goog.module('x');",
             "",
-            // TODO(tbreisacher): Remove the entire const statement instead?
             "const {} = goog.require('goog.util');"));
+  }
+
+  @Test
+  public void testExtraRequire_destructuring_empty() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {} = goog.require('goog.util');"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            ""));
   }
 
   @Test

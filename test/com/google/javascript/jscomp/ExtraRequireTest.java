@@ -293,4 +293,13 @@ public final class ExtraRequireTest extends Es6CompilerTestCase {
             "};"),
         EXTRA_REQUIRE_WARNING);
   }
+
+  public void testGoogModuleWithEmptyDestructuringRequire() {
+    testErrorEs6(
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "var {} = goog.require('goog.asserts');"),
+        EXTRA_REQUIRE_WARNING);
+  }
 }

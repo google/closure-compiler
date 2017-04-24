@@ -435,12 +435,16 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
     if (parent.isName()) {
       visitRequire(parent.getString(), googRequireCall);
     } else if (parent.isDestructuringLhs() && parent.getFirstChild().isObjectPattern()) {
-      for (Node stringKey : parent.getFirstChild().children()) {
-        if (stringKey.hasChildren()) {
-          visitRequire(stringKey.getFirstChild().getString(), stringKey.getFirstChild());
-        } else {
-          visitRequire(stringKey.getString(), stringKey);
+      if (parent.getFirstChild().hasChildren()) {
+        for (Node stringKey : parent.getFirstChild().children()) {
+          if (stringKey.hasChildren()) {
+            visitRequire(stringKey.getFirstChild().getString(), stringKey.getFirstChild());
+          } else {
+            visitRequire(stringKey.getString(), stringKey);
+          }
         }
+      } else {
+        visitRequire(namespace, googRequireCall);
       }
     } else {
       visitRequire(namespace, googRequireCall);
