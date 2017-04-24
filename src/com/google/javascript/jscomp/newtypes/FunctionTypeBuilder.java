@@ -174,11 +174,9 @@ public final class FunctionTypeBuilder {
         && this.outerVars.isEmpty()) {
       return this.commonTypes.QMARK_FUNCTION;
     }
-    FunctionType result = FunctionType.normalized(
+    return FunctionType.normalized(
         this.commonTypes,
         requiredFormals, optionalFormals, restFormals, returnType,
         nominalType, receiverType, outerVars, typeParameters, loose, isAbstract);
-    result.checkValid();
-    return result;
   }
 }
