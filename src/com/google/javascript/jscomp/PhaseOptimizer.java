@@ -193,11 +193,8 @@ class PhaseOptimizer implements CompilerPass {
   }
 
   private void setSanityCheckState() {
-    // TODO(johnlenz): change this to always validate. See b/37164291
-    if (inLoop) {
-      lastAst = jsRoot.cloneTree();
-      mtoc = NodeUtil.mapMainToClone(jsRoot, lastAst);
-    }
+    lastAst = jsRoot.cloneTree();
+    mtoc = NodeUtil.mapMainToClone(jsRoot, lastAst);
   }
 
   /**
@@ -251,14 +248,7 @@ class PhaseOptimizer implements CompilerPass {
   private void maybeSanityCheck(String passName, Node externs, Node root) {
     if (sanityCheck != null) {
       sanityCheck.create(compiler).process(externs, root);
-      // The cross-module passes are loopable and ran together, but do not
-      // participate in the other optimization loops, and are not relevant to
-      // tracking changed scopes.
-      if (inLoop
-          && !currentPass.name.equals(Compiler.CROSS_MODULE_CODE_MOTION_NAME)
-          && !currentPass.name.equals(Compiler.CROSS_MODULE_METHOD_MOTION_NAME)) {
-        NodeUtil.verifyScopeChanges(passName, mtoc, jsRoot);
-      }
+      NodeUtil.verifyScopeChanges(passName, mtoc, jsRoot);
     }
   }
 
