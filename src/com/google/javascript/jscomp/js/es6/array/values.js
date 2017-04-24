@@ -33,4 +33,6 @@ $jscomp.polyfill('Array.prototype.values', function(orig) {
   };
 
   return polyfill;
+  // NOTE: 'es6' here is incorrect, since this method is not actually supported
+  // in current versions of Chrome and FF (due to web compatibility).
 }, 'es6', 'es3');
