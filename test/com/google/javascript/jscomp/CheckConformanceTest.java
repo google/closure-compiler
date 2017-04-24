@@ -653,6 +653,37 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testConformance("[1, 2, 3].push(4);\n", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
+  public void testBannedProperty_recordType() {
+    configuration = LINE_JOINER.join(
+        "requirement: {",
+        "  type: BANNED_PROPERTY",
+        "  value: 'Logger.prototype.config'",
+        "  error_message: 'Logger.config is not allowed'",
+        "  whitelist: 'SRC1'",
+        "}");
+
+    String declaration = "class Logger { config() {} }";
+
+    // Fine, because there is no explicit relationship between Logger & GoodRecord.
+    testConformance(declaration, LINE_JOINER.join(
+        "/** @record */",
+        "class GoodRecord {",
+        "  constructor() {",
+        "    /** @type {Function} */ this.config;",
+        "  }",
+        "}"));
+
+    // Bad, because there is a direct relationship.
+    testConformance("/** @implements {BadRecord} */ " + declaration, LINE_JOINER.join(
+        "/** @record */",
+        "class BadRecord {",
+        "  constructor() {",
+        "    /** @type {Function} */ this.config;",
+        "  }",
+        "}"),
+        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
+  }
+
   public void testBannedPropertyWrite() {
     configuration =
         "requirement: {\n" +

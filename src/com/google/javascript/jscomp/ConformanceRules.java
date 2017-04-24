@@ -525,7 +525,7 @@ public final class ConformanceRules {
             }
           } else if (foundType.isSubtypeOf(typeWithBannedProp)) {
             return ConformanceResult.VIOLATION;
-          } else if (typeWithBannedProp.isSubtypeOf(foundType)) {
+          } else if (typeWithBannedProp.isSubtypeWithoutStructuralTyping(foundType)) {
             if (matchesPrototype(typeWithBannedProp, foundType)) {
               return ConformanceResult.VIOLATION;
             } else if (reportLooseTypeViolations) {
