@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * A {@link Compiler} pass for moving code to a deeper module if possible.
+ * A compiler pass for moving code to a deeper module if possible.
  * - currently it only moves functions + variables
  *
  */

@@ -33,7 +33,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A {@link Compiler} pass for aliasing strings. String declarations
+ * A compiler pass for aliasing strings. String declarations
  * contribute to garbage collection, which becomes a problem in large
  * applications. Strings that should be aliased occur many times in the code,
  * or occur on codepaths that get executed frequently.
