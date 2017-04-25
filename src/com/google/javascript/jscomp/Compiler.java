@@ -214,7 +214,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private JSTypeRegistry typeRegistry;
   private volatile Config parserConfig = null;
-  private Config externsParserConfig = null;
+  private volatile Config externsParserConfig = null;
 
   private ReverseAbstractInterpreter abstractInterpreter;
   private TypeValidator typeValidator;
