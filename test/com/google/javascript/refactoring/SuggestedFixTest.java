@@ -793,7 +793,7 @@ public class SuggestedFixTest {
         .addGoogRequire(match, namespace)
         .build();
     CodeReplacement replacement = new CodeReplacement(
-        before.length(), 0, "goog.require('" + namespace + "');\n");
+        before.length(), 0, "goog.require('" + namespace + "');\n", namespace);
     assertReplacement(fix, replacement);
   }
 

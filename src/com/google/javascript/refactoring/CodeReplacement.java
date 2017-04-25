@@ -97,10 +97,11 @@ public final class CodeReplacement {
     CodeReplacement other = (CodeReplacement) o;
     return startPosition == other.startPosition
         && length == other.length
-        && newContent.equals(other.newContent);
+        && newContent.equals(other.newContent)
+        && sortKey.equals(other.sortKey);
   }
 
   @Override public int hashCode() {
-    return Objects.hash(startPosition, length, newContent);
+    return Objects.hash(startPosition, length, newContent, sortKey);
   }
 }

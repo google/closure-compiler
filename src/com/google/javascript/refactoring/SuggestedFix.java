@@ -679,7 +679,8 @@ public final class SuggestedFix {
           replacements.put(nodeToInsertAfter.getSourceFileName(), new CodeReplacement(
               startPosition,
               0,
-              generateCode(m.getMetadata().getCompiler(), googRequireNode)));
+              generateCode(m.getMetadata().getCompiler(), googRequireNode),
+              namespace));
           return this;
         } else {
           // The file has no goog.provide or goog.require nodes.
@@ -687,7 +688,7 @@ public final class SuggestedFix {
             nodeToInsertBefore = script.getFirstChild();
           } else {
             replacements.put(script.getSourceFileName(), new CodeReplacement(
-                0, 0, generateCode(m.getMetadata().getCompiler(), googRequireNode)));
+                0, 0, generateCode(m.getMetadata().getCompiler(), googRequireNode), namespace));
             return this;
           }
         }
