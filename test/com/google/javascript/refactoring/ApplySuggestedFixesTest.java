@@ -41,8 +41,9 @@ public class ApplySuggestedFixesTest {
 
   @Test
   public void testApplyCodeReplacements_overlapsAreErrors() throws Exception {
-    List<CodeReplacement> replacements =
-        ImmutableList.of(CodeReplacement.create(0, 10, ""), CodeReplacement.create(5, 3, ""));
+    List<CodeReplacement> replacements = ImmutableList.of(
+        new CodeReplacement(0, 10, ""),
+        new CodeReplacement(5, 3, ""));
     try {
       ApplySuggestedFixes.applyCodeReplacements(replacements, "");
       fail("Overlaps in Code replacements should be an error.");
@@ -51,47 +52,48 @@ public class ApplySuggestedFixesTest {
 
   @Test
   public void testApplyCodeReplacements_noOverlapsSucceed() throws Exception {
-    List<CodeReplacement> replacements =
-        ImmutableList.of(CodeReplacement.create(0, 3, ""), CodeReplacement.create(5, 3, ""));
+    List<CodeReplacement> replacements = ImmutableList.of(
+        new CodeReplacement(0, 3, ""),
+        new CodeReplacement(5, 3, ""));
     ApplySuggestedFixes.applyCodeReplacements(replacements, "abcdef");
   }
 
   @Test
   public void testApplyCodeReplacements() throws Exception {
-    List<CodeReplacement> replacements =
-        ImmutableList.of(CodeReplacement.create(0, 1, "z"), CodeReplacement.create(3, 2, "qq"));
+    List<CodeReplacement> replacements = ImmutableList.of(
+        new CodeReplacement(0, 1, "z"),
+        new CodeReplacement(3, 2, "qq"));
     String newCode = ApplySuggestedFixes.applyCodeReplacements(replacements, "abcdef");
     assertEquals("zbcqqf", newCode);
   }
 
   @Test
   public void testApplyCodeReplacements_insertion() throws Exception {
-    List<CodeReplacement> replacements = ImmutableList.of(CodeReplacement.create(0, 0, "z"));
+    List<CodeReplacement> replacements = ImmutableList.of(new CodeReplacement(0, 0, "z"));
     String newCode = ApplySuggestedFixes.applyCodeReplacements(replacements, "abcdef");
     assertEquals("zabcdef", newCode);
   }
 
   @Test
   public void testApplyCodeReplacements_deletion() throws Exception {
-    List<CodeReplacement> replacements = ImmutableList.of(CodeReplacement.create(0, 6, ""));
+    List<CodeReplacement> replacements = ImmutableList.of(new CodeReplacement(0, 6, ""));
     String newCode = ApplySuggestedFixes.applyCodeReplacements(replacements, "abcdef");
     assertThat(newCode).isEmpty();
   }
 
   @Test
   public void testApplyCodeReplacements_boundaryCases() throws Exception {
-    List<CodeReplacement> replacements = ImmutableList.of(CodeReplacement.create(5, 1, "z"));
+    List<CodeReplacement> replacements = ImmutableList.of(new CodeReplacement(5, 1, "z"));
     String newCode = ApplySuggestedFixes.applyCodeReplacements(replacements, "abcdef");
     assertEquals("abcdez", newCode);
   }
 
   @Test
   public void testApplyCodeReplacements_multipleReplacements() throws Exception {
-    List<CodeReplacement> replacements =
-        ImmutableList.of(
-            CodeReplacement.create(0, 2, "z"),
-            CodeReplacement.create(2, 1, "y"),
-            CodeReplacement.create(3, 3, "xwvu"));
+    List<CodeReplacement> replacements = ImmutableList.of(
+        new CodeReplacement(0, 2, "z"),
+        new CodeReplacement(2, 1, "y"),
+        new CodeReplacement(3, 3, "xwvu"));
     String newCode = ApplySuggestedFixes.applyCodeReplacements(replacements, "abcdef");
     assertEquals("zyxwvu", newCode);
   }
