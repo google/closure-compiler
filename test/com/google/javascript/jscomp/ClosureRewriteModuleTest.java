@@ -932,6 +932,28 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
                 "}")});
   }
 
+  public void testGoogModuleGet3() {
+    testEs6(
+        new String[] {
+            LINE_JOINER.join(
+                "goog.module('a.b.c');",
+                "exports = class {};"),
+            LINE_JOINER.join(
+                "goog.module('x.y.z');",
+                "",
+                "function f() {",
+                "  return new (goog.module.get('a.b.c'))();",
+                "}")},
+
+        new String[] {
+            "/** @const */ var module$exports$a$b$c = class {};",
+            LINE_JOINER.join(
+                "/** @const */ var module$exports$x$y$z = {};",
+                "function module$contents$x$y$z_f() {",
+                "  return new module$exports$a$b$c();",
+                "}")});
+  }
+
   public void testAliasedGoogModuleGet1() {
     test(
         new String[] {

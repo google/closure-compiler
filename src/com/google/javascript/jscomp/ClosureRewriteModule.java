@@ -816,8 +816,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
 
     String aliasName = null;
-    boolean isFillingAnAlias =
-        call.getParent().isAssign() && call.getParent().getFirstChild().isName();
+    Node maybeAssign = call.getParent();
+    boolean isFillingAnAlias = maybeAssign.isAssign() && maybeAssign.getFirstChild().isName()
+        && maybeAssign.getParent().isExprResult();
     if (isFillingAnAlias && currentScript.isModule) {
       aliasName = call.getParent().getFirstChild().getString();
 
@@ -839,6 +840,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         t.report(call, INVALID_GET_ALIAS);
         return;
       }
+
+      // Each goog.module.get() calling filling an alias will have the alias importing logic
+      // handed at the goog.forwardDeclare call, and the corresponding goog.module.get can simply
+      // be removed.
+      compiler.reportChangeToEnclosingScope(maybeAssign);
+      maybeAssign.getParent().detach();
     }
   }
 
@@ -1110,20 +1117,13 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     String legacyNamespace = legacyNamespaceNode.getString();
 
     compiler.reportChangeToEnclosingScope(call);
-    if (currentScript.isModule) {
-      // In a module each goog.module.get() will have a paired goog.forwardDeclare() and the module
-      // alias importing will be handled there so that the alias is available in the entire module
-      // scope.
-      NodeUtil.getEnclosingStatement(call).detach();
-    } else {
-      // In a non-module script goog.module.get() is used inside of a goog.scope() and it's
-      // imported alias need only be made available within that scope.
-      // Replace "goog.module.get('pkg.Foo');" with "module$exports$pkg$Foo;".
-      String exportedNamespace = rewriteState.getExportedNamespaceOrScript(legacyNamespace);
-      Node exportedNamespaceName = NodeUtil.newQName(compiler, exportedNamespace).srcrefTree(call);
-      exportedNamespaceName.putProp(Node.ORIGINALNAME_PROP, legacyNamespace);
-      call.replaceWith(exportedNamespaceName);
-    }
+    // Remaining calls to goog.module.get() are not alias updates,
+    // and should be replaced by a reference to the proper name.
+    // Replace "goog.module.get('pkg.Foo')" with either "pkg.Foo" or "module$exports$pkg$Foo".
+    String exportedNamespace = rewriteState.getExportedNamespaceOrScript(legacyNamespace);
+    Node exportedNamespaceName = NodeUtil.newQName(compiler, exportedNamespace).srcrefTree(call);
+    exportedNamespaceName.putProp(Node.ORIGINALNAME_PROP, legacyNamespace);
+    call.replaceWith(exportedNamespaceName);
   }
 
   private void recordExportsPropertyAssignment(NodeTraversal t, Node getpropNode) {
