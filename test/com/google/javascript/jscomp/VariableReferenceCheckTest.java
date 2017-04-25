@@ -597,7 +597,7 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
       "var x;",
       "function x() {}",
     };
-    String message = "Variable x first declared in input0";
+    String message = "Variable x declared more than once. First occurence: input0";
     test(js, null, VarCheck.VAR_MULTIPLY_DECLARED_ERROR, null, message);
   }
 
@@ -606,7 +606,7 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
       "function x() {}",
       "var x;",
     };
-    String message = "Variable x first declared in input0";
+    String message = "Variable x declared more than once. First occurence: input0";
     test(js, null, VarCheck.VAR_MULTIPLY_DECLARED_ERROR, null, message);
   }
 
