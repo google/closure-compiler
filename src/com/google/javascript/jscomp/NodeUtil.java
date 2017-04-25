@@ -4773,19 +4773,18 @@ public final class NodeUtil {
   }
 
   static void verifyNodeChange(final String passNameMsg, Node n, Node clone) {
+    if (n.isRoot() && n.getChangeTime() != 0) {
+      throw new IllegalStateException("Root nodes should never be marked as changed.");
+    }
     if (n.getChangeTime() > clone.getChangeTime()) {
       if (isEquivalentToExcludingFunctions(n, clone)) {
         throw new IllegalStateException(
-           passNameMsg
-           + "unchanged scope marked as changed: "
-            + n.toStringTree());
+            passNameMsg + "unchanged scope marked as changed: " + n.toStringTree());
       }
     } else {
       if (!isEquivalentToExcludingFunctions(n, clone)) {
         throw new IllegalStateException(
-            passNameMsg
-            + "change scope not marked as changed: "
-            + n.toStringTree());
+            passNameMsg + "change scope not marked as changed: " + n.toStringTree());
       }
     }
   }
