@@ -29,6 +29,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   @Override
   public void setUp() {
     setLanguage(ECMASCRIPT_NEXT, ECMASCRIPT_NEXT);
+    behavior = null;
   }
 
   @Override
@@ -92,6 +93,52 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
             "try {",
             "} catch (e) {",
             "  var y; y = e;",
+            "  g();" ,
+            "  y;y;" ,
+            "}"));
+  }
+
+  public void testLetAssignedOnceInLifetime1() {
+    behavior = new Behavior() {
+      @Override
+      public void afterExitScope(NodeTraversal t, ReferenceMap rm)  {
+        if (t.getScope().isCatchScope()) {
+          ReferenceCollection e = rm.getReferences(t.getScope().getVar("e"));
+          assertThat(e.isAssignedOnceInLifetime()).isTrue();
+          ReferenceCollection y = rm.getReferences(t.getScope().getVar("y"));
+          assertThat(y.isAssignedOnceInLifetime()).isTrue();
+          assertThat(y.isWellDefined()).isTrue();
+        }
+      }
+    };
+    testSame(
+        LINE_JOINER.join(
+            "try {",
+            "} catch (e) {",
+            "  let y = e;",
+            "  g();" ,
+            "  y;y;" ,
+            "}"));
+  }
+
+  public void testLetAssignedOnceInLifetime2() {
+    behavior = new Behavior() {
+      @Override
+      public void afterExitScope(NodeTraversal t, ReferenceMap rm)  {
+        if (t.getScope().isCatchScope()) {
+          ReferenceCollection e = rm.getReferences(t.getScope().getVar("e"));
+          assertThat(e.isAssignedOnceInLifetime()).isTrue();
+          ReferenceCollection y = rm.getReferences(t.getScope().getVar("y"));
+          assertThat(y.isAssignedOnceInLifetime()).isTrue();
+          assertThat(y.isWellDefined()).isTrue();
+        }
+      }
+    };
+    testSame(
+        LINE_JOINER.join(
+            "try {",
+            "} catch (e) {",
+            "  let y; y = e;",
             "  g();" ,
             "  y;y;" ,
             "}"));

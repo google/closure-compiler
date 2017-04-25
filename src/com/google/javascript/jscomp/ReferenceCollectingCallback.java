@@ -483,7 +483,7 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
     private boolean isInitializingAssignmentAt(int index) {
       if (index < references.size() && index > 0) {
         Reference maybeDecl = references.get(index - 1);
-        if (maybeDecl.isVarDeclaration()) {
+        if (maybeDecl.isVarDeclaration() || maybeDecl.isLetDeclaration()) {
           Preconditions.checkState(!maybeDecl.isInitializingDeclaration());
           Reference maybeInit = references.get(index);
           if (maybeInit.isSimpleAssignmentToName()) {
