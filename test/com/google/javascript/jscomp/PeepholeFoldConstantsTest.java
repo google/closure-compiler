@@ -33,7 +33,7 @@ import java.util.Set;
 
 public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
 
-  PeepholeFoldConstantsTest() {
+  public PeepholeFoldConstantsTest() {
     super(DEFAULT_EXTERNS);
   }
 
@@ -1305,7 +1305,7 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   }
 
   public void testTypeBasedFoldConstant() {
-    this.mode = TypeInferenceMode.BOTH;
+    this.mode = TypeInferenceMode.OTI_ONLY;
     test("var /** number */ x; x + 1 + 1 + x",
          "var /** number */ x; x + 2 + x");
 
