@@ -250,6 +250,12 @@ public class Scope implements StaticScope {
     return getRootNode().isModuleBody();
   }
 
+  public boolean isCatchScope() {
+    return getRootNode().isNormalBlock()
+        && getRootNode().hasOneChild()
+        && getRootNode().getFirstChild().isCatch();
+  }
+
   /**
    * If a var were declared in this scope, return the scope it would be hoisted to.
    *
