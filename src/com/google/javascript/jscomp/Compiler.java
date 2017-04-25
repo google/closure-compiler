@@ -722,15 +722,25 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     externAndJsRoot = IR.root(externsRoot, jsRoot);
   }
 
-  public Result compile(
+  public Result initAndCheckAndTranspileAndOptimize(
       SourceFile extern, SourceFile input, CompilerOptions options) {
+    return initAndCheckAndTranspileAndOptimize(
+        ImmutableList.of(extern), ImmutableList.of(input), options);
+  }
+
+  /** @deprecated use initAndCheckAndTranspileAndOptimize() */
+  @Deprecated
+  public Result compile(SourceFile extern, SourceFile input, CompilerOptions options) {
     return compile(ImmutableList.of(extern), ImmutableList.of(input), options);
   }
 
   /**
    * Compiles a list of inputs.
+   *
+   * <p>TODO(bradfordcsmith): Define checkAndTranspile() and optimize() methods that
+   * may be sequentially invoked after init() or initModules().
    */
-  public <T1 extends SourceFile, T2 extends SourceFile> Result compile(
+  public <T1 extends SourceFile, T2 extends SourceFile> Result initAndCheckAndTranspileAndOptimize(
       List<T1> externs, List<T2> inputs, CompilerOptions options) {
     // The compile method should only be called once.
     Preconditions.checkState(jsRoot == null);
@@ -740,7 +750,37 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       if (hasErrors()) {
         return getResult();
       }
-      return compile();
+      return checkAndTranspileAndOptimize();
+    } finally {
+      Tracer t = newTracer("generateReport");
+      errorManager.generateReport();
+      stopTracer(t, "generateReport");
+    }
+  }
+
+  /**
+   * Compiles a list of inputs.
+   *
+   * @deprecated use initAndCheckAndTranspileAndOptimize()
+   */
+  @Deprecated
+  public <T1 extends SourceFile, T2 extends SourceFile> Result compile(
+      List<T1> externs, List<T2> inputs, CompilerOptions options) {
+    return initAndCheckAndTranspileAndOptimize(externs, inputs, options);
+  }
+
+  /** Compiles a list of modules. */
+  public <T extends SourceFile> Result initModulesAndCheckAndTranspileAndOptimize(
+      List<T> externs, List<JSModule> modules, CompilerOptions options) {
+    // The compile method should only be called once.
+    Preconditions.checkState(jsRoot == null);
+
+    try {
+      initModules(externs, modules, options);
+      if (hasErrors()) {
+        return getResult();
+      }
+      return checkAndTranspileAndOptimize();
     } finally {
       Tracer t = newTracer("generateReport");
       errorManager.generateReport();
@@ -750,26 +790,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   /**
    * Compiles a list of modules.
+   *
+   * @deprecated Use initModulesAndCheckAndTranspileAndOptimize()
    */
-  public <T extends SourceFile> Result compileModules(List<T> externs,
-      List<JSModule> modules, CompilerOptions options) {
-    // The compile method should only be called once.
-    Preconditions.checkState(jsRoot == null);
-
-    try {
-      initModules(externs, modules, options);
-      if (hasErrors()) {
-        return getResult();
-      }
-      return compile();
-    } finally {
-      Tracer t = newTracer("generateReport");
-      errorManager.generateReport();
-      stopTracer(t, "generateReport");
-    }
+  @Deprecated
+  public <T extends SourceFile> Result compileModules(
+      List<T> externs, List<JSModule> modules, CompilerOptions options) {
+    return initModulesAndCheckAndTranspileAndOptimize(externs, modules, options);
   }
 
-  private Result compile() {
+  private Result checkAndTranspileAndOptimize() {
     return runInCompilerThread(new Callable<Result>() {
       @Override
       public Result call() throws Exception {
