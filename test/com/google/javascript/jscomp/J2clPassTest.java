@@ -72,11 +72,13 @@ public class J2clPassTest extends CompilerTestCase {
                     "Arrays.$init = function() { return 2; }",
                     "Arrays.$instanceIsOfType = function() { return 3; }",
                     "Arrays.$castTo = function() { return 4; }",
+                    "Arrays.$stampType = function() { return 5; }",
                     "",
                     "alert(Arrays.$create());",
                     "alert(Arrays.$init());",
                     "alert(Arrays.$instanceIsOfType());",
-                    "alert(Arrays.$castTo());"))),
+                    "alert(Arrays.$castTo());",
+                    "alert(Arrays.$stampType());"))),
         Lists.newArrayList(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Arrays.impl.java.js",
@@ -87,11 +89,13 @@ public class J2clPassTest extends CompilerTestCase {
                     "Arrays.$init = function() { return 2; }",
                     "Arrays.$instanceIsOfType = function() { return 3; }",
                     "Arrays.$castTo = function() { return 4; }",
+                    "Arrays.$stampType = function() { return 5; }",
                     "",
                     "alert(1);",
                     "alert(2);",
                     "alert(3);",
-                    "alert(4);"))));
+                    "alert(4);",
+                    "alert(5);"))));
 
     // Casts functions.
     test(

@@ -245,7 +245,7 @@ public class J2clPass implements CompilerPass {
     inlineFunctionsInFile(
         root,
         "vmbootstrap/Arrays.impl.java.js",
-        ImmutableSet.of("$create", "$init", "$instanceIsOfType", "$castTo"),
+        ImmutableSet.of("$create", "$init", "$instanceIsOfType", "$castTo", "$stampType"),
         InliningMode.DIRECT);
     inlineFunctionsInFile(
         root, "vmbootstrap/Casts.impl.java.js", ImmutableSet.of("to"), InliningMode.DIRECT);
