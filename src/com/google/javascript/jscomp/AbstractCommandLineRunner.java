@@ -923,9 +923,28 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     String fileName = getModuleOutputFileName(m);
     String baseName = new File(fileName).getName();
-    writeOutput(out, compiler, compiler.toSource(m),
+    writeOutput(out, compiler, m,
         parsedModuleWrappers.get(m.getName()).replace("%basename%", baseName),
         "%s", null);
+  }
+
+  /**
+   * Writes code to an output stream, optionally wrapping it in an arbitrary
+   * wrapper that contains a placeholder where the code should be inserted.
+   * @param module Which module to write. If this is null, write the entire AST.
+   */
+  static void writeOutput(Appendable out, Compiler compiler, @Nullable JSModule module,
+      String wrapper, String codePlaceholder,
+      @Nullable Function<String, String> escaper)
+      throws IOException {
+    if (compiler.getOptions().outputJs == OutputJs.SENTINEL) {
+      out.append("// No JS output because the compiler was run in checks-only mode.\n");
+      return;
+    }
+    Preconditions.checkState(compiler.getOptions().outputJs == OutputJs.NORMAL);
+
+    String code = module == null ? compiler.toSource() : compiler.toSource(module);
+    writeOutput(out, compiler, code, wrapper, codePlaceholder, escaper);
   }
 
   /**
@@ -936,12 +955,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       String wrapper, String codePlaceholder,
       @Nullable Function<String, String> escaper)
       throws IOException {
-    if (compiler.getOptions().outputJs == OutputJs.SENTINEL) {
-      out.append("// No JS output because the compiler was run in checks-only mode.\n");
-      return;
-    }
-    Preconditions.checkState(compiler.getOptions().outputJs == OutputJs.NORMAL);
-
     int pos = wrapper.indexOf(codePlaceholder);
     if (pos != -1) {
       String prefix = "";
@@ -1224,13 +1237,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     if (isOutputInJson()) {
       this.filesToStreamOut.add(createJsonFile(options, marker, escaper));
     } else {
-      if(!config.jsOutputFile.isEmpty()) {
+      if (!config.jsOutputFile.isEmpty()) {
         maybeCreateDirsForPath(config.jsOutputFile);
       }
 
       Appendable jsOutput = createDefaultOutput();
       writeOutput(
-          jsOutput, compiler, compiler.toSource(), config.outputWrapper,
+          jsOutput, compiler, (JSModule) null, config.outputWrapper,
           marker, escaper);
       closeAppendable(jsOutput);
     }
@@ -1244,7 +1257,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       Function<String, String> escaper) throws IOException {
     Appendable jsOutput = new StringBuilder();
     writeOutput(
-        jsOutput, compiler, compiler.toSource(), config.outputWrapper,
+        jsOutput, compiler, (JSModule) null, config.outputWrapper,
         outputMarker, escaper);
 
     JsonFileSpec jsonOutput = new JsonFileSpec(jsOutput.toString(),
@@ -1406,8 +1419,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   }
 
   protected List<SourceFile> createExterns(CompilerOptions options) throws IOException {
-    return isInTestMode() ? externsSupplierForTesting.get() :
-        createExternInputs(config.externs);
+    return isInTestMode() ? externsSupplierForTesting.get() : createExternInputs(config.externs);
   }
 
   /**
