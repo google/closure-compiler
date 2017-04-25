@@ -75,7 +75,9 @@ class Denormalize implements CompilerPass, Callback, Behavior {
    */
   @Override
   public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {
-    if (t.getScopeRoot().isNormalBlock() && t.getScopeRoot().getParent().isFunction()) {
+    Node scopeRoot = t.getScopeRoot();
+    if (scopeRoot.isNormalBlock() && scopeRoot.getParent().isFunction()) {
+      boolean changed = false;
       for (Var v : t.getScope().getVarIterable()) {
         ReferenceCollection references = referenceMap.getReferences(v);
         Reference declaration = null;
@@ -104,9 +106,13 @@ class Denormalize implements CompilerPass, Callback, Behavior {
             checkState(var.isVar(), var);
             NodeUtil.removeChild(var, declaration.getNode());
 
-            compiler.reportChangeToEnclosingScope(var);
+            changed = true;
           }
         }
+      }
+
+      if (changed) {
+        t.reportCodeChange();
       }
     }
   }

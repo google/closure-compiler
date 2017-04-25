@@ -414,10 +414,14 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
                 reference.getParent().putBooleanProp(Node.FREE_CALL, false);
               }
               // Change reference to GETPROP.
-              compiler.reportChangeToEnclosingScope(reference);
+              Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(reference);
               reference.replaceWith(
                   IR.getprop(IR.name(object.name), IR.string(var.name))
                       .useSourceInfoIfMissingFromForTree(reference));
+              // TODO(johnlenz): Don't work on detached nodes.
+              if (changeScope != null) {
+                compiler.reportChangeToChangeScope(changeScope);
+              }
             }
           }
         }

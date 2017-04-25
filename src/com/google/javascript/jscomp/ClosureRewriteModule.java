@@ -1544,7 +1544,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     if (n.getOriginalName() == null) {
       n.setOriginalName(originalName);
     }
-    compiler.reportChangeToEnclosingScope(n);
+    // TODO(blickly): It would be better not to be renaming detached nodes
+    Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(n);
+    if (changeScope != null) {
+      compiler.reportChangeToChangeScope(changeScope);
+    }
   }
 
   private void safeSetMaybeQualifiedString(Node nameNode, String newString) {

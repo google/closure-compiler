@@ -98,8 +98,9 @@ class ExpressionDecomposer {
   void exposeExpression(Node expression) {
     Node expressionRoot = findExpressionRoot(expression);
     Preconditions.checkState(expressionRoot != null);
+    Node change = expressionRoot.getParent();
     exposeExpression(expressionRoot, expression);
-    compiler.reportChangeToEnclosingScope(expressionRoot);
+    compiler.reportChangeToEnclosingScope(change);
   }
 
   // TODO(johnlenz): This is not currently used by the function inliner,

@@ -115,7 +115,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     if (n.isCall() && isGoogDefineClass(n) && !validateUsage(n)) {
       compiler.report(JSError.make(n, GOOG_CLASS_TARGET_INVALID));
     }
-    maybeRewriteClassDefinition(n);
+    maybeRewriteClassDefinition(t, n);
   }
 
   private boolean validateUsage(Node n) {
@@ -151,21 +151,21 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     return false;
   }
 
-  private void maybeRewriteClassDefinition(Node n) {
+  private void maybeRewriteClassDefinition(NodeTraversal t, Node n) {
     if (NodeUtil.isNameDeclaration(n)) {
       Node target = n.getFirstChild();
       Node value = target.getFirstChild();
-      maybeRewriteClassDefinition(n, target, value);
+      maybeRewriteClassDefinition(t, n, target, value);
     } else if (NodeUtil.isExprAssign(n)) {
       Node assign = n.getFirstChild();
       Node target = assign.getFirstChild();
       Node value = assign.getLastChild();
-      maybeRewriteClassDefinition(n, target, value);
+      maybeRewriteClassDefinition(t, n, target, value);
     }
   }
 
   private void maybeRewriteClassDefinition(
-      Node n, Node target, Node value) {
+      NodeTraversal t, Node n, Node target, Node value) {
     if (isGoogDefineClass(value)) {
       if (!target.isQualifiedName()) {
         compiler.report(JSError.make(n, GOOG_CLASS_TARGET_INVALID));
@@ -174,7 +174,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       if (def != null) {
         value.detach();
         target.detach();
-        rewriteGoogDefineClass(n, def);
+        rewriteGoogDefineClass(t, n, def);
       }
     }
   }
@@ -408,7 +408,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     return result;
   }
 
-  private void rewriteGoogDefineClass(Node exprRoot, final ClassDefinition cls) {
+  private void rewriteGoogDefineClass(NodeTraversal t, Node exprRoot, final ClassDefinition cls) {
     // For simplicity add everything into a block, before adding it to the AST.
     Node block = IR.block();
 
@@ -459,7 +459,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
                   .srcref(def.name),
               def.value)).setJSDocInfo(def.info))));
       // Handle inner class definitions.
-      maybeRewriteClassDefinition(block.getLastChild());
+      maybeRewriteClassDefinition(t, block.getLastChild());
     }
 
     for (MemberDefinition def : cls.props) {
@@ -485,7 +485,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       block.addChildToBack(exprResult);
 
       // Handle inner class definitions.
-      maybeRewriteClassDefinition(block.getLastChild());
+      maybeRewriteClassDefinition(t, block.getLastChild());
     }
 
     if (cls.classModifier != null) {
@@ -529,7 +529,8 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
     parent.addChildrenAfter(stmts, exprRoot);
     parent.removeChild(exprRoot);
 
-    compiler.reportChangeToEnclosingScope(parent);
+    // compiler.reportChangeToEnclosingScope(parent);
+    t.reportCodeChange();
   }
 
   private static Node fixupSrcref(Node node) {

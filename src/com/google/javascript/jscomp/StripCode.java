@@ -20,10 +20,8 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -204,7 +202,7 @@ class StripCode implements CompilerPass {
           //   NAME
           //   NUMBER|STRING|NAME|...
           if (parent.getFirstChild() == n && isReferenceToRemovedVar(t, n)) {
-            replaceHighestNestedCallWithNull(parent, parent.getParent());
+            replaceHighestNestedCallWithNull(t, parent, parent.getParent());
           }
           break;
 
@@ -258,7 +256,7 @@ class StripCode implements CompilerPass {
      * in a.b().c().d(), we'll have to remove all of the calls, and it
      * will take a few iterations through this loop to get up to d().
      */
-    void replaceHighestNestedCallWithNull(Node node, Node parent) {
+    void replaceHighestNestedCallWithNull(NodeTraversal t, Node node, Node parent) {
       Node ancestor = parent;
       Node ancestorChild = node;
       Node ancestorParent;
@@ -288,7 +286,7 @@ class StripCode implements CompilerPass {
         ancestorChild = ancestor;
         ancestor = ancestorParent;
       }
-      compiler.reportChangeToEnclosingScope(ancestorParent);
+      t.reportCodeChange();
     }
 
     /**
@@ -365,7 +363,7 @@ class StripCode implements CompilerPass {
       //   function
       //   arguments
       if (isMethodOrCtorCallThatTriggersRemoval(t, n, parent)) {
-        replaceHighestNestedCallWithNull(n, parent);
+        replaceHighestNestedCallWithNull(t, n, parent);
       }
     }
 

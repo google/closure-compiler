@@ -600,7 +600,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
           umdPattern.ifRoot.detachChildren();
         }
         parent.replaceChild(umdPattern.ifRoot, newNode);
-        compiler.reportChangeToEnclosingScope(parent);
+        // TODO(johnlenz): don't work on detached nodes
+        Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(parent);
+        if (changeScope != null) {
+          compiler.reportChangeToEnclosingScope(parent);
+        }
       }
     }
   }
