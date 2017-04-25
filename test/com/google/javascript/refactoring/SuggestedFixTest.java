@@ -57,8 +57,8 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .insertBefore(root.getLastChild().getFirstChild(), newNode, compiler)
         .build();
-    CodeReplacement replacement = new CodeReplacement(
-        before.length(), 0, "goog2.get('service');\n");
+    CodeReplacement replacement =
+        CodeReplacement.create(before.length(), 0, "goog2.get('service');\n");
     assertReplacement(fix, replacement);
   }
 
@@ -70,7 +70,7 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .delete(root.getFirstChild())
         .build();
-    CodeReplacement replacement = new CodeReplacement(0, input.length(), "");
+    CodeReplacement replacement = CodeReplacement.create(0, input.length(), "");
     assertReplacement(fix, replacement);
   }
 
@@ -84,7 +84,7 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .delete(root.getLastChild())
         .build();
-    CodeReplacement replacement = new CodeReplacement(before.length(), after.length(), "");
+    CodeReplacement replacement = CodeReplacement.create(before.length(), after.length(), "");
     assertReplacement(fix, replacement);
   }
 
@@ -98,7 +98,7 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .deleteWithoutRemovingWhitespaceBefore(root.getLastChild())
         .build();
-    CodeReplacement replacement = new CodeReplacement(before.length(), after.length(), "");
+    CodeReplacement replacement = CodeReplacement.create(before.length(), after.length(), "");
     assertReplacement(fix, replacement);
   }
 
@@ -113,21 +113,21 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .delete(root.getFirstFirstChild())
         .build();
-    CodeReplacement replacement = new CodeReplacement(4, "foo = 3, ".length(), "");
+    CodeReplacement replacement = CodeReplacement.create(4, "foo = 3, ".length(), "");
     assertReplacement(fix, replacement);
 
     // Delete the 2nd variable.
     fix = new SuggestedFix.Builder()
         .delete(root.getFirstChild().getSecondChild())
         .build();
-    replacement = new CodeReplacement(13, "bar, ".length(), "");
+    replacement = CodeReplacement.create(13, "bar, ".length(), "");
     assertReplacement(fix, replacement);
 
     // Delete the last variable. Make sure it removes the leading comma.
     fix = new SuggestedFix.Builder()
         .delete(root.getFirstChild().getLastChild())
         .build();
-    replacement = new CodeReplacement(16, ", baz".length(), "");
+    replacement = CodeReplacement.create(16, ", baz".length(), "");
     assertReplacement(fix, replacement);
   }
 
@@ -142,21 +142,21 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .delete(root.getFirstFirstChild())
         .build();
-    CodeReplacement replacement = new CodeReplacement(4, "foo = 3, ".length(), "");
+    CodeReplacement replacement = CodeReplacement.create(4, "foo = 3, ".length(), "");
     assertReplacement(fix, replacement);
 
     // Delete the 2nd variable.
     fix = new SuggestedFix.Builder()
         .delete(root.getFirstChild().getSecondChild())
         .build();
-    replacement = new CodeReplacement(13, "bar, ".length(), "");
+    replacement = CodeReplacement.create(13, "bar, ".length(), "");
     assertReplacement(fix, replacement);
 
     // Delete the last variable. Make sure it removes the leading comma.
     fix = new SuggestedFix.Builder()
         .delete(root.getFirstChild().getLastChild())
         .build();
-    replacement = new CodeReplacement(16, ", baz".length(), "");
+    replacement = CodeReplacement.create(16, ", baz".length(), "");
     assertReplacement(fix, replacement);
   }
 
@@ -171,21 +171,21 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .delete(root.getFirstFirstChild())
         .build();
-    CodeReplacement replacement = new CodeReplacement(6, "foo = 3, ".length(), "");
+    CodeReplacement replacement = CodeReplacement.create(6, "foo = 3, ".length(), "");
     assertReplacement(fix, replacement);
 
     // Delete the 2nd variable.
     fix = new SuggestedFix.Builder()
         .delete(root.getFirstChild().getSecondChild())
         .build();
-    replacement = new CodeReplacement(15, "bar = 4, ".length(), "");
+    replacement = CodeReplacement.create(15, "bar = 4, ".length(), "");
     assertReplacement(fix, replacement);
 
     // Delete the last variable. Make sure it removes the leading comma.
     fix = new SuggestedFix.Builder()
         .delete(root.getFirstChild().getLastChild())
         .build();
-    replacement = new CodeReplacement(22, ", baz = 5".length(), "");
+    replacement = CodeReplacement.create(22, ", baz = 5".length(), "");
     assertReplacement(fix, replacement);
   }
 
@@ -198,7 +198,7 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .rename(node, "fooBar")
         .build();
-    CodeReplacement replacement = new CodeReplacement(11, "foo".length(), "fooBar");
+    CodeReplacement replacement = CodeReplacement.create(11, "foo".length(), "fooBar");
     assertReplacement(fix, replacement);
   }
 
@@ -210,7 +210,7 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .rename(root.getFirstFirstChild(), "renamedProperty")
         .build();
-    CodeReplacement replacement = new CodeReplacement(9, "property".length(), "renamedProperty");
+    CodeReplacement replacement = CodeReplacement.create(9, "property".length(), "renamedProperty");
     assertReplacement(fix, replacement);
   }
 
@@ -222,7 +222,7 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .rename(root.getFirstFirstChild(), "renamedProperty", true)
         .build();
-    CodeReplacement replacement = new CodeReplacement(0, input.length(), "renamedProperty");
+    CodeReplacement replacement = CodeReplacement.create(0, input.length(), "renamedProperty");
     assertReplacement(fix, replacement);
   }
 
@@ -234,7 +234,7 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .rename(root.getFirstFirstChild(), "renamedFnCall")
         .build();
-    CodeReplacement replacement = new CodeReplacement(4, "fnCall".length(), "renamedFnCall");
+    CodeReplacement replacement = CodeReplacement.create(4, "fnCall".length(), "renamedFnCall");
     assertReplacement(fix, replacement);
   }
 
@@ -248,7 +248,7 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .rename(root.getFirstFirstChild(), newFnName, true)
         .build();
-    CodeReplacement replacement = new CodeReplacement(0, fnName.length(), newFnName);
+    CodeReplacement replacement = CodeReplacement.create(0, fnName.length(), newFnName);
     assertReplacement(fix, replacement);
   }
 
@@ -263,8 +263,8 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .rename(root.getFirstFirstChild(), newFnName)
         .build();
-    CodeReplacement replacement = new CodeReplacement(prefix.length(),
-        fnName.length(), newFnName);
+    CodeReplacement replacement =
+        CodeReplacement.create(prefix.length(), fnName.length(), newFnName);
     assertReplacement(fix, replacement);
   }
 
@@ -278,7 +278,7 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .rename(root.getFirstFirstChild(), newFnName, true)
         .build();
-    CodeReplacement replacement = new CodeReplacement(0, fnName.length(), newFnName);
+    CodeReplacement replacement = CodeReplacement.create(0, fnName.length(), newFnName);
     assertReplacement(fix, replacement);
   }
 
@@ -294,8 +294,8 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .replace(root.getLastChild().getFirstChild(), newNode, compiler)
         .build();
-    CodeReplacement replacement = new CodeReplacement(
-        before.length(), after.length(), "goog2.get('service');");
+    CodeReplacement replacement =
+        CodeReplacement.create(before.length(), after.length(), "goog2.get('service');");
     assertReplacement(fix, replacement);
   }
 
@@ -313,8 +313,9 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .replace(root.getLastChild().getFirstChild().getLastChild(), newNode, compiler)
         .build();
-    CodeReplacement replacement = new CodeReplacement(
-        before.length() + "alert(".length(), "clazz.foo()".length(), "clazz.bar()");
+    CodeReplacement replacement =
+        CodeReplacement.create(
+            before.length() + "alert(".length(), "clazz.foo()".length(), "clazz.bar()");
     assertReplacement(fix, replacement);
   }
 
@@ -330,8 +331,9 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .replace(root.getLastChild().getFirstFirstChild(), newNode, compiler)
         .build();
-    CodeReplacement replacement = new CodeReplacement(
-        before.length(), "MyClass.prototype.foo".length(), "MyClass.prototype.bar");
+    CodeReplacement replacement =
+        CodeReplacement.create(
+            before.length(), "MyClass.prototype.foo".length(), "MyClass.prototype.bar");
     assertReplacement(fix, replacement);
   }
 
@@ -344,8 +346,8 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .addCast(objNode, compiler, "FooBar")
         .build();
-    CodeReplacement replacement = new CodeReplacement(
-        0, "obj".length(), "/** @type {FooBar} */ (obj)");
+    CodeReplacement replacement =
+        CodeReplacement.create(0, "obj".length(), "/** @type {FooBar} */ (obj)");
     assertReplacement(fix, replacement);
   }
 
@@ -418,8 +420,8 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .changeJsDocType(root.getFirstChild(), compiler, "Object")
         .build();
-    CodeReplacement replacement = new CodeReplacement(
-        before.length(), "@type {Foo}".length(), "@type {Object}");
+    CodeReplacement replacement =
+        CodeReplacement.create(before.length(), "@type {Foo}".length(), "@type {Object}");
     assertReplacement(fix, replacement);
   }
 
@@ -434,8 +436,7 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .insertBefore(jsdocRoot, "!")
         .build();
-    CodeReplacement replacement = new CodeReplacement(
-        "/** @type {".length(), 0, "!");
+    CodeReplacement replacement = CodeReplacement.create("/** @type {".length(), 0, "!");
     assertReplacement(fix, replacement);
   }
 
@@ -448,8 +449,8 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .changeJsDocType(root.getFirstChild(), compiler, "Object")
         .build();
-    CodeReplacement replacement = new CodeReplacement(
-        before.length(), "@package {Foo}".length(), "@package {Object}");
+    CodeReplacement replacement =
+        CodeReplacement.create(before.length(), "@package {Foo}".length(), "@package {Object}");
     assertReplacement(fix, replacement);
   }
 
@@ -462,8 +463,8 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .changeJsDocType(root.getFirstChild(), compiler, "Object")
         .build();
-    CodeReplacement replacement = new CodeReplacement(
-        before.length(), "@private {Foo}".length(), "@private {Object}");
+    CodeReplacement replacement =
+        CodeReplacement.create(before.length(), "@private {Foo}".length(), "@private {Object}");
     assertReplacement(fix, replacement);
   }
 
@@ -476,8 +477,8 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .changeJsDocType(root.getFirstChild(), compiler, "Object")
         .build();
-    CodeReplacement replacement = new CodeReplacement(
-        before.length(), "@const {Foo}".length(), "@const {Object}");
+    CodeReplacement replacement =
+        CodeReplacement.create(before.length(), "@const {Foo}".length(), "@const {Object}");
     assertReplacement(fix, replacement);
   }
 
@@ -490,8 +491,8 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .changeJsDocType(root.getFirstChild(), compiler, "Object")
         .build();
-    CodeReplacement replacement = new CodeReplacement(
-        before.length(), "@const {Foo}".length(), "@const {Object}");
+    CodeReplacement replacement =
+        CodeReplacement.create(before.length(), "@const {Foo}".length(), "@const {Object}");
     assertReplacement(fix, replacement);
   }
 
@@ -504,8 +505,8 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .changeJsDocType(root.getFirstChild(), compiler, "Object")
         .build();
-    CodeReplacement replacement = new CodeReplacement(
-        before.length(), "@const {Foo}".length(), "@const {Object}");
+    CodeReplacement replacement =
+        CodeReplacement.create(before.length(), "@const {Foo}".length(), "@const {Object}");
     assertReplacement(fix, replacement);
   }
 
@@ -518,7 +519,7 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .insertArguments(root.getFirstFirstChild(), 0, "baz")
         .build();
-    CodeReplacement replacement = new CodeReplacement(before.length(), 0, "baz, ");
+    CodeReplacement replacement = CodeReplacement.create(before.length(), 0, "baz, ");
     assertReplacement(fix, replacement);
   }
 
@@ -531,7 +532,7 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .insertArguments(root.getFirstFirstChild(), 0, "baz")
         .build();
-    CodeReplacement replacement = new CodeReplacement(before.length(), 0, "baz");
+    CodeReplacement replacement = CodeReplacement.create(before.length(), 0, "baz");
     assertReplacement(fix, replacement);
   }
 
@@ -544,7 +545,7 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .insertArguments(root.getFirstFirstChild(), 1, "baz")
         .build();
-    CodeReplacement replacement = new CodeReplacement(before.length(), 0, "baz, ");
+    CodeReplacement replacement = CodeReplacement.create(before.length(), 0, "baz, ");
     assertReplacement(fix, replacement);
   }
 
@@ -557,7 +558,7 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .insertArguments(root.getFirstFirstChild(), 2, "baz")
         .build();
-    CodeReplacement replacement = new CodeReplacement(before.length(), 0, ", baz");
+    CodeReplacement replacement = CodeReplacement.create(before.length(), 0, ", baz");
     assertReplacement(fix, replacement);
   }
 
@@ -792,8 +793,9 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .addGoogRequire(match, namespace)
         .build();
-    CodeReplacement replacement = new CodeReplacement(
-        before.length(), 0, "goog.require('" + namespace + "');\n", namespace);
+    CodeReplacement replacement =
+        CodeReplacement.create(
+            before.length(), 0, "goog.require('" + namespace + "');\n", namespace);
     assertReplacement(fix, replacement);
   }
 
@@ -814,7 +816,7 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .removeGoogRequire(match, "abc.def")
         .build();
-    CodeReplacement replacement = new CodeReplacement(before.length(), googRequire.length(), "");
+    CodeReplacement replacement = CodeReplacement.create(before.length(), googRequire.length(), "");
     assertReplacement(fix, replacement);
   }
 
@@ -836,7 +838,7 @@ public class SuggestedFixTest {
     SuggestedFix fix = new SuggestedFix.Builder()
         .removeGoogRequire(match, "abc.def")
         .build();
-    CodeReplacement replacement = new CodeReplacement(before.length(), googRequire.length(), "");
+    CodeReplacement replacement = CodeReplacement.create(before.length(), googRequire.length(), "");
     assertReplacement(fix, replacement);
   }
 

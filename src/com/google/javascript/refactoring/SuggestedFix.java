@@ -162,8 +162,7 @@ public final class SuggestedFix {
           "addChildToFront is only supported for BLOCK statements.");
       int startPosition = parentNode.getSourceOffset() + 1;
       replacements.put(
-          parentNode.getSourceFileName(),
-          new CodeReplacement(startPosition, 0, "\n" + content));
+          parentNode.getSourceFileName(), CodeReplacement.create(startPosition, 0, "\n" + content));
       return this;
     }
 
@@ -172,9 +171,7 @@ public final class SuggestedFix {
      */
     public Builder insertAfter(Node node, String text) {
       int position = node.getSourceOffset() + node.getLength();
-      replacements.put(
-          node.getSourceFileName(),
-          new CodeReplacement(position, 0, text));
+      replacements.put(node.getSourceFileName(), CodeReplacement.create(position, 0, text));
       return this;
     }
 
@@ -209,7 +206,7 @@ public final class SuggestedFix {
           "No source file name for node: %s", nodeToInsertBefore);
       replacements.put(
           nodeToInsertBefore.getSourceFileName(),
-          new CodeReplacement(startPosition, 0, content, sortKey));
+          CodeReplacement.create(startPosition, 0, content, sortKey));
       return this;
     }
 
@@ -231,7 +228,7 @@ public final class SuggestedFix {
     /** Deletes a node without touching any surrounding whitespace. */
     public Builder deleteWithoutRemovingWhitespace(Node n) {
       replacements.put(
-          n.getSourceFileName(), new CodeReplacement(n.getSourceOffset(), n.getLength(), ""));
+          n.getSourceFileName(), CodeReplacement.create(n.getSourceOffset(), n.getLength(), ""));
       return this;
     }
 
@@ -292,7 +289,7 @@ public final class SuggestedFix {
           startPosition = previousSiblingEndPosition;
         }
       }
-      replacements.put(n.getSourceFileName(), new CodeReplacement(startPosition, length, ""));
+      replacements.put(n.getSourceFileName(), CodeReplacement.create(startPosition, length, ""));
       return this;
     }
 
@@ -343,7 +340,7 @@ public final class SuggestedFix {
       }
       replacements.put(
           nodeToRename.getSourceFileName(),
-          new CodeReplacement(nodeToRename.getSourceOffset(), nodeToRename.getLength(), name));
+          CodeReplacement.create(nodeToRename.getSourceOffset(), nodeToRename.getLength(), name));
       return this;
     }
 
@@ -363,7 +360,8 @@ public final class SuggestedFix {
 
       int end = last.getSourceOffset() + last.getLength();
       int length = end - start;
-      replacements.put(first.getSourceFileName(), new CodeReplacement(start, length, newContent));
+      replacements.put(
+          first.getSourceFileName(), CodeReplacement.create(start, length, newContent));
       return this;
     }
 
@@ -393,7 +391,7 @@ public final class SuggestedFix {
       }
       replacements.put(
           original.getSourceFileName(),
-          new CodeReplacement(original.getSourceOffset(), original.getLength(), newCode));
+          CodeReplacement.create(original.getSourceOffset(), original.getLength(), newCode));
       return this;
     }
 
@@ -404,7 +402,7 @@ public final class SuggestedFix {
       // TODO(mknichel): Figure out the best way to output the typecast.
       replacements.put(
           n.getSourceFileName(),
-          new CodeReplacement(
+          CodeReplacement.create(
               n.getSourceOffset(),
               n.getLength(),
               "/** @type {" + type + "} */ (" + generateCode(compiler, n) + ")"));
@@ -419,16 +417,13 @@ public final class SuggestedFix {
       JSDocInfo jsDoc = n.getJSDocInfo();
       replacements.put(
           n.getSourceFileName(),
-          new CodeReplacement(
+          CodeReplacement.create(
               jsDoc.getOriginalCommentPosition(),
               n.getFirstChild().getSourceOffset() - jsDoc.getOriginalCommentPosition(),
               ""));
       replacements.put(
           n.getSourceFileName(),
-          new CodeReplacement(
-              n.getSourceOffset() + n.getLength() - 1,
-              1 /* length */,
-              ""));
+          CodeReplacement.create(n.getSourceOffset() + n.getLength() - 1, 1 /* length */, ""));
       return this;
     }
 
@@ -443,7 +438,8 @@ public final class SuggestedFix {
         startPosition = jsDoc.getOriginalCommentPosition();
         length = n.getSourceOffset() - jsDoc.getOriginalCommentPosition();
       }
-      replacements.put(n.getSourceFileName(), new CodeReplacement(startPosition, length, newJsDoc));
+      replacements.put(
+          n.getSourceFileName(), CodeReplacement.create(startPosition, length, newJsDoc));
       return this;
     }
 
@@ -486,7 +482,7 @@ public final class SuggestedFix {
         while (m.find()) {
           replacements.put(
               n.getSourceFileName(),
-              new CodeReplacement(
+              CodeReplacement.create(
                   originalPosition + m.start(),
                   m.end() - m.start(),
                   "@" + m.group(1) + " {" + type + "}"));
@@ -527,7 +523,7 @@ public final class SuggestedFix {
       } else if (i > 0) {
         newContent = ", " + newContent;
       }
-      replacements.put(n.getSourceFileName(), new CodeReplacement(startPosition, 0, newContent));
+      replacements.put(n.getSourceFileName(), CodeReplacement.create(startPosition, 0, newContent));
 
       return this;
     }
@@ -594,8 +590,9 @@ public final class SuggestedFix {
 
       // Remove the argument by replacing it with an empty string.
       int lengthOfArgumentToRemove = endOfArgumentToRemove - startOfArgumentToRemove;
-      replacements.put(n.getSourceFileName(),
-          new CodeReplacement(startOfArgumentToRemove, lengthOfArgumentToRemove, ""));
+      replacements.put(
+          n.getSourceFileName(),
+          CodeReplacement.create(startOfArgumentToRemove, lengthOfArgumentToRemove, ""));
       return this;
     }
 
@@ -676,19 +673,23 @@ public final class SuggestedFix {
               lastGoogRequireNode != null ? lastGoogRequireNode : lastModuleOrProvideNode;
           int startPosition =
               nodeToInsertAfter.getSourceOffset() + nodeToInsertAfter.getLength() + 2;
-          replacements.put(nodeToInsertAfter.getSourceFileName(), new CodeReplacement(
-              startPosition,
-              0,
-              generateCode(m.getMetadata().getCompiler(), googRequireNode),
-              namespace));
+          replacements.put(
+              nodeToInsertAfter.getSourceFileName(),
+              CodeReplacement.create(
+                  startPosition,
+                  0,
+                  generateCode(m.getMetadata().getCompiler(), googRequireNode),
+                  namespace));
           return this;
         } else {
           // The file has no goog.provide or goog.require nodes.
           if (script.getFirstChild() != null) {
             nodeToInsertBefore = script.getFirstChild();
           } else {
-            replacements.put(script.getSourceFileName(), new CodeReplacement(
-                0, 0, generateCode(m.getMetadata().getCompiler(), googRequireNode), namespace));
+            replacements.put(
+                script.getSourceFileName(),
+                CodeReplacement.create(
+                    0, 0, generateCode(m.getMetadata().getCompiler(), googRequireNode), namespace));
             return this;
           }
         }

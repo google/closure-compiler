@@ -16,92 +16,45 @@
 
 package com.google.javascript.refactoring;
 
-import java.util.Objects;
+import com.google.auto.value.AutoValue;
 
 /**
  * Class that represents a set of changes to make to the code.
  *
  * @author mknichel@google.com (Mark Knichel)
  */
-public final class CodeReplacement {
+@AutoValue
+public abstract class CodeReplacement {
 
-  private final int startPosition;
-  private final int length;
-  private final String newContent;
-
-  // Used for sorting a list of CodeReplacements, in case of a "tie": two replacements with the
-  // same startPosition.
-  private final String sortKey;
-
-  CodeReplacement(int startPosition, int length, String newContent) {
-    this(startPosition, length, newContent, "");
+  static CodeReplacement create(int startPosition, int length, String newContent) {
+    return create(startPosition, length, newContent, "");
   }
 
-  CodeReplacement(int startPosition, int length, String newContent, String sortKey) {
-    this.startPosition = startPosition;
-    this.length = length;
-    this.newContent = newContent;
-    this.sortKey = sortKey;
+  static CodeReplacement create(int startPosition, int length, String newContent, String sortKey) {
+    return new AutoValue_CodeReplacement(startPosition, length, newContent, sortKey);
   }
 
   /**
-   * Returns the start position within the file that the modification
-   * should be applied starting at.
+   * Returns the start position within the file that the modification should be applied starting at.
    */
-  public int getStartPosition() {
-    return startPosition;
-  }
+  public abstract int getStartPosition();
 
-  /**
-   * Returns how many characters the new content should replace in the
-   * original content.
-   */
-  public int getLength() {
-    return length;
-  }
+  /** Returns how many characters the new content should replace in the original content. */
+  public abstract int getLength();
 
   /**
    * Returns the end position within the file that the modification
    * should be applied starting at.
    */
   public int getEndPosition() {
-    return startPosition + length;
+    return getStartPosition() + getLength();
   }
 
-  /**
-   * Returns the new content that should be inserted into the file.
-   */
-  public String getNewContent() {
-    return newContent;
-  }
+  /** Returns the new content that should be inserted into the file. */
+  public abstract String getNewContent();
 
   /**
    * Returns an additional String key that can be used to sort replacements using lexical ordering.
    */
-  public String getSortKey() {
-    return sortKey;
-  }
-
-  @Override public String toString() {
-    return String.format(
-        "Start position: %d\nLength: %d\nNew Content: \"%s\"", startPosition, length, newContent);
-  }
-
-  @Override public boolean equals(Object o) {
-    if (o == this) {
-      return true;
-    }
-    if (!(o instanceof CodeReplacement)) {
-      return false;
-    }
-    CodeReplacement other = (CodeReplacement) o;
-    return startPosition == other.startPosition
-        && length == other.length
-        && newContent.equals(other.newContent)
-        && sortKey.equals(other.sortKey);
-  }
-
-  @Override public int hashCode() {
-    return Objects.hash(startPosition, length, newContent, sortKey);
-  }
+  public abstract String getSortKey();
 }
