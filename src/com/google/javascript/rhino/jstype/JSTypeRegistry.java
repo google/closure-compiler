@@ -145,7 +145,7 @@ public class JSTypeRegistry implements TypeIRegistry, Serializable {
   // Types that have been "forward-declared."
   // If these types are not declared anywhere in the binary, we shouldn't
   // try to type-check them at all.
-  private final Set<String> forwardDeclaredTypes;
+  private final transient Set<String> forwardDeclaredTypes;
 
   // A map of properties to the types on which those properties have been
   // declared.

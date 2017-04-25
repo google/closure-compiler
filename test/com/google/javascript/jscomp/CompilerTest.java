@@ -26,6 +26,7 @@ import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -37,6 +38,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -939,6 +941,45 @@ public final class CompilerTest extends TestCase {
     assertExternIndex(compiler, 0, "hops");
     assertExternIndex(compiler, 1, "beer");
     assertExternIndex(compiler, 2, "leaf");
+  }
+
+
+  public void testCheckSaveRestoreOptimize() throws Exception {
+    Compiler compiler = new Compiler(new TestErrorManager());
+
+    CompilerOptions options = new CompilerOptions();
+    options.setAssumeForwardDeclaredForMissingTypes(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setCheckTypes(true);
+    options.setStrictModeInput(true);
+    options.setPreserveDetailedSourceInfo(true);
+    options.setCheckTypes(true);
+
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    compiler.init(
+        Collections.singletonList(
+            SourceFile.fromCode("externs.js",
+                Joiner.on('\n').join("", "var console = {};", " console.log = function() {};"))),
+        Collections.singletonList(
+            SourceFile.fromCode("input.js",
+                Joiner.on('\n').join("", "function f() { return 2; }", "console.log(f());"))),
+        options);
+
+    compiler.parse();
+    compiler.check();
+
+    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+    compiler.saveState(byteArrayOutputStream);
+
+    compiler = new Compiler(new TestErrorManager());
+    ByteArrayInputStream byteArrayInputStream =
+        new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+    compiler.restoreState(byteArrayInputStream);
+
+    compiler.optimize();
+    String source = compiler.toSource();
+    assertEquals("'use strict';console.log(2);", source);
+
   }
 
   public void testExternsDependencyPruning() {

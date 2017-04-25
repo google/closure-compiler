@@ -53,7 +53,7 @@ public final class TemplatizedType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
   final ImmutableList<JSType> templateTypes;
-  final TemplateTypeMapReplacer replacer;
+  final transient TemplateTypeMapReplacer replacer;
 
   TemplatizedType(
       JSTypeRegistry registry, ObjectType objectType,

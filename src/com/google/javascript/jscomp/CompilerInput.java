@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.deps.SimpleDependencyInfo;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -54,7 +53,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   private final SourceAst ast;
 
   // DependencyInfo to delegate to.
-  private DependencyInfo dependencyInfo;
+  private transient DependencyInfo dependencyInfo;
   private final List<String> extraRequires = new ArrayList<>();
   private final List<String> extraProvides = new ArrayList<>();
 

@@ -55,7 +55,12 @@ import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.Serializable;
 import java.nio.file.FileSystems;
 import java.util.AbstractSet;
 import java.util.ArrayList;
@@ -3130,5 +3135,64 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (getOptions().sourceMapIncludeSourcesContent && getSourceMap() != null) {
       getSourceMap().addSourceFile(SourceFile.fromCode(filename, contents));
     }
+  }
+
+  /**
+   * Serializable state of the compiler.
+   */
+  private static class CompilerState implements Serializable {
+    CompilerOptions options;
+    Node externsRoot;
+    Node jsRoot;
+    Node externAndJsRoot;
+    List<CompilerInput> externs;
+    List<CompilerInput> inputs;
+    Map<InputId, CompilerInput> inputsById;
+    JSTypeRegistry typeRegistry;
+
+    CompilerState(
+        CompilerOptions options,
+        Node externsRoot,
+        Node jsRoot,
+        Node externAndJsRoot,
+        List<CompilerInput> externs,
+        List<CompilerInput> inputs,
+        Map<InputId, CompilerInput> inputsById,
+        JSTypeRegistry typeRegistry) {
+      this.options = options;
+      this.externsRoot = externsRoot;
+      this.jsRoot = jsRoot;
+      this.externAndJsRoot = externAndJsRoot;
+      this.typeRegistry = typeRegistry;
+      this.externs = externs;
+      this.inputs = inputs;
+      this.inputsById = inputsById;
+    }
+  }
+
+  @GwtIncompatible("ObjectOutputStream")
+  public void saveState(OutputStream outputStream) throws IOException {
+    CompilerState compilerState = new CompilerState(
+        options, externsRoot, jsRoot, externAndJsRoot, externs, inputs, inputsById, typeRegistry);
+    try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream)) {
+      objectOutputStream.writeObject(compilerState);
+   }
+  }
+
+  @GwtIncompatible("ObjectInputStream")
+  public void restoreState(InputStream inputStream) throws Exception {
+    try (ObjectInputStream objectInputStream = new ObjectInputStream(inputStream)) {
+      CompilerState compilerState = (CompilerState) objectInputStream.readObject();
+      options = compilerState.options;
+      externs = compilerState.externs;
+      inputs = compilerState.inputs;
+      inputsById.clear();
+      inputsById.putAll(compilerState.inputsById);
+      typeRegistry = compilerState.typeRegistry;
+      externAndJsRoot = compilerState.externAndJsRoot;
+      externsRoot = compilerState.externsRoot;
+      jsRoot = compilerState.jsRoot;
+    }
+    initWarningsGuard(options.getWarningsGuard());
   }
 }
