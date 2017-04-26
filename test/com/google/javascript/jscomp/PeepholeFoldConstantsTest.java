@@ -61,6 +61,16 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
     return 2;
   }
 
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    // NTI is stricter than OTI w.r.t. implicitly casting boolean/null/undefined to numbers,
+    // but that's irrelevant to this test.
+    options.setWarningLevel(
+        new DiagnosticGroup(NewTypeInference.INVALID_OPERAND_TYPE), CheckLevel.OFF);
+    return options;
+  }
+
   private void foldSame(String js) {
     testSame(js);
   }
@@ -1305,27 +1315,29 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   }
 
   public void testTypeBasedFoldConstant() {
-    this.mode = TypeInferenceMode.OTI_ONLY;
-    test("var /** number */ x; x + 1 + 1 + x",
-         "var /** number */ x; x + 2 + x");
+    this.mode = TypeInferenceMode.BOTH;
+    test("function f(/** number */ x) { x + 1 + 1 + x; }",
+         "function f(/** number */ x) { x + 2 + x; }");
 
-    test("var /** boolean */ x; x + 1 + 1 + x",
-         "var /** boolean */ x; x + 2 + x");
+    test("function f(/** boolean */ x) { x + 1 + 1 + x; }",
+         "function f(/** boolean */ x) { x + 2 + x; }");
 
-    test("var /** null */ x; x + 1 + 1 + x",
-         "var /** null */ x; 2");
+    test("function f(/** null */ x) { x + 1 + 1 + x; }",
+         "function f(/** null */ x) { 2; }");
 
-    test("var /** undefined */ x; x + 1 + 1 + x",
-         "var /** undefined */ x; NaN");
+    test("function f(/** undefined */ x) { x + 1 + 1 + x; }",
+         "function f(/** undefined */ x) { NaN; }");
 
-    test("var /** null */ x; var y = true > x;", "var /** null */ x; var y = true;");
+    test("function f(/** null */ x) { var y = true > x; }",
+         "function f(/** null */ x) { var y = true; }");
 
-    test("var /** null */ x; var y = null > x;", "var /** null */ x; var y = false;");
+    test("function f(/** null */ x) { var y = null > x; }",
+         "function f(/** null */ x) { var y = false; }");
 
-    testSame("var /** string */ x; x + 1 + 1 + x");
+    testSame("function f(/** string */ x) { x + 1 + 1 + x; }");
 
     useTypes = false;
-    testSame("var /** number */ x; x + 1 + 1 + x");
+    testSame("function f(/** number */ x) { x + 1 + 1 + x; }");
   }
 
   public void foldDefineProperties1() {
