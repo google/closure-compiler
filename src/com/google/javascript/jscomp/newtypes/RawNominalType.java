@@ -585,16 +585,16 @@ public final class RawNominalType extends Namespace {
   public void addUndeclaredProtoProperty(String pname, Node defSite, JSType inferredType) {
     Preconditions.checkState(!this.isFrozen);
     Property existingProp = this.protoProps.get(pname);
-    if (existingProp == null || !existingProp.isDeclared()) {
-      JSType oldType = existingProp == null ? null : existingProp.getType();
-      if (oldType != null) {
-        inferredType = JSType.join(oldType, inferredType);
-      }
-      this.protoProps = this.protoProps.with(pname,
-          Property.makeWithDefsite(defSite, inferredType, null));
-      if (this.randomProps.containsKey(pname)) {
-        this.randomProps = this.randomProps.without(pname);
-      }
+    if (existingProp != null && existingProp.isDeclared()) {
+      return;
+    }
+    if (existingProp != null) {
+      inferredType = JSType.join(existingProp.getType(), inferredType);
+    }
+    this.protoProps =
+        this.protoProps.with(pname, Property.makeWithDefsite(defSite, inferredType, null));
+    if (this.randomProps.containsKey(pname)) {
+      this.randomProps = this.randomProps.without(pname);
     }
   }
 
@@ -611,9 +611,13 @@ public final class RawNominalType extends Namespace {
   }
 
   /** Add a new undeclared property to this class's constructor */
-  public void addUndeclaredCtorProperty(String pname, Node defSite) {
+  public void addUndeclaredCtorProperty(String pname, Node defSite, JSType inferredType) {
     Preconditions.checkState(!this.isFrozen);
-    super.addUndeclaredProperty(pname, defSite, this.commonTypes.UNKNOWN, false);
+    Property existingProp = getNsProp(pname);
+    if (existingProp != null && !existingProp.isDeclared()) {
+      inferredType = JSType.join(existingProp.getType(), inferredType);
+    }
+    super.addUndeclaredProperty(pname, defSite, inferredType, false);
   }
 
   public JSType getCtorPropDeclaredType(String pname) {

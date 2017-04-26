@@ -187,8 +187,7 @@ public abstract class Namespace {
   public final void addUndeclaredProperty(
       String pname, Node defSite, JSType t, boolean isConstant) {
     Preconditions.checkState(this.namespaceType == null);
-    if (otherProps.containsKey(pname)
-        && !otherProps.get(pname).getType().isUnknown()) {
+    if (otherProps.containsKey(pname) && otherProps.get(pname).isDeclared()) {
       return;
     }
     otherProps = otherProps.with(pname, isConstant

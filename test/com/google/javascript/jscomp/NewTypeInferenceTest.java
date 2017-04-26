@@ -19926,7 +19926,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "f(Foo);"));
   }
 
-  public void testInstantiateTypeVariablesToUnknownWhenUsingCallApply() {
+  public void testHandleClassGenericsWhenUsingCallApply() {
     typeCheck(LINE_JOINER.join(
         "/**",
         " * @constructor",
@@ -19991,5 +19991,42 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "Foo.prototype.f = function(x) { return x; }",
         "var /** number */ n = Foo.prototype.f.call(new Foo, 'asdf');"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testInferTypeOfUndeclaredConstructorProperties() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prop = 1;",
+        "function f() {",
+        "  var /** string */ s = Foo.prop;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prop = 1;",
+        "Foo.prop = true;"));
+
+    // TODO(dimvar): we want to catch the warning here, which requires not tightening the
+    // property type. Will do in a follow-up CL.
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prop = 'asdf';",
+        "function f() {",
+        "  var /** string */ s = Foo.prop;",
+        "}",
+        "Foo.prop = 1;"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prop = 'asdf';",
+        "function f() {",
+        "  var /** string */ s = Foo.prop;",
+        "}",
+        "Foo.prop = globalVar;"));
   }
 }

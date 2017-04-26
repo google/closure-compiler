@@ -1830,7 +1830,15 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           getProp.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
         }
       } else {
-        classType.addUndeclaredCtorProperty(pname, getProp);
+        JSType inferredType = null;
+        Node initializer = NodeUtil.getRValueOfLValue(getProp);
+        if (initializer != null) {
+          inferredType = simpleInferExprType(initializer);
+        }
+        if (inferredType == null) {
+          inferredType = commonTypes.UNKNOWN;
+        }
+        classType.addUndeclaredCtorProperty(pname, getProp, inferredType);
       }
     }
 
