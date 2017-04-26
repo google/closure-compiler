@@ -125,6 +125,32 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
     testSame("let x; function f() { x = 0; }");
   }
 
+  public void testParameterAssignedOnlyOnceInLifetime() {
+    behavior = new Behavior() {
+      @Override
+      public void afterExitScope(NodeTraversal t, ReferenceMap rm)  {
+        if (t.getScope().isFunctionScope()) {
+          ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
+          assertThat(x.isAssignedOnceInLifetime()).isTrue();
+        }
+      }
+    };
+    testSame("function f(x) { x; }");
+  }
+
+  public void testModifiedParameterNotAssignedOnlyOnceInLifetime() {
+    behavior = new Behavior() {
+      @Override
+      public void afterExitScope(NodeTraversal t, ReferenceMap rm)  {
+        if (t.getScope().isFunctionScope()) {
+          ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
+          assertThat(x.isAssignedOnceInLifetime()).isFalse();
+        }
+      }
+    };
+    testSame("function f(x) { x = 3; }");
+  }
+
   public void testVarAssignedOnceInLifetime1() {
     behavior = new Behavior() {
       @Override
