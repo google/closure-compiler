@@ -1270,7 +1270,7 @@ public final class FunctionType {
     return builder.buildFunction();
   }
 
-  /** {@see #instantiateGenerics} */
+  /** @see #instantiateGenerics */
   private FunctionType substituteParametricGenerics(Map<String, JSType> typeMap) {
     if (typeMap.isEmpty()) {
       return this;

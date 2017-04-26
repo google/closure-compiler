@@ -19663,7 +19663,6 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    // TODO(dimvar): ideally, we'd warn here because the inferred type of a is (number|string)
     typeCheck(LINE_JOINER.join(
         "/** @const */",
         "var ns = {};",
@@ -19673,7 +19672,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "ns.Foo.prototype.a = 123;",
         "function f() {",
         "  var /** string */ s = ns.Foo.prototype.a;",
-        "}"));
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testDontWarnForBreakAfterReturn() {
@@ -20009,8 +20009,6 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "Foo.prop = 1;",
         "Foo.prop = true;"));
 
-    // TODO(dimvar): we want to catch the warning here, which requires not tightening the
-    // property type. Will do in a follow-up CL.
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
         "function Foo() {}",
@@ -20018,7 +20016,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function f() {",
         "  var /** string */ s = Foo.prop;",
         "}",
-        "Foo.prop = 1;"));
+        "Foo.prop = 1;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",

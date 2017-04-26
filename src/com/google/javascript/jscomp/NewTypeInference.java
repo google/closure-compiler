@@ -1612,7 +1612,7 @@ final class NewTypeInference implements CompilerPass {
       // We have a heuristic check to avoid the spurious warnings,
       // but we also miss some true warnings.
       JSType declType = currentScope.getDeclaredTypeOf(varName);
-      if (tightenTypeAndDontWarn(varName, expr, declType, inferredType, requiredType)) {
+      if (tightenNameTypeAndDontWarn(varName, expr, declType, inferredType, requiredType)) {
         inferredType = inferredType.specialize(requiredType);
       } else {
         // Propagate incorrect type so that the context catches
@@ -2967,28 +2967,53 @@ final class NewTypeInference implements CompilerPass {
     }
   }
 
-  private boolean tightenTypeAndDontWarn(
+  /**
+   * In certain cases, tightens the type of a variable to avoid warning.
+   *
+   * The intent is to be looser about warnings in the case when a value is passed to a function
+   * (as opposed to being created locally), because then we have less information about the value.
+   * The accurate way to do this is with taint tracking: mark types so that we can track where a
+   * type comes from (local or not).
+   * Without tainting (e.g., we used to have locations on types), we approximate this by checking
+   * the variable name.
+   */
+  private boolean tightenNameTypeAndDontWarn(
       String varName, Node n, JSType declared, JSType inferred, JSType required) {
     boolean isSpecializableTop = declared != null && declared.isTop()
         && (!inferred.isTop() || NodeUtil.isPropertyTest(compiler, n.getParent()));
-    boolean fuzzyDeclaration = declared == null || declared.isUnknown() || isSpecializableTop;
-
-    return fuzzyDeclaration
-        // The intent is to be looser about warnings in the case when a value
-        // is passed to a function (as opposed to being created locally),
-        // because then we have less information about the value.
-        // The accurate way to do this is to taint types so that we can track
-        // where a type comes from (local or not).
-        // Without tainting (eg, we used to have locations), we approximate this
-        // by checking the variable name.
+    boolean fuzzyDeclaration = declared == null || declared.isUnknown();
+    return (fuzzyDeclaration || isSpecializableTop)
         && (varName == null || currentScope.isFormalParam(varName)
             || currentScope.isOuterVar(varName))
+        // If required is loose, it's easier for it to be a subtype of inferred.
+        // We only tighten the type if the non-loose required is also a subtype.
+        && required.isNonLooseSubtypeOf(inferred);
+  }
+
+  /**
+   * In certain cases, tightens the type of a property to avoid warning.
+   *
+   * Don't do it if the receiver is a namespace or a prototype object: these are more "static"
+   * than some instance type, so we can be stricter.
+   * The heuristics for tightening the type are similar to @see #tightenNameTypeAndDontWarn.
+   */
+  private boolean tightenPropertyTypeAndDontWarn(String recvName, Node propAccessNode,
+      JSType recvType, JSType propDeclType, JSType propInferredType, JSType propRequiredType) {
+    if (recvType != null && (recvType.isNamespace() || recvType.isPrototypeObject())) {
+      return false;
+    }
+    boolean isSpecializableTop = propDeclType != null && propDeclType.isTop()
+        && (!propInferredType.isTop() || NodeUtil.isPropertyTest(compiler, propAccessNode));
+    boolean fuzzyDeclaration = propDeclType == null || propDeclType.isUnknown();
+    return (fuzzyDeclaration || isSpecializableTop)
+        && (recvName == null || currentScope.isFormalParam(recvName)
+            || currentScope.isOuterVar(recvName))
         // If required is loose, it's easier for it to be a subtype of inferred.
         // We only tighten the type if the non-loose required is also a subtype.
         // Otherwise, we would be skipping warnings too often.
         // This is important b/c analyzePropAccess & analyzePropLvalue introduce
         // loose objects, even if there are no undeclared formals.
-        && required.isNonLooseSubtypeOf(inferred);
+        && propRequiredType.isNonLooseSubtypeOf(propInferredType);
   }
 
   private static String errorMsgWithTypeDiff(JSType expected, JSType found) {
@@ -3313,9 +3338,10 @@ final class NewTypeInference implements CompilerPass {
         && !mayWarnAboutInexistentProp(propAccessNode, recvType, propQname)
         && recvType.hasProp(propQname)
         && !resultType.isSubtypeOf(requiredType)
-        && tightenTypeAndDontWarn(
+        && tightenPropertyTypeAndDontWarn(
             receiver.isName() ? receiver.getString() : null,
-            receiver,
+            propAccessNode,
+            recvType,
             recvType.getDeclaredProp(propQname),
             resultType, requiredType)) {
       // Tighten the inferred type and don't warn.
