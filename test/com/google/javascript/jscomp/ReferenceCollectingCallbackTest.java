@@ -25,104 +25,19 @@ import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 
 public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   private Behavior behavior;
-  private boolean es6ScopeCreator;
 
   @Override
   public void setUp() {
     setLanguage(ECMASCRIPT_NEXT, ECMASCRIPT_NEXT);
     behavior = null;
-    es6ScopeCreator = true;
-  }
-
-  @Override
-  protected int getNumRepetitions() {
-    return 1;
   }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    ScopeCreator scopeCreator =
-        es6ScopeCreator
-            ? new Es6SyntacticScopeCreator(compiler)
-            : SyntacticScopeCreator.makeUntyped(compiler);
-    return new ReferenceCollectingCallback(compiler, this.behavior, scopeCreator);
-  }
-
-  public void testVarInBlock_oldScopeCreator() {
-    es6ScopeCreator = false;
-    behavior = new Behavior() {
-      @Override
-      public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-        if (t.getScope().isFunctionScope()) {
-          ReferenceCollection y = rm.getReferences(t.getScope().getVar("y"));
-          assertThat(y.isAssignedOnceInLifetime()).isTrue();
-          assertThat(y.isWellDefined()).isTrue();
-        }
-      }
-    };
-    testSame(
-        LINE_JOINER.join(
-            "function f(x) {",
-            "  if (true) {",
-            "    var y = x;",
-            "    y;",
-            "    y;",
-            "  }",
-            "}"));
-  }
-
-  public void testVarInBlock() {
-    behavior = new Behavior() {
-      @Override
-      public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-        if (t.getScope().isBlockScope() && t.getScope().getParent().isFunctionBlockScope()) {
-          ReferenceCollection y = rm.getReferences(t.getScope().getVar("y"));
-          assertThat(y.isAssignedOnceInLifetime()).isTrue();
-          assertThat(y.isWellDefined()).isTrue();
-        }
-      }
-    };
-    testSame(
-        LINE_JOINER.join(
-            "function f(x) {",
-            "  if (true) {",
-            "    var y = x;",
-            "    y;",
-            "    y;",
-            "  }",
-            "}"));
-  }
-
-  public void testVarInLoopNotAssignedOnlyOnceInLifetime() {
-    behavior = new Behavior() {
-      @Override
-      public void afterExitScope(NodeTraversal t, ReferenceMap rm)  {
-        if (t.getScope().isBlockScope()) {
-          ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
-          assertThat(x.isAssignedOnceInLifetime()).isFalse();
-        }
-      }
-    };
-    testSame("while (true) { var x = 0; }");
-    testSame("while (true) { let x = 0; }");
-  }
-
-  /**
-   * Although there is only one assignment to x in the code, it's in a function which could be
-   * called multiple times, so {@code isAssignedOnceInLifetime()} returns false.
-   */
-  public void testVarInFunctionNotAssignedOnlyOnceInLifetime() {
-    behavior = new Behavior() {
-      @Override
-      public void afterExitScope(NodeTraversal t, ReferenceMap rm)  {
-        if (t.getScope().isGlobal()) {
-          ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
-          assertThat(x.isAssignedOnceInLifetime()).isFalse();
-        }
-      }
-    };
-    testSame("var x; function f() { x = 0; }");
-    testSame("let x; function f() { x = 0; }");
+    return new ReferenceCollectingCallback(
+        compiler,
+        this.behavior,
+        new Es6SyntacticScopeCreator(compiler));
   }
 
   public void testParameterAssignedOnlyOnceInLifetime() {
