@@ -1819,16 +1819,16 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testRegression2() {
-    String comment =
-        " * @return {boolean} whatever\n" +
-        " * but important\n" +
-        " *\n" +
-        " * @param {number} index the index of blah\n" +
-        " * some more comments here\n" +
-        " * @param name the name of the guy\n" +
-        " *\n" +
-        " * @protected\n" +
-        " */";
+    String comment = LINE_JOINER.join(
+        " * @return {boolean} whatever",
+        " * but important",
+        " *",
+        " * @param {number} index the index of blah",
+        " * some more comments here",
+        " * @param name the name of the person",
+        " *",
+        " * @protected",
+        " */");
 
     JSDocInfo info = parse(comment, MISSING_TYPE_DECL_WARNING_TEXT);
 

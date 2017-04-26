@@ -1519,7 +1519,7 @@ class TypeInference
    * Suppose X is an object with inferred properties.
    * Suppose also that X is used in a way where it would only type-check
    * correctly if some of those properties are widened.
-   * Then we should be polite and automatically widen X's properties for him.
+   * Then we should be polite and automatically widen X's properties.
    *
    * For a concrete example, consider:
    * param x {{prop: (number|undefined)}}
