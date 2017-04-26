@@ -93,7 +93,7 @@ public final class GwtRunner implements EntryPoint {
     String outputWrapper;
     @Deprecated
     boolean polymerPass;
-    Integer polymerVersion;
+    Double polymerVersion;  // nb. GWT only supports Double, not Integer
     boolean preserveTypeAnnotations;
     boolean processClosurePrimitives;
     boolean processCommonJsModules;
@@ -135,6 +135,7 @@ public final class GwtRunner implements EntryPoint {
     defaultFlags.newTypeInf = false;
     defaultFlags.isolationMode = "NONE";
     defaultFlags.outputWrapper = null;
+    defaultFlags.polymerPass = false;
     defaultFlags.polymerVersion = null;
     defaultFlags.preserveTypeAnnotations = false;
     defaultFlags.processClosurePrimitives = true;
@@ -409,8 +410,8 @@ public final class GwtRunner implements EntryPoint {
     options.setNewTypeInference(flags.newTypeInf);
     if (flags.polymerPass) {
       options.setPolymerVersion(1);
-    } else {
-      options.setPolymerVersion(flags.polymerVersion);
+    } else if (flags.polymerVersion != null) {
+      options.setPolymerVersion(flags.polymerVersion.intValue());
     }
     options.setPreserveTypeAnnotations(flags.preserveTypeAnnotations);
     options.setClosurePass(flags.processClosurePrimitives);
