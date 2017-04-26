@@ -85,6 +85,7 @@ class TagNameToType {
           .put("style", "HTMLStyleElement")
           .put("table", "HTMLTableElement")
           .put("tbody", "HTMLTableSectionElement")
+          .put("tfoot", "HTMLTableSectionElement")
           .put("template", "HTMLTemplateElement")
           .put("td", "HTMLTableSectionElement")
           .put("textarea", "HTMLTextAreaElement")
