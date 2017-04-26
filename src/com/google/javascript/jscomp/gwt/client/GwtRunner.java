@@ -93,7 +93,7 @@ public final class GwtRunner implements EntryPoint {
     String outputWrapper;
     @Deprecated
     boolean polymerPass;
-    Double polymerVersion;  // nb. GWT only supports Double, not Integer
+    Double polymerVersion;  // nb. nullable JS number represented by java.lang.Double in GWT.
     boolean preserveTypeAnnotations;
     boolean processClosurePrimitives;
     boolean processCommonJsModules;
