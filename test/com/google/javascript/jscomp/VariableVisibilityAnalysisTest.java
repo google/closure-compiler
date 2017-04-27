@@ -27,14 +27,11 @@ import com.google.javascript.rhino.Node;
  * @author dcc@google.com (Devin Coughlin)
  */
 public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
-
-  private Compiler lastCompiler;
   private VariableVisibilityAnalysis lastAnalysis;
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     lastAnalysis = new VariableVisibilityAnalysis(compiler);
-    lastCompiler = compiler;
 
     return lastAnalysis;
   }
@@ -175,7 +172,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
       }
     };
 
-    NodeTraversal.traverseEs6(lastCompiler, lastCompiler.jsRoot, findParameter);
+    NodeTraversal.traverseEs6(getLastCompiler(), getLastCompiler().jsRoot, findParameter);
 
     return foundNode[0];
   }
@@ -202,7 +199,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
           }
         };
 
-    NodeTraversal.traverseEs6(lastCompiler, lastCompiler.jsRoot, findFunction);
+    NodeTraversal.traverseEs6(getLastCompiler(), getLastCompiler().jsRoot, findFunction);
 
     return foundNode[0];
   }
@@ -211,7 +208,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
   private Node searchLabel(String label) {
     LabeledVariableSearcher s = new LabeledVariableSearcher(label);
 
-    NodeTraversal.traverseEs6(lastCompiler, lastCompiler.jsRoot, s);
+    NodeTraversal.traverseEs6(getLastCompiler(), getLastCompiler().jsRoot, s);
     assertNotNull("Label " + label + " should be in the source code", s.found);
 
     return s.found;
@@ -232,8 +229,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
     }
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isLabel() &&
-          target.equals(n.getFirstChild().getString())) {
+      if (n.isLabel() && target.equals(n.getFirstChild().getString())) {
 
         // LABEL
         //     VAR

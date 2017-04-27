@@ -29,9 +29,14 @@ public final class CheckRegExpTest extends CompilerTestCase {
   }
 
   @Override
+  protected CompilerOptions getOptions(CompilerOptions options) {
+    super.getOptions(options);
+    options.setWarningLevel(DiagnosticGroups.CHECK_REGEXP, CheckLevel.WARNING);
+    return options;
+  }
+
+  @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    compiler.options.setWarningLevel(
-        DiagnosticGroups.CHECK_REGEXP, CheckLevel.WARNING);
     last = new CheckRegExp(compiler);
     return last;
   }

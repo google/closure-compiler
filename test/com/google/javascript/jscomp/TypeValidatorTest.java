@@ -35,16 +35,12 @@ import java.util.List;
  * @author nicksantos@google.com (Nick Santos)
  */
 public final class TypeValidatorTest extends CompilerTestCase {
-
-  private Compiler compiler = null;
-
   public TypeValidatorTest() {
     enableTypeCheck();
   }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    this.compiler = compiler;
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node n) {
@@ -72,7 +68,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
         " */ function f(x) { return x; }",
         TYPE_MISMATCH_WARNING);
 
-    JSTypeRegistry registry = compiler.getTypeRegistry();
+    JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
     JSType string = registry.getNativeType(STRING_TYPE);
     JSType bool = registry.getNativeType(BOOLEAN_TYPE);
     JSType number = registry.getNativeType(NUMBER_TYPE);
@@ -94,7 +90,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
         " */ function f(x) { return x; }",
         TYPE_MISMATCH_WARNING);
 
-    JSTypeRegistry registry = compiler.getTypeRegistry();
+    JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
     JSType string = registry.getNativeType(STRING_TYPE);
     JSType bool = registry.getNativeType(BOOLEAN_TYPE);
     JSType number = registry.getNativeType(NUMBER_TYPE);
@@ -484,13 +480,13 @@ public final class TypeValidatorTest extends CompilerTestCase {
   }
 
   private TypeMismatch fromNatives(JSTypeNative a, JSTypeNative b) {
-    JSTypeRegistry registry = compiler.getTypeRegistry();
+    JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
     return new TypeMismatch(
         registry.getNativeType(a), registry.getNativeType(b), null);
   }
 
   private void assertMismatches(List<TypeMismatch> expected) {
-    List<TypeMismatch> actual = ImmutableList.copyOf(compiler.getTypeMismatches());
+    List<TypeMismatch> actual = ImmutableList.copyOf(getLastCompiler().getTypeMismatches());
     assertEquals(expected, actual);
   }
 }
