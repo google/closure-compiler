@@ -89,11 +89,11 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
   /*
    * Feel free to increase this to a reasonable number if you are finding that
-   * more and more passes need more than 600000 steps before finding a
-   * fixed-point. If you just have a special case, consider calling
-   * {@link #analyse(int)} instead.
+   * more and more passes need more steps before finding a fixed-point.
+   * If you just have a special case, consider calling
+   * {@link #analyze(int)} instead.
    */
-  public static final int MAX_STEPS = 600000;
+  public static final int MAX_STEPS = 800000;
 
   /**
    * Constructs a data flow analysis.
