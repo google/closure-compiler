@@ -1096,14 +1096,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         compiler.initModules(externs, modules, options);
         compiler.orderInputsWithLargeStack();
       } else {
-        result = compiler.compileModules(externs, modules, options);
+        result = performFullCompilationWithModules(options, externs, modules);
       }
     } else {
       if (config.skipNormalOutputs) {
         compiler.init(externs, inputs, options);
         compiler.orderInputsWithLargeStack();
       } else {
-        result = compiler.compile(externs, inputs, options);
+        result = performFullCompilation(options, externs, inputs);
       }
     }
 
@@ -1125,6 +1125,36 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     return processResults(result, modules, options);
+  }
+
+  private Result performFullCompilationWithModules(
+      B options, List<SourceFile> externs, List<JSModule> modules) {
+    try {
+      compiler.initModules(externs, modules, options);
+      if (compiler.hasErrors()) {
+        return compiler.getResult();
+      }
+      return compiler.checkAndTranspileAndOptimize();
+    } finally {
+      // Make sure we generate a report of errors and warnings even if the compiler throws an
+      // exception somewhere.
+      compiler.generateReport();
+    }
+  }
+
+  private Result performFullCompilation(
+      B options, List<SourceFile> externs, List<SourceFile> inputs) {
+    try {
+      compiler.init(externs, inputs, options);
+      if (compiler.hasErrors()) {
+        return compiler.getResult();
+      }
+      return compiler.checkAndTranspileAndOptimize();
+    } finally {
+      // Make sure we generate a report of errors and warnings even if the compiler throws an
+      // exception somewhere.
+      compiler.generateReport();
+    }
   }
 
   /**

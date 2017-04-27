@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
@@ -737,8 +738,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /**
    * Compiles a list of inputs.
    *
-   * <p>TODO(bradfordcsmith): Define checkAndTranspile() and optimize() methods that
-   * may be sequentially invoked after init() or initModules().
+   * <p>This is a convenience method to wrap up all the work of compilation, including
+   * generating the error and warning report.
+   *
+   * <p>NOTE: All methods called here must be public, because client code must be able to replicate
+   * and customize this.
    */
   public <T1 extends SourceFile, T2 extends SourceFile> Result initAndCheckAndTranspileAndOptimize(
       List<T1> externs, List<T2> inputs, CompilerOptions options) {
@@ -752,9 +756,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
       return checkAndTranspileAndOptimize();
     } finally {
-      Tracer t = newTracer("generateReport");
-      errorManager.generateReport();
-      stopTracer(t, "generateReport");
+      generateReport();
     }
   }
 
@@ -769,7 +771,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return initAndCheckAndTranspileAndOptimize(externs, inputs, options);
   }
 
-  /** Compiles a list of modules. */
+  /**
+   * Compiles a list of modules.
+   *
+   * <p>This is a convenience method to wrap up all the work of compilation, including
+   * generating the error and warning report.
+   *
+   * <p>NOTE: All methods called here must be public, because client code must be able to replicate
+   * and customize this.
+   */
   public <T extends SourceFile> Result initModulesAndCheckAndTranspileAndOptimize(
       List<T> externs, List<JSModule> modules, CompilerOptions options) {
     // The compile method should only be called once.
@@ -782,10 +792,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
       return checkAndTranspileAndOptimize();
     } finally {
-      Tracer t = newTracer("generateReport");
-      errorManager.generateReport();
-      stopTracer(t, "generateReport");
+      generateReport();
     }
+  }
+
+  /**
+   * Generates a report of all warnings and errors found during compilation to stderr.
+   *
+   * <p>Client code must call this method explicitly if it doesn't use one of the convenience
+   * methods that do so automatically.
+   */
+  public void generateReport() {
+    Tracer t = newTracer("generateReport");
+    errorManager.generateReport();
+    stopTracer(t, "generateReport");
   }
 
   /**
@@ -799,7 +819,19 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return initModulesAndCheckAndTranspileAndOptimize(externs, modules, options);
   }
 
-  private Result checkAndTranspileAndOptimize() {
+  /**
+   * Perform checks transpilation and optimization.
+   *
+   * <p>Either {@code init()} or {@code initModules()} must be called before this method is called.
+   * <p>The caller is responsible for also calling {@code generateReport()} to generate a
+   * report of warnings and errors to stderr.  See the invocation in
+   * {@link #initAndCheckAndTranspileAndOptimize} for a good example.
+   * <p> TODO(bradfordcsmith): Break this up into checkAndTranspile() and optimize().
+   * @return compilation results.
+   */
+  public Result checkAndTranspileAndOptimize() {
+    checkState(
+        inputs != null && !inputs.isEmpty(), "No inputs. Did you call init() or initModules()?");
     return runInCompilerThread(new Callable<Result>() {
       @Override
       public Result call() throws Exception {
