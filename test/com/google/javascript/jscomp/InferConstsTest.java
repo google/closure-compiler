@@ -135,6 +135,11 @@ public final class InferConstsTest extends TestCase {
     testNotConsts("function fn({b, c} = {b:1, c:2}){c = 1}", "c");
   }
 
+  public void testVarInBlock() {
+    // TODO(tbreisacher): x should be const.
+    testNotConsts("function f() { if (true) { var x = function() {}; x(); } }", "x");
+  }
+
   private void testConsts(String js, String... constants) {
     testInferConstsHelper(true, js, constants);
   }
