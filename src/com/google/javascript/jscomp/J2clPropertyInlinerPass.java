@@ -233,7 +233,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
 
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
-        if (NodeUtil.isCompoundAssignementOp(n) || n.isInc() || n.isDec()) {
+        if (NodeUtil.isCompoundAssignmentOp(n) || n.isInc() || n.isDec()) {
           Node assignmentTarget = n.getFirstChild();
           if (assignmentTarget.isGetProp()) {
             String accessName = assignmentTarget.getQualifiedName();

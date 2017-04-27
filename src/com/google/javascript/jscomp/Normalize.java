@@ -495,7 +495,7 @@ class Normalize implements CompilerPass {
         moveNamedFunctions(n.getLastChild());
       }
 
-      if (NodeUtil.isCompoundAssignementOp(n)) {
+      if (NodeUtil.isCompoundAssignmentOp(n)) {
         normalizeAssignShorthand(n);
       }
     }

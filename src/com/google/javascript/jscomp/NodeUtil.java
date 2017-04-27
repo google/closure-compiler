@@ -2029,7 +2029,7 @@ public final class NodeUtil {
     return false;
   }
 
-  public static boolean isCompoundAssignementOp(Node n) {
+  public static boolean isCompoundAssignmentOp(Node n) {
     return isAssignmentOp(n) && !n.isAssign();
   }
 
