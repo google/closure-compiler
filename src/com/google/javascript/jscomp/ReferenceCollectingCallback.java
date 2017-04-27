@@ -533,11 +533,12 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
         return false;
       }
 
-      // Make sure this assignment is not in a loop.
+      // Make sure this assignment is not in a loop or an enclosing function.
       for (BasicBlock block = ref.getBasicBlock();
            block != null; block = block.getParent()) {
         if (block.isFunction) {
-          if (ref.getSymbol().getScope() != ref.scope) {
+          if (ref.getSymbol().getScope().getClosestHoistScope()
+              != ref.scope.getClosestHoistScope()) {
             return false;
           }
           break;
