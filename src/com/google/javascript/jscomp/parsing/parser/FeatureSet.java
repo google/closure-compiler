@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
+import com.google.errorprone.annotations.Immutable;
 import java.io.Serializable;
 import java.util.Objects;
-import javax.annotation.concurrent.Immutable;
 
 /**
  * Represents various aspects of language version and support.
