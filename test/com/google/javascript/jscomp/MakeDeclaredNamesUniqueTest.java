@@ -497,7 +497,7 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
          "var CONST$jscomp$unique_0 = 3; var b$jscomp$unique_1 = CONST$jscomp$unique_0;");
   }
 
-  public void testVarParamSameName() {
+  public void testVarParamSameName0() {
     test(
         LINE_JOINER.join(
             "function f(x) {",
@@ -507,7 +507,9 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
              "function f$jscomp$unique_0(x$jscomp$unique_1) {",
              "  if (!x$jscomp$unique_1) var x$jscomp$unique_1 = 6;",
              "}"));
+  }
 
+  public void testVarParamSameName1() {
     test(
         LINE_JOINER.join(
             "function f(x) {",
@@ -517,7 +519,9 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
              "function f$jscomp$unique_0(x$jscomp$unique_1) {",
              "  if (!x$jscomp$unique_1) x$jscomp$unique_1 = 6; ",
              "}"));
+  }
 
+  public void testVarParamSameAsLet0() {
     testEs6(
         LINE_JOINER.join(
             "function f(x) {",

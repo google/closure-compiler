@@ -364,26 +364,31 @@ final class RenameVars implements CompilerPass {
 
     // Rename the globals!
     for (Node n : globalNameNodes) {
-      String newName = getNewGlobalName(n);
-      // Note: if newName is null, then oldName is an extern.
-      if (newName != null) {
-        n.setString(newName);
-        compiler.reportChangeToEnclosingScope(n);
-      }
+      setNameAndReport(n, getNewGlobalName(n));
     }
 
     // Rename the locals!
     for (Node n : localNameNodes) {
-      String newName = getNewLocalName(n);
-      if (newName != null) {
-        n.setString(newName);
-        compiler.reportChangeToEnclosingScope(n);
-      }
+      setNameAndReport(n, getNewLocalName(n));
     }
 
     // Lastly, write the name assignments to the debug log.
     compiler.addToDebugLog("JS var assignments:\n" + assignmentLog);
     assignmentLog = null;
+  }
+
+  private void setNameAndReport(Node n, String newName) {
+    // A null newName, indicates it should not be renamed.
+    if (newName != null) {
+      n.setString(newName);
+      compiler.reportChangeToEnclosingScope(n);
+      Node parent = n.getParent();
+      if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
+        // If we are renaming a function declaration, make sure the containing scope
+        // has the opporunity to act on the change.
+        compiler.reportChangeToEnclosingScope(parent);
+      }
+    }
   }
 
   private String getNewGlobalName(Node n) {

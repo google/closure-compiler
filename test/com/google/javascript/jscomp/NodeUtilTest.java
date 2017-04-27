@@ -2540,6 +2540,23 @@ public final class NodeUtilTest extends TestCase {
         NodeUtil.getNearestFunctionName(getFunctionNode(js)));
   }
 
+  public static void testChangeVerification() {
+    Node mainScript = IR.script();
+    Node main = IR.root(mainScript);
+
+    Node clone = main.cloneTree();
+
+    Map<Node, Node> map = NodeUtil.mapMainToClone(main, clone);
+
+    NodeUtil.verifyScopeChanges("", map, main);
+
+    mainScript.addChildToFront(
+        IR.function(IR.name("A"), IR.paramList(), IR.block()));
+    mainScript.setChangeTime(100);
+
+    NodeUtil.verifyScopeChanges("", map, main);
+  }
+
   static Node getClassNode(String js) {
     Node root = parse(js);
     return getClassNode(root);

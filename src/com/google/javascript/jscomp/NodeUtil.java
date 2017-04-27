@@ -4832,9 +4832,19 @@ public final class NodeUtil {
     Node thatChild = thatNode.getFirstChild();
     while (thisChild != null && thatChild != null) {
       if (thisChild.isFunction() || thisChild.isScript()) {
-        //  don't compare function name, parameters or bodies.
+        // Don't compare function expression name, parameters or bodies.
+        // But do check that that the node is there.
         if (thatChild.getToken() != thisChild.getToken()) {
           return false;
+        }
+        // Only compare function names for function declarations (not function expressions)
+        // as they change the outer scope definition.
+        if (thisChild.isFunction() && NodeUtil.isFunctionDeclaration(thisChild)) {
+          String thisName = thisChild.getFirstChild().getString();
+          String thatName = thatChild.getFirstChild().getString();
+          if (!thisName.equals(thatName)) {
+            return false;
+          }
         }
       } else if (!isEquivalentToExcludingFunctions(thisChild, thatChild)) {
         return false;

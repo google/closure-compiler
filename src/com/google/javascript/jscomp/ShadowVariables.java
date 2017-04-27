@@ -179,10 +179,11 @@ class ShadowVariables implements CompilerPass {
 
       // Since we don't shadow global, there is nothing to be done in the
       // first immediate local scope as well.
-      if ((t.getScopeRoot().isFunction()
-              && NodeUtil.getEnclosingFunction(t.getScopeRoot().getParent()) == null)
-          || (NodeUtil.isFunctionBlock(t.getScopeRoot())
-              && NodeUtil.getEnclosingFunction(t.getScopeRoot().getGrandparent()) == null)) {
+      Node scopeRoot = t.getScopeRoot();
+      if ((scopeRoot.isFunction()
+              && NodeUtil.getEnclosingFunction(scopeRoot.getParent()) == null)
+          || (NodeUtil.isFunctionBlock(scopeRoot)
+              && NodeUtil.getEnclosingFunction(scopeRoot.getGrandparent()) == null)) {
         return;
       }
 
