@@ -36,6 +36,7 @@ import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -54,6 +55,7 @@ import java.util.Set;
 public final class JSModuleGraph {
 
   private final JSModule[] modules;
+  private final BitSet[] selfPlusTransitiveDeps;
 
   /**
    * Lists of modules at each depth. <code>modulesByDepth.get(3)</code> is a list of the modules at
@@ -79,15 +81,31 @@ public final class JSModuleGraph {
 
   /** Creates a module graph from a list of modules in dependency order. */
   public JSModuleGraph(List<JSModule> modulesInDepOrder) {
-    int numModules = modulesInDepOrder.size();
-    modules = new JSModule[numModules];
-    modulesByDepth = new ArrayList<>();
+    modules = new JSModule[modulesInDepOrder.size()];
 
-    for (int i = 0; i < numModules; ++i) {
-      final JSModule module = modulesInDepOrder.get(i);
+    // n = number of modules
+    // Populate modules O(n)
+    for (int moduleIndex = 0; moduleIndex < modules.length; ++moduleIndex) {
+      final JSModule module = modulesInDepOrder.get(moduleIndex);
       checkState(module.getIndex() == -1, "Module index already set: %s", module);
-      module.setIndex(i);
-      modules[i] = module;
+      module.setIndex(moduleIndex);
+      modules[moduleIndex] = module;
+    }
+
+    // Determine depth for all modules.
+    // m = number of edges in the graph
+    // O(n*m)
+    modulesByDepth = initModulesByDepth();
+
+    // Determine transitive deps for all modules.
+    // O(n*m * log(n)) (probably a bit better than that)
+    selfPlusTransitiveDeps = initTransitiveDepsBitSets();
+  }
+
+  private List<List<JSModule>> initModulesByDepth() {
+    final List<List<JSModule>> tmpModulesByDepth = new ArrayList<>();
+    for (int moduleIndex = 0; moduleIndex < modules.length; ++moduleIndex) {
+      final JSModule module = modules[moduleIndex];
       checkState(module.getDepth() == -1, "Module depth already set: %s", module);
       int depth = 0;
       for (JSModule dep : module.getDependencies()) {
@@ -102,11 +120,29 @@ public final class JSModuleGraph {
       }
 
       module.setDepth(depth);
-      if (depth == modulesByDepth.size()) {
-        modulesByDepth.add(new ArrayList<JSModule>());
+      if (depth == tmpModulesByDepth.size()) {
+        tmpModulesByDepth.add(new ArrayList<JSModule>());
       }
-      modulesByDepth.get(depth).add(module);
+      tmpModulesByDepth.get(depth).add(module);
     }
+    return tmpModulesByDepth;
+  }
+
+  private BitSet[] initTransitiveDepsBitSets() {
+    BitSet[] array = new BitSet[modules.length];
+    for (int moduleIndex = 0; moduleIndex < modules.length; ++moduleIndex) {
+      final JSModule module = modules[moduleIndex];
+      BitSet selfPlusTransitiveDeps = new BitSet(moduleIndex + 1);
+      array[moduleIndex] = selfPlusTransitiveDeps;
+      selfPlusTransitiveDeps.set(moduleIndex);
+      // O(moduleIndex * log64(moduleIndex))
+      for (JSModule dep : module.getDependencies()) {
+        // Add this dependency and all of its dependencies to the current module.
+        // O(log64(moduleIndex))
+        selfPlusTransitiveDeps.or(array[dep.getIndex()]);
+      }
+    }
+    return array;
   }
 
   /**
@@ -193,7 +229,7 @@ public final class JSModuleGraph {
    * module never depends on itself, as that dependency would be cyclic.
    */
   public boolean dependsOn(JSModule src, JSModule m) {
-    return getTransitiveDeps(src).contains(m);
+    return src != m && selfPlusTransitiveDeps[src.getIndex()].get(m.getIndex());
   }
 
   /**
