@@ -1429,6 +1429,7 @@ public final class ConformanceRules {
   /**
    * Ban {@code goog.dom.createDom} and {@code goog.dom.DomHelper#createDom} with parameters
    * specified in {@code value} in the format tagname.attribute, e.g. {@code value: 'iframe.src'}.
+   * Tag name might be also {@code *} to ban the attribute in any tag.
    * Note that string literal values assigned to banned attributes are allowed as they couldn't be
    * attacker controlled.
    */
@@ -1440,10 +1441,11 @@ public final class ConformanceRules {
       super(compiler, requirement);
       bannedTagAttrs = new ArrayList<>();
       for (String value : requirement.getValueList()) {
-        String[] tagAttr = value.toLowerCase().split("\\.");
+        String[] tagAttr = value.split("\\.");
         if (tagAttr.length != 2 || tagAttr[0].isEmpty() || tagAttr[1].isEmpty()) {
           throw new InvalidRequirementSpec("Values must be in the format tagname.attribute.");
         }
+        tagAttr[0] = tagAttr[0].toLowerCase();
         bannedTagAttrs.add(tagAttr);
       }
       if (bannedTagAttrs.isEmpty()) {
@@ -1471,7 +1473,7 @@ public final class ConformanceRules {
       }
 
       for (String[] tagAttr : bannedTagAttrs) {
-        if (tagName != null && !tagAttr[0].equals(tagName)) {
+        if (tagName != null && !tagAttr[0].equals(tagName) && !tagAttr[0].equals("*")) {
           continue;
         }
         if (attrsType != null
@@ -1480,7 +1482,7 @@ public final class ConformanceRules {
           if (!tagAttr[1].equals("class")) {
             continue;
           }
-          return tagName == null
+          return tagName == null && !tagAttr[0].equals("*")
               ? ConformanceResult.POSSIBLE_VIOLATION
               : ConformanceResult.VIOLATION;
         }
@@ -1494,7 +1496,7 @@ public final class ConformanceRules {
             // Ignore string literal values.
             continue;
           }
-          return tagName == null
+          return tagName == null && !tagAttr[0].equals("*")
               ? ConformanceResult.POSSIBLE_VIOLATION
               : ConformanceResult.VIOLATION;
         }

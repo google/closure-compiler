@@ -1737,6 +1737,11 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateDom Message");
 
+    testWarning(
+        "goog.dom.createDom('DIV', ['red']);",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateDom Message");
+
     // TODO(jakubvrana): Add a test for goog.dom.DomHelper.
 
     testWarning(
@@ -1764,5 +1769,33 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame("goog.dom.createDom('img', {'src': src});");
     testSame("goog.dom.createDom('img', attrs);");
     testSame("goog.dom.createDom(tag, {});");
+  }
+
+  public void testBanCreateDomAnyTagName() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'\n" +
+        "  error_message: 'BanCreateDom Message'\n" +
+        "  value: '*.innerHTML'\n" +
+        "}";
+
+    testWarning(
+        "goog.dom.createDom('span', {'innerHTML': html});",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateDom Message");
+
+    testWarning(
+        "goog.dom.createDom(tag, {'innerHTML': html});",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateDom Message");
+
+    testWarning(
+        "goog.dom.createDom('span', attrs);",
+        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION,
+        "Possible violation: BanCreateDom Message");
+
+    testSame("goog.dom.createDom('span', {'innerHTML': ''});");
+    testSame("goog.dom.createDom('span', {'innerhtml': html});");
   }
 }
