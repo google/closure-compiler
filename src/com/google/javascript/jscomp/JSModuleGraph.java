@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -34,9 +35,9 @@ import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideExcept
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -45,15 +46,14 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A {@link JSModule} dependency graph that assigns a depth to each module and
- * can answer depth-related queries about them. For the purposes of this class,
- * a module's depth is defined as the number of hops in the longest (non cyclic)
- * path from the module to a module with no dependencies.
- *
+ * A {@link JSModule} dependency graph that assigns a depth to each module and can answer
+ * depth-related queries about them. For the purposes of this class, a module's depth is defined as
+ * the number of hops in the longest (non cyclic) path from the module to a module with no
+ * dependencies.
  */
 public final class JSModuleGraph {
 
-  private final List<JSModule> modules;
+  private final JSModule[] modules;
 
   /**
    * Lists of modules at each depth. <code>modulesByDepth.get(3)</code> is a list of the modules at
@@ -72,25 +72,23 @@ public final class JSModuleGraph {
    */
   private final Map<JSModule, Set<JSModule>> dependencyMap = new IdentityHashMap<>();
 
-  /**
-   * Creates a module graph from a list of modules in dependency order.
-   */
+  /** Creates a module graph from a list of modules in dependency order. */
   public JSModuleGraph(JSModule[] modulesInDepOrder) {
-    this(ImmutableList.copyOf(modulesInDepOrder));
+    this(Arrays.asList(modulesInDepOrder));
   }
 
-  /**
-   * Creates a module graph from a list of modules in dependency order.
-   */
+  /** Creates a module graph from a list of modules in dependency order. */
   public JSModuleGraph(List<JSModule> modulesInDepOrder) {
-    Preconditions.checkState(
-        modulesInDepOrder.size() == new HashSet<>(modulesInDepOrder).size(),
-        "Found duplicate modules");
-    modules = ImmutableList.copyOf(modulesInDepOrder);
+    int numModules = modulesInDepOrder.size();
+    modules = new JSModule[numModules];
     modulesByDepth = new ArrayList<>();
 
-    for (JSModule module : modulesInDepOrder) {
-      checkState(module.getDepth() == -1, "Module already used in another graph: %s", module);
+    for (int i = 0; i < numModules; ++i) {
+      final JSModule module = modulesInDepOrder.get(i);
+      checkState(module.getIndex() == -1, "Module index already set: %s", module);
+      module.setIndex(i);
+      modules[i] = module;
+      checkState(module.getDepth() == -1, "Module depth already set: %s", module);
       int depth = 0;
       for (JSModule dep : module.getDependencies()) {
         int depDepth = dep.getDepth();
@@ -126,7 +124,7 @@ public final class JSModuleGraph {
    * Gets an iterable over all modules in dependency order.
    */
   Iterable<JSModule> getAllModules() {
-    return modules;
+    return Arrays.asList(modules);
   }
 
   /**
@@ -144,7 +142,7 @@ public final class JSModuleGraph {
    * Gets the total number of modules.
    */
   int getModuleCount() {
-    return modules.size();
+    return modules.length;
   }
 
   /**
@@ -265,6 +263,7 @@ public final class JSModuleGraph {
    * @param m A module in this graph
    * @return The transitive dependencies of module {@code m}
    */
+  @VisibleForTesting
   List<JSModule> getTransitiveDepsDeepestFirst(JSModule m) {
     return InverseDepthComparator.INSTANCE.sortedCopy(getTransitiveDeps(m));
   }
@@ -277,16 +276,6 @@ public final class JSModuleGraph {
       dependencyMap.put(m, deps);
     }
     return deps;
-  }
-
-  /**
-   * Adds a module's transitive dependencies to a set.
-   */
-  private static void addDeps(Set<JSModule> deps, JSModule m) {
-    for (JSModule dep : m.getDependencies()) {
-      deps.add(dep);
-      addDeps(deps, dep);
-    }
   }
 
   /**
