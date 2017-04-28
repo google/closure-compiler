@@ -21,7 +21,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.io.CharSource;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
@@ -159,13 +158,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
     return code;
   }
 
-  /**
-   * Gets a char source for the code in this source file.
-   */
-  @GwtIncompatible("com.google.common.io.CharSource")
-  public CharSource getCodeCharSource() {
-    return CharSource.wrap(code);
-  }
 
   /**
    * Gets a reader for the code in this source file.
@@ -400,6 +392,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
     return builder().withCharset(charset).buildFromFile(fileName);
   }
 
+  @GwtIncompatible("java.io.File")
   public static SourceFile fromFile(String fileName) {
     return builder().buildFromFile(fileName);
   }
@@ -473,10 +466,12 @@ public class SourceFile implements StaticSourceFile, Serializable {
       return this;
     }
 
+    @GwtIncompatible("java.io.File")
     public SourceFile buildFromFile(String fileName) {
       return buildFromFile(new File(fileName));
     }
 
+    @GwtIncompatible("java.io.File")
     public SourceFile buildFromFile(File file) {
       return new OnDisk(file, originalPath, charset);
     }
@@ -561,10 +556,10 @@ public class SourceFile implements StaticSourceFile, Serializable {
   }
 
   /**
-   * A source file where the code is only read into memory if absolutely
-   * necessary. We will try to delay loading the code into memory as long as
-   * possible.
+   * A source file where the code is only read into memory if absolutely necessary. We will try to
+   * delay loading the code into memory as long as possible.
    */
+  @GwtIncompatible("java.io.File")
   static class OnDisk extends SourceFile {
     private static final long serialVersionUID = 1L;
     private final File file;
@@ -594,20 +589,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
         cachedCode = super.getCode();
       }
       return cachedCode;
-    }
-
-    /**
-     * Gets a char source for the code in this source file.
-     */
-    @Override
-    @GwtIncompatible("Files.asCharSource()")
-    public CharSource getCodeCharSource() {
-      if (hasSourceInMemory()) {
-        return super.getCodeCharSource();
-      } else {
-        // If we haven't pulled the code into memory yet, don't.
-        return Files.asCharSource(file, StandardCharsets.UTF_8);
-      }
     }
 
     /**
@@ -700,19 +681,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
     }
 
     /**
-     * Gets a char source for the code at this URL.
-     */
-    @Override
-    public CharSource getCodeCharSource() {
-      if (hasSourceInMemory()) {
-        return super.getCodeCharSource();
-      } else {
-        // If we haven't pulled the code into memory yet, don't.
-        return Resources.asCharSource(url, StandardCharsets.UTF_8);
-      }
-    }
-
-    /**
      * Gets a reader for the code at this URL.
      */
     @Override
@@ -721,7 +689,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
         return super.getCodeReader();
       } else {
         // If we haven't pulled the code into memory yet, don't.
-        return getCodeCharSource().openStream();
+        return Resources.asCharSource(url, StandardCharsets.UTF_8).openStream();
       }
     }
 

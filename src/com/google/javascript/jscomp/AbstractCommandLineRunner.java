@@ -1959,7 +1959,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       out.append(displayName);
       out.append("\n");
 
-      bundler.appendTo(out, input, input.getSourceFile().getCodeCharSource());
+      bundler.appendTo(out, input, input.getSourceFile().getCode());
 
       out.append("\n");
     }

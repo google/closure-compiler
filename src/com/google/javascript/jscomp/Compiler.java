@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -166,11 +165,22 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private final Map<InputId, CompilerInput> inputsById = new ConcurrentHashMap<>();
 
-  // Function to load source files from disk or memory.
-  private Function<String, SourceFile> originalSourcesLoader =
-      new Function<String, SourceFile>() {
+  /**
+   * Subclasses are responsible for loading soures that were not provided as explicit inputs to the
+   * compiler. For example, looking up sources referenced within sourcemaps.
+   */
+  public static class ExternalSourceLoader {
+    public SourceFile loadSource(String filename) {
+      throw new RuntimeException("Cannot load without a valid loader.");
+    }
+  }
+
+  private ExternalSourceLoader originalSourcesLoader =
+      new ExternalSourceLoader() {
+        // TODO(tdeegan): The @GwtIncompatible tree needs to be cleaned up.
         @Override
-        public SourceFile apply(String filename) {
+        @GwtIncompatible("SourceFile.fromFile")
+        public SourceFile loadSource(String filename) {
           return SourceFile.fromFile(filename);
         }
       };
@@ -326,8 +336,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @VisibleForTesting
-  void setOriginalSourcesLoader(
-      Function<String, SourceFile> originalSourcesLoader) {
+  void setOriginalSourcesLoader(ExternalSourceLoader originalSourcesLoader) {
     this.originalSourcesLoader = originalSourcesLoader;
   }
 
@@ -2775,8 +2784,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // Translate it to one relative to our base directory.
     String path =
         getRelativeTo(result.getOriginalFile(), sourceMap.getOriginalPath());
-    sourceMapOriginalSources.putIfAbsent(
-        path, originalSourcesLoader.apply(path));
+    sourceMapOriginalSources.putIfAbsent(path, originalSourcesLoader.loadSource(path));
     return result.toBuilder()
         .setOriginalFile(path)
         .setColumnPosition(result.getColumnPosition() - 1)

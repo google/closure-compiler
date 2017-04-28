@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -26,6 +25,7 @@ import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
+import com.google.javascript.jscomp.Compiler.ExternalSourceLoader;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -185,11 +185,10 @@ public final class CompilerTest extends TestCase {
         SourceFile.fromCode(sourceMapPath, output.toString()));
   }
 
-  private Function<String, SourceFile> createFileLoader(
-      final List<SourceFile> sourceFiles) {
-    return new Function<String, SourceFile>() {
+  private ExternalSourceLoader createFileLoader(final List<SourceFile> sourceFiles) {
+    return new ExternalSourceLoader() {
       @Override
-      public SourceFile apply(String filename) {
+      public SourceFile loadSource(String filename) {
         for (SourceFile file : sourceFiles) {
           if (file.getOriginalPath().equals(filename)) {
             return file;
