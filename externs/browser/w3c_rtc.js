@@ -307,6 +307,23 @@ RTCRtpSender.prototype.setParameters = function(params) {};
 
 /**
  * @interface
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcrtpcontributingsource
+ */
+function RTCRtpContributingSource() {}
+
+/**
+ * @type {?number}
+ */
+RTCRtpContributingSource.prototype.source;
+
+/**
+ * @type {?Date}
+ */
+RTCRtpContributingSource.prototype.timestamp;
+
+
+/**
+ * @interface
  * @see https://www.w3.org/TR/webrtc/#rtcrtpreceiver-interface
  */
 function RTCRtpReceiver() {}
@@ -315,6 +332,12 @@ function RTCRtpReceiver() {}
  * @const {!MediaStreamTrack}
  */
 RTCRtpReceiver.prototype.track;
+
+/**
+ * @return {!Array<!RTCRtpContributingSource>}
+ */
+RTCRtpReceiver.prototype.getContributingSources = function() {};
+
 
 /**
  * @interface
@@ -1197,6 +1220,11 @@ RTCPeerConnection.prototype.getStreamById = function(streamId) {};
  * @return {!Array<!RTCRtpSender>}
  */
 RTCPeerConnection.prototype.getSenders = function() {};
+
+/**
+ * @return {!Array<!RTCRtpReceiver>}
+ */
+RTCPeerConnection.prototype.getReceivers = function() {};
 
 /**
  * @param {?string} label
