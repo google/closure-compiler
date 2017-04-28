@@ -194,7 +194,7 @@ Node.prototype.previousSibling;
 
 /**
  * @param {Node} newChild
- * @return {Node}
+ * @return {!Node}
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#method-appendChild
  */
 Node.prototype.appendChild = function(newChild) {};
