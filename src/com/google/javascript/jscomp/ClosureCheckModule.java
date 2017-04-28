@@ -409,7 +409,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
   private static void checkShortName(NodeTraversal t, Node shortNameNode, String namespace) {
     String shortName = shortNameNode.getString();
     String lastSegment = namespace.substring(namespace.lastIndexOf('.') + 1);
-    if (shortName.equals(lastSegment)) {
+    if (shortName.equals(lastSegment) || lastSegment.isEmpty()) {
       return;
     }
 

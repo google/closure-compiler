@@ -634,4 +634,12 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             EXPORT_REPEATED_ERROR);
 
   }
+
+  public void testDontCrashOnTrailingDot() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('foo');",
+            "",
+            "var a = goog.require('abc.');"));
+  }
 }
