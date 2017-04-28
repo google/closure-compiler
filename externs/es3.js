@@ -2048,7 +2048,7 @@ String.prototype.length;
  * @param {*=} opt_pattern
  * @param {*=} opt_flags
  * @return {!RegExp}
- * @nosideeffects
+ * @throws {SyntaxError} if opt_pattern is an invalid pattern.
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp
  */
 function RegExp(opt_pattern, opt_flags) {}
