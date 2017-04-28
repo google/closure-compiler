@@ -378,6 +378,29 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     assertNoWarning("var prop; for (prop in obj) {}");
   }
 
+  public void testUnusedCompoundAssign() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("var x = 0; function f() { return x += 1; }");
+    assertNoWarningEs6("var x = 0; var f = () => x += 1;");
+    assertNoWarningEs6(
+        LINE_JOINER.join(
+            "function f(elapsed) {",
+            "  let fakeMs = 0;",
+            "  stubs.replace(goog, 'now', () => fakeMs += elapsed);",
+            "}"));
+    assertNoWarningEs6(
+        LINE_JOINER.join(
+            "function f(elapsed) {",
+            "  let fakeMs = 0;",
+            "  stubs.replace(goog, 'now', () => fakeMs -= elapsed);",
+            "}"));
+  }
+
+  public void testChainedAssign() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("var a, b = 0, c; a = b = c; alert(a);");
+  }
+
   public void testGoogModule() {
     enableUnusedLocalAssignmentCheck = true;
     assertNoWarning("goog.module('example'); var X = 3; use(X);");

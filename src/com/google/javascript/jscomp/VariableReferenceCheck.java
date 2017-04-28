@@ -269,7 +269,8 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
               && !lhsOfForInLoop) {
             unusedAssignment = reference;
           }
-          if ((reference.getParent().isDec() || reference.getParent().isInc())
+          if ((reference.getParent().isDec() || reference.getParent().isInc()
+              || NodeUtil.isCompoundAssignmentOp(reference.getParent()))
               && NodeUtil.isExpressionResultUsed(reference.getNode())) {
             isRead = true;
           }
