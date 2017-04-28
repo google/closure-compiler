@@ -41,6 +41,13 @@ public final class CheckGlobalNamesTest extends Es6CompilerTestCase {
   }
 
   @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_DEP_CHECK, CheckLevel.WARNING);
+    return options;
+  }
+
+  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     final CheckGlobalNames checkGlobalNames = new CheckGlobalNames(
         compiler, CheckLevel.WARNING);
@@ -61,7 +68,6 @@ public final class CheckGlobalNamesTest extends Es6CompilerTestCase {
   @Override
   public void setUp() {
     injectNamespace = false;
-    STRICT_MODULE_DEP_QNAME.level = CheckLevel.WARNING;
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
 
