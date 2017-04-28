@@ -442,14 +442,14 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
     }
 
     /**
-     * Whether the variable is escaped into an inner scope.
+     * Whether the variable is escaped into an inner function.
      */
     boolean isEscaped() {
-      Scope scope = null;
+      Scope hoistScope = null;
       for (Reference ref : references) {
-        if (scope == null) {
-          scope = ref.scope;
-        } else if (scope != ref.scope) {
+        if (hoistScope == null) {
+          hoistScope = ref.scope.getClosestHoistScope();
+        } else if (hoistScope != ref.scope.getClosestHoistScope()) {
           return true;
         }
       }

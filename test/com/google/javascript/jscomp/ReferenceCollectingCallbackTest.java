@@ -252,4 +252,53 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
             "  y;y;" ,
             "}"));
   }
+
+  public void testThis() {
+    behavior = new Behavior() {
+      @Override
+      public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
+        if (t.getScope().isFunctionBlockScope()
+            && t.getScopeRoot().getParent().getFirstChild().matchesQualifiedName("m")) {
+          ReferenceCollection self = rm.getReferences(t.getScope().getVar("self"));
+          assertThat(self.isEscaped()).isFalse();
+        }
+      }
+    };
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "",
+            "C.prototype.m = function m() {",
+            "  var self = this;",
+            "  if (true) {",
+            "    alert(self);",
+            "  }",
+            "};"));
+  }
+
+  public void testThis_oldScopeCreator() {
+    es6ScopeCreator = false;
+    behavior = new Behavior() {
+      @Override
+      public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
+        if (t.getScope().isFunctionBlockScope()
+            && t.getScopeRoot().getParent().getFirstChild().matchesQualifiedName("m")) {
+          ReferenceCollection self = rm.getReferences(t.getScope().getVar("self"));
+          assertThat(self.isEscaped()).isFalse();
+        }
+      }
+    };
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "",
+            "C.prototype.m = function m() {",
+            "  var self = this;",
+            "  if (true) {",
+            "    alert(self);",
+            "  }",
+            "};"));
+  }
 }
