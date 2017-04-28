@@ -844,6 +844,27 @@ public final class InlineVariablesTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testInlineThis() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "",
+            "C.prototype.m = function() {",
+            "  var self = this;",
+            "  if (true) {",
+            "    alert(self);",
+            "  }",
+            "};"),
+        LINE_JOINER.join(
+            "(/** @constructor */",
+            "function C() {}).prototype.m = function() {",
+            "  if (true) {",
+            "    alert(this);",
+            "  }",
+            "};"));
+  }
+
   public void testVarInBlock1() {
     test(
         "function f(x) { if (true) {var y = x; y; y;} }",
