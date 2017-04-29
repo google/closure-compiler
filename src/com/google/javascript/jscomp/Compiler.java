@@ -2027,16 +2027,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return new JsAst(file).getAstRoot(this);
   }
 
-  private int syntheticCodeId = 0;
 
-  @Override
-  Node parseSyntheticCode(String js) {
-    SourceFile source = SourceFile.fromCode(" [synthetic:" + (++syntheticCodeId) + "] ", js);
-    addFilesToSourceMap(ImmutableList.of(source));
-    CompilerInput input = new CompilerInput(source);
-    putCompilerInput(input.getInputId(), input);
-    return input.getAstRoot(this);
-  }
 
   /**
    * Allow subclasses to override the default CompileOptions object.
@@ -2053,21 +2044,31 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
+  private int syntheticCodeId = 0;
+
   @Override
-  Node parseSyntheticCode(String fileName, String js) {
-    initCompilerOptionsIfTesting();
-    addFileToSourceMap(fileName, js);
-    CompilerInput input = new CompilerInput(SourceFile.fromCode(fileName, js));
-    putCompilerInput(input.getInputId(), input);
-    return input.getAstRoot(this);
+  Node parseSyntheticCode(String js) {
+    return parseSyntheticCode(" [synthetic:" + (++syntheticCodeId) + "] ", js);
   }
 
   @Override
+  Node parseSyntheticCode(String fileName, String js) {
+    initCompilerOptionsIfTesting();
+    SourceFile source = SourceFile.fromCode(fileName, js);
+    addFilesToSourceMap(ImmutableList.of(source));
+    return parseCodeHelper(source);
+  }
+
+  @Override
+  @VisibleForTesting
   Node parseTestCode(String js) {
     initCompilerOptionsIfTesting();
     initBasedOnOptions();
-    CompilerInput input = new CompilerInput(
-        SourceFile.fromCode("[testcode]", js));
+    return parseCodeHelper(SourceFile.fromCode("[testcode]", js));
+  }
+
+  private Node parseCodeHelper(SourceFile src) {
+    CompilerInput input = new CompilerInput(src);
     putCompilerInput(input.getInputId(), input);
     return input.getAstRoot(this);
   }

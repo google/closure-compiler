@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
@@ -228,6 +229,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Parses code for testing.
    */
+  @VisibleForTesting
   abstract Node parseTestCode(String code);
 
   /**
