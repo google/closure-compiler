@@ -1087,7 +1087,7 @@ Polymer.Templatizer = {
   ctor: function() {},
 
   /**
-   * @param {?Object} model
+   * @param {?Object=} model
    * @return {?Element}
    */
   stamp: function(model) {},
