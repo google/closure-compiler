@@ -26,7 +26,7 @@
  * The $resource service is a factory for creating a resource class.
  *
  * @typedef {function(string, !Object=,
- *     !Object.<string, angular.ResourceAction>=):angular.Resource}
+ *     !Object.<string, angular.ResourceAction>=, Object=):angular.Resource}
  */
 angular.$resource;
 
