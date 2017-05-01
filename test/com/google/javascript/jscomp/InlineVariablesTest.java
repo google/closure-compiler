@@ -80,7 +80,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
     test("var x = 1; var y = x;", "var y = 1;");
   }
 
-  public void testInlineInFunction() {
+  public void testInlineInFunction1() {
     test("function baz() { var x = 1; var z = x; }",
         "function baz() { var z = 1; }");
   }
@@ -119,6 +119,16 @@ public final class InlineVariablesTest extends CompilerTestCase {
            "foo.x();" +
            "result = a;" +
         "}");
+  }
+
+  public void testInlineInFunction6() {
+    test("function baz() { { var x = 1; var z = x; } }",
+        "function baz() { { var z = 1; } }");
+  }
+
+  public void testInlineInFunction7() {
+    test("function baz() { var x = 1; { var z = x; } }",
+        "function baz() { { var z = 1; } }");
   }
 
   public void testInlineAcrossModules() {
