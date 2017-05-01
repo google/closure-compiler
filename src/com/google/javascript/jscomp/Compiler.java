@@ -844,7 +844,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return runInCompilerThread(new Callable<Result>() {
       @Override
       public Result call() throws Exception {
-        compileInternal();
+        parseForCompilation();
+        if (!hasErrors()) {
+          compileInternal();
+        }
         return getResult();
       }
     });
@@ -876,18 +879,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   private void compileInternal() {
-    setProgress(0.0, null);
-    CompilerOptionsPreprocessor.preprocess(options);
-    readInputs();
-    // Guesstimate.
-    setProgress(0.02, "read");
-    parse();
-    // Guesstimate.
-    setProgress(0.15, "parse");
-    if (hasErrors()) {
-      return;
-    }
-
     if (options.getInstrumentForCoverageOnly()) {
       instrumentForCoverage(options.instrumentBranchCoverage);
       return;
@@ -934,6 +925,31 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     stopTracer(tracer, "instrumentationPass");
   }
 
+  /**
+   * Parses input files in preparation for compilation.
+   *
+   * <p>Either {@code init()} or {@code initModules()} must be called first to set up the input
+   * files to be read.
+   * <p>TODO(bradfordcsmith): Rename this to parse()
+   */
+  public void parseForCompilation() {
+    setProgress(0.0, null);
+    CompilerOptionsPreprocessor.preprocess(options);
+    readInputs();
+    // Guesstimate.
+    setProgress(0.02, "read");
+    parseInputs();
+    // Guesstimate.
+    setProgress(0.15, "parse");
+  }
+
+  /**
+   * Parses input files without doing progress tracking that is part of a full compile.
+   *
+   * <p>Either {@code init()} or {@code initModules()} must be called first to set up the input
+   * files to be read.
+   * <p>TODO(bradfordcsmith): Rename this to parseIndependentOfCompilation() or similar.
+   */
   public void parse() {
     parseInputs();
   }
