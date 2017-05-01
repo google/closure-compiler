@@ -846,7 +846,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       public Result call() throws Exception {
         parseForCompilation();
         if (!hasErrors()) {
-          compileInternal();
+          if (options.getInstrumentForCoverageOnly()) {
+            instrumentForCoverage(options.instrumentBranchCoverage);
+          } else {
+            compileInternal();
+          }
         }
         return getResult();
       }
@@ -879,11 +883,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   private void compileInternal() {
-    if (options.getInstrumentForCoverageOnly()) {
-      instrumentForCoverage(options.instrumentBranchCoverage);
-      return;
-    }
-
     if (options.skipNonTranspilationPasses) {
       // i.e. whitespace-only mode, which will not work with goog.module without:
       whitespaceOnlyPasses();
@@ -900,7 +899,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         optimize();
       }
     }
+    completeCompilation();
+  }
 
+  /**
+   * Performs all the bookkeeping required at the end of a compilation.
+   */
+  private void completeCompilation() {
     if (options.recordFunctionInformation) {
       recordFunctionInformation();
     }
