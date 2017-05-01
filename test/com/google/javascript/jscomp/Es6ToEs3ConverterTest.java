@@ -286,12 +286,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     testError("function Foo() { new.target; }", CANNOT_CONVERT_YET);
   }
 
-  public void testAsyncFunction() {
-    setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
-    testError("f = async function() {};", CANNOT_CONVERT_YET);
-    testError("async function f() {};", CANNOT_CONVERT_YET);
-  }
-
   public void testClassWithJsDoc() {
     test("class C { }", "/** @constructor @struct */ var C = function() { };");
 

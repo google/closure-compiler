@@ -129,7 +129,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
         break;
       case FUNCTION:
         if (n.isAsyncFunction()) {
-          cannotConvertYet(n, "async function");
+          throw new IllegalStateException("async functions should have already been converted");
         }
         break;
       default:
