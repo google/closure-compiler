@@ -91,7 +91,7 @@ public class J2clPass implements CompilerPass {
    *
    * <p>e.g. "let $RegExp = window.RegExp; var foo = new $RegExp;" becomes "var foo = new RegExp;"
    */
-  private class NativeAliasInliner extends AbstractPostOrderCallback {
+  private static class NativeAliasInliner extends AbstractPostOrderCallback {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -247,9 +247,8 @@ public class J2clPass implements CompilerPass {
         "vmbootstrap/Arrays.impl.java.js",
         ImmutableSet.of("$create", "$init", "$instanceIsOfType", "$castTo", "$stampType"),
         InliningMode.DIRECT);
-    // TODO(b/37722603): remove "to" once the change is done in J2CL.
     inlineFunctionsInFile(
-        root, "vmbootstrap/Casts.impl.java.js", ImmutableSet.of("$to", "to"), InliningMode.DIRECT);
+        root, "vmbootstrap/Casts.impl.java.js", ImmutableSet.of("$to"), InliningMode.DIRECT);
 
     /*
      * Inlines all Interface.$markImplementor(FooClass) metaclass calls so that FooClass and others

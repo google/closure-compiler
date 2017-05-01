@@ -106,11 +106,8 @@ public class J2clPassTest extends CompilerTestCase {
                     // Function definitions and calls are qualified globals.
                     "var Casts = function() {};",
                     "Casts.$to = function() { return 1; }",
-                    // TODO(b/37722603): remove "to" once the change is done in J2CL.
-                    "Casts.to = function() { return 2; }",
                     "",
-                    "alert(Casts.$to());",
-                    "alert(Casts.to());"))),
+                    "alert(Casts.$to());"))),
         Lists.newArrayList(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
@@ -118,10 +115,8 @@ public class J2clPassTest extends CompilerTestCase {
                     // Function definitions and calls are qualified globals.
                     "var Casts = function() {};",
                     "Casts.$to = function() { return 1; }",
-                    "Casts.to = function() { return 2; }",
                     "",
-                    "alert(1);",
-                    "alert(2);"))));
+                    "alert(1);"))));
 
     // Interface $markImplementor() functions.
     test(
@@ -200,11 +195,8 @@ public class J2clPassTest extends CompilerTestCase {
                     "$jscomp.scope = {};",
                     "$jscomp.scope.Casts = function() {};",
                     "$jscomp.scope.Casts.$to = function() { return 1; }",
-                    // TODO(b/37722603): remove "to" once the change is done in J2CL.
-                    "$jscomp.scope.Casts.to = function() { return 2; }",
                     "",
-                    "alert($jscomp.scope.Casts.$to());",
-                    "alert($jscomp.scope.Casts.to());"))),
+                    "alert($jscomp.scope.Casts.$to());"))),
         Lists.newArrayList(
             SourceFile.fromCode(
                 "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
@@ -214,10 +206,8 @@ public class J2clPassTest extends CompilerTestCase {
                     "$jscomp.scope = {};",
                     "$jscomp.scope.Casts = function() {};",
                     "$jscomp.scope.Casts.$to = function() { return 1; }",
-                    "$jscomp.scope.Casts.to = function() { return 2; }",
                     "",
-                    "alert(1);",
-                    "alert(2);"))));
+                    "alert(1);"))));
 
     // Interface $markImplementor() functions.
     test(
