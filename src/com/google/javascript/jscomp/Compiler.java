@@ -878,7 +878,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private void compileInternal() {
     setProgress(0.0, null);
     CompilerOptionsPreprocessor.preprocess(options);
-    read();
+    readInputs();
     // Guesstimate.
     setProgress(0.02, "read");
     parse();
@@ -932,10 +932,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     process(new CoverageInstrumentationPass(this, CoverageReach.ALL, instrumentOption));
     stopTracer(tracer, "instrumentationPass");
-  }
-
-  public void read() {
-    readInputs();
   }
 
   public void parse() {
