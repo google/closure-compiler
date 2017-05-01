@@ -4,42 +4,34 @@
 package com.google.javascript.jscomp;
 
 /**
- * Protobuf type {@code jscomp.ConformanceConfig}
- *
  * <pre>
  * A container to describe code requirements
  * </pre>
+ *
+ * Protobuf type {@code jscomp.ConformanceConfig}
  */
 public  final class ConformanceConfig extends
-    com.google.protobuf.GeneratedMessage
-    implements ConformanceConfigOrBuilder {
+    com.google.protobuf.GeneratedMessageV3 implements
+    // @@protoc_insertion_point(message_implements:jscomp.ConformanceConfig)
+    ConformanceConfigOrBuilder {
   // Use ConformanceConfig.newBuilder() to construct.
-  private ConformanceConfig(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
+  private ConformanceConfig(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
     super(builder);
-    this.unknownFields = builder.getUnknownFields();
   }
-  private ConformanceConfig(boolean noInit) { this.unknownFields = com.google.protobuf.UnknownFieldSet.getDefaultInstance(); }
-
-  private static final ConformanceConfig defaultInstance;
-  public static ConformanceConfig getDefaultInstance() {
-    return defaultInstance;
+  private ConformanceConfig() {
+    requirement_ = java.util.Collections.emptyList();
   }
 
-  public ConformanceConfig getDefaultInstanceForType() {
-    return defaultInstance;
-  }
-
-  private final com.google.protobuf.UnknownFieldSet unknownFields;
   @java.lang.Override
   public final com.google.protobuf.UnknownFieldSet
-      getUnknownFields() {
+  getUnknownFields() {
     return this.unknownFields;
   }
   private ConformanceConfig(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws com.google.protobuf.InvalidProtocolBufferException {
-    initFields();
+    this();
     int mutable_bitField0_ = 0;
     com.google.protobuf.UnknownFieldSet.Builder unknownFields =
         com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -63,7 +55,8 @@ public  final class ConformanceConfig extends
               requirement_ = new java.util.ArrayList<com.google.javascript.jscomp.Requirement>();
               mutable_bitField0_ |= 0x00000001;
             }
-            requirement_.add(input.readMessage(com.google.javascript.jscomp.Requirement.PARSER, extensionRegistry));
+            requirement_.add(
+                input.readMessage(com.google.javascript.jscomp.Requirement.PARSER, extensionRegistry));
             break;
           }
         }
@@ -72,7 +65,7 @@ public  final class ConformanceConfig extends
       throw e.setUnfinishedMessage(this);
     } catch (java.io.IOException e) {
       throw new com.google.protobuf.InvalidProtocolBufferException(
-          e.getMessage()).setUnfinishedMessage(this);
+          e).setUnfinishedMessage(this);
     } finally {
       if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
         requirement_ = java.util.Collections.unmodifiableList(requirement_);
@@ -86,29 +79,13 @@ public  final class ConformanceConfig extends
     return com.google.javascript.jscomp.Conformance.internal_static_jscomp_ConformanceConfig_descriptor;
   }
 
-  protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+  protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internalGetFieldAccessorTable() {
     return com.google.javascript.jscomp.Conformance.internal_static_jscomp_ConformanceConfig_fieldAccessorTable
         .ensureFieldAccessorsInitialized(
             com.google.javascript.jscomp.ConformanceConfig.class, com.google.javascript.jscomp.ConformanceConfig.Builder.class);
   }
 
-  public static com.google.protobuf.Parser<ConformanceConfig> PARSER =
-      new com.google.protobuf.AbstractParser<ConformanceConfig>() {
-    public ConformanceConfig parsePartialFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return new ConformanceConfig(input, extensionRegistry);
-    }
-  };
-
-  @java.lang.Override
-  public com.google.protobuf.Parser<ConformanceConfig> getParserForType() {
-    return PARSER;
-  }
-
-  // repeated .jscomp.Requirement requirement = 1;
   public static final int REQUIREMENT_FIELD_NUMBER = 1;
   private java.util.List<com.google.javascript.jscomp.Requirement> requirement_;
   /**
@@ -144,13 +121,11 @@ public  final class ConformanceConfig extends
     return requirement_.get(index);
   }
 
-  private void initFields() {
-    requirement_ = java.util.Collections.emptyList();
-  }
   private byte memoizedIsInitialized = -1;
   public final boolean isInitialized() {
     byte isInitialized = memoizedIsInitialized;
-    if (isInitialized != -1) return isInitialized == 1;
+    if (isInitialized == 1) return true;
+    if (isInitialized == 0) return false;
 
     for (int i = 0; i < getRequirementCount(); i++) {
       if (!getRequirement(i).isInitialized()) {
@@ -164,16 +139,14 @@ public  final class ConformanceConfig extends
 
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    getSerializedSize();
     for (int i = 0; i < requirement_.size(); i++) {
       output.writeMessage(1, requirement_.get(i));
     }
-    getUnknownFields().writeTo(output);
+    unknownFields.writeTo(output);
   }
 
-  private int memoizedSerializedSize = -1;
   public int getSerializedSize() {
-    int size = memoizedSerializedSize;
+    int size = memoizedSize;
     if (size != -1) return size;
 
     size = 0;
@@ -181,16 +154,43 @@ public  final class ConformanceConfig extends
       size += com.google.protobuf.CodedOutputStream
         .computeMessageSize(1, requirement_.get(i));
     }
-    size += getUnknownFields().getSerializedSize();
-    memoizedSerializedSize = size;
+    size += unknownFields.getSerializedSize();
+    memoizedSize = size;
     return size;
   }
 
   private static final long serialVersionUID = 0L;
   @java.lang.Override
-  protected java.lang.Object writeReplace()
-      throws java.io.ObjectStreamException {
-    return super.writeReplace();
+  public boolean equals(final java.lang.Object obj) {
+    if (obj == this) {
+     return true;
+    }
+    if (!(obj instanceof com.google.javascript.jscomp.ConformanceConfig)) {
+      return super.equals(obj);
+    }
+    com.google.javascript.jscomp.ConformanceConfig other = (com.google.javascript.jscomp.ConformanceConfig) obj;
+
+    boolean result = true;
+    result = result && getRequirementList()
+        .equals(other.getRequirementList());
+    result = result && unknownFields.equals(other.unknownFields);
+    return result;
+  }
+
+  @java.lang.Override
+  public int hashCode() {
+    if (memoizedHashCode != 0) {
+      return memoizedHashCode;
+    }
+    int hash = 41;
+    hash = (19 * hash) + getDescriptorForType().hashCode();
+    if (getRequirementCount() > 0) {
+      hash = (37 * hash) + REQUIREMENT_FIELD_NUMBER;
+      hash = (53 * hash) + getRequirementList().hashCode();
+    }
+    hash = (29 * hash) + unknownFields.hashCode();
+    memoizedHashCode = hash;
+    return hash;
   }
 
   public static com.google.javascript.jscomp.ConformanceConfig parseFrom(
@@ -216,65 +216,77 @@ public  final class ConformanceConfig extends
   }
   public static com.google.javascript.jscomp.ConformanceConfig parseFrom(java.io.InputStream input)
       throws java.io.IOException {
-    return PARSER.parseFrom(input);
+    return com.google.protobuf.GeneratedMessageV3
+        .parseWithIOException(PARSER, input);
   }
   public static com.google.javascript.jscomp.ConformanceConfig parseFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
-    return PARSER.parseFrom(input, extensionRegistry);
+    return com.google.protobuf.GeneratedMessageV3
+        .parseWithIOException(PARSER, input, extensionRegistry);
   }
   public static com.google.javascript.jscomp.ConformanceConfig parseDelimitedFrom(java.io.InputStream input)
       throws java.io.IOException {
-    return PARSER.parseDelimitedFrom(input);
+    return com.google.protobuf.GeneratedMessageV3
+        .parseDelimitedWithIOException(PARSER, input);
   }
   public static com.google.javascript.jscomp.ConformanceConfig parseDelimitedFrom(
       java.io.InputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
-    return PARSER.parseDelimitedFrom(input, extensionRegistry);
+    return com.google.protobuf.GeneratedMessageV3
+        .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
   }
   public static com.google.javascript.jscomp.ConformanceConfig parseFrom(
       com.google.protobuf.CodedInputStream input)
       throws java.io.IOException {
-    return PARSER.parseFrom(input);
+    return com.google.protobuf.GeneratedMessageV3
+        .parseWithIOException(PARSER, input);
   }
   public static com.google.javascript.jscomp.ConformanceConfig parseFrom(
       com.google.protobuf.CodedInputStream input,
       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
       throws java.io.IOException {
-    return PARSER.parseFrom(input, extensionRegistry);
+    return com.google.protobuf.GeneratedMessageV3
+        .parseWithIOException(PARSER, input, extensionRegistry);
   }
 
-  public static Builder newBuilder() { return Builder.create(); }
   public Builder newBuilderForType() { return newBuilder(); }
-  public static Builder newBuilder(com.google.javascript.jscomp.ConformanceConfig prototype) {
-    return newBuilder().mergeFrom(prototype);
+  public static Builder newBuilder() {
+    return DEFAULT_INSTANCE.toBuilder();
   }
-  public Builder toBuilder() { return newBuilder(this); }
+  public static Builder newBuilder(com.google.javascript.jscomp.ConformanceConfig prototype) {
+    return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+  }
+  public Builder toBuilder() {
+    return this == DEFAULT_INSTANCE
+        ? new Builder() : new Builder().mergeFrom(this);
+  }
 
   @java.lang.Override
   protected Builder newBuilderForType(
-      com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+      com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
     Builder builder = new Builder(parent);
     return builder;
   }
   /**
-   * Protobuf type {@code jscomp.ConformanceConfig}
-   *
    * <pre>
    * A container to describe code requirements
    * </pre>
+   *
+   * Protobuf type {@code jscomp.ConformanceConfig}
    */
   public static final class Builder extends
-      com.google.protobuf.GeneratedMessage.Builder<Builder>
-     implements com.google.javascript.jscomp.ConformanceConfigOrBuilder {
+      com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+      // @@protoc_insertion_point(builder_implements:jscomp.ConformanceConfig)
+      com.google.javascript.jscomp.ConformanceConfigOrBuilder {
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
       return com.google.javascript.jscomp.Conformance.internal_static_jscomp_ConformanceConfig_descriptor;
     }
 
-    protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return com.google.javascript.jscomp.Conformance.internal_static_jscomp_ConformanceConfig_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
@@ -287,19 +299,16 @@ public  final class ConformanceConfig extends
     }
 
     private Builder(
-        com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
       super(parent);
       maybeForceBuilderInitialization();
     }
     private void maybeForceBuilderInitialization() {
-      if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+      if (com.google.protobuf.GeneratedMessageV3
+              .alwaysUseFieldBuilders) {
         getRequirementFieldBuilder();
       }
     }
-    private static Builder create() {
-      return new Builder();
-    }
-
     public Builder clear() {
       super.clear();
       if (requirementBuilder_ == null) {
@@ -309,10 +318,6 @@ public  final class ConformanceConfig extends
         requirementBuilder_.clear();
       }
       return this;
-    }
-
-    public Builder clone() {
-      return create().mergeFrom(buildPartial());
     }
 
     public com.google.protobuf.Descriptors.Descriptor
@@ -348,6 +353,32 @@ public  final class ConformanceConfig extends
       return result;
     }
 
+    public Builder clone() {
+      return (Builder) super.clone();
+    }
+    public Builder setField(
+        com.google.protobuf.Descriptors.FieldDescriptor field,
+        Object value) {
+      return (Builder) super.setField(field, value);
+    }
+    public Builder clearField(
+        com.google.protobuf.Descriptors.FieldDescriptor field) {
+      return (Builder) super.clearField(field);
+    }
+    public Builder clearOneof(
+        com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+      return (Builder) super.clearOneof(oneof);
+    }
+    public Builder setRepeatedField(
+        com.google.protobuf.Descriptors.FieldDescriptor field,
+        int index, Object value) {
+      return (Builder) super.setRepeatedField(field, index, value);
+    }
+    public Builder addRepeatedField(
+        com.google.protobuf.Descriptors.FieldDescriptor field,
+        Object value) {
+      return (Builder) super.addRepeatedField(field, value);
+    }
     public Builder mergeFrom(com.google.protobuf.Message other) {
       if (other instanceof com.google.javascript.jscomp.ConformanceConfig) {
         return mergeFrom((com.google.javascript.jscomp.ConformanceConfig)other);
@@ -378,21 +409,21 @@ public  final class ConformanceConfig extends
             requirement_ = other.requirement_;
             bitField0_ = (bitField0_ & ~0x00000001);
             requirementBuilder_ = 
-              com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+              com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                  getRequirementFieldBuilder() : null;
           } else {
             requirementBuilder_.addAllMessages(other.requirement_);
           }
         }
       }
-      this.mergeUnknownFields(other.getUnknownFields());
+      this.mergeUnknownFields(other.unknownFields);
+      onChanged();
       return this;
     }
 
     public final boolean isInitialized() {
       for (int i = 0; i < getRequirementCount(); i++) {
         if (!getRequirement(i).isInitialized()) {
-          
           return false;
         }
       }
@@ -408,7 +439,7 @@ public  final class ConformanceConfig extends
         parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
         parsedMessage = (com.google.javascript.jscomp.ConformanceConfig) e.getUnfinishedMessage();
-        throw e;
+        throw e.unwrapIOException();
       } finally {
         if (parsedMessage != null) {
           mergeFrom(parsedMessage);
@@ -418,7 +449,6 @@ public  final class ConformanceConfig extends
     }
     private int bitField0_;
 
-    // repeated .jscomp.Requirement requirement = 1;
     private java.util.List<com.google.javascript.jscomp.Requirement> requirement_ =
       java.util.Collections.emptyList();
     private void ensureRequirementIsMutable() {
@@ -428,7 +458,7 @@ public  final class ConformanceConfig extends
        }
     }
 
-    private com.google.protobuf.RepeatedFieldBuilder<
+    private com.google.protobuf.RepeatedFieldBuilderV3<
         com.google.javascript.jscomp.Requirement, com.google.javascript.jscomp.Requirement.Builder, com.google.javascript.jscomp.RequirementOrBuilder> requirementBuilder_;
 
     /**
@@ -560,7 +590,8 @@ public  final class ConformanceConfig extends
         java.lang.Iterable<? extends com.google.javascript.jscomp.Requirement> values) {
       if (requirementBuilder_ == null) {
         ensureRequirementIsMutable();
-        super.addAll(values, requirement_);
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, requirement_);
         onChanged();
       } else {
         requirementBuilder_.addAllMessages(values);
@@ -643,11 +674,11 @@ public  final class ConformanceConfig extends
          getRequirementBuilderList() {
       return getRequirementFieldBuilder().getBuilderList();
     }
-    private com.google.protobuf.RepeatedFieldBuilder<
+    private com.google.protobuf.RepeatedFieldBuilderV3<
         com.google.javascript.jscomp.Requirement, com.google.javascript.jscomp.Requirement.Builder, com.google.javascript.jscomp.RequirementOrBuilder> 
         getRequirementFieldBuilder() {
       if (requirementBuilder_ == null) {
-        requirementBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+        requirementBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
             com.google.javascript.jscomp.Requirement, com.google.javascript.jscomp.Requirement.Builder, com.google.javascript.jscomp.RequirementOrBuilder>(
                 requirement_,
                 ((bitField0_ & 0x00000001) == 0x00000001),
@@ -657,15 +688,52 @@ public  final class ConformanceConfig extends
       }
       return requirementBuilder_;
     }
+    public final Builder setUnknownFields(
+        final com.google.protobuf.UnknownFieldSet unknownFields) {
+      return super.setUnknownFields(unknownFields);
+    }
+
+    public final Builder mergeUnknownFields(
+        final com.google.protobuf.UnknownFieldSet unknownFields) {
+      return super.mergeUnknownFields(unknownFields);
+    }
+
 
     // @@protoc_insertion_point(builder_scope:jscomp.ConformanceConfig)
   }
 
+  // @@protoc_insertion_point(class_scope:jscomp.ConformanceConfig)
+  private static final com.google.javascript.jscomp.ConformanceConfig DEFAULT_INSTANCE;
   static {
-    defaultInstance = new ConformanceConfig(true);
-    defaultInstance.initFields();
+    DEFAULT_INSTANCE = new com.google.javascript.jscomp.ConformanceConfig();
   }
 
-  // @@protoc_insertion_point(class_scope:jscomp.ConformanceConfig)
+  public static com.google.javascript.jscomp.ConformanceConfig getDefaultInstance() {
+    return DEFAULT_INSTANCE;
+  }
+
+  @java.lang.Deprecated public static final com.google.protobuf.Parser<ConformanceConfig>
+      PARSER = new com.google.protobuf.AbstractParser<ConformanceConfig>() {
+    public ConformanceConfig parsePartialFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+        return new ConformanceConfig(input, extensionRegistry);
+    }
+  };
+
+  public static com.google.protobuf.Parser<ConformanceConfig> parser() {
+    return PARSER;
+  }
+
+  @java.lang.Override
+  public com.google.protobuf.Parser<ConformanceConfig> getParserForType() {
+    return PARSER;
+  }
+
+  public com.google.javascript.jscomp.ConformanceConfig getDefaultInstanceForType() {
+    return DEFAULT_INSTANCE;
+  }
+
 }
 

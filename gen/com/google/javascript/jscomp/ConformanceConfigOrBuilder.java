@@ -3,10 +3,10 @@
 
 package com.google.javascript.jscomp;
 
-public interface ConformanceConfigOrBuilder
-    extends com.google.protobuf.MessageOrBuilder {
+public interface ConformanceConfigOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jscomp.ConformanceConfig)
+    com.google.protobuf.MessageOrBuilder {
 
-  // repeated .jscomp.Requirement requirement = 1;
   /**
    * <code>repeated .jscomp.Requirement requirement = 1;</code>
    */
