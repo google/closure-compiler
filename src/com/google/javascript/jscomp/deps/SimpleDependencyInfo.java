@@ -18,8 +18,8 @@ package com.google.javascript.jscomp.deps;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +30,7 @@ import java.util.Objects;
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
+@Immutable
 public final class SimpleDependencyInfo implements DependencyInfo {
 
   /** A list of provided symbols. */
