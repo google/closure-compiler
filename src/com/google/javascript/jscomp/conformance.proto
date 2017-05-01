@@ -107,6 +107,11 @@ message Requirement {
     // Unlike BANNED_PROPERTY_WRITE, this only bans assignments of a
     // non-constant value.
     BANNED_PROPERTY_NON_CONSTANT_WRITE = 11;
+
+    // A banned function call.
+    // Unlike BANNED_NAME, this only bans calls to the property, i.e. using the
+    // property as a value is allowed.
+    BANNED_NAME_CALL = 12;
   }
 
   // Required: The type of requirement.

@@ -285,6 +285,18 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame(ImmutableList.of(SourceFile.fromCode("bar.js", "eval()")));
   }
 
+  public void testBannedNameCall() {
+    configuration =
+        "requirement: {\n" +
+        "  type: BANNED_NAME_CALL\n" +
+        "  value: 'Function'\n" +
+        "  error_message: 'Calling Function is not allowed.'\n" +
+        "}";
+
+    testSame("f instanceof Function");
+    testSame("new Function(str);", CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
   public void testInferredConstCheck() {
     configuration =
         LINE_JOINER.join(

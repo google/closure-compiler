@@ -307,6 +307,16 @@ public  final class Requirement extends
      * <code>BANNED_PROPERTY_NON_CONSTANT_WRITE = 11;</code>
      */
     BANNED_PROPERTY_NON_CONSTANT_WRITE(11),
+    /**
+     * <pre>
+     * A banned function call.
+     * Unlike BANNED_NAME, this only bans calls to the property, i.e. using the
+     * property as a value is allowed.
+     * </pre>
+     *
+     * <code>BANNED_NAME_CALL = 12;</code>
+     */
+    BANNED_NAME_CALL(12),
     ;
 
     /**
@@ -422,6 +432,16 @@ public  final class Requirement extends
      * <code>BANNED_PROPERTY_NON_CONSTANT_WRITE = 11;</code>
      */
     public static final int BANNED_PROPERTY_NON_CONSTANT_WRITE_VALUE = 11;
+    /**
+     * <pre>
+     * A banned function call.
+     * Unlike BANNED_NAME, this only bans calls to the property, i.e. using the
+     * property as a value is allowed.
+     * </pre>
+     *
+     * <code>BANNED_NAME_CALL = 12;</code>
+     */
+    public static final int BANNED_NAME_CALL_VALUE = 12;
 
 
     public final int getNumber() {
@@ -449,6 +469,7 @@ public  final class Requirement extends
         case 9: return BANNED_CODE_PATTERN;
         case 10: return BANNED_PROPERTY_CALL;
         case 11: return BANNED_PROPERTY_NON_CONSTANT_WRITE;
+        case 12: return BANNED_NAME_CALL;
         default: return null;
       }
     }

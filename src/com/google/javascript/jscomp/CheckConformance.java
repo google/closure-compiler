@@ -217,6 +217,7 @@ public final class CheckConformance implements Callback, CompilerPass {
         case BANNED_DEPENDENCY:
           return new ConformanceRules.BannedDependency(compiler, requirement);
         case BANNED_NAME:
+        case BANNED_NAME_CALL:
           return new ConformanceRules.BannedName(compiler, requirement);
         case BANNED_PROPERTY:
         case BANNED_PROPERTY_READ:

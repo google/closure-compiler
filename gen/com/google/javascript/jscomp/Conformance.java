@@ -35,22 +35,23 @@ public final class Conformance {
     java.lang.String[] descriptorData = {
       "\n\021conformance.proto\022\006jscomp\"=\n\021Conforman" +
       "ceConfig\022(\n\013requirement\030\001 \003(\0132\023.jscomp.R" +
-      "equirement\"\303\004\n\013Requirement\022\025\n\rerror_mess" +
+      "equirement\"\331\004\n\013Requirement\022\025\n\rerror_mess" +
       "age\030\001 \001(\t\022\021\n\twhitelist\030\002 \003(\t\022\030\n\020whitelis" +
       "t_regexp\030\003 \003(\t\022\025\n\ronly_apply_to\030\004 \003(\t\022\034\n" +
       "\024only_apply_to_regexp\030\005 \003(\t\022&\n\004type\030\006 \001(" +
       "\0162\030.jscomp.Requirement.Type\022\r\n\005value\030\007 \003" +
       "(\t\022\022\n\njava_class\030\010 \001(\t\022\017\n\007rule_id\030\t \001(\t\022" +
       "\017\n\007extends\030\n \001(\t\022*\n\034report_loose_type_vi" +
-      "olations\030\013 \001(\010:\004true\"\225\002\n\004Type\022\n\n\006CUSTOM\020",
+      "olations\030\013 \001(\010:\004true\"\253\002\n\004Type\022\n\n\006CUSTOM\020",
       "\001\022\025\n\021BANNED_DEPENDENCY\020\002\022\017\n\013BANNED_NAME\020" +
       "\003\022\023\n\017BANNED_PROPERTY\020\004\022\030\n\024BANNED_PROPERT" +
       "Y_READ\020\005\022\031\n\025BANNED_PROPERTY_WRITE\020\006\022\030\n\024R" +
       "ESTRICTED_NAME_CALL\020\007\022\032\n\026RESTRICTED_METH" +
       "OD_CALL\020\010\022\027\n\023BANNED_CODE_PATTERN\020\t\022\030\n\024BA" +
       "NNED_PROPERTY_CALL\020\n\022&\n\"BANNED_PROPERTY_" +
-      "NON_CONSTANT_WRITE\020\013*\n\010\300\204=\020\200\200\200\200\002B \n\034com." +
-      "google.javascript.jscompP\001"
+      "NON_CONSTANT_WRITE\020\013\022\024\n\020BANNED_NAME_CALL" +
+      "\020\014*\n\010\300\204=\020\200\200\200\200\002B \n\034com.google.javascript." +
+      "jscompP\001"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
