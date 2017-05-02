@@ -74,6 +74,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.ERROR);
+    options.setWarningLevel(DiagnosticGroups.DEPRECATED, CheckLevel.ERROR);
     options.setWarningLevel(DiagnosticGroups.CONSTANT_PROPERTY, CheckLevel.ERROR);
     // Disable NTI's native const checks so as to suppress duplicate warnings that
     // prevent us from testing the const checks of CheckAccessControls itself.

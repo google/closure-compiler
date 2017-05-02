@@ -184,9 +184,9 @@ public class DiagnosticGroups {
           CheckAccessControls.VISIBILITY_MISMATCH,
           CheckAccessControls.CONVENTION_MISMATCH);
 
+  // TODO(tbreisacher): Deprecate this and keep just the "visibility" group.
   public static final DiagnosticGroup ACCESS_CONTROLS =
-      DiagnosticGroups.registerGroup("accessControls",
-          DEPRECATED, VISIBILITY);
+      DiagnosticGroups.registerGroup("accessControls", VISIBILITY);
 
   public static final DiagnosticGroup NON_STANDARD_JSDOC =
       DiagnosticGroups.registerGroup("nonStandardJsDocs",

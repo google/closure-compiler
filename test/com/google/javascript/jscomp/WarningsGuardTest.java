@@ -17,14 +17,14 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CheckAccessControls.DEPRECATED_NAME;
 import static com.google.javascript.jscomp.CheckAccessControls.VISIBILITY_MISMATCH;
 import static com.google.javascript.jscomp.CheckLevel.ERROR;
 import static com.google.javascript.jscomp.CheckLevel.OFF;
 import static com.google.javascript.jscomp.CheckLevel.WARNING;
+import static com.google.javascript.jscomp.NewTypeInference.MISTYPED_ASSIGN_RHS;
+import static com.google.javascript.jscomp.TypeCheck.DETERMINISTIC_TEST;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ShowByPathWarningsGuard.ShowType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -42,11 +42,11 @@ public final class WarningsGuardTest extends TestCase {
   private static final DiagnosticType BAR_WARNING =
       DiagnosticType.warning("BAR", "Bar description");
 
-  private static final WarningsGuard accessControlsOff =
+  private static final WarningsGuard visibilityOff =
       new DiagnosticGroupWarningsGuard(
           DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.OFF);
 
-  private static final WarningsGuard accessControlsWarning =
+  private static final WarningsGuard visibilityWarning =
       new DiagnosticGroupWarningsGuard(
           DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.WARNING);
 
@@ -216,14 +216,14 @@ public final class WarningsGuardTest extends TestCase {
     // Ensure that guards added later always override, when two guards
     // have the same priority.
     ComposeWarningsGuard guardA = new ComposeWarningsGuard();
-    guardA.addGuard(accessControlsWarning);
-    guardA.addGuard(accessControlsOff);
-    guardA.addGuard(accessControlsWarning);
+    guardA.addGuard(visibilityWarning);
+    guardA.addGuard(visibilityOff);
+    guardA.addGuard(visibilityWarning);
 
     ComposeWarningsGuard guardB = new ComposeWarningsGuard();
-    guardB.addGuard(accessControlsOff);
-    guardB.addGuard(accessControlsWarning);
-    guardB.addGuard(accessControlsOff);
+    guardB.addGuard(visibilityOff);
+    guardB.addGuard(visibilityWarning);
+    guardB.addGuard(visibilityOff);
 
     assertFalse(guardA.disables(DiagnosticGroups.ACCESS_CONTROLS));
     assertTrue(guardA.enables(DiagnosticGroups.ACCESS_CONTROLS));
@@ -245,20 +245,20 @@ public final class WarningsGuardTest extends TestCase {
     guardA.addGuard(
         new DiagnosticGroupWarningsGuard(
           DiagnosticGroups.ACCESS_CONTROLS, CheckLevel.WARNING));
-    guardA.addGuard(accessControlsOff);
+    guardA.addGuard(visibilityOff);
 
     assertTrue(guardA.disables(DiagnosticGroups.ACCESS_CONTROLS));
   }
 
   public void testComposeGuardOrdering4() {
     ComposeWarningsGuard guardA = new ComposeWarningsGuard();
-    guardA.addGuard(accessControlsWarning);
-    guardA.addGuard(accessControlsWarning);
-    guardA.addGuard(accessControlsWarning);
-    guardA.addGuard(accessControlsWarning);
-    guardA.addGuard(accessControlsWarning);
-    guardA.addGuard(accessControlsWarning);
-    guardA.addGuard(accessControlsOff);
+    guardA.addGuard(visibilityWarning);
+    guardA.addGuard(visibilityWarning);
+    guardA.addGuard(visibilityWarning);
+    guardA.addGuard(visibilityWarning);
+    guardA.addGuard(visibilityWarning);
+    guardA.addGuard(visibilityWarning);
+    guardA.addGuard(visibilityOff);
 
     assertTrue(guardA.disables(DiagnosticGroups.ACCESS_CONTROLS));
   }
@@ -302,49 +302,49 @@ public final class WarningsGuardTest extends TestCase {
 
   public void testDiagnosticGuard1() {
     WarningsGuard guard = new DiagnosticGroupWarningsGuard(
-        DiagnosticGroups.ACCESS_CONTROLS, ERROR);
+        DiagnosticGroups.CHECK_TYPES, ERROR);
 
-    assertEquals(ERROR, guard.level(makeError("foo", VISIBILITY_MISMATCH)));
-    assertEquals(ERROR, guard.level(makeError("foo", DEPRECATED_NAME)));
+    assertEquals(ERROR, guard.level(makeError("foo", MISTYPED_ASSIGN_RHS)));
+    assertEquals(ERROR, guard.level(makeError("foo", DETERMINISTIC_TEST)));
 
-    assertFalse(guard.disables(DiagnosticGroups.DEPRECATED));
-    assertFalse(guard.disables(DiagnosticGroups.VISIBILITY));
-    assertFalse(guard.disables(DiagnosticGroups.ACCESS_CONTROLS));
+    assertFalse(guard.disables(DiagnosticGroups.OLD_CHECK_TYPES));
+    assertFalse(guard.disables(DiagnosticGroups.NEW_CHECK_TYPES));
+    assertFalse(guard.disables(DiagnosticGroups.CHECK_TYPES));
 
-    assertEnables(guard, DiagnosticGroups.DEPRECATED);
-    assertEnables(guard, DiagnosticGroups.VISIBILITY);
-    assertEnables(guard, DiagnosticGroups.ACCESS_CONTROLS);
+    assertEnables(guard, DiagnosticGroups.OLD_CHECK_TYPES);
+    assertEnables(guard, DiagnosticGroups.NEW_CHECK_TYPES);
+    assertEnables(guard, DiagnosticGroups.CHECK_TYPES);
     assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
   }
 
   public void testDiagnosticGuard2() {
     WarningsGuard guard = new DiagnosticGroupWarningsGuard(
-        DiagnosticGroups.DEPRECATED, ERROR);
+        DiagnosticGroups.OLD_CHECK_TYPES, ERROR);
 
-    assertNull(guard.level(makeError("foo", VISIBILITY_MISMATCH)));
-    assertEquals(ERROR, guard.level(makeError("foo", DEPRECATED_NAME)));
+    assertNull(guard.level(makeError("foo", MISTYPED_ASSIGN_RHS)));
+    assertEquals(ERROR, guard.level(makeError("foo", DETERMINISTIC_TEST)));
 
-    assertFalse(guard.disables(DiagnosticGroups.DEPRECATED));
-    assertFalse(guard.disables(DiagnosticGroups.VISIBILITY));
-    assertFalse(guard.disables(DiagnosticGroups.ACCESS_CONTROLS));
+    assertFalse(guard.disables(DiagnosticGroups.OLD_CHECK_TYPES));
+    assertFalse(guard.disables(DiagnosticGroups.NEW_CHECK_TYPES));
+    assertFalse(guard.disables(DiagnosticGroups.CHECK_TYPES));
 
-    assertEnables(guard, DiagnosticGroups.DEPRECATED);
-    assertNotEnables(guard, DiagnosticGroups.VISIBILITY);
-    assertEnables(guard, DiagnosticGroups.ACCESS_CONTROLS);
+    assertEnables(guard, DiagnosticGroups.OLD_CHECK_TYPES);
+    assertNotEnables(guard, DiagnosticGroups.NEW_CHECK_TYPES);
+    assertEnables(guard, DiagnosticGroups.CHECK_TYPES);
     assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
   }
 
   public void testDiagnosticGuard3() {
     WarningsGuard guard = new DiagnosticGroupWarningsGuard(
-        DiagnosticGroups.ACCESS_CONTROLS, OFF);
+        DiagnosticGroups.CHECK_TYPES, OFF);
 
-    assertTrue(guard.disables(DiagnosticGroups.DEPRECATED));
-    assertTrue(guard.disables(DiagnosticGroups.VISIBILITY));
-    assertTrue(guard.disables(DiagnosticGroups.ACCESS_CONTROLS));
+    assertTrue(guard.disables(DiagnosticGroups.OLD_CHECK_TYPES));
+    assertTrue(guard.disables(DiagnosticGroups.NEW_CHECK_TYPES));
+    assertTrue(guard.disables(DiagnosticGroups.CHECK_TYPES));
 
-    assertNotEnables(guard, DiagnosticGroups.DEPRECATED);
-    assertNotEnables(guard, DiagnosticGroups.VISIBILITY);
-    assertNotEnables(guard, DiagnosticGroups.ACCESS_CONTROLS);
+    assertNotEnables(guard, DiagnosticGroups.OLD_CHECK_TYPES);
+    assertNotEnables(guard, DiagnosticGroups.NEW_CHECK_TYPES);
+    assertNotEnables(guard, DiagnosticGroups.CHECK_TYPES);
     assertNotEnables(guard, DiagnosticGroups.MESSAGE_DESCRIPTIONS);
   }
 
@@ -449,11 +449,10 @@ public final class WarningsGuardTest extends TestCase {
 
   public void testComposeGuardCycle() {
     ComposeWarningsGuard guard = new ComposeWarningsGuard(
-        accessControlsOff, accessControlsWarning);
+        visibilityOff, visibilityWarning);
     guard.addGuard(guard);
     assertEquals(
-        "DiagnosticGroup<accessControls>(WARNING), " +
-        "DiagnosticGroup<accessControls>(OFF)",
+        "DiagnosticGroup<visibility>(WARNING), DiagnosticGroup<visibility>(OFF)",
         guard.toString());
   }
 
