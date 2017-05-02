@@ -841,20 +841,25 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public Result checkAndTranspileAndOptimize() {
     checkState(
         inputs != null && !inputs.isEmpty(), "No inputs. Did you call init() or initModules()?");
-    return runInCompilerThread(new Callable<Result>() {
-      @Override
-      public Result call() throws Exception {
-        parseForCompilation();
-        if (!hasErrors()) {
-          if (options.getInstrumentForCoverageOnly()) {
-            instrumentForCoverage(options.instrumentBranchCoverage);
-          } else {
-            compileInternal();
+    return runInCompilerThread(
+        new Callable<Result>() {
+          @Override
+          public Result call() throws Exception {
+            parseForCompilation();
+            if (!hasErrors()) {
+              if (options.getInstrumentForCoverageOnly()) {
+                instrumentForCoverage(options.instrumentBranchCoverage);
+              } else {
+                performChecksAndTranspilation();
+                if (!hasErrors() && options.shouldOptimize()) {
+                  performOptimizations();
+                }
+              }
+            }
+            completeCompilation();
+            return getResult();
           }
-        }
-        return getResult();
-      }
-    });
+        });
   }
 
   /**
@@ -882,7 +887,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         callable, options != null && options.getTracerMode().isOn());
   }
 
-  private void compileInternal() {
+  private void performChecksAndTranspilation() {
     if (options.skipNonTranspilationPasses) {
       // i.e. whitespace-only mode, which will not work with goog.module without:
       whitespaceOnlyPasses();
@@ -891,15 +896,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     } else {
       check(); // check() also includes transpilation
-      if (hasErrors()) {
-        return;
-      }
-
-      if (!options.checksOnly && !options.shouldGenerateTypedExterns()) {
-        optimize();
-      }
     }
-    completeCompilation();
   }
 
   /**
@@ -1025,7 +1022,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return phaseOptimizer;
   }
 
-  public void check() {
+  void check() {
     runCustomPasses(CustomPassExecutionTime.BEFORE_CHECKS);
 
     // We are currently only interested in check-passes for progress reporting
@@ -2391,7 +2388,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // Optimizations
   //------------------------------------------------------------------------
 
-  public void optimize() {
+  void performOptimizations() {
+    checkState(options.shouldOptimize());
     List<PassFactory> optimizations = getPassConfig().getOptimizations();
     if (optimizations.isEmpty()) {
       return;

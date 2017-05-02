@@ -3355,4 +3355,11 @@ public class CompilerOptions implements Serializable {
       outputCharset = Charset.forName(outputCharsetName);
     }
   }
+
+  boolean shouldOptimize() {
+    return !skipNonTranspilationPasses
+        && !checksOnly
+        && !shouldGenerateTypedExterns()
+        && !instrumentForCoverageOnly;
+  }
 }

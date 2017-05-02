@@ -975,7 +975,7 @@ public final class CompilerTest extends TestCase {
         new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
     compiler.restoreState(byteArrayInputStream);
 
-    compiler.optimize();
+    compiler.performOptimizations();
     String source = compiler.toSource();
     assertEquals("'use strict';console.log(2);", source);
 
