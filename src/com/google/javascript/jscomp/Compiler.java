@@ -760,13 +760,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     try {
       init(externs, inputs, options);
-      if (hasErrors()) {
-        return getResult();
+      if (!hasErrors()) {
+        checkAndTranspileAndOptimize();
+        completeCompilation();
       }
-      return checkAndTranspileAndOptimize();
     } finally {
       generateReport();
     }
+    return getResult();
   }
 
   /**
@@ -796,13 +797,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     try {
       initModules(externs, modules, options);
-      if (hasErrors()) {
-        return getResult();
+      if (!hasErrors()) {
+        checkAndTranspileAndOptimize();
+        completeCompilation();
       }
-      return checkAndTranspileAndOptimize();
     } finally {
       generateReport();
     }
+    return getResult();
   }
 
   /**
@@ -810,6 +812,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    *
    * <p>Client code must call this method explicitly if it doesn't use one of the convenience
    * methods that do so automatically.
+   * <p>Always call this method, even if the compiler throws an exception. The report will include
+   * information about the exception.
    */
   public void generateReport() {
     Tracer t = newTracer("generateReport");
@@ -836,15 +840,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * report of warnings and errors to stderr.  See the invocation in
    * {@link #initAndCheckAndTranspileAndOptimize} for a good example.
    * <p> TODO(bradfordcsmith): Break this up into checkAndTranspile() and optimize().
-   * @return compilation results.
    */
-  public Result checkAndTranspileAndOptimize() {
+  public void checkAndTranspileAndOptimize() {
     checkState(
         inputs != null && !inputs.isEmpty(), "No inputs. Did you call init() or initModules()?");
-    return runInCompilerThread(
-        new Callable<Result>() {
+    runInCompilerThread(
+        new Callable<Void>() {
           @Override
-          public Result call() throws Exception {
+          public Void call() throws Exception {
             parseForCompilation();
             if (!hasErrors()) {
               if (options.getInstrumentForCoverageOnly()) {
@@ -856,8 +859,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                 }
               }
             }
-            completeCompilation();
-            return getResult();
+            return null;
           }
         });
   }
@@ -901,8 +903,27 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   /**
    * Performs all the bookkeeping required at the end of a compilation.
+   *
+   * <p>This method must be called if the compilation makes it as far as doing checks.
+   * <p> DON'T call it if the compiler threw an exception.
+   * <p> DO call it even when {@code hasErrors()} returns true.
    */
-  private void completeCompilation() {
+  public void completeCompilation() {
+    runInCompilerThread(new Callable<Void>() {
+
+      @Override
+      public Void call() throws Exception {
+        completeCompilationInternal();
+        return null;
+      }
+
+    });
+  }
+
+  /**
+   * Performs all the bookkeeping required at the end of a compilation.
+   */
+  private void completeCompilationInternal() {
     if (options.recordFunctionInformation) {
       recordFunctionInformation();
     }
