@@ -539,8 +539,7 @@ class InlineVariables implements CompilerPass {
         return false;
       }
 
-      // Be very conservative and do no cross control structures or
-      // scope boundaries
+      // Be very conservative and do not cross control structures or scope boundaries
       if (declaration.getBasicBlock() != initialization.getBasicBlock()
           || declaration.getBasicBlock() != reference.getBasicBlock()) {
         return false;
@@ -608,11 +607,12 @@ class InlineVariables implements CompilerPass {
       // Check if declaration can be inlined without passing
       // any side-effect causing nodes.
       Iterator<Node> it;
-      if (initialization.getParent().isVar()) {
-        it = NodeIterators.LocalVarMotion.forVar(
-            initialization.getNode(),     // NAME
-            initialization.getParent(),       // VAR
-            initialization.getGrandparent()); // VAR container
+      if (NodeUtil.isNameDeclaration(initialization.getParent())) {
+        it =
+            NodeIterators.LocalVarMotion.forVar(
+                initialization.getNode(), // NAME
+                initialization.getParent(), // VAR/LET/CONST
+                initialization.getGrandparent()); // VAR/LET/CONST container
       } else if (initialization.getParent().isAssign()) {
         Preconditions.checkState(
             initialization.getGrandparent().isExprResult());
@@ -622,8 +622,8 @@ class InlineVariables implements CompilerPass {
             initialization.getGrandparent(),  // EXPR_RESULT
             initialization.getGrandparent().getParent()); // EXPR container
       } else {
-        throw new IllegalStateException("Unexpected initialization parent " +
-            initialization.getParent().toStringTree());
+        throw new IllegalStateException("Unexpected initialization parent\n"
+            + initialization.getParent().toStringTree());
       }
       Node targetName = reference.getNode();
       while (it.hasNext()) {
@@ -640,7 +640,7 @@ class InlineVariables implements CompilerPass {
      * @return true if the reference is a normal VAR or FUNCTION declaration.
      */
     private boolean isValidDeclaration(Reference declaration) {
-      return (declaration.getParent().isVar()
+      return (NodeUtil.isNameDeclaration(declaration.getParent())
               && !NodeUtil.isLoopStructure(declaration.getGrandparent()))
           || NodeUtil.isFunctionDeclaration(declaration.getParent());
     }
@@ -716,12 +716,9 @@ class InlineVariables implements CompilerPass {
         Preconditions.checkNotNull(value);
 
         boolean isImmutableValueWorthInlining =
-            NodeUtil.isImmutableValue(value) &&
-            (!value.isString() ||
-                isStringWorthInlining(v, refInfo.references));
-        boolean isInlinableThisAlias =
-            value.isThis() &&
-            !refInfo.isEscaped();
+            NodeUtil.isImmutableValue(value)
+                && (!value.isString() || isStringWorthInlining(v, refInfo.references));
+        boolean isInlinableThisAlias = value.isThis() && !refInfo.isEscaped();
         if (!isImmutableValueWorthInlining && !isInlinableThisAlias) {
           return false;
         }

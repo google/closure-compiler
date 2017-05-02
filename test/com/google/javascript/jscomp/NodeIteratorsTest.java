@@ -20,13 +20,11 @@ import com.google.javascript.jscomp.NodeIterators.FunctionlessLocalScope;
 import com.google.javascript.jscomp.NodeIterators.LocalVarMotion;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
-import junit.framework.TestCase;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import junit.framework.TestCase;
 
 /**
  * Tests for NodeIterators.
@@ -124,6 +122,14 @@ public final class NodeIteratorsTest extends TestCase {
         Token.VAR, Token.NAME);
   }
 
+  public void testLet() {
+    testVarMotionWithCode("let X = foo(); if (X) {}", Token.LET, Token.NAME);
+  }
+
+  public void testConst() {
+    testVarMotionWithCode("const X = foo(); if (X) {}", Token.CONST, Token.NAME);
+  }
+
   /**
    * Parses the given code, finds the variable X in the global scope, and runs
    * the VarMotion iterator. Asserts that the iteration order matches the
@@ -152,9 +158,9 @@ public final class NodeIteratorsTest extends TestCase {
     boolean found = false;
     while (searchIt.hasNext()) {
       Node n = searchIt.next();
-      if (n.isName() &&
-          searchIt.currentParent().isVar() &&
-          n.getString().equals("X")) {
+      if (n.isName()
+          && NodeUtil.isNameDeclaration(searchIt.currentParent())
+          && n.getString().equals("X")) {
         found = true;
         break;
       }
