@@ -885,6 +885,11 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
       return isGlobalScopeBlock() && thatBlock.isGlobalScopeBlock();
     }
 
+    @VisibleForTesting
+    Node getRoot() {
+      return root;
+    }
+
     @Override
     public String toString() {
       return "BasicBlock @ " + root;

@@ -18,10 +18,12 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
+import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
+import com.google.javascript.rhino.Token;
 
 public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   private Behavior behavior;
@@ -250,6 +252,51 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
             "  let y; y = e;",
             "  g();" ,
             "  y;y;" ,
+            "}"));
+  }
+
+  public void testBasicBlocks() {
+    behavior = new Behavior() {
+      @Override
+      public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
+        if (t.getScope().isGlobal()) {
+          ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
+          assertThat(x.references).hasSize(3);
+          assertNode(x.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
+          assertNode(x.references.get(1).getBasicBlock().getRoot()).hasType(Token.SWITCH);
+          assertNode(x.references.get(2).getBasicBlock().getRoot()).hasType(Token.CASE);
+        }
+      }
+    };
+    testSame(
+        LINE_JOINER.join(
+            "var x = 0;",
+            "switch (x) {",
+            "  case 0:",
+            "    x;",
+            "}"));
+  }
+
+  public void testBasicBlocks_oldScopeCreator() {
+    es6ScopeCreator = false;
+    behavior = new Behavior() {
+      @Override
+      public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
+        if (t.getScope().isGlobal()) {
+          ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
+          assertThat(x.references).hasSize(3);
+          assertNode(x.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
+          assertNode(x.references.get(1).getBasicBlock().getRoot()).hasType(Token.ROOT);
+          assertNode(x.references.get(2).getBasicBlock().getRoot()).hasType(Token.CASE);
+        }
+      }
+    };
+    testSame(
+        LINE_JOINER.join(
+            "var x = 0;",
+            "switch (x) {",
+            "  case 0:",
+            "    x;",
             "}"));
   }
 
