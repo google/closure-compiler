@@ -21,19 +21,10 @@ import static com.google.javascript.jscomp.Es6RewriteClass.CONFLICTING_GETTER_SE
 import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;;
-import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
-/**
- * Test cases for ES6 transpilation. Despite the name, this isn't just testing {@link
- * Es6ToEs3Converter}, but also some other ES6 transpilation passes. See #getProcessor.
- *
- * @author tbreisacher@google.com (Tyler Breisacher)
- */
-// TODO(tbreisacher): Rename this to Es6TranspilationIntegrationTest since it's really testing
-// a lot of different passes. Also create a unit test for Es6ToEs3Converter.
-public final class Es6ToEs3ConverterTest extends CompilerTestCase {
+public final class Es6RewriteClassTest extends CompilerTestCase {
 
   private static final String EXTERNS_BASE =
       LINE_JOINER.join(
@@ -47,26 +38,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
           " * @template T",
           " */",
           "function Array(var_args) {}",
-          "",
-          "/** @constructor @template T */",
-          "function Iterable() {}",
-          "",
-          "/** @constructor @template T */",
-          "function Iterator() {}",
-          "",
-          "Iterator.prototype.next = function() {};",
-          "",
-          "/**",
-          " * @record",
-          " * @template VALUE",
-          " */",
-          "function IIterableResult() {}",
-          "",
-          "/** @type {boolean} */",
-          "IIterableResult.prototype.done;",
-          "",
-          "/** @type {VALUE} */",
-          "IIterableResult.prototype.value;",
           "",
           "/**",
           " * @param {...*} var_args",
@@ -86,32 +57,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
           " * @param {function(new: ?)} subclass",
           " * @param {function(new: ?)} superclass",
           " */",
-          "$jscomp.inherits = function(subclass, superclass) {};",
-          "",
-          "/**",
-          " * @param {string|!Array<T>|!Iterable<T>|!Iterator<T>|!Arguments<T>} iterable",
-          " * @return {!Iterator<T>}",
-          " * @template T",
-          " */",
-          "$jscomp.makeIterator = function(iterable) {};",
-          "",
-          "/**",
-          " * @param {string|!Array<T>|!Iterable<T>|!Iterator<T>|!Arguments<T>} iterable",
-          " * @return {!Array<T>}",
-          " * @template T",
-          " */",
-          "$jscomp.arrayFromIterable = function(iterable) {};",
-          "",
-          "$jscomp.global.Object = function() {};",
-          "",
-          "/**",
-          "* @param {!Object} obj",
-          "* @param {!Object} props",
-          "* @return {!Object}",
-          "*/",
-          "$jscomp.global.Object.defineProperties = function(obj, props) {};");
+          "$jscomp.inherits = function(subclass, superclass) {};");
 
-  public Es6ToEs3ConverterTest() {
+  public Es6RewriteClassTest() {
     super(EXTERNS_BASE);
   }
 
@@ -136,16 +84,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   protected CompilerPass getProcessor(final Compiler compiler) {
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
     optimizer.addOneTimePass(
-        makePassFactory("Es6RenameVariablesInParamLists",
-            new Es6RenameVariablesInParamLists(compiler)));
-    optimizer.addOneTimePass(
         makePassFactory("es6ConvertSuper", new Es6ConvertSuper(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", new Es6ExtractClasses(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6RewriteClass", new Es6RewriteClass(compiler)));
-    optimizer.addOneTimePass(makePassFactory("convertEs6", new Es6ToEs3Converter(compiler)));
-    optimizer.addOneTimePass(
-        makePassFactory("Es6RewriteBlockScopedDeclaration",
-            new Es6RewriteBlockScopedDeclaration(compiler)));
     optimizer.addOneTimePass(
         makePassFactory(
             "Es6ConvertSuperConstructorCalls", new Es6ConvertSuperConstructorCalls(compiler)));
@@ -157,55 +98,33 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     return 1;
   }
 
-  public void testObjectLiteralStringKeysWithNoValue() {
-    test("var x = {a, b};", "var x = {a: a, b: b};");
-    assertThat(getLastCompiler().injected).isEmpty();
-  }
-
-  public void testObjectLiteralMemberFunctionDef() {
-    test(
-        "var x = {/** @return {number} */ a() { return 0; } };",
-        "var x = {/** @return {number} */ a: function() { return 0; } };");
-    assertThat(getLastCompiler().injected).isEmpty();
-  }
-
-  public void testClassGenerator() {
-    test(
-        "class C { *foo() { yield 1; } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "C.prototype.foo = function*() { yield 1;};"));
-    assertThat(getLastCompiler().injected).isEmpty();
-  }
-
   public void testClassStatement() {
-    test("class C { }", "/** @constructor @struct */ var C = function() {};");
+    test("class C { }", "/** @constructor @struct */ let C = function() {};");
     test(
         "class C { constructor() {} }",
-        "/** @constructor @struct */ var C = function() {};");
+        "/** @constructor @struct */ let C = function() {};");
     test(
         "class C { method() {}; }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "C.prototype.method = function() {};"));
     test(
         "class C { constructor(a) { this.a = a; } }",
-        "/** @constructor @struct */ var C = function(a) { this.a = a; };");
+        "/** @constructor @struct */ let C = function(a) { this.a = a; };");
 
     test(
         "class C { constructor() {} foo() {} }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "C.prototype.foo = function() {};"));
 
     test(
         "class C { constructor() {}; foo() {}; bar() {} }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "C.prototype.foo = function() {};",
             "C.prototype.bar = function() {};"));
 
@@ -213,7 +132,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "class C { foo() {}; bar() {} }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "C.prototype.foo = function() {};",
             "C.prototype.bar = function() {};"));
 
@@ -228,46 +147,46 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function(a) { this.a = a; };",
+            "let C = function(a) { this.a = a; };",
             "C.prototype.foo = function() { console.log(this.a); };",
             "C.prototype.bar = function() { alert(this.a); };"));
 
     test(
         LINE_JOINER.join(
             "if (true) {",
-            "   class Foo{}",
+            "  class Foo{}",
             "} else {",
-            "   class Foo{}",
+            "  class Foo{}",
             "}"),
         LINE_JOINER.join(
             "if (true) {",
-            "    /** @constructor @struct */",
-            "    var Foo = function() {};",
+            "   /** @constructor @struct */",
+            "   let Foo = function() {};",
             "} else {",
-            "    /** @constructor @struct */",
-            "    var Foo$0 = function() {};",
+            "   /** @constructor @struct */",
+            "   let Foo = function() {};",
             "}"));
   }
 
   public void testClassWithNgInject() {
     test(
         "class A { /** @ngInject */ constructor($scope) {} }",
-        "/** @constructor @struct @ngInject */ var A = function($scope) {}");
+        "/** @constructor @struct @ngInject */ let A = function($scope) {}");
 
     test(
         "/** @ngInject */ class A { constructor($scope) {} }",
-        "/** @constructor @struct @ngInject */ var A = function($scope) {}");
+        "/** @constructor @struct @ngInject */ let A = function($scope) {}");
   }
 
   public void testAnonymousSuper() {
     test(
         "f(class extends D { f() { super.g() } })",
         LINE_JOINER.join(
-            "/** @constructor @struct @const",
+            "/** @constructor @struct",
             " * @extends {D}",
             " * @param {...?} var_args",
             " */",
-            "var testcode$classdecl$var0 = function(var_args) {",
+            "const testcode$classdecl$var0 = function(var_args) {",
             "  return D.apply(this,arguments) || this; ",
             "};",
             "$jscomp.inherits(testcode$classdecl$var0, D);",
@@ -275,42 +194,32 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "f(testcode$classdecl$var0)"));
   }
 
-  public void testExponentiationOperator() {
-    setLanguage(LanguageMode.ECMASCRIPT_2016, LanguageMode.ECMASCRIPT5);
-    test("2 ** 2;", "Math.pow(2,2)");
-  }
-
-  public void testExponentiationAssignmentOperator() {
-    setLanguage(LanguageMode.ECMASCRIPT_2016, LanguageMode.ECMASCRIPT5);
-    test("x **= 2;", "x=Math.pow(x,2)");
-  }
-
   public void testNewTarget() {
     testError("function Foo() { new.target; }", CANNOT_CONVERT_YET);
   }
 
   public void testClassWithJsDoc() {
-    test("class C { }", "/** @constructor @struct */ var C = function() { };");
+    test("class C { }", "/** @constructor @struct */ let C = function() { };");
 
     test(
         "/** @deprecated */ class C { }",
-        "/** @constructor @struct @deprecated */ var C = function() {};");
+        "/** @constructor @struct @deprecated */ let C = function() {};");
 
     test(
         "/** @dict */ class C { }",
-        "/** @constructor @dict */ var C = function() {};");
+        "/** @constructor @dict */ let C = function() {};");
 
     test(
         "/** @template T */ class C { }",
-        "/** @constructor @struct @template T */ var C = function() {};");
+        "/** @constructor @struct @template T */ let C = function() {};");
 
     test(
         "/** @final */ class C { }",
-        "/** @constructor @struct @final */ var C = function() {};");
+        "/** @constructor @struct @final */ let C = function() {};");
 
     test(
         "/** @private */ class C { }",
-        "/** @constructor @struct @private */ var C = function() {};");
+        "/** @constructor @struct @private */ let C = function() {};");
   }
 
   public void testInterfaceWithJsDoc() {
@@ -332,7 +241,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * Converts Xs to Ys.",
             " * @struct @interface",
             " */",
-            "var Converter = function() { };",
+            "let Converter = function() { };",
             "",
             "/**",
             " * @param {X} x",
@@ -358,7 +267,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "/**",
             " * @struct @record",
             " */",
-            "var Converter = function() { };",
+            "let Converter = function() { };",
             "",
             "/**",
             " * @param {X} x",
@@ -376,7 +285,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @constructor",
             " * @struct",
             " */",
-            "var C = function(b) {};"));
+            "let C = function(b) {};"));
 
     test(
         "class C { /** @throws {Error} */ constructor() {} }",
@@ -386,7 +295,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @constructor",
             " * @struct",
             " */",
-            "var C = function() {};"));
+            "let C = function() {};"));
 
     test(
         "class C { /** @private */ constructor() {} }",
@@ -396,7 +305,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @constructor",
             " * @struct",
             " */",
-            "var C = function() {};"));
+            "let C = function() {};"));
 
     test(
         "class C { /** @deprecated */ constructor() {} }",
@@ -406,7 +315,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @constructor",
             " * @struct",
             " */",
-            "var C = function() {};"));
+            "let C = function() {};"));
 
     test(
         "class C { /** @template T */ constructor() {} }",
@@ -416,7 +325,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @struct",
             " * @template T",
             " */",
-            "var C = function() {};"));
+            "let C = function() {};"));
 
     test(
         "/** @template S */ class C { /** @template T */ constructor() {} }",
@@ -426,7 +335,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @struct",
             " * @template S, T",
             " */",
-            "var C = function() {};"));
+            "let C = function() {};"));
 
     test(
         "/** @template S */ class C { /** @template T, U */ constructor() {} }",
@@ -436,7 +345,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @struct",
             " * @template S, T, U",
             " */",
-            "var C = function() {};"));
+            "let C = function() {};"));
   }
 
   public void testMemberWithJsDoc() {
@@ -447,7 +356,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @constructor",
             " * @struct",
             " */",
-            "var C = function() {};",
+            "let C = function() {};",
             "",
             "/** @param {boolean} b */",
             "C.prototype.foo = function(b) {};"));
@@ -456,11 +365,11 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   public void testClassStatementInsideIf() {
     test(
         "if (foo) { class C { } }",
-        "if (foo) { /** @constructor @struct */ var C = function() {}; }");
+        "if (foo) { /** @constructor @struct */ let C = function() {}; }");
 
     test(
         "if (foo) class C {}",
-        "if (foo) { /** @constructor @struct */ var C = function() {}; }");
+        "if (foo) { /** @constructor @struct */ let C = function() {}; }");
 
   }
 
@@ -481,15 +390,15 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "var C = class C { }",
         LINE_JOINER.join(
-            "/** @constructor @struct @const */",
-            "var testcode$classdecl$var0 = function() {};",
+            "/** @constructor @struct */",
+            "const testcode$classdecl$var0 = function() {};",
             "var C = testcode$classdecl$var0;"));
 
     test(
         "var C = class C { foo() {} }",
         LINE_JOINER.join(
-            "/** @constructor @struct @const */",
-            "var testcode$classdecl$var0 = function() {}",
+            "/** @constructor @struct */",
+            "const testcode$classdecl$var0 = function() {}",
             "testcode$classdecl$var0.prototype.foo = function() {};",
             "",
             "var C = testcode$classdecl$var0;"));
@@ -513,8 +422,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "window['MediaSource'] = class {};",
         LINE_JOINER.join(
-            "/** @constructor @struct @const */",
-            "var testcode$classdecl$var0 = function() {};",
+            "/** @constructor @struct */",
+            "const testcode$classdecl$var0 = function() {};",
             "window['MediaSource'] = testcode$classdecl$var0;"));
   }
 
@@ -522,24 +431,15 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "var C = new (class {})();",
         LINE_JOINER.join(
-            "/** @constructor @struct @const */",
-            "var testcode$classdecl$var0=function(){};",
+            "/** @constructor @struct */",
+            "const testcode$classdecl$var0=function(){};",
             "var C=new testcode$classdecl$var0"));
     test(
         "(condition ? obj1 : obj2).prop = class C { };",
         LINE_JOINER.join(
-            "/** @constructor @struct @const */",
-            "var testcode$classdecl$var0 = function(){};",
+            "/** @constructor @struct */",
+            "const testcode$classdecl$var0 = function(){};",
             "(condition ? obj1 : obj2).prop = testcode$classdecl$var0;"));
-  }
-
-  public void testAbstractClass() {
-    enableTypeCheck();
-    test(
-        "/** @abstract */ class Foo {} var x = new Foo();",
-        "/** @abstract @constructor @struct */ var Foo = function() {}; var x = new Foo();",
-        null,
-        INSTANTIATE_ABSTRACT_CLASS);
   }
 
   /**
@@ -555,12 +455,12 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "class D {} class C extends D {}",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var D = function() {};",
+            "let D = function() {};",
             "/** @constructor @struct",
             " * @extends {D}",
             " * @param {...?} var_args",
             " */",
-            "var C = function(var_args) { D.apply(this, arguments); };",
+            "let C = function(var_args) { D.apply(this, arguments); };",
             "$jscomp.inherits(C, D);"));
     assertThat(getLastCompiler().injected).containsExactly("es6/util/inherits");
 
@@ -568,9 +468,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "class D {} class C extends D { constructor() { super(); } }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var D = function() {};",
+            "let D = function() {};",
             "/** @constructor @struct @extends {D} */",
-            "var C = function() {",
+            "let C = function() {",
             "  D.call(this);",
             "}",
             "$jscomp.inherits(C, D);"));
@@ -579,9 +479,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "class D {} class C extends D { constructor(str) { super(str); } }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var D = function() {};",
+            "let D = function() {};",
             "/** @constructor @struct @extends {D} */",
-            "var C = function(str) { ",
+            "let C = function(str) { ",
             "  D.call(this, str);",
             "}",
             "$jscomp.inherits(C, D);"));
@@ -593,7 +493,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {ns.D}",
             " * @param {...?} var_args",
             " */",
-            "var C = function(var_args) {",
+            "let C = function(var_args) {",
             " return ns.D.apply(this, arguments) || this;",
             "};",
             "$jscomp.inherits(C, ns.D);"));
@@ -603,12 +503,12 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "class D {} class C extends D {}", "",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var D = function() {};",
+            "let D = function() {};",
             "/** @constructor @struct",
             " * @extends {D}",
             " * @param {...?} var_args",
             " */",
-            "var C = function(var_args) {};"));
+            "let C = function(var_args) {};"));
   }
 
   public void testExtendNonNativeError() {
@@ -625,14 +525,14 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "/** @constructor @struct",
             " * @param {string} msg",
             " */",
-            "var Error = function(msg) {",
+            "let Error = function(msg) {",
             "  /** @const */ this.message = msg;",
             "};",
             "/** @constructor @struct",
             " * @extends {Error}",
             " * @param {...?} var_args",
             " */",
-            "var C = function(var_args) { Error.apply(this, arguments); };",
+            "let C = function(var_args) { Error.apply(this, arguments); };",
             "$jscomp.inherits(C, Error);"));
     test(
         LINE_JOINER.join(
@@ -652,13 +552,13 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "/** @constructor @struct",
             " * @param {string} msg",
             " */",
-            "var Error = function(msg) {",
+            "let Error = function(msg) {",
             "  /** @const */ this.message = msg;",
             "};",
             "/** @constructor @struct",
             " * @extends {Error}",
             " */",
-            "var C = function() { Error.call(this, 'C error'); };",
+            "let C = function() { Error.call(this, 'C error'); };",
             "$jscomp.inherits(C, Error);"));
   }
 
@@ -670,7 +570,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {Error}",
             " * @param {...?} var_args",
             " */",
-            "var C = function(var_args) {",
+            "let C = function(var_args) {",
             "  var $jscomp$tmp$error;",
             "  $jscomp$tmp$error = Error.apply(this, arguments),",
             "      this.message = $jscomp$tmp$error.message,",
@@ -690,7 +590,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "/** @constructor @struct",
             " * @extends {Error}",
             " */",
-            "var C = function() {",
+            "let C = function() {",
             "  var $jscomp$tmp$error;",
             "  var self =",
             "      ($jscomp$tmp$error = Error.call(this, 'C error'),",
@@ -721,13 +621,13 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "/** @struct @interface */",
-            "var D = function() {};",
+            "let D = function() {};",
             "D.prototype.f = function() {};",
             "/**",
             " * @struct @interface",
             " * @param {...?} var_args",
             " * @extends{D} */",
-            "var C = function(var_args) {};",
+            "let C = function(var_args) {};",
             "C.prototype.g = function() {};"));
   }
 
@@ -744,13 +644,13 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "/** @struct @record */",
-            "var D = function() {};",
+            "let D = function() {};",
             "D.prototype.f = function() {};",
             "/**",
             " * @struct @record",
             " * @param {...?} var_args",
             " * @extends{D} */",
-            "var C = function(var_args) {};",
+            "let C = function(var_args) {};",
             "C.prototype.g = function() {};"));
   }
 
@@ -767,10 +667,10 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "/** @struct @interface */",
-            "var D = function() {};",
+            "let D = function() {};",
             "D.prototype.f = function() {};",
             "/** @constructor @struct @implements{D} */",
-            "var C = function() {};",
+            "let C = function() {};",
             "C.prototype.f = function() {console.log('hi');};"));
   }
 
@@ -787,11 +687,11 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var D = function() {};",
+            "let D = function() {};",
             "/** @constructor @struct",
             " * @extends {D}",
             " */",
-            "var C = function() {};"));
+            "let C = function() {};"));
   }
 
   public void testSuperCall() {
@@ -799,9 +699,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "class D {} class C extends D { constructor() { super(); } }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var D = function() {};",
+            "let D = function() {};",
             "/** @constructor @struct @extends {D} */",
-            "var C = function() {",
+            "let C = function() {",
             "  D.call(this);",
             "}",
             "$jscomp.inherits(C, D);"));
@@ -810,9 +710,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "class D {} class C extends D { constructor(str) { super(str); } }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var D = function() {}",
+            "let D = function() {}",
             "/** @constructor @struct @extends {D} */",
-            "var C = function(str) {",
+            "let C = function(str) {",
             "  D.call(this,str);",
             "}",
             "$jscomp.inherits(C, D);"));
@@ -821,9 +721,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "class D {} class C extends D { constructor(str, n) { super(str); this.n = n; } }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var D = function() {}",
+            "let D = function() {}",
             "/** @constructor @struct @extends {D} */",
-            "var C = function(str, n) {",
+            "let C = function(str, n) {",
             "  D.call(this,str);",
             "  this.n = n;",
             "}",
@@ -838,9 +738,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var D = function() {}",
+            "let D = function() {}",
             "/** @constructor @struct @extends {D} */",
-            "var C = function() { }",
+            "let C = function() { }",
             "$jscomp.inherits(C, D);",
             "C.prototype.foo = function() {",
             "  return D.prototype.foo.call(this);",
@@ -855,9 +755,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var D = function() {}",
+            "let D = function() {}",
             "/** @constructor @struct @extends {D} */",
-            "var C = function() {};",
+            "let C = function() {};",
             "$jscomp.inherits(C, D);",
             "C.prototype.foo = function(bar) {",
             "  return D.prototype.foo.call(this, bar);",
@@ -867,10 +767,10 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "class C { method() { class D extends C { constructor() { super(); }}}}",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {}",
+            "let C = function() {}",
             "C.prototype.method = function() {",
-            "  /** @constructor @struct @extends{C} */",
-            "  var D = function() {",
+            "  /** @constructor @struct @extends {C} */",
+            "  let D = function() {",
             "    C.call(this);",
             "  }",
             "  $jscomp.inherits(D, C);",
@@ -879,11 +779,10 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "class D {} class C extends D { constructor() {}; f() {super();} }",
         LINE_JOINER.join(
-
             "/** @constructor @struct */",
-            "var D = function() {};",
+            "let D = function() {};",
             "/** @constructor @struct @extends {D} */",
-            "var C = function() {}",
+            "let C = function() {}",
             "$jscomp.inherits(C, D);",
             "C.prototype.f = function() {",
             "  D.prototype.f.call(this);",
@@ -917,7 +816,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @constructor @struct",
             " * @param {string} str",
             " */",
-            "var D = function(str) {",
+            "let D = function(str) {",
             "  this.str = str;",
             "  return;",
             "}",
@@ -926,7 +825,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @param {string} str",
             " * @param {number} n",
             " */",
-            "var C = function(str, n) {",
+            "let C = function(str, n) {",
             "  (D.call(this,str), this).n = n;", // super() returns `this`.
             "  return;",
             "}",
@@ -947,7 +846,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "/** @constructor @struct @extends {D} */",
-            "var C = function(str, n) {",
+            "let C = function(str, n) {",
             "  var $jscomp$super$this;",
             "  ($jscomp$super$this = D.call(this,str) || this).n = n;",
             "  return $jscomp$super$this;", // Duplicate because of existing return statement.
@@ -980,13 +879,13 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @constructor @struct",
             " * @param {string} name */",
-            "var D = function(name) {",
+            "let D = function(name) {",
             "  this.name = name;",
             "}",
             "/** @constructor @struct @extends {D}",
             " * @param {string} str",
             " * @param {number} n */",
-            "var C = function(str, n) {",
+            "let C = function(str, n) {",
             "  if (n >= 0) {",
             "    D.call(this, 'positive: ' + str);",
             "  } else {",
@@ -1015,7 +914,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "/** @constructor @struct @extends {D}",
             " * @param {string} str",
             " * @param {number} n */",
-            "var C = function(str, n) {",
+            "let C = function(str, n) {",
             "  var $jscomp$super$this;",
             "  if (n >= 0) {",
             "    $jscomp$super$this = D.call(this, 'positive: ' + str) || this;",
@@ -1065,11 +964,11 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var Base = function() {};",
+            "let Base = function() {};",
             "Base.prototype.method = function() { return 5; };",
             "",
             "/** @constructor @struct @extends {Base} */",
-            "var Subclass = function() { Base.call(this); };",
+            "let Subclass = function() { Base.call(this); };",
             "",
             "/** @type {?} */",
             "Subclass.prototype.x;",
@@ -1106,11 +1005,11 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var Base = function() {};",
+            "let Base = function() {};",
             "Base.prototype.method = function() { this._x = 5; };",
             "",
             "/** @constructor @struct @extends {Base} */",
-            "var Subclass = function() { Base.call(this); };",
+            "let Subclass = function() { Base.call(this); };",
             "",
             "/** @type {?} */",
             "Subclass.prototype.x;",
@@ -1162,7 +1061,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @constructor @struct @extends {Object}",
             " * @param {string} msg",
             " */",
-            "var Foo = function(msg) {",
+            "let Foo = function(msg) {",
             "  this;", // super() replaced with its return value
             "  this.msg = msg;",
             "};",
@@ -1174,7 +1073,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @constructor @struct @extends {Object}",
             " * @param {...?} var_args",
             " */",
-            "var Foo = function(var_args) {",
+            "let Foo = function(var_args) {",
             "  this;", // super.apply(this, arguments) replaced with its return value
             "};",
             "$jscomp.inherits(Foo, Object);"));
@@ -1196,13 +1095,13 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "/**",
             " * @constructor @struct",
             " */",
-            "var Object = function() {",
+            "let Object = function() {",
             "};",
             "/**",
             " * @constructor @struct @extends {Object}",
             " * @param {string} msg",
             " */",
-            "var Foo = function(msg) {",
+            "let Foo = function(msg) {",
             "  Object.call(this);",
             "  this.msg = msg;",
             "};",
@@ -1215,13 +1114,13 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "/**",
             " * @constructor @struct",
             " */",
-            "var Object = function() {",
+            "let Object = function() {",
             "};",
             "/**",
             " * @constructor @struct @extends {Object}",
             " * @param {...?} var_args",
             " */",
-            "var Foo = function(var_args) {",
+            "let Foo = function(var_args) {",
             "  Object.apply(this, arguments);", // all arguments passed on to super()
             "};",
             "$jscomp.inherits(Foo, Object);"));
@@ -1231,15 +1130,15 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "var F = class G {}",
         LINE_JOINER.join(
-            "/** @constructor @struct @const */",
-            "var testcode$classdecl$var0 = function(){};",
+            "/** @constructor @struct */",
+            "const testcode$classdecl$var0 = function(){};",
             "var F = testcode$classdecl$var0;"));
 
     test(
         "F = class G {}",
         LINE_JOINER.join(
-            "/** @constructor @struct @const */",
-            "var testcode$classdecl$var0 = function(){};",
+            "/** @constructor @struct */",
+            "const testcode$classdecl$var0 = function(){};",
             "F = testcode$classdecl$var0;"));
   }
 
@@ -1248,23 +1147,23 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "class C { f() { class D {} } }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "C.prototype.f = function() {",
             "  /** @constructor @struct */",
-            "  var D = function() {}",
+            "  let D = function() {}",
             "};"));
 
     test(
         "class C { f() { class D extends C {} } }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "C.prototype.f = function() {",
             "  /**",
             " * @constructor @struct",
             " * @param {...?} var_args",
             " * @extends{C} */",
-            "  var D = function(var_args) {",
+            "  let D = function(var_args) {",
             "    C.apply(this, arguments); ",
             "  };",
             "  $jscomp.inherits(D, C);",
@@ -1304,27 +1203,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
               CANNOT_CONVERT_YET);
   }
 
-  public void testSuperSpread() {
-    test(
-        LINE_JOINER.join(
-            "class D {}",
-            "class C extends D {",
-            "  constructor(args) {",
-            "    super(...args)",
-            "  }",
-            "}"),
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var D = function(){};",
-            "/** @constructor @struct @extends {D} */",
-            "var C=function(args) {",
-            "  D.apply(this, [].concat($jscomp.arrayFromIterable(args)));",
-            "};",
-            "$jscomp.inherits(C,D);"));
-    assertThat(getLastCompiler().injected)
-        .containsExactly("es6/util/arrayfromiterable", "es6/util/inherits");
-  }
-
   public void testSuperCallNonConstructor() {
 
     test(
@@ -1334,7 +1212,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {B}",
             " * @param {...?} var_args",
             " */",
-            "var S = function(var_args) { return B.apply(this, arguments) || this; };",
+            "let S = function(var_args) { return B.apply(this, arguments) || this; };",
             "$jscomp.inherits(S, B);",
             "/** @this {?} */",
             "S.f=function() { B.f.call(this) }"));
@@ -1346,7 +1224,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {B}",
             " * @param {...?} var_args",
             " */",
-            "var S = function(var_args) { return B.apply(this, arguments) || this; };",
+            "let S = function(var_args) { return B.apply(this, arguments) || this; };",
             "$jscomp.inherits(S, B);",
             "S.prototype.f=function() {",
             "  B.prototype.f.call(this);",
@@ -1357,18 +1235,18 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "class F { static f() { return this; } }",
         LINE_JOINER.join(
-            "/** @constructor @struct */ var F = function() {}",
+            "/** @constructor @struct */ let F = function() {}",
             "/** @this {?} */ F.f = function() { return this; };"));
   }
 
   public void testStaticMethods() {
     test("class C { static foo() {} }",
-        "/** @constructor @struct */ var C = function() {}; C.foo = function() {};");
+        "/** @constructor @struct */ let C = function() {}; C.foo = function() {};");
 
     test("class C { static foo() {}; foo() {} }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "",
             "C.foo = function() {};",
             "",
@@ -1377,7 +1255,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     test("class C { static foo() {}; bar() { C.foo(); } }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "",
             "C.foo = function() {};",
             "",
@@ -1395,10 +1273,10 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "C.f();"),
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var D = function() {};",
+            "let D = function() {};",
             "D.f = function () {};",
             "/** @constructor @struct @extends{D} */",
-            "var C = function() {};",
+            "let C = function() {};",
             "$jscomp.inherits(C, D);",
             "C.f();"));
 
@@ -1414,10 +1292,10 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "C.f();"),
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var D = function() {};",
+            "let D = function() {};",
             "D.f = function() {};",
             "/** @constructor @struct @extends{D} */",
-            "var C = function() { };",
+            "let C = function() { };",
             "$jscomp.inherits(C, D);",
             "C.prototype.f = function() {};",
             "C.f();"));
@@ -1434,10 +1312,10 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var D = function() {};",
+            "let D = function() {};",
             "D.f = function() {};",
             "/** @constructor @struct @extends{D} */",
-            "var C = function() { };",
+            "let C = function() { };",
             "$jscomp.inherits(C, D);",
             "C.f = function() {};",
             "C.prototype.g = function() {};"));
@@ -1453,7 +1331,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {ExternsClass}",
             " * @param {...?} var_args",
             " */",
-            "var CodeClass = function(var_args) {",
+            "let CodeClass = function(var_args) {",
             "  return ExternsClass.apply(this,arguments) || this;",
             "};",
             "$jscomp.inherits(CodeClass,ExternsClass)"),
@@ -1473,8 +1351,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "function f() { var a = b = class {};}",
         LINE_JOINER.join(
             "function f() {",
-            "  /** @constructor @struct @const */",
-            "  var testcode$classdecl$var0 = function() {};",
+            "  /** @constructor @struct */",
+            "  const testcode$classdecl$var0 = function() {};",
             "  var a = b = testcode$classdecl$var0;",
             "}"));
 
@@ -1483,60 +1361,10 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         LINE_JOINER.join(
             "var ns = {};",
             "function f() {",
-            "  /** @constructor @struct @const */",
-            "  var testcode$classdecl$var0 = function() {};",
+            "  /** @constructor @struct */",
+            "  const testcode$classdecl$var0 = function() {};",
             "  var self = ns.Child = testcode$classdecl$var0",
             "}"));
-  }
-
-  public void testInvalidClassUse() {
-    enableTypeCheck();
-
-    test(
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "function Foo() {}",
-            "Foo.prototype.f = function() {};",
-            "class Sub extends Foo {}",
-            "(new Sub).f();"),
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "function Foo() {}",
-            "Foo.prototype.f = function() {};",
-            "/**",
-            " * @constructor @struct",
-            " * @extends {Foo}",
-            " * @param {...?} var_args",
-            " */",
-            "var Sub=function(var_args) { Foo.apply(this, arguments); }",
-            "$jscomp.inherits(Sub, Foo);",
-            "(new Sub).f();"));
-
-    testWarning(
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "function Foo() {}",
-            "Foo.f = function() {};",
-            "class Sub extends Foo {}",
-            "Sub.f();"),
-        TypeCheck.INEXISTENT_PROPERTY);
-
-    test(
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function Foo() {}",
-            "Foo.f = function() {};",
-            "class Sub extends Foo {}"),
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function Foo() {}",
-            "Foo.f = function() {};",
-            "/** @constructor @struct",
-            " * @extends {Foo}",
-            " * @param {...?} var_args",
-            " */",
-            "var Sub = function(var_args) { Foo.apply(this, arguments); };",
-            "$jscomp.inherits(Sub, Foo);"));
   }
 
   /**
@@ -1550,7 +1378,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "class C { get value() { return 0; } }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "/** @type {?} */",
             "C.prototype.value;",
             "$jscomp.global.Object.defineProperties(C.prototype, {",
@@ -1568,7 +1396,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "class C { set value(val) { this.internalVal = val; } }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "/** @type {?} */",
             "C.prototype.value;",
             "$jscomp.global.Object.defineProperties(C.prototype, {",
@@ -1595,7 +1423,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "/** @type {?} */",
             "C.prototype.value;",
             "$jscomp.global.Object.defineProperties(C.prototype, {",
@@ -1627,7 +1455,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "/** @type {?} */",
             "C.prototype.alwaysTwo;",
             "/** @type {?} */",
@@ -1659,7 +1487,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "class C { static get value() {} }  class D extends C { static get value() {} }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "/** @nocollapse @type {?} */",
             "C.value;",
             "$jscomp.global.Object.defineProperties(C, {",
@@ -1674,7 +1502,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {C}",
             " * @param {...?} var_args",
             " */",
-            "var D = function(var_args) {",
+            "let D = function(var_args) {",
             "  C.apply(this,arguments); ",
             "};",
             "/** @nocollapse @type {?} */",
@@ -1701,7 +1529,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "/** @type {number} */",
             "C.prototype.value;",
             "$jscomp.global.Object.defineProperties(C.prototype, {",
@@ -1722,7 +1550,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "class C { /** @param {string} v */ set value(v) { } }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "/** @type {string} */",
             "C.prototype.value;",
             "$jscomp.global.Object.defineProperties(C.prototype, {",
@@ -1749,50 +1577,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         CONFLICTING_GETTER_SETTER_TYPE);
   }
 
-  public void testClassEs5GetterSetterIncorrectTypes() {
-    enableTypeCheck();
-    setLanguageOut(LanguageMode.ECMASCRIPT5);
-
-
-    // Using @type instead of @return on a getter.
-    test(
-        "class C { /** @type {string} */ get value() { } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "/** @type {?} */",
-            "C.prototype.value;",
-            "$jscomp.global.Object.defineProperties(C.prototype, {",
-            "  value: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    /** @type {string} */",
-            "    get: function() {}",
-            "  }",
-            "});"),
-        null,
-        TypeValidator.TYPE_MISMATCH_WARNING);
-
-    // Using @type instead of @param on a setter.
-    test(
-        "class C { /** @type {string} */ set value(v) { } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "/** @type {?} */",
-            "C.prototype.value;",
-            "$jscomp.global.Object.defineProperties(C.prototype, {",
-            "  value: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    /** @type {string} */",
-            "    set: function(v) {}",
-            "  }",
-            "});"),
-        null,
-        TypeValidator.TYPE_MISMATCH_WARNING);
-  }
-
   /**
    * @bug 20536614
    */
@@ -1803,7 +1587,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "class C { static get foo() {} }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "/** @nocollapse @type {?} */",
             "C.foo;",
             "$jscomp.global.Object.defineProperties(C, {",
@@ -1819,7 +1603,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         LINE_JOINER.join("class C { static get foo() {} }", "class Sub extends C {}"),
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "/** @nocollapse @type {?} */",
             "C.foo;",
             "$jscomp.global.Object.defineProperties(C, {",
@@ -1835,7 +1619,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @extends {C}",
             " * @param {...?} var_args",
             " */",
-            "var Sub = function(var_args) {",
+            "let Sub = function(var_args) {",
             "  C.apply(this, arguments);",
             "};",
             "$jscomp.inherits(Sub, C)"));
@@ -1847,7 +1631,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         "class C { static set foo(x) {} }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "/** @nocollapse @type {?} */",
             "C.foo;",
             "$jscomp.global.Object.defineProperties(C, {",
@@ -1858,119 +1642,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "    set: function(x) {}",
             "  }",
             "});"));
-  }
-
-  public void testInitSymbol() {
-    test("let a = alert(Symbol.thimble);", "$jscomp.initSymbol(); var a = alert(Symbol.thimble)");
-    assertThat(getLastCompiler().injected).containsExactly("es6/symbol");
-
-    test(
-        LINE_JOINER.join(
-            "function f() {",
-            "  let x = 1;",
-            "  let y = Symbol('nimble');",
-            "}"),
-        LINE_JOINER.join(
-            "function f() {",
-            "  var x = 1;",
-            "  $jscomp.initSymbol();",
-            "  var y = Symbol('nimble');",
-            "}"));
-    test(
-        LINE_JOINER.join(
-            "function f() {",
-            "  if (true) {",
-            "     let Symbol = function() {};",
-            "  }",
-            "  alert(Symbol.ism)",
-            "}"),
-        LINE_JOINER.join(
-            "function f() {",
-            "  if (true) {",
-            "     var Symbol$0 = function() {};",
-            "  }",
-            "  $jscomp.initSymbol();",
-            "  alert(Symbol.ism)",
-            "}"));
-
-    // No $jscomp.initSymbol because "Symbol" doesn't refer to the global Symbol function here.
-    test(
-        LINE_JOINER.join(
-            "function f() {",
-            "  if (true) {",
-            "    let Symbol = function() {};",
-            "    alert(Symbol.ism)",
-            "  }",
-            "}"),
-        LINE_JOINER.join(
-            "function f() {",
-            "  if (true) {",
-            "    var Symbol = function() {};",
-            "    alert(Symbol.ism)",
-            "  }",
-            "}"));
-    // No $jscomp.initSymbol in externs
-    testExternChanges(
-        "alert(Symbol.thimble);", "",
-        "alert(Symbol.thimble)");
-  }
-
-  public void testInitSymbolIterator() {
-    test(
-        "var x = {[Symbol.iterator]: function() { return this; }};",
-        LINE_JOINER.join(
-            "$jscomp.initSymbol();",
-            "$jscomp.initSymbolIterator();",
-            "var $jscomp$compprop0 = {};",
-            "var x = ($jscomp$compprop0[Symbol.iterator] = function() {return this;},",
-            "         $jscomp$compprop0)"));
-  }
-
-  public void testClassComputedPropGetter() {
-    setLanguageOut(LanguageMode.ECMASCRIPT5);
-
-    test(
-        "/** @unrestricted */ class C { /** @return {number} */ get [foo]() { return 4; }}",
-        LINE_JOINER.join(
-            "/** @constructor @unrestricted */",
-            "var C = function() {};",
-            "/** @type {number} */",
-            "C.prototype[foo];",
-            "var $jscomp$compprop0 = {};",
-            "$jscomp.global.Object.defineProperties(",
-            "  C.prototype,",
-            "  ($jscomp$compprop0[foo] = {",
-            "    configurable:true,",
-            "    enumerable:true,",
-            "    /** @this {C} */",
-            "    get: function() { return 4; }",
-            "  }, $jscomp$compprop0));"));
-    assertThat(getLastCompiler().injected).containsExactly("util/global");
-
-    testError("class C { get [add + expr]() {} }", CANNOT_CONVERT);
-  }
-
-  public void testClassComputedPropSetter() {
-    setLanguageOut(LanguageMode.ECMASCRIPT5);
-
-    test(
-        "/** @unrestricted */ class C { /** @param {string} val */ set [foo](val) {}}",
-        LINE_JOINER.join(
-            "/** @constructor @unrestricted */",
-            "var C = function() {};",
-            "/** @type {string} */",
-            "C.prototype[foo];",
-            "var $jscomp$compprop0={};",
-            "$jscomp.global.Object.defineProperties(",
-            "  C.prototype,",
-            "  ($jscomp$compprop0[foo] = {",
-            "    configurable:true,",
-            "    enumerable:true,",
-            "    /** @this {C} */",
-            "    set: function(val) {}",
-            "  }, $jscomp$compprop0));"));
-
-    testError("class C { get [sub - expr]() {} }", CANNOT_CONVERT);
   }
 
   public void testClassStaticComputedProps() {
@@ -1994,20 +1665,21 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "/** @constructor @unrestricted */",
-            "var C = function() {};",
+            "let C = function() {};",
             "/** @type {boolean} */",
             "C.prototype[foo];",
-            "var $jscomp$compprop0={};",
             "$jscomp.global.Object.defineProperties(",
             "  C.prototype,",
-            "  ($jscomp$compprop0[foo] = {",
-            "    configurable:true,",
-            "    enumerable:true,",
-            "    /** @this {C} */",
-            "    get: function() {},",
-            "    /** @this {C} */",
-            "    set: function(val) {},",
-            "  }, $jscomp$compprop0));"));
+            "  {",
+            "    [foo]: {",
+            "      configurable:true,",
+            "      enumerable:true,",
+            "      /** @this {C} */",
+            "      get: function() {},",
+            "      /** @this {C} */",
+            "      set: function(val) {},",
+            "    },",
+            "  });"));
 
     testError(
         LINE_JOINER.join(
@@ -2021,655 +1693,20 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         CONFLICTING_GETTER_SETTER_TYPE);
   }
 
-  /**
-   * ES5 getters and setters should report an error if the languageOut is ES3.
-   */
-  public void testEs5GettersAndSetters_es3() {
-    testError("let x = { get y() {} };", CANNOT_CONVERT);
-    testError("let x = { set y(value) {} };", CANNOT_CONVERT);
-  }
-
-  /**
-   * ES5 getters and setters on object literals should be left alone if the languageOut is ES5.
-   */
-  public void testEs5GettersAndSettersObjLit_es5() {
-    setLanguageOut(LanguageMode.ECMASCRIPT5);
-    testSame("var x = { get y() {} };");
-    testSame("var x = { set y(value) {} };");
-  }
-
-  public void testRestParameter() {
-    test("function f(...zero) { return zero; }",
-        LINE_JOINER.join(
-        "function f(zero) {",
-        "  var $jscomp$restParams = [];",
-        "  for (var $jscomp$restIndex = 0; $jscomp$restIndex < arguments.length;",
-        "      ++$jscomp$restIndex) {",
-        "    $jscomp$restParams[$jscomp$restIndex - 0] = arguments[$jscomp$restIndex];",
-        "  }",
-        "  {",
-        "    var zero$0 = $jscomp$restParams;",
-        "    return zero$0;",
-        "  }",
-        "}"));
-
-    test("function f(zero, ...one) {}", "function f(zero, one) {}");
-    test("function f(zero, one, ...two) {}", "function f(zero, one, two) {}");
-
-    // Function-level and inline type
-    test("/** @param {...number} zero */ function f(...zero) {}",
-         "/** @param {...number} zero */ function f(zero) {}");
-    test("function f(/** ...number */ ...zero) {}",
-         "function f(/** ...number */ zero) {}");
-
-    // Make sure we get type checking inside the function for the rest parameters.
-    test(
-        "/** @param {...number} two */ function f(zero, one, ...two) { return two; }",
-        LINE_JOINER.join(
-            "/** @param {...number} two */ function f(zero, one, two) {",
-            "  var $jscomp$restParams = [];",
-            "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
-            "      ++$jscomp$restIndex) {",
-            "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
-            "  }",
-            "  {",
-            "    var /** !Array<number> */ two$0 = $jscomp$restParams;",
-            "    return two$0;",
-            "  }",
-            "}"));
-
-    test(
-        "/** @param {...number} two */ var f = function(zero, one, ...two) { return two; }",
-        LINE_JOINER.join(
-            "/** @param {...number} two */ var f = function(zero, one, two) {",
-            "  var $jscomp$restParams = [];",
-            "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
-            "      ++$jscomp$restIndex) {",
-            "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
-            "  }",
-            "  {",
-            "    var /** !Array<number> */ two$0 = $jscomp$restParams;",
-            "    return two$0;",
-            "  }",
-            "}"));
-
-    test(
-        "/** @param {...number} two */ ns.f = function(zero, one, ...two) { return two; }",
-        LINE_JOINER.join(
-            "/** @param {...number} two */ ns.f = function(zero, one, two) {",
-            "  var $jscomp$restParams = [];",
-            "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
-            "      ++$jscomp$restIndex) {",
-            "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
-            "  }",
-            "  {",
-            "    var /** !Array<number> */ two$0 = $jscomp$restParams;",
-            "    return two$0;",
-            "  }",
-            "}"));
-
-    // Warn on /** number */
-    testWarning("function f(/** number */ ...zero) {}",
-                Es6ToEs3Converter.BAD_REST_PARAMETER_ANNOTATION);
-    testWarning("/** @param {number} zero */ function f(...zero) {}",
-                Es6ToEs3Converter.BAD_REST_PARAMETER_ANNOTATION);
-  }
-
-  public void testDefaultAndRestParameters() {
-    test(
-        "function f(zero, one, ...two) {one = (one === undefined) ? 1 : one;}",
-        LINE_JOINER.join(
-            "function f(zero, one, two) {",
-            "  var $jscomp$restParams = [];",
-            "  for (var $jscomp$restIndex = 2; $jscomp$restIndex < arguments.length;",
-            "      ++$jscomp$restIndex) {",
-            "    $jscomp$restParams[$jscomp$restIndex - 2] = arguments[$jscomp$restIndex];",
-            "  }",
-            "  {",
-            "    var two$0 = $jscomp$restParams;",
-            "    one = (one === undefined) ? 1 : one;",
-            "  }",
-            "}"));
-  }
-
-  public void testForOf() {
-
-    // With array literal and declaring new bound variable.
-    test(
-        "for (var i of [1,2,3]) { console.log(i); }",
-        LINE_JOINER.join(
-            "for (var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]),",
-            "    $jscomp$key$i = $jscomp$iter$0.next();",
-            "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
-            "  var i = $jscomp$key$i.value;",
-            "  {",
-            "    console.log(i);",
-            "  }",
-            "}"));
-    assertThat(getLastCompiler().injected).containsExactly("es6/util/makeiterator");
-
-    // With simple assign instead of var declaration in bound variable.
-    test(
-        "for (i of [1,2,3]) { console.log(i); }",
-        LINE_JOINER.join(
-            "for (var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]),",
-            "    $jscomp$key$i = $jscomp$iter$0.next();",
-            "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
-            "  i = $jscomp$key$i.value;",
-            "  {",
-            "    console.log(i);",
-            "  }",
-            "}"));
-
-    // With name instead of array literal.
-    test(
-        "for (var i of arr) { console.log(i); }",
-        LINE_JOINER.join(
-            "for (var $jscomp$iter$0 = $jscomp.makeIterator(arr),",
-            "    $jscomp$key$i = $jscomp$iter$0.next();",
-            "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
-            "  var i = $jscomp$key$i.value;",
-            "  {",
-            "    console.log(i);",
-            "  }",
-            "}"));
-
-    // With empty loop body.
-    test(
-        "for (var i of [1,2,3]);",
-        LINE_JOINER.join(
-            "for (var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]),",
-            "    $jscomp$key$i = $jscomp$iter$0.next();",
-            "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
-            "  var i = $jscomp$key$i.value;",
-            "  {}",
-            "}"));
-
-    // With no block in for loop body.
-    test(
-        "for (var i of [1,2,3]) console.log(i);",
-        LINE_JOINER.join(
-            "for (var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]),",
-            "    $jscomp$key$i = $jscomp$iter$0.next();",
-            "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
-            "  var i = $jscomp$key$i.value;",
-            "  {",
-            "    console.log(i);",
-            "  }",
-            "}"));
-
-    // Iteration var shadows an outer var ()
-    test(
-        "var i = 'outer'; for (let i of [1, 2, 3]) { alert(i); } alert(i);",
-        LINE_JOINER.join(
-            "var i = 'outer';",
-            "for (var $jscomp$iter$0 = $jscomp.makeIterator([1,2,3]),",
-            "    $jscomp$key$i = $jscomp$iter$0.next();",
-            "    !$jscomp$key$i.done; $jscomp$key$i = $jscomp$iter$0.next()) {",
-            "  var i$1 = $jscomp$key$i.value;",
-            "  {",
-            "    alert(i$1);",
-            "  }",
-            "}",
-            "alert(i);"));
-  }
-
-  public void testForOfRedeclaredVar() {
-    test(
-        LINE_JOINER.join(
-            "for (let x of []) {",
-            "  let x = 0;",
-            "}"),
-        LINE_JOINER.join(
-            "for(var $jscomp$iter$0=$jscomp.makeIterator([]),",
-            "    $jscomp$key$x=$jscomp$iter$0.next();",
-            "    !$jscomp$key$x.done;$jscomp$key$x=$jscomp$iter$0.next()) {",
-            "  var x = $jscomp$key$x.value;",
-            "  {",
-            "    var x$1 = 0;",
-            "  }",
-            "}"));
-  }
-
-  public void testForOfJSDoc() {
-    test(
-        "for (/** @type {string} */ let x of []) {}",
-        LINE_JOINER.join(
-            "for(var $jscomp$iter$0=$jscomp.makeIterator([]),",
-            "    $jscomp$key$x=$jscomp$iter$0.next();",
-            "    !$jscomp$key$x.done;$jscomp$key$x=$jscomp$iter$0.next()) {",
-            "  /** @type {string} */",
-            "  var x = $jscomp$key$x.value;",
-            "  {}",
-            "}"));
-    test(
-        "for (/** @type {string} */ x of []) {}",
-        LINE_JOINER.join(
-            "for(var $jscomp$iter$0=$jscomp.makeIterator([]),",
-            "    $jscomp$key$x=$jscomp$iter$0.next();",
-            "    !$jscomp$key$x.done;$jscomp$key$x=$jscomp$iter$0.next()) {",
-            "  /** @type {string} */",
-            "  x = $jscomp$key$x.value;",
-            "  {}",
-            "}"));
-  }
-
-  public void testSpreadArray() {
-    test("var arr = [1, 2, ...mid, 4, 5];",
-        "var arr = [].concat([1, 2], $jscomp.arrayFromIterable(mid), [4, 5]);");
-    assertThat(getLastCompiler().injected).containsExactly("es6/util/arrayfromiterable");
-
-    test("var arr = [1, 2, ...mid(), 4, 5];",
-        "var arr = [].concat([1, 2], $jscomp.arrayFromIterable(mid()), [4, 5]);");
-    test("var arr = [1, 2, ...mid, ...mid2(), 4, 5];",
-        "var arr = [].concat([1, 2], $jscomp.arrayFromIterable(mid),"
-        + " $jscomp.arrayFromIterable(mid2()), [4, 5]);");
-    test("var arr = [...mid()];",
-        "var arr = [].concat($jscomp.arrayFromIterable(mid()));");
-    test("f(1, [2, ...mid, 4], 5);",
-        "f(1, [].concat([2], $jscomp.arrayFromIterable(mid), [4]), 5);");
-    test(
-        "function f() { return [...arguments]; };",
-        LINE_JOINER.join(
-            "function f() {",
-            "  return [].concat($jscomp.arrayFromIterable(arguments));",
-            "};"));
-    test(
-        "function f() { return [...arguments, 2]; };",
-        LINE_JOINER.join(
-            "function f() {",
-            "  return [].concat($jscomp.arrayFromIterable(arguments), [2]);",
-            "};"));
-  }
-
-  public void testArgumentsEscaped() {
-    test(
-        LINE_JOINER.join(
-            "function g(x) {",
-            "  return [...x];",
-            "}",
-            "function f() {",
-            "  return g(arguments);",
-            "}"),
-        LINE_JOINER.join(
-            "function g(x) {",
-            "  return [].concat($jscomp.arrayFromIterable(x));",
-            "}",
-            "function f() {",
-            "  return g(arguments);",
-            "}"));
-  }
-
-  public void testForOfOnNonIterable() {
-    enableTypeCheck();
-    testWarning(
-        LINE_JOINER.join(
-            "var arrayLike = {",
-            "  0: 'x',",
-            "  1: 'y',",
-            "  length: 2,",
-            "};",
-            "for (var x of arrayLike) {}"),
-        TypeValidator.TYPE_MISMATCH_WARNING);
-  }
-
-  public void testSpreadCall() {
-    test("f(...arr);", "f.apply(null, [].concat($jscomp.arrayFromIterable(arr)));");
-    test("f(0, ...g());", "f.apply(null, [].concat([0], $jscomp.arrayFromIterable(g())));");
-    test("f(...arr, 1);", "f.apply(null, [].concat($jscomp.arrayFromIterable(arr), [1]));");
-    test("f(0, ...g(), 2);", "f.apply(null, [].concat([0], $jscomp.arrayFromIterable(g()), [2]));");
-    test("obj.m(...arr);", "obj.m.apply(obj, [].concat($jscomp.arrayFromIterable(arr)));");
-    test("x.y.z.m(...arr);", "x.y.z.m.apply(x.y.z, [].concat($jscomp.arrayFromIterable(arr)));");
-    test("f(a, ...b, c, ...d, e);",
-        "f.apply(null, [].concat([a], $jscomp.arrayFromIterable(b),"
-        + " [c], $jscomp.arrayFromIterable(d), [e]));");
-
-    test("Factory.create().m(...arr);",
-        LINE_JOINER.join(
-        "var $jscomp$spread$args0;",
-        "($jscomp$spread$args0 = Factory.create()).m.apply("
-            + "$jscomp$spread$args0, [].concat($jscomp.arrayFromIterable(arr)));"
-    ));
-
-    test("var x = b ? Factory.create().m(...arr) : null;",
-        LINE_JOINER.join(
-            "var $jscomp$spread$args0;",
-            "var x = b ? ($jscomp$spread$args0 = Factory.create()).m.apply($jscomp$spread$args0, ",
-            "    [].concat($jscomp.arrayFromIterable(arr))) : null;"));
-
-    test("getF()(...args);", "getF().apply(null, [].concat($jscomp.arrayFromIterable(args)));");
-    test(
-        "F.c().m(...a); G.d().n(...b);",
-        LINE_JOINER.join(
-            "var $jscomp$spread$args0;",
-            "($jscomp$spread$args0 = F.c()).m.apply($jscomp$spread$args0,",
-            "    [].concat($jscomp.arrayFromIterable(a)));",
-            "var $jscomp$spread$args1;",
-            "($jscomp$spread$args1 = G.d()).n.apply($jscomp$spread$args1,",
-            "    [].concat($jscomp.arrayFromIterable(b)));"));
-
-    enableTypeCheck();
-
-    testWarning(
-        LINE_JOINER.join(
-            "class C {}",
-            "class Factory {",
-            "  /** @return {C} */",
-            "  static create() {return new C()}",
-            "}",
-            "var arr = [1,2]",
-            "Factory.create().m(...arr);"),
-        TypeCheck.INEXISTENT_PROPERTY);
-
-    test(
-        LINE_JOINER.join(
-            "class C { m(a) {} }",
-            "class Factory {",
-            "  /** @return {C} */",
-            "  static create() {return new C()}",
-            "}",
-            "var arr = [1,2]",
-            "Factory.create().m(...arr);"),
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "C.prototype.m = function(a) {};",
-            "/** @constructor @struct */",
-            "var Factory = function() {};",
-            "/** @return {C} */",
-            "Factory.create = function() {return new C()};",
-            "var arr = [1,2]",
-            "var $jscomp$spread$args0;",
-            "($jscomp$spread$args0 = Factory.create()).m.apply(",
-            "    $jscomp$spread$args0, [].concat($jscomp.arrayFromIterable(arr)));"));
-  }
-
-  public void testSpreadNew() {
-    setLanguageOut(LanguageMode.ECMASCRIPT5);
-
-    test("new F(...args);",
-        "new (Function.prototype.bind.apply(F, [null].concat($jscomp.arrayFromIterable(args))));");
-  }
-
-  public void testMethodInObject() {
-    test("var obj = { f() {alert(1); } };",
-        "var obj = { f: function() {alert(1); } };");
-
-    test(
-        "var obj = { f() { alert(1); }, x };",
-        "var obj = { f: function() { alert(1); }, x: x };");
-  }
-
-  public void testComputedPropertiesWithMethod() {
-    test(
-        "var obj = { ['f' + 1]: 1, m() {}, ['g' + 1]: 1, };",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {};",
-            "var obj = ($jscomp$compprop0['f' + 1] = 1,",
-            "  ($jscomp$compprop0.m = function() {}, ",
-            "     ($jscomp$compprop0['g' + 1] = 1, $jscomp$compprop0)));"));
-  }
-
-  public void testComputedProperties() {
-    test(
-        "var obj = { ['f' + 1] : 1, ['g' + 1] : 1 };",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {};",
-            "var obj = ($jscomp$compprop0['f' + 1] = 1,",
-            "  ($jscomp$compprop0['g' + 1] = 1, $jscomp$compprop0));"));
-
-    test(
-        "var obj = { ['f'] : 1};",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {};",
-            "var obj = ($jscomp$compprop0['f'] = 1,",
-            "  $jscomp$compprop0);"));
-
-    test(
-        "var o = { ['f'] : 1}; var p = { ['g'] : 1};",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {};",
-            "var o = ($jscomp$compprop0['f'] = 1,",
-            "  $jscomp$compprop0);",
-            "var $jscomp$compprop1 = {};",
-            "var p = ($jscomp$compprop1['g'] = 1,",
-            "  $jscomp$compprop1);"));
-
-    test(
-        "({['f' + 1] : 1})",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {};",
-            "($jscomp$compprop0['f' + 1] = 1,",
-            "  $jscomp$compprop0)"));
-
-    test(
-        "({'a' : 2, ['f' + 1] : 1})",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {};",
-            "($jscomp$compprop0['a'] = 2,",
-            "  ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0));"));
-
-    test(
-        "({['f' + 1] : 1, 'a' : 2})",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {};",
-            "($jscomp$compprop0['f' + 1] = 1,",
-            "  ($jscomp$compprop0['a'] = 2, $jscomp$compprop0));"));
-
-    test("({'a' : 1, ['f' + 1] : 1, 'b' : 1})",
-        LINE_JOINER.join(
-        "var $jscomp$compprop0 = {};",
-        "($jscomp$compprop0['a'] = 1,",
-        "  ($jscomp$compprop0['f' + 1] = 1, ($jscomp$compprop0['b'] = 1, $jscomp$compprop0)));"
-    ));
-
-    test(
-        "({'a' : x++, ['f' + x++] : 1, 'b' : x++})",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {};",
-            "($jscomp$compprop0['a'] = x++, ($jscomp$compprop0['f' + x++] = 1,",
-            "  ($jscomp$compprop0['b'] = x++, $jscomp$compprop0)))"));
-
-    test(
-        "({a : x++, ['f' + x++] : 1, b : x++})",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {};",
-            "($jscomp$compprop0.a = x++, ($jscomp$compprop0['f' + x++] = 1,",
-            "  ($jscomp$compprop0.b = x++, $jscomp$compprop0)))"));
-
-    test(
-        "({a, ['f' + 1] : 1})",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {};",
-            "  ($jscomp$compprop0.a = a, ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0))"));
-
-    test(
-        "({['f' + 1] : 1, a})",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {};",
-            "  ($jscomp$compprop0['f' + 1] = 1, ($jscomp$compprop0.a = a, $jscomp$compprop0))"));
-
-    test(
-        "var obj = { [foo]() {}}",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {};",
-            "var obj = ($jscomp$compprop0[foo] = function(){}, $jscomp$compprop0)"));
-
-    test(
-        "var obj = { *[foo]() {}}",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {};",
-            "var obj = (",
-            "  $jscomp$compprop0[foo] = function*(){},",
-            "  $jscomp$compprop0)"));
-  }
-
-  public void testComputedPropGetterSetter() {
-    setLanguageOut(LanguageMode.ECMASCRIPT5);
-
-    testSame("var obj = {get latest () {return undefined;}}");
-    testSame("var obj = {set latest (str) {}}");
-    test(
-        "var obj = {'a' : 2, get l () {return null;}, ['f' + 1] : 1}",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {get l () {return null;}};",
-            "var obj = ($jscomp$compprop0['a'] = 2,",
-            "  ($jscomp$compprop0['f' + 1] = 1, $jscomp$compprop0));"));
-    test(
-        "var obj = {['a' + 'b'] : 2, set l (str) {}}",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {set l (str) {}};",
-            "var obj = ($jscomp$compprop0['a' + 'b'] = 2, $jscomp$compprop0);"));
-  }
-
   public void testComputedPropClass() {
     test(
         "class C { [foo]() { alert(1); } }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "C.prototype[foo] = function() { alert(1); };"));
 
     test(
         "class C { static [foo]() { alert(2); } }",
         LINE_JOINER.join(
             "/** @constructor @struct */",
-            "var C = function() {};",
+            "let C = function() {};",
             "C[foo] = function() { alert(2); };"));
-  }
-
-  public void testComputedPropGeneratorMethods() {
-    test(
-        "class C { *[foo]() { yield 1; } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "C.prototype[foo] = function*() { yield 1; };"));
-
-    test(
-        "class C { static *[foo]() { yield 2; } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "C[foo] = function*() { yield 2; };"));
-  }
-
-  public void testBlockScopedGeneratorFunction() {
-    // Functions defined in a block get translated to a var
-    test(
-        "{ function *f() {yield 1;} }",
-        "{ var f = function*() { yield 1; }; }");
-  }
-
-  public void testComputedPropCannotConvert() {
-    testError("var o = { get [foo]() {}}", CANNOT_CONVERT_YET);
-    testError("var o = { set [foo](val) {}}", CANNOT_CONVERT_YET);
-  }
-
-  public void testNoComputedProperties() {
-    testSame("({'a' : 1})");
-    testSame("({'a' : 1, f : 1, b : 1})");
-  }
-
-  public void testUntaggedTemplateLiteral() {
-    test("``", "''");
-    test("`\"`", "'\\\"'");
-    test("`'`", "\"'\"");
-    test("`\\``", "'`'");
-    test("`\\\"`", "'\\\"'");
-    test("`\\\\\"`", "'\\\\\\\"'");
-    test("`\"\\\\`", "'\"\\\\'");
-    test("`$$`", "'$$'");
-    test("`$$$`", "'$$$'");
-    test("`\\$$$`", "'$$$'");
-    test("`hello`", "'hello'");
-    test("`hello\nworld`", "'hello\\nworld'");
-    test("`hello\rworld`", "'hello\\nworld'");
-    test("`hello\r\nworld`", "'hello\\nworld'");
-    test("`hello\n\nworld`", "'hello\\n\\nworld'");
-    test("`hello\\r\\nworld`", "'hello\\r\\nworld'");
-    test("`${world}`", "'' + world");
-    test("`hello ${world}`", "'hello ' + world");
-    test("`${hello} world`", "hello + ' world'");
-    test("`${hello}${world}`", "'' + hello + world");
-    test("`${a} b ${c} d ${e}`", "a + ' b ' + c + ' d ' + e");
-    test("`hello ${a + b}`", "'hello ' + (a + b)");
-    test("`hello ${a, b, c}`", "'hello ' + (a, b, c)");
-    test("`hello ${a ? b : c}${a * b}`", "'hello ' + (a ? b : c) + (a * b)");
-  }
-
-  public void testTaggedTemplateLiteral() {
-    test(
-        "tag``",
-        LINE_JOINER.join(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['']);",
-            "$jscomp$templatelit$0.raw = [''];",
-            "tag($jscomp$templatelit$0);"));
-
-    test(
-        "tag`${hello} world`",
-        LINE_JOINER.join(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
-            "$jscomp$templatelit$0.raw = ['', ' world'];",
-            "tag($jscomp$templatelit$0, hello);"));
-
-    test(
-        "tag`${hello} ${world}`",
-        LINE_JOINER.join(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' ', '']);",
-            "$jscomp$templatelit$0.raw = ['', ' ', ''];",
-            "tag($jscomp$templatelit$0, hello, world);"));
-
-    test(
-        "tag`\"`",
-        LINE_JOINER.join(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['\\\"']);",
-            "$jscomp$templatelit$0.raw = ['\\\"'];",
-            "tag($jscomp$templatelit$0);"));
-
-    // The cooked string and the raw string are different.
-    test(
-        "tag`a\tb`",
-        LINE_JOINER.join(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['a\tb']);",
-            "$jscomp$templatelit$0.raw = ['a\\tb'];",
-            "tag($jscomp$templatelit$0);"));
-
-    test(
-        "tag()`${hello} world`",
-        LINE_JOINER.join(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
-            "$jscomp$templatelit$0.raw = ['', ' world'];",
-            "tag()($jscomp$templatelit$0, hello);"));
-
-    test(
-        "a.b`${hello} world`",
-        LINE_JOINER.join(
-            "var $jscomp$templatelit$0 = /** @type {!ITemplateArray} */ (['', ' world']);",
-            "$jscomp$templatelit$0.raw = ['', ' world'];",
-            "a.b($jscomp$templatelit$0, hello);"));
-
-    // https://github.com/google/closure-compiler/issues/1299
-    test(
-        "tag`<p class=\"foo\">${x}</p>`",
-        LINE_JOINER.join(
-            "var $jscomp$templatelit$0 = "
-                + "/** @type {!ITemplateArray} */ (['<p class=\"foo\">', '</p>']);",
-            "$jscomp$templatelit$0.raw = ['<p class=\"foo\">', '</p>'];",
-            "tag($jscomp$templatelit$0, x);"));
-    test(
-        "tag`<p class='foo'>${x}</p>`",
-        LINE_JOINER.join(
-            "var $jscomp$templatelit$0 = "
-                + "/** @type {!ITemplateArray} */ (['<p class=\\'foo\\'>', '</p>']);",
-            "$jscomp$templatelit$0.raw = ['<p class=\\'foo\\'>', '</p>'];",
-            "tag($jscomp$templatelit$0, x);"));
-  }
-
-  public void testUnicodeEscapes() {
-    test("var \\u{73} = \'\\u{2603}\'", "var s = \'\u2603\'");  // ☃
-    test("var \\u{63} = \'\\u{1f42a}\'", "var c = \'\uD83D\uDC2A\'");  // 🐪
-    test("var str = `begin\\u{2026}end`", "var str = 'begin\\u2026end'");
   }
 
   @Override

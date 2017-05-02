@@ -44,7 +44,7 @@ import java.util.Set;
  * <p>
  * This must be done before {@link Es6ToEs3Converter}, because that pass only handles classes
  * that are declarations or simple assignments.
- * @see Es6ToEs3Converter#visitClass(NodeTraversal, Node, Node)
+ * @see Es6RewriteClass#visitClass(NodeTraversal, Node, Node)
  */
 public final class Es6ExtractClasses
     extends NodeTraversal.AbstractPostOrderCallback implements HotSwapCompilerPass {

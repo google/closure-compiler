@@ -17,7 +17,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.Es6ToEs3Converter.ClassDeclarationMetadata;
+import com.google.javascript.jscomp.Es6RewriteClass.ClassDeclarationMetadata;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
