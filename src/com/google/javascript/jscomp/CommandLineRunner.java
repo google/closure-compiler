@@ -687,6 +687,7 @@ public class CommandLineRunner extends
     private boolean preserveTypeAnnotations = false;
 
     @Option(name = "--inject_libraries",
+        handler = BooleanOptionHandler.class,
         usage = "Allow injecting runtime libraries.")
     private boolean injectLibraries = true;
 
@@ -727,6 +728,7 @@ public class CommandLineRunner extends
 
     @Option(
       name = "--print_source_after_each_pass",
+      handler = BooleanOptionHandler.class,
       hidden = true,
       usage = "Whether to iteratively print resulting JS source per pass."
     )
