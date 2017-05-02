@@ -28,7 +28,6 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import junit.framework.TestCase;
 
@@ -211,17 +210,16 @@ public final class NodeTraversalTest extends TestCase {
         "}");
     assertChangesRecorded(code, new NameChangingCallback());
   }
-  
+
   private void assertChangesRecorded(String code, NodeTraversal.Callback callback) {
     final String externs = "";
     Compiler compiler = new Compiler();
     Node tree = parseRoots(compiler, externs, code);
-    System.out.println("parse done");
-    Node clone = tree.cloneTree();
-    Map<Node, Node> map = NodeUtil.mapMainToClone(tree, clone);
+
+    ChangeVerifier changeVerifier = new ChangeVerifier(compiler).snapshot(tree);
     NodeTraversal.traverseRootsEs6(
         compiler, callback,  tree.getFirstChild(), tree.getSecondChild());
-    NodeUtil.verifyScopeChanges("test", map, tree);
+    changeVerifier.checkRecordedChanges(tree);
   }
 
 

@@ -32,7 +32,6 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import junit.framework.TestCase;
 
@@ -50,7 +49,7 @@ public final class NodeUtilTest extends TestCase {
     return n;
   }
 
-  static Node getNode(String js) {
+  private static Node getNode(String js) {
     Node root = parse("var a=(" + js + ");");
     Node expr = root.getFirstChild();
     Node var = expr.getFirstChild();
@@ -116,19 +115,19 @@ public final class NodeUtilTest extends TestCase {
     assertNotLiteral(getNode("void foo()"));
   }
 
-  public void assertLiteralAndImmutable(Node n) {
+  private void assertLiteralAndImmutable(Node n) {
     assertTrue(NodeUtil.isLiteralValue(n, true));
     assertTrue(NodeUtil.isLiteralValue(n, false));
     assertTrue(NodeUtil.isImmutableValue(n));
   }
 
-  public void assertLiteralButNotImmutable(Node n) {
+  private void assertLiteralButNotImmutable(Node n) {
     assertTrue(NodeUtil.isLiteralValue(n, true));
     assertTrue(NodeUtil.isLiteralValue(n, false));
     assertFalse(NodeUtil.isImmutableValue(n));
   }
 
-  public void assertNotLiteral(Node n) {
+  private void assertNotLiteral(Node n) {
     assertFalse(NodeUtil.isLiteralValue(n, true));
     assertFalse(NodeUtil.isLiteralValue(n, false));
     assertFalse(NodeUtil.isImmutableValue(n));
@@ -296,21 +295,21 @@ public final class NodeUtilTest extends TestCase {
   }
 
   public void testIsObjectLiteralKey1() throws Exception {
-    testIsObjectLiteralKey(
+    assertIsObjectLiteralKey(
       parseExpr("({})"), false);
-    testIsObjectLiteralKey(
+    assertIsObjectLiteralKey(
       parseExpr("a"), false);
-    testIsObjectLiteralKey(
+    assertIsObjectLiteralKey(
       parseExpr("'a'"), false);
-    testIsObjectLiteralKey(
+    assertIsObjectLiteralKey(
       parseExpr("1"), false);
-    testIsObjectLiteralKey(
+    assertIsObjectLiteralKey(
       parseExpr("({a: 1})").getFirstChild(), true);
-    testIsObjectLiteralKey(
+    assertIsObjectLiteralKey(
       parseExpr("({1: 1})").getFirstChild(), true);
-    testIsObjectLiteralKey(
+    assertIsObjectLiteralKey(
       parseExpr("({get a(){}})").getFirstChild(), true);
-    testIsObjectLiteralKey(
+    assertIsObjectLiteralKey(
       parseExpr("({set a(b){}})").getFirstChild(), true);
   }
 
@@ -319,41 +318,41 @@ public final class NodeUtilTest extends TestCase {
     return root.getFirstFirstChild();
   }
 
-  private void testIsObjectLiteralKey(Node node, boolean expected) {
+  private void assertIsObjectLiteralKey(Node node, boolean expected) {
     assertEquals(expected, NodeUtil.isObjectLitKey(node));
   }
 
   public void testGetFunctionName1() throws Exception {
     Node parent = parse("function name(){}");
-    testGetFunctionName(parent.getFirstChild(), "name");
+    assertGetNameResult(parent.getFirstChild(), "name");
   }
 
   public void testGetFunctionName2() throws Exception {
     Node parent = parse("var name = function(){}")
         .getFirstFirstChild();
 
-    testGetFunctionName(parent.getFirstChild(), "name");
+    assertGetNameResult(parent.getFirstChild(), "name");
   }
 
   public void testGetFunctionName3() throws Exception {
     Node parent = parse("qualified.name = function(){}")
         .getFirstFirstChild();
 
-    testGetFunctionName(parent.getLastChild(), "qualified.name");
+    assertGetNameResult(parent.getLastChild(), "qualified.name");
   }
 
   public void testGetFunctionName4() throws Exception {
     Node parent = parse("var name2 = function name1(){}")
         .getFirstFirstChild();
 
-    testGetFunctionName(parent.getFirstChild(), "name2");
+    assertGetNameResult(parent.getFirstChild(), "name2");
   }
 
   public void testGetFunctionName5() throws Exception {
     Node n = parse("qualified.name2 = function name1(){}");
     Node parent = n.getFirstFirstChild();
 
-    testGetFunctionName(parent.getLastChild(), "qualified.name2");
+    assertGetNameResult(parent.getLastChild(), "qualified.name2");
   }
 
   public void testGetBestFunctionName1() throws Exception {
@@ -371,7 +370,7 @@ public final class NodeUtilTest extends TestCase {
         NodeUtil.getNearestFunctionName(parent.getLastChild()));
   }
 
-  private void testGetFunctionName(Node function, String name) {
+  private void assertGetNameResult(Node function, String name) {
     assertEquals(Token.FUNCTION, function.getToken());
     assertEquals(name, NodeUtil.getName(function));
   }
@@ -1166,109 +1165,109 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLocalValue1() throws Exception {
     // Names are not known to be local.
-    assertFalse(testLocalValue("x"));
-    assertFalse(testLocalValue("x()"));
-    assertFalse(testLocalValue("this"));
-    assertFalse(testLocalValue("arguments"));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x()")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("this")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("arguments")));
 
     // We can't know if new objects are local unless we know
     // that they don't alias themselves.
     // TODO(tdeegan): Revisit this.
-    assertFalse(testLocalValue("new x()"));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("new x()")));
 
     // property references are assumed to be non-local
-    assertFalse(testLocalValue("(new x()).y"));
-    assertFalse(testLocalValue("(new x())['y']"));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("(new x()).y")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("(new x())['y']")));
 
     // Primitive values are local
-    assertTrue(testLocalValue("null"));
-    assertTrue(testLocalValue("undefined"));
-    assertTrue(testLocalValue("Infinity"));
-    assertTrue(testLocalValue("NaN"));
-    assertTrue(testLocalValue("1"));
-    assertTrue(testLocalValue("'a'"));
-    assertTrue(testLocalValue("true"));
-    assertTrue(testLocalValue("false"));
-    assertTrue(testLocalValue("[]"));
-    assertTrue(testLocalValue("{}"));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("null")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("undefined")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("Infinity")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("NaN")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("1")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("'a'")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("true")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("false")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("[]")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{}")));
 
-    assertFalse(testLocalValue("[x]"));
-    assertFalse(testLocalValue("{'a':x}"));
-    assertTrue(testLocalValue("{'a': {'b': 2}}"));
-    assertFalse(testLocalValue("{'a': {'b': global}}"));
-    assertTrue(testLocalValue("{get someGetter() { return 1; }}"));
-    assertTrue(testLocalValue("{get someGetter() { return global; }}"));
-    assertTrue(testLocalValue("{set someSetter(value) {}}"));
-    assertTrue(testLocalValue("{[someComputedProperty]: {}}"));
-    assertFalse(testLocalValue("{[someComputedProperty]: global}"));
-    assertFalse(testLocalValue("{[someComputedProperty]: {'a':x}}"));
-    assertTrue(testLocalValue("{[someComputedProperty]: {'a':1}}"));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("[x]")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("{'a':x}")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{'a': {'b': 2}}")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("{'a': {'b': global}}")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{get someGetter() { return 1; }}")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{get someGetter() { return global; }}")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{set someSetter(value) {}}")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: {}}")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: global}")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: {'a':x}}")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: {'a':1}}")));
 
     // increment/decrement results in primitive number, the previous value is
     // always coersed to a number (even in the post.
-    assertTrue(testLocalValue("++x"));
-    assertTrue(testLocalValue("--x"));
-    assertTrue(testLocalValue("x++"));
-    assertTrue(testLocalValue("x--"));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("++x")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("--x")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x++")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x--")));
 
     // The left side of an only assign matters if it is an alias or mutable.
-    assertTrue(testLocalValue("x=1"));
-    assertFalse(testLocalValue("x=[]"));
-    assertFalse(testLocalValue("x=y"));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x=1")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x=[]")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x=y")));
     // The right hand side of assignment opts don't matter, as they force
     // a local result.
-    assertTrue(testLocalValue("x+=y"));
-    assertTrue(testLocalValue("x*=y"));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x+=y")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x*=y")));
     // Comparisons always result in locals, as they force a local boolean
     // result.
-    assertTrue(testLocalValue("x==y"));
-    assertTrue(testLocalValue("x!=y"));
-    assertTrue(testLocalValue("x>y"));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x==y")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x!=y")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x>y")));
     // Only the right side of a comma matters
-    assertTrue(testLocalValue("(1,2)"));
-    assertTrue(testLocalValue("(x,1)"));
-    assertFalse(testLocalValue("(x,y)"));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("(1,2)")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("(x,1)")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("(x,y)")));
 
     // Both the operands of OR matter
-    assertTrue(testLocalValue("1||2"));
-    assertFalse(testLocalValue("x||1"));
-    assertFalse(testLocalValue("x||y"));
-    assertFalse(testLocalValue("1||y"));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("1||2")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x||1")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x||y")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("1||y")));
 
     // Both the operands of AND matter
-    assertTrue(testLocalValue("1&&2"));
-    assertFalse(testLocalValue("x&&1"));
-    assertFalse(testLocalValue("x&&y"));
-    assertFalse(testLocalValue("1&&y"));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("1&&2")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x&&1")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x&&y")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("1&&y")));
 
     // Only the results of HOOK matter
-    assertTrue(testLocalValue("x?1:2"));
-    assertFalse(testLocalValue("x?x:2"));
-    assertFalse(testLocalValue("x?1:x"));
-    assertFalse(testLocalValue("x?x:y"));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x?1:2")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x?x:2")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x?1:x")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("x?x:y")));
 
     // Results of ops are local values
-    assertTrue(testLocalValue("!y"));
-    assertTrue(testLocalValue("~y"));
-    assertTrue(testLocalValue("y + 1"));
-    assertTrue(testLocalValue("y + z"));
-    assertTrue(testLocalValue("y * z"));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("!y")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("~y")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("y + 1")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("y + z")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("y * z")));
 
-    assertTrue(testLocalValue("'a' in x"));
-    assertTrue(testLocalValue("typeof x"));
-    assertTrue(testLocalValue("x instanceof y"));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("'a' in x")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("typeof x")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("x instanceof y")));
 
-    assertTrue(testLocalValue("void x"));
-    assertTrue(testLocalValue("void 0"));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("void x")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("void 0")));
 
-    assertFalse(testLocalValue("{}.x"));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("{}.x")));
 
-    assertTrue(testLocalValue("{}.toString()"));
-    assertTrue(testLocalValue("o.toString()"));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{}.toString()")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("o.toString()")));
 
-    assertFalse(testLocalValue("o.valueOf()"));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("o.valueOf()")));
 
-    assertTrue(testLocalValue("delete a.b"));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("delete a.b")));
   }
 
   public void testLocalValue2() {
@@ -1379,34 +1378,30 @@ public final class NodeUtilTest extends TestCase {
     assertTrue(NodeUtil.mayHaveSideEffects(callExpr));
   }
 
-  private boolean testLocalValue(String js) {
-    return NodeUtil.evaluatesToLocalValue(getNode(js));
-  }
-
   public void testValidDefine() {
-    assertTrue(testValidDefineValue("1"));
-    assertTrue(testValidDefineValue("-3"));
-    assertTrue(testValidDefineValue("true"));
-    assertTrue(testValidDefineValue("false"));
-    assertTrue(testValidDefineValue("'foo'"));
+    assertTrue(getIsValidDefineValueResultFor("1"));
+    assertTrue(getIsValidDefineValueResultFor("-3"));
+    assertTrue(getIsValidDefineValueResultFor("true"));
+    assertTrue(getIsValidDefineValueResultFor("false"));
+    assertTrue(getIsValidDefineValueResultFor("'foo'"));
 
-    assertFalse(testValidDefineValue("x"));
-    assertFalse(testValidDefineValue("null"));
-    assertFalse(testValidDefineValue("undefined"));
-    assertFalse(testValidDefineValue("NaN"));
+    assertFalse(getIsValidDefineValueResultFor("x"));
+    assertFalse(getIsValidDefineValueResultFor("null"));
+    assertFalse(getIsValidDefineValueResultFor("undefined"));
+    assertFalse(getIsValidDefineValueResultFor("NaN"));
 
-    assertTrue(testValidDefineValue("!true"));
-    assertTrue(testValidDefineValue("-true"));
-    assertTrue(testValidDefineValue("1 & 8"));
-    assertTrue(testValidDefineValue("1 + 8"));
-    assertTrue(testValidDefineValue("'a' + 'b'"));
-    assertTrue(testValidDefineValue("true ? 'a' : 'b'"));
+    assertTrue(getIsValidDefineValueResultFor("!true"));
+    assertTrue(getIsValidDefineValueResultFor("-true"));
+    assertTrue(getIsValidDefineValueResultFor("1 & 8"));
+    assertTrue(getIsValidDefineValueResultFor("1 + 8"));
+    assertTrue(getIsValidDefineValueResultFor("'a' + 'b'"));
+    assertTrue(getIsValidDefineValueResultFor("true ? 'a' : 'b'"));
 
-    assertFalse(testValidDefineValue("1 & foo"));
-    assertFalse(testValidDefineValue("foo ? 'a' : 'b'"));
+    assertFalse(getIsValidDefineValueResultFor("1 & foo"));
+    assertFalse(getIsValidDefineValueResultFor("foo ? 'a' : 'b'"));
   }
 
-  private boolean testValidDefineValue(String js) {
+  private boolean getIsValidDefineValueResultFor(String js) {
     Node script = parse("var test = " + js + ";");
     Node var = script.getFirstChild();
     Node name = var.getFirstChild();
@@ -1689,10 +1684,6 @@ public final class NodeUtilTest extends TestCase {
 
     assertTrue(NodeUtil.mayBeString(getNode("a += 'x'")));
     assertTrue(NodeUtil.mayBeString(getNode("a += 1")));
-  }
-
-  public void test1() {
-    assertFalse(NodeUtil.isStringResult(getNode("a+b")));
   }
 
   public void testIsStringResult() {
@@ -2327,11 +2318,11 @@ public final class NodeUtilTest extends TestCase {
     assertLhsByDestructuring(nameNodeA);
   }
 
-  static void assertLhsByDestructuring(Node n) {
+  private static void assertLhsByDestructuring(Node n) {
     assertTrue(NodeUtil.isLhsByDestructuring(n));
   }
 
-  static void assertNotLhsByDestructuring(Node n) {
+  private static void assertNotLhsByDestructuring(Node n) {
     assertFalse(NodeUtil.isLhsByDestructuring(n));
   }
 
@@ -2491,24 +2482,6 @@ public final class NodeUtilTest extends TestCase {
         getCallNode("Object.defineProperty();")));
   }
 
-  public void testCorrectValidationOfScriptWithChangeAfterFunction() {
-    Node script = parse("function A() {} if (0) { A(); }");
-    Preconditions.checkState(script.isScript());
-
-    Node clone = script.cloneTree();
-    Map<Node, Node> mtoc = NodeUtil.mapMainToClone(script, clone);
-
-    // Here we make a change in that doesn't change the script node
-    // child count.
-    getCallNode(script).detach();
-
-    // Mark the script as changed
-    script.setChangeTime(100);
-
-    // will throw if no change is detected.
-    NodeUtil.verifyScopeChanges("test", mtoc, script);
-  }
-
   private boolean executedOnceTestCase(String code) {
     Node ast = parse(code);
     Node nameNode = getNameNode(ast, "x");
@@ -2534,40 +2507,23 @@ public final class NodeUtilTest extends TestCase {
     assertNull(error, error);
   }
 
-  static void testFunctionName(String js, String expected) {
+  private static void testFunctionName(String js, String expected) {
     assertEquals(
         expected,
         NodeUtil.getNearestFunctionName(getFunctionNode(js)));
   }
 
-  public static void testChangeVerification() {
-    Node mainScript = IR.script();
-    Node main = IR.root(mainScript);
-
-    Node clone = main.cloneTree();
-
-    Map<Node, Node> map = NodeUtil.mapMainToClone(main, clone);
-
-    NodeUtil.verifyScopeChanges("", map, main);
-
-    mainScript.addChildToFront(
-        IR.function(IR.name("A"), IR.paramList(), IR.block()));
-    mainScript.setChangeTime(100);
-
-    NodeUtil.verifyScopeChanges("", map, main);
-  }
-
-  static Node getClassNode(String js) {
+  private static Node getClassNode(String js) {
     Node root = parse(js);
     return getClassNode(root);
   }
 
-  static Iterable<Node> getLhsNodesOfDeclaration(String js) {
+  private static Iterable<Node> getLhsNodesOfDeclaration(String js) {
     Node root = parse(js);
     return NodeUtil.getLhsNodesOfDeclaration(root.getFirstChild());
   }
 
-  static Node getClassNode(Node n) {
+  private static Node getClassNode(Node n) {
     if (n.isClass()) {
       return n;
     }
@@ -2580,12 +2536,12 @@ public final class NodeUtilTest extends TestCase {
     return null;
   }
 
-  static Node getCallNode(String js) {
+  private static Node getCallNode(String js) {
     Node root = parse(js);
     return getCallNode(root);
   }
 
-  static Node getCallNode(Node n) {
+  private static Node getCallNode(Node n) {
     if (n.isCall()) {
       return n;
     }
@@ -2598,12 +2554,12 @@ public final class NodeUtilTest extends TestCase {
     return null;
   }
 
-  static Node getFunctionNode(String js) {
+  private static Node getFunctionNode(String js) {
     Node root = parse(js);
     return getFunctionNode(root);
   }
 
-  static Node getFunctionNode(Node n) {
+  private static Node getFunctionNode(Node n) {
     if (n.isFunction()) {
       return n;
     }
@@ -2616,7 +2572,7 @@ public final class NodeUtilTest extends TestCase {
     return null;
   }
 
-  static Node getNameNode(Node n, String name) {
+  private static Node getNameNode(Node n, String name) {
     if (n.isName() && n.getString().equals(name)) {
       return n;
     }
@@ -2629,11 +2585,11 @@ public final class NodeUtilTest extends TestCase {
     return null;
   }
 
-  static boolean isValidPropertyName(String s) {
+  private static boolean isValidPropertyName(String s) {
     return NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, s);
   }
 
-  static boolean isValidQualifiedName(String s) {
+  private static boolean isValidQualifiedName(String s) {
     return NodeUtil.isValidQualifiedName(LanguageMode.ECMASCRIPT3, s);
   }
 }

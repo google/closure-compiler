@@ -40,7 +40,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -4726,68 +4725,6 @@ public final class NodeUtil {
     return n;
   }
 
-  /**
-   * Given an AST and its copy, map the root node of each scope of main to the
-   * corresponding root node of clone
-   */
-  public static Map<Node, Node> mapMainToClone(Node main, Node clone) {
-    Preconditions.checkState(main.isEquivalentTo(clone));
-    Map<Node, Node> mtoc = new HashMap<>();
-    mtoc.put(main, clone);
-    mtocHelper(mtoc, main, clone);
-    return mtoc;
-  }
-
-  private static void mtocHelper(Map<Node, Node> map, Node main, Node clone) {
-    // TODO(johnlenz): determine if MODULE_BODY is useful here.
-    if (main.isFunction() || main.isScript()) {
-      map.put(main, clone);
-    }
-    Node mchild = main.getFirstChild();
-    Node cchild = clone.getFirstChild();
-    while (mchild != null) {
-      mtocHelper(map, mchild, cchild);
-      mchild = mchild.getNext();
-      cchild = cchild.getNext();
-    }
-  }
-
-  /** Checks that the scope roots marked as changed have indeed changed */
-  public static void verifyScopeChanges(
-      String passName, final Map<Node, Node> mtoc, Node main) {
-    final String passNameMsg = passName.isEmpty() ? "" : passName + ": ";
-
-    Node clone = mtoc.get(main);
-    verifyNodeChange(passNameMsg, main, clone);
-    visitPreOrder(main,
-        new Visitor() {
-          @Override
-          public void visit(Node n) {
-            if ((n.isScript() || n.isFunction()) && mtoc.containsKey(n)) {
-              Node clone = mtoc.get(n);
-              verifyNodeChange(passNameMsg, n, clone);
-            }
-          }
-        },
-        Predicates.<Node>alwaysTrue());
-  }
-
-  static void verifyNodeChange(final String passNameMsg, Node n, Node clone) {
-    if (n.isRoot() && n.getChangeTime() != 0) {
-      throw new IllegalStateException("Root nodes should never be marked as changed.");
-    }
-    if (n.getChangeTime() > clone.getChangeTime()) {
-      if (isEquivalentToExcludingFunctions(n, clone)) {
-        throw new IllegalStateException(
-            passNameMsg + "unchanged scope marked as changed: " + n.toStringTree());
-      }
-    } else {
-      if (!isEquivalentToExcludingFunctions(n, clone)) {
-        throw new IllegalStateException(
-            passNameMsg + "change scope not marked as changed: " + n.toStringTree());
-      }
-    }
-  }
 
   static int countAstSizeUpToLimit(Node n, final int limit) {
     // Java doesn't allow accessing mutable local variables from another class.
@@ -4813,47 +4750,6 @@ public final class NodeUtil {
     return countAstSizeUpToLimit(n, Integer.MAX_VALUE);
   }
 
-  /**
-   * @return Whether the two node are equivalent while ignoring
-   * differences any descendant functions differences.
-   */
-  private static boolean isEquivalentToExcludingFunctions(
-      Node thisNode, Node thatNode) {
-    if (thisNode == null || thatNode == null) {
-      return thisNode == null && thatNode == null;
-    }
-    if (!thisNode.isEquivalentWithSideEffectsToShallow(thatNode)) {
-      return false;
-    }
-    if (thisNode.getChildCount() != thatNode.getChildCount()) {
-      return false;
-    }
-    Node thisChild = thisNode.getFirstChild();
-    Node thatChild = thatNode.getFirstChild();
-    while (thisChild != null && thatChild != null) {
-      if (thisChild.isFunction() || thisChild.isScript()) {
-        // Don't compare function expression name, parameters or bodies.
-        // But do check that that the node is there.
-        if (thatChild.getToken() != thisChild.getToken()) {
-          return false;
-        }
-        // Only compare function names for function declarations (not function expressions)
-        // as they change the outer scope definition.
-        if (thisChild.isFunction() && NodeUtil.isFunctionDeclaration(thisChild)) {
-          String thisName = thisChild.getFirstChild().getString();
-          String thatName = thatChild.getFirstChild().getString();
-          if (!thisName.equals(thatName)) {
-            return false;
-          }
-        }
-      } else if (!isEquivalentToExcludingFunctions(thisChild, thatChild)) {
-        return false;
-      }
-      thisChild = thisChild.getNext();
-      thatChild = thatChild.getNext();
-    }
-    return true;
-  }
 
   static JSDocInfo createConstantJsDoc() {
     JSDocInfoBuilder builder = new JSDocInfoBuilder(false);

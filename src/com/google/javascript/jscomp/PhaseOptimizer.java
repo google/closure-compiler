@@ -63,9 +63,8 @@ class PhaseOptimizer implements CompilerPass {
 
   private final boolean useSizeHeuristicToStopOptimizationLoop;
 
-  // Used for sanity checks between loopable passes
-  private Node lastAst;
-  private Map<Node, Node> mtoc; // Stands for "main to clone"
+  // Used for sanity checking passes
+  private ChangeVerifier changeVerifier;
 
   /**
    * When processing loopable passes in order, the PhaseOptimizer can be in one
@@ -189,12 +188,7 @@ class PhaseOptimizer implements CompilerPass {
    */
   void setSanityCheck(PassFactory sanityCheck) {
     this.sanityCheck = sanityCheck;
-    setSanityCheckState();
-  }
-
-  private void setSanityCheckState() {
-    lastAst = jsRoot.cloneTree();
-    mtoc = NodeUtil.mapMainToClone(jsRoot, lastAst);
+    this.changeVerifier = new ChangeVerifier(compiler).snapshot(jsRoot);
   }
 
   /**
@@ -248,7 +242,7 @@ class PhaseOptimizer implements CompilerPass {
   private void maybeSanityCheck(String passName, Node externs, Node root) {
     if (sanityCheck != null) {
       sanityCheck.create(compiler).process(externs, root);
-      NodeUtil.verifyScopeChanges(passName, mtoc, jsRoot);
+      changeVerifier.checkRecordedChanges(passName, jsRoot);
     }
   }
 
@@ -275,7 +269,7 @@ class PhaseOptimizer implements CompilerPass {
       if (sanityCheck != null) {
         // Before running the pass, clone the AST so you can sanity-check the
         // changed AST against the clone after the pass finishes.
-        setSanityCheckState();
+        changeVerifier = new ChangeVerifier(compiler).snapshot(jsRoot);
       }
       if (tracker != null) {
         tracker.recordPassStart(name, factory.isOneTimePass());

@@ -38,7 +38,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import junit.framework.TestCase;
 
@@ -1427,9 +1426,10 @@ public abstract class CompilerTestCase extends TestCase {
 
         recentChange.reset();
 
-        Map<Node, Node> mtoc = null;
+        ChangeVerifier changeVerifier = null;
         if (checkAstChangeMarking) {
-          mtoc = NodeUtil.mapMainToClone(mainRoot, mainRoot.cloneTree());
+          changeVerifier = new ChangeVerifier(compiler);
+          changeVerifier.snapshot(mainRoot);
         }
 
         getProcessor(compiler).process(externsRoot, mainRoot);
@@ -1438,7 +1438,7 @@ public abstract class CompilerTestCase extends TestCase {
           // TODO(johnlenz): add support for multiple passes in getProcessor so that we can
           // check the AST marking after each pass runs.
           // Verify that changes to the AST are properly marked on the AST.
-          NodeUtil.verifyScopeChanges("", mtoc, mainRoot);
+          changeVerifier.checkRecordedChanges(mainRoot);
         }
 
         if (astValidationEnabled) {
