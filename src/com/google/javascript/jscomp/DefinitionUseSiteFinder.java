@@ -30,6 +30,7 @@ import java.util.Collection;
  * ast.
  *
  */
+// TODO(stalcup): track useSites in lhs of GET_ELEM nodes as well.
 public class DefinitionUseSiteFinder extends NameBasedDefinitionProvider {
 
   private final Multimap<String, UseSite> nameUseSiteMultimap;

@@ -66,10 +66,21 @@ import java.util.Set;
  * {@code FlowSensitiveInlineVariables}, except that it works for variables
  * used across scopes.
  *
+ * Multiple datastructures are used to accumulate nodes, some of which are
+ * later removed. Since some nodes encompass a subtree of nodes, the removal
+ * can sometimes pre-remove other nodes which are also referenced in these
+ * datastructures for later removal. Attempting double-removal violates scope
+ * change notification constraints so there is a desire to excise
+ * already-removed subtree nodes from these datastructures. But not all of the
+ * datastructures are conducive to flexible removal and the ones that are
+ * conducive don't necessarily track all flavors of nodes. So instead of
+ * updating datastructures on the fly a pre-check is performed to skip
+ * already-removed nodes right before the moment an attempt to remove them
+ * would otherwise be made.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
-class RemoveUnusedVars
-    implements CompilerPass, OptimizeCalls.CallGraphCompilerPass {
+class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerPass {
 
   private final AbstractCompiler compiler;
 
@@ -448,10 +459,20 @@ class RemoveUnusedVars
      */
     public void applyChanges() {
       for (Node n : toRemove) {
+        // Don't remove any nodes twice since doing so would violate change reporting constraints.
+        if (alreadyRemoved(n)) {
+          continue;
+        }
+
         compiler.reportChangeToEnclosingScope(n);
         n.getParent().removeChild(n);
       }
       for (Node n : toReplaceWithZero) {
+        // Don't remove any nodes twice since doing so would violate change reporting constraints.
+        if (alreadyRemoved(n)) {
+          continue;
+        }
+
         compiler.reportChangeToEnclosingScope(n);
         n.replaceWith(IR.number(0).srcref(n));
       }
@@ -986,5 +1007,16 @@ class RemoveUnusedVars
         }
       }
     }
+  }
+
+  private static boolean alreadyRemoved(Node n) {
+    Node parent = n.getParent();
+    if (parent == null) {
+      return true;
+    }
+    if (parent.isRoot()) {
+      return false;
+    }
+    return alreadyRemoved(parent);
   }
 }
