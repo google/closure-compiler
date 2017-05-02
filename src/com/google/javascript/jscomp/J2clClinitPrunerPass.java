@@ -68,7 +68,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
       }
 
       if (isNewControlBranch(parent)) {
-        clinitsCalledAtBranch = new HierarchicalSet(clinitsCalledAtBranch);
+        clinitsCalledAtBranch = new HierarchicalSet<>(clinitsCalledAtBranch);
         if (isClinitMethod(parent)) {
           // Adds itself as any of your children can assume clinit is already called.
           clinitsCalledAtBranch.add(NodeUtil.getName(parent));
@@ -301,7 +301,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
     private Set<T> currentSet = new HashSet<>();
     private HierarchicalSet<T> parent;
 
-    public HierarchicalSet(HierarchicalSet parent) {
+    public HierarchicalSet(HierarchicalSet<T> parent) {
       this.parent = parent;
     }
 
