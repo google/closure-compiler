@@ -98,8 +98,8 @@ public class J2clClinitPrunerPass implements CompilerPass {
         return;
       }
 
-      // Replacing with '0' is a simple way of removing without introducing invalid AST.
-      parent.replaceChild(node, Node.newNumber(0).useSourceInfoIfMissingFrom(node));
+      // Replacing with undefined is a simple way of removing without introducing invalid AST.
+      parent.replaceChild(node, NodeUtil.newUndefinedNode(node));
       compiler.reportChangeToEnclosingScope(parent);
       madeChange = true;
     }
