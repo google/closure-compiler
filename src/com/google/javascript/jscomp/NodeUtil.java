@@ -4893,4 +4893,13 @@ public final class NodeUtil {
     }
     return externsNames.build();
   }
+
+  static void markNewScopesChanged(Node node, AbstractCompiler compiler) {
+    if (node.isFunction()) {
+      compiler.reportChangeToChangeScope(node);
+    }
+    for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
+      markNewScopesChanged(child, compiler);
+    }
+  }
 }

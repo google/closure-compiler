@@ -284,6 +284,7 @@ class FunctionInjector {
 
       // Clone the return node first.
       Node safeReturnNode = returnNode.cloneTree();
+      NodeUtil.markNewScopesChanged(safeReturnNode, compiler);
       Node inlineResult = FunctionArgumentInjector.inject(
           null, safeReturnNode, null, argMap);
       Preconditions.checkArgument(safeReturnNode == inlineResult);
@@ -529,6 +530,7 @@ class FunctionInjector {
     Node newBlock = mutator.mutate(
         fnName, fnNode, callNode, resultName,
         needsDefaultReturnResult, isCallInLoop);
+    NodeUtil.markNewScopesChanged(newBlock, compiler);
 
     // TODO(nicksantos): Create a common mutation function that
     // can replace either a VAR name assignment, assignment expression or

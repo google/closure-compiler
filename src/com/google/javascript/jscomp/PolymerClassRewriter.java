@@ -99,6 +99,7 @@ final class PolymerClassRewriter {
       Node assign = IR.assign(
           cls.target.cloneTree(),
           cls.constructor.value.cloneTree());
+      NodeUtil.markNewScopesChanged(assign, compiler);
       assign.setJSDocInfo(constructorDoc.build());
       Node exprResult = IR.exprResult(assign);
       exprResult.useSourceInfoIfMissingFromForTree(cls.target);
@@ -106,6 +107,7 @@ final class PolymerClassRewriter {
     } else {
       // var foo = Polymer({...}); OR Polymer({...});
       Node var = IR.var(cls.target.cloneTree(), cls.constructor.value.cloneTree());
+      NodeUtil.markNewScopesChanged(var, compiler);
       var.useSourceInfoIfMissingFromForTree(exprRoot);
       var.setJSDocInfo(constructorDoc.build());
       block.addChildToBack(var);
@@ -292,6 +294,7 @@ final class PolymerClassRewriter {
         }
 
         Node fnValue = behaviorFunction.value.cloneTree();
+        NodeUtil.markNewScopesChanged(fnValue, compiler);
         Node exprResult = IR.exprResult(
             IR.assign(NodeUtil.newQName(compiler, qualifiedPath + fnName), fnValue));
         exprResult.useSourceInfoIfMissingFromForTree(behaviorFunction.name);
