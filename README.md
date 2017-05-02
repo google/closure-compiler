@@ -383,7 +383,7 @@ an encoding of structured data.</td>
 
   <tr>
     <td>Version</td>
-    <td>0.30</td>
+    <td>0.32</td>
   </tr>
 
   <tr>
