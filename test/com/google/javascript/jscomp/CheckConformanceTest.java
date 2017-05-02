@@ -1810,4 +1810,33 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame("goog.dom.createDom('span', {'innerHTML': ''});");
     testSame("goog.dom.createDom('span', {'innerhtml': html});");
   }
+
+  public void testBanCreateDomTextContent() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'\n" +
+        "  error_message: 'BanCreateDom Message'\n" +
+        "  value: 'script.textContent'\n" +
+        "}";
+
+    testWarning(
+        "goog.dom.createDom('script', {}, source);",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateDom Message");
+
+    testWarning(
+        "goog.dom.createDom('script', {'textContent': source});",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateDom Message");
+
+    testWarning(
+        "goog.dom.createDom(script, {}, source);",
+        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION,
+        "Possible violation: BanCreateDom Message");
+
+    testSame("goog.dom.createDom('script', {});");
+    testSame("goog.dom.createDom('span', {'textContent': text});");
+    testSame("goog.dom.createDom('span', {}, text);");
+  }
 }

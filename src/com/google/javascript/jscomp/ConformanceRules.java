@@ -1483,15 +1483,20 @@ public final class ConformanceRules {
         if (tagName != null && !tagAttr[0].equals(tagName) && !tagAttr[0].equals("*")) {
           continue;
         }
+        ConformanceResult violation =
+            tagName == null && !tagAttr[0].equals("*")
+                ? ConformanceResult.POSSIBLE_VIOLATION
+                : ConformanceResult.VIOLATION;
         if (attrsType != null
             && (attrsType.isStringValueType() || attrsType.containsArray())) {
           // String or array attribute sets the class.
           if (!tagAttr[1].equals("class")) {
             continue;
           }
-          return tagName == null && !tagAttr[0].equals("*")
-              ? ConformanceResult.POSSIBLE_VIOLATION
-              : ConformanceResult.VIOLATION;
+          return violation;
+        }
+        if (tagAttr[1].equals("textContent") && n.getChildCount() > 3) {
+          return violation;
         }
         if (!attrs.isObjectLit()) {
           // Attrs is not an object literal and tagName matches or is unknown.
@@ -1503,9 +1508,7 @@ public final class ConformanceRules {
             // Ignore string literal values.
             continue;
           }
-          return tagName == null && !tagAttr[0].equals("*")
-              ? ConformanceResult.POSSIBLE_VIOLATION
-              : ConformanceResult.VIOLATION;
+          return violation;
         }
       }
 
