@@ -54,7 +54,6 @@ $jscomp.inherits = function(childCtor, parentCtor) {
   /** @constructor */
   function tempCtor() {}
   tempCtor.prototype = parentCtor.prototype;
-  childCtor.superClass_ = parentCtor.prototype;
   childCtor.prototype = new tempCtor();
   /** @override */
     childCtor.prototype.constructor = childCtor;
@@ -70,4 +69,5 @@ $jscomp.inherits = function(childCtor, parentCtor) {
       childCtor[p] = parentCtor[p];
     }
   }
+  childCtor.superClass_ = parentCtor.prototype;
 };
