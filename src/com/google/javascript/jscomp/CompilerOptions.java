@@ -3009,13 +3009,14 @@ public class CompilerOptions implements Serializable {
      */
     ECMASCRIPT_2016,
 
-    /** @deprecated Use {@code ECMASCRIPT_NEXT} */
+    /** @deprecated Use {@code ECMASCRIPT_2017} */
     @Deprecated
     ECMASCRIPT8,
 
-    /**
-     * ECMAScript latest draft standard.
-     */
+    /** ECMAScript standard approved in 2017. Adds async/await. */
+    ECMASCRIPT_2017,
+
+    /** ECMAScript latest draft standard. */
     ECMASCRIPT_NEXT,
 
     /**

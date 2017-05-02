@@ -584,9 +584,9 @@ public class CommandLineRunner extends
           "Sets what language spec that input sources conform. "
               + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
               + "ECMASCRIPT6_TYPED (experimental), ECMASCRIPT_2015, ECMASCRIPT_2016, "
-              + "ECMASCRIPT_NEXT"
+              + "ECMASCRIPT_2017, ECMASCRIPT_NEXT"
     )
-    private String languageIn = "ECMASCRIPT_NEXT";
+    private String languageIn = "ECMASCRIPT_2017";
 
     @Option(
       name = "--language_out",
@@ -594,7 +594,7 @@ public class CommandLineRunner extends
           "Sets what language spec the output should conform to. "
               + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
               + "ECMASCRIPT6_TYPED (experimental), ECMASCRIPT_2015, ECMASCRIPT_2016, "
-              + "ECMASCRIPT_NEXT"
+              + "ECMASCRIPT_2017, ECMASCRIPT_NEXT"
     )
     private String languageOut = "ECMASCRIPT5";
 
