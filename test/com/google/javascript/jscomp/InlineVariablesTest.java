@@ -819,6 +819,12 @@ public final class InlineVariablesTest extends CompilerTestCase {
       );
   }
 
+  public void testInlineSwitchVar() {
+    test(
+        "var x = y; switch (x) {}",
+        "switch (y) {}");
+  }
+
   public void testInlineCatchAlias1() {
     test(
         LINE_JOINER.join(
