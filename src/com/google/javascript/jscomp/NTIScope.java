@@ -81,6 +81,9 @@ final class NTIScope implements DeclaredTypeRegistry {
   // For top level, the DeclaredFunctionType just includes a type for THIS.
   // For functions, the DeclaredFunctionType is never null, even those without jsdoc.
   // Any inferred parameters or return will be set to null individually.
+  // If the function uses TTL, we instantiate the TTL variables to ?.
+  // TODO(dimvar): instead, we want to evaluate the TTL variables when the non-TTL variables are
+  // unknown, and use that for the declaredType. Will try in a follow-up CL.
   private DeclaredFunctionType declaredType;
 
   NTIScope(Node root, NTIScope parent, List<String> formals, JSTypes commonTypes) {
@@ -129,7 +132,13 @@ final class NTIScope implements DeclaredTypeRegistry {
 
   void setDeclaredType(DeclaredFunctionType declaredType) {
     Preconditions.checkNotNull(declaredType);
-    this.declaredType = declaredType;
+    Map<String, Node> typeTransformations = getTypeTransformations();
+    if (typeTransformations.isEmpty()) {
+      this.declaredType = declaredType;
+    } else {
+      Set<String> ttlVars = typeTransformations.keySet();
+      this.declaredType = declaredType.substituteTTLGenericsWithUnknown(ttlVars);
+    }
     // In NTI, we set the type of a function node after we create the summary.
     // NTI doesn't analyze externs, so we set the type for extern functions here.
     if (this.root.isFromExterns()) {
@@ -148,6 +157,14 @@ final class NTIScope implements DeclaredTypeRegistry {
 
   boolean isTopLevel() {
     return parent == null;
+  }
+
+  /**
+   * Returns a non-null map from TTL variables to their transformations in AST form.
+   */
+  private Map<String, Node> getTypeTransformations() {
+    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(this.root);
+    return jsdoc == null ? ImmutableMap.<String, Node>of() : jsdoc.getTypeTransformations();
   }
 
   boolean isConstructor() {

@@ -594,21 +594,21 @@ final class NewTypeInference implements CompilerPass {
     // For function scopes, add the formal parameters and the free variables
     // from outer scopes to the environment.
     Set<String> nonLocals = new LinkedHashSet<>();
-    if (currentScope.hasThis()) {
+    if (this.currentScope.hasThis()) {
       nonLocals.add(THIS_ID);
     }
-    if (currentScope.isFunction()) {
-      if (currentScope.getName() != null) {
-        nonLocals.add(currentScope.getName());
+    if (this.currentScope.isFunction()) {
+      if (this.currentScope.getName() != null) {
+        nonLocals.add(this.currentScope.getName());
       }
-      nonLocals.addAll(currentScope.getOuterVars());
-      nonLocals.addAll(currentScope.getFormals());
+      nonLocals.addAll(this.currentScope.getOuterVars());
+      nonLocals.addAll(this.currentScope.getFormals());
       entryEnv = envPutType(entryEnv, RETVAL_ID, UNDEFINED);
     } else {
-      nonLocals.addAll(currentScope.getExterns());
+      nonLocals.addAll(this.currentScope.getExterns());
     }
     for (String name : nonLocals) {
-      JSType declType = currentScope.getDeclaredTypeOf(name);
+      JSType declType = this.currentScope.getDeclaredTypeOf(name);
       JSType initType = declType;
       if (initType == null) {
         initType = envGetType(entryEnv, name);
@@ -623,12 +623,12 @@ final class NewTypeInference implements CompilerPass {
 
     // For all scopes, add local variables and (local) function definitions
     // to the environment.
-    for (String local : currentScope.getLocals()) {
-      if (!currentScope.isFunctionNamespace(local)) {
+    for (String local : this.currentScope.getLocals()) {
+      if (!this.currentScope.isFunctionNamespace(local)) {
         entryEnv = envPutType(entryEnv, local, UNDEFINED);
       }
     }
-    for (String fnName : currentScope.getLocalFunDefs()) {
+    for (String fnName : this.currentScope.getLocalFunDefs()) {
       entryEnv = envPutType(entryEnv, fnName, getSummaryOfLocalFunDef(fnName));
     }
     println("Keeping env: ", entryEnv);
@@ -637,16 +637,16 @@ final class NewTypeInference implements CompilerPass {
 
   private TypeEnv getTypeEnvFromDeclaredTypes() {
     TypeEnv env = new TypeEnv();
-    Set<String> varNames = currentScope.getOuterVars();
-    Set<String> locals = currentScope.getLocals();
+    Set<String> varNames = this.currentScope.getOuterVars();
+    Set<String> locals = this.currentScope.getLocals();
     varNames.addAll(locals);
-    varNames.addAll(currentScope.getExterns());
-    if (currentScope.hasThis()) {
+    varNames.addAll(this.currentScope.getExterns());
+    if (this.currentScope.hasThis()) {
       varNames.add(THIS_ID);
     }
-    if (currentScope.isFunction()) {
-      Node fn = currentScope.getRoot();
-      if (!currentScope.hasThis()
+    if (this.currentScope.isFunction()) {
+      Node fn = this.currentScope.getRoot();
+      if (!this.currentScope.hasThis()
           // Can't use NodeUtil.referencesSuper here because that function is correct only
           // on valid ASTs, but here we may have an invalid AST that contains super inside
           // a function.
@@ -658,14 +658,14 @@ final class NewTypeInference implements CompilerPass {
         Preconditions.checkState(qnameRoot.isName());
         varNames.add(qnameRoot.getString());
       }
-      if (currentScope.getName() != null) {
-        varNames.add(currentScope.getName());
+      if (this.currentScope.getName() != null) {
+        varNames.add(this.currentScope.getName());
       }
-      varNames.addAll(currentScope.getFormals());
+      varNames.addAll(this.currentScope.getFormals());
       // In the rare case when there is a local variable named "arguments",
       // this entry will be overwritten in the foreach loop below.
       JSType argumentsType;
-      DeclaredFunctionType dft = currentScope.getDeclaredFunctionType();
+      DeclaredFunctionType dft = this.currentScope.getDeclaredFunctionType();
       if (dft.getOptionalArity() == 0 && dft.hasRestFormals()) {
         argumentsType = dft.getRestFormalsType();
       } else {
@@ -675,8 +675,8 @@ final class NewTypeInference implements CompilerPass {
           commonTypes.getArgumentsArrayType(argumentsType));
     }
     for (String varName : varNames) {
-      if (!locals.contains(varName) || !currentScope.isFunctionNamespace(varName)) {
-        JSType declType = currentScope.getDeclaredTypeOf(varName);
+      if (!this.currentScope.isLocalFunDef(varName)) {
+        JSType declType = this.currentScope.getDeclaredTypeOf(varName);
         if (declType == null) {
           declType = UNKNOWN;
         } else if (areTypeVariablesUnknown) {
@@ -685,20 +685,20 @@ final class NewTypeInference implements CompilerPass {
         env = envPutType(env, varName, declType);
       }
     }
-    for (String fnName : currentScope.getLocalFunDefs()) {
+    for (String fnName : this.currentScope.getLocalFunDefs()) {
       env = envPutType(env, fnName, getSummaryOfLocalFunDef(fnName));
     }
     return env;
   }
 
   private JSType getSummaryOfLocalFunDef(String name) {
-    NTIScope fnScope = currentScope.getScope(name);
+    NTIScope fnScope = this.currentScope.getScope(name);
     JSType fnType = summaries.get(fnScope);
     if (fnType != null) {
       return fnType;
     }
     // Functions defined in externs have no summary, so use the declared type
-    fnType = currentScope.getDeclaredTypeOf(name);
+    fnType = this.currentScope.getDeclaredTypeOf(name);
     if (fnType.getFunType() == null) {
       // Can happen when a function defined in externs clashes with a variable
       // defined by a catch block.
@@ -887,7 +887,7 @@ final class NewTypeInference implements CompilerPass {
           if (retExp == null) {
             inEnv = outEnv;
           } else {
-            JSType declRetType = currentScope.getDeclaredFunctionType().getReturnType();
+            JSType declRetType = this.currentScope.getDeclaredFunctionType().getReturnType();
             declRetType = declRetType == null ? UNKNOWN : declRetType;
             inEnv = analyzeExprBwd(retExp, outEnv, declRetType).env;
           }
@@ -903,9 +903,9 @@ final class NewTypeInference implements CompilerPass {
                nameNode = nameNode.getNext()) {
             String varName = nameNode.getString();
             Node rhs = nameNode.getFirstChild();
-            JSType declType = currentScope.getDeclaredTypeOf(varName);
+            JSType declType = this.currentScope.getDeclaredTypeOf(varName);
             inEnv = envPutType(inEnv, varName, UNKNOWN);
-            if (rhs == null || currentScope.isLocalFunDef(varName)) {
+            if (rhs == null || this.currentScope.isLocalFunDef(varName)) {
               continue;
             }
             JSType inferredType = envGetType(outEnv, varName);
@@ -1011,7 +1011,7 @@ final class NewTypeInference implements CompilerPass {
           break;
         case RETURN: {
           Node retExp = n.getFirstChild();
-          JSType declRetType = currentScope.getDeclaredFunctionType().getReturnType();
+          JSType declRetType = this.currentScope.getDeclaredFunctionType().getReturnType();
           if (declRetType == null) {
             declRetType = UNKNOWN;
           } else if (this.areTypeVariablesUnknown) {
@@ -1309,9 +1309,9 @@ final class NewTypeInference implements CompilerPass {
   /** Processes a single variable declaration in a VAR statement. */
   private TypeEnv processVarDeclaration(Node nameNode, TypeEnv inEnv) {
     String varName = nameNode.getString();
-    JSType declType = currentScope.getDeclaredTypeOf(varName);
+    JSType declType = this.currentScope.getDeclaredTypeOf(varName);
 
-    if (currentScope.isLocalFunDef(varName)) {
+    if (this.currentScope.isLocalFunDef(varName)) {
       return inEnv;
     }
     Node rhs = nameNode.getFirstChild();
@@ -1611,7 +1611,7 @@ final class NewTypeInference implements CompilerPass {
       // (These usually include the polymorphic operators += and <.)
       // We have a heuristic check to avoid the spurious warnings,
       // but we also miss some true warnings.
-      JSType declType = currentScope.getDeclaredTypeOf(varName);
+      JSType declType = this.currentScope.getDeclaredTypeOf(varName);
       if (tightenNameTypeAndDontWarn(varName, expr, declType, inferredType, requiredType)) {
         inferredType = inferredType.specialize(requiredType);
       } else {
@@ -1627,8 +1627,8 @@ final class NewTypeInference implements CompilerPass {
       preciseType = pickFallbackTypeAfterBottom(varName, inferredType, specializedType);
     }
     println(varName, "'s preciseType: ", preciseType);
-    if ((currentScope.isUndeclaredFormal(varName)
-        || currentScope.isUndeclaredOuterVar(varName))
+    if ((this.currentScope.isUndeclaredFormal(varName)
+        || this.currentScope.isUndeclaredOuterVar(varName))
         && preciseType.hasNonScalar()) {
       // In the bwd direction, we may infer a loose type and then join w/
       // top and forget it. That's why we also loosen types going fwd.
@@ -1644,7 +1644,7 @@ final class NewTypeInference implements CompilerPass {
    */
   private JSType pickFallbackTypeAfterBottom(
       String name, JSType inferredType, JSType specializedType) {
-    JSType declType = currentScope.getDeclaredTypeOf(name);
+    JSType declType = this.currentScope.getDeclaredTypeOf(name);
     if (declType == null) {
       return inferredType;
     }
@@ -2024,7 +2024,7 @@ final class NewTypeInference implements CompilerPass {
         // or as an arbitrarily nested property), don't warn.
         if (callee.isQualifiedName()) {
           String qnameRoot = QualifiedName.fromNode(callee).getLeftmostName();
-          if (!currentScope.isFormalParamInAnyAncestorScope(qnameRoot)) {
+          if (!this.currentScope.isFormalParamInAnyAncestorScope(qnameRoot)) {
             warnings.add(JSError.make(expr, NOT_A_CONSTRUCTOR, funType.toString()));
           }
         }
@@ -2060,11 +2060,11 @@ final class NewTypeInference implements CompilerPass {
         expr, expr.getSecondChild(), funType, argTypes, envAfterCallee);
     if (callee.isName()) {
       String calleeName = callee.getString();
-      if (currentScope.isKnownFunction(calleeName)
-          && !currentScope.isExternalFunction(calleeName)) {
+      if (this.currentScope.isKnownFunction(calleeName)
+          && !this.currentScope.isExternalFunction(calleeName)) {
         // Local function definitions will be type-checked more
         // exactly using their summaries, and don't need deferred checks
-        if (currentScope.isLocalFunDef(calleeName)) {
+        if (this.currentScope.isLocalFunDef(calleeName)) {
           tmpEnv = collectTypesForFreeVarsFwd(callee, tmpEnv);
         } else if (!origFunType.isGeneric()) {
           JSType expectedRetType = requiredType;
@@ -2073,7 +2073,7 @@ final class NewTypeInference implements CompilerPass {
           DeferredCheck dc;
           if (isConstructorCall(expr)) {
             dc = new DeferredCheck(expr, null,
-                currentScope, currentScope.getScope(calleeName));
+                this.currentScope, this.currentScope.getScope(calleeName));
             deferredChecks.put(expr, dc);
           } else {
             dc = deferredChecks.get(expr);
@@ -2084,7 +2084,7 @@ final class NewTypeInference implements CompilerPass {
               // variables, including outer vars, are declared.
               // So, we check that dc is null iff bwd was skipped.
               Preconditions.checkState(
-                  !currentScope.hasUndeclaredFormalsOrOuters(),
+                  !this.currentScope.hasUndeclaredFormalsOrOuters(),
                   "No deferred check created in backward direction for %s",
                   expr);
             }
@@ -2104,7 +2104,7 @@ final class NewTypeInference implements CompilerPass {
 
   private boolean isConstructorCall(Node expr) {
     return expr.isNew()
-        || (expr.isCall() && currentScope.isConstructor() && expr.getFirstChild().isSuper());
+        || (expr.isCall() && this.currentScope.isConstructor() && expr.getFirstChild().isSuper());
   }
 
   private EnvTypePair analyzeFunctionBindFwd(Node call, TypeEnv inEnv) {
@@ -2469,7 +2469,7 @@ final class NewTypeInference implements CompilerPass {
   private EnvTypePair analyzeThisFwd(
       Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
     mayWarnAboutGlobalThis(expr, currentScope);
-    if (!currentScope.hasThis()) {
+    if (!this.currentScope.hasThis()) {
       return new EnvTypePair(inEnv, UNKNOWN);
     }
     // A trimmed-down version of analyzeNameFwd.
@@ -2486,7 +2486,7 @@ final class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeSuperFwd(Node expr, TypeEnv inEnv) {
     Preconditions.checkArgument(expr.isSuper());
-    if (currentScope.hasThis()) {
+    if (this.currentScope.hasThis()) {
       NominalType thisClass = Preconditions.checkNotNull(
           envGetType(inEnv, THIS_ID).getNominalTypeIfSingletonObj());
       NominalType superClass = thisClass.getInstantiatedSuperclass();
@@ -2496,14 +2496,14 @@ final class NewTypeInference implements CompilerPass {
         warnings.add(JSError.make(expr, UNDEFINED_SUPER_CLASS, thisClass.toString()));
         return new EnvTypePair(inEnv, UNKNOWN);
       }
-      if (currentScope.isConstructor()) {
+      if (this.currentScope.isConstructor()) {
         JSType superCtor = commonTypes.fromFunctionType(superClass.getConstructorFunction());
         return new EnvTypePair(inEnv, superCtor);
       }
       return new EnvTypePair(inEnv, superClass.getInstanceAsJSType());
     }
     // Use of super in a static method.
-    Node funName = NodeUtil.getBestLValue(currentScope.getRoot());
+    Node funName = NodeUtil.getBestLValue(this.currentScope.getRoot());
     Node classNameNode = funName.getFirstChild();
     JSType thisClassAsJstype = analyzeExprFwd(classNameNode, inEnv).type;
     FunctionType thisCtor = thisClassAsJstype.getFunTypeIfSingletonObj();
@@ -2983,8 +2983,8 @@ final class NewTypeInference implements CompilerPass {
         && (!inferred.isTop() || NodeUtil.isPropertyTest(compiler, n.getParent()));
     boolean fuzzyDeclaration = declared == null || declared.isUnknown();
     return (fuzzyDeclaration || isSpecializableTop)
-        && (varName == null || currentScope.isFormalParam(varName)
-            || currentScope.isOuterVar(varName))
+        && (varName == null || this.currentScope.isFormalParam(varName)
+            || this.currentScope.isOuterVar(varName))
         // If required is loose, it's easier for it to be a subtype of inferred.
         // We only tighten the type if the non-loose required is also a subtype.
         && required.isNonLooseSubtypeOf(inferred);
@@ -3186,7 +3186,7 @@ final class NewTypeInference implements CompilerPass {
 
   private boolean mayWarnAboutConst(Node n) {
     Node lhs = n.getFirstChild();
-    if (lhs.isName() && currentScope.isConstVar(lhs.getString())) {
+    if (lhs.isName() && this.currentScope.isConstVar(lhs.getString())) {
       warnings.add(JSError.make(n, CONST_REASSIGNED));
       return true;
     }
@@ -3205,13 +3205,13 @@ final class NewTypeInference implements CompilerPass {
 
   private void mayWarnAboutGlobalThis(Node thisExpr, NTIScope currentScope) {
     Preconditions.checkArgument(thisExpr.isThis());
-    if (currentScope.isTopLevel() || !currentScope.hasThis()) {
+    if (this.currentScope.isTopLevel() || !this.currentScope.hasThis()) {
       Node parent = thisExpr.getParent();
       if ((parent.isGetProp() || parent.isGetElem())
           // Don't warn for callbacks. Most of them are not annotated but THIS is
           // bound to a legitimate object at runtime. They do lose typechecking
           // for THIS however, but we won't warn.
-          && !NodeUtil.isCallOrNewArgument(currentScope.getRoot())) {
+          && !NodeUtil.isCallOrNewArgument(this.currentScope.getRoot())) {
         warnings.add(JSError.make(thisExpr, GLOBAL_THIS));
       }
     }
@@ -3400,7 +3400,7 @@ final class NewTypeInference implements CompilerPass {
     Preconditions.checkArgument(n.isFunction()
         || n.isName() && NodeUtil.isCallOrNewTarget(n));
     String fnName = n.isFunction() ? symbolTable.getFunInternalName(n) : n.getString();
-    NTIScope innerScope = currentScope.getScope(fnName);
+    NTIScope innerScope = this.currentScope.getScope(fnName);
     for (String freeVar : innerScope.getOuterVars()) {
       if (innerScope.getDeclaredTypeOf(freeVar) == null) {
         FunctionType summary = summaries.get(innerScope).getFunType();
@@ -3511,10 +3511,10 @@ final class NewTypeInference implements CompilerPass {
         return analyzeObjLitBwd(expr, outEnv, requiredType);
       case THIS: {
         // TODO(blickly): Infer a loose type for THIS if we're in a function.
-        if (!currentScope.hasThis()) {
+        if (!this.currentScope.hasThis()) {
           return new EnvTypePair(outEnv, UNKNOWN);
         }
-        JSType thisType = currentScope.getDeclaredTypeOf(THIS_ID);
+        JSType thisType = this.currentScope.getDeclaredTypeOf(THIS_ID);
         return new EnvTypePair(outEnv, thisType);
       }
       case SUPER:
@@ -3664,8 +3664,8 @@ final class NewTypeInference implements CompilerPass {
       return new EnvTypePair(outEnv, UNKNOWN);
     }
     JSType preciseType = inferredType.specialize(requiredType);
-    if ((currentScope.isUndeclaredFormal(varName)
-        || currentScope.isUndeclaredOuterVar(varName))
+    if ((this.currentScope.isUndeclaredFormal(varName)
+        || this.currentScope.isUndeclaredOuterVar(varName))
         && preciseType.hasNonScalar()) {
       preciseType = preciseType.withLoose();
     }
@@ -3682,7 +3682,7 @@ final class NewTypeInference implements CompilerPass {
       // variable flow to other variables and this can also be a source of
       // unintuitive warnings.
       // It's a trade-off.
-      JSType declType = currentScope.getDeclaredTypeOf(varName);
+      JSType declType = this.currentScope.getDeclaredTypeOf(varName);
       preciseType = declType == null ? requiredType : declType;
     }
     return EnvTypePair.addBinding(outEnv, varName, preciseType);
@@ -3912,10 +3912,10 @@ final class NewTypeInference implements CompilerPass {
     String calleeName = expr.getFirstChild().getString();
     // Local function definitions will be type-checked more
     // exactly using their summaries, and don't need deferred checks
-    if (currentScope.isKnownFunction(calleeName)
-        && !currentScope.isLocalFunDef(calleeName)
-        && !currentScope.isExternalFunction(calleeName)) {
-      NTIScope s = currentScope.getScope(calleeName);
+    if (this.currentScope.isKnownFunction(calleeName)
+        && !this.currentScope.isLocalFunDef(calleeName)
+        && !this.currentScope.isExternalFunction(calleeName)) {
+      NTIScope s = this.currentScope.getScope(calleeName);
       JSType expectedRetType;
       if (s.getDeclaredFunctionType().getReturnType() == null) {
         expectedRetType = requiredType;
@@ -4197,9 +4197,9 @@ final class NewTypeInference implements CompilerPass {
     switch (expr.getToken()) {
       case THIS: {
         mayWarnAboutGlobalThis(expr, currentScope);
-        if (currentScope.hasThis()) {
+        if (this.currentScope.hasThis()) {
           lvalResult = new LValueResultFwd(inEnv, envGetType(inEnv, THIS_ID),
-              currentScope.getDeclaredTypeOf(THIS_ID),
+              this.currentScope.getDeclaredTypeOf(THIS_ID),
               new QualifiedName(THIS_ID));
         } else {
           lvalResult = new LValueResultFwd(inEnv, UNKNOWN, null, null);
@@ -4210,7 +4210,7 @@ final class NewTypeInference implements CompilerPass {
         String varName = expr.getString();
         JSType varType = analyzeExprFwd(expr, inEnv).type;
         lvalResult = new LValueResultFwd(inEnv, varType,
-            currentScope.getDeclaredTypeOf(varName),
+            this.currentScope.getDeclaredTypeOf(varName),
             varType.hasNonScalar() ? new QualifiedName(varName) : null);
         break;
       }
@@ -4417,7 +4417,7 @@ final class NewTypeInference implements CompilerPass {
       case NAME: {
         EnvTypePair pair = analyzeExprBwd(expr, outEnv, type);
         String name = expr.getQualifiedName();
-        JSType declType = currentScope.getDeclaredTypeOf(name);
+        JSType declType = this.currentScope.getDeclaredTypeOf(name);
         if (doSlicing) {
           pair.env = envPutType(pair.env, name,
               declType != null ? declType : UNKNOWN);

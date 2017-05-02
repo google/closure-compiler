@@ -20,8 +20,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * This class represents the function types for functions that are defined
@@ -284,13 +286,30 @@ public final class DeclaredFunctionType {
     if (!nt.isGeneric()) {
       return this;
     }
-    Map<String, JSType> typeMap = nt.getTypeMap();
-    Preconditions.checkState(!typeMap.isEmpty());
-    // Before we switched to unique generated names for type variables, a method's type variables
-    // could shadow type variables defined on the class. Check that this no longer happens.
-    for (String typeParam : typeParameters) {
-      Preconditions.checkState(!typeMap.containsKey(typeParam));
+    FunctionTypeBuilder builder = substituteGenerics(nt.getTypeMap());
+    // Explicitly forget nominalType and receiverType. This method is used when
+    // calculating the declared type of a method using the inherited types.
+    // In withTypeInfoFromSuper, we ignore super's nominalType and receiverType.
+    builder.addReceiverType(null);
+    builder.addNominalType(null);
+    return builder.buildDeclaration();
+  }
+
+  public DeclaredFunctionType substituteTTLGenericsWithUnknown(Set<String> ttlVars) {
+    Map<String, JSType> m = new LinkedHashMap<>();
+    for (String ttlVar : ttlVars) {
+      String generatedName = UniqueNameGenerator.findGeneratedName(ttlVar, this.typeParameters);
+      m.put(generatedName, this.commonTypes.UNKNOWN);
     }
+    return substituteGenerics(m).buildDeclaration();
+  }
+
+  /**
+   * The domain of the typeMap and this.typeParameters overlap, in the case when we are
+   * substituting the TTL type variables with unknown.
+   */
+  private FunctionTypeBuilder substituteGenerics(Map<String, JSType> typeMap) {
+    Preconditions.checkState(!typeMap.isEmpty());
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
     for (JSType reqFormal : requiredFormals) {
       builder.addReqFormal(reqFormal == null ? null : reqFormal.substituteGenerics(typeMap));
@@ -304,11 +323,16 @@ public final class DeclaredFunctionType {
     if (returnType != null) {
       builder.addRetType(returnType.substituteGenerics(typeMap));
     }
-    // Explicitly forget nominalType and receiverType. This method is used when
-    // calculating the declared type of a method using the inherited types.
-    // In withTypeInfoFromSuper, we ignore super's nominalType and receiverType.
+    if (this.receiverType != null) {
+      builder.addReceiverType(this.receiverType.substituteGenerics(typeMap));
+    }
+    if (this.nominalType != null) {
+      builder.addNominalType(this.nominalType.substituteGenerics(typeMap));
+    }
+    // Technically, we should only be adding the type parameters that haven't been substituted
+    // away, but AFAICT, it makes no difference to just add them all.
     builder.addTypeParameters(this.typeParameters);
-    return builder.buildDeclaration();
+    return builder;
   }
 
   public static DeclaredFunctionType meet(Collection<DeclaredFunctionType> toMeet) {
