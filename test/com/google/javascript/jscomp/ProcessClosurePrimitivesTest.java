@@ -719,7 +719,10 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
     // namespace placeholders for a.b and a.b.c remain.
     test(
         LINE_JOINER.join(
-            "goog.provide('a.b');", "goog.provide('a.b.c');", "a.b = function(x,y) {};", "a.b.c;"),
+            "goog.provide('a.b');",
+            "goog.provide('a.b.c');",
+            "a.b = function(x,y) {};",
+            "a.b.c;"),
         LINE_JOINER.join(
             "/** @const */",
             "var a = {};",
@@ -736,7 +739,10 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
   public void testProvideOrder3a() {
     test(
         LINE_JOINER.join(
-            "goog.provide('a.b');", "a.b = function(x,y) {};", "goog.provide('a.b.c');", "a.b.c;"),
+            "goog.provide('a.b');",
+            "a.b = function(x,y) {};",
+            "goog.provide('a.b.c');",
+            "a.b.c;"),
         LINE_JOINER.join(
             "/** @const */",
             "var a = {};",
@@ -752,7 +758,10 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
     // This tests a cleanly provided name, below a function namespace.
     test(
         LINE_JOINER.join(
-            "goog.provide('a.b');", "a.b = function(x,y) {};", "goog.provide('a.b.c');", "a.b.c;"),
+            "goog.provide('a.b');",
+            "a.b = function(x,y) {};",
+            "goog.provide('a.b.c');",
+            "a.b.c;"),
         LINE_JOINER.join(
             "/** @const */",
             "var a = {};",
@@ -773,7 +782,12 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
             "  goog.a.b = 2;",
             "}"),
         LINE_JOINER.join(
-            "/** @const */", "goog.a={};", "if(x)", "  goog.a.b=1;", "else", "  goog.a.b=2;"));
+            "/** @const */",
+            "goog.a={};",
+            "if(x)",
+            "  goog.a.b=1;",
+            "else",
+            "  goog.a.b=2;"));
   }
 
   public void testProvideOrder4b() {
@@ -790,7 +804,12 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
             "  goog.a.b = 2;",
             "}"),
         LINE_JOINER.join(
-            "/** @const */", "goog.a={};", "if(x)", "  goog.a.b=1;", "else", "  goog.a.b=2;"));
+            "/** @const */",
+            "goog.a={};",
+            "if(x)",
+            "  goog.a.b=1;",
+            "else",
+            "  goog.a.b=2;"));
   }
 
   public void testInvalidProvide() {
