@@ -366,9 +366,7 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
           LINE_JOINER.join(
               "goog.provide('modA');",
               "class module$contents$modA_Foo {}",
-              "/** @const */ modA = {",
-              "    /** @const */ Foo: module$contents$modA_Foo",
-              "};"),
+              "/** @const */ modA.Foo = module$contents$modA_Foo;"),
           LINE_JOINER.join(
               "/** @const */ var module$exports$modB = {}",
               "/** @type {modA.Foo} */",
@@ -442,9 +440,8 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         new String[] {
           "/** @const */ var module$exports$modA = class {};",
           LINE_JOINER.join(
-              "/** @const */ var module$exports$modB = {",
-              "  /** @const */ Foo: module$exports$modA,",
-              "};"),
+              "/** @const */ var module$exports$modB = {};",
+              "/** @const */ module$exports$modB.Foo = module$exports$modA;"),
         });
 
     testEs6(
@@ -461,11 +458,9 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
         new String[] {
           "/** @const */ var module$exports$modA = class {};",
           LINE_JOINER.join(
-              "class module$contents$modB_Bar {}",
-              "/** @const */ var module$exports$modB = {",
-              "  /** @const */ Foo: module$exports$modA,",
-              "  /** @const */ Bar: module$contents$modB_Bar,",
-              "};"),
+              "/** @const */ var module$exports$modB = {};",
+              "module$exports$modB.Bar = class {};",
+              "/** @const */ module$exports$modB.Foo = module$exports$modA;"),
         });
   }
 
@@ -2106,6 +2101,21 @@ public final class ClosureRewriteModuleTest extends Es6CompilerTestCase {
                 "module$exports$mod_B.prototype;",
                 "/**@type {module$exports$mod_B} */ var module$contents$mod_A_b;")
         });
+  }
+
+  public void testLegacyModuleIsUninlined() {
+    testEs6(
+        LINE_JOINER.join(
+            "goog.module('mod.ns');",
+            "goog.module.declareLegacyNamespace();",
+            "",
+            "class Foo {}",
+            "",
+            "exports.Foo = Foo;"),
+        LINE_JOINER.join(
+            "goog.provide('mod.ns');",
+            "class module$contents$mod$ns_Foo {}",
+            "/** @const */ mod.ns.Foo = module$contents$mod$ns_Foo;"));
   }
 
   public void testMultiplyExportedSymbolDoesntCrash() {
