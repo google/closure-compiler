@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.rhino.IR;
@@ -43,7 +44,6 @@ class OptimizeParameters
     implements CompilerPass, OptimizeCalls.CallGraphCompilerPass {
 
   private final AbstractCompiler compiler;
-  private final List<Node> removedNodes = new ArrayList<>();
 
   OptimizeParameters(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -54,25 +54,22 @@ class OptimizeParameters
   public void process(Node externs, Node root) {
     Preconditions.checkState(
         compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
-    DefinitionUseSiteFinder defFinder = new DefinitionUseSiteFinder(compiler);
-    defFinder.process(externs, root);
-    process(externs, root, defFinder);
+    DefinitionUseSiteFinder definitionFinder = new DefinitionUseSiteFinder(compiler);
+    definitionFinder.process(externs, root);
+    process(externs, root, definitionFinder);
   }
 
   @Override
   public void process(
-      Node externs, Node root, DefinitionUseSiteFinder definitions) {
-    for (DefinitionSite defSite : definitions.getDefinitionSites()) {
-      if (canChangeSignature(defSite, definitions)) {
-        tryEliminateConstantArgs(defSite, definitions);
-        tryEliminateOptionalArgs(defSite, definitions);
+      Node externs, Node root, DefinitionUseSiteFinder definitionFinder) {
+    // Copy the list of definition sites to avoid a concurrent modification exception.
+    List<DefinitionSite> definitionSites =
+        Lists.newArrayList(definitionFinder.getDefinitionSites());
+    for (DefinitionSite definitionSite : definitionSites) {
+      if (canChangeSignature(definitionSite, definitionFinder)) {
+        tryEliminateConstantArgs(definitionSite, definitionFinder);
+        tryEliminateOptionalArgs(definitionSite, definitionFinder);
       }
-    }
-
-    // Remove any references or definitions that have been removed to keep it
-    // in a consistent state for the next pass.
-    for (Node n : removedNodes) {
-      definitions.removeReferences(n);
     }
   }
 
@@ -81,7 +78,7 @@ class OptimizeParameters
    *      signature can be modified.
    */
   private static boolean canChangeSignature(
-      DefinitionSite definitionSite, DefinitionUseSiteFinder defFinder) {
+      DefinitionSite definitionSite, DefinitionUseSiteFinder definitionFinder) {
     Definition definition = definitionSite.definition;
 
     if (definitionSite.inExterns) {
@@ -116,11 +113,11 @@ class OptimizeParameters
     }
 
     // Assume an exported method result is used.
-    if (!defFinder.canModifyDefinition(definition)) {
+    if (!definitionFinder.canModifyDefinition(definition)) {
       return false;
     }
 
-    Collection<UseSite> useSites = defFinder.getUseSites(definition);
+    Collection<UseSite> useSites = definitionFinder.getUseSites(definition);
 
     if (useSites.isEmpty()) {
       return false;
@@ -141,7 +138,7 @@ class OptimizeParameters
       // TODO(johnlenz): Allow rewrite all definitions are valid.
       Node nameNode = site.node;
       Collection<Definition> singleSiteDefinitions =
-          defFinder.getDefinitionsReferencedAt(nameNode);
+          definitionFinder.getDefinitionsReferencedAt(nameNode);
       if (singleSiteDefinitions.size() > 1) {
         return false;
       }
@@ -156,13 +153,13 @@ class OptimizeParameters
    * Removes any optional parameters if no callers specifies it as an argument.
    */
   private void tryEliminateOptionalArgs(
-      DefinitionSite defSite, DefinitionUseSiteFinder defFinder) {
+      DefinitionSite definitionSite, DefinitionUseSiteFinder definitionFinder) {
     // Count the maximum number of arguments passed into this function all
     // all points of the program.
     int maxArgs = -1;
 
-    Definition definition = defSite.definition;
-    Collection<UseSite> useSites = defFinder.getUseSites(definition);
+    Definition definition = definitionSite.definition;
+    Collection<UseSite> useSites = definitionFinder.getUseSites(definition);
     for (UseSite site : useSites) {
       Preconditions.checkState(DefinitionUseSiteFinder.isCallOrNewSite(site));
       Node call = site.node.getParent();
@@ -173,7 +170,7 @@ class OptimizeParameters
       }
     }
 
-    eliminateParamsAfter(definition.getRValue(), maxArgs);
+    eliminateParamsAfter(definition.getRValue(), maxArgs, definitionFinder);
   }
 
   /**
@@ -188,14 +185,14 @@ class OptimizeParameters
    * foo(3);
    */
   private void tryEliminateConstantArgs(
-      DefinitionSite defSite, DefinitionUseSiteFinder defFinder) {
+      DefinitionSite definitionSite, DefinitionUseSiteFinder definitionFinder) {
 
     List<Parameter> parameters = new ArrayList<>();
     boolean firstCall = true;
 
     // Build a list of parameters to remove
-    Definition definition = defSite.definition;
-    Collection<UseSite> useSites = defFinder.getUseSites(definition);
+    Definition definition = definitionSite.definition;
+    Collection<UseSite> useSites = definitionFinder.getUseSites(definition);
     boolean continueLooking = false;
     for (UseSite site : useSites) {
       Preconditions.checkState(DefinitionUseSiteFinder.isCallOrNewSite(site));
@@ -225,14 +222,14 @@ class OptimizeParameters
       Preconditions.checkState(DefinitionUseSiteFinder.isCallOrNewSite(site));
       Node call = site.node.getParent();
 
-      optimizeCallSite(defFinder, parameters, call);
+      optimizeCallSite(definitionFinder, parameters, call);
     }
 
     // Remove the constant parameters in the definitions and add it as a local
     // variable.
     Node function = definition.getRValue();
     if (function.isFunction()) {
-      optimizeFunctionDefinition(parameters, function);
+      optimizeFunctionDefinition(parameters, function, definitionFinder);
     }
   }
 
@@ -388,10 +385,10 @@ class OptimizeParameters
   }
 
   private void optimizeFunctionDefinition(List<Parameter> parameters,
-      Node function) {
+      Node function, DefinitionUseSiteFinder definitionFinder) {
     for (int index = parameters.size() - 1; index >= 0; index--) {
       if (parameters.get(index).shouldRemove()) {
-        Node paramName = eliminateFunctionParamAt(function, index);
+        Node paramName = eliminateFunctionParamAt(function, index, definitionFinder);
         addVariableToFunction(function, paramName,
             parameters.get(index).getArg());
       }
@@ -399,13 +396,13 @@ class OptimizeParameters
   }
 
   private void optimizeCallSite(
-      DefinitionUseSiteFinder defFinder, List<Parameter> parameters, Node call) {
+      DefinitionUseSiteFinder definitionFinder, List<Parameter> parameters, Node call) {
     boolean mayMutateArgs = call.mayMutateArguments();
     boolean mayMutateGlobalsOrThrow = call.mayMutateGlobalStateOrThrow();
     for (int index = parameters.size() - 1; index >= 0; index--) {
       Parameter p = parameters.get(index);
       if (p.shouldRemove()) {
-        eliminateCallParamAt(defFinder, p, call, index);
+        eliminateCallParamAt(definitionFinder, p, call, index);
 
         if (mayMutateArgs && !mayMutateGlobalsOrThrow &&
             // We want to cover both global-state arguments, and
@@ -492,20 +489,22 @@ class OptimizeParameters
    * Removes all formal parameters starting at argIndex.
    * @return true if a parameter has been removed.
    */
-  private boolean eliminateParamsAfter(Node function, int argIndex) {
+  private boolean eliminateParamsAfter(
+      Node function, int argIndex, DefinitionUseSiteFinder definitionFinder) {
     Node formalArgPtr = function.getSecondChild().getFirstChild();
     while (argIndex != 0 && formalArgPtr != null) {
       formalArgPtr = formalArgPtr.getNext();
       argIndex--;
     }
 
-    return eliminateParamsAfter(function, formalArgPtr);
+    return eliminateParamsAfter(function, formalArgPtr, definitionFinder);
   }
 
-  private boolean eliminateParamsAfter(Node fnNode, Node argNode) {
+  private boolean eliminateParamsAfter(
+      Node fnNode, Node argNode, DefinitionUseSiteFinder definitionFinder) {
     if (argNode != null) {
       // Keep the args in the same order, do the last first.
-      eliminateParamsAfter(fnNode, argNode.getNext());
+      eliminateParamsAfter(fnNode, argNode.getNext(), definitionFinder);
       compiler.reportChangeToEnclosingScope(argNode);
       argNode.detach();
       Node var = IR.var(argNode).useSourceInfoIfMissingFrom(argNode);
@@ -521,17 +520,18 @@ class OptimizeParameters
    *
    * @param function The function node
    * @param argIndex The index of the the argument to remove.
+   * @param definitionFinder The definition and use sites index.
    * @return The Node of the argument removed.
    */
-  private Node eliminateFunctionParamAt(Node function, int argIndex) {
-    Preconditions.checkArgument(function.isFunction(),
-        "Node must be a function.");
+  private Node eliminateFunctionParamAt(
+      Node function, int argIndex, DefinitionUseSiteFinder definitionFinder) {
+    Preconditions.checkArgument(function.isFunction(), "Node must be a function.");
 
-    Node formalArgPtr = NodeUtil.getArgumentForFunction(
-        function, argIndex);
+    Node formalArgPtr = NodeUtil.getArgumentForFunction(function, argIndex);
 
     if (formalArgPtr != null) {
       compiler.reportChangeToEnclosingScope(formalArgPtr);
+      definitionFinder.removeReferences(formalArgPtr);
       function.getSecondChild().removeChild(formalArgPtr);
     }
     return formalArgPtr;
@@ -539,14 +539,14 @@ class OptimizeParameters
 
   /**
    * Eliminates the parameter from a function call.
-   * @param defFinder
+   * @param definitionFinder The definition and use sites index.
    * @param p
    * @param call The function call node
    * @param argIndex The index of the the argument to remove.
    * @return The Node of the argument removed.
    */
   private Node eliminateCallParamAt(
-      DefinitionUseSiteFinder defFinder, Parameter p, Node call, int argIndex) {
+      DefinitionUseSiteFinder definitionFinder, Parameter p, Node call, int argIndex) {
     Preconditions.checkArgument(
         NodeUtil.isCallOrNew(call), "Node must be a call or new.");
 
@@ -554,14 +554,14 @@ class OptimizeParameters
         call, argIndex);
 
     if (formalArgPtr != null) {
-      call.removeChild(formalArgPtr);
-      compiler.reportChangeToEnclosingScope(call);
+      compiler.reportChangeToEnclosingScope(formalArgPtr);
       // The value in the parameter object is the one that is being moved into
       // function definition leave that one's references.  For everything else,
       // remove any references.
       if (p.getArg() != formalArgPtr) {
-        removedNodes.add(formalArgPtr);
+        definitionFinder.removeReferences(formalArgPtr);
       }
+      call.removeChild(formalArgPtr);
     }
     return formalArgPtr;
   }
