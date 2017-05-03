@@ -15,18 +15,18 @@
  */
 package com.google.javascript.jscomp;
 
-public class J2clEqualitySameRewriterPassTest extends CompilerTestCase {
+public class J2clEqualitySameRewriterPassTest extends TypeICompilerTestCase {
   private static final String EXTERN = "Equality.$same = function(a, b) {};";
 
   private boolean useTypesForOptimization = true;
 
   public J2clEqualitySameRewriterPassTest() {
-    super(EXTERN);
+    super(MINIMAL_EXTERNS + EXTERN);
   }
 
   @Override
   public void setUp() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
   }
 
   @Override
