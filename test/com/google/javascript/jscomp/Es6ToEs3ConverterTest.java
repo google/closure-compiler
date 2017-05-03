@@ -16,11 +16,12 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.Es6ConvertSuper.INVALID_SUPER_CALL;
 import static com.google.javascript.jscomp.Es6RewriteClass.CLASS_REASSIGNMENT;
 import static com.google.javascript.jscomp.Es6RewriteClass.CONFLICTING_GETTER_SETTER_TYPE;
 import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;;
+import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -876,18 +877,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "  $jscomp.inherits(D, C);",
             "};"));
 
-    test(
-        "class D {} class C extends D { constructor() {}; f() {super();} }",
-        LINE_JOINER.join(
-
-            "/** @constructor @struct */",
-            "var D = function() {};",
-            "/** @constructor @struct @extends {D} */",
-            "var C = function() {}",
-            "$jscomp.inherits(C, D);",
-            "C.prototype.f = function() {",
-            "  D.prototype.f.call(this);",
-            "}"));
+    testError(
+        "class D {} class C extends D { constructor() {} f() {super();} }", INVALID_SUPER_CALL);
   }
 
   public void testSuperKnownNotToChangeThis() {
@@ -1297,11 +1288,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testSuperNew() {
-    testError("class D {} class C extends D { f() {var s = new super;} }",
-              CANNOT_CONVERT_YET);
-
-    testError("class D {} class C extends D { f(str) {var s = new super(str);} }",
-              CANNOT_CONVERT_YET);
+    testError("class D {} class C extends D { f() {var s = new super;} }", INVALID_SUPER_CALL);
+    testError(
+        "class D {} class C extends D { f(str) {var s = new super(str);} }", INVALID_SUPER_CALL);
   }
 
   public void testSuperSpread() {
@@ -1326,31 +1315,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testSuperCallNonConstructor() {
+    testError("class S extends B { static f() { super(); } }", INVALID_SUPER_CALL);
 
-    test(
-        "class S extends B { static f() { super(); } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct",
-            " * @extends {B}",
-            " * @param {...?} var_args",
-            " */",
-            "var S = function(var_args) { return B.apply(this, arguments) || this; };",
-            "$jscomp.inherits(S, B);",
-            "/** @this {?} */",
-            "S.f=function() { B.f.call(this) }"));
-
-    test(
-        "class S extends B { f() { super(); } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct",
-            " * @extends {B}",
-            " * @param {...?} var_args",
-            " */",
-            "var S = function(var_args) { return B.apply(this, arguments) || this; };",
-            "$jscomp.inherits(S, B);",
-            "S.prototype.f=function() {",
-            "  B.prototype.f.call(this);",
-            "}"));
+    testError("class S extends B { f() { super(); } }", INVALID_SUPER_CALL);
   }
 
   public void testStaticThis() {
