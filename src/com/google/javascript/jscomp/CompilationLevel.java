@@ -88,6 +88,7 @@ public enum CompilationLevel {
     options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.UNMAPPED);
     options.generatePseudoNames = true;
     options.removeClosureAsserts = false;
+    options.removeJ2clAsserts = false;
     // Don't shadow variables as it is too confusing.
     options.shadowVariables = false;
   }

@@ -584,6 +584,10 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(closureCodeRemoval);
     }
 
+    if (options.removeJ2clAsserts) {
+      passes.add(j2clAssertRemovalPass);
+    }
+
     // Property disambiguation should only run once and needs to be done
     // soon after type checking, both so that it can make use of type
     // information and so that other passes can take advantage of the renamed
@@ -2869,6 +2873,14 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new J2clPass(compiler);
+        }
+      };
+
+  private final PassFactory j2clAssertRemovalPass =
+      new PassFactory("j2clAssertRemovalPass", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new J2clAssertRemovalPass(compiler);
         }
       };
 

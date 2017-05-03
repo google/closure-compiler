@@ -784,6 +784,9 @@ public class CompilerOptions implements Serializable {
   /** Remove goog.asserts calls. */
   boolean removeClosureAsserts;
 
+  /** Remove J2CL assert calls. */
+  boolean removeJ2clAsserts = true;
+
   /** Gather CSS names (requires closurePass) */
   public boolean gatherCssNames;
 
@@ -1699,6 +1702,10 @@ public class CompilerOptions implements Serializable {
 
   public void setRemoveClosureAsserts(boolean remove) {
     this.removeClosureAsserts = remove;
+  }
+
+  public void setRemoveJ2clAsserts(boolean remove) {
+    this.removeJ2clAsserts = remove;
   }
 
   public void setColorizeErrorOutput(boolean colorizeErrorOutput) {
@@ -2904,6 +2911,7 @@ public class CompilerOptions implements Serializable {
             .add("removeAbstractMethods", removeAbstractMethods)
             .add("removeSuperMethods", removeSuperMethods)
             .add("removeClosureAsserts", removeClosureAsserts)
+            .add("removeJ2clAsserts", removeJ2clAsserts)
             .add("removeDeadCode", removeDeadCode)
             .add("removeUnusedClassProperties", removeUnusedClassProperties)
             .add("removeUnusedConstructorProperties", removeUnusedConstructorProperties)
