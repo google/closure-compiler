@@ -16,8 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
@@ -163,7 +162,7 @@ class InlineObjectLiterals implements CompilerPass {
         // since the function referenced by y might reference 'this').
         //
         if (parent.isGetProp()) {
-          checkState(parent.getFirstChild() == name);
+          Preconditions.checkState(parent.getFirstChild() == name);
           // A call target may be using the object as a 'this' value.
           if (grandparent.isCall()
               && grandparent.getFirstChild() == parent) {
@@ -274,7 +273,7 @@ class InlineObjectLiterals implements CompilerPass {
         if (ref.isLvalue() || ref.isInitializingDeclaration()) {
           Node val = ref.getAssignedValue();
           if (val != null) {
-            checkState(val.isObjectLit(), val);
+            Preconditions.checkState(val.isObjectLit());
             for (Node child = val.getFirstChild(); child != null;
                  child = child.getNext()) {
               String varname = child.getString();
@@ -290,7 +289,7 @@ class InlineObjectLiterals implements CompilerPass {
           // This is the var. There is no value.
         } else {
           Node getprop = ref.getParent();
-          checkState(getprop.isGetProp(), getprop);
+          Preconditions.checkState(getprop.isGetProp());
 
           // The key being looked up in the original map.
           String varname = getprop.getLastChild().getString();
@@ -313,7 +312,7 @@ class InlineObjectLiterals implements CompilerPass {
      */
     private void fillInitialValues(Reference init, Map<String, Node> initvals) {
       Node object = init.getAssignedValue();
-      checkState(object.isObjectLit(), object);
+      Preconditions.checkState(object.isObjectLit());
       for (Node key = object.getFirstChild(); key != null;
            key = key.getNext()) {
         initvals.put(key.getString(), key.removeFirstChild());
@@ -331,7 +330,7 @@ class InlineObjectLiterals implements CompilerPass {
       List<Node> nodes = new ArrayList<>();
       Node val = ref.getAssignedValue();
       blacklistVarReferencesInTree(val, v.scope);
-      checkState(val.isObjectLit(), val);
+      Preconditions.checkState(val.isObjectLit());
       Set<String> all = new LinkedHashSet<>(varmap.keySet());
       for (Node key = val.getFirstChild(); key != null;
            key = key.getNext()) {
@@ -412,18 +411,17 @@ class InlineObjectLiterals implements CompilerPass {
         // Find the beginning of the function / script.
         vnode = v.getScope().getClosestHoistScope().getRootNode().getLastChild().getFirstChild();
       }
-      checkState(vnode.isVar() || vnode.isExprResult(), vnode);
 
       for (Map.Entry<String, String> entry : varmap.entrySet()) {
         Node val = initvals.get(entry.getKey());
-        Node newVarNode = NodeUtil.newVarNode(entry.getValue(), val);
+        Node varnode = NodeUtil.newVarNode(entry.getValue(), val);
         if (val == null) {
           // is this right?
-          newVarNode.useSourceInfoIfMissingFromForTree(vnode);
+          varnode.useSourceInfoIfMissingFromForTree(vnode);
         } else {
           blacklistVarReferencesInTree(val, v.scope);
         }
-        vnode.getParent().addChildBefore(newVarNode, vnode);
+        vnode.getParent().addChildBefore(varnode, vnode);
         compiler.reportChangeToEnclosingScope(vnode);
       }
 
@@ -451,14 +449,14 @@ class InlineObjectLiterals implements CompilerPass {
         } else {
           // Make sure that the reference is a GETPROP as we expect it to be.
           Node getprop = ref.getParent();
-          checkState(getprop.isGetProp(), getprop);
+          Preconditions.checkState(getprop.isGetProp());
 
           // The key being looked up in the original map.
           String var = getprop.getSecondChild().getString();
 
           // If the variable hasn't already been declared, add an empty
           // declaration near all the other declarations.
-          checkState(varmap.containsKey(var));
+          Preconditions.checkState(varmap.containsKey(var));
 
           // Replace the GETPROP node with a NAME.
           Node replacement = IR.name(varmap.get(var));
