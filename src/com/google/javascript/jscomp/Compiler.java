@@ -2627,7 +2627,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   Config getParserConfig(ConfigContext context) {
-    if (parserConfig == null) {
+    if (parserConfig == null || externsParserConfig == null) {
       synchronized (this) {
         if (parserConfig == null) {
           Config.LanguageMode configLanguageMode = getParserConfigLanguageMode(
