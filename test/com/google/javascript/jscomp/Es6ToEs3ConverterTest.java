@@ -20,7 +20,7 @@ import static com.google.javascript.jscomp.Es6RewriteClass.CLASS_REASSIGNMENT;
 import static com.google.javascript.jscomp.Es6RewriteClass.CONFLICTING_GETTER_SETTER_TYPE;
 import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;;
+import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
