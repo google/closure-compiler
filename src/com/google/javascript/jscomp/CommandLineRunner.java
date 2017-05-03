@@ -583,15 +583,20 @@ public class CommandLineRunner extends
       usage =
           "Sets what language spec that input sources conform. "
               + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
-              + "ECMASCRIPT6 (default), ECMASCRIPT6_STRICT, ECMASCRIPT6_TYPED (experimental)"
+              + "ECMASCRIPT6_TYPED (experimental), ECMASCRIPT_2015, ECMASCRIPT_2016, "
+              + "ECMASCRIPT_2017, ECMASCRIPT_NEXT"
     )
-    private String languageIn = "ECMASCRIPT6";
+    private String languageIn = "ECMASCRIPT_2017";
 
-    @Option(name = "--language_out",
-        usage = "Sets what language spec the output should conform to. "
-        + "Options: ECMASCRIPT3 (default), ECMASCRIPT5, ECMASCRIPT5_STRICT, "
-        + "ECMASCRIPT6_TYPED (experimental)")
-    private String languageOut = "ECMASCRIPT3";
+    @Option(
+      name = "--language_out",
+      usage =
+          "Sets what language spec the output should conform to. "
+              + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
+              + "ECMASCRIPT6_TYPED (experimental), ECMASCRIPT_2015, ECMASCRIPT_2016, "
+              + "ECMASCRIPT_2017, ECMASCRIPT_NEXT"
+    )
+    private String languageOut = "ECMASCRIPT5";
 
     @Option(name = "--version",
         handler = BooleanOptionHandler.class,
@@ -802,6 +807,7 @@ public class CommandLineRunner extends
                     "jscomp_off",
                     "jscomp_warning",
                     "new_type_inf",
+                    "strict_mode_input",
                     "warnings_whitelist_file"))
             .putAll(
                 "Output",
