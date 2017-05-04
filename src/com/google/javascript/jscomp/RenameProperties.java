@@ -72,6 +72,7 @@ class RenameProperties implements CompilerPass {
   /** Property renaming map from a previous compilation. */
   private final VariableMap prevUsedPropertyMap;
 
+  private final List<Node> toRemove = new ArrayList<>();
   private final List<Node> stringNodesToRename = new ArrayList<>();
   private final Map<Node, Node> callNodeToParentMap =
       new HashMap<>();
@@ -241,6 +242,16 @@ class RenameProperties implements CompilerPass {
       compiler.reportChangeToEnclosingScope(parent);
     }
 
+    // Complete queued removals.
+    for (Node n : toRemove) {
+      Node parent = n.getParent();
+      compiler.reportChangeToEnclosingScope(n);
+      n.detach();
+      if (!parent.hasChildren() && !parent.isScript()) {
+        parent.detach();
+      }
+    }
+
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED_OBFUSCATED);
   }
 
@@ -371,22 +382,13 @@ class RenameProperties implements CompilerPass {
           if (NodeUtil.isFunctionDeclaration(n)) {
             String name = n.getFirstChild().getString();
               if (NodeUtil.JSC_PROPERTY_NAME_FN.equals(name)) {
-                t.reportCodeChange(parent);
-                if (parent.isExprResult()) {
-                  parent.detach();
-                } else {
-                  parent.removeChild(n);
-                }
+                toRemove.add(n);
               }
             } else if (parent.isName()
                 && NodeUtil.JSC_PROPERTY_NAME_FN.equals(parent.getString())) {
               Node varNode = parent.getParent();
               if (varNode.isVar()) {
-                varNode.removeChild(parent);
-                t.reportCodeChange(varNode);
-                if (!varNode.hasChildren()) {
-                  varNode.detach();
-                }
+                toRemove.add(parent);
               }
             } else if (NodeUtil.isFunctionExpression(n)
                 && parent.isAssign()
@@ -398,8 +400,7 @@ class RenameProperties implements CompilerPass {
               if (exprResult.isExprResult()
                   && NodeUtil.isStatementBlock(exprResult.getParent())
                   && exprResult.getFirstChild().isAssign()) {
-                t.reportCodeChange(exprResult);
-                exprResult.detach();
+                toRemove.add(exprResult);
               }
           }
           break;
