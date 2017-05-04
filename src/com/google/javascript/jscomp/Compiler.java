@@ -2520,7 +2520,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     currentChangeScope = newChangeScopeRoot;
   }
 
-  private Node getEnclosingChangeScope(Node n) {
+  private Node getChangeScopeForNode(Node n) {
     /**
      * Compiler change reporting usually occurs after the AST change has already occurred. In the
      * case of node removals those nodes are already removed from the tree and so have no parent
@@ -2532,11 +2532,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return n;
     }
 
-    while (n.getParent() != null) {
-      n = n.getParent();
-      if (n.isFunction() || n.isScript()) {
-        return n;
-      }
+    n = NodeUtil.getEnclosingChangeScopeRoot(n.getParent());
+    if (n == null) {
+      throw new IllegalStateException(
+          "An enclosing scope is required for change reports but node " + n + " doesn't have one.");
     }
     return n;
   }
@@ -2581,7 +2580,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   void reportChangeToEnclosingScope(Node n) {
-    recordChange(getEnclosingChangeScope(n));
+    recordChange(getChangeScopeForNode(n));
     notifyChangeHandlers();
   }
 
@@ -2620,7 +2619,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       case ECMASCRIPT_NEXT:
         return Config.LanguageMode.ECMASCRIPT8;
       default:
-        throw new IllegalStateException("unexpected language mode: "
+        throw new IllegalStateException("Unexpected language mode: "
             + options.getLanguageIn());
     }
   }

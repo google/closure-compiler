@@ -27,6 +27,7 @@ import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.Compiler.ExternalSourceLoader;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -1084,6 +1085,29 @@ public final class CompilerTest extends TestCase {
     } catch (IllegalArgumentException expected) {
       return;
     }
+  }
+
+  public void testReportChangeNoScopeFails() {
+    Compiler compiler = new Compiler();
+
+    Node detachedNode = IR.var(IR.name("foo"));
+
+    try {
+      compiler.reportChangeToEnclosingScope(detachedNode);
+      fail("Reporting a change on a node with no scope should have failed.");
+    } catch (IllegalStateException e) {
+      return;
+    }
+  }
+
+  public void testReportChangeWithScopeSucceeds() {
+    Compiler compiler = new Compiler();
+
+    Node attachedNode = IR.var(IR.name("foo"));
+    Node function = IR.function(IR.name("bar"), IR.paramList(), IR.block(attachedNode));
+
+    // Succeeds without throwing an exception.
+    compiler.reportChangeToEnclosingScope(attachedNode);
   }
 
   private static CompilerOptions createNewFlagBasedOptions() {
