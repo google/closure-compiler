@@ -2447,6 +2447,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         + "}\n"
         + "exports.fn = fn;\n";
     String expectedCode = ""
+        + "void 0;\n"
         + "var module$exports$foo$bar = {};\n"
         + "const STR = '3';\n"
         + "module$exports$foo$bar.fn = function fn() {\n"

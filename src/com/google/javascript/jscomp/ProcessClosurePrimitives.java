@@ -904,6 +904,12 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       JSModule module = t.getModule();
       registerAnyProvidedPrefixes(name, expr, module);
 
+      // If registerAnyProvidedPrefixes didn't add any children, add a no-op child so that
+      // the AST is valid.
+      if (!expr.hasChildren()) {
+        expr.addChildToBack(NodeUtil.newUndefinedNode(parent));
+      }
+
       ProvidedName provided = new ProvidedName(name, expr, module, true);
       providedNames.put(name, provided);
       provided.addDefinition(parent, module);
