@@ -272,6 +272,7 @@ class PeepholeSubstituteAlternateSyntax
         Node newCallTarget = IR.getprop(
             callTarget.cloneTree(),
             IR.string("call").srcref(callTarget));
+        NodeUtil.markNewScopesChanged(newCallTarget, compiler);
         n.replaceChild(callTarget, newCallTarget);
         n.addChildAfter(bind.thisValue.cloneTree(), newCallTarget);
         n.putBooleanProp(Node.FREE_CALL, false);

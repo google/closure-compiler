@@ -28,7 +28,7 @@ import com.google.javascript.rhino.Node;
 abstract class AbstractPeepholeOptimization {
 
   private NodeTraversal traversal;
-  private AbstractCompiler compiler;
+  protected AbstractCompiler compiler;
 
   /**
    * Given a node to optimize and a traversal, optimize the node. Subclasses

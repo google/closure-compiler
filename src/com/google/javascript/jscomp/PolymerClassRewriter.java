@@ -354,6 +354,7 @@ final class PolymerClassRewriter {
   private Node makeReadOnlySetter(String propName, String qualifiedPath) {
     String setterName = "_set" + propName.substring(0, 1).toUpperCase() + propName.substring(1);
     Node fnNode = IR.function(IR.name(""), IR.paramList(IR.name(propName)), IR.block());
+    compiler.reportChangeToChangeScope(fnNode);
     Node exprResNode = IR.exprResult(
         IR.assign(NodeUtil.newQName(compiler, qualifiedPath + setterName), fnNode));
 
@@ -377,6 +378,7 @@ final class PolymerClassRewriter {
 
     String interfaceName = getInterfaceName(cls);
     Node fnNode = IR.function(IR.name(""), IR.paramList(), IR.block());
+    compiler.reportChangeToChangeScope(fnNode);
     Node varNode = IR.var(NodeUtil.newQName(compiler, interfaceName), fnNode);
 
     JSDocInfoBuilder info = new JSDocInfoBuilder(true);

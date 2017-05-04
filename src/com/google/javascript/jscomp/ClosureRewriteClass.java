@@ -274,6 +274,7 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
           IR.paramList().srcref(callNode),
           IR.block().srcref(callNode));
       constructor.srcref(callNode);
+      compiler.reportChangeToChangeScope(constructor);
     }
 
     JSDocInfo info = NodeUtil.getBestJSDocInfo(constructor);

@@ -117,6 +117,7 @@ final class PolymerClassDefinition {
     Node constructor = NodeUtil.getFirstPropMatchingKey(descriptor, "factoryImpl");
     if (constructor == null) {
       constructor = IR.function(IR.name(""), IR.paramList(), IR.block());
+      compiler.reportChangeToChangeScope(constructor);
       constructor.useSourceInfoFromForTree(callNode);
     } else {
       ctorInfo = NodeUtil.getBestJSDocInfo(constructor);

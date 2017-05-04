@@ -65,11 +65,10 @@ public class WhitespaceWrapGoogModules implements HotSwapCompilerPass {
     block.addChildToBack(
         IR.exprResult(IR.string("use strict"))); // needs to be explicit, to match ClosureBundler
 
+    Node function = IR.function(IR.name(""), IR.paramList(IR.name("exports")), block);
+    compiler.reportChangeToChangeScope(function);
     Node loadMod =
-        IR.exprResult(
-                IR.call(
-                    IR.getprop(IR.name("goog"), IR.string("loadModule")),
-                    IR.function(IR.name(""), IR.paramList(IR.name("exports")), block)))
+        IR.exprResult(IR.call(IR.getprop(IR.name("goog"), IR.string("loadModule")), function))
             .srcrefTree(scriptRoot);
 
     if (scriptRoot.hasChildren()) {

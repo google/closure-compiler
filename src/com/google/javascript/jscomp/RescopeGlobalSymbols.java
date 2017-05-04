@@ -512,6 +512,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
         } else {
           // Var statement outside of for-loop.
           Node expr = IR.exprResult(c.cloneTree()).srcref(c);
+          NodeUtil.markNewScopesChanged(expr, compiler);
           parent.addChildBefore(expr, n);
         }
       }

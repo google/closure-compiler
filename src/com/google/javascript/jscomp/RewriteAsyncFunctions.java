@@ -195,6 +195,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     // be used as the generator function body.
     Node generatorFunction =
         IR.function(IR.name(ASYNC_GENERATOR_NAME), IR.paramList(), originalBody);
+    compiler.reportChangeToChangeScope(generatorFunction);
     generatorFunction.setIsGeneratorFunction(true);
     // function* $jscomp$async$generator() { ... }
     newBody.addChildToBack(generatorFunction);

@@ -444,6 +444,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
             IR.name(""),
             IR.paramList(objectNames),
             IR.block(returnNode));
+        compiler.reportChangeToChangeScope(iife);
         Node call = IR.call(iife, objectNamesForCall);
         call.putBooleanProp(Node.FREE_CALL, true);
         Node replacement;

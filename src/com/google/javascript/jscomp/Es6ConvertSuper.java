@@ -66,8 +66,9 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     Node classMembers = classNode.getLastChild();
     Node memberDef;
     if (superClass.isEmpty()) {
-      memberDef = IR.memberFunctionDef("constructor",
-          IR.function(IR.name(""), IR.paramList(), IR.block()));
+      Node function = IR.function(IR.name(""), IR.paramList(), IR.block());
+      compiler.reportChangeToChangeScope(function);
+      memberDef = IR.memberFunctionDef("constructor", function);
     } else {
       if (!superClass.isQualifiedName()) {
         // This will be reported as an error in Es6ToEs3Converter.
@@ -90,6 +91,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
           IR.name(""),
           IR.paramList(IR.name("var_args")),
           body);
+      compiler.reportChangeToChangeScope(constructor);
       memberDef = IR.memberFunctionDef("constructor", constructor);
       JSDocInfoBuilder info = new JSDocInfoBuilder(false);
       info.recordParameter(
