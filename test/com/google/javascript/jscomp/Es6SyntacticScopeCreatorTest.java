@@ -430,6 +430,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertEquals(root, globalScope.getRootNode());
     assertFalse(globalScope.isBlockScope());
     assertEquals(globalScope, globalScope.getClosestHoistScope());
+    assertTrue(globalScope.isHoistScope());
 
     Node function = root.getFirstChild();
     checkState(function.isFunction(), function);
@@ -440,6 +441,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertEquals(fooBlockNode, fooScope.getRootNode());
     assertTrue(fooScope.isBlockScope());
     assertEquals(fooScope, fooScope.getClosestHoistScope());
+    assertTrue(fooScope.isHoistScope());
     assertTrue(fooScope.isDeclared("x", false));
   }
 

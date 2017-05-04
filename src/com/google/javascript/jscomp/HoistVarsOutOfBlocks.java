@@ -75,7 +75,7 @@ class HoistVarsOutOfBlocks extends AbstractPostOrderCallback
   public void afterExitScope(NodeTraversal t, ReferenceMap refMap) {
     // TODO(tbreisacher): Avoid calling t.getScope() here, so that we aren't creating scopes we
     // don't need to.
-    if (t.getScope() != t.getClosestHoistScope()) {
+    if (!t.getScope().isHoistScope()) {
       return;
     }
     this.refMap = refMap;

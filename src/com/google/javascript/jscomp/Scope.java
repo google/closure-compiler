@@ -257,6 +257,18 @@ public class Scope implements StaticScope {
   }
 
   /**
+   * If a var were declared in this scope, would it belong to this scope (as opposed to some
+   * enclosing scope)?
+   *
+   * We consider function scopes to be hoist scopes. Even though it's impossible to declare a var
+   * inside function parameters, it would make less sense to say that if you did declare one in
+   * the function parameters, it would be hoisted somewhere else.
+   */
+  boolean isHoistScope() {
+    return isFunctionScope() || isFunctionBlockScope() || isGlobal() || isModuleScope();
+  }
+
+  /**
    * If a var were declared in this scope, return the scope it would be hoisted to.
    *
    * For function scopes, we return back the scope itself, since even though there is no way
@@ -266,10 +278,7 @@ public class Scope implements StaticScope {
   public Scope getClosestHoistScope() {
     Scope current = this;
     while (current != null) {
-      if (current.isFunctionScope()
-          || current.isFunctionBlockScope()
-          || current.isGlobal()
-          || current.isModuleScope()) {
+      if (current.isHoistScope()) {
         return current;
       }
       current = current.parent;

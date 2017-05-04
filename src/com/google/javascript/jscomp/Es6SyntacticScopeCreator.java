@@ -142,7 +142,7 @@ public final class Es6SyntacticScopeCreator implements ScopeCreator {
   private void scanVars(Node n, boolean scanInnerBlockScopes, boolean firstScan) {
     switch (n.getToken()) {
       case VAR:
-        if (scope.getClosestHoistScope() == scope) {
+        if (scope.isHoistScope()) {
           declareLHS(n);
         }
         return;
