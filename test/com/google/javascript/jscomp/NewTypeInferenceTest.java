@@ -20028,4 +20028,21 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}",
         "Foo.prop = globalVar;"));
   }
+
+  public void testAvoidSpuriousWarningOnBooleanNamespaceProperty() {
+    typeCheck(LINE_JOINER.join(
+        "/** @return {{valid: boolean}} */",
+        "function f() {",
+        "  /** @const */",
+        "  var ns = {};",
+        "  if (1<2) {",
+        "    ns.valid = true;",
+        "  } else {",
+        "    ns.valid = false;",
+        "  }",
+        // We used to infer incorrectly that .valid is an optional property here.
+        // Test that it doesn't happen again.
+        "  return ns;",
+        "}"));
+  }
 }

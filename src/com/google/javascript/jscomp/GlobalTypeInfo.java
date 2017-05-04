@@ -2187,9 +2187,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           return commonTypes.getArrayInstance(arrayType);
         }
         case TRUE:
-          return commonTypes.TRUE_TYPE;
         case FALSE:
-          return commonTypes.FALSE_TYPE;
+          return commonTypes.BOOLEAN;
         case THIS:
           return this.currentScope.getDeclaredTypeOf("this");
         case NAME:

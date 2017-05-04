@@ -320,6 +320,7 @@ final class ObjectType implements TypeWithProperties {
     if (qname.isIdentifier()) {
       String pname = qname.getLeftmostName();
       JSType declType = getDeclaredProp(qname);
+      JSType inferred = hasProp(qname) ? getProp(qname) : null;
       if (type == null) {
         type = declType;
       }
@@ -338,7 +339,7 @@ final class ObjectType implements TypeWithProperties {
 
       if (type == null && declType == null) {
         newProps = newProps.without(pname);
-      } else if (!type.equals(declType)) {
+      } else if (!type.equals(declType) && !type.equals(inferred)) {
         if (isDeclared && declType == null) {
           declType = type;
         }
