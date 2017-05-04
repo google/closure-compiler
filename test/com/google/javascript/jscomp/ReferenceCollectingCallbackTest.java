@@ -270,29 +270,12 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   }
 
   public void testBasicBlocks() {
-    testBehavior(
-        LINE_JOINER.join(
-            "var x = 0;",
-            "switch (x) {",
-            "  case 0:",
-            "    x;",
-            "}"),
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isGlobal()) {
-              ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
-              assertThat(x.references).hasSize(3);
-              assertNode(x.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
-              assertNode(x.references.get(1).getBasicBlock().getRoot()).hasType(Token.SWITCH);
-              assertNode(x.references.get(2).getBasicBlock().getRoot()).hasType(Token.CASE);
-            }
-          }
-        });
+    testBasicBlocks(true);
+    testBasicBlocks(false);
   }
 
-  public void testBasicBlocks_oldScopeCreator() {
-    es6ScopeCreator = false;
+  private void testBasicBlocks(boolean scopeCreator) {
+    es6ScopeCreator = scopeCreator;
     testBehavior(
         LINE_JOINER.join(
             "var x = 0;",

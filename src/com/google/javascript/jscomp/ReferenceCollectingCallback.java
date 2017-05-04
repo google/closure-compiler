@@ -240,7 +240,12 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
   public void enterScope(NodeTraversal t) {
     Node n = t.getScopeRoot();
     BasicBlock parent = blockStack.isEmpty() ? null : peek(blockStack);
-    blockStack.add(new BasicBlock(parent, n));
+    // Don't add all ES6 scope roots to blockStack, only those that are also scopes according to
+    // the ES5 scoping rules. Other nodes that ought to be considered the root of a BasicBlock
+    // are added in shouldTraverse() and removed in visit().
+    if (t.getScope().isHoistScope()) {
+      blockStack.add(new BasicBlock(parent, n));
+    }
   }
 
   /**
@@ -248,7 +253,9 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
    */
   @Override
   public void exitScope(NodeTraversal t) {
-    pop(blockStack);
+    if (t.getScope().isHoistScope()) {
+      pop(blockStack);
+    }
     if (t.inGlobalScope()) {
       // Update global scope reference lists when we are done with it.
       compiler.updateGlobalVarReferences(referenceMap, t.getScopeRoot());
@@ -845,6 +852,7 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
             pType == Token.DO
                 || pType == Token.WHILE
                 || pType == Token.FOR
+                || pType == Token.FOR_OF
                 || pType == Token.FOR_IN;
       } else {
         this.isLoop = false;
