@@ -270,7 +270,9 @@ class RenameProperties implements CompilerPass {
       String prevName = prevUsedPropertyMap.lookupNewName(prop.oldName);
       if (!generatePseudoNames && prevName != null) {
         // We can reuse prevName if it's not reserved.
-        if (reservedNames.contains(prevName)) {
+      	// HOWEVER, if prevName is an "exclude obfuscation" mapping (matches oldName),
+      	// retain it, to ensure the exclusion remains:
+        if (reservedNames.contains(prevName) && !prevName.equals(prop.oldName)) {
           continue;
         }
 
