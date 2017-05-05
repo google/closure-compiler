@@ -380,7 +380,7 @@ public class DiagnosticGroups {
 //           NewTypeInference.POSSIBLY_INEXISTENT_PROPERTY,
 //           NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT,
 //           NewTypeInference.RETURN_NONDECLARED_TYPE,
-//           NewTypeInference.WRONG_ARGUMENT_COUNT,
+          NewTypeInference.WRONG_ARGUMENT_COUNT,
           NewTypeInference.UNKNOWN_ASSERTION_TYPE,
           NewTypeInference.UNKNOWN_TYPEOF_VALUE);
   }
