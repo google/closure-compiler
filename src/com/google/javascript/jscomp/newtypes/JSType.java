@@ -1517,7 +1517,12 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
             switch (tag) {
               case TRUE_MASK:
               case FALSE_MASK:
-                builder.append("boolean");
+                builder.append(
+                    (tags & BOOLEAN_MASK) == BOOLEAN_MASK
+                        ? "boolean"
+                        : tag == TRUE_MASK
+                        ? "true"
+                        : "false");
                 tags &= ~BOOLEAN_MASK;
                 continue;
               case NULL_MASK:
