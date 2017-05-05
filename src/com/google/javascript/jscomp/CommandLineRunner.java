@@ -467,6 +467,12 @@ public class CommandLineRunner extends
         + "PRETTY_PRINT, PRINT_INPUT_DELIMITER, SINGLE_QUOTES")
     private List<FormattingOption> formatting = new ArrayList<>();
 
+    @Option(name = "--skip_non_transpilation_passes",
+        hidden = true,
+        handler = BooleanOptionHandler.class,
+        usage = "Run ES6 to ES3 transpilation only, skip other passes.")
+    private boolean skipNonTranspilationPasses = false;
+
     @Option(name = "--process_common_js_modules",
         handler = BooleanOptionHandler.class,
         usage = "Process CommonJS modules to a concatenable form.")
@@ -1542,6 +1548,7 @@ public class CommandLineRunner extends
           .setOutputManifest(ImmutableList.of(flags.outputManifest))
           .setOutputModuleDependencies(flags.outputModuleDependencies)
           .setProcessCommonJSModules(flags.processCommonJsModules)
+          .setSkipNonTranspilationPasses(flags.skipNonTranspilationPasses)
           .setModuleRoots(moduleRoots)
           .setTransformAMDToCJSModules(flags.transformAmdModules)
           .setWarningsWhitelistFile(flags.warningsWhitelistFile)

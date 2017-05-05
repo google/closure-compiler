@@ -425,6 +425,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     options.transformAMDToCJSModules = config.transformAMDToCJSModules;
     options.processCommonJSModules = config.processCommonJSModules;
+    options.skipNonTranspilationPasses = config.skipNonTranspilationPasses;
     options.moduleRoots = config.moduleRoots;
     options.angularPass = config.angularPass;
     options.setTracerMode(config.tracerMode);
@@ -2160,6 +2161,16 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     public CommandLineConfig setVariableMapOutputFile(String variableMapOutputFile) {
       this.variableMapOutputFile = variableMapOutputFile;
       return this;
+    }
+
+    private boolean skipNonTranspilationPasses = false;
+
+    /**
+     * Sets whether to run up to ES6 transpilation only.
+     */
+    CommandLineConfig setSkipNonTranspilationPasses(boolean skipNonTranspilationPasses) {
+        this.skipNonTranspilationPasses = skipNonTranspilationPasses;
+        return this;
     }
 
     private boolean createNameMapFiles = false;
