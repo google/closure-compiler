@@ -291,6 +291,34 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     return null;
   }
 
+  /**
+   * Helper method to convert the manage closure dependecy options to the new
+   * DependencyMode enum value
+   */
+  static CompilerOptions.DependencyMode depModeFromClosureDepOptions(
+      boolean onlyClosureDependencies, boolean manageClosureDependencies) {
+    if (onlyClosureDependencies) {
+      return CompilerOptions.DependencyMode.STRICT;
+    } else if (manageClosureDependencies) {
+      return CompilerOptions.DependencyMode.LOOSE;
+    } else {
+      return CompilerOptions.DependencyMode.NONE;
+    }
+  }
+
+  /**
+   * Helper method to convert a list of closure entry points a list of the new
+   * ModuleIdentifier values
+   */
+  static List<DependencyOptions.ModuleIdentifier> entryPointsFromClosureEntryPoints(
+      List<String> closureEntryPoints) {
+    List<DependencyOptions.ModuleIdentifier> entryPoints = new ArrayList<>();
+    for(String closureEntryPoint : closureEntryPoints) {
+      entryPoints.add(DependencyOptions.ModuleIdentifier.forClosure(closureEntryPoint));
+    }
+    return entryPoints;
+  }
+
   protected abstract void addWhitelistWarningsGuard(
       CompilerOptions options, File whitelistFile);
 
