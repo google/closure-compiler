@@ -24,7 +24,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.javascript.jscomp.NodeTraversal.AbstractModuleCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
@@ -335,53 +334,15 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
-  private class ScriptPreprocessor extends AbstractModuleCallback {
-    private boolean inModule = false;
-
-    @Override
-    public void enterModule(NodeTraversal t, Node scopeRoot) {
-      inModule = true;
-    }
-
-    @Override
-    public void exitModule(NodeTraversal t, Node scopeRoot) {
-      inModule = false;
-    }
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      switch (n.getToken()) {
-        case SCRIPT:
-          if (NodeUtil.isGoogModuleFile(n)) {
-            n.putBooleanProp(Node.GOOG_MODULE, true);
-            inlineModuleIntoGlobal(n);
-            t.reportCodeChange();
-            checkAndSetStrictModeDirective(t, n);
-          }
-          break;
-
-        case STRING_KEY:
-          if (inModule) {
-            rewriteShortObjectKey(n);
-          }
-          break;
-
-        case NAME:
-          if (inModule) {
-            preprocessExportDeclaration(n);
-          }
-          break;
-
-        default:
-          break;
-      }
-    }
-
-  }
-
   private class ScriptRecorder extends AbstractPreOrderCallback {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      if (NodeUtil.isGoogModuleFile(n)) {
+        n.putBooleanProp(Node.GOOG_MODULE, true);
+        inlineModuleIntoGlobal(n);
+        t.reportCodeChange();
+        checkAndSetStrictModeDirective(t, n);
+      }
 
       switch (n.getToken()) {
         case CALL:
@@ -424,6 +385,13 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         case GETPROP:
           if (isExportPropertyAssignment(n)) {
             recordExportsPropertyAssignment(t, n);
+          }
+          break;
+
+        case STRING_KEY:
+          // Short objects must be converted first, so that we can rewrite module-global names.
+          if (currentScript.isModule) {
+            rewriteShortObjectKey(n);
           }
           break;
 
@@ -693,7 +661,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       pushScript(new ScriptDescription());
       currentScript.rootNode = c;
       scriptDescriptions.addLast(currentScript);
-      NodeTraversal.traverseEs6(compiler, c, new ScriptPreprocessor());
       NodeTraversal.traverseEs6(compiler, c, new ScriptRecorder());
       popScript();
     }
@@ -720,7 +687,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     pushScript(new ScriptDescription());
     currentScript.rootNode = scriptRoot;
-    NodeTraversal.traverseEs6(compiler, scriptRoot, new ScriptPreprocessor());
     NodeTraversal.traverseEs6(compiler, scriptRoot, new ScriptRecorder());
 
     if (compiler.hasHaltingErrors()) {
@@ -731,56 +697,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     popScript();
 
     reportUnrecognizedRequires();
-  }
-
-  /**
-   * Rewrites ES6 shorthand property names from {name} to the expanded version {name:name}.
-   * This makes it easier for later analyses to rewrite lvalue and rvalue names correctly.
-   */
-  private void rewriteShortObjectKey(Node n) {
-    Preconditions.checkArgument(n.isStringKey());
-    if (!n.hasChildren()) {
-      Node nameNode = IR.name(n.getString()).srcref(n);
-      n.addChildToBack(nameNode);
-    }
-  }
-
-  private void preprocessExportDeclaration(Node n) {
-    if (!n.getString().equals("exports")
-        || !isAssignTarget(n)
-        || !n.getGrandparent().isExprResult()) {
-      return;
-    }
-
-    Preconditions.checkState(currentScript.defaultExportRhs == null);
-    Node exportRhs = n.getNext();
-    if (isNamedExportsLiteral(exportRhs)) {
-      Node insertionPoint = n.getGrandparent();
-      for (Node key = exportRhs.getFirstChild(); key != null; key = key.getNext()) {
-        String exportName = key.getString();
-        Node rhs = key.hasChildren() ? key.removeFirstChild() : IR.name(exportName).srcref(key);
-        Node lhs = IR.getprop(IR.name("exports"), IR.string(exportName)).srcrefTree(key);
-        Node newExport = IR.exprResult(IR.assign(lhs, rhs).srcref(key)).srcref(key);
-        insertionPoint.getParent().addChildAfter(newExport, insertionPoint);
-        insertionPoint = newExport;
-      }
-      n.getGrandparent().detach();
-    }
-  }
-
-  private static boolean isNamedExportsLiteral(Node objLit) {
-    if (!objLit.isObjectLit() || !objLit.hasChildren()) {
-      return false;
-    }
-    for (Node key = objLit.getFirstChild(); key != null; key = key.getNext()) {
-      if (!key.isStringKey() || key.isQuotedString()) {
-        return false;
-      }
-      if (key.hasChildren() && !key.getFirstChild().isName()) {
-        return false;
-      }
-    }
-    return true;
   }
 
   private void recordGoogLoadModule(Node call) {
@@ -837,8 +753,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     // Log legacy namespaces and prefixes.
     rewriteState.legacyScriptNamespaces.add(legacyNamespace);
-    rewriteState.legacyNamespacesByScriptNode.put(
-        NodeUtil.getEnclosingScript(call), legacyNamespace);
+    rewriteState.legacyNamespacesByScriptNode.put(NodeUtil.getEnclosingScript(call), legacyNamespace);
     LinkedList<String> parts = Lists.newLinkedList(Splitter.on('.').split(legacyNamespace));
     while (!parts.isEmpty()) {
       legacyScriptNamespacesAndPrefixes.add(Joiner.on('.').join(parts));
@@ -949,6 +864,14 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
+  private void rewriteShortObjectKey(Node n) {
+    Preconditions.checkArgument(n.isStringKey());
+    if (!n.hasChildren()) {
+      Node nameNode = IR.name(n.getString()).srcref(n);
+      n.addChildToBack(nameNode);
+    }
+  }
+
   private void maybeRecordExportDeclaration(NodeTraversal t, Node n) {
     if (!currentScript.isModule
         || !n.getString().equals("exports")
@@ -958,9 +881,31 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     Preconditions.checkState(currentScript.defaultExportRhs == null);
     Node exportRhs = n.getNext();
-    // Exports object should have already been converted in ScriptPreprocess step.
-    Preconditions.checkState(!isNamedExportsLiteral(exportRhs),
-        "Exports object should have been converted already");
+    if (isNamedExportsLiteral(exportRhs)) {
+      boolean areAllExportsInlinable = true;
+      List<ExportDefinition> inlinableExports = new ArrayList<>();
+      for (Node key = exportRhs.getFirstChild(); key != null; key = key.getNext()) {
+        String exportName = key.getString();
+        Node rhs = key.hasChildren() ? key.getFirstChild() : key;
+        ExportDefinition namedExport = ExportDefinition.newNamedExport(t, exportName, rhs);
+        currentScript.namedExports.add(exportName);
+        if (currentScript.declareLegacyNamespace
+            || !namedExport.hasInlinableName(currentScript.exportsToInline.keySet())) {
+          areAllExportsInlinable = false;
+        } else {
+          inlinableExports.add(namedExport);
+        }
+      }
+      if (areAllExportsInlinable) {
+        for (ExportDefinition export : inlinableExports) {
+          recordExportToInline(export);
+        }
+        NodeUtil.removeChild(n.getParent().getParent(), n.getParent());
+      } else {
+        currentScript.willCreateExportsObject = true;
+      }
+      return;
+    }
 
     currentScript.defaultExportRhs = exportRhs;
     currentScript.willCreateExportsObject = true;
@@ -973,6 +918,21 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
 
     return;
+  }
+
+  private static boolean isNamedExportsLiteral(Node objLit) {
+    if (!objLit.isObjectLit() || !objLit.hasChildren()) {
+      return false;
+    }
+    for (Node key = objLit.getFirstChild(); key != null; key = key.getNext()) {
+      if (!key.isStringKey() || key.isQuotedString()) {
+        return false;
+      }
+      if (key.hasChildren() && !key.getFirstChild().isName()) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private void recordModuleReturn() {
@@ -1278,8 +1238,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   /**
    * For exports like "exports = {prop: value}" update the declarations to enforce
    * @const ness (and typedef exports).
-   * TODO(blickly): Remove as much of this functionality as possible, now that these style of
-   * exports are rewritten in ScriptPreprocess step.
    */
   private void maybeUpdateExportObjectLiteral(NodeTraversal t, Node n) {
     if (!currentScript.isModule) {
