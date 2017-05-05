@@ -118,6 +118,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
             "}"));
 
     testWarning("/** @suppress {uselessCode} */ goog.require('unused.Class');", INVALID_SUPPRESS);
+    testSame("/** @suppress {extraProvide} */ goog.provide('unused.Class');");
     testSame("/** @suppress {extraRequire} */ goog.require('unused.Class');");
     testSame("/** @const @suppress {duplicate} */ var google = {};");
     testSame("/** @suppress {const} */ var google = {};");
