@@ -1830,6 +1830,31 @@ angular.$locale = function() {};
  */
 angular.$locale.prototype.id;
 
+/**
+ * @record
+ */
+angular.$locale.NUMBER_FORMATS;
+
+/**
+ * @type {string}
+ */
+angular.$locale.NUMBER_FORMATS.CURRENCY_SYM;
+
+/**
+ * @type {string}
+ */
+angular.$locale.NUMBER_FORMATS.GROUP_SEP;
+
+/**
+ * @type {string}
+ */
+angular.$locale.NUMBER_FORMATS.DECIMAL_SEP;
+
+/**
+ * @type {angular.$locale.NUMBER_FORMATS}
+ */
+angular.$locale.prototype.NUMBER_FORMATS;
+
 /******************************************************************************
  * $location Service
  *****************************************************************************/
