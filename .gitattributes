@@ -1,0 +1,2 @@
+# Always use UNIX line endings, even on Windows
+*.java eol=lf
