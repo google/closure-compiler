@@ -521,7 +521,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
       throws IOException {
     int i = 0;
     for (Entry<String, Integer> entry : map.entrySet()) {
-      String key = entry.getKey();
+      String key = entry.getKey().replace('\\', '/');
       if (i != 0) {
         out.append(",");
       }
