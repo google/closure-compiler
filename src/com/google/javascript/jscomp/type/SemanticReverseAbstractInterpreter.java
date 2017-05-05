@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.type;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 
 import com.google.common.base.Function;
+import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -30,6 +31,10 @@ import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.UnionType;
 import com.google.javascript.rhino.jstype.Visitor;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A reverse abstract interpreter using the semantics of the JavaScript
@@ -110,6 +115,9 @@ public final class SemanticReverseAbstractInterpreter
             getRestrictedWithoutUndefined(p.typeB));
       }
     };
+
+  private static final Set<String> NUMBER_PREDICATES = ImmutableSet.of(
+      "Number.isFinite", "Number.isInteger", "Number.isNaN", "Number.isSafeInteger");
 
   /**
    * Creates a semantic reverse abstract interpreter.
@@ -265,6 +273,8 @@ public final class SemanticReverseAbstractInterpreter
         String leftName = left.getQualifiedName();
         if ("Array.isArray".equals(leftName) && left.getNext() != null) {
           return caseIsArray(left.getNext(), blindScope, outcome);
+        } else if (NUMBER_PREDICATES.contains(leftName) && left.getNext() != null) {
+          return caseIsNumber(left.getNext(), blindScope);
         }
         break;
       }
@@ -277,10 +287,18 @@ public final class SemanticReverseAbstractInterpreter
   }
 
   private FlowScope caseIsArray(Node value, FlowScope blindScope, boolean outcome) {
-      JSType type = getTypeIfRefinable(value, blindScope);
+    JSType type = getTypeIfRefinable(value, blindScope);
     if (type != null) {
       Visitor<JSType> visitor = outcome ? restrictToArrayVisitor : restrictToNotArrayVisitor;
       return maybeRestrictName(blindScope, value, type, type.visit(visitor));
+    }
+    return blindScope;
+  }
+
+  private FlowScope caseIsNumber(Node value, FlowScope blindScope) {
+    JSType type = getTypeIfRefinable(value, blindScope);
+    if (type != null) {
+      return maybeRestrictName(blindScope, value, type, type.visit(restrictToNumberVisitor));
     }
     return blindScope;
   }

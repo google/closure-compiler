@@ -773,4 +773,21 @@ public abstract class ChainableReverseAbstractInterpreter
           return type.isSubtype(getNativeType(ARRAY_TYPE)) ? null : type;
         }
       };
+
+  /**
+   * For when {@code Number.isFinite}, {@code Number.isInteger}, {@code Number.isNaN}
+   * or {@code Number.isSafeInteger} returns true.
+   */
+  final Visitor<JSType> restrictToNumberVisitor =
+      new RestrictByTrueTypeOfResultVisitor() {
+        @Override
+        protected JSType caseTopType(JSType topType) {
+          return topType.isAllType() ? getNativeType(NUMBER_TYPE) : topType;
+        }
+
+        @Override
+        public JSType caseNumberType() {
+          return getNativeType(NUMBER_TYPE);
+        }
+      };
 }
