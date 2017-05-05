@@ -500,6 +500,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       // Type the global THIS as a loose object
       globalThisType = this.commonTypes.getTopObject().withLoose();
     }
+    commonTypes.setGlobalThis(globalThisType);
     this.globalScope.setDeclaredType(
         (new FunctionTypeBuilder(this.commonTypes)).
         addReceiverType(globalThisType).buildDeclaration());

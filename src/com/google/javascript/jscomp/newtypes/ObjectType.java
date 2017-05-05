@@ -337,7 +337,7 @@ final class ObjectType implements TypeWithProperties {
         }
       }
 
-      if (type == null && declType == null) {
+      if (type == null) {
         newProps = newProps.without(pname);
       } else if (!type.equals(declType) && !type.equals(inferred)) {
         if (isDeclared && declType == null) {

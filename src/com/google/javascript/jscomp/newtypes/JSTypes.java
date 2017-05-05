@@ -123,6 +123,7 @@ public final class JSTypes {
   private JSType stringOrString;
   private JSType anyNumOrStr;
 
+  private JSType globalThis;
   private JSType regexpInstance;
   private RawNominalType arrayType;
   private RawNominalType builtinObject;
@@ -359,6 +360,10 @@ public final class JSTypes {
     return regexpInstance != null ? regexpInstance : this.UNKNOWN;
   }
 
+  public JSType getGlobalThis() {
+    return globalThis != null ? globalThis : UNKNOWN;
+  }
+
   public JSType getNumberInstance() {
     return numberInstance != null ? numberInstance : this.NUMBER;
   }
@@ -424,9 +429,13 @@ public final class JSTypes {
         return getFunctionType().getPrototypeObject();
       case FUNCTION_INSTANCE_TYPE:
         return fromFunctionType(QMARK_FUNCTION);
+      case FUNCTION_FUNCTION_TYPE:
+        return builtinFunction.toJSType();
       case OBJECT_PROTOTYPE:
       case TOP_LEVEL_PROTOTYPE:
         return getTopObject().getNominalTypeIfSingletonObj().getPrototypePropertyOfCtor();
+      case GLOBAL_THIS:
+        return getGlobalThis();
       default:
         throw new RuntimeException("Native type " + typeId.name() + " not found");
     }
@@ -475,6 +484,12 @@ public final class JSTypes {
 
   public void setRegexpInstance(JSType regexpInstance) {
     this.regexpInstance = regexpInstance;
+  }
+
+  public void setGlobalThis(JSType globalThis) {
+    Preconditions.checkState(this.globalThis == null,
+        "Tried to reassign globalThis from %s to %s", this.globalThis, globalThis);
+    this.globalThis = globalThis;
   }
 
   public void setNumberInstance(JSType t) {

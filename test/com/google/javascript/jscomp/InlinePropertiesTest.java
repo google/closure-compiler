@@ -16,25 +16,42 @@
 
 package com.google.javascript.jscomp;
 
-/**
- * @author johnlenz@google.com (John Lenz)
- */
-public final class InlinePropertiesTest extends CompilerTestCase {
 
-  private static final String EXTERNS = LINE_JOINER.join(
-      "Function.prototype.call=function(){};",
-      "Function.prototype.inherits=function(){};",
-      "prop.toString;",
-      "var google = { gears: { factory: {}, workerPool: {} } };",
-      "/** @type {?} */ var externUnknownVar;",
-      "/** @type {!Function} */ var externGenericFn;");
+/** @author johnlenz@google.com (John Lenz) */
+public final class InlinePropertiesTest extends TypeICompilerTestCase {
+
+  private static final String EXTERNS =
+      LINE_JOINER.join(
+          MINIMAL_EXTERNS,
+          "Function.prototype.call=function(){};",
+          "Function.prototype.inherits=function(){};",
+          "prop.toString;",
+          "var google = { gears: { factory: {}, workerPool: {} } };",
+          "/** @type {?} */ var externUnknownVar;",
+          "/** @type {!Function} */ var externFn;");
 
   public InlinePropertiesTest() {
     super(EXTERNS);
     enableNormalize();
-    enableTypeCheck();
     enableClosurePass();
     enableGatherExternProperties();
+    this.mode = TypeInferenceMode.BOTH;
+  }
+
+  @Override
+  protected CompilerOptions getOptions() {
+    CompilerOptions options = super.getOptions();
+    // Ignore a few type warnings: we intentionally trigger these warnings
+    // to make sure that the pass still operates correctly with bad code.
+    DiagnosticGroup ignored =
+        new DiagnosticGroup(
+            TypeCheck.INEXISTENT_PROPERTY,
+            NewTypeInference.GLOBAL_THIS,
+            NewTypeInference.INEXISTENT_PROPERTY,
+            NewTypeInference.INVALID_ARGUMENT_TYPE,
+            TypeValidator.TYPE_MISMATCH_WARNING);
+    options.setWarningLevel(ignored, CheckLevel.OFF);
+    return options;
   }
 
   @Override
@@ -138,79 +155,88 @@ public final class InlinePropertiesTest extends CompilerTestCase {
 
   public void testConstClassProps1() {
     // Inline constant class properties,
-    test(LINE_JOINER.join(
-        "/** @constructor */",
-        "function C() {",
-        "}",
-        "C.foo = 1;",
-        "C.foo;"),
+    test(
         LINE_JOINER.join(
-        "/** @constructor */",
-        "function C() {",
-        "}",
-        "C.foo = 1;",
-        "1;"));
+            "/** @constructor */",
+            "function C() {",
+            "}",
+            "C.bar = 2;",
+            "C.foo = 1;",
+            "var z = C.foo;"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {",
+            "}",
+            "C.bar = 2;",
+            "C.foo = 1;",
+            "var z = 1;"));
   }
 
   public void testConstClassProps2() {
     // Don't confuse, class properties with instance properties
-    testSame(LINE_JOINER.join(
-        "/** @constructor */",
-        "function C() {",
-        "  this.foo = 1;",
-        "}",
-        "C.foo;"));
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {",
+            "  this.foo = 1;",
+            "}",
+            "var z = C.foo;"));
   }
 
   public void testConstClassProps3() {
     // Don't confuse, class properties with prototype properties
-    testSame(LINE_JOINER.join(
-        "/** @constructor */",
-        "function C() {}",
-        "C.prototype.foo = 1;",
-        "C.foo;\n"));
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "C.prototype.foo = 1;",
+            "var z = C.foo;\n"));
   }
 
   public void testConstClassProps4() {
     // Don't confuse unique constructors with similiar function types
-    testSame(LINE_JOINER.join(
-        "/** @constructor */",
-        "function C() {}",
-        "/** @constructor @extends {C} */",
-        "function D() {}",
-        "/** @type {function(new:C)} */",
-        "var x = D;",
-        "x.foo = 1;",
-        "C.foo;\n"));
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "/** @constructor @extends {C} */",
+            "function D() {}",
+            "/** @type {function(new:C): undefined} */",
+            "var x = D;",
+            "/** @type {number} */ x.foo = 1;",
+            "var z = C.foo;\n"));
   }
 
   public void testConstClassProps5() {
     // Don't confuse subtype constructors properties
-    testSame(LINE_JOINER.join(
-        "/** @constructor */",
-        "function C() {}",
-        "/** @constructor @extends {C} */",
-        "function D() {}",
-        "D.foo = 1;",
-        "C.foo;\n"));
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "/** @constructor @extends {C} */",
+            "function D() {}",
+            "D.foo = 1;",
+            "var z = C.foo;\n"));
   }
 
   public void testConstClassProps6() {
     // Don't inline to unknowns
-    testSame(LINE_JOINER.join(
-        "/** @constructor */",
-        "function C() {}",
-        "C.foo = 1;",
-        "externUnknownVar.foo;\n"));
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "C.foo = 1;",
+            "var z = externUnknownVar.foo;\n"));
   }
 
   public void testConstClassProps7() {
     // Don't inline to Function prop
-    testSame(LINE_JOINER.join(
-        "/** @constructor */",
-        "function C() {}",
-        "C.foo = 1;",
-        "externGenericFn.foo;\n"));
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "C.foo = 1;",
+            "var z = externFn.foo;\n"));
   }
 
   public void testNonConstClassProp1() {
@@ -377,29 +403,27 @@ public final class InlinePropertiesTest extends CompilerTestCase {
   }
 
   public void testTypeMismatchNoPropInlining() {
-    String js = LINE_JOINER.join(
-        "/** @constructor */",
-        "function C() {}",
-        "C.prototype.foo = 1;",
-        "function f(/** !C */ x) { return x.foo; }",
-        "f([]);");
-
-    testSame(js, TypeValidator.TYPE_MISMATCH_WARNING);
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function C() {}",
+            "C.prototype.foo = 1;",
+            "function f(/** !C */ x) { return x.foo; }",
+            "f([]);"));
   }
 
   public void testStructuralInterfacesNoPropInlining() {
-    String js = LINE_JOINER.join(
-        "/** @record */ function I() {}",
-        "/** @type {number|undefined} */ I.prototype.foo;",
-        "",
-        "/** @constructor @implements {I} */",
-        "function C() {}",
-        "/** @override */",
-        "C.prototype.foo = 1;",
-        "",
-        "function f(/** !I */ x) { return x.foo; }",
-        "f([]);");
-
-    testSame(js);
+    testSame(
+        LINE_JOINER.join(
+            "/** @record */ function I() {}",
+            "/** @type {number|undefined} */ I.prototype.foo;",
+            "",
+            "/** @constructor @implements {I} */",
+            "function C() {}",
+            "/** @override */",
+            "C.prototype.foo = 1;",
+            "",
+            "function f(/** !I */ x) { return x.foo; }",
+            "f([]);"));
   }
 }

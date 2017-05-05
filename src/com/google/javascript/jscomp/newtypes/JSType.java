@@ -1970,7 +1970,10 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public final boolean isBoxableScalar() {
-    return isNumber() || isString() || isBoolean();
+    return isNumber()
+        || isString()
+        || isBoolean()
+        || (isEnumElement() && getEnumeratedTypeOfEnumElement().isBoxableScalar());
   }
 
   @Override

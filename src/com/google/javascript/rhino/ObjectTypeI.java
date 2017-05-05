@@ -110,6 +110,10 @@ public interface ObjectTypeI extends TypeI {
    */
   ObjectTypeI normalizeObjectForCheckAccessControls();
 
+  /**
+   * Returns true if this object is an anonymous object type (i.e. the builtin Object type, or an
+   * object literal). Everything else has a named reference type and returns false.
+   */
   boolean isUnknownObject();
 
   /**
