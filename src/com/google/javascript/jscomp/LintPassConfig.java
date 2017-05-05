@@ -36,8 +36,8 @@ import java.util.List;
  * DiagnosticGroup enabled, but some of the lint checks depend on type information, which is not
  * available when looking at a single file, so those are omitted here.
  */
-class LintPassConfig extends PassConfig.PassConfigDelegate {
-  LintPassConfig(CompilerOptions options) {
+public class LintPassConfig extends PassConfig.PassConfigDelegate {
+  public LintPassConfig(CompilerOptions options) {
     super(new DefaultPassConfig(options));
   }
 
