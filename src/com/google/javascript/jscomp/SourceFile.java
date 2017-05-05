@@ -517,6 +517,27 @@ public class SourceFile implements StaticSourceFile, Serializable {
         Generator generator) {
       return new Generated(fileName, originalPath, generator);
     }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
+
+      Builder builder = (Builder) o;
+
+      if (charset != null ? !charset.equals(builder.charset) : builder.charset != null) return false;
+      if (originalPath != null ? !originalPath.equals(builder.originalPath) : builder.originalPath != null)
+          return false;
+
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = charset != null ? charset.hashCode() : 0;
+      result = 31 * result + (originalPath != null ? originalPath.hashCode() : 0);
+      return result;
+    }
   }
 
 
