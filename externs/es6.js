@@ -1220,6 +1220,16 @@ Promise.prototype.catch = function(onRejected) {};
 
 
 /**
+ * @param {{length: number}|!Iterable<T>} arrayLike
+ * @param {?function(this:S, T, number, ?) : ?} opt_mapFn
+ * @param {S=} opt_this
+ * @return {!Array<T>}
+ * @template T,S
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
+ */
+Array.from = function(arrayLike, opt_mapFn, opt_this) {};
+
+/**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/of
  * @param {...T} var_args
  * @return {!Array<T>}
