@@ -128,7 +128,7 @@ public class CodeGenerator {
           childCount == 2,
           "Bad binary operator \"%s\": expected 2 arguments but got %s",
           opstr, childCount);
-      int p = precedence(n);
+      int p = NodeUtil.precedence(type);
 
       // For right-hand-side of operations, only pass context if it's
       // the IN_FOR_INIT_CLAUSE one.
@@ -1085,13 +1085,9 @@ public class CodeGenerator {
         break;
 
       case CAST:
-        if (preserveTypeAnnotations) {
-          add("(");
-        }
+        add("(");
         add(first);
-        if (preserveTypeAnnotations) {
-          add(")");
-        }
+        add(")");
         break;
 
       case TAGGED_TEMPLATELIT:
@@ -1251,13 +1247,6 @@ public class CodeGenerator {
     }
 
     cc.endSourceMapping(n);
-  }
-
-  private int precedence(Node n) {
-    if (n.isCast()) {
-      return precedence(n.getFirstChild());
-    }
-    return NodeUtil.precedence(n.getToken());
   }
 
   private static boolean arrowFunctionNeedsParens(Node n) {
@@ -1572,7 +1561,7 @@ public class CodeGenerator {
       // statement block with higher precedence, which we avoid with parentheses.
       return true;
     } else {
-      return precedence(n) < minPrecedence;
+      return NodeUtil.precedence(n.getToken()) < minPrecedence;
     }
   }
 
