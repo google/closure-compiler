@@ -2435,6 +2435,12 @@ DataTransferItem.prototype.getAsString = function(callback) {};
 DataTransferItem.prototype.getAsFile = function() { return null; };
 
 /**
+ * @return {?Entry} The Entry corresponding to this item, or null.
+ * @nosideeffects
+ */
+DataTransferItem.prototype.getAsEntry = function() { return null; };
+
+/**
  * @return {?Entry} The Entry corresponding to this item, or null. Note that
  * despite its name,this method only works in Chrome, and will eventually
  * be renamed to {@code getAsEntry}.
