@@ -252,6 +252,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("f(a+b,(c,d,(e,f,g)))", "f(a+b,(c,d,e,f,g))");
     assertPrint("({}) , 1 , 2", "({}),1,2");
     assertPrint("({}) , {} , {}", "({}),{},{}");
+    assertPrintSame("var a=(b=c,d)");
 
     // EMPTY nodes
     assertPrint("if (x){}", "if(x);");
