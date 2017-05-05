@@ -368,6 +368,9 @@ ServiceWorkerClient.prototype.visibilityState;
 /** @type {string} */
 ServiceWorkerClient.prototype.url;
 
+/** @type {string} */
+ServiceWorkerClient.prototype.id;
+
 /**
  * // TODO(mtragut): Possibly replace the type with enum ContextFrameType once
  * the enum is defined.
@@ -586,14 +589,20 @@ FetchEvent.prototype.request;
  */
 FetchEvent.prototype.preloadResponse;
 
-/** @type {!ServiceWorkerClient} */
+/**
+ * @type {!ServiceWorkerClient}
+ * @deprecated
+ */
 FetchEvent.prototype.client;
+
+/** @type {?string} */
+FetchEvent.prototype.clientId;
 
 /** @type {!boolean} */
 FetchEvent.prototype.isReload;
 
 /**
- * @param {(Response|Promise<Response>)} r
+ * @param {(Response|IThenable<Response>)} r
  * @return {undefined}
  */
 FetchEvent.prototype.respondWith = function(r) {};
