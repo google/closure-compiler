@@ -370,6 +370,7 @@ class Normalize implements CompilerPass {
           break;
 
         case CAST:
+          compiler.reportChangeToEnclosingScope(n);
           parent.replaceChild(n, n.removeFirstChild());
           break;
         default:
