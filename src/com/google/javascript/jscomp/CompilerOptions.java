@@ -123,6 +123,15 @@ public class CompilerOptions implements Serializable {
   public void setSkipTranspilationAndCrash(boolean value) {
     skipTranspilationAndCrash = value;
   }
+  
+  /**
+   * Sets the input sourcemap files, indexed by the JS files they refer to.
+   *
+   * @param inputSourceMaps the collection of input sourcemap files
+   */
+  public void setInputSourceMaps(final ImmutableMap<String, SourceMapInput> inputSourceMaps) {
+    this.inputSourceMaps = inputSourceMaps;  
+  } 
 
   /**
    * Sets the input sourcemap files, indexed by the JS files they refer to.
