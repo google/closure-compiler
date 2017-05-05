@@ -252,7 +252,14 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("f(a+b,(c,d,(e,f,g)))", "f(a+b,(c,d,e,f,g))");
     assertPrint("({}) , 1 , 2", "({}),1,2");
     assertPrint("({}) , {} , {}", "({}),{},{}");
+
     assertPrintSame("var a=(b=c,d)");
+    assertPrintSame("var a=(b[c]=d,e)");
+    assertPrintSame("var a=(b[c]=d,e[f]=g,h)");
+
+    assertPrint("var a = /** @type {?} */ (b=c,d)", "var a=(b=c,d)");
+    assertPrint("var a = /** @type {?} */ (b[c]=d,e)", "var a=(b[c]=d,e)");
+    assertPrint("var a = /** @type {?} */ (b[c]=d,e[f]=g,h)", "var a=(b[c]=d,e[f]=g,h)");
 
     // EMPTY nodes
     assertPrint("if (x){}", "if(x);");
@@ -260,6 +267,28 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("if(x)if(y);", "if(x)if(y);");
     assertPrint("if(x){if(y);}", "if(x)if(y);");
     assertPrint("if(x){if(y){};;;}", "if(x)if(y);");
+  }
+
+  public void testPrintComma1() {
+    Node node = IR.var(
+        IR.name("a"),
+            IR.comma(
+                IR.comma(
+                    IR.name("b"),
+                    IR.name("c")),
+                IR.name("d")));
+    assertPrintNode("var a=(b,c,d)", node);
+  }
+
+  public void testPrintComma2() {
+    Node node = IR.var(
+        IR.name("a"),
+            IR.comma(
+                IR.name("b"),
+                IR.comma(
+                    IR.name("c"),
+                    IR.name("d"))));
+    assertPrintNode("var a=(b,c,d)", node);
   }
 
   public void testPrintCast1() {
