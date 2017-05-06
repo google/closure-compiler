@@ -100,6 +100,7 @@ class FunctionRewriter implements CompilerPass {
         }
 
         Node addingRoot = compiler.getNodeForCodeInsertion(null);
+        NodeUtil.markNewScopesChanged(helperCode, compiler);
         addingRoot.addChildToFront(helperCode);
         compiler.reportChangeToEnclosingScope(addingRoot);
       }

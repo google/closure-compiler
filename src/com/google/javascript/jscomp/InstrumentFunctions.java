@@ -100,6 +100,7 @@ class InstrumentFunctions implements CompilerPass {
       Node initCodeRoot = compiler.parseSyntheticCode(
           "template:init", initCodeSource);
       if (initCodeRoot != null && initCodeRoot.getFirstChild() != null) {
+        NodeUtil.markNewScopesChanged(initCodeRoot, compiler);
         initCode = initCodeRoot.removeChildren();
       } else {
         return;  // parse failure

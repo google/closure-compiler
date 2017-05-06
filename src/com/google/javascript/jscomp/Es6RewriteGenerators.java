@@ -250,6 +250,7 @@ public final class Es6RewriteGenerators
 
     originalGeneratorBody = n.getLastChild();
     n.replaceChild(originalGeneratorBody, genBlock);
+    NodeUtil.markNewScopesChanged(genBlock, compiler);
     n.setIsGeneratorFunction(false);
 
     // TODO(mattloring): remove this suppression once we can optimize the switch statement to

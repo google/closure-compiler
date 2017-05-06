@@ -3170,6 +3170,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       // Handle require-only libraries.
       return lastInjectedLibrary;
     }
+    NodeUtil.markNewScopesChanged(firstChild, this);
     Node parent = getNodeForCodeInsertion(null);
     if (lastInjectedLibrary == null) {
       parent.addChildrenToFront(firstChild);

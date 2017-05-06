@@ -68,11 +68,14 @@ public final class RewritePolyfillsTest extends CompilerTestCase {
   protected Compiler createCompiler() {
     return new NoninjectingCompiler() {
       Node lastInjected = null;
-      @Override Node ensureLibraryInjected(String library, boolean force) {
+
+      @Override
+      Node ensureLibraryInjected(String library, boolean force) {
         Node parent = getNodeForCodeInsertion(null);
         Node ast = parseSyntheticCode(injectableLibraries.get(library));
         Node lastChild = ast.getLastChild();
         Node firstChild = ast.removeChildren();
+        NodeUtil.markNewScopesChanged(firstChild, this);
         if (lastInjected == null) {
           parent.addChildrenToFront(firstChild);
         } else {

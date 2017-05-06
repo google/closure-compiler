@@ -65,7 +65,7 @@ public final class ChangeVerifierTest extends TestCase {
     } catch (IllegalStateException e) {
       // TODO(johnlenz): use this when we upgrade Trush:
       //    assertThat(e).hasMessageThat().contains("change scope not marked as changed");
-      assertTrue(e.getMessage().contains("change scope not marked as changed"));
+      assertThat(e.getMessage()).contains("change scope not marked as changed");
     }
   }
 

@@ -231,6 +231,7 @@ class CrossModuleMethodMotion implements CompilerPass {
         .hasGeneratedAnyIds()) {
       // Declare stub functions in the top-most module.
       Node declarations = compiler.parseSyntheticCode(STUB_DECLARATIONS);
+      NodeUtil.markNewScopesChanged(declarations, compiler);
       Node firstScript = compiler.getNodeForCodeInsertion(null);
       firstScript.addChildrenToFront(declarations.removeChildren());
       compiler.reportChangeToEnclosingScope(firstScript);
