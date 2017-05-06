@@ -17,9 +17,10 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableSet;
@@ -204,7 +205,7 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
     // Replace the block stack with a new one. This algorithm only works
     // because we know hoisted functions cannot be inside loops. It will have to
     // change if we ever do general function continuations.
-    Preconditions.checkState(NodeUtil.isHoistedFunctionDeclaration(fnNode));
+    checkState(NodeUtil.isHoistedFunctionDeclaration(fnNode), fnNode);
 
     Scope containingScope = v.getScope();
 
@@ -221,7 +222,7 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
         }
       }
     }
-    Preconditions.checkNotNull(newBlockStack);
+    checkNotNull(newBlockStack);
 
     List<BasicBlock> oldBlockStack = blockStack;
     blockStack = newBlockStack;
@@ -279,12 +280,11 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
     if (NodeUtil.isHoistedFunctionDeclaration(n)) {
       Node nameNode = n.getFirstChild();
       Var functionVar = nodeTraversal.getScope().getVar(nameNode.getString());
-      if (functionVar != null) {
-        if (finishedFunctionTraverse.contains(functionVar)) {
-          return false;
-        }
-        startedFunctionTraverse.add(functionVar);
+      checkNotNull(functionVar);
+      if (finishedFunctionTraverse.contains(functionVar)) {
+        return false;
       }
+      startedFunctionTraverse.add(functionVar);
     }
 
     // If node is a new basic block, put on basic block stack
@@ -436,7 +436,7 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
         return false;
       }
 
-      Preconditions.checkState(references.get(0).isDeclaration());
+      checkState(references.get(0).isDeclaration());
       BasicBlock initBlock = init.getBasicBlock();
       for (int i = 1; i < size; i++) {
         if (!initBlock.provablyExecutesBefore(
@@ -491,7 +491,7 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
       if (index < references.size() && index > 0) {
         Reference maybeDecl = references.get(index - 1);
         if (maybeDecl.isVarDeclaration() || maybeDecl.isLetDeclaration()) {
-          Preconditions.checkState(!maybeDecl.isInitializingDeclaration());
+          checkState(!maybeDecl.isInitializingDeclaration());
           Reference maybeInit = references.get(index);
           if (maybeInit.isSimpleAssignmentToName()) {
             return true;
