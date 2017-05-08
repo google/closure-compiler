@@ -138,12 +138,19 @@ MediaStreamTrack.prototype.clone = function() {};
 MediaStreamTrack.prototype.stop = function() {};
 
 /**
+ * @typedef {{track: MediaStreamTrack}}
+ */
+var MediaStreamTrackEventInit;
+
+
+/**
+ * @param {string} type
+ * @param {!MediaStreamTrackEventInit} eventInitDict
  * @constructor
  * @extends {Event}
- * @private
  * @see https://www.w3.org/TR/mediacapture-streams/#mediastreamtrackevent
  */
-function MediaStreamTrackEvent() {}
+function MediaStreamTrackEvent(type, eventInitDict) {}
 
 /**
  * @type {!MediaStreamTrack}
