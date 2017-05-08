@@ -128,7 +128,7 @@ public class CodeGenerator {
           childCount == 2,
           "Bad binary operator \"%s\": expected 2 arguments but got %s",
           opstr, childCount);
-      int p = NodeUtil.precedence(type);
+      int p = precedence(n);
 
       // For right-hand-side of operations, only pass context if it's
       // the IN_FOR_INIT_CLAUSE one.
@@ -264,7 +264,7 @@ public class CodeGenerator {
         if (first != null && !first.isEmpty()) {
           Preconditions.checkState(childCount == 1);
           cc.addOp("=", true);
-          if (first.isComma()) {
+          if (first.isComma() || (first.isCast() && first.getFirstChild().isComma())) {
             addExpr(first, NodeUtil.precedence(Token.ASSIGN), Context.OTHER);
           } else {
             // Add expression, consider nearby code at lowest level of
@@ -1085,9 +1085,13 @@ public class CodeGenerator {
         break;
 
       case CAST:
-        add("(");
+        if (preserveTypeAnnotations) {
+          add("(");
+        }
         add(first);
-        add(")");
+        if (preserveTypeAnnotations) {
+          add(")");
+        }
         break;
 
       case TAGGED_TEMPLATELIT:
@@ -1247,6 +1251,13 @@ public class CodeGenerator {
     }
 
     cc.endSourceMapping(n);
+  }
+
+  private int precedence(Node n) {
+    if (n.isCast()) {
+      return precedence(n.getFirstChild());
+    }
+    return NodeUtil.precedence(n.getToken());
   }
 
   private static boolean arrowFunctionNeedsParens(Node n) {
@@ -1561,7 +1572,7 @@ public class CodeGenerator {
       // statement block with higher precedence, which we avoid with parentheses.
       return true;
     } else {
-      return NodeUtil.precedence(n.getToken()) < minPrecedence;
+      return precedence(n) < minPrecedence;
     }
   }
 

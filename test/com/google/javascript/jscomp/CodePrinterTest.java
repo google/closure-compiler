@@ -292,19 +292,19 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   public void testPrintCast1() {
-    assertPrint("var x = /** @type {number} */ (0);", "var x=(0)");
+    assertPrint("var x = /** @type {number} */ (0);", "var x=0");
     assertPrettyPrintSame("var x = /** @type {number} */ (0);\n");
   }
 
   public void testPrintCast2() {
     assertPrint("var x = (2+3) * 4;", "var x=(2+3)*4");
     assertPrint("var x = /** @type {number} */ (2+3) * 4;", "var x=(2+3)*4");
-    assertPrettyPrintSame("var x = /** @type {number} */ (2 + 3) * 4;\n");
+    assertPrettyPrintSame("var x = (/** @type {number} */ (2 + 3)) * 4;\n");
   }
 
   public void testPrintCast3() {
     assertPrint("var x = (2*3) + 4;", "var x=2*3+4");
-    assertPrint("var x = /** @type {number} */ (2*3) + 4;", "var x=(2*3)+4");
+    assertPrint("var x = /** @type {number} */ (2*3) + 4;", "var x=2*3+4");
     assertPrettyPrintSame("var x = /** @type {number} */ (2 * 3) + 4;\n");
   }
 
