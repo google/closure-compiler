@@ -72,6 +72,10 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
     testSame("a['\u00d1StuffAfter']");
   }
 
+  public void testAlreadyDotted() {
+    testSame("a.b");
+    testSame("var a = {b: 0};");
+  }
 
   public void testQuotedProps() {
     testSame("({'':0})");
