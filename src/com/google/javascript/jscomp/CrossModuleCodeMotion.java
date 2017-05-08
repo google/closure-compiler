@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Reference;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceCollection;
@@ -172,7 +173,7 @@ class CrossModuleCodeMotion implements CompilerPass {
       } else {
         // Find the deepest common dependency
         deepestModule =
-            graph.getDeepestCommonDependencyInclusive(m, deepestModule);
+            graph.getSmallestCoveringDependency(ImmutableList.of(m, deepestModule));
       }
     }
 

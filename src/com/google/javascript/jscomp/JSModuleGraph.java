@@ -55,7 +55,17 @@ import java.util.Set;
 public final class JSModuleGraph {
 
   private final JSModule[] modules;
+  
+  /**
+   * selfPlusTransitiveDeps[i] = indices of all modules that modules[i] depends on, including
+   * itself.
+   */
   private final BitSet[] selfPlusTransitiveDeps;
+  
+  /**
+   * subtreeSize[i] = Number of modules that transitively depend on modules[i], including itself.
+   */
+  private final int[] subtreeSize;
 
   /**
    * Lists of modules at each depth. <code>modulesByDepth.get(3)</code> is a list of the modules at
@@ -100,6 +110,9 @@ public final class JSModuleGraph {
     // Determine transitive deps for all modules.
     // O(n*m * log(n)) (probably a bit better than that)
     selfPlusTransitiveDeps = initTransitiveDepsBitSets();
+
+    // O(n*m)
+    subtreeSize = initSubtreeSize();
   }
 
   private List<List<JSModule>> initModulesByDepth() {
@@ -143,6 +156,21 @@ public final class JSModuleGraph {
       }
     }
     return array;
+  }
+
+  private int[] initSubtreeSize() {
+    int[] subtreeSize = new int[modules.length];
+    for (int dependentIndex = 0; dependentIndex < modules.length; ++dependentIndex) {
+      BitSet dependencies = selfPlusTransitiveDeps[dependentIndex];
+      // Iterating backward through the bitset is slightly more efficient, since it avoids
+      // considering later modules, which this one cannot depend on.
+      for (int requiredIndex = dependentIndex;
+          requiredIndex >= 0;
+          requiredIndex = dependencies.previousSetBit(requiredIndex - 1)) {
+        subtreeSize[requiredIndex] += 1; // Count dependent in required module's subtree.
+      }
+    }
+    return subtreeSize;
   }
 
   /**
@@ -230,6 +258,49 @@ public final class JSModuleGraph {
    */
   public boolean dependsOn(JSModule src, JSModule m) {
     return src != m && selfPlusTransitiveDeps[src.getIndex()].get(m.getIndex());
+  }
+
+  /**
+   * Finds the module with the fewest transitive dependents on which all of the given modules
+   * depend.
+   *
+   * <p>If multiple candidates have the same number of dependents, the module farthest down in the
+   * total ordering of modules will be chosen.
+   *
+   * @param dependentModules to consider
+   * @return A module on which all of the argument modules depend
+   */
+  public JSModule getSmallestCoveringDependency(Collection<JSModule> dependentModules) {
+    checkState(!dependentModules.isEmpty());
+
+    // Candidate modules are those that all of the given dependent modules depend on, including
+    // themselves. The dependent module with the smallest index might be our answer, if all
+    // the other modules depend on it.
+    int minDependentModuleIndex = modules.length;
+    final BitSet candidates = new BitSet(modules.length);
+    candidates.set(0, modules.length, true);
+    for (JSModule module : dependentModules) {
+      int dependentIndex = module.getIndex();
+      minDependentModuleIndex = Math.min(minDependentModuleIndex, dependentIndex);
+      candidates.and(selfPlusTransitiveDeps[dependentIndex]);
+    }
+    checkState(
+        !candidates.isEmpty(), "No common dependency found for %s", dependentModules);
+
+    // All candidates must have an index <= the smallest dependent module index.
+    // Work backwards through the candidates starting with the dependent module with the smallest
+    // index. For each candidate, we'll remove all of the modules it depends on from consideration,
+    // since they must all have larger subtrees than the one we're considering.
+    int bestCandidateIndex = candidates.previousSetBit(minDependentModuleIndex);
+    for (int candidateIndex = bestCandidateIndex;
+        candidateIndex >= 0;
+        candidateIndex = candidates.previousSetBit(candidateIndex - 1)) {
+      candidates.andNot(selfPlusTransitiveDeps[candidateIndex]);
+      if (subtreeSize[candidateIndex] < subtreeSize[bestCandidateIndex]) {
+        bestCandidateIndex = candidateIndex;
+      }
+    }
+    return modules[bestCandidateIndex];
   }
 
   /**
