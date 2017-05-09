@@ -2103,6 +2103,34 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
+    private String continueSavedCompilationFileName = null;
+
+    /**
+     * Set the compiler to resume a saved compilation state from a file.
+     */
+    public CommandLineConfig setContinueSavedCompilationFileName(String fileName) {
+      continueSavedCompilationFileName = fileName;
+      return this;
+    }
+
+    String getContinueSavedCompilationFileName() {
+      return continueSavedCompilationFileName;
+    }
+
+    private String saveAfterChecksFileName = null;
+
+    /**
+     * Set the compiler to perform the first phase and save the intermediate result to a file.
+     */
+    public CommandLineConfig setSaveAfterChecksFileName(String fileName) {
+      saveAfterChecksFileName = fileName;
+      return this;
+    }
+
+    public String getSaveAfterChecksFileName() {
+      return saveAfterChecksFileName;
+    }
+
     private final List<String> module = new ArrayList<>();
 
     /**
