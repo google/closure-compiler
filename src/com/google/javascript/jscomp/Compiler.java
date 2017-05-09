@@ -730,14 +730,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     externAndJsRoot = IR.root(externsRoot, jsRoot);
   }
 
-  public Result initAndCheckAndTranspileAndOptimize(
-      SourceFile extern, SourceFile input, CompilerOptions options) {
-    return initAndCheckAndTranspileAndOptimize(
-        ImmutableList.of(extern), ImmutableList.of(input), options);
-  }
-
-  /** @deprecated use initAndCheckAndTranspileAndOptimize() */
-  @Deprecated
+  /** Compiles a single source file and a single externs file. */
   public Result compile(SourceFile extern, SourceFile input, CompilerOptions options) {
     return compile(ImmutableList.of(extern), ImmutableList.of(input), options);
   }
@@ -751,7 +744,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>NOTE: All methods called here must be public, because client code must be able to replicate
    * and customize this.
    */
-  public <T1 extends SourceFile, T2 extends SourceFile> Result initAndCheckAndTranspileAndOptimize(
+  public <T1 extends SourceFile, T2 extends SourceFile> Result compile(
       List<T1> externs, List<T2> inputs, CompilerOptions options) {
     // The compile method should only be called once.
     checkState(jsRoot == null);
@@ -762,47 +755,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         parseForCompilation();
       }
       if (!hasErrors()) {
-        checkAndTranspileAndOptimize();
-        completeCompilation();
-      }
-    } finally {
-      generateReport();
-    }
-    return getResult();
-  }
-
-  /**
-   * Compiles a list of inputs.
-   *
-   * @deprecated use initAndCheckAndTranspileAndOptimize()
-   */
-  @Deprecated
-  public <T1 extends SourceFile, T2 extends SourceFile> Result compile(
-      List<T1> externs, List<T2> inputs, CompilerOptions options) {
-    return initAndCheckAndTranspileAndOptimize(externs, inputs, options);
-  }
-
-  /**
-   * Compiles a list of modules.
-   *
-   * <p>This is a convenience method to wrap up all the work of compilation, including
-   * generating the error and warning report.
-   *
-   * <p>NOTE: All methods called here must be public, because client code must be able to replicate
-   * and customize this.
-   */
-  public <T extends SourceFile> Result initModulesAndCheckAndTranspileAndOptimize(
-      List<T> externs, List<JSModule> modules, CompilerOptions options) {
-    // The compile method should only be called once.
-    checkState(jsRoot == null);
-
-    try {
-      initModules(externs, modules, options);
-      if (!hasErrors()) {
-        parseForCompilation();
-      }
-      if (!hasErrors()) {
-        checkAndTranspileAndOptimize();
+        stage1AndStage2Passes();
         completeCompilation();
       }
     } finally {
@@ -828,12 +781,30 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /**
    * Compiles a list of modules.
    *
-   * @deprecated Use initModulesAndCheckAndTranspileAndOptimize()
+   * <p>This is a convenience method to wrap up all the work of compilation, including
+   * generating the error and warning report.
+   *
+   * <p>NOTE: All methods called here must be public, because client code must be able to replicate
+   * and customize this.
    */
-  @Deprecated
   public <T extends SourceFile> Result compileModules(
       List<T> externs, List<JSModule> modules, CompilerOptions options) {
-    return initModulesAndCheckAndTranspileAndOptimize(externs, modules, options);
+    // The compile method should only be called once.
+    checkState(jsRoot == null);
+
+    try {
+      initModules(externs, modules, options);
+      if (!hasErrors()) {
+        parseForCompilation();
+      }
+      if (!hasErrors()) {
+        stage1AndStage2Passes();
+        completeCompilation();
+      }
+    } finally {
+      generateReport();
+    }
+    return getResult();
   }
 
   /**
@@ -842,12 +813,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>{@code parseForCompilation()} must be called before this method is called.
    *
    * <p>The caller is responsible for also calling {@code generateReport()} to generate a report of
-   * warnings and errors to stderr. See the invocation in {@link
-   * #initAndCheckAndTranspileAndOptimize} for a good example.
+   * warnings and errors to stderr. See the invocation in {@link #compile} for a good example.
    *
-   * <p>TODO(bradfordcsmith): Break this up into checkAndTranspile() and optimize().
+   * <p>TODO(bradfordcsmith): Break this up into stage1Passes() and stage2Passes().
    */
-  public void checkAndTranspileAndOptimize() {
+  public void stage1AndStage2Passes() {
     checkState(
         inputs != null && !inputs.isEmpty(), "No inputs. Did you call init() or initModules()?");
     checkState(!hasErrors());

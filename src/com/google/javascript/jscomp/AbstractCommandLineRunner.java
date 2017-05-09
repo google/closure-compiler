@@ -1135,7 +1135,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         compiler.parseForCompilation();
       }
       if (!compiler.hasErrors()) {
-        compiler.checkAndTranspileAndOptimize();
+        compiler.stage1AndStage2Passes();
         compiler.completeCompilation();
       }
     } finally {
@@ -1154,7 +1154,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         compiler.parseForCompilation();
       }
       if (!compiler.hasErrors()) {
-        compiler.checkAndTranspileAndOptimize();
+        compiler.stage1AndStage2Passes();
         compiler.completeCompilation();
       }
     } finally {
