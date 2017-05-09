@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
@@ -321,8 +320,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * @param errorManager the error manager, it cannot be {@code null}
    */
   public void setErrorManager(ErrorManager errorManager) {
-    Preconditions.checkNotNull(
-        errorManager, "the error manager cannot be null");
+    checkNotNull(errorManager, "the error manager cannot be null");
     this.errorManager = new ThreadSafeDelegatingErrorManager(errorManager);
   }
 
@@ -756,10 +754,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public <T1 extends SourceFile, T2 extends SourceFile> Result initAndCheckAndTranspileAndOptimize(
       List<T1> externs, List<T2> inputs, CompilerOptions options) {
     // The compile method should only be called once.
-    Preconditions.checkState(jsRoot == null);
+    checkState(jsRoot == null);
 
     try {
       init(externs, inputs, options);
+      if (!hasErrors()) {
+        parseForCompilation();
+      }
       if (!hasErrors()) {
         checkAndTranspileAndOptimize();
         completeCompilation();
@@ -793,10 +794,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public <T extends SourceFile> Result initModulesAndCheckAndTranspileAndOptimize(
       List<T> externs, List<JSModule> modules, CompilerOptions options) {
     // The compile method should only be called once.
-    Preconditions.checkState(jsRoot == null);
+    checkState(jsRoot == null);
 
     try {
       initModules(externs, modules, options);
+      if (!hasErrors()) {
+        parseForCompilation();
+      }
       if (!hasErrors()) {
         checkAndTranspileAndOptimize();
         completeCompilation();
@@ -835,28 +839,28 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /**
    * Perform checks transpilation and optimization.
    *
-   * <p>Either {@code init()} or {@code initModules()} must be called before this method is called.
-   * <p>The caller is responsible for also calling {@code generateReport()} to generate a
-   * report of warnings and errors to stderr.  See the invocation in
-   * {@link #initAndCheckAndTranspileAndOptimize} for a good example.
-   * <p> TODO(bradfordcsmith): Break this up into checkAndTranspile() and optimize().
+   * <p>{@code parseForCompilation()} must be called before this method is called.
+   *
+   * <p>The caller is responsible for also calling {@code generateReport()} to generate a report of
+   * warnings and errors to stderr. See the invocation in {@link
+   * #initAndCheckAndTranspileAndOptimize} for a good example.
+   *
+   * <p>TODO(bradfordcsmith): Break this up into checkAndTranspile() and optimize().
    */
   public void checkAndTranspileAndOptimize() {
     checkState(
         inputs != null && !inputs.isEmpty(), "No inputs. Did you call init() or initModules()?");
+    checkState(!hasErrors());
     runInCompilerThread(
         new Callable<Void>() {
           @Override
           public Void call() throws Exception {
-            parseForCompilation();
-            if (!hasErrors()) {
-              if (options.getInstrumentForCoverageOnly()) {
-                instrumentForCoverage(options.instrumentBranchCoverage);
-              } else {
-                performChecksAndTranspilation();
-                if (!hasErrors() && options.shouldOptimize()) {
-                  performOptimizations();
-                }
+            if (options.getInstrumentForCoverageOnly()) {
+              instrumentForCoverage(options.instrumentBranchCoverage);
+            } else {
+              performChecksAndTranspilation();
+              if (!hasErrors() && options.shouldOptimize()) {
+                performOptimizations();
               }
             }
             return null;
@@ -956,6 +960,25 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>TODO(bradfordcsmith): Rename this to parse()
    */
   public void parseForCompilation() {
+    runInCompilerThread(
+        new Callable<Void>() {
+          @Override
+          public Void call() throws Exception {
+            parseForCompilationInternal();
+            return null;
+          }
+        });
+  }
+
+  /**
+   * Parses input files in preparation for compilation.
+   *
+   * <p>Either {@code init()} or {@code initModules()} must be called first to set up the input
+   * files to be read.
+   *
+   * <p>TODO(bradfordcsmith): Rename this to parse()
+   */
+  private void parseForCompilationInternal() {
     setProgress(0.0, null);
     CompilerOptionsPreprocessor.preprocess(options);
     readInputs();
@@ -1003,8 +1026,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // new PassConfig object and use that, which is probably not what
     // the client wanted since they probably meant to use their
     // own PassConfig object.
-    Preconditions.checkNotNull(passes);
-    Preconditions.checkState(this.passes == null, "setPassConfig was already called");
+    checkNotNull(passes);
+    checkState(this.passes == null, "setPassConfig was already called");
     this.passes = passes;
   }
 
@@ -1137,7 +1160,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Marks the beginning of a pass.
    */
   void startPass(String passName) {
-    Preconditions.checkState(currentTracer == null);
+    checkState(currentTracer == null);
     currentPassName = passName;
     currentTracer = newTracer(passName);
     beforePass(passName);
@@ -1147,8 +1170,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Marks the end of a pass.
    */
   void endPass(String passName) {
-    Preconditions.checkState(currentTracer != null,
-        "Tracer should not be null at the end of a pass.");
+    checkState(currentTracer != null, "Tracer should not be null at the end of a pass.");
     stopTracer(currentTracer, currentPassName);
     afterPass(passName);
     currentPassName = null;
@@ -1339,7 +1361,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (input == null) {
       return;
     }
-    Preconditions.checkState(input.isExtern(), "Not an extern input: %s", input.getName());
+    checkState(input.isExtern(), "Not an extern input: %s", input.getName());
     inputsById.remove(id);
     externs.remove(input);
     Node root = input.getAstRoot(this);
@@ -1387,7 +1409,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   boolean replaceIncrementalSourceAst(JsAst ast) {
     CompilerInput oldInput = getInput(ast.getInputId());
-    Preconditions.checkNotNull(oldInput, "No input to replace: %s", ast.getInputId().getIdName());
+    checkNotNull(oldInput, "No input to replace: %s", ast.getInputId().getIdName());
     Node newRoot = ast.getAstRoot(this);
     if (newRoot == null) {
       return false;
@@ -1410,10 +1432,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     // Verify the input id is set properly.
-    Preconditions.checkState(
-        newInput.getInputId().equals(oldInput.getInputId()));
+    checkState(newInput.getInputId().equals(oldInput.getInputId()));
     InputId inputIdOnAst = newInput.getAstRoot(this).getInputId();
-    Preconditions.checkState(newInput.getInputId().equals(inputIdOnAst));
+    checkState(newInput.getInputId().equals(inputIdOnAst));
 
     inputs.remove(oldInput);
     return true;
@@ -1527,7 +1548,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @SuppressWarnings("unchecked")
   DefaultPassConfig ensureDefaultPassConfig() {
     PassConfig passes = getPassConfig().getBasePassConfig();
-    Preconditions.checkState(passes instanceof DefaultPassConfig,
+    checkState(
+        passes instanceof DefaultPassConfig,
         "PassConfigs must eventually delegate to the DefaultPassConfig");
     return (DefaultPassConfig) passes;
   }
@@ -1653,6 +1675,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>Allows for easy measurement of IO cost separately from parse cost.
    */
   void readInputs() {
+    checkState(!hasErrors());
+    checkNotNull(externs);
+    checkNotNull(inputs);
     if (options.getTracerMode().isOn()) {
       tracker =
           new PerformanceTracker(externsRoot, jsRoot, options.getTracerMode(), this.outStream);
@@ -2238,67 +2263,63 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public void toSource(final CodeBuilder cb,
                        final int inputSeqNum,
                        final Node root) {
-    runInCompilerThread(new Callable<Void>() {
-      @Override
-      public Void call() throws Exception {
-        if (options.printInputDelimiter) {
-          if ((cb.getLength() > 0) && !cb.endsWith("\n")) {
-            cb.append("\n");  // Make sure that the label starts on a new line
+    runInCompilerThread(
+        new Callable<Void>() {
+          @Override
+          public Void call() throws Exception {
+            if (options.printInputDelimiter) {
+              if ((cb.getLength() > 0) && !cb.endsWith("\n")) {
+                cb.append("\n"); // Make sure that the label starts on a new line
+              }
+              checkState(root.isScript());
+
+              String delimiter = options.inputDelimiter;
+
+              String inputName = root.getInputId().getIdName();
+              String sourceName = root.getSourceFileName();
+              checkState(sourceName != null);
+              checkState(!sourceName.isEmpty());
+
+              delimiter =
+                  delimiter
+                      .replaceAll("%name%", Matcher.quoteReplacement(inputName))
+                      .replaceAll("%num%", String.valueOf(inputSeqNum));
+
+              cb.append(delimiter).append("\n");
+            }
+            if (root.getJSDocInfo() != null) {
+              String license = root.getJSDocInfo().getLicense();
+              if (license != null && cb.addLicense(license)) {
+                cb.append("/*\n").append(license).append("*/\n");
+              }
+            }
+
+            // If there is a valid source map, then indicate to it that the current
+            // root node's mappings are offset by the given string builder buffer.
+            if (options.sourceMapOutputPath != null) {
+              sourceMap.setStartingPosition(cb.getLineIndex(), cb.getColumnIndex());
+            }
+
+            // if LanguageMode is strict, only print 'use strict'
+            // for the first input file
+            String code = toSource(root, sourceMap, inputSeqNum == 0);
+            if (!code.isEmpty()) {
+              cb.append(code);
+
+              // In order to avoid parse ambiguity when files are concatenated
+              // together, all files should end in a semi-colon. Do a quick
+              // heuristic check if there's an obvious semi-colon already there.
+              int length = code.length();
+              char lastChar = code.charAt(length - 1);
+              char secondLastChar = length >= 2 ? code.charAt(length - 2) : '\0';
+              boolean hasSemiColon = lastChar == ';' || (lastChar == '\n' && secondLastChar == ';');
+              if (!hasSemiColon) {
+                cb.append(";");
+              }
+            }
+            return null;
           }
-          Preconditions.checkState(root.isScript());
-
-          String delimiter = options.inputDelimiter;
-
-          String inputName = root.getInputId().getIdName();
-          String sourceName = root.getSourceFileName();
-          Preconditions.checkState(sourceName != null);
-          Preconditions.checkState(!sourceName.isEmpty());
-
-          delimiter = delimiter
-              .replaceAll("%name%", Matcher.quoteReplacement(inputName))
-              .replaceAll("%num%", String.valueOf(inputSeqNum));
-
-          cb.append(delimiter)
-            .append("\n");
-        }
-        if (root.getJSDocInfo() != null) {
-          String license = root.getJSDocInfo().getLicense();
-          if (license != null && cb.addLicense(license)) {
-            cb.append("/*\n")
-              .append(license)
-              .append("*/\n");
-          }
-        }
-
-        // If there is a valid source map, then indicate to it that the current
-        // root node's mappings are offset by the given string builder buffer.
-        if (options.sourceMapOutputPath != null) {
-          sourceMap.setStartingPosition(
-              cb.getLineIndex(), cb.getColumnIndex());
-        }
-
-        // if LanguageMode is strict, only print 'use strict'
-        // for the first input file
-        String code = toSource(root, sourceMap, inputSeqNum == 0);
-        if (!code.isEmpty()) {
-          cb.append(code);
-
-          // In order to avoid parse ambiguity when files are concatenated
-          // together, all files should end in a semi-colon. Do a quick
-          // heuristic check if there's an obvious semi-colon already there.
-          int length = code.length();
-          char lastChar = code.charAt(length - 1);
-          char secondLastChar = length >= 2 ?
-              code.charAt(length - 2) : '\0';
-          boolean hasSemiColon = lastChar == ';' ||
-              (lastChar == '\n' && secondLastChar == ';');
-          if (!hasSemiColon) {
-            cb.append(";");
-          }
-        }
-        return null;
-      }
-    });
+        });
   }
 
   /**
@@ -2565,7 +2586,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // but this isn't done, so we need to make this illegal or record this as having
     // invalidated everything.
     if (currentChangeScope != null) {
-      Preconditions.checkState(currentChangeScope.isScript() || currentChangeScope.isFunction());
+      checkState(currentChangeScope.isScript() || currentChangeScope.isFunction());
       recordChange(currentChangeScope);
     }
     notifyChangeHandlers();
@@ -2573,7 +2594,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   public void reportChangeToChangeScope(Node changeScopeRoot) {
-    Preconditions.checkState(changeScopeRoot.isScript() || changeScopeRoot.isFunction());
+    checkState(changeScopeRoot.isScript() || changeScopeRoot.isFunction());
     recordChange(changeScopeRoot);
     notifyChangeHandlers();
   }
@@ -2702,7 +2723,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   public CheckLevel getErrorLevel(JSError error) {
-    Preconditions.checkNotNull(options);
+    checkNotNull(options);
     return warningsGuard.level(error);
   }
 
@@ -2966,7 +2987,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   void updateGlobalVarReferences(Map<Var, ReferenceCollection> refMapPatch,
       Node collectionRoot) {
-    Preconditions.checkState(collectionRoot.isScript() || collectionRoot.isRoot());
+    checkState(collectionRoot.isScript() || collectionRoot.isRoot());
     if (globalRefMap == null) {
       globalRefMap = new GlobalVarReferenceMap(getInputsInOrder(),
           getExternsInOrder());
@@ -3067,7 +3088,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     languageMode = options.getLanguageIn();
 
     Node js = ast.getAstRoot(this);
-    Preconditions.checkNotNull(js);
+    checkNotNull(js);
 
     runHotSwap(originalRoot, js, this.getCleanupPassConfig());
     // NOTE: If hot swap passes that use GlobalNamespace are added, we will need

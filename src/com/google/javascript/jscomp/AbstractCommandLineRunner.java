@@ -1132,6 +1132,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     try {
       compiler.initModules(externs, modules, options);
       if (!compiler.hasErrors()) {
+        compiler.parseForCompilation();
+      }
+      if (!compiler.hasErrors()) {
         compiler.checkAndTranspileAndOptimize();
         compiler.completeCompilation();
       }
@@ -1147,6 +1150,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       B options, List<SourceFile> externs, List<SourceFile> inputs) {
     try {
       compiler.init(externs, inputs, options);
+      if (!compiler.hasErrors()) {
+        compiler.parseForCompilation();
+      }
       if (!compiler.hasErrors()) {
         compiler.checkAndTranspileAndOptimize();
         compiler.completeCompilation();
