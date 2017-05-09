@@ -760,7 +760,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           //     runner, not the compiler.
           instrumentForCoverage();
         } else {
-          stage1AndStage2Passes();
+          stage1Passes();
+          if (!hasErrors()) {
+            stage2Passes();
+          }
         }
         completeCompilation();
       }
@@ -809,7 +812,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         if (options.getInstrumentForCoverageOnly()) {
           instrumentForCoverage();
         } else {
-          stage1AndStage2Passes();
+          stage1Passes();
+          if (!hasErrors()) {
+            stage2Passes();
+          }
         }
         completeCompilation();
       }
@@ -820,16 +826,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /**
-   * Perform checks transpilation and optimization.
+   * Perform compiler passes for stage 1 of compilation.
+   *
+   * <p>Stage 1 consists primarily of error and type checking passes.
    *
    * <p>{@code parseForCompilation()} must be called before this method is called.
    *
    * <p>The caller is responsible for also calling {@code generateReport()} to generate a report of
    * warnings and errors to stderr. See the invocation in {@link #compile} for a good example.
-   *
-   * <p>TODO(bradfordcsmith): Break this up into stage1Passes() and stage2Passes().
    */
-  public void stage1AndStage2Passes() {
+  public void stage1Passes() {
     checkState(
         inputs != null && !inputs.isEmpty(), "No inputs. Did you call init() or initModules()?");
     checkState(!hasErrors());
@@ -839,7 +845,31 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           @Override
           public Void call() throws Exception {
             performChecksAndTranspilation();
-            if (!hasErrors() && options.shouldOptimize()) {
+            return null;
+          }
+        });
+  }
+
+  /**
+   * Perform compiler passes for stage 2 of compilation.
+   *
+   * <p>Stage 2 consists primarily of optimization passes.
+   *
+   * <p>{@code stage1Passes()} must be called before this method is called.
+   *
+   * <p>The caller is responsible for also calling {@code generateReport()} to generate a report of
+   * warnings and errors to stderr. See the invocation in {@link #compile} for a good example.
+   */
+  public void stage2Passes() {
+    checkState(
+        inputs != null && !inputs.isEmpty(), "No inputs. Did you call init() or initModules()?");
+    checkState(!hasErrors());
+    checkState(!options.getInstrumentForCoverageOnly());
+    runInCompilerThread(
+        new Callable<Void>() {
+          @Override
+          public Void call() throws Exception {
+            if (options.shouldOptimize()) {
               performOptimizations();
             }
             return null;
@@ -929,8 +959,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p>The caller is responsible for also calling {@code generateReport()} to generate a report of
    * warnings and errors to stderr. See the invocation in {@link #compile} for a good example.
    *
-   * <p>Do not call both this and stage1AndStage2Passes(). They should be considered mutually
-   * exclusive.
+   * <p>This method is mutually exclusive with stage1Passes() and stage2Passes().
+   * Either call those two methods or this one, but not both.
    */
   public void instrumentForCoverage() {
     checkState(

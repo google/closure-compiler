@@ -1138,7 +1138,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         if (options.getInstrumentForCoverageOnly()) {
           compiler.instrumentForCoverage();
         } else {
-          compiler.stage1AndStage2Passes();
+          compiler.stage1Passes();
+          if (!compiler.hasErrors()) {
+            compiler.stage2Passes();
+          }
         }
         compiler.completeCompilation();
       }
@@ -1161,7 +1164,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         if (options.getInstrumentForCoverageOnly()) {
           compiler.instrumentForCoverage();
         } else {
-          compiler.stage1AndStage2Passes();
+          compiler.stage1Passes();
+          if (!compiler.hasErrors()) {
+            compiler.stage2Passes();
+          }
         }
         compiler.completeCompilation();
       }
