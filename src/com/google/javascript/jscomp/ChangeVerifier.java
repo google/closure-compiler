@@ -86,7 +86,7 @@ public class ChangeVerifier {
             } else if (NodeUtil.isChangeScopeRoot(n)) {
               Node clone = map.get(n);
               if (clone == null) {
-                verifyNewNode(n);
+                verifyNewNode(passNameMsg, n);
               } else {
                 verifyNodeChange(passNameMsg, n, clone);
               }
@@ -96,8 +96,12 @@ public class ChangeVerifier {
         Predicates.<Node>alwaysTrue());
   }
 
-  private void verifyNewNode(Node n) {
-    // TODO(johnlenz): Verify the new nodes are properly tagged.
+  private void verifyNewNode(String passNameMsg, Node n) {
+    int changeTime = n.getChangeTime();
+    if (changeTime == 0 || changeTime < snapshotChange) {
+      throw new IllegalStateException(
+          passNameMsg + "new scope not explicitly marked as changed: " + n.toStringTree());
+    }
   }
 
   private void verifyRoot(Node root) {
@@ -119,7 +123,7 @@ public class ChangeVerifier {
     } else {
       if (!isEquivalentToExcludingFunctions(n, snapshot)) {
         throw new IllegalStateException(
-            passNameMsg + "change scope not marked as changed: " + n.toStringTree());
+            passNameMsg + "changed scope not marked as changed: " + n.toStringTree());
       }
     }
   }

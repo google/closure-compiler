@@ -65,10 +65,9 @@ public final class ChangeVerifierTest extends TestCase {
     } catch (IllegalStateException e) {
       // TODO(johnlenz): use this when we upgrade Trush:
       //    assertThat(e).hasMessageThat().contains("change scope not marked as changed");
-      assertThat(e.getMessage()).contains("change scope not marked as changed");
+      assertThat(e.getMessage()).contains("changed scope not marked as changed");
     }
   }
-
 
   public static void testChangeVerification() {
     Compiler compiler = new Compiler();
@@ -85,7 +84,15 @@ public final class ChangeVerifierTest extends TestCase {
     compiler.incrementChangeStamp();
     mainScript.setChangeTime(compiler.getChangeStamp());
 
-    verifier.checkRecordedChanges(main);
+    try {
+      verifier.checkRecordedChanges(main);
+      fail("method should throw");
+    } catch (IllegalStateException e) {
+      // ensure that e was thrown from the right code-path
+      // especially important if it's something as frequent
+      // as an IllegalArgumentException, etc.
+      assertThat(e).hasMessageThat().startsWith("new scope not explicitly marked as changed:");
+    }
   }
 
   private static Node parse(String js) {
