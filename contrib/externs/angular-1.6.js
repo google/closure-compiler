@@ -268,7 +268,7 @@ angular.Animation.prototype.addClass;
 angular.Animation.prototype.beforeRemoveClass;
 
 /**
- * @type {function(!angular.JQLite, string, string, !Function, !Object=):
+ * @type {function(!angular.JQLite, string, !Function, !Object=):
  *           (!Function|undefined)|
  *        undefined}
  */
