@@ -15,6 +15,7 @@
  */
 
 'require es6/reflect/apply';
+'require util/objectcreate';
 'require util/polyfill';
 
 
@@ -41,9 +42,9 @@ $jscomp.polyfill('Reflect.construct', function(orig) {
     // }
     if (opt_newTarget === undefined) opt_newTarget = target;
     var proto = opt_newTarget.prototype || Object.prototype;
-    var obj = Object.create(proto);
+    var obj = $jscomp.objectCreate(proto);
     var out = Reflect.apply(target, obj, argList);
     return out || obj;
   };
   return polyfill;
-}, 'es6', 'es5'); // ES5: Requires Object.create
+}, 'es6', 'es3');

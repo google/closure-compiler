@@ -42,7 +42,7 @@ Object.values es8 es3 es6/object/values
 Promise es6-impl es3 es6/promise
 Proxy es6 es6
 Reflect.apply es6 es3 es6/reflect/apply
-Reflect.construct es6 es5 es6/reflect/construct
+Reflect.construct es6 es3 es6/reflect/construct
 Reflect.defineProperty es6 es5 es6/reflect/defineproperty
 Reflect.deleteProperty es6 es3 es6/reflect/deleteproperty
 Reflect.get es6 es5 es6/reflect/get
