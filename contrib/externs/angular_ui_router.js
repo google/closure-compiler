@@ -66,7 +66,7 @@ ui.router.StateConfig.prototype.controller;
 ui.router.StateConfig.prototype.controllerAs;
 
 
-/** @type {!Function|undefined} */
+/** @type {!angular.Injectable|undefined} */
 ui.router.StateConfig.prototype.controllerProvider;
 
 
