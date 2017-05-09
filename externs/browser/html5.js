@@ -94,6 +94,11 @@ HTMLCanvasElement.prototype.getContext = function(contextId, opt_args) {};
 HTMLCanvasElement.prototype.captureStream = function(opt_framerate) {};
 
 /**
+ * @typedef {HTMLImageElement|HTMLVideoElement|HTMLCanvasElement}
+ */
+var CanvasImageSource;
+
+/**
  * @interface
  * @see https://www.w3.org/TR/2dcontext/#canvaspathmethods
  */
@@ -262,15 +267,53 @@ Path2D.prototype.arc = function(
  */
 Path2D.prototype.addPath = function(path) {}
 
+/**
+ * @interface
+ * @see https://www.w3.org/TR/2dcontext/#canvasdrawingstyles
+ */
+function CanvasDrawingStyles() {};
+
+/** @type {number} */
+CanvasDrawingStyles.prototype.lineWidth;
+
+/** @type {string} */
+CanvasDrawingStyles.prototype.lineCap;
+
+/** @type {string} */
+CanvasDrawingStyles.prototype.lineJoin;
+
+/** @type {number} */
+CanvasDrawingStyles.prototype.miterLimit;
+
+/**
+ * @param {Array<number>} segments
+ * @return {undefined}
+ */
+CanvasDrawingStyles.prototype.setLineDash;
+
+/**
+ * @return {!Array<number>}
+ */
+CanvasDrawingStyles.prototype.getLineDash;
+
+/** @type {string} */
+CanvasDrawingStyles.prototype.font;
+
+/** @type {string} */
+CanvasDrawingStyles.prototype.textAlign;
+
+/** @type {string} */
+CanvasDrawingStyles.prototype.textBaseline;
 
 /**
  * @constructor
+ * @implements {CanvasDrawingStyles}
  * @implements {CanvasPathMethods}
  * @see http://www.w3.org/TR/2dcontext/#canvasrenderingcontext2d
  */
 function CanvasRenderingContext2D() {}
 
-/** @type {!HTMLCanvasElement} */
+/** @const {!HTMLCanvasElement} */
 CanvasRenderingContext2D.prototype.canvas;
 
 /**
@@ -352,7 +395,7 @@ CanvasRenderingContext2D.prototype.createRadialGradient = function(
     x0, y0, r0, x1, y1, r1) {};
 
 /**
- * @param {HTMLImageElement|HTMLCanvasElement} image
+ * @param {CanvasImageSource} image
  * @param {string} repetition
  * @return {?CanvasPattern}
  * @throws {Error}
@@ -503,6 +546,12 @@ CanvasRenderingContext2D.prototype.fill = function(optFillRuleOrPath, optFillRul
 CanvasRenderingContext2D.prototype.stroke = function(optStroke) {};
 
 /**
+ * @param {Element} element
+ * @return {undefined}
+ */
+CanvasRenderingContext2D.prototype.drawFocusIfNeeded = function(element) {};
+
+/**
  * @param {Path2D|string=} optFillRuleOrPath
  * @param {string=} optFillRule
  * @return {undefined}
@@ -556,7 +605,7 @@ CanvasRenderingContext2D.prototype.strokeText = function(
 CanvasRenderingContext2D.prototype.measureText = function(text) {};
 
 /**
- * @param {HTMLImageElement|HTMLCanvasElement|Image|HTMLVideoElement} image
+ * @param {CanvasImageSource} image
  * @param {number} dx Destination x coordinate.
  * @param {number} dy Destination y coordinate.
  * @param {number=} opt_dw Destination box width.  Defaults to the image width.
@@ -652,26 +701,11 @@ CanvasRenderingContext2D.prototype.fillColor;
  */
 CanvasRenderingContext2D.prototype.fillStyle;
 
-/** @type {string} */
-CanvasRenderingContext2D.prototype.font;
-
 /** @type {number} */
 CanvasRenderingContext2D.prototype.globalAlpha;
 
 /** @type {string} */
 CanvasRenderingContext2D.prototype.globalCompositeOperation;
-
-/** @type {number} */
-CanvasRenderingContext2D.prototype.lineWidth;
-
-/** @type {string} */
-CanvasRenderingContext2D.prototype.lineCap;
-
-/** @type {string} */
-CanvasRenderingContext2D.prototype.lineJoin;
-
-/** @type {number} */
-CanvasRenderingContext2D.prototype.miterLimit;
 
 /** @type {number} */
 CanvasRenderingContext2D.prototype.shadowBlur;
@@ -694,12 +728,6 @@ CanvasRenderingContext2D.prototype.strokeStyle;
 
 /** @type {string} */
 CanvasRenderingContext2D.prototype.strokeColor;
-
-/** @type {string} */
-CanvasRenderingContext2D.prototype.textAlign;
-
-/** @type {string} */
-CanvasRenderingContext2D.prototype.textBaseline;
 
 /** @type {number} */
 CanvasRenderingContext2D.prototype.lineDashOffset;
@@ -726,7 +754,7 @@ function CanvasPattern() {}
  */
 function TextMetrics() {}
 
-/** @type {number} */
+/** @const {number} */
 TextMetrics.prototype.width;
 
 /**
@@ -741,13 +769,13 @@ TextMetrics.prototype.width;
  */
 function ImageData(dataOrWidth, widthOrHeight, opt_height) {}
 
-/** @type {Uint8ClampedArray} */
+/** @const {Uint8ClampedArray} */
 ImageData.prototype.data;
 
-/** @type {number} */
+/** @const {number} */
 ImageData.prototype.width;
 
-/** @type {number} */
+/** @const {number} */
 ImageData.prototype.height;
 
 /**
