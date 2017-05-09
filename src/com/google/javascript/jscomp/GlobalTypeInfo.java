@@ -1486,7 +1486,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           // computation later.
           if (grandparent == null
               || (!isPrototypePropertyDeclaration(grandparent)
-                  && !isClassPropertyDeclaration(parent.getFirstChild(), currentScope))) {
+                  && !isPropertyDeclarationOnThis(parent.getFirstChild(), currentScope))) {
             RawNominalType ownerType = maybeGetOwnerType(n, parent);
             visitFunctionLate(n, ownerType);
           }
@@ -1647,9 +1647,9 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
 
     private void visitPropertyDeclaration(Node getProp) {
       recordPropertyName(getProp.getLastChild().getString(), getProp);
-      // Class property
-      if (isClassPropertyDeclaration(getProp, currentScope)) {
-        visitClassPropertyDeclaration(getProp);
+      // Property declaration on THIS; most commonly a class property
+      if (isPropertyDeclarationOnThis(getProp, currentScope)) {
+        visitPropertyDeclarationOnThis(getProp);
       }
       // Prototype property
       else if (isPrototypeProperty(getProp)) {
@@ -1732,15 +1732,32 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       return result;
     }
 
+    /**
+     * Called for prototype-property declarations of the form:
+     * Foo.prototype.someprop = ...;
+     */
     private void visitPrototypePropertyDeclaration(Node getProp) {
+      Preconditions.checkArgument(getProp.isGetProp());
+      Node ctorNameNode = NodeUtil.getPrototypeClassName(getProp);
+      QualifiedName ctorQname = QualifiedName.fromNode(ctorNameNode);
+      RawNominalType ownerType = currentScope.getNominalType(ctorQname);
+      // We only add properties to the prototype of a class if the
+      // property creations are in the same scope as the constructor
+      if (ownerType != null && !currentScope.isDefined(ctorNameNode)) {
+        warnings.add(JSError.make(getProp, CTOR_IN_DIFFERENT_SCOPE));
+      }
+      visitPrototypePropertyDeclaration(getProp, ownerType);
+    }
+
+    /**
+     * Called for the common prototype-property declarations, but also for property
+     * declarations on THIS inside the constructor of a record or interface.
+     */
+    private void visitPrototypePropertyDeclaration(Node getProp, RawNominalType ownerType) {
       Preconditions.checkArgument(getProp.isGetProp());
       Node parent = getProp.getParent();
       Node initializer = parent.isAssign() ? parent.getLastChild() : null;
-      Node ctorNameNode = NodeUtil.getPrototypeClassName(getProp);
-      QualifiedName ctorQname = QualifiedName.fromNode(ctorNameNode);
-      RawNominalType rawType = currentScope.getNominalType(ctorQname);
-
-      if (rawType == null) {
+      if (ownerType == null) {
         if (initializer != null && initializer.isFunction()) {
           visitFunctionLate(initializer, null);
         }
@@ -1750,14 +1767,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       if (initializer != null && initializer.isFunction()) {
         parent.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
       }
-      // We only add properties to the prototype of a class if the
-      // property creations are in the same scope as the constructor
-      if (!currentScope.isDefined(ctorNameNode)) {
-        warnings.add(JSError.make(getProp, CTOR_IN_DIFFERENT_SCOPE));
-      }
-      mayWarnAboutInterfacePropInit(rawType, initializer);
-      mayAddPropToPrototype(
-          rawType, getProp.getLastChild().getString(), getProp, initializer);
+      mayWarnAboutInterfacePropInit(ownerType, initializer);
+      mayAddPropToPrototype(ownerType, getProp.getLastChild().getString(), getProp, initializer);
     }
 
     private void mayWarnAboutInterfacePropInit(RawNominalType rawType, Node initializer) {
@@ -1932,7 +1943,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
       }
     }
 
-    private void visitClassPropertyDeclaration(Node getProp) {
+    private void visitPropertyDeclarationOnThis(Node getProp) {
       Preconditions.checkArgument(getProp.isGetProp());
       JSType t = currentScope.getDeclaredFunctionType().getThisType();
       NominalType thisType = t == null ? null : t.getNominalTypeIfSingletonObj();
@@ -1946,6 +1957,12 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         return;
       }
       RawNominalType rawType = thisType.getRawNominalType();
+      // In ES6, we allow declaring a record or interface as a class and declaring the
+      // properties on THIS in the constructor. Handle those here.
+      if (rawType.isInterface()) {
+        visitPrototypePropertyDeclaration(getProp, rawType);
+        return;
+      }
       String pname = getProp.getLastChild().getString();
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getProp);
       PropertyType pt = getPropTypeHelper(jsdoc, getProp, rawType);
@@ -1975,7 +1992,6 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         } else {
           rawType.addUndeclaredClassProperty(pname, commonTypes.UNKNOWN, getProp);
         }
-
       }
       // Only add the definition node if the property is not already defined.
       if (!propertyDefs.contains(rawType, pname)) {
@@ -2690,12 +2706,14 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     }
   }
 
-  private static boolean isClassPropertyDeclaration(Node n, NTIScope s) {
+  private static boolean isPropertyDeclarationOnThis(Node n, NTIScope s) {
     Node parent = n.getParent();
     return n.isGetProp()
         && n.getFirstChild().isThis()
         && ((parent.isAssign() && parent.getFirstChild().equals(n)) || parent.isExprResult())
-        && (s.isConstructor() || s.isPrototypeMethod());
+        && (s.isConstructor()
+            || s.isInterface()
+            || s.isPrototypeMethod());
   }
 
   // In contrast to the NodeUtil method, here we only accept properties directly

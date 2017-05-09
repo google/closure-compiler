@@ -168,11 +168,13 @@ final class NTIScope implements DeclaredTypeRegistry {
   }
 
   boolean isConstructor() {
-    if (!root.isFunction()) {
-      return false;
-    }
-    JSDocInfo fnDoc = NodeUtil.getBestJSDocInfo(root);
-    return fnDoc != null && fnDoc.isConstructor();
+    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(root);
+    return isFunction() && jsdoc != null && jsdoc.isConstructor();
+  }
+
+  boolean isInterface() {
+    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(root);
+    return isFunction() && jsdoc != null && jsdoc.isInterface();
   }
 
   boolean isPrototypeMethod() {

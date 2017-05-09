@@ -510,4 +510,47 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         "  }",
         "}"));
   }
+
+  public void testInterfacePropertiesInConstructor() {
+    typeCheck(LINE_JOINER.join(
+        "/** @record */",
+        "class Foo {",
+        "  constructor() {",
+        "    /** @type {number} */",
+        "    this.myprop;",
+        "  }",
+        "}",
+        "function f(/** !Foo */ x) {",
+        "  var /** number */ y = x.myprop;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @record */",
+        "class Foo {",
+        "  constructor() {",
+        "    /** @type {number} */",
+        "    this.myprop;",
+        "  }",
+        "}",
+        "function f(/** !Foo */ x) {",
+        "  var /** string */ y = x.myprop;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @record",
+        " * @template T",
+        " */",
+        "class Foo {",
+        "  constructor() {",
+        "    /** @type {T} */",
+        "    this.myprop;",
+        "  }",
+        "}",
+        "function f(/** !Foo<number> */ x) {",
+        "  var /** string */ y = x.myprop;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }

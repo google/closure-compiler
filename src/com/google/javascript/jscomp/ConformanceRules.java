@@ -493,6 +493,10 @@ public final class ConformanceRules {
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       if (NodeUtil.isGet(n) && n.getLastChild().isString()) {
+        // TODO(dimvar): Instead of the for-loop, we could make props be a multi-map from
+        // the property name to Property, and then here just pull the relevant Property instances.
+        // Won't make much difference to performance, since props usually only has a few elements,
+        // but it will make the code clearer.
         for (int i = 0; i < props.size(); i++) {
           Property prop = props.get(i);
           ConformanceResult result = checkConformance(t, n, prop);
@@ -504,13 +508,13 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    private ConformanceResult checkConformance(NodeTraversal t, Node n, Property prop) {
-      if (isCandidatePropUse(n, prop)) {
+    private ConformanceResult checkConformance(NodeTraversal t, Node propAccess, Property prop) {
+      if (isCandidatePropUse(propAccess, prop)) {
         TypeIRegistry registry = t.getCompiler().getTypeIRegistry();
         TypeI typeWithBannedProp = registry.getType(prop.type);
-        Node lhs = n.getFirstChild();
-        if (typeWithBannedProp != null && lhs.getTypeI() != null) {
-          TypeI foundType = lhs.getTypeI().restrictByNotNullOrUndefined();
+        Node receiver = propAccess.getFirstChild();
+        if (typeWithBannedProp != null && receiver.getTypeI() != null) {
+          TypeI foundType = receiver.getTypeI().restrictByNotNullOrUndefined();
           ObjectTypeI foundObj = foundType.toMaybeObjectType();
           if (foundObj != null) {
             if (foundObj.isPrototypeObject()) {
@@ -563,24 +567,26 @@ public final class ConformanceRules {
      * requirement under consideration only bans assignment to the property,
      * {@code n} is only a candidate if it is an l-value.
      */
-    private boolean isCandidatePropUse(Node n, Property prop) {
-      if (n.getLastChild().getString().equals(prop.property)) {
+    private boolean isCandidatePropUse(Node propAccess, Property prop) {
+      Preconditions.checkState(propAccess.isGetProp() || propAccess.isGetElem(),
+          "Expected property-access node but found %s", propAccess);
+      if (propAccess.getLastChild().getString().equals(prop.property)) {
         if (requirementType == Type.BANNED_PROPERTY_WRITE) {
-          return NodeUtil.isLValue(n);
+          return NodeUtil.isLValue(propAccess);
         } else if (requirementType == Type.BANNED_PROPERTY_NON_CONSTANT_WRITE) {
-          if (!NodeUtil.isLValue(n)) {
+          if (!NodeUtil.isLValue(propAccess)) {
             return false;
           }
-          if (NodeUtil.isLhsOfAssign(n)
-              && (NodeUtil.isLiteralValue(n.getNext(), false /* includeFunctions */)
-                  || NodeUtil.isStringLiteralValue(n.getNext()))) {
+          if (NodeUtil.isLhsOfAssign(propAccess)
+              && (NodeUtil.isLiteralValue(propAccess.getNext(), false /* includeFunctions */)
+                  || NodeUtil.isStringLiteralValue(propAccess.getNext()))) {
             return false;
           }
           return true;
         } else if (requirementType == Type.BANNED_PROPERTY_READ) {
-          return !NodeUtil.isLValue(n) && NodeUtil.isExpressionResultUsed(n);
+          return !NodeUtil.isLValue(propAccess) && NodeUtil.isExpressionResultUsed(propAccess);
         } else if (requirementType == Type.BANNED_PROPERTY_CALL) {
-          return ConformanceUtil.isCallTarget(n);
+          return ConformanceUtil.isCallTarget(propAccess);
         } else {
           return true;
         }

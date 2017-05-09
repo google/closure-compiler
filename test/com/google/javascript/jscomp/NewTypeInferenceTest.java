@@ -20045,4 +20045,48 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  return ns;",
         "}"));
   }
+
+  // This style of declarations is not used in ES5; it's transpiled from ES6 classes.
+  public void testInterfacePropertiesInConstructor() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @struct",
+        " * @record",
+        " */",
+        "var Foo = function() {",
+        "  /** @type {number} */",
+        "  this.myprop;",
+        "};",
+        "function f(/** !Foo */ x) {",
+        "  var /** number */ y = x.myprop;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @struct",
+        " * @record",
+        " */",
+        "var Foo = function() {",
+        "  /** @type {number} */",
+        "  this.myprop;",
+        "};",
+        "function f(/** !Foo */ x) {",
+        "  var /** string */ y = x.myprop;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @record",
+        " * @template T",
+        " */",
+        "var Foo = function() {",
+        "  /** @type {T} */",
+        "  this.myprop;",
+        "};",
+        "function f(/** !Foo<number> */ x) {",
+        "  var /** string */ y = x.myprop;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }

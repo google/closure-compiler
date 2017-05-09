@@ -4131,13 +4131,11 @@ final class NewTypeInference implements CompilerPass {
   // Some expressions are analyzed during GTI, so they're skipped here.
   // But we must annotate them with a type anyway.
   private JSType markAndGetTypeOfPreanalyzedNode(Node qnameNode, TypeEnv env, boolean isFwd) {
-    if (NodeUtil.getRootOfQualifiedName(qnameNode).isThis()) {
-      return null;
-    }
     switch (qnameNode.getToken()) {
-      case NAME: {
-        JSType result = envGetType(env, qnameNode.getString());
-        Preconditions.checkNotNull(result, "Null declared type@%s", qnameNode);
+      case NAME:
+      case THIS: {
+        JSType result = envGetType(env, qnameNode.isThis() ? THIS_ID : qnameNode.getString());
+        Preconditions.checkNotNull(result, "Null declared type at node: %s", qnameNode);
         if (isFwd) {
           maybeSetTypeI(qnameNode, result);
         }
