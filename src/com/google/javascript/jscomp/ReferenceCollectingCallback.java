@@ -217,7 +217,7 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
       newBlockStack.add(blockStack.get(0));
     } else {
       for (int i = 0; i < blockStack.size(); i++) {
-        if (blockStack.get(i).root == containingScope.getRootNode()) {
+        if (blockStack.get(i).getRoot() == containingScope.getRootNode()) {
           newBlockStack = new ArrayList<>(blockStack.subList(0, i + 1));
         }
       }
@@ -455,8 +455,8 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
       Scope hoistScope = null;
       for (Reference ref : references) {
         if (hoistScope == null) {
-          hoistScope = ref.scope.getClosestHoistScope();
-        } else if (hoistScope != ref.scope.getClosestHoistScope()) {
+          hoistScope = ref.getScope().getClosestHoistScope();
+        } else if (hoistScope != ref.getScope().getClosestHoistScope()) {
           return true;
         }
       }
@@ -543,13 +543,13 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
       // Make sure this assignment is not in a loop or an enclosing function.
       for (BasicBlock block = ref.getBasicBlock();
            block != null; block = block.getParent()) {
-        if (block.isFunction) {
+        if (block.isFunction()) {
           if (ref.getSymbol().getScope().getClosestHoistScope()
-              != ref.scope.getClosestHoistScope()) {
+              != ref.getScope().getClosestHoistScope()) {
             return false;
           }
           break;
-        } else if (block.isLoop) {
+        } else if (block.isLoop()) {
           return false;
         }
       }
@@ -815,92 +815,4 @@ public final class ReferenceCollectingCallback implements ScopedCallback,
     }
   }
 
-  /**
-   * Represents a section of code that is uninterrupted by control structures
-   * (conditional or iterative logic).
-   */
-  static final class BasicBlock {
-
-    private final BasicBlock parent;
-
-    private final Node root;
-
-    /**
-     * Whether this block denotes a function scope.
-     */
-    private final boolean isFunction;
-
-    /**
-     * Whether this block denotes a loop.
-     */
-    private final boolean isLoop;
-
-    /**
-     * Creates a new block.
-     * @param parent The containing block.
-     * @param root The root node of the block.
-     */
-    BasicBlock(BasicBlock parent, Node root) {
-      this.parent = parent;
-      this.root = root;
-
-      this.isFunction = root.isFunction();
-
-      if (root.getParent() != null) {
-        Token pType = root.getParent().getToken();
-        this.isLoop =
-            pType == Token.DO
-                || pType == Token.WHILE
-                || pType == Token.FOR
-                || pType == Token.FOR_OF
-                || pType == Token.FOR_IN;
-      } else {
-        this.isLoop = false;
-      }
-    }
-
-    BasicBlock getParent() {
-      return parent;
-    }
-
-    /**
-     * Determines whether this block is equivalent to the very first block that
-     * is created when reference collection traversal enters global scope. Note
-     * that when traversing a single script in a hot-swap fashion a new instance
-     * of {@code BasicBlock} is created.
-     *
-     * @return true if this is global scope block.
-     */
-    boolean isGlobalScopeBlock() {
-      return getParent() == null;
-    }
-
-    /**
-     * Determines whether this block is guaranteed to begin executing before
-     * the given block does.
-     */
-    boolean provablyExecutesBefore(BasicBlock thatBlock) {
-      // If thatBlock is a descendant of this block, and there are no hoisted
-      // blocks between them, then this block must start before thatBlock.
-      BasicBlock currentBlock;
-      for (currentBlock = thatBlock;
-           currentBlock != null && currentBlock != this;
-           currentBlock = currentBlock.getParent()) { }
-
-      if (currentBlock == this) {
-        return true;
-      }
-      return isGlobalScopeBlock() && thatBlock.isGlobalScopeBlock();
-    }
-
-    @VisibleForTesting
-    Node getRoot() {
-      return root;
-    }
-
-    @Override
-    public String toString() {
-      return "BasicBlock @ " + root;
-    }
-  }
 }
