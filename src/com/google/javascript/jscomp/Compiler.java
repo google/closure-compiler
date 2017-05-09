@@ -755,7 +755,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         parseForCompilation();
       }
       if (!hasErrors()) {
-        stage1AndStage2Passes();
+        if (options.getInstrumentForCoverageOnly()) {
+          // TODO(bradfordcsmith): The option to instrument for coverage only should belong to the
+          //     runner, not the compiler.
+          instrumentForCoverage();
+        } else {
+          stage1AndStage2Passes();
+        }
         completeCompilation();
       }
     } finally {
@@ -798,7 +804,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         parseForCompilation();
       }
       if (!hasErrors()) {
-        stage1AndStage2Passes();
+        // TODO(bradfordcsmith): The option to instrument for coverage only should belong to the
+        //     runner, not the compiler.
+        if (options.getInstrumentForCoverageOnly()) {
+          instrumentForCoverage();
+        } else {
+          stage1AndStage2Passes();
+        }
         completeCompilation();
       }
     } finally {
@@ -821,17 +833,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(
         inputs != null && !inputs.isEmpty(), "No inputs. Did you call init() or initModules()?");
     checkState(!hasErrors());
+    checkState(!options.getInstrumentForCoverageOnly());
     runInCompilerThread(
         new Callable<Void>() {
           @Override
           public Void call() throws Exception {
-            if (options.getInstrumentForCoverageOnly()) {
-              instrumentForCoverage(options.instrumentBranchCoverage);
-            } else {
-              performChecksAndTranspilation();
-              if (!hasErrors() && options.shouldOptimize()) {
-                performOptimizations();
-              }
+            performChecksAndTranspilation();
+            if (!hasErrors() && options.shouldOptimize()) {
+              performOptimizations();
             }
             return null;
           }
@@ -912,7 +921,34 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  private void instrumentForCoverage(boolean instrumentBranchCoverage) {
+  /**
+   * Instrument code for coverage.
+   *
+   * <p>{@code parseForCompilation()} must be called before this method is called.
+   *
+   * <p>The caller is responsible for also calling {@code generateReport()} to generate a report of
+   * warnings and errors to stderr. See the invocation in {@link #compile} for a good example.
+   *
+   * <p>Do not call both this and stage1AndStage2Passes(). They should be considered mutually
+   * exclusive.
+   */
+  public void instrumentForCoverage() {
+    checkState(
+        inputs != null && !inputs.isEmpty(), "No inputs. Did you call init() or initModules()?");
+    checkState(!hasErrors());
+    runInCompilerThread(
+        new Callable<Void>() {
+          @Override
+          public Void call() throws Exception {
+            checkState(options.getInstrumentForCoverageOnly());
+            checkState(!hasErrors());
+            instrumentForCoverageInternal(options.instrumentBranchCoverage);
+            return null;
+          }
+        });
+  }
+
+  private void instrumentForCoverageInternal(boolean instrumentBranchCoverage) {
     Tracer tracer = newTracer("instrumentationPass");
     InstrumentOption instrumentOption = InstrumentOption.LINE_ONLY;
     if (instrumentBranchCoverage) {

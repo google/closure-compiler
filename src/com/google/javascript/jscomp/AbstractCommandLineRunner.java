@@ -1135,7 +1135,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         compiler.parseForCompilation();
       }
       if (!compiler.hasErrors()) {
-        compiler.stage1AndStage2Passes();
+        if (options.getInstrumentForCoverageOnly()) {
+          compiler.instrumentForCoverage();
+        } else {
+          compiler.stage1AndStage2Passes();
+        }
         compiler.completeCompilation();
       }
     } finally {
@@ -1154,7 +1158,11 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         compiler.parseForCompilation();
       }
       if (!compiler.hasErrors()) {
-        compiler.stage1AndStage2Passes();
+        if (options.getInstrumentForCoverageOnly()) {
+          compiler.instrumentForCoverage();
+        } else {
+          compiler.stage1AndStage2Passes();
+        }
         compiler.completeCompilation();
       }
     } finally {
