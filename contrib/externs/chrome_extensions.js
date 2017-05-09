@@ -5865,7 +5865,68 @@ chrome.system.cpu = {};
 
 
 /**
- * @param {function(!Object)} callback
+ * @interface
+ * @see https://developer.chrome.com/extensions/system_cpu#method-getInfo
+ */
+chrome.system.cpu.CpuInformation = function() {};
+
+
+/** @type {number} */
+chrome.system.cpu.CpuInformation.prototype.numOfProcessors;
+
+
+/** @type {string} */
+chrome.system.cpu.CpuInformation.prototype.archName;
+
+
+/** @type {string} */
+chrome.system.cpu.CpuInformation.prototype.modelName;
+
+
+/** @type {!Array<string>} */
+chrome.system.cpu.CpuInformation.prototype.features;
+
+
+/** @type {!Array<!chrome.system.cpu.ProcessorInformation>} */
+chrome.system.cpu.CpuInformation.prototype.processors;
+
+
+/**
+ * This field is expected to roll out in ChromeOS 60. See the following link
+ * for the implementing CL. https://codereview.chromium.org/2802593005/
+ *
+ * TODO(b/38111360): Remove above documentation when this is released.
+ *
+ * @type {!Array<number>|undefined}
+ */
+chrome.system.cpu.CpuInformation.prototype.temperatures;
+
+
+/**
+ * @interface
+ * @see https://developer.chrome.com/extensions/system_cpu#method-getInfo
+ */
+chrome.system.cpu.ProcessorInformation = function() {};
+
+
+/** @type {number} */
+chrome.system.cpu.ProcessorInformation.prototype.user;
+
+
+/** @type {number} */
+chrome.system.cpu.ProcessorInformation.prototype.kernel;
+
+
+/** @type {number} */
+chrome.system.cpu.ProcessorInformation.prototype.idle;
+
+
+/** @type {number} */
+chrome.system.cpu.ProcessorInformation.prototype.total;
+
+
+/**
+ * @param {function(!chrome.system.cpu.CpuInformation)} callback
  * @return {undefined}
  */
 chrome.system.cpu.getInfo = function(callback) {};
