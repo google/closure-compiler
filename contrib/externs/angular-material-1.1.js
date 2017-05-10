@@ -446,7 +446,7 @@ md.$toast = function() {};
  * @typedef {{
  *   templateUrl: (string|!Object|undefined),
  *   template: (string|undefined),
- *   hideDelay: (number|undefined),
+ *   hideDelay: (boolean|number|undefined),
  *   position: (string|undefined),
  *   controller: (angular.Injectable|string|undefined),
  *   locals: (Object|undefined),
