@@ -3297,12 +3297,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  private void addFileToSourceMap(String filename, String contents) {
-    if (getOptions().sourceMapIncludeSourcesContent && getSourceMap() != null) {
-      getSourceMap().addSourceFile(SourceFile.fromCode(filename, contents));
-    }
-  }
-
   /**
    * Serializable state of the compiler.
    */
