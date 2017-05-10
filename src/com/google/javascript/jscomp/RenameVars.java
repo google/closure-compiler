@@ -377,7 +377,7 @@ final class RenameVars implements CompilerPass {
     assignmentLog = null;
   }
 
-  private void setNameAndReport(Node n, String newName) {
+  private void setNameAndReport(Node n, @Nullable String newName) {
     // A null newName, indicates it should not be renamed.
     if (newName != null) {
       n.setString(newName);
@@ -391,6 +391,7 @@ final class RenameVars implements CompilerPass {
     }
   }
 
+  @Nullable
   private String getNewGlobalName(Node n) {
     String oldName = n.getString();
     Assignment a = assignments.get(oldName);
@@ -404,6 +405,7 @@ final class RenameVars implements CompilerPass {
     }
   }
 
+  @Nullable
   private String getNewLocalName(Node n) {
     String oldTempName = n.getString();
     Assignment a = assignments.get(oldTempName);
