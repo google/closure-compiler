@@ -353,7 +353,7 @@ IDBObjectStore.prototype.put = function(value, key) {};
 IDBObjectStore.prototype.add = function(value, key) {};
 
 /**
- * @param {!IDBKeyType} key The key of this value.
+ * @param {!IDBKeyType|!IDBKeyRange} key The key of this value.
  * @return {!IDBRequest} The IDBRequest object.
  */
 IDBObjectStore.prototype.delete = function(key) {};
