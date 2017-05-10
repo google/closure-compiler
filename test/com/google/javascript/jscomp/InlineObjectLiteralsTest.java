@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
+
 /**
  * Verifies that valid candidates for object literals are inlined as
  * expected, and invalid candidates are not touched.
@@ -25,6 +27,7 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
 
   public InlineObjectLiteralsTest() {
     enableNormalize();
+    setAcceptedLanguage(ECMASCRIPT_NEXT);
   }
 
   @Override

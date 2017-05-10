@@ -61,7 +61,7 @@ class InlineObjectLiterals implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     ReferenceCollectingCallback callback = new ReferenceCollectingCallback(
-        compiler, new InliningBehavior(), SyntacticScopeCreator.makeUntyped(compiler));
+        compiler, new InliningBehavior(), new Es6SyntacticScopeCreator(compiler));
     callback.process(externs, root);
   }
 
@@ -406,10 +406,10 @@ class InlineObjectLiterals implements CompilerPass {
         vnode = init.getParent();
         fillInitialValues(init, initvals);
       } else {
-        // TODO(user): More test / rewrite this part.
-        // Find the beginning of the function / script.
-        vnode = v.getScope().getClosestHoistScope().getRootNode().getLastChild().getFirstChild();
+        // Find the beginning of the function body / script.
+        vnode = v.getScope().getClosestHoistScope().getRootNode().getFirstChild();
       }
+      checkState(NodeUtil.isStatement(vnode), vnode);
 
       for (Map.Entry<String, String> entry : varmap.entrySet()) {
         Node val = initvals.get(entry.getKey());
