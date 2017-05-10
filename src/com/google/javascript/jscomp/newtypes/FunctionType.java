@@ -259,6 +259,7 @@ public final class FunctionType {
    * Returns true if this function is either version (loose or not) of the
    * top function (which takes all bottoms and returns top).
    */
+  @SuppressWarnings("ReferenceEquality")
   public boolean isTopFunction() {
     return this == this.commonTypes.TOP_FUNCTION || this == this.commonTypes.LOOSE_TOP_FUNCTION;
   }
