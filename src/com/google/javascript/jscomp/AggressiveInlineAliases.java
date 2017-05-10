@@ -229,6 +229,7 @@ class AggressiveInlineAliases implements CompilerPass {
 
           Node newNode = alias.node.cloneTree();
           aliasRef.getParent().replaceChild(aliasRef.getNode(), newNode);
+          compiler.reportChangeToEnclosingScope(newNode);
           newNodes.add(new AstChange(getRefModule(aliasRef), aliasRef.getScope(), newNode));
         }
 
@@ -291,6 +292,7 @@ class AggressiveInlineAliases implements CompilerPass {
               Node newNode = alias.node.cloneTree();
               Node node = ref.node;
               node.getParent().replaceChild(node, newNode);
+              compiler.reportChangeToEnclosingScope(newNode);
               newNodes.add(new AstChange(ref.module, ref.scope, newNode));
               name.removeRef(ref);
               break;

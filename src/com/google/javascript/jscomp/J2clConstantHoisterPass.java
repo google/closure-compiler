@@ -124,14 +124,15 @@ public class J2clConstantHoisterPass implements CompilerPass {
 
     // Replace the assignment in declaration with the value from clinit
     clinitAssignedValue.detach();
-    declarationInClass.replaceChild(declarationAssignedValue, clinitAssignedValue);
+    compiler.reportChangeToChangeScope(clinitChangeScope);
+    if (!declarationAssignedValue.isEquivalentTo(clinitAssignedValue)) {
+      declarationInClass.replaceChild(declarationAssignedValue, clinitAssignedValue);
+      compiler.reportChangeToEnclosingScope(declarationAssignment);
+    }
     declarationInClass.putBooleanProp(Node.IS_CONSTANT_VAR, true);
 
     // Sanity check
     checkState(NodeUtil.isLiteralValue(declarationAssignedValue, false /* includeFunctions */));
-
-    compiler.reportChangeToChangeScope(clinitChangeScope);
-    compiler.reportChangeToEnclosingScope(declarationAssignment);
   }
 
   private static boolean isClassFieldInitialization(Node node) {

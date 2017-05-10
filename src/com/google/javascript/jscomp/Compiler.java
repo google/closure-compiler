@@ -3221,12 +3221,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     // Insert the code immediately after the last-inserted runtime library.
     Node lastChild = ast.getLastChild();
+    for (Node child = ast.getFirstChild(); child != null; child = child.getNext()) {
+      NodeUtil.markNewScopesChanged(child, this);
+    }
     Node firstChild = ast.removeChildren();
     if (firstChild == null) {
       // Handle require-only libraries.
       return lastInjectedLibrary;
     }
-    NodeUtil.markNewScopesChanged(firstChild, this);
     Node parent = getNodeForCodeInsertion(null);
     if (lastInjectedLibrary == null) {
       parent.addChildrenToFront(firstChild);

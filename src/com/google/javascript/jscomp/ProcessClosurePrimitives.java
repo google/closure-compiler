@@ -167,8 +167,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   private final PreprocessorSymbolTable preprocessorSymbolTable;
   private final List<Node> defineCalls = new ArrayList<>();
   private final boolean preserveGoogProvidesAndRequires;
-
   private final List<Node> requiresToBeRemoved = new ArrayList<>();
+  private final Set<Node> maybeTemporarilyLiveNodes = new HashSet<>();
 
   ProcessClosurePrimitives(AbstractCompiler compiler,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable,
@@ -220,6 +220,9 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     for (Node closureRequire : requiresToBeRemoved) {
       compiler.reportChangeToEnclosingScope(closureRequire);
       closureRequire.detach();
+    }
+    for (Node liveNode : maybeTemporarilyLiveNodes) {
+      compiler.reportChangeToEnclosingScope(liveNode);
     }
   }
 
@@ -899,7 +902,12 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       Node expr = new Node(Token.EXPR_RESULT);
       expr.useSourceInfoWithoutLengthIfMissingFromForTree(parent);
       parent.getParent().addChildBefore(expr, parent);
-      compiler.reportChangeToEnclosingScope(expr);
+      /**
+       * 'expr' has been newly added to the AST, but it might be removed again before this pass
+       * finishes. Keep it in a list for later change reporting if it doesn't get removed again
+       * before the end of the pass.
+       */
+      maybeTemporarilyLiveNodes.add(expr);
 
       JSModule module = t.getModule();
       registerAnyProvidedPrefixes(name, expr, module);
@@ -1421,7 +1429,15 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         if (preserveGoogProvidesAndRequires && explicitNode.hasChildren()) {
           return;
         }
-        compiler.reportChangeToEnclosingScope(explicitNode);
+        /**
+         * If 'explicitNode' was added earlier in this pass then don't bother to report it's removal
+         * right here as a change (since the original AST state is being restored). Also remove
+         * 'explicitNode' from the list of "possibly live" nodes so that it does not get reported as
+         * a change at the end of the pass.
+         */
+        if (!maybeTemporarilyLiveNodes.remove(explicitNode)) {
+          compiler.reportChangeToEnclosingScope(explicitNode);
+        }
         explicitNode.detach();
       }
     }
