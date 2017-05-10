@@ -1771,6 +1771,11 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION,
         "Possible violation: BanCreateDom Message");
 
+    testWarning(
+        "goog.dom.createDom('iframe', x ? {'src': src} : 'class');",
+        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION,
+        "Possible violation: BanCreateDom Message");
+
     testSame("goog.dom.createDom('iframe');");
     testSame("goog.dom.createDom('iframe', {'src': ''});");
     testSame("goog.dom.createDom('iframe', {'name': name});");
@@ -1781,6 +1786,9 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame("goog.dom.createDom('img', {'src': src});");
     testSame("goog.dom.createDom('img', attrs);");
     testSame("goog.dom.createDom(tag, {});");
+    testSame(
+        "/** @enum {string} */ var Classes = {A: ''};\n" +
+        "goog.dom.createDom('iframe', Classes.A);");
   }
 
   public void testBanCreateDomAnyTagName() {

@@ -1479,6 +1479,11 @@ public final class ConformanceRules {
       String tagName = getTagName(n.getSecondChild());
       Node attrs = n.getChildAtIndex(2);
       TypeI attrsType = attrs.getTypeI();
+      TypeI stringType = compiler.getTypeIRegistry().getNativeType(JSTypeNative.STRING_TYPE);
+      TypeI arrayType = compiler.getTypeIRegistry().getNativeType(JSTypeNative.ARRAY_TYPE);
+      // String or array attribute sets the class.
+      boolean isClassName = attrsType != null && !attrsType.isUnknownType()
+        && (attrsType.isSubtypeOf(stringType) || attrsType.isSubtypeOf(arrayType));
 
       if (attrs.isNull() || (attrsType != null && attrsType.isVoidType())) {
         // goog.dom.createDom('iframe', null) is fine.
@@ -1493,9 +1498,7 @@ public final class ConformanceRules {
             tagName == null && !tagAttr[0].equals("*")
                 ? ConformanceResult.POSSIBLE_VIOLATION
                 : ConformanceResult.VIOLATION;
-        if (attrsType != null
-            && (attrsType.isStringValueType() || attrsType.containsArray())) {
-          // String or array attribute sets the class.
+        if (isClassName) {
           if (!tagAttr[1].equals("class")) {
             continue;
           }
