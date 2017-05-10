@@ -247,12 +247,13 @@ public final class Matchers {
    */
   public static Matcher propertyAccess(final String name) {
     return new Matcher() {
-      @Override public boolean matches(Node node, NodeMetadata metadata) {
+      @Override
+      public boolean matches(Node node, NodeMetadata metadata) {
         if (node.isGetProp()) {
           if (name == null) {
             return true;
           }
-          if (name.equals(node.getQualifiedName())) {
+          if (node.matchesQualifiedName(name)) {
             return true;
           } else if (name.contains(".prototype.")) {
             return matchesPrototypeInstanceVar(node, metadata, name);
