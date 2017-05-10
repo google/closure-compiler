@@ -116,7 +116,7 @@ class HoistVarsOutOfBlocks extends AbstractPostOrderCallback
         continue;
       }
 
-      Node rhs = lhs.getFirstChild();
+      Node rhs = lhs.removeFirstChild();
       Node hoistRoot = t.getClosestHoistScope().getRootNode();
       if (hoistRoot.isRoot()) {
         hoistRoot = NodeUtil.getEnclosingScript(varNode);
@@ -127,7 +127,7 @@ class HoistVarsOutOfBlocks extends AbstractPostOrderCallback
         // splits var nodes up.
         NodeUtil.removeChild(lhs.getParent(), lhs);
       } else {
-        Node exprAssign = IR.exprResult(IR.assign(lhs.cloneNode(), rhs.cloneTree()));
+        Node exprAssign = IR.exprResult(IR.assign(lhs.cloneNode(), rhs));
         exprAssign.useSourceInfoIfMissingFromForTree(varNode);
         NodeUtil.replaceDeclarationChild(lhs, exprAssign);
       }
