@@ -560,9 +560,10 @@ md.$toast.preset.prototype.toastClass = function(className) {};
 
 
 /**
+ * @param {!md.$toast.options=} options
  * @return {!md.$toast.preset}
  */
-md.$toast.prototype.simple = function() {};
+md.$toast.prototype.simple = function(options) {};
 
 /******************************************************************************
  * $sidenav Service
