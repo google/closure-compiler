@@ -3927,8 +3927,7 @@ public final class IntegrationTest extends IntegrationTestCase {
       test(options, "", "");
       fail("Expected CompilerOptionsPreprocessor.InvalidOptionsException");
     } catch (RuntimeException e) {
-      Throwable t = e.getCause();
-      if (!(t instanceof CompilerOptionsPreprocessor.InvalidOptionsException)) {
+      if (!(e instanceof CompilerOptionsPreprocessor.InvalidOptionsException)) {
         fail("Expected CompilerOptionsPreprocessor.InvalidOptionsException");
       }
     }
@@ -3942,8 +3941,7 @@ public final class IntegrationTest extends IntegrationTestCase {
       test(options, "", "");
       fail("Expected CompilerOptionsPreprocessor.InvalidOptionsException");
     } catch (RuntimeException e) {
-      Throwable t = e.getCause();
-      if (!(t instanceof CompilerOptionsPreprocessor.InvalidOptionsException)) {
+      if (!(e instanceof CompilerOptionsPreprocessor.InvalidOptionsException)) {
         fail("Expected CompilerOptionsPreprocessor.InvalidOptionsException");
       }
     }

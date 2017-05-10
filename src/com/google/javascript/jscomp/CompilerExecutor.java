@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Throwables.throwIfUnchecked;
+
 import com.google.common.base.Preconditions;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -123,6 +125,7 @@ final class CompilerExecutor {
 
     // Pass on any exception caught by the runnable object.
     if (exception[0] != null) {
+      throwIfUnchecked(exception[0]);
       throw new RuntimeException(exception[0]);
     }
 
