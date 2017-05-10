@@ -285,6 +285,13 @@ assert.deepEqual = function(actual, expected, opt_message) {};
 
 /**
  * @param {*} valueToCheck
+ * @param {*} valueToBeAbove
+ * @param {string=} opt_message
+ */
+assert.isAbove = function(valueToCheck, valueToBeAbove, opt_message) {};
+
+/**
+ * @param {*} valueToCheck
  * @param {*} valueToBeBelow
  * @param {string=} opt_message
  */
