@@ -414,7 +414,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
   @Deprecated
   @GwtIncompatible("java.io.File")
   public static SourceFile fromFile(File file) {
-    return builder().buildFromFile(file);
+    return fromFile(file, UTF_8);
   }
 
   public static SourceFile fromCode(String fileName, String code) {
