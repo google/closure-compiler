@@ -138,7 +138,6 @@ class FindExportableNodes extends AbstractPostOrderCallback {
 
         case GETPROP:
           if (allowLocalExports && parent.isExprResult()) {
-            mode = Mode.EXTERN;
             export = n.getLastChild().getString();
             mode = Mode.EXTERN;
           }
