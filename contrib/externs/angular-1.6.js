@@ -1583,11 +1583,14 @@ angular.$http.Config.prototype.responseType;
 /** @type {(number|!angular.$q.Promise|undefined)} */
 angular.$http.Config.prototype.timeout;
 
+/** @typedef {function(string=): (?string | !Object<string>)} */
+angular.$http.HeadersGetter;
+
 /**
  * @type {
  *   (undefined|
- *    function(?, Object):?|
- *        Array<function(?, Object):?>)
+ *    function(?, !angular.$http.HeadersGetter):?|
+ *    !Array<function(?, !angular.$http.HeadersGetter):?>)
  * }
  */
 angular.$http.Config.prototype.transformRequest;
@@ -1595,8 +1598,8 @@ angular.$http.Config.prototype.transformRequest;
 /**
  * @type {
  *   (undefined|
- *    function(?, Object, Object):?|
- *        Array<function(?, Object, Object):?>)
+ *    function(?, !angular.$http.HeadersGetter, number):?|
+ *    !Array<function(?, !angular.$http.HeadersGetter, number):?>)
  * }
  */
 angular.$http.Config.prototype.transformResponse;
