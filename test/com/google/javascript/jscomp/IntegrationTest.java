@@ -1654,6 +1654,38 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, expected);
   }
 
+  public void testExportOnClassGetter() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setGenerateExports(true);
+    options.setExportLocalPropertyDefinitions(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(options,
+        "class C { /** @export @return {string} */ get exportedName() {} }; (new C).exportedName;",
+        ""
+            + "function a(){}(\"undefined\"!=typeof window&&"
+            + "window===this?this:\"undefined\"!=typeof global&&"
+            + "null!=global?global:this).a.defineProperties("
+            + "a.prototype,{exportedName:{b:!0,c:!0,get:function(){}}});(new a).exportedName");
+  }
+
+  public void testExportOnClassSetter() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setGenerateExports(true);
+    options.setExportLocalPropertyDefinitions(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(options,
+        "class C { /** @export @return {string} */ set exportedName(x) {} }; (new C).exportedName;",
+        ""
+            + "function a(){}(\"undefined\"!=typeof window&&"
+            + "window===this?this:\"undefined\"!=typeof global&&"
+            + "null!=global?global:this).a.defineProperties("
+            + "a.prototype,{exportedName:{b:!0,c:!0,set:function(){}}});(new a).exportedName");
+  }
+
   public void testSmartNamePassBug11163486() {
     CompilerOptions options = createCompilerOptions();
 
