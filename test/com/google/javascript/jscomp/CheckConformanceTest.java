@@ -453,14 +453,9 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: Setting content of <script> is dangerous.");
 
-    // NOTE(aravindpg): we define a random extra property on HTMLScriptElement.prototype so
-    // as to differentiate from any old (new Element), otherwise NTI is unable to distinguish them
-    // and treats this case exactly like the case right above.
-    // This limitation is arguably never a problem in practice since we always define/redefine
-    // properties on a subclass.
     testSame(
         externs,
-        "HTMLScriptElement.prototype.randomProp; (new Element).textContent = 'safe'",
+        "(new Element).textContent = 'safe'",
         null);
   }
 
