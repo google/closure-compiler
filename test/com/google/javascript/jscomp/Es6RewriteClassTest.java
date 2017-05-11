@@ -1577,6 +1577,68 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
         CONFLICTING_GETTER_SETTER_TYPE);
   }
 
+  public void testEs5GetterWithExport() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        "class C { /** @export @return {string} */ get foo() {} }",
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor @struct",
+            " */",
+            "let C = function() {}",
+            "",
+            "/**",
+            " * @export",
+            " * @type {string}",
+            " */",
+            "C.prototype.foo;",
+            "",
+            "$jscomp.global.Object.defineProperties(C.prototype, {",
+            "  foo: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "",
+            "    /**",
+            "     * @return {string}",
+            "     * @this {C}",
+            "     * @export",
+            "     */",
+            "    get: function() {},",
+            "  }",
+            "});"));
+  }
+
+  public void testEs5SetterWithExport() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        "class C { /** @export @param {string} x */ set foo(x) {} }",
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor @struct",
+            " */",
+            "let C = function() {}",
+            "",
+            "/**",
+            " * @export",
+            " * @type {string}",
+            " */",
+            "C.prototype.foo;",
+            "",
+            "$jscomp.global.Object.defineProperties(C.prototype, {",
+            "  foo: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "",
+            "    /**",
+            "     * @param {string} x",
+            "     * @this {C}",
+            "     * @export",
+            "     */",
+            "    set: function(x) {},",
+            "  }",
+            "});"));
+  }
+
   /**
    * @bug 20536614
    */

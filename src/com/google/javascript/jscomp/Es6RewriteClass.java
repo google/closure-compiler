@@ -23,6 +23,7 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
+import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -143,7 +144,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
               && (member.getBooleanProp(Node.COMPUTED_PROP_GETTER)
                   || member.getBooleanProp(Node.COMPUTED_PROP_SETTER)))
           || (member.isGetterDef() || member.isSetterDef())) {
-        visitComputedPropInClass(member, metadata);
+        visitNonMethodMember(member, metadata);
       } else if (member.isMemberFunctionDef() && member.getString().equals("constructor")) {
         ctorJSDocInfo = member.getJSDocInfo();
         constructor = member.getFirstChild().detach();
@@ -160,7 +161,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
             "Unexpected class member:", member);
         Preconditions.checkState(!member.getBooleanProp(Node.COMPUTED_PROP_VARIABLE),
             "Member variables should have been transpiled earlier:", member);
-        visitClassMember(member, metadata);
+        visitMethod(member, metadata);
       }
     }
 
@@ -366,7 +367,10 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     prop.useSourceInfoIfMissingFromForTree(member);
   }
 
-  private void visitComputedPropInClass(Node member, ClassDeclarationMetadata metadata) {
+  /**
+   * Visits class members other than simple methods: Getters, setters, and computed properties.
+   */
+  private void visitNonMethodMember(Node member, ClassDeclarationMetadata metadata) {
     if (member.isComputedProp() && member.isStaticMember()) {
       cannotConvertYet(member, "Static computed property");
       return;
@@ -400,6 +404,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       jsDoc.recordType(typeExpr);
       if (member.getJSDocInfo() != null && member.getJSDocInfo().isExport()) {
         jsDoc.recordExport();
+        jsDoc.recordVisibility(Visibility.PUBLIC);
       }
       if (member.isStaticMember() && !member.isComputedProp()) {
         jsDoc.recordNoCollapse();
@@ -412,8 +417,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
    * Handles transpilation of a standard class member function. Getters, setters, and the
    * constructor are not handled here.
    */
-  private void visitClassMember(
-      Node member, ClassDeclarationMetadata metadata) {
+  private void visitMethod(Node member, ClassDeclarationMetadata metadata) {
     Node qualifiedMemberAccess = getQualifiedMemberAccess(
         member,
         NodeUtil.newQName(compiler, metadata.fullClassName),
