@@ -174,7 +174,7 @@ public class CommandLineRunner extends
         name = "--strict_mode_input",
         handler = BooleanOptionHandler.class,
         usage = "Assume input sources are to run in strict mode."
-            + " Ignored for language modes earlier than ECMASCRIPT7.")
+            + " Ignored for language modes earlier than ECMASCRIPT_2016.")
     private boolean strictModeInput = true;
 
     // Turn on (very slow) extra sanity checks for use when modifying the

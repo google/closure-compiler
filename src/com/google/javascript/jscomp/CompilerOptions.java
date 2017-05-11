@@ -2993,20 +2993,10 @@ public class CompilerOptions implements Serializable {
     ECMASCRIPT6_TYPED,
 
     /**
-     * @deprecated Use ECMASCRIPT_2016.
-     */
-    @Deprecated
-    ECMASCRIPT7,
-
-    /**
      * ECMAScript standard approved in 2016.
      * Adds the exponent operator (**).
      */
     ECMASCRIPT_2016,
-
-    /** @deprecated Use {@code ECMASCRIPT_2017} */
-    @Deprecated
-    ECMASCRIPT8,
 
     /** ECMAScript standard approved in 2017. Adds async/await. */
     ECMASCRIPT_2017,
