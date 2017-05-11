@@ -205,6 +205,10 @@ final class NameAnalyzer implements CompilerPass {
     /** Whether this is a call that only affects the class definition */
     boolean onlyAffectsClassDef = false;
 
+    NameInformation(String name) {
+      this.name = checkNotNull(name);
+    }
+
     @Override
     public String toString() {
       return "NameInformation:" + name;
@@ -1537,8 +1541,7 @@ final class NameAnalyzer implements CompilerPass {
       CodingConvention convention = compiler.getCodingConvention();
       SubclassRelationship classes = convention.getClassesDefinedByCall(parent);
       if (classes != null) {
-        NameInformation nameInfo = new NameInformation();
-        nameInfo.name = classes.subclassName;
+        NameInformation nameInfo = new NameInformation(classes.subclassName);
         nameInfo.onlyAffectsClassDef = true;
         nameInfo.superclass = classes.superclassName;
         return nameInfo;
@@ -1547,8 +1550,7 @@ final class NameAnalyzer implements CompilerPass {
       String singletonGetterClass =
           convention.getSingletonGetterClassName(parent);
       if (singletonGetterClass != null) {
-        NameInformation nameInfo = new NameInformation();
-        nameInfo.name = singletonGetterClass;
+        NameInformation nameInfo = new NameInformation(singletonGetterClass);
         nameInfo.onlyAffectsClassDef = true;
         return nameInfo;
       }
@@ -1565,8 +1567,7 @@ final class NameAnalyzer implements CompilerPass {
           if (createNameInformation(t, n.getFirstChild()) != null) {
             name = rootNameNode.getString() + name;
             name = name.substring(0, name.length() - PROTOTYPE_SUFFIX_LEN);
-            NameInformation nameInfo = new NameInformation();
-            nameInfo.name = name;
+            NameInformation nameInfo = new NameInformation(name);
             return nameInfo;
           } else {
             return null;
@@ -1576,12 +1577,8 @@ final class NameAnalyzer implements CompilerPass {
             rootNameNode.getString() + name, t.getScope(), rootNameNode);
       case THIS:
         if (t.inGlobalHoistScope()) {
-          NameInformation nameInfo = new NameInformation();
-          if (name.indexOf('.') == 0) {
-            nameInfo.name = name.substring(1);  // strip leading "."
-          } else {
-            nameInfo.name = name;
-          }
+          NameInformation nameInfo = new NameInformation(
+              name.indexOf('.') == 0 ? /* strip leading "." */ name.substring(1) : name);
           nameInfo.isExternallyReferenceable = true;
           return nameInfo;
         }
@@ -1611,7 +1608,7 @@ final class NameAnalyzer implements CompilerPass {
       return null;
     }
 
-    NameInformation nameInfo = new NameInformation();
+    NameInformation nameInfo = new NameInformation(name);
 
     // If a prototype property or method, fill in prototype information.
     int idx = name.indexOf(PROTOTYPE_SUBSTRING);
@@ -1622,9 +1619,7 @@ final class NameAnalyzer implements CompilerPass {
           idx + PROTOTYPE_SUBSTRING_LEN);
     }
 
-    nameInfo.name = name;
-    nameInfo.isExternallyReferenceable =
-        isExtern || isExternallyReferenceable(scope, name);
+    nameInfo.isExternallyReferenceable = isExtern || isExternallyReferenceable(scope, name);
     return nameInfo;
   }
 
