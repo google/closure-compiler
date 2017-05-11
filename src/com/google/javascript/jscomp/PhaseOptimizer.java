@@ -240,9 +240,14 @@ class PhaseOptimizer implements CompilerPass {
    * Runs the sanity check if it is available.
    */
   private void maybeSanityCheck(String passName, Node externs, Node root) {
-    if (sanityCheck != null) {
+    if (sanityCheck == null) {
+      return;
+    }
+    try {
       sanityCheck.create(compiler).process(externs, root);
       changeVerifier.checkRecordedChanges(passName, jsRoot);
+    } catch (Exception e) {
+      throw new IllegalStateException("Sanity check failed for pass: " + passName, e);
     }
   }
 
