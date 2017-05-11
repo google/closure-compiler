@@ -115,3 +115,10 @@ PointerEvent.prototype.MSPOINTER_TYPE_PEN;
 
 /** @type {string} */
 PointerEvent.prototype.MSPOINTER_TYPE_MOUSE;
+
+/**
+ * @see https://w3c.github.io/pointerevents/extension.html
+ * @return {!Array<!PointerEvent>}
+ */
+PointerEvent.prototype.getCoalescedEvents = function() {};
+
