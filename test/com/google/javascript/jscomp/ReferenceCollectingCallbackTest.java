@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRI
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
-import com.google.javascript.jscomp.ReferenceCollectingCallback.ReferenceMap;
 import com.google.javascript.rhino.Token;
 
 public final class ReferenceCollectingCallbackTest extends CompilerTestCase {

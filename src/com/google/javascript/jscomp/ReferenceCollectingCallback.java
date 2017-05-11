@@ -354,10 +354,6 @@ public final class ReferenceCollectingCallback
     referenceInfo.add(reference);
   }
 
-  public interface ReferenceMap {
-    ReferenceCollection getReferences(Var var);
-  }
-
   private static class ReferenceMapWrapper implements ReferenceMap {
     private final Map<Var, ReferenceCollection> referenceMap;
 
