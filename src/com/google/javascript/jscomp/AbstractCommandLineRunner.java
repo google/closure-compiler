@@ -1092,19 +1092,23 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         outputFileNames.add(getModuleOutputFileName(m));
       }
 
-      if (config.skipNormalOutputs) {
-        compiler.initModules(externs, modules, options);
-        compiler.orderInputsWithLargeStack();
-      } else {
-        result = performFullCompilationWithModules(options, externs, modules);
-      }
+      compiler.initModules(externs, modules, options);
     } else {
-      if (config.skipNormalOutputs) {
-        compiler.init(externs, inputs, options);
-        compiler.orderInputsWithLargeStack();
-      } else {
-        result = performFullCompilation(options, externs, inputs);
-      }
+      compiler.init(externs, inputs, options);
+    }
+
+    // TODO(rluble): Add save and restore cases here.
+    if (config.skipNormalOutputs) {
+      // TODO(bradfordcsmith): Should we be ignoring possible init/initModules() errors here?
+      compiler.orderInputsWithLargeStack();
+    } else if (compiler.hasErrors()) {
+      // init() or initModules() encountered an error.
+      compiler.generateReport();
+      result = compiler.getResult();
+    } else if (options.getInstrumentForCoverageOnly()) {
+      result = instrumentForCoverage();
+    } else {
+      result = performFullCompilation();
     }
 
     if (createCommonJsModules) {
@@ -1127,21 +1131,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     return processResults(result, modules, options);
   }
 
-  private Result performFullCompilationWithModules(
-      B options, List<SourceFile> externs, List<JSModule> modules) {
+  private Result performFullCompilation() {
+    Result result;
     try {
-      compiler.initModules(externs, modules, options);
+      compiler.parseForCompilation();
       if (!compiler.hasErrors()) {
-        compiler.parseForCompilation();
-      }
-      if (!compiler.hasErrors()) {
-        if (options.getInstrumentForCoverageOnly()) {
-          compiler.instrumentForCoverage();
-        } else {
-          compiler.stage1Passes();
-          if (!compiler.hasErrors()) {
-            compiler.stage2Passes();
-          }
+        compiler.stage1Passes();
+        if (!compiler.hasErrors()) {
+          compiler.stage2Passes();
         }
         compiler.completeCompilation();
       }
@@ -1150,33 +1147,22 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       // exception somewhere.
       compiler.generateReport();
     }
-    return compiler.getResult();
+    result = compiler.getResult();
+    return result;
   }
 
-  private Result performFullCompilation(
-      B options, List<SourceFile> externs, List<SourceFile> inputs) {
+  private Result instrumentForCoverage() {
+    Result result;
     try {
-      compiler.init(externs, inputs, options);
+      compiler.parseForCompilation();
       if (!compiler.hasErrors()) {
-        compiler.parseForCompilation();
-      }
-      if (!compiler.hasErrors()) {
-        if (options.getInstrumentForCoverageOnly()) {
-          compiler.instrumentForCoverage();
-        } else {
-          compiler.stage1Passes();
-          if (!compiler.hasErrors()) {
-            compiler.stage2Passes();
-          }
-        }
-        compiler.completeCompilation();
+        compiler.instrumentForCoverage();
       }
     } finally {
-      // Make sure we generate a report of errors and warnings even if the compiler throws an
-      // exception somewhere.
       compiler.generateReport();
     }
-    return compiler.getResult();
+    result = compiler.getResult();
+    return result;
   }
 
   /**
