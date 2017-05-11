@@ -1791,6 +1791,25 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "goog.dom.createDom('iframe', Classes.A);");
   }
 
+  public void testBanCreateDomIgnoreLooseType() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'\n" +
+        "  error_message: 'BanCreateDom Message'\n" +
+        "  report_loose_type_violations: false\n" +
+        "  value: 'iframe.src'\n" +
+        "}";
+
+    testWarning(
+        "goog.dom.createDom('iframe', {'src': src});",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateDom Message");
+
+    testSame("goog.dom.createDom('iframe', attrs);");
+    testSame("goog.dom.createDom(tag, {'src': src});");
+  }
+
   public void testBanCreateDomAnyTagName() {
     configuration =
         "requirement: {\n" +

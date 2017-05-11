@@ -1494,22 +1494,30 @@ public final class ConformanceRules {
         if (tagName != null && !tagAttr[0].equals(tagName) && !tagAttr[0].equals("*")) {
           continue;
         }
-        ConformanceResult violation =
-            tagName == null && !tagAttr[0].equals("*")
-                ? ConformanceResult.POSSIBLE_VIOLATION
-                : ConformanceResult.VIOLATION;
+        ConformanceResult violation;
+        if (tagName != null || tagAttr[0].equals("*")) {
+          violation = ConformanceResult.VIOLATION;
+        } else if (reportLooseTypeViolations) {
+          violation = ConformanceResult.POSSIBLE_VIOLATION;
+        } else {
+          violation = ConformanceResult.CONFORMANCE;
+        }
         if (isClassName) {
           if (!tagAttr[1].equals("class")) {
             continue;
           }
           return violation;
         }
-        if (tagAttr[1].equals("textContent") && n.getChildCount() > 3) {
+        if (tagAttr[1].equals("textContent")
+            && n.getChildCount() > 3
+            && violation != ConformanceResult.CONFORMANCE) {
           return violation;
         }
         if (!attrs.isObjectLit()) {
           // Attrs is not an object literal and tagName matches or is unknown.
-          return ConformanceResult.POSSIBLE_VIOLATION;
+          return reportLooseTypeViolations
+              ? ConformanceResult.POSSIBLE_VIOLATION
+              : ConformanceResult.CONFORMANCE;
         }
         Node prop = NodeUtil.getFirstPropMatchingKey(attrs, tagAttr[1]);
         if (prop != null) {
