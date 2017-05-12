@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
 import com.google.javascript.jscomp.newtypes.JSType;
@@ -428,8 +429,12 @@ public interface CodingConvention extends Serializable {
     final String subclassName;
     final String superclassName;
 
-    public SubclassRelationship(SubclassType type,
-        Node subclassNode, Node superclassNode) {
+    public SubclassRelationship(
+        SubclassType type, Node subclassNode, Node superclassNode) {
+      Preconditions.checkArgument(
+          subclassNode.isQualifiedName(), "Expected qualified name, found: %s", subclassNode);
+      Preconditions.checkArgument(
+          superclassNode.isQualifiedName(), "Expected qualified name, found: %s", superclassNode);
       this.type = type;
       this.subclassName = subclassNode.getQualifiedName();
       this.superclassName = superclassNode.getQualifiedName();
