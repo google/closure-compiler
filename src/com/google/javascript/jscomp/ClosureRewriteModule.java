@@ -168,8 +168,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   static final DiagnosticType ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT =
       DiagnosticType.error(
           "JSC_ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT",
-          "Destructuring import cannot refer to a module with default export."
-              + " Please use standard (non-destructuring) import instead.");
+          "Destructuring import only allowed for importing module with named exports.\n"
+              + "See https://github.com/google/closure-compiler/wiki/goog.module-style");
 
   static final DiagnosticType ILLEGAL_DESTRUCTURING_NOT_EXPORTED =
       DiagnosticType.error(
