@@ -20,19 +20,17 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 
 /**
- * Creates synthetic blocks to optimizations from moving code
- * past markers in the source.
+ * Creates synthetic blocks to optimizations from moving code past markers in the source.
  *
  * @author johnlenz@google.com (John Lenz)
  */
-class CreateSyntheticBlocks implements CompilerPass {
+class CreateSyntheticBlocks extends AbstractPostOrderCallback implements CompilerPass {
   static final DiagnosticType UNMATCHED_START_MARKER = DiagnosticType.error(
       "JSC_UNMATCHED_START_MARKER", "Unmatched {0}");
 
@@ -77,7 +75,7 @@ class CreateSyntheticBlocks implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     // Find and validate the markers.
-    NodeTraversal.traverseEs6(compiler, root, new Callback());
+    NodeTraversal.traverseEs6(compiler, root, this);
 
     // Complain about any unmatched markers.
     for (Node node : markerStack) {
@@ -140,53 +138,47 @@ class CreateSyntheticBlocks implements CompilerPass {
     }
   }
 
-  private class Callback extends AbstractPostOrderCallback {
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!n.isCall() || !n.getFirstChild().isName()) {
-        return;
-      }
-
-      Node callTarget = n.getFirstChild();
-      String callName = callTarget.getString();
-
-      if (startMarkerName.equals(callName)) {
-        if (!parent.isExprResult()) {
-          compiler.report(
-              t.makeError(n, INVALID_MARKER_USAGE, startMarkerName));
-          return;
-        }
-        markerStack.push(parent);
-        return;
-      }
-
-      if (!endMarkerName.equals(callName)) {
-        return;
-      }
-
-      Node endMarkerNode = parent;
-      if (!endMarkerNode.isExprResult()) {
-        compiler.report(
-            t.makeError(n, INVALID_MARKER_USAGE, endMarkerName));
-        return;
-      }
-
-      if (markerStack.isEmpty()) {
-        compiler.report(t.makeError(n, UNMATCHED_END_MARKER,
-            startMarkerName, endMarkerName));
-        return;
-      }
-
-      Node startMarkerNode = markerStack.pop();
-      if (endMarkerNode.getParent() != startMarkerNode.getParent()) {
-        // The end marker isn't in the same block as the start marker.
-        compiler.report(t.makeError(n, UNMATCHED_END_MARKER,
-            startMarkerName, endMarkerName));
-        return;
-      }
-
-      // This is a valid marker set add it to the list of markers to process.
-      validMarkers.add(new Marker(startMarkerNode, endMarkerNode));
+  @Override
+  public void visit(NodeTraversal t, Node n, Node parent) {
+    if (!n.isCall() || !n.getFirstChild().isName()) {
+      return;
     }
+
+    Node callTarget = n.getFirstChild();
+    String callName = callTarget.getString();
+
+    if (startMarkerName.equals(callName)) {
+      if (!parent.isExprResult()) {
+        compiler.report(t.makeError(n, INVALID_MARKER_USAGE, startMarkerName));
+        return;
+      }
+      markerStack.push(parent);
+      return;
+    }
+
+    if (!endMarkerName.equals(callName)) {
+      return;
+    }
+
+    Node endMarkerNode = parent;
+    if (!endMarkerNode.isExprResult()) {
+      compiler.report(t.makeError(n, INVALID_MARKER_USAGE, endMarkerName));
+      return;
+    }
+
+    if (markerStack.isEmpty()) {
+      compiler.report(t.makeError(n, UNMATCHED_END_MARKER, startMarkerName, endMarkerName));
+      return;
+    }
+
+    Node startMarkerNode = markerStack.pop();
+    if (endMarkerNode.getParent() != startMarkerNode.getParent()) {
+      // The end marker isn't in the same block as the start marker.
+      compiler.report(t.makeError(n, UNMATCHED_END_MARKER, startMarkerName, endMarkerName));
+      return;
+    }
+
+    // This is a valid marker set add it to the list of markers to process.
+    validMarkers.add(new Marker(startMarkerNode, endMarkerNode));
   }
 }
