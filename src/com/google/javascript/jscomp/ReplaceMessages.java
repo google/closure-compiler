@@ -59,6 +59,10 @@ final class ReplaceMessages extends JsMessageVisitor {
         isSecondMessageTranslated && !isFirstMessageTranslated ?
         callNode.getChildAtIndex(2) : callNode.getSecondChild();
     callNode.replaceWith(replacementNode.detach());
+    Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(replacementNode);
+    if (changeScope != null) {
+      compiler.reportChangeToChangeScope(changeScope);
+    }
   }
 
   @Override

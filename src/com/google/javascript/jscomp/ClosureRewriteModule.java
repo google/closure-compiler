@@ -391,7 +391,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         case STRING_KEY:
           // Short objects must be converted first, so that we can rewrite module-global names.
           if (currentScript.isModule) {
-            rewriteShortObjectKey(n);
+            rewriteShortObjectKey(t, n);
           }
           break;
 
@@ -864,11 +864,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
-  private void rewriteShortObjectKey(Node n) {
+  private void rewriteShortObjectKey(NodeTraversal t, Node n) {
     Preconditions.checkArgument(n.isStringKey());
     if (!n.hasChildren()) {
       Node nameNode = IR.name(n.getString()).srcref(n);
       n.addChildToBack(nameNode);
+      t.reportCodeChange();
     }
   }
 
@@ -1345,6 +1346,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     if (currentScript.declareLegacyNamespace) {
       Node legacyQname = NodeUtil.newQName(compiler, currentScript.legacyNamespace).srcrefTree(n);
       n.replaceWith(legacyQname);
+      compiler.reportChangeToEnclosingScope(legacyQname);
       return;
     }
 
@@ -1539,6 +1541,10 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void safeSetString(Node n, String newString) {
+    if (n.getString().equals(newString)) {
+      return;
+    }
+
     String originalName = n.getString();
     n.setString(newString);
     if (n.getOriginalName() == null) {

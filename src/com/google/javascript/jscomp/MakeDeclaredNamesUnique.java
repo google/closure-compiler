@@ -380,6 +380,12 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
           checkState(n.isName(), n);
           n.setString(newName);
           compiler.reportChangeToEnclosingScope(n);
+          Node parent = n.getParent();
+          // If we are renaming a function declaration, make sure the containing scope
+          // has the opportunity to act on the change.
+          if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
+            compiler.reportChangeToEnclosingScope(parent);
+          }
         }
         nameMap.removeAll(name);
       }

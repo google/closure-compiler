@@ -224,6 +224,7 @@ final class CheckSideEffects extends AbstractPostOrderCallback
           Node expr = n.getLastChild();
           n.detachChildren();
           parent.replaceChild(n, expr);
+          t.reportCodeChange();
         }
       }
     }

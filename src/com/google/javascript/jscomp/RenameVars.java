@@ -57,6 +57,9 @@ final class RenameVars implements CompilerPass {
   /** List of local NAME nodes */
   private final ArrayList<Node> localNameNodes = new ArrayList<>();
 
+  /** Mapping of original names for change detection */
+  private final Map<Node, String> originalNameByNode = new HashMap<>();
+
   /**
    * Maps a name node to its pseudo name, null if we are not generating so
    * there will be no overhead unless we are debugging.
@@ -283,6 +286,8 @@ final class RenameVars implements CompilerPass {
         String tempName = LOCAL_VAR_PREFIX + getLocalVarIndex(var);
         incCount(tempName);
         localNameNodes.add(n);
+        // Remember the original string in a name before it's temporarily filled with an "L".
+        originalNameByNode.put(n, n.getString());
         n.setString(tempName);
       } else if (var != null) { // Not an extern
         // If it's global, increment global count
@@ -335,6 +340,7 @@ final class RenameVars implements CompilerPass {
   public void process(Node externs, Node root) {
     this.externNames = NodeUtil.collectExternVariableNames(this.compiler, externs);
 
+    originalNameByNode.clear();
     assignmentLog = new StringBuilder();
 
     // Do variable reference counting.
@@ -379,14 +385,19 @@ final class RenameVars implements CompilerPass {
 
   private void setNameAndReport(Node n, @Nullable String newName) {
     // A null newName, indicates it should not be renamed.
-    if (newName != null) {
+    if (newName != null && !newName.equals(n.getString())) {
       n.setString(newName);
-      compiler.reportChangeToEnclosingScope(n);
-      Node parent = n.getParent();
-      if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
-        // If we are renaming a function declaration, make sure the containing scope
-        // has the opporunity to act on the change.
-        compiler.reportChangeToEnclosingScope(parent);
+
+      // Only mark changes if the final name change is different than it was original before being
+      // filled with the "L" temporary name.
+      if (!newName.equals(originalNameByNode.get(n))) {
+        compiler.reportChangeToEnclosingScope(n);
+        Node parent = n.getParent();
+        if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
+          // If we are renaming a function declaration, make sure the containing scope
+          // has the opportunity to act on the change.
+          compiler.reportChangeToEnclosingScope(parent);
+        }
       }
     }
   }
