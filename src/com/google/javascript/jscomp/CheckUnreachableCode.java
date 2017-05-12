@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.GraphReachability;
@@ -30,7 +31,7 @@ import com.google.javascript.rhino.jstype.TernaryValue;
  * about unreachable code.
  *
  */
-class CheckUnreachableCode implements ScopedCallback {
+class CheckUnreachableCode extends AbstractPreOrderCallback implements ScopedCallback {
 
   static final DiagnosticType UNREACHABLE_CODE = DiagnosticType.warning(
       "JSC_UNREACHABLE_CODE", "unreachable code");
@@ -81,10 +82,6 @@ class CheckUnreachableCode implements ScopedCallback {
 
   @Override
   public void exitScope(NodeTraversal t) {
-  }
-
-  @Override
-  public void visit(NodeTraversal t, Node n, Node parent) {
   }
 
   private static final class ReachablePredicate implements
