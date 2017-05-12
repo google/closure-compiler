@@ -303,7 +303,7 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
         "}"));
 
     // Use of with test
-    testWarningEs6(LINE_JOINER.join(
+    testErrorEs6(LINE_JOINER.join(
         "class A {",
         "  constructor() {this.x = 1;}",
         "  method() {",
@@ -312,37 +312,37 @@ public final class StrictModeCheckTest extends Es6CompilerTestCase {
         "}"), StrictModeCheck.USE_OF_WITH);
 
     // Eval errors test
-    testWarningEs6(LINE_JOINER.join(
+    testErrorEs6(LINE_JOINER.join(
         "class A {",
         "  method(eval) {}",
         "}"), StrictModeCheck.EVAL_DECLARATION);
-    testWarningEs6(LINE_JOINER.join(
+    testErrorEs6(LINE_JOINER.join(
         "class A {",
         "  method() {var eval = 1;}",
         "}"), StrictModeCheck.EVAL_DECLARATION);
-    testWarningEs6(LINE_JOINER.join(
+    testErrorEs6(LINE_JOINER.join(
         "class A {",
         "  method() {eval = 1}",
         "}"), StrictModeCheck.EVAL_ASSIGNMENT);
 
     // Use of 'arguments'
-    testWarningEs6(LINE_JOINER.join(
+    testErrorEs6(LINE_JOINER.join(
         "class A {",
         "  method(arguments) {}",
         "}"), StrictModeCheck.ARGUMENTS_DECLARATION);
-    testWarningEs6(LINE_JOINER.join(
+    testErrorEs6(LINE_JOINER.join(
         "class A {",
         "  method() {var arguments = 1;}",
         "}"), StrictModeCheck.ARGUMENTS_DECLARATION);
-    testWarningEs6(LINE_JOINER.join(
+    testErrorEs6(LINE_JOINER.join(
         "class A {",
         "  method() {arguments = 1}",
         "}"), StrictModeCheck.ARGUMENTS_ASSIGNMENT);
-    testWarningEs6(LINE_JOINER.join(
+    testErrorEs6(LINE_JOINER.join(
         "class A {",
         "  method() {arguments.callee}",
         "}"), StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN);
-    testWarningEs6(LINE_JOINER.join(
+    testErrorEs6(LINE_JOINER.join(
         "class A {",
         "  method() {arguments.caller}",
         "}"), StrictModeCheck.ARGUMENTS_CALLER_FORBIDDEN);
