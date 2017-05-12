@@ -313,11 +313,13 @@ final class NameAnalyzer implements CompilerPass {
 
     @Override
     public void remove() {
-      // Setters have VAR, FUNCTION, or ASSIGN parent nodes. CALL parent
+      // Setters have VAR, LET, CONST, FUNCTION, or ASSIGN parent nodes. CALL parent
       // nodes are global refs, and are handled later in this function.
       Node containingNode = parent.getParent();
       switch (parent.getToken()) {
         case VAR:
+        case LET:
+        case CONST:
           checkState(parent.hasOneChild());
           replaceWithRhs(containingNode, parent);
           break;
@@ -470,7 +472,7 @@ final class NameAnalyzer implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       NameInformation ns = null;
-      if (NodeUtil.isVarDeclaration(n)) {
+      if (n.isName() && NodeUtil.isNameDeclaration(parent)) {
         ns = createNameInformation(t, n);
       } else if (NodeUtil.isFunctionDeclaration(n)) {
         ns = createNameInformation(t, n.getFirstChild());
@@ -516,7 +518,8 @@ final class NameAnalyzer implements CompilerPass {
         if (!NodeUtil.isImmutableResult(n.getLastChild())) {
           recordConsumers(t, n, n);
         }
-      } else if (NodeUtil.isVarDeclaration(n)) {
+      } else if (NodeUtil.isVarDeclaration(n)
+          || (t.inGlobalScope() && n.isName() && NodeUtil.isNameDeclaration(parent))) {
         NameInformation ns = createNameInformation(t, n);
         checkNotNull(ns, "createNameInformation returned null for: %s", n);
         recordDepScope(n, ns);
@@ -650,7 +653,8 @@ final class NameAnalyzer implements CompilerPass {
 
       // Record global variable and function declarations
       if (t.inGlobalHoistScope()) {
-        if (NodeUtil.isVarDeclaration(n)) {
+        if (NodeUtil.isVarDeclaration(n)
+            || (t.inGlobalScope() && n.isName() && NodeUtil.isNameDeclaration(parent))) {
           NameInformation ns = createNameInformation(t, n);
           checkNotNull(ns, "createNameInformation returned null for: %s", n);
           recordSet(ns.name, n);
@@ -714,15 +718,13 @@ final class NameAnalyzer implements CompilerPass {
     }
 
     /**
-     * Records the assignment to a prototype property of a global name,
-     * if possible.
+     * Records the assignment to a prototype property of a global name, if possible.
      *
      * @param className The name of the class.
      * @param prototypeProperty The name of the prototype property.
      * @param node The top node representing the name (GETPROP)
      */
-    private void recordPrototypeSet(String className, String prototypeProperty,
-        Node node) {
+    private void recordPrototypeSet(String className, String prototypeProperty, Node node) {
       JsName name = getName(className, true);
       name.prototypeNames.add(prototypeProperty);
       refNodes.add(new PrototypeSetNode(name, node));
@@ -1560,10 +1562,10 @@ final class NameAnalyzer implements CompilerPass {
       case NAME:
         // Check whether this is an assignment to a prototype property
         // of an object defined in the global scope.
-        if (!bNameWasShortened &&
-            n.isGetProp() &&
-            parent.isAssign() &&
-            "prototype".equals(n.getLastChild().getString())) {
+        if (!bNameWasShortened
+            && n.isGetProp()
+            && parent.isAssign()
+            && "prototype".equals(n.getLastChild().getString())) {
           if (createNameInformation(t, n.getFirstChild()) != null) {
             name = rootNameNode.getString() + name;
             name = name.substring(0, name.length() - PROTOTYPE_SUFFIX_LEN);
@@ -1573,8 +1575,7 @@ final class NameAnalyzer implements CompilerPass {
             return null;
           }
         }
-        return createNameInformation(
-            rootNameNode.getString() + name, t.getScope(), rootNameNode);
+        return createNameInformation(rootNameNode.getString() + name, t.getScope(), rootNameNode);
       case THIS:
         if (t.inGlobalHoistScope()) {
           NameInformation nameInfo = new NameInformation(
@@ -1850,6 +1851,8 @@ final class NameAnalyzer implements CompilerPass {
       case EXPR_RESULT:
       case FUNCTION:
       case VAR:
+      case LET:
+      case CONST:
         break;
       case ASSIGN:
         checkArgument(
@@ -1984,6 +1987,8 @@ final class NameAnalyzer implements CompilerPass {
           return ImmutableList.of(lhs, rhs);
         }
       case VAR:
+      case LET:
+      case CONST:
         {
           // recurse on all children
           ImmutableList.Builder<Node> nodes = ImmutableList.builder();

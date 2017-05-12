@@ -174,8 +174,7 @@ public final class Reference implements StaticRef {
   }
 
   Node getGrandparent() {
-    Node parent = getParent();
-    return parent == null ? null : parent.getParent();
+    return getNode().getGrandparent();
   }
 
   private static boolean isLhsOfEnhancedForExpression(Node n) {
