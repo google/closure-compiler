@@ -63,6 +63,7 @@ public class PartialCompilationTest extends TestCase {
     options.setAssumeForwardDeclaredForMissingTypes(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setStrictModeInput(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setPreserveDetailedSourceInfo(true);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     compiler.init(
