@@ -21,6 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Resources;
 import com.google.javascript.rhino.StaticSourceFile;
@@ -365,6 +366,23 @@ public class SourceFile implements StaticSourceFile, Serializable {
   static final String BANG_SLASH = "!/";
   static final String JAR_URL_PREFIX = "jar:file:";
 
+  private static boolean isZipEntry(String path) {
+    return path.contains(".zip!/") && path.endsWith(".js");
+  }
+
+  @GwtIncompatible("java.io.File")
+  private static SourceFile fromZipEntry(String zipURL, Charset inputCharset) {
+    Preconditions.checkArgument(isZipEntry(zipURL));
+    String[] components = zipURL.split(BANG_SLASH);
+    try {
+      String zipPath = components[0];
+      String relativePath = components[1];
+      return fromZipEntry(zipPath, zipPath, relativePath, inputCharset);
+    } catch (MalformedURLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   @GwtIncompatible("java.net.URL")
   public static SourceFile fromZipEntry(
       String originalZipPath, String absoluteZipPath, String entryPath, Charset inputCharset)
@@ -380,16 +398,6 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
   @GwtIncompatible("java.io.File")
   public static SourceFile fromFile(String fileName, Charset charset) {
-    if (fileName.contains(BANG_SLASH)) {
-      String[] components = fileName.split(BANG_SLASH);
-      try {
-        String zipPath = components[0];
-        String relativePath = components[1];
-        return fromZipEntry(zipPath, zipPath, relativePath, charset);
-      } catch (MalformedURLException e) {
-        throw new RuntimeException(e);
-      }
-    }
     return builder().withCharset(charset).buildFromFile(fileName);
   }
 
@@ -481,13 +489,20 @@ public class SourceFile implements StaticSourceFile, Serializable {
       return buildFromFile(new File(fileName));
     }
 
+    /**
+     * @deprecated Use {@link #buildFromPath(Path path)}
+     */
     @GwtIncompatible("java.io.File")
+    @Deprecated
     public SourceFile buildFromFile(File file) {
-      return new OnDisk(file.toPath(), originalPath, charset);
+      return buildFromPath(file.toPath());
     }
 
     @GwtIncompatible("java.io.File")
     public SourceFile buildFromPath(Path path) {
+      if (isZipEntry(path.toString())) {
+        return fromZipEntry(path.toString(), charset);
+      }
       return new OnDisk(path, originalPath, charset);
     }
 

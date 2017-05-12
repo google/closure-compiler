@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import junit.framework.TestCase;
@@ -91,10 +92,48 @@ public final class SourceFileTest extends TestCase {
 
     // Perform a change.
     createZipWithContent(jsZipFile, newExpectedContent);
+    // Verify cache is consistent unless cleared.
+    assertEquals(expectedContent, zipSourceFile.getCode());
     zipSourceFile.clearCachedSource();
 
     // Verify final state.
     assertEquals(newExpectedContent, zipSourceFile.getCode());
+  }
+
+  public void testSourceFileResolvesZipEntries() throws IOException {
+    // Setup environment.
+    String expectedContent = "// <program goes here>";
+    Path jsZipFile = Files.createTempFile("test", ".js.zip");
+    createZipWithContent(jsZipFile, expectedContent);
+
+    // Test SourceFile#fromZipEntry(String, String, String, Charset)
+    SourceFile sourceFileFromZipEntry =
+        SourceFile.fromZipEntry(
+            jsZipFile.toString(),
+            jsZipFile.toAbsolutePath().toString(),
+            "foo.js",
+            StandardCharsets.UTF_8);
+    assertEquals(expectedContent, sourceFileFromZipEntry.getCode());
+
+    // Test SourceFile#fromFile(String)
+    SourceFile sourceFileFromFileString = SourceFile.fromFile(jsZipFile + "!/foo.js");
+    assertEquals(expectedContent, sourceFileFromFileString.getCode());
+
+    // Test SourceFile#fromFile(String, Charset)
+    SourceFile sourceFileFromFileStringCharset =
+        SourceFile.fromFile(jsZipFile + "!/foo.js", StandardCharsets.UTF_8);
+    assertEquals(expectedContent, sourceFileFromFileStringCharset.getCode());
+
+    // Test SourceFile#fromPath(Path, Charset)
+    Path zipEntryPath = Paths.get(jsZipFile + "!/foo.js");
+    SourceFile sourceFileFromPathCharset =
+        SourceFile.fromPath(zipEntryPath, StandardCharsets.UTF_8);
+    assertEquals(expectedContent, sourceFileFromPathCharset.getCode());
+
+    // Test SourceFile#fromFile(File, Charset)
+    SourceFile sourceFileFromFileCharset =
+        SourceFile.fromFile(zipEntryPath.toFile(), StandardCharsets.UTF_8);
+    assertEquals(expectedContent, sourceFileFromFileCharset.getCode());
   }
 
   private static void createZipWithContent(Path zipFile, String content)
