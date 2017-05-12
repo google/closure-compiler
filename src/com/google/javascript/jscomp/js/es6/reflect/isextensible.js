@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
+'require util/defines';
 'require util/polyfill';
 
 
 $jscomp.polyfill('Reflect.isExtensible', function(orig) {
   if (orig) return orig;
-  if (typeof Object.isExtensible == 'function') {
+  if ($jscomp.ASSUME_ES5 || typeof Object.isExtensible == 'function') {
     return Object.isExtensible;
   }
   return function() { return true; };

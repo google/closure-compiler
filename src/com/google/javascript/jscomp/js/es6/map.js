@@ -17,6 +17,7 @@
 'require es6/symbol';
 'require es6/util/makeiterator';
 'require es6/weakmap';
+'require util/defines';
 'require util/owns';
 'require util/polyfill';
 
@@ -40,12 +41,6 @@ $jscomp.MapEntry = function() {
   this.value;
 };
 
-
-/**
- * Whether to skip the conformance check and simply use the polyfill always.
- * @define {boolean}
- */
-$jscomp.ASSUME_NO_NATIVE_MAP = false;
 
 $jscomp.polyfill('Map',
     /**

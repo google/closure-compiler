@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
+'require util/defines';
 'require util/polyfill';
 
 
 $jscomp.polyfill('Reflect.preventExtensions', function(orig) {
   if (orig) return orig;
 
-  if (typeof Object.preventExtensions != 'function') {
+  if (!($jscomp.ASSUME_ES5 || typeof Object.preventExtensions == 'function')) {
     return function() { return false; };
   }
 

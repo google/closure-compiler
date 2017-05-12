@@ -14,26 +14,24 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Provides a partial internal polyfill for Object.create.
- */
-'require util/defines';
+'require base';
 
 
 /**
- * Polyfill for Object.create() method:
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
- *
- * Does not implement the second argument.
- * @param {!Object} prototype
- * @return {!Object}
+ * Whether to assume ES5 is available.  This enables removing several
+ * internal polyfills, which must otherwise be detected at runtime.
+ * @define {boolean}
  */
-$jscomp.objectCreate =
-    ($jscomp.ASSUME_ES5 || typeof Object.create == 'function') ?
-    Object.create :
-    function(prototype) {
-      /** @constructor */
-      var ctor = function() {};
-      ctor.prototype = prototype;
-      return new ctor();
-    };
+$jscomp.ASSUME_ES5 = false;
+
+/**
+ * Whether to skip the conformance check and simply use the polyfill always.
+ * @define {boolean}
+ */
+$jscomp.ASSUME_NO_NATIVE_MAP = false;
+
+/**
+ * Whether to skip the conformance check and simply use the polyfill always.
+ * @define {boolean}
+ */
+$jscomp.ASSUME_NO_NATIVE_SET = false;

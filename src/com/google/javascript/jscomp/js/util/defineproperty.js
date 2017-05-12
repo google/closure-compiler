@@ -18,7 +18,7 @@
  * @fileoverview Provides methods to polyfill native objects.
  * @suppress {reportUnknownTypes}
  */
-'require base';
+'require util/defines';
 
 
 /**
@@ -35,7 +35,7 @@
  * @suppress {reportUnknownTypes}
  */
 $jscomp.defineProperty =
-    typeof Object.defineProperties == 'function' ?
+    $jscomp.ASSUME_ES5 || typeof Object.defineProperties == 'function' ?
     Object.defineProperty :
     function(target, property, descriptor) {
       descriptor = /** @type {!ObjectPropertyDescriptor} */ (descriptor);
