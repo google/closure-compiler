@@ -149,7 +149,7 @@ class CollapseProperties implements CompilerPass {
     // allow "a = a || {}" or "var a = a || {}"
     Node valParent = getValueParent(ref);
     Node val = valParent.getLastChild();
-    if (val.getToken() == Token.OR) {
+    if (val.isOr()) {
       Node maybeName = val.getFirstChild();
       if (ref.node.matchesQualifiedName(maybeName)) {
         return true;

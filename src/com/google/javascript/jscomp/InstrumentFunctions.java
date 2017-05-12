@@ -148,7 +148,7 @@ class InstrumentFunctions implements CompilerPass {
       if (NodeUtil.isVarDeclaration(n) && removable.contains(n.getString())) {
         parent.removeChild(n);
         if (!parent.hasChildren()) {
-          parent.getParent().removeChild(parent);
+          parent.detach();
         }
       }
     }

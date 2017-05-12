@@ -1535,8 +1535,7 @@ public final class ConformanceRules {
     private String getTagName(Node tag) {
       if (tag.isString()) {
         return tag.getString().toLowerCase();
-      } else if (tag.isGetProp()
-          && tag.getFirstChild().getQualifiedName().equals("goog.dom.TagName")) {
+      } else if (tag.isGetProp() && tag.getFirstChild().matchesQualifiedName("goog.dom.TagName")) {
         return tag.getLastChild().getString().toLowerCase();
       }
       return null;

@@ -208,7 +208,7 @@ class CrossModuleMethodMotion implements CompilerPass {
             Node assignmentParent = valueParent.getParent();
             valueParent.removeChild(value);
             // remove Foo.prototype.bar = value
-            assignmentParent.getParent().removeChild(assignmentParent);
+            assignmentParent.detach();
 
             Node destParent = compiler.getNodeForCodeInsertion(
                 deepestCommonModuleRef);

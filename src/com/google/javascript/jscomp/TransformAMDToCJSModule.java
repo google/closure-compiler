@@ -138,7 +138,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
      */
     private void handleDefineObjectLiteral(NodeTraversal t, Node parent, Node onlyExport,
         Node script) {
-      onlyExport.getParent().removeChild(onlyExport);
+      onlyExport.detach();
       script.replaceChild(parent,
           IR.exprResult(
               IR.assign(
@@ -252,7 +252,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
         Node callbackBlock) {
       int curIndex = script.getIndexOfChild(defineParent);
       script.removeChild(defineParent);
-      callbackBlock.getParent().removeChild(callbackBlock);
+      callbackBlock.detach();
       Node before = script.getChildAtIndex(curIndex);
       if (before != null) {
         script.addChildBefore(callbackBlock, before);

@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -25,7 +24,6 @@ import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -248,7 +246,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
             @Override
             public void visit(NodeTraversal t, Node n, Node parent) {
               if (!foundNonEmptyReturn) {
-                if (n.getToken() == Token.RETURN
+                if (n.isReturn()
                     && n.hasChildren()
                     && !n.getFirstChild().matchesQualifiedName("undefined")) {
                   foundNonEmptyReturn = true;

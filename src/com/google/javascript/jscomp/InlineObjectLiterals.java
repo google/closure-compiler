@@ -425,7 +425,7 @@ class InlineObjectLiterals implements CompilerPass {
 
       if (defined) {
         compiler.reportChangeToEnclosingScope(vnode.getParent());
-        vnode.getParent().removeChild(vnode);
+        vnode.detach();
       }
 
       for (Reference ref : referenceInfo.references) {

@@ -622,58 +622,59 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       case EQ:
       case NE:
       case SHEQ:
-      case SHNE: {
-        left = n.getFirstChild();
-        right = n.getLastChild();
+      case SHNE:
+        {
+          left = n.getFirstChild();
+          right = n.getLastChild();
 
-        if (left.isTypeOf()) {
-          if (right.isString()) {
-            checkTypeofString(t, right, right.getString());
+          if (left.isTypeOf()) {
+            if (right.isString()) {
+              checkTypeofString(t, right, right.getString());
+            }
+          } else if (right.isTypeOf() && left.isString()) {
+            checkTypeofString(t, left, left.getString());
           }
-        } else if (right.isTypeOf() && left.isString()) {
-          checkTypeofString(t, left, left.getString());
-        }
 
-        leftType = getJSType(left);
-        rightType = getJSType(right);
+          leftType = getJSType(left);
+          rightType = getJSType(right);
 
-        // We do not want to warn about explicit comparisons to VOID. People
-        // often do this if they think their type annotations screwed up.
-        //
-        // We do want to warn about cases where people compare things like
-        // (Array|null) == (Function|null)
-        // because it probably means they screwed up.
-        //
-        // This heuristic here is not perfect, but should catch cases we
-        // care about without too many false negatives.
-        JSType leftTypeRestricted = leftType.restrictByNotNullOrUndefined();
-        JSType rightTypeRestricted = rightType.restrictByNotNullOrUndefined();
+          // We do not want to warn about explicit comparisons to VOID. People
+          // often do this if they think their type annotations screwed up.
+          //
+          // We do want to warn about cases where people compare things like
+          // (Array|null) == (Function|null)
+          // because it probably means they screwed up.
+          //
+          // This heuristic here is not perfect, but should catch cases we
+          // care about without too many false negatives.
+          JSType leftTypeRestricted = leftType.restrictByNotNullOrUndefined();
+          JSType rightTypeRestricted = rightType.restrictByNotNullOrUndefined();
 
-        TernaryValue result = TernaryValue.UNKNOWN;
-          if (n.getToken() == Token.EQ || n.getToken() == Token.NE) {
-          result = leftTypeRestricted.testForEquality(rightTypeRestricted);
-          if (n.isNE()) {
-            result = result.not();
-          }
-        } else {
-          // SHEQ or SHNE
-          if (!leftTypeRestricted.canTestForShallowEqualityWith(rightTypeRestricted)) {
+          TernaryValue result = TernaryValue.UNKNOWN;
+          if (n.getToken() == Token.EQ || n.isNE()) {
+            result = leftTypeRestricted.testForEquality(rightTypeRestricted);
+            if (n.isNE()) {
+              result = result.not();
+            }
+          } else {
+            // SHEQ or SHNE
+            if (!leftTypeRestricted.canTestForShallowEqualityWith(rightTypeRestricted)) {
               result = n.getToken() == Token.SHEQ ? TernaryValue.FALSE : TernaryValue.TRUE;
+            }
           }
-        }
 
-        if (result != TernaryValue.UNKNOWN) {
-          report(
-              t,
-              n,
-              DETERMINISTIC_TEST,
-              leftType.toString(),
-              rightType.toString(),
-              result.toString());
+          if (result != TernaryValue.UNKNOWN) {
+            report(
+                t,
+                n,
+                DETERMINISTIC_TEST,
+                leftType.toString(),
+                rightType.toString(),
+                result.toString());
+          }
+          ensureTyped(t, n, BOOLEAN_TYPE);
+          break;
         }
-        ensureTyped(t, n, BOOLEAN_TYPE);
-        break;
-      }
 
       case LT:
       case LE:

@@ -4331,7 +4331,7 @@ final class NewTypeInference implements CompilerPass {
     if (!recvType.hasProp(pname)) {
       // Warn for inexistent prop either on the non-top-level of a qualified
       // name, or for assignment ops that won't create a new property.
-      if (insideQualifiedName || propAccessNode.getParent().getToken() != Token.ASSIGN) {
+      if (insideQualifiedName || !propAccessNode.getParent().isAssign()) {
         mayWarnAboutInexistentProp(propAccessNode, recvType, pname);
         if (!recvType.isLoose()) {
           return new LValueResultFwd(inEnv, requiredType, null, null);

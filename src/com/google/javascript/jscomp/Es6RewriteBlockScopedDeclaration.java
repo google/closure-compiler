@@ -142,7 +142,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
    */
   private boolean inLoop(Node n) {
     Node enclosingNode = NodeUtil.getEnclosingNode(n, loopPredicate);
-    return enclosingNode != null && enclosingNode.getToken() != Token.FUNCTION;
+    return enclosingNode != null && !enclosingNode.isFunction();
   }
 
   private static final Predicate<Node> loopPredicate = new Predicate<Node>() {

@@ -774,7 +774,7 @@ class GlobalNamespace
             }
             break;
           case ASSIGN:
-            if (!name.equals(anc.getFirstChild().getQualifiedName())) {
+            if (!anc.getFirstChild().matchesQualifiedName(name)) {
               return Ref.Type.ALIASING_GET;
             }
             break;

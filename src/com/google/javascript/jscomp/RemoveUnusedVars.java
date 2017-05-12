@@ -465,7 +465,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
         }
 
         compiler.reportChangeToEnclosingScope(n);
-        n.getParent().removeChild(n);
+        n.detach();
       }
       for (Node n : toReplaceWithZero) {
         // Don't remove any nodes twice since doing so would violate change reporting constraints.

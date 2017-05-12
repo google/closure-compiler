@@ -130,7 +130,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         n.removeChild(finallyBlock);
         n.replaceWith(finallyBlock);
       } else {
-        n.getParent().removeChild(n);
+        n.detach();
       }
       reportCodeChange();
       return finallyBlock;

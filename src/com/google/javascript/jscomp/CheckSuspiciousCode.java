@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 
 /**
  * Checks for common errors, such as misplaced semicolons:
@@ -129,13 +128,13 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
   }
 
   private void checkInvalidIn(NodeTraversal t, Node n) {
-    if (n.getToken() == Token.IN) {
+    if (n.isIn()) {
       reportIfNonObject(t, n.getLastChild(), SUSPICIOUS_IN_OPERATOR);
     }
   }
 
   private void checkNonObjectInstanceOf(NodeTraversal t, Node n) {
-    if (n.getToken() == Token.INSTANCEOF) {
+    if (n.isInstanceOf()) {
       reportIfNonObject(
           t, n.getFirstChild(), SUSPICIOUS_INSTANCEOF_LEFT_OPERAND);
     }

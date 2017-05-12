@@ -314,7 +314,7 @@ public final class JSDocInfoPrinter {
         }
       }
       sb.append("}");
-    } else if (typeNode.getToken() == Token.VOID) {
+    } else if (typeNode.isVoid()) {
       sb.append("void");
     } else {
       if (typeNode.hasChildren()) {

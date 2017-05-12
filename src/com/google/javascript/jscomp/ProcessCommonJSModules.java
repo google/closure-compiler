@@ -321,7 +321,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         if (v == null || v.isGlobal()) {
           Node qNameRoot = getBaseQualifiedNameNode(n);
           if (qNameRoot != null
-              && EXPORTS.equals(qNameRoot.getQualifiedName())
+              && qNameRoot.matchesQualifiedName(EXPORTS)
               && NodeUtil.isLValue(qNameRoot)) {
             if (!this.hasGoogProvideOrModule) {
               errors.add(t.makeError(qNameRoot, SUSPICIOUS_EXPORTS_ASSIGNMENT));
@@ -375,7 +375,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       if (!NodeUtil.isExpressionResultUsed(require)
           && parent.isExprResult()
           && NodeUtil.isStatementBlock(parent.getParent())) {
-        parent.getParent().removeChild(parent);
+        parent.detach();
       }
 
       imports.add(moduleName);
@@ -784,7 +784,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       //
       //     module.exports = {};
       //     module.exports.foo = bar;
-      if ("module.exports".equals(root.getQualifiedName())) {
+      if (root.matchesQualifiedName("module.exports")) {
         if (rValue != null
             && rValue.isObjectLit()
             && root.getParent().isAssign()
@@ -817,7 +817,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           && (root.getNext() != null && (root.getNext().isName() || root.getNext().isGetProp()))
           && root.getParent().getParent().isExprResult()
           && rValueVar != null) {
-        root.getParent().getParent().detachFromParent();
+        root.getParent().getParent().detach();
         t.reportCodeChange();
         return;
       }
@@ -825,7 +825,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       Node updatedExport =
           NodeUtil.newName(compiler, moduleName, export, export.getQualifiedName());
 
-      if ("module.exports".equals(root.getQualifiedName())
+      if (root.matchesQualifiedName("module.exports")
           && rValue != null
           && t.getScope().getVar("module.exports") == null
           && root.getParent().isAssign()
@@ -1008,7 +1008,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
             }
             grandparent.replaceChild(parent, expr);
             if (expr.isLet()) {
-              expr.getFirstChild().replaceChild(expr.getFirstChild().getFirstChild(), parent);
+              expr.getFirstChild().replaceChild(expr.getFirstFirstChild(), parent);
             } else {
               expr.getFirstChild().replaceChild(expr.getFirstChild().getSecondChild(), parent);
             }
@@ -1038,7 +1038,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
             }
             grandparent.replaceChild(parent, expr);
             if (expr.isVar()) {
-              expr.getFirstChild().replaceChild(expr.getFirstChild().getFirstChild(), parent);
+              expr.getFirstChild().replaceChild(expr.getFirstFirstChild(), parent);
             } else {
               expr.getFirstChild().replaceChild(expr.getFirstChild().getSecondChild(), parent);
             }

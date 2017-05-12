@@ -222,7 +222,7 @@ final class ClosureCodeRemoval implements CompilerPass {
       compiler.reportChangeToEnclosingScope(call);
       Node parent = call.getParent();
       if (parent.isExprResult()) {
-        parent.getParent().removeChild(parent);
+        parent.detach();
       } else {
         // Otherwise, replace the assertion with its first argument,
         // which is the return value of the assertion.

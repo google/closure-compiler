@@ -20,7 +20,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import javax.annotation.Nullable;
 
 /**
@@ -154,7 +153,7 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
     }
     if (node.isString()) {
       return true;
-    } else if (node.getToken() == Token.ADD) {
+    } else if (node.isAdd()) {
       Preconditions.checkState(node.hasTwoChildren());
       Node left = node.getFirstChild();
       Node right = node.getLastChild();

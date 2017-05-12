@@ -541,7 +541,7 @@ public final class CodingConventions {
 
     @Override
     public boolean isPropertyTestFunction(Node call) {
-      return "Array.isArray".equals(call.getFirstChild().getQualifiedName());
+      return call.getFirstChild().matchesQualifiedName("Array.isArray");
     }
 
     @Override

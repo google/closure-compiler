@@ -530,14 +530,14 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
 
     Node insertionPoint = n;
     Node topLevel = parent;
-    boolean insideExport = parent.getToken() == Token.EXPORT;
+    boolean insideExport = parent.isExport();
     if (insideExport) {
       insertionPoint = parent;
       topLevel = parent.getParent();
     }
     // The node can have multiple children if transformed from an ambient namespace declaration.
     for (Node c : n.children()) {
-      if (c.getToken() == Token.CONST) {
+      if (c.isConst()) {
         JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(c.getJSDocInfo());
         builder.recordConstancy();
         c.setToken(Token.VAR);
@@ -858,7 +858,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
       switch (parent.getToken()) {
         case DECLARE:
         case EXPORT:
-          if (parent.getParent().getToken() == Token.EXPORT) {
+          if (parent.getParent().isExport()) {
             parentModuleRoot = grandParent.getGrandparent();
           } else {
             parentModuleRoot = grandParent.getParent();

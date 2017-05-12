@@ -926,7 +926,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       // replacement already.
       if (isNamespacePlaceholder(parent)) {
         compiler.reportChangeToEnclosingScope(parent);
-        parent.getParent().removeChild(parent);
+        parent.detach();
       }
     }
   }
@@ -1027,7 +1027,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       };
       compiler.setCssRenamingMap(cssRenamingMap);
       compiler.reportChangeToEnclosingScope(parent);
-      parent.getParent().removeChild(parent);
+      parent.detach();
     }
   }
 
@@ -1370,7 +1370,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             if (n.getToken() == Token.BANG) {
               n = n.getFirstChild();
             }
-            if (n.getToken() == Token.STRING
+            if (n.isString()
                 && !n.hasChildren() // templated object types are ok.
                 && n.getString().equals("Object")) {
               compiler.report(

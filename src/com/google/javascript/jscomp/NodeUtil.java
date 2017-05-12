@@ -699,7 +699,7 @@ public final class NodeUtil {
   static boolean isStringLiteralValue(Node node) {
     if (node.isString()) {
       return true;
-    } else if (node.getToken() == Token.ADD) {
+    } else if (node.isAdd()) {
       Preconditions.checkState(node.hasTwoChildren(), node);
       Node left = node.getFirstChild();
       Node right = node.getLastChild();
@@ -3032,7 +3032,7 @@ public final class NodeUtil {
 
   static boolean isLhsOfAssign(Node n) {
     Node parent = n.getParent();
-    return parent != null && parent.getToken() == Token.ASSIGN && parent.getFirstChild() == n;
+    return parent != null && parent.isAssign() && parent.getFirstChild() == n;
   }
 
   public static boolean isImportedName(Node n) {

@@ -21,7 +21,6 @@ import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -132,7 +131,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
   public void visit(NodeTraversal t, Node n, Node parent) {
     LexicalContext context = contextStack.getFirst();
 
-    if (n.getToken() == Token.FUNCTION) {
+    if (n.isFunction()) {
       checkState(
           context.function.isPresent() && context.function.get() == n,
           "unexpected function context:\nexpected: %s\nactual: %s",

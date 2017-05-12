@@ -1028,7 +1028,7 @@ public class CodeGenerator {
           add(body);
         } else {
           // This is a field or object literal property.
-          boolean isInClass = n.getParent().getToken() == Token.CLASS_MEMBERS;
+          boolean isInClass = n.getParent().isClassMembers();
           Node initializer = first.getNext();
           if (initializer != null) {
             // Object literal value.

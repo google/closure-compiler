@@ -433,7 +433,7 @@ class PeepholeSubstituteAlternateSyntax
     // Object() really refers to the built-in Object constructor
     // and not a user-defined constructor with the same name.
 
-    if (isASTNormalized() && Token.NAME == constructorNameNode.getToken()) {
+    if (isASTNormalized() && constructorNameNode.isName()) {
 
       String className = constructorNameNode.getString();
 

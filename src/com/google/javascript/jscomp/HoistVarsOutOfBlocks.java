@@ -92,7 +92,7 @@ class HoistVarsOutOfBlocks extends AbstractPostOrderCallback
       return;
     }
 
-    Node block = t.getScope().getRootNode();
+    Node block = t.getScopeRoot();
 
     for (Node lhs : varNode.children()) {
       if (!lhs.isName()) {
