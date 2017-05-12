@@ -16,8 +16,9 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.MoreObjects.toStringHelper;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableSet;
@@ -25,6 +26,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import java.util.ArrayDeque;
@@ -84,9 +86,9 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     if (nameStack.isEmpty()) {
       // If the contextual renamer is being used, the starting context can not
       // be a function.
-      Preconditions.checkState(
+      checkState(
           !declarationRoot.isFunction() || !(rootRenamer instanceof ContextualRenamer));
-      Preconditions.checkState(t.inGlobalScope());
+      checkState(t.inGlobalScope());
       renamer = rootRenamer;
     } else {
       renamer = nameStack.peek().createForChildScope(!NodeUtil.createsBlockScope(declarationRoot));
@@ -132,9 +134,8 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         Renamer renamer = nameStack.peek().createForChildScope(true);
 
         // Add the function parameters
-        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-          String name = c.getString();
-          renamer.addDeclaredName(name, true);
+        for (Node lhs : NodeUtil.getLhsNodesOfDeclaration(n)) {
+          renamer.addDeclaredName(lhs.getString(), true);
         }
 
         Node functionBody = n.getNext();
@@ -155,22 +156,18 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
   public void visit(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
       case NAME:
+        visitName(t, n, parent);
+        break;
+
+      case STRING_KEY: {
         String newName = getReplacementName(n.getString());
-        if (newName != null) {
-          Renamer renamer = nameStack.peek();
-          if (renamer.stripConstIfReplaced()) {
-            // TODO(johnlenz): Do we need to do anything about the Javadoc?
-            n.removeProp(Node.IS_CONSTANT_NAME);
-          }
-          n.setString(newName);
-          t.reportCodeChange();
-          // If we are renaming a function declaration, make sure the containing scope 
-          // has the opporunity to act on the change.
-          if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
-            t.getCompiler().reportChangeToEnclosingScope(parent);
-          }
+        if (newName != null && !n.hasChildren()) {
+          Node name = IR.name(n.getString()).useSourceInfoFrom(n);
+          n.addChildToBack(name);
+          visitName(t, name, n);
         }
         break;
+      }
 
       case FUNCTION:
         // Remove the function body scope
@@ -189,7 +186,23 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         break;
     }
   }
-
+  private void visitName(NodeTraversal t, Node n, Node parent) {
+    String newName = getReplacementName(n.getString());
+    if (newName != null) {
+      Renamer renamer = nameStack.peek();
+      if (renamer.stripConstIfReplaced()) {
+        // TODO(johnlenz): Do we need to do anything about the Javadoc?
+        n.removeProp(Node.IS_CONSTANT_NAME);
+      }
+      n.setString(newName);
+      t.reportCodeChange();
+      // If we are renaming a function declaration, make sure the containing scope
+      // has the opporunity to act on the change.
+      if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
+        t.getCompiler().reportChangeToEnclosingScope(parent);
+      }
+    }
+  }
   /**
    * Walks the stack of name maps and finds the replacement name for the
    * current scope.
@@ -364,7 +377,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         referencedNames.add(newName);
         List<Node> references = nameMap.get(name);
         for (Node n : references) {
-          Preconditions.checkState(n.isName(), n);
+          checkState(n.isName(), n);
           n.setString(newName);
           compiler.reportChangeToEnclosingScope(n);
         }
@@ -571,7 +584,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
       this.uniqueIdSupplier = uniqueIdSupplier;
       // To ensure that the id does not conflict with the id from the
       // ContextualRenamer some prefix is needed.
-      Preconditions.checkArgument(!idPrefix.isEmpty());
+      checkArgument(!idPrefix.isEmpty());
       this.idPrefix = idPrefix;
       this.removeConstness = removeConstness;
 
@@ -584,7 +597,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
 
     @Override
     public void addDeclaredName(String name, boolean hoisted) {
-      Preconditions.checkState(!name.equals(ARGUMENTS));
+      checkState(!name.equals(ARGUMENTS));
       if (hoisted && hoistRenamer != this) {
         hoistRenamer.addDeclaredName(name, hoisted);
       } else {

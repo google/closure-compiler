@@ -413,7 +413,6 @@ public final class NormalizeTest extends Es6CompilerTestCase {
                    "if (true) {} else {var g = function () {}}");
   }
 
-
   public void testMakeLocalNamesUnique() {
     // Verify global names are untouched.
     testSame("var a;");
@@ -450,6 +449,40 @@ public final class NormalizeTest extends Es6CompilerTestCase {
     // Verify local masking extern made unique.
     test("function f() {var window}",
          "function f() {var window$jscomp$1}");
+  }
+
+  public void testMakeParamNamesUnique() {
+    test(
+        "function f(x) { x; }\nfunction g(x) { x; }",
+        "function f(x) { x; }\nfunction g(x$jscomp$1) { x$jscomp$1; }");
+
+    testEs6(
+        "function f(x) { x; }\nfunction g(...x) { x; }",
+        "function f(x) { x; }\nfunction g(...x$jscomp$1) { x$jscomp$1; }");
+
+    testEs6(
+        "function f(x) { x; }\nfunction g({x: x}) { x; }",
+        "function f(x) { x; }\nfunction g({x: x$jscomp$1}) { x$jscomp$1; }");
+
+    testEs6(
+        "function f(x) { x; }\nfunction g({x}) { x; }",
+        "function f(x) { x; }\nfunction g({x: x$jscomp$1}) { x$jscomp$1; }");
+
+    testEs6(
+        "function f(x) { x; }\nfunction g({y: {x}}) { x; }",
+        "function f(x) { x; }\nfunction g({y: {x: x$jscomp$1}}) { x$jscomp$1; }");
+  }
+
+  public void testNoRenameParamNames() {
+    testSame("function f(x) { x; }");
+
+    testSameEs6("function f(...x) { x; }");
+
+    testSameEs6("function f({x: x}) { x; }");
+
+    testSameEs6("function f({x}) { x; }");
+
+    testSameEs6("function f({y: {x}}) { x; }");
   }
 
   public void testRemoveDuplicateVarDeclarations1() {

@@ -497,6 +497,12 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
          "var CONST$jscomp$unique_0 = 3; var b$jscomp$unique_1 = CONST$jscomp$unique_0;");
   }
 
+  public void testRestParam() {
+    testEs6(
+        "function f(...x) { x; }",
+        "function f$jscomp$unique_0(...x$jscomp$unique_1) { x$jscomp$unique_1; }");
+  }
+
   public void testVarParamSameName0() {
     test(
         LINE_JOINER.join(
