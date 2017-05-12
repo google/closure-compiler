@@ -1644,9 +1644,9 @@ class IRFactory {
       Node key = processObjectLitKeyAsString(tree.propertyName);
       key.setToken(Token.GETTER_DEF);
       Node body = transform(tree.body);
-      Node dummyName = IR.name("");
+      Node dummyName = newStringNode(Token.NAME, "");
       setSourceInfo(dummyName, tree.body);
-      Node paramList = IR.paramList();
+      Node paramList = newNode(Token.PARAM_LIST);
       setSourceInfo(paramList, tree.body);
       Node value = newNode(Token.FUNCTION, dummyName, paramList, body);
       setSourceInfo(value, tree.body);
@@ -1660,10 +1660,9 @@ class IRFactory {
       Node key = processObjectLitKeyAsString(tree.propertyName);
       key.setToken(Token.SETTER_DEF);
       Node body = transform(tree.body);
-      Node dummyName = IR.name("");
+      Node dummyName = newStringNode(Token.NAME, "");
       setSourceInfo(dummyName, tree.propertyName);
-      Node paramList = IR.paramList(
-          safeProcessName(tree.parameter));
+      Node paramList = newNode(Token.PARAM_LIST, safeProcessName(tree.parameter));
       setSourceInfo(paramList, tree.parameter);
       maybeProcessType(paramList.getFirstChild(), tree.type);
       Node value = newNode(Token.FUNCTION, dummyName, paramList, body);

@@ -82,7 +82,7 @@ public class IR {
     return new Node(Token.PARAM_LIST, param);
   }
 
-  public static Node paramList(Node ... params) {
+  public static Node paramList(Node... params) {
     Node paramList = paramList();
     for (Node param : params) {
       Preconditions.checkState(param.isName() || param.isRest());
