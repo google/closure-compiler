@@ -63,22 +63,9 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
     return options;
   }
 
-  protected final PassFactory makePassFactory(
-      String name, final CompilerPass pass) {
-    return new PassFactory(name, true/* one-time pass */) {
-      @Override
-      protected CompilerPass create(AbstractCompiler compiler) {
-        return pass;
-      }
-    };
-  }
-
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
-    optimizer.addOneTimePass(
-        makePassFactory("dartSuperAccessors", new DartSuperAccessorsPass(compiler)));
-    return optimizer;
+    return new DartSuperAccessorsPass(compiler);
   }
 
   @Override

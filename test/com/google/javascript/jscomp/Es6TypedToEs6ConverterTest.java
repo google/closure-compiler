@@ -35,14 +35,7 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
-    optimizer.addOneTimePass(new PassFactory("convertDeclaredTypesToJSDoc", true) {
-      // To make sure types copied.
-      @Override protected CompilerPass create(AbstractCompiler compiler) {
-        return new Es6TypedToEs6Converter(compiler);
-      }
-    });
-    return optimizer;
+    return new Es6TypedToEs6Converter(compiler);
   }
 
   @Override
