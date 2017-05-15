@@ -43,7 +43,8 @@ public final class NodeUtilTest extends TestCase {
   private static Node parse(String js) {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
-    compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT6);
+    compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    compiler.getOptions().setStrictModeInput(false);
     Node n = compiler.parseTestCode(js);
     assertThat(compiler.getErrors()).isEmpty();
     return n;
