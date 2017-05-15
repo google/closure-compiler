@@ -762,7 +762,6 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateParametersEs6(Node n) {
-    boolean defaultParams = false;
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       if (c.isRest()) {
         if (c.getNext() != null) {
@@ -770,14 +769,8 @@ public final class AstValidator implements CompilerPass {
         }
         validateRest(Token.PARAM_LIST, c);
       } else if (c.isDefaultValue()) {
-        defaultParams = true;
         validateDefaultValue(Token.PARAM_LIST, c);
       } else {
-        if (defaultParams) {
-          violation("Cannot have a parameter without a default value,"
-              + " after one with a default value.", c);
-        }
-
         if (c.isName()) {
           validateName(c);
         } else if (c.isArrayPattern()) {

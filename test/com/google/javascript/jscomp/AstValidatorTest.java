@@ -131,6 +131,11 @@ public final class AstValidatorTest extends CompilerTestCase {
     valid("function f(a,...[re,...st]){}");
   }
 
+  public void testDefaultParameter() {
+    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
+    valid("function f(a = 0, b){}");
+  }
+
   public void testAwaitExpression() {
     setLanguage(LanguageMode.ECMASCRIPT_NEXT, LanguageMode.ECMASCRIPT5);
     Node awaitNode = new Node(Token.AWAIT);
