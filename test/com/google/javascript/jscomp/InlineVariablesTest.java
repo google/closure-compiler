@@ -133,6 +133,18 @@ public final class InlineVariablesTest extends CompilerTestCase {
         "function baz() { { var z = 1; } }");
   }
 
+  public void testInlineIntoArrowFunction1() {
+    test(
+        "var x = 0; var f = () => x + 1;",
+        "var f = () => 0 + 1;");
+  }
+
+  public void testInlineIntoArrowFunction2() {
+    test(
+        "var x = 0; var f = () => { return x + 1; }",
+        "var f = () => { return 0 + 1; }");
+  }
+
   public void testInlineAcrossModules() {
     // TODO(kushal): Make decision about overlap with CrossModuleCodeMotion
     test(createModules("var a = 2;", "var b = a;"),

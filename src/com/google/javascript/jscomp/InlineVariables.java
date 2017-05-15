@@ -220,7 +220,7 @@ class InlineVariables implements CompilerPass {
     }
 
     private boolean maybeEscapedOrModifiedArguments(Scope scope, ReferenceMap referenceMap) {
-      if (scope.isFunctionScope()) {
+      if (scope.isFunctionScope() && !scope.getRootNode().isArrowFunction()) {
         Var arguments = scope.getArgumentsVar();
         ReferenceCollection refs = referenceMap.getReferences(arguments);
         if (refs != null && !refs.references.isEmpty()) {
