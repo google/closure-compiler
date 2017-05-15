@@ -19,12 +19,9 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.StaticSymbolTable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -33,8 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 /** Collects global variable references for use by {@link CrossModuleCodeMotion}. */
-public final class CrossModuleReferenceCollector
-    implements ScopedCallback, HotSwapCompilerPass, StaticSymbolTable<Var, Reference> {
+public final class CrossModuleReferenceCollector implements ScopedCallback, CompilerPass {
 
   /**
    * Maps a given variable to a collection of references to that name. Note that
@@ -62,11 +58,6 @@ public final class CrossModuleReferenceCollector
   private final AbstractCompiler compiler;
 
   /**
-   * Only collect references for filtered variables.
-   */
-  private final Predicate<Var> varFilter;
-
-  /**
    * Traverse hoisted functions where they're referenced, not
    * where they're declared.
    */
@@ -77,23 +68,11 @@ public final class CrossModuleReferenceCollector
   /**
    * Constructor initializes block stack.
    */
-  public CrossModuleReferenceCollector(AbstractCompiler compiler, Behavior behavior,
+  CrossModuleReferenceCollector(AbstractCompiler compiler, Behavior behavior,
       ScopeCreator creator) {
-    this(compiler, behavior, creator, Predicates.<Var>alwaysTrue());
-  }
-
-  /**
-   * Constructor only collects references that match the given variable.
-   *
-   * The test for Var equality uses reference equality, so it's necessary to
-   * inject a scope when you traverse.
-   */
-  CrossModuleReferenceCollector(AbstractCompiler compiler, Behavior behavior, ScopeCreator creator,
-      Predicate<Var> varFilter) {
     this.compiler = compiler;
     this.behavior = behavior;
     this.scopeCreator = creator;
-    this.varFilter = varFilter;
   }
 
   /**
@@ -121,31 +100,16 @@ public final class CrossModuleReferenceCollector
   }
 
   /**
-   * Same as process but only runs on a part of AST associated to one script.
-   */
-  @Override
-  public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
-  }
-
-  /**
    * Gets the variables that were referenced in this callback.
    */
-  @Override
-  public Iterable<Var> getAllSymbols() {
+  Iterable<Var> getAllSymbols() {
     return referenceMap.keySet();
-  }
-
-  @Override
-  public Scope getScope(Var var) {
-    return var.scope;
   }
 
   /**
    * Gets the reference collection for the given variable.
    */
-  @Override
-  public ReferenceCollection getReferences(Var v) {
+  ReferenceCollection getReferences(Var v) {
     return referenceMap.get(v);
   }
 
@@ -159,7 +123,8 @@ public final class CrossModuleReferenceCollector
       Var v = t.getScope().getVar(n.getString());
 
       if (v != null) {
-        if (varFilter.apply(v)) {
+        // Only global, non-exported names can be moved
+        if (v.isGlobal() && !compiler.getCodingConvention().isExported(v.getName())) {
           addReference(v, new Reference(n, t, peek(blockStack)));
         }
 
@@ -240,13 +205,7 @@ public final class CrossModuleReferenceCollector
     if (t.getScope().isHoistScope()) {
       pop(blockStack);
     }
-    if (t.inGlobalScope()) {
-      // Update global scope reference lists when we are done with it.
-      compiler.updateGlobalVarReferences(referenceMap, t.getScopeRoot());
-      behavior.afterExitScope(t, compiler.getGlobalVarReferences());
-    } else {
-      behavior.afterExitScope(t, new ReferenceMapWrapper(referenceMap));
-    }
+    behavior.afterExitScope(t, new ReferenceMapWrapper(referenceMap));
   }
 
   /**

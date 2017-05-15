@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.IR;
@@ -303,13 +302,7 @@ class CrossModuleCodeMotion implements CompilerPass {
   private void collectReferences(Node root) {
     CrossModuleReferenceCollector collector = new CrossModuleReferenceCollector(
         compiler, CrossModuleReferenceCollector.DO_NOTHING_BEHAVIOR,
-        new Es6SyntacticScopeCreator(compiler),
-        new Predicate<Var>() {
-          @Override public boolean apply(Var var) {
-            // Only collect global and non-exported names.
-            return var.isGlobal() && !compiler.getCodingConvention().isExported(var.getName());
-          }
-        });
+        new Es6SyntacticScopeCreator(compiler));
     collector.process(root);
 
     for (Var v : collector.getAllSymbols()) {

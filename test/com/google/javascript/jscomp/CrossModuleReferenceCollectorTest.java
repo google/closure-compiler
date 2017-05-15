@@ -25,13 +25,11 @@ import com.google.javascript.rhino.Token;
 
 public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   private Behavior behavior;
-  private boolean es6ScopeCreator;
 
   @Override
   public void setUp() {
     setLanguage(ECMASCRIPT_NEXT, ECMASCRIPT_NEXT);
     behavior = null;
-    es6ScopeCreator = true;
   }
 
   @Override
@@ -45,10 +43,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    ScopeCreator scopeCreator =
-        es6ScopeCreator
-            ? new Es6SyntacticScopeCreator(compiler)
-            : SyntacticScopeCreator.makeUntyped(compiler);
+    ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
     return new CrossModuleReferenceCollector(
         compiler,
         this.behavior,
@@ -60,43 +55,18 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
     testSame(js);
   }
 
-  public void testVarInBlock_oldScopeCreator() {
-    es6ScopeCreator = false;
-    testBehavior(
-        LINE_JOINER.join(
-            "function f(x) {",
-            "  if (true) {",
-            "    var y = x;",
-            "    y;",
-            "    y;",
-            "  }",
-            "}"),
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isFunctionScope()) {
-              ReferenceCollection y = rm.getReferences(t.getScope().getVar("y"));
-              assertThat(y.isAssignedOnceInLifetime()).isTrue();
-              assertThat(y.isWellDefined()).isTrue();
-            }
-          }
-        });
-  }
-
   public void testVarInBlock() {
     testBehavior(
         LINE_JOINER.join(
-            "function f(x) {",
             "  if (true) {",
             "    var y = x;",
             "    y;",
             "    y;",
-            "  }",
-            "}"),
+            "  }"),
         new Behavior() {
           @Override
           public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isBlockScope() && t.getScope().getParent().isFunctionBlockScope()) {
+            if (t.getScope().isGlobal()) {
               ReferenceCollection y = rm.getReferences(t.getScope().getVar("y"));
               assertThat(y.isAssignedOnceInLifetime()).isTrue();
               assertThat(y.isWellDefined()).isTrue();
@@ -110,14 +80,14 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
         new Behavior() {
           @Override
           public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isBlockScope()) {
+            if (t.getScope().isGlobal()) {
               ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
               assertThat(x.isAssignedOnceInLifetime()).isFalse();
             }
           }
         };
-    testBehavior("while (true) { var x = 0; }", behavior);
-    testBehavior("while (true) { let x = 0; }", behavior);
+    testBehavior("var x; while (true) { x = 0; }", behavior);
+    testBehavior("let x; while (true) { x = 0; }", behavior);
   }
 
   /**
@@ -139,150 +109,36 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
     testBehavior("let x; function f() { x = 0; }", behavior);
   }
 
-  public void testParameterAssignedOnlyOnceInLifetime() {
-    testBehavior(
-        "function f(x) { x; }",
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isFunctionScope()) {
-              ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
-              assertThat(x.isAssignedOnceInLifetime()).isTrue();
-            }
-          }
-        });
-  }
-
-  public void testModifiedParameterNotAssignedOnlyOnceInLifetime() {
-    testBehavior(
-        "function f(x) { x = 3; }",
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isFunctionScope()) {
-              ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
-              assertThat(x.isAssignedOnceInLifetime()).isFalse();
-            }
-          }
-        });
-  }
-
   public void testVarAssignedOnceInLifetime1() {
     Behavior behavior =
         new Behavior() {
           @Override
           public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isFunctionBlockScope()) {
+            if (t.getScope().isGlobal()) {
               ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
               assertThat(x.isAssignedOnceInLifetime()).isTrue();
             }
           }
         };
-    testBehavior("function f() { var x = 0; }", behavior);
-    testBehavior("function f() { let x = 0; }", behavior);
+    testBehavior("var x = 0;", behavior);
+    testBehavior("let x = 0;", behavior);
   }
 
   public void testVarAssignedOnceInLifetime2() {
     testBehavior(
-        "function f() { { let x = 0; } }",
+        "{ var x = 0; }",
         new Behavior() {
           @Override
           public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isBlockScope() && !t.getScope().isFunctionBlockScope()) {
+            if (t.getScope().isGlobal()) {
               ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
               assertThat(x.isAssignedOnceInLifetime()).isTrue();
-            }
-          }
-        });
-  }
-
-  public void testVarAssignedOnceInLifetime3() {
-    Behavior behavior =
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isCatchScope()) {
-              ReferenceCollection e = rm.getReferences(t.getScope().getVar("e"));
-              assertThat(e.isAssignedOnceInLifetime()).isTrue();
-              ReferenceCollection y = rm.getReferences(t.getScope().getVar("y"));
-              assertThat(y.isAssignedOnceInLifetime()).isTrue();
-              assertThat(y.isWellDefined()).isTrue();
-            }
-          }
-        };
-    testBehavior(
-        LINE_JOINER.join(
-            "try {",
-            "} catch (e) {",
-            "  var y = e;",
-            "  g();",
-            "  y;y;",
-            "}"),
-        behavior);
-    testBehavior(
-        LINE_JOINER.join(
-            "try {",
-            "} catch (e) {",
-            "  var y; y = e;",
-            "  g();",
-            "  y;y;",
-            "}"),
-        behavior);
-  }
-
-  public void testLetAssignedOnceInLifetime1() {
-    testBehavior(
-        LINE_JOINER.join(
-            "try {",
-            "} catch (e) {",
-            "  let y = e;",
-            "  g();",
-            "  y;y;",
-            "}"),
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isCatchScope()) {
-              ReferenceCollection e = rm.getReferences(t.getScope().getVar("e"));
-              assertThat(e.isAssignedOnceInLifetime()).isTrue();
-              ReferenceCollection y = rm.getReferences(t.getScope().getVar("y"));
-              assertThat(y.isAssignedOnceInLifetime()).isTrue();
-              assertThat(y.isWellDefined()).isTrue();
-            }
-          }
-        });
-  }
-
-  public void testLetAssignedOnceInLifetime2() {
-    testBehavior(
-        LINE_JOINER.join(
-            "try {",
-            "} catch (e) {",
-            "  let y; y = e;",
-            "  g();",
-            "  y;y;",
-            "}"),
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isCatchScope()) {
-              ReferenceCollection e = rm.getReferences(t.getScope().getVar("e"));
-              assertThat(e.isAssignedOnceInLifetime()).isTrue();
-              ReferenceCollection y = rm.getReferences(t.getScope().getVar("y"));
-              assertThat(y.isAssignedOnceInLifetime()).isTrue();
-              assertThat(y.isWellDefined()).isTrue();
             }
           }
         });
   }
 
   public void testBasicBlocks() {
-    testBasicBlocks(true);
-    testBasicBlocks(false);
-  }
-
-  private void testBasicBlocks(boolean scopeCreator) {
-    es6ScopeCreator = scopeCreator;
     testBehavior(
         LINE_JOINER.join(
             "var x = 0;",
@@ -299,55 +155,6 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
               assertNode(x.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
               assertNode(x.references.get(1).getBasicBlock().getRoot()).hasType(Token.ROOT);
               assertNode(x.references.get(2).getBasicBlock().getRoot()).hasType(Token.CASE);
-            }
-          }
-        });
-  }
-
-  public void testThis() {
-    testBehavior(
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function C() {}",
-            "",
-            "C.prototype.m = function m() {",
-            "  var self = this;",
-            "  if (true) {",
-            "    alert(self);",
-            "  }",
-            "};"),
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isFunctionBlockScope()
-                && t.getScopeRoot().getParent().getFirstChild().matchesQualifiedName("m")) {
-              ReferenceCollection self = rm.getReferences(t.getScope().getVar("self"));
-              assertThat(self.isEscaped()).isFalse();
-            }
-          }
-        });
-  }
-
-  public void testThis_oldScopeCreator() {
-    es6ScopeCreator = false;
-    testBehavior(
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function C() {}",
-            "",
-            "C.prototype.m = function m() {",
-            "  var self = this;",
-            "  if (true) {",
-            "    alert(self);",
-            "  }",
-            "};"),
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isFunctionBlockScope()
-                && t.getScopeRoot().getParent().getFirstChild().matchesQualifiedName("m")) {
-              ReferenceCollection self = rm.getReferences(t.getScope().getVar("self"));
-              assertThat(self.isEscaped()).isFalse();
             }
           }
         });
