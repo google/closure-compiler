@@ -16,14 +16,16 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Joiner;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -171,7 +173,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     compilerOptions.setNewTypeInference(true);
     compilerOptions.setWarningLevel(
         DiagnosticGroups.NEW_CHECK_TYPES_ALL_CHECKS, CheckLevel.WARNING);
-    // EC5 is the highest language level that type inference understands.
+    // ES5 is the highest language level that type inference understands.
     compilerOptions.setLanguage(LanguageMode.ECMASCRIPT5);
     return compilerOptions;
   }
@@ -200,11 +202,8 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     astRoot.addChildToFront(
         compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler));
 
-    assertEquals("parsing error: " + Joiner.on(", ").join(compiler.getErrors()),
-        0, compiler.getErrorCount());
-    assertEquals(
-        "parsing warning: " + Joiner.on(", ").join(compiler.getWarnings()), 0,
-        compiler.getWarningCount());
+    assertThat(compiler.getErrors()).named("parsing errors").isEmpty();
+    assertThat(compiler.getWarnings()).named("parsing warnings").isEmpty();
 
     // Create common parent of externs and ast; needed by Es6RewriteBlockScopedDeclaration.
     Node block = IR.root(externsRoot, astRoot);
@@ -265,14 +264,12 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
         warningKinds.length,
         warnings.length + errors.length);
     for (JSError warning : warnings) {
-      assertTrue(
-          "Wrong warning type\n" + errorMessage,
-          Arrays.asList(warningKinds).contains(warning.getType()));
+      assertWithMessage("Wrong warning type\n" + errorMessage)
+          .that(warningKinds).asList().contains(warning.getType());
     }
     for (JSError error : errors) {
-      assertTrue(
-          "Wrong warning type\n" + errorMessage,
-          Arrays.asList(warningKinds).contains(error.getType()));
+      assertWithMessage("Wrong warning type\n" + errorMessage)
+          .that(warningKinds).asList().contains(error.getType());
     }
   }
 
@@ -285,34 +282,10 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     parseAndTypeCheck(DEFAULT_EXTERNS, js);
     JSError[] warnings = compiler.getWarnings();
     JSError[] errors = compiler.getErrors();
-    assertEquals(
-        "Expected no errors, but found:\n" + Arrays.toString(errors),
-        0, errors.length);
-    assertEquals(
-        "Expected one warning, but found:\n" + Arrays.toString(warnings),
-        1, warnings.length);
+    assertThat(errors).isEmpty();
+    assertThat(warnings).hasLength(1);
     JSError warning = warnings[0];
-    assertEquals(LINE_JOINER.join(
-        "Wrong warning type",
-        "Expected warning of type:",
-        "================================================================",
-        warningKind.toString(),
-        "================================================================",
-        "but found:",
-        "----------------------------------------------------------------",
-        warning.toString(),
-        "----------------------------------------------------------------\n"),
-        warningKind, warning.getType());
-    assertEquals(LINE_JOINER.join(
-        "Wrong warning message",
-        "Expected:",
-        "================================================================",
-        warningMsg,
-        "================================================================",
-        "but found:",
-        "----------------------------------------------------------------",
-        warning.description,
-        "----------------------------------------------------------------\n"),
-        warningMsg, warning.description);
+    assertError(warning).hasType(warningKind);
+    assertError(warning).hasMessage(warningMsg);
   }
 }

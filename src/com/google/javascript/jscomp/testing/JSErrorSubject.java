@@ -45,4 +45,11 @@ public final class JSErrorSubject extends Subject<JSErrorSubject, JSError> {
     String message = "Expected an error of type " + type + " but got: " + actual();
     assertEquals(message, type, actual().getType());
   }
+
+  public void hasMessage(String msg) {
+    assertEquals(
+        "Expected an error with message:\n" + msg + " but got:\n" + actual(),
+        msg,
+        actual().description);
+  }
 }
