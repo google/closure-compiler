@@ -3034,12 +3034,6 @@ public class CompilerOptions implements Serializable {
       }
       // Trim spaces, disregard case, and allow abbreviation of ECMASCRIPT for convenience.
       String canonicalizedName = Ascii.toUpperCase(value.trim()).replaceFirst("^ES", "ECMASCRIPT");
-
-      // TODO(tbreisacher): Remove this when all usages are gone.
-      if (canonicalizedName.equals("ECMASCRIPT8")) {
-        return ECMASCRIPT_2017;
-      }
-
       try {
         return LanguageMode.valueOf(canonicalizedName);
       } catch (IllegalArgumentException e) {
