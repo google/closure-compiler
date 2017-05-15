@@ -104,11 +104,20 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
          "/** @constructor */ function Foo() {} \n /** @const {*} */ Foo.prototype.x;");
   }
 
-  public void testConstJsdocPropagationForNames() {
+  public void testConstJsdocPropagationForGlobalNames() {
     test(
         "/** @type {!Array<string>} */ var x = []; /** @const */ var y = x;",
-        "/** @type {!Array<string>} */ var x; /** @const {!Array<string>} */ var y;");
+        "/** @type {!Array<string>} */ var x; /** @const */ var y = x;");
 
+    test(
+        "/** @type {Object} */ var o = {}; /** @type {number} */ o.p = 5; /** @const */ var y = o;",
+        "/** @type {Object} */ var o; /** @type {number} */ o.p; /** @const */ var y = o;");
+
+    testWarning(
+        "/** @const */ var x = Foo;", ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
+  }
+
+  public void testConstJsdocPropagationForConstructorNames() {
     test(
         LINE_JOINER.join(
             "/** @constructor */",
@@ -156,6 +165,48 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "  constructor(x) {}",
             "}",
             "/** @const {number} */ Foo.prototype.x;"));
+  }
+
+  public void testConstructorAlias1() {
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @const */ var FooAlias = Foo;"));
+  }
+
+  public void testConstructorAlias2() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('a.b.c');",
+            "",
+            "/** @constructor */",
+            "function Foo() {}",
+            "/** @const */ var FooAlias = Foo;"));
+  }
+
+  public void testConstructorAlias3() {
+    testSameEs6(
+        LINE_JOINER.join(
+            "class Foo {}",
+            "/** @const */ var FooAlias = Foo;"));
+  }
+
+  public void testConstructorAlias4() {
+    testSameEs6(
+        LINE_JOINER.join(
+            "goog.module('a.b.c');",
+            "",
+            "class Foo {}",
+            "/** @constructor */ var FooAlias = Foo;"));
+  }
+
+  public void testConstructorAlias5() {
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {}",
+           "/** @constructor */ var FooAlias = Foo;"));
   }
 
   public void testConstPropagationPrivateProperties1() {

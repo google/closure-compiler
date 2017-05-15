@@ -25,7 +25,6 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import com.google.javascript.rhino.jstype.JSType;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -69,11 +68,14 @@ class ConvertToTypedInterface implements CompilerPass {
     new RemoveCode(compiler).process(externs, root);
   }
 
-  private static class PropagateConstJsdoc extends NodeTraversal.AbstractPostOrderCallback {
-
-    PropagateConstJsdoc() {
+  private static @Nullable Var findNameDeclaration(NodeTraversal t, Node rhs) {
+    if (!rhs.isName()) {
+      return null;
     }
+    return t.getScope().getVar(rhs.getString());
+  }
 
+  private static class PropagateConstJsdoc extends NodeTraversal.AbstractPostOrderCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
@@ -98,21 +100,25 @@ class ConvertToTypedInterface implements CompilerPass {
     private void propagateJsdocAtName(NodeTraversal t, Node nameNode) {
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
-      if (!isInferrableConst(jsdoc, nameNode, false)) {
+      if (!isConstToBeInferred(jsdoc, nameNode, false)) {
         return;
       }
       Node rhs = NodeUtil.getRValueOfLValue(nameNode);
       if (rhs == null) {
         return;
       }
-      JSDocInfo newJsdoc = getJSDocForRhs(t, rhs, jsdoc);
+      JSDocInfo newJsdoc = getJSDocForRhs(rhs, jsdoc);
+      if (newJsdoc == null && nameNode.isGetProp() && nameNode.getFirstChild().isThis()) {
+        Var decl = findNameDeclaration(t, rhs);
+        newJsdoc = getJSDocForName(decl, jsdoc);
+      }
       if (newJsdoc != null) {
         jsdocNode.setJSDocInfo(newJsdoc);
         t.reportCodeChange();
       }
     }
 
-    private static JSDocInfo getJSDocForRhs(NodeTraversal t, Node rhs, JSDocInfo oldJSDoc) {
+    private static JSDocInfo getJSDocForRhs(Node rhs, JSDocInfo oldJSDoc) {
       switch (NodeUtil.getKnownValueType(rhs)) {
         case BOOLEAN:
           return getConstJSDoc(oldJSDoc, "boolean");
@@ -129,11 +135,7 @@ class ConvertToTypedInterface implements CompilerPass {
             return getConstJSDoc(oldJSDoc, new Node(Token.BANG, IR.string("RegExp")));
           }
           break;
-        case UNDETERMINED:
-          if (rhs.isName()) {
-            Var decl = t.getScope().getVar(rhs.getString());
-            return getJSDocForName(decl, oldJSDoc);
-          }
+        default:
           break;
       }
       return null;
@@ -448,7 +450,7 @@ class ConvertToTypedInterface implements CompilerPass {
                 JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(name);
                 if (jsdoc == null) {
                   jsdoc = getAllTypeJSDoc();
-                } else if (isInferrableConst(jsdoc, name, false)) {
+                } else if (isConstToBeInferred(jsdoc, name, false)) {
                   jsdoc = pullJsdocTypeFromAst(compiler, jsdoc, name);
                 }
                 Node newProtoAssignStmt =
@@ -487,7 +489,7 @@ class ConvertToTypedInterface implements CompilerPass {
           || (lhs.isGetProp() && lhs.getFirstChild().matchesQualifiedName("exports"));
     }
 
-    private RemovalType shouldRemove(Node nameNode) {
+    private RemovalType shouldRemove(NodeTraversal t, Node nameNode) {
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
       Node rhs = NodeUtil.getRValueOfLValue(nameNode);
@@ -518,10 +520,18 @@ class ConvertToTypedInterface implements CompilerPass {
         }
         return RemovalType.REMOVE_ALL;
       }
-      if (isInferrableConst(jsdoc, nameNode, isExport)) {
+      if (isConstToBeInferred(jsdoc, nameNode, isExport)) {
         if (rhs.isQualifiedName() && currentFile.isRequiredName(rhs.getQualifiedName())) {
           return RemovalType.PRESERVE_ALL;
         }
+
+        Var originalDecl = findNameDeclaration(t, rhs);
+        if (originalDecl != null) {
+          if (originalDecl.isClass() || hasAnnotatedType(originalDecl.getJSDocInfo())) {
+            return RemovalType.PRESERVE_ALL;
+          }
+        }
+
         jsdocNode.setJSDocInfo(pullJsdocTypeFromAst(compiler, jsdoc, nameNode));
       }
       return RemovalType.REMOVE_RHS;
@@ -535,7 +545,7 @@ class ConvertToTypedInterface implements CompilerPass {
         return;
       }
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
-      switch (shouldRemove(nameNode)) {
+      switch (shouldRemove(t, nameNode)) {
         case REMOVE_ALL:
           removeNode(statement);
           break;
@@ -607,7 +617,8 @@ class ConvertToTypedInterface implements CompilerPass {
     }
   }
 
-  private static boolean isInferrableConst(JSDocInfo jsdoc, Node nameNode, boolean isImpliedConst) {
+  private static boolean isConstToBeInferred(
+      JSDocInfo jsdoc, Node nameNode, boolean isImpliedConst) {
     boolean isConst =
         isImpliedConst
             || nameNode.getParent().isConst()
@@ -673,15 +684,10 @@ class ConvertToTypedInterface implements CompilerPass {
   private static JSDocInfo pullJsdocTypeFromAst(
       AbstractCompiler compiler, JSDocInfo oldJSDoc, Node nameNode) {
     Preconditions.checkArgument(nameNode.isQualifiedName());
-    JSType type = nameNode.getJSType();
-    if (type == null) {
-      if (!nameNode.isFromExterns() && !isPrivate(oldJSDoc)) {
-        compiler.report(JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
-      }
-      return getConstJSDoc(oldJSDoc, new Node(Token.STAR));
-    } else {
-      return getConstJSDoc(oldJSDoc, type.toNonNullAnnotationString());
+    if (!nameNode.isFromExterns() && !isPrivate(oldJSDoc)) {
+      compiler.report(JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
     }
+    return getConstJSDoc(oldJSDoc, new Node(Token.STAR));
   }
 
   private static boolean isPrivate(@Nullable JSDocInfo jsdoc) {
