@@ -72,7 +72,7 @@ public class CodeGenerator {
     this.preferSingleQuotes = options.preferSingleQuotes;
     this.trustedStrings = options.trustedStrings;
     this.preserveTypeAnnotations = options.preserveTypeAnnotations;
-    this.quoteKeywordProperties = options.quoteKeywordProperties;
+    this.quoteKeywordProperties = options.shouldQuoteKeywordProperties();
     this.useOriginalName = options.getUseOriginalNamesInOutput();
     this.jsDocInfoPrinter = new JSDocInfoPrinter(useOriginalName);
   }

@@ -947,7 +947,7 @@ public class CompilerOptions implements Serializable {
   public String inputDelimiter = "// Input %num%";
 
   /** Whether to write keyword properties as foo['class'] instead of foo.class; needed for IE8. */
-  boolean quoteKeywordProperties;
+  private boolean quoteKeywordProperties;
 
   boolean preferSingleQuotes;
 
@@ -1888,9 +1888,6 @@ public class CompilerOptions implements Serializable {
    */
   public void setLanguageOut(LanguageMode languageOut) {
     this.languageOut = languageOut;
-    if (languageOut == LanguageMode.ECMASCRIPT3) {
-      this.quoteKeywordProperties = true;
-    }
   }
 
   public LanguageMode getLanguageOut() {
@@ -2554,6 +2551,14 @@ public class CompilerOptions implements Serializable {
 
   public void setQuoteKeywordProperties(boolean quoteKeywordProperties) {
     this.quoteKeywordProperties = quoteKeywordProperties;
+  }
+
+  public boolean shouldQuoteKeywordProperties() {
+    // Never quote properties in .i.js files
+    if (incrementalCheckMode == IncrementalCheckMode.GENERATE_IJS) {
+      return false;
+    }
+    return this.quoteKeywordProperties || languageOut == LanguageMode.ECMASCRIPT3;
   }
 
   public void setErrorFormat(ErrorFormat errorFormat) {
