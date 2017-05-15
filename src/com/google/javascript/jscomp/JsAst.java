@@ -35,8 +35,8 @@ import java.util.ArrayList;
 public class JsAst implements SourceAst {
   private static final long serialVersionUID = 1L;
 
-  private final transient InputId inputId;
-  private transient SourceFile sourceFile;
+  private final InputId inputId;
+  private SourceFile sourceFile;
   private final String fileName;
   private Node root;
   private FeatureSet features;

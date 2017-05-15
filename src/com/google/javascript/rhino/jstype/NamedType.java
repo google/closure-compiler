@@ -91,7 +91,7 @@ public class NamedType extends ProxyObjectType {
   /**
    * Validates the type resolution.
    */
-  private Predicate<JSType> validator;
+  private transient Predicate<JSType> validator;
 
   /**
    * Property-defining continuations.

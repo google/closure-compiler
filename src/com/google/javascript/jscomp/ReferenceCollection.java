@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.MoreObjects.toStringHelper;
 import static com.google.common.base.Preconditions.checkState;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -27,7 +28,7 @@ import java.util.List;
  * A collection of references. Can be subclassed to apply checks or store additional state when
  * adding.
  */
-public final class ReferenceCollection implements Iterable<Reference> {
+public final class ReferenceCollection implements Iterable<Reference>, Serializable {
 
   List<Reference> references = new ArrayList<>();
 

@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.deps.ModuleNames;
+import java.io.Serializable;
 
 /**
  * Basic information on an entry point module.
@@ -27,7 +28,7 @@ import com.google.javascript.jscomp.deps.ModuleNames;
  * be based on the input name rather than the
  * normalized version.
  */
-public class ModuleIdentifier {
+public class ModuleIdentifier implements Serializable {
   private final String name;
   private final String closureNamespace;
   private final String moduleName;

@@ -53,7 +53,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   private final SourceAst ast;
 
   // DependencyInfo to delegate to.
-  private transient DependencyInfo dependencyInfo;
+  private DependencyInfo dependencyInfo;
   private final List<String> extraRequires = new ArrayList<>();
   private final List<String> extraProvides = new ArrayList<>();
 

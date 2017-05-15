@@ -44,6 +44,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.javascript.rhino.jstype.JSType;
@@ -315,18 +316,12 @@ public class Node implements Serializable {
 
     StringNode(Token token, String str) {
       super(token);
-      if (null == str) {
-        throw new IllegalArgumentException("StringNode: str is null");
-      }
-      this.str = str;
+      setString(str);
     }
 
     StringNode(Token token, String str, int lineno, int charno) {
       super(token, lineno, charno);
-      if (null == str) {
-        throw new IllegalArgumentException("StringNode: str is null");
-      }
-      this.str = str;
+      setString(str);
     }
 
     /**
@@ -347,7 +342,8 @@ public class Node implements Serializable {
       if (null == str) {
         throw new IllegalArgumentException("StringNode: str is null");
       }
-      this.str = str;
+      // Intern the string reference so that serialization won't save repeated strings.
+      this.str = str.intern();
     }
 
     @Override
@@ -1239,9 +1235,9 @@ public class Node implements Serializable {
   }
 
   Token token;           // Type of the token of the node; NAME for example
-  @Nullable Node next; // next sibling, a linked list
-  @Nullable Node previous; // previous sibling, a circular linked list
-  @Nullable Node first; // first element of a linked list of children
+  @Nullable transient Node next; // next sibling, a linked list
+  @Nullable transient Node previous; // previous sibling, a circular linked list
+  @Nullable transient Node first; // first element of a linked list of children
   // We get the last child as first.previous. But last.next is null, not first.
 
   /**
@@ -1286,9 +1282,9 @@ public class Node implements Serializable {
   /** The length of the code represented by the node. */
   private int length;
 
-  @Nullable private TypeI typei;
+  @Nullable private transient TypeI typei;
 
-  @Nullable protected Node parent;
+  @Nullable protected transient Node parent;
 
   //==========================================================================
   // Source position management
@@ -3231,4 +3227,48 @@ public class Node implements Serializable {
   public boolean isYield() {
     return this.token == Token.YIELD;
   }
-}
+
+  @GwtIncompatible("ObjectOutputStream")
+  private void writeObject(java.io.ObjectOutputStream out) throws Exception {
+    out.defaultWriteObject();
+    // Serialize the embedded children linked list here to limit the depth of recursion (and avoid
+    // serializing redundant information like the previous reference)
+    Node currentChild = first;
+    while (currentChild != null) {
+      out.writeObject(currentChild);
+      currentChild = currentChild.next;
+    }
+    // Null marks the end of the children.
+    out.writeObject(null);
+    out.writeObject(typei);
+  }
+
+  @GwtIncompatible("ObjectInputStream")
+  private void readObject(java.io.ObjectInputStream in) throws Exception {
+    in.defaultReadObject();
+
+    // Deserialize the children list restoring the value of the previous reference.
+    first = (Node) in.readObject();
+    if (first != null) {
+      checkState(first.parent == null);
+      first.parent = this;
+
+      Node currentChild;
+      Node lastChild = first;
+      while ((currentChild = (Node) in.readObject()) != null) {
+        checkState(currentChild.parent == null);
+        currentChild.parent = this;
+        // previous is never null, either it points to the previous sibling or if it is the first
+        // sibling it points to the last one.
+        checkState(currentChild.previous == null);
+        currentChild.previous = lastChild;
+        checkState(lastChild.next == null);
+        lastChild.next = currentChild;
+        lastChild = currentChild;
+      }
+      // Close the reverse circular list.
+      checkState(first.previous == null);
+      first.previous = lastChild;
+    }
+    typei = (TypeI) in.readObject();
+  }}

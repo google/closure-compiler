@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -32,7 +33,7 @@ import java.util.Map;
  *
  * @author agrieve@google.com (Andrew Grieve)
  */
-public interface DependencyInfo {
+public interface DependencyInfo extends Serializable {
 
   /** Gets the unique name / path of this file. */
   String getName();

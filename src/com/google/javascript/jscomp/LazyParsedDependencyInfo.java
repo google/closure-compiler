@@ -32,7 +32,7 @@ public class LazyParsedDependencyInfo implements DependencyInfo {
 
   private final DependencyInfo delegate;
   private final JsAst ast;
-  private final AbstractCompiler compiler;
+  private final transient AbstractCompiler compiler;
 
   private ImmutableMap<String, String> loadFlags;
 

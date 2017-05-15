@@ -22,9 +22,10 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticRef;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
+import java.io.Serializable;
 
 /** Represents a single declaration or reference to a variable. */
-public final class Reference implements StaticRef {
+public final class Reference implements StaticRef, Serializable {
 
   private static final ImmutableSet<Token> DECLARATION_PARENTS =
       ImmutableSet.of(

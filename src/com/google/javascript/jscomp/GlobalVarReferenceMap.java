@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -37,7 +38,7 @@ import java.util.Map.Entry;
  *
  * @author bashir@google.com (Bashir Sadjad)
  */
-class GlobalVarReferenceMap implements ReferenceMap {
+class GlobalVarReferenceMap implements ReferenceMap, Serializable {
 
   private Map<String, ReferenceCollection> refMap = null;
 

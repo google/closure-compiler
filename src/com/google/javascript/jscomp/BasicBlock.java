@@ -18,12 +18,13 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.io.Serializable;
 
 /**
  * Represents a section of code that is uninterrupted by control structures (conditional or
  * iterative logic).
  */
-final class BasicBlock {
+final class BasicBlock implements Serializable {
 
   private final BasicBlock parent;
 

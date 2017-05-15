@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.LinkedHashSet;
@@ -53,7 +54,7 @@ public final class TemplatizedType extends ProxyObjectType {
   private static final long serialVersionUID = 1L;
 
   final ImmutableList<JSType> templateTypes;
-  final transient TemplateTypeMapReplacer replacer;
+  transient TemplateTypeMapReplacer replacer;
 
   TemplatizedType(
       JSTypeRegistry registry, ObjectType objectType,
@@ -214,5 +215,11 @@ public final class TemplatizedType extends ProxyObjectType {
    */
   public ObjectType getReferencedType() {
     return getReferencedObjTypeInternal();
+  }
+
+  @GwtIncompatible("ObjectInputStream")
+  private void readObject(java.io.ObjectInputStream in) throws Exception {
+    in.defaultReadObject();
+    replacer = new TemplateTypeMapReplacer(registry, templateTypeMap);
   }
 }

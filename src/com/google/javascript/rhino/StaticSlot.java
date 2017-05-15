@@ -39,12 +39,14 @@
 
 package com.google.javascript.rhino;
 
+import java.io.Serializable;
+
 /**
  * The {@code StaticSlot} interface must be implemented by variables that can
  * appear as members of a {@code StaticScope}.
  *
  */
-public interface StaticSlot {
+public interface StaticSlot extends Serializable {
   /**
    * Gets the name of the slot.
    */

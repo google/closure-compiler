@@ -33,12 +33,14 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -592,12 +594,8 @@ public class SourceFile implements StaticSourceFile, Serializable {
   @GwtIncompatible("java.io.File")
   static class OnDisk extends SourceFile {
     private static final long serialVersionUID = 1L;
-    private final Path path;
-
-    // This is stored as a String, but passed in and out as a Charset so that
-    // we can serialize the class.
-    // Default input file format for the compiler has always been UTF_8.
-    private Charset inputCharset = UTF_8;
+    private transient Path path;
+    private transient Charset inputCharset = UTF_8;
 
     OnDisk(Path path, String originalPath, Charset c) {
       super(path.toString());
@@ -659,6 +657,22 @@ public class SourceFile implements StaticSourceFile, Serializable {
      */
     public Charset getCharset() {
       return inputCharset;
+    }
+
+    @GwtIncompatible("ObjectOutputStream")
+    private void writeObject(java.io.ObjectOutputStream out) throws Exception {
+      out.defaultWriteObject();
+      out.writeObject(inputCharset != null ? inputCharset.name() : null);
+      out.writeObject(path != null ? path.toUri() : null);
+    }
+
+    @GwtIncompatible("ObjectInputStream")
+    private void readObject(java.io.ObjectInputStream in) throws Exception {
+      in.defaultReadObject();
+      String inputCharsetName = (String) in.readObject();
+      inputCharset = inputCharsetName != null ? Charset.forName(inputCharsetName) : null;
+      URI uri = (URI) in.readObject();
+      path = uri != null ? Paths.get(uri) : null;
     }
   }
 

@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticScope;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -34,7 +35,7 @@ import java.util.Map;
  * @see NodeTraversal
  *
  */
-public class Scope implements StaticScope {
+public class Scope implements StaticScope, Serializable {
   private final Map<String, Var> vars = new LinkedHashMap<>();
   private final Scope parent;
   protected final int depth;

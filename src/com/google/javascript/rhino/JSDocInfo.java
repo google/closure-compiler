@@ -232,7 +232,7 @@ public class JSDocInfo implements Serializable {
     }
   }
 
-  private static final class LazilyInitializedDocumentation {
+  private static final class LazilyInitializedDocumentation implements Serializable {
     private String sourceComment;
     private ArrayList<Marker> markers;
 
