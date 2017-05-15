@@ -1097,6 +1097,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       compiler.init(externs, inputs, options);
     }
 
+    if (options.printConfig) {
+      compiler.printConfig(System.err);
+    }
+
     // TODO(rluble): Add save and restore cases here.
     if (config.skipNormalOutputs) {
       // TODO(bradfordcsmith): Should we be ignoring possible init/initModules() errors here?

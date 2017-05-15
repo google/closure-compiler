@@ -522,10 +522,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     modules.add(module);
     initModules(externs, modules, options);
     addFilesToSourceMap(inputs);
-
-    if (options.printConfig) {
-      printConfig(System.err);
-    }
   }
 
   /**
@@ -750,6 +746,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     try {
       init(externs, inputs, options);
+      if (options.printConfig) {
+        printConfig(System.err);
+      }
       if (!hasErrors()) {
         parseForCompilation();
       }
@@ -802,6 +801,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     try {
       initModules(externs, modules, options);
+      if (options.printConfig) {
+        printConfig(System.err);
+      }
       if (!hasErrors()) {
         parseForCompilation();
       }
