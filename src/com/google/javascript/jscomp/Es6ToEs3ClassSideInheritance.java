@@ -35,13 +35,14 @@ import java.util.Set;
  * Rewrites static inheritance to explicitly copy inherited properties from superclass to
  * subclass so that the typechecker knows the subclass has those properties.
  *
- * <p>For example, {@link Es6ToEs3Converter} will convert
+ * <p>For example, the main transpilation passes will convert this ES6 code:
  *
  * <pre>
  *   class Foo { static f() {} }
  *   class Bar extends Foo {}
  * </pre>
- * to
+ *
+ * to this ES3 code:
  *
  * <pre>
  *   function Foo() {}
@@ -61,11 +62,14 @@ import java.util.Set;
  * </pre>
  *
  * Additionally, there are getter and setter fields which are transpiled from:
+ *
  * <pre>
  *   class Foo { static get prop() { return 1; } }
  *   class Bar extends Foo {}
  * </pre>
+ *
  * to:
+ *
  * <pre>
  *   var Foo = function() {};
  *   Foo.prop; // stub declaration so that the type checker knows about prop
@@ -77,6 +81,7 @@ import java.util.Set;
  *
  * The stub declaration of Foo.prop needs to be duplicated for Bar so that the type checker knows
  * that Bar also has this property.  (ES5 clases don't have class-side inheritance).
+ *
  * <pre>
  *   var Bar = function() {};
  *   Bar.prop;
@@ -90,7 +95,7 @@ import java.util.Set;
  * is stored on the stub declarations so we must gather both to transpile correctly.
  * <p>
  * TODO(tdeegan): In the future the type information for getter/setter properties could be stored
- * in the defineProperies functions.  It would reduce the complexity of this pass significantly.
+ * in the defineProperties functions.  It would reduce the complexity of this pass significantly.
  *
  * @author mattloring@google.com (Matthew Loring)
  * @author tdeegan@google.com (Thomas Deegan)
