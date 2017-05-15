@@ -301,8 +301,8 @@ class CrossModuleCodeMotion implements CompilerPass {
   }
 
   private void collectReferences(Node root) {
-    ReferenceCollectingCallback collector = new ReferenceCollectingCallback(
-        compiler, ReferenceCollectingCallback.DO_NOTHING_BEHAVIOR,
+    CrossModuleReferenceCollector collector = new CrossModuleReferenceCollector(
+        compiler, CrossModuleReferenceCollector.DO_NOTHING_BEHAVIOR,
         new Es6SyntacticScopeCreator(compiler),
         new Predicate<Var>() {
           @Override public boolean apply(Var var) {
@@ -325,7 +325,7 @@ class CrossModuleCodeMotion implements CompilerPass {
   }
 
   private void processReference(
-      ReferenceCollectingCallback collector, Reference ref, NamedInfo info, Var v) {
+      CrossModuleReferenceCollector collector, Reference ref, NamedInfo info, Var v) {
     Node n = ref.getNode();
     if (isRecursiveDeclaration(v, n)) {
       return;
@@ -387,7 +387,7 @@ class CrossModuleCodeMotion implements CompilerPass {
    * where "movable object" is a literal or a function.
    */
   private boolean maybeProcessDeclaration(
-      ReferenceCollectingCallback collector, Reference ref, NamedInfo info) {
+      CrossModuleReferenceCollector collector, Reference ref, NamedInfo info) {
     Node name = ref.getNode();
     Node parent = name.getParent();
     Node grandparent = parent.getParent();
@@ -453,7 +453,7 @@ class CrossModuleCodeMotion implements CompilerPass {
    * Determines whether the given value is eligible to be moved across modules.
    */
   private static boolean canMoveValue(
-      ReferenceCollectingCallback collector, Scope scope, Node n) {
+      CrossModuleReferenceCollector collector, Scope scope, Node n) {
     // the value is only movable if it's
     // a) nothing,
     // b) a constant literal,
