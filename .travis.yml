@@ -20,5 +20,15 @@ script:
 # Causes the build to run on a VM instead of in a container, to avoid OOM errors.
 sudo: required
 
+after_success:
+  - travis_util/deploy_snapshot.sh
+
+env:
+  global:
+    # CI_DEPLOY_USERNAME
+    - secure: "gJFof2oINvYcEIMEW7pZt4SmnGtDj8Wt3uvDRCLgvyZb2OHL80q3BkMA7KeXlt5kgjqPB3xL+B+ikUYLgHVM870dYUn4GLakTSenlM9lsCTkHTFfFLlQuPDaOR7ELSrFpB0tdGuAB0yILABRF8JpR8MOcK2ZNIvC5DLl84X0jKM="
+    # CI_DEPLOY_PASSWORD
+    - secure: "uzTxScdaeX0qD+jqJH/npYOGhlpSr34H2eah5ylkSRw0lLl0jyPnSpV9ZCivgb8AKiCmnxCy5ioe4fUO26P2erSIppO5b0VzQ+IztBIOAblkV2c1DZb2/wKa6VbHrNjmc9wvyfvPLFECtnh0JW3X+nXy6Ux9PdEhWCjBnljSRjI="
+
 notifications:
   email: false
