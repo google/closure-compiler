@@ -1589,6 +1589,14 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           Node rhs = nameNode.hasChildren() ? nameNode.getLastChild().detach() : null;
           Node newStatement = NodeUtil.newQNameDeclaration(compiler, newString, rhs, jsdoc);
           newStatement.useSourceInfoIfMissingFromForTree(nameParent);
+          int nameLength =
+              nameNode.getOriginalName() != null
+                  ? nameNode.getOriginalName().length()
+                  : nameNode.getString().length();
+          // We want the final property name to have the correct length (that of the property
+          // name, not of the entire nameNode).
+          replaceStringNodeLocationForExportedTopLevelVariable(
+              newStatement, nameNode.getSourcePosition(), nameLength);
           NodeUtil.replaceDeclarationChild(nameNode, newStatement);
           return;
         }
@@ -1603,6 +1611,34 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     newQualifiedNameNode.srcrefTree(nameNode);
     nameParent.replaceChild(nameNode, newQualifiedNameNode);
     compiler.reportChangeToEnclosingScope(newQualifiedNameNode);
+  }
+
+  /**
+   * If we had something like const FOO = "text" and we export FOO, change the source location
+   * information for the rewritten FOO. The replacement should be something like MOD.FOO = "text",
+   * so we look for MOD.FOO and replace the source location for FOO to the original location of FOO.
+   *
+   * @param n node tree to modify
+   * @param sourcePosition position to set for the start of the STRING node.
+   * @param length length to set for STRING node.
+   */
+  private void replaceStringNodeLocationForExportedTopLevelVariable(
+      Node n, int sourcePosition, int length) {
+    if (n.hasOneChild()) {
+      Node assign = n.getFirstChild();
+      if (assign != null && assign.isAssign()) {
+        // ASSIGN always has two children.
+        Node getProp = assign.getFirstChild();
+        if (getProp != null && getProp.isGetProp()) {
+          // GETPROP always has two children.
+          Node stringNode = getProp.getLastChild();
+          if (stringNode != null && stringNode.isString()) {
+            stringNode.setSourceEncodedPosition(sourcePosition);
+            stringNode.setLength(length);
+          }
+        }
+      }
+    }
   }
 
   private boolean isTopLevel(NodeTraversal t, Node n, ScopeType scopeType) {
