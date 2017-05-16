@@ -189,7 +189,7 @@ class IRFactory {
       "set the appropriate language_in option.";
 
   static final String INVALID_ES5_STRICT_OCTAL =
-      "Octal integer literals are not supported in Ecmascript 5 strict mode.";
+      "Octal integer literals are not supported in strict mode.";
 
   static final String INVALID_OCTAL_DIGIT =
       "Invalid octal digit in octal literal.";
@@ -2193,8 +2193,7 @@ class IRFactory {
       Node decls = null;
       if (tree.isExportAll) {
         Preconditions.checkState(
-            tree.declaration == null &&
-            tree.exportSpecifierList == null);
+            tree.declaration == null && tree.exportSpecifierList == null);
       } else if (tree.declaration != null) {
         Preconditions.checkState(tree.exportSpecifierList == null);
         decls = transform(tree.declaration);
@@ -3045,6 +3044,11 @@ class IRFactory {
         }
         case '0': case '1': case '2': case '3':
         case '4': case '5': case '6': case '7':
+          if (inStrictContext()) {
+            errorReporter.error(INVALID_ES5_STRICT_OCTAL, sourceName,
+                lineno(location.start), charno(location.start));
+            return 0;
+          }
           double v = 0;
           int c = 0;
           while (++c < length) {
@@ -3057,14 +3061,8 @@ class IRFactory {
               return 0;
             }
           }
-          if (inStrictContext()) {
-            // TODO(tbreisacher): Make this an error instead of a warning.
-            errorReporter.warning(INVALID_ES5_STRICT_OCTAL, sourceName,
-                lineno(location.start), charno(location.start));
-          } else {
-            errorReporter.warning(INVALID_ES5_STRICT_OCTAL, sourceName,
-                lineno(location.start), charno(location.start));
-          }
+          errorReporter.warning(INVALID_ES5_STRICT_OCTAL, sourceName,
+              lineno(location.start), charno(location.start));
           return v;
         case '8': case '9':
           errorReporter.error(INVALID_OCTAL_DIGIT, sourceName,
@@ -3115,8 +3113,8 @@ class IRFactory {
       case 'd': case 'D': return 13;
       case 'e': case 'E': return 14;
       case 'f': case 'F': return 15;
+      default: throw new IllegalStateException("unexpected: " + c);
     }
-    throw new IllegalStateException("unexpected: " + c);
   }
 
   static Token transformBooleanTokenType(TokenType token) {
