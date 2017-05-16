@@ -189,6 +189,6 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    NodeTraversal.traverse(compiler, scriptRoot, this);
+    NodeTraversal.traverseEs6(compiler, scriptRoot, this);
   }
 }
