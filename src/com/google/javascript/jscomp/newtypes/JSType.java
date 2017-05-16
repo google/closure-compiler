@@ -2129,7 +2129,12 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public ImmutableList<? extends TypeI> getTemplateTypes() {
-    throw new UnsupportedOperationException();
+    NominalType nt = getNominalTypeIfSingletonObj();
+    if (nt.isGeneric()) {
+      ImmutableList.Builder<JSType> builder = ImmutableList.builder();
+      return builder.addAll(nt.getTypeMap().values()).build();
+    }
+    return null;
   }
 
   // Note: concrete subclasses follow below.  The above code in JSType

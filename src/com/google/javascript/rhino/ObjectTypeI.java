@@ -82,6 +82,7 @@ public interface ObjectTypeI extends TypeI {
 
   /**
    * For an instantiated generic type, return the types that the type variables are mapped to.
+   * @return Returns null if this type is not generic.
    *
    * TODO(dimvar): this could have a better name, but it's used by non-compiler code.
    * Rename in a follow-up CL.
