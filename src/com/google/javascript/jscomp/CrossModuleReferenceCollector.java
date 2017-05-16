@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableMap;
@@ -25,12 +24,10 @@ import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 /** Collects global variable references for use by {@link CrossModuleCodeMotion}. */
 public final class CrossModuleReferenceCollector implements ScopedCallback, CompilerPass {
@@ -46,10 +43,8 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
   private final Map<Var, ReferenceCollection> referenceMap =
        new LinkedHashMap<>();
 
-  /**
-   * The stack of basic blocks and scopes the current traversal is in.
-   */
-  private List<BasicBlock> blockStack = new ArrayList<>();
+  /** The stack of basic blocks and scopes the current traversal is in. */
+  private final List<BasicBlock> blockStack = new ArrayList<>();
 
   private final ScopeCreator scopeCreator;
 
@@ -57,14 +52,6 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
    * JavaScript compiler to use in traversing.
    */
   private final AbstractCompiler compiler;
-
-  /**
-   * Traverse hoisted functions where they're referenced, not
-   * where they're declared.
-   */
-  private final Set<Var> startedFunctionTraverse = new HashSet<>();
-  private final Set<Var> finishedFunctionTraverse = new HashSet<>();
-  private Scope narrowScope;
 
   /**
    * Constructor initializes block stack.
@@ -87,15 +74,6 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
   public void process(Node root) {
     NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
     t.traverse(root);
-  }
-
-  /**
-   * Targets reference collection to a particular scope.
-   */
-  void processScope(Scope scope) {
-    this.narrowScope = scope;
-    (new NodeTraversal(compiler, this, scopeCreator)).traverseAtScope(scope);
-    this.narrowScope = null;
   }
 
   /**
@@ -136,59 +114,12 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
           }
           addReference(v, new Reference(n, t, peek(blockStack)));
         }
-
-        if (v.getParentNode() != null
-            && NodeUtil.isHoistedFunctionDeclaration(v.getParentNode())
-            // If we're only traversing a narrow scope, do not try to climb outside.
-            && (narrowScope == null || narrowScope.getDepth() <= v.getScope().getDepth())) {
-          outOfBandTraversal(v);
-        }
       }
     }
 
     if (isBlockBoundary(n, parent)) {
       pop(blockStack);
     }
-  }
-
-  private void outOfBandTraversal(Var v) {
-    if (startedFunctionTraverse.contains(v)) {
-      return;
-    }
-    startedFunctionTraverse.add(v);
-
-    Node fnNode = v.getParentNode();
-
-    // Replace the block stack with a new one. This algorithm only works
-    // because we know hoisted functions cannot be inside loops. It will have to
-    // change if we ever do general function continuations.
-    checkState(NodeUtil.isHoistedFunctionDeclaration(fnNode), fnNode);
-
-    Scope containingScope = v.getScope();
-
-    // This is tricky to compute because of the weird traverseAtScope call for
-    // CollapseProperties.
-    List<BasicBlock> newBlockStack = null;
-    if (containingScope.isGlobal()) {
-      newBlockStack = new ArrayList<>();
-      newBlockStack.add(blockStack.get(0));
-    } else {
-      for (int i = 0; i < blockStack.size(); i++) {
-        if (blockStack.get(i).getRoot() == containingScope.getRootNode()) {
-          newBlockStack = new ArrayList<>(blockStack.subList(0, i + 1));
-        }
-      }
-    }
-    checkNotNull(newBlockStack);
-
-    List<BasicBlock> oldBlockStack = blockStack;
-    blockStack = newBlockStack;
-
-    NodeTraversal outOfBandTraversal = new NodeTraversal(compiler, this, scopeCreator);
-    outOfBandTraversal.traverseFunctionOutOfBand(fnNode, containingScope);
-
-    blockStack = oldBlockStack;
-    finishedFunctionTraverse.add(v);
   }
 
   /**
@@ -222,33 +153,9 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
   @Override
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
       Node parent) {
-    // We automatically traverse a hoisted function body when that function
-    // is first referenced, so that the reference lists are in the right order.
-    //
-    // TODO(nicksantos): Maybe generalize this to a continuation mechanism
-    // like in RemoveUnusedVars.
-    if (NodeUtil.isHoistedFunctionDeclaration(n)) {
-      Node nameNode = n.getFirstChild();
-      Var functionVar = nodeTraversal.getScope().getVar(nameNode.getString());
-      checkNotNull(functionVar);
-      if (finishedFunctionTraverse.contains(functionVar)) {
-        return false;
-      }
-      startedFunctionTraverse.add(functionVar);
-    }
-
     // If node is a new basic block, put on basic block stack
     if (isBlockBoundary(n, parent)) {
       blockStack.add(new BasicBlock(peek(blockStack), n));
-    }
-
-    // Add the second x before the first one in "let [x] = x;". VariableReferenceCheck
-    // relies on reference order to give a warning.
-    if ((n.isDefaultValue() || n.isDestructuringLhs()) && n.hasTwoChildren()) {
-      Scope scope = nodeTraversal.getScope();
-      nodeTraversal.traverseInnerNode(n.getSecondChild(), n, scope);
-      nodeTraversal.traverseInnerNode(n.getFirstChild(), n, scope);
-      return false;
     }
     return true;
   }
