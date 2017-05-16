@@ -47,6 +47,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.Flushable;
 import java.io.IOException;
@@ -115,6 +116,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   static final DiagnosticType OUTPUT_SAME_AS_INPUT_ERROR = DiagnosticType.error(
       "JSC_OUTPUT_SAME_AS_INPUT_ERROR",
       "Bad output file (already listed as input file): {0}");
+
+  static final DiagnosticType COULD_NOT_SERIALIZE_AST = DiagnosticType.error(
+      "JSC_COULD_NOT_SERIALIZE_AST",
+      "Could not serialize ast to: {0}");
+
+  static final DiagnosticType COULD_NOT_DESERIALIZE_AST = DiagnosticType.error(
+      "JSC_COULD_NOT_DESERIALIZE_AST",
+      "Could not deserialize ast from: {0}");
 
   static final DiagnosticType NO_TREE_GENERATED_ERROR = DiagnosticType.error(
       "JSC_NO_TREE_GENERATED_ERROR",
@@ -1101,7 +1110,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       compiler.printConfig(System.err);
     }
 
-    // TODO(rluble): Add save and restore cases here.
+
+    String saveAfterChecksFilename = config.getSaveAfterChecksFileName();
+    String continueSavedCompilationFilename = config.getContinueSavedCompilationFileName();
     if (config.skipNormalOutputs) {
       // TODO(bradfordcsmith): Should we be ignoring possible init/initModules() errors here?
       compiler.orderInputsWithLargeStack();
@@ -1111,6 +1122,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       result = compiler.getResult();
     } else if (options.getInstrumentForCoverageOnly()) {
       result = instrumentForCoverage();
+    } else if (saveAfterChecksFilename != null) {
+      result = performStage1andSave(saveAfterChecksFilename);
+    } else if (continueSavedCompilationFilename != null) {
+      result = restoreAndPerformStage2(continueSavedCompilationFilename);
     } else {
       result = performFullCompilation();
     }
@@ -1133,6 +1148,45 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     }
 
     return processResults(result, modules, options);
+  }
+
+  private Result performStage1andSave(String filename) {
+    Result result;
+    try (FileOutputStream serializedOutputStream = new FileOutputStream(filename)){
+      compiler.parseForCompilation();
+      if (!compiler.hasErrors()) {
+        compiler.stage1Passes();
+        compiler.completeCompilation();
+        compiler.saveState(serializedOutputStream);
+      }
+    } catch (IOException e) {
+      compiler.report(JSError.make(COULD_NOT_SERIALIZE_AST, filename));
+    } finally {
+      // Make sure we generate a report of errors and warnings even if the compiler throws an
+      // exception somewhere.
+      compiler.generateReport();
+    }
+    result = compiler.getResult();
+    return result;
+  }
+
+  private Result restoreAndPerformStage2(String filename) {
+    Result result;
+    try (FileInputStream serializedInputStream = new FileInputStream(filename)){
+      compiler.restoreState(serializedInputStream);
+      if (!compiler.hasErrors()) {
+          compiler.stage2Passes();
+      }
+      compiler.completeCompilation();
+    } catch (Exception e) {
+      compiler.report(JSError.make(COULD_NOT_DESERIALIZE_AST, filename));
+    } finally {
+      // Make sure we generate a report of errors and warnings even if the compiler throws an
+      // exception somewhere.
+      compiler.generateReport();
+    }
+    result = compiler.getResult();
+    return result;
   }
 
   private Result performFullCompilation() {

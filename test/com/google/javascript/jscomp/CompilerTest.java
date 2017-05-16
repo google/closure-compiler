@@ -972,6 +972,7 @@ public final class CompilerTest extends TestCase {
     compiler.saveState(byteArrayOutputStream);
 
     compiler = new Compiler(new TestErrorManager());
+    compiler.options = options;
     ByteArrayInputStream byteArrayInputStream =
         new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
     compiler.restoreState(byteArrayInputStream);

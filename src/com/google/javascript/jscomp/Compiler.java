@@ -1715,11 +1715,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(!hasErrors());
     checkNotNull(externs);
     checkNotNull(inputs);
-    if (options.getTracerMode().isOn()) {
-      tracker =
-          new PerformanceTracker(externsRoot, jsRoot, options.getTracerMode(), this.outStream);
-      addChangeHandler(tracker.getCodeChangeHandler());
-    }
+    maybeSetTracker();
 
     Tracer tracer = newTracer(READING_PASS_NAME);
     beforePass(READING_PASS_NAME);
@@ -1735,6 +1731,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     } finally {
       afterPass(READING_PASS_NAME);
       stopTracer(tracer, READING_PASS_NAME);
+    }
+  }
+
+  public void maybeSetTracker() {
+    if (options.getTracerMode().isOn()) {
+      tracker =
+          new PerformanceTracker(externsRoot, jsRoot, options.getTracerMode(), this.outStream);
+      addChangeHandler(tracker.getCodeChangeHandler());
     }
   }
 
@@ -3301,49 +3305,64 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Serializable state of the compiler.
    */
   private static class CompilerState implements Serializable {
-    CompilerOptions options;
+
+    Node externAndJsRoot;
     Node externsRoot;
     Node jsRoot;
-    Node externAndJsRoot;
     List<CompilerInput> externs;
     List<CompilerInput> inputs;
     Map<InputId, CompilerInput> inputsById;
     JSTypeRegistry typeRegistry;
+    MostRecentTypechecker mostRecentTypeChecker;
+    CompilerInput synthesizedExternsInput;
+    CompilerInput synthesizedExternsInputAtEnd;
+    Map<String, Node> injectedLibraries;
+    Node lastInjectedLibrary;
+    GlobalVarReferenceMap globalRefMap;
+    GlobalTypeInfo symbolTable;
+    private final boolean hasRegExpGlobalReferences;
 
-    CompilerState(
-        CompilerOptions options,
-        Node externsRoot,
-        Node jsRoot,
-        Node externAndJsRoot,
-        List<CompilerInput> externs,
-        List<CompilerInput> inputs,
-        Map<InputId, CompilerInput> inputsById,
-        JSTypeRegistry typeRegistry) {
-      this.options = options;
-      this.externsRoot = externsRoot;
-      this.jsRoot = jsRoot;
-      this.externAndJsRoot = externAndJsRoot;
-      this.typeRegistry = typeRegistry;
-      this.externs = externs;
-      this.inputs = inputs;
-      this.inputsById = inputsById;
+    CompilerState(Compiler compiler) {
+      this.externsRoot = checkNotNull(compiler.externsRoot);
+      this.jsRoot =  checkNotNull(compiler.jsRoot);
+      this.externAndJsRoot =  checkNotNull(compiler.externAndJsRoot);
+      this.typeRegistry =  compiler.typeRegistry;
+      this.externs =  compiler.externs;
+      this.inputs =  checkNotNull(compiler.inputs);
+      this.inputsById =  checkNotNull(compiler.inputsById);
+      this.mostRecentTypeChecker = compiler.mostRecentTypechecker;
+      this.synthesizedExternsInput = compiler.synthesizedExternsInput;
+      this.synthesizedExternsInputAtEnd = compiler.synthesizedExternsInputAtEnd;
+      this.injectedLibraries = compiler.injectedLibraries;
+      this.globalRefMap = compiler.globalRefMap;
+      this.lastInjectedLibrary = compiler.lastInjectedLibrary;
+      this.symbolTable = compiler.symbolTable;
+      this.hasRegExpGlobalReferences = compiler.hasRegExpGlobalReferences;
     }
   }
 
   @GwtIncompatible("ObjectOutputStream")
   public void saveState(OutputStream outputStream) throws IOException {
-    CompilerState compilerState = new CompilerState(
-        options, externsRoot, jsRoot, externAndJsRoot, externs, inputs, inputsById, typeRegistry);
     try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream)) {
-      objectOutputStream.writeObject(compilerState);
+      runInCompilerThread(new Callable<Void>() {
+        @Override
+        public Void call() throws Exception {
+          objectOutputStream.writeObject(new CompilerState(Compiler.this));
+          return null;
+        }
+      });
    }
   }
 
   @GwtIncompatible("ObjectInputStream")
   public void restoreState(InputStream inputStream) throws Exception {
-    try (ObjectInputStream objectInputStream = new ObjectInputStream(inputStream)) {
-      CompilerState compilerState = (CompilerState) objectInputStream.readObject();
-      options = compilerState.options;
+    try (final ObjectInputStream objectInputStream = new ObjectInputStream(inputStream)) {
+      CompilerState compilerState = runInCompilerThread(new Callable<CompilerState>() {
+        @Override
+        public CompilerState call() throws Exception {
+          return (CompilerState) objectInputStream.readObject();
+        }
+      });
       externs = compilerState.externs;
       inputs = compilerState.inputs;
       inputsById.clear();
@@ -3352,7 +3371,17 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       externAndJsRoot = compilerState.externAndJsRoot;
       externsRoot = compilerState.externsRoot;
       jsRoot = compilerState.jsRoot;
+      mostRecentTypechecker = compilerState.mostRecentTypeChecker;
+      synthesizedExternsInput = compilerState.synthesizedExternsInput;
+      synthesizedExternsInputAtEnd = compilerState.synthesizedExternsInputAtEnd;
+      injectedLibraries.clear();
+      injectedLibraries.putAll(compilerState.injectedLibraries);
+      lastInjectedLibrary = compilerState.lastInjectedLibrary;
+      globalRefMap = compilerState.globalRefMap;
+      symbolTable = compilerState.symbolTable;
+      hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
     }
     initWarningsGuard(options.getWarningsGuard());
+    maybeSetTracker();
   }
 }
