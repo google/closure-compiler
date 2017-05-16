@@ -1727,7 +1727,9 @@ public class CommandLineRunner extends
 
     options.setPrintSourceAfterEachPass(flags.printSourceAfterEachPass);
     options.setStrictModeInput(flags.strictModeInput);
-    options.setEmitUseStrict(flags.emitUseStrict);
+    if (!flags.emitUseStrict) {
+      options.setEmitUseStrict(false);
+    }
     options.setSourceMapIncludeSourcesContent(flags.sourceMapIncludeSourcesContent);
     options.setModuleResolutionMode(flags.moduleResolutionMode);
 

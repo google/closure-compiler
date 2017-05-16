@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Ascii;
 import com.google.common.base.MoreObjects;
+import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -76,10 +77,8 @@ public class CompilerOptions implements Serializable {
 
   /**
    * Should the compiled output start with "'use strict';"?
-   *
-   * <p>Ignored for non-strict output language modes.
    */
-  private boolean emitUseStrict = true;
+  private Optional<Boolean> emitUseStrict = Optional.absent();
 
   /**
    * The JavaScript language version accepted.
@@ -2714,12 +2713,23 @@ public class CompilerOptions implements Serializable {
     this.conformanceConfigs = ImmutableList.copyOf(configs);
   }
 
-  public boolean isEmitUseStrict() {
-    return emitUseStrict;
+  public boolean shouldEmitUseStrict() {
+    return this.emitUseStrict.or(getDefaultEmitUseStrict());
+  }
+
+  boolean getDefaultEmitUseStrict() {
+    switch (getLanguageOut()) {
+      case ECMASCRIPT3:
+      case ECMASCRIPT5:
+      case ECMASCRIPT6:
+        return false;
+      default:
+        return true;
+    }
   }
 
   public CompilerOptions setEmitUseStrict(boolean emitUseStrict) {
-    this.emitUseStrict = emitUseStrict;
+    this.emitUseStrict = Optional.of(emitUseStrict);
     return this;
   }
 

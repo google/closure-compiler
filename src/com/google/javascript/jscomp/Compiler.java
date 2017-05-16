@@ -2382,19 +2382,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);
     builder.setTagAsExterns(firstOutput && options.shouldGenerateTypedExterns());
-    builder.setTagAsStrict(firstOutput && shouldEmitUseStrict());
+    builder.setTagAsStrict(firstOutput && options.shouldEmitUseStrict());
     return builder.build();
-  }
-
-  private boolean shouldEmitUseStrict() {
-    switch (options.getLanguageOut()) {
-      case ECMASCRIPT3:
-      case ECMASCRIPT5:
-      case ECMASCRIPT6:
-        return false;
-      default:
-        return options.isEmitUseStrict();
-    }
   }
 
   /**

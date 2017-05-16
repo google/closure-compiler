@@ -61,6 +61,14 @@ public final class CompilerOptionsTest extends TestCase {
     assertNull(LanguageMode.fromString("junk"));
   }
 
+  public void testEmitUseStrictWorksInEs3() {
+    CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(true);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+
+    assertTrue(options.shouldEmitUseStrict());
+  }
+
   public void testSerialization() throws Exception {
     CompilerOptions options = new CompilerOptions();
     options.setDefineToBooleanLiteral("trueVar", true);
