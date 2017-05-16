@@ -476,9 +476,9 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).isEmpty();
     assertThat(compiler.getErrors()).hasLength(1);
     JSError error = compiler.getErrors()[0];
-    assertEquals("Message parse tree malformed. "+
-                 "Message must be initialized using goog.getMsg function.",
-                 error.description);
+    assertEquals(
+        "Message parse tree malformed. Message must be initialized using goog.getMsg function.",
+        error.description);
   }
 
   public void testUnrecognizedFunction() {
@@ -488,10 +488,10 @@ public final class JsMessageVisitorTest extends TestCase {
     assertThat(messages).isEmpty();
     assertThat(compiler.getErrors()).hasLength(1);
     JSError error = compiler.getErrors()[0];
-    assertEquals("Message parse tree malformed. "+
-                 "Message initialized using unrecognized function. " +
-                 "Please use goog.getMsg() instead.",
-                 error.description);
+    assertEquals(
+        "Message parse tree malformed. Message initialized using unrecognized function. "
+            + "Please use goog.getMsg() instead.",
+        error.description);
   }
 
   public void testExtractPropertyMessage() {
@@ -717,6 +717,18 @@ public final class JsMessageVisitorTest extends TestCase {
         "var x = goog.getMsgWithFallback(\n" +
         "    MSG_UNNAMED_1, MSG_UNNAMED_2);\n" +
         "}\n");
+    assertNoErrors();
+  }
+
+  public void testUsingMsgPrefixWithFallback_rename() {
+    renameMessages = true;
+    extractMessages(
+        LINE_JOINER.join(
+            "function f() {",
+            "/** @desc Hello */ var MSG_A = goog.getMsg('hello');",
+            "/** @desc Hello */ var MSG_B = goog.getMsg('hello!');",
+            "var x = goog.getMsgWithFallback(MSG_A, MSG_B);",
+            "}"));
     assertNoErrors();
   }
 

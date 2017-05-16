@@ -829,19 +829,24 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
     }
 
     Node firstArg = call.getSecondChild();
-    JsMessage firstMessage = getTrackedMessage(t, firstArg.getString());
+    String name = firstArg.getOriginalName();
+    if (name == null) {
+      name = firstArg.getString();
+    }
+    JsMessage firstMessage = getTrackedMessage(t, name);
     if (firstMessage == null) {
-      compiler.report(
-          t.makeError(firstArg, FALLBACK_ARG_ERROR, firstArg.getString()));
+      compiler.report(t.makeError(firstArg, FALLBACK_ARG_ERROR, name));
       return;
     }
 
     Node secondArg = firstArg.getNext();
-    JsMessage secondMessage = getTrackedMessage(
-        t, call.getChildAtIndex(2).getString());
+    name = secondArg.getOriginalName();
+    if (name == null) {
+      name = secondArg.getString();
+    }
+    JsMessage secondMessage = getTrackedMessage(t, name);
     if (secondMessage == null) {
-      compiler.report(
-          t.makeError(secondArg, FALLBACK_ARG_ERROR, secondArg.getString()));
+      compiler.report(t.makeError(secondArg, FALLBACK_ARG_ERROR, name));
       return;
     }
 
@@ -929,8 +934,7 @@ public abstract class JsMessageVisitor extends AbstractPostOrderCallback
       return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, input);
     } else {
       return CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL,
-          input.substring(0, suffixStart)) +
-          input.substring(suffixStart);
+          input.substring(0, suffixStart)) + input.substring(suffixStart);
     }
   }
 
