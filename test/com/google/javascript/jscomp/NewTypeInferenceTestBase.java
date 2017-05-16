@@ -224,6 +224,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     }
     if (compilerOptions.getLanguageIn().isEs6OrHigher()
         && !compilerOptions.getLanguageOut().isEs6OrHigher()) {
+      TranspilationPasses.addEs2017Passes(passes);
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
       TranspilationPasses.addRewritePolyfillPass(passes);

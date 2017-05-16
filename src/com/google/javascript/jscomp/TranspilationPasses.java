@@ -28,6 +28,10 @@ import java.util.List;
 public class TranspilationPasses {
   private TranspilationPasses() {}
 
+  public static void addEs2017Passes(List<PassFactory> passes) {
+    passes.add(rewriteAsyncFunctions);
+  }
+
   /**
    * Adds all the early ES6 transpilation passes, which go before the Dart pass.
    *
@@ -36,7 +40,6 @@ public class TranspilationPasses {
    * transpile them, even if the output language is also ES6.
    */
   public static void addEs6EarlyPasses(List<PassFactory> passes) {
-    passes.add(rewriteAsyncFunctions);
     passes.add(es6SuperCheck);
     passes.add(es6ConvertSuper);
     passes.add(es6RewriteArrowFunction);

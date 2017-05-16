@@ -3033,6 +3033,21 @@ public class CompilerOptions implements Serializable {
       }
     }
 
+    /** Whether this is ECMAScript 2017 or higher. */
+    public boolean isEs2017OrHigher() {
+      Preconditions.checkState(this != NO_TRANSPILE);
+      switch (this) {
+        case ECMASCRIPT3:
+        case ECMASCRIPT5:
+        case ECMASCRIPT5_STRICT:
+        case ECMASCRIPT_2015:
+        case ECMASCRIPT_2016:
+          return false;
+        default:
+          return true;
+      }
+    }
+
     public static LanguageMode fromString(String value) {
       if (value == null) {
         return null;

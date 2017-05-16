@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT;
+import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT6_TYPED;
+import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_2016;
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -154,8 +157,7 @@ public final class DefaultPassConfig extends PassConfig {
   protected State getIntermediateState() {
     return new State(
         cssNames == null ? null : new HashMap<>(cssNames),
-        exportedNames == null ? null :
-            Collections.unmodifiableSet(exportedNames),
+        exportedNames == null ? null : Collections.unmodifiableSet(exportedNames),
         crossModuleIdGenerator, variableMap, propertyMap,
         anonymousFunctionNameMap, stringMap, functionNames, idGeneratorMap);
   }
@@ -171,8 +173,7 @@ public final class DefaultPassConfig extends PassConfig {
   void maybeInitializePreprocessorSymbolTable(AbstractCompiler compiler) {
     if (options.preservesDetailedSourceInfo()) {
       Node root = compiler.getRoot();
-      if (preprocessorSymbolTable == null ||
-          preprocessorSymbolTable.getRootNode() != root) {
+      if (preprocessorSymbolTable == null || preprocessorSymbolTable.getRootNode() != root) {
         preprocessorSymbolTable = new PreprocessorSymbolTable(root);
       }
     }
@@ -188,8 +189,8 @@ public final class DefaultPassConfig extends PassConfig {
   protected List<PassFactory> getTranspileOnlyPasses() {
     List<PassFactory> passes = new ArrayList<>();
 
-    if (options.getLanguageIn() == LanguageMode.ECMASCRIPT6_TYPED
-        && options.getLanguageOut() != LanguageMode.ECMASCRIPT6_TYPED) {
+    if (options.getLanguageIn() == ECMASCRIPT6_TYPED
+        && options.getLanguageOut() != ECMASCRIPT6_TYPED) {
       passes.add(convertEs6TypedToEs6);
     }
 
@@ -202,6 +203,12 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(dartSuperAccessorsPass);
     }
 
+    if (options.getLanguageIn().isEs2017OrHigher()
+        && !options.getLanguageOut().isEs2017OrHigher()) {
+      TranspilationPasses.addEs2017Passes(passes);
+      passes.add(setLanguageMode(ECMASCRIPT_2016));
+    }
+
     if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
@@ -209,7 +216,7 @@ public final class DefaultPassConfig extends PassConfig {
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(passes);
       }
-      passes.add(markTranspilationDone);
+      passes.add(setLanguageMode(options.getLanguageOut()));
     }
 
     if (options.raiseToEs6Typed()) {
@@ -295,8 +302,8 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(declaredGlobalExternsOnWindow);
     }
 
-    if (options.getLanguageIn() == LanguageMode.ECMASCRIPT6_TYPED
-            && options.getLanguageOut() != LanguageMode.ECMASCRIPT6_TYPED) {
+    if (options.getLanguageIn() == ECMASCRIPT6_TYPED
+        && options.getLanguageOut() != ECMASCRIPT6_TYPED) {
       checks.add(convertEs6TypedToEs6);
     }
 
@@ -375,6 +382,12 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(dartSuperAccessorsPass);
     }
 
+    if (options.getLanguageIn().isEs2017OrHigher()
+        && !options.getLanguageOut().isEs2017OrHigher()) {
+      TranspilationPasses.addEs2017Passes(checks);
+      checks.add(setLanguageMode(ECMASCRIPT_2016));
+    }
+
     if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
       checks.add(es6ExternsCheck);
       TranspilationPasses.addEs6EarlyPasses(checks);
@@ -387,7 +400,7 @@ public final class DefaultPassConfig extends PassConfig {
       }
       // TODO(bradfordcsmith): This marking is really about how variable scoping is handled during
       //     type checking. It should really be handled in a more direct fashion.
-      checks.add(markTranspilationDone);
+      checks.add(setLanguageMode(options.getLanguageOut()));
     }
 
     if (options.raiseToEs6Typed()) {
@@ -458,15 +471,15 @@ public final class DefaultPassConfig extends PassConfig {
       addOldTypeCheckerPasses(checks, options);
     }
 
-    if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE) ||
-        (!options.getNewTypeInference() && !options.disables(DiagnosticGroups.MISSING_RETURN))) {
+    if (!options.disables(DiagnosticGroups.CHECK_USELESS_CODE)
+        || (!options.getNewTypeInference() && !options.disables(DiagnosticGroups.MISSING_RETURN))) {
       checks.add(checkControlFlow);
     }
 
     // CheckAccessControls only works if check types is on.
-    if (options.checkTypes &&
-        (!options.disables(DiagnosticGroups.ACCESS_CONTROLS)
-         || options.enables(DiagnosticGroups.CONSTANT_PROPERTY))) {
+    if (options.checkTypes
+        && (!options.disables(DiagnosticGroups.ACCESS_CONTROLS)
+            || options.enables(DiagnosticGroups.CONSTANT_PROPERTY))) {
       checks.add(checkAccessControls);
     }
 
@@ -517,8 +530,7 @@ public final class DefaultPassConfig extends PassConfig {
     // Defines in code always need to be processed.
     checks.add(processDefines);
 
-    if (options.instrumentationTemplate != null ||
-        options.recordFunctionInformation) {
+    if (options.instrumentationTemplate != null || options.recordFunctionInformation) {
       checks.add(computeFunctionNames);
     }
 
@@ -579,8 +591,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Abstract method removal works best on minimally modified code, and also
     // only needs to run once.
-    if (options.closurePass &&
-        (options.removeAbstractMethods || options.removeClosureAsserts)) {
+    if (options.closurePass && (options.removeAbstractMethods || options.removeClosureAsserts)) {
       passes.add(closureCodeRemoval);
     }
 
@@ -789,15 +800,14 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Move functions before extracting prototype member declarations.
-    if (options.moveFunctionDeclarations ||
+    if (options.moveFunctionDeclarations
         // renamePrefixNamescape relies on moveFunctionDeclarations
         // to preserve semantics.
-        options.renamePrefixNamespace != null) {
+        || options.renamePrefixNamespace != null) {
       passes.add(moveFunctionDeclarations);
     }
 
-    if (options.anonymousFunctionNaming ==
-        AnonymousFunctionNamingPolicy.MAPPED) {
+    if (options.anonymousFunctionNaming == AnonymousFunctionNamingPolicy.MAPPED) {
       passes.add(nameMappedAnonymousFunctions);
     }
 
@@ -808,8 +818,8 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(extractPrototypeMemberDeclarations);
     }
 
-    if (options.shouldAmbiguateProperties() &&
-        (options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED)) {
+    if (options.shouldAmbiguateProperties()
+        && options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED) {
       passes.add(ambiguateProperties);
     }
 
@@ -893,8 +903,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(latePeepholeOptimizations);
     }
 
-    if (options.anonymousFunctionNaming ==
-        AnonymousFunctionNamingPolicy.UNMAPPED) {
+    if (options.anonymousFunctionNaming == AnonymousFunctionNamingPolicy.UNMAPPED) {
       passes.add(nameUnmappedAnonymousFunctions);
     }
 
@@ -1192,8 +1201,7 @@ public final class DefaultPassConfig extends PassConfig {
   private static final DiagnosticType GENERATE_EXPORTS_ERROR =
       DiagnosticType.error(
           "JSC_GENERATE_EXPORTS_ERROR",
-          "Exports can only be generated if export symbol/property " +
-          "functions are set.");
+          "Exports can only be generated if export symbol/property functions are set.");
 
   /** Verifies JSDoc annotations are used properly. */
   private final HotSwapPassFactory checkJsDoc = new HotSwapPassFactory("checkJsDoc", true) {
@@ -1208,8 +1216,8 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       CodingConvention convention = compiler.getCodingConvention();
-      if (convention.getExportSymbolFunction() != null &&
-          convention.getExportPropertyFunction() != null) {
+      if (convention.getExportSymbolFunction() != null
+          && convention.getExportPropertyFunction() != null) {
         final GenerateExports pass = new GenerateExports(compiler,
             options.exportLocalPropertyDefinitions,
             convention.getExportSymbolFunction(),
@@ -1415,18 +1423,19 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
-  private final PassFactory markTranspilationDone = new PassFactory("setLanguageMode", true) {
-    @Override
-    protected CompilerPass create(final AbstractCompiler compiler) {
-      return new CompilerPass() {
-        @Override
-        public void process(Node externs, Node root) {
-          LanguageMode langOut = options.getLanguageOut();
-          compiler.setLanguageMode(langOut.isEs6OrHigher() ? LanguageMode.ECMASCRIPT5 : langOut);
-        }
-      };
-    }
-  };
+  private final PassFactory setLanguageMode(final LanguageMode mode) {
+    return new PassFactory("setLanguageMode:" + mode, true) {
+      @Override
+      protected CompilerPass create(final AbstractCompiler compiler) {
+        return new CompilerPass() {
+          @Override
+          public void process(Node externs, Node root) {
+            compiler.setLanguageMode(mode);
+          }
+        };
+      }
+    };
+  }
 
   /** Applies aliases and inlines goog.scope. */
   private final PassFactory declaredGlobalExternsOnWindow =
@@ -2349,8 +2358,7 @@ public final class DefaultPassConfig extends PassConfig {
               options.inlineFunctions,
               options.inlineLocalFunctions,
               true,
-              options.assumeStrictThis()
-                  || options.getLanguageIn() == LanguageMode.ECMASCRIPT5_STRICT,
+              options.assumeStrictThis() || options.getLanguageIn() == ECMASCRIPT5_STRICT,
               options.assumeClosuresOnlyCaptureReferences,
               options.maxFunctionSizeAfterInlining);
         }
