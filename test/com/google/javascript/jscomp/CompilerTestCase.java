@@ -168,6 +168,8 @@ public abstract class CompilerTestCase extends TestCase {
 
   private String filename = "testcode";
 
+  private final Set<DiagnosticType> ignoredWarnings = new HashSet<>();
+
   static final String ACTIVE_X_OBJECT_DEF =
       LINE_JOINER.join(
           "/**",
@@ -417,6 +419,10 @@ public abstract class CompilerTestCase extends TestCase {
 
     options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.INVALID_CASTS, CheckLevel.WARNING);
+    if (!ignoredWarnings.isEmpty()) {
+      options.setWarningLevel(
+          new DiagnosticGroup(ignoredWarnings.toArray(new DiagnosticType[0])), CheckLevel.OFF);
+    }
     options.setCodingConvention(getCodingConvention());
     options.setPolymerVersion(1);
     return options;
@@ -444,6 +450,18 @@ public abstract class CompilerTestCase extends TestCase {
     // Since most compiler passes should be idempotent, we run each pass twice
     // by default.
     return 2;
+  }
+
+  /** Adds the given DiagnosticTypes to the set of warnings to ignore. */
+  protected final void ignoreWarnings(DiagnosticType... warnings) {
+    ignoredWarnings.addAll(Arrays.asList(warnings));
+  }
+
+  /** Adds the given DiagnosticGroups to the set of warnings to ignore. */
+  protected final void ignoreWarnings(DiagnosticGroup... warnings) {
+    for (DiagnosticGroup group : warnings) {
+      ignoredWarnings.addAll(group.getTypes());
+    }
   }
 
   /** Expect warnings without source information. */

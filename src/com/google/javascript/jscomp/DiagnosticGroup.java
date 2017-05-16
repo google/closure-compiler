@@ -21,18 +21,18 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
- * Group a set of related diagnostic types together, so that they can
- * be toggled on and off as one unit.
+ * Group a set of related diagnostic types together, so that they can be toggled on and off as one
+ * unit.
+ *
  * @author nicksantos@google.com (Nick Santos)
  */
-public class DiagnosticGroup implements Serializable {
+public final class DiagnosticGroup implements Serializable {
   private static final long serialVersionUID = 1;
 
   // The set of types represented by this group, hashed by key.
-  private final Set<DiagnosticType> types;
+  private final ImmutableSet<DiagnosticType> types;
 
   // A human-readable name for the group.
   private final String name;
@@ -120,10 +120,8 @@ public class DiagnosticGroup implements Serializable {
     return true;
   }
 
-  /**
-   * Returns an iterable over all the types in this group.
-   */
-  public Iterable<DiagnosticType> getTypes() {
+  /** Returns all the types in this group. */
+  public ImmutableSet<DiagnosticType> getTypes() {
     return types;
   }
 
