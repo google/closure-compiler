@@ -42,6 +42,7 @@ import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
 import com.google.javascript.rhino.jstype.UnknownType;
+import java.io.Serializable;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -59,8 +60,8 @@ import javax.annotation.Nullable;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class TypeValidator {
-  private final AbstractCompiler compiler;
+class TypeValidator implements Serializable {
+  private final transient AbstractCompiler compiler;
   private final JSTypeRegistry typeRegistry;
   private final JSType allValueTypes;
   private final JSType nullOrUndefined;

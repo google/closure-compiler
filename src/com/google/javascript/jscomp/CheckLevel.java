@@ -15,13 +15,15 @@
  */
 package com.google.javascript.jscomp;
 
+import java.io.Serializable;
+
 /**
  * Controls checking levels of certain options.  For all checks going
  * forward, this should be used instead of booleans, so teams and
  * individuals can control which checks are off, which produce only warnings,
  * and which produce errors, without everyone having to agree.
  */
-public enum CheckLevel {
+public enum CheckLevel implements Serializable{
   ERROR,
   WARNING,
   OFF;

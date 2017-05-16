@@ -3294,22 +3294,23 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Serializable state of the compiler.
    */
   private static class CompilerState implements Serializable {
-
-    Node externAndJsRoot;
-    Node externsRoot;
-    Node jsRoot;
-    List<CompilerInput> externs;
-    List<CompilerInput> inputs;
-    Map<InputId, CompilerInput> inputsById;
-    JSTypeRegistry typeRegistry;
-    MostRecentTypechecker mostRecentTypeChecker;
-    CompilerInput synthesizedExternsInput;
-    CompilerInput synthesizedExternsInputAtEnd;
-    Map<String, Node> injectedLibraries;
-    Node lastInjectedLibrary;
-    GlobalVarReferenceMap globalRefMap;
-    GlobalTypeInfo symbolTable;
+    private final Node externAndJsRoot;
+    private final Node externsRoot;
+    private final Node jsRoot;
+    private final List<CompilerInput> externs;
+    private final List<CompilerInput> inputs;
+    private final Map<InputId, CompilerInput> inputsById;
+    private final JSTypeRegistry typeRegistry;
+    private final TypeValidator typeValidator;
+    private final MostRecentTypechecker mostRecentTypeChecker;
+    private final CompilerInput synthesizedExternsInput;
+    private final CompilerInput synthesizedExternsInputAtEnd;
+    private final Map<String, Node> injectedLibraries;
+    private final Node lastInjectedLibrary;
+    private final GlobalVarReferenceMap globalRefMap;
+    private final GlobalTypeInfo symbolTable;
     private final boolean hasRegExpGlobalReferences;
+
 
     CompilerState(Compiler compiler) {
       this.externsRoot = checkNotNull(compiler.externsRoot);
@@ -3327,6 +3328,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.lastInjectedLibrary = compiler.lastInjectedLibrary;
       this.symbolTable = compiler.symbolTable;
       this.hasRegExpGlobalReferences = compiler.hasRegExpGlobalReferences;
+      this.typeValidator = compiler.typeValidator;
     }
   }
 
@@ -3369,6 +3371,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       globalRefMap = compilerState.globalRefMap;
       symbolTable = compilerState.symbolTable;
       hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
+      typeValidator = compilerState.typeValidator;
     }
     initWarningsGuard(options.getWarningsGuard());
     maybeSetTracker();

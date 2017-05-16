@@ -17,13 +17,14 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
 
+import java.io.Serializable;
 import javax.annotation.Nullable;
 
 /**
  * Compile error description
  *
  */
-public final class JSError {
+public final class JSError implements Serializable {
   /** A type of the error */
   private final DiagnosticType type;
 

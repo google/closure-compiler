@@ -19,6 +19,7 @@ import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -30,7 +31,7 @@ import java.util.Objects;
  * Type-based optimizations should take this into account
  * so that they don't wreck code with type warnings.
  */
-class TypeMismatch {
+class TypeMismatch implements Serializable {
   final TypeI typeA;
   final TypeI typeB;
   final JSError src;
