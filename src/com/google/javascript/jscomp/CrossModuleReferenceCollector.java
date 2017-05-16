@@ -19,18 +19,24 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /** Collects global variable references for use by {@link CrossModuleCodeMotion}. */
 public final class CrossModuleReferenceCollector implements ScopedCallback, CompilerPass {
+
+  /** Maps global variable name to the corresponding {@link Var} object. */
+  private final Map<String, Var> varsByName = new HashMap<>();
 
   /**
    * Maps a given variable to a collection of references to that name. Note that
@@ -44,11 +50,6 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
    * The stack of basic blocks and scopes the current traversal is in.
    */
   private List<BasicBlock> blockStack = new ArrayList<>();
-
-  /**
-   * Source of behavior at various points in the traversal.
-   */
-  private final Behavior behavior;
 
   private final ScopeCreator scopeCreator;
 
@@ -68,10 +69,8 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
   /**
    * Constructor initializes block stack.
    */
-  CrossModuleReferenceCollector(AbstractCompiler compiler, Behavior behavior,
-      ScopeCreator creator) {
+  CrossModuleReferenceCollector(AbstractCompiler compiler, ScopeCreator creator) {
     this.compiler = compiler;
-    this.behavior = behavior;
     this.scopeCreator = creator;
   }
 
@@ -113,6 +112,10 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
     return referenceMap.get(v);
   }
 
+  ImmutableMap<String, Var> getGlobalVariableNamesMap() {
+    return ImmutableMap.copyOf(varsByName);
+  }
+
   /**
    * For each node, update the block stack and reference collection
    * as appropriate.
@@ -120,11 +123,17 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isName() || (n.isStringKey() && !n.hasChildren())) {
-      Var v = t.getScope().getVar(n.getString());
+      String varName = n.getString();
+      Var v = t.getScope().getVar(varName);
 
       if (v != null) {
         // Only global, non-exported names can be moved
         if (v.isGlobal() && !compiler.getCodingConvention().isExported(v.getName())) {
+          if (varsByName.containsKey(varName)) {
+            checkState(Objects.equals(varsByName.get(varName), v));
+          } else {
+            varsByName.put(varName, v);
+          }
           addReference(v, new Reference(n, t, peek(blockStack)));
         }
 
@@ -205,7 +214,6 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
     if (t.getScope().isHoistScope()) {
       pop(blockStack);
     }
-    behavior.afterExitScope(t, new ReferenceMapWrapper(referenceMap));
   }
 
   /**
@@ -305,34 +313,4 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
     // Add this particular reference
     referenceInfo.add(reference);
   }
-
-  private static class ReferenceMapWrapper implements ReferenceMap {
-    private final Map<Var, ReferenceCollection> referenceMap;
-
-    public ReferenceMapWrapper(Map<Var, ReferenceCollection> referenceMap) {
-      this.referenceMap = referenceMap;
-    }
-
-    @Override
-    public ReferenceCollection getReferences(Var var) {
-      return referenceMap.get(var);
-    }
-  }
-
-  /**
-   * Way for callers to add specific behavior during traversal that
-   * utilizes the built-up reference information.
-   */
-  public interface Behavior {
-    /**
-     * Called after we finish with a scope.
-     */
-    void afterExitScope(NodeTraversal t, ReferenceMap referenceMap);
-  }
-
-  static final Behavior DO_NOTHING_BEHAVIOR = new Behavior() {
-    @Override
-    public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {}
-  };
-
 }

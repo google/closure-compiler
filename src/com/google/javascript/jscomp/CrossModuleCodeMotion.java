@@ -301,7 +301,7 @@ class CrossModuleCodeMotion implements CompilerPass {
 
   private void collectReferences(Node root) {
     CrossModuleReferenceCollector collector = new CrossModuleReferenceCollector(
-        compiler, CrossModuleReferenceCollector.DO_NOTHING_BEHAVIOR,
+        compiler,
         new Es6SyntacticScopeCreator(compiler));
     collector.process(root);
 

@@ -20,16 +20,15 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
-import com.google.javascript.jscomp.CrossModuleReferenceCollector.Behavior;
+import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Token;
 
 public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
-  private Behavior behavior;
+  private CrossModuleReferenceCollector testedCollector;
 
   @Override
   public void setUp() {
     setLanguage(ECMASCRIPT_NEXT, ECMASCRIPT_NEXT);
-    behavior = null;
   }
 
   @Override
@@ -44,50 +43,41 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
-    return new CrossModuleReferenceCollector(
+    testedCollector = new CrossModuleReferenceCollector(
         compiler,
-        this.behavior,
         scopeCreator);
-  }
-
-  private void testBehavior(String js, Behavior behavior) {
-    this.behavior = behavior;
-    testSame(js);
+    return testedCollector;
   }
 
   public void testVarInBlock() {
-    testBehavior(
-        LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
             "  if (true) {",
             "    var y = x;",
             "    y;",
             "    y;",
-            "  }"),
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isGlobal()) {
-              ReferenceCollection y = rm.getReferences(t.getScope().getVar("y"));
-              assertThat(y.isAssignedOnceInLifetime()).isTrue();
-              assertThat(y.isWellDefined()).isTrue();
-            }
-          }
-        });
+            "  }"));
+    ImmutableMap<String, Var> globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
+    assertThat(globalVariableNamesMap).containsKey("y");
+    Var yVar = globalVariableNamesMap.get("y");
+    ReferenceCollection yRefs = testedCollector.getReferences(yVar);
+    assertThat(yRefs.isAssignedOnceInLifetime()).isTrue();
+    assertThat(yRefs.isWellDefined()).isTrue();
   }
 
   public void testVarInLoopNotAssignedOnlyOnceInLifetime() {
-    Behavior behavior =
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isGlobal()) {
-              ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
-              assertThat(x.isAssignedOnceInLifetime()).isFalse();
-            }
-          }
-        };
-    testBehavior("var x; while (true) { x = 0; }", behavior);
-    testBehavior("let x; while (true) { x = 0; }", behavior);
+    testSame("var x; while (true) { x = 0; }");
+    ImmutableMap<String, Var> globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
+    Var xVar = globalVariableNamesMap.get("x");
+    assertThat(globalVariableNamesMap).containsKey("x");
+    ReferenceCollection xRefs = testedCollector.getReferences(xVar);
+    assertThat(xRefs.isAssignedOnceInLifetime()).isFalse();
+
+    testSame("let x; while (true) { x = 0; }");
+    globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
+    xVar = globalVariableNamesMap.get("x");
+    assertThat(globalVariableNamesMap).containsKey("x");
+    xRefs = testedCollector.getReferences(xVar);
+    assertThat(xRefs.isAssignedOnceInLifetime()).isFalse();
   }
 
   /**
@@ -95,68 +85,60 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
    * called multiple times, so {@code isAssignedOnceInLifetime()} returns false.
    */
   public void testVarInFunctionNotAssignedOnlyOnceInLifetime() {
-    Behavior behavior =
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isGlobal()) {
-              ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
-              assertThat(x.isAssignedOnceInLifetime()).isFalse();
-            }
-          }
-        };
-    testBehavior("var x; function f() { x = 0; }", behavior);
-    testBehavior("let x; function f() { x = 0; }", behavior);
+    testSame("var x; function f() { x = 0; }");
+    ImmutableMap<String, Var> globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
+    Var xVar = globalVariableNamesMap.get("x");
+    assertThat(globalVariableNamesMap).containsKey("x");
+    ReferenceCollection xRefs = testedCollector.getReferences(xVar);
+    assertThat(xRefs.isAssignedOnceInLifetime()).isFalse();
+
+    testSame("let x; function f() { x = 0; }");
+    globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
+    xVar = globalVariableNamesMap.get("x");
+    assertThat(globalVariableNamesMap).containsKey("x");
+    xRefs = testedCollector.getReferences(xVar);
+    assertThat(xRefs.isAssignedOnceInLifetime()).isFalse();
   }
 
   public void testVarAssignedOnceInLifetime1() {
-    Behavior behavior =
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isGlobal()) {
-              ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
-              assertThat(x.isAssignedOnceInLifetime()).isTrue();
-            }
-          }
-        };
-    testBehavior("var x = 0;", behavior);
-    testBehavior("let x = 0;", behavior);
+    testSame("var x = 0;");
+    ImmutableMap<String, Var> globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
+    Var xVar = globalVariableNamesMap.get("x");
+    assertThat(globalVariableNamesMap).containsKey("x");
+    ReferenceCollection xRefs = testedCollector.getReferences(xVar);
+    assertThat(xRefs.isAssignedOnceInLifetime()).isTrue();
+
+    testSame("let x = 0;");
+    globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
+    xVar = globalVariableNamesMap.get("x");
+    assertThat(globalVariableNamesMap).containsKey("x");
+    xRefs = testedCollector.getReferences(xVar);
+    assertThat(xRefs.isAssignedOnceInLifetime()).isTrue();
   }
 
   public void testVarAssignedOnceInLifetime2() {
-    testBehavior(
-        "{ var x = 0; }",
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isGlobal()) {
-              ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
-              assertThat(x.isAssignedOnceInLifetime()).isTrue();
-            }
-          }
-        });
+    testSame("{ var x = 0; }");
+    ImmutableMap<String, Var> globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
+    Var xVar = globalVariableNamesMap.get("x");
+    assertThat(globalVariableNamesMap).containsKey("x");
+    ReferenceCollection xRefs = testedCollector.getReferences(xVar);
+    assertThat(xRefs.isAssignedOnceInLifetime()).isTrue();
   }
 
   public void testBasicBlocks() {
-    testBehavior(
-        LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
             "var x = 0;",
             "switch (x) {",
             "  case 0:",
             "    x;",
-            "}"),
-        new Behavior() {
-          @Override
-          public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-            if (t.getScope().isGlobal()) {
-              ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
-              assertThat(x.references).hasSize(3);
-              assertNode(x.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
-              assertNode(x.references.get(1).getBasicBlock().getRoot()).hasType(Token.ROOT);
-              assertNode(x.references.get(2).getBasicBlock().getRoot()).hasType(Token.CASE);
-            }
-          }
-        });
+            "}"));
+    ImmutableMap<String, Var> globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
+    Var xVar = globalVariableNamesMap.get("x");
+    assertThat(globalVariableNamesMap).containsKey("x");
+    ReferenceCollection xRefs = testedCollector.getReferences(xVar);
+    assertThat(xRefs.references).hasSize(3);
+    assertNode(xRefs.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
+    assertNode(xRefs.references.get(1).getBasicBlock().getRoot()).hasType(Token.ROOT);
+    assertNode(xRefs.references.get(2).getBasicBlock().getRoot()).hasType(Token.CASE);
   }
 }
