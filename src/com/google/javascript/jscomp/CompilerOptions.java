@@ -195,6 +195,10 @@ public class CompilerOptions implements Serializable {
     return incrementalCheckMode == IncrementalCheckMode.GENERATE_IJS;
   }
 
+  public boolean shouldDoExternsHoisting() {
+    return incrementalCheckMode != IncrementalCheckMode.GENERATE_IJS;
+  }
+
   public boolean allowIjsInputs() {
     return incrementalCheckMode != IncrementalCheckMode.OFF;
   }

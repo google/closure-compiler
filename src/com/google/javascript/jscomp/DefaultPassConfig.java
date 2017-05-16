@@ -264,6 +264,14 @@ public final class DefaultPassConfig extends PassConfig {
   protected List<PassFactory> getChecks() {
     List<PassFactory> checks = new ArrayList<>();
 
+    if (options.shouldGenerateTypedExterns()) {
+      checks.add(closureGoogScopeAliases);
+      checks.add(closureRewriteClass);
+      checks.add(generateIjs);
+      checks.add(whitespaceWrapGoogModules);
+      return checks;
+    }
+
     checks.add(createEmptyPass("beforeStandardChecks"));
 
     // Verify JsDoc annotations
@@ -281,14 +289,6 @@ public final class DefaultPassConfig extends PassConfig {
         || options.enables(DiagnosticGroups.STRICT_MISSING_REQUIRE)
         || options.enables(DiagnosticGroups.EXTRA_REQUIRE)) {
       checks.add(checkRequires);
-    }
-
-    if (options.shouldGenerateTypedExterns()) {
-      checks.add(closureGoogScopeAliases);
-      checks.add(closureRewriteClass);
-      checks.add(generateIjs);
-      checks.add(whitespaceWrapGoogModules);
-      return checks;
     }
 
     checks.add(checkVariableReferences);
