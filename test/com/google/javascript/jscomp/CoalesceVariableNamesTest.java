@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.rhino.Node;
 
 /**
  * Unit tests for {@link CoalesceVariableNames}
@@ -41,13 +40,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CompilerPass() {
-      @Override
-      public void process(Node externs, Node js) {
-        NodeTraversal.traverse(compiler, js,
-            new CoalesceVariableNames(compiler, usePseudoName));
-      }
-    };
+    return new CoalesceVariableNames(compiler, usePseudoName);
   }
 
   public void testSimple() {

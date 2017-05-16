@@ -83,7 +83,9 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverse(compiler, root, this);
+    NodeTraversal t =
+        new NodeTraversal(compiler, this, SyntacticScopeCreator.makeUntyped(compiler));
+    t.traverse(root);
   }
 
   private static boolean shouldOptimizeScope(Scope scope) {
@@ -277,10 +279,9 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
           CombinedLiveRangeChecker checker = new CombinedLiveRangeChecker(
               new LiveRangeChecker(v1, v2OutLive ? null : v2),
               new LiveRangeChecker(v2, v1OutLive ? null : v1));
-          NodeTraversal.traverse(
-              compiler,
-              cfgNode.getValue(),
-              checker);
+          NodeTraversal newTraversal =
+              new NodeTraversal(compiler, checker, SyntacticScopeCreator.makeUntyped(compiler));
+          newTraversal.traverse(cfgNode.getValue());
           if (checker.connectIfCrossed(interferenceGraph)) {
             continue NEXT_VAR_PAIR;
           }

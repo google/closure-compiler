@@ -570,7 +570,8 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       }
     };
 
-    NodeTraversal t = new NodeTraversal(compiler, finder);
+    NodeTraversal t =
+        new NodeTraversal(compiler, finder, SyntacticScopeCreator.makeUntyped(compiler));
     t.traverseAtScope(jsScope);
 
     // 1: Remove the exception name in CATCH which technically isn't local to

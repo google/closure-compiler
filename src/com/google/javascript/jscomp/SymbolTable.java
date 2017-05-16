@@ -475,18 +475,20 @@ public final class SymbolTable {
 
   /** Finds all the scopes and adds them to this symbol table. */
   void findScopes(Node externs, Node root) {
-    NodeTraversal.traverseRoots(
-        compiler,
-        new NodeTraversal.AbstractScopedCallback() {
-          @Override
-          public void enterScope(NodeTraversal t) {
-            createScopeFrom(t.getScope());
-          }
+    NodeTraversal t =
+        new NodeTraversal(
+            compiler,
+            new NodeTraversal.AbstractScopedCallback() {
+              @Override
+              public void enterScope(NodeTraversal t) {
+                createScopeFrom(t.getScope());
+              }
 
-          @Override
-          public void visit(NodeTraversal t, Node n, Node p) {}
-        },
-        externs, root);
+              @Override
+              public void visit(NodeTraversal t, Node n, Node p) {}
+            },
+            SyntacticScopeCreator.makeUntyped(compiler));
+    t.traverseRoots(externs, root);
   }
 
   /** Gets all the scopes in this symbol table. */
@@ -880,8 +882,12 @@ public final class SymbolTable {
 
   /** Index JSDocInfo. */
   void fillJSDocInfo(Node externs, Node root) {
-    NodeTraversal.traverseRoots(
-        compiler, new JSDocInfoCollector(compiler.getTypeRegistry()), externs, root);
+    NodeTraversal t =
+        new NodeTraversal(
+            compiler,
+            new JSDocInfoCollector(compiler.getTypeRegistry()),
+            SyntacticScopeCreator.makeUntyped(compiler));
+    t.traverseRoots(externs, root);
 
     // Create references to parameters in the JSDoc.
     for (Symbol sym : getAllSymbolsSorted()) {
@@ -938,10 +944,13 @@ public final class SymbolTable {
     collectPass.process(externs, root);
     ImmutableMap<StaticSourceFile, Visibility> visibilityMap =
         collectPass.getFileOverviewVisibilityMap();
-    NodeTraversal.traverseRoots(
-        compiler,
-        new VisibilityCollector(visibilityMap, compiler.getCodingConvention()),
-        externs, root);
+
+    NodeTraversal t =
+        new NodeTraversal(
+            compiler,
+            new VisibilityCollector(visibilityMap, compiler.getCodingConvention()),
+            SyntacticScopeCreator.makeUntyped(compiler));
+    t.traverseRoots(externs, root);
   }
 
   /**
@@ -1344,7 +1353,9 @@ public final class SymbolTable {
       implements CompilerPass {
     @Override
     public void process(Node externs, Node root) {
-      NodeTraversal.traverseRoots(compiler, this, externs, root);
+      NodeTraversal t =
+          new NodeTraversal(compiler, this, SyntacticScopeCreator.makeUntyped(compiler));
+      t.traverseRoots(externs, root);
     }
 
     private boolean maybeDefineReference(
@@ -1467,7 +1478,9 @@ public final class SymbolTable {
 
     @Override
     public void process(Node externs, Node root) {
-      NodeTraversal.traverseRoots(compiler, this, externs, root);
+      NodeTraversal t =
+          new NodeTraversal(compiler, this, SyntacticScopeCreator.makeUntyped(compiler));
+      t.traverseRoots(externs, root);
     }
 
     @Override

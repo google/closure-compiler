@@ -27,7 +27,6 @@ import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.Node;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -218,7 +217,8 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
 
   @Override
   public void process(Node externs, Node root) {
-    (new NodeTraversal(compiler, this)).traverseRoots(externs, root);
+    (new NodeTraversal(compiler, this, SyntacticScopeCreator.makeUntyped(compiler)))
+        .traverseRoots(externs, root);
   }
 
   @Override

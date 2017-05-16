@@ -89,7 +89,7 @@ public final class NodeTraversalTest extends TestCase {
     });
     compiler.initCompilerOptionsIfTesting();
 
-    NodeTraversal t = new NodeTraversal(compiler, null);
+    NodeTraversal t = new NodeTraversal(compiler, null, new Es6SyntacticScopeCreator(compiler));
     DiagnosticType dt = DiagnosticType.warning("FOO", "{0}, {1} - {2}");
 
     t.report(new Node(Token.EMPTY), dt, "Foo", "Bar", "Hello");
