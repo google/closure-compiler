@@ -184,6 +184,7 @@ public enum CompilationLevel {
     options.setInlineVariables(Reach.ALL);
     options.setFlowSensitiveInlineVariables(true);
     options.setComputeFunctionSideEffects(true);
+    options.setAssumeStrictThis(true);
 
     // Remove unused vars also removes unused functions.
     options.setRemoveUnusedVariables(Reach.ALL);

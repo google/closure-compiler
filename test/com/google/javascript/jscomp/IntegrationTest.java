@@ -2846,7 +2846,6 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setAssumeStrictThis(true);
     options.setRenamingPolicy(
         VariableRenamingPolicy.OFF, PropertyRenamingPolicy.OFF);
     test(options, source, expected);
