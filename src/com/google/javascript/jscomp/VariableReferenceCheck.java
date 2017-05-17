@@ -70,6 +70,8 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   // variable declarations will prevent correct transpilation, so this pass must be run.
   private final boolean forTranspileOnly;
 
+  private final boolean checkUnusedLocals;
+
   // NOTE(nicksantos): It's a lot faster to use a shared Set that
   // we clear after each method call, because the Set never gets too big.
   private final Set<BasicBlock> blocksWithDeclarations = new HashSet<>();
@@ -86,6 +88,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   VariableReferenceCheck(AbstractCompiler compiler, boolean forTranspileOnly) {
     this.compiler = compiler;
     this.forTranspileOnly = forTranspileOnly;
+    this.checkUnusedLocals = compiler.getOptions().enables(DiagnosticGroups.UNUSED_LOCAL_VARIABLE);
   }
 
   private boolean shouldProcess(Node root) {
@@ -275,7 +278,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
         }
       }
 
-      if (unusedAssignment != null && !isRead && !hasErrors) {
+      if (checkUnusedLocals && unusedAssignment != null && !isRead && !hasErrors) {
         checkForUnusedLocalVar(v, unusedAssignment);
       }
     }
