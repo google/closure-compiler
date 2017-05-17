@@ -691,6 +691,36 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
   }
 
+  public void testBannedProperty_namespacedType() {
+    configuration = LINE_JOINER.join(
+        "requirement: {",
+        "  type: BANNED_PROPERTY",
+        "  value: 'ns.C.prototype.p'",
+        "  error_message: 'ns.C.p is not allowed'",
+        "  whitelist: 'SRC1'",
+        "}");
+
+    String declarations = LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @constructor */ function SC() {}",
+        "/** @constructor @extends {SC} */",
+        "ns.C = function() {}",
+        "/** @type {string} */",
+        "ns.C.prototype.p;",
+        "/** @constructor */ function D() {}",
+        "/** @type {string} */",
+        "D.prototype.p;");
+
+    testConformance(declarations, "var d = new D(); d.p = 'boo';");
+
+    testConformance(declarations, "var c = new ns.C(); c.p = 'boo';",
+        CheckConformance.CONFORMANCE_VIOLATION);
+
+    testConformance(declarations, "var c = new SC(); c.p = 'boo';",
+        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
+  }
+
   public void testBannedPropertyWrite() {
     configuration =
         "requirement: {\n" +
