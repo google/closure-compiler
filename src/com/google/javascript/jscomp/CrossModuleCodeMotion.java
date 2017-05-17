@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
@@ -176,7 +177,8 @@ class CrossModuleCodeMotion implements CompilerPass {
     }
 
     boolean isUsedInOrDependencyOfModule(JSModule m) {
-      if (deepestModule == null || m == null) {
+      checkNotNull(m);
+      if (deepestModule == null) {
         return false;
       }
       return m == deepestModule || graph.dependsOn(m, deepestModule);
@@ -211,8 +213,8 @@ class CrossModuleCodeMotion implements CompilerPass {
     final Node node;
 
     Declaration(JSModule module, Node node) {
-      this.module = module;
-      this.node = node;
+      this.module = checkNotNull(module);
+      this.node = checkNotNull(node);
     }
   }
 
@@ -543,8 +545,8 @@ class CrossModuleCodeMotion implements CompilerPass {
     private final NamedInfo namedInfo;
 
     InstanceofInfo(JSModule module, NamedInfo namedInfo) {
-      this.module = module;
-      this.namedInfo = namedInfo;
+      this.module = checkNotNull(module);
+      this.namedInfo = checkNotNull(namedInfo);
     }
 
     /**
