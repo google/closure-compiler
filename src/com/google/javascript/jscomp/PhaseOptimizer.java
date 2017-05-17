@@ -108,6 +108,9 @@ class PhaseOptimizer implements CompilerPass {
   static final String OPTIMIZE_LOOP_ERROR =
       "Fixed point loop exceeded the maximum number of iterations.";
 
+  /** @see CompilerOptions#optimizationLoopMaxIterations */
+  private final int optimizationLoopMaxIterations;
+
   /**
    * @param comp the compiler that owns/creates this.
    * @param tracker an optional performance tracker
@@ -123,6 +126,12 @@ class PhaseOptimizer implements CompilerPass {
     this.lastChange = START_TIME;
     this.useSizeHeuristicToStopOptimizationLoop =
         comp.getOptions().useSizeHeuristicToStopOptimizationLoop;
+    int maxIterations = comp.getOptions().optimizationLoopMaxIterations;
+    if (maxIterations > 0 && maxIterations <= MAX_LOOPS) {
+      this.optimizationLoopMaxIterations = maxIterations;
+    } else {
+      this.optimizationLoopMaxIterations = MAX_LOOPS;
+    }
   }
 
   PhaseOptimizer withProgress(ProgressRange range) {
@@ -402,7 +411,7 @@ class PhaseOptimizer implements CompilerPass {
       Set<NamedPass> runInPrevIter = new HashSet<>();
       State state = State.RUN_PASSES_NOT_RUN_IN_PREV_ITER;
       boolean lastIterMadeChanges;
-      int count = 0;
+      int count = 1;
       int astSize = NodeUtil.countAstSize(root);
       int previousAstSize = astSize;
 
@@ -418,9 +427,13 @@ class PhaseOptimizer implements CompilerPass {
 
       try {
         while (true) {
-          if (count++ > MAX_LOOPS) {
+          if (count > optimizationLoopMaxIterations && this.isCodeRemovalLoop) {
+            return;
+          }
+          if (count > MAX_LOOPS) {
             compiler.throwInternalError(OPTIMIZE_LOOP_ERROR, null);
           }
+          count++;
           lastIterMadeChanges = false;
           for (NamedPass pass : myPasses) {
             if ((state == State.RUN_PASSES_NOT_RUN_IN_PREV_ITER

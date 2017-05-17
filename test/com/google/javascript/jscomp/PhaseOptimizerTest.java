@@ -80,9 +80,17 @@ public final class PhaseOptimizerTest extends TestCase {
     assertPasses("x", "y", "x", "y", "x", "x", "y");
   }
 
+  public void testCapLoopIterations() {
+    compiler.getOptions().setMaxOptimizationLoopIterations(1);
+    optimizer = new PhaseOptimizer(compiler, tracker);
+    Loop loop = optimizer.addFixedPointLoop();
+    addLoopedPass(loop, Compiler.PEEPHOLE_PASS_NAME, 2);
+    assertPasses(Compiler.PEEPHOLE_PASS_NAME);
+  }
+
   public void testNotInfiniteLoop() {
     Loop loop = optimizer.addFixedPointLoop();
-    addLoopedPass(loop, "x", PhaseOptimizer.MAX_LOOPS - 1);
+    addLoopedPass(loop, "x", PhaseOptimizer.MAX_LOOPS - 2);
     optimizer.process(null, dummyRoot);
     assertEquals("There should be no errors.", 0, compiler.getErrorCount());
   }

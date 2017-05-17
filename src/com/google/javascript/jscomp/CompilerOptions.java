@@ -576,6 +576,13 @@ public class CompilerOptions implements Serializable {
 
   boolean useSizeHeuristicToStopOptimizationLoop = true;
 
+  /**
+   * Do up to this many iterations of the optimization loop.
+   * Setting this field to some small number, say 3 or 4, allows a large project to build faster,
+   * but sacrifice some code size.
+   */
+  int optimizationLoopMaxIterations;
+
   //--------------------------------
   // Renaming
   //--------------------------------
@@ -2263,6 +2270,10 @@ public class CompilerOptions implements Serializable {
 
   public void setUseSizeHeuristicToStopOptimizationLoop(boolean mayStopEarly) {
     this.useSizeHeuristicToStopOptimizationLoop = mayStopEarly;
+  }
+
+  public void setMaxOptimizationLoopIterations(int maxIterations) {
+    this.optimizationLoopMaxIterations = maxIterations;
   }
 
   @Deprecated
