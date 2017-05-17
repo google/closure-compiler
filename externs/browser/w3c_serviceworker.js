@@ -577,7 +577,7 @@ var InstallEventInit;
  * @constructor
  * @param {string} type
  * @param {FetchEventInit=} opt_eventInitDict
- * @extends {Event}
+ * @extends {ExtendableEvent}
  */
 function FetchEvent(type, opt_eventInitDict) {}
 
