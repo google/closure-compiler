@@ -288,7 +288,7 @@ public class Node implements Serializable {
     }
 
     @Override
-    boolean isEquivalentTo(
+    public boolean isEquivalentTo(
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
       boolean equiv = super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect);
       if (equiv) {
@@ -347,7 +347,7 @@ public class Node implements Serializable {
     }
 
     @Override
-    boolean isEquivalentTo(
+    public boolean isEquivalentTo(
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
       return (super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)
           && this.str.equals(((StringNode) node).str));
@@ -1829,7 +1829,7 @@ public class Node implements Serializable {
    * @param sideEffect Whether to check that the side-effect flags of the nodes are equivalent.
    * @return Whether this node is equivalent semantically to the provided node.
    */
-  boolean isEquivalentTo(
+  public boolean isEquivalentTo(
       Node node, boolean compareType, boolean recurse, boolean jsDoc, boolean sideEffect) {
     if (token != node.token
         || getChildCount() != node.getChildCount()
