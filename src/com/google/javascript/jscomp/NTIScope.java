@@ -657,7 +657,11 @@ final class NTIScope implements DeclaredTypeRegistry {
   public JSType getType(String typeName) {
     Preconditions.checkNotNull(
         preservedNamespaces, "Failed to preserve namespaces post-finalization");
-    Namespace ns = preservedNamespaces.get(typeName);
+    QualifiedName qname = QualifiedName.fromQualifiedString(typeName);
+    Namespace ns = preservedNamespaces.get(qname.getLeftmostName());
+    if (ns != null && !qname.isIdentifier()) {
+      ns = ns.getSubnamespace(qname.getAllButLeftmost());
+    }
     if (ns instanceof RawNominalType) {
       return ((RawNominalType) ns).getInstanceAsJSType();
     }
