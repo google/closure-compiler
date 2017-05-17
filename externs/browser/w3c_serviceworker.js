@@ -37,11 +37,16 @@ ServiceWorker.prototype.state;
 ServiceWorker.prototype.onstatechange;
 
 /**
- *  Set of possible string values: 'installing', 'installed', 'activating',
- * 'activated', 'redundant'.
- *  @typedef {string}
+ * @see https://w3c.github.io/ServiceWorker/#enumdef-serviceworkerstate
+ * @enum {string}
  */
-var ServiceWorkerState ;
+var ServiceWorkerState = {
+  INSTALLING: 'installing',
+  INSTALLED: 'installed',
+  ACTIVATING: 'activating',
+  ACTIVATED: 'activated',
+  REDUNDANT: 'redundant'
+};
 
 /**
  * @see https://w3c.github.io/ServiceWorker/#navigationpreloadmanager
