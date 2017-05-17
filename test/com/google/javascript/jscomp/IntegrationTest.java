@@ -2806,23 +2806,47 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, source, expected);
   }
 
-  public void testAddFunctionProperties2() throws Exception {
+  public void testAddFunctionProperties2a() throws Exception {
     String source =
-        "/** @constructor */ function F() {}" +
-        "var x = new F();" +
-        "/** @this {F} */" +
-        "function g() { this.bar = function() { alert(3); }; }" +
-        "g.call(x);" +
-        "x.bar();";
+        ""
+            + "/** @constructor */ function F() {}"
+            + "var x = new F();"
+            + "/** @this {F} */"
+            + "function g() { this.bar = function() { alert(3); }; }"
+            + "g.call(x);"
+            + "x.bar();";
     String expected =
-        "var x = new function() {};" +
-        "/** @this {F} */" +
-        "(function () { this.bar = function() { alert(3); }; }).call(x);" +
-        "x.bar();";
+        ""
+            + "var x = new function() {};"
+            + "/** @this {F} */"
+            + "(function () { this.bar = function() { alert(3); }; }).call(x);"
+            + "x.bar();";
 
     CompilerOptions options = createCompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS
-        .setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setStrictModeInput(false);
+    options.setAssumeStrictThis(false);
+    options.setRenamingPolicy(VariableRenamingPolicy.OFF, PropertyRenamingPolicy.OFF);
+    test(options, source, expected);
+  }
+
+  public void testAddFunctionProperties2b() throws Exception {
+    String source =
+        ""
+            + "/** @constructor */ function F() {}"
+            + "var x = new F();"
+            + "/** @this {F} */"
+            + "function g() { this.bar = function() { alert(3); }; }"
+            + "g.call(x);"
+            + "x.bar();";
+    String expected =
+        ""
+            + "var x = new function() {};"
+            + "x.bar=function(){alert(3)};x.bar()";
+
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setAssumeStrictThis(true);
     options.setRenamingPolicy(
         VariableRenamingPolicy.OFF, PropertyRenamingPolicy.OFF);
     test(options, source, expected);
