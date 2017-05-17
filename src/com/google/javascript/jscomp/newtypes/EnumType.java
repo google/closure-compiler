@@ -100,6 +100,7 @@ public final class EnumType extends Namespace implements TypeWithProperties {
 
   void resolveEnum(JSType t) {
     Preconditions.checkNotNull(t);
+    Preconditions.checkArgument(!t.isUnion());
     if (this.state == State.RESOLVED) {
       return;
     }

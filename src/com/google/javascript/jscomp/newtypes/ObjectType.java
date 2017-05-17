@@ -1312,18 +1312,16 @@ final class ObjectType implements TypeWithProperties {
     NominalType thisNt = this.nominalType;
     NominalType otherNt = other.nominalType;
     if (!thisNt.isBuiltinObject() && !otherNt.isBuiltinObject()) {
-      if (thisNt.unifyWithSubtype(
-          otherNt, typeParameters, typeMultimap, subSuperMap)) {
+      if (thisNt.unifyWithSubtype(otherNt, typeParameters, typeMultimap, subSuperMap)) {
         return true;
-      }
-      if (thisNt.isClass()) {
-        return false;
       }
       if (thisNt.isStructuralInterface()) {
         if (thisNt.equals(subSuperMap.get(otherNt))) {
           return true;
         }
         subSuperMap = subSuperMap.with(otherNt, thisNt);
+      } else { // class or nominal interface
+        return false;
       }
     }
     if (!thisNt.isBuiltinObject() && !thisNt.isStructuralInterface()

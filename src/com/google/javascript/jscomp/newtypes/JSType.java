@@ -581,6 +581,14 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return JSType.join(t1, t2);
   }
 
+  static JSType joinManyTypes(JSTypes commonTypes, Iterable<JSType> types) {
+    JSType result = commonTypes.BOTTOM;
+    for (JSType t : types) {
+      result = join(result, t);
+    }
+    return result;
+  }
+
   // When joining w/ TOP or UNKNOWN, avoid setting more fields on them, eg, obj.
   public static JSType join(JSType lhs, JSType rhs) {
     Preconditions.checkNotNull(lhs);
@@ -698,7 +706,11 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     }
   }
 
-  private static int promoteBoolean(int mask) {
+  private final JSType promoteBoolean() {
+    return isTheTrueType() || isTheFalseType() ? this.commonTypes.BOOLEAN : this;
+  }
+
+  private static int promoteBooleanMask(int mask) {
     if ((mask & (TRUE_MASK | FALSE_MASK)) != 0) {
       return mask | TRUE_MASK | FALSE_MASK;
     }
@@ -728,8 +740,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     }
     ImmutableSet<EnumType> newEnums = t1.getEnums();
 
-    int t1Mask = promoteBoolean(t1.getMask());
-    int t2Mask = promoteBoolean(t2.getMask());
+    int t1Mask = promoteBooleanMask(t1.getMask());
+    int t2Mask = promoteBooleanMask(t2.getMask());
     if (t1Mask != t2Mask || !Objects.equals(t1.getTypeVar(), t2.getTypeVar())) {
       return null;
     }
@@ -770,89 +782,106 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
    * Unify {@code this}, which may contain free type variables,
    * with {@code other}, a concrete subtype, modifying the supplied
    * {@code typeMultimap} to add any new template variable type bindings.
-   * Note that if {@code this} is a union type, some of the union members may
-   * be ignored if they are not present in {@code other}.
    * @return Whether unification succeeded
    *
    * This method should only be called outside the newtypes package;
    * classes inside the package should use unifyWithSubtype.
+   *
+   * Unification algorithm.
+   *
+   * Say that {@code this} is a potentially generic type G and {@code other} is a concrete type C.
+   * 1. If C is not a union:
+   *    (A) If C is a subtype of G, then unification succeeds and we don't update the type map.
+   *        E.g., (T|string) unifies with string and we learn nothing about T.
+   *    (B) If some member of G unifies with C, unification succeeds and we update the type map.
+   *    (C) If 2+ members of G unify with C, we use each of them to update the type map. This is
+   *        simpler than depending on the iteration order of the members of G to decide which one
+   *        to unify with C.
+   *        E.g., if Foo extends Bar and implements Baz,
+   *        (Bar(T)|Baz(T)) unifies with Foo(number) and T is number.
+   *        (Bar(number, T)|Baz(T, string)) doesn't unify with Foo(number,string), but each member
+   *        unifies with C, and we get a "not unique instantiation" warning.
+   *
+   * 2. If C is a union:
+   *    We throw away C's members that are subtypes of G, and for each remaining
+   *    member we try to individually unify G with it. A single member of G may unify with
+   *    2+ members of C.
+   *    Let SubC be a type that contains all members of C that are left over: they are not subtypes
+   *    of G and G doesn't unify with them. If G is of the form (T|...), then T is mapped to SubC.
+   *    E.g., (T|Foo|Bar(U)) unifies with (number|string|Foo|Bar(Baz))
+   *    SubC is (number|string), T is mapped to (number|string), and U is mapped to Baz.
    */
   public final boolean unifyWith(JSType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
     return unifyWithSubtype(other, typeParameters, typeMultimap, SubtypeCache.create());
   }
 
+  /**
+   * Unify this, which is a potentially generic type G, with other, a concrete type C.
+   * Unifying means finding concrete types to substitute for the type variables in G and get a
+   * type G', such that C is a subtype of G'.
+   *
+   * Doing unification of function types correctly also requires a unifyWithSupertype method.
+   * See {@link FunctionType#unifyWithSubtype} for details. For now, we think that's an overkill.
+   *
+   * @param subSuperMap needed to avoid infinite recursion when unifying structural interfaces.
+   * @return whether unification succeeded
+   */
   final boolean unifyWithSubtype(JSType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap, SubtypeCache subSuperMap) {
-    Preconditions.checkNotNull(other);
-    if (other.isTheTrueType() || other.isTheFalseType()) {
-      other = this.commonTypes.BOOLEAN;
-    }
-    if (this.isUnknown() || this.isTop()) {
-      return true;
-    } else if (getMask() == TYPEVAR_MASK && typeParameters.contains(getTypeVar())) {
-      updateTypemap(typeMultimap, getTypeVar(), other);
-      return true;
-    } else if (other.isUnknown() || other.isTrueOrTruthy()) {
-      return true;
-    } else if (other.isTop()) {
-      if (hasTypeVariable() && typeParameters.contains(getTypeVar())) {
-        updateTypemap(typeMultimap, getTypeVar(), other);
-        return true;
+    if (other.isUnknown()) {
+      String thisTypevar = getTypeVar();
+      if (thisTypevar != null && typeParameters.contains(thisTypevar)) {
+        updateTypemap(typeMultimap, thisTypevar, other);
       }
-      return false;
+      return true;
     }
-
-    Set<EnumType> ununifiedEnums = ImmutableSet.of();
-    if (!other.getEnums().isEmpty()) {
-      ununifiedEnums = new LinkedHashSet<>();
-      for (EnumType e : other.getEnums()) {
-        if (!fromEnum(e).isSubtypeOf(this, SubtypeCache.create())) {
-          ununifiedEnums.add(e);
-        }
+    HashSet<JSType> leftovers = new HashSet<>();
+    for (JSType otherMember : other.getUnionMembers()) {
+      if (otherMember.isSubtypeOf(this)) {
+        continue;
+      }
+      otherMember = otherMember.promoteBoolean();
+      if (!unifyWithSingleType(otherMember, typeParameters, typeMultimap, subSuperMap)) {
+        leftovers.add(otherMember);
       }
     }
-
-    Set<ObjectType> ununifiedObjs = new LinkedHashSet<>(other.getObjs());
-    // We don't check that two different objects of this don't unify
-    // with the same other type.
-    // Fancy cases are unfortunately iteration-order dependent, eg,
-    // Foo<number>|Foo<string> may or may not unify with Foo<T>|Foo<string>
-    for (ObjectType targetObj : getObjs()) {
-      for (ObjectType sourceObj : other.getObjs()) {
-        if (targetObj.unifyWithSubtype(
-              sourceObj, typeParameters, typeMultimap, subSuperMap)) {
-          ununifiedObjs.remove(sourceObj);
-        }
-      }
+    if (leftovers.isEmpty()) {
+      return true;
     }
-
     String thisTypevar = getTypeVar();
-    String otherTypevar = other.getTypeVar();
-    if (thisTypevar == null || !typeParameters.contains(thisTypevar)) {
-      return ununifiedObjs.isEmpty() && ununifiedEnums.isEmpty()
-          && (otherTypevar == null || otherTypevar.equals(thisTypevar))
-          && getMask() == (getMask() | (other.getMask() & ~ENUM_MASK));
-    } else {
-      // this is (T | ...)
-      int thisScalarBits = getMask() & ~NON_SCALAR_MASK & ~TYPEVAR_MASK;
-      int templateMask = other.getMask() & ~thisScalarBits;
-      if (ununifiedObjs.isEmpty()) {
-        templateMask &= ~NON_SCALAR_MASK;
-      }
-
-      if (templateMask == BOTTOM_MASK) {
-        // nothing left in other to assign to thisTypevar, so don't update typemap
-        return ununifiedObjs.isEmpty() && ununifiedEnums.isEmpty();
-      }
-      JSType templateType = makeType(
-          this.commonTypes,
-          promoteBoolean(templateMask),
-          ImmutableSet.copyOf(ununifiedObjs),
-          otherTypevar, ImmutableSet.copyOf(ununifiedEnums));
-      updateTypemap(typeMultimap, getTypeVar(), templateType);
+    if (thisTypevar != null && typeParameters.contains(thisTypevar)) {
+      updateTypemap(typeMultimap, thisTypevar, joinManyTypes(this.commonTypes, leftovers));
       return true;
     }
+    return false;
+  }
+
+  /**
+   * Unify other, which is NOT a union type, with this, which may be a union.
+   * Note that if other is a primitive type then this method will always return false:
+   * primitives may only be unified with a typevar as "leftovers".
+   */
+  final boolean unifyWithSingleType(JSType other, List<String> typeParameters,
+      Multimap<String, JSType> typeMultimap, SubtypeCache subSuperMap) {
+    Preconditions.checkArgument(!other.isUnion(), "Expected non-union type but found: %s", other);
+    if (other.isEnumElement()) {
+      JSType enumType = other.getEnumeratedTypeOfEnumElement();
+      return unifyWithSingleType(enumType, typeParameters, typeMultimap, subSuperMap);
+    }
+    if (other.isSingletonObj()) {
+      ObjectType otherObj = other.getObjTypeIfSingletonObj();
+      boolean result = false;
+      for (ObjectType thisObj : getObjs()) {
+        // Note that we want to execute thisObj.unifyWithSubtype(otherObj, ...) even if result
+        // is already true, because several members of the generic type may unify with otherObj.
+        if (thisObj.unifyWithSubtype(otherObj, typeParameters, typeMultimap, subSuperMap)) {
+          result = true;
+        }
+      }
+      return result;
+    }
+    return false;
   }
 
   public final JSType specialize(JSType other) {
@@ -1932,8 +1961,11 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public final Iterable<TypeI> getUnionMembers() {
-    ImmutableSet.Builder<TypeI> builder = ImmutableSet.builder();
+  public final Iterable<JSType> getUnionMembers() {
+    if (!isUnion()) {
+      return ImmutableList.of(this);
+    }
+    ImmutableSet.Builder<JSType> builder = ImmutableSet.builder();
     JSType[] primitiveTypes = {
         this.commonTypes.BOOLEAN,
         this.commonTypes.NUMBER,
@@ -2055,11 +2087,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public final TypeI getGreatestSubtypeWithProperty(String pname) {
-    JSType result = this.commonTypes.BOTTOM;
-    for (JSType t : getSubtypesWithProperty(new QualifiedName(pname))) {
-      result = join(result, t);
-    }
-    return result;
+    return joinManyTypes(this.commonTypes, getSubtypesWithProperty(new QualifiedName(pname)));
   }
 
   @Override

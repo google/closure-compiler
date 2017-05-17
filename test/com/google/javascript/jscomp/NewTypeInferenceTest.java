@@ -6520,6 +6520,52 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " */",
         "function f(x) {}",
         "f(new Foo);"));
+
+    // Both the concrete and the generic type are unions; match correctly
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @interface",
+        " * @template T",
+        " */",
+        "function Foo() {}",
+        "/**",
+        " * @interface",
+        " * @template T",
+        " */",
+        "function Bar() {}",
+        "/**",
+        " * @template T",
+        " * @param {!Foo<T>|!Bar<T>} x",
+        " */",
+        "function f(x) {}",
+        "function g(/** !Foo<number>|!Bar<string> */ x) {",
+        "  f(x);",
+        "}"),
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {T|!Array<T>} x",
+        " * @return {T}",
+        " */",
+        "function f(x) { return /** @type {T} */ (x); }",
+        "function g(/** number|!Array<number> */ x) {",
+        "  var /** string */ s = f(x);",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T",
+        " * @param {T|!Array<T>} x",
+        " * @return {T}",
+        " */",
+        "function f(x) { return /** @type {T} */ (x); }",
+        "function g(/** number|!Array<string> */ x) {",
+        "  f(x);",
+        "}"),
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
   }
 
   public void testBoxedUnification() {
@@ -6729,6 +6775,14 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "    f(y);",
         "  }",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var arr = [1, 2, 3, null, 4, null];",
+        "/** @const */",
+        "var x = arr.filter(function(elm) { return elm !== null; });",
+        "var /** !Array<string> */ n = x;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testUnifyObjects() {
@@ -11378,9 +11432,56 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " * @return {T}",
         " */",
         "function f(x) { return /** @type {T} */ (x); }",
+        "/** @param {number|e1} x */",
+        "function g(x) { f(x) - 5; }"));
+
+    // Unifying T|e1 with number|e2 should not remove e2 from T,
+    // even though e1 and e2 are backed by the same type.
+    typeCheck(LINE_JOINER.join(
+        "/** @enum {string} */",
+        "var e1 = { A: '' };",
+        "/** @enum {string} */",
+        "var e2 = { B: '' };",
+        "/**",
+        " * @template T",
+        " * @param {T|e1} x",
+        " * @return {T}",
+        " */",
+        "function f(x) { return /** @type {T} */ (x); }",
         "/** @param {number|e2} x */",
         "function g(x) { f(x) - 5; }"),
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @enum {!Array<string>} */",
+        "var myenum = { A: ['a', 'b'] };",
+        "/**",
+        " * @template T",
+        " * @param {!Array<T>} x",
+        " * @return {T}",
+        " */",
+        "function f(x) { return x[0]; }",
+        "var /** string */ s = f(myenum.A);"));
+
+    // TODO(dimvar): if we support enums of unions, this is the behavior we want for generics.
+    // The enum of a union is not a union. When unifying here with MyEnum, it's not the same
+    // as unifying with number|string. In the former case, T is mapped to MyEnum, in the latter
+    // it would be mapped to number and there would be no warning.
+//    typeCheck(LINE_JOINER.join(
+//        "/** @enum {number|string} */",
+//        "var MyEnum = { A: 1, B: 'asdf' };",
+//        "/**",
+//        " * @template T",
+//        " * @param {T|string} x",
+//        " * @return {T}",
+//        " */",
+//        "function f(x) {",
+//        "  return /** @type {T} */ (x)",
+//        "}",
+//        "function g(/** !MyEnum */ x) {",
+//        "  f(x) - 3;",
+//        "}"),
+//        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testEnumJoinSpecializeMeet() {
@@ -20088,5 +20189,148 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  var /** string */ y = x.myprop;",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testTwoGenericTypesUnifyWithOneConcreteType() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @interface",
+        " * @template T",
+        " */",
+        "function Foo() {}",
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "function Bar() {}",
+        "/**",
+        " * @constructor",
+        " * @implements {Foo<T>}",
+        " * @extends {Bar<T>}",
+        " * @param {T} x",
+        " * @template T",
+        " */",
+        "function FooBar(x) {}",
+        "/**",
+        " * @template T",
+        " * @param {!Foo<T> | !Bar<T>} x",
+        " * @return {T}",
+        " */",
+        "function f(x) { return /** @type {?} */ (123); }",
+        "var /** number */ n = f(new FooBar(1));"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @interface",
+        " * @template T",
+        " */",
+        "function Foo() {}",
+        "/**",
+        " * @interface",
+        " * @template T",
+        " */",
+        "function Bar() {}",
+        "/**",
+        " * @constructor",
+        " * @implements {Foo<T>}",
+        " * @implements {Bar<T>}",
+        " * @param {T} x",
+        " * @template T",
+        " */",
+        "function FooBar(x) {}",
+        "/**",
+        " * @param {!Foo<T>|!Bar<U>} x",
+        " * @return {T}",
+        " * @template T, U",
+        " */",
+        "function f(x) { return /** @type {?} */ (123); }",
+        "var /** string */ s = f(new FooBar(1));"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // The only difference with the previous test is the return type of f
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @interface",
+        " * @template T",
+        " */",
+        "function Foo() {}",
+        "/**",
+        " * @interface",
+        " * @template T",
+        " */",
+        "function Bar() {}",
+        "/**",
+        " * @constructor",
+        " * @implements {Foo<T>}",
+        " * @implements {Bar<T>}",
+        " * @param {T} x",
+        " * @template T",
+        " */",
+        "function FooBar(x) {}",
+        "/**",
+        " * @param {!Foo<T>|!Bar<U>} x",
+        " * @return {U}",
+        " * @template T, U",
+        " */",
+        "function f(x) { return /** @type {?} */ (123); }",
+        "var /** string */ s = f(new FooBar(1));"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testOneGenericTypeUnifiesWithTwoConcreteTypes() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @interface",
+        " * @template T",
+        " */",
+        "function Foo() {}",
+        "/**",
+        " * @constructor",
+        " * @implements {Foo<T>}",
+        " * @template T",
+        " */",
+        "function FooImpl1() {}",
+        "/**",
+        " * @constructor",
+        " * @implements {Foo<T>}",
+        " * @template T",
+        " */",
+        "function FooImpl2() {}",
+        "/**",
+        " * @param {!Foo<T>} x",
+        " * @template T",
+        " */",
+        "function f(x) {}",
+        "function g(/** (!FooImpl1<number>|!FooImpl2<number>) */ x) {",
+        "  f(x);",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @interface",
+        " * @template T",
+        " */",
+        "function Foo() {}",
+        "/**",
+        " * @constructor",
+        " * @implements {Foo<T>}",
+        " * @template T",
+        " */",
+        "function FooImpl1() {}",
+        "/**",
+        " * @constructor",
+        " * @implements {Foo<T>}",
+        " * @template T",
+        " */",
+        "function FooImpl2() {}",
+        "/**",
+        " * @param {!Foo<T>} x",
+        " * @template T",
+        " */",
+        "function f(x) {}",
+        "function g(/** (!FooImpl1<number>|!FooImpl2<string>) */ x) {",
+        "  f(x);",
+        "}"),
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
   }
 }
