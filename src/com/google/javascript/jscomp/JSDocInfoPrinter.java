@@ -66,6 +66,7 @@ public final class JSDocInfoPrinter {
     //   template
     //   override
     //   type|define|typedef|enum
+    //   implicitCast
     //   suppress
     //   deprecated
     parts.add("/**");
@@ -200,6 +201,10 @@ public final class JSDocInfoPrinter {
 
     if (info.hasEnumParameterType()) {
       parts.add(buildAnnotationWithType("enum", info.getEnumParameterType()));
+    }
+
+    if (info.isImplicitCast()) {
+      parts.add("@implicitCast");
     }
 
     Set<String> suppressions = info.getSuppressions();

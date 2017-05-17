@@ -34,7 +34,6 @@ import junit.framework.TestCase;
  */
 public final class JSDocInfoPrinterTest extends TestCase {
   private static final Joiner LINE_JOINER = Joiner.on('\n');
-
   private JSDocInfoBuilder builder;
   private JSDocInfoPrinter jsDocInfoPrinter;
 
@@ -347,6 +346,10 @@ public final class JSDocInfoPrinterTest extends TestCase {
 
   public void testAbstract() {
     testSame("/** @abstract */ ");
+  }
+
+  public void testImplicitCast() {
+    testSame("/** @implicitCast */ ");
   }
 
   private void testSame(String jsdoc) {
