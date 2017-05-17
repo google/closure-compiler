@@ -782,7 +782,6 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
    * Unify {@code this}, which may contain free type variables,
    * with {@code other}, a concrete subtype, modifying the supplied
    * {@code typeMultimap} to add any new template variable type bindings.
-   * @return Whether unification succeeded
    *
    * This method should only be called outside the newtypes package;
    * classes inside the package should use unifyWithSubtype.
@@ -811,9 +810,9 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
    *    E.g., (T|Foo|Bar(U)) unifies with (number|string|Foo|Bar(Baz))
    *    SubC is (number|string), T is mapped to (number|string), and U is mapped to Baz.
    */
-  public final boolean unifyWith(JSType other, List<String> typeParameters,
+  public final void unifyWith(JSType other, List<String> typeParameters,
       Multimap<String, JSType> typeMultimap) {
-    return unifyWithSubtype(other, typeParameters, typeMultimap, SubtypeCache.create());
+    unifyWithSubtype(other, typeParameters, typeMultimap, SubtypeCache.create());
   }
 
   /**

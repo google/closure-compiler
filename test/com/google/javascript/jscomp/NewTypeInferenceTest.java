@@ -8414,30 +8414,30 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "(new Foo(123)).method('asdf') - 5;"),
         NewTypeInference.INVALID_OPERAND_TYPE);
 
-    // typeCheck(LINE_JOINER.join(
-    //     "/**",
-    //     " * @template T",
-    //     " * @constructor",
-    //     " */",
-    //     "function Foo() {}",
-    //     "/** @param {T} x */",
-    //     "Foo.prototype.method = function(x) {};",
-    //     "",
-    //     "/**",
-    //     " * @template T",
-    //     " * @constructor",
-    //     " * @extends {Foo<T>}",
-    //     " * @param {T} x",
-    //     " */",
-    //     "function Bar(x) {}",
-    //     // Invalid instantiation here, must be T, o/w bugs like the call to f
-    //     "/** @param {number} x */",
-    //     "Bar.prototype.method = function(x) {};",
-    //     "",
-    //     "/** @param {!Foo<string>} x */",
-    //     "function f(x) { x.method('sadf'); };",
-    //     "f(new Bar('asdf'));"),
-    //     NewTypeInference.FAILED_TO_UNIFY);
+     typeCheck(LINE_JOINER.join(
+         "/**",
+         " * @template T",
+         " * @constructor",
+         " */",
+         "function Foo() {}",
+         "/** @param {T} x */",
+         "Foo.prototype.method = function(x) {};",
+         "",
+         "/**",
+         " * @template T",
+         " * @constructor",
+         " * @extends {Foo<T>}",
+         " * @param {T} x",
+         " */",
+         "function Bar(x) {}",
+         // Invalid instantiation here, must be T, o/w bugs like the call to f
+         "/** @param {number} x */",
+         "Bar.prototype.method = function(x) {};",
+         "",
+         "/** @param {!Foo<string>} x */",
+         "function f(x) { x.method('sadf'); };",
+         "f(new Bar('asdf'));"),
+         GlobalTypeInfo.INVALID_PROP_OVERRIDE);
 
     typeCheck(LINE_JOINER.join(
         "/**",
@@ -15749,8 +15749,30 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function g(x) {}",
         "/** @type {function(!Parent<number>)} */",
         "function h(x) {}",
-        "g(h);"),
-        NewTypeInference.FAILED_TO_UNIFY);
+        "g(h);"));
+
+    // Missed warning because we don't have unifyWithSuperType.
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "function Parent() {}",
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " * @extends {Parent<T>}",
+        " */",
+        "function Child() {}",
+        "/**",
+        " * @template T",
+        " * @param {function(!Child<T>)} x",
+        " * @return {T}",
+        " */",
+        "function g(x) { return /** @type {?} */ (''); }",
+        "/** @type {function(!Parent<number>)} */",
+        "function h(x) {}",
+        "var /** string */ s = g(h);"));
   }
 
   public void testNamespaceDefinitionInExternsWithoutConst() {

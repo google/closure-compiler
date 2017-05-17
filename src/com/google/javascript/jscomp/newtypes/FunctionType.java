@@ -1067,13 +1067,11 @@ public final class FunctionType {
         // contravariance here.
         // But it's probably an overkill to do, so instead we just do a subtype
         // check if unification fails. Same for restFormals and receiverType.
-        // Altenatively, maybe the unifyWith function could handle both subtype
-        // and supertype, and we'd catch type errors as invalid-argument-type
-        // after unification. (Not sure this is correct, I'd have to try it.)
         if (otherFormal != null
             && !thisFormal.unifyWithSubtype(
                 otherFormal, typeParameters, typeMultimap, subSuperMap)
-            && !thisFormal.isSubtypeOf(otherFormal, SubtypeCache.create())) {
+            && !thisFormal.substituteGenericsWithUnknown().isSubtypeOf(
+                otherFormal, SubtypeCache.create())) {
           return false;
         }
       }
@@ -1082,7 +1080,7 @@ public final class FunctionType {
         if (otherRestFormals != null
             && !this.restFormals.unifyWithSubtype(
                 otherRestFormals, typeParameters, typeMultimap, subSuperMap)
-            && !this.restFormals.isSubtypeOf(
+            && !this.restFormals.substituteGenericsWithUnknown().isSubtypeOf(
                 otherRestFormals, SubtypeCache.create())) {
           return false;
         }
@@ -1099,12 +1097,11 @@ public final class FunctionType {
       return false;
     }
 
-    // If one of the two functions doesn't use THIS in the body, we can still
-    // unify.
+    // If one of the two functions doesn't use THIS in the body, we can still unify.
     if (this.receiverType != null && other.receiverType != null
         && !this.receiverType.unifyWithSubtype(
             other.receiverType, typeParameters, typeMultimap, subSuperMap)
-        && !this.receiverType.isSubtypeOf(
+        && !this.receiverType.substituteGenericsWithUnknown().isSubtypeOf(
             other.receiverType, SubtypeCache.create())) {
       return false;
     }

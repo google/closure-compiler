@@ -92,6 +92,10 @@ public interface ObjectTypeI extends TypeI {
    */
   ImmutableList<? extends TypeI> getTemplateTypes();
 
+  /**
+   * When this type represents an instance of a generic class/interface Foo, return an instance
+   * of Foo with type parameters mapped to the unknown type.
+   */
   ObjectTypeI instantiateGenericsWithUnknown();
 
   boolean hasProperty(String propertyName);
