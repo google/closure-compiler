@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.IR;
@@ -125,7 +126,7 @@ class CrossModuleCodeMotion implements CompilerPass {
 
             // VAR Nodes are normalized to have only one child.
             Node declParent = decl.node.getParent();
-            Preconditions.checkState(
+            checkState(
                 !declParent.isVar() || declParent.hasOneChild(),
                 "AST not normalized.");
 
@@ -522,7 +523,7 @@ class CrossModuleCodeMotion implements CompilerPass {
       // Wrap "foo instanceof Bar" in
       // "('undefined' != typeof Bar && foo instanceof Bar)"
       Node reference = n.getLastChild().cloneNode();
-      Preconditions.checkState(reference.isName());
+      checkState(reference.isName());
       n.replaceWith(tmp);
       Node and = IR.and(
           new Node(Token.NE,
