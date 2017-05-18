@@ -346,6 +346,21 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
          });
   }
 
+  public void testClassMovement_alreadyGuardedInstanceof() {
+    parentModuleCanSeeSymbolsDeclaredInChildren = true;
+    test(
+        createModuleStar(
+            // m1
+            "function f(){} f.prototype.bar=function (){};"
+                + "(true && ('undefined' != typeof f && 1 instanceof f));",
+            // m2
+            "var a = new f();"),
+        new String[] {
+          "(true && ('undefined' != typeof f && 1 instanceof f));",
+          "function f(){} f.prototype.bar=function (){};" + "var a = new f();"
+        });
+  }
+
   public void testClassMovement_instanceof3() {
     parentModuleCanSeeSymbolsDeclaredInChildren = true;
     testSame(createModuleStar(

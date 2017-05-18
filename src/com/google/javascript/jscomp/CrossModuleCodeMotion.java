@@ -338,14 +338,103 @@ class CrossModuleCodeMotion implements CompilerPass {
         info.allowMove = false;
       }
     } else {
-      if (parentModuleCanSeeSymbolsDeclaredInChildren &&
-          parent.isInstanceOf() && parent.getLastChild() == n) {
-        instanceofNodes.put(parent, new InstanceofInfo(getModule(ref), info));
-      } else {
-        // Otherwise, it's a read
+      if (!parentModuleCanSeeSymbolsDeclaredInChildren) {
+        // Modules are loaded in such a way that Foo really must be defined before any
+        // expressions like `x instanceof Foo` are evaluated.
         processRead(ref, info);
+      } else {
+        if (isUnguardedInstanceofReference(n)) {
+          // Save a list of unguarded instanceof references.
+          // We'll add undefined typeof guards to them instead of allowing them to block code
+          // motion.
+          instanceofNodes.put(parent, new InstanceofInfo(getModule(ref), info));
+        } else if (!(isUndefinedTypeofGuardReference(n) || isGuardedInstanceofReference(n))) {
+          // Ignore `'undefined' != typeof Ref && x instanceof Ref`
+          // Otherwise, it's a read
+          processRead(ref, info);
+        }
       }
     }
+  }
+
+  /**
+   * Is the reference node the first {@code Ref} in an expression like
+   * {@code 'undefined' != typeof Ref && x instanceof Ref}?
+   *
+   * <p>It's safe to ignore this kind of reference when moving the definition of {@code Ref}.
+   */
+  private boolean isUndefinedTypeofGuardReference(Node reference) {
+    // reference => typeof => `!=`
+    Node undefinedTypeofGuard = reference.getGrandparent();
+    if (undefinedTypeofGuard != null
+        && isUndefinedTypeofGuardFor(undefinedTypeofGuard, reference)) {
+      Node andNode = undefinedTypeofGuard.getParent();
+      return andNode != null
+          && andNode.isAnd()
+          && isInstanceofFor(andNode.getLastChild(), reference);
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Is the expression of the form {@code 'undefined' != typeof Ref}?
+   *
+   * @param expression
+   * @param reference Ref node must be equivalent to this node
+   */
+  private boolean isUndefinedTypeofGuardFor(Node expression, Node reference) {
+    if (expression.isNE()) {
+      Node undefinedString = expression.getFirstChild();
+      Node typeofNode = expression.getLastChild();
+      return undefinedString.isString()
+          && undefinedString.getString().equals("undefined")
+          && typeofNode.isTypeOf()
+          && typeofNode.getFirstChild().isEquivalentTo(reference);
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Is the reference node the second {@code Ref} in an expression like
+   * {@code 'undefined' != typeof Ref && x instanceof Ref}?
+   *
+   * <p>It's safe to ignore this kind of reference when moving the definition of {@code Ref}.
+   */
+  private boolean isGuardedInstanceofReference(Node reference) {
+    Node instanceofNode = reference.getParent();
+    if (isInstanceofFor(instanceofNode, reference)) {
+      Node andNode = instanceofNode.getParent();
+      return andNode != null
+          && andNode.isAnd()
+          && isUndefinedTypeofGuardFor(andNode.getFirstChild(), reference);
+    } else {
+      return false;
+    }
+  }
+
+  /** Is the reference the right hand side of an {@code instanceof} and not guarded? */
+  private boolean isUnguardedInstanceofReference(Node reference) {
+    Node instanceofNode = reference.getParent();
+    if (isInstanceofFor(instanceofNode, reference)) {
+      Node andNode = instanceofNode.getParent();
+      return !(andNode != null
+          && andNode.isAnd()
+          && isUndefinedTypeofGuardFor(andNode.getFirstChild(), reference));
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Is the expression of the form {@code x instanceof Ref}?
+   *
+   * @param expression
+   * @param reference Ref node must be equivalent to this node
+   */
+  private boolean isInstanceofFor(Node expression, Node reference) {
+    return expression.isInstanceOf() && expression.getLastChild().isEquivalentTo(reference);
   }
 
   /**
@@ -507,24 +596,14 @@ class CrossModuleCodeMotion implements CompilerPass {
       if (!info.namedInfo.allowMove || !info.mustBeGuardedByTypeof()) {
         continue;
       }
-      // In order for the compiler pass to be idempotent, this checks whether
-      // the instanceof is already wrapped in the code that is generated below.
-      Node parent = n.getParent();
-      if (parent.isAnd() && parent.getLastChild() == n
-          && parent.getFirstChild().isNE()) {
-        Node ne = parent.getFirstChild();
-        if (ne.getFirstChild().isString()
-            && "undefined".equals(ne.getFirstChild().getString())
-            && ne.getLastChild().isTypeOf()) {
-          Node ref = ne.getLastChild().getFirstChild();
-          if (ref.isEquivalentTo(n.getLastChild())) {
-            continue;
-          }
-        }
-      }
       // Wrap "foo instanceof Bar" in
       // "('undefined' != typeof Bar && foo instanceof Bar)"
-      Node reference = n.getLastChild().cloneNode();
+      Node originalReference = n.getLastChild();
+      checkState(
+          isUnguardedInstanceofReference(originalReference),
+          "instanceof Reference is already guarded: %s",
+          originalReference);
+      Node reference = originalReference.cloneNode();
       checkState(reference.isName());
       n.replaceWith(tmp);
       Node and = IR.and(
