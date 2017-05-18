@@ -102,27 +102,25 @@ class CrossModuleCodeMotion implements CompilerPass {
   /** move the code accordingly */
   private void moveCode() {
     for (NamedInfo info : namedInfo.values()) {
-      JSModule deepestDependency = info.deepestModule;
+      JSModule preferredModule = info.preferredModule;
 
       // Only move if all are true:
       // a) allowMove is true
       // b) it was used + declared somewhere [if not, then it will be removed
       // as dead or invalid code elsewhere]
       // c) the new dependency depends on the declModule
-      if (info.allowMove && deepestDependency != null) {
+      if (info.allowMove && preferredModule != null) {
         Iterator<Declaration> it = info.declarationIterator();
         JSModuleGraph moduleGraph = compiler.getModuleGraph();
         while (it.hasNext()) {
           Declaration decl = it.next();
-          if (decl.module != null &&
-              moduleGraph.dependsOn(deepestDependency,
-                  decl.module)) {
+          if (moduleGraph.dependsOn(preferredModule, decl.module)) {
 
             // Find the appropriate spot to move it to
-            Node destParent = moduleVarParentMap.get(deepestDependency);
+            Node destParent = moduleVarParentMap.get(preferredModule);
             if (destParent == null) {
-              destParent = compiler.getNodeForCodeInsertion(deepestDependency);
-              moduleVarParentMap.put(deepestDependency, destParent);
+              destParent = compiler.getNodeForCodeInsertion(preferredModule);
+              moduleVarParentMap.put(preferredModule, destParent);
             }
 
             // VAR Nodes are normalized to have only one child.
@@ -149,8 +147,10 @@ class CrossModuleCodeMotion implements CompilerPass {
   private class NamedInfo {
     boolean allowMove = true;
 
-    // The deepest module where the variable is used. Starts at null
-    private JSModule deepestModule = null;
+    // All modules containing references to this global variable directly or transitively depend
+    // on this module, which is potentially further down the tree than the module containing the
+    // variable's declaration statements.
+    private JSModule preferredModule = null;
 
     // The module where declarations appear
     private JSModule declModule = null;
@@ -166,22 +166,22 @@ class CrossModuleCodeMotion implements CompilerPass {
         return;
       }
 
-      // If we have no deepest module yet, set this one
-      if (deepestModule == null) {
-        deepestModule = m;
+      // If we have no preferred module yet, set this one
+      if (preferredModule == null) {
+        preferredModule = m;
       } else {
         // Find the deepest common dependency
-        deepestModule =
-            graph.getSmallestCoveringDependency(ImmutableList.of(m, deepestModule));
+        preferredModule =
+            graph.getSmallestCoveringDependency(ImmutableList.of(m, preferredModule));
       }
     }
 
     boolean isUsedInOrDependencyOfModule(JSModule m) {
       checkNotNull(m);
-      if (deepestModule == null) {
+      if (preferredModule == null) {
         return false;
       }
-      return m == deepestModule || graph.dependsOn(m, deepestModule);
+      return m == preferredModule || graph.dependsOn(m, preferredModule);
     }
 
     /**
