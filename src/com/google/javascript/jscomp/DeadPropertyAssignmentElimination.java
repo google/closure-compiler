@@ -363,7 +363,6 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
         case GETPROP:
           // Handle potential getters/setters.
           if (n.isGetProp()
-              && n.getLastChild().isString()
               && blacklistedPropNames.contains(n.getLastChild().getString())) {
             // We treat getters/setters as if they were a call, thus we mark all properties as read.
             markAllPropsRead();
