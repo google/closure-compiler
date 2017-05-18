@@ -1810,6 +1810,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame("goog.dom.createDom('iframe', null);");
     testSame("goog.dom.createDom('img', {'src': src});");
     testSame("goog.dom.createDom('img', attrs);");
+    testSame("goog.dom.createDom('iframe', /** @type {?string|!Array|undefined} */ (className));");
     testSame("goog.dom.createDom(tag, {});");
     testSame(
         "/** @enum {string} */ var Classes = {A: ''};\n" +

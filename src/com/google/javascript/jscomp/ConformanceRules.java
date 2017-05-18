@@ -1448,6 +1448,7 @@ public final class ConformanceRules {
    */
   public static final class BanCreateDom extends AbstractRule {
     private List<String[]> bannedTagAttrs;
+    private TypeI classNameTypes;
 
     public BanCreateDom(AbstractCompiler compiler, Requirement requirement)
         throws InvalidRequirementSpec {
@@ -1464,6 +1465,11 @@ public final class ConformanceRules {
       if (bannedTagAttrs.isEmpty()) {
         throw new InvalidRequirementSpec("Specify one or more values.");
       }
+      classNameTypes = compiler.getTypeIRegistry().createUnionType(ImmutableList.of(
+          compiler.getTypeIRegistry().getNativeType(JSTypeNative.STRING_TYPE),
+          compiler.getTypeIRegistry().getNativeType(JSTypeNative.ARRAY_TYPE),
+          compiler.getTypeIRegistry().getNativeType(JSTypeNative.NULL_TYPE),
+          compiler.getTypeIRegistry().getNativeType(JSTypeNative.VOID_TYPE)));
     }
 
     @Override
@@ -1479,11 +1485,9 @@ public final class ConformanceRules {
       String tagName = getTagName(n.getSecondChild());
       Node attrs = n.getChildAtIndex(2);
       TypeI attrsType = attrs.getTypeI();
-      TypeI stringType = compiler.getTypeIRegistry().getNativeType(JSTypeNative.STRING_TYPE);
-      TypeI arrayType = compiler.getTypeIRegistry().getNativeType(JSTypeNative.ARRAY_TYPE);
       // String or array attribute sets the class.
       boolean isClassName = attrsType != null && !attrsType.isUnknownType()
-        && (attrsType.isSubtypeOf(stringType) || attrsType.isSubtypeOf(arrayType));
+          && (attrsType.isSubtypeOf(classNameTypes));
 
       if (attrs.isNull() || (attrsType != null && attrsType.isVoidType())) {
         // goog.dom.createDom('iframe', null) is fine.
