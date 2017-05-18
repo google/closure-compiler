@@ -85,6 +85,36 @@ PerformanceResourceTiming.prototype.decodedBodySize;
 /** @type {number|undefined} */
 PerformanceResourceTiming.prototype.workerStart;
 
+/**
+ * https://w3c.github.io/navigation-timing/#sec-performance-navigation-types
+ * @enum {string}
+ */
+var NavigationType = {
+  NAVIGATE: 'navigate',
+  RELOAD: 'reload',
+  BACK_FORWARD: 'back_forward',
+  PRERENDER: 'prerender'
+};
+
+/**
+ * https://w3c.github.io/navigation-timing/#sec-PerformanceNavigationTiming
+ * @constructor
+ * @extends {PerformanceResourceTiming}
+ */
+function PerformanceNavigationTiming() {}
+/** @type {number} */ PerformanceNavigationTiming.prototype.unloadEventStart;
+/** @type {number} */ PerformanceNavigationTiming.prototype.unloadEventEnd;
+/** @type {number} */ PerformanceNavigationTiming.prototype.domInteractive;
+/** @type {number} */ PerformanceNavigationTiming.prototype
+    .domContentLoadedEventStart;
+/** @type {number} */ PerformanceNavigationTiming.prototype
+    .domContentLoadedEventEnd;
+/** @type {number} */ PerformanceNavigationTiming.prototype.domComplete;
+/** @type {number} */ PerformanceNavigationTiming.prototype.loadEventStart;
+/** @type {number} */ PerformanceNavigationTiming.prototype.loadEventEnd;
+/** @type {NavigationType} */ PerformanceNavigationTiming.prototype.type;
+/** @type {number} */ PerformanceNavigationTiming.prototype.redirectCount;
+
 /** @constructor */
 function PerformanceNavigation() {}
 /** @type {number} */ PerformanceNavigation.prototype.TYPE_NAVIGATE = 0;
