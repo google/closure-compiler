@@ -2268,14 +2268,6 @@ public class CompilerOptions implements Serializable {
     this.useTypesForLocalOptimization = useTypesForLocalOptimization;
   }
 
-  public void setUseSizeHeuristicToStopOptimizationLoop(boolean mayStopEarly) {
-    this.useSizeHeuristicToStopOptimizationLoop = mayStopEarly;
-  }
-
-  public void setMaxOptimizationLoopIterations(int maxIterations) {
-    this.optimizationLoopMaxIterations = maxIterations;
-  }
-
   @Deprecated
   public void setUseTypesForOptimization(boolean useTypesForOptimization) {
     if (useTypesForOptimization) {
