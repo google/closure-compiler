@@ -29,6 +29,7 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -358,7 +359,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract CheckLevel getErrorLevel(JSError error);
 
-  static enum LifeCycleStage {
+  static enum LifeCycleStage implements Serializable {
     RAW,
 
     // See constraints put on the tree by Normalize.java

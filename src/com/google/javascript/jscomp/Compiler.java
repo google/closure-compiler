@@ -3310,7 +3310,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final GlobalVarReferenceMap globalRefMap;
     private final GlobalTypeInfo symbolTable;
     private final boolean hasRegExpGlobalReferences;
-
+    private final LifeCycleStage lifeCycleStage;
+    private final Set<String> externProperties;
 
     CompilerState(Compiler compiler) {
       this.externsRoot = checkNotNull(compiler.externsRoot);
@@ -3329,6 +3330,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.symbolTable = compiler.symbolTable;
       this.hasRegExpGlobalReferences = compiler.hasRegExpGlobalReferences;
       this.typeValidator = compiler.typeValidator;
+      this.lifeCycleStage = compiler.getLifeCycleStage();
+      this.externProperties = compiler.externProperties;
     }
   }
 
@@ -3372,6 +3375,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       symbolTable = compilerState.symbolTable;
       hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
       typeValidator = compilerState.typeValidator;
+      setLifeCycleStage(compilerState.lifeCycleStage);
+      externProperties = compilerState.externProperties;
     }
     initWarningsGuard(options.getWarningsGuard());
     maybeSetTracker();
