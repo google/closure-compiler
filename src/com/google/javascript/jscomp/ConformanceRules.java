@@ -20,6 +20,8 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
 import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
@@ -1542,8 +1544,99 @@ public final class ConformanceRules {
       } else if (tag.isGetProp() && tag.getFirstChild().matchesQualifiedName("goog.dom.TagName")) {
         return tag.getLastChild().getString().toLowerCase();
       }
+      // TODO(jakubvrana): Support union, e.g. {!TagName<!HTMLDivElement>|!TagName<!HTMLBRElement>}.
+      TypeI type = tag.getTypeI();
+      if (type == null || !type.isGenericObjectType()) {
+        return null;
+      }
+      ObjectTypeI typeAsObj = type.toMaybeObjectType();
+      if (typeAsObj.getRawType().getDisplayName().equals("goog.dom.TagName")) {
+        TypeI tagType = Iterables.getOnlyElement(typeAsObj.getTemplateTypes());
+        return ELEMENT_TAG_NAMES.get(tagType.getDisplayName());
+      }
       return null;
     }
+
+    private static final ImmutableMap<String, String> ELEMENT_TAG_NAMES =
+        ImmutableMap.<String, String>builder()
+            .put("HTMLAnchorElement", "a")
+            .put("HTMLAppletElement", "applet")
+            .put("HTMLAreaElement", "area")
+            .put("HTMLAudioElement", "audio")
+            .put("HTMLBRElement", "br")
+            .put("HTMLBaseElement", "base")
+            .put("HTMLBaseFontElement", "basefont")
+            .put("HTMLBodyElement", "body")
+            .put("HTMLButtonElement", "button")
+            .put("HTMLCanvasElement", "canvas")
+            .put("HTMLDListElement", "dl")
+            .put("HTMLDataListElement", "datalist")
+            .put("HTMLDetailsElement", "details")
+            .put("HTMLDialogElement", "dialog")
+            .put("HTMLDirectoryElement", "dir")
+            .put("HTMLDivElement", "div")
+            .put("HTMLEmbedElement", "embed")
+            .put("HTMLFieldSetElement", "fieldset")
+            .put("HTMLFontElement", "font")
+            .put("HTMLFormElement", "form")
+            .put("HTMLFrameElement", "frame")
+            .put("HTMLFrameSetElement", "frameset")
+            .put("HTMLHRElement", "hr")
+            .put("HTMLHeadElement", "head")
+            // .put("HTMLHeadingElement", "h1")
+            // .put("HTMLHeadingElement", "h2")
+            // .put("HTMLHeadingElement", "h3")
+            // .put("HTMLHeadingElement", "h4")
+            // .put("HTMLHeadingElement", "h5")
+            // .put("HTMLHeadingElement", "h6")
+            .put("HTMLHtmlElement", "html")
+            .put("HTMLIFrameElement", "iframe")
+            .put("HTMLImageElement", "img")
+            .put("HTMLInputElement", "input")
+            .put("HTMLIsIndexElement", "isindex")
+            .put("HTMLLIElement", "li")
+            .put("HTMLLabelElement", "label")
+            .put("HTMLLegendElement", "legend")
+            .put("HTMLLinkElement", "link")
+            .put("HTMLMapElement", "map")
+            .put("HTMLMenuElement", "menu")
+            .put("HTMLMetaElement", "meta")
+            .put("HTMLMeterElement", "meter")
+            // .put("HTMLModElement", "del")
+            // .put("HTMLModElement", "ins")
+            .put("HTMLOListElement", "ol")
+            .put("HTMLObjectElement", "object")
+            .put("HTMLOptGroupElement", "optgroup")
+            .put("HTMLOptionElement", "option")
+            .put("HTMLOutputElement", "output")
+            .put("HTMLParagraphElement", "p")
+            .put("HTMLParamElement", "param")
+            .put("HTMLPreElement", "pre")
+            .put("HTMLProgressElement", "progress")
+            // .put("HTMLQuoteElement", "blockquote")
+            // .put("HTMLQuoteElement", "q")
+            .put("HTMLScriptElement", "script")
+            .put("HTMLSelectElement", "select")
+            .put("HTMLSourceElement", "source")
+            .put("HTMLSpanElement", "span")
+            .put("HTMLStyleElement", "style")
+            .put("HTMLTableCaptionElement", "caption")
+            // .put("HTMLTableCellElement", "td")
+            // .put("HTMLTableCellElement", "th")
+            // .put("HTMLTableColElement", "col")
+            // .put("HTMLTableColElement", "colgroup")
+            .put("HTMLTableElement", "table")
+            .put("HTMLTableRowElement", "tr")
+            // .put("HTMLTableSectionElement", "tbody")
+            // .put("HTMLTableSectionElement", "tfoot")
+            // .put("HTMLTableSectionElement", "thead")
+            .put("HTMLTemplateElement", "template")
+            .put("HTMLTextAreaElement", "textarea")
+            .put("HTMLTitleElement", "title")
+            .put("HTMLTrackElement", "track")
+            .put("HTMLUListElement", "ul")
+            .put("HTMLVideoElement", "video")
+            .build();
 
     private boolean isCreateDomCall(Node n) {
       if (NodeUtil.isCallTo(n, "goog.dom.createDom")) {

@@ -1836,6 +1836,43 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame("goog.dom.createDom(tag, {'src': src});");
   }
 
+  public void testBanCreateDomTagNameType() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'\n" +
+        "  error_message: 'BanCreateDom Message'\n" +
+        "  value: 'div.class'\n" +
+        "}";
+
+    String externs =
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @const */ var goog = {};",
+            "/** @const */ goog.dom = {};",
+            "/** @constructor @template T */ goog.dom.TagName = function() {}",
+            "/** @type {!goog.dom.TagName<!HTMLDivElement>} */",
+            "goog.dom.TagName.DIV = new goog.dom.TagName();",
+            "/** @constructor */ function HTMLDivElement() {}\n");
+
+    testWarning(
+        externs,
+        LINE_JOINER.join(
+            "function f(/** !goog.dom.TagName<!HTMLDivElement> */ div) {",
+            "  goog.dom.createDom(div, 'red');",
+            "}"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateDom Message");
+
+    testWarning(
+        externs,
+        LINE_JOINER.join(
+            "const TagName = goog.dom.TagName;",
+            "goog.dom.createDom(TagName.DIV, 'red');"),
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateDom Message");
+  }
+
   public void testBanCreateDomAnyTagName() {
     configuration =
         "requirement: {\n" +
