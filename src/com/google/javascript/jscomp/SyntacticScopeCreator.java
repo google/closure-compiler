@@ -27,7 +27,7 @@ import com.google.javascript.rhino.Node;
  * <p>This implementation is not thread-safe.</p>
  *
  */
-class SyntacticScopeCreator implements ScopeCreator {
+public class SyntacticScopeCreator implements ScopeCreator {
   private final AbstractCompiler compiler;
   private Scope scope;
   private InputId inputId;
@@ -52,7 +52,7 @@ class SyntacticScopeCreator implements ScopeCreator {
     this.redeclarationHandler = new DefaultRedeclarationHandler();
   }
 
-  static SyntacticScopeCreator makeUntyped(AbstractCompiler compiler) {
+  public static SyntacticScopeCreator makeUntyped(AbstractCompiler compiler) {
     return new SyntacticScopeCreator(compiler, false);
   }
 
