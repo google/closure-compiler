@@ -16744,6 +16744,13 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"),
         NewTypeInference.BOTTOM_INDEX_TYPE,
         NewTypeInference.BOTTOM_INDEX_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !IObject<number, number>|!IObject<string, number> */ x) {",
+        "  return x[1] + x['asdf'];",
+        "}"),
+        NewTypeInference.BOTTOM_INDEX_TYPE,
+        NewTypeInference.BOTTOM_INDEX_TYPE);
   }
 
   // A dot access on IObject<K, V> is not typed as V.
@@ -20354,5 +20361,29 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  f(x);",
         "}"),
         NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+  }
+
+  public void testJoinWithAllMembers() {
+    // Tests that the extra property prop exists in Bar. If we short-circuit the join,
+    // it would only exist in Foo and we would get an inexistent-property warning.
+    // Admittedly this is very convoluted code.
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {}",
+        "/**",
+        " * @constructor",
+        " * @extends {Bar}",
+        " * @implements {Foo}",
+        " */",
+        "function FooBar() {}",
+        "function f(p, /** !FooBar */ x, /** !Foo|!Bar */ y) {",
+        "  x.prop = 123;",
+        "  var z = p ? x : y;",
+        "  if (z instanceof Bar) {",
+        "    return z.prop - 1;",
+        "  }",
+        "}"));
   }
 }

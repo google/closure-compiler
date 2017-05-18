@@ -20,22 +20,14 @@ import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 
 /**
- * In rare cases, when joining or meeting sets of objects, we end up with a set
- * that includes two objects A and B with the same nominal type N.
- * This custom builder avoids that by replacing A and B with a new object of
- * the same nominal type N.
+ * When meeting sets of objects, we may end up with a set that includes two objects A and B
+ * with the same nominal type N. This custom builder avoids that by replacing A and B
+ * with a new object of the same nominal type N.
  */
 class ObjectsBuilder {
-  static enum ResolveConflictsBy {
-    JOIN,
-    MEET
-  }
-
-  private final ResolveConflictsBy resolution;
   private final ArrayList<ObjectType> objs;
 
-  ObjectsBuilder(ResolveConflictsBy resolution) {
-    this.resolution = resolution;
+  ObjectsBuilder() {
     this.objs = new ArrayList<>();
   }
 
@@ -45,14 +37,9 @@ class ObjectsBuilder {
     // while iterating over it.
     for (int i = 0; i < this.objs.size(); i++) {
       ObjectType oldObj = this.objs.get(i);
-      if (NominalType.equalRawTypes(
-          oldObj.getNominalType(), newObj.getNominalType())) {
+      if (NominalType.equalRawTypes(oldObj.getNominalType(), newObj.getNominalType())) {
         addedObj = true;
-        if (this.resolution == ResolveConflictsBy.JOIN) {
-          this.objs.set(i, ObjectType.join(oldObj, newObj));
-        } else {
-          this.objs.set(i, ObjectType.meet(oldObj, newObj));
-        }
+        this.objs.set(i, ObjectType.meet(oldObj, newObj));
       }
     }
     if (!addedObj) {

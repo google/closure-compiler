@@ -22,9 +22,8 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
-import com.google.javascript.jscomp.newtypes.ObjectsBuilder.ResolveConflictsBy;
 import com.google.javascript.rhino.Node;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -949,14 +948,17 @@ final class ObjectType implements TypeWithProperties {
   }
 
   static ObjectType meet(ObjectType obj1, ObjectType obj2) {
-    Preconditions.checkState(areRelatedNominalTypes(obj1.nominalType, obj2.nominalType));
+    NominalType nt1 = obj1.nominalType;
+    NominalType nt2 = obj2.nominalType;
+    Preconditions.checkState(areRelatedNominalTypes(nt1, nt2),
+        "Unrelated nominal types %s and %s", nt1, nt2);
     if (obj1.isTopObject() || obj2.isBottomObject()) {
       return obj2;
     } else if (obj2.isTopObject() || obj1.isBottomObject()) {
       return obj1;
     }
     JSTypes commonTypes = obj1.commonTypes;
-    NominalType resultNomType = NominalType.pickSubclass(obj1.nominalType, obj2.nominalType);
+    NominalType resultNomType = NominalType.pickSubclass(nt1, nt2);
     FunctionType fn = FunctionType.meet(obj1.fn, obj2.fn);
     if (!FunctionType.isInhabitable(fn)) {
       return commonTypes.getBottomObject();
@@ -986,7 +988,8 @@ final class ObjectType implements TypeWithProperties {
     }
     if (obj1.equals(obj2)) {
       return obj1;
-    } else if (obj1.isPrototypeObject() && obj2.isPrototypeObject()) {
+    }
+    if (obj1.isPrototypeObject() && obj2.isPrototypeObject()) {
       // When Bar and Baz extend Foo, joining Bar.prototype and Baz.prototype returns Foo.
       return join(
           obj1.getNominalType().getInstanceAsObjectType(),
@@ -1027,46 +1030,41 @@ final class ObjectType implements TypeWithProperties {
     } else if (objs2.isEmpty()) {
       return objs1;
     }
-    ObjectType[] objs1Arr = objs1.toArray(new ObjectType[0]);
-    ObjectType[] keptFrom1 = Arrays.copyOf(objs1Arr, objs1Arr.length);
-    ObjectsBuilder newObjs = new ObjectsBuilder(ResolveConflictsBy.JOIN);
-    for (ObjectType obj2 : objs2) {
-      boolean addedObj2 = false;
-      for (int i = 0; i < objs1Arr.length; i++) {
-        ObjectType obj1 = objs1Arr[i];
-        NominalType nt1 = obj1.nominalType;
+    List<ObjectType> objs = new ArrayList<>(objs1);
+    objs.addAll(objs2);
+    for (int i = 0; i < objs.size() - 1; i++) {
+      ObjectType obj1 = objs.get(i);
+      NominalType nt1 = obj1.nominalType;
+      for (int j = i + 1; j < objs.size(); j++) {
+        ObjectType obj2 = objs.get(j);
         NominalType nt2 = obj2.nominalType;
-        if (areRelatedNominalTypes(nt1, nt2)) {
-          if ((nt2.isBuiltinObject() && nt1 != null
-              && !obj1.isSubtypeOf(obj2, SubtypeCache.create()))
-              || (nt1.isBuiltinObject() && nt2 != null
-              && !obj2.isSubtypeOf(obj1, SubtypeCache.create()))) {
-            // Don't merge other classes with record types
-            break;
-          }
-          keptFrom1[i] = null;
-          addedObj2 = true;
-          // obj1 and obj2 may be in a subtype relation.
+        if (nt1.isBuiltinObject() && nt2.isBuiltinObject()) {
+          objs.set(i, null);
+          objs.set(j, join(obj1, obj2));
+        } else if ((areRelatedNominalTypes(nt1, nt2) || NominalType.equalRawTypes(nt1, nt2))
+            // In a union, there is at most one object whose nominal type is Object.
+            // We don't merge "classy" objects with it unless they are in the subtype relation.
+            && (!nt1.isBuiltinObject() || obj2.isSubtypeOf(obj1, SubtypeCache.create()))
+            && (!nt2.isBuiltinObject() || obj1.isSubtypeOf(obj2, SubtypeCache.create()))) {
+          // obj1 and obj2 may be in the subtype relation.
           // Even then, we want to join them because we don't want to forget
-          // any extra properties in the subtype object.
+          // any extra properties present in the subtype object.
           // TODO(dimvar): currently, a class and a @record that is a
           // supertype can be in the same union. We must normalize like we do
           // for other types, to maintain the invariant that the members of
           // a union are not subtypes of each other.
-          newObjs.add(join(obj1, obj2));
-          break;
+          objs.set(i, null);
+          objs.set(j, join(obj1, obj2));
         }
       }
-      if (!addedObj2) {
-        newObjs.add(obj2);
+    }
+    ImmutableSet.Builder<ObjectType> builder = ImmutableSet.builder();
+    for (ObjectType obj : objs) {
+      if (obj != null) {
+        builder.add(obj);
       }
     }
-    for (ObjectType o : keptFrom1) {
-      if (o != null) {
-        newObjs.add(o);
-      }
-    }
-    return newObjs.build();
+    return builder.build();
   }
 
   private static boolean areRelatedNominalTypes(NominalType c1, NominalType c2) {
@@ -1078,9 +1076,8 @@ final class ObjectType implements TypeWithProperties {
   // two object types that are in a subtype relation, eg, see
   // NewTypeInferenceTest#testDifficultObjectSpecialization.
   static ImmutableSet<ObjectType> meetSetsHelper(
-      boolean specializeObjs1,
-      Set<ObjectType> objs1, Set<ObjectType> objs2) {
-    ObjectsBuilder newObjs = new ObjectsBuilder(ResolveConflictsBy.MEET);
+      boolean specializeObjs1, Set<ObjectType> objs1, Set<ObjectType> objs2) {
+    ObjectsBuilder newObjs = new ObjectsBuilder();
     for (ObjectType obj2 : objs2) {
       for (ObjectType obj1 : objs1) {
         if (areRelatedNominalTypes(obj1.nominalType, obj2.nominalType)) {
@@ -1106,13 +1103,11 @@ final class ObjectType implements TypeWithProperties {
     return newObjs.build();
   }
 
-  static ImmutableSet<ObjectType> meetSets(
-      Set<ObjectType> objs1, Set<ObjectType> objs2) {
+  static ImmutableSet<ObjectType> meetSets(Set<ObjectType> objs1, Set<ObjectType> objs2) {
     return meetSetsHelper(false, objs1, objs2);
   }
 
-  static ImmutableSet<ObjectType> specializeSet(
-      Set<ObjectType> objs1, Set<ObjectType> objs2) {
+  static ImmutableSet<ObjectType> specializeSet(Set<ObjectType> objs1, Set<ObjectType> objs2) {
     return meetSetsHelper(true, objs1, objs2);
   }
 

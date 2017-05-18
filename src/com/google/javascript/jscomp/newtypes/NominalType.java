@@ -334,7 +334,7 @@ public final class NominalType {
     return this.rawType.getCtorPropDeclaredType("prototype");
   }
 
-  // We require finalization for the interfaces here because the inheritance
+  // We require a frozen type for the interfaces here because the inheritance
   // chain of each type may not be correct until after the type is frozen.
   public ImmutableSet<NominalType> getInstantiatedInterfaces() {
     Preconditions.checkState(this.rawType.isFrozen());
@@ -555,24 +555,24 @@ public final class NominalType {
     return true;
   }
 
-  private static ImmutableMap<String, JSType> joinTypeMaps(
-      Set<String> domain, ImmutableMap<String, JSType> m1, ImmutableMap<String, JSType> m2) {
+  private static ImmutableMap<String, JSType> joinTypeMaps(NominalType nt1, NominalType nt2) {
+    Preconditions.checkState(nt1.rawType.equals(nt2.rawType));
     ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
-    for (String typevar : domain) {
-      JSType t1 = m1.get(typevar);
-      JSType t2 = m2.get(typevar);
-      if (t1 == null) {
-        builder.put(typevar, Preconditions.checkNotNull(t2));
-      } else if (t2 == null) {
-        builder.put(typevar, t1);
-      } else {
-        builder.put(typevar, JSType.join(t1, t2));
-      }
+    if (nt1.isIObject()) {
+      // Special case IObject, whose first type parameter is contravariant.
+      String indexTypevar = nt1.rawType.getTypeParameters().get(0);
+      builder.put(indexTypevar, JSType.meet(nt1.getIndexType(), nt2.getIndexType()));
+      String indexedTypevar = nt1.rawType.getTypeParameters().get(1);
+      builder.put(indexedTypevar, JSType.join(nt1.getIndexedType(), nt2.getIndexedType()));
+      return builder.build();
+    }
+    for (String typevar : nt1.typeMap.keySet()) {
+      builder.put(typevar, JSType.join(nt1.typeMap.get(typevar), nt2.typeMap.get(typevar)));
     }
     return builder.build();
   }
 
-  // A special-case of join. One of the raw types must be a subtype of the other
+  // A special-case of join.
   static NominalType join(NominalType c1, NominalType c2) {
     if (c1 == null || c2 == null) {
       return null;
@@ -580,15 +580,18 @@ public final class NominalType {
     if (c1.isNominalSubtypeOf(c2)) {
       return c2;
     }
-    if (c1.isRawSubtypeOf(c2)) {
-      return new NominalType(joinTypeMaps(c2.typeMap.keySet(), c1.typeMap, c2.typeMap), c2.rawType);
-    }
     if (c2.isNominalSubtypeOf(c1)) {
       return c1;
     }
-    if (c2.isRawSubtypeOf(c1)) {
-      return new NominalType(joinTypeMaps(c1.typeMap.keySet(), c1.typeMap, c2.typeMap), c1.rawType);
+    if (c1.rawType.equals(c2.rawType)) {
+      return c1.isGeneric() ? new NominalType(joinTypeMaps(c1, c2), c1.rawType) : c1;
     }
+    // If c1.isRawSubtypeOf(c2) but not c1.isNominalSubtypeOf(c2), we would want to change
+    // joinTypeMaps to handle type maps with different domains. Basically, we want to go up
+    // c1's inheritance chain and get instantiated ancestors until we reach the ancestor with the
+    // same raw type as c2, and then join.
+    // Putting the preconditions check in order to get notified if we ever need to handle this.
+    Preconditions.checkState(!c1.isRawSubtypeOf(c2) && !c2.isRawSubtypeOf(c1));
     return null;
   }
 
