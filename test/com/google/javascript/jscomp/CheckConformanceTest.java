@@ -72,7 +72,6 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   public CheckConformanceTest() {
     super(EXTERNS, true);
     enableTranspile();
-    enableNormalize();
     enableClosurePass();
     enableClosurePassForExpected();
     enableRewriteClosureCode();
