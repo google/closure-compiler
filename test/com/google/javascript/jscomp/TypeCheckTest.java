@@ -13861,7 +13861,20 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     compiler.getOptions().setWarningLevel(DiagnosticGroups.REPORT_UNKNOWN_TYPES,
         CheckLevel.WARNING);
     testTypes("function id(x) { return x; }",
-        "could not determine the type of this expression");
+        "could not determine the type of expression: x");
+  }
+
+  public void testUnknownTypeReportLonger() throws Exception {
+    compiler.getOptions().setWarningLevel(DiagnosticGroups.REPORT_UNKNOWN_TYPES,
+        CheckLevel.WARNING);
+    // Here we are explicitly typing the return value as unknown to force this error
+    // (it would be better if the error was reported only for *implicit* unknown types).
+    testTypes(
+        "function id(/** function(string): ? */ someFunc) { " +
+          "return someFunc(\"some string over 100 chars some string over 100 chars " +
+          "some string over 100 chars some string over 100 chars\"); }",
+        "could not determine the type of expression: someFunc(\"some string over 100 chars " +
+          "some string o ... string over 100 chars some string over 100 chars\")");
   }
 
   public void testUnknownForIn() throws Exception {
