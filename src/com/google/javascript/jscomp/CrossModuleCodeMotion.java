@@ -102,42 +102,32 @@ class CrossModuleCodeMotion implements CompilerPass {
   /** move the code accordingly */
   private void moveCode() {
     for (NamedInfo info : namedInfo.values()) {
-      JSModule preferredModule = info.preferredModule;
-
-      // Only move if all are true:
-      // a) allowMove is true
-      // b) it was used + declared somewhere [if not, then it will be removed
-      // as dead or invalid code elsewhere]
-      // c) the new dependency depends on the declModule
-      if (info.allowMove && preferredModule != null) {
+      if (info.shouldBeMoved()) {
         Iterator<Declaration> it = info.declarationIterator();
-        JSModuleGraph moduleGraph = compiler.getModuleGraph();
+        // Find the appropriate spot to move it to
+        Node destParent = moduleVarParentMap.get(info.preferredModule);
+        if (destParent == null) {
+          destParent = compiler.getNodeForCodeInsertion(info.preferredModule);
+          moduleVarParentMap.put(info.preferredModule, destParent);
+        }
         while (it.hasNext()) {
           Declaration decl = it.next();
-          if (moduleGraph.dependsOn(preferredModule, decl.module)) {
+          checkState(decl.module == info.declModule);
 
-            // Find the appropriate spot to move it to
-            Node destParent = moduleVarParentMap.get(preferredModule);
-            if (destParent == null) {
-              destParent = compiler.getNodeForCodeInsertion(preferredModule);
-              moduleVarParentMap.put(preferredModule, destParent);
-            }
+          // VAR Nodes are normalized to have only one child.
+          Node declParent = decl.node.getParent();
+          checkState(
+              !declParent.isVar() || declParent.hasOneChild(),
+              "AST not normalized.");
 
-            // VAR Nodes are normalized to have only one child.
-            Node declParent = decl.node.getParent();
-            checkState(
-                !declParent.isVar() || declParent.hasOneChild(),
-                "AST not normalized.");
+          // Remove it
+          compiler.reportChangeToEnclosingScope(declParent);
+          declParent.detach();
 
-            // Remove it
-            compiler.reportChangeToEnclosingScope(declParent);
-            declParent.detach();
+          // Add it to the new spot
+          destParent.addChildToFront(declParent);
 
-            // Add it to the new spot
-            destParent.addChildToFront(declParent);
-
-            compiler.reportChangeToEnclosingScope(declParent);
-          }
+          compiler.reportChangeToEnclosingScope(declParent);
         }
       }
     }
@@ -197,6 +187,19 @@ class CrossModuleCodeMotion implements CompilerPass {
       declarations.push(d);
       declModule = d.module;
       return true;
+    }
+
+    boolean shouldBeMoved() {
+      // Only move if all are true:
+      // a) allowMove is true
+      // b) it is declared somewhere (declModule != null)
+      // c) it was used somewhere (preferredModule != null)
+      //    [if not, then it will be removed as dead or invalid code elsewhere]
+      // d) the all usages depend on the declModule by way of preferredModule
+      return allowMove
+          && preferredModule != null
+          && declModule != null
+          && graph.dependsOn(preferredModule, declModule);
     }
 
     /**
