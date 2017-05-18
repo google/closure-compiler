@@ -130,6 +130,23 @@ MediaStreamTrack.prototype.onunmute;
 MediaStreamTrack.prototype.onended;
 
 /**
+ * @type {?function(!Event)}
+ */
+MediaStreamTrack.prototype.onoverconstrained;
+
+/**
+ * Applies the specified set of constraints to the track, if any specified; or
+ * if no constraints are specified, removes all constraints from the track.
+ *
+ * @param {MediaTrackConstraints=} constraints Constraints to apply to the
+ *   track.
+ * @return {!Promise<void>} A |Promise| that is resolved when the constraints
+ *   have been applied, or rejected if there was an error applying the
+ *   constraints.
+ */
+MediaStreamTrack.prototype.applyConstraints = function(constraints) {};
+
+/**
  * @return {!MediaStreamTrack}
  */
 MediaStreamTrack.prototype.clone = function() {};
