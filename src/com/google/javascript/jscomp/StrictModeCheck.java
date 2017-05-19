@@ -41,47 +41,47 @@ class StrictModeCheck extends AbstractPostOrderCallback
 
   static final DiagnosticType USE_OF_WITH = DiagnosticType.warning(
       "JSC_USE_OF_WITH",
-      "The 'with' statement cannot be used in ES5 strict mode.");
+      "The 'with' statement cannot be used in strict mode.");
 
   static final DiagnosticType EVAL_DECLARATION = DiagnosticType.warning(
       "JSC_EVAL_DECLARATION",
-      "\"eval\" cannot be redeclared in ES5 strict mode");
+      "\"eval\" cannot be redeclared in strict mode");
 
   static final DiagnosticType EVAL_ASSIGNMENT = DiagnosticType.warning(
       "JSC_EVAL_ASSIGNMENT",
-      "the \"eval\" object cannot be reassigned in ES5 strict mode");
+      "the \"eval\" object cannot be reassigned in strict mode");
 
   static final DiagnosticType ARGUMENTS_DECLARATION = DiagnosticType.warning(
       "JSC_ARGUMENTS_DECLARATION",
-      "\"arguments\" cannot be redeclared in ES5 strict mode");
+      "\"arguments\" cannot be redeclared in strict mode");
 
   static final DiagnosticType ARGUMENTS_ASSIGNMENT = DiagnosticType.warning(
       "JSC_ARGUMENTS_ASSIGNMENT",
-      "the \"arguments\" object cannot be reassigned in ES5 strict mode");
+      "the \"arguments\" object cannot be reassigned in strict mode");
 
   static final DiagnosticType ARGUMENTS_CALLEE_FORBIDDEN = DiagnosticType.warning(
       "JSC_ARGUMENTS_CALLEE_FORBIDDEN",
-      "\"arguments.callee\" cannot be used in ES5 strict mode");
+      "\"arguments.callee\" cannot be used in strict mode");
 
   static final DiagnosticType ARGUMENTS_CALLER_FORBIDDEN = DiagnosticType.warning(
       "JSC_ARGUMENTS_CALLER_FORBIDDEN",
-      "\"arguments.caller\" cannot be used in ES5 strict mode");
+      "\"arguments.caller\" cannot be used in strict mode");
 
   static final DiagnosticType FUNCTION_CALLER_FORBIDDEN = DiagnosticType.warning(
       "JSC_FUNCTION_CALLER_FORBIDDEN",
-      "A function''s \"caller\" property cannot be used in ES5 strict mode");
+      "A function''s \"caller\" property cannot be used in strict mode");
 
   static final DiagnosticType FUNCTION_ARGUMENTS_PROP_FORBIDDEN = DiagnosticType.warning(
       "JSC_FUNCTION_ARGUMENTS_PROP_FORBIDDEN",
-      "A function''s \"arguments\" property cannot be used in ES5 strict mode");
+      "A function''s \"arguments\" property cannot be used in strict mode");
 
   static final DiagnosticType DELETE_VARIABLE = DiagnosticType.warning(
       "JSC_DELETE_VARIABLE",
-      "variables, functions, and arguments cannot be deleted in ES5 strict mode");
+      "variables, functions, and arguments cannot be deleted in strict mode");
 
   static final DiagnosticType DUPLICATE_OBJECT_KEY = DiagnosticType.error(
       "JSC_DUPLICATE_OBJECT_KEY",
-      "Object literal contains illegal duplicate key \"{0}\", disallowed in ES5 strict mode");
+      "Object literal contains illegal duplicate key \"{0}\", disallowed in strict mode");
 
   static final DiagnosticType DUPLICATE_CLASS_METHODS = DiagnosticType.error(
       "JSC_DUPLICATE_CLASS_METHODS",
@@ -90,7 +90,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
   static final DiagnosticType BAD_FUNCTION_DECLARATION = DiagnosticType.error(
       "JSC_BAD_FUNCTION_DECLARATION",
       "functions can only be declared at top level or immediately within"
-      + " another function in ES5 strict mode");
+      + " another function in strict mode");
 
   private final AbstractCompiler compiler;
 
