@@ -20,7 +20,8 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.TypeToken;
@@ -42,6 +43,7 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -1484,12 +1486,12 @@ public final class ConformanceRules {
         return ConformanceResult.CONFORMANCE;
       }
 
-      String tagName = getTagName(n.getSecondChild());
+      Collection<String> tagNames = getTagNames(n.getSecondChild());
       Node attrs = n.getChildAtIndex(2);
       TypeI attrsType = attrs.getTypeI();
       // String or array attribute sets the class.
-      boolean isClassName = attrsType != null && !attrsType.isUnknownType()
-          && (attrsType.isSubtypeOf(classNameTypes));
+      boolean isClassName =
+          attrsType != null && !attrsType.isUnknownType() && attrsType.isSubtypeOf(classNameTypes);
 
       if (attrs.isNull() || (attrsType != null && attrsType.isVoidType())) {
         // goog.dom.createDom('iframe', null) is fine.
@@ -1497,11 +1499,11 @@ public final class ConformanceRules {
       }
 
       for (String[] tagAttr : bannedTagAttrs) {
-        if (tagName != null && !tagAttr[0].equals(tagName) && !tagAttr[0].equals("*")) {
+        if (tagNames != null && !tagNames.contains(tagAttr[0]) && !tagAttr[0].equals("*")) {
           continue;
         }
         ConformanceResult violation;
-        if (tagName != null || tagAttr[0].equals("*")) {
+        if (tagNames != null || tagAttr[0].equals("*")) {
           violation = ConformanceResult.VIOLATION;
         } else if (reportLooseTypeViolations) {
           violation = ConformanceResult.POSSIBLE_VIOLATION;
@@ -1538,11 +1540,11 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    private String getTagName(Node tag) {
+    private Collection<String> getTagNames(Node tag) {
       if (tag.isString()) {
-        return tag.getString().toLowerCase();
+        return ImmutableSet.of(tag.getString().toLowerCase());
       } else if (tag.isGetProp() && tag.getFirstChild().matchesQualifiedName("goog.dom.TagName")) {
-        return tag.getLastChild().getString().toLowerCase();
+        return ImmutableSet.of(tag.getLastChild().getString().toLowerCase());
       }
       // TODO(jakubvrana): Support union, e.g. {!TagName<!HTMLDivElement>|!TagName<!HTMLBRElement>}.
       TypeI type = tag.getTypeI();
@@ -1557,8 +1559,8 @@ public final class ConformanceRules {
       return null;
     }
 
-    private static final ImmutableMap<String, String> ELEMENT_TAG_NAMES =
-        ImmutableMap.<String, String>builder()
+    private static final ImmutableMultimap<String, String> ELEMENT_TAG_NAMES =
+        ImmutableMultimap.<String, String>builder()
             .put("HTMLAnchorElement", "a")
             .put("HTMLAppletElement", "applet")
             .put("HTMLAreaElement", "area")
@@ -1583,12 +1585,12 @@ public final class ConformanceRules {
             .put("HTMLFrameSetElement", "frameset")
             .put("HTMLHRElement", "hr")
             .put("HTMLHeadElement", "head")
-            // .put("HTMLHeadingElement", "h1")
-            // .put("HTMLHeadingElement", "h2")
-            // .put("HTMLHeadingElement", "h3")
-            // .put("HTMLHeadingElement", "h4")
-            // .put("HTMLHeadingElement", "h5")
-            // .put("HTMLHeadingElement", "h6")
+            .put("HTMLHeadingElement", "h1")
+            .put("HTMLHeadingElement", "h2")
+            .put("HTMLHeadingElement", "h3")
+            .put("HTMLHeadingElement", "h4")
+            .put("HTMLHeadingElement", "h5")
+            .put("HTMLHeadingElement", "h6")
             .put("HTMLHtmlElement", "html")
             .put("HTMLIFrameElement", "iframe")
             .put("HTMLImageElement", "img")
@@ -1602,8 +1604,8 @@ public final class ConformanceRules {
             .put("HTMLMenuElement", "menu")
             .put("HTMLMetaElement", "meta")
             .put("HTMLMeterElement", "meter")
-            // .put("HTMLModElement", "del")
-            // .put("HTMLModElement", "ins")
+            .put("HTMLModElement", "del")
+            .put("HTMLModElement", "ins")
             .put("HTMLOListElement", "ol")
             .put("HTMLObjectElement", "object")
             .put("HTMLOptGroupElement", "optgroup")
@@ -1613,23 +1615,23 @@ public final class ConformanceRules {
             .put("HTMLParamElement", "param")
             .put("HTMLPreElement", "pre")
             .put("HTMLProgressElement", "progress")
-            // .put("HTMLQuoteElement", "blockquote")
-            // .put("HTMLQuoteElement", "q")
+            .put("HTMLQuoteElement", "blockquote")
+            .put("HTMLQuoteElement", "q")
             .put("HTMLScriptElement", "script")
             .put("HTMLSelectElement", "select")
             .put("HTMLSourceElement", "source")
             .put("HTMLSpanElement", "span")
             .put("HTMLStyleElement", "style")
             .put("HTMLTableCaptionElement", "caption")
-            // .put("HTMLTableCellElement", "td")
-            // .put("HTMLTableCellElement", "th")
-            // .put("HTMLTableColElement", "col")
-            // .put("HTMLTableColElement", "colgroup")
+            .put("HTMLTableCellElement", "td")
+            .put("HTMLTableCellElement", "th")
+            .put("HTMLTableColElement", "col")
+            .put("HTMLTableColElement", "colgroup")
             .put("HTMLTableElement", "table")
             .put("HTMLTableRowElement", "tr")
-            // .put("HTMLTableSectionElement", "tbody")
-            // .put("HTMLTableSectionElement", "tfoot")
-            // .put("HTMLTableSectionElement", "thead")
+            .put("HTMLTableSectionElement", "tbody")
+            .put("HTMLTableSectionElement", "tfoot")
+            .put("HTMLTableSectionElement", "thead")
             .put("HTMLTemplateElement", "template")
             .put("HTMLTextAreaElement", "textarea")
             .put("HTMLTitleElement", "title")
