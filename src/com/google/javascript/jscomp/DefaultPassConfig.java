@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT;
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT6_TYPED;
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_2016;
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
@@ -2357,7 +2358,7 @@ public final class DefaultPassConfig extends PassConfig {
               options.inlineFunctions,
               options.inlineLocalFunctions,
               true,
-              options.assumeStrictThis() || options.isStrictModeInput(),
+              options.assumeStrictThis() || options.getLanguageIn() == ECMASCRIPT5_STRICT,
               options.assumeClosuresOnlyCaptureReferences,
               options.maxFunctionSizeAfterInlining);
         }
