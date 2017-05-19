@@ -257,7 +257,8 @@ IDBDatabase.prototype.createObjectStore =
 IDBDatabase.prototype.deleteObjectStore = function(name) {};
 
 /**
- * @param {(string|!Array<string>)} storeNames The stores to open in this transaction.
+ * @param {(string|!Array<string>|!DOMStringList)} storeNames The stores to open
+ *     in this transaction.
  * @param {!IDBTransactionMode=} mode The mode for opening the object stores.
  * @return {!IDBTransaction} The IDBRequest object.
  */
