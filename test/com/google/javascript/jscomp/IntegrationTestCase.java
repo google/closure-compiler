@@ -33,6 +33,7 @@ import junit.framework.TestCase;
  */
 abstract class IntegrationTestCase extends TestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
+  protected static final Joiner EMPTY_JOINER = Joiner.on("");
 
   /** Externs for the test */
   protected static final ImmutableList<SourceFile> DEFAULT_EXTERNS =

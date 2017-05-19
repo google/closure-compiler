@@ -1657,33 +1657,90 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testExportOnClassGetter() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.declaredGlobalExternsOnWindow = true;
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    test(options,
+    test(
+        options,
         "class C { /** @export @return {string} */ get exportedName() {} }; (new C).exportedName;",
-        ""
-            + "function a(){}(\"undefined\"!=typeof window&&"
-            + "window===this?this:\"undefined\"!=typeof global&&"
-            + "null!=global?global:this).a.defineProperties("
-            + "a.prototype,{exportedName:{b:!0,c:!0,get:function(){}}});(new a).exportedName");
+        EMPTY_JOINER.join(
+            "function a(){}(\"undefined\"!=typeof window&&",
+            "window===this?this:\"undefined\"!=typeof global&&",
+            "null!=global?global:this).Object.defineProperties(",
+            "a.prototype,{exportedName:{a:!0,b:!0,get:function(){}}});(new a).exportedName"));
   }
 
   public void testExportOnClassSetter() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.declaredGlobalExternsOnWindow = true;
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    test(options,
+    test(
+        options,
         "class C { /** @export @return {string} */ set exportedName(x) {} }; (new C).exportedName;",
-        ""
-            + "function a(){}(\"undefined\"!=typeof window&&"
-            + "window===this?this:\"undefined\"!=typeof global&&"
-            + "null!=global?global:this).a.defineProperties("
-            + "a.prototype,{exportedName:{b:!0,c:!0,set:function(){}}});(new a).exportedName");
+        EMPTY_JOINER.join(
+            "function a(){}(\"undefined\"!=typeof window&&",
+            "window===this?this:\"undefined\"!=typeof global&&",
+            "null!=global?global:this).Object.defineProperties(",
+            "a.prototype,{exportedName:{a:!0,b:!0,set:function(){}}});(new a).exportedName"));
+  }
+
+  public void testExportOnStaticGetter() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.declaredGlobalExternsOnWindow = true;
+    options.setGenerateExports(true);
+    options.setExportLocalPropertyDefinitions(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        options,
+        LINE_JOINER.join(
+            "var goog = {};",
+            "goog.exportSymbol = function(path, symbol) {};",
+            "",
+            "/** @export */",
+            "class C {",
+            "  /** @export @return {string} */ static get exportedName() {}",
+            "};",
+            "alert(C.exportedName);"),
+        EMPTY_JOINER.join(
+            // TODO(tbreisacher): Find out why C is renamed to a despite the @export annotation.
+            "function a(){}(\"undefined\"!=typeof window&&window===this?",
+            "this:\"undefined\"!=typeof global&&null!=global?",
+            "global:this).Object.defineProperties(a,",
+            "{exportedName:{a:!0,b:!0,get:function(){}}});alert(a.exportedName)"));
+  }
+
+  public void testExportOnStaticSetter() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.declaredGlobalExternsOnWindow = true;
+    options.setGenerateExports(true);
+    options.setExportLocalPropertyDefinitions(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        options,
+        LINE_JOINER.join(
+            "var goog = {};",
+            "goog.exportSymbol = function(path, symbol) {};",
+            "",
+            "/** @export */",
+            "class C {",
+            "  /** @export @param {number} x */ static set exportedName(x) {}",
+            "};",
+            "C.exportedName = 0;"),
+        EMPTY_JOINER.join(
+            // TODO(tbreisacher): Find out why C is removed despite the @export annotation.
+            "(\"undefined\"!=typeof window&&window===this?",
+            "this:\"undefined\"!=typeof global&&null!=global?global:this)",
+            ".Object.defineProperties(function(){},{exportedName:{a:!0,b:!0,set:function(){}}})"));
   }
 
   public void testSmartNamePassBug11163486() {
@@ -3943,14 +4000,15 @@ public final class IntegrationTest extends IntegrationTestCase {
             "(new function(){this.abc = 1}).abc);");
 
     // unreferenced property not removed due to export.
-    test(options, "" +
-        "/** @constructor */ var X = function() {" +
-        "/** @export */ this.abc = 1;};\n" +
-        "/** @constructor */ var Y = function() {" +
-        "/** @export */ this.abc = 1;};\n" +
-        "alert(new X() + new Y());",
-        "alert((new function(){this.abc = 1}) + " +
-            "(new function(){this.abc = 1}));");
+    test(
+        options,
+        ""
+            + "/** @constructor */ var X = function() {"
+            + "/** @export */ this.abc = 1;};\n"
+            + "/** @constructor */ var Y = function() {"
+            + "/** @export */ this.abc = 1;};\n"
+            + "alert(new X() + new Y());",
+        "alert((new function(){this.abc = 1}) + (new function(){this.abc = 1}));");
   }
 
   public void testGatherExternPropsWithNTI() {
