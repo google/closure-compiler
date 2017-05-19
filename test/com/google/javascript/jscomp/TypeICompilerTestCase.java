@@ -81,18 +81,38 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
       DiagnosticType warning,
       String description) {
     if (this.mode.runsOTI()) {
-      enableTypeCheck();
-      super.test(externs, js, expected, error, warning, description);
-      disableTypeCheck();
+      testOTI(externs, js, expected, error, warning, description);
     }
     if (this.mode.runsNTI()) {
-      enableNewTypeInference();
-      super.test(externs, js, expected, error, warning, description);
-      disableNewTypeInference();
+      testNTI(externs, js, expected, error, warning, description);
     }
     if (this.mode.runsNeither()) {
       super.test(externs, js, expected, error, warning, description);
     }
+  }
+
+  private void testOTI(
+      List<SourceFile> externs,
+      String js,
+      String expected,
+      DiagnosticType error,
+      DiagnosticType warning,
+      String description) {
+    enableTypeCheck();
+    super.test(externs, js, expected, error, warning, description);
+    disableTypeCheck();
+  }
+
+  private void testNTI(
+      List<SourceFile> externs,
+      String js,
+      String expected,
+      DiagnosticType error,
+      DiagnosticType warning,
+      String description) {
+    enableNewTypeInference();
+    super.test(externs, js, expected, error, warning, description);
+    disableNewTypeInference();
   }
 
   @Override
