@@ -20,14 +20,6 @@
 'require util/polyfill';
 
 /**
- * Should we expose AsyncExecutor for testing?
- * TODO(bradfordcsmith): Set this false here & arrange for it to be set to true
- * only for tests.
- * @define {boolean}
- */
-$jscomp.EXPOSE_ASYNC_EXECUTOR = true;
-
-/**
  * Should we unconditionally override a native Promise implementation with our
  * own?
  * @define {boolean}
@@ -553,13 +545,6 @@ $jscomp.polyfill('Promise',
       });
     }
   };
-
-  if ($jscomp.EXPOSE_ASYNC_EXECUTOR) {
-    // expose AsyncExecutor so it can be tested independently.
-    PolyfillPromise['$jscomp$new$AsyncExecutor'] = function() {
-      return new AsyncExecutor();
-    };
-  }
 
   return PolyfillPromise;
 }, 'es6-impl', 'es3');
