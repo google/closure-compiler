@@ -429,34 +429,8 @@ $jscomp.polyfill('Promise',
     }
   };
 
-  /**
-   * Returns a PolyfillPromise that resolves to the given value.
-   *
-   * <p>If the type of {@code opt_value} (VALUE) is a {@code Thenable<T>},
-   * the RESULT type will be {@code T}.
-   * Otherwise, the RESULT type will be the same as VALUE.
-   *
-   * <p>NOTE: The RESULT template expression is the same as the one used for
-   * {@code goog.IThenable.prototype.then()}.
-   *
-   * <p>TODO(bradfordcsmith): The spec actually requires {@code resolve} to
-   * use its {@code this} value as the constructor for building the promise to
-   * return. Right now we're always using the {@link PolyfillPromise}
-   * constructor.
-   * @param {VALUE=} opt_value
-   * @return {RESULT}
-   * @template VALUE
-   * @template RESULT := type('PolyfillPromise',
-   *     cond(isUnknown(VALUE), unknown(),
-   *       mapunion(VALUE, (V) =>
-   *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),
-   *           templateTypeOf(V, 0),
-   *           cond(sub(V, 'Thenable'),
-   *              unknown(),
-   *              V)))))
-   * =:
-   */
-  PolyfillPromise.resolve = function(opt_value) {
+  // called locally, so give it a name
+  function resolvingPromise(opt_value) {
     if (opt_value instanceof PolyfillPromise) {
       return opt_value;
     } else {
@@ -464,56 +438,42 @@ $jscomp.polyfill('Promise',
         resolve(opt_value);
       });
     }
-  };
+  }
+  PolyfillPromise['resolve'] = resolvingPromise;
 
 
-  /**
-   * @param {*=} opt_reason
-   * @return {!Promise<?>}
-   */
-  PolyfillPromise.reject = function(opt_reason) {
+  PolyfillPromise['reject'] = function(opt_reason) {
     return new PolyfillPromise(function(resolve, reject) {
       reject(opt_reason);
     });
   };
 
 
-  /**
-   * @param {!Array<(TYPE|!IThenable<TYPE>)>} thenablesOrValues
-   * @return {!Promise<TYPE>} A Promise that receives the result of the
-   *     first Promise (or Promise-like) input to settle immediately after it
-   *     settles.
-   * @template TYPE
-   */
-  PolyfillPromise.race = function(thenablesOrValues) {
+  PolyfillPromise['race'] = function(thenablesOrValues) {
     return new PolyfillPromise(function(resolve, reject) {
       var iterator =
           $jscomp.makeIterator(thenablesOrValues);
       for (var /** !IIterableResult<*> */ iterRec = iterator.next();
            !iterRec.done;
            iterRec = iterator.next()) {
-        // Using Promise.resolve() allows us to treat all elements the same way.
-        // NOTE: Promise.resolve(promise) always returns the argument unchanged.
+        // Using resolvingPromise() allows us to treat all elements the same
+        // way.
+        // NOTE: resolvingPromise(promise) always returns the argument
+        // unchanged.
         // Using .callWhenSettled_() instead of .then() avoids creating an
         // unnecessary extra promise.
-        PolyfillPromise.resolve(iterRec.value)
-            .callWhenSettled_(resolve, reject);
+        resolvingPromise(iterRec.value).callWhenSettled_(resolve, reject);
       }
     });
   };
 
 
-  /**
-   * @template T
-   * @param {!Array<T|!Promise<T>>|!Iterable<T|!Promise<T>>} thenablesOrValues
-   * @return {!Promise<!Array<T>>}
-   */
-  PolyfillPromise.all = function(thenablesOrValues) {
+  PolyfillPromise['all'] = function(thenablesOrValues) {
     var iterator = $jscomp.makeIterator(thenablesOrValues);
     var /** !IIterableResult<*> */ iterRec = iterator.next();
 
     if (iterRec.done) {
-      return PolyfillPromise.resolve([]);
+      return resolvingPromise([]);
     } else {
       return new PolyfillPromise(function(resolveAll, rejectAll) {
         var resultsArray = [];
@@ -532,12 +492,12 @@ $jscomp.polyfill('Promise',
         do {
           resultsArray.push(undefined);
           unresolvedCount++;
-          // Using Promise.resolve() allows us to treat all elements the same
+          // Using resolvingPromise() allows us to treat all elements the same
           // way.
-          // NOTE: Promise.resolve(promise) always returns the argument
+          // NOTE: resolvingPromise(promise) always returns the argument
           // unchanged. Using .callWhenSettled_() instead of .then() avoids
           // creating an unnecessary extra promise.
-          PolyfillPromise.resolve(iterRec.value)
+          resolvingPromise(iterRec.value)
               .callWhenSettled_(
                   onFulfilled(resultsArray.length - 1), rejectAll);
           iterRec = iterator.next();
