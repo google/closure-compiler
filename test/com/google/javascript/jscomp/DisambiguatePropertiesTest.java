@@ -48,13 +48,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     super.enableNormalize();
-  }
-
-  @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    options.setWarningLevel(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
-    return options;
+    ignoreWarnings(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS);
   }
 
   @Override

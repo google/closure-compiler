@@ -79,18 +79,11 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   }
 
   @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    options.setWarningLevel(
-        DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.OFF);
-    return options;
-  }
-
-  @Override
   protected void setUp() throws Exception {
     super.setUp();
     super.enableClosurePass();
     configuration = DEFAULT_CONFORMANCE;
+    ignoreWarnings(DiagnosticGroups.MISSING_PROPERTIES);
   }
 
   @Override

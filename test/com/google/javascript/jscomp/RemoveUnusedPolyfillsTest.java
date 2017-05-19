@@ -64,16 +64,14 @@ public final class RemoveUnusedPolyfillsTest extends TypeICompilerTestCase {
   }
 
   @Override
-  protected CompilerPass getProcessor(final Compiler compiler) {
-    return new RemoveUnusedPolyfills(compiler);
+  public void setUp() {
+    // NTI warns about property accesses on *
+    ignoreWarnings(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS);
   }
 
   @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    // NTI warns about property accesses on *
-    options.setWarningLevel(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
-    return options;
+  protected CompilerPass getProcessor(final Compiler compiler) {
+    return new RemoveUnusedPolyfills(compiler);
   }
 
   public void testRemovesPolyfillInstanceMethods() {

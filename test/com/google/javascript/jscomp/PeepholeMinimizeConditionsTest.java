@@ -36,6 +36,8 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
     late = true;
     useTypes = true;
     this.mode = TypeInferenceMode.NEITHER;
+    // NTI warns about property accesses on *
+    ignoreWarnings(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS);
   }
 
   @Override
@@ -49,14 +51,6 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
   @Override
   protected int getNumRepetitions() {
     return 1;
-  }
-
-  @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    // NTI warns about property accesses on *
-    options.setWarningLevel(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
-    return options;
   }
 
   private void foldSame(String js) {
