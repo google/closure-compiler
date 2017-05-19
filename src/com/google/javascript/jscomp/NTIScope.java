@@ -311,7 +311,7 @@ final class NTIScope implements DeclaredTypeRegistry {
   boolean isGlobalVar(String varName) {
     NTIScope s = this;
     while (s.parent != null) {
-      if (isDefinedLocally(varName, false)) {
+      if (s.isDefinedLocally(varName, false)) {
         return false;
       }
       s = s.parent;
@@ -554,7 +554,8 @@ final class NTIScope implements DeclaredTypeRegistry {
     }
     if (qnameNode.isName()) {
       String varName = qnameNode.getString();
-      Preconditions.checkState(!this.localNamespaces.containsKey(varName));
+      Preconditions.checkState(!this.localNamespaces.containsKey(varName),
+          "Namespace %s already defined.", varName);
       this.localNamespaces.put(varName, ns);
       if (qnameNode.isFromExterns() && !this.externs.containsKey(varName)) {
         // We don't know the full type of a namespace until after we see all

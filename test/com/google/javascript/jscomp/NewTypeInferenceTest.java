@@ -20386,4 +20386,17 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  }",
         "}"));
   }
+
+  public void testLocalWindowDontCrash() {
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  var window = x;",
+        "  var g = function() {",
+        "    window.p1 = 123;",
+        "  };",
+        "  var h = function() {",
+        "    window.p2 = 234;",
+        "  };",
+        "}"));
+  }
 }
