@@ -256,14 +256,6 @@ public class NodeTraversal {
     }
   }
 
-  /** Use the 3-argument constructor instead. */
-  @Deprecated
-  public NodeTraversal(AbstractCompiler compiler, Callback cb) {
-    this(compiler, cb, compiler.getLanguageMode().isEs6OrHigher()
-        ? new Es6SyntacticScopeCreator(compiler)
-        : SyntacticScopeCreator.makeUntyped(compiler));
-  }
-
   /**
    * Creates a node traversal using the specified callback interface
    * and the scope creator.
@@ -556,16 +548,6 @@ public class NodeTraversal {
   }
 
   /**
-   * Traverses a node recursively.
-   * @deprecated Use traverseEs6 whenever possible.
-   */
-  @Deprecated
-  public static void traverse(AbstractCompiler compiler, Node root, Callback cb) {
-    NodeTraversal t = new NodeTraversal(compiler, cb);
-    t.traverse(root);
-  }
-
-  /**
    * Traverses using the ES6SyntacticScopeCreator
    */
   // TODO (stephshi): rename to "traverse" when the old traverse method is no longer used
@@ -577,16 +559,6 @@ public class NodeTraversal {
   public static void traverseTyped(AbstractCompiler compiler, Node root, Callback cb) {
     NodeTraversal t = new NodeTraversal(compiler, cb, SyntacticScopeCreator.makeTyped(compiler));
     t.traverse(root);
-  }
-
-  /**
-   * @deprecated Use traverseRootsEs6.
-   */
-  @Deprecated
-  public static void traverseRoots(
-      AbstractCompiler compiler, Callback cb, Node externs, Node root) {
-    NodeTraversal t = new NodeTraversal(compiler, cb);
-    t.traverseRoots(externs, root);
   }
 
   public static void traverseRootsEs6(
