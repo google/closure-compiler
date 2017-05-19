@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableList;
 
 /** Tests for {@link RemoveSuperMethodsPass} */
-public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
+public final class RemoveSuperMethodsPassTest extends TypeICompilerTestCase {
 
   private static final String BOILERPLATE =
       LINE_JOINER.join(
@@ -37,7 +37,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
           "/** @constructor @extends {FooBase} */",
           "var Foo = function() {}",
           "Foo.superClass_ = FooBase.prototype",
-          "var ns = {};",
+          "/** @const */ var ns = {};",
           "/** @constructor */ ns.FooBase = function() {};",
           "ns.FooBase.prototype.bar = function() {};",
           "/** @constructor @extends {ns.FooBase} */ ns.Foo = function() {};",
@@ -45,7 +45,6 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
 
   public RemoveSuperMethodsPassTest() {
     super(DEFAULT_EXTERNS);
-    enableTypeCheck();
   }
 
   @Override
@@ -68,7 +67,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
             "Foo.prototype.bar = function() { Foo.superClass_.bar.call(this); };"));
   }
 
-  public void testOptimize_baseClassName_noArgs() {
+  public void testOptimize_noArgs_baseClassName() {
     testOptimize(
         LINE_JOINER.join(
             "/** @override */",
@@ -160,13 +159,15 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
     testNoOptimize(
         LINE_JOINER.join(
             "Foo.prototype.baw = {",
-            "  superClass_: { baz: /** @return {number} */ function(time, loc) {} }",
+            "  superClass_: { baz: /** @return {number} */ function(time, loc) { return 3; } }",
             "};",
             "/** @override */",
             "Foo.prototype.baz = function(time, loc) {",
             "  return Foo.prototype.baw.superClass_.baz.call(this, time, loc);",
             "};"));
 
+    ignoreWarnings(
+        NewTypeInference.INEXISTENT_PROPERTY, NewTypeInference.UNKNOWN_NAMESPACE_PROPERTY);
     testNoOptimize(
         LINE_JOINER.join(
             "Foo.prototype.baw = {};",
@@ -201,6 +202,7 @@ public final class RemoveSuperMethodsPassTest extends CompilerTestCase {
   }
 
   public void testNoOptimize_missingReturn() {
+    ignoreWarnings(NewTypeInference.MISSING_RETURN_STATEMENT);
     testNoOptimize(
         LINE_JOINER.join(
             "/** @override */",

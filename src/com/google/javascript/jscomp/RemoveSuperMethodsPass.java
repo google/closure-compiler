@@ -16,9 +16,9 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSType;
+import com.google.javascript.rhino.TypeI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -127,17 +127,17 @@ public final class RemoveSuperMethodsPass implements CompilerPass {
 
       // Check that call references the superclass
       String calledClass = callNameSplittedByPrototypeMarker[0];
-      JSType subclassType = compiler.getTypeIRegistry().getType(enclosingClassName);
-      JSType calledClassType = compiler.getTypeIRegistry().getType(calledClass);
+      TypeI subclassType = compiler.getTypeIRegistry().getType(enclosingClassName);
+      TypeI calledClassType = compiler.getTypeIRegistry().getType(calledClass);
       if (subclassType == null || calledClassType == null) {
         return false;
       }
-      if (subclassType.toObjectType() == null
-          || subclassType.toObjectType().getConstructor() == null) {
+      if (subclassType.toMaybeObjectType() == null
+          || subclassType.toMaybeObjectType().getConstructor() == null) {
         return false;
       }
-      FunctionType superClassConstructor =
-          subclassType.toObjectType().getConstructor().getSuperClassConstructor();
+      FunctionTypeI superClassConstructor =
+          subclassType.toMaybeObjectType().getSuperClassConstructor();
       // TODO(moz): Investigate why this could be null
       if (superClassConstructor == null) {
         return false;
@@ -147,13 +147,13 @@ public final class RemoveSuperMethodsPass implements CompilerPass {
 
     private boolean returnMatches(Node call) {
       // no match if function being called does not have function type
-      JSType childType = call.getFirstChild().getJSType();
+      TypeI childType = call.getFirstChild().getTypeI();
       if (childType == null || !childType.isFunctionType()) {
         return false;
       }
       // no match if function being called has a return value, but result of the call is not part
       // of return statement
-      JSType returnType = childType.toMaybeFunctionType().getReturnType();
+      TypeI returnType = childType.toMaybeFunctionType().getReturnType();
       if (returnType != null && !returnType.isVoidType() && !returnType.isUnknownType()) {
         return call.getParent().isReturn();
       }
