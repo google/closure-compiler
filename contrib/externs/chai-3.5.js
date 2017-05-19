@@ -329,6 +329,13 @@ assert.isDefined = function(value, opt_message) {};
 assert.instanceOf = function(object, constructor, opt_message) {};
 
 /**
+ * @param {*} object
+ * @param {!RegExp} re
+ * @param {string=} opt_message
+ */
+assert.match = function(object, re, opt_message) {};
+
+/**
  * @param {?Object|undefined} object
  * @param {string} property
  * @param {*} value
