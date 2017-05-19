@@ -702,7 +702,7 @@ public final class NodeUtilTest extends TestCase {
         parse("function foo(){this}")));
     // But starting with a function properly check for 'this'
     Node n = parse("function foo(){this}").getFirstChild();
-    assertEquals(n.getToken(), Token.FUNCTION);
+    assertEquals(Token.FUNCTION, n.getToken());
     assertTrue(NodeUtil.referencesThis(n));
     assertTrue(NodeUtil.referencesThis(
         parse("b?this:null")));
@@ -710,7 +710,7 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.referencesThis(
         parse("a")));
     n = parse("function foo(){}").getFirstChild();
-    assertEquals(n.getToken(), Token.FUNCTION);
+    assertEquals(Token.FUNCTION, n.getToken());
     assertFalse(NodeUtil.referencesThis(n));
     assertFalse(NodeUtil.referencesThis(
         parse("(b?foo():null)")));

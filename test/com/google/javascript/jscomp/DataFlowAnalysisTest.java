@@ -792,8 +792,7 @@ public final class DataFlowAnalysisTest extends TestCase {
       constProp.analyze(MAX_STEP);
       fail("Expected MaxIterationsExceededException to be thrown.");
     } catch (MaxIterationsExceededException e) {
-      assertEquals(e.getMessage(), "Analysis did not terminate after "
-          + MAX_STEP + " iterations");
+      assertEquals("Analysis did not terminate after " + MAX_STEP + " iterations", e.getMessage());
     }
   }
 

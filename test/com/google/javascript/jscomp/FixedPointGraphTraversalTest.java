@@ -20,7 +20,6 @@ import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
-
 import junit.framework.TestCase;
 
 /**
@@ -170,8 +169,7 @@ public final class FixedPointGraphTraversalTest extends TestCase {
       fail("Expecting Error: " +
           FixedPointGraphTraversal.NON_HALTING_ERROR_MSG);
     } catch (IllegalStateException e) {
-      assertEquals(e.getMessage(),
-          FixedPointGraphTraversal.NON_HALTING_ERROR_MSG);
+      assertEquals(FixedPointGraphTraversal.NON_HALTING_ERROR_MSG, e.getMessage());
     }
   }
 
