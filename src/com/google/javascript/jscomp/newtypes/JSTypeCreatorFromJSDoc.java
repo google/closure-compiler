@@ -352,9 +352,11 @@ public final class JSTypeCreatorFromJSDoc {
       return false;
     }
     for (Node child : n.children()) {
-      if (child.getToken() == Token.VOID
-          || child.getToken() == Token.STRING
-              && (child.getString().equals("void") || child.getString().equals("undefined"))) {
+      if (child.getToken() == Token.VOID) {
+        return true;
+      }
+      if (child.getToken() == Token.STRING
+          && (child.getString().equals("void") || child.getString().equals("undefined"))) {
         return true;
       }
     }
@@ -487,6 +489,11 @@ public final class JSTypeCreatorFromJSDoc {
       tdType = this.commonTypes.UNKNOWN;
     } else {
       tdType = getTypeFromJSTypeExpression(texp, registry, null);
+      if (tdType.isSingletonObj()) {
+        for (String pname : tdType.getOwnPropertyNames()) {
+          this.recordPropertyName.apply(pname);
+        }
+      }
     }
     td.resolveTypedef(tdType);
   }
@@ -847,7 +854,7 @@ public final class JSTypeCreatorFromJSDoc {
       return builder.buildDeclaration();
     } else if (jsdoc.isConstructor()) {
       handleConstructorAnnotation(functionName, funNode, constructorType,
-          parentClass, implementedIntfs, registry, builder);
+          parentClass, implementedIntfs, builder);
     } else if (jsdoc.isInterface()) {
       handleInterfaceAnnotation(jsdoc, functionName, funNode, constructorType,
           implementedIntfs, typeParameters, registry, builder);
@@ -1002,7 +1009,7 @@ public final class JSTypeCreatorFromJSDoc {
   private void handleConstructorAnnotation(
       String functionName, Node funNode, RawNominalType constructorType,
       NominalType parentClass, ImmutableSet<NominalType> implementedIntfs,
-      DeclaredTypeRegistry registry, FunctionTypeBuilder builder) {
+      FunctionTypeBuilder builder) {
     String className = constructorType.toString();
     NominalType builtinObject = this.commonTypes.getObjectType();
     if (parentClass == null && !functionName.equals("Object")) {

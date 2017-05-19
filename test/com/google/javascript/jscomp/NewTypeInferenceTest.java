@@ -20399,4 +20399,14 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  };",
         "}"));
   }
+
+  public void testRegisterPropertyOfTypedef() {
+    typeCheck(LINE_JOINER.join(
+        "/** @typedef {{p1: number}} */",
+        "var MyType;",
+        "function f(x) {",
+        "  x = /** @type {MyType} */ (x);",
+        "  return x.p1;",
+        "}"));
+  }
 }

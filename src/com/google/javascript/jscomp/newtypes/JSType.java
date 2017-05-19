@@ -1892,14 +1892,10 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return this.getObjTypeIfSingletonObj().getPropertyDefSite(propertyName);
   }
 
-  /** Returns the names of all the properties directly on this type. */
   @Override
-  public final Iterable<String> getOwnPropertyNames() {
+  public final Set<String> getOwnPropertyNames() {
     Preconditions.checkState(this.isSingletonObj());
-    // TODO(aravindpg): this might need to also include the extra properties as stored in the
-    // ObjectType::props. If so, demonstrate a test case that needs it and fix this.
-    Set<String> props = getNominalTypeIfSingletonObj().getAllOwnClassProps();
-    return props;
+    return getObjTypeIfSingletonObj().getOwnPropertyNames();
   }
 
   @Override
