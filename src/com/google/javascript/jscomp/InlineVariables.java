@@ -381,7 +381,9 @@ class InlineVariables implements CompilerPass {
         List<Reference> refSet) {
       Reference decl = refSet.get(0);
       for (int i = 1; i < refSet.size(); i++) {
-        inlineValue(v, refSet.get(i), value.cloneTree());
+        Node clonedValue = value.cloneTree();
+        NodeUtil.markNewScopesChanged(clonedValue, compiler);
+        inlineValue(v, refSet.get(i), clonedValue);
       }
       removeDeclaration(decl);
     }
@@ -398,7 +400,9 @@ class InlineVariables implements CompilerPass {
         if (r.getNode() == v.getNameNode()) {
           decl = r;
         } else {
-          inlineValue(v, r, value.cloneTree());
+          Node clonedValue = value.cloneTree();
+          NodeUtil.markNewScopesChanged(clonedValue, compiler);
+          inlineValue(v, r, clonedValue);
         }
       }
 
