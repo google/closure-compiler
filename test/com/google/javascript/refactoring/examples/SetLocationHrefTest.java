@@ -43,7 +43,7 @@ public class SetLocationHrefTest {
         SET_LOCATION_HREF_TEMPLATE,
         TESTDATA_DIR,
         "set_location_href_test_in.js",
-        ImmutableList.of("goog_base.js", "test_dependency.js"),
+        ImmutableList.of("goog_base.js"),
         "set_location_href_test_out.js");
   }
 }

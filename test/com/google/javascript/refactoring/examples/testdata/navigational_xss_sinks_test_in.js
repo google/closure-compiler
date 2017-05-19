@@ -21,9 +21,6 @@
 
 goog.provide('refactoring_testcase');
 
-/** @suppress {extraRequire} */
-goog.require('test_dependency');
-
 //
 // Test cases for .href assignments in well-typed contexts.
 //

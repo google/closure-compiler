@@ -20,11 +20,8 @@
  */
 
 goog.provide('refactoring_testcase');
-
 goog.require('goog.asserts');
 goog.require('goog.dom.safe');
-/** @suppress {extraRequire} */
-goog.require('test_dependency');
 
 //
 // Test cases for .href assignments in well-typed contexts.

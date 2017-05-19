@@ -43,7 +43,7 @@ public class NavigationalXssSinksRefactoringTest {
         NAVIGATIONAL_XSS_SINKS_TEMPLATE,
         TESTDATA_DIR,
         "navigational_xss_sinks_test_in.js",
-        ImmutableList.of("goog_base.js", "test_dependency.js"),
+        ImmutableList.of("goog_base.js"),
         "navigational_xss_sinks_test_out.js");
   }
 }

@@ -18,8 +18,6 @@
 
 goog.provide('refactoring_testcase');
 
-/** @suppress {extraRequire} */
-goog.require('test_dependency');
 
 /**
  * @param {!Location} target The target.

@@ -17,10 +17,8 @@
 /** @fileoverview Test cases for set_location_href RefasterJs template. */
 
 goog.provide('refactoring_testcase');
-
 goog.require('goog.dom.safe');
-/** @suppress {extraRequire} */
-goog.require('test_dependency');
+
 
 /**
  * @param {!Location} target The target.
