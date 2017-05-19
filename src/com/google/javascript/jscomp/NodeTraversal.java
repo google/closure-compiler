@@ -38,9 +38,6 @@ public class NodeTraversal {
   /** Contains the current node*/
   private Node curNode;
 
-  /** The current script being visited */
-  private Node curScript;
-
   /** The change scope for the current node being visiteds */
   private Node currentChangeScope;
 
@@ -575,7 +572,6 @@ public class NodeTraversal {
 
   private void handleScript(Node n, Node parent) {
     setChangeScope(n);
-    curScript = n;
     setInputId(n.getInputId(), getSourceName(n));
 
     curNode = n;
@@ -584,7 +580,6 @@ public class NodeTraversal {
       curNode = n;
       callback.visit(this, n, parent);
     }
-    curScript = null;
     setChangeScope(null);
   }
 
@@ -958,7 +953,6 @@ public class NodeTraversal {
     } else {
       setInputId(null, "");
     }
-    this.curScript = script;
   }
 
   private void setInputId(InputId id, String sourceName) {
