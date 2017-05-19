@@ -161,7 +161,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
   private static void assertUpEdge(ControlFlowGraph<Node> cfg,
       Token startToken, Token endToken, Branch type) {
     assertTrue("No up edge found",
-        0 != getAllDownEdges(cfg, endToken, startToken, type).size());
+        0 != getAllDownEdges(cfg, /*startToken=*/endToken, /*endToken=*/startToken, type).size());
   }
 
   /**
