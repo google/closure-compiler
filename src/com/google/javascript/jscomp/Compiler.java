@@ -92,6 +92,8 @@ import java.util.regex.Matcher;
  * window, document.
  *
  */
+// TODO(tbreisacher): Rename Compiler to JsCompiler and remove this suppression.
+@SuppressWarnings("JavaLangClash")
 public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFileMapping {
   static final String SINGLETON_MODULE_NAME = "$singleton$";
 
