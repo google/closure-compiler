@@ -3349,7 +3349,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @GwtIncompatible("ObjectInputStream")
-  public void restoreState(InputStream inputStream) throws Exception {
+  public void restoreState(InputStream inputStream) throws IOException  {
     try (final ObjectInputStream objectInputStream = new ObjectInputStream(inputStream)) {
       CompilerState compilerState = runInCompilerThread(new Callable<CompilerState>() {
         @Override
