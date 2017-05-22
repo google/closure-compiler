@@ -22,6 +22,7 @@ import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import javax.annotation.CheckReturnValue;
 
 /**
  * A Truth Subject for the Node class. Usage:
@@ -33,6 +34,7 @@ import com.google.javascript.rhino.Token;
  * </pre>
  */
 public final class NodeSubject extends Subject<NodeSubject, Node> {
+  @CheckReturnValue
   public static NodeSubject assertNode(Node node) {
     return new NodeSubject(THROW_ASSERTION_ERROR, node);
   }
