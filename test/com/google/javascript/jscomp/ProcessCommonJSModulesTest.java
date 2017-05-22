@@ -434,6 +434,17 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module$test.a = 4;"));
   }
 
+  public void testKeywordsInExports() {
+    testModules(
+        LINE_JOINER.join(
+            "var a = 4;",
+            "module.exports = { else: a };"),
+        LINE_JOINER.join(
+            "goog.provide('module$testcode');",
+            "/** @const */ var module$testcode = {};",
+            "module$testcode.else = 4;"));
+  }
+
   public void testRequireResultUnused() {
     setFilename("test");
     testModules("require('./other');", "goog.require('module$other');");
