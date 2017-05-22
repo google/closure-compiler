@@ -261,6 +261,9 @@ $jscomp.typecheck.ExternClassChecker_.trackOpenOnWindow = function(win) {
 /**
  * Returns the global 'this' object. This will normally be the same as 'window'
  * but when running in a worker thread, the DOM is not available.
+ *
+ * This does not work when strict mode is enabled.
+ *
  * @return {!Window}
  * @private
  */
@@ -309,7 +312,7 @@ $jscomp.typecheck.ExternClassChecker_.prototype.toString = function() {
  * @param {*} expr the expression to check.
  * @param {!Array.<boolean>} classTypeDefined a wrapped boolean
  *     updated to indicate whether the class type was seen in any frame.
- * @return true if the given expression is an instance of this class.
+ * @return {boolean} true if the given expression is an instance of this class.
  * @private
  */
 $jscomp.typecheck.ExternClassChecker_.prototype.checkWindow_ =
