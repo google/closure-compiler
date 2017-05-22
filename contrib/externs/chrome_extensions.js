@@ -2654,6 +2654,14 @@ chrome.tabs.detectLanguage = function(tabIdOrCallback, opt_callback) {};
 
 
 /**
+ * @see https://developer.chrome.com/extensions/tabs#method-discard
+ * @param {number|function(!Tab): void} tabIdOrCallback
+ * @param {function(!Tab): void=} opt_callback
+ */
+chrome.tabs.discard;
+
+
+/**
  * @see https://developer.chrome.com/extensions/tabs#method-executeScript
  * @param {number|!chrome.tabs.InjectDetails} tabIdOrDetails
  *     Either the id of the tab in which to run the script, or an object
@@ -2712,6 +2720,34 @@ chrome.tabs.getCurrent = function(callback) {};
  * @return {undefined}
  */
 chrome.tabs.getSelected = function(windowId, callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/extensions/tabs#method-getZoom
+ * @param {number|function(number): void} tabIdOrCallback
+ * @param {function(number): void=} opt_callback
+ * @return {undefined}
+ */
+chrome.tabs.getZoom = function(tabIdOrCallback, opt_callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/extensions/tabs#type-ZoomSettings
+ * @typedef {?{
+ *   mode: (string|undefined),
+ *   scope: (string|undefined),
+ *   defaultZoomFactor: (number|undefined),
+ * }}
+ */
+chrome.tabs.ZoomSettings;
+
+
+/**
+ * @see https://developer.chrome.com/extensions/tabs#method-getZoomSettings
+ * @param {number|function(!chrome.tabs.ZoomSettings): void} tabIdOrCallback
+ * @param {function(!chrome.tabs.ZoomSettings): void=} opt_callback
+ */
+chrome.tabs.getZoomSettings = function(tabIdOrCallback, opt_callback) {};
 
 
 /**
@@ -2878,6 +2914,28 @@ chrome.tabs.sendRequest = function(tabId, request, opt_callback) {};
 
 
 /**
+ * @see https://developer.chrome.com/extensions/tabs#method-setZoom
+ * @param {number} tabIdOrZoomFactor
+ * @param {(number|function(): void)=} opt_zoomFactorOrCallback
+ * @param {function(): void=} opt_callback
+ * @return {undefined}
+ */
+chrome.tabs.setZoom = function(
+    tabIdOrZoomFactor, opt_zoomFactorOrCallback, opt_callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/extensions/tabs#method-setZoomSettings
+ * @param {number|!chrome.tabs.ZoomSettings} tabIdOrZoomSettings
+ * @param {(!chrome.tabs.ZoomSettings|function(): void)=}
+ *     opt_zoomSettingsOrCallback
+ * @param {function(): void=} opt_callback
+ */
+chrome.tabs.setZoomSettings = function(
+    tabIdOrZoomSettings, opt_zoomSettingsOrCallback, opt_callback) {};
+
+
+/**
  * @typedef {?{
  *   url: (string|undefined),
  *   active: (boolean|undefined),
@@ -2967,6 +3025,13 @@ chrome.tabs.onReplaced;
  * @deprecated Please use tabs.onActivated.
  */
 chrome.tabs.onSelectionChanged;
+
+
+/**
+ * @see https://developer.chrome.com/extensions/tabs#event-onZoomChange
+ * @type {!ChromeObjectEvent}
+ */
+chrome.tabs.onZoomChange;
 
 
 /**
