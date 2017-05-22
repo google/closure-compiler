@@ -1493,11 +1493,25 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testES3() {
     args.add("--language_in=ECMASCRIPT3");
     args.add("--language_out=ECMASCRIPT3");
+    args.add("--strict_mode_input=false");
     useStringComparison = true;
     test(
         "var x = f.function",
         "var x=f[\"function\"];",
         RhinoErrorReporter.INVALID_ES3_PROP_NAME);
+    testSame("var let;");
+  }
+
+  public void testES3plusStrictModeChecks() {
+    args.add("--language_in=ECMASCRIPT3");
+    args.add("--language_out=ECMASCRIPT3");
+    useStringComparison = true;
+    test(
+        "var x = f.function",
+        "var x=f[\"function\"];",
+        RhinoErrorReporter.INVALID_ES3_PROP_NAME);
+    test("var let", RhinoErrorReporter.PARSE_ERROR);
+    test("function f(x) { delete x; }", StrictModeCheck.DELETE_VARIABLE);
   }
 
   public void testES6TranspiledByDefault() {
@@ -1515,6 +1529,7 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testES5() {
     args.add("--language_in=ECMASCRIPT5");
+    args.add("--strict_mode_input=false");
     test("var x = f.function", "var x = f.function");
     test("var let", "var let");
   }

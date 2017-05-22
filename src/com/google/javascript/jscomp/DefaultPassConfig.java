@@ -2357,7 +2357,7 @@ public final class DefaultPassConfig extends PassConfig {
               options.inlineFunctions,
               options.inlineLocalFunctions,
               true,
-              options.assumeStrictThis() || options.isStrictModeInput(),
+              options.assumeStrictThis() || options.expectStrictModeInput(),
               options.assumeClosuresOnlyCaptureReferences,
               options.maxFunctionSizeAfterInlining);
         }

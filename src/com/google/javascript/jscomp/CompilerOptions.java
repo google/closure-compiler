@@ -1151,10 +1151,8 @@ public class CompilerOptions implements Serializable {
 
   /**
    * Are the input files written for strict mode?
-   *
-   * <p>Ignored for language modes that do not support strict mode.
    */
-  private boolean isStrictModeInput = true;
+  private Optional<Boolean> isStrictModeInput = Optional.absent();
 
   /** Which algorithm to use for locating ES6 and CommonJS modules */
   ModuleLoader.ResolutionMode moduleResolutionMode;
@@ -2721,18 +2719,7 @@ public class CompilerOptions implements Serializable {
   }
 
   public boolean shouldEmitUseStrict() {
-    return this.emitUseStrict.or(getDefaultEmitUseStrict());
-  }
-
-  boolean getDefaultEmitUseStrict() {
-    switch (getLanguageOut()) {
-      case ECMASCRIPT3:
-      case ECMASCRIPT5:
-      case ECMASCRIPT6:
-        return false;
-      default:
-        return true;
-    }
+    return this.emitUseStrict.or(getLanguageOut().isDefaultStrict());
   }
 
   public CompilerOptions setEmitUseStrict(boolean emitUseStrict) {
@@ -3031,6 +3018,19 @@ public class CompilerOptions implements Serializable {
      */
     NO_TRANSPILE;
 
+
+    /** Whether this language mode defaults to strict mode */
+    boolean isDefaultStrict() {
+      switch (this) {
+        case ECMASCRIPT3:
+        case ECMASCRIPT5:
+        case ECMASCRIPT6:
+          return false;
+        default:
+          return true;
+      }
+    }
+
     /** Whether this is ECMAScript 5 or higher. */
     public boolean isEs5OrHigher() {
       Preconditions.checkState(this != NO_TRANSPILE);
@@ -3310,12 +3310,12 @@ public class CompilerOptions implements Serializable {
     }
   }
 
-  public boolean isStrictModeInput() {
-    return isStrictModeInput;
+  public boolean expectStrictModeInput() {
+    return isStrictModeInput.or(getLanguageIn().isDefaultStrict());
   }
 
   public CompilerOptions setStrictModeInput(boolean isStrictModeInput) {
-    this.isStrictModeInput = isStrictModeInput;
+    this.isStrictModeInput = Optional.of(isStrictModeInput);
     return this;
   }
 

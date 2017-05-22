@@ -473,7 +473,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           options.checkGlobalThisLevel);
     }
 
-    if (expectStrictModeInput()) {
+    if (options.expectStrictModeInput()) {
       options.setWarningLevel(
           DiagnosticGroups.ES5_STRICT,
           CheckLevel.ERROR);
@@ -488,21 +488,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         !options.enables(DiagnosticGroups.CHECK_VARIABLES)) {
       options.setWarningLevel(
           DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF);
-    }
-  }
-
-  private boolean expectStrictModeInput() {
-    switch (options.getLanguageIn()) {
-      case ECMASCRIPT3:
-      case ECMASCRIPT5:
-      case ECMASCRIPT6:
-        return false;
-      case ECMASCRIPT5_STRICT:
-      case ECMASCRIPT6_STRICT:
-      case ECMASCRIPT6_TYPED:
-        return true;
-      default:
-        return options.isStrictModeInput();
     }
   }
 
@@ -2681,7 +2666,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           Config.LanguageMode configLanguageMode = getParserConfigLanguageMode(
               options.getLanguageIn());
           Config.StrictMode strictMode =
-              expectStrictModeInput() ? Config.StrictMode.STRICT : Config.StrictMode.SLOPPY;
+              options.expectStrictModeInput() ? Config.StrictMode.STRICT : Config.StrictMode.SLOPPY;
           parserConfig = createConfig(configLanguageMode, strictMode);
           // Externs must always be parsed with at least ES5 language mode.
           externsParserConfig =

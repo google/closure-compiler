@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp.parsing.parser;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
 import com.google.errorprone.annotations.FormatMethod;
@@ -234,7 +232,6 @@ public class Parser {
     private final boolean warnTrailingCommas;
 
     public Config(Mode mode, boolean isStrictMode) {
-      checkArgument(!(mode == Mode.ES3 && isStrictMode));
       parseTypeSyntax = mode == Mode.TYPESCRIPT;
       atLeast6 = !(mode == Mode.ES3 || mode == Mode.ES5);
       this.isStrictMode = isStrictMode;

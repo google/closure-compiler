@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp.parsing;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -140,7 +138,6 @@ public final class Config {
       LanguageMode languageMode,
       boolean parseInlineSourceMaps,
       StrictMode strictMode) {
-    checkArgument(!(languageMode == LanguageMode.ECMASCRIPT3 && strictMode == StrictMode.STRICT));
     this.parseInlineSourceMaps = parseInlineSourceMaps;
     this.annotationNames = buildAnnotationNames(annotationWhitelist);
     this.parseJsDocDocumentation = parseJsDocDocumentation;
