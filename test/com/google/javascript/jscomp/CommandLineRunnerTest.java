@@ -2060,6 +2060,12 @@ public final class CommandLineRunnerTest extends TestCase {
     exitCodes.clear();
     Compiler compiler = compile(original);
 
+    assertThat(exitCodes).hasSize(1);
+    if (exitCodes.get(0) != 0) {
+      throw new AssertionError("Got nonzero exit code " + exitCodes.get(0)
+          + "\nContents of err printstream:\n" + errReader);
+    }
+
     if (warning == null) {
       assertEquals("Expected no warnings or errors"
           + "\nErrors: \n" + Joiner.on("\n").join(compiler.getErrors())
@@ -2080,8 +2086,6 @@ public final class CommandLineRunnerTest extends TestCase {
           "\nResult: " + compiler.toSource(root) +
           "\n" + explanation, explanation);
     }
-
-    assertThat(exitCodes).containsExactly(0);
   }
 
   /**
