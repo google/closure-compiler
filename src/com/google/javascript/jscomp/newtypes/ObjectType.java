@@ -1197,13 +1197,6 @@ final class ObjectType implements TypeWithProperties {
     return p == null ? null : p.getDefSite();
   }
 
-  Set<String> getOwnPropertyNames() {
-    ImmutableSet.Builder<String> s = ImmutableSet.builder();
-    s.addAll(this.nominalType.getAllOwnClassProps());
-    s.addAll(this.props.keySet());
-    return s.build();
-  }
-
   @Override
   public boolean mayHaveProp(QualifiedName qname) {
     Property p = getLeftmostProp(qname);

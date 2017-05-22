@@ -41,7 +41,6 @@ package com.google.javascript.rhino;
 
 import com.google.common.collect.ImmutableList;
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * @author blickly@google.com (Ben Lickly)
@@ -103,12 +102,7 @@ public interface ObjectTypeI extends TypeI {
 
   boolean hasOwnProperty(String propertyName);
 
-  /**
-   * Returns the names of all properties defined on the instance: properties that exist on
-   * all instances of this type plus any extras that exist only on this instance.
-   * Does not return prototype properties, or properties of ancestor types.
-   */
-  Set<String> getOwnPropertyNames();
+  Iterable<String> getOwnPropertyNames();
 
   /**
    * Works around the OTI distinction between prototype-object types and other objects.
