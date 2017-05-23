@@ -44,7 +44,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -2087,7 +2086,7 @@ public final class CommandLineRunnerTest extends TestCase {
           + "\nWarnings: \n" + Joiner.on("\n").join(compiler.getWarnings()),
           0, compiler.getErrors().length + compiler.getWarnings().length);
     } else {
-      assertThat(Arrays.asList(compiler.getWarnings())).hasSize(1);
+      assertThat(compiler.getWarnings()).hasLength(1);
       assertThat(compiler.getWarnings()[0].getType()).isEqualTo(warning);
     }
 
@@ -2128,11 +2127,11 @@ public final class CommandLineRunnerTest extends TestCase {
     int lastExitCode = Iterables.getLast(exitCodes);
 
     if (compiler.getErrors().length > 0) {
-      assertThat(Arrays.asList(compiler.getErrors())).hasSize(1);
+      assertThat(compiler.getErrors()).hasLength(1);
       assertThat(compiler.getErrors()[0].getType()).isEqualTo(warning);
       assertThat(lastExitCode).isEqualTo(1);
     } else {
-      assertThat(Arrays.asList(compiler.getWarnings())).hasSize(1);
+      assertThat(compiler.getWarnings()).hasLength(1);
       assertThat(compiler.getWarnings()[0].getType()).isEqualTo(warning);
       assertThat(lastExitCode).isEqualTo(0);
     }
