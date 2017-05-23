@@ -114,6 +114,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
   }
 
   private void visitSuper(Node node, Node parent) {
+    Preconditions.checkState(node.isSuper());
     Node exprRoot = node;
 
     if (exprRoot.getParent().isGetElem() || exprRoot.getParent().isGetProp()) {
@@ -137,38 +138,50 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
               }
             });
 
-    if (exprRoot.getParent().isNew()) {
+    if (parent.isCall()) {
+      // super(...)
+      visitSuperCall(node, parent, enclosingMemberDef);
+    } else if (parent.isGetProp()) {
+      if (parent.getFirstChild() == node) {
+        if (parent.getParent().isCall() && NodeUtil.isCallOrNewTarget(parent)) {
+          // super.something(...)
+          visitSuperPropertyCall(node, parent, enclosingMemberDef);
+        } else {
+          // super.something
+          compiler.report(JSError.make(node, CANNOT_CONVERT_YET,
+              "Only calls to super or to a method of super are supported."));
+        }
+      } else {
+        // super.something used in some other way
+        compiler.report(JSError.make(node, CANNOT_CONVERT_YET,
+            "Only calls to super or to a method of super are supported."));
+      }
+    } else if (parent.isGetElem()) {
+      compiler.report(JSError.make(node, CANNOT_CONVERT_YET,
+          "Only calls to super or to a method of super are supported."));
+    } else if (parent.isNew()) {
+      // new super(...)
       compiler.report(JSError.make(node, INVALID_SUPER_CALL));
-    } else if (NodeUtil.isCallOrNewTarget(exprRoot)
-        && (exprRoot.isSuper() || exprRoot.getFirstChild().isSuper())) {
-      visitSuperCall(node, exprRoot, enclosingMemberDef);
     } else {
+      // some other use of super we don't support yet
       compiler.report(JSError.make(node, CANNOT_CONVERT_YET,
           "Only calls to super or to a method of super are supported."));
     }
   }
 
-  private void visitSuperCall(Node node, Node callTarget, Node enclosingMemberDef) {
-    Node enclosingCall = callTarget.getParent();
-    Preconditions.checkState(enclosingCall.isCall());
+  private void visitSuperCall(Node node, Node parent, Node enclosingMemberDef) {
+    Preconditions.checkState(parent.isCall());
+    Preconditions.checkState(node.isSuper());
 
     Node clazz = NodeUtil.getEnclosingClass(node);
     Node superName = clazz.getSecondChild();
     if (!superName.isQualifiedName()) {
       // This will be reported as an error in Es6ToEs3Converter.
       return;
-    } else if (callTarget.isGetElem()) {
-      compiler.report(
-          JSError.make(
-              node,
-              CANNOT_CONVERT_YET,
-              "Only calls to super or to a method of super are supported."));
-      return;
     }
 
     if (enclosingMemberDef.isMemberFunctionDef()
-        && enclosingMemberDef.getString().equals("constructor")
-        && callTarget.isSuper()) {
+        && enclosingMemberDef.getString().equals("constructor")) {
       // Calls to super() constructors will be transpiled by Es6ConvertSuperConstructorCalls later.
       if (node.isFromExterns() || isInterface(clazz)) {
         // If a class is defined in an externs file or as an interface, it's only a stub, not an
@@ -181,46 +194,44 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       // Calls to super() constructors will be transpiled by Es6ConvertSuperConstructorCalls
       // later.
       return;
-    } else if (enclosingMemberDef.isStaticMember()) {
-      if (callTarget.isSuper()) {
-        compiler.report(JSError.make(node, INVALID_SUPER_CALL));
-        return;
-      }
-      // of the form super.method()
+    } else {
+      // super can only be directly called in a constructor
+      compiler.report(JSError.make(node, INVALID_SUPER_CALL));
+      return;
+    }
+  }
+
+  private void visitSuperPropertyCall(Node node, Node parent, Node enclosingMemberDef) {
+    Preconditions.checkState(parent.isGetProp());
+    Preconditions.checkState(node.isSuper());
+    Node grandparent = parent.getParent();
+    Preconditions.checkState(grandparent.isCall());
+
+    Node clazz = NodeUtil.getEnclosingClass(node);
+    Node superName = clazz.getSecondChild();
+    if (!superName.isQualifiedName()) {
+      // This will be reported as an error in Es6ToEs3Converter.
+      return;
+    }
+
+    Node callTarget = parent;
+    if (enclosingMemberDef.isStaticMember()) {
       callTarget.replaceChild(node, superName.cloneTree());
       callTarget = IR.getprop(callTarget.detach(), IR.string("call"));
-      enclosingCall.addChildToFront(callTarget);
-      enclosingCall.addChildAfter(IR.thisNode(), callTarget);
-      enclosingCall.useSourceInfoIfMissingFromForTree(enclosingCall);
+      grandparent.addChildToFront(callTarget);
+      grandparent.addChildAfter(IR.thisNode(), callTarget);
+      grandparent.useSourceInfoIfMissingFromForTree(parent);
     } else {
-      if (callTarget.isSuper()) {
-        compiler.report(JSError.make(node, INVALID_SUPER_CALL));
-        return;
-      }
-
       String newPropName = Joiner.on('.').join(superName.getQualifiedName(), "prototype");
       Node newProp = NodeUtil.newQName(compiler, newPropName);
       node.replaceWith(newProp);
       callTarget = IR.getprop(callTarget.detach(), IR.string("call"));
-      enclosingCall.addChildToFront(callTarget);
-      enclosingCall.addChildAfter(IR.thisNode(), callTarget);
-      enclosingCall.putBooleanProp(Node.FREE_CALL, false);
-      enclosingCall.useSourceInfoIfMissingFromForTree(enclosingCall);
+      grandparent.addChildToFront(callTarget);
+      grandparent.addChildAfter(IR.thisNode(), callTarget);
+      grandparent.putBooleanProp(Node.FREE_CALL, false);
+      grandparent.useSourceInfoIfMissingFromForTree(parent);
     }
-    compiler.reportCodeChange();
-  }
-
-  private Node baseCall(String baseClass, String methodName, Node arguments) {
-    Preconditions.checkNotNull(baseClass);
-    Preconditions.checkNotNull(methodName);
-    String baseMethodName;
-    baseMethodName = Joiner.on('.').join(baseClass, "prototype", methodName, "call");
-    Node methodCall = NodeUtil.newQName(compiler, baseMethodName);
-    Node callNode = IR.call(methodCall, IR.thisNode());
-    if (arguments != null) {
-      callNode.addChildrenToBack(arguments);
-    }
-    return callNode;
+    compiler.reportChangeToEnclosingScope(grandparent);
   }
 
   @Override
