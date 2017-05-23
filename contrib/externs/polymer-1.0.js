@@ -168,7 +168,7 @@ PolymerElement.prototype.domHost;
 /**
  * Notifies the event binding system of a change to a property.
  * @param  {string} path  The path to set.
- * @param  {*}      value The value to send in the update notification.
+ * @param  {*=} value The value to send in the update notification.
  * @param {boolean=} fromAbove When true, specifies that the change came from
  *     above this element and thus upward notification is not necessary.
  * @return {boolean} True if notification actually took place, based on a dirty
