@@ -127,10 +127,9 @@ public final class CompileTask
     switch (value) {
       case "ECMASCRIPT6_STRICT":
       case "ES6_STRICT":
-        return CompilerOptions.LanguageMode.ECMASCRIPT_2015;
       case "ECMASCRIPT6":
       case "ES6":
-        return CompilerOptions.LanguageMode.ECMASCRIPT6;
+        return CompilerOptions.LanguageMode.ECMASCRIPT_2015;
       case "ECMASCRIPT5_STRICT":
       case "ES5_STRICT":
         return CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT;

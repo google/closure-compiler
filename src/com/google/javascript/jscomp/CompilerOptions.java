@@ -2979,20 +2979,6 @@ public class CompilerOptions implements Serializable {
      */
     ECMASCRIPT5_STRICT,
 
-    /**
-     * Shiny new JavaScript
-     * @deprecated Use ECMASCRIPT_2015 with {@code isStrictModeInput == false}.
-     */
-    @Deprecated
-    ECMASCRIPT6,
-
-    /**
-     * Nitpicky, shiny new JavaScript
-     * @deprecated Use ECMASCRIPT_2015 with {@code isStrictModeInput == true}.
-     */
-    @Deprecated
-    ECMASCRIPT6_STRICT,
-
     /** ECMAScript standard approved in 2015. */
     ECMASCRIPT_2015,
 
@@ -3024,7 +3010,6 @@ public class CompilerOptions implements Serializable {
       switch (this) {
         case ECMASCRIPT3:
         case ECMASCRIPT5:
-        case ECMASCRIPT6:
           return false;
         default:
           return true;
@@ -3071,6 +3056,12 @@ public class CompilerOptions implements Serializable {
       }
       // Trim spaces, disregard case, and allow abbreviation of ECMASCRIPT for convenience.
       String canonicalizedName = Ascii.toUpperCase(value.trim()).replaceFirst("^ES", "ECMASCRIPT");
+
+      if (canonicalizedName.equals("ECMASCRIPT6")
+          || canonicalizedName.equals("ECMASCRIPT6_STRICT")) {
+        return ECMASCRIPT_2015;
+      }
+
       try {
         return LanguageMode.valueOf(canonicalizedName);
       } catch (IllegalArgumentException e) {

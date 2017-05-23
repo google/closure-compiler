@@ -2643,8 +2643,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       case ECMASCRIPT5:
       case ECMASCRIPT5_STRICT:
         return Config.LanguageMode.ECMASCRIPT5;
-      case ECMASCRIPT6:
-      case ECMASCRIPT6_STRICT:
       case ECMASCRIPT_2015:
         return Config.LanguageMode.ECMASCRIPT6;
       case ECMASCRIPT6_TYPED:
@@ -2747,9 +2745,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   @Override
   void throwInternalError(String message, Exception cause) {
-    String finalMessage =
-      "INTERNAL COMPILER ERROR.\n" +
-      "Please report this problem.\n\n" + message;
+    String finalMessage = "INTERNAL COMPILER ERROR.\nPlease report this problem.\n\n" + message;
 
     RuntimeException e = new RuntimeException(finalMessage, cause);
     if (cause != null) {
