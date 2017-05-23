@@ -950,8 +950,10 @@ public final class CompilerTest extends TestCase {
     CompilerOptions options = new CompilerOptions();
     options.setAssumeForwardDeclaredForMissingTypes(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setCheckTypes(true);
     options.setStrictModeInput(true);
+    options.setEmitUseStrict(true);
     options.setPreserveDetailedSourceInfo(true);
     options.setCheckTypes(true);
 
@@ -959,10 +961,16 @@ public final class CompilerTest extends TestCase {
     compiler.init(
         Collections.singletonList(
             SourceFile.fromCode("externs.js",
-                Joiner.on('\n').join("", "var console = {};", " console.log = function() {};"))),
+                Joiner.on('\n').join(
+                    "",
+                    "var console = {};",
+                    " console.log = function() {};"))),
         Collections.singletonList(
             SourceFile.fromCode("input.js",
-                Joiner.on('\n').join("", "function f() { return 2; }", "console.log(f());"))),
+                Joiner.on('\n').join(
+                    "",
+                    "function f() { return 2; }",
+                    "console.log(f());"))),
         options);
 
     compiler.parse();
