@@ -500,7 +500,8 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       return IR.getelem(context, member.removeFirstChild());
     } else {
       Node methodName = member.getFirstFirstChild();
-      return IR.getprop(context, IR.string(member.getString()).useSourceInfoFrom(methodName));
+      return IR.getprop(context, IR.string(member.getString()))
+          .useSourceInfoFromForTree(methodName);
     }
   }
 
