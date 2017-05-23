@@ -627,7 +627,7 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
    */
   private void checkPropertyVisibility(NodeTraversal t,
       Node getprop, Node parent) {
-    JSDocInfo jsdoc = parent.getJSDocInfo();
+    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(getprop);
     if (jsdoc != null && jsdoc.getSuppressions().contains("visibility")) {
       return;
     }
@@ -650,9 +650,9 @@ class CheckAccessControls implements ScopedCallback, HotSwapCompilerPass {
 
     // Is this a normal property access, or are we trying to override
     // an existing property?
-    boolean isOverride = jsdoc != null
-        && parent.isAssign()
-        && parent.getFirstChild() == getprop;
+    boolean isOverride =
+        jsdoc != null
+            && (parent.isExprResult() || (parent.isAssign() && parent.getFirstChild() == getprop));
 
     ObjectTypeI objectType = AccessControlUtils.getObjectType(
         referenceType, isOverride, propertyName);

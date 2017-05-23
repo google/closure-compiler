@@ -874,6 +874,17 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         BAD_PROTECTED_PROPERTY_ACCESS);
   }
 
+  public void testNoProtectedAccessForPropertiesWithNoRhs() {
+    testSame(new String[] {
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() {}",
+            "/** @protected */ Foo.prototype.x;"),
+        LINE_JOINER.join(
+            "/** @constructor @extends {Foo} */ function Bar() {}",
+            "/** @protected */ Bar.prototype.x;")
+    });
+  }
+
   public void testPackagePrivateAccessForNames() {
     test(
         ImmutableList.of(
