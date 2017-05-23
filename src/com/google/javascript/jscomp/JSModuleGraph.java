@@ -34,6 +34,7 @@ import com.google.javascript.jscomp.deps.SortedDependencies;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -52,7 +53,7 @@ import java.util.Set;
  * the number of hops in the longest (non cyclic) path from the module to a module with no
  * dependencies.
  */
-public final class JSModuleGraph {
+public final class JSModuleGraph implements Serializable {
 
   private final JSModule[] modules;
   
