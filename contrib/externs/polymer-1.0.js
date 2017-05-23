@@ -534,14 +534,6 @@ Polymer.Gestures;
  */
 Polymer.Gestures.findOriginalTarget = function(ev) {};
 
-/** @type {!Object} */
-Polymer.Gestures.gestures = {};
-
-/** @type {!Object} */
-Polymer.Gestures.gestures.tap = {};
-
-/** @return {void} */
-Polymer.Gestures.gestures.tap.reset = function() {};
 
 /**
  * @param {number} handle
