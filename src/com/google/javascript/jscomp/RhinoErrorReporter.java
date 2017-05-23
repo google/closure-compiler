@@ -97,8 +97,7 @@ class RhinoErrorReporter {
 
   static final DiagnosticType ES6_TYPED =
       DiagnosticType.error("ES6_TYPED",
-          "{0}. Use --language_in=ECMASCRIPT6_TYPED " +
-          "to enable ES6 typed features.");
+          "{0}. Use --language_in=ECMASCRIPT6_TYPED to enable ES6 typed features.");
 
   static final DiagnosticType MISPLACED_TYPE_SYNTAX =
       DiagnosticType.error("MISPLACED_TYPE_SYNTAX",
@@ -125,8 +124,7 @@ class RhinoErrorReporter {
         ImmutableMap.<Pattern, DiagnosticType>builder()
             // Trailing comma
             .put(
-                Pattern.compile(
-                    "Trailing comma is not legal in an ECMA-262 object initializer"),
+                Pattern.compile("Trailing comma is not legal in an ECMA-262 object initializer"),
                 TRAILING_COMMA)
 
             // Duplicate parameter
@@ -149,15 +147,14 @@ class RhinoErrorReporter {
 
             .put(
                 Pattern.compile(
-                    "^Keywords and reserved words" + " are not allowed as unquoted property.*"),
+                    "^Keywords and reserved words are not allowed as unquoted property.*"),
                 INVALID_ES3_PROP_NAME)
 
             .put(Pattern.compile("^Too many template parameters"), TOO_MANY_TEMPLATE_PARAMS)
 
             // Type annotation warnings.
             .put(
-                Pattern.compile(
-                    ".*Type annotations should have curly braces.*"),
+                Pattern.compile(".*Type annotations should have curly braces.*"),
                 JSDOC_MISSING_BRACES_WARNING)
 
             .put(Pattern.compile("Missing type declaration\\."), JSDOC_MISSING_TYPE_WARNING)
