@@ -763,4 +763,11 @@ public class SourceFile implements StaticSourceFile, Serializable {
       return Charset.forName(inputCharset);
     }
   }
+
+  @GwtIncompatible("ObjectOutputStream")
+  private void writeObject(java.io.ObjectOutputStream out) throws Exception {
+    // Remove cached source before serializing.
+    clearCachedSource();
+    out.defaultWriteObject();
+  }
 }
