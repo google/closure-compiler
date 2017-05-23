@@ -23,6 +23,7 @@ import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -46,6 +47,9 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
   /** The stack of basic blocks and scopes the current traversal is in. */
   private final List<BasicBlock> blockStack = new ArrayList<>();
 
+  /** List of all top-level statements in the order they appear in the AST. */
+  private final List<TopLevelStatement> topLevelStatements = new ArrayList<>();
+
   private final ScopeCreator scopeCreator;
 
   /**
@@ -67,11 +71,13 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
    */
   @Override
   public void process(Node externs, Node root) {
+    checkState(topLevelStatements.isEmpty(), "process() called more than once");
     NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
     t.traverseRoots(externs, root);
   }
 
   public void process(Node root) {
+    checkState(topLevelStatements.isEmpty(), "process() called more than once");
     NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
     t.traverse(root);
   }
@@ -153,6 +159,9 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
   @Override
   public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
       Node parent) {
+    if (parent != null && NodeUtil.isTopLevel(parent)) {
+      topLevelStatements.add(new TopLevelStatement(nodeTraversal.getModule(), n));
+    }
     // If node is a new basic block, put on basic block stack
     if (isBlockBoundary(n, parent)) {
       blockStack.add(new BasicBlock(peek(blockStack), n));
@@ -210,6 +219,7 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
   }
 
   private void addReference(Var v, Reference reference) {
+    peek(topLevelStatements).addReference(reference);
     // Create collection if none already
     ReferenceCollection referenceInfo = referenceMap.get(v);
     if (referenceInfo == null) {
@@ -219,5 +229,38 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
 
     // Add this particular reference
     referenceInfo.add(reference);
+  }
+
+  List<TopLevelStatement> getTopLevelStatements() {
+    return Collections.unmodifiableList(topLevelStatements);
+  }
+
+  /** Represents a top-level statement and the references to global names it contains. */
+  static final class TopLevelStatement {
+
+    private final JSModule module;
+    private final Node statementNode;
+    private final List<Reference> containedReferences = new ArrayList<>();
+
+    TopLevelStatement(JSModule module, Node statementNode) {
+      this.module = module;
+      this.statementNode = statementNode;
+    }
+
+    private void addReference(Reference reference) {
+      containedReferences.add(reference);
+    }
+
+    JSModule getModule() {
+      return module;
+    }
+
+    Node getStatementNode() {
+      return statementNode;
+    }
+
+    List<Reference> getContainedReferences() {
+      return Collections.unmodifiableList(containedReferences);
+    }
   }
 }

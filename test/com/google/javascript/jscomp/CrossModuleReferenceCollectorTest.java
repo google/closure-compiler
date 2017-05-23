@@ -20,8 +20,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.CrossModuleReferenceCollector.TopLevelStatement;
 import com.google.javascript.rhino.Token;
+import java.util.List;
 
 public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   private CrossModuleReferenceCollector testedCollector;
@@ -140,5 +143,42 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
     assertNode(xRefs.references.get(0).getBasicBlock().getRoot()).hasType(Token.ROOT);
     assertNode(xRefs.references.get(1).getBasicBlock().getRoot()).hasType(Token.ROOT);
     assertNode(xRefs.references.get(2).getBasicBlock().getRoot()).hasType(Token.CASE);
+  }
+
+  public void testTopLevelStatements() {
+    testSame(LINE_JOINER.join(
+        "var x = 1;",
+        "const y = x;",
+        "let z = x - y;",
+        "function f(x, y) {",   // only f and z globals referenced
+        "  return x + y + z;",
+        "}"));
+
+    // Pull out all the references for comparison.
+    ImmutableMap<String, Var> globalVariableNamesMap = testedCollector.getGlobalVariableNamesMap();
+    ImmutableList<Reference> xReferences =
+        ImmutableList.copyOf(testedCollector.getReferences(globalVariableNamesMap.get("x")));
+    ImmutableList<Reference> yReferences =
+        ImmutableList.copyOf(testedCollector.getReferences(globalVariableNamesMap.get("y")));
+    ImmutableList<Reference> zReferences =
+        ImmutableList.copyOf(testedCollector.getReferences(globalVariableNamesMap.get("z")));
+    ImmutableList<Reference> fReferences =
+        ImmutableList.copyOf(testedCollector.getReferences(globalVariableNamesMap.get("f")));
+
+    // Make sure the statements have the references we expect.
+    List<TopLevelStatement> topLevelStatements = testedCollector.getTopLevelStatements();
+    assertThat(topLevelStatements).hasSize(4);
+    // var x = 1;
+    assertThat(topLevelStatements.get(0).getContainedReferences())
+        .containsExactly(xReferences.get(0));
+    // const y = x;
+    assertThat(topLevelStatements.get(1).getContainedReferences())
+        .containsExactly(yReferences.get(0), xReferences.get(1));
+    // let z = x - y;
+    assertThat(topLevelStatements.get(2).getContainedReferences())
+        .containsExactly(zReferences.get(0), xReferences.get(2), yReferences.get(1));
+    // function f(x, y) { return x + y + z; }
+    assertThat(topLevelStatements.get(3).getContainedReferences())
+        .containsExactly(fReferences.get(0), zReferences.get(1));
   }
 }
