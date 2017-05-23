@@ -1150,7 +1150,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
             if (key.isStringKey()
                 && !key.isQuotedString()
                 && NodeUtil.isValidPropertyName(
-                    compiler.getOptions().getLanguageOut(), key.getString())) {
+                    compiler.getOptions().getLanguageIn(), key.getString())) {
               if (key.hasChildren()) {
                 if (key.getFirstChild().isQualifiedName()) {
                   if (key.getFirstChild() == n) {
