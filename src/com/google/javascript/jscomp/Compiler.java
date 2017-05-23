@@ -3332,7 +3332,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       runInCompilerThread(new Callable<Void>() {
         @Override
         public Void call() throws Exception {
+          startPass("serializeCompilerState");
           objectOutputStream.writeObject(new CompilerState(Compiler.this));
+          endPass("serializeCompilerState");
           return null;
         }
       });
@@ -3345,7 +3347,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       CompilerState compilerState = runInCompilerThread(new Callable<CompilerState>() {
         @Override
         public CompilerState call() throws Exception {
-          return (CompilerState) objectInputStream.readObject();
+          startPass("deserializeCompilerState");
+          CompilerState compilerState = (CompilerState) objectInputStream.readObject();
+          endPass("deserializeCompilerState");
+          return compilerState;
         }
       });
       externs = compilerState.externs;
