@@ -95,6 +95,11 @@ final class InlineProperties implements CompilerPass {
       addInvalidatingType(mis.typeA);
       addInvalidatingType(mis.typeB);
     }
+
+    // NOTE: Mismatches are less important to this pass than to disabmiguate/ambiguate
+    // properties. This pass doesn't remove values (it only inlines them when the type
+    // is known), so it isn't necessary to record the invalidation from
+    // "getImplicitInterfaceUses".
   }
 
   private void invalidateExternProperties() {

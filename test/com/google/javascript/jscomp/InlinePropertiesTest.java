@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.rhino.Node;
 
 /** @author johnlenz@google.com (John Lenz) */
 public final class InlinePropertiesTest extends TypeICompilerTestCase {
@@ -29,6 +30,8 @@ public final class InlinePropertiesTest extends TypeICompilerTestCase {
           "var google = { gears: { factory: {}, workerPool: {} } };",
           "/** @type {?} */ var externUnknownVar;",
           "/** @type {!Function} */ var externFn;");
+
+  private boolean runSmartNameRemoval = false;
 
   public InlinePropertiesTest() {
     super(EXTERNS);
@@ -56,13 +59,31 @@ public final class InlinePropertiesTest extends TypeICompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new InlineProperties(compiler);
+    final CompilerPass pass =  new InlineProperties(compiler);
+    if (runSmartNameRemoval) {
+      final CompilerPass removalPass = new NameAnalyzer(compiler, true, null);
+      return new CompilerPass(){
+
+        @Override
+        public void process(Node externs, Node root) {
+          removalPass.process(externs, root);
+          pass.process(externs, root);
+        }
+      };
+    }
+    return pass;
   }
 
   @Override
   protected int getNumRepetitions() {
     return 1;
   }
+
+  @Override
+  protected void setUp() throws Exception {
+    runSmartNameRemoval = false;
+  }
+
 
   public void testConstInstanceProp1() {
     // Replace a reference to known constant property.
@@ -425,5 +446,28 @@ public final class InlinePropertiesTest extends TypeICompilerTestCase {
             "",
             "function f(/** !I */ x) { return x.foo; }",
             "f([]);"));
+  }
+
+  public void testStructuralInterfacesNoPropInlining2() {
+    runSmartNameRemoval = true;
+
+    test(
+        LINE_JOINER.join(
+            "/** @record */",
+            "function I() {",
+            "  /** @type {number} */ this.foo;",
+            "}",
+            "",
+            "/** @constructor @implements {I} */",
+            "function C() { /** @type {number} */ this.foo = 1; }",
+            "",
+            "function f(/** ? */ x) { return x.foo; }",
+            "f(new C());"),
+        LINE_JOINER.join(
+            "/** @constructor @implements {I} */",
+            "function C() { /** @type {number} */ this.foo = 1; }",
+            "",
+            "function f(/** ? */ x) { return x.foo; }",
+            "f(new C());"));
   }
 }
