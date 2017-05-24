@@ -1831,35 +1831,27 @@ public final class NameAnalyzerTest extends Es6CompilerTestCase {
   }
 
   public void testNoRemoveWindowPropertyAlias4() {
-    // TODO(johnlenz): fix this. "self_" should remain.
-    test(
-        "var self_ = window['gbar'] || {};\n" +
-        "self_.qs = function() {};",
-        "");
+    testSame(LINE_JOINER.join(
+        "var self_ = window['gbar'] || {};",
+        "self_.qs = function() {};"));
  }
 
   public void testNoRemoveWindowPropertyAlias4a() {
-    // TODO(johnlenz): fix this. "self_" should remain.
-    test(
-        "var self_; self_ = window.gbar || {};\n" +
-        "self_.qs = function() {};",
-        "");
+    testSame(LINE_JOINER.join(
+        "var self_; self_ = window.gbar || {};",
+        "self_.qs = function() {};"));
  }
 
   public void testNoRemoveWindowPropertyAlias5() {
-    // TODO(johnlenz): fix this. "self_" should remain.
-    test(
-        "var self_ = window || {};\n" +
-        "self_['qs'] = function() {};",
-        "");
+    testSame(LINE_JOINER.join(
+        "var self_ = window || {};",
+        "self_['qs'] = function() {};"));
   }
 
   public void testNoRemoveWindowPropertyAlias5a() {
-    // TODO(johnlenz): fix this.
-    test(
-        "var self_; self_ = window || {};\n" +
-        "self_['qs'] = function() {};",
-        "");
+    testSame(LINE_JOINER.join(
+        "var self_; self_ = window || {};",
+        "self_['qs'] = function() {};"));
   }
 
   public void testNoRemoveWindowPropertyAlias6() {
@@ -2044,16 +2036,12 @@ public final class NameAnalyzerTest extends Es6CompilerTestCase {
   }
 
   public void testAliasInstanceof5() {
-    // TODO(johnlenz): fix this. "b" should remain.
-    test(
-      "function Foo() {}" +
-      "function Bar() {}" +
-      "var b = x ? Foo : Bar;" +
-      "var y = new Foo();" +
-      "if (y instanceof b) {}",
-      "function Foo() {}" +
-      "var y = new Foo;" +
-      "if (false){}");
+    testSame(LINE_JOINER.join(
+      "function Foo() {}",
+      "function Bar() {}",
+      "var b = x ? Foo : Bar;",
+      "var y = new Foo();",
+      "if (y instanceof b) {}"));
   }
 
   // We cannot leave x.a.prototype there because it will
@@ -2160,6 +2148,32 @@ public final class NameAnalyzerTest extends Es6CompilerTestCase {
         "var hackhack = window['__o_o_o__'] = window['__o_o_o__'] || {};\n" +
         "window['__o_o_o__']['va'] = 1;\n" +
         "hackhack['Vb'] = 1;");
+  }
+
+  public void testBug37975351a() {
+    // The original repro case from the bug.
+    testSame(LINE_JOINER.join(
+        "function noop() {}",
+        "var x = window['magic'];",
+        "var FormData = window['FormData'] || noop;",
+        "function f() { return x instanceof FormData; }",
+        "console.log(f());"));
+  }
+
+  public void testBug37975351b() {
+    // The simplified repro that still repro'd the problem.
+    testSame(LINE_JOINER.join(
+        "var FormData = window['FormData'] || function() {};",
+        "function f() { return window['magic'] instanceof FormData; }",
+        "console.log(f());"));
+  }
+
+  public void testBug37975351c() {
+    // This simpliification did not reproduce the problematic behavior.
+    testSame(LINE_JOINER.join(
+        "var FormData = window['FormData'];",
+        "function f() { return window['magic'] instanceof FormData; }",
+        "console.log(f());"));
   }
 
   @Override
