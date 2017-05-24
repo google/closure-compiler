@@ -86,7 +86,7 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
         new SimpleDependencyInfo("", "", EMPTY, EMPTY, ImmutableMap.of("foo", "bar"));
     DependencyInfo info = new LazyParsedDependencyInfo(delegate, ast, compiler);
 
-    assertThat(info.getLoadFlags()).containsExactly("foo", "bar", "lang", "es6-impl");
+    assertThat(info.getLoadFlags()).containsExactly("foo", "bar", "lang", "es6");
     assertFalse(info.isModule());
   }
 

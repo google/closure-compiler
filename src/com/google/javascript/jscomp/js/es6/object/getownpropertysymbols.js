@@ -24,4 +24,4 @@ $jscomp.polyfill('Object.getOwnPropertySymbols', function(orig) {
   // the trade-off of "fixing" this behavior is not worth the costs
   // in (a) code size, (b) brittleness, and (c) complexity.
   return function() { return []; };
-}, 'es6-impl', 'es5'); // Same as Object.getOwnPropertyNames
+}, 'es6', 'es5'); // Same as Object.getOwnPropertyNames

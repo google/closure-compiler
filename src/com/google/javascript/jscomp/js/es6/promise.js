@@ -507,4 +507,4 @@ $jscomp.polyfill('Promise',
   };
 
   return PolyfillPromise;
-}, 'es6-impl', 'es3');
+}, 'es6', 'es3');

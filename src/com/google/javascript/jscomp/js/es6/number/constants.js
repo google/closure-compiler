@@ -24,7 +24,7 @@ $jscomp.polyfill('Number.EPSILON', function(orig) {
    * <p>Polyfills the static field Number.EPSILON.
    */
   return Math.pow(2, -52);
-}, 'es6-impl', 'es3');
+}, 'es6', 'es3');
 
 
 $jscomp.polyfill('Number.MAX_SAFE_INTEGER', function() {
@@ -34,7 +34,7 @@ $jscomp.polyfill('Number.MAX_SAFE_INTEGER', function() {
    * <p>Polyfills the static field Number.MAX_SAFE_INTEGER.
    */
   return 0x1fffffffffffff;
-}, 'es6-impl', 'es3');
+}, 'es6', 'es3');
 
 
 $jscomp.polyfill('Number.MIN_SAFE_INTEGER', function() {
@@ -44,4 +44,4 @@ $jscomp.polyfill('Number.MIN_SAFE_INTEGER', function() {
    * <p>Polyfills the static field Number.MIN_SAFE_INTEGER.
    */
   return -0x1fffffffffffff;
-}, 'es6-impl', 'es3');
+}, 'es6', 'es3');

@@ -35,4 +35,4 @@ $jscomp.polyfill('Math.sinh', function(orig) {
   };
 
   return polyfill;
-}, 'es6-impl', 'es3');
+}, 'es6', 'es3');

@@ -86,4 +86,4 @@ $jscomp.polyfill('WeakSet',
   };
 
   return PolyfillWeakSet;
-}, 'es6-impl', 'es3');
+}, 'es6', 'es3');

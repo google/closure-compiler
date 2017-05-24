@@ -47,4 +47,4 @@ $jscomp.polyfill('String.prototype.startsWith', function(orig) {
   };
 
   return polyfill;
-}, 'es6-impl', 'es3');
+}, 'es6', 'es3');

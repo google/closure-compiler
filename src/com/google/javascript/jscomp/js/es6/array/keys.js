@@ -31,4 +31,4 @@ $jscomp.polyfill('Array.prototype.keys', function(orig) {
   };
 
   return polyfill;
-}, 'es6-impl', 'es3');
+}, 'es6', 'es3');

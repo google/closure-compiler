@@ -33,4 +33,4 @@ $jscomp.polyfill('Number.isNaN', function(orig) {
   };
 
   return polyfill;
-}, 'es6-impl', 'es3');
+}, 'es6', 'es3');

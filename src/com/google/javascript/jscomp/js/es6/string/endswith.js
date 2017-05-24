@@ -43,4 +43,4 @@ $jscomp.polyfill('String.prototype.endsWith', function(orig) {
     return j <= 0;
   };
 return polyfill;
-}, 'es6-impl', 'es3');
+}, 'es6', 'es3');

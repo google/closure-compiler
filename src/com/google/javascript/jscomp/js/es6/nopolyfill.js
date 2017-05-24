@@ -25,5 +25,5 @@
 
 $jscomp.polyfill('Proxy', null, 'es6', 'es6');
 
-$jscomp.polyfill('String.raw', null, 'es6-impl', 'es6-impl');
-$jscomp.polyfill('String.prototype.normalize', null, 'es6-impl', 'es6-impl');
+$jscomp.polyfill('String.raw', null, 'es6', 'es6');
+$jscomp.polyfill('String.prototype.normalize', null, 'es6', 'es6');

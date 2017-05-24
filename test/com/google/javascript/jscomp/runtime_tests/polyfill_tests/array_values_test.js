@@ -33,9 +33,7 @@ testSuite({
   // TODO(sdh): this is the *only* ES6 feature that's missing in Chrome 50,
   // and it's not yet been added to es6.js externs, so we'll cheat by just
   // commenting out the calls to Array.prototype.values (since they don't
-  // type check) and the corresponding assertions.  Once Chrome 52 is stable
-  // we should add the extern, uncomment the tests, and mark the polyfill
-  // as an 'es6' (rather than 'es6-impl') feature.
+  // type check) and the corresponding assertions.
   testValues() {
     // assertIteratorContents(['x', 'c'].values(), 'x', 'c');
 

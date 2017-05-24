@@ -154,4 +154,4 @@ $jscomp.polyfill('Set',
 
 
   return PolyfillSet;
-}, 'es6-impl', 'es3');
+}, 'es6', 'es3');

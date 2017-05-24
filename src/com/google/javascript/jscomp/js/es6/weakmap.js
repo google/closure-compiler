@@ -159,4 +159,4 @@ $jscomp.polyfill('WeakMap',
   };
 
   return PolyfillWeakMap;
-}, 'es6-impl', 'es3');
+}, 'es6', 'es3');

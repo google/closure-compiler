@@ -41,29 +41,27 @@ public final class FeatureSet implements Serializable {
 
   /** The number of the language version: 3, 5, or 6. */
   private final int number;
-  /** Whether this includes features not supported in current stable browsers. */
-  private final boolean unsupported;
+  /** Whether this includes only features supported in current stable browsers. */
+  private final boolean supported;
   /** Whether ES6 modules are included. */
   private final boolean es6Modules;
   /** Whether TypeScript syntax is included (for .d.ts support). */
   private final boolean typeScript;
 
   /** The bare minimum set of features in ES3. */
-  public static final FeatureSet ES3 = new FeatureSet(3, false, false, false);
+  public static final FeatureSet ES3 = new FeatureSet(3, true, false, false);
   /** Features from ES5 only. */
-  public static final FeatureSet ES5 = new FeatureSet(5, false, false, false);
-  /** The subset of ES6 features that are implemented in stable Chrome, Firefox, and Edge. */
-  public static final FeatureSet ES6_IMPL = new FeatureSet(6, false, false, false);
+  public static final FeatureSet ES5 = new FeatureSet(5, true, false, false);
   /** The full set of ES6 features, not including modules. */
   public static final FeatureSet ES6 = new FeatureSet(6, true, false, false);
   /** All ES6 features, including modules. */
-  public static final FeatureSet ES6_MODULES = new FeatureSet(6, true, true, false);
-  public static final FeatureSet ES7 = new FeatureSet(7, true, false, false);
-  public static final FeatureSet ES7_MODULES = new FeatureSet(7, true, true, false);
-  public static final FeatureSet ES8 = new FeatureSet(8, true, false, false);
-  public static final FeatureSet ES8_MODULES = new FeatureSet(8, true, true, false);
+  public static final FeatureSet ES6_MODULES = new FeatureSet(6, false, true, false);
+  public static final FeatureSet ES7 = new FeatureSet(7, false, false, false);
+  public static final FeatureSet ES7_MODULES = new FeatureSet(7, false, true, false);
+  public static final FeatureSet ES8 = new FeatureSet(8, false, false, false);
+  public static final FeatureSet ES8_MODULES = new FeatureSet(8, false, true, false);
   /** TypeScript syntax. */
-  public static final FeatureSet TYPESCRIPT = new FeatureSet(8, true, true, true);
+  public static final FeatureSet TYPESCRIPT = new FeatureSet(8, false, true, true);
 
   /**
    * Specific features that can be included (indirectly) in a FeatureSet.
@@ -81,32 +79,26 @@ public final class FeatureSet implements Serializable {
     STRING_CONTINUATION("string continuation", ES5),
     TRAILING_COMMA("trailing comma", ES5),
 
-    // ES6 features that are already implemented in modern stable browsers
-    // (Chrome 50, Firefox 46, and Edge 13)
-    ARROW_FUNCTIONS("arrow function", ES6_IMPL),
-    BINARY_LITERALS("binary literal", ES6_IMPL),
-    OCTAL_LITERALS("octal literal", ES6_IMPL),
-    CLASSES("class", ES6_IMPL),
-    COMPUTED_PROPERTIES("computed property", ES6_IMPL),
-    EXTENDED_OBJECT_LITERALS("extended object literal", ES6_IMPL),
-    FOR_OF("for-of loop", ES6_IMPL),
-    GENERATORS("generator", ES6_IMPL),
-    LET_DECLARATIONS("let declaration", ES6_IMPL),
-    MEMBER_DECLARATIONS("member declaration", ES6_IMPL),
-    REGEXP_FLAG_Y("RegExp flag 'y'", ES6_IMPL),
-    REST_PARAMETERS("rest parameter", ES6_IMPL),
-    SPREAD_EXPRESSIONS("spread expression", ES6_IMPL),
-    SUPER("super", ES6_IMPL),
-    TEMPLATE_LITERALS("template literal", ES6_IMPL),
-
-    // ES6 features that are not yet implemented in all "modern" browsers
-    // The following features will become stable once Edge 14 is released:
+    // ES6 features (besides modules): all stable browsers are now fully compliant
+    ARROW_FUNCTIONS("arrow function", ES6),
+    BINARY_LITERALS("binary literal", ES6),
+    OCTAL_LITERALS("octal literal", ES6),
+    CLASSES("class", ES6),
+    COMPUTED_PROPERTIES("computed property", ES6),
+    EXTENDED_OBJECT_LITERALS("extended object literal", ES6),
+    FOR_OF("for-of loop", ES6),
+    GENERATORS("generator", ES6),
+    LET_DECLARATIONS("let declaration", ES6),
+    MEMBER_DECLARATIONS("member declaration", ES6),
+    REGEXP_FLAG_Y("RegExp flag 'y'", ES6),
+    REST_PARAMETERS("rest parameter", ES6),
+    SPREAD_EXPRESSIONS("spread expression", ES6),
+    SUPER("super", ES6),
+    TEMPLATE_LITERALS("template literal", ES6),
     CONST_DECLARATIONS("const declaration", ES6),
     DESTRUCTURING("destructuring", ES6),
-    NEW_TARGET("new.target", ES6), // Not fully supported until Edge 14
-    REGEXP_FLAG_U("RegExp flag 'u'", ES6), // (note: case folding still broken even in Edge 14)
-    // The following features are still broken even in Firefox 49:
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1187502 for details
+    NEW_TARGET("new.target", ES6),
+    REGEXP_FLAG_U("RegExp flag 'u'", ES6),
     DEFAULT_PARAMETERS("default parameter", ES6),
 
     // ES6 features that include modules
@@ -151,9 +143,9 @@ public final class FeatureSet implements Serializable {
     }
   }
 
-  private FeatureSet(int number, boolean unsupported, boolean es6Modules, boolean typeScript) {
+  private FeatureSet(int number, boolean supported, boolean es6Modules, boolean typeScript) {
     this.number = number;
-    this.unsupported = unsupported;
+    this.supported = supported;
     this.es6Modules = es6Modules;
     this.typeScript = typeScript;
   }
@@ -162,12 +154,10 @@ public final class FeatureSet implements Serializable {
   public String version() {
     if (typeScript) {
       return "ts";
-    } else if (number > 6) {
-      return "es" + number;
-    } else if (unsupported || es6Modules) {
-      return "es6";
     } else if (number > 5) {
-      return "es6-impl";
+      return "es" + number;
+    } else if (es6Modules) {
+      return "es6";
     } else if (number > 3) {
       return "es5";
     }
@@ -195,7 +185,7 @@ public final class FeatureSet implements Serializable {
   public FeatureSet union(FeatureSet other) {
     return new FeatureSet(
         Math.max(number, other.number),
-        unsupported || other.unsupported,
+        supported && other.supported,
         es6Modules || other.es6Modules,
         typeScript || other.typeScript);
   }
@@ -205,7 +195,7 @@ public final class FeatureSet implements Serializable {
    */
   public boolean contains(FeatureSet other) {
     return this.number >= other.number
-        && (this.unsupported || !other.unsupported)
+        && (!this.supported || other.supported)
         && (this.es6Modules || !other.es6Modules)
         && (this.typeScript || !other.typeScript);
   }
@@ -226,20 +216,20 @@ public final class FeatureSet implements Serializable {
   public boolean equals(Object other) {
     return other instanceof FeatureSet
         && ((FeatureSet) other).number == number
-        && ((FeatureSet) other).unsupported == unsupported
+        && ((FeatureSet) other).supported == supported
         && ((FeatureSet) other).es6Modules == es6Modules
         && ((FeatureSet) other).typeScript == typeScript;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(number, unsupported, es6Modules, typeScript);
+    return Objects.hash(number, supported, es6Modules, typeScript);
   }
 
   @Override
   public String toString() {
     return "FeatureSet{number=" + number
-        + (unsupported ? ", unsupported" : "")
+        + (!supported ? ", unsupported" : "")
         + (es6Modules ? ", es6Modules" : "")
         + (typeScript ? ", typeScript" : "")
         + "}";
@@ -247,7 +237,7 @@ public final class FeatureSet implements Serializable {
 
   /** Returns a the name of a corresponding LanguageMode enum element. */
   public String toLanguageModeString() {
-    return "ECMASCRIPT" + number;
+    return number > 6 ? "ECMASCRIPT_" + (2009 + number) : "ECMASCRIPT" + number;
   }
 
   /** Parses known strings into feature sets. */
@@ -258,7 +248,6 @@ public final class FeatureSet implements Serializable {
       case "es5":
         return ES5;
       case "es6-impl":
-        return ES6_IMPL;
       case "es6":
         return ES6;
       case "es7":

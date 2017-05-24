@@ -35,4 +35,4 @@ $jscomp.polyfill('Math.atanh', function(orig) {
   };
 
   return polyfill;
-}, 'es6-impl', 'es3');
+}, 'es6', 'es3');

@@ -329,4 +329,4 @@ $jscomp.polyfill('Map',
 
 
   return PolyfillMap;
-}, 'es6-impl', 'es3');
+}, 'es6', 'es3');
