@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-
 import com.google.javascript.rhino.Node;
 
 public final class RemoveUnusedVarsTest extends CompilerTestCase {
@@ -28,6 +27,11 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   public RemoveUnusedVarsTest() {
     super("function alert() {}");
     enableNormalize();
+  }
+
+  @Override
+  protected int getNumRepetitions() {
+    return modifyCallSites ? 2 : 1;
   }
 
   @Override
@@ -809,5 +813,15 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
         "var b;\n" +
         "a.push(b = []);\n" +
         "b[0] = 1;\n");
+  }
+
+  public void testBug38457201() {
+    this.removeGlobal = true;
+    test(
+        LINE_JOINER.join(
+            "var DOCUMENT_MODE = 1;",
+            "var temp;",
+            "false || (temp = (Number(DOCUMENT_MODE) >= 9));"),
+        "false || 0");
   }
 }

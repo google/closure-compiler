@@ -1002,8 +1002,9 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
         if (parent.isExprResult()) {
           grandparent.removeChild(parent);
         } else {
-          parent.replaceChild(assignNode,
-              assignNode.getLastChild().detach());
+          // mayHaveSecondarySideEffects is false, which means the value isn't needed,
+          // but we need to keep the AST valid.
+          parent.replaceChild(assignNode, IR.number(0).srcref(assignNode));
         }
       }
     }
