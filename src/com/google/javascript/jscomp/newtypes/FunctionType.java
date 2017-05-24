@@ -1428,36 +1428,37 @@ public final class FunctionType {
 
   @Override
   public String toString() {
-    return appendTo(new StringBuilder()).toString();
+    return appendTo(new StringBuilder(), ToStringContext.TO_STRING).toString();
   }
 
   /**
    * Returns a transformed collection of type parameter names, mapped back
    * to original (pre-uniquified) names.
    */
-  private static Collection<String> getPrettyTypeParams(List<String> typeParams) {
+  private static Collection<String> getPrettyTypeParams(
+      List<String> typeParams, final ToStringContext ctx) {
     return Collections2.transform(
         typeParams,
         new Function<String, String>() {
           @Override
           public String apply(String typeParam) {
-            return UniqueNameGenerator.getOriginalName(typeParam);
+            return ctx.formatTypeVar(typeParam);
           }
         });
   }
 
   @SuppressWarnings("ReferenceEquality")
-  public StringBuilder appendTo(StringBuilder builder) {
+  public StringBuilder appendTo(StringBuilder builder, ToStringContext ctx) {
     if (this == this.commonTypes.LOOSE_TOP_FUNCTION) {
       return builder.append("LOOSE_TOP_FUNCTION");
     } else if (this == this.commonTypes.TOP_FUNCTION) {
       return builder.append("TOP_FUNCTION");
     } else if (isQmarkFunction()) {
-      return builder.append("Function");
+      return builder.append(ctx.forAnnotation() ? "!" : "").append("Function");
     }
     if (!this.typeParameters.isEmpty()) {
       builder.append("<");
-      builder.append(Joiner.on(",").join(getPrettyTypeParams(this.typeParameters)));
+      builder.append(Joiner.on(",").join(getPrettyTypeParams(this.typeParameters, ctx)));
       builder.append(">");
     }
     builder.append("function(");
@@ -1471,16 +1472,16 @@ public final class FunctionType {
       builder.append(',');
     }
     for (int i = 0; i < requiredFormals.size(); ++i) {
-      requiredFormals.get(i).appendTo(builder);
+      requiredFormals.get(i).appendTo(builder, ctx);
       builder.append(',');
     }
     for (int i = 0; i < optionalFormals.size(); ++i) {
-      optionalFormals.get(i).appendTo(builder);
+      optionalFormals.get(i).appendTo(builder, ctx);
       builder.append("=,");
     }
     if (restFormals != null) {
       builder.append("...");
-      restFormals.appendTo(builder);
+      restFormals.appendTo(builder, ctx);
     }
     // Delete the trailing comma, if present
     if (builder.charAt(builder.length() - 1) == ',') {
@@ -1489,7 +1490,7 @@ public final class FunctionType {
     builder.append(')');
     if (returnType != null) {
       builder.append(':');
-      returnType.appendTo(builder);
+      returnType.appendTo(builder, ctx);
     }
     if (isLoose()) {
       builder.append(" (loose)");
@@ -1503,7 +1504,7 @@ public final class FunctionType {
         }
         builder.append(entry.getKey());
         builder.append('=');
-        entry.getValue().appendTo(builder);
+        entry.getValue().appendTo(builder, ctx);
       }
       builder.append('}');
     }

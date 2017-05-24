@@ -1515,17 +1515,19 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     if (mockToString) {
       return "";
     }
-    return appendTo(new StringBuilder()).toString();
+    return appendTo(new StringBuilder(), ToStringContext.TO_STRING).toString();
   }
 
-  public final StringBuilder appendTo(StringBuilder builder) {
-    return typeToString(builder);
-  }
-
-  /** For use in {@link #typeToString} */
+  /** For use in {@link #appendTo} */
   private static final Joiner PIPE_JOINER = Joiner.on("|");
 
-  private StringBuilder typeToString(StringBuilder builder) {
+  /**
+   * Appends this type to the `builder`. If `forAnnotations` is true, then
+   * the type will be in a format suitable for type annotations during
+   * code generation.
+   */
+  StringBuilder appendTo(StringBuilder builder, ToStringContext ctx) {
+    // TODO(sdh): Add checkState(!forAnnotations) calls in places where annotations are nonsense.
     switch (getMask()) {
       case BOTTOM_MASK:
         return builder.append("bottom");
@@ -1570,16 +1572,16 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
                 tags &= ~UNDEFINED_MASK;
                 continue;
               case TYPEVAR_MASK:
-                builder.append(UniqueNameGenerator.getOriginalName(getTypeVar()));
+                builder.append(ctx.formatTypeVar(getTypeVar()));
                 tags &= ~TYPEVAR_MASK;
                 continue;
               case NON_SCALAR_MASK: {
                 if (getObjs().size() == 1) {
-                  Iterables.getOnlyElement(getObjs()).appendTo(builder);
+                  Iterables.getOnlyElement(getObjs()).appendTo(builder, ctx);
                 } else {
                   Set<String> strReps = new TreeSet<>();
                   for (ObjectType obj : getObjs()) {
-                    strReps.add(obj.toString());
+                    strReps.add(obj.toString(ctx));
                   }
                   PIPE_JOINER.appendTo(builder, strReps);
                 }
@@ -1588,11 +1590,11 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
               }
               case ENUM_MASK: {
                 if (getEnums().size() == 1) {
-                  builder.append(Iterables.getOnlyElement(getEnums()));
+                  builder.append(Iterables.getOnlyElement(getEnums()).toString(ctx));
                 } else {
                   Set<String> strReps = new TreeSet<>();
                   for (EnumType e : getEnums()) {
-                    strReps.add(e.toString());
+                    strReps.add(e.toString(ctx));
                   }
                   PIPE_JOINER.appendTo(builder, strReps);
                 }

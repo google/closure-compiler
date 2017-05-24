@@ -676,10 +676,13 @@ public final class NominalType {
 
   @Override
   public String toString() {
-    return appendTo(new StringBuilder()).toString();
+    return appendTo(new StringBuilder(), ToStringContext.TO_STRING).toString();
   }
 
-  StringBuilder appendTo(StringBuilder builder) {
+  StringBuilder appendTo(StringBuilder builder, ToStringContext ctx) {
+    if (ctx.forAnnotation()) {
+      builder.append("!");
+    }
     if (this.typeMap.isEmpty()) {
       return this.rawType.appendTo(builder);
     }
@@ -695,7 +698,7 @@ public final class NominalType {
         builder.append(',');
       }
       JSType concrete = this.typeMap.get(typeParam);
-      Preconditions.checkNotNull(concrete).appendTo(builder);
+      Preconditions.checkNotNull(concrete).appendTo(builder, ctx);
     }
     builder.append('>');
     return builder;

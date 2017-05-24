@@ -216,17 +216,17 @@ class Property {
 
   @Override
   public String toString() {
-    return appendTo(new StringBuilder()).toString();
+    return appendTo(new StringBuilder(), ToStringContext.TO_STRING).toString();
   }
 
-  public StringBuilder appendTo(StringBuilder builder) {
+  public StringBuilder appendTo(StringBuilder builder, ToStringContext ctx) {
     switch (attribute) {
       case CONSTANT:
-        return inferredType.appendTo(builder).append('^');
+        return inferredType.appendTo(builder, ctx).append('^');
       case REQUIRED:
-        return inferredType.appendTo(builder);
+        return inferredType.appendTo(builder, ctx);
       case OPTIONAL:
-        return inferredType.appendTo(builder).append('=');
+        return inferredType.appendTo(builder, ctx).append('=');
       default:
         throw new RuntimeException("Unknown Attribute value " + attribute);
     }

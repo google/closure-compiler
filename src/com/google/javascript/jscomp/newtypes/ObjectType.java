@@ -1382,23 +1382,27 @@ final class ObjectType implements TypeWithProperties {
 
   @Override
   public String toString() {
-    return appendTo(new StringBuilder()).toString();
+    return appendTo(new StringBuilder(), ToStringContext.TO_STRING).toString();
   }
 
-  StringBuilder appendTo(StringBuilder builder) {
+  String toString(ToStringContext ctx) {
+    return appendTo(new StringBuilder(), ctx).toString();
+  }
+
+  StringBuilder appendTo(StringBuilder builder, ToStringContext ctx) {
     if (isPrototypeObject()) {
       return builder.append(getOwnerFunction().getThisType()).append(".prototype");
     }
     if (!hasNonPrototypeProperties()) {
       if (fn != null) {
-        return fn.appendTo(builder);
+        return fn.appendTo(builder, ctx);
       }
-      return this.nominalType.appendTo(builder);
+      return this.nominalType.appendTo(builder, ctx);
     }
     if (!nominalType.getName().equals("Function")
         && !nominalType.getName().equals("Object")
         && !nominalType.getName().equals(JSTypes.OBJLIT_CLASS_NAME)) {
-      nominalType.appendTo(builder);
+      nominalType.appendTo(builder, ctx);
     } else if (isStruct()) {
       builder.append("struct");
     } else if (isDict()) {
@@ -1408,7 +1412,7 @@ final class ObjectType implements TypeWithProperties {
     }
     if (this.fn != null) {
       builder.append("<|");
-      fn.appendTo(builder);
+      fn.appendTo(builder, ctx);
       builder.append("|>");
     }
     if (ns == null || !props.isEmpty()) {
@@ -1422,7 +1426,7 @@ final class ObjectType implements TypeWithProperties {
         }
         builder.append(pname);
         builder.append(':');
-        props.get(pname).appendTo(builder);
+        props.get(pname).appendTo(builder, ctx);
       }
       builder.append('}');
     }
