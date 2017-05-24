@@ -8232,7 +8232,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     Node externs = new Node(Token.SCRIPT);
     externs.setInputId(new InputId("externs"));
 
-    Node externAndJsRoot = IR.root(externs, parent);
+    IR.root(externs, parent);
 
     makeTypeCheck().processForTesting(null, parent);
     return node.getJSType();
@@ -11447,7 +11447,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     Node n = compiler.parseTestCode(js);
 
     Node externs = IR.root();
-    Node externAndJsRoot = IR.root(externs, n);
+    IR.root(externs, n);
 
     TypeCheck t = makeTypeCheck();
     t.processForTesting(null, n);
@@ -12035,7 +12035,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     Node second = compiler.parseTestCode("new Foo");
 
     Node externs = IR.root();
-    Node externAndJsRoot = IR.root(externs, second);
+    IR.root(externs, second);
 
     new TypeCheck(
         compiler,
@@ -17683,7 +17683,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     compiler.initOptions(compiler.getOptions());
     Node n = compiler.parseTestCode(js);
     Node externs = IR.root();
-    Node externAndJsRoot = IR.root(externs, n);
+    IR.root(externs, n);
 
     assertEquals("parsing error: " +
         Joiner.on(", ").join(compiler.getErrors()),
