@@ -4043,6 +4043,22 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @constructor */ function Base() {}");
   }
 
+  // https://github.com/google/closure-compiler/issues/2458
+  public void testAbstractSpread() throws Exception {
+    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
+    testTypes(
+        LINE_JOINER.join(
+            "/** @abstract */",
+            "class X {",
+            "  /** @abstract */",
+            "  m1() {}",
+            "",
+            "  m2() {",
+            "    return () => this.m1(...[]);",
+            "  }",
+            "}"));
+  }
+
   public void testGoodSuperCall() throws Exception {
     setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(

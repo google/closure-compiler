@@ -1854,7 +1854,9 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     if (NodeUtil.isFunctionObjectCall(call) || NodeUtil.isFunctionObjectApply(call)) {
       Node method = call.getFirstFirstChild();
       // this.foo.apply(this) should be allowed
-      if (method.isGetProp() && method.getFirstChild().isThis()) {
+      if (method.isGetProp()
+          && (method.getFirstChild().isThis()
+              || method.getFirstChild().matchesQualifiedName(Es6RewriteArrowFunction.THIS_VAR))) {
         return;
       }
       FunctionType methodType = method.getJSType().toMaybeFunctionType();

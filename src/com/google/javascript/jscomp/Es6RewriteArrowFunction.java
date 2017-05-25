@@ -30,7 +30,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
   // The name of the vars that capture 'this' and 'arguments'
   // for converting arrow functions.
   private static final String ARGUMENTS_VAR = "$jscomp$arguments";
-  private static final String THIS_VAR = "$jscomp$this";
+  static final String THIS_VAR = "$jscomp$this";
 
   private static class ThisContext {
     final Node scopeBody;
