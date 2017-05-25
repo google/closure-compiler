@@ -1125,6 +1125,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       result = performStage1andSave(saveAfterChecksFilename);
     } else if (continueSavedCompilationFilename != null) {
       result = restoreAndPerformStage2(continueSavedCompilationFilename);
+      if (modules != null) {
+        modules = compiler.getModules();
+      }
     } else {
       result = performFullCompilation();
     }

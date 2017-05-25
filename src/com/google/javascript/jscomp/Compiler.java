@@ -1517,6 +1517,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /**
+   * Gets the list of modules.
+   */
+  public List<JSModule> getModules() {
+    return modules;
+  }
+
+  /**
    * Gets a module graph. This will always return a module graph, even
    * in the degenerate case when there's only one module.
    */

@@ -231,6 +231,18 @@ public class CommandLineRunner extends
         + "modules.")
     private List<String> module = new ArrayList<>();
 
+    @Option(name = "--continue-saved-compilation",
+        usage = "Filename where the intermediate compilation state was previously saved.",
+        hidden = true)
+    private String continueSavedCompilationFile = null;
+
+    @Option(name = "--save-after-checks",
+        usage = "Filename to save phase 1 intermediate state so that the compilation can be"
+            + " resumed later.",
+        hidden = true)
+    private String saveAfterChecksFile = null;
+
+
     @Option(name = "--variable_renaming_report",
         usage = "File where the serialized version of the variable "
         + "renaming map produced should be saved")
@@ -1518,6 +1530,8 @@ public class CommandLineRunner extends
           .setJsZip(flags.jszip)
           .setMixedJsSources(mixedSources)
           .setJsOutputFile(flags.jsOutputFile)
+          .setSaveAfterChecksFileName(flags.saveAfterChecksFile)
+          .setContinueSavedCompilationFileName(flags.continueSavedCompilationFile)
           .setModule(flags.module)
           .setVariableMapOutputFile(flags.variableMapOutputFile)
           .setCreateNameMapFiles(flags.createNameMapFiles)

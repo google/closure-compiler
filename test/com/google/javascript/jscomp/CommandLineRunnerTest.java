@@ -1310,6 +1310,49 @@ public final class CommandLineRunnerTest extends TestCase {
     assertThat(builder.toString()).isEqualTo("var x=3; // m0.js\n");
   }
 
+  public void testMultistageCompilation() throws Exception {
+    File saveFile = File.createTempFile("serialized", "state");
+
+    String inputString = "[{\"src\": \"alert('foo');\", \"path\":\"foo.js\"}]";
+    args.add("--json_streams=BOTH");
+    args.add("--module=foo--bar.baz:1");
+
+    // Perform stage1
+    List<String> stage1Args = new ArrayList<>(args);
+    stage1Args.add("--save-after-checks=" + saveFile.getAbsolutePath());
+    compile(inputString, stage1Args);
+
+    // Perform stage2
+    List<String> stage2Args = new ArrayList<>(args);
+    stage2Args.add("--continue-saved-compilation=" + saveFile.getAbsolutePath());
+    String multistageOutput = compile(inputString, stage2Args);
+
+    // Perform single stage compilation
+    String singleStageOutput = compile(inputString, args);
+
+    assertThat(multistageOutput).isEqualTo(singleStageOutput);
+  }
+
+  private String compile(String inputString, List<String> args) {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ByteArrayOutputStream errorStream = new ByteArrayOutputStream();
+    CommandLineRunner runner =
+        new CommandLineRunner(
+            args.toArray(new String[] {}),
+            new ByteArrayInputStream(inputString.getBytes(UTF_8)),
+            new PrintStream(outputStream),
+            new PrintStream(errorStream));
+
+    runner.getCompiler();
+    try {
+      runner.doRun();
+    } catch (IOException e) {
+      e.printStackTrace();
+      fail("Unexpected exception " + e);
+    }
+    return new String(outputStream.toByteArray(), UTF_8);
+  }
+
   public void testCharSetExpansion() {
     testSame("");
     assertThat(lastCompiler.getOptions().outputCharset).isEqualTo(US_ASCII);
