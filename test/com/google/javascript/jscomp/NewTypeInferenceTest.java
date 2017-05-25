@@ -17437,8 +17437,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.INVALID_ARGUMENT_TYPE,
         LINE_JOINER.join(
             "Invalid type for parameter 1 of function f.",
-            "Expected : {a:number, b:string}",
-            "Found    : {a:number, b:number}",
+            "Expected : {a: number, b: string}",
+            "Found    : {a: number, b: number}",
             "More details:",
             "Incompatible types for property b.",
             "Expected : string",
@@ -17450,8 +17450,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.INVALID_ARGUMENT_TYPE,
         LINE_JOINER.join(
             "Invalid type for parameter 1 of function f.",
-            "Expected : {a:number, b:string|undefined=}",
-            "Found    : {a:number, b:number}",
+            "Expected : {a: number, b: string|undefined=}",
+            "Found    : {a: number, b: number}",
             "More details:",
             "Incompatible types for property b.",
             "Expected : string|undefined",
@@ -17463,8 +17463,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.INVALID_ARGUMENT_TYPE,
         LINE_JOINER.join(
             "Invalid type for parameter 1 of function f.",
-            "Expected : {a:number, b:string}",
-            "Found    : {a:number}",
+            "Expected : {a: number, b: string}",
+            "Found    : {a: number}",
             "More details:",
             "The found type is missing property b"));
 
@@ -17474,8 +17474,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.INVALID_ARGUMENT_TYPE,
         LINE_JOINER.join(
             "Invalid type for parameter 1 of function f.",
-            "Expected : {a:number, b:string}",
-            "Found    : {a:number, b:string|undefined=}",
+            "Expected : {a: number, b: string}",
+            "Found    : {a: number, b: string|undefined=}",
             "More details:",
             "In found type, property b is optional but should be required."));
 
@@ -17559,8 +17559,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.MISTYPED_ASSIGN_RHS,
         LINE_JOINER.join(
             "The right side in the assignment is not a subtype of the left side.",
-            "Expected : {a:number}",
-            "Found    : {a:string}",
+            "Expected : {a: number}",
+            "Found    : {a: string}",
             "More details:",
             "Incompatible types for property a.",
             "Expected : number",

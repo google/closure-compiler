@@ -1450,7 +1450,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testWarning(
         js,
         CheckConformance.CONFORMANCE_VIOLATION,
-        "Violation: My rule message\nThe property \"gak\" on type \"I{gak:TOP_FUNCTION}\"");
+        "Violation: My rule message\nThe property \"gak\" on type \"I{gak: TOP_FUNCTION}\"");
   }
 
   public void testCustomBanUnknownInterfaceProp2() {

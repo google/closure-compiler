@@ -1425,7 +1425,7 @@ final class ObjectType implements TypeWithProperties {
           builder.append(", ");
         }
         builder.append(pname);
-        builder.append(':');
+        builder.append(": ");
         props.get(pname).appendTo(builder, ctx);
       }
       builder.append('}');
