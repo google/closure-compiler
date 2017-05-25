@@ -1906,6 +1906,11 @@ public class CompilerOptions implements Serializable {
     return languageOut;
   }
 
+  public boolean needsTranspilationFrom(FeatureSet languageLevel) {
+    return getLanguageIn().toFeatureSet().contains(languageLevel)
+        && !getLanguageOut().toFeatureSet().contains(languageLevel);
+  }
+
   /**
    * Set which set of builtin externs to use.
    */
@@ -1917,18 +1922,11 @@ public class CompilerOptions implements Serializable {
     return environment;
   }
 
-  /**
-   * @return whether we are currently transpiling from ES6 to a lower version.
-   */
-  boolean lowerFromEs6() {
-    return languageOut != LanguageMode.NO_TRANSPILE
-        && languageIn.isEs6OrHigher()
-        && !languageOut.isEs6OrHigher();
-  }
 
   /**
    * @return whether we are currently transpiling to ES6_TYPED
    */
+  @Deprecated
   boolean raiseToEs6Typed() {
     return languageOut != LanguageMode.NO_TRANSPILE
         && !languageIn.isEs6OrHigher()
@@ -3018,33 +3016,20 @@ public class CompilerOptions implements Serializable {
     }
 
     /** Whether this is ECMAScript 5 or higher. */
+    @Deprecated
     public boolean isEs5OrHigher() {
       Preconditions.checkState(this != NO_TRANSPILE);
       return this != LanguageMode.ECMASCRIPT3;
     }
 
     /** Whether this is ECMAScript 6 or higher. */
+    @Deprecated
     public boolean isEs6OrHigher() {
       Preconditions.checkState(this != NO_TRANSPILE);
       switch (this) {
         case ECMASCRIPT3:
         case ECMASCRIPT5:
         case ECMASCRIPT5_STRICT:
-          return false;
-        default:
-          return true;
-      }
-    }
-
-    /** Whether this is ECMAScript 2017 or higher. */
-    public boolean isEs2017OrHigher() {
-      Preconditions.checkState(this != NO_TRANSPILE);
-      switch (this) {
-        case ECMASCRIPT3:
-        case ECMASCRIPT5:
-        case ECMASCRIPT5_STRICT:
-        case ECMASCRIPT_2015:
-        case ECMASCRIPT_2016:
           return false;
         default:
           return true;

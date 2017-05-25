@@ -244,7 +244,7 @@ public class TranspilationPasses {
    */
   static void processTranspile(
       AbstractCompiler compiler, Node combinedRoot, Callback... callbacks) {
-    if (compiler.getOptions().lowerFromEs6()) {
+    if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
       for (Node singleRoot : combinedRoot.children()) {
         if (isScriptEs6ImplOrHigher(singleRoot)) {
           for (Callback callback : callbacks) {
@@ -265,7 +265,7 @@ public class TranspilationPasses {
    * @param callbacks The callbacks that should be invoked if the file has ES6 features.
    */
   static void hotSwapTranspile(AbstractCompiler compiler, Node scriptRoot, Callback... callbacks) {
-    if (compiler.getOptions().lowerFromEs6()) {
+    if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
       if (isScriptEs6ImplOrHigher(scriptRoot)) {
         for (Callback callback : callbacks) {
           scriptRoot.putBooleanProp(Node.TRANSPILED, true);

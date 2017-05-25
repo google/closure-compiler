@@ -890,7 +890,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (options.skipNonTranspilationPasses) {
       // i.e. whitespace-only mode, which will not work with goog.module without:
       whitespaceOnlyPasses();
-      if (options.lowerFromEs6()) {
+      if (options.needsTranspilationFrom(FeatureSet.ES6)) {
         transpileAndDontCheck();
       }
     } else {
@@ -1765,7 +1765,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         externsRoot.addChildToBack(n);
       }
 
-      if (options.lowerFromEs6()
+      if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)
           || options.transformAMDToCJSModules
           || options.processCommonJSModules) {
 
@@ -1791,7 +1791,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                   processJsonInputs(inputs));
         }
 
-        if (options.lowerFromEs6()) {
+        if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)) {
           processEs6Modules();
         }
 

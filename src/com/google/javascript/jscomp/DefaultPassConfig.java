@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT6_TYPED;
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -187,8 +186,7 @@ public final class DefaultPassConfig extends PassConfig {
   protected List<PassFactory> getTranspileOnlyPasses() {
     List<PassFactory> passes = new ArrayList<>();
 
-    if (options.getLanguageIn() == ECMASCRIPT6_TYPED
-        && options.getLanguageOut() != ECMASCRIPT6_TYPED) {
+    if (options.needsTranspilationFrom(FeatureSet.TYPESCRIPT)) {
       passes.add(convertEs6TypedToEs6);
     }
 
@@ -197,17 +195,16 @@ public final class DefaultPassConfig extends PassConfig {
 
     // It's important that the Dart super accessors pass run *before* es6ConvertSuper,
     // which is a "late" ES6 pass. This is enforced in the assertValidOrder method.
-    if (options.dartPass && !options.getLanguageOut().isEs6OrHigher()) {
+    if (options.dartPass && options.needsTranspilationFrom(FeatureSet.ES6)) {
       passes.add(dartSuperAccessorsPass);
     }
 
-    if (options.getLanguageIn().isEs2017OrHigher()
-        && !options.getLanguageOut().isEs2017OrHigher()) {
+    if (options.needsTranspilationFrom(FeatureSet.ES7)) {
       TranspilationPasses.addEs2017Passes(passes);
       passes.add(setFeatureSet(FeatureSet.ES7));
     }
 
-    if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
+    if (options.needsTranspilationFrom(FeatureSet.ES6) && !options.skipTranspilationAndCrash) {
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
       TranspilationPasses.addPostCheckPasses(passes);
@@ -300,8 +297,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(declaredGlobalExternsOnWindow);
     }
 
-    if (options.getLanguageIn() == ECMASCRIPT6_TYPED
-        && options.getLanguageOut() != ECMASCRIPT6_TYPED) {
+    if (options.needsTranspilationFrom(FeatureSet.TYPESCRIPT)) {
       checks.add(convertEs6TypedToEs6);
     }
 
@@ -380,18 +376,17 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(dartSuperAccessorsPass);
     }
 
-    if (options.getLanguageIn().isEs2017OrHigher()
-        && !options.getLanguageOut().isEs2017OrHigher()) {
+    if (options.needsTranspilationFrom(FeatureSet.ES7)) {
       TranspilationPasses.addEs2017Passes(checks);
       checks.add(setFeatureSet(FeatureSet.ES7));
     }
 
-    if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
+    if (options.needsTranspilationFrom(FeatureSet.ES6) && !options.skipTranspilationAndCrash) {
       checks.add(es6ExternsCheck);
       TranspilationPasses.addEs6EarlyPasses(checks);
     }
 
-    if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
+    if (options.needsTranspilationFrom(FeatureSet.ES6) && !options.skipTranspilationAndCrash) {
       TranspilationPasses.addEs6LatePasses(checks);
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(checks);
@@ -413,7 +408,7 @@ public final class DefaultPassConfig extends PassConfig {
       addNonTranspilationCheckPasses(checks);
     }
 
-    if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
+    if (options.needsTranspilationFrom(FeatureSet.ES6) && !options.skipTranspilationAndCrash) {
       TranspilationPasses.addPostCheckPasses(checks);
     }
 
