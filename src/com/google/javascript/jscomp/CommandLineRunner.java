@@ -1546,7 +1546,6 @@ public class CommandLineRunner extends
           .setWarningsWhitelistFile(flags.warningsWhitelistFile)
           .setHideWarningsFor(flags.hideWarningsFor)
           .setAngularPass(flags.angularPass)
-          .setTracerMode(flags.tracerMode)
           .setInstrumentationTemplateFile(flags.instrumentationFile)
           .setNewTypeInference(flags.useNewTypeInference)
           .setJsonStreamMode(flags.jsonStreamMode);
@@ -1725,6 +1724,7 @@ public class CommandLineRunner extends
     }
 
     options.setPrintSourceAfterEachPass(flags.printSourceAfterEachPass);
+    options.setTracerMode(flags.tracerMode);
     options.setStrictModeInput(flags.strictModeInput);
     if (!flags.emitUseStrict) {
       options.setEmitUseStrict(false);

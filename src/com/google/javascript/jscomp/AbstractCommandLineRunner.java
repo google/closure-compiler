@@ -436,7 +436,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     options.processCommonJSModules = config.processCommonJSModules;
     options.moduleRoots = config.moduleRoots;
     options.angularPass = config.angularPass;
-    options.setTracerMode(config.tracerMode);
     options.setNewTypeInference(config.useNewTypeInference);
     options.instrumentationTemplateFile = config.instrumentationTemplateFile;
   }
@@ -2641,14 +2640,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
      */
     public CommandLineConfig setAngularPass(boolean angularPass) {
       this.angularPass = angularPass;
-      return this;
-    }
-
-    private CompilerOptions.TracerMode tracerMode =
-        CompilerOptions.TracerMode.OFF;
-
-    public CommandLineConfig setTracerMode(CompilerOptions.TracerMode tracerMode) {
-      this.tracerMode = tracerMode;
       return this;
     }
 
