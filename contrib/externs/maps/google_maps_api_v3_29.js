@@ -15,7 +15,7 @@
  */
 
 /**
- * @fileoverview Externs for the Google Maps v3.28 API.
+ * @fileoverview Externs for the Google Maps v3.29 API.
  * @see http://code.google.com/apis/maps/documentation/javascript/reference.html
  * @externs
  */
@@ -636,7 +636,7 @@ google.maps.Data.LinearRing.prototype.getType = function() {};
 
 /**
  * @extends {google.maps.MouseEvent}
- * @constructor
+ * @record
  */
 google.maps.Data.MouseEvent = function() {};
 
@@ -1927,7 +1927,7 @@ google.maps.Geocoder = function() {};
 google.maps.Geocoder.prototype.geocode = function(request, callback) {};
 
 /**
- * @constructor
+ * @record
  */
 google.maps.GeocoderAddressComponent = function() {};
 
@@ -1977,7 +1977,7 @@ google.maps.GeocoderComponentRestrictions.prototype.postalCode;
 google.maps.GeocoderComponentRestrictions.prototype.route;
 
 /**
- * @constructor
+ * @record
  */
 google.maps.GeocoderGeometry = function() {};
 
@@ -2052,7 +2052,7 @@ google.maps.GeocoderRequest.prototype.placeId;
 google.maps.GeocoderRequest.prototype.region;
 
 /**
- * @constructor
+ * @record
  */
 google.maps.GeocoderResult = function() {};
 
@@ -2206,7 +2206,7 @@ google.maps.Icon.prototype.url;
 
 /**
  * @extends {google.maps.MouseEvent}
- * @constructor
+ * @record
  */
 google.maps.IconMouseEvent = function() {};
 
