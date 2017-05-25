@@ -28,6 +28,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
     super.setUp();
     enableNormalize();
     enableTypeCheck();
+    // TODO(rluble): enable multistage compilation.
+    disableMultistageCompilation();
   }
 
   @Override

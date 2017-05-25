@@ -117,28 +117,6 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
 
   @Override
   public void test(
-      List<SourceFile> inputs,
-      String[] expected,
-      DiagnosticType error,
-      DiagnosticType warning,
-      String description) {
-    if (this.mode.runsOTI()) {
-      enableTypeCheck();
-      super.test(inputs, expected, error, warning, description);
-      disableTypeCheck();
-    }
-    if (this.mode.runsNTI()) {
-      enableNewTypeInference();
-      super.test(inputs, expected, error, warning, description);
-      disableNewTypeInference();
-    }
-    if (this.mode.runsNeither()) {
-      super.test(inputs, expected, error, warning, description);
-    }
-  }
-
-  @Override
-  public void test(
       List<SourceFile> js,
       List<SourceFile> expected,
       DiagnosticType error,
@@ -161,19 +139,20 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
 
   @Override
   protected void test(
-      Compiler compiler, String[] expected, DiagnosticType error, DiagnosticType warning) {
+      Compiler compiler, List<SourceFile> inputs,
+      List<SourceFile> expected, DiagnosticType error, DiagnosticType warning) {
     if (this.mode.runsOTI()) {
       enableTypeCheck();
-      super.test(compiler, expected, error, warning);
+      super.test(compiler, inputs, expected, error, warning);
       disableTypeCheck();
     }
     if (this.mode.runsNTI()) {
       enableNewTypeInference();
-      super.test(compiler, expected, error, warning);
+      super.test(compiler, inputs, expected, error, warning);
       disableNewTypeInference();
     }
     if (this.mode.runsNeither()) {
-      super.test(compiler, expected, error, warning);
+      super.test(compiler, inputs, expected, error, warning);
     }
   }
 

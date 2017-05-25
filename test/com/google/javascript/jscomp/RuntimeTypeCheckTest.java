@@ -27,6 +27,8 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   public RuntimeTypeCheckTest() {
     super("/** @const */ var undefined;");
     enableTypeCheck();
+    // TODO(rluble): enable multistage compilation.
+    disableMultistageCompilation();
   }
 
   @Override

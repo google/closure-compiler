@@ -16,12 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.ForOverride;
@@ -32,6 +32,8 @@ import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -89,6 +91,11 @@ public abstract class CompilerTestCase extends TestCase {
    * flag controls whether NTI runs before or after the pass.
    */
   private boolean newTypeInferenceEnabled = false;
+
+  /**
+   * If true performs the test using multistage compilation.
+   */
+  private boolean multistageCompilation = true;
 
   /** Whether to test the compiler pass before the type check. */
   protected boolean runTypeCheckAfterProcessing = false;
@@ -561,6 +568,20 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   /**
+   * Run using multistage compilation.
+   */
+  public void enableMultistageCompilation() {
+    multistageCompilation = true;
+  }
+
+  /**
+   * Run using singlestage compilation.
+   */
+  public void disableMultistageCompilation() {
+    multistageCompilation = false;
+  }
+
+  /**
    * Check to make sure that line numbers were preserved.
    */
   public void enableLineNumberCheck(boolean newVal) {
@@ -913,7 +934,7 @@ public abstract class CompilerTestCase extends TestCase {
    * expected, this method just verifies that the error is encountered.
    *
    * @param externs Externs inputs
-   * @param js Inputs
+   * @param inputs Inputs
    * @param expected Expected output, or null if an error is expected
    * @param error Expected error, or null if no error is expected
    * @param warning Expected warning, or null if no warning is expected
@@ -923,29 +944,30 @@ public abstract class CompilerTestCase extends TestCase {
    */
   private void test(
       List<SourceFile> externs,
-      List<SourceFile> js,
+      List<SourceFile> inputs,
       String expected,
       DiagnosticType error,
       DiagnosticType warning,
       String description) {
+
     Compiler compiler = createCompiler();
     lastCompiler = compiler;
 
     CompilerOptions options = getOptions();
 
     options.setCheckTypes(parseTypeInfo || this.typeCheckEnabled);
-    compiler.init(externs, js, options);
+    compiler.init(externs, inputs, options);
 
     if (this.typeCheckEnabled) {
       BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());
     }
 
-    test(compiler, maybeCreateArray(expected), error, warning, description);
+    test(compiler, inputs, maybeCreateSources("expected", expected), error, warning, description);
   }
 
-  private static String[] maybeCreateArray(String expected) {
+  private static List<SourceFile> maybeCreateSources(String name, String expected) {
     if (expected != null) {
-      return new String[] {expected};
+      return Collections.singletonList(SourceFile.fromCode(name, expected));
     }
     return null;
   }
@@ -1031,7 +1053,7 @@ public abstract class CompilerTestCase extends TestCase {
    * and (optionally) that an expected warning is issued. Or, if an error is
    * expected, this method just verifies that the error is encountered.
    *
-   * @param js Inputs
+   * @param inputs Inputs
    * @param expected Expected JS output
    * @param error Expected error, or null if no error is expected
    * @param warning Expected warning, or null if no warning is expected
@@ -1040,49 +1062,32 @@ public abstract class CompilerTestCase extends TestCase {
    *      should not be examined
    */
   public void test(
-      String[] js,
+      String[] inputs,
       String[] expected,
       DiagnosticType error,
       DiagnosticType warning,
       String description) {
-    List<SourceFile> inputs = new ArrayList<>();
-    for (int i = 0; i < js.length; i++) {
-      inputs.add(SourceFile.fromCode("input" + i, js[i]));
-    }
-    test(inputs, expected, error, warning, description);
+    List<SourceFile> inputSources = createSources("input", inputs);
+    List<SourceFile> expectedSources = createSources("expected", expected);
+    test(inputSources, expectedSources, error, warning, description);
   }
 
-  /**
-   * Verifies that the compiler pass's JS output matches the expected output
-   * and (optionally) that an expected warning is issued. Or, if an error is
-   * expected, this method just verifies that the error is encountered.
-   *
-   * @param js Inputs
-   * @param expected Expected JS output
-   * @param error Expected error, or null if no error is expected
-   * @param description The description of the expected warning,
-   *     or null if no warning is expected or if the warning's description
-   *     should not be examined
-   */
-  public void test(
-      List<SourceFile> js,
-      List<SourceFile> expected,
-      DiagnosticType error,
-      DiagnosticType warning,
-      String description) {
-    Compiler compiler = createCompiler();
-    lastCompiler = compiler;
-
-    compiler.init(externsInputs, js, getOptions());
-    test(compiler, expected, error, warning, description);
+  private List<SourceFile> createSources(String name, String... sources) {
+    if (sources == null) {
+      return null;
+    }
+    List<SourceFile> expectedSources = new ArrayList<>();
+    for (int i = 0; i < sources.length; i++) {
+      expectedSources.add(SourceFile.fromCode(name + i, sources[i]));
+    }
+    return expectedSources;
   }
 
   /**
    * Verifies that the compiler pass's JS output matches the expected output
    * and (optionall) that an expected warning is issued. Or, if an error is
    * expected, this method just verifies that the error is encountered.
-   *
-   * @param inputs Inputs
+   *  @param inputs Inputs
    * @param expected Expected JS output
    * @param error Expected error, or null if no error is expected
    * @param description The description of the expected warning,
@@ -1091,7 +1096,7 @@ public abstract class CompilerTestCase extends TestCase {
    */
   public void test(
       List<SourceFile> inputs,
-      String[] expected,
+      List<SourceFile> expected,
       DiagnosticType error,
       DiagnosticType warning,
       String description) {
@@ -1099,7 +1104,7 @@ public abstract class CompilerTestCase extends TestCase {
     lastCompiler = compiler;
 
     compiler.init(externsInputs, inputs, getOptions());
-    test(compiler, expected, error, warning, description);
+    test(compiler, inputs, expected, error, warning, description);
   }
 
   /**
@@ -1140,7 +1145,7 @@ public abstract class CompilerTestCase extends TestCase {
     lastCompiler = compiler;
 
     compiler.initModules(externsInputs, ImmutableList.copyOf(modules), getOptions());
-    test(compiler, expected, error, warning);
+    test(compiler, null, createSources("expected", expected), error, warning);
   }
 
   /**
@@ -1222,7 +1227,7 @@ public abstract class CompilerTestCase extends TestCase {
    */
   private void testSame(
       String externs, String js, DiagnosticType type, String description, boolean error) {
-    List<SourceFile> externsInputs = ImmutableList.of(SourceFile.fromCode("externs", externs));
+    List<SourceFile> externsInputs = maybeCreateSources("externs",  externs);
     if (error) {
       test(externsInputs, js, null, type, null, description);
     } else {
@@ -1293,67 +1298,42 @@ public abstract class CompilerTestCase extends TestCase {
    * Verifies that the compiler pass's JS output matches the expected output
    * and (optionally) that an expected warning is issued. Or, if an error is
    * expected, this method just verifies that the error is encountered.
-   *
-   * @param compiler A compiler that has been initialized via
-   *     {@link Compiler#init}
+   * @param compiler A compiler that has been initialized via {@link Compiler#init}
+   * @param inputs inputs
    * @param expected Expected output, or null if an error is expected
    * @param error Expected error, or null if no error is expected
    * @param warning Expected warning, or null if no warning is expected
    */
   protected void test(
-      Compiler compiler, String[] expected, DiagnosticType error, DiagnosticType warning) {
-    test(compiler, expected, error, warning, null);
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output matches the expected output
-   * and (optionally) that an expected warning is issued. Or, if an error is
-   * expected, this method just verified that the error is encountered.
-   *
-   * @param compiler A compiler that has been initialized via
-   *     {@link Compiler#init}
-   * @param expected Expected output, or null if an error is expected
-   * @param error Expected error, or null if no error is expected
-   * @param warning Expected warning, or null if no warning is expected
-   */
-  private void test(
       Compiler compiler,
-      String[] expected,
+      List<SourceFile> inputs,
+      List<SourceFile> expected,
       DiagnosticType error,
-      DiagnosticType warning,
-      String description) {
-    if (expected == null) {
-      test(compiler, (List<SourceFile>) null, error, warning, description);
-    } else {
-      List<SourceFile> inputs = new ArrayList<>();
-      for (int i = 0; i < expected.length; i++) {
-        inputs.add(SourceFile.fromCode("expected" + i, expected[i]));
-      }
-      test(compiler, inputs, error, warning, description);
-    }
+      DiagnosticType warning) {
+    test(compiler, inputs, expected, error, warning, null);
   }
 
   /**
    * Verifies that the compiler pass's JS output matches the expected output
    * and (optionally) that an expected warning is issued. Or, if an error is
    * expected, this method just verifies that the error is encountered.
-   *
-   * @param compiler A compiler that has been initialized via
+   *  @param compiler A compiler that has been initialized via
    *     {@link Compiler#init}
+   * @param inputs
    * @param expected Expected output, or null if an error is expected
    * @param error Expected error, or null if no error is expected
    * @param warning Expected warning, or null if no warning is expected
    * @param description The description of the expected warning,
-   *      or null if no warning is expected or if the warning's description
-   *      should not be examined
+*      or null if no warning is expected or if the warning's description
    */
   private void test(
       Compiler compiler,
+      List<SourceFile> inputs,
       List<SourceFile> expected,
       DiagnosticType error,
       DiagnosticType warning,
       String description) {
-    Preconditions.checkState(!this.typeCheckEnabled || !this.newTypeInferenceEnabled);
+    checkState(!this.typeCheckEnabled || !this.newTypeInferenceEnabled);
     RecentChange recentChange = new RecentChange();
     compiler.addChangeHandler(recentChange);
 
@@ -1446,8 +1426,24 @@ public abstract class CompilerTestCase extends TestCase {
           runNewTypeInference(compiler, externsRoot, mainRoot);
         }
 
+        boolean runNormalization = normalizeEnabled && i == 0;
+
+        if (multistageCompilation && runNormalization) {
+          // Only run multistage compilation when normalizing.
+
+          // TODO(rluble): Use the multistage pipeline for NTI and modules.
+          if (!newTypeInferenceEnabled
+              && inputs != null
+              && compiler.getModuleGraph() == null) {
+            compiler = multistageSerializeAndDeserialize(compiler, inputs, recentChange);
+            root = compiler.getRoot();
+            externsRoot = compiler.getExternsRoot();
+            mainRoot = compiler.getJsRoot();
+          }
+        }
+
         // Only run the normalize pass once, if asked.
-        if (normalizeEnabled && i == 0) {
+        if (runNormalization) {
           normalizeActualCode(compiler, externsRoot, mainRoot);
         }
 
@@ -1698,6 +1694,31 @@ public abstract class CompilerTestCase extends TestCase {
     }
   }
 
+  private Compiler multistageSerializeAndDeserialize(
+      Compiler compiler,
+      List<SourceFile> inputs,
+      CodeChangeHandler changeHandler) {
+    ErrorManager errorManager = compiler.getErrorManager();
+    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+      compiler.removeChangeHandler(changeHandler);
+      compiler.disableThreads();
+      compiler.saveState(baos);
+
+      try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray())) {
+        compiler = createCompiler();
+        compiler.disableThreads();
+        compiler.init(externsInputs, inputs, getOptions());
+        compiler.restoreState(bais);
+        compiler.setErrorManager(errorManager);
+        compiler.addChangeHandler(changeHandler);
+
+      }
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    return compiler;
+  }
+
   private static void transpileToEs5(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
     List<PassFactory> factories = new ArrayList<>();
     TranspilationPasses.addEs2017Passes(factories);
@@ -1729,10 +1750,8 @@ public abstract class CompilerTestCase extends TestCase {
    * Parses expected JS inputs and returns the root of the parse tree.
    */
   protected Node parseExpectedJs(String[] expected) {
-    List<SourceFile> inputs = new ArrayList<>();
-    for (int i = 0; i < expected.length; i++) {
-      inputs.add(SourceFile.fromCode("expected" + i, expected[i]));
-    }
+    List<SourceFile> inputs = createSources("expected",
+        expected);
     return parseExpectedJs(inputs);
   }
 
@@ -1789,8 +1808,8 @@ public abstract class CompilerTestCase extends TestCase {
     Compiler compiler = createCompiler();
     CompilerOptions options = getOptions();
     compiler.init(
-        ImmutableList.of(SourceFile.fromCode("extern", extern)),
-        ImmutableList.of(SourceFile.fromCode("input", input)),
+        maybeCreateSources("extern", extern),
+        maybeCreateSources("input", input),
         options);
     compiler.parseInputs();
     assertThat(compiler.hasErrors()).isFalse();
@@ -1817,9 +1836,9 @@ public abstract class CompilerTestCase extends TestCase {
       }
 
       // Expected output parsed without implied block.
-      Preconditions.checkState(externs.isRoot());
-      Preconditions.checkState(compareJsDoc);
-      Preconditions.checkState(
+      checkState(externs.isRoot());
+      checkState(compareJsDoc);
+      checkState(
           externs.hasOneChild(), "Compare as tree only works when output has a single script.");
       externs = externs.getFirstChild();
       String explanation = expected.checkTreeEqualsIncludingJsDoc(externs);
@@ -1887,7 +1906,7 @@ public abstract class CompilerTestCase extends TestCase {
    * on module 1, and all other modules depend on module 2.
    */
   static JSModule[] createModuleBush(String... inputs) {
-    Preconditions.checkState(inputs.length > 2);
+    checkState(inputs.length > 2);
     JSModule[] modules = createModules(inputs);
     for (int i = 1; i < modules.length; i++) {
       modules[i].addDependency(modules[i == 1 ? 0 : 1]);

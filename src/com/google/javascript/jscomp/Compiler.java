@@ -3302,6 +3302,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final boolean hasRegExpGlobalReferences;
     private final LifeCycleStage lifeCycleStage;
     private final Set<String> externProperties;
+    private final JSError[] errors;
+    private final JSError[] warnings;
     private final JSModuleGraph moduleGraph;
     private final List<JSModule> modules;
 
@@ -3324,6 +3326,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.typeValidator = compiler.typeValidator;
       this.lifeCycleStage = compiler.getLifeCycleStage();
       this.externProperties = compiler.externProperties;
+      this.errors = compiler.errorManager.getErrors();
+      this.warnings = compiler.errorManager.getWarnings();
       this.moduleGraph = compiler.moduleGraph;
       this.modules = compiler.modules;
     }
@@ -3378,8 +3382,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       externProperties = compilerState.externProperties;
       moduleGraph = compilerState.moduleGraph;
       modules = compilerState.modules;
+      initWarningsGuard(options.getWarningsGuard());
+      maybeSetTracker();
+
+      // restore errors.
+      if (compilerState.errors != null) {
+        for (JSError error : compilerState.errors) {
+          report(CheckLevel.ERROR, error);
+        }
+      }
+      if (compilerState.warnings != null) {
+        for (JSError warning : compilerState.warnings) {
+          report(CheckLevel.WARNING, warning);
+        }
+      }
     }
-    initWarningsGuard(options.getWarningsGuard());
-    maybeSetTracker();
   }
 }
