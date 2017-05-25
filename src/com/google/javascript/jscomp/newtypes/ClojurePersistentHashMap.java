@@ -17,14 +17,14 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.annotations.GwtIncompatible;
-
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Set;
 
 /** A persistent map that simply wraps Clojure's implementation */
 @GwtIncompatible("java.lang.reflect")
-final class ClojurePersistentHashMap<K, V> extends PersistentMap<K, V> {
+final class ClojurePersistentHashMap<K, V> extends PersistentMap<K, V> implements Serializable {
   private static Method assoc;
   private static Method without;
   private final Map map;

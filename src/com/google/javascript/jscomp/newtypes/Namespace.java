@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.newtypes;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -31,7 +32,7 @@ import java.util.Set;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public abstract class Namespace {
+public abstract class Namespace implements Serializable {
   private Map<String, Namespace> namespaces = ImmutableMap.of();
   // Freeze the namespace after GTI and null-out the typedefs.
   private Map<String, Typedef> typedefs = ImmutableMap.of();

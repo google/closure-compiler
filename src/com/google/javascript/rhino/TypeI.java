@@ -39,6 +39,8 @@
 
 package com.google.javascript.rhino;
 
+import java.io.Serializable;
+
 /**
  * A common interface for types in the old type system and the new type system,
  * so that the other passes need not know which type system they are using.
@@ -46,7 +48,7 @@ package com.google.javascript.rhino;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public interface TypeI {
+public interface TypeI extends Serializable {
 
   boolean isBottom();
 

@@ -57,7 +57,11 @@ public final class RawNominalType extends Namespace {
   // If a type A directly inherits from this type, we put it in the set.
   // If this type is generic, we don't record which instantiation A inherits from.
   // We don't store subclasses for Object because there are too many.
-  private final Set<RawNominalType> subtypes = new LinkedHashSet<>();
+
+  // TODO(rluble): Serialize this field. If this field is serialized naively, a cycle is introduced
+  // which results in NPE when attempting to deserialize an HashSet that contains object that are
+  // only partially deserialized.
+  private final transient Set<RawNominalType> subtypes = new LinkedHashSet<>();
   private ImmutableSet<NominalType> interfaces = null;
   private final Kind kind;
   private final boolean isAbstractClass;

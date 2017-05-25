@@ -41,6 +41,7 @@ package com.google.javascript.rhino;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -48,7 +49,7 @@ import java.util.Map;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public interface TypeIRegistry {
+public interface TypeIRegistry extends Serializable {
   // TODO(dimvar): Some methods in this interface are polymorphic because they are used
   // in compiler passes mixed with the old type system.
   // Polymorphism avoids the need for casting in many cases (fewer casts in java 8 than in java 7).

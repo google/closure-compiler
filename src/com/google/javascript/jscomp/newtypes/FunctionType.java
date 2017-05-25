@@ -26,6 +26,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.TypeI;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -40,7 +41,7 @@ import java.util.Objects;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public final class FunctionType {
+public final class FunctionType implements Serializable {
   private final JSTypes commonTypes;
   private final ImmutableList<JSType> requiredFormals;
   private final ImmutableList<JSType> optionalFormals;

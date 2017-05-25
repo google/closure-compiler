@@ -16,13 +16,14 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 /**
  * A type that can contain properties,
  * such as an ObjectType, NominalType, or a Namespace.
  */
-interface TypeWithProperties {
+interface TypeWithProperties extends Serializable {
   /** Get the inferred type of the given property */
   JSType getProp(QualifiedName qname);
 

@@ -35,6 +35,7 @@ import com.google.javascript.jscomp.newtypes.RawNominalType;
 import com.google.javascript.jscomp.newtypes.Typedef;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -46,7 +47,7 @@ import java.util.Set;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-final class NTIScope implements DeclaredTypeRegistry {
+final class NTIScope implements DeclaredTypeRegistry, Serializable {
   private final NTIScope parent;
   private final Node root;
   // Name on the function AST node; null for top scope & anonymous functions

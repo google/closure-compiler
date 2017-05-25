@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.collect.ImmutableList;
+import java.io.Serializable;
 
 /**
  * Uses a counter to create unique names for functions, variables, type
@@ -24,7 +25,7 @@ import com.google.common.collect.ImmutableList;
  * For a name foo, the generated name is of the form foo#COUNT; the original
  * name can be recovered from the unique name.
  */
-public class UniqueNameGenerator {
+public class UniqueNameGenerator implements Serializable {
   private int count;
 
   public UniqueNameGenerator() {

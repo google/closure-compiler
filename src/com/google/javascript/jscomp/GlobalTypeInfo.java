@@ -54,6 +54,7 @@ import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -287,7 +288,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   private final List<TypeMismatch> mismatches;
   private final List<TypeMismatch> implicitInterfaceUses;
   private final JSTypeCreatorFromJSDoc typeParser;
-  private final AbstractCompiler compiler;
+  private final transient AbstractCompiler compiler;
   private final CodingConvention convention;
   private final Map<Node, String> anonFunNames = new LinkedHashMap<>();
   // Uses %, which is not allowed in identifiers, to avoid naming clashes
@@ -337,16 +338,17 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     this.varNameGen = new UniqueNameGenerator();
     this.funNameGen = new DefaultNameGenerator(ImmutableSet.<String>of(), "", null);
     this.commonTypes = JSTypes.init(inCompatibilityMode);
-    Function<String, Void> callback = new Function<String, Void>() {
+    class CallBack implements Function<String, Void>, Serializable {
       @Override
       public Void apply(String pname) {
         allPropertyNames.add(pname);
         externPropertyNames.add(pname);
         return null;
       }
-    };
+    }
+
     this.typeParser = new JSTypeCreatorFromJSDoc(
-        this.commonTypes, this.convention, this.varNameGen, callback);
+        this.commonTypes, this.convention, this.varNameGen, new CallBack());
     this.allPropertyNames.add("prototype");
   }
 

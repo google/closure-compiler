@@ -19,10 +19,11 @@ package com.google.javascript.jscomp.newtypes;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
@@ -43,7 +44,7 @@ import java.util.Set;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public final class JSTypes {
+public final class JSTypes implements Serializable {
   // The builtin Object type represents instances of Object, but also objects
   // whose class we don't know, such as when a function @param is annotated as !Object.
   // However, it is very useful to know that some objects, such as object literals,
@@ -173,7 +174,7 @@ public final class JSTypes {
     this.looseSubtypingForLooseObjects = inCompatibilityMode;
     this.bivariantArrayGenerics = inCompatibilityMode;
 
-    this.MAP_TO_UNKNOWN = new Map<String, JSType>() {
+    class MapToUnknown implements Map<String, JSType>, Serializable {
       @Override
       public void clear() {
         throw new UnsupportedOperationException();
@@ -231,7 +232,7 @@ public final class JSTypes {
 
       @Override
       public Collection<JSType> values() {
-        return ImmutableSet.of(UNKNOWN);
+        return Collections.singleton(UNKNOWN);
       }
 
       @Override
@@ -243,7 +244,9 @@ public final class JSTypes {
       public boolean equals(Object o) {
         return o == this;
       }
-    };
+    }
+
+    this.MAP_TO_UNKNOWN = new MapToUnknown();
   }
 
   public static JSTypes init(boolean inCompatibilityMode) {

@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.Node;
+import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,7 @@ import java.util.regex.Pattern;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public final class NominalType {
+public final class NominalType implements Serializable {
   // In the case of a generic type (rawType.typeParameters non-empty) either:
   // a) typeMap is empty, this is an uninstantiated generic type (Foo<T>), or
   // b) typeMap's keys exactly correspond to the type parameters of rawType;

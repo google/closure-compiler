@@ -28,6 +28,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -45,7 +46,7 @@ import java.util.Set;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public final class JSTypeCreatorFromJSDoc {
+public final class JSTypeCreatorFromJSDoc implements Serializable {
   public static final DiagnosticType INVALID_GENERICS_INSTANTIATION =
       DiagnosticType.warning(
         "JSC_NTI_INVALID_GENERICS_INSTANTIATION",
@@ -665,8 +666,8 @@ public final class JSTypeCreatorFromJSDoc {
       ImmutableList<String> typeParameters, boolean implementedIntfs) {
     ImmutableSet.Builder<NominalType> builder = ImmutableSet.builder();
     for (JSTypeExpression texp : (implementedIntfs ?
-          jsdoc.getImplementedInterfaces() :
-          jsdoc.getExtendedInterfaces())) {
+        jsdoc.getImplementedInterfaces() :
+        jsdoc.getExtendedInterfaces())) {
       Node expRoot = texp.getRoot();
       JSType interfaceType = getTypeFromComment(expRoot, registry, typeParameters);
       NominalType nt = interfaceType.getNominalTypeIfSingletonObj();
@@ -683,7 +684,10 @@ public final class JSTypeCreatorFromJSDoc {
     return builder.build();
   }
 
-  public static class FunctionAndSlotType {
+  /**
+   * Represents the type of a function and the type of the property which it might be assigned.
+   */
+  public static class FunctionAndSlotType implements Serializable {
     public JSType slotType;
     public DeclaredFunctionType functionType;
 
@@ -1033,15 +1037,15 @@ public final class JSTypeCreatorFromJSDoc {
         getExtendedInterfaces(jsdoc, registry, typeParameters);
     boolean noCycles = constructorType.addInterfaces(
         extendedInterfaces.isEmpty()
-        ? ImmutableSet.of(this.commonTypes.getObjectType())
-        : extendedInterfaces);
+            ? ImmutableSet.of(this.commonTypes.getObjectType())
+            : extendedInterfaces);
     if (!noCycles) {
       warnings.add(JSError.make(
           funNode, INHERITANCE_CYCLE, constructorType.toString()));
     }
     builder.addNominalType(constructorType.getInstanceAsJSType());
   }
-
+  
   // /** @param {...?} var_args */ function f(var_args) { ... }
   // var_args shouldn't be used in the body of f
   public static boolean isRestArg(JSDocInfo funJsdoc, String formalParamName) {
@@ -1084,7 +1088,7 @@ public final class JSTypeCreatorFromJSDoc {
     return new ParameterType(t, p);
   }
 
-  private static class ParameterType {
+  private static class ParameterType implements Serializable {
     private final JSType type;
     private final ParameterKind kind;
 
@@ -1094,7 +1098,7 @@ public final class JSTypeCreatorFromJSDoc {
     }
   }
 
-  private static enum ParameterKind {
+  private enum ParameterKind implements Serializable{
     REQUIRED,
     OPTIONAL,
     REST,

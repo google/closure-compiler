@@ -18,13 +18,14 @@ package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.JSTypeExpression;
+import java.io.Serializable;
 
 /**
  *
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public final class Typedef {
+public final class Typedef implements Serializable {
 
   private enum State {
     NOT_RESOLVED,

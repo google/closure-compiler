@@ -15,13 +15,15 @@
  */
 package com.google.javascript.jscomp.newtypes;
 
+import java.io.Serializable;
+
 /**
  * Used by NominalType and ObjectType for @struct, @dict and @unrestricted.
  *
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public class ObjectKind {
+public class ObjectKind implements Serializable {
   private static final int UNRESTRICTED_MASK = 0;
   private static final int STRUCT_MASK = 1;
   private static final int DICT_MASK = 2;

@@ -62,7 +62,6 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.TypeIRegistry;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -80,7 +79,7 @@ import java.util.Set;
  * <p>This class is not thread-safe.
  *
  */
-public class JSTypeRegistry implements TypeIRegistry, Serializable {
+public class JSTypeRegistry implements TypeIRegistry {
   private static final long serialVersionUID = 1L;
 
   /**

@@ -18,6 +18,7 @@ package com.google.javascript.jscomp.newtypes;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -36,7 +37,7 @@ import java.util.Set;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public final class DeclaredFunctionType {
+public final class DeclaredFunctionType implements Serializable {
   private final List<JSType> requiredFormals;
   private final List<JSType> optionalFormals;
   private final JSType restFormals;
@@ -61,7 +62,7 @@ public final class DeclaredFunctionType {
       JSType retType,
       JSType nominalType,
       JSType receiverType,
-      ImmutableList<String> typeParameters,
+      ImmutableList<String> typeParameters,                                            
       boolean isAbstract) {
     Preconditions.checkArgument(retType == null || !retType.isBottom());
     Preconditions.checkNotNull(commonTypes);

@@ -2175,11 +2175,13 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   private static final class UnionType extends JSType {
     final int mask;
     // objs is empty for scalar types
-    final ImmutableSet<ObjectType> objs;
+    // TODO(rluble): Serialize this field (guava issue #1554)
+    final transient ImmutableSet<ObjectType> objs;
     // typeVar is null for non-generic types
     final String typeVar;
     // enums is empty for types that don't have enums
-    final ImmutableSet<EnumType> enums;
+    // TODO(rluble): Serialize this field (guava issue #1554)
+    final transient ImmutableSet<EnumType> enums;
 
     UnionType(JSTypes commonTypes, int mask, ImmutableSet<ObjectType> objs,
         String typeVar, ImmutableSet<EnumType> enums) {
@@ -2253,7 +2255,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   private static final class ObjsType extends JSType {
-    final ImmutableSet<ObjectType> objs;
+    // TODO(rluble): Serialize this field (guava issue #1554)
+    final transient ImmutableSet<ObjectType> objs;
 
     ObjsType(JSTypes commonTypes, ImmutableSet<ObjectType> objs) {
       super(commonTypes);
@@ -2282,7 +2285,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   private static final class NullableObjsType extends JSType {
-    final ImmutableSet<ObjectType> objs;
+    // TODO(rluble): Serialize this field (guava issue #1554)
+    final transient ImmutableSet<ObjectType> objs;
 
     NullableObjsType(JSTypes commonTypes, ImmutableSet<ObjectType> objs) {
       super(commonTypes);

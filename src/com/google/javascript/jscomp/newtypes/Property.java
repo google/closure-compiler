@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.newtypes;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.Node;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -28,7 +29,7 @@ import java.util.Objects;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-class Property {
+class Property implements Serializable {
   // AST node where the property is defined; most commonly null.
   // TODO(dimvar): if having this field on every property wastes memory,
   // consider alternatives:
