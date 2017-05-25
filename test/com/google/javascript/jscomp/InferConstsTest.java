@@ -15,21 +15,39 @@
  */
 package com.google.javascript.jscomp;
 
-import static junit.framework.TestCase.assertFalse;
+import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
-import java.util.HashMap;
-import java.util.Map;
-import junit.framework.TestCase;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Tests for {@link InferConsts}.
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
-public final class InferConstsTest extends TestCase {
+public final class InferConstsTest extends CompilerTestCase {
+  private FindConstants constFinder;
+
+  private String[] names;
+
+  @Override
+  public void setUp() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+  }
+
+  @Override
+  public CompilerPass getProcessor(final Compiler compiler) {
+    constFinder = new FindConstants(names);
+    return new CompilerPass() {
+      @Override
+      public void process(Node externs, Node root) {
+        new InferConsts(compiler).process(externs, root);
+        NodeTraversal.traverseEs6(compiler, root, constFinder);
+      }
+    };
+  }
+
   public void testSimple() {
     testConsts("var x = 3;", "x");
     testConsts("/** @const */ var x;", "x");
@@ -147,45 +165,27 @@ public final class InferConstsTest extends TestCase {
     testInferConstsHelper(false, js, constants);
   }
 
-  private void testInferConstsHelper(boolean constExpected,
-      String js, String... constants) {
-    Compiler compiler = new Compiler();
+  private void testInferConstsHelper(boolean constExpected, String js, String... constants) {
+    names = constants;
 
-    SourceFile input = SourceFile.fromCode("js", js);
-    compiler.init(ImmutableList.<SourceFile>of(), ImmutableList.of(input),
-        new CompilerOptions());
-
-    compiler.options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
-    compiler.setLanguageMode(LanguageMode.ECMASCRIPT_2015);
-    Node root = compiler.parseInputs();
-    assertNotNull("Unexpected parse error(s): " + Joiner.on('\n').join(compiler.getErrors()), root);
-    CompilerPass inferConsts = new InferConsts(compiler);
-    inferConsts.process(
-        compiler.getExternsRoot(),
-        compiler.getJsRoot());
-
-    Node n = compiler.getRoot().getLastChild();
-
-    FindConstants constFinder = new FindConstants(constants);
-    NodeTraversal.traverseEs6(compiler, n, constFinder);
+    testSame(js);
 
     for (String name : constants) {
       if (constExpected) {
-        assertTrue("Expect constant: " + name,
-            constFinder.foundNodes.containsKey(name));
+        assertThat(constFinder.foundNodes).contains(name);
       } else {
-        assertFalse("Unexpected constant: " + name, constFinder.foundNodes.containsKey(name));
+        assertThat(constFinder.foundNodes).doesNotContain(name);
       }
     }
   }
 
   private static class FindConstants extends NodeTraversal.AbstractPostOrderCallback {
     final String[] names;
-    final Map<String, Node> foundNodes;
+    final Set<String> foundNodes;
 
     FindConstants(String[] names) {
       this.names = names;
-      foundNodes = new HashMap<>();
+      foundNodes = new HashSet<>();
     }
 
     @Override
@@ -195,7 +195,7 @@ public final class InferConstsTest extends TestCase {
                 || ((n.isStringKey() || n.isMemberFunctionDef())
                     && n.getString().equals(name)))
             && n.getBooleanProp(Node.IS_CONSTANT_VAR)) {
-          foundNodes.put(name, n);
+          foundNodes.add(name);
         }
       }
     }
