@@ -91,7 +91,7 @@ class SanityCheck implements CompilerPass {
     }
 
     String source = compiler.toSource(root);
-    Node root2 = compiler.parseSyntheticCode(source);
+    Node root2 = compiler.parseSyntheticCode("<SanityCheck.java>", source);
     if (compiler.hasHaltingErrors()) {
       compiler.report(JSError.make(CANNOT_PARSE_GENERATED_CODE,
               Strings.truncateAtMaxLength(source, 100, true)));
