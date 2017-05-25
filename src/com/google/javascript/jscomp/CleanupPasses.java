@@ -87,10 +87,10 @@ class CleanupPasses extends PassConfig {
 
   /**
    * A CleanupPass implementation that will remove stored scopes from the
-   * MemoizedScopeCreator of the compiler instance for a the hot swapped script.
+   * MemoizedTypedScopeCreator of the compiler instance for a the hot swapped script.
    * <p>
    * This pass will also clear out Source Nodes of Function Types declared on
-   * Vars tracked by MemoizedScopeCreator
+   * Vars tracked by MemoizedTypedScopeCreator
    */
   static class MemoizedScopeCleanupPass implements HotSwapCompilerPass {
 
@@ -103,8 +103,8 @@ class CleanupPasses extends PassConfig {
     @Override
     public void hotSwapScript(Node scriptRoot, Node originalRoot) {
       ScopeCreator creator = compiler.getTypedScopeCreator();
-      if (creator instanceof MemoizedScopeCreator) {
-        MemoizedScopeCreator scopeCreator = (MemoizedScopeCreator) creator;
+      if (creator instanceof MemoizedTypedScopeCreator) {
+        MemoizedTypedScopeCreator scopeCreator = (MemoizedTypedScopeCreator) creator;
         String newSrc = scriptRoot.getSourceFileName();
         for (TypedVar var : scopeCreator.getAllSymbols()) {
           TypeI type = var.getType();

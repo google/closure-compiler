@@ -12044,7 +12044,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   public void testTypeCheckStandaloneAST() throws Exception {
     Node n = compiler.parseTestCode("function Foo() { }");
     typeCheck(n);
-    MemoizedScopeCreator scopeCreator = new MemoizedScopeCreator(
+    MemoizedTypedScopeCreator scopeCreator = new MemoizedTypedScopeCreator(
         new TypedScopeCreator(compiler));
     TypedScope topScope = scopeCreator.createScope(n, null);
 

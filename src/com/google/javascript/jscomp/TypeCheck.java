@@ -325,7 +325,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
   private final JSTypeRegistry typeRegistry;
   private TypedScope topScope;
 
-  private MemoizedScopeCreator scopeCreator;
+  private MemoizedTypedScopeCreator scopeCreator;
 
   private final boolean reportUnknownTypes;
   private SubtypingMode subtypingMode = SubtypingMode.NORMAL;
@@ -356,7 +356,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       ReverseAbstractInterpreter reverseInterpreter,
       JSTypeRegistry typeRegistry,
       TypedScope topScope,
-      MemoizedScopeCreator scopeCreator) {
+      MemoizedTypedScopeCreator scopeCreator) {
     this.compiler = compiler;
     this.validator = compiler.getTypeValidator();
     this.reverseInterpreter = reverseInterpreter;
@@ -411,7 +411,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     Preconditions.checkState(jsRoot.getParent() != null);
     Node externsAndJsRoot = jsRoot.getParent();
 
-    scopeCreator = new MemoizedScopeCreator(new TypedScopeCreator(compiler));
+    scopeCreator = new MemoizedTypedScopeCreator(new TypedScopeCreator(compiler));
     topScope = scopeCreator.createScope(externsAndJsRoot, null);
 
     TypeInferencePass inference = new TypeInferencePass(compiler,

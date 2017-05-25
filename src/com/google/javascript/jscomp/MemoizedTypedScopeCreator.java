@@ -44,7 +44,7 @@ import java.util.Map;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class MemoizedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVar, TypedVar> {
+class MemoizedTypedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVar, TypedVar> {
 
   private final Map<Node, TypedScope> scopes = new LinkedHashMap<>();
   private final ScopeCreator delegate;
@@ -52,7 +52,7 @@ class MemoizedScopeCreator implements ScopeCreator, StaticSymbolTable<TypedVar, 
   /**
    * @param delegate The real source of Scope objects.
    */
-  MemoizedScopeCreator(ScopeCreator delegate) {
+  MemoizedTypedScopeCreator(ScopeCreator delegate) {
     this.delegate = delegate;
   }
 

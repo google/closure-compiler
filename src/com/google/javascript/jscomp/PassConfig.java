@@ -42,7 +42,7 @@ public abstract class PassConfig {
    * we can make two separate passes over the AST, one for inferring types
    * and one for checking types.
    */
-  private MemoizedScopeCreator typedScopeCreator;
+  private MemoizedTypedScopeCreator typedScopeCreator;
 
   /**
    * This is the scope creator that {@code TypedScopeCreator} delegates to.
@@ -64,7 +64,7 @@ public abstract class PassConfig {
    */
   void regenerateGlobalTypedScope(AbstractCompiler compiler, Node root) {
     internalScopeCreator = new TypedScopeCreator(compiler);
-    typedScopeCreator = new MemoizedScopeCreator(internalScopeCreator);
+    typedScopeCreator = new MemoizedTypedScopeCreator(internalScopeCreator);
     topScope = typedScopeCreator.createScope(root, null);
   }
 
@@ -89,7 +89,7 @@ public abstract class PassConfig {
   /**
    * Gets the scope creator for typed scopes.
    */
-  MemoizedScopeCreator getTypedScopeCreator() {
+  MemoizedTypedScopeCreator getTypedScopeCreator() {
     return typedScopeCreator;
   }
 
@@ -274,7 +274,7 @@ public abstract class PassConfig {
       return delegate.getTranspileOnlyPasses();
     }
 
-    @Override MemoizedScopeCreator getTypedScopeCreator() {
+    @Override MemoizedTypedScopeCreator getTypedScopeCreator() {
       return delegate.getTypedScopeCreator();
     }
 

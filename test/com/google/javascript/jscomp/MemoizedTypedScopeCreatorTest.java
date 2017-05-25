@@ -22,19 +22,19 @@ import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
 
 /**
- * A dopey test for {@link MemoizedScopeCreator}. This is mostly here
+ * A dopey test for {@link MemoizedTypedScopeCreator}. This is mostly here
  * just so it's easy to write more tests if this becomes more complicated.
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public final class MemoizedScopeCreatorTest extends TestCase {
+public final class MemoizedTypedScopeCreatorTest extends TestCase {
 
   public void testMemoization() throws Exception {
     Node root1 = new Node(Token.ROOT);
     Node root2 = new Node(Token.ROOT);
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
-    ScopeCreator creator = new MemoizedScopeCreator(
+    ScopeCreator creator = new MemoizedTypedScopeCreator(
         SyntacticScopeCreator.makeTyped(compiler));
     Scope scopeA = creator.createScope(root1, null);
     assertSame(scopeA, creator.createScope(root1, null));
@@ -45,7 +45,7 @@ public final class MemoizedScopeCreatorTest extends TestCase {
     Compiler compiler = new Compiler();
     compiler.initOptions(new CompilerOptions());
     Node root = new Node(Token.ROOT);
-    ScopeCreator creator = new MemoizedScopeCreator(
+    ScopeCreator creator = new MemoizedTypedScopeCreator(
         SyntacticScopeCreator.makeTyped(compiler));
     Scope scopeA = creator.createScope(root, null);
 

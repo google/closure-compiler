@@ -37,12 +37,12 @@ class TypeInferencePass implements CompilerPass {
   private final AbstractCompiler compiler;
   private final ReverseAbstractInterpreter reverseInterpreter;
   private final TypedScope topScope;
-  private final MemoizedScopeCreator scopeCreator;
+  private final MemoizedTypedScopeCreator scopeCreator;
   private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
 
   TypeInferencePass(AbstractCompiler compiler,
       ReverseAbstractInterpreter reverseInterpreter,
-      TypedScope topScope, MemoizedScopeCreator scopeCreator) {
+      TypedScope topScope, MemoizedTypedScopeCreator scopeCreator) {
     this.compiler = compiler;
     this.reverseInterpreter = reverseInterpreter;
     this.topScope = topScope;
