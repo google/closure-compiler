@@ -1947,7 +1947,7 @@ public abstract class CompilerTestCase extends TestCase {
 
   Compiler createCompiler() {
     Compiler compiler = new Compiler();
-    compiler.setLanguageMode(acceptedLanguage);
+    compiler.setFeatureSet(acceptedLanguage.toFeatureSet());
     return compiler;
   }
 

@@ -22,6 +22,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.parsing.Config;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.rhino.ErrorReporter;
@@ -396,14 +397,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
   abstract CompilerOptions getOptions();
 
-  /**
-   * The language mode of the current root node. This will match the languageIn
-   * field of the {@link CompilerOptions} before transpilation happens, and
-   * match the languageOut field after transpilation.
-   */
-  abstract CompilerOptions.LanguageMode getLanguageMode();
+  abstract FeatureSet getFeatureSet();
 
-  abstract void setLanguageMode(CompilerOptions.LanguageMode mode);
+  abstract void setFeatureSet(FeatureSet fs);
 
   // TODO(bashir) It would be good to extract a single dumb data object with
   // only getters and setters that keeps all global information we keep for a

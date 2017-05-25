@@ -111,6 +111,9 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     NodeTraversal.traverseEs6(compiler, scriptRoot, scanner);
     NodeTraversal.traverseEs6(compiler, externs, this);
     NodeTraversal.traverseEs6(compiler, scriptRoot, this);
+    if (!compiler.hasHaltingErrors()) {
+      compiler.setFeatureSet(compiler.getFeatureSet().withoutTypes());
+    }
   }
 
   @Override

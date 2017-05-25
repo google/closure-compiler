@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT6_TYPED;
-import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_2016;
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -27,7 +26,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CompilerOptions.ExtractPrototypeMemberDeclarationsMode;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption;
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
@@ -47,6 +45,7 @@ import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
 import com.google.javascript.jscomp.parsing.ParserRunner;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -205,7 +204,7 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.getLanguageIn().isEs2017OrHigher()
         && !options.getLanguageOut().isEs2017OrHigher()) {
       TranspilationPasses.addEs2017Passes(passes);
-      passes.add(setLanguageMode(ECMASCRIPT_2016));
+      passes.add(setFeatureSet(FeatureSet.ES7));
     }
 
     if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
@@ -215,7 +214,7 @@ public final class DefaultPassConfig extends PassConfig {
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(passes);
       }
-      passes.add(setLanguageMode(options.getLanguageOut()));
+      passes.add(setFeatureSet(options.getLanguageOut().toFeatureSet()));
     }
 
     if (options.raiseToEs6Typed()) {
@@ -384,7 +383,7 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.getLanguageIn().isEs2017OrHigher()
         && !options.getLanguageOut().isEs2017OrHigher()) {
       TranspilationPasses.addEs2017Passes(checks);
-      checks.add(setLanguageMode(ECMASCRIPT_2016));
+      checks.add(setFeatureSet(FeatureSet.ES7));
     }
 
     if (options.getLanguageIn().isEs6OrHigher() && !options.skipTranspilationAndCrash) {
@@ -399,7 +398,7 @@ public final class DefaultPassConfig extends PassConfig {
       }
       // TODO(bradfordcsmith): This marking is really about how variable scoping is handled during
       //     type checking. It should really be handled in a more direct fashion.
-      checks.add(setLanguageMode(options.getLanguageOut()));
+      checks.add(setFeatureSet(options.getLanguageOut().toFeatureSet()));
     }
 
     if (options.raiseToEs6Typed()) {
@@ -1422,14 +1421,14 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
-  private final PassFactory setLanguageMode(final LanguageMode mode) {
-    return new PassFactory("setLanguageMode:" + mode, true) {
+  private final PassFactory setFeatureSet(final FeatureSet featureSet) {
+    return new PassFactory("setFeatureSet:" + featureSet.toLanguageModeString(), true) {
       @Override
       protected CompilerPass create(final AbstractCompiler compiler) {
         return new CompilerPass() {
           @Override
           public void process(Node externs, Node root) {
-            compiler.setLanguageMode(mode);
+            compiler.setFeatureSet(featureSet);
           }
         };
       }

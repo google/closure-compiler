@@ -179,6 +179,20 @@ public final class FeatureSet implements Serializable {
     return this.contains(other) ? this : this.union(other);
   }
 
+  public FeatureSet withoutModules() {
+    if (!es6Modules) {
+      return this;
+    }
+    return new FeatureSet(number, supported, false, typeScript);
+  }
+
+  public FeatureSet withoutTypes() {
+    if (!typeScript) {
+      return this;
+    }
+    return new FeatureSet(number, supported, es6Modules, false);
+  }
+
   /**
    * Returns a new {@link FeatureSet} including all features of both {@code this} and {@code other}.
    */

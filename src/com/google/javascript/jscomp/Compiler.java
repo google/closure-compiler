@@ -37,6 +37,7 @@ import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideException;
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.type.ChainableReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
@@ -159,9 +160,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // Used for debugging; to see the compiled code between passes
   private String lastJsSource = null;
 
-  /** @see #getLanguageMode() */
-  private CompilerOptions.LanguageMode languageMode =
-      CompilerOptions.LanguageMode.ECMASCRIPT3;
+  private FeatureSet featureSet;
 
   private final Map<InputId, CompilerInput> inputsById = new ConcurrentHashMap<>();
 
@@ -345,7 +344,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   public void initOptions(CompilerOptions options) {
     this.options = options;
-    this.languageMode = options.getLanguageIn();
+    this.setFeatureSet(options.getLanguageIn().toFeatureSet());
     if (errorManager == null) {
       if (this.outStream == null) {
         setErrorManager(
@@ -468,8 +467,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           CheckLevel.WARNING);
     }
 
-    if (options.checkGlobalThisLevel.isOn() &&
-        !options.disables(DiagnosticGroups.GLOBAL_THIS)) {
+    if (options.checkGlobalThisLevel.isOn() && !options.disables(DiagnosticGroups.GLOBAL_THIS)) {
       options.setWarningLevel(
           DiagnosticGroups.GLOBAL_THIS,
           options.checkGlobalThisLevel);
@@ -486,10 +484,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // checks the externs file for validity. If you don't want to warn
     // about missing variable declarations, we shut that specific
     // error off.
-    if (!options.checkSymbols &&
-        !options.enables(DiagnosticGroups.CHECK_VARIABLES)) {
-      options.setWarningLevel(
-          DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF);
+    if (!options.checkSymbols && !options.enables(DiagnosticGroups.CHECK_VARIABLES)) {
+      options.setWarningLevel(DiagnosticGroups.CHECK_VARIABLES, CheckLevel.OFF);
     }
   }
 
@@ -1312,13 +1308,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  CompilerOptions.LanguageMode getLanguageMode() {
-    return languageMode;
+  FeatureSet getFeatureSet() {
+    return featureSet;
   }
 
   @Override
-  void setLanguageMode(CompilerOptions.LanguageMode mode) {
-    languageMode = mode;
+  void setFeatureSet(FeatureSet fs) {
+    featureSet = fs;
   }
 
   /**
@@ -1349,8 +1345,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   boolean areNodesEqualForInlining(Node n1, Node n2) {
-    if (options.shouldAmbiguateProperties() ||
-        options.shouldDisambiguateProperties()) {
+    if (options.shouldAmbiguateProperties() || options.shouldDisambiguateProperties()) {
       // The type based optimizations require that type information is preserved
       // during other optimizations.
       return n1.isEquivalentToTyped(n2);
@@ -1863,10 +1858,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
         // TODO(johnlenz): we shouldn't need to check both isExternExportsEnabled and
         // externExportsPath.
-        if (options.sourceMapOutputPath != null ||
-            options.isExternExportsEnabled() ||
-            options.externExportsPath != null ||
-            !options.replaceStringsFunctionDescriptions.isEmpty()) {
+        if (options.sourceMapOutputPath != null
+            || options.isExternExportsEnabled()
+            || options.externExportsPath != null
+            || !options.replaceStringsFunctionDescriptions.isEmpty()) {
 
           // Annotate the nodes in the tree with information from the
           // input file. This information is used to construct the SourceMap.
@@ -2092,6 +2087,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
       new ProcessEs6Modules(this).processFile(root, forceRewrite);
     }
+
+    setFeatureSet(featureSet.withoutModules());
   }
 
   /**
@@ -3103,7 +3100,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   private void processNewScript(JsAst ast, Node originalRoot) {
-    languageMode = options.getLanguageIn();
+    setFeatureSet(options.getLanguageIn().toFeatureSet());
 
     Node js = ast.getAstRoot(this);
     checkNotNull(js);
@@ -3287,6 +3284,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final Node externAndJsRoot;
     private final Node externsRoot;
     private final Node jsRoot;
+    private final FeatureSet featureSet;
     private final List<CompilerInput> externs;
     private final List<CompilerInput> inputs;
     private final Map<InputId, CompilerInput> inputsById;
@@ -3309,12 +3307,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     CompilerState(Compiler compiler) {
       this.externsRoot = checkNotNull(compiler.externsRoot);
-      this.jsRoot =  checkNotNull(compiler.jsRoot);
-      this.externAndJsRoot =  checkNotNull(compiler.externAndJsRoot);
-      this.typeRegistry =  compiler.typeRegistry;
-      this.externs =  compiler.externs;
-      this.inputs =  checkNotNull(compiler.inputs);
-      this.inputsById =  checkNotNull(compiler.inputsById);
+      this.jsRoot = checkNotNull(compiler.jsRoot);
+      this.externAndJsRoot = checkNotNull(compiler.externAndJsRoot);
+      this.featureSet = checkNotNull(compiler.featureSet);
+      this.typeRegistry = compiler.typeRegistry;
+      this.externs = compiler.externs;
+      this.inputs = checkNotNull(compiler.inputs);
+      this.inputsById = checkNotNull(compiler.inputsById);
       this.mostRecentTypeChecker = compiler.mostRecentTypechecker;
       this.synthesizedExternsInput = compiler.synthesizedExternsInput;
       this.synthesizedExternsInputAtEnd = compiler.synthesizedExternsInputAtEnd;
@@ -3360,6 +3359,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           return compilerState;
         }
       });
+      featureSet = compilerState.featureSet;
       externs = compilerState.externs;
       inputs = compilerState.inputs;
       inputsById.clear();

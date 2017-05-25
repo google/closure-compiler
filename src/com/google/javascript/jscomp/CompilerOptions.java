@@ -31,6 +31,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.parsing.Config;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.SourcePosition;
@@ -3067,6 +3068,28 @@ public class CompilerOptions implements Serializable {
       } catch (IllegalArgumentException e) {
         return null; // unknown name.
       }
+    }
+
+    FeatureSet toFeatureSet() {
+      switch (this) {
+        case ECMASCRIPT3:
+          return FeatureSet.ES3;
+        case ECMASCRIPT5:
+        case ECMASCRIPT5_STRICT:
+          return FeatureSet.ES5;
+        case ECMASCRIPT_2015:
+          return FeatureSet.ES6_MODULES;
+        case ECMASCRIPT_2016:
+          return FeatureSet.ES7_MODULES;
+        case ECMASCRIPT_2017:
+        case ECMASCRIPT_NEXT:
+          return FeatureSet.ES8_MODULES;
+        case ECMASCRIPT6_TYPED:
+          return FeatureSet.TYPESCRIPT;
+        case NO_TRANSPILE:
+          throw new IllegalStateException();
+      }
+      throw new IllegalStateException();
     }
   }
 

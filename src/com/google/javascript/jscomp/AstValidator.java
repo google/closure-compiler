@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -357,7 +357,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateYield(Node n) {
-    validateEs6Feature("yield", n);
+    validateFeature(Feature.GENERATORS, n);
     validateNodeType(Token.YIELD, n);
     validateChildCountIn(n, 0, 1);
     if (n.hasChildren()) {
@@ -366,7 +366,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateAwait(Node n) {
-    validateEs6Feature("async function", n);
+    validateFeature(Feature.ASYNC_FUNCTIONS, n);
     validateNodeType(Token.AWAIT, n);
     validateWithinAsyncFunction(n);
   }
@@ -379,7 +379,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateImport(Node n) {
-    validateEs6Feature("import statement", n);
+    validateFeature(Feature.MODULES, n);
     validateNodeType(Token.IMPORT, n);
     validateChildCount(n);
 
@@ -457,7 +457,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateTaggedTemplateLit(Node n) {
-    validateEs6Feature("template literal", n);
+    validateFeature(Feature.TEMPLATE_LITERALS, n);
     validateNodeType(Token.TAGGED_TEMPLATELIT, n);
     validateChildCount(n);
     validateExpression(n.getFirstChild());
@@ -465,7 +465,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateTemplateLit(Node n) {
-    validateEs6Feature("template literal", n);
+    validateFeature(Feature.TEMPLATE_LITERALS, n);
     validateNodeType(Token.TEMPLATELIT, n);
     if (!n.hasChildren()) {
       return;
@@ -490,7 +490,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateInterface(Node n) {
-    validateEs6TypedFeature("interface", n);
+    validateFeature(Feature.INTERFACE, n);
     validateNodeType(Token.INTERFACE, n);
     validateChildCount(n);
     Node name = n.getFirstChild();
@@ -566,7 +566,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateClassHelper(Node n, boolean isAmbient) {
-    validateEs6Feature("classes", n);
+    validateFeature(Feature.CLASSES, n);
     validateNodeType(Token.CLASS, n);
     validateChildCount(n);
 
@@ -724,7 +724,7 @@ public final class AstValidator implements CompilerPass {
     Node name = n.getFirstChild();
     Node body = n.getLastChild();
     if (n.isArrowFunction()) {
-      validateEs6Feature("arrow functions", n);
+      validateFeature(Feature.ARROW_FUNCTIONS, n);
       validateEmptyName(name);
       if (body.isNormalBlock()) {
         validateBlock(body);
@@ -747,21 +747,6 @@ public final class AstValidator implements CompilerPass {
 
   private void validateParameters(Node n) {
     validateNodeType(Token.PARAM_LIST, n);
-
-    if (isEs6OrHigher()) {
-      validateParametersEs6(n);
-    } else {
-      validateParametersEs5(n);
-    }
-  }
-
-  private void validateParametersEs5(Node n) {
-    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      validateName(c);
-    }
-  }
-
-  private void validateParametersEs6(Node n) {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       if (c.isRest()) {
         if (c.getNext() != null) {
@@ -783,6 +768,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateDefaultValue(Token type, Node n) {
+    validateFeature(Feature.DEFAULT_PARAMETERS, n);
     validateAssignmentExpression(n);
     Node lhs = n.getFirstChild();
 
@@ -810,6 +796,7 @@ public final class AstValidator implements CompilerPass {
    * @param n
    */
   private void validateRest(Token contextType, Node n) {
+    validateFeature(Feature.REST_PARAMETERS, n);
     validateNodeType(Token.REST, n);
     validateChildCount(n);
     validateLHS(contextType, n.getFirstChild());
@@ -886,6 +873,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateArrayPattern(Token type, Node n) {
+    validateFeature(Feature.DESTRUCTURING, n);
     validateNodeType(Token.ARRAY_PATTERN, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       // When the array pattern is a direct child of a var/let/const node,
@@ -905,6 +893,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateObjectPattern(Token type, Node n) {
+    validateFeature(Feature.DESTRUCTURING, n);
     validateNodeType(Token.OBJECT_PATTERN, n);
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       // When the object pattern is a direct child of a var/let/const node,
@@ -1253,11 +1242,7 @@ public final class AstValidator implements CompilerPass {
     validateNodeType(Token.STRING_KEY, n);
     validateObjectLiteralKeyName(n);
 
-    if (isEs6OrHigher()) {
-      validateChildCountIn(n, 0, 1);
-    } else {
-      validateChildCount(n, 1);
-    }
+    validateChildCountIn(n, 0, 1);
 
     if (n.hasOneChild()) {
       validateExpression(n.getFirstChild());
@@ -1342,13 +1327,13 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateTypeAlias(Node n) {
-    validateEs6TypedFeature("type alias", n);
+    validateFeature(Feature.TYPE_ALIAS, n);
     validateNodeType(Token.TYPE_ALIAS, n);
     validateChildCount(n);
   }
 
   private void validateAmbientDeclaration(Node n) {
-    validateEs6TypedFeature("ambient declaration", n);
+    validateFeature(Feature.AMBIENT_DECLARATION, n);
     validateNodeType(Token.DECLARE, n);
     validateAmbientDeclarationHelper(n.getFirstChild());
   }
@@ -1384,7 +1369,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateNamespace(Node n, boolean isAmbient) {
-    validateEs6TypedFeature("namespace", n);
+    validateFeature(Feature.NAMESPACE_DECLARATION, n);
     validateNodeType(Token.NAMESPACE, n);
     validateChildCount(n);
     validateNamespaceName(n.getFirstChild());
@@ -1476,19 +1461,9 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateEs6Feature(String feature, Node n) {
-    if (!isEs6OrHigher()) {
-      violation("Feature '" + feature + "' is only allowed in ES6 mode.", n);
-    }
-  }
-
-  private boolean isEs6OrHigher() {
-    return compiler.getLanguageMode().isEs6OrHigher();
-  }
-
-  private void validateEs6TypedFeature(String feature, Node n) {
-    if (!compiler.getLanguageMode().equals(LanguageMode.ECMASCRIPT6_TYPED)) {
-      violation("Feature '" + feature + "' is only allowed in ES6 Typed mode.", n);
+  private void validateFeature(Feature feature, Node n) {
+    if (!compiler.getFeatureSet().contains(feature)) {
+      violation("AST should not contain " + feature, n);
     }
   }
 }
