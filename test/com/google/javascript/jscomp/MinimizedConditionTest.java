@@ -17,14 +17,13 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.MinimizedCondition.MinimizationStyle;
 import com.google.javascript.rhino.Node;
-
-import junit.framework.TestCase;
-
 import java.util.ArrayList;
 import java.util.List;
+import junit.framework.TestCase;
 
 /**
  * Tests for {@link MinimizedCondition} in isolation.
@@ -50,17 +49,23 @@ public final class MinimizedConditionTest extends TestCase {
     return exprResult.getFirstChild();
   }
 
+  private static Node cloneAttachedTree(Node n) {
+    Preconditions.checkState(n.getParent().getFirstChild() == n);
+    return n.getParent().cloneTree().getFirstChild();
+  }
+
   private static void minCond(String input, String positive, String negative) {
     Node inputNode = parseExpr(input);
-    MinimizedCondition result = MinimizedCondition.fromConditionNode(inputNode);
+    MinimizedCondition result1 = MinimizedCondition.fromConditionNode(cloneAttachedTree(inputNode));
+    MinimizedCondition result2 = MinimizedCondition.fromConditionNode(cloneAttachedTree(inputNode));
     Node positiveNode = parseExpr(positive);
     Node negativeNode = parseExpr(negative);
     // With counting the leading NOT node:
     Node positiveResult =
-        result.getMinimized(MinimizationStyle.PREFER_UNNEGATED).getNode();
+        result1.getMinimized(MinimizationStyle.PREFER_UNNEGATED).buildReplacement();
     // Without counting the leading NOT node:
     Node negativeResult =
-        result.getMinimized(MinimizationStyle.ALLOW_LEADING_NOT).getNode();
+        result2.getMinimized(MinimizationStyle.ALLOW_LEADING_NOT).buildReplacement();
     if (!positiveResult.isEquivalentTo(positiveNode)) {
       fail("Not equal:" +
           "\nExpected: " + positive +

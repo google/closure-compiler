@@ -314,6 +314,16 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
     fold("if(!a&&!b)foo()", "(a||b)||foo()");
   }
 
+  public void testMinimizeDemorgan2() {
+    // Make sure trees with cloned functions are marked as changed
+    fold("(!(a&&!((function(){})())))||foo()", "!a||(function(){})()||foo()");
+  }
+
+  public void testMinimizeDemorgan2b() {
+    // Make sure unchanged trees with functions are not marked as changed
+    foldSame("!a||(function(){})()||foo()");
+  }
+
   public void testMinimizeDemorgan3() {
     fold("if((!a||!b)&&(c||d)) foo()", "(a&&b||!c&&!d)||foo()");
   }
@@ -327,9 +337,12 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
          "(!x || y!==2 && f() || y!==3 && h()) || foo()");
   }
 
-  public void testMinimizeDemorgan20() {
+  public void testMinimizeDemorgan20a() {
     fold("if (0===c && (2===a || 1===a)) f(); else g()",
          "if (0!==c || 2!==a && 1!==a) g(); else f()");
+  }
+
+  public void testMinimizeDemorgan20b() {
     fold("if (0!==c || 2!==a && 1!==a) g(); else f()",
          "(0!==c || 2!==a && 1!==a) ? g() : f()");
   }
@@ -759,9 +772,13 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
     testSame("var x = 1; var y = x != 0;");
   }
 
-  public void testCoercionSubstitution_booleanResult() {
+  public void testCoercionSubstitution_booleanResult0() {
     this.mode = TypeInferenceMode.BOTH;
     test("var x = {}; var y = x != null;", "var x = {}; var y = !!x;");
+  }
+
+  public void testCoercionSubstitution_booleanResult1() {
+    this.mode = TypeInferenceMode.BOTH;
     test("var x = {}; var y = x == null;", "var x = {}; var y = !x;");
     testSame("var x = {}; var y = x !== null;");
     testSame("var x = undefined; var y = x !== null;");

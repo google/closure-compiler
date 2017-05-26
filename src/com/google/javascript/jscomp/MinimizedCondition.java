@@ -16,13 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-import java.util.Collections;
-import java.util.Comparator;
 
 /**
  * A class that represents a minimized conditional expression.
@@ -50,42 +47,28 @@ class MinimizedCondition {
 
   /** A representation equivalent to the original condition. */
   private final MeasuredNode positive;
+
   /** A representation equivalent to the negation of the original condition. */
   private final MeasuredNode negative;
 
-  /** A placeholder at the same AST location as the original condition */
-  private Node placeholder;
-
   private MinimizedCondition(MeasuredNode p, MeasuredNode n) {
-    Preconditions.checkArgument(p.node.getParent() == null);
-    Preconditions.checkArgument(n.node.getParent() == null);
     positive = p;
     negative = n.change();
   }
 
-  Node getPlaceholder() {
-    return placeholder;
-  }
-
-  MinimizedCondition setPlaceholder(Node placeholder) {
-    this.placeholder = placeholder;
-    return this;
-  }
-
   /**
-   * Remove the passed condition node from the AST, and then return a
-   * MinimizedCondition that represents the condition node after
+   * Returns a MinimizedCondition that represents the condition node after
    * minimization.
    */
   static MinimizedCondition fromConditionNode(Node n) {
+    Preconditions.checkState(n.getParent() != null);
     switch (n.getToken()) {
       case NOT:
       case AND:
       case OR:
       case HOOK:
       case COMMA:
-        Node placeholder = swapWithPlaceholderNode(n);
-        return computeMinimizedCondition(n).setPlaceholder(placeholder);
+        return computeMinimizedCondition(n);
       default:
         return unoptimized(n);
     }
@@ -124,181 +107,177 @@ class MinimizedCondition {
    * Return a MeasuredNode of the given condition node, without minimizing
    * the result.
    * <p>
-   * Since a MinimizedCondition necessarily must contain two trees, this
-   * method sets the negative side to a {@link Token#SCRIPT} node (never valid
-   * inside an expression) with an unreasonably high length so that it will
+   * Since a MinimizedCondition necessarily must contain two trees,
+   * this method sets the negative side to a invalid node
+   * with an unreasonably high length so that it will
    * never be chosen by {@link #getMinimized}.
    *
-   * @param n the conditional expression tree to minimize.
-   *  This must be connected to the AST, and will be swapped
-   *  with a placeholder node during minimization.
+   * @param n the conditional expression tree
    * @return a MinimizedCondition object representing that tree.
    */
   static MinimizedCondition unoptimized(Node n) {
     Preconditions.checkNotNull(n.getParent());
-    Node placeholder = swapWithPlaceholderNode(n);
-    MeasuredNode pos = new MeasuredNode(n, 0, false);
-    MeasuredNode neg = new MeasuredNode(IR.script(), Integer.MAX_VALUE, true);
-    return new MinimizedCondition(pos, neg).setPlaceholder(placeholder);
+    MeasuredNode pos = new MeasuredNode(n, null, 0, false);
+    MeasuredNode neg = new MeasuredNode(null, null, Integer.MAX_VALUE, true);
+    return new MinimizedCondition(pos, neg);
   }
 
-  /**
-   * Remove the given node from the AST, and replace it with a placeholder
-   * SCRIPT node.
-   * @return the new placeholder node.
-   */
-  private static Node swapWithPlaceholderNode(Node n) {
-    Preconditions.checkNotNull(n.getParent());
-    Node placeholder = IR.script();
-    n.replaceWith(placeholder);
-    return placeholder;
+  /** return the best, prefer unchanged */
+  static MeasuredNode pickBest(MeasuredNode a, MeasuredNode b) {
+    if (a.length == b.length) {
+      return (b.isChanged()) ? a : b;
+    }
+
+    return (a.length < b.length) ? a : b;
   }
 
   /**
    * Minimize the condition at the given node.
    *
    * @param n the conditional expression tree to minimize.
-   *  This must be connected to the AST, and will be swapped
-   *  with a placeholder node during minimization.
    * @return a MinimizedCondition object representing that tree.
    */
   private static MinimizedCondition computeMinimizedCondition(Node n) {
-    Preconditions.checkArgument(n.getParent() == null);
     switch (n.getToken()) {
       case NOT: {
-        MinimizedCondition subtree =
-            computeMinimizedCondition(n.getFirstChild().detach());
-        ImmutableList<MeasuredNode> positiveAsts = ImmutableList.of(
-            subtree.positive.cloneTree().addNot(),
-            subtree.negative.cloneTree());
-        ImmutableList<MeasuredNode> negativeAsts = ImmutableList.of(
+        MinimizedCondition subtree = computeMinimizedCondition(n.getFirstChild());
+        MeasuredNode positive = pickBest(
+            MeasuredNode.addNode(n, subtree.positive),
+            subtree.negative);
+        MeasuredNode negative = pickBest(
             subtree.negative.negate(),
             subtree.positive);
-        return new MinimizedCondition(
-            Collections.min(positiveAsts, AST_LENGTH_COMPARATOR),
-            Collections.min(negativeAsts, AST_LENGTH_COMPARATOR));
+        return new MinimizedCondition(positive, negative);
       }
       case AND:
       case OR: {
-          Token opType = n.getToken();
-        Token complementType = opType == Token.AND ? Token.OR : Token.AND;
-        MinimizedCondition leftSubtree =
-            computeMinimizedCondition(n.getFirstChild().detach());
-        MinimizedCondition rightSubtree =
-            computeMinimizedCondition(n.getLastChild().detach());
-        ImmutableList<MeasuredNode> positiveAsts = ImmutableList.of(
-            MeasuredNode.addNode(new Node(opType).srcref(n),
-                leftSubtree.positive.cloneTree(),
-                rightSubtree.positive.cloneTree()),
-            MeasuredNode.addNode(new Node(complementType).srcref(n),
-                leftSubtree.negative.cloneTree(),
-                rightSubtree.negative.cloneTree()).negate());
-        ImmutableList<MeasuredNode> negativeAsts = ImmutableList.of(
-            MeasuredNode.addNode(new Node(opType).srcref(n),
+        Node complementNode = new Node(n.getToken() == Token.AND ? Token.OR : Token.AND).srcref(n);
+        MinimizedCondition leftSubtree = computeMinimizedCondition(n.getFirstChild());
+        MinimizedCondition rightSubtree = computeMinimizedCondition(n.getLastChild());
+        MeasuredNode positive = pickBest(
+            MeasuredNode.addNode(n,
+                leftSubtree.positive,
+                rightSubtree.positive),
+            MeasuredNode.addNode(complementNode,
+                leftSubtree.negative,
+                rightSubtree.negative).negate());
+        MeasuredNode negative = pickBest(
+            MeasuredNode.addNode(n,
                 leftSubtree.positive,
                 rightSubtree.positive).negate(),
-            MeasuredNode.addNode(new Node(complementType).srcref(n),
+            MeasuredNode.addNode(complementNode,
                 leftSubtree.negative,
-                rightSubtree.negative));
-        return new MinimizedCondition(
-            Collections.min(positiveAsts, AST_LENGTH_COMPARATOR),
-            Collections.min(negativeAsts, AST_LENGTH_COMPARATOR));
+                rightSubtree.negative).change());
+        return new MinimizedCondition(positive, negative);
       }
       case HOOK: {
         Node cond = n.getFirstChild();
         Node thenNode = cond.getNext();
         Node elseNode = thenNode.getNext();
-        MinimizedCondition thenSubtree =
-            computeMinimizedCondition(thenNode.detach());
-        MinimizedCondition elseSubtree =
-            computeMinimizedCondition(elseNode.detach());
-        MeasuredNode posTree = MeasuredNode.addNode(
-            new Node(Token.HOOK, cond.cloneTree()).srcref(n),
+        MinimizedCondition thenSubtree = computeMinimizedCondition(thenNode);
+        MinimizedCondition elseSubtree = computeMinimizedCondition(elseNode);
+        MeasuredNode positive = MeasuredNode.addNode(
+            n,
+            MeasuredNode.forNode(cond),
             thenSubtree.positive,
             elseSubtree.positive);
-        MeasuredNode negTree = MeasuredNode.addNode(
-            new Node(Token.HOOK, cond.cloneTree()).srcref(n),
+        MeasuredNode negative = MeasuredNode.addNode(
+            n,
+            MeasuredNode.forNode(cond),
             thenSubtree.negative,
             elseSubtree.negative);
-        return new MinimizedCondition(posTree, negTree);
+        return new MinimizedCondition(positive, negative);
       }
       case COMMA: {
         Node lhs = n.getFirstChild();
-        MinimizedCondition rhsSubtree =
-            computeMinimizedCondition(lhs.getNext().detach());
-        MeasuredNode posTree = MeasuredNode.addNode(
-            new Node(Token.COMMA, lhs.cloneTree()).srcref(n),
+        MinimizedCondition rhsSubtree = computeMinimizedCondition(lhs.getNext());
+        MeasuredNode positive = MeasuredNode.addNode(
+            n,
+            MeasuredNode.forNode(lhs),
             rhsSubtree.positive);
-        MeasuredNode negTree = MeasuredNode.addNode(
-            new Node(Token.COMMA, lhs.cloneTree()).srcref(n),
+        MeasuredNode negative = MeasuredNode.addNode(
+            n,
+            MeasuredNode.forNode(lhs),
             rhsSubtree.negative);
-        return new MinimizedCondition(posTree, negTree);
+        return new MinimizedCondition(positive, negative);
       }
       default: {
-        MeasuredNode pos = new MeasuredNode(n, 0, false);
-        MeasuredNode neg = pos.cloneTree().negate();
+        MeasuredNode pos = MeasuredNode.forNode(n);
+        MeasuredNode neg = pos.negate();
         return new MinimizedCondition(pos, neg);
       }
     }
   }
 
-  private static final Comparator<MeasuredNode> AST_LENGTH_COMPARATOR =
-      new Comparator<MeasuredNode>() {
-    @Override
-    public int compare(MeasuredNode o1, MeasuredNode o2) {
-      return o1.length - o2.length;
-    }
-  };
-
   /** An AST-node along with some additional metadata. */
   static class MeasuredNode {
-    private Node node;
-    private int length;
-    private boolean changed;
+    private final Node node;
+    private final int length;
+    private final boolean changed;
+    private final MeasuredNode[] children;
 
-    Node getNode() {
-      return node;
+    MeasuredNode(Node n, MeasuredNode[] children, int len, boolean ch) {
+      this.node = n;
+      this.children = children;
+      this.length = len;
+      this.changed = ch;
     }
 
     boolean isChanged() {
       return changed;
     }
 
-    MeasuredNode(Node n, int len, boolean ch) {
-      node = n;
-      length = len;
-      changed = ch;
+    boolean isNot() {
+      return node.isNot();
+    }
+
+    MeasuredNode withoutNot() {
+      Preconditions.checkState(this.isNot());
+      return (normalizeChildren(node, children)[0]).change();
     }
 
     private MeasuredNode negate() {
-      this.change();
       switch (node.getToken()) {
         case EQ:
-          node.setToken(Token.NE);
-          return this;
+          return updateToken(Token.NE);
         case NE:
-          node.setToken(Token.EQ);
-          return this;
+          return updateToken(Token.EQ);
         case SHEQ:
-          node.setToken(Token.SHNE);
-          return this;
+          return updateToken(Token.SHNE);
         case SHNE:
-          node.setToken(Token.SHEQ);
-          return this;
+          return updateToken(Token.SHEQ);
+        case NOT:
+          return withoutNot();
         default:
           return this.addNot();
       }
     }
 
-    private MeasuredNode change() {
-      this.changed = true;
-      return this;
+    static MeasuredNode[] normalizeChildren(Node node, MeasuredNode[] children) {
+      if (children != null || !node.hasChildren()) {
+        return children;
+      } else {
+        MeasuredNode[] measuredChildren = new MeasuredNode[node.getChildCount()];
+        int child = 0;
+        for (Node c : node.children()) {
+          measuredChildren[child++] = forNode(c);
+        }
+        return measuredChildren;
+      }
+    }
+
+    private MeasuredNode updateToken(Token token) {
+      return new MeasuredNode(
+          new Node(token).srcref(node), normalizeChildren(node, children), length, true);
     }
 
     private MeasuredNode addNot() {
-      node = new Node(Token.NOT, node).srcref(node);
-      length += estimateCostOneLevel(node);
-      return this;
+      return addNode(
+          new Node(Token.NOT).srcref(node), this).change();
+    }
+
+    private MeasuredNode change() {
+      return (isChanged()) ? this : new MeasuredNode(node, children, length, true);
     }
 
     /**
@@ -312,37 +291,97 @@ class MinimizedCondition {
      *  @param n the node to be checked.
      *  @return the number of negations and parentheses in the node.
      */
-    private static int estimateCostOneLevel(Node n) {
+    private static int estimateCostOneLevel(Node n, MeasuredNode ...children) {
       int cost = 0;
       if (n.isNot()) {
         cost++;  // A negation is needed.
       }
       int parentPrecedence = NodeUtil.precedence(n.getToken());
-      for (Node child = n.getFirstChild();
-          child != null; child = child.getNext()) {
-        if (PeepholeMinimizeConditions.isLowerPrecedence(child, parentPrecedence)) {
+      for (MeasuredNode child : children) {
+        if (child.isLowerPrecedenceThan(parentPrecedence)) {
           cost += 2;  // A pair of parenthesis is needed.
         }
       }
       return cost;
     }
 
-    private MeasuredNode cloneTree() {
-      return new MeasuredNode(node.cloneTree(), length, changed);
+    /**
+     * Whether the node type has lower precedence than "precedence"
+     */
+    boolean isLowerPrecedenceThan(int precedence) {
+      return NodeUtil.precedence(node.getToken()) < precedence;
     }
 
-    private static MeasuredNode addNode(Node parent, MeasuredNode... children) {
+    /**
+     * The returned MeasuredNode is only marked as changed if the children
+     * are marked as changed.
+     */
+    private static MeasuredNode addNode(Node parent, MeasuredNode ...children) {
       int cost = 0;
       boolean changed = false;
       for (MeasuredNode child : children) {
-        parent.addChildToBack(child.node);
         cost += child.length;
         changed = changed || child.changed;
       }
-      cost += estimateCostOneLevel(parent);
-      return new MeasuredNode(parent, cost, changed);
+      cost += estimateCostOneLevel(parent, children);
+      return new MeasuredNode(parent, children, cost, changed);
+    }
+
+    /**
+     * Return a MeasuredNode for a non-particapting AST Node. This is
+     * used for leaf expression nodes.
+     */
+    private static MeasuredNode forNode(Node n) {
+      return new MeasuredNode(n, null, 0, false);
+    }
+
+    /**
+     * Whether the MeasuredNode is a change from the original.
+     * This can either be a change within the original AST tree or a
+     * replacement of the original node.
+     */
+    public boolean willChange(Node original) {
+      Preconditions.checkNotNull(original);
+      return original != this.node || this.isChanged();
+    }
+
+    /**
+     * Update the AST for the result of this MeasuredNode.
+     * This can either be a change within the original AST tree or a
+     * replacement of the original node.
+     */
+    public Node applyTo(Node original) {
+      Preconditions.checkNotNull(original);
+      Preconditions.checkState(willChange(original));
+      Node replacement = buildReplacement();
+      if (original != replacement) {
+        safeDetach(replacement);
+        original.replaceWith(replacement);
+      }
+      return replacement;
+    }
+
+    /** Detach a node only IIF it is in the tree */
+    private Node safeDetach(Node n) {
+      return (n.getParent() != null) ? n.detach() : n;
+    }
+
+    /**
+     * Build the final AST structure, detaching component Nodes as necessary 
+     * from the original AST. The root Node, if currently attached is left attached
+     * to avoid the need to keep track of its position.
+     */
+    @VisibleForTesting
+    Node buildReplacement() {
+      if (children != null) {
+        node.detachChildren();
+        for (MeasuredNode child : children) {
+          Node replacementChild = safeDetach(child.buildReplacement());
+          node.addChildToBack(replacementChild);
+        }
+      }
+      return node;
     }
 
   }
-
 }

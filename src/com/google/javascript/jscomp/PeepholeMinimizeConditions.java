@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.javascript.jscomp.MinimizedCondition.MeasuredNode;
 import com.google.javascript.jscomp.MinimizedCondition.MinimizationStyle;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -203,8 +204,8 @@ class PeepholeMinimizeConditions
             newCond.addChildToBack(nextCond);
             reportCodeChange();
           }
-        } else if (nextNode != null && elseBranch == null &&
-            isReturnBlock(thenBranch) && isReturnExpression(nextNode)) {
+        } else if (nextNode != null && elseBranch == null
+            && isReturnBlock(thenBranch) && isReturnExpression(nextNode)) {
           Node thenExpr = null;
           // if(x)return; return 1 -> return x?void 0:1
           if (isReturnExpressBlock(thenBranch)) {
@@ -450,17 +451,15 @@ class PeepholeMinimizeConditions
    * necessary.
    */
   private Node tryMinimizeExprResult(Node n) {
-    MinimizedCondition minCond =
-        MinimizedCondition.fromConditionNode(n.getFirstChild());
-    MinimizedCondition.MeasuredNode mNode =
+    Node originalExpr = n.getFirstChild();
+    MinimizedCondition minCond = MinimizedCondition.fromConditionNode(originalExpr);
+    MeasuredNode mNode =
         minCond.getMinimized(MinimizationStyle.ALLOW_LEADING_NOT);
-    Node placeholder = minCond.getPlaceholder();
-    if (mNode.getNode().isNot()) {
+    if (mNode.isNot()) {
       // Remove the leading NOT in the EXPR_RESULT.
-      n.replaceChild(placeholder, mNode.getNode().removeFirstChild());
-      reportCodeChange();
+      replaceNode(originalExpr, mNode.withoutNot());
     } else {
-      replaceNode(placeholder, mNode);
+      replaceNode(originalExpr, mNode);
     }
     return n;
   }
@@ -472,20 +471,19 @@ class PeepholeMinimizeConditions
    * necessary.
    */
   private Node tryMinimizeHook(Node n) {
-    MinimizedCondition minCond =
-      MinimizedCondition.fromConditionNode(n.getFirstChild());
-    MinimizedCondition.MeasuredNode mNode =
+    Node originalCond = n.getFirstChild();
+    MinimizedCondition minCond = MinimizedCondition.fromConditionNode(originalCond);
+    MeasuredNode mNode =
         minCond.getMinimized(MinimizationStyle.ALLOW_LEADING_NOT);
-    Node placeholder = minCond.getPlaceholder();
-    if (mNode.getNode().isNot()) {
+    if (mNode.isNot()) {
       // Swap the HOOK
       Node thenBranch = n.getSecondChild();
-      n.replaceChild(placeholder, mNode.getNode().removeFirstChild());
+      replaceNode(originalCond, mNode.withoutNot());
       n.removeChild(thenBranch);
       n.addChildToBack(thenBranch);
       reportCodeChange();
     } else {
-      replaceNode(placeholder, mNode);
+      replaceNode(originalCond, mNode);
     }
     return n;
   }
@@ -512,21 +510,15 @@ class PeepholeMinimizeConditions
     Node thenBranch = originalCond.getNext();
     Node elseBranch = thenBranch.getNext();
 
-    MinimizedCondition minCond =
-        MinimizedCondition.fromConditionNode(originalCond);
-    originalCond = null;  // originalCond was mutated and should not be used.
+    MinimizedCondition minCond = MinimizedCondition.fromConditionNode(originalCond);
 
-    Node placeholder = minCond.getPlaceholder();
-
-    MinimizedCondition.MeasuredNode unnegatedCond;
-    MinimizedCondition.MeasuredNode shortCond;
     // Compute two minimized representations. The first representation counts
     // a leading NOT node, and the second ignores a leading NOT node.
     // If we can fold the if statement into a HOOK or boolean operation,
     // then the NOT node does not matter, and we prefer the second condition.
     // If we cannot fold the if statement, then we prefer the first condition.
-    unnegatedCond = minCond.getMinimized(MinimizationStyle.PREFER_UNNEGATED);
-    shortCond = minCond.getMinimized(MinimizationStyle.ALLOW_LEADING_NOT);
+    MeasuredNode unnegatedCond = minCond.getMinimized(MinimizationStyle.PREFER_UNNEGATED);
+    MeasuredNode shortCond = minCond.getMinimized(MinimizationStyle.ALLOW_LEADING_NOT);
 
     if (elseBranch == null) {
       if (isFoldableExpressBlock(thenBranch)) {
@@ -535,14 +527,15 @@ class PeepholeMinimizeConditions
           // Keep opportunities for CollapseProperties such as
           // a.longIdentifier || a.longIdentifier = ... -> var a = ...;
           // until CollapseProperties has been run.
-          replaceNode(placeholder, unnegatedCond);
+          replaceNode(originalCond, unnegatedCond);
           return n;
         }
 
-        if (shortCond.getNode().isNot()) {
+        if (shortCond.isNot()) {
           // if(!x)bar(); -> x||bar();
+          Node replacementCond = replaceNode(originalCond, shortCond.withoutNot()).detach();
           Node or = IR.or(
-              shortCond.getNode().removeFirstChild(),
+              replacementCond,
               expr.removeFirstChild()).srcref(n);
           Node newExpr = NodeUtil.newExpr(or);
           parent.replaceChild(n, newExpr);
@@ -554,19 +547,18 @@ class PeepholeMinimizeConditions
         // Preconditions.checkState(shortCond.isEquivalentTo(unnegatedCond));
 
         // if(x)foo(); -> x&&foo();
-        if (isLowerPrecedence(shortCond.getNode(), AND_PRECEDENCE) &&
-            isLowerPrecedence(expr.getFirstChild(),
-                AND_PRECEDENCE)) {
+        if (shortCond.isLowerPrecedenceThan(AND_PRECEDENCE)
+            && isLowerPrecedence(expr.getFirstChild(), AND_PRECEDENCE)) {
           // One additional set of parentheses is worth the change even if
           // there is no immediate code size win. However, two extra pair of
           // {}, we would have to think twice. (unless we know for sure the
           // we can further optimize its parent.
-          replaceNode(placeholder, shortCond);
+          replaceNode(originalCond, shortCond);
           return n;
         }
 
-        n.removeChild(placeholder);
-        Node and = IR.and(shortCond.getNode(), expr.removeFirstChild()).srcref(n);
+        Node replacementCond = replaceNode(originalCond, shortCond).detach();
+        Node and = IR.and(replacementCond, expr.removeFirstChild()).srcref(n);
         Node newExpr = NodeUtil.newExpr(and);
         parent.replaceChild(n, newExpr);
         reportCodeChange();
@@ -575,8 +567,7 @@ class PeepholeMinimizeConditions
       } else {
 
         // Try to combine two IF-ELSE
-        if (NodeUtil.isStatementBlock(thenBranch) &&
-            thenBranch.hasOneChild()) {
+        if (NodeUtil.isStatementBlock(thenBranch) && thenBranch.hasOneChild()) {
           Node innerIf = thenBranch.getFirstChild();
 
           if (innerIf.isIf()) {
@@ -584,15 +575,16 @@ class PeepholeMinimizeConditions
             Node innerThenBranch = innerCond.getNext();
             Node innerElseBranch = innerThenBranch.getNext();
 
-            if (innerElseBranch == null &&
-                 !(isLowerPrecedence(unnegatedCond.getNode(), AND_PRECEDENCE) &&
-                   isLowerPrecedence(innerCond, AND_PRECEDENCE))) {
+            if (innerElseBranch == null
+                 && !(unnegatedCond.isLowerPrecedenceThan(AND_PRECEDENCE)
+                   && isLowerPrecedence(innerCond, AND_PRECEDENCE))) {
+              Node replacementCond = replaceNode(originalCond, unnegatedCond).detach();
               n.detachChildren();
               n.addChildToBack(
                   IR.and(
-                      unnegatedCond.getNode(),
+                      replacementCond,
                       innerCond.detach())
-                      .srcref(placeholder));
+                      .srcref(originalCond));
               n.addChildToBack(innerThenBranch.detach());
               reportCodeChange();
               // Not worth trying to fold the current IF-ELSE into && because
@@ -602,7 +594,7 @@ class PeepholeMinimizeConditions
           }
         }
       }
-      replaceNode(placeholder, unnegatedCond);
+      replaceNode(originalCond, unnegatedCond);
       return n;
     }
 
@@ -613,8 +605,8 @@ class PeepholeMinimizeConditions
 
     // if(!x)foo();else bar(); -> if(x)bar();else foo();
     // An additional set of curly braces isn't worth it.
-    if (shortCond.getNode().isNot() && !consumesDanglingElse(elseBranch)) {
-      n.replaceChild(placeholder, shortCond.getNode().removeFirstChild());
+    if (shortCond.isNot() && !consumesDanglingElse(elseBranch)) {
+      replaceNode(originalCond, shortCond.withoutNot());
       n.removeChild(thenBranch);
       n.addChildToBack(thenBranch);
       reportCodeChange();
@@ -625,7 +617,8 @@ class PeepholeMinimizeConditions
     if (isReturnExpressBlock(thenBranch) && isReturnExpressBlock(elseBranch)) {
       Node thenExpr = getBlockReturnExpression(thenBranch);
       Node elseExpr = getBlockReturnExpression(elseBranch);
-      n.removeChild(placeholder);
+
+      Node replacementCond = replaceNode(originalCond, shortCond).detach();
       thenExpr.detach();
       elseExpr.detach();
 
@@ -633,7 +626,7 @@ class PeepholeMinimizeConditions
       // can be converted to "return undefined;" or some variant, but
       // that does not help code size.
       Node returnNode = IR.returnNode(
-                            IR.hook(shortCond.getNode(), thenExpr, elseExpr)
+                            IR.hook(replacementCond, thenExpr, elseExpr)
                                 .srcref(n));
       parent.replaceChild(n, returnNode);
       reportCodeChange();
@@ -650,22 +643,22 @@ class PeepholeMinimizeConditions
         // if(x)a=1;else a=2; -> a=x?1:2;
         if (NodeUtil.isAssignmentOp(thenOp)) {
           Node lhs = thenOp.getFirstChild();
-          if (areNodesEqualForInlining(lhs, elseOp.getFirstChild()) &&
+          if (areNodesEqualForInlining(lhs, elseOp.getFirstChild())
               // if LHS has side effects, don't proceed [since the optimization
               // evaluates LHS before cond]
               // NOTE - there are some circumstances where we can
               // proceed even if there are side effects...
-              !mayEffectMutableState(lhs) &&
-              (!mayHaveSideEffects(unnegatedCond.getNode()) ||
-                  (thenOp.isAssign() && thenOp.getFirstChild().isName()))) {
+              && !mayEffectMutableState(lhs)
+              && (!mayHaveSideEffects(originalCond)
+                  || (thenOp.isAssign() && thenOp.getFirstChild().isName()))) {
 
-            n.removeChild(placeholder);
+            Node replacementCond = replaceNode(originalCond, shortCond).detach();
             Node assignName = thenOp.removeFirstChild();
             Node thenExpr = thenOp.removeFirstChild();
             Node elseExpr = elseOp.getLastChild();
             elseOp.removeChild(elseExpr);
 
-            Node hookNode = IR.hook(shortCond.getNode(), thenExpr, elseExpr)
+            Node hookNode = IR.hook(replacementCond, thenExpr, elseExpr)
                 .srcref(n);
             Node assign = new Node(thenOp.getToken(), assignName, hookNode).srcref(thenOp);
             Node expr = NodeUtil.newExpr(assign);
@@ -677,11 +670,11 @@ class PeepholeMinimizeConditions
         }
       }
       // if(x)foo();else bar(); -> x?foo():bar()
-      n.removeChild(placeholder);
+      Node replacementCond = replaceNode(originalCond, shortCond).detach();
       thenOp.detach();
       elseOp.detach();
       Node expr = IR.exprResult(
-          IR.hook(shortCond.getNode(), thenOp, elseOp).srcref(n));
+          IR.hook(replacementCond, thenOp, elseOp).srcref(n));
       parent.replaceChild(n, expr);
       reportCodeChange();
       return expr;
@@ -691,8 +684,8 @@ class PeepholeMinimizeConditions
     boolean elseBranchIsVar = isVarBlock(elseBranch);
 
     // if(x)var y=1;else y=2  ->  var y=x?1:2
-    if (thenBranchIsVar && elseBranchIsExpressionBlock &&
-        getBlockExpression(elseBranch).getFirstChild().isAssign()) {
+    if (thenBranchIsVar && elseBranchIsExpressionBlock
+        && getBlockExpression(elseBranch).getFirstChild().isAssign()) {
 
       Node var = getBlockVar(thenBranch);
       Node elseAssign = getBlockExpression(elseBranch).getFirstChild();
@@ -706,9 +699,8 @@ class PeepholeMinimizeConditions
         Preconditions.checkState(name1.hasOneChild());
         Node thenExpr = name1.removeFirstChild();
         Node elseExpr = elseAssign.getLastChild().detach();
-        placeholder.detach();
-        Node hookNode = IR.hook(shortCond.getNode(), thenExpr, elseExpr)
-                            .srcref(n);
+        Node replacementCond = replaceNode(originalCond, shortCond).detach();
+        Node hookNode = IR.hook(replacementCond, thenExpr, elseExpr).srcref(n);
         var.detach();
         name1.addChildToBack(hookNode);
         parent.replaceChild(n, var);
@@ -717,8 +709,8 @@ class PeepholeMinimizeConditions
       }
 
     // if(x)y=1;else var y=2  ->  var y=x?1:2
-    } else if (elseBranchIsVar && thenBranchIsExpressionBlock &&
-        getBlockExpression(thenBranch).getFirstChild().isAssign()) {
+    } else if (elseBranchIsVar && thenBranchIsExpressionBlock
+        && getBlockExpression(thenBranch).getFirstChild().isAssign()) {
 
       Node var = getBlockVar(elseBranch);
       Node thenAssign = getBlockExpression(thenBranch).getFirstChild();
@@ -732,9 +724,8 @@ class PeepholeMinimizeConditions
         Node thenExpr = thenAssign.getLastChild().detach();
         Preconditions.checkState(name2.hasOneChild());
         Node elseExpr = name2.removeFirstChild();
-        placeholder.detach();
-        Node hookNode = IR.hook(shortCond.getNode(), thenExpr, elseExpr)
-                            .srcref(n);
+        Node replacementCond = replaceNode(originalCond, shortCond).detach();
+        Node hookNode = IR.hook(replacementCond, thenExpr, elseExpr).srcref(n);
         var.detach();
         name2.addChildToBack(hookNode);
         parent.replaceChild(n, var);
@@ -744,7 +735,7 @@ class PeepholeMinimizeConditions
       }
     }
 
-    replaceNode(placeholder, unnegatedCond);
+    replaceNode(originalCond, unnegatedCond);
     return n;
   }
 
@@ -822,8 +813,8 @@ class PeepholeMinimizeConditions
             // param, or this doesn't happen.
             if (calledFn.isGetElem()) {
               return false;
-            } else if (calledFn.isGetProp() &&
-                       calledFn.getLastChild().getString().startsWith("on")) {
+            } else if (calledFn.isGetProp()
+                       && calledFn.getLastChild().getString().startsWith("on")) {
               return false;
             }
           }
@@ -957,7 +948,7 @@ class PeepholeMinimizeConditions
   /**
    * Whether the node type has lower precedence than "precedence"
    */
-  static boolean isLowerPrecedence(Node n, final int precedence) {
+  static boolean isLowerPrecedence(Node n, int precedence) {
     return NodeUtil.precedence(n.getToken()) < precedence;
   }
 
@@ -969,8 +960,8 @@ class PeepholeMinimizeConditions
         new Predicate<Node>() {
       @Override
       public boolean apply(Node input) {
-        return (input.isGetProp() &&
-            input.getParent().isAssign());
+        return (input.isGetProp()
+            && input.getParent().isAssign());
       }
     };
 
@@ -990,7 +981,7 @@ class PeepholeMinimizeConditions
     n = performConditionSubstitutions(n);
     MinimizedCondition minCond = MinimizedCondition.fromConditionNode(n);
     return replaceNode(
-        minCond.getPlaceholder(),
+        n,
         minCond.getMinimized(MinimizationStyle.PREFER_UNNEGATED));
   }
 
@@ -1050,7 +1041,7 @@ class PeepholeMinimizeConditions
       if (n.getToken() == Token.EQ || n.getToken() == Token.SHEQ) {
         replacement = IR.not(objExpression);
       } else {
-        replacement = booleanResult ? IR.not(IR.not(objExpression)) : objExpression;
+        replacement = booleanResult ? IR.not(IR.not(objExpression)).srcrefTree(n) : objExpression;
       }
       n.replaceWith(replacement);
       reportCodeChange();
@@ -1146,13 +1137,13 @@ class PeepholeMinimizeConditions
         && type.isNumberValueType();
   }
 
-  private Node replaceNode(Node lhs, MinimizedCondition.MeasuredNode rhs) {
-    Node parent = lhs.getParent();
-    parent.replaceChild(lhs, rhs.getNode());
-    if (rhs.isChanged()) {
+  private Node replaceNode(Node original, MeasuredNode measuredNodeReplacement) {
+    if (measuredNodeReplacement.willChange(original)) {
+      Node replacement = measuredNodeReplacement.applyTo(original);
       reportCodeChange();
+      return replacement;
     }
-    return rhs.getNode();
+    return original;
   }
 
   /**
