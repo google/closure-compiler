@@ -3015,25 +3015,10 @@ public class CompilerOptions implements Serializable {
       }
     }
 
-    /** Whether this is ECMAScript 5 or higher. */
-    @Deprecated
-    public boolean isEs5OrHigher() {
-      Preconditions.checkState(this != NO_TRANSPILE);
-      return this != LanguageMode.ECMASCRIPT3;
-    }
-
     /** Whether this is ECMAScript 6 or higher. */
     @Deprecated
     public boolean isEs6OrHigher() {
-      Preconditions.checkState(this != NO_TRANSPILE);
-      switch (this) {
-        case ECMASCRIPT3:
-        case ECMASCRIPT5:
-        case ECMASCRIPT5_STRICT:
-          return false;
-        default:
-          return true;
-      }
+      return this.toFeatureSet().contains(FeatureSet.ES6);
     }
 
     public static LanguageMode fromString(String value) {

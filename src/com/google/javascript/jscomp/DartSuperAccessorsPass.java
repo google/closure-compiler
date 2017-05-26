@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
@@ -50,7 +51,8 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
 
     this.renameProperties = options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED;
 
-    Preconditions.checkState(options.getLanguageOut().isEs5OrHigher(),
+    Preconditions.checkState(
+        options.getLanguageOut().toFeatureSet().contains(FeatureSet.ES5),
         "Dart super accessors pass requires ES5+ output");
 
     // We currently rely on JSCompiler_renameProperty, which is not type-aware.

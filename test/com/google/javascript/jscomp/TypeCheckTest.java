@@ -24,6 +24,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
@@ -17849,7 +17850,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         Joiner.on(", ").join(compiler.getErrors()),
         0, compiler.getErrorCount());
 
-    if (compiler.getOptions().getLanguageIn().isEs6OrHigher()) {
+    if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6)) {
       List<PassFactory> passes = new ArrayList<>();
       TranspilationPasses.addEs2017Passes(passes);
       TranspilationPasses.addEs6EarlyPasses(passes);

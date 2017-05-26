@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -134,7 +135,8 @@ abstract class AbstractPeepholeOptimization {
    *     ignored when this is true.
    */
   boolean isEcmaScript5OrGreater() {
-    return compiler != null && compiler.getOptions().getLanguageOut().isEs5OrHigher();
+    return compiler != null
+        && compiler.getOptions().getLanguageOut().toFeatureSet().contains(FeatureSet.ES5);
   }
 
   /**

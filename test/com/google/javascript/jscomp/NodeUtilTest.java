@@ -25,6 +25,7 @@ import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -2587,10 +2588,10 @@ public final class NodeUtilTest extends TestCase {
   }
 
   private static boolean isValidPropertyName(String s) {
-    return NodeUtil.isValidPropertyName(LanguageMode.ECMASCRIPT3, s);
+    return NodeUtil.isValidPropertyName(FeatureSet.ES3, s);
   }
 
   private static boolean isValidQualifiedName(String s) {
-    return NodeUtil.isValidQualifiedName(LanguageMode.ECMASCRIPT3, s);
+    return NodeUtil.isValidQualifiedName(FeatureSet.ES3, s);
   }
 }

@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -95,7 +96,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
     if (!forTranspileOnly) {
       return true;
     }
-    if (compiler.getOptions().getLanguageIn().isEs6OrHigher()) {
+    if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6)) {
       for (Node singleRoot : root.children()) {
         if (TranspilationPasses.isScriptEs6ImplOrHigher(singleRoot)) {
           return true;
@@ -117,7 +118,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     if (!forTranspileOnly
-        || (compiler.getOptions().getLanguageIn().isEs6OrHigher()
+        || (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6)
             && TranspilationPasses.isScriptEs6ImplOrHigher(scriptRoot))) {
       new ReferenceCollectingCallback(
               compiler, new ReferenceCheckingBehavior(), new Es6SyntacticScopeCreator(compiler))

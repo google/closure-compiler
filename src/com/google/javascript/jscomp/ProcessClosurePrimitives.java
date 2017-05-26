@@ -1043,7 +1043,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       return false;
     }
 
-    if (!NodeUtil.isValidQualifiedName(compiler.getOptions().getLanguageIn(), arg.getString())) {
+    if (!NodeUtil.isValidQualifiedName(
+        compiler.getOptions().getLanguageIn().toFeatureSet(), arg.getString())) {
       compiler.report(t.makeError(arg, INVALID_PROVIDE_ERROR,
           arg.getString(), compiler.getOptions().getLanguageIn().toString()));
       return false;
@@ -1077,7 +1078,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
 
     String name = args.getString();
-    if (!NodeUtil.isValidQualifiedName(compiler.getOptions().getLanguageIn(), name)) {
+    if (!NodeUtil.isValidQualifiedName(
+        compiler.getOptions().getLanguageIn().toFeatureSet(), name)) {
       compiler.report(t.makeError(args, INVALID_DEFINE_NAME_ERROR, name));
       return false;
     }

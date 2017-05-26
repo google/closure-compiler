@@ -368,7 +368,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     // It's important that the Dart super accessors pass run *before* es6ConvertSuper,
     // which is a "late" ES6 pass. This is enforced in the assertValidOrder method.
-    if (options.dartPass && !options.getLanguageOut().isEs6OrHigher()) {
+    if (options.dartPass && !options.getLanguageOut().toFeatureSet().contains(FeatureSet.ES6)) {
       checks.add(dartSuperAccessorsPass);
     }
 
@@ -911,7 +911,7 @@ public final class DefaultPassConfig extends PassConfig {
     passes.add(sanityCheckVars);
 
     // Raise to ES6, if allowed
-    if (options.getLanguageOut().isEs6OrHigher()) {
+    if (options.getLanguageOut().toFeatureSet().contains(FeatureSet.ES6)) {
       passes.add(optimizeToEs6);
     }
 

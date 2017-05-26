@@ -205,7 +205,7 @@ public class TranspilationPasses {
    * @param callbacks The callbacks that should be invoked if a file has ES6 features.
    */
   static void processCheck(AbstractCompiler compiler, Node combinedRoot, Callback... callbacks) {
-    if (compiler.getOptions().getLanguageIn().isEs6OrHigher()) {
+    if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6)) {
       for (Node singleRoot : combinedRoot.children()) {
         if (isScriptEs6ImplOrHigher(singleRoot)) {
           for (Callback callback : callbacks) {
@@ -225,7 +225,7 @@ public class TranspilationPasses {
    * @param callbacks The callbacks that should be invoked if the file has ES6 features.
    */
   static void hotSwapCheck(AbstractCompiler compiler, Node scriptRoot, Callback... callbacks) {
-    if (compiler.getOptions().getLanguageIn().isEs6OrHigher()) {
+    if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6)) {
       if (isScriptEs6ImplOrHigher(scriptRoot)) {
         for (Callback callback : callbacks) {
           NodeTraversal.traverseEs6(compiler, scriptRoot, callback);

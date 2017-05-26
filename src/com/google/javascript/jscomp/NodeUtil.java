@@ -22,6 +22,8 @@ import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
@@ -3507,10 +3509,13 @@ public final class NodeUtil {
         && isLatin(name);
   }
 
-  /**
-   * Determines whether the given name is a valid qualified name.
-   */
+  @Deprecated
   public static boolean isValidQualifiedName(LanguageMode mode, String name) {
+    return isValidQualifiedName(mode.toFeatureSet(), name);
+  }
+
+  /** Determines whether the given name is a valid qualified name. */
+  public static boolean isValidQualifiedName(FeatureSet mode, String name) {
     if (name.endsWith(".") || name.startsWith(".")) {
       return false;
     }
@@ -3525,14 +3530,14 @@ public final class NodeUtil {
   }
 
   /**
-   * Determines whether the given name can appear on the right side of
-   * the dot operator. Many properties (like reserved words) cannot, in ES3.
+   * Determines whether the given name can appear on the right side of the dot operator. Many
+   * properties (like reserved words) cannot, in ES3.
    */
-  static boolean isValidPropertyName(LanguageMode mode, String name) {
+  static boolean isValidPropertyName(FeatureSet mode, String name) {
     if (isValidSimpleName(name)) {
       return true;
     } else {
-      return mode.isEs5OrHigher() && TokenStream.isKeyword(name);
+      return mode.contains(Feature.KEYWORDS_AS_PROPERTIES) && TokenStream.isKeyword(name);
     }
   }
 

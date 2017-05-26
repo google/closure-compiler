@@ -31,6 +31,7 @@ import com.google.common.io.Files;
 import com.google.javascript.jscomp.CompilerOptions.IsolationMode;
 import com.google.javascript.jscomp.SourceMap.LocationMapping;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.TextFormat;
 import java.io.BufferedReader;
@@ -1688,7 +1689,8 @@ public class CommandLineRunner extends
       options.setForceLibraryInjection(flags.forceInjectLibraries);
     }
 
-    options.rewritePolyfills = flags.rewritePolyfills && options.getLanguageIn().isEs6OrHigher();
+    options.rewritePolyfills =
+        flags.rewritePolyfills && options.getLanguageIn().toFeatureSet().contains(FeatureSet.ES6);
 
     if (!flags.translationsFile.isEmpty()) {
       try {
