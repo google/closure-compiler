@@ -40,6 +40,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -1012,6 +1013,16 @@ public class CompilerOptions implements Serializable {
 
   public void setTracerMode(TracerMode mode) {
     this.tracer = mode;
+  }
+
+  private PrintStream tracerOutput;
+
+  PrintStream getTracerOutput() {
+    return tracerOutput;
+  }
+
+  public void setTracerOutput(PrintStream out) {
+    tracerOutput = out;
   }
 
   private boolean colorizeErrorOutput;

@@ -1725,8 +1725,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   public void maybeSetTracker() {
     if (options.getTracerMode().isOn()) {
-      tracker =
-          new PerformanceTracker(externsRoot, jsRoot, options.getTracerMode(), this.outStream);
+      PrintStream tracerOutput =
+          options.getTracerOutput() == null ? this.outStream : options.getTracerOutput();
+      tracker = new PerformanceTracker(externsRoot, jsRoot, options.getTracerMode(), tracerOutput);
       addChangeHandler(tracker.getCodeChangeHandler());
     }
   }
