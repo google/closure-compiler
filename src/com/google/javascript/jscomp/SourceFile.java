@@ -611,7 +611,12 @@ public class SourceFile implements StaticSourceFile, Serializable {
       String cachedCode = super.getCode();
 
       if (cachedCode == null) {
-        cachedCode = CharStreams.toString(getCodeReader());
+        try {
+          cachedCode = CharStreams.toString(getCodeReader());
+        } catch (java.nio.charset.MalformedInputException e) {
+          throw new IOException("Failed to read: " + path + ", is this input UTF-8 encoded?", e);
+        }
+
         super.setCode(cachedCode, Objects.equals(this.getCharset(), inputCharset));
         // Byte Order Mark can be removed by setCode
         cachedCode = super.getCode();
