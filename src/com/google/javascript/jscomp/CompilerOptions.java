@@ -1922,17 +1922,6 @@ public class CompilerOptions implements Serializable {
     return environment;
   }
 
-
-  /**
-   * @return whether we are currently transpiling to ES6_TYPED
-   */
-  @Deprecated
-  boolean raiseToEs6Typed() {
-    return languageOut != LanguageMode.NO_TRANSPILE
-        && !languageIn.isEs6OrHigher()
-        && languageOut == LanguageMode.ECMASCRIPT6_TYPED;
-  }
-
   public void setAliasTransformationHandler(
       AliasTransformationHandler changes) {
     this.aliasHandler = changes;

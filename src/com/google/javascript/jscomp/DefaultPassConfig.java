@@ -214,10 +214,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(setFeatureSet(options.getLanguageOut().toFeatureSet()));
     }
 
-    if (options.raiseToEs6Typed()) {
-      passes.add(convertToTypedES6);
-    }
-
     if (!options.forceLibraryInjection.isEmpty()) {
       passes.add(injectRuntimeLibraries);
     }
@@ -394,10 +390,6 @@ public final class DefaultPassConfig extends PassConfig {
       // TODO(bradfordcsmith): This marking is really about how variable scoping is handled during
       //     type checking. It should really be handled in a more direct fashion.
       checks.add(setFeatureSet(options.getLanguageOut().toFeatureSet()));
-    }
-
-    if (options.raiseToEs6Typed()) {
-      checks.add(convertToTypedES6);
     }
 
     if (!options.forceLibraryInjection.isEmpty()) {
@@ -1407,14 +1399,6 @@ public final class DefaultPassConfig extends PassConfig {
           return new AggressiveInlineAliases(compiler);
         }
       };
-
-  private final PassFactory convertToTypedES6 =
-      new PassFactory("ConvertToTypedES6", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new JsdocToEs6TypedConverter(compiler);
-    }
-  };
 
   private final PassFactory setFeatureSet(final FeatureSet featureSet) {
     return new PassFactory("setFeatureSet:" + featureSet.toLanguageModeString(), true) {
