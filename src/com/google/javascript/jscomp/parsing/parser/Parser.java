@@ -885,6 +885,9 @@ public class Parser {
     if (peekIdOrKeyword()) {
       nameExpr = null;
       name = eatIdOrKeywordAsId();
+      if (Keywords.isKeyword(name.value)) {
+        features = features.require(Feature.KEYWORDS_AS_PROPERTIES);
+      }
     } else {
       if (config.parseTypeSyntax && peekIndexSignature()) {
         ParseTree indexSignature = parseIndexSignature();
@@ -1724,7 +1727,13 @@ public class Parser {
 
     switch (token) {
     case CONST:
+      features = features.require(Feature.CONST_DECLARATIONS);
+      eat(token);
+      break;
     case LET:
+      features = features.require(Feature.LET_DECLARATIONS);
+      eat(token);
+      break;
     case VAR:
       eat(token);
       break;
@@ -3574,6 +3583,7 @@ public class Parser {
   }
 
   private ParseTree parseArrayPatternRest(PatternKind patternKind) {
+    features = features.require(Feature.ARRAY_PATTERN_REST);
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.SPREAD);
     ParseTree patternAssignmentTarget = parseRestAssignmentTarget(patternKind);
@@ -3903,7 +3913,11 @@ public class Parser {
       return eatIdOrKeywordAsId();
     } else {
       reportExpectedError(peekToken(), TokenType.IDENTIFIER);
-      return null;
+      if (peekIdOrKeyword()) {
+        return eatIdOrKeywordAsId();
+      } else {
+        return null;
+      }
     }
   }
 

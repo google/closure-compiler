@@ -1412,17 +1412,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
 
-    expectFeatures(Feature.DESTRUCTURING, Feature.REST_PARAMETERS);
+    expectFeatures(Feature.DESTRUCTURING, Feature.ARRAY_PATTERN_REST);
     parse("var [first, ...rest] = foo();");
 
-    expectFeatures(Feature.DESTRUCTURING, Feature.REST_PARAMETERS, Feature.LET_DECLARATIONS);
+    expectFeatures(Feature.DESTRUCTURING, Feature.ARRAY_PATTERN_REST, Feature.LET_DECLARATIONS);
     parse("let [first, ...rest] = foo();");
 
-    expectFeatures(Feature.DESTRUCTURING, Feature.REST_PARAMETERS, Feature.CONST_DECLARATIONS);
+    expectFeatures(Feature.DESTRUCTURING, Feature.ARRAY_PATTERN_REST, Feature.CONST_DECLARATIONS);
     parse("const [first, ...rest] = foo();");
 
     // nested destructuring in regular parameters and rest parameters
-    expectFeatures(Feature.DESTRUCTURING, Feature.REST_PARAMETERS);
+    expectFeatures(Feature.DESTRUCTURING, Feature.ARRAY_PATTERN_REST);
     parse("var [first, {a, b}, ...[re, st, ...{length}]] = foo();");
 
     parseError(
@@ -1440,7 +1440,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testArrayDestructuringAssignRest() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    expectFeatures(Feature.DESTRUCTURING, Feature.REST_PARAMETERS);
+    expectFeatures(Feature.DESTRUCTURING, Feature.ARRAY_PATTERN_REST);
     parse("[first, ...rest] = foo();");
     // nested destructuring in regular parameters and rest parameters
     parse("[first, {a, b}, ...[re, st, ...{length}]] = foo();");
@@ -1745,7 +1745,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
         getRequiresEs6Message(Feature.LET_DECLARATIONS));
   }
 
-  public void testLetForbidden3() {
+  public void xtestLetForbidden3() {
     mode = LanguageMode.ECMASCRIPT5;
     strictMode = STRICT;
     parseError("function f() { var let = 3; }",
@@ -2379,18 +2379,13 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     parseWarning("var x = {function: 1};", IRFactory.INVALID_ES3_PROP_NAME);
     parseWarning("x.function;", IRFactory.INVALID_ES3_PROP_NAME);
-    parseError("var x = {get x(){} };",
-        IRFactory.GETTER_ERROR_MESSAGE);
+    parseError("var x = {get x(){} };", IRFactory.GETTER_ERROR_MESSAGE);
     parseError("var x = {get function(){} };", IRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {get 'function'(){} };",
-        IRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {get 1(){} };",
-        IRFactory.GETTER_ERROR_MESSAGE);
+    parseError("var x = {get 'function'(){} };", IRFactory.GETTER_ERROR_MESSAGE);
+    parseError("var x = {get 1(){} };", IRFactory.GETTER_ERROR_MESSAGE);
     parseError("var x = {set function(a){} };", IRFactory.SETTER_ERROR_MESSAGE);
-    parseError("var x = {set 'function'(a){} };",
-        IRFactory.SETTER_ERROR_MESSAGE);
-    parseError("var x = {set 1(a){} };",
-        IRFactory.SETTER_ERROR_MESSAGE);
+    parseError("var x = {set 'function'(a){} };", IRFactory.SETTER_ERROR_MESSAGE);
+    parseError("var x = {set 1(a){} };", IRFactory.SETTER_ERROR_MESSAGE);
     parseWarning("var x = {class: 1};", IRFactory.INVALID_ES3_PROP_NAME);
     expectFeatures();
     parse("var x = {'class': 1};");
@@ -3168,16 +3163,27 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError(
         "for (var a,b in c) d;",
         "for-in statement may not have more than one variable declaration");
+
+    expectFeatures(Feature.LET_DECLARATIONS);
     parseError(
         "for (let a,b in c) d;",
         "for-in statement may not have more than one variable declaration");
+
+    expectFeatures(Feature.CONST_DECLARATIONS);
     parseError(
         "for (const a,b in c) d;",
         "for-in statement may not have more than one variable declaration");
 
+    expectFeatures();
     parseError("for (a=1 in b) c;", INVALID_ASSIGNMENT_TARGET);
+
+    expectFeatures(Feature.LET_DECLARATIONS);
     parseError("for (let a=1 in b) c;", "for-in statement may not have initializer");
+
+    expectFeatures(Feature.CONST_DECLARATIONS);
     parseError("for (const a=1 in b) c;", "for-in statement may not have initializer");
+
+    expectFeatures();
     parseError("for (var a=1 in b) c;", "for-in statement may not have initializer");
     parseError("for (\"a\" in b) c;", INVALID_ASSIGNMENT_TARGET);
   }
@@ -3257,7 +3263,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     parseError("for(a=1 of b) c;", INVALID_ASSIGNMENT_TARGET);
     parseError("for(var a=1 of b) c;", "for-of statement may not have initializer");
+
+    expectFeatures(Feature.FOR_OF, Feature.LET_DECLARATIONS);
     parseError("for(let a=1 of b) c;", "for-of statement may not have initializer");
+
+    expectFeatures(Feature.FOR_OF, Feature.CONST_DECLARATIONS);
     parseError("for(const a=1 of b) c;", "for-of statement may not have initializer");
   }
 
@@ -3267,8 +3277,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     parseError("for(var a, b of c) d;",
         "for-of statement may not have more than one variable declaration");
+
+    expectFeatures(Feature.FOR_OF, Feature.LET_DECLARATIONS);
     parseError("for(let a, b of c) d;",
         "for-of statement may not have more than one variable declaration");
+
+    expectFeatures(Feature.FOR_OF, Feature.CONST_DECLARATIONS);
     parseError("for(const a, b of c) d;",
         "for-of statement may not have more than one variable declaration");
   }

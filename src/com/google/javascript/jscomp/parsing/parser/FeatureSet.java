@@ -91,6 +91,7 @@ public final class FeatureSet implements Serializable {
     LET_DECLARATIONS("let declaration", ES6),
     MEMBER_DECLARATIONS("member declaration", ES6),
     REGEXP_FLAG_Y("RegExp flag 'y'", ES6),
+    ARRAY_PATTERN_REST("array pattern rest", ES6),
     REST_PARAMETERS("rest parameter", ES6),
     SPREAD_EXPRESSIONS("spread expression", ES6),
     SUPER("super", ES6),
