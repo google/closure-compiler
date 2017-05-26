@@ -829,4 +829,20 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
                     "var name = module$mod$name;",
                     "(function() { module$mod$name(); })();"))));
   }
+
+  public void testIssue2450() {
+    setFilename("test");
+    testModules(
+        LINE_JOINER.join(
+            "var x = 1, y = 2;",
+            "module.exports = {",
+            "a: x,",
+            "b: y,",
+            "};"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "/** @const */ var module$test = {};",
+            "module$test.a = 1;",
+            "module$test.b = 2;"));
+  }
 }
