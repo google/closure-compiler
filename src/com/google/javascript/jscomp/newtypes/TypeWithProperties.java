@@ -20,23 +20,38 @@ import java.io.Serializable;
 import java.util.Collection;
 
 /**
- * A type that can contain properties,
- * such as an ObjectType, NominalType, or a Namespace.
+ * A type that can contain properties, such as an ObjectType, and
+ * EnumType (a separate, special case, of ObjectType).
  */
 interface TypeWithProperties extends Serializable {
-  /** Get the inferred type of the given property */
+  /**
+   * Get the inferred type of the given property. Returns the undefined
+   * type if the named property is not found.
+   */
   JSType getProp(QualifiedName qname);
 
-  /** Get the declared type of the given property */
+  /**
+   * Get the declared type of the given property, or null if the named
+   * property is not declared.
+   */
   JSType getDeclaredProp(QualifiedName qname);
 
-  /** Return whether this type contains any form of property */
+  /**
+   * Return true if this type contains any form of the given property
+   * (this may include declared, inferred, required, or optional properties).
+   */
   boolean mayHaveProp(QualifiedName qname);
 
-  /** Return whether this type contains a required property */
+  /**
+   * Return true if this type contains the given required property.
+   * The qname must be an identifier, not a general qualified name.
+   */
   boolean hasProp(QualifiedName qname);
 
-  /** Return whether this type contains a constant property */
+  /**
+   * Return true if this type contains the given property and it is constant.
+   * The qname must be an identifier, not a general qualified name.
+   */
   boolean hasConstantProp(QualifiedName qname);
 
   /**

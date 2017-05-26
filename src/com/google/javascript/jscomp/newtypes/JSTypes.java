@@ -546,4 +546,9 @@ public final class JSTypes implements Serializable {
     }
     return t.isSubtypeOf(anyNumOrStr);
   }
+
+  @SuppressWarnings("ReferenceEquality")
+  boolean isBottomPropertyMap(PersistentMap<String, Property> map) {
+    return map == BOTTOM_PROPERTY_MAP;
+  }
 }

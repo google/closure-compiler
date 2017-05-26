@@ -49,5 +49,4 @@ abstract class PersistentMap<K, V> extends AbstractMap<K, V> {
   public static <K, V> PersistentMap<K, V> of(K key, V value) {
     return PersistentMap.<K, V>create().with(key, value);
   }
-
 }

@@ -1365,8 +1365,14 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
       Preconditions.checkState(!getEnums().isEmpty());
       return this;
     }
-    return makeType(this.commonTypes, getMask(),
-        ObjectType.withLooseObjects(getObjs()), getTypeVar(), getEnums());
+    // TODO(dimvar): here, a lot of the time the set of objects will only contain objects for which
+    // withLoose is a no-op. Worth it to detect it and return `this` in that case, to avoid
+    // unnecessary creation of types?
+    ImmutableSet.Builder<ObjectType> looseObjs = ImmutableSet.builder();
+    for (ObjectType obj : getObjs()) {
+      looseObjs.add(obj.withLoose());
+    }
+    return makeType(this.commonTypes, getMask(), looseObjs.build(), getTypeVar(), getEnums());
   }
 
   public final JSType getProp(QualifiedName qname) {
@@ -1437,8 +1443,11 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     if (isUnknown() || isBottom() || getObjs().isEmpty()) {
       return this;
     }
-    return makeType(this.commonTypes, getMask(),
-        ObjectType.withProperty(getObjs(), qname, type), getTypeVar(), getEnums());
+    ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
+    for (ObjectType obj : getObjs()) {
+      newObjs.add(obj.withProperty(qname, type));
+    }
+    return makeType(this.commonTypes, getMask(), newObjs.build(), getTypeVar(), getEnums());
   }
 
   public final JSType withDeclaredProperty(
@@ -1447,16 +1456,22 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     if (type == null && isConstant) {
       type = this.commonTypes.UNKNOWN;
     }
-    return makeType(this.commonTypes,
-        getMask(),
-        ObjectType.withDeclaredProperty(getObjs(), qname, type, isConstant), getTypeVar(), getEnums());
+    ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
+    for (ObjectType obj : getObjs()) {
+      newObjs.add(obj.withDeclaredProperty(qname, type, isConstant));
+    }
+    return makeType(this.commonTypes, getMask(), newObjs.build(), getTypeVar(), getEnums());
   }
 
   public final JSType withPropertyRequired(String pname) {
-    return (isUnknown() || getObjs().isEmpty()) ?
-        this :
-        makeType(this.commonTypes, getMask(),
-            ObjectType.withPropertyRequired(getObjs(), pname), getTypeVar(), getEnums());
+    if (isUnknown() || getObjs().isEmpty()) {
+      return this;
+    }
+    ImmutableSet.Builder<ObjectType> newObjs = ImmutableSet.builder();
+    for (ObjectType obj : getObjs()) {
+      newObjs.add(obj.withPropertyRequired(pname));
+    }
+    return makeType(this.commonTypes, getMask(), newObjs.build(), getTypeVar(), getEnums());
   }
 
   // For a type A, this method tries to return the greatest subtype of A that
