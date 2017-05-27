@@ -192,9 +192,9 @@ public class TranspilationPasses {
    * @param script The SCRIPT node representing a JS file
    * @return If the file has at least ES6 features currently implemented in modern browsers.
    */
-  static boolean isScriptEs6ImplOrHigher(Node script) {
+  static boolean isScriptEs6OrHigher(Node script) {
     FeatureSet features = (FeatureSet) script.getProp(Node.FEATURE_SET);
-    return features != null && features.isEs6ImplOrHigher();
+    return features != null && features.contains(FeatureSet.ES6);
   }
 
   /**
@@ -207,7 +207,7 @@ public class TranspilationPasses {
   static void processCheck(AbstractCompiler compiler, Node combinedRoot, Callback... callbacks) {
     if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6)) {
       for (Node singleRoot : combinedRoot.children()) {
-        if (isScriptEs6ImplOrHigher(singleRoot)) {
+        if (isScriptEs6OrHigher(singleRoot)) {
           for (Callback callback : callbacks) {
             NodeTraversal.traverseEs6(compiler, singleRoot, callback);
           }
@@ -226,7 +226,7 @@ public class TranspilationPasses {
    */
   static void hotSwapCheck(AbstractCompiler compiler, Node scriptRoot, Callback... callbacks) {
     if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6)) {
-      if (isScriptEs6ImplOrHigher(scriptRoot)) {
+      if (isScriptEs6OrHigher(scriptRoot)) {
         for (Callback callback : callbacks) {
           NodeTraversal.traverseEs6(compiler, scriptRoot, callback);
         }
@@ -246,7 +246,7 @@ public class TranspilationPasses {
       AbstractCompiler compiler, Node combinedRoot, Callback... callbacks) {
     if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
       for (Node singleRoot : combinedRoot.children()) {
-        if (isScriptEs6ImplOrHigher(singleRoot)) {
+        if (isScriptEs6OrHigher(singleRoot)) {
           for (Callback callback : callbacks) {
             singleRoot.putBooleanProp(Node.TRANSPILED, true);
             NodeTraversal.traverseEs6(compiler, singleRoot, callback);
@@ -266,7 +266,7 @@ public class TranspilationPasses {
    */
   static void hotSwapTranspile(AbstractCompiler compiler, Node scriptRoot, Callback... callbacks) {
     if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
-      if (isScriptEs6ImplOrHigher(scriptRoot)) {
+      if (isScriptEs6OrHigher(scriptRoot)) {
         for (Callback callback : callbacks) {
           scriptRoot.putBooleanProp(Node.TRANSPILED, true);
           NodeTraversal.traverseEs6(compiler, scriptRoot, callback);

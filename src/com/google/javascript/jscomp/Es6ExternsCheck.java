@@ -38,7 +38,7 @@ final class Es6ExternsCheck extends AbstractPreOrderCallback implements Compiler
     Preconditions.checkState(root.isRoot());
     for (Node script : root.children()) {
       Preconditions.checkState(script.isScript());
-      if (TranspilationPasses.isScriptEs6ImplOrHigher(script)) {
+      if (TranspilationPasses.isScriptEs6OrHigher(script)) {
         return true;
       }
     }

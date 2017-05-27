@@ -98,7 +98,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
     }
     if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6)) {
       for (Node singleRoot : root.children()) {
-        if (TranspilationPasses.isScriptEs6ImplOrHigher(singleRoot)) {
+        if (TranspilationPasses.isScriptEs6OrHigher(singleRoot)) {
           return true;
         }
       }
@@ -119,7 +119,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     if (!forTranspileOnly
         || (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6)
-            && TranspilationPasses.isScriptEs6ImplOrHigher(scriptRoot))) {
+            && TranspilationPasses.isScriptEs6OrHigher(scriptRoot))) {
       new ReferenceCollectingCallback(
               compiler, new ReferenceCheckingBehavior(), new Es6SyntacticScopeCreator(compiler))
           .hotSwapScript(scriptRoot, originalRoot);
