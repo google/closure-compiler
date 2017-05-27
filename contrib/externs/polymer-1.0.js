@@ -1538,3 +1538,15 @@ Polymer.DomModule = function() {};
  * at the specified `id`.
  */
 Polymer.DomModule.import = function(id, opt_selector) {};
+
+/**
+ * For compatibility with both Polymer 1.0 and 2.0, code may check for certain
+ * objects and properties which don't exist in Polymer 1.0.
+ *
+ * We give those objects and properties the `undefined` type here, because
+ * the dependency tree will either contain these externs and Polymer 1.0 or
+ * it will contain Polymer 2.0 which defines the full types.
+ */
+
+/** @type {undefined} */
+var ShadyDOM;
