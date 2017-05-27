@@ -1523,3 +1523,18 @@ Polymer.ArraySplice = {};
  * of items added at this location.
  */
 Polymer.ArraySplice.calculateSplices = function(current, previous) {};
+
+/**
+ * @constructor @extends {PolymerElement}
+ */
+Polymer.DomModule = function() {};
+
+/**
+ * Retrieves the dom specified by `selector` in the module specified by
+ * `id`. For example, this.import('foo', 'img');
+ * @param {string} id
+ * @param {string=} opt_selector
+ * @return {?HTMLElement} Returns the dom which matches `selector` in the module
+ * at the specified `id`.
+ */
+Polymer.DomModule.import = function(id, opt_selector) {};
