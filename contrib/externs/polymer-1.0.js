@@ -735,6 +735,12 @@ PolymerElement.prototype._pathEffector = function(path, value) {};
  */
 PolymerElement.prototype._propertySetter = function(path, value) {};
 
+/**
+ * Do not call this function.
+ *
+ * @param {string} path .
+ */
+PolymerElement.prototype._notifyChange = function(path) {};
 
 /**
  * A Polymer DOM API for manipulating DOM such that local DOM and light DOM
