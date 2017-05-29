@@ -1061,7 +1061,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
               Node assign = IR.assign(getProp, nameRef.getFirstChild().detachFromParent());
               assign.setJSDocInfo(info);
               Node expr = IR.exprResult(assign).useSourceInfoIfMissingFromForTree(nameRef);
-              parent.replaceWith(expr);
+              if (parent.getParent() != null) {
+                  parent.replaceWith(expr);
+              } else {
+                  t.getScope().getRootNode().addChildToBack(expr);
+              }
             } else {
               getProp.setJSDocInfo(info);
               parent.replaceWith(IR.exprResult(getProp).useSourceInfoFrom(getProp));
