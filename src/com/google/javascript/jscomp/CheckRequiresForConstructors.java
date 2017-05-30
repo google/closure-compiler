@@ -417,7 +417,13 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
   private void maybeAddClosurizedNamespace(String requiredName) {
     if (mode == Mode.SINGLE_FILE) {
       String rootName = Splitter.on('.').split(requiredName).iterator().next();
-      closurizedNamespaces.add(rootName);
+      if (rootName.equals("google")) {
+        // Unfortunately, it's common to goog.require some things from the namespace 'google' while
+        // other things under 'google' are provided in externs. So don't consider 'google' to be
+        // a Closurized namespace.
+      } else {
+        closurizedNamespaces.add(rootName);
+      }
     }
   }
 
