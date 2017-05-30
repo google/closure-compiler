@@ -2086,7 +2086,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       if (root == null) {
         continue;
       }
-      new ProcessEs6Modules(this).processFile(root, forceRewrite);
+      new Es6RewriteModules(this).processFile(root, forceRewrite);
     }
 
     setFeatureSet(featureSet.withoutModules());

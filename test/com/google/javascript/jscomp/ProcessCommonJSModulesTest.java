@@ -56,7 +56,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   }
 
   void testModules(String input, String expected) {
-    ProcessEs6ModulesTest.testModules(this, input, expected);
+    Es6RewriteModulesTest.testModules(this, input, expected);
   }
 
   public void testWithoutExports() {

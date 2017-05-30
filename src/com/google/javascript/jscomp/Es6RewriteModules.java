@@ -40,7 +40,7 @@ import java.util.Set;
  *
  * @author moz@google.com (Michael Zhou)
  */
-public final class ProcessEs6Modules extends AbstractPostOrderCallback {
+public final class Es6RewriteModules extends AbstractPostOrderCallback {
   private static final String DEFAULT_EXPORT_NAME = "$jscompDefaultExport";
 
   static final DiagnosticType LHS_OF_GOOG_REQUIRE_MUST_BE_CONST =
@@ -82,10 +82,10 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
   private Node googRequireInsertSpot;
 
   /**
-   * Creates a new ProcessEs6Modules instance which can be used to rewrite
+   * Creates a new Es6RewriteModules instance which can be used to rewrite
    * ES6 modules to a concatenable form.
    */
-  public ProcessEs6Modules(Compiler compiler) {
+  public Es6RewriteModules(Compiler compiler) {
     this.compiler = compiler;
   }
 
@@ -359,7 +359,7 @@ public final class ProcessEs6Modules extends AbstractPostOrderCallback {
     ClosureRewriteModule.checkAndSetStrictModeDirective(t, script);
 
     Preconditions.checkArgument(scriptNodeCount == 1,
-        "ProcessEs6Modules supports only one invocation per "
+        "Es6RewriteModules supports only one invocation per "
         + "CompilerInput / script node");
 
     // rewriteRequires is here (rather than being part of the main visit()

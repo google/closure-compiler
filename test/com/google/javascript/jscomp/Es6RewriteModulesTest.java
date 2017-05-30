@@ -16,17 +16,17 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.ProcessEs6Modules.LHS_OF_GOOG_REQUIRE_MUST_BE_CONST;
+import static com.google.javascript.jscomp.Es6RewriteModules.LHS_OF_GOOG_REQUIRE_MUST_BE_CONST;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 /**
- * Unit tests for {@link ProcessEs6Modules}
+ * Unit tests for {@link Es6RewriteModules}
  */
 
-public final class ProcessEs6ModulesTest extends CompilerTestCase {
+public final class Es6RewriteModulesTest extends CompilerTestCase {
   private ImmutableList<String> moduleRoots = null;
 
   @Override
@@ -624,7 +624,7 @@ public final class ProcessEs6ModulesTest extends CompilerTestCase {
             "var foo$$module$testcode = new other.Foo();"));
 
     testModules("import * as Foo from 'goog:other.Foo';",
-        ProcessEs6Modules.NAMESPACE_IMPORT_CANNOT_USE_STAR);
+        Es6RewriteModules.NAMESPACE_IMPORT_CANNOT_USE_STAR);
   }
 
   public void testObjectDestructuringAndObjLitShorthand() {
