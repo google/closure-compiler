@@ -205,7 +205,7 @@ var undefined;
 /**
  * @param {string} uri
  * @return {string}
- * @nosideeffects
+ * @throws {URIError} when used wrongly.
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURI
  */
 function decodeURI(uri) {}
@@ -213,7 +213,7 @@ function decodeURI(uri) {}
 /**
  * @param {string} uri
  * @return {string}
- * @nosideeffects
+ * @throws {URIError} when used wrongly.
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/decodeURIComponent
  */
 function decodeURIComponent(uri) {}
@@ -221,7 +221,8 @@ function decodeURIComponent(uri) {}
 /**
  * @param {string} uri
  * @return {string}
- * @nosideeffects
+ * @throws {URIError} if one attempts to encode a surrogate which is not part of
+ * a high-low pair.
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURI
  */
 function encodeURI(uri) {}
@@ -229,7 +230,8 @@ function encodeURI(uri) {}
 /**
  * @param {string} uri
  * @return {string}
- * @nosideeffects
+ * @throws {URIError} if one attempts to encode a surrogate which is not part of
+ * a high-low pair.
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent
  */
 function encodeURIComponent(uri) {}
