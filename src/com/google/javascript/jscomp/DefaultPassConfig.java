@@ -396,6 +396,12 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(injectRuntimeLibraries);
     }
 
+    if (options.needsTranspilationFrom(FeatureSet.ES6) && !options.skipTranspilationAndCrash) {
+      checks.add(convertStaticInheritance);
+    }
+
+    // End of ES6 transpilation passes.
+
     if (!options.skipNonTranspilationPasses) {
       addNonTranspilationCheckPasses(checks);
     }
@@ -433,10 +439,6 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   private void addNonTranspilationCheckPasses(List<PassFactory> checks) {
-    checks.add(convertStaticInheritance);
-
-    // End of ES6 transpilation passes.
-
     checks.add(createEmptyPass("beforeTypeChecking"));
 
     if (options.getNewTypeInference()) {
