@@ -35,10 +35,6 @@ public final class CheckSuspiciousCodeTest extends Es6CompilerTestCase {
     return 1;
   }
 
-  public void test(String js, DiagnosticType error) {
-    test(js, js, null, error);
-  }
-
   public void testSuspiciousSemi() {
     final DiagnosticType e = CheckSuspiciousCode.SUSPICIOUS_SEMICOLON;
 
