@@ -23,7 +23,7 @@
  */
 
 /**
- * @param {function(number)} callback
+ * @param {function(number): undefined} callback
  * @param {Element=} opt_element In early versions of this API, the callback
  *     was invoked only if the element was visible.
  * @return {number}
