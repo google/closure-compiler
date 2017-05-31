@@ -37,14 +37,34 @@ public final class NameAnalyzerTest extends Es6CompilerTestCase {
   }
 
   @Override
-  protected void setUp() {
-    super.enableNormalize();
-  }
-
-  @Override
   protected int getNumRepetitions() {
     // pass reaches steady state after 1 iteration.
     return 1;
+  }
+
+  @Override
+  protected CompilerPass getProcessor(Compiler compiler) {
+    return new MarkNoSideEffectCallsAndNameAnalyzerRunner(compiler);
+  }
+
+  private static class MarkNoSideEffectCallsAndNameAnalyzerRunner implements CompilerPass {
+    MarkNoSideEffectCalls markNoSideEffectCalls;
+    NameAnalyzer analyzer;
+    MarkNoSideEffectCallsAndNameAnalyzerRunner(Compiler compiler) {
+      this.markNoSideEffectCalls = new MarkNoSideEffectCalls(compiler);
+      this.analyzer = new NameAnalyzer(compiler, true, null);
+    }
+
+    @Override
+    public void process(Node externs, Node root) {
+      markNoSideEffectCalls.process(externs, root);
+      analyzer.process(externs, root);
+    }
+  }
+
+  @Override
+  protected void setUp() {
+    super.enableNormalize();
   }
 
   public void testRemoveVarDeclaration1() {
@@ -2176,23 +2196,24 @@ public final class NameAnalyzerTest extends Es6CompilerTestCase {
         "console.log(f());"));
   }
 
-  @Override
-  protected CompilerPass getProcessor(Compiler compiler) {
-    return new MarkNoSideEffectCallsAndNameAnalyzerRunner(compiler);
-  }
-
-  private static class MarkNoSideEffectCallsAndNameAnalyzerRunner implements CompilerPass {
-    MarkNoSideEffectCalls markNoSideEffectCalls;
-    NameAnalyzer analyzer;
-    MarkNoSideEffectCallsAndNameAnalyzerRunner(Compiler compiler) {
-      this.markNoSideEffectCalls = new MarkNoSideEffectCalls(compiler);
-      this.analyzer = new NameAnalyzer(compiler, true, null);
-    }
-
-    @Override
-    public void process(Node externs, Node root) {
-      markNoSideEffectCalls.process(externs, root);
-      analyzer.process(externs, root);
-    }
+  public void testBug30868041() {
+    // TODO(johnlenz): fix this, "x" should remain or the reference to "x" should also be removed
+    // as-is this pass has a prerequisite that the peephole passes have already remove
+    // side-effect free statements like this.
+    test(
+        LINE_JOINER.join(
+            "function Base() {};",
+            "/** @nosideeffects */",
+            "Base.prototype.foo =  function() {",
+            "}",
+            "var x = new Base();",
+            "x.foo()"),
+        LINE_JOINER.join(
+            "function Base() {};",
+            "/** @nosideeffects */",
+            "Base.prototype.foo =  function() {",
+            "}",
+            "new Base();",
+            "x.foo()"));
   }
 }

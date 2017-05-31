@@ -832,7 +832,7 @@ final class NameAnalyzer implements CompilerPass {
         Node pred = decl.getNext();
         Node step = pred.getNext();
         addSimplifiedExpression(decl, n);
-        addSimplifiedExpression(pred, n);
+        addSimplifiedExpression(pred, n);   // addAllChildren?
         addSimplifiedExpression(step, n);
       } else if (n.isForIn()) {
         Node decl = n.getFirstChild();
