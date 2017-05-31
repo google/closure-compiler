@@ -28,7 +28,7 @@ import junit.framework.TestCase;
  * function and assertions are made at the instruction labeled with {@code X}.
  *
  */
-public final class LiveVariableAnalysisTest extends TestCase {
+public final class LiveVariablesAnalysisTest extends TestCase {
 
   private LiveVariablesAnalysis liveness = null;
 
