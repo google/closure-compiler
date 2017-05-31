@@ -164,3 +164,10 @@ angular.$q.prototype.resolve;
  * @template RESULT
  */
 angular.$q.prototype.when = function(value) {};
+
+/**
+ * @param {RESULT} value
+ * @return {!angular.$q.Promise.<RESULT>}
+ * @template RESULT
+ */
+angular.$q.prototype.resolve = function(value) {};
