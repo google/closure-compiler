@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import java.util.List;
@@ -403,5 +404,28 @@ public class J2clPassTest extends CompilerTestCase {
             "  var $RegExp = function() {};",
             "  var foo = new $RegExp('', '');",
             "}"));
+  }
+
+  public void testMarksChanges() {
+    test(
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
+                LINE_JOINER.join(
+                    // Function definitions and calls are qualified globals.
+                    "var Casts = function() {};",
+                    "Casts.$to = function(instance) { return instance; }",
+                    "",
+                    "alert(Casts.$to(function(a) { return a; }));"))),
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "j2cl/transpiler/vmbootstrap/Casts.impl.java.js",
+                LINE_JOINER.join(
+                    // Function definitions and calls are qualified globals.
+                    "var Casts = function() {};",
+                    "Casts.$to = function(instance) { return instance; }",
+                    "",
+                    "alert(function(a) { return a; });"))));
+
   }
 }

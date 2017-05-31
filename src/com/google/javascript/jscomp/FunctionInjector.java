@@ -247,12 +247,14 @@ class FunctionInjector {
    */
   Node inline(Reference ref, String fnName, Node fnNode) {
     Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
-
+    Node result;
     if (ref.mode == InliningMode.DIRECT) {
-      return inlineReturnValue(ref, fnNode);
+      result = inlineReturnValue(ref, fnNode);
     } else {
-      return inlineFunction(ref, fnNode, fnName);
+      result = inlineFunction(ref, fnNode, fnName);
     }
+    compiler.reportChangeToEnclosingScope(result);
+    return result;
   }
 
   /**
@@ -284,11 +286,11 @@ class FunctionInjector {
 
       // Clone the return node first.
       Node safeReturnNode = returnNode.cloneTree();
-      NodeUtil.markNewScopesChanged(safeReturnNode, compiler);
       Node inlineResult = FunctionArgumentInjector.inject(
           null, safeReturnNode, null, argMap);
       Preconditions.checkArgument(safeReturnNode == inlineResult);
       newExpression = safeReturnNode.removeFirstChild();
+      NodeUtil.markNewScopesChanged(newExpression, compiler);
     }
 
     // If the call site had a cast ensure it's persisted to the new expression that replaces it.

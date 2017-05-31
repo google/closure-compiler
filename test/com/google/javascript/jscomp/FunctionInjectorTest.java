@@ -972,6 +972,22 @@ public final class FunctionInjectorTest extends TestCase {
         "foo", INLINE_BLOCK);
   }
 
+  public void testInline20() {
+    // cloned FUNCTION node must be reported as being added.
+    helperInlineReferenceToFunction(
+        "function foo(a){return a}; foo(function(){});",
+        "function foo(a){return a}; (function(){})",
+        "foo", INLINE_DIRECT);
+  }
+
+  public void testInline21() {
+    // cloned FUNCTION node must be reported as being added.
+    helperInlineReferenceToFunction(
+        "function foo(a){return a}; foo(function(){});",
+        "function foo(a){return a}; {(function(){})}",
+        "foo", INLINE_BLOCK);
+  }
+
   public void testInlineIntoLoop() {
     helperInlineReferenceToFunction(
         "function foo(a){var b;return a;}; " +
@@ -1523,8 +1539,11 @@ public final class FunctionInjectorTest extends TestCase {
     };
 
     compiler.resetUniqueNameId();
+
+    ChangeVerifier verifier = new ChangeVerifier(compiler).snapshot(mainRoot);
     TestCallback test = new TestCallback(fnName, tester);
     NodeTraversal.traverseEs6(compiler, tree, test);
+    verifier.checkRecordedChanges("helperInlineReferenceToFunction", mainRoot);
   }
 
   interface Method {
