@@ -81,7 +81,7 @@ ReadableStreamSource.prototype.start;
  */
 ReadableStreamSource.prototype.pull;
 
-/** @type {(undefined|function(*):(!Promise<*>|undefined))} */
+/** @type {(undefined|function(*):(!IThenable<*>|undefined))} */
 ReadableStreamSource.prototype.cancel;
 
 /** @type {(undefined|string)} */
