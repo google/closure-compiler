@@ -746,7 +746,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             stage2Passes();
           }
         }
-        completeCompilation();
+        performPostCompilationTasks();
       }
     } finally {
       generateReport();
@@ -801,7 +801,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             stage2Passes();
           }
         }
-        completeCompilation();
+        performPostCompilationTasks();
       }
     } finally {
       generateReport();
@@ -905,12 +905,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * <p> DON'T call it if the compiler threw an exception.
    * <p> DO call it even when {@code hasErrors()} returns true.
    */
-  public void completeCompilation() {
+  public void performPostCompilationTasks() {
     runInCompilerThread(new Callable<Void>() {
 
       @Override
       public Void call() throws Exception {
-        completeCompilationInternal();
+        performPostCompilationTasksInternal();
         return null;
       }
 
@@ -920,7 +920,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /**
    * Performs all the bookkeeping required at the end of a compilation.
    */
-  private void completeCompilationInternal() {
+  private void performPostCompilationTasksInternal() {
     if (options.recordFunctionInformation) {
       recordFunctionInformation();
     }

@@ -1158,8 +1158,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       compiler.parseForCompilation();
       if (!compiler.hasErrors()) {
         compiler.stage1Passes();
-        compiler.completeCompilation();
         compiler.saveState(serializedOutputStream);
+        compiler.performPostCompilationTasks();
       }
     } catch (IOException e) {
       compiler.report(JSError.make(COULD_NOT_SERIALIZE_AST, filename));
@@ -1179,7 +1179,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       if (!compiler.hasErrors()) {
           compiler.stage2Passes();
       }
-      compiler.completeCompilation();
+      compiler.performPostCompilationTasks();
     } catch (IOException e) {
       compiler.report(JSError.make(COULD_NOT_DESERIALIZE_AST, filename));
     } finally {
@@ -1200,7 +1200,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         if (!compiler.hasErrors()) {
           compiler.stage2Passes();
         }
-        compiler.completeCompilation();
+        compiler.performPostCompilationTasks();
       }
     } finally {
       // Make sure we generate a report of errors and warnings even if the compiler throws an
