@@ -500,22 +500,9 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closureReplaceGetCssName);
     }
 
-    // i18n
-    // If you want to customize the compiler to use a different i18n pass,
-    // you can create a PassConfig that calls replacePassFactory
-    // to replace this.
-    if (options.replaceMessagesWithChromeI18n) {
-      checks.add(replaceMessagesForChrome);
-    } else if (options.messageBundle != null) {
-      checks.add(replaceMessages);
-    }
-
     if (options.getTweakProcessing().isOn()) {
       checks.add(processTweaks);
     }
-
-    // Defines in code always need to be processed.
-    checks.add(processDefines);
 
     if (options.instrumentationTemplate != null || options.recordFunctionInformation) {
       checks.add(computeFunctionNames);
@@ -533,6 +520,28 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.skipNonTranspilationPasses) {
       return passes;
     }
+    passes.add(garbageCollectChecks);
+
+    // i18n
+    // If you want to customize the compiler to use a different i18n pass,
+    // you can create a PassConfig that calls replacePassFactory
+    // to replace this.
+    if (options.replaceMessagesWithChromeI18n) {
+      passes.add(replaceMessagesForChrome);
+    } else if (options.messageBundle != null) {
+      passes.add(replaceMessages);
+    }
+
+    // Defines in code always need to be processed.
+    passes.add(processDefines);
+
+    if (options.getTweakProcessing().shouldStrip()
+        || !options.stripTypes.isEmpty()
+        || !options.stripNameSuffixes.isEmpty()
+        || !options.stripTypePrefixes.isEmpty()
+        || !options.stripNamePrefixes.isEmpty()) {
+      passes.add(stripCode);
+    }
 
     passes.add(hoistVars);
     passes.add(normalize);
@@ -545,8 +554,6 @@ public final class DefaultPassConfig extends PassConfig {
     // Gather property names in externs so they can be queried by the
     // optimizing passes.
     passes.add(gatherExternProperties);
-
-    passes.add(garbageCollectChecks);
 
     if (options.instrumentForCoverage) {
       passes.add(instrumentForCodeCoverage);
@@ -1931,6 +1938,28 @@ public final class DefaultPassConfig extends PassConfig {
           replacements.putAll(options.getDefineReplacements());
           new ProcessDefines(compiler, ImmutableMap.copyOf(replacements))
               .injectNamespace(namespaceForChecks).process(externs, jsRoot);
+        }
+      };
+    }
+  };
+
+  /**
+   * Strips code for smaller compiled code. This is useful for removing debug
+   * statements to prevent leaking them publicly.
+   */
+  private final PassFactory stripCode = new PassFactory("stripCode", true) {
+    @Override
+    protected CompilerPass create(final AbstractCompiler compiler) {
+      return new CompilerPass() {
+        @Override
+        public void process(Node externs, Node jsRoot) {
+          CompilerOptions options = compiler.getOptions();
+          StripCode pass = new StripCode(compiler, options.stripTypes, options.stripNameSuffixes,
+              options.stripTypePrefixes, options.stripNamePrefixes);
+          if (options.getTweakProcessing().shouldStrip()) {
+            pass.enableTweakStripping();
+          }
+          pass.process(externs, jsRoot);
         }
       };
     }

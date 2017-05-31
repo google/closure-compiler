@@ -1100,15 +1100,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return;
     }
 
-    if (options.getTweakProcessing().shouldStrip()
-        || !options.stripTypes.isEmpty()
-        || !options.stripNameSuffixes.isEmpty()
-        || !options.stripTypePrefixes.isEmpty()
-        || !options.stripNamePrefixes.isEmpty()) {
-      stripCode(options.stripTypes, options.stripNameSuffixes,
-          options.stripTypePrefixes, options.stripNamePrefixes);
-    }
-
     runCustomPasses(CustomPassExecutionTime.BEFORE_OPTIMIZATIONS);
     phaseOptimizer = null;
   }
@@ -1139,23 +1130,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private void runSanityCheck() {
     sanityCheck.create(this).process(externsRoot, jsRoot);
-  }
-
-  /**
-   * Strips code for smaller compiled code. This is useful for removing debug
-   * statements to prevent leaking them publicly.
-   */
-  void stripCode(Set<String> stripTypes, Set<String> stripNameSuffixes,
-      Set<String> stripTypePrefixes, Set<String> stripNamePrefixes) {
-    logger.fine("Strip code");
-    startPass("stripCode");
-    StripCode r = new StripCode(this, stripTypes, stripNameSuffixes,
-        stripTypePrefixes, stripNamePrefixes);
-    if (options.getTweakProcessing().shouldStrip()) {
-      r.enableTweakStripping();
-    }
-    process(r);
-    endPass("stripCode");
   }
 
   /**
