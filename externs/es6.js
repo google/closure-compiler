@@ -1420,7 +1420,7 @@ Object.values = function(obj) {};
 /**
  * NOTE: this is an ES2017 (ES8) extern.
  * @param {!Object<T>} obj
- * @return {!Array<!Array<(string|T)>>} entries
+ * @return {!Array<!Array<(string)>>} entries
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/entries
  * @throws {Error}
  * @template T
