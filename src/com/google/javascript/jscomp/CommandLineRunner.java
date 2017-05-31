@@ -659,6 +659,10 @@ public class CommandLineRunner extends
         handler = BooleanOptionHandler.class,
         usage = "Checks for type errors using the new type inference algorithm.")
     private boolean useNewTypeInference = false;
+    
+    @Option(name = "--rename_prefix",
+        usage = "Specifies a prefix that will be prepended to all variables.")
+    private String renamePrefix = null;
 
     @Option(name = "--rename_variable_prefix",
         usage = "Specifies a prefix that will be prepended to all variables.")
