@@ -322,6 +322,12 @@ assert.isUndefined = function(value, opt_message) {};
 assert.isDefined = function(value, opt_message) {};
 
 /**
+ * @param {*} value
+ * @param {string=} opt_message
+ */
+assert.isNull = function(value, opt_message) {};
+
+/**
  * @param {*} object
  * @param {function(new: Object)} constructor
  * @param {string=} opt_message
