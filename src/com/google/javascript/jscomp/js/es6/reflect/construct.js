@@ -14,37 +14,14 @@
  * limitations under the License.
  */
 
-'require es6/reflect/apply';
-'require util/objectcreate';
+/**
+ * @fileoverview
+ * @suppress {uselessCode}
+ */
+
+'require es6/util/construct';
 'require util/polyfill';
 
-
 $jscomp.polyfill('Reflect.construct', function(orig) {
-  if (orig) return orig;
-
-  /**
-   * Polyfill for Reflect.construct() method:
-   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/construct
-   *
-   * Calls a constructor as with the 'new' operator.
-   * TODO(sdh): how to type 'target' with (new: TARGET) if opt_newTarget missing?
-   *
-   * @param {function(new: ?, ...?)} target The constructor to call.
-   * @param {!Array} argList The arguments as a list.
-   * @param {function(new: TARGET, ...?)=} opt_newTarget The constructor to instantiate.
-   * @return {TARGET} The result of the function call.
-   * @template TARGET
-   * @suppress {reportUnknownTypes}
-   */
-  var polyfill = function(target, argList, opt_newTarget) {
-    // if (arguments.length < 3 || opt_newTarget == target) {
-    //   return new target(...argList);
-    // }
-    if (opt_newTarget === undefined) opt_newTarget = target;
-    var proto = opt_newTarget.prototype || Object.prototype;
-    var obj = $jscomp.objectCreate(proto);
-    var out = Reflect.apply(target, obj, argList);
-    return out || obj;
-  };
-  return polyfill;
-}, 'es6', 'es3');
+   return orig || $jscomp.construct;
+  }, 'es6', 'es3');
