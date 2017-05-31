@@ -410,6 +410,19 @@ enum CompilationParam {
     }
   },
 
+  /** Removes abstract methods */
+  REMOVE_ABSTRACT_METHODS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
+    @Override
+    void apply(CompilerOptions options, boolean value) {
+      options.setRemoveAbstractMethods(value);
+    }
+
+    @Override
+    String getJavaInfo() {
+      return "options.setRemoveAbstractMethods(true)";
+    }
+  },
+
   /** Removes unused member prototypes */
   REMOVE_UNUSED_PROTOTYPE_PROPERTIES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
