@@ -129,8 +129,6 @@ import java.util.ArrayDeque;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -242,8 +240,7 @@ public class Parser {
     }
   }
 
-  private static final Pattern SOURCE_MAPPING_URL_PATTERN =
-      Pattern.compile("^//#\\s*sourceMappingURL=");
+  private static final String SOURCE_MAPPING_URL_PREFIX = "//# sourceMappingURL=";
   private static final String BASE64_URL_PREFIX = "data:application/json;base64,";
 
   private class CommentRecorder implements Scanner.CommentRecorder {
@@ -251,10 +248,10 @@ public class Parser {
     @Override
     public void recordComment(
         Comment.Type type, SourceRange range, String value) {
+      value = value.trim();
       if (parseInlineSourceMaps) {
-        Matcher matcher = SOURCE_MAPPING_URL_PATTERN.matcher(value);
-        if (matcher.find()) {
-          String url = value.substring(matcher.group(0).length());
+        if (value.startsWith(SOURCE_MAPPING_URL_PREFIX)) {
+          String url = value.substring(SOURCE_MAPPING_URL_PREFIX.length());
           if (url.startsWith(BASE64_URL_PREFIX)) {
             byte[] data = BaseEncoding.base64().decode(url.substring(BASE64_URL_PREFIX.length()));
             String source = new String(data, StandardCharsets.UTF_8);
