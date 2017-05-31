@@ -3340,9 +3340,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       runInCompilerThread(new Callable<Void>() {
         @Override
         public Void call() throws Exception {
-          startPass("serializeCompilerState");
+          Tracer tracer = newTracer("serializeCompilerState");
           objectOutputStream.writeObject(new CompilerState(Compiler.this));
-          endPass("serializeCompilerState");
+          stopTracer(tracer, "serializeCompilerState");
           return null;
         }
       });
@@ -3351,13 +3351,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @GwtIncompatible("ObjectInputStream")
   public void restoreState(InputStream inputStream) throws IOException  {
+    initWarningsGuard(options.getWarningsGuard());
+    maybeSetTracker();
     try (final ObjectInputStream objectInputStream = new ObjectInputStream(inputStream)) {
       CompilerState compilerState = runInCompilerThread(new Callable<CompilerState>() {
         @Override
         public CompilerState call() throws Exception {
-          startPass("deserializeCompilerState");
+          Tracer tracer = newTracer("deserializeCompilerState");
           CompilerState compilerState = (CompilerState) objectInputStream.readObject();
-          endPass("deserializeCompilerState");
+          stopTracer(tracer, "deserializeCompilerState");
           return compilerState;
         }
       });
@@ -3384,8 +3386,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       externProperties = compilerState.externProperties;
       moduleGraph = compilerState.moduleGraph;
       modules = compilerState.modules;
-      initWarningsGuard(options.getWarningsGuard());
-      maybeSetTracker();
 
       // restore errors.
       if (compilerState.errors != null) {
