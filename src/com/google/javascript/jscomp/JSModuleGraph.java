@@ -268,10 +268,10 @@ public final class JSModuleGraph implements Serializable {
    * <p>If multiple candidates have the same number of dependents, the module farthest down in the
    * total ordering of modules will be chosen.
    *
-   * @param dependentModules to consider
+   * @param dependentModules indices of modules to consider
    * @return A module on which all of the argument modules depend
    */
-  public JSModule getSmallestCoveringDependency(Collection<JSModule> dependentModules) {
+  public JSModule getSmallestCoveringDependency(BitSet dependentModules) {
     checkState(!dependentModules.isEmpty());
 
     // Candidate modules are those that all of the given dependent modules depend on, including
@@ -280,8 +280,9 @@ public final class JSModuleGraph implements Serializable {
     int minDependentModuleIndex = modules.length;
     final BitSet candidates = new BitSet(modules.length);
     candidates.set(0, modules.length, true);
-    for (JSModule module : dependentModules) {
-      int dependentIndex = module.getIndex();
+    for (int dependentIndex = dependentModules.nextSetBit(0);
+        dependentIndex >= 0;
+        dependentIndex = dependentModules.nextSetBit(dependentIndex + 1)) {
       minDependentModuleIndex = Math.min(minDependentModuleIndex, dependentIndex);
       candidates.and(selfPlusTransitiveDeps[dependentIndex]);
     }

@@ -26,7 +26,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.BitSet;
 import java.util.List;
 import junit.framework.TestCase;
 
@@ -394,16 +394,20 @@ public final class JSModuleGraphTest extends TestCase {
   }
 
   private void assertSmallestCoveringDependency(JSModule expected, JSModule... modules) {
-    assertSmallestCoveringDependency(expected, graph, Arrays.asList(modules));
+    assertSmallestCoveringDependency(expected, graph, modules);
   }
 
   private void assertSmallestCoveringDependency(
       JSModule expected, JSModuleGraph graph, JSModule... modules) {
-    assertSmallestCoveringDependency(expected, graph, Arrays.asList(modules));
+    BitSet modulesBitSet = new BitSet();
+    for (JSModule m : modules) {
+      modulesBitSet.set(m.getIndex());
+    }
+    assertSmallestCoveringDependency(expected, graph, modulesBitSet);
   }
 
   private void assertSmallestCoveringDependency(
-      JSModule expected, JSModuleGraph graph, Collection<JSModule> modules) {
+      JSModule expected, JSModuleGraph graph, BitSet modules) {
     JSModule actual = graph.getSmallestCoveringDependency(modules);
     assertWithMessage(
             "Smallest covering dep of %s should be %s but was %s", modules, expected, actual)

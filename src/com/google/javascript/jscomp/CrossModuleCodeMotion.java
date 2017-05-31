@@ -19,12 +19,12 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
+import java.util.BitSet;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -105,10 +105,11 @@ class CrossModuleCodeMotion implements CompilerPass {
       if (info.shouldBeMoved()) {
         Iterator<Declaration> it = info.declarationIterator();
         // Find the appropriate spot to move it to
-        Node destParent = moduleVarParentMap.get(info.preferredModule);
+        JSModule preferredModule = info.getPreferredModule();
+        Node destParent = moduleVarParentMap.get(preferredModule);
         if (destParent == null) {
-          destParent = compiler.getNodeForCodeInsertion(info.preferredModule);
-          moduleVarParentMap.put(info.preferredModule, destParent);
+          destParent = compiler.getNodeForCodeInsertion(preferredModule);
+          moduleVarParentMap.put(preferredModule, destParent);
         }
         while (it.hasNext()) {
           Declaration decl = it.next();
@@ -131,7 +132,7 @@ class CrossModuleCodeMotion implements CompilerPass {
         }
         // Update variable declaration location.
         info.wasMoved = true;
-        info.declModule = info.preferredModule;
+        info.declModule = preferredModule;
       }
     }
   }
@@ -140,9 +141,11 @@ class CrossModuleCodeMotion implements CompilerPass {
   private class NamedInfo {
     boolean allowMove = true;
 
-    // All modules containing references to this global variable directly or transitively depend
-    // on this module, which is potentially further down the tree than the module containing the
-    // variable's declaration statements.
+    // If movement is allowed, this will be filled with the indices of all modules referring to
+    // the global name.
+    private BitSet modulesWithReferences = null;
+
+    // A place to stash the results of getPreferredModule() to avoid recalculating it unnecessarily.
     private JSModule preferredModule = null;
 
     // The module where declarations appear
@@ -154,21 +157,51 @@ class CrossModuleCodeMotion implements CompilerPass {
     private final Deque<Declaration> declarations =
         new ArrayDeque<>();
 
+    boolean isAllowedToMove() {
+      return allowMove;
+    }
+
+    void disallowMovement() {
+      allowMove = false;
+      // If we cannot move it, there's no point tracking where it's used.
+      modulesWithReferences = null;
+      preferredModule = declModule;
+    }
+
     // Add a Module where it is used
     void addUsedModule(JSModule m) {
-      // If we are not allowed to move it, all bets are off
-      if (!allowMove) {
-        return;
+      // If we are not allowed to move it, don't waste time and space tracking modules with
+      // references.
+      if (allowMove) {
+        if (modulesWithReferences == null) {
+          // first call to this method
+          modulesWithReferences = new BitSet(graph.getModuleCount());
+        }
+        modulesWithReferences.set(m.getIndex());
+        // invalidate preferredModule, so it will be recalculated next time getPreferredModule() is
+        // called.
+        preferredModule = null;
       }
+    }
 
-      // If we have no preferred module yet, set this one
+    /**
+     * Returns the root module of a dependency subtree that contains all of the modules which refer
+     * to this global name.
+     */
+    JSModule getPreferredModule() {
+      // It doesn't even make sense to call this method if the declarations cannot be moved.
+      checkState(allowMove);
       if (preferredModule == null) {
-        preferredModule = m;
-      } else {
-        // Find the deepest common dependency
-        preferredModule =
-            graph.getSmallestCoveringDependency(ImmutableList.of(m, preferredModule));
+        if (modulesWithReferences == null) {
+          // If we saw no references, we must at least have seen a declaration.
+          preferredModule = checkNotNull(declModule);
+        } else {
+          // Note that getSmallestCoveringDependency() will do this:
+          // checkState(!modulesWithReferences.isEmpty())
+          preferredModule = graph.getSmallestCoveringDependency(modulesWithReferences);
+        }
       }
+      return preferredModule;
     }
 
     /**
@@ -190,13 +223,8 @@ class CrossModuleCodeMotion implements CompilerPass {
       // Only move if all are true:
       // a) allowMove is true
       // b) it is declared somewhere (declModule != null)
-      // c) it was used somewhere (preferredModule != null)
-      //    [if not, then it will be removed as dead or invalid code elsewhere]
-      // d) the all usages depend on the declModule by way of preferredModule
-      return allowMove
-          && preferredModule != null
-          && declModule != null
-          && graph.dependsOn(preferredModule, declModule);
+      // c) the all usages depend on the declModule by way of a different, preferred module
+      return allowMove && declModule != null && graph.dependsOn(getPreferredModule(), declModule);
     }
 
     /**
@@ -310,12 +338,11 @@ class CrossModuleCodeMotion implements CompilerPass {
 
     for (Var v : collector.getAllSymbols()) {
       NamedInfo info = getNamedInfo(v);
-      if (!info.allowMove) {
-        continue;
-      }
-      ReferenceCollection refCollection = collector.getReferences(v);
-      for (Reference ref : refCollection) {
-        processReference(collector, ref, info, v);
+      if (info.isAllowedToMove()) {
+        ReferenceCollection refCollection = collector.getReferences(v);
+        for (Reference ref : refCollection) {
+          processReference(collector, ref, info, v);
+        }
       }
     }
   }
@@ -335,7 +362,7 @@ class CrossModuleCodeMotion implements CompilerPass {
       // we would need to skip the parent in this check as the name could
       // just be a function itself.
       if (hasConditionalAncestor(parent.getParent())) {
-        info.allowMove = false;
+        info.disallowMovement();
       }
     } else {
       if (!parentModuleCanSeeSymbolsDeclaredInChildren) {
@@ -584,9 +611,9 @@ class CrossModuleCodeMotion implements CompilerPass {
   }
 
   /**
-   * Transforms instanceof usages into an expression that short circuits to
-   * false if tested with a constructor that is undefined. This allows ignoring
-   * instanceof with respect to cross module code motion.
+   * Transforms instanceof usages into an expression that short circuits to false if tested with a
+   * constructor that is undefined. This allows ignoring instanceof with respect to cross module
+   * code motion.
    */
   private void addInstanceofGuards() {
     Node tmp = IR.block();
