@@ -44,6 +44,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TokenStream;
 import com.google.protobuf.CodedOutputStream;
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.File;
@@ -1154,7 +1155,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
   private Result performStage1andSave(String filename) {
     Result result;
-    try (FileOutputStream serializedOutputStream = new FileOutputStream(filename)){
+    try (BufferedOutputStream serializedOutputStream =
+        new BufferedOutputStream(new FileOutputStream(filename))) {
       compiler.parseForCompilation();
       if (!compiler.hasErrors()) {
         compiler.stage1Passes();
@@ -1174,7 +1176,8 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
   private Result restoreAndPerformStage2(String filename) {
     Result result;
-    try (FileInputStream serializedInputStream = new FileInputStream(filename)){
+    try (BufferedInputStream serializedInputStream =
+        new BufferedInputStream(new FileInputStream(filename))) {
       compiler.restoreState(serializedInputStream);
       if (!compiler.hasErrors()) {
           compiler.stage2Passes();
