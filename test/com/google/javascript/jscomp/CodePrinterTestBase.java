@@ -15,11 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.rhino.InputId;
+import com.google.javascript.jscomp.TypeICompilerTestCase.TypeInferenceMode;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
-
 import junit.framework.TestCase;
 
 /** Base class for tests that exercise {@link CodePrinter}. */
@@ -41,34 +41,45 @@ public abstract class CodePrinterTestBase extends TestCase {
   }
 
   Node parse(String js) {
-    return parse(js, false);
+    return parse(js, TypeInferenceMode.NEITHER);
   }
 
-  Node parse(String js, boolean checkTypes) {
+  Node parse(String js, TypeInferenceMode mode) {
+    Preconditions.checkArgument(mode != TypeInferenceMode.BOTH);
     Compiler compiler = new Compiler();
     lastCompiler = compiler;
     CompilerOptions options = new CompilerOptions();
     options.setTrustedStrings(trustedStrings);
     options.preserveTypeAnnotations = preserveTypeAnnotations;
-
     // Allow getters and setters.
     options.setLanguageIn(languageMode);
-    compiler.initOptions(options);
-    Node n = compiler.parseTestCode(js);
+    options.setWarningLevel(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS, CheckLevel.OFF);
+    options.setNewTypeInference(mode.runsNTI());
 
-    if (checkTypes) {
+    compiler.init(
+        ImmutableList.of(SourceFile.fromCode("externs", CompilerTestCase.MINIMAL_EXTERNS)),
+        ImmutableList.of(SourceFile.fromCode("testcode", js)),
+        options);
+    Node externsAndJs = compiler.parseInputs();
+    checkUnexpectedErrorsOrWarnings(compiler, 0);
+    Node root = externsAndJs.getLastChild();
+    Node externs = externsAndJs.getFirstChild();
+
+    if (mode.runsNTI()) {
+      GlobalTypeInfo gti = compiler.getSymbolTable();
+      gti.process(externs, root);
+      NewTypeInference nti = new NewTypeInference(compiler);
+      nti.process(externs, root);
+    } else if (mode.runsOTI()) {
       DefaultPassConfig passConfig = new DefaultPassConfig(null);
       CompilerPass typeResolver = passConfig.resolveTypes.create(compiler);
-      Node externs = new Node(Token.SCRIPT);
-      externs.setInputId(new InputId("externs"));
-      Node externAndJsRoot = new Node(Token.ROOT, externs, n);
-      typeResolver.process(externs, n);
+      typeResolver.process(externs, root);
       CompilerPass inferTypes = passConfig.inferTypes.create(compiler);
-      inferTypes.process(externs, n);
+      inferTypes.process(externs, root);
     }
 
     checkUnexpectedErrorsOrWarnings(compiler, 0);
-    return n;
+    return root.getFirstChild();
   }
 
   private void checkUnexpectedErrorsOrWarnings(

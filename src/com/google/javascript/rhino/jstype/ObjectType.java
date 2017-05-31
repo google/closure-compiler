@@ -51,6 +51,7 @@ import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
+import com.google.javascript.rhino.TypeI;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -823,5 +824,10 @@ public abstract class ObjectType
       propTypeMap.put(name, this.getPropertyType(name));
     }
     return propTypeMap.build();
+  }
+
+  @Override
+  public TypeI getElementsType() {
+    return null;
   }
 }

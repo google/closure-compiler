@@ -97,4 +97,13 @@ public interface FunctionTypeI extends TypeI {
   ObjectTypeI getPrototypeProperty();
 
   Iterable<TypeI> getParameterTypes();
+
+  /** Returns the number of required arguments. */
+  int getMinArguments();
+
+  /** Returns the maximum number of allowed arguments, or Integer.MAX_VALUE if variadic. */
+  int getMaxArguments();
+
+  /** Returns the names of all type parameters. */
+  Collection<String> getTypeParameters();
 }

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.TypeICompilerTestCase.TypeInferenceMode;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -1070,8 +1071,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrettyPrintSame("var x = 10;\n");
     assertPrettyPrintSame("var x = 1.;\n");
     assertPrettyPrint("var x = 0xFE;", "var x = 254;\n");
-    assertPrettyPrintSame(
-        "var x = 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;\n");
+    assertPrettyPrintSame("var x = 1" + String.format("%0100d", 0) + ";\n"); // a googol
     assertPrettyPrintSame("f(10000);\n");
     assertPrettyPrintSame("var x = -10000;\n");
     assertPrettyPrintSame("var x = y - -10000;\n");
@@ -1089,18 +1089,17 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testTypeAnnotations() {
     assertTypeAnnotations(
         "/** @constructor */ function Foo(){}",
-        "/**\n * @constructor\n */\n"
-        + "function Foo() {\n}\n");
+        "/**\n * @constructor\n */\nfunction Foo() {\n}\n");
   }
 
   public void testNonNullTypes() {
     assertTypeAnnotations(
-        Joiner.on("\n").join(
+        LINE_JOINER.join(
             "/** @constructor */",
             "function Foo() {}",
             "/** @return {!Foo} */",
             "Foo.prototype.f = function() { return new Foo; };"),
-        Joiner.on("\n").join(
+        LINE_JOINER.join(
             "/**",
             " * @constructor",
             " */",
@@ -1117,131 +1116,180 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // TODO(johnlenz): It would be nice if there were some way to preserve
     // typedefs but currently they are resolved into the basic types in the
     // type registry.
+    // NOTE(sdh): OTI and NTI have slightly different behaviors here:
+    // OTI does not correctly remove null, while NTI handles this correctly.
     assertTypeAnnotations(
-        "/** @typedef {Array<number>} */ goog.java.Long;\n"
-        + "/** @param {!goog.java.Long} a*/\n"
-        + "function f(a){};\n",
-        "goog.java.Long;\n"
-        + "/**\n"
-        + " * @param {(Array<number>|null)} a\n"
-        + " * @return {undefined}\n"
-        + " */\n"
-        + "function f(a) {\n}\n");
+        LINE_JOINER.join(
+            "/** @const */ var goog = {};",
+            "/** @const */ goog.java = {};",
+            "/** @typedef {Array<number>} */ goog.java.Long;",
+            "/** @param {!goog.java.Long} a*/",
+            "function f(a){};"),
+        LINE_JOINER.join(
+            "/** @const */ var goog = {};",
+            "/** @const */ goog.java = {};",
+            "goog.java.Long;",
+            "/**",
+            " * @param {(Array<number>|null)} a",
+            " * @return {undefined}",
+            " */",
+            "function f(a) {\n}\n"),
+        LINE_JOINER.join(
+            "/** @const */ var goog = {};",
+            "/** @const */ goog.java = {};",
+            "goog.java.Long;",
+            "/**",
+            " * @param {!Array<number>} a",
+            " * @return {undefined}",
+            " */",
+            "function f(a) {\n}\n"));
   }
 
   public void testTypeAnnotationsAssign() {
-    assertTypeAnnotations("/** @constructor */ var Foo = function(){}",
-        "/**\n * @constructor\n */\n"
-        + "var Foo = function() {\n};\n");
+    assertTypeAnnotations(
+        "/** @constructor */ var Foo = function(){}",
+        LINE_JOINER.join(
+            "/**\n * @constructor\n */",
+            "var Foo = function() {\n};\n"));
   }
 
   public void testTypeAnnotationsNamespace() {
-    assertTypeAnnotations("var a = {};"
-        + "/** @constructor */ a.Foo = function(){}",
-        "var a = {};\n"
-        + "/**\n * @constructor\n */\n"
-        + "a.Foo = function() {\n};\n");
+    assertTypeAnnotations(
+        LINE_JOINER.join(
+            "var a = {};",
+            "/** @constructor */ a.Foo = function(){}"),
+        LINE_JOINER.join(
+            "var a = {};",
+            "/**\n * @constructor\n */",
+            "a.Foo = function() {\n};\n"));
   }
 
   public void testTypeAnnotationsMemberSubclass() {
-    assertTypeAnnotations("var a = {};"
-        + "/** @constructor */ a.Foo = function(){};"
-        + "/** @constructor \n @extends {a.Foo} */ a.Bar = function(){}",
-        "var a = {};\n"
-        + "/**\n * @constructor\n */\n"
-        + "a.Foo = function() {\n};\n"
-        + "/**\n * @extends {a.Foo}\n"
-        + " * @constructor\n */\n"
-        + "a.Bar = function() {\n};\n");
+    assertTypeAnnotations(
+        LINE_JOINER.join(
+            "/** @const */ var a = {};",
+            "/** @constructor */ a.Foo = function(){};",
+            "/** @constructor \n @extends {a.Foo} */ a.Bar = function(){}"),
+        LINE_JOINER.join(
+            "/** @const */ var a = {};",
+            "/**\n * @constructor\n */",
+            "a.Foo = function() {\n};",
+            "/**\n * @extends {a.Foo}",
+            " * @constructor\n */",
+            "a.Bar = function() {\n};\n"));
   }
 
   public void testTypeAnnotationsInterface() {
-    assertTypeAnnotations("var a = {};"
-        + "/** @interface */ a.Foo = function(){};"
-        + "/** @interface \n @extends {a.Foo} */ a.Bar = function(){}",
-        "var a = {};\n"
-        + "/**\n * @interface\n */\n"
-        + "a.Foo = function() {\n};\n"
-        + "/**\n * @extends {a.Foo}\n"
-        + " * @interface\n */\n"
-        + "a.Bar = function() {\n};\n");
+    assertTypeAnnotations(
+        LINE_JOINER.join(
+            "/** @const */ var a = {};",
+            "/** @interface */ a.Foo = function(){};",
+            "/** @interface \n @extends {a.Foo} */ a.Bar = function(){}"),
+        LINE_JOINER.join(
+            "/** @const */ var a = {};",
+            "/**\n * @interface\n */",
+            "a.Foo = function() {\n};",
+            "/**\n * @extends {a.Foo}",
+            " * @interface\n */",
+            "a.Bar = function() {\n};\n"));
   }
 
   public void testTypeAnnotationsMultipleInterface() {
-    assertTypeAnnotations("var a = {};"
-        + "/** @interface */ a.Foo1 = function(){};"
-        + "/** @interface */ a.Foo2 = function(){};"
-        + "/** @interface \n @extends {a.Foo1} \n @extends {a.Foo2} */"
-        + "a.Bar = function(){}",
-        "var a = {};\n"
-        + "/**\n * @interface\n */\n"
-        + "a.Foo1 = function() {\n};\n"
-        + "/**\n * @interface\n */\n"
-        + "a.Foo2 = function() {\n};\n"
-        + "/**\n * @extends {a.Foo1}\n"
-        + " * @extends {a.Foo2}\n"
-        + " * @interface\n */\n"
-        + "a.Bar = function() {\n};\n");
+    assertTypeAnnotations(
+        LINE_JOINER.join(
+            "/** @const */ var a = {};",
+            "/** @interface */ a.Foo1 = function(){};",
+            "/** @interface */ a.Foo2 = function(){};",
+            "/** @interface \n @extends {a.Foo1} \n @extends {a.Foo2} */",
+            "a.Bar = function(){}"),
+        LINE_JOINER.join(
+            "/** @const */ var a = {};",
+            "/**\n * @interface\n */",
+            "a.Foo1 = function() {\n};",
+            "/**\n * @interface\n */",
+            "a.Foo2 = function() {\n};",
+            "/**\n * @extends {a.Foo1}",
+            " * @extends {a.Foo2}",
+            " * @interface\n */",
+            "a.Bar = function() {\n};\n"));
   }
 
   public void testTypeAnnotationsMember() {
-    assertTypeAnnotations("var a = {};"
-        + "/** @constructor */ a.Foo = function(){}"
-        + "/** @param {string} foo\n"
-        + "  * @return {number} */\n"
-        + "a.Foo.prototype.foo = function(foo) { return 3; };"
-        + "/** @type {string|undefined} */"
-        + "a.Foo.prototype.bar = '';",
-        "var a = {};\n"
-        + "/**\n * @constructor\n */\n"
-        + "a.Foo = function() {\n};\n"
-        + "/**\n"
-        + " * @param {string} foo\n"
-        + " * @return {number}\n"
-        + " */\n"
-        + "a.Foo.prototype.foo = function(foo) {\n  return 3;\n};\n"
-        + "/** @type {string} */\n"
-        + "a.Foo.prototype.bar = \"\";\n");
+    assertTypeAnnotations(
+        LINE_JOINER.join(
+            "var a = {};",
+            "/** @constructor */ a.Foo = function(){}",
+            "/** @param {string} foo",
+            "  * @return {number} */",
+            "a.Foo.prototype.foo = function(foo) { return 3; };",
+            "/** @type {!Array|undefined} */",
+            "a.Foo.prototype.bar = [];"),
+        LINE_JOINER.join(
+            "var a = {};",
+            "/**\n * @constructor\n */",
+            "a.Foo = function() {\n};",
+            "/**",
+            " * @param {string} foo",
+            " * @return {number}",
+            " */",
+            "a.Foo.prototype.foo = function(foo) {\n  return 3;\n};",
+            "/** @type {!Array} */",
+            "a.Foo.prototype.bar = [];\n"),
+        LINE_JOINER.join(
+            "var a = {};",
+            "/**\n * @constructor\n */",
+            "a.Foo = function() {\n};",
+            "/**",
+            " * @param {string} foo",
+            " * @return {number}",
+            " */",
+            "a.Foo.prototype.foo = function(foo) {\n  return 3;\n};",
+            "/** @type {!Array<?>} */",
+            "a.Foo.prototype.bar = [];\n"));
   }
 
   public void testTypeAnnotationsMemberStub() {
     // TODO(blickly): Investigate why the method's type isn't preserved.
-    assertTypeAnnotations("/** @interface */ function I(){};"
-        + "/** @return {undefined} @param {number} x */ I.prototype.method;",
-        "/**\n"
-        + " * @interface\n"
-        + " */\n"
-        + "function I() {\n"
-        + "}\n"
-        + "I.prototype.method;\n");
+    assertTypeAnnotations(
+        LINE_JOINER.join(
+            "/** @interface */ function I(){};",
+            "/** @return {undefined} @param {number} x */ I.prototype.method;"),
+        "/**\n * @interface\n */\nfunction I() {\n}\nI.prototype.method;\n");
   }
 
   public void testTypeAnnotationsImplements() {
-    assertTypeAnnotations("var a = {};"
-        + "/** @constructor */ a.Foo = function(){};\n"
-        + "/** @interface */ a.I = function(){};\n"
-        + "/** @interface */ a.I2 = function(){};\n"
-        + "/** @constructor \n @extends {a.Foo}\n"
-        + " * @implements {a.I} \n @implements {a.I2}\n"
-        + "*/ a.Bar = function(){}",
-        "var a = {};\n"
-        + "/**\n * @constructor\n */\n"
-        + "a.Foo = function() {\n};\n"
-        + "/**\n * @interface\n */\n"
-        + "a.I = function() {\n};\n"
-        + "/**\n * @interface\n */\n"
-        + "a.I2 = function() {\n};\n"
-        + "/**\n * @extends {a.Foo}\n"
-        + " * @implements {a.I}\n"
-        + " * @implements {a.I2}\n * @constructor\n */\n"
-        + "a.Bar = function() {\n};\n");
+    assertTypeAnnotations(
+        LINE_JOINER.join(
+            "/** @const */ var a = {};",
+            "/** @constructor */ a.Foo = function(){};",
+            "/** @interface */ a.I = function(){};",
+            "/** @record */ a.I2 = function(){};",
+            "/** @record @extends {a.I2} */ a.I3 = function(){};",
+            "/** @constructor \n @extends {a.Foo}",
+            " * @implements {a.I} \n @implements {a.I2}",
+            " */ a.Bar = function(){}"),
+        LINE_JOINER.join(
+            "/** @const */ var a = {};",
+            "/**\n * @constructor\n */",
+            "a.Foo = function() {\n};",
+            "/**\n * @interface\n */",
+            "a.I = function() {\n};",
+            "/**\n * @record\n */",
+            "a.I2 = function() {\n};",
+            "/**\n * @extends {a.I2}",
+            " * @record\n */",
+            "a.I3 = function() {\n};",
+            "/**\n * @extends {a.Foo}",
+            " * @implements {a.I}",
+            " * @implements {a.I2}",
+            " * @constructor\n */",
+            "a.Bar = function() {\n};\n"));
   }
 
   public void testU2UFunctionTypeAnnotation1() {
     assertTypeAnnotations(
         "/** @type {!Function} */ var x = function() {}",
-        "/** @type {!Function} */\n" +
-        "var x = function() {\n};\n");
+        "/** @type {!Function} */\nvar x = function() {\n};\n");
   }
 
   public void testU2UFunctionTypeAnnotation2() {
@@ -1249,58 +1297,66 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // correct, we should export the type of the LHS.
     assertTypeAnnotations(
         "/** @type {Function} */ var x = function() {}",
-        "/** @type {!Function} */\n" +
-        "var x = function() {\n};\n");
+        "/** @type {!Function} */\nvar x = function() {\n};\n");
   }
 
   public void testEmitUnknownParamTypesAsAllType() {
+    // TODO(sdh): Why does NTI infer `x` to be optional?
     assertTypeAnnotations(
         "var a = function(x) {}",
-        "/**\n" +
-        " * @param {?} x\n" +
-        " * @return {undefined}\n" +
-        " */\n" +
-        "var a = function(x) {\n};\n");
+        LINE_JOINER.join(
+            "/**",
+            " * @param {?} x",
+            " * @return {undefined}",
+            " */",
+            "var a = function(x) {\n};\n"),
+        LINE_JOINER.join(
+            "/**",
+            " * @param {?=} x",
+            " * @return {undefined}",
+            " */",
+            "var a = function(x) {\n};\n"));
   }
 
   public void testOptionalTypesAnnotation() {
     assertTypeAnnotations(
-        "/**\n" +
-        " * @param {string=} x \n" +
-        " */\n" +
-        "var a = function(x) {}",
-        "/**\n" +
-        " * @param {string=} x\n" +
-        " * @return {undefined}\n" +
-        " */\n" +
-        "var a = function(x) {\n};\n");
+        "/** @param {string=} x */ var a = function(x) {}",
+        LINE_JOINER.join(
+            "/**",
+            " * @param {string=} x",
+            " * @return {undefined}",
+            " */",
+            "var a = function(x) {\n};\n"));
   }
 
   public void testVariableArgumentsTypesAnnotation() {
     assertTypeAnnotations(
-        "/**\n" +
-        " * @param {...string} x \n" +
-        " */\n" +
-        "var a = function(x) {}",
-        "/**\n" +
-        " * @param {...string} x\n" +
-        " * @return {undefined}\n" +
-        " */\n" +
-        "var a = function(x) {\n};\n");
+        "/** @param {...string} x */ var a = function(x) {}",
+        LINE_JOINER.join(
+            "/**",
+            " * @param {...string} x",
+            " * @return {undefined}",
+            " */",
+            "var a = function(x) {\n};\n"));
   }
 
   public void testTempConstructor() {
     assertTypeAnnotations(
-        "var x = function() {\n/**\n * @constructor\n */\nfunction t1() {}\n" +
-        " /**\n * @constructor\n */\nfunction t2() {}\n" +
-        " t1.prototype = t2.prototype}",
-        "/**\n * @return {undefined}\n */\nvar x = function() {\n" +
-        "  /**\n * @constructor\n */\n" +
-        "function t1() {\n  }\n" +
-        "  /**\n * @constructor\n */\n" +
-        "function t2() {\n  }\n" +
-        "  t1.prototype = t2.prototype;\n};\n"
-    );
+        LINE_JOINER.join(
+            "var x = function() {",
+            "  /** @constructor */ function t1() {}",
+            "  /** @constructor */ function t2() {}",
+            "  t1.prototype = t2.prototype",
+            "}"),
+        LINE_JOINER.join(
+            "/**\n * @return {undefined}\n */",
+            "var x = function() {",
+            "  /**\n * @constructor\n */",
+            "function t1() {\n  }",
+            "  /**\n * @constructor\n */",
+            "function t2() {\n  }",
+            "  t1.prototype = t2.prototype;",
+            "};\n"));
   }
 
   public void testEnumAnnotation1() {
@@ -1311,21 +1367,36 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   public void testEnumAnnotation2() {
     assertTypeAnnotations(
-        "var goog = goog || {};" +
-        "/** @enum {string} */ goog.Enum = {FOO: 'x', BAR: 'y'};" +
-        "/** @const */ goog.Enum2 = goog.x ? {} : goog.Enum;",
-        "var goog = goog || {};\n" +
-        "/** @enum {string} */\ngoog.Enum = {FOO:\"x\", BAR:\"y\"};\n" +
-        "/** @type {(Object|{})} */\ngoog.Enum2 = goog.x ? {} : goog.Enum;\n");
+        LINE_JOINER.join(
+            "/** @const */ var goog = goog || {};",
+            "/** @enum {string} */ goog.Enum = {FOO: 'x', BAR: 'y'};",
+            "/** @const */ goog.Enum2 = goog.x ? {} : goog.Enum;"),
+        LINE_JOINER.join(
+            "/** @const */ var goog = goog || {};",
+            "/** @enum {string} */\ngoog.Enum = {FOO:\"x\", BAR:\"y\"};",
+            "/** @type {(!Object|{})} */\ngoog.Enum2 = goog.x ? {} : goog.Enum;\n"),
+        LINE_JOINER.join(
+            "/** @const */ var goog = goog || {};",
+            "/** @enum {string} */\ngoog.Enum = {FOO:\"x\", BAR:\"y\"};",
+            "/** @type {{BAR: string=, FOO: string=}} */\ngoog.Enum2 = goog.x ? {} : goog.Enum;",
+            ""));
+  }
+
+  public void testEnumAnnotation3() {
+    assertTypeAnnotations(
+        "/** @enum {!Object} */ var Enum = {FOO: {}};",
+        "/** @enum {!Object} */\nvar Enum = {FOO:{}};\n");
   }
 
   public void testClosureLibraryTypeAnnotationExamples() {
     assertTypeAnnotations(
         LINE_JOINER.join(
+            "/** @const */ var goog = goog || {};",
             "/** @param {Object} obj */goog.removeUid = function(obj) {};",
             "/** @param {Object} obj The object to remove the field from. */",
             "goog.removeHashCode = goog.removeUid;"),
         LINE_JOINER.join(
+            "/** @const */ var goog = goog || {};",
             "/**",
             " * @param {(Object|null)} obj",
             " * @return {undefined}",
@@ -1336,18 +1407,52 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             " * @param {(Object|null)} p0",
             " * @return {undefined}",
             " */",
-            "goog.removeHashCode = goog.removeUid;",
-            ""));
+            "goog.removeHashCode = goog.removeUid;\n"),
+        LINE_JOINER.join(
+            "/** @const */ var goog = goog || {};",
+            "/**",
+            " * @param {!Object|null} obj",
+            " * @return {undefined}",
+            " */",
+            "goog.removeUid = function(obj) {",
+            "};",
+            "/**",
+            " * @param {!Object|null} p0",
+            " * @return {undefined}",
+            " */",
+            "goog.removeHashCode = goog.removeUid;\n"));
+  }
+
+  public void testFunctionTypeAnnotation() {
+    assertTypeAnnotations(
+        "/**\n * @param {{foo:number}} arg\n */\nfunction f(arg) {}",
+        "/**\n * @param {{foo: number}} arg\n * @return {undefined}\n */\nfunction f(arg) {\n}\n");
+    assertTypeAnnotations(
+        "/**\n * @param {number} arg\n */\nfunction f(arg) {}",
+        "/**\n * @param {number} arg\n * @return {undefined}\n */\nfunction f(arg) {\n}\n");
+    assertTypeAnnotations(
+        "/**\n * @param {!Array<string>} arg\n */\nfunction f(arg) {}",
+        "/**\n * @param {!Array<string>} arg\n * @return {undefined}\n */\nfunction f(arg) {\n}\n");
+  }
+
+  public void testFunctionWithThisTypeAnnotation() {
+    assertTypeAnnotations(
+        "/**\n * @this {{foo:number}}\n */\nfunction foo() {}",
+        "/**\n * @return {undefined}\n * @this {{foo: number}}\n */\nfunction foo() {\n}\n");
+    assertTypeAnnotations(
+        "/**\n * @this {!Array<string>}\n */\nfunction foo() {}",
+        "/**\n * @return {undefined}\n * @this {!Array<string>}\n */\nfunction foo() {\n}\n");
   }
 
   public void testDeprecatedAnnotationIncludesNewline() {
-    String js = LINE_JOINER.join(
-        "/**",
-        " @type {number}",
-        " @deprecated See {@link replacementClass} for more details.",
-        " */",
-        "var x;",
-        "");
+    String js =
+        LINE_JOINER.join(
+            "/**",
+            " @type {number}",
+            " @deprecated See {@link replacementClass} for more details.",
+            " */",
+            "var x;",
+            "");
 
     assertPrettyPrint(js, js);
   }
@@ -1378,8 +1483,30 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   private void assertTypeAnnotations(String js, String expected) {
-    assertEquals(expected,
-        new CodePrinter.Builder(parse(js, true))
+    assertTypeAnnotations(js, expected, expected);
+  }
+
+  private void assertTypeAnnotations(String js, String expectedOti, String expectedNti) {
+    assertEquals(
+        "OTI",
+        expectedOti,
+        new CodePrinter.Builder(parse(js, TypeInferenceMode.OTI_ONLY))
+            .setCompilerOptions(newCompilerOptions(new CompilerOptionBuilder() {
+              @Override
+              void setOptions(CompilerOptions options) {
+                options.setPrettyPrint(true);
+                options.setLineBreak(false);
+                options.setLineLengthThreshold(CompilerOptions.DEFAULT_LINE_LENGTH_THRESHOLD);
+              }
+            }))
+            .setOutputTypes(true)
+            .setTypeRegistry(lastCompiler.getTypeIRegistry())
+            .build());
+
+    assertEquals(
+        "NTI",
+        expectedNti,
+        new CodePrinter.Builder(parse(js, TypeInferenceMode.NTI_ONLY))
             .setCompilerOptions(newCompilerOptions(new CompilerOptionBuilder() {
               @Override
               void setOptions(CompilerOptions options) {
@@ -1651,7 +1778,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testFreeCall2() {
     Node n = parse("foo(a);");
     assertPrintNode("foo(a)", n);
-    Node call =  n.getFirstFirstChild();
+    Node call = n.getFirstFirstChild();
     assertTrue(call.isCall());
     call.putBooleanProp(Node.FREE_CALL, true);
     assertPrintNode("foo(a)", n);
@@ -1660,7 +1787,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   public void testFreeCall3() {
     Node n = parse("x.foo(a);");
     assertPrintNode("x.foo(a)", n);
-    Node call =  n.getFirstFirstChild();
+    Node call = n.getFirstFirstChild();
     assertTrue(call.isCall());
     call.putBooleanProp(Node.FREE_CALL, true);
     assertPrintNode("(0,x.foo)(a)", n);
@@ -1689,7 +1816,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("var x={'1':1}", "var x={1:1}");
     assertPrint("var x={'1.0':1}", "var x={\"1.0\":1}");
     assertPrint("var x={1.5:1}", "var x={\"1.5\":1}");
-
   }
 
   public void testObjectLit3() {
@@ -1778,7 +1904,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         IR.exprResult(IR.objectlit(getter)));
   }
 
-
   public void testSetter() {
     assertPrint("var x = {}", "var x={}");
     assertPrint(
@@ -1835,12 +1960,22 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   public void testStrict() {
-    String result = defaultBuilder(parse("var x", true)).setTagAsStrict(true).build();
+    String result =
+        defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY)).setTagAsStrict(true).build();
+    assertEquals("'use strict';var x", result);
+
+    result =
+        defaultBuilder(parse("var x", TypeInferenceMode.NTI_ONLY)).setTagAsStrict(true).build();
     assertEquals("'use strict';var x", result);
   }
 
   public void testExterns() {
-    String result = defaultBuilder(parse("var x", true)).setTagAsExterns(true).build();
+    String result =
+        defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY)).setTagAsExterns(true).build();
+    assertEquals("/** @externs */\nvar x", result);
+
+    result =
+        defaultBuilder(parse("var x", TypeInferenceMode.NTI_ONLY)).setTagAsExterns(true).build();
     assertEquals("/** @externs */\nvar x", result);
   }
 
@@ -2305,7 +2440,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("((x)=>1)?a:b");
     assertPrint("x?((x)=>0):((x)=>1)", "x?(x)=>0:(x)=>1");
   }
-
 
   public void testPrettyArrowFunction() {
     languageMode = LanguageMode.ECMASCRIPT_2015;

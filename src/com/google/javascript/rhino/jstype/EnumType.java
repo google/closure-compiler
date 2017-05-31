@@ -102,9 +102,8 @@ public class EnumType extends PrototypeObjectType {
     return defineDeclaredProperty(name, elementsType, definingNode);
   }
 
-  /**
-   * Gets the elements' type.
-   */
+  /** Gets the elements' type. */
+  @Override
   public EnumElementType getElementsType() {
     return elementsType;
   }
@@ -133,7 +132,7 @@ public class EnumType extends PrototypeObjectType {
 
   @Override
   StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
-    return sb.append(forAnnotations ? "Object" : getReferenceName());
+    return sb.append(forAnnotations ? "!Object" : getReferenceName());
   }
 
   @Override

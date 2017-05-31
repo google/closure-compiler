@@ -1664,6 +1664,7 @@ public abstract class JSType implements TypeI {
    *
    * Don't call from this package; use appendAsNonNull instead.
    */
+  @Override
   public final String toAnnotationString() {
     return appendTo(new StringBuilder(), true).toString();
   }
@@ -1674,8 +1675,14 @@ public abstract class JSType implements TypeI {
   }
 
   final StringBuilder appendAsNonNull(StringBuilder sb, boolean forAnnotations) {
-    if (forAnnotations && isObject()
-        && !isUnknownType() && !isTemplateType() && !isRecordType() && !isFunctionType()) {
+    if (forAnnotations
+        && isObject()
+        && !isUnknownType()
+        && !isTemplateType()
+        && !isRecordType()
+        && !isFunctionType()
+        && !isUnionType()
+        && !isLiteralObject()) {
       sb.append("!");
     }
     return appendTo(sb, forAnnotations);

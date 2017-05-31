@@ -325,6 +325,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   }
 
   /** Gets the minimum number of arguments that this function requires. */
+  @Override
   public int getMinArguments() {
     // NOTE(nicksantos): There are some native functions that have optional
     // parameters before required parameters. This algorithm finds the position
@@ -344,6 +345,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * Gets the maximum number of arguments that this function requires,
    * or Integer.MAX_VALUE if this is a variable argument function.
    */
+  @Override
   public int getMaxArguments() {
     Node params = getParametersNode();
     if (params != null) {
@@ -1403,6 +1405,15 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     return getTemplateTypeMap().numUnfilledTemplateKeys() > 0
         || typeOfThis.hasAnyTemplateTypes()
         || call.hasAnyTemplateTypes();
+  }
+
+  @Override
+  public ImmutableSet<String> getTypeParameters() {
+    ImmutableSet.Builder<String> params = ImmutableSet.builder();
+    for (TemplateType type : getTemplateTypeMap().getTemplateKeys()) {
+      params.add(type.toString());
+    }
+    return params.build();
   }
 
   @Override

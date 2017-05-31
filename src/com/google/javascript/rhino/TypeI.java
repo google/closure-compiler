@@ -189,4 +189,22 @@ public interface TypeI extends Serializable {
    * In NTI, a generic type can only be uninstantiated or fully instantiated.
    */
   boolean hasUninstantiatedTypeVariables();
+
+  // TODO(sdh): Replace calls of toAnnotationString with toNonNullAnnotationString and
+  // then substring off any leading '!' if necessary.  Then delete toAnnotationString
+  // and consider renaming toNonNullAnnotationString as simply toAnnotationString.
+  /**
+   * Returns a string representation of this type, suitable for printing
+   * in type annotations at code generation time.  In particular, explicit
+   * non-null modifiers will be added to implicitly nullable types (except
+   * the outermost type, which is expected to be a reference type).
+   */
+  String toAnnotationString();
+
+  /**
+   * Returns a string representation of this type, suitable for printing
+   * in type annotations at code generation time.  In particular, explicit
+   * non-null modifiers will be added to implicitly nullable types.
+   */
+  String toNonNullAnnotationString();
 }

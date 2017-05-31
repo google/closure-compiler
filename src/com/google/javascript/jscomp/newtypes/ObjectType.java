@@ -1027,22 +1027,25 @@ final class ObjectType implements TypeWithProperties {
   }
 
   /**
-   * Returns true if this is the type of an enum namespace (as opposed to the
-   * type of the individual elements).
+   * If this is an enum object (i.e. the namespace itself, not the individual
+   * elements), then returns the associated EnumType; otherwise returns null.
    */
-  boolean isEnumObject() {
+  EnumType getEnumType() {
     if (!this.nominalType.isLiteralObject()) {
-      return false;
+      return null;
     }
-    EnumType e = null;
     for (Property p : this.props.values()) {
       JSType t = p.getType();
       if (t.isEnumElement()) {
-        e = Iterables.getOnlyElement(t.getEnums());
-        break;
+        EnumType e = Iterables.getOnlyElement(t.getEnums());
+        return this.equals(e.toJSType().getObjTypeIfSingletonObj()) ? e : null;
       }
     }
-    return e != null && this.equals(e.toJSType().getObjTypeIfSingletonObj());
+    return null;
+  }
+
+  boolean isEnumObject() {
+    return this.getEnumType() != null;
   }
 
   /**

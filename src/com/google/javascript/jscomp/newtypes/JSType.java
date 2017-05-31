@@ -501,6 +501,16 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return obj != null && obj.isEnumObject();
   }
 
+  @Override
+  public final TypeI getElementsType() {
+    ObjectType obj = getObjTypeIfSingletonObj();
+    if (obj != null) {
+      EnumType e = obj.getEnumType();
+      return e != null ? e.getEnumeratedType() : null;
+    }
+    return null;
+  }
+
   public final boolean isUnion() {
     if (isBottom() || isTop() || isUnknown()
         || isScalar() || isTypeVariable() || isEnumElement()
@@ -1542,7 +1552,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
    * code generation.
    */
   StringBuilder appendTo(StringBuilder builder, ToStringContext ctx) {
-    // TODO(sdh): Add checkState(!forAnnotations) calls in places where annotations are nonsense.
+    // TODO(sdh): checkState(!forAnnotations) all
     switch (getMask()) {
       case BOTTOM_MASK:
         return builder.append("bottom");
@@ -1631,6 +1641,17 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
           return builder.append("Unrecognized type: ").append(tags);
         }
     }
+  }
+
+  @Override
+  public final String toNonNullAnnotationString() {
+    return appendTo(new StringBuilder(), ToStringContext.FOR_ANNOTATION).toString();
+  }
+
+  @Override
+  public final String toAnnotationString() {
+    String s = toNonNullAnnotationString();
+    return s.startsWith("!") ? s.substring(1) : s;
   }
 
   @Override
@@ -1828,6 +1849,24 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     }
 
     return true;
+  }
+
+  @Override
+  public final int getMinArguments() {
+    Preconditions.checkState(this.isFunctionType());
+    return this.getFunTypeIfSingletonObj().getMinArity();
+  }
+
+  @Override
+  public final int getMaxArguments() {
+    Preconditions.checkState(this.isFunctionType());
+    return this.getFunTypeIfSingletonObj().getMaxArity();
+  }
+
+  @Override
+  public final List<String> getTypeParameters() {
+    Preconditions.checkState(this.isFunctionType());
+    return this.getFunTypeIfSingletonObj().getTypeParameters();
   }
 
   @Override

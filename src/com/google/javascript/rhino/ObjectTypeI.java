@@ -152,4 +152,10 @@ public interface ObjectTypeI extends TypeI {
    * Returns the type of property propName on this object, or null if the property doesn't exist.
    */
   TypeI getPropertyType(String propName);
+
+  /**
+   * If this type is an enum object, returns the declared type of the elements.
+   * Otherwise returns null.
+   */
+  TypeI getElementsType();
 }

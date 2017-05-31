@@ -410,7 +410,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   public void process(Node externs, Node root) {
     Preconditions.checkNotNull(warnings, "Cannot rerun GlobalTypeInfo.process");
     Preconditions.checkArgument(externs == null || externs.isRoot());
-    Preconditions.checkArgument(root.isRoot());
+    Preconditions.checkArgument(root.isRoot(), "Root must be ROOT, but is %s", root.getToken());
 
     this.compiler.setMostRecentTypechecker(MostRecentTypechecker.NTI);
 
