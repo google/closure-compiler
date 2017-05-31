@@ -19,16 +19,10 @@ goog.setTestOnly();
 
 const testSuite = goog.require('goog.testing.testSuite');
 const testing = goog.require('jscomp.runtime_tests.polyfill_tests.testing');
-const userAgent = goog.require('goog.userAgent');
 
 const noCheck = testing.noCheck;
 
 testSuite({
-  shouldRunTests() {
-    // Not polyfilled to ES3
-    return !userAgent.IE || userAgent.isVersionOrHigher(9);
-  },
-
   testConstruct() {
     const Foo = class {
       constructor(a, b) {
