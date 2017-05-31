@@ -118,13 +118,29 @@ public class ChangeVerifier {
     if (n.getChangeTime() > snapshot.getChangeTime()) {
       if (isEquivalentToExcludingFunctions(n, snapshot)) {
         throw new IllegalStateException(
-            passNameMsg + "unchanged scope marked as changed: " + n.toStringTree());
+            passNameMsg + "unchanged scope marked as changed: " + getNameForNode(n));
       }
     } else {
       if (!isEquivalentToExcludingFunctions(n, snapshot)) {
         throw new IllegalStateException(
-            passNameMsg + "changed scope not marked as changed: " + n.toStringTree());
+            passNameMsg + "changed scope not marked as changed: " + getNameForNode(n));
       }
+    }
+  }
+
+  String getNameForNode(Node n) {
+    String sourceName = NodeUtil.getSourceName(n);
+    switch (n.getToken()) {
+      case SCRIPT:
+        return "SCRIPT: " + sourceName;
+      case FUNCTION:
+        String fnName = NodeUtil.getNearestFunctionName(n);
+        if (fnName == null) {
+          fnName = "anonymous@" + n.getLineno() + ":" + n.getCharno();
+        }
+        return "FUNCTION: " + "" + " in " + sourceName;
+      default:
+        throw new IllegalStateException("unexpected Node type");
     }
   }
 
