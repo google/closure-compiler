@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -22,7 +23,7 @@ import com.google.javascript.rhino.Node;
  *
  * @author johnlenz@google.com (John Lenz)
  */
-public final class CreateSyntheticBlocksTest extends Es6CompilerTestCase {
+public final class CreateSyntheticBlocksTest extends CompilerTestCase {
   private static final String START_MARKER = "startMarker";
   private static final String END_MARKER = "endMarker";
 
@@ -34,6 +35,7 @@ public final class CreateSyntheticBlocksTest extends Es6CompilerTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     enableLineNumberCheck(false);
   }
 
@@ -125,11 +127,11 @@ public final class CreateSyntheticBlocksTest extends Es6CompilerTestCase {
   }
 
   public void testArrowFunction() {
-    testSameEs6("var y=()=>{startMarker();x();endMarker()}");
-    testErrorEs6(
+    testSame("var y=()=>{startMarker();x();endMarker()}");
+    testError(
         "var y=()=>{startMarker();x();};endMarker()",
         CreateSyntheticBlocks.UNMATCHED_END_MARKER);
-    testErrorEs6(
+    testError(
         "var y=()=>startMarker();",
         CreateSyntheticBlocks.INVALID_MARKER_USAGE);
   }

@@ -24,6 +24,7 @@ import java.util.List;
  *
  * @author moz@google.com (Michael Zhou)
  */
+@Deprecated
 public abstract class Es6CompilerTestCase extends CompilerTestCase {
 
   protected boolean useNTI = false;

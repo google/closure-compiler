@@ -27,7 +27,7 @@ import com.google.javascript.rhino.Node;
  * @author stalcup@google.com (John Stalcup)
  */
 
-public final class MissingProvideTest extends Es6CompilerTestCase {
+public final class MissingProvideTest extends CompilerTestCase {
 
   public MissingProvideTest() {
     enableRewriteClosureCode();

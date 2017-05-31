@@ -23,7 +23,12 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * Tests for {@link CheckProvides}.
  *
  */
-public final class CheckProvidesTest extends Es6CompilerTestCase {
+public final class CheckProvidesTest extends CompilerTestCase {
+  @Override
+  public void setUp() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+  }
+
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckProvides(compiler);
@@ -43,13 +48,12 @@ public final class CheckProvidesTest extends Es6CompilerTestCase {
   }
 
   public void testHarmlessEs6Class() {
-    testSameEs6("goog.provide('X'); var X = class {};");
-    testSameEs6("goog.provide('X'); class X {};");
-    testSameEs6("goog.provide('foo.bar.X'); foo.bar.X = class {};");
+    testSame("goog.provide('X'); var X = class {};");
+    testSame("goog.provide('X'); class X {};");
+    testSame("goog.provide('foo.bar.X'); foo.bar.X = class {};");
   }
 
   public void testMissingProvideEs6Class() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     String js = "goog.require('Y'); class X {};";
     String warning = "missing goog.provide('X')";
     test(js, js, null, MISSING_PROVIDE_WARNING, warning);
@@ -113,29 +117,29 @@ public final class CheckProvidesTest extends Es6CompilerTestCase {
     testSame("/** @private\n@constructor */ X = function(){};");
     testSame("/** @constructor\n@private */ X = function(){};");
 
-    testSameEs6("/** @private */ var X = class {};");
-    testSameEs6("/** @private */ let X = class {};");
-    testSameEs6("/** @private */ X = class {};");
+    testSame("/** @private */ var X = class {};");
+    testSame("/** @private */ let X = class {};");
+    testSame("/** @private */ X = class {};");
 
-    testSameEs6("/** @private */ var X = class Y {};");
-    testSameEs6("/** @private */ let X = class Y {};");
-    testSameEs6("/** @private */ X = class Y {};");
+    testSame("/** @private */ var X = class Y {};");
+    testSame("/** @private */ let X = class Y {};");
+    testSame("/** @private */ X = class Y {};");
 
-    testSameEs6("/** @private */ class X {}");
+    testSame("/** @private */ class X {}");
   }
 
   public void testIgnorePrivateByConventionConstructor() {
     testSame("/** @constructor */ privateFn_ = function(){};");
     testSame("/** @constructor */ privateFn_ = function(){};");
 
-    testSameEs6("var privateCls_ = class {};");
-    testSameEs6("let privateCls_ = class {};");
-    testSameEs6("privateCls_ = class {};");
+    testSame("var privateCls_ = class {};");
+    testSame("let privateCls_ = class {};");
+    testSame("privateCls_ = class {};");
 
-    testSameEs6("class privateCls_ {}");
+    testSame("class privateCls_ {}");
   }
 
   public void testArrowFunction() {
-    testSameEs6("/** @constructor*/ X = ()=>{};");
+    testSame("/** @constructor*/ X = ()=>{};");
   }
 }

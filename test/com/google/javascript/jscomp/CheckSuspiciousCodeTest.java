@@ -16,10 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Tests for CheckSuspiciousCode
  */
-public final class CheckSuspiciousCodeTest extends Es6CompilerTestCase {
+public final class CheckSuspiciousCodeTest extends CompilerTestCase {
   public CheckSuspiciousCodeTest() {
     this.parseTypeInfo = true;
   }
@@ -28,6 +30,11 @@ public final class CheckSuspiciousCodeTest extends Es6CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CombinedCompilerPass(compiler,
         new CheckSuspiciousCode());
+  }
+
+  @Override
+  public void setUp() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   @Override
@@ -61,9 +68,9 @@ public final class CheckSuspiciousCodeTest extends Es6CompilerTestCase {
     testWarning("for(x in y); x = y;", e);
     testSame("for(x in y){} x = y;");
 
-    testSameEs6("var y = [1, 2, 3]; for(x of y) console.log(x);");
-    testWarningEs6("var y = [1, 2, 3]; for(x of y); console.log(x);", e);
-    testSameEs6("var y = [1, 2, 3]; for(x of y){} console.log(x);");
+    testSame("var y = [1, 2, 3]; for(x of y) console.log(x);");
+    testWarning("var y = [1, 2, 3]; for(x of y); console.log(x);", e);
+    testSame("var y = [1, 2, 3]; for(x of y){} console.log(x);");
   }
 
   public void testSuspiciousIn() {
@@ -81,15 +88,15 @@ public final class CheckSuspiciousCodeTest extends Es6CompilerTestCase {
   }
 
   public void testForOf() {
-    testSameEs6("var y = [1, 2, 3]; for (var x of y) console.log(x);");
-    testSameEs6("var y = [1, 2, 3]; for (var x of 'test') console.log(x);");
-    testSameEs6("for (var x of 123) console.log(x);");
-    testSameEs6("for (var x of false) console.log(x);");
-    testSameEs6("for (var x of true) console.log(x);");
-    testSameEs6("for (var x of undefined) console.log(x);");
-    testSameEs6("for (var x of NaN) console.log(x);");
-    testSameEs6("for (var x of Infinity) console.log(x);");
-    testSameEs6("for (var x of null) console.log(x);");
+    testSame("var y = [1, 2, 3]; for (var x of y) console.log(x);");
+    testSame("var y = [1, 2, 3]; for (var x of 'test') console.log(x);");
+    testSame("for (var x of 123) console.log(x);");
+    testSame("for (var x of false) console.log(x);");
+    testSame("for (var x of true) console.log(x);");
+    testSame("for (var x of undefined) console.log(x);");
+    testSame("for (var x of NaN) console.log(x);");
+    testSame("for (var x of Infinity) console.log(x);");
+    testSame("for (var x of null) console.log(x);");
   }
 
   private void testReportNaN(String js) {
@@ -190,13 +197,13 @@ public final class CheckSuspiciousCodeTest extends Es6CompilerTestCase {
     testSame("/** @constructor */ function Foo() {"
         + " var a = this instanceof Foo; }");
 
-    testSameEs6("(()=>42) instanceof Function");
-    testSameEs6("class Person{} Person instanceof Function");
-    testSameEs6(LINE_JOINER.join(
+    testSame("(()=>42) instanceof Function");
+    testSame("class Person{} Person instanceof Function");
+    testSame(LINE_JOINER.join(
         "class Person{}",
         "var peter = new Person();",
         "peter instanceof Person"));
-    testSameEs6("taggedTemplate`${tagged}Temp` instanceof Function");
+    testSame("taggedTemplate`${tagged}Temp` instanceof Function");
   }
 
   private void testReportInstanceOf(String left, String right) {

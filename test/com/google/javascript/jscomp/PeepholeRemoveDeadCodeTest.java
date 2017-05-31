@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -23,7 +24,7 @@ import com.google.javascript.rhino.Node;
  * of multiple peephole passes are in PeepholeIntegrationTest.
  */
 
-public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
+public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   private static final String MATH =
       "/** @const */ var Math = {};" +
@@ -50,6 +51,12 @@ public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
         peepholePass.process(externs, root);
       }
     };
+  }
+
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   @Override
@@ -102,7 +109,7 @@ public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
     fold("function f() { if (false) {} }", "function f(){}");
     fold("function f() { { if (false) {} if (true) {} {} } }",
          "function f(){}");
-    testEs6("{var x; var y; var z; function f() { { var a; { var b; } } } }",
+    test("{var x; var y; var z; function f() { { var a; { var b; } } } }",
          "var x;var y;var z;function f(){var a;var b}");
   }
 
@@ -571,7 +578,7 @@ public final class PeepholeRemoveDeadCodeTest extends Es6CompilerTestCase {
 
     // TODO(moz): This is to show that the current optimization might break if the input has block
     // scoped declarations. We will need to fix the logic for removing blocks to account for this.
-    testEs6(
+    test(
         LINE_JOINER.join(
             "function f() {",
             "  let x = 1;",

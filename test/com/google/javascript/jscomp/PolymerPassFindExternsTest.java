@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 
-public final class PolymerPassFindExternsTest extends Es6CompilerTestCase {
+public final class PolymerPassFindExternsTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       LINE_JOINER.join(

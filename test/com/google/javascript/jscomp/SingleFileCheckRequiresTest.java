@@ -18,10 +18,17 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING;
 import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_WARNING;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Tests for {@link CheckRequiresForConstructors} in single-file mode.
  */
-public final class SingleFileCheckRequiresTest extends Es6CompilerTestCase {
+public final class SingleFileCheckRequiresTest extends CompilerTestCase {
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+  }
 
   @Override
   protected CompilerOptions getOptions(CompilerOptions options) {
@@ -49,9 +56,9 @@ public final class SingleFileCheckRequiresTest extends Es6CompilerTestCase {
   }
 
   public void testClassExtendsSingleName() {
-    testSameEs6("class MyFoo extends Foo {}");
-    testSameEs6("class MyError extends Error {}");
-    testSameEs6("class MyArray extends Array {}");
+    testSame("class MyFoo extends Foo {}");
+    testSame("class MyError extends Error {}");
+    testSame("class MyArray extends Array {}");
   }
 
   public void testReferenceToQualifiedName() {
@@ -76,27 +83,27 @@ public final class SingleFileCheckRequiresTest extends Es6CompilerTestCase {
   }
 
   public void testReferenceToUnqualifiedName() {
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.module('a.b.c');",
             "var z = goog.require('x.y.z');",
             "",
             "exports = { foobar : z };"));
 
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.module('a.b.c');",
             "var {z} = goog.require('x.y');",
             "",
             "exports = { foobar : z };"));
 
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "import {z} from 'x.y'",
             "",
             "export var foobar = z;"));
 
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "import z from 'x.y.z'",
             "",
@@ -104,27 +111,27 @@ public final class SingleFileCheckRequiresTest extends Es6CompilerTestCase {
   }
 
   public void testExtraRequire() {
-    testErrorEs6("goog.require('foo.Bar');", EXTRA_REQUIRE_WARNING);
+    testError("goog.require('foo.Bar');", EXTRA_REQUIRE_WARNING);
   }
 
   public void testUnqualifiedRequireUsedInJSDoc() {
-    testSameEs6("goog.require('Bar'); /** @type {Bar} */ var x;");
+    testSame("goog.require('Bar'); /** @type {Bar} */ var x;");
   }
 
   public void testUnqualifiedImportUsedInJSDoc() {
-    testSameEs6("import { Something } from 'somewhere'; /** @type {Something} */ var x;");
+    testSame("import { Something } from 'somewhere'; /** @type {Something} */ var x;");
   }
 
   public void testReferenceToSingleNameWithRequire() {
-    testSameEs6("goog.require('Foo'); new Foo();");
+    testSame("goog.require('Foo'); new Foo();");
   }
 
   public void testReferenceInDefaultParam() {
-    testSameEs6("function func( a = new Bar() ){}; func();");
+    testSame("function func( a = new Bar() ){}; func();");
   }
 
   public void testReferenceInDestructuringParam() {
-    testSameEs6("var {a = new Bar()} = b;");
+    testSame("var {a = new Bar()} = b;");
   }
 
   public void testPassForwardDeclareInModule() {

@@ -28,6 +28,7 @@ import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_UNQUALIFIED
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.rhino.Node;
 
@@ -35,7 +36,7 @@ import com.google.javascript.rhino.Node;
  * Unit tests for PolymerPass
  * @author jlklein@google.com (Jeremy Klein)
  */
-public class PolymerPassTest extends Es6CompilerTestCase {
+public class PolymerPassTest extends CompilerTestCase {
   private static final String EXTERNS =
       LINE_JOINER.join(
           "/** @constructor */",
@@ -159,6 +160,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     allowExternsChanges(true);
     enableTypeCheck();
     enableCheckAccessControls(false);
@@ -188,7 +190,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
 
   public void testLetTarget() {
     disableTypeCheck();
-    testEs6(
+    test(
         LINE_JOINER.join(
             "let X = Polymer({",
             "  is: 'x-element',",
@@ -205,7 +207,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
 
   public void testConstTarget() {
     disableTypeCheck();
-    testErrorEs6(
+    testError(
         LINE_JOINER.join(
             "const X = Polymer({",
             "  is: 'x-element',",
@@ -249,7 +251,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
 
   public void testComputedPropName() {
     disableTypeCheck(); // TypeCheck cannot grab a name from a complicated computedPropName
-    testEs6("var X = Polymer({is:'x-element', [name + (() => 42)]: function() {return 42;}});",
+    test("var X = Polymer({is:'x-element', [name + (() => 42)]: function() {return 42;}});",
         LINE_JOINER.join(
             "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
             "var X = function() {}",
@@ -375,7 +377,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
   }
 
   public void testShorthandConstructorExtraction() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "var X = Polymer({",
             "  is: 'x-element',",
@@ -574,7 +576,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
 
   public void testPropertiesObjLitShorthand() {
     disableTypeCheck();
-    testErrorEs6(
+    testError(
         LINE_JOINER.join(
             "var XElem = Polymer({",
             "  is: 'x-element',",
@@ -640,7 +642,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
   }
 
   public void testPropertiesDefaultValueShortHandFunction() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "/** @constructor */",
             "var User = function() {};",
@@ -721,7 +723,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
   }
 
   public void testShorthandFunctionDefinition() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "var ES6Test = Polymer({",
             "  is: 'x-element',",
@@ -746,7 +748,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
   }
 
   public void testArrowFunctionDefinition() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "var ES6Test = Polymer({",
             "  is: 'x-element',",
@@ -767,7 +769,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
   }
 
   public void testShorthandLifecycleCallbacks() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "var ES6Test = Polymer({",
             "  is: 'x-element',",
@@ -793,7 +795,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
   }
 
   public void testShorthandFunctionDefinitionWithReturn() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "var ESTest = Polymer({",
             "  is: 'x-element',",
@@ -938,7 +940,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
   }
 
   public void testDollarSignPropsInShorthandFunctionConvertedToBrackets() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "/** @constructor */",
             "var SomeType = function() {};",
@@ -1300,7 +1302,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
   }
 
   public void testBehaviorShorthandFunctionOverriddenByElement() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "/** @polymerBehavior */",
             "var FunBehavior = {",
@@ -1742,7 +1744,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
   }
 
   public void testBehaviorShorthandFunctionOverriding() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "/** @polymerBehavior */",
             "var FunBehavior = {",
@@ -2125,8 +2127,8 @@ public class PolymerPassTest extends Es6CompilerTestCase {
     testWarning("var x = Polymer('foo-bar', {});", POLYMER_DESCRIPTOR_NOT_VALID);
     testError("var x = Polymer({},'blah');", POLYMER_UNEXPECTED_PARAMS);
     testError("var x = Polymer({});", POLYMER_MISSING_IS);
-    testErrorEs6("var x = Polymer({is});", POLYMER_MISSING_IS);
-    testErrorEs6("var x = Polymer({is: 'x-element', shortHand,});",
+    testError("var x = Polymer({is});", POLYMER_MISSING_IS);
+    testError("var x = Polymer({is: 'x-element', shortHand,});",
         POLYMER_SHORTHAND_NOT_SUPPORTED);
   }
 
@@ -2269,7 +2271,7 @@ public class PolymerPassTest extends Es6CompilerTestCase {
 
   public void testES6FeaturesInFunctionBody() {
     disableTypeCheck();
-    testEs6(
+    test(
         LINE_JOINER.join(
             "var X = Polymer({",
             "  is: 'x-element',",

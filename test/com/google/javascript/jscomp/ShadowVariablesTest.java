@@ -16,11 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Unit tests for {@link ShadowVariables}.
  *
  */
-public final class ShadowVariablesTest extends Es6CompilerTestCase {
+public final class ShadowVariablesTest extends CompilerTestCase {
   // Use pseudo names to make test easier to read.
   private boolean generatePseudoNames = false;
   private RenameVars pass = null;
@@ -42,6 +44,7 @@ public final class ShadowVariablesTest extends Es6CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     generatePseudoNames = false;
   }
 
@@ -331,7 +334,7 @@ public final class ShadowVariablesTest extends Es6CompilerTestCase {
         "}"));
 
     // Safe to shadow nested "let"s
-    testEs6(LINE_JOINER.join(
+    test(LINE_JOINER.join(
         "function f() {",
         "  let x = 1;",
         "  {",
@@ -352,7 +355,7 @@ public final class ShadowVariablesTest extends Es6CompilerTestCase {
         "  }",
         "}"));
 
-    testEs6(LINE_JOINER.join(
+    test(LINE_JOINER.join(
         "function f() {",
         "  let x = 1;",
         "  {",

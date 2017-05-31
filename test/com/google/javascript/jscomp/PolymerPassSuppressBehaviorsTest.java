@@ -15,12 +15,13 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 /**
  * Unit tests for {@link PolymerPassSuppressBehaviors}
  */
-public class PolymerPassSuppressBehaviorsTest extends Es6CompilerTestCase {
+public class PolymerPassSuppressBehaviorsTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       LINE_JOINER.join(
@@ -73,6 +74,7 @@ public class PolymerPassSuppressBehaviorsTest extends Es6CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     allowExternsChanges(true);
     enableTypeCheck();
     runTypeCheckAfterProcessing = true;
@@ -169,7 +171,7 @@ public class PolymerPassSuppressBehaviorsTest extends Es6CompilerTestCase {
 
   public void testConstBehaviours() {
     disableTypeCheck();
-    testEs6(
+    test(
         LINE_JOINER.join(
             "/** @polymerBehavior */",
             "const FunBehavior = {",
@@ -183,7 +185,7 @@ public class PolymerPassSuppressBehaviorsTest extends Es6CompilerTestCase {
 
   public void testLetBehaviours() {
     disableTypeCheck();
-    testEs6(
+    test(
         LINE_JOINER.join(
             "/** @polymerBehavior */",
             "let FunBehavior = {",

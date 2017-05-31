@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.InlineAliases.ALIAS_CYCLE;
 
 /** Unit tests for {@link InlineAliases}. */
-public class InlineAliasesTest extends Es6CompilerTestCase {
+public class InlineAliasesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {

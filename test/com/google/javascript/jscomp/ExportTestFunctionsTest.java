@@ -15,11 +15,13 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Tests for ExportTestFunctions.
  *
  */
-public final class ExportTestFunctionsTest extends Es6CompilerTestCase {
+public final class ExportTestFunctionsTest extends CompilerTestCase {
 
   private static final String EXTERNS =
       "function google_exportSymbol(a, b) {}; function google_exportProperty(a, b, c) {};";
@@ -37,8 +39,10 @@ public final class ExportTestFunctionsTest extends Es6CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
+  public void setUp() throws Exception {
+    super.setUp();
     super.enableLineNumberCheck(false);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   @Override
@@ -121,43 +125,43 @@ public final class ExportTestFunctionsTest extends Es6CompilerTestCase {
   }
 
   public void testFunctionExpressionsByLetAreExported() {
-    testSameEs6("let Foo = function() {var testA = function() {}}");
-    testEs6(
+    testSame("let Foo = function() {var testA = function() {}}");
+    test(
         "let setUp = function() {}",
         "let setUp = function() {}; google_exportSymbol('setUp', setUp)");
-    testEs6(
+    test(
         "let testBar = function() {}",
         "let testBar = function() {}; google_exportSymbol('testBar', testBar)");
-    testEs6(
+    test(
         "let tearDown = function() {}",
         LINE_JOINER.join(
             "let tearDown = function() {}; ", "google_exportSymbol('tearDown', tearDown)"));
   }
 
   public void testFunctionExpressionsByConstAreExported() {
-    testSameEs6("const Foo = function() {var testA = function() {}}");
-    testEs6(
+    testSame("const Foo = function() {var testA = function() {}}");
+    test(
         "const setUp = function() {}",
         LINE_JOINER.join("const setUp = function() {}; ", "google_exportSymbol('setUp', setUp)"));
-    testEs6(
+    test(
         "const testBar = function() {}",
         LINE_JOINER.join(
             "const testBar = function() {}; ", "google_exportSymbol('testBar', testBar)"));
-    testEs6(
+    test(
         "const tearDown = function() {}",
         LINE_JOINER.join(
             "const tearDown = function() {}; ", "google_exportSymbol('tearDown', tearDown)"));
   }
 
   public void testArrowFunctionExpressionsAreExported() {
-    testSameEs6("var Foo = ()=>{var testA = function() {}}");
-    testEs6(
+    testSame("var Foo = ()=>{var testA = function() {}}");
+    test(
         "var setUp = ()=>{}",
         LINE_JOINER.join("var setUp = ()=>{}; ", "google_exportSymbol('setUp', setUp)"));
-    testEs6(
+    test(
         "var testBar = ()=>{}",
         LINE_JOINER.join("var testBar = ()=>{}; ", "google_exportSymbol('testBar', testBar)"));
-    testEs6(
+    test(
         "var tearDown = ()=>{}",
         LINE_JOINER.join("var tearDown = ()=>{}; ", "google_exportSymbol('tearDown', tearDown)"));
   }
@@ -212,13 +216,13 @@ public final class ExportTestFunctionsTest extends Es6CompilerTestCase {
   }
 
   public void testMemberDefInObjLit() {
-    testEs6(
+    test(
         "goog.testing.testSuite({a() {}, b() {}});",
         "goog.testing.testSuite({'a': function() {}, 'b': function() {}});");
   }
 
   public void testEs6Class_testMethod() {
-    testEs6(
+    test(
         "class MyTest {testFoo() {}} goog.testing.testSuite(new MyTest());",
         "class MyTest {testFoo() {}} "
             + "google_exportProperty(MyTest.prototype, 'testFoo', MyTest.prototype.testFoo); "
@@ -226,7 +230,7 @@ public final class ExportTestFunctionsTest extends Es6CompilerTestCase {
   }
 
   public void testEs6Class_lifeCycleMethods() {
-    testEs6(
+    test(
         "class MyTest {"
             + "testFoo(){} setUp(){} tearDown(){} setUpPage(){} tearDownPage(){} notExported(){}"
             + "}"

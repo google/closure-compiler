@@ -16,13 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
 import com.google.javascript.rhino.Node;
 
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
+public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   private boolean useDefaultRenamer = false;
   private boolean invert = false;
@@ -58,7 +59,9 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
+  public void setUp() throws Exception {
+    super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     removeConst = false;
     invert = false;
     useDefaultRenamer = false;
@@ -74,9 +77,9 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
 
   private void testWithInversionEs6(String original, String expected) {
     invert = false;
-    testEs6(original, expected);
+    test(original, expected);
     invert = true;
-    testEs6(expected, original);
+    test(expected, original);
     invert = false;
   }
 
@@ -94,9 +97,9 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
 
   private void testSameWithInversionEs6(String original) {
     invert = false;
-    testSameEs6(original);
+    testSame(original);
     invert = true;
-    testSameEs6(original);
+    testSame(original);
     invert = false;
   }
 
@@ -109,7 +112,7 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
   }
 
   private void testInFunctionEs6(String original, String expected) {
-    testEs6(wrapInFunction(original), wrapInFunction(expected));
+    test(wrapInFunction(original), wrapInFunction(expected));
   }
 
   public void testMakeLocalNamesUniqueWithContext1() {
@@ -124,13 +127,13 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
         "var a;function foo(){var a$jscomp$inline_1;}",
         "var a;function foo(){var a;}");
 
-    testEs6(
+    test(
         "let a;function foo(){let a$jscomp$inline_1; a = 1}",
         "let a;function foo(){let a$jscomp$0; a = 1}");
-    testEs6(
+    test(
         "const a = 1;function foo(){let a$jscomp$inline_1;}",
         "const a = 1;function foo(){let a;}");
-    testEs6(
+    test(
         "class A {} function foo(){class A$jscomp$inline_1 {}}",
         "class A {} function foo(){class A {}}");
   }
@@ -280,17 +283,17 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
 
   public void testClassInForLoop() {
     useDefaultRenamer = true;
-    testSameEs6("for (class a {};;) { break; }");
+    testSame("for (class a {};;) { break; }");
   }
 
   public void testFunctionInForLoop() {
     useDefaultRenamer = true;
-    testSameEs6("for (function a() {};;) { break; }");
+    testSame("for (function a() {};;) { break; }");
   }
 
   public void testLetsInSeparateBlocks() {
     useDefaultRenamer = true;
-    testEs6(
+    test(
         LINE_JOINER.join(
             "if (x) {",
             "  let e;",
@@ -313,13 +316,13 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
 
   public void testConstInGlobalHoistScope() {
     useDefaultRenamer = true;
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "if (true) {",
             "  const x = 1; alert(x);",
             "}"));
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             "if (true) {",
             "  const x = 1; alert(x);",
@@ -340,7 +343,7 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
 
     test("var a;",
          "var a$jscomp$unique_0");
-    testEs6("let a;",
+    test("let a;",
             "let a$jscomp$unique_0");
 
     // Verify undeclared names are untouched.
@@ -359,7 +362,7 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
          "function foo$jscomp$unique_1(){var b$jscomp$unique_3;a$jscomp$unique_0}"
          + "function boo$jscomp$unique_2(){var b$jscomp$unique_4;a$jscomp$unique_0}");
 
-    testEs6(
+    test(
         "let a; function foo(a) {let b; a; }",
         LINE_JOINER.join(
             "let a$jscomp$unique_0;",
@@ -368,7 +371,7 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
             "  a$jscomp$unique_2;",
             "}"));
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             "let a;",
             "function foo() { let b; a; }",
@@ -387,7 +390,7 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
     // Verify function expressions are renamed.
     test("var a = function foo(){foo()};",
          "var a$jscomp$unique_0 = function foo$jscomp$unique_1(){foo$jscomp$unique_1()};");
-    testEs6("const a = function foo(){foo()};",
+    test("const a = function foo(){foo()};",
             "const a$jscomp$unique_0 = function foo$jscomp$unique_1(){foo$jscomp$unique_1()};");
 
     // Verify catch exceptions names are made unique
@@ -410,14 +413,14 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
     test("var _a;",
          "var JSCompiler__a$jscomp$unique_0");
     test("var _a = function _b(_c) { var _d; };",
-         "var JSCompiler__a$jscomp$unique_0 = function JSCompiler__b$jscomp$unique_1(" +
-             "JSCompiler__c$jscomp$unique_2) { var JSCompiler__d$jscomp$unique_3; };");
+         "var JSCompiler__a$jscomp$unique_0 = function JSCompiler__b$jscomp$unique_1("
+             + "JSCompiler__c$jscomp$unique_2) { var JSCompiler__d$jscomp$unique_3; };");
 
-    testEs6("let _a;",
+    test("let _a;",
         "let JSCompiler__a$jscomp$unique_0");
-    testEs6("const _a = function _b(_c) { let _d; };",
-        "const JSCompiler__a$jscomp$unique_0 = function JSCompiler__b$jscomp$unique_1(" +
-            "JSCompiler__c$jscomp$unique_2) { let JSCompiler__d$jscomp$unique_3; };");
+    test("const _a = function _b(_c) { let _d; };",
+        "const JSCompiler__a$jscomp$unique_0 = function JSCompiler__b$jscomp$unique_1("
+            + "JSCompiler__c$jscomp$unique_2) { let JSCompiler__d$jscomp$unique_3; };");
   }
 
   public void testOnlyInversion() {
@@ -428,7 +431,7 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
          "function f(a, b) {}");
     test("function f(a$jscomp$1, a$jscomp$2) {}",
          "function f(a, a$jscomp$0) {}");
-    testEs6("try { } catch(e) {e; try { } catch(e$jscomp$1) {e$jscomp$1;} }; ",
+    test("try { } catch(e) {e; try { } catch(e$jscomp$1) {e$jscomp$1;} }; ",
             "try { } catch(e) {e; try { } catch(e) {e;} }; ");
     testSame("var a$jscomp$1;");
     testSame("function f() { var $jscomp$; }");
@@ -439,7 +442,7 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
 
   public void testOnlyInversion2() {
     invert = true;
-    testEs6("function f() {try { } catch(e) {e;}; try { } catch(e$jscomp$0) {e$jscomp$0;}}",
+    test("function f() {try { } catch(e) {e;}; try { } catch(e$jscomp$0) {e$jscomp$0;}}",
             "function f() {try { } catch(e) {e;}; try { } catch(e) {e;}}");
   }
 
@@ -498,7 +501,7 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
   }
 
   public void testRestParam() {
-    testEs6(
+    test(
         "function f(...x) { x; }",
         "function f$jscomp$unique_0(...x$jscomp$unique_1) { x$jscomp$unique_1; }");
   }
@@ -528,7 +531,7 @@ public final class MakeDeclaredNamesUniqueTest extends Es6CompilerTestCase {
   }
 
   public void testVarParamSameAsLet0() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "function f(x) {",
             "  if (!x) { let x = 6; }",

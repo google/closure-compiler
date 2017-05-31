@@ -24,12 +24,14 @@ import static com.google.javascript.jscomp.VariableReferenceCheck.REDECLARED_VAR
 import static com.google.javascript.jscomp.VariableReferenceCheck.REDECLARED_VARIABLE_ERROR;
 import static com.google.javascript.jscomp.VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Test that warnings are generated in appropriate cases and appropriate
  * cases only by VariableReferenceCheck
  *
  */
-public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
+public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   private static final String LET_RUN =
       "let a = 1; let b = 2; let c = a + b, d = c;";
@@ -57,6 +59,7 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     enableUnusedLocalAssignmentCheck = false;
   }
 
@@ -244,11 +247,11 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
   }
 
   public void testDestructuringInFor() {
-    testSameEs6("for (let [key, val] of X){}");
-    testSameEs6("for (let [key, [nestKey, nestVal], val] of X){}");
+    testSame("for (let [key, val] of X){}");
+    testSame("for (let [key, [nestKey, nestVal], val] of X){}");
 
-    testSameEs6("var {x: a, y: b} = {x: 1, y: 2}; a++; b++;");
-    testWarningEs6("a++; var {x: a} = {x: 1};", EARLY_REFERENCE);
+    testSame("var {x: a, y: b} = {x: 1, y: 2}; a++; b++;");
+    testWarning("a++; var {x: a} = {x: 1};", EARLY_REFERENCE);
   }
 
   public void testNoWarnInExterns1() {
@@ -278,12 +281,12 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
     assertUnusedEs6("goog.module('m'); let x;");
 
     testSame("goog.module('m'); /** @typedef {string} */ var x;");
-    testSameEs6("goog.module('m'); /** @typedef {string} */ let x;");
+    testSame("goog.module('m'); /** @typedef {string} */ let x;");
   }
 
   public void testAliasInModule() {
     enableUnusedLocalAssignmentCheck = true;
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.module('m');",
             "const x = goog.require('x');",
@@ -356,9 +359,9 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
   public void testUsedInShorthandObjLit() {
     enableUnusedLocalAssignmentCheck = true;
     assertUndeclaredEs6("var z = {x}; z(); var x;");
-    testSameEs6("var {x} = foo();");
-    testSameEs6("var {x} = {};"); // TODO(moz): Maybe add a warning for this case
-    testSameEs6("function f() { var x = 1; return {x}; }");
+    testSame("var {x} = foo();");
+    testSame("var {x} = {};"); // TODO(moz): Maybe add a warning for this case
+    testSame("function f() { var x = 1; return {x}; }");
   }
 
   public void testUnusedCatch() {
@@ -605,9 +608,9 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
 
   public void testLetConstNotDirectlyInBlock() {
     testSame("if (true) var x = 3;");
-    testErrorEs6("if (true) let x = 3;", DECLARATION_NOT_DIRECTLY_IN_BLOCK);
-    testErrorEs6("if (true) const x = 3;", DECLARATION_NOT_DIRECTLY_IN_BLOCK);
-    testErrorEs6("if (true) class C {}", DECLARATION_NOT_DIRECTLY_IN_BLOCK);
+    testError("if (true) let x = 3;", DECLARATION_NOT_DIRECTLY_IN_BLOCK);
+    testError("if (true) const x = 3;", DECLARATION_NOT_DIRECTLY_IN_BLOCK);
+    testError("if (true) class C {}", DECLARATION_NOT_DIRECTLY_IN_BLOCK);
     testError("if (true) function f() {}", DECLARATION_NOT_DIRECTLY_IN_BLOCK);
   }
 
@@ -765,12 +768,12 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
   }
 
   public void testDestructuring() {
-    testSameEs6(LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
         "function f() { ",
         "  var obj = {a:1, b:2}; ",
         "  var {a:c, b:d} = obj; ",
         "}"));
-    testSameEs6(LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
         "function f() { ",
         "  var obj = {a:1, b:2}; ",
         "  var {a, b} = obj; ",
@@ -801,18 +804,18 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
   }
 
   public void testDestructuringInLoop() {
-    testSameEs6("for (let {length: x} in obj) {}");
+    testSame("for (let {length: x} in obj) {}");
 
-    testSameEs6("for (let [{length: z}, w] in obj) {}");
+    testSame("for (let [{length: z}, w] in obj) {}");
   }
 
   public void testEnhancedForLoopTemporalDeadZone() {
     assertEarlyReferenceError("for (let x of [x]);");
     assertEarlyReferenceError("for (let x in [x]);");
     assertEarlyReferenceError("for (const x of [x]);");
-    testSameEs6("for (var x of [x]);");
-    testSameEs6("for (let x of [() => x]);");
-    testSameEs6("let x = 1; for (let y of [x]);");
+    testSame("for (var x of [x]);");
+    testSame("for (let x of [() => x]);");
+    testSame("let x = 1; for (let y of [x]);");
   }
 
   /**
@@ -823,15 +826,15 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
   }
 
   private void assertRedeclareEs6(String js) {
-    testWarningEs6(js, REDECLARED_VARIABLE);
+    testWarning(js, REDECLARED_VARIABLE);
   }
 
   private void assertRedeclareError(String js) {
-    testErrorEs6(js, REDECLARED_VARIABLE_ERROR);
+    testError(js, REDECLARED_VARIABLE_ERROR);
   }
 
   private void assertReassign(String js) {
-    testErrorEs6(js, REASSIGNED_CONSTANT);
+    testError(js, REASSIGNED_CONSTANT);
   }
 
   private void assertRedeclareGlobal(String js) {
@@ -849,18 +852,18 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
    * Expects the JS to generate one bad-write warning.
    */
   private void assertUndeclaredEs6(String js) {
-    testWarningEs6(js, EARLY_REFERENCE);
+    testWarning(js, EARLY_REFERENCE);
   }
 
   private void assertEarlyReferenceError(String js) {
-    testErrorEs6(js, EARLY_REFERENCE_ERROR);
+    testError(js, EARLY_REFERENCE_ERROR);
   }
 
   /**
    * Expects the JS to generate one bad-write warning.
    */
   private void assertAmbiguousEs6(String js) {
-    testSameEs6(js); // In ES6, these are block scoped functions, so no ambiguity.
+    testSame(js); // In ES6, these are block scoped functions, so no ambiguity.
   }
 
   /**
@@ -874,7 +877,7 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
    * Expects the JS to generate one unused local error.
    */
   private void assertUnusedEs6(String js) {
-    testWarningEs6(js, UNUSED_LOCAL_ASSIGNMENT);
+    testWarning(js, UNUSED_LOCAL_ASSIGNMENT);
   }
 
   /**
@@ -888,6 +891,6 @@ public final class VariableReferenceCheckTest extends Es6CompilerTestCase {
    * Expects the JS to generate no errors or warnings.
    */
   private void assertNoWarningEs6(String js) {
-    testSameEs6(js);
+    testSame(js);
   }
 }
