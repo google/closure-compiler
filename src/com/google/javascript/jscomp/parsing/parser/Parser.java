@@ -886,7 +886,7 @@ public class Parser {
       nameExpr = null;
       name = eatIdOrKeywordAsId();
       if (Keywords.isKeyword(name.value)) {
-        features = features.require(Feature.KEYWORDS_AS_PROPERTIES);
+        features = features.with(Feature.KEYWORDS_AS_PROPERTIES);
       }
     } else {
       if (config.parseTypeSyntax && peekIndexSignature()) {
@@ -965,7 +965,7 @@ public class Parser {
   }
 
   private ParseTree parseAsyncMethod(PartialClassElement partial) {
-    features = features.require(Feature.ASYNC_FUNCTIONS);
+    features = features.with(Feature.ASYNC_FUNCTIONS);
     eatPredefinedString(ASYNC);
     if (peekIdOrKeyword()) {
       IdentifierToken name = eatIdOrKeywordAsId();
@@ -1231,7 +1231,7 @@ public class Parser {
 
   private ParseTree parseAsyncFunctionDeclaration() {
     SourcePosition start = getTreeStartLocation();
-    features = features.require(Feature.ASYNC_FUNCTIONS);
+    features = features.with(Feature.ASYNC_FUNCTIONS);
     eatAsyncFunctionStart();
 
     if (peek(TokenType.STAR)) {
@@ -1251,7 +1251,7 @@ public class Parser {
 
   private ParseTree parseAsyncFunctionExpression() {
     SourcePosition start = getTreeStartLocation();
-    features = features.require(Feature.ASYNC_FUNCTIONS);
+    features = features.with(Feature.ASYNC_FUNCTIONS);
     eatAsyncFunctionStart();
 
     if (peek(TokenType.STAR)) {
@@ -1331,7 +1331,7 @@ public class Parser {
     if (context == ParamContext.IMPLEMENTATION
         && !parameter.isRestParameter()
         && peek(TokenType.EQUAL)) {
-      features = features.require(Feature.DEFAULT_PARAMETERS);
+      features = features.with(Feature.DEFAULT_PARAMETERS);
       eat(TokenType.EQUAL);
       ParseTree defaultValue = parseAssignmentExpression();
       parameter = new DefaultParameterTree(getTreeLocation(start), parameter, defaultValue);
@@ -1346,7 +1346,7 @@ public class Parser {
   }
 
   private ParseTree parseRestParameter() {
-    features = features.require(Feature.REST_PARAMETERS);
+    features = features.with(Feature.REST_PARAMETERS);
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.SPREAD);
     return new RestParameterTree(
@@ -1727,11 +1727,11 @@ public class Parser {
 
     switch (token) {
     case CONST:
-      features = features.require(Feature.CONST_DECLARATIONS);
+      features = features.with(Feature.CONST_DECLARATIONS);
       eat(token);
       break;
     case LET:
-      features = features.require(Feature.LET_DECLARATIONS);
+      features = features.with(Feature.LET_DECLARATIONS);
       eat(token);
       break;
     case VAR:
@@ -1943,10 +1943,10 @@ public class Parser {
   /** Reports if declaration requires an initializer, assuming initializer is absent. */
   private void maybeReportNoInitializer(TokenType token, ParseTree lvalue) {
     if (token == TokenType.CONST) {
-      features = features.require(Feature.CONST_DECLARATIONS);
+      features = features.with(Feature.CONST_DECLARATIONS);
       reportError("const variables must have an initializer");
     } else if (lvalue.isPattern()) {
-      features = features.require(Feature.DESTRUCTURING);
+      features = features.with(Feature.DESTRUCTURING);
       reportError("destructuring must have an initializer");
     }
   }
@@ -2430,7 +2430,7 @@ public class Parser {
 
   void maybeReportTrailingComma(Token commaToken) {
     if (commaToken != null) {
-      features = features.require(Feature.TRAILING_COMMA);
+      features = features.with(Feature.TRAILING_COMMA);
       if (config.warnTrailingCommas) {
         // In ES3 mode warn about trailing commas which aren't accepted by
         // older browsers (such as IE8).
@@ -2846,7 +2846,7 @@ public class Parser {
       }
       Token operator = nextToken();
       if (TokenType.STAR_STAR_EQUAL.equals(operator.type)) {
-        features = features.require(Feature.EXPONENT_OP);
+        features = features.with(Feature.EXPONENT_OP);
       }
       ParseTree right = parseAssignment(expressionIn);
       return new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
@@ -2894,7 +2894,7 @@ public class Parser {
 
   private ParseTree completeArrowFunctionParseAtArrow(
       ParseTree leftOfArrow, Expression expressionIn) {
-    features = features.require(Feature.ARROW_FUNCTIONS);
+    features = features.with(Feature.ARROW_FUNCTIONS);
     FormalParameterListTree arrowFormalParameters = transformToArrowFormalParameters(leftOfArrow);
     if (peekImplicitSemiColon()) {
       reportError("No newline allowed before '=>'");
@@ -2956,7 +2956,7 @@ public class Parser {
 
   private ParseTree parseAsyncArrowFunction(Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
-    features = features.require(Feature.ARROW_FUNCTIONS).require(Feature.ASYNC_FUNCTIONS);
+    features = features.with(Feature.ARROW_FUNCTIONS, Feature.ASYNC_FUNCTIONS);
     eatPredefinedString(ASYNC);
     if (peekImplicitSemiColon()) {
       reportError("No newline allowed between `async` and arrow function parameter list");
@@ -3292,7 +3292,7 @@ public class Parser {
             "Unary operator '%s' requires parentheses before '**'",
             left.asUnaryExpression().operator);
       }
-      features = features.require(Feature.EXPONENT_OP);
+      features = features.with(Feature.EXPONENT_OP);
       Token operator = nextToken();
       ParseTree right = parseExponentiationExpression();
       return new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
@@ -3488,7 +3488,7 @@ public class Parser {
 
   private ParseTree parseNewDotSomething() {
     // currently only "target" is valid after "new."
-    features = features.require(Feature.NEW_TARGET);
+    features = features.with(Feature.NEW_TARGET);
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.NEW);
     eat(TokenType.PERIOD);
@@ -3557,7 +3557,7 @@ public class Parser {
   }
 
   private ParseTree parsePattern(PatternKind kind) {
-    features = features.require(Feature.DESTRUCTURING);
+    features = features.with(Feature.DESTRUCTURING);
     switch (peekType()) {
       case OPEN_SQUARE:
         return parseArrayPattern(kind);
@@ -3583,7 +3583,7 @@ public class Parser {
   }
 
   private ParseTree parseArrayPatternRest(PatternKind patternKind) {
-    features = features.require(Feature.ARRAY_PATTERN_REST);
+    features = features.with(Feature.ARRAY_PATTERN_REST);
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.SPREAD);
     ParseTree patternAssignmentTarget = parseRestAssignmentTarget(patternKind);
@@ -3600,7 +3600,7 @@ public class Parser {
 
   // Pattern ::= ... | "[" Element? ("," Element?)* "]"
   private ParseTree parseArrayPattern(PatternKind kind) {
-    features = features.require(Feature.DESTRUCTURING);
+    features = features.with(Feature.DESTRUCTURING);
     SourcePosition start = getTreeStartLocation();
     ImmutableList.Builder<ParseTree> elements = ImmutableList.builder();
     eat(TokenType.OPEN_SQUARE);
@@ -3630,7 +3630,7 @@ public class Parser {
 
   // Pattern ::= "{" (Field ("," Field)* ","?)? "}" | ...
   private ParseTree parseObjectPattern(PatternKind kind) {
-    features = features.require(Feature.DESTRUCTURING);
+    features = features.with(Feature.DESTRUCTURING);
     SourcePosition start = getTreeStartLocation();
     ImmutableList.Builder<ParseTree> fields = ImmutableList.builder();
     eat(TokenType.OPEN_CURLY);
@@ -3890,7 +3890,7 @@ public class Parser {
 
   private TokenType maybeParseAccessibilityModifier() {
     if (config.parseTypeSyntax && peekAccessibilityModifier()) {
-      features = features.require(FeatureSet.TYPESCRIPT);
+      features = features.union(FeatureSet.TYPESCRIPT);
       return nextToken().type;
     } else {
       return null;

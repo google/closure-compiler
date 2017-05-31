@@ -1403,7 +1403,7 @@ public final class DefaultPassConfig extends PassConfig {
       };
 
   private final PassFactory setFeatureSet(final FeatureSet featureSet) {
-    return new PassFactory("setFeatureSet:" + featureSet.toLanguageModeString(), true) {
+    return new PassFactory("setFeatureSet:" + featureSet.version(), true) {
       @Override
       protected CompilerPass create(final AbstractCompiler compiler) {
         return new CompilerPass() {

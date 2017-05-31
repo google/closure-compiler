@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
@@ -48,7 +49,7 @@ public class LazyParsedDependencyInfo implements DependencyInfo {
       Map<String, String> loadFlagsBuilder = new TreeMap<>();
       loadFlagsBuilder.putAll(delegate.getLoadFlags());
       FeatureSet features = ast.getFeatures(compiler);
-      if (features.hasEs6Modules()) {
+      if (features.has(Feature.MODULES)) {
         String previousModule = loadFlagsBuilder.get("module");
         if (previousModule != null && !previousModule.equals("es6")) {
           compiler.report(JSError.make(ModuleLoader.MODULE_CONFLICT, getName()));

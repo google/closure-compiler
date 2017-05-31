@@ -61,7 +61,7 @@ public final class Config {
     public static LanguageMode minimumRequiredFor(FeatureSet.Feature feature) {
       // relies on the LanguageMode enums being in the right order
       for (LanguageMode mode : LanguageMode.values()) {
-        if (mode.featureSet.contains(feature)) {
+        if (mode.featureSet.has(feature)) {
           return mode;
         }
       }

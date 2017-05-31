@@ -190,11 +190,11 @@ public class TranspilationPasses {
 
   /**
    * @param script The SCRIPT node representing a JS file
-   * @return If the file has at least ES6 features currently implemented in modern browsers.
+   * @return If the file has any features which are part of ES6 but not part of ES5.
    */
   static boolean isScriptEs6OrHigher(Node script) {
     FeatureSet features = (FeatureSet) script.getProp(Node.FEATURE_SET);
-    return features != null && features.contains(FeatureSet.ES6);
+    return features != null && !FeatureSet.ES5.contains(features);
   }
 
   /**

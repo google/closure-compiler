@@ -575,7 +575,7 @@ class IRFactory {
   JSDocInfo recordJsDoc(SourceRange location, JSDocInfo info) {
     if (info != null && info.hasTypeInformation()) {
       hasJsDocTypeAnnotations = true;
-      if (features.isTypeScript()) {
+      if (features.version().equals("ts")) {
         errorReporter.error("Can only have JSDoc or inline type annotations, not both",
             sourceName, lineno(location.start), charno(location.start));
       }
@@ -1500,7 +1500,7 @@ class IRFactory {
 
     private void maybeWarnKeywordProperty(Node node) {
       if (TokenStream.isKeyword(node.getString())) {
-        features = features.require(Feature.KEYWORDS_AS_PROPERTIES);
+        features = features.with(Feature.KEYWORDS_AS_PROPERTIES);
         if (config.languageMode == LanguageMode.ECMASCRIPT3) {
           errorReporter.warning(INVALID_ES3_PROP_NAME, sourceName,
               node.getLineno(), node.getCharno());
@@ -1512,11 +1512,11 @@ class IRFactory {
       String identifier = token.value;
       boolean isIdentifier = false;
       if (TokenStream.isKeyword(identifier)) {
-        features = features.require(Feature.ES3_KEYWORDS_AS_IDENTIFIERS);
+        features = features.with(Feature.ES3_KEYWORDS_AS_IDENTIFIERS);
         isIdentifier = config.languageMode == LanguageMode.ECMASCRIPT3;
       }
       if (reservedKeywords != null && reservedKeywords.contains(identifier)) {
-        features = features.require(Feature.KEYWORDS_AS_PROPERTIES);
+        features = features.with(Feature.KEYWORDS_AS_PROPERTIES);
         isIdentifier = config.languageMode == LanguageMode.ECMASCRIPT3;
       }
       if (isIdentifier) {
@@ -2033,7 +2033,7 @@ class IRFactory {
 
     /** Reports an illegal getter and returns true if the language mode is too low. */
     boolean maybeReportGetter(ParseTree node) {
-      features = features.require(Feature.GETTER);
+      features = features.with(Feature.GETTER);
       if (config.languageMode == LanguageMode.ECMASCRIPT3) {
         errorReporter.error(
             GETTER_ERROR_MESSAGE,
@@ -2046,7 +2046,7 @@ class IRFactory {
 
     /** Reports an illegal setter and returns true if the language mode is too low. */
     boolean maybeReportSetter(ParseTree node) {
-      features = features.require(Feature.SETTER);
+      features = features.with(Feature.SETTER);
       if (config.languageMode == LanguageMode.ECMASCRIPT3) {
         errorReporter.error(
             SETTER_ERROR_MESSAGE,
@@ -2108,8 +2108,8 @@ class IRFactory {
       Node body = newNode(Token.CLASS_MEMBERS);
       setSourceInfo(body, tree);
       for (ParseTree child : tree.elements) {
-        if (child.type == ParseTreeType.MEMBER_VARIABLE ||
-            child.type == ParseTreeType.COMPUTED_PROPERTY_MEMBER_VARIABLE) {
+        if (child.type == ParseTreeType.MEMBER_VARIABLE
+            || child.type == ParseTreeType.COMPUTED_PROPERTY_MEMBER_VARIABLE) {
           maybeWarnTypeSyntax(child, Feature.MEMBER_VARIABLE_IN_CLASS);
         }
         body.addChildToBack(transform(child));
@@ -2560,7 +2560,7 @@ class IRFactory {
     }
 
     void maybeWarnForFeature(ParseTree node, Feature feature) {
-      features = features.require(feature);
+      features = features.with(feature);
       if (!isSupportedForInputLanguageMode(feature)) {
 
         errorReporter.warning(
@@ -2601,7 +2601,7 @@ class IRFactory {
             lineno(node),
             charno(node));
       }
-      features = features.require(feature);
+      features = features.with(feature);
       recordTypeSyntax(node.location);
     }
 
@@ -2893,7 +2893,7 @@ class IRFactory {
           result.append('\u000B');
           break;
         case '\n':
-          features = features.require(Feature.STRING_CONTINUATION);
+          features = features.with(Feature.STRING_CONTINUATION);
           if (isEs5OrBetterMode()) {
             errorReporter.warning(STRING_CONTINUATION_WARNING,
                 sourceName,
@@ -2975,7 +2975,7 @@ class IRFactory {
   }
 
   boolean isSupportedForInputLanguageMode(Feature feature) {
-    return config.languageMode.featureSet.contains(feature);
+    return config.languageMode.featureSet.has(feature);
   }
 
   boolean isEs5OrBetterMode() {
@@ -3005,7 +3005,7 @@ class IRFactory {
           return Double.valueOf(value);
         case 'b':
         case 'B': {
-          features = features.require(Feature.BINARY_LITERALS);
+          features = features.with(Feature.BINARY_LITERALS);
           if (!isSupportedForInputLanguageMode(Feature.BINARY_LITERALS)) {
             errorReporter.warning(BINARY_NUMBER_LITERAL_WARNING,
                 sourceName,
@@ -3020,7 +3020,7 @@ class IRFactory {
         }
         case 'o':
         case 'O': {
-          features = features.require(Feature.OCTAL_LITERALS);
+          features = features.with(Feature.OCTAL_LITERALS);
           if (!isSupportedForInputLanguageMode(Feature.OCTAL_LITERALS)) {
             errorReporter.warning(OCTAL_NUMBER_LITERAL_WARNING,
                 sourceName,

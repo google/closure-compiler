@@ -3537,7 +3537,7 @@ public final class NodeUtil {
     if (isValidSimpleName(name)) {
       return true;
     } else {
-      return mode.contains(Feature.KEYWORDS_AS_PROPERTIES) && TokenStream.isKeyword(name);
+      return mode.has(Feature.KEYWORDS_AS_PROPERTIES) && TokenStream.isKeyword(name);
     }
   }
 
@@ -3974,7 +3974,7 @@ public final class NodeUtil {
   }
 
   /**
-   * @return The number of times the the predicate is true for the node
+   * @return The number of times the predicate is true for the node
    * or any of its descendants.
    */
   public static int getCount(

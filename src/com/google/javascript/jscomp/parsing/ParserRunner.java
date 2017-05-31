@@ -130,7 +130,7 @@ public final class ParserRunner {
       IRFactory factory =
           IRFactory.transformTree(tree, sourceFile, sourceString, config, errorReporter);
       root = factory.getResultNode();
-      features = features.require(factory.getFeatures());
+      features = features.union(factory.getFeatures());
       root.putProp(Node.FEATURE_SET, features);
 
       if (config.parseJsDocDocumentation.shouldParseDescriptions()) {
@@ -180,7 +180,7 @@ public final class ParserRunner {
     Parser p = new Parser(config, new Es6ErrorReporter(reporter, false), file);
     ProgramTree tree = p.parseProgram();
     StaticSourceFile simpleSourceFile = new SimpleSourceFile(sourcePath, false);
-    return IRFactory.detectFeatures(tree, simpleSourceFile, sourceString).require(p.getFeatures());
+    return IRFactory.detectFeatures(tree, simpleSourceFile, sourceString).union(p.getFeatures());
   }
 
   private static class Es6ErrorReporter

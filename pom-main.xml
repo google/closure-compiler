@@ -193,6 +193,7 @@
               <sources>
                 <source>src/com/google/javascript/rhino/testing</source>
                 <source>src/com/google/javascript/jscomp/testing</source>
+                <source>src/com/google/javascript/jscomp/parsing/parser/testing</source>
                 <source>src/com/google/javascript/refactoring/testing</source>
               </sources>
             </configuration>

@@ -38,6 +38,7 @@ import com.google.javascript.jscomp.deps.SortedDependencies.MissingProvideExcept
 import com.google.javascript.jscomp.parsing.Config;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.parsing.parser.trees.Comment;
 import com.google.javascript.jscomp.type.ChainableReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
@@ -2089,7 +2090,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       new Es6RewriteModules(this).processFile(root, forceRewrite);
     }
 
-    setFeatureSet(featureSet.withoutModules());
+    setFeatureSet(featureSet.without(Feature.MODULES));
   }
 
   /**

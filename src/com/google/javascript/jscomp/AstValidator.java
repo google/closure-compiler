@@ -1462,7 +1462,7 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateFeature(Feature feature, Node n) {
-    if (!compiler.getFeatureSet().contains(feature)) {
+    if (!compiler.getFeatureSet().has(feature)) {
       violation("AST should not contain " + feature, n);
     }
   }

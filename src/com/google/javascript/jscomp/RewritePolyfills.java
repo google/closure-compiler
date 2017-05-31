@@ -37,7 +37,7 @@ public class RewritePolyfills implements HotSwapCompilerPass {
 
   static final DiagnosticType INSUFFICIENT_OUTPUT_VERSION_ERROR = DiagnosticType.disabled(
       "JSC_INSUFFICIENT_OUTPUT_VERSION",
-      "Built-in ''{0}'' not supported in output version {1}: set --language_out to at least {2}");
+      "Built-in ''{0}'' not supported in output version {1}");
 
   /**
    * Represents a single polyfill: specifically, for a native symbol
@@ -245,8 +245,7 @@ public class RewritePolyfills implements HotSwapCompilerPass {
                 node,
                 INSUFFICIENT_OUTPUT_VERSION_ERROR,
                 name,
-                compiler.getOptions().getLanguageOut().toString(),
-                polyfill.polyfillVersion.toLanguageModeString());
+                compiler.getOptions().getLanguageOut().toString());
           }
           inject(polyfill);
 

@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.parsing.Config.StrictMode.SLOPPY;
 import static com.google.javascript.jscomp.parsing.Config.StrictMode.STRICT;
 import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
+import static com.google.javascript.jscomp.parsing.parser.testing.FeatureSetSubject.assertFS;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
@@ -1113,7 +1114,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testMethodInObjectLiteral() {
-    expectFeatures(Feature.EXTENDED_OBJECT_LITERALS);
+    expectFeatures(Feature.MEMBER_DECLARATIONS);
     testMethodInObjectLiteral("var a = {b() {}};");
     testMethodInObjectLiteral("var a = {b() { alert('b'); }};");
 
@@ -1502,7 +1503,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testObjectDestructuringVarWithInitializer() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    expectFeatures(Feature.DESTRUCTURING);
+    expectFeatures(Feature.DESTRUCTURING, Feature.DEFAULT_PARAMETERS);
     parse("var {x = 1} = foo();");
     parse("var {x: {y = 1}} = foo();");
     parse("var {x: y = 1} = foo();");
@@ -2372,20 +2373,32 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("while (i--) { module = module[i]; }");
   }
 
-  public void testKeywordsAsProperties() {
+  public void testGettersES3() {
+    mode = LanguageMode.ECMASCRIPT3;
+    strictMode = SLOPPY;
+
+    parseError("var x = {get x(){} };", IRFactory.GETTER_ERROR_MESSAGE);
+    parseError("var x = {get function(){} };", IRFactory.GETTER_ERROR_MESSAGE);
+    parseError("var x = {get 'function'(){} };", IRFactory.GETTER_ERROR_MESSAGE);
+    parseError("var x = {get 1(){} };", IRFactory.GETTER_ERROR_MESSAGE);
+  }
+
+  public void testSettersES3() {
+    mode = LanguageMode.ECMASCRIPT3;
+    strictMode = SLOPPY;
+
+    parseError("var x = {set function(a){} };", IRFactory.SETTER_ERROR_MESSAGE);
+    parseError("var x = {set 'function'(a){} };", IRFactory.SETTER_ERROR_MESSAGE);
+    parseError("var x = {set 1(a){} };", IRFactory.SETTER_ERROR_MESSAGE);
+  }
+
+  public void testKeywordsAsProperties1() {
     expectFeatures(Feature.KEYWORDS_AS_PROPERTIES);
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
 
     parseWarning("var x = {function: 1};", IRFactory.INVALID_ES3_PROP_NAME);
     parseWarning("x.function;", IRFactory.INVALID_ES3_PROP_NAME);
-    parseError("var x = {get x(){} };", IRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {get function(){} };", IRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {get 'function'(){} };", IRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {get 1(){} };", IRFactory.GETTER_ERROR_MESSAGE);
-    parseError("var x = {set function(a){} };", IRFactory.SETTER_ERROR_MESSAGE);
-    parseError("var x = {set 'function'(a){} };", IRFactory.SETTER_ERROR_MESSAGE);
-    parseError("var x = {set 1(a){} };", IRFactory.SETTER_ERROR_MESSAGE);
     parseWarning("var x = {class: 1};", IRFactory.INVALID_ES3_PROP_NAME);
     expectFeatures();
     parse("var x = {'class': 1};");
@@ -2407,11 +2420,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("var x = {function: 1};");
     parse("x.function;");
     parse("var x = {get function(){} };");
-    parse("var x = {get 'function'(){} };");
-    parse("var x = {get 1(){} };");
     parse("var x = {set function(a){} };");
-    parse("var x = {set 'function'(a){} };");
-    parse("var x = {set 1(a){} };");
     parse("var x = {class: 1};");
     parse("x.class;");
     expectFeatures();
@@ -2429,11 +2438,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("var x = {function: 1};");
     parse("x.function;");
     parse("var x = {get function(){} };");
-    parse("var x = {get 'function'(){} };");
-    parse("var x = {get 1(){} };");
     parse("var x = {set function(a){} };");
-    parse("var x = {set 'function'(a){} };");
-    parse("var x = {set 1(a){} };");
     parse("var x = {class: 1};");
     parse("x.class;");
     expectFeatures();
@@ -2444,6 +2449,25 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.KEYWORDS_AS_PROPERTIES);
     parse("x.prototype.catch = function() {};");
     parse("x().catch();");
+  }
+
+  public void testKeywordsAsProperties2() {
+    mode = LanguageMode.ECMASCRIPT5;
+
+    parse("var x = {get 'function'(){} };");
+    parse("var x = {get 1(){} };");
+    parse("var x = {set 'function'(a){} };");
+    parse("var x = {set 1(a){} };");
+  }
+
+  public void testKeywordsAsProperties3() {
+    mode = LanguageMode.ECMASCRIPT5;
+    strictMode = STRICT;
+
+    parse("var x = {get 'function'(){} };");
+    parse("var x = {get 1(){} };");
+    parse("var x = {set 'function'(a){} };");
+    parse("var x = {set 1(a){} };");
   }
 
   public void testKeywordsAsPropertiesInExterns1() {
@@ -3003,7 +3027,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     for (LanguageMode m : LanguageMode.values()) {
       mode = m;
       strictMode = (m == LanguageMode.ECMASCRIPT3) ? SLOPPY : STRICT;
-      if (m.featureSet.contains(Feature.ASYNC_FUNCTIONS)) {
+      if (m.featureSet.has(Feature.ASYNC_FUNCTIONS)) {
         parse(asyncFunctionExpressionSource);
         parse(asyncFunctionDeclarationSource);
       } else {
@@ -3019,7 +3043,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testAsyncNamedFunction() {
     mode = LanguageMode.ECMASCRIPT6;
-    expectFeatures(Feature.CLASSES, Feature.CONST_DECLARATIONS);
+    expectFeatures(
+        Feature.CLASSES,
+        Feature.MEMBER_DECLARATIONS,
+        Feature.CONST_DECLARATIONS,
+        Feature.LET_DECLARATIONS);
     parse(LINE_JOINER.join(
         "class C {",
         "  async(x) { return x; }",
@@ -3048,9 +3076,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     for (LanguageMode m : LanguageMode.values()) {
       mode = m;
       strictMode = (m == LanguageMode.ECMASCRIPT3) ? SLOPPY : STRICT;
-      if (m.featureSet.contains(Feature.ASYNC_FUNCTIONS)) {
+      if (m.featureSet.has(Feature.ASYNC_FUNCTIONS)) {
         parse(arrowFunctionSource);
-      } else if (m.featureSet.contains(Feature.ARROW_FUNCTIONS)) {
+      } else if (m.featureSet.has(Feature.ARROW_FUNCTIONS)) {
         parseWarning(
             arrowFunctionSource,
             requiresLanguageModeMessage(LanguageMode.ECMASCRIPT8, Feature.ASYNC_FUNCTIONS));
@@ -3230,7 +3258,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.DESTRUCTURING);
     parseError("for ({a: b} = foo() in c) d;", INVALID_ASSIGNMENT_TARGET);
     parseError("for (var {a: b} = foo() in c) d;", "for-in statement may not have initializer");
-    expectFeatures(Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
+    expectFeatures(Feature.DESTRUCTURING);
     parseError("for (let {a: b} = foo() in c) d;", "for-in statement may not have initializer");
     expectFeatures(Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
     parseError("for (const {a: b} = foo() in c) d;", "for-in statement may not have initializer");
@@ -3263,11 +3291,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     parseError("for(a=1 of b) c;", INVALID_ASSIGNMENT_TARGET);
     parseError("for(var a=1 of b) c;", "for-of statement may not have initializer");
-
-    expectFeatures(Feature.FOR_OF, Feature.LET_DECLARATIONS);
     parseError("for(let a=1 of b) c;", "for-of statement may not have initializer");
-
-    expectFeatures(Feature.FOR_OF, Feature.CONST_DECLARATIONS);
     parseError("for(const a=1 of b) c;", "for-of statement may not have initializer");
   }
 
@@ -3277,12 +3301,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     parseError("for(var a, b of c) d;",
         "for-of statement may not have more than one variable declaration");
-
-    expectFeatures(Feature.FOR_OF, Feature.LET_DECLARATIONS);
     parseError("for(let a, b of c) d;",
         "for-of statement may not have more than one variable declaration");
-
-    expectFeatures(Feature.FOR_OF, Feature.CONST_DECLARATIONS);
     parseError("for(const a, b of c) d;",
         "for-of statement may not have more than one variable declaration");
   }
@@ -3371,19 +3391,16 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
 
-    expectFeatures(Feature.FOR_OF, Feature.DESTRUCTURING);
     parseError("for({x}=a of b) c;", INVALID_ASSIGNMENT_TARGET);
     parseError("for({x: y}=a of b) c;", INVALID_ASSIGNMENT_TARGET);
     parseError("for([x, y]=a of b) c;", INVALID_ASSIGNMENT_TARGET);
     parseError("for([x, ...y]=a of b) c;", INVALID_ASSIGNMENT_TARGET);
 
-    expectFeatures(Feature.FOR_OF, Feature.DESTRUCTURING, Feature.LET_DECLARATIONS);
     parseError("for(let {x}=a of b) c;", "for-of statement may not have initializer");
     parseError("for(let {x: y}=a of b) c;", "for-of statement may not have initializer");
     parseError("for(let [x, y]=a of b) c;", "for-of statement may not have initializer");
     parseError("for(let [x, ...y]=a of b) c;", "for-of statement may not have initializer");
 
-    expectFeatures(Feature.FOR_OF, Feature.DESTRUCTURING, Feature.CONST_DECLARATIONS);
     parseError("for(const {x}=a of b) c;", "for-of statement may not have initializer");
     parseError("for(const {x: y}=a of b) c;", "for-of statement may not have initializer");
     parseError("for(const [x, y]=a of b) c;", "for-of statement may not have initializer");
@@ -3609,7 +3626,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     // check expected features if specified
     if (expectedFeatures != null) {
-      assertThat(result.features).isEqualTo(expectedFeatures);
+      assertFS(result.features).contains(expectedFeatures);
     }
 
     // verifying that all errors were seen
@@ -3638,7 +3655,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     // check expected features if specified
     if (expectedFeatures != null) {
-      assertThat(result.features).isEqualTo(expectedFeatures);
+      assertFS(result.features).contains(expectedFeatures);
     }
 
     // verifying that all warnings were seen
@@ -3671,10 +3688,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   /** Sets expectedFeatures based on the list of features. */
   private void expectFeatures(Feature... features) {
-    expectedFeatures = FeatureSet.ES3;
-    for (Feature feature : features) {
-      expectedFeatures = expectedFeatures.require(feature);
-    }
+    expectedFeatures = FeatureSet.ES3.with(features);
   }
 
   private static class ParserResult {
