@@ -436,12 +436,15 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         "export /** @const */ var foo = {}; /** @const */ foo.bar = {};");
 
     testDts(
-        "export declare namespace foo.bar { export var x; }",
-        "export /** @const */ var foo = {}; /** @const */ foo.bar = {}; foo.bar.x;");
-
-    testDts(
         "export declare namespace foo.bar {} export declare namespace foo.bar {}",
         "export /** @const */ var foo = {}; /** @const */ foo.bar = {};");
+  }
+
+  public void disable_testAmbientNamespace() {
+    // TODO(blickly): Reenable these once module rewriting happens after Typescript transpilation.
+    testDts(
+        "export declare namespace foo.bar { export var x; }",
+        "export /** @const */ var foo = {}; /** @const */ foo.bar = {}; foo.bar.x;");
 
     testDts(
         "export declare namespace foo { var i, j, k; }",
@@ -502,7 +505,8 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         Es6TypedToEs6Converter.NON_AMBIENT_NAMESPACE_NOT_SUPPORTED);
   }
 
-  public void testExportDeclarationInAmbientNamespace() {
+  public void disable_testExportDeclarationInAmbientNamespace() {
+    // TODO(blickly): Reenable these once module rewriting happens after Typescript transpilation.
     testDts(
         "declare namespace foo { export var i, j, k; }",
         "/** @const */ var foo = {}; foo.i; foo.j; foo.k;");
