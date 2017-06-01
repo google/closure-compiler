@@ -751,6 +751,24 @@ ImageData.prototype.width;
 ImageData.prototype.height;
 
 /**
+ * @see https://www.w3.org/TR/html51/webappapis.html#webappapis-images
+ * @interface
+ */
+function ImageBitmap() {}
+
+/**
+ * @type {number}
+ * @const
+ */
+ImageBitmap.prototype.width;
+
+/**
+ * @type {number}
+ * @const
+ */
+ImageBitmap.prototype.height;
+
+/**
  * @constructor
  */
 function ClientInformation() {}

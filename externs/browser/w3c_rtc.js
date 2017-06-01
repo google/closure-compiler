@@ -54,6 +54,198 @@ SourceInfo.prototype.facing;
 
 /**
  * @interface
+ * @see https://w3c.github.io/mediacapture-image/#mediasettingsrange-section
+ */
+function MediaSettingsRange() {}
+
+/**
+ * @type {number}
+ * @const
+ */
+MediaSettingsRange.prototype.max;
+
+/**
+ * @type {number}
+ * @const
+ */
+MediaSettingsRange.prototype.min;
+
+/**
+ * @type {number}
+ * @const
+ */
+MediaSettingsRange.prototype.step;
+
+/**
+ * @interface
+ * @see https://www.w3.org/TR/mediacapture-streams/#idl-def-MediaTrackCapabilities
+ * @see https://w3c.github.io/mediacapture-image/#mediatrackcapabilities-section
+ */
+function MediaTrackCapabilities() {}
+
+/** @type {number} */
+MediaTrackCapabilities.prototype.width;
+
+/** @type {number} */
+MediaTrackCapabilities.prototype.height;
+
+/** @type {number} */
+MediaTrackCapabilities.prototype.aspectRatio;
+
+/** @type {number} */
+MediaTrackCapabilities.prototype.frameRate;
+
+/** @type {!Array<string>} */
+MediaTrackCapabilities.prototype.facingMode;
+
+/** @type {number} */
+MediaTrackCapabilities.prototype.volume;
+
+/** @type {number} */
+MediaTrackCapabilities.prototype.sampleRate;
+
+/** @type {number} */
+MediaTrackCapabilities.prototype.sampleSize;
+
+/** @type {!Array<boolean>} */
+MediaTrackCapabilities.prototype.echoCancellation;
+
+/** @type {number} */
+MediaTrackCapabilities.prototype.latency;
+
+/** @type {number} */
+MediaTrackCapabilities.prototype.channelCount;
+
+/** @type {string} */
+MediaTrackCapabilities.prototype.deviceId;
+
+/** @type {string} */
+MediaTrackCapabilities.prototype.groupId;
+
+/** @type {!Array<string>} */
+MediaTrackCapabilities.prototype.whiteBalanceMode;
+
+/** @type {!Array<string>} */
+MediaTrackCapabilities.prototype.exposureMode;
+
+/** @type {!Array<string>} */
+MediaTrackCapabilities.prototype.focusMode;
+
+/** @type {!MediaSettingsRange} */
+MediaTrackCapabilities.prototype.exposureCompensation;
+
+/** @type {!MediaSettingsRange} */
+MediaTrackCapabilities.prototype.colorTemperature
+
+/** @type {!MediaSettingsRange} */
+MediaTrackCapabilities.prototype.iso
+
+/** @type {!MediaSettingsRange} */
+MediaTrackCapabilities.prototype.brightness
+
+/** @type {!MediaSettingsRange} */
+MediaTrackCapabilities.prototype.contrast
+
+/** @type {!MediaSettingsRange} */
+MediaTrackCapabilities.prototype.saturation
+
+/** @type {!MediaSettingsRange} */
+MediaTrackCapabilities.prototype.sharpness
+
+/** @type {!MediaSettingsRange} */
+MediaTrackCapabilities.prototype.zoom
+
+/** @type {boolean} */
+MediaTrackCapabilities.prototype.torch
+
+/**
+ * @interface
+ * @see https://www.w3.org/TR/mediacapture-streams/#media-track-settings
+ * @see https://w3c.github.io/mediacapture-image/#mediatracksettings-section
+ */
+function MediaTrackSettings() {}
+
+/** @type {number} */
+MediaTrackSettings.prototype.width;
+
+/** @type {number} */
+MediaTrackSettings.prototype.height;
+
+/** @type {number} */
+MediaTrackSettings.prototype.aspectRatio;
+
+/** @type {number} */
+MediaTrackSettings.prototype.frameRate;
+
+/** @type {string} */
+MediaTrackSettings.prototype.facingMode;
+
+/** @type {number} */
+MediaTrackSettings.prototype.volume;
+
+/** @type {number} */
+MediaTrackSettings.prototype.sampleRate;
+
+/** @type {number} */
+MediaTrackSettings.prototype.sampleSize;
+
+/** @type {boolean} */
+MediaTrackSettings.prototype.echoCancellation;
+
+/** @type {number} */
+MediaTrackSettings.prototype.latency;
+
+/** @type {number} */
+MediaTrackSettings.prototype.channelCount;
+
+/** @type {string} */
+MediaTrackSettings.prototype.deviceId;
+
+/** @type {string} */
+MediaTrackSettings.prototype.groupId;
+
+/** @type {string} */
+MediaTrackSettings.prototype.whiteBalanceMode;
+
+/** @type {string} */
+MediaTrackSettings.prototype.exposureMode;
+
+/** @type {string} */
+MediaTrackSettings.prototype.focusMode;
+
+/** @type {!Array<{x: number, y: number}>} */
+MediaTrackSettings.prototype.pointsOfInterest;
+
+/** @type {number} */
+MediaTrackSettings.prototype.exposureCompensation;
+
+/** @type {number} */
+MediaTrackSettings.prototype.colorTemperature
+
+/** @type {number} */
+MediaTrackSettings.prototype.iso
+
+/** @type {number} */
+MediaTrackSettings.prototype.brightness
+
+/** @type {number} */
+MediaTrackSettings.prototype.contrast
+
+/** @type {number} */
+MediaTrackSettings.prototype.saturation
+
+/** @type {number} */
+MediaTrackSettings.prototype.sharpness
+
+/** @type {number} */
+MediaTrackSettings.prototype.zoom
+
+/** @type {boolean} */
+MediaTrackSettings.prototype.torch
+
+
+/**
+ * @interface
  * @extends {EventTarget}
  * @see https://www.w3.org/TR/mediacapture-streams/#mediastreamtrack
  */
@@ -153,6 +345,15 @@ MediaStreamTrack.prototype.clone = function() {};
 
 /** @return {void} */
 MediaStreamTrack.prototype.stop = function() {};
+
+/** @return {!MediaTrackCapabilities} */
+MediaStreamTrack.prototype.getCapabilities = function() {};
+
+/** @return {!MediaTrackConstraints} */
+MediaStreamTrack.prototype.getConstraints = function() {};
+
+/** @return {!MediaTrackSettings} */
+MediaStreamTrack.prototype.getSettings = function() {};
 
 /**
  * @typedef {{track: MediaStreamTrack}}
@@ -581,6 +782,214 @@ function MediaStreamEvent(type, eventInitDict) {}
  * @const
  */
 MediaStreamEvent.prototype.stream;
+
+/**
+ * @record
+ * @see https://www.w3.org/TR/mediastream-recording/#dictdef-mediarecorderoptions
+ */
+function MediaRecorderOptions() {}
+
+/** @type {(string|undefined)} */
+MediaRecorderOptions.prototype.mimeType
+
+/** @type {(number|undefined)} */
+MediaRecorderOptions.prototype.audioBitsPerSecond
+
+/** @type {(number|undefined)} */
+MediaRecorderOptions.prototype.videoBitsPerSecond
+
+/** @type {(number|undefined)} */
+MediaRecorderOptions.prototype.bitsPerSecond
+
+/**
+ * @see https://www.w3.org/TR/mediastream-recording/#mediarecorder-api
+ * @param {!MediaStream} stream
+ * @param {MediaRecorderOptions=} options
+ * @implements {EventTarget}
+ * @constructor
+ */
+function MediaRecorder(stream, options) {}
+
+/**
+ * @override
+ */
+MediaRecorder.prototype.addEventListener = function(type, listener,
+    opt_useCapture) {};
+
+/**
+ * @override
+ */
+MediaRecorder.prototype.removeEventListener = function(type, listener,
+    opt_useCapture) {};
+
+/**
+ * @override
+ * @return {boolean}
+ */
+MediaRecorder.prototype.dispatchEvent = function(evt) {};
+
+/**
+ * @type {!MediaStream}
+ */
+MediaRecorder.prototype.stream;
+
+/**
+ * @type {string}
+ */
+MediaRecorder.prototype.mimeType;
+
+/**
+ * @type {string}
+ */
+MediaRecorder.prototype.state;
+
+/**
+ * @type {(function(!Event)|undefined)}
+ */
+MediaRecorder.prototype.onstart;
+
+/**
+ * @type {(function(!Event)|undefined)}
+ */
+MediaRecorder.prototype.onstop;
+
+/**
+ * @type {(function(!Event)|undefined)}
+ */
+MediaRecorder.prototype.ondataavailable;
+
+/**
+ * @type {(function(!Event)|undefined)}
+ */
+MediaRecorder.prototype.onpause;
+
+/**
+ * @type {(function(!Event)|undefined)}
+ */
+MediaRecorder.prototype.onresume;
+
+/**
+ * @type {(function(!Event)|undefined)}
+ */
+MediaRecorder.prototype.onerror;
+
+/**
+ * @type {number}
+ */
+MediaRecorder.prototype.videoBitsPerSecond;
+
+/**
+ * @type {number}
+ */
+MediaRecorder.prototype.audioBitsPerSecond;
+
+/**
+ * @param {number=} timeslice
+ */
+MediaRecorder.prototype.start = function(timeslice) {};
+
+/** @return {void} */
+MediaRecorder.prototype.stop = function() {};
+
+/** @return {void} */
+MediaRecorder.prototype.pause = function() {};
+
+/** @return {void} */
+MediaRecorder.prototype.resume = function() {};
+
+/** @return {void} */
+MediaRecorder.prototype.requestData = function() {};
+
+/**
+ * @param {string} type
+ * @return {boolean}
+ */
+MediaRecorder.isTypeSupported = function(type) {};
+
+/**
+ * @interface
+ * @see https://w3c.github.io/mediacapture-image/##photosettings-section
+ */
+function PhotoSettings() {}
+
+/**
+ * @type {string}
+ */
+PhotoSettings.prototype.fillLightMode;
+
+/**
+ * @type {number}
+ */
+PhotoSettings.prototype.imageHeight;
+
+/**
+ * @type {number}
+ */
+PhotoSettings.prototype.imageWidth;
+
+/**
+ * @type {boolean}
+ */
+PhotoSettings.prototype.redEyeReduction;
+
+/**
+ * @interface
+ * @see https://w3c.github.io/mediacapture-image/##photocapabilities-section
+ */
+function PhotoCapabilities() {}
+
+/**
+ * @type {string}
+ * @const
+ */
+PhotoCapabilities.prototype.redEyeReduction;
+
+/**
+ * @type {!MediaSettingsRange}
+ * @const
+ */
+PhotoCapabilities.prototype.imageHeight;
+
+/**
+ * @type {!MediaSettingsRange}
+ * @const
+ */
+PhotoCapabilities.prototype.imageWidth;
+
+/**
+ * @type {!Array<!string>}
+ * @const
+ */
+PhotoCapabilities.prototype.fillLightMode;
+
+/**
+ * @see https://w3c.github.io/mediacapture-image/
+ * @param {!MediaStreamTrack} videoTrack
+ * @constructor
+ */
+function ImageCapture(videoTrack) {}
+
+/**
+ * @param {!PhotoSettings=} photoSettings
+ * @return {!Promise<!Blob>}
+ */
+ImageCapture.prototype.takePhoto = function(photoSettings) {};
+
+/**
+ * @return {!Promise<!PhotoCapabilities>}
+ */
+ImageCapture.prototype.getPhotoCapabilities = function() {};
+
+/**
+ * @return {!Promise<!ImageBitmap>}
+ */
+ImageCapture.prototype.grabFrame = function() {};
+
+/**
+ * @type {!MediaStreamTrack}
+ * @const
+ */
+ImageCapture.prototype.track;
 
 /**
  * @see https://www.w3.org/TR/webrtc/#rtctrackevent
