@@ -42,7 +42,11 @@ public final class CheckRegExpTest extends CompilerTestCase {
   }
 
   private void testReference(String code, boolean expected) {
-    testSame(code, (expected) ? CheckRegExp.REGEXP_REFERENCE : null);
+    if (expected) {
+      testWarning(code, CheckRegExp.REGEXP_REFERENCE);
+    } else {
+      testSame(code);
+    }
     assertEquals(expected, last.isGlobalRegExpPropertiesUsed());
   }
 
@@ -115,6 +119,6 @@ public final class CheckRegExpTest extends CompilerTestCase {
   }
 
   public void testInvalidRange() {
-    testSame("\"asdf\".match(/[z-a]/)", CheckRegExp.MALFORMED_REGEXP);
+    this.testWarning("\"asdf\".match(/[z-a]/)", CheckRegExp.MALFORMED_REGEXP);
   }
 }

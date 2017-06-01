@@ -528,12 +528,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testPropertyOnUnknownSuperClass1() {
-    testSame(
-        "var goog = this.foo();" +
-        "/** @constructor \n * @extends {goog.Unknown} */" +
-        "function Foo() {}" +
-        "Foo.prototype.bar = 1;" +
-        "var x = new Foo();",
+    testWarning(
+        "var goog = this.foo();"
+            + "/** @constructor \n * @extends {goog.Unknown} */"
+            + "function Foo() {}"
+            + "Foo.prototype.bar = 1;"
+            + "var x = new Foo();",
         RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertEquals("Foo", x.toString());
@@ -543,12 +543,12 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testPropertyOnUnknownSuperClass2() {
-    testSame(
-        "var goog = this.foo();" +
-        "/** @constructor \n * @extends {goog.Unknown} */" +
-        "function Foo() {}" +
-        "Foo.prototype = {bar: 1};" +
-        "var x = new Foo();",
+    testWarning(
+        "var goog = this.foo();"
+            + "/** @constructor \n * @extends {goog.Unknown} */"
+            + "function Foo() {}"
+            + "Foo.prototype = {bar: 1};"
+            + "var x = new Foo();",
         RhinoErrorReporter.UNRECOGNIZED_TYPE_ERROR);
     ObjectType x = (ObjectType) findNameType("x", globalScope);
     assertEquals("Foo", x.toString());
@@ -1004,14 +1004,13 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testBadObjectLiteralCast1() {
-    testSame("/** @constructor */ A.B = function() {}\n" +
-             "goog.reflect.object(A.B, 1)",
-             ClosureCodingConvention.OBJECTLIT_EXPECTED);
+    testWarning(
+        "/** @constructor */ A.B = function() {}\n" + "goog.reflect.object(A.B, 1)",
+        ClosureCodingConvention.OBJECTLIT_EXPECTED);
   }
 
   public void testBadObjectLiteralCast2() {
-    testSame("goog.reflect.object(A.B, {})",
-             TypedScopeCreator.CONSTRUCTOR_EXPECTED);
+    testWarning("goog.reflect.object(A.B, {})", TypedScopeCreator.CONSTRUCTOR_EXPECTED);
   }
 
   public void testConstructorNode() {
@@ -1749,18 +1748,17 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
 
   public void testDuplicateExternProperty1() {
     testSame(
-        "/** @constructor */ function Foo() {}" +
-        "Foo.prototype.bar;" +
-        "/** @type {number} */ Foo.prototype.bar; var x = (new Foo).bar;",
-        null);
+        "/** @constructor */ function Foo() {}"
+            + "Foo.prototype.bar;"
+            + "/** @type {number} */ Foo.prototype.bar; var x = (new Foo).bar;");
     assertEquals("number", findNameType("x", globalScope).toString());
   }
 
   public void testDuplicateExternProperty2() {
     testSame(
-        "/** @constructor */ function Foo() {}" +
-        "/** @type {number} */ Foo.prototype.bar;" +
-        "Foo.prototype.bar; var x = (new Foo).bar;", null);
+        "/** @constructor */ function Foo() {}"
+            + "/** @type {number} */ Foo.prototype.bar;"
+            + "Foo.prototype.bar; var x = (new Foo).bar;");
     assertEquals("number", findNameType("x", globalScope).toString());
   }
 
@@ -2048,19 +2046,19 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   public void testBadCtorInit1() throws Exception {
-    testSame("/** @constructor */ var f;", CTOR_INITIALIZER);
+    testWarning("/** @constructor */ var f;", CTOR_INITIALIZER);
   }
 
   public void testBadCtorInit2() throws Exception {
-    testSame("var x = {}; /** @constructor */ x.f;", CTOR_INITIALIZER);
+    testWarning("var x = {}; /** @constructor */ x.f;", CTOR_INITIALIZER);
   }
 
   public void testBadIfaceInit1() throws Exception {
-    testSame("/** @interface */ var f;", IFACE_INITIALIZER);
+    testWarning("/** @interface */ var f;", IFACE_INITIALIZER);
   }
 
   public void testBadIfaceInit2() throws Exception {
-    testSame("var x = {}; /** @interface */ x.f;", IFACE_INITIALIZER);
+    testWarning("var x = {}; /** @interface */ x.f;", IFACE_INITIALIZER);
   }
 
   public void testDeclaredCatchExpression1() {

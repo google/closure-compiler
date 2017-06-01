@@ -112,19 +112,14 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  error_message: 'eval is not allowed'\n" +
         "}";
 
-    testSame(
-        "eval()",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning("eval()", CheckConformance.CONFORMANCE_VIOLATION);
 
-    testSame(
-        "Function.prototype.name; eval.name.length",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(
+        "Function.prototype.name; eval.name.length", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
   public void testViolation2() {
-    testSame(
-        "function f() { arguments.callee }",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning("function f() { arguments.callee }", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
   public void testNotViolation1() {
@@ -160,20 +155,16 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   }
 
   public void testMaybeViolation1() {
-    testSame(
-        "function f() { y.callee }",
-        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
+    testWarning("function f() { y.callee }", CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 
-    testSame(
-        "function f() { new Foo().callee }",
-        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
+    testWarning(
+        "function f() { new Foo().callee }", CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 
-    testSame(
-        "function f() { new Object().callee }",
-        CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
+    testWarning(
+        "function f() { new Object().callee }", CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 
     // NTI warns since "callee" doesn't exist on *
-    testSame(
+    testWarning(
         "/** @suppress {newCheckTypes} */ function f() { /** @type {*} */ var x; x.callee }",
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 
@@ -286,7 +277,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "}";
 
     testSame("f instanceof Function");
-    testSame("new Function(str);", CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning("new Function(str);", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
   public void testInferredConstCheck() {
@@ -732,9 +723,8 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame(
         declarations + "var d = new D(); d.p = 'boo';");
 
-    testSame(
-        declarations + "var c = new C(); c.p = 'boo';",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(
+        declarations + "var c = new C(); c.p = 'boo';", CheckConformance.CONFORMANCE_VIOLATION);
 
     testSame(
         declarations + "var c = new C(); var foo = c.p;");
@@ -742,9 +732,8 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame(
         declarations + "var c = new C(); var foo = 'x' + c.p;");
 
-    testSame(
-        declarations + "var c = new C(); c['p'] = 'boo';",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(
+        declarations + "var c = new C(); c['p'] = 'boo';", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
   public void testBannedPropertyWriteExtern() {
@@ -793,7 +782,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame(declarations + "var c = new C(); c.p = 'boo';");
     testSame(declarations + "var c = new C(); c.p = 'foo' + 'bar';");
 
-    testSame(
+    testWarning(
         declarations + "var boo = 'boo'; var c = new C(); c.p = boo;",
         CheckConformance.CONFORMANCE_VIOLATION);
   }
@@ -821,24 +810,21 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame(
         declarations + "var c = new C(); c.p = 'boo';");
 
-    testSame(
-        declarations + "var c = new C(); use(c.p);",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(
+        declarations + "var c = new C(); use(c.p);", CheckConformance.CONFORMANCE_VIOLATION);
 
-    testSame(
-        declarations + "var c = new C(); var foo = c.p;",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(
+        declarations + "var c = new C(); var foo = c.p;", CheckConformance.CONFORMANCE_VIOLATION);
 
-    testSame(
+    testWarning(
         declarations + "var c = new C(); var foo = 'x' + c.p;",
         CheckConformance.CONFORMANCE_VIOLATION);
 
     testSame(
         declarations + "var c = new C(); c['p'] = 'boo';");
 
-    testSame(
-        declarations + "var c = new C(); use(c['p']);",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(
+        declarations + "var c = new C(); use(c['p']);", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
   public void testRestrictedCall1() {
@@ -857,16 +843,13 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame(
         code + "new C().m(1);");
 
-    testSame(
-        code + "new C().m('str');",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(code + "new C().m('str');", CheckConformance.CONFORMANCE_VIOLATION);
 
     testSame(
         code + "new C().m.call(new C(), 1);");
 
-    testSame(
-        code + "new C().m.call(new C(), 'str');",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(
+        code + "new C().m.call(new C(), 'str');", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
   public void testRestrictedCall2() {
@@ -885,16 +868,12 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame(
         code + "C.m(1);");
 
-    testSame(
-        code + "C.m('str');",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(code + "C.m('str');", CheckConformance.CONFORMANCE_VIOLATION);
 
     testSame(
         code + "C.m.call(this, 1);");
 
-    testSame(
-        code + "C.m.call(this, 'str');",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(code + "C.m.call(this, 'str');", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
   public void testRestrictedCall3() {
@@ -911,17 +890,11 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testSame(
         code + "new C(1);");
 
-    testSame(
-        code + "new C('str');",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(code + "new C('str');", CheckConformance.CONFORMANCE_VIOLATION);
 
-    testSame(
-        code + "new C(1, 1);",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(code + "new C(1, 1);", CheckConformance.CONFORMANCE_VIOLATION);
 
-    testSame(
-        code + "new C();",
-        CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(code + "new C();", CheckConformance.CONFORMANCE_VIOLATION);
   }
 
   public void testRestrictedCall4() {
@@ -959,8 +932,8 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         + "var maybeB = cond ? new Base() : null;\n"
         + "var maybeS = cond ? new Sub() : null;\n";
 
-    testSame(code + "b.m(1)", CheckConformance.CONFORMANCE_VIOLATION);
-    testSame(code + "maybeB.m(1)", CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(code + "b.m(1)", CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(code + "maybeB.m(1)", CheckConformance.CONFORMANCE_VIOLATION);
     testSame(code + "s.m(1)");
     testSame(code + "maybeS.m(1)");
   }
@@ -983,8 +956,8 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         + "var maybeB = cond ? new Base() : null;\n"
         + "var maybeS = cond ? new Sub() : null;";
 
-    testSame(code + "b.m.call(b, 1)", CheckConformance.CONFORMANCE_VIOLATION);
-    testSame(code + "b.m.call(maybeB, 1)", CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(code + "b.m.call(b, 1)", CheckConformance.CONFORMANCE_VIOLATION);
+    testWarning(code + "b.m.call(maybeB, 1)", CheckConformance.CONFORMANCE_VIOLATION);
     testSame(code + "b.m.call(s, 1)");
     testSame(code + "b.m.call(maybeS, 1)");
   }

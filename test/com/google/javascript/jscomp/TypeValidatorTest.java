@@ -55,17 +55,16 @@ public final class TypeValidatorTest extends CompilerTestCase {
   }
 
   public void testBasicMismatch() throws Exception {
-    testSame("/** @param {number} x */ function f(x) {} f('a');",
-        TYPE_MISMATCH_WARNING);
+    testWarning("/** @param {number} x */ function f(x) {} f('a');", TYPE_MISMATCH_WARNING);
     assertMismatches(ImmutableList.of(fromNatives(STRING_TYPE, NUMBER_TYPE)));
   }
 
   public void testFunctionMismatch() throws Exception {
-    testSame(
-        "/** \n" +
-        " * @param {function(string): number} x \n" +
-        " * @return {function(boolean): string} \n" +
-        " */ function f(x) { return x; }",
+    testWarning(
+        "/** \n"
+            + " * @param {function(string): number} x \n"
+            + " * @return {function(boolean): string} \n"
+            + " */ function f(x) { return x; }",
         TYPE_MISMATCH_WARNING);
 
     JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
@@ -83,11 +82,11 @@ public final class TypeValidatorTest extends CompilerTestCase {
   }
 
   public void testFunctionMismatch2() throws Exception {
-    testSame(
-        "/** \n" +
-        " * @param {function(string): number} x \n" +
-        " * @return {function(boolean): number} \n" +
-        " */ function f(x) { return x; }",
+    testWarning(
+        "/** \n"
+            + " * @param {function(string): number} x \n"
+            + " * @return {function(boolean): number} \n"
+            + " */ function f(x) { return x; }",
         TYPE_MISMATCH_WARNING);
 
     JSTypeRegistry registry = getLastCompiler().getTypeRegistry();
@@ -181,23 +180,25 @@ public final class TypeValidatorTest extends CompilerTestCase {
   }
 
   public void testNullUndefined() {
-    testSame("/** @param {string} x */ function f(x) {}\n" +
-             "f(/** @type {string|null|undefined} */ ('a'));",
-             TYPE_MISMATCH_WARNING);
+    testWarning(
+        "/** @param {string} x */ function f(x) {}\n"
+            + "f(/** @type {string|null|undefined} */ ('a'));",
+        TYPE_MISMATCH_WARNING);
     assertMismatches(Collections.<TypeMismatch>emptyList());
   }
 
   public void testSubclass() {
-    testSame("/** @constructor */\n"  +
-             "function Super() {}\n" +
-             "/**\n" +
-             " * @constructor\n" +
-             " * @extends {Super}\n" +
-             " */\n" +
-             "function Sub() {}\n" +
-             "/** @param {Sub} x */ function f(x) {}\n" +
-             "f(/** @type {Super} */ (new Sub));",
-             TYPE_MISMATCH_WARNING);
+    testWarning(
+        "/** @constructor */\n"
+            + "function Super() {}\n"
+            + "/**\n"
+            + " * @constructor\n"
+            + " * @extends {Super}\n"
+            + " */\n"
+            + "function Sub() {}\n"
+            + "/** @param {Sub} x */ function f(x) {}\n"
+            + "f(/** @type {Super} */ (new Sub));",
+        TYPE_MISMATCH_WARNING);
     assertMismatches(Collections.<TypeMismatch>emptyList());
   }
 
@@ -433,29 +434,28 @@ public final class TypeValidatorTest extends CompilerTestCase {
         "/** @type {number} @suppress {duplicate} */",
         "ns1.x = 3;"));
 
-    testSame(LINE_JOINER.join(
-        "/** @const */",
-        "var ns2 = {};",
-        "/** @type {number} */",
-        "ns2.x = 3;",
-        "/** @type {number} */",
-        "ns2.x = 3;"),
+    testWarning(
+        LINE_JOINER.join(
+            "/** @const */",
+            "var ns2 = {};",
+            "/** @type {number} */",
+            "ns2.x = 3;",
+            "/** @type {number} */",
+            "ns2.x = 3;"),
         TypeValidator.DUP_VAR_DECLARATION);
 
-    testSame(LINE_JOINER.join(
-        "/** @const */",
-        "var ns3 = {};",
-        "/** @type {number} */",
-        "ns3.x;",
-        "/** @type {string} @suppress {duplicate} */",
-        "ns3.x;"),
+    testWarning(
+        LINE_JOINER.join(
+            "/** @const */",
+            "var ns3 = {};",
+            "/** @type {number} */",
+            "ns3.x;",
+            "/** @type {string} @suppress {duplicate} */",
+            "ns3.x;"),
         TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH);
 
-    testSame(LINE_JOINER.join(
-        "/** @type {number} */",
-        "var w;",
-        "/** @type {number} */",
-        "var w;"),
+    testWarning(
+        LINE_JOINER.join("/** @type {number} */", "var w;", "/** @type {number} */", "var w;"),
         TypeValidator.DUP_VAR_DECLARATION);
 
     testSame(LINE_JOINER.join(
@@ -464,18 +464,17 @@ public final class TypeValidatorTest extends CompilerTestCase {
         "/** @type {number} @suppress {duplicate} */",
         "var x;"));
 
-    testSame(LINE_JOINER.join(
-        "/** @type {number} */",
-        "var y = 3;",
-        "/** @type {number} */",
-        "var y = 3;"),
+    testWarning(
+        LINE_JOINER.join(
+            "/** @type {number} */", "var y = 3;", "/** @type {number} */", "var y = 3;"),
         TypeValidator.DUP_VAR_DECLARATION);
 
-    testSame(LINE_JOINER.join(
-        "/** @type {number} */",
-        "var z;",
-        "/** @type {string} @suppress {duplicate} */",
-        "var z;"),
+    testWarning(
+        LINE_JOINER.join(
+            "/** @type {number} */",
+            "var z;",
+            "/** @type {string} @suppress {duplicate} */",
+            "var z;"),
         TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH);
   }
 

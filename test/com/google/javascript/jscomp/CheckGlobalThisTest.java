@@ -33,7 +33,7 @@ public final class CheckGlobalThisTest extends CompilerTestCase {
   }
 
   private void testFailure(String js) {
-    testSame(js, CheckGlobalThis.GLOBAL_THIS);
+    testWarning(js, CheckGlobalThis.GLOBAL_THIS);
   }
 
   public void testGlobalThis1() throws Exception {

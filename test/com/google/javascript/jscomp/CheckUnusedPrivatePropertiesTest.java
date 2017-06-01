@@ -60,7 +60,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
   }
 
   private void unused(String code) {
-    testSame(code, CheckUnusedPrivateProperties.UNUSED_PRIVATE_PROPERTY);
+    testWarning(code, CheckUnusedPrivateProperties.UNUSED_PRIVATE_PROPERTY);
   }
 
   private void used(String code) {

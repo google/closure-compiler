@@ -15,9 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CheckLevel;
-import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.DiagnosticGroups;
 
 /**
  * {@link CheckDebuggerStatementTest} is a unit test for
@@ -53,9 +50,9 @@ public final class CheckDebuggerStatementTest extends CompilerTestCase {
   public void testCheckDebuggerStatement() {
     checkLevel = CheckLevel.WARNING;
 
-    testSame("debugger;", CheckDebuggerStatement.DEBUGGER_STATEMENT_PRESENT);
-    testSame("function foo() { debugger; }",
-        CheckDebuggerStatement.DEBUGGER_STATEMENT_PRESENT);
+    testWarning("debugger;", CheckDebuggerStatement.DEBUGGER_STATEMENT_PRESENT);
+    testWarning(
+        "function foo() { debugger; }", CheckDebuggerStatement.DEBUGGER_STATEMENT_PRESENT);
   }
 
   public void testCheckIsDisabledByDefault() {

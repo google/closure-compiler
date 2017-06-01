@@ -135,23 +135,22 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
   }
 
   public void testFunctionsWithJsDoc6() {
-    testSame("/** @param {...*} b */ var foo = function(a, b) {}; foo();",
-             WRONG_ARGUMENT_COUNT);
+    testWarning(
+        "/** @param {...*} b */ var foo = function(a, b) {}; foo();", WRONG_ARGUMENT_COUNT);
   }
 
   public void testFunctionsWithJsDoc7() {
     String fooDfn = "/** @param {*} [b] */ var foo = function(b) {};";
     testSame(fooDfn + "foo();");
     testSame(fooDfn + "foo(1);");
-    testSame(fooDfn + "foo(1, 2);", WRONG_ARGUMENT_COUNT);
+    testWarning(fooDfn + "foo(1, 2);", WRONG_ARGUMENT_COUNT);
   }
 
   public void testFunctionWithDefaultCodingConvention() {
     convention = CodingConventions.getDefault();
-    testSame("var foo = function(x) {}; foo(1, 2);", WRONG_ARGUMENT_COUNT);
-    testSame("var foo = function(opt_x) {}; foo(1, 2);", WRONG_ARGUMENT_COUNT);
-    testSame("var foo = function(var_args) {}; foo(1, 2);",
-        WRONG_ARGUMENT_COUNT);
+    testWarning("var foo = function(x) {}; foo(1, 2);", WRONG_ARGUMENT_COUNT);
+    testWarning("var foo = function(opt_x) {}; foo(1, 2);", WRONG_ARGUMENT_COUNT);
+    testWarning("var foo = function(var_args) {}; foo(1, 2);", WRONG_ARGUMENT_COUNT);
   }
 
   public void testMethodCalls() {
@@ -167,29 +166,24 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
       "function Bar() {}";
 
     // Prototype method with too many arguments.
-    testSame(METHOD_DEFS +
-        "var f = new Foo();f.prototypeMethod(1, 2, 3);",
+    testWarning(
+        METHOD_DEFS + "var f = new Foo();f.prototypeMethod(1, 2, 3);",
         TypeCheck.WRONG_ARGUMENT_COUNT);
     // Prototype method with too few arguments.
-    testSame(METHOD_DEFS +
-        "var f = new Foo();f.prototypeMethod(1);",
-        TypeCheck.WRONG_ARGUMENT_COUNT);
+    testWarning(
+        METHOD_DEFS + "var f = new Foo();f.prototypeMethod(1);", TypeCheck.WRONG_ARGUMENT_COUNT);
 
     // Static method with too many arguments.
-    testSame(METHOD_DEFS +
-        "Foo.staticMethod(1, 2, 3);",
-        TypeCheck.WRONG_ARGUMENT_COUNT);
+    testWarning(METHOD_DEFS + "Foo.staticMethod(1, 2, 3);", TypeCheck.WRONG_ARGUMENT_COUNT);
     // Static method with too few arguments.
-    testSame(METHOD_DEFS +
-        "Foo.staticMethod(1);",
-        TypeCheck.WRONG_ARGUMENT_COUNT);
+    testWarning(METHOD_DEFS + "Foo.staticMethod(1);", TypeCheck.WRONG_ARGUMENT_COUNT);
 
     // Constructor calls require "new" keyword
-    testSame(METHOD_DEFS + "Foo();", TypeCheck.CONSTRUCTOR_NOT_CALLABLE);
+    testWarning(METHOD_DEFS + "Foo();", TypeCheck.CONSTRUCTOR_NOT_CALLABLE);
 
     // Constructors with explicit return type can be called without
     // the "new" keyword
-    testSame(METHOD_DEFS + "Bar();", null);
+    testSame(METHOD_DEFS + "Bar();");
 
     // Extern constructor calls require "new" keyword
     testSame(METHOD_DEFS, "Foo();", TypeCheck.CONSTRUCTOR_NOT_CALLABLE);
@@ -200,12 +194,10 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
   }
 
   public void assertOk(String params, String arguments) {
-    assertWarning(params, arguments, null);
+    testSame("function foo(" + params + ") {} foo(" + arguments + ");");
   }
 
-  public void assertWarning(String params, String arguments,
-      DiagnosticType type) {
-    testSame("function foo(" + params + ") {} foo(" + arguments + ");",
-        type);
+  public void assertWarning(String params, String arguments, DiagnosticType type) {
+    testWarning("function foo(" + params + ") {} foo(" + arguments + ");", type);
   }
 }

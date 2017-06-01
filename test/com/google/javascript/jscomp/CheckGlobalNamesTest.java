@@ -380,12 +380,13 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
   }
 
   public void testPathologicalCaseThatsOkAnyway() {
-    testSame(
-        "var x = {};" +
-        "switch (x) { " +
-        "  default: x.y.z = {}; " +
-        "  case (x.y = {}): break;" +
-        "}", NAME_DEFINED_LATE_WARNING);
+    testWarning(
+        "var x = {};"
+            + "switch (x) { "
+            + "  default: x.y.z = {}; "
+            + "  case (x.y = {}): break;"
+            + "}",
+        NAME_DEFINED_LATE_WARNING);
   }
 
   public void testOkGlobalDeclExpr() {
