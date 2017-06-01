@@ -449,6 +449,16 @@ NodeList.prototype.length;
 NodeList.prototype.item = function(index) {};
 
 /**
+ * @param {?function(this:S, T, number, !NodeList<T>): ?} callback
+ * @param {S=} opt_thisobj
+ * @this {NodeList<T>}
+ * @template T,S
+ * @return {undefined}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/NodeList/forEach
+ */
+NodeList.prototype.forEach = function(callback, opt_thisobj) {};
+
+/**
  * @constructor
  * @implements {IObject<(string|number), T>}
  * @implements {IArrayLike<T>}
