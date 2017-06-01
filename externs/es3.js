@@ -707,6 +707,17 @@ Array.prototype.toSource;
  */
 Array.prototype.toString = function() {};
 
+
+/**
+ * @this {Array<?>}
+ * @return {string}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/toLocaleString
+ * @override
+ */
+Array.prototype.toLocaleString = function() {};
+
+
 /**
  * Adds one or more elements to the beginning of an array and returns the new
  * length of the array.
