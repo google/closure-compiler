@@ -323,6 +323,12 @@ RTCRtpSender.prototype.replaceTrack = function(track) {};
 
 
 /**
+ * @return {!Object}
+ */
+RTCRtpSender.prototype.getParameters = function() {};
+
+
+/**
  * @param {!Object} params
  * @return {!Promise<undefined>}
  */
