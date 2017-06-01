@@ -49,34 +49,34 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     testWarning("var f = (x)=>{ if(x); }", e);
 
     testSame("if(x) x = y;");
-    testWarning("if(x) x == bar();", "if(x) JSCOMPILER_PRESERVE(x == bar());", e);
+    test("if(x) x == bar();", "if(x) JSCOMPILER_PRESERVE(x == bar());", null, e);
 
     testSame("x = 3;");
-    testWarning("x == 3;", "JSCOMPILER_PRESERVE(x == 3);", e);
+    test("x == 3;", "JSCOMPILER_PRESERVE(x == 3);", null, e);
 
     testSame("var x = 'test'");
-    testWarning("var x = 'test'\n'Breakstr'",
-         "var x = 'test'\nJSCOMPILER_PRESERVE('Breakstr')", e);
+    test("var x = 'test'\n'Breakstr'",
+         "var x = 'test'\nJSCOMPILER_PRESERVE('Breakstr')", null, e);
 
     testSame("");
     testSame("foo();;;;bar();;;;");
 
     testSame("var a, b; a = 5, b = 6");
-    testWarning("var a, b; a = 5, b == 6",
-         "var a, b; a = 5, JSCOMPILER_PRESERVE(b == 6)", e);
-    testWarning("var a, b; a = (5, 6)",
-         "var a, b; a = (JSCOMPILER_PRESERVE(5), 6)", e);
-    testWarning("var a, b; a = (bar(), 6, 7)",
-         "var a, b; a = (bar(), JSCOMPILER_PRESERVE(6), 7)", e);
-    testWarning("var a, b; a = (bar(), bar(), 7, 8)",
-         "var a, b; a = (bar(), bar(), JSCOMPILER_PRESERVE(7), 8)", e);
+    test("var a, b; a = 5, b == 6",
+         "var a, b; a = 5, JSCOMPILER_PRESERVE(b == 6)", null, e);
+    test("var a, b; a = (5, 6)",
+         "var a, b; a = (JSCOMPILER_PRESERVE(5), 6)", null, e);
+    test("var a, b; a = (bar(), 6, 7)",
+         "var a, b; a = (bar(), JSCOMPILER_PRESERVE(6), 7)", null, e);
+    test("var a, b; a = (bar(), bar(), 7, 8)",
+         "var a, b; a = (bar(), bar(), JSCOMPILER_PRESERVE(7), 8)", null, e);
     testSame("var a, b; a = (b = 7, 6)");
     testSame(
         LINE_JOINER.join(
             "function x(){}",
             "function f(a, b){}",
             "f(1,(x(), 2));"));
-    testWarning(
+    test(
         LINE_JOINER.join(
             "function x(){}",
             "function f(a, b){}",
@@ -84,25 +84,29 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         LINE_JOINER.join(
             "function x(){}",
             "function f(a, b){}",
-            "f(1,(JSCOMPILER_PRESERVE(2), 3));"), e);
+            "f(1,(JSCOMPILER_PRESERVE(2), 3));"),
+        null, e);
 
-    testWarning("var x = `TemplateA`\n'TestB'",
-        "var x = `TemplateA`\nJSCOMPILER_PRESERVE('TestB')", e);
-    testWarning("`LoneTemplate`", "JSCOMPILER_PRESERVE(`LoneTemplate`)", e);
-    testWarning(
+    test(
+        "var x = `TemplateA`\n'TestB'",
+        "var x = `TemplateA`\nJSCOMPILER_PRESERVE('TestB')",
+        null, e);
+    test("`LoneTemplate`", "JSCOMPILER_PRESERVE(`LoneTemplate`)", null, e);
+    test(
         LINE_JOINER.join(
             "var name = 'Bad';",
-            "`${name}Template`;"),
-        LINE_JOINER.join(
+            "`${name}Template`;"), LINE_JOINER.join(
             "var name = 'Bad';",
-            "JSCOMPILER_PRESERVE(`${name}Template`)"), e);
-    testWarning(
+            "JSCOMPILER_PRESERVE(`${name}Template`)"),
+        null, e);
+    test(
         LINE_JOINER.join(
             "var name = 'BadTail';",
             "`Template${name}`;"),
         LINE_JOINER.join(
             "var name = 'BadTail';",
-            "JSCOMPILER_PRESERVE(`Template${name}`)"), e);
+            "JSCOMPILER_PRESERVE(`Template${name}`)"),
+        null, e);
     testSame(
         LINE_JOINER.join(
             "var name = 'Good';",
@@ -148,12 +152,18 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     testSame("for(var x = 0; x < 100; x++) { foo(x) }");
     testSame("for(; true; ) { bar() }");
     testSame("for(foo(); true; foo()) { bar() }");
-    testWarning("for(void 0; true; foo()) { bar() }",
-         "for(JSCOMPILER_PRESERVE(void 0); true; foo()) { bar() }", e);
-    testWarning("for(foo(); true; void 0) { bar() }",
-         "for(foo(); true; JSCOMPILER_PRESERVE(void 0)) { bar() }", e);
-    testWarning("for(foo(); true; (1, bar())) { bar() }",
-         "for(foo(); true; (JSCOMPILER_PRESERVE(1), bar())) { bar() }", e);
+    test(
+        "for(void 0; true; foo()) { bar() }",
+        "for(JSCOMPILER_PRESERVE(void 0); true; foo()) { bar() }",
+        null, e);
+    test(
+        "for(foo(); true; void 0) { bar() }",
+        "for(foo(); true; JSCOMPILER_PRESERVE(void 0)) { bar() }",
+        null, e);
+    test(
+        "for(foo(); true; (1, bar())) { bar() }",
+        "for(foo(); true; (JSCOMPILER_PRESERVE(1), bar())) { bar() }",
+        null, e);
 
     testSame("for(foo in bar) { foo() }");
     testSame("for (i = 0; el = el.previousSibling; i++) {}");
@@ -161,28 +171,28 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
   }
 
   public void testTypeAnnotations() {
-    testWarning("x;", "JSCOMPILER_PRESERVE(x);", e);
-    testWarning("a.b.c.d;", "JSCOMPILER_PRESERVE(a.b.c.d);", e);
+    test("x;", "JSCOMPILER_PRESERVE(x);", null, e);
+    test("a.b.c.d;", "JSCOMPILER_PRESERVE(a.b.c.d);", null, e);
     testSame("/** @type {Number} */ a.b.c.d;");
     testSame("if (true) { /** @type {Number} */ a.b.c.d; }");
 
-    testWarning("function A() { this.foo; }",
-         "function A() { JSCOMPILER_PRESERVE(this.foo); }", e);
+    test("function A() { this.foo; }",
+         "function A() { JSCOMPILER_PRESERVE(this.foo); }", null, e);
     testSame("function A() { /** @type {Number} */ this.foo; }");
   }
 
   public void testJSDocComments() {
     testSame("function A() { /** This is a JsDoc comment */ this.foo; }");
-    testWarning("function A() { /* This is a normal comment */ this.foo; }",
-         "function A() { " +
-         " /* This is a normal comment */ JSCOMPILER_PRESERVE(this.foo); }", e);
+    test("function A() { /* This is a normal comment */ this.foo; }",
+         "function A() { /* This is a normal comment */ JSCOMPILER_PRESERVE(this.foo); }",
+        null, e);
   }
 
   public void testIssue80() {
     testSame("(0, eval)('alert');");
-    testWarning(
+    test(
         "(0, foo)('alert');",
-        "(JSCOMPILER_PRESERVE(0), foo)('alert');", e);
+        "(JSCOMPILER_PRESERVE(0), foo)('alert');", null, e);
   }
 
   public void testIsue504() {

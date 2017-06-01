@@ -62,10 +62,10 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "/** @constructor */ function Foo() { /** @const */ this.x = 5; }",
         "/** @constructor */ function Foo() {} \n /** @const {number} */ Foo.prototype.x;");
 
-    testWarning(
+    test(
         "/** @const */ var x = cond ? true : 5;",
         "/** @const {*} */ var x;",
-        ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
+        null, ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
   }
 
   public void testConstKeywordJsdocPropagation() {
@@ -85,10 +85,10 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "/** @constructor */ function Foo() { /** @type {?number} */ this.x = null; this.x = 5; }",
         "/** @constructor */ function Foo() {} \n /** @type {?number} */ Foo.prototype.x;");
 
-    testWarning(
+    test(
         "/** @constructor */ function Foo() { /** @const */ this.x = cond ? true : 5; }",
-        "/** @constructor */ function Foo() {}  /** @const {*} */ Foo.prototype.x; ",
-        ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
+        "/** @constructor */ function Foo() {}  /** @const {*} */ Foo.prototype.x;",
+        null, ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
   }
 
   public void testThisPropertiesInConstructorsAndPrototype() {

@@ -785,9 +785,9 @@ public abstract class CompilerTestCase extends TestCase {
    * @param js Input
    * @param warning Expected warning
    */
-  public void testWarning(String js, String expected, DiagnosticType warning) {
+  public void testWarning(String externs, String js, DiagnosticType warning) {
     assertNotNull(warning);
-    test(js, expected, null, warning);
+    test(externs, js, null, null, warning);
   }
 
   /**
@@ -799,6 +799,14 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   /**
+   * Verifies that the compiler generates the given warning for the given input.
+   */
+  public void testWarning(List<SourceFile> inputs, DiagnosticType warning) {
+    assertNotNull(warning);
+    test(inputs, null, null, warning);
+  }
+
+  /**
    * Verifies that the compiler generates the given warning and description for the given input.
    *
    * @param js Input
@@ -807,6 +815,14 @@ public abstract class CompilerTestCase extends TestCase {
   public void testWarning(String js, DiagnosticType warning, String description) {
     assertNotNull(warning);
     test(js, null, null, warning, description);
+  }
+
+  /**
+   * Verifies that the compiler generates the given warning for the given input.
+   */
+  public void testWarning(List<SourceFile> inputs, DiagnosticType warning, String description) {
+    assertNotNull(warning);
+    test(inputs, null, null, warning, description);
   }
 
   /**
@@ -828,9 +844,25 @@ public abstract class CompilerTestCase extends TestCase {
 
   /**
    * Verifies that the compiler generates no warnings for the given input.
+   *
+   * @param js Input
+   */
+  public void testNoWarning(String externs, String js) {
+    test(externs, js, null, (DiagnosticType) null, (DiagnosticType) null);
+  }
+
+  /**
+   * Verifies that the compiler generates no warnings for the given input.
    */
   public void testNoWarning(String[] js) {
     test(js, null, null, null);
+  }
+
+  /**
+   * Verifies that the compiler generates no warnings for the given input.
+   */
+  public void testNoWarning(List<SourceFile> inputs) {
+    test(inputs, null, null, null);
   }
 
   /**
