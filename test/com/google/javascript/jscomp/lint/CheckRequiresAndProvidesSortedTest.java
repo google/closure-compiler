@@ -128,6 +128,27 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
         REQUIRES_NOT_SORTED);
   }
 
+  public void testGoogModule_emptyDestructuring() {
+    testWarning(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "const {FOO} = goog.require('example.constants');",
+            "const {} = goog.require('just.forthe.side.effects');",
+            "",
+            "alert(1);"),
+        REQUIRES_NOT_SORTED);
+
+    testNoWarning(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "const {} = goog.require('just.forthe.side.effects');",
+            "const {FOO} = goog.require('example.constants');",
+            "",
+            "alert(1);"));
+  }
+
   public void testGoogModule_allThreeStyles() {
     testWarning(
         LINE_JOINER.join(

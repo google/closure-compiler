@@ -90,6 +90,9 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
               // All case 2 nodes should come after all case 1 nodes.
               Node pattern = n.getFirstFirstChild();
               Preconditions.checkState(pattern.isObjectPattern(), pattern);
+              if (!pattern.hasChildren()) {
+                return "{";
+              }
               return "{" + pattern.getFirstChild().getString();
             }
           } else if (n.isExprResult()) {
