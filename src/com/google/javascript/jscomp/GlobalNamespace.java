@@ -403,10 +403,10 @@ class GlobalNamespace
                 }
             }
           }
-          name = n.getQualifiedName();
-          if (name == null) {
+          if (!n.isQualifiedName()) {
             return;
           }
+          name = n.getQualifiedName();
           break;
         default:
           return;

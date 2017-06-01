@@ -220,11 +220,11 @@ class AngularPass extends AbstractPostOrderCallback
       // a = function() {}
       // a = b = c = function() {}
       case ASSIGN:
-        name = n.getFirstChild().getQualifiedName();
-        if (name == null) {
+        if (!n.getFirstChild().isQualifiedName()) {
           compiler.report(t.makeError(n, INJECTED_FUNCTION_ON_NON_QNAME));
           return;
         }
+        name = n.getFirstChild().getQualifiedName();
         // last node of chained assignment.
         fn = n;
         while (fn.isAssign()) {

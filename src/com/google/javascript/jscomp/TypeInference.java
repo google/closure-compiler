@@ -624,8 +624,8 @@ class TypeInference
         }
         break;
       case GETPROP:
-        String qualifiedName = left.getQualifiedName();
-        if (qualifiedName != null) {
+        if (left.isQualifiedName()) {
+          String qualifiedName = left.getQualifiedName();
           boolean declaredSlotType = false;
           JSType rawObjType = left.getFirstChild().getJSType();
           if (rawObjType != null) {
@@ -742,9 +742,9 @@ class TypeInference
    */
   private boolean ensurePropertyDeclaredHelper(
       Node getprop, ObjectType objectType) {
-    String propName = getprop.getLastChild().getString();
-    String qName = getprop.getQualifiedName();
-    if (qName != null) {
+    if (getprop.isQualifiedName()) {
+      String propName = getprop.getLastChild().getString();
+      String qName = getprop.getQualifiedName();
       TypedVar var = syntacticScope.getVar(qName);
       if (var != null && !var.isTypeInferred()) {
         // Handle normal declarations that could not be addressed earlier.

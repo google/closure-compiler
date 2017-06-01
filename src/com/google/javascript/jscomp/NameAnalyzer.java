@@ -886,8 +886,8 @@ final class NameAnalyzer implements CompilerPass {
         // Make sure that we record a reference to the function that does
         // the inheritance, so that the inherits() function itself does
         // not get stripped.
-        String nodeName = n.getQualifiedName();
-        if (nodeName != null) {
+        if (n.isQualifiedName()) {
+          String nodeName = n.getQualifiedName();
           recordReference(
               nameInfo.name, nodeName, RefType.REGULAR);
         }

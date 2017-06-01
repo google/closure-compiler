@@ -512,8 +512,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     JSDocInfo info = n.getFirstChild().getJSDocInfo();
     boolean hasStubDefinition = info != null && (n.isFromExterns() || info.hasTypedefType());
     if (hasStubDefinition) {
-      String name = n.getFirstChild().getQualifiedName();
-      if (name != null) {
+      if (n.getFirstChild().isQualifiedName()) {
+        String name = n.getFirstChild().getQualifiedName();
         ProvidedName pn = providedNames.get(name);
         if (pn != null) {
           n.putBooleanProp(Node.WAS_PREVIOUSLY_PROVIDED, true);
