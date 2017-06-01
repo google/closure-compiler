@@ -215,7 +215,7 @@ public enum Token {
     PIPE,
     STAR,
     EOC,
-    QMARK,
+    QMARK, // type is nullable or unknown
     ELLIPSIS,
     BANG,
     EQUALS,

@@ -318,7 +318,11 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       } else {
         Set<String> paramNames = info.getParameterNames();
         if (paramNames.size() == 1) {
-          return info.getParameterType(Iterables.getOnlyElement(info.getParameterNames()));
+          JSTypeExpression paramType =
+              info.getParameterType(Iterables.getOnlyElement(info.getParameterNames()));
+          if (paramType != null) {
+            return paramType;
+          }
         }
       }
     }
@@ -390,11 +394,12 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       membersToDeclare = metadata.prototypeComputedPropsToDeclare;
       memberName = member.getFirstChild().getQualifiedName();
     } else {
-      membersToDeclare = member.isStaticMember()
-          ? metadata.classMembersToDeclare
-          : metadata.prototypeMembersToDeclare;
+      membersToDeclare =
+          member.isStaticMember()
+              ? metadata.classMembersToDeclare
+              : metadata.prototypeMembersToDeclare;
       memberName = member.getString();
-    }
+      }
     JSDocInfo existingJSDoc = membersToDeclare.get(memberName);
     JSTypeExpression existingType = existingJSDoc == null ? null : existingJSDoc.getType();
     if (existingType != null && !existingType.equals(typeExpr)) {
@@ -410,7 +415,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
         jsDoc.recordNoCollapse();
       }
       membersToDeclare.put(memberName, jsDoc.build());
-    }
+      }
   }
 
   /**

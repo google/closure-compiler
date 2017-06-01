@@ -251,6 +251,103 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "Converter.prototype.convert = function(x) {};"));
   }
 
+  public void testNoTypeForParam() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    test(
+        LINE_JOINER.join(
+          "class MdMenu {",
+          "  /**",
+          "   * @param c",
+          "   */",
+          "  set classList(c) {}",
+          "}"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let MdMenu=function(){};",
+            "/**",
+            " * @type {?}",
+            " */",
+            "MdMenu.prototype.classList;",
+            "$jscomp.global.Object.defineProperties(",
+            "    MdMenu.prototype,",
+            "    {",
+            "      classList: {",
+            "        configurable:true,",
+            "        enumerable:true,",
+            "        /**",
+            "         * @this {MdMenu}",
+            "         * @param c",
+            "         */",
+            "        set:function(c){}",
+            "      }",
+            "    })"
+        ));
+  }
+
+  public void testParamNameMismatch() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    test(
+        LINE_JOINER.join(
+            "class MdMenu {",
+            "/**",
+            "* @param {boolean} classes",
+            "*/",
+            "set classList(c) {}",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let MdMenu=function(){};",
+            " /**",
+            "  * @type {boolean}",
+            "  */",
+            "MdMenu.prototype.classList;",
+            "$jscomp.global.Object.defineProperties(",
+            "    MdMenu.prototype,",
+            "    {",
+            "      classList: {",
+            "        configurable:true,",
+            "        enumerable:true,",
+            "       /**",
+            "        * @this {MdMenu}",
+            "        * @param {boolean} classes",
+            "        */",
+            "       set:function(c){}",
+            "     }",
+            "   })"
+        ));
+  }
+
+  public void testParamNameMismatchAndNoParamType() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    test(
+        LINE_JOINER.join(
+            "class MdMenu {", "/**", "* @param classes", "*/", "set classList(c) {}", "}"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let MdMenu=function(){};",
+            "/**",
+            " * @type {?}",
+            " */",
+            "MdMenu.prototype.classList;",
+            "$jscomp.global.Object.defineProperties(",
+            "    MdMenu.prototype,",
+            "    {",
+            "      classList: {",
+            "        configurable:true,",
+            "        enumerable:true,",
+            "        /**",
+            "         * @this {MdMenu}",
+            "         * @param  classes",
+            "         */",
+            "        set:function(c){}",
+            "      }",
+            "   })"
+        ));
+  }
+
   public void testRecordWithJsDoc() {
     test(
         LINE_JOINER.join(
