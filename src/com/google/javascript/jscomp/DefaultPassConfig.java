@@ -383,12 +383,13 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(dartSuperAccessorsPass);
     }
 
-    if (options.needsTranspilationFrom(ES7)) {
+    if (options.needsTranspilationFrom(ES8)) {
       TranspilationPasses.addEs2017Passes(checks);
       checks.add(setFeatureSet(ES7));
     }
 
-    if (options.needsTranspilationFrom(ES6) && !options.skipTranspilationAndCrash) {
+    if ((options.needsTranspilationFrom(ES6) || options.needsTranspilationFrom(ES7))
+        && !options.skipTranspilationAndCrash) {
       checks.add(es6ExternsCheck);
       TranspilationPasses.addEs6EarlyPasses(checks);
     }
