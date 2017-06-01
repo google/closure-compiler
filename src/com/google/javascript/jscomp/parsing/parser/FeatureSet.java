@@ -249,4 +249,8 @@ public final class FeatureSet implements Serializable {
         throw new IllegalArgumentException("No such FeatureSet: " + name);
     }
   }
+
+  public static FeatureSet latest() {
+    return TYPESCRIPT;
+  }
 }

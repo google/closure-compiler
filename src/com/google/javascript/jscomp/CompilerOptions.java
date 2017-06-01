@@ -3254,7 +3254,7 @@ public class CompilerOptions implements Serializable {
 
     /**
      * Files must be discoverable from specified entry points. Files
-     * which do not goog.provide a namespace and and are not either
+     * which do not goog.provide a namespace and are not either
      * an ES6 or CommonJS module will be automatically treated as entry points.
      * Module files will be included only if referenced from an entry point.
      */

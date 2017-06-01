@@ -28,6 +28,7 @@ import com.google.javascript.jscomp.lint.CheckPrototypeProperties;
 import com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted;
 import com.google.javascript.jscomp.lint.CheckUnusedLabels;
 import com.google.javascript.jscomp.lint.CheckUselessBlocks;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import java.util.List;
 
 /**
@@ -75,6 +76,11 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new ClosureCheckModule(compiler),
                   new Es6SuperCheck(compiler)));
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.latest().withoutTypes();
+        }
       };
 
   private final PassFactory variableReferenceCheck =
@@ -83,6 +89,11 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new VariableReferenceCheck(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.latest().withoutTypes();
+        }
       };
 
   private final PassFactory closureRewriteClass =
@@ -90,6 +101,11 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
           return new ClosureRewriteClass(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.latest().withoutTypes();
         }
       };
 
@@ -102,6 +118,11 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
               ImmutableList.<Callback>of(
                   new CheckInterfaces(compiler),
                   new CheckPrototypeProperties(compiler)));
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.latest().withoutTypes();
         }
       };
 }

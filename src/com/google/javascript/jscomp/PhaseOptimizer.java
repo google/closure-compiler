@@ -36,8 +36,7 @@ import java.util.logging.Logger;
  */
 class PhaseOptimizer implements CompilerPass {
 
-  private static final Logger logger =
-      Logger.getLogger(PhaseOptimizer.class.getName());
+  private static final Logger logger = Logger.getLogger(PhaseOptimizer.class.getName());
   private final AbstractCompiler compiler;
   private final PerformanceTracker tracker;
   private final List<CompilerPass> passes;
@@ -279,7 +278,15 @@ class PhaseOptimizer implements CompilerPass {
 
     @Override
     public void process(Node externs, Node root) {
-      logger.fine(name);
+      if (!factory.featureSet().contains(compiler.getFeatureSet())) {
+        logger.fine(
+            "Skipping pass " + name
+                + "\nfactory features:  " + factory.featureSet()
+                + "\ncompiler features: " + compiler.getFeatureSet());
+        return;
+      }
+
+      logger.fine("Running pass " + name);
       if (sanityCheck != null) {
         // Before running the pass, clone the AST so you can sanity-check the
         // changed AST against the clone after the pass finishes.

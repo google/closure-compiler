@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -66,6 +67,16 @@ public abstract class PassFactory {
   protected abstract CompilerPass create(AbstractCompiler compiler);
 
   /**
+   * The set of features that this pass understands. Passes that can handle any code (no-op passes,
+   * extremely simple passes that are unlikely to be broken by new features, etc.) should return
+   * FeatureSet.latest().
+   */
+  protected FeatureSet featureSet() {
+    // TODO(tbreisacher): Switch this to ES5 when we drop the skipTranspilationAndCrash flag.
+    return FeatureSet.latest();
+  }
+
+  /**
    * Any factory whose CompilerPass has a corresponding hot-swap version should
    * override this.
    *
@@ -90,6 +101,11 @@ public abstract class PassFactory {
           @Override
           public void process(Node externs, Node root) {}
         };
+      }
+
+      @Override
+      protected FeatureSet featureSet() {
+        return FeatureSet.latest();
       }
     };
   }

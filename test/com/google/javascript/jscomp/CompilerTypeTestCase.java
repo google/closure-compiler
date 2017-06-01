@@ -20,6 +20,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import java.util.Arrays;
 
@@ -108,6 +109,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
   protected void initializeNewCompiler(CompilerOptions options) {
     compiler = new Compiler();
     compiler.initOptions(options);
+    compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
     registry = compiler.getTypeRegistry();
     registry.setOptimizePropertyIndex_TRANSITIONAL_METHOD(true);
     initTypes();

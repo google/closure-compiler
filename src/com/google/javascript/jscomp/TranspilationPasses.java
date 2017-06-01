@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
+
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.PassFactory.HotSwapPassFactory;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -77,6 +79,11 @@ public class TranspilationPasses {
         protected CompilerPass create(final AbstractCompiler compiler) {
           return new RewriteAsyncFunctions(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
       };
 
   private static final PassFactory es6SuperCheck =
@@ -84,6 +91,11 @@ public class TranspilationPasses {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
           return new Es6SuperCheck(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
         }
       };
 
@@ -93,6 +105,11 @@ public class TranspilationPasses {
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
           return new Es6ExtractClasses(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
       };
 
   static final HotSwapPassFactory es6RewriteClass =
@@ -100,6 +117,11 @@ public class TranspilationPasses {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
           return new Es6RewriteClass(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
         }
       };
 
@@ -109,6 +131,11 @@ public class TranspilationPasses {
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es6RewriteDestructuring(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
       };
 
   static final HotSwapPassFactory es6RenameVariablesInParamLists =
@@ -116,6 +143,11 @@ public class TranspilationPasses {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es6RenameVariablesInParamLists(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
         }
       };
 
@@ -125,6 +157,11 @@ public class TranspilationPasses {
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es6RewriteArrowFunction(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
       };
 
   static final HotSwapPassFactory rewritePolyfills =
@@ -132,6 +169,11 @@ public class TranspilationPasses {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new RewritePolyfills(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
         }
       };
 
@@ -141,6 +183,11 @@ public class TranspilationPasses {
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es6SplitVariableDeclarations(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
       };
 
   static final HotSwapPassFactory es6ConvertSuperConstructorCalls =
@@ -149,14 +196,24 @@ public class TranspilationPasses {
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es6ConvertSuperConstructorCalls(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
       };
 
   static final HotSwapPassFactory es6ConvertSuper =
       new HotSwapPassFactory("es6ConvertSuper", true) {
-    @Override
-    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      return new Es6ConvertSuper(compiler);
-    }
+        @Override
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+          return new Es6ConvertSuper(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
   };
 
   /**
@@ -170,6 +227,11 @@ public class TranspilationPasses {
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
       return new Es6ToEs3Converter(compiler);
     }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8;
+    }
   };
 
   static final HotSwapPassFactory rewriteBlockScopedDeclaration =
@@ -178,6 +240,11 @@ public class TranspilationPasses {
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
       return new Es6RewriteBlockScopedDeclaration(compiler);
     }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8;
+    }
   };
 
   static final HotSwapPassFactory rewriteGenerators =
@@ -185,6 +252,11 @@ public class TranspilationPasses {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
       return new Es6RewriteGenerators(compiler);
+    }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8;
     }
   };
 

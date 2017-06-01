@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.jscomp.type.ClosureReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.IR;
@@ -64,6 +65,14 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     super.setUp();
     // Enable missing override checks that are disabled by default.
     compiler.getOptions().setWarningLevel(DiagnosticGroups.MISSING_OVERRIDE, CheckLevel.WARNING);
+  }
+
+  @Override
+  protected CompilerOptions getDefaultOptions() {
+    CompilerOptions options = super.getDefaultOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    return options;
   }
 
   public void testInitialTypingScope() throws Exception {
@@ -4046,7 +4055,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   // https://github.com/google/closure-compiler/issues/2458
   public void testAbstractSpread() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "/** @abstract */",
@@ -4061,7 +4069,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testGoodSuperCall() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "class A {",
@@ -4081,7 +4088,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testBadSuperCall() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "class A {",
@@ -4101,12 +4107,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
             "actual parameter 1 of super does not match formal parameter",
             "found   : number",
             "required: string"));
-  }
-
-  private void setLanguageInAndOut(LanguageMode languageIn, LanguageMode languageOut) {
-    CompilerOptions options = compiler.getOptions();
-    options.setLanguageIn(languageIn);
-    options.setLanguageOut(languageOut);
   }
 
   public void testDirectPrototypeAssignment1() throws Exception {
@@ -8549,7 +8549,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testAbstractMethodCall_Es6Class() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "/** @abstract */",
@@ -8571,7 +8570,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testAbstractMethodCall_Es6Class_prototype() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "/** @abstract */",
@@ -8589,7 +8587,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testAbstractMethodCall_Es6Class_prototype_warning() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "/** @abstract */",
@@ -8608,7 +8605,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testNonAbstractMethodCall_Es6Class_prototype() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "/** @abstract */",
@@ -8629,7 +8625,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   // GitHub issue #2262: https://github.com/google/closure-compiler/issues/2262
   public void testAbstractMethodCall_Es6ClassWithSpread() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "/** @abstract */",
@@ -17574,7 +17569,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testEs5ClassExtendingEs6Class() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "class Foo {}",
@@ -17583,7 +17577,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testEs5ClassExtendingEs6Class_noWarning() throws Exception {
-    setLanguageInAndOut(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
     testTypes(
         LINE_JOINER.join(
             "class A {}",
@@ -17834,12 +17827,12 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     return parseAndTypeCheckWithScope(DEFAULT_EXTERNS, js);
   }
 
-  private TypeCheckResult parseAndTypeCheckWithScope(
-      String externs, String js) {
+  private TypeCheckResult parseAndTypeCheckWithScope(String externs, String js) {
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
         ImmutableList.of(SourceFile.fromCode("[testcode]", js)),
         compiler.getOptions());
+    compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
 
     Node n = compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler);
     Node externsNode = compiler.getInput(new InputId("[externs]"))
@@ -17850,7 +17843,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         Joiner.on(", ").join(compiler.getErrors()),
         0, compiler.getErrorCount());
 
-    if (compiler.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6)) {
+    if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
       List<PassFactory> passes = new ArrayList<>();
       TranspilationPasses.addEs2017Passes(passes);
       TranspilationPasses.addEs6EarlyPasses(passes);
