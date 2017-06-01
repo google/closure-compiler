@@ -74,7 +74,9 @@ final class CheckMissingSuper extends AbstractPostOrderCallback implements HotSw
 
     @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
-      return !found;
+      // Stop traversal once the super() call is found. Also don't traverse into nested functions
+      // since this and super() references may not be applicable within those scopes.
+      return !found && !n.isFunction();
     }
 
     @Override
