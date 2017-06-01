@@ -17,7 +17,7 @@
 package com.google.javascript.rhino.dtoa;
 
 public class DToA {
-  public static native String numberToString(double value) /*-{
-    return '' + value;
-  }-*/;
+  public static String numberToString(double value) {
+    return "" + value;
+  }
 }
