@@ -338,6 +338,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       if (NodeUtil.isGoogModuleFile(n)) {
+        n.putBooleanProp(Node.GOOG_MODULE, true);
         inlineModuleIntoGlobal(n);
         t.reportCodeChange();
         checkAndSetStrictModeDirective(t, n);
