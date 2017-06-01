@@ -30,11 +30,12 @@ import java.util.List;
  *
  */
 
-public final class MissingRequireTest extends Es6CompilerTestCase {
+public final class MissingRequireTest extends CompilerTestCase {
   private CheckRequiresForConstructors.Mode mode;
 
   @Override
   public void setUp() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     mode = CheckRequiresForConstructors.Mode.FULL_COMPILE;
   }
 
@@ -79,13 +80,13 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   }
 
   public void testPassWithNewDeclaredClass() {
-    testSameEs6("class C {}; var c = new C();");
+    testSame("class C {}; var c = new C();");
   }
 
   public void testClassRecognizedAsConstructor() {
-    testSameEs6("/** @constructor */ module$test.A = function() {};"
+    testSame("/** @constructor */ module$test.A = function() {};"
                 + "class C extends module$test.A {}");
-    testSameEs6("module$test.A = class {}; class C extends module$test.A {}");
+    testSame("module$test.A = class {}; class C extends module$test.A {}");
   }
 
   public void testPassWithOneNewOuterClass() {
@@ -144,12 +145,12 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   }
 
   public void testPassEs6ClassExtends() {
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.require('goog.foo.Bar');",
             "",
             "class SubClass extends goog.foo.Bar.Inner {}"));
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.require('goog.foo.Bar');",
             "",
@@ -168,22 +169,22 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   }
 
   public void testPassGoogDefineClass() {
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "var Example = goog.defineClass(null, {constructor() {}});",
             "new Example();"));
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "foo.bar.Example = goog.defineClass(null, {constructor() {}});",
             "new foo.bar.Example();"));
   }
 
   public void testPassGoogDefineClass_noRewriting() {
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "var Example = goog.defineClass(null, {constructor() {}});",
             "new Example();"));
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "foo.bar.Example = goog.defineClass(null, {constructor() {}});",
             "new foo.bar.Example();"));
@@ -207,7 +208,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   }
 
   public void testPassForwardDeclare() {
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.module('example');",
             "",
@@ -237,7 +238,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   }
 
   public void testPassGoogModule_noRewriting() {
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.module('example');",
             "",
@@ -253,7 +254,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
             "",
             "exports = getElems;"));
 
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.module('example');",
             "goog.module.declareLegacyNamespace();",
@@ -270,7 +271,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
             "",
             "exports = getElems;"));
 
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.module('example');",
             "",
@@ -286,7 +287,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
             "",
             "exports = getElems;"));
 
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.module('example');",
             "",
@@ -302,7 +303,7 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
             "",
             "exports = getElems;"));
 
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.module('example');",
             "",
@@ -834,14 +835,14 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   }
 
   public void testLetConstConstructorName() {
-    testSameEs6("/** @type {function(new:Date)} */let bar = Date; new bar();");
-    testSameEs6("/** @type {function(new:Date)} */const bar = Date; new bar();");
+    testSame("/** @type {function(new:Date)} */let bar = Date; new bar();");
+    testSame("/** @type {function(new:Date)} */const bar = Date; new bar();");
   }
 
   public void testLetConstConstructorFunction() {
-    testSameEs6(
+    testSame(
         "/** @type {function(new:Date)} */let bar = function() {}; new bar();");
-    testSameEs6(
+    testSame(
         "/** @type {function(new:Date)} */const bar = function() {}; new bar();");
   }
 
@@ -1086,31 +1087,31 @@ public final class MissingRequireTest extends Es6CompilerTestCase {
   }
 
   public void testReferenceInDestructuringParam() {
-    testSameEs6(LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
         "goog.require('Bar');",
         "function func( {a} ){}",
         "func( {a: new Bar()} );"));
-    testWarningEs6(LINE_JOINER.join(
+    testWarning(LINE_JOINER.join(
         "function func( {a} ){}",
         "func( {a: new Bar()} );"), MISSING_REQUIRE_WARNING);
-    testSameEs6(LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
         "/** @constructor */ var Bar = function(){};",
         "function func( {a} ){}",
         "func( {a: new Bar()} );"));
   }
 
   public void testReferenceInDefaultParam() {
-    testWarningEs6(LINE_JOINER.join(
+    testWarning(LINE_JOINER.join(
         "function func( a = new Bar() ){}",
         "func();"), MISSING_REQUIRE_WARNING);
-    testSameEs6(LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
         "/** @constructor */ var Bar = function(){};",
         "function func( a = new Bar() ){}",
         "func();"));
   }
 
   public void testPassModule() {
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "import {Foo} from 'bar';",
             "new Foo();"));

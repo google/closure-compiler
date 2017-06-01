@@ -21,14 +21,15 @@ import static com.google.javascript.jscomp.lint.CheckUnusedLabels.UNUSED_LABEL;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import com.google.javascript.jscomp.Es6CompilerTestCase;
 
 /**
  * Test case for {@link CheckUnusedLabels}.
  */
-public final class CheckUnusedLabelsTest extends Es6CompilerTestCase {
+public final class CheckUnusedLabelsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckUnusedLabels(compiler);
@@ -39,6 +40,11 @@ public final class CheckUnusedLabelsTest extends Es6CompilerTestCase {
     super.getOptions(options);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
     return options;
+  }
+
+  @Override
+  public void setUp() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   public void testCheckUnusedLabels_noWarning() {
@@ -52,6 +58,6 @@ public final class CheckUnusedLabelsTest extends Es6CompilerTestCase {
     testWarning("L: { f(); }", UNUSED_LABEL);
     testWarning("L: for (;;) {}", UNUSED_LABEL);
     testWarning("L1: for (;;) { L2: if (true) { break L2; } }", UNUSED_LABEL);
-    testWarningEs6("() => {a: 2}", UNUSED_LABEL);
+    testWarning("() => {a: 2}", UNUSED_LABEL);
   }
 }

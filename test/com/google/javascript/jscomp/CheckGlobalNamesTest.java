@@ -28,7 +28,7 @@ import com.google.javascript.rhino.Node;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-public final class CheckGlobalNamesTest extends Es6CompilerTestCase {
+public final class CheckGlobalNamesTest extends CompilerTestCase {
 
   private boolean injectNamespace = false;
 
@@ -68,7 +68,7 @@ public final class CheckGlobalNamesTest extends Es6CompilerTestCase {
   @Override
   public void setUp() {
     injectNamespace = false;
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
   }
 
   private static final String GET_NAMES =
@@ -88,15 +88,15 @@ public final class CheckGlobalNamesTest extends Es6CompilerTestCase {
     testSame(GET_NAMES + "alert(a.b); alert(a.c.e);");
     testSame(SET_NAMES + "alert(a.b); alert(a.c.e);");
 
-    testSameEs6(LET_NAMES + "alert(a.b); alert(a.c.e);");
-    testSameEs6(CONST_NAMES + "alert(a.b); alert(a.c.e);");
+    testSame(LET_NAMES + "alert(a.b); alert(a.c.e);");
+    testSame(CONST_NAMES + "alert(a.b); alert(a.c.e);");
 
-    testSameEs6(CLASS_DECLARATION_NAMES + "alert(A.b());");
-    testSameEs6(CLASS_EXPRESSION_NAMES + "alert(A.b());");
-    testSameEs6("let " + CLASS_EXPRESSION_NAMES_STUB + "alert(A.b());");
-    testSameEs6("const " + CLASS_EXPRESSION_NAMES_STUB + "alert(A.b());");
+    testSame(CLASS_DECLARATION_NAMES + "alert(A.b());");
+    testSame(CLASS_EXPRESSION_NAMES + "alert(A.b());");
+    testSame("let " + CLASS_EXPRESSION_NAMES_STUB + "alert(A.b());");
+    testSame("const " + CLASS_EXPRESSION_NAMES_STUB + "alert(A.b());");
 
-    testSameEs6(EXT_OBJLIT_NAMES + "alert(a.b()); alert(a.c); alert(a.d);");
+    testSame(EXT_OBJLIT_NAMES + "alert(a.b()); alert(a.c); alert(a.d);");
   }
 
   public void testRefToDefinedProperties2() {
@@ -104,8 +104,8 @@ public final class CheckGlobalNamesTest extends Es6CompilerTestCase {
     testSame(GET_NAMES + "a.x={}; alert(a.c);");
     testSame(SET_NAMES + "a.x={}; alert(a.c);");
 
-    testSameEs6(LET_NAMES + "a.x={}; alert(a.c);");
-    testSameEs6(EXT_OBJLIT_NAMES + "a.x = {}; alert(a.c);");
+    testSame(LET_NAMES + "a.x={}; alert(a.c);");
+    testSame(EXT_OBJLIT_NAMES + "a.x = {}; alert(a.c);");
   }
 
   public void testRefToDefinedProperties3() {
@@ -113,8 +113,8 @@ public final class CheckGlobalNamesTest extends Es6CompilerTestCase {
     testSame(GET_NAMES + "alert(a.d);");
     testSame(SET_NAMES + "alert(a.d);");
 
-    testSameEs6(LET_NAMES + "alert(a.d);");
-    testSameEs6(CONST_NAMES + "alert(a.d);");
+    testSame(LET_NAMES + "alert(a.d);");
+    testSame(CONST_NAMES + "alert(a.d);");
   }
 
   public void testRefToMethod1() {
@@ -139,27 +139,27 @@ public final class CheckGlobalNamesTest extends Es6CompilerTestCase {
   public void testRefToUndefinedProperty1() {
     testWarning(NAMES + "alert(a.x);", UNDEFINED_NAME_WARNING);
 
-    testWarningEs6(CLASS_DECLARATION_NAMES + "alert(A.x);", UNDEFINED_NAME_WARNING);
-    testWarningEs6(CLASS_EXPRESSION_NAMES + "alert(A.x);", UNDEFINED_NAME_WARNING);
-    testWarningEs6("let " + CLASS_EXPRESSION_NAMES_STUB + "alert(A.x);",
+    testWarning(CLASS_DECLARATION_NAMES + "alert(A.x);", UNDEFINED_NAME_WARNING);
+    testWarning(CLASS_EXPRESSION_NAMES + "alert(A.x);", UNDEFINED_NAME_WARNING);
+    testWarning("let " + CLASS_EXPRESSION_NAMES_STUB + "alert(A.x);",
         UNDEFINED_NAME_WARNING);
-    testWarningEs6("const " + CLASS_EXPRESSION_NAMES_STUB + "alert(A.x);",
+    testWarning("const " + CLASS_EXPRESSION_NAMES_STUB + "alert(A.x);",
         UNDEFINED_NAME_WARNING);
-    testWarningEs6(EXT_OBJLIT_NAMES + "alert(a.x);", UNDEFINED_NAME_WARNING);
+    testWarning(EXT_OBJLIT_NAMES + "alert(a.x);", UNDEFINED_NAME_WARNING);
 
   }
 
   public void testRefToUndefinedProperty2() {
     testWarning(NAMES + "a.x();", UNDEFINED_NAME_WARNING);
 
-    testWarningEs6(LET_NAMES + "a.x();", UNDEFINED_NAME_WARNING);
-    testWarningEs6(CONST_NAMES + "a.x();", UNDEFINED_NAME_WARNING);
+    testWarning(LET_NAMES + "a.x();", UNDEFINED_NAME_WARNING);
+    testWarning(CONST_NAMES + "a.x();", UNDEFINED_NAME_WARNING);
 
-    testWarningEs6(CLASS_DECLARATION_NAMES + "alert(A.x());", UNDEFINED_NAME_WARNING);
-    testWarningEs6(CLASS_EXPRESSION_NAMES + "alert(A.x());", UNDEFINED_NAME_WARNING);
-    testWarningEs6("let " + CLASS_EXPRESSION_NAMES_STUB + "alert(A.x());",
+    testWarning(CLASS_DECLARATION_NAMES + "alert(A.x());", UNDEFINED_NAME_WARNING);
+    testWarning(CLASS_EXPRESSION_NAMES + "alert(A.x());", UNDEFINED_NAME_WARNING);
+    testWarning("let " + CLASS_EXPRESSION_NAMES_STUB + "alert(A.x());",
         UNDEFINED_NAME_WARNING);
-    testWarningEs6("const " + CLASS_EXPRESSION_NAMES_STUB + "alert(A.x());",
+    testWarning("const " + CLASS_EXPRESSION_NAMES_STUB + "alert(A.x());",
         UNDEFINED_NAME_WARNING);
   }
 
@@ -168,8 +168,8 @@ public final class CheckGlobalNamesTest extends Es6CompilerTestCase {
     testWarning(GET_NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
     testWarning(SET_NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
 
-    testWarningEs6(LET_NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
-    testWarningEs6(CONST_NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
+    testWarning(LET_NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
+    testWarning(CONST_NAMES + "alert(a.c.x);", UNDEFINED_NAME_WARNING);
   }
 
   public void testRefToUndefinedProperty4() {
@@ -181,42 +181,42 @@ public final class CheckGlobalNamesTest extends Es6CompilerTestCase {
   public void testRefToDescendantOfUndefinedProperty1() {
     testWarning(NAMES + "var c = a.x.b;", UNDEFINED_NAME_WARNING);
 
-    testWarningEs6(LET_NAMES + "var c = a.x.b;", UNDEFINED_NAME_WARNING);
-    testWarningEs6(CONST_NAMES + "var c = a.x.b;", UNDEFINED_NAME_WARNING);
+    testWarning(LET_NAMES + "var c = a.x.b;", UNDEFINED_NAME_WARNING);
+    testWarning(CONST_NAMES + "var c = a.x.b;", UNDEFINED_NAME_WARNING);
 
-    testWarningEs6(CLASS_DECLARATION_NAMES + "var z = A.x.y;", UNDEFINED_NAME_WARNING);
-    testWarningEs6(CLASS_EXPRESSION_NAMES + "var z = A.x.y;", UNDEFINED_NAME_WARNING);
-    testWarningEs6("let " + CLASS_EXPRESSION_NAMES_STUB + "var z = A.x.y;",
+    testWarning(CLASS_DECLARATION_NAMES + "var z = A.x.y;", UNDEFINED_NAME_WARNING);
+    testWarning(CLASS_EXPRESSION_NAMES + "var z = A.x.y;", UNDEFINED_NAME_WARNING);
+    testWarning("let " + CLASS_EXPRESSION_NAMES_STUB + "var z = A.x.y;",
         UNDEFINED_NAME_WARNING);
-    testWarningEs6("const " + CLASS_EXPRESSION_NAMES_STUB + "var z = A.x.y;",
+    testWarning("const " + CLASS_EXPRESSION_NAMES_STUB + "var z = A.x.y;",
         UNDEFINED_NAME_WARNING);
   }
 
   public void testRefToDescendantOfUndefinedProperty2() {
     testWarning(NAMES + "a.x.b();", UNDEFINED_NAME_WARNING);
 
-    testWarningEs6(CLASS_DECLARATION_NAMES + "A.x.y();", UNDEFINED_NAME_WARNING);
-    testWarningEs6(CLASS_EXPRESSION_NAMES + "A.x.y();", UNDEFINED_NAME_WARNING);
-    testWarningEs6("let " + CLASS_EXPRESSION_NAMES_STUB + "A.x.y();",
+    testWarning(CLASS_DECLARATION_NAMES + "A.x.y();", UNDEFINED_NAME_WARNING);
+    testWarning(CLASS_EXPRESSION_NAMES + "A.x.y();", UNDEFINED_NAME_WARNING);
+    testWarning("let " + CLASS_EXPRESSION_NAMES_STUB + "A.x.y();",
         UNDEFINED_NAME_WARNING);
-    testWarningEs6("const " + CLASS_EXPRESSION_NAMES_STUB + "A.x.y();",
+    testWarning("const " + CLASS_EXPRESSION_NAMES_STUB + "A.x.y();",
         UNDEFINED_NAME_WARNING);
   }
 
   public void testRefToDescendantOfUndefinedProperty3() {
     testWarning(NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING);
 
-    testWarningEs6(CLASS_DECLARATION_NAMES + "A.x.y = 42;", UNDEFINED_NAME_WARNING);
-    testWarningEs6(CLASS_EXPRESSION_NAMES + "A.x.y = 42;", UNDEFINED_NAME_WARNING);
-    testWarningEs6("let " + CLASS_EXPRESSION_NAMES_STUB + "A.x.y = 42;",
+    testWarning(CLASS_DECLARATION_NAMES + "A.x.y = 42;", UNDEFINED_NAME_WARNING);
+    testWarning(CLASS_EXPRESSION_NAMES + "A.x.y = 42;", UNDEFINED_NAME_WARNING);
+    testWarning("let " + CLASS_EXPRESSION_NAMES_STUB + "A.x.y = 42;",
         UNDEFINED_NAME_WARNING);
-    testWarningEs6("const " + CLASS_EXPRESSION_NAMES_STUB + "A.x.y = 42;",
+    testWarning("const " + CLASS_EXPRESSION_NAMES_STUB + "A.x.y = 42;",
         UNDEFINED_NAME_WARNING);
   }
 
   public void testComputedPropNameNoWarning() {
     // Computed prop name is not collected in GlobalNamespace
-    testSameEs6("var comp; var a = {}; a[comp + 'name'] = 3");
+    testSame("var comp; var a = {}; a[comp + 'name'] = 3");
   }
 
   public void testUndefinedPrototypeMethodRefGivesNoWarning() {
@@ -235,14 +235,14 @@ public final class CheckGlobalNamesTest extends Es6CompilerTestCase {
     testWarning(NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING,
         UNDEFINED_NAME_WARNING.format("a.x"));
 
-    testWarningEs6(LET_NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING,
+    testWarning(LET_NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING,
         UNDEFINED_NAME_WARNING.format("a.x"));
-    testWarningEs6(CONST_NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING,
+    testWarning(CONST_NAMES + "a.x.b = 3;", UNDEFINED_NAME_WARNING,
         UNDEFINED_NAME_WARNING.format("a.x"));
 
-    testWarningEs6(CLASS_DECLARATION_NAMES + "A.x.y = 42;", UNDEFINED_NAME_WARNING,
+    testWarning(CLASS_DECLARATION_NAMES + "A.x.y = 42;", UNDEFINED_NAME_WARNING,
         UNDEFINED_NAME_WARNING.format("A.x"));
-    testWarningEs6(CLASS_EXPRESSION_NAMES + "A.x.y = 42;", UNDEFINED_NAME_WARNING,
+    testWarning(CLASS_EXPRESSION_NAMES + "A.x.y = 42;", UNDEFINED_NAME_WARNING,
         UNDEFINED_NAME_WARNING.format("A.x"));
   }
 
@@ -318,24 +318,24 @@ public final class CheckGlobalNamesTest extends Es6CompilerTestCase {
 
   public void testLateDefinedName1() {
     testWarning("x.y = {}; var x = {};", NAME_DEFINED_LATE_WARNING);
-    testWarningEs6("x.y = {}; let x = {};", NAME_DEFINED_LATE_WARNING);
-    testWarningEs6("x.y = {}; const x = {};", NAME_DEFINED_LATE_WARNING);
+    testWarning("x.y = {}; let x = {};", NAME_DEFINED_LATE_WARNING);
+    testWarning("x.y = {}; const x = {};", NAME_DEFINED_LATE_WARNING);
   }
 
   public void testLateDefinedName2() {
     testWarning("var x = {}; x.y.z = {}; x.y = {};", NAME_DEFINED_LATE_WARNING);
-    testWarningEs6("let x = {}; x.y.z = {}; x.y = {};", NAME_DEFINED_LATE_WARNING);
-    testWarningEs6("const x = {}; x.y.z = {}; x.y = {};", NAME_DEFINED_LATE_WARNING);
+    testWarning("let x = {}; x.y.z = {}; x.y = {};", NAME_DEFINED_LATE_WARNING);
+    testWarning("const x = {}; x.y.z = {}; x.y = {};", NAME_DEFINED_LATE_WARNING);
   }
 
   public void testLateDefinedName3() {
     testWarning("var x = {}; x.y.z = {}; x.y = {z: {}};",
         NAME_DEFINED_LATE_WARNING);
-    testWarningEs6("let x = {}; x.y.z = {}; x.y = {z: {}};",
+    testWarning("let x = {}; x.y.z = {}; x.y = {z: {}};",
         NAME_DEFINED_LATE_WARNING);
-    testWarningEs6("const x = {}; x.y.z = {}; x.y = {z: {}};",
+    testWarning("const x = {}; x.y.z = {}; x.y = {z: {}};",
         NAME_DEFINED_LATE_WARNING);
-    testWarningEs6("var x = {}; x.y.z = {}; x.y = {z};",
+    testWarning("var x = {}; x.y.z = {}; x.y = {z};",
         NAME_DEFINED_LATE_WARNING);
   }
 
@@ -357,18 +357,18 @@ public final class CheckGlobalNamesTest extends Es6CompilerTestCase {
   }
 
   public void testLateDefinedNameOfClass1() {
-    testWarningEs6("X.y = function(){}; class X{};", NAME_DEFINED_LATE_WARNING);
-    testWarningEs6("X.y = function(){}; var X = class{};", NAME_DEFINED_LATE_WARNING);
+    testWarning("X.y = function(){}; class X{};", NAME_DEFINED_LATE_WARNING);
+    testWarning("X.y = function(){}; var X = class{};", NAME_DEFINED_LATE_WARNING);
   }
 
   public void testLateDefinedNameOfClass2() {
-    testWarningEs6("X.y = {}; class X{};", NAME_DEFINED_LATE_WARNING);
-    testWarningEs6("X.y = {}; var X = class{};", NAME_DEFINED_LATE_WARNING);
+    testWarning("X.y = {}; class X{};", NAME_DEFINED_LATE_WARNING);
+    testWarning("X.y = {}; var X = class{};", NAME_DEFINED_LATE_WARNING);
   }
 
   public void testLateDefinedNameOfClass3() {
-    testWarningEs6("class X{}; X.y.z = {}; X.y = {};", NAME_DEFINED_LATE_WARNING);
-    testWarningEs6("var X = class{}; X.y.z = {}; X.y = {};", NAME_DEFINED_LATE_WARNING);
+    testWarning("class X{}; X.y.z = {}; X.y = {};", NAME_DEFINED_LATE_WARNING);
+    testWarning("var X = class{}; X.y.z = {}; X.y = {};", NAME_DEFINED_LATE_WARNING);
   }
 
   public void testOkLateDefinedName1() {

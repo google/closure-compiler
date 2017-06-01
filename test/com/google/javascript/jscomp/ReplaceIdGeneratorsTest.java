@@ -19,12 +19,13 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.ReplaceIdGenerators.INVALID_GENERATOR_PARAMETER;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests for {@link ReplaceIdGenerators}.
  *
  */
-public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
+public final class ReplaceIdGeneratorsTest extends CompilerTestCase {
 
   private boolean generatePseudoNames = false;
   private ReplaceIdGenerators lastPass = null;
@@ -60,6 +61,7 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     generatePseudoNames = false;
     previousMappings = null;
   }
@@ -259,7 +261,7 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
             "/** @idGenerator */ goog.id = function() {};",
             "things = {'foo$0': function() {}}"));
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             "/** @idGenerator */ goog.id = function() {};",
             "things = goog.id({foo: function*() {}})"),
@@ -272,19 +274,19 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
   }
 
   public void testObjectLit_ES6() {
-    testErrorEs6(LINE_JOINER.join(
+    testError(LINE_JOINER.join(
         "/** @idGenerator */",
         "goog.id = function() {};",
         "things = goog.id({fooX() {}})"),
         ReplaceIdGenerators.SHORTHAND_FUNCTION_NOT_SUPPORTED_IN_ID_GEN);
 
-    testErrorEs6(LINE_JOINER.join(
+    testError(LINE_JOINER.join(
         "/** @idGenerator */ ",
         "goog.id = function() {};",
         "things = goog.id({shorthand})"),
         ReplaceIdGenerators.SHORTHAND_ASSIGNMENT_NOT_SUPPORTED_IN_ID_GEN);
 
-    testErrorEs6(LINE_JOINER.join(
+    testError(LINE_JOINER.join(
         "/** @idGenerator */",
         "goog.id = function() {};",
         "things = goog.id({['fooX']: 'test'})"),
@@ -292,7 +294,7 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
   }
 
   public void testClass() {
-    testSameEs6("", LINE_JOINER.join(
+    testSame("", LINE_JOINER.join(
         "/** @idGenerator */",
         "goog.id = function() {};",
         "things = goog.id(class fooBar{})"),
@@ -366,20 +368,20 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
   }
 
   public void testLet() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "/** @consistentIdGenerator */ let id = function() {};", "foo.bar = id('foo_bar')"),
         LINE_JOINER.join("/** @consistentIdGenerator */ let id = function() {};", "foo.bar = 'a'"),
         LINE_JOINER.join(
             "/** @consistentIdGenerator */ let id = function() {};", "foo.bar = 'foo_bar$0'"));
 
-    testNonPseudoSupportingGeneratorEs6(
+    testNonPseudoSupportingGenerator(
         "/** @stableIdGenerator */ let id = function() {};" + "foo.bar = id('foo_bar')",
         "/** @stableIdGenerator */ let id = function() {};" + "foo.bar = '125lGg'");
   }
 
   public void testConst() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "/** @consistentIdGenerator */ const id = function() {};", "foo.bar = id('foo_bar')"),
         LINE_JOINER.join(
@@ -387,7 +389,7 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
         LINE_JOINER.join(
             "/** @consistentIdGenerator */ const id = function() {};", "foo.bar = 'foo_bar$0'"));
 
-    testNonPseudoSupportingGeneratorEs6(
+    testNonPseudoSupportingGenerator(
         LINE_JOINER.join(
             "/** @stableIdGenerator */ const id = function() {};", "foo.bar = id('foo_bar')"),
         LINE_JOINER.join(
@@ -572,7 +574,7 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
             "/** @stableIdGenerator */ var id = function() {};",
             "function fb() {foo.bar = '125lGg'}"));
 
-    testErrorEs6(
+    testError(
         LINE_JOINER.join(
             "/** @idGenerator */",
             "var id = function() {}; ",
@@ -637,24 +639,10 @@ public final class ReplaceIdGeneratorsTest extends Es6CompilerTestCase {
     test(code, expectedPseudo);
   }
 
-  private void testEs6(String code, String expected, String expectedPseudo) {
-    generatePseudoNames = false;
-    testEs6(code, expected);
-    generatePseudoNames = true;
-    testEs6(code, expectedPseudo);
-  }
-
   private void testNonPseudoSupportingGenerator(String code, String expected) {
     generatePseudoNames = false;
     test(code, expected);
     generatePseudoNames = true;
     test(code, expected);
-  }
-
-  private void testNonPseudoSupportingGeneratorEs6(String code, String expected) {
-    generatePseudoNames = false;
-    testEs6(code, expected);
-    generatePseudoNames = true;
-    testEs6(code, expected);
   }
 }

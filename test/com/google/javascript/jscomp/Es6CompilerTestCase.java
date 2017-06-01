@@ -326,13 +326,14 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
   }
 
   /**
-   * Verifies that the compiler generates expected output and the given warning
-   * for the given input, under both ES5 and ES6 modes.
+   * Verifies that the compiler generates expected output and the given warning for the given input,
+   * under both ES5 and ES6 modes.
    *
    * @param js Input
    * @param expected Expected JS output
    * @param warning Expected warning
    */
+  @Override
   public void testWarning(String js, String expected, DiagnosticType warning) {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     super.test(js, expected, null, warning);
@@ -364,26 +365,13 @@ public abstract class Es6CompilerTestCase extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
 
-  /**
-   * Verifies that the compiler generates expected output and the given warning
-   * for the given input, under just ES6. Usually this implies that the input
-   * contains ES6 features.
-   *
-   * @param js Input
-   * @param expected Expected JS output
-   * @param warning Expected warning
-   */
-  public void testWarningEs6(String js, String expected, DiagnosticType warning) {
-    testWarning(js, expected, warning, LanguageMode.ECMASCRIPT_2015);
-  }
-
   @Override
   protected void testExternChanges(String extern, String input, String expectedExtern) {
     testExternChanges(extern, input, expectedExtern, LanguageMode.ECMASCRIPT_2015);
     testExternChanges(extern, input, expectedExtern, LanguageMode.ECMASCRIPT5);
   }
 
-  protected void testExternChanges(String extern, String input,
+  private void testExternChanges(String extern, String input,
       String expectedExtern, LanguageMode lang) {
     setAcceptedLanguage(lang);
     super.testExternChanges(extern, input, expectedExtern);

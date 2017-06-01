@@ -16,10 +16,18 @@
 
 package com.google.javascript.jscomp;
 
-public final class CheckSideEffectsTest extends Es6CompilerTestCase {
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
+public final class CheckSideEffectsTest extends CompilerTestCase {
   public CheckSideEffectsTest() {
     this.parseTypeInfo = true;
     allowExternsChanges(true);
+  }
+
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   @Override
@@ -37,8 +45,8 @@ public final class CheckSideEffectsTest extends Es6CompilerTestCase {
   public void testUselessCode() {
     testSame("function f(x) { if(x) return; }");
     testWarning("function f(x) { if(x); }", e);
-    testSameEs6("var f = x=>x");
-    testWarningEs6("var f = (x)=>{ if(x); }", e);
+    testSame("var f = x=>x");
+    testWarning("var f = (x)=>{ if(x); }", e);
 
     testSame("if(x) x = y;");
     testWarning("if(x) x == bar();", "if(x) JSCOMPILER_PRESERVE(x == bar());", e);
@@ -78,62 +86,62 @@ public final class CheckSideEffectsTest extends Es6CompilerTestCase {
             "function f(a, b){}",
             "f(1,(JSCOMPILER_PRESERVE(2), 3));"), e);
 
-    testWarningEs6("var x = `TemplateA`\n'TestB'",
+    testWarning("var x = `TemplateA`\n'TestB'",
         "var x = `TemplateA`\nJSCOMPILER_PRESERVE('TestB')", e);
-    testWarningEs6("`LoneTemplate`", "JSCOMPILER_PRESERVE(`LoneTemplate`)", e);
-    testWarningEs6(
+    testWarning("`LoneTemplate`", "JSCOMPILER_PRESERVE(`LoneTemplate`)", e);
+    testWarning(
         LINE_JOINER.join(
             "var name = 'Bad';",
             "`${name}Template`;"),
         LINE_JOINER.join(
             "var name = 'Bad';",
             "JSCOMPILER_PRESERVE(`${name}Template`)"), e);
-    testWarningEs6(
+    testWarning(
         LINE_JOINER.join(
             "var name = 'BadTail';",
             "`Template${name}`;"),
         LINE_JOINER.join(
             "var name = 'BadTail';",
             "JSCOMPILER_PRESERVE(`Template${name}`)"), e);
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "var name = 'Good';",
             "var templateString = `${name}Template`;"));
-    testSameEs6("var templateString = `Template`;");
-    testSameEs6("tagged`Template`;");
-    testSameEs6("tagged`${name}Template`;");
+    testSame("var templateString = `Template`;");
+    testSame("tagged`Template`;");
+    testSame("tagged`${name}Template`;");
 
-    testSameEs6(LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
         "var obj = {",
         "  itm1: 1,",
         "  itm2: 2",
         "}",
         "var { itm1: de_item1, itm2: de_item2 } = obj;"));
-    testSameEs6(LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
         "var obj = {",
         "  itm1: 1,",
         "  itm2: 2",
         "}",
         "var { itm1, itm2 } = obj;"));
-    testSameEs6(LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
         "var arr = ['item1', 'item2', 'item3'];",
         "var [ itm1 = 1, itm2 = 2 ] = arr;"));
-    testSameEs6(LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
         "var arr = ['item1', 'item2', 'item3'];",
         "var [ itm1 = 1, itm2 = 2 ] = badArr;"));
-    testSameEs6(LINE_JOINER.join(
+    testSame(LINE_JOINER.join(
         "var arr = ['item1', 'item2', 'item3'];",
         "function f(){}",
         "var [ itm1 = f(), itm2 = 2 ] = badArr;"));
 
-    testSameEs6("function c(a, b = 1) {}; c(1);");
-    testSameEs6("function c(a, b = f()) {}; c(1);");
-    testSameEs6("function c(a, {b, c}) {}; c(1);");
-    testSameEs6("function c(a, {b, c}) {}; c(1, {b: 2, c: 3});");
+    testSame("function c(a, b = 1) {}; c(1);");
+    testSame("function c(a, b = f()) {}; c(1);");
+    testSame("function c(a, {b, c}) {}; c(1);");
+    testSame("function c(a, {b, c}) {}; c(1, {b: 2, c: 3});");
 
-    testWarningEs6("var f = s => {key:s}", e);
-    testWarningEs6("var f = s => {key:s + 1}", e);
-    testWarningEs6("var f = s => {s}", e);
+    testWarning("var f = s => {key:s}", e);
+    testWarning("var f = s => {key:s + 1}", e);
+    testWarning("var f = s => {s}", e);
   }
 
   public void testUselessCodeInFor() {

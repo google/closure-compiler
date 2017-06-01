@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
-public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase {
+public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -27,6 +27,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
 
   @Override
   protected void setUp() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     allowExternsChanges(true);
     enableTypeCheck();
     runTypeCheckAfterProcessing = true;
@@ -80,8 +81,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends Es6CompilerTestCase
     testExternChanges(
         "var window; var x = ()=>{}",
         "var b",
-        "var window;var x=()=>{};window.x;",
-        LanguageMode.ECMASCRIPT_2015);
+        "var window;var x=()=>{};window.x;");
   }
 
   public void testWindowProperty6() {

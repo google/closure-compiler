@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -23,7 +24,7 @@ import com.google.javascript.rhino.Node;
  *
  */
 
-public final class NameAnalyzerTest extends Es6CompilerTestCase {
+public final class NameAnalyzerTest extends CompilerTestCase {
 
   private static String kExterns =
       "var window, top;" +
@@ -63,7 +64,9 @@ public final class NameAnalyzerTest extends Es6CompilerTestCase {
   }
 
   @Override
-  protected void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     super.enableNormalize();
   }
 
@@ -101,54 +104,54 @@ public final class NameAnalyzerTest extends Es6CompilerTestCase {
   }
 
   public void testRemoveLetDeclaration1() {
-    testEs6("let foo = 3;", "");
+    test("let foo = 3;", "");
   }
 
   public void testRemoveLetDeclaration2() {
-    testEs6("let foo = 3, bar = 4; externfoo = foo;",
+    test("let foo = 3, bar = 4; externfoo = foo;",
          "let foo = 3; externfoo = foo;");
   }
 
   public void testRemoveLetDeclaration3() {
-    testEs6("let a = f(), b = 1, c = 2; b; c", "f();let b = 1, c = 2; b; c");
+    test("let a = f(), b = 1, c = 2; b; c", "f();let b = 1, c = 2; b; c");
   }
 
   public void testRemoveLetDeclaration4() {
-    testEs6("let a = 0, b = f(), c = 2; a; c", "let a = 0;f();let c = 2; a; c");
+    test("let a = 0, b = f(), c = 2; a; c", "let a = 0;f();let c = 2; a; c");
   }
 
   public void testRemoveLetDeclaration5() {
-    testEs6("let a = 0, b = 1, c = f(); a; b", "let a = 0, b = 1; f(); a; b");
+    test("let a = 0, b = 1, c = f(); a; b", "let a = 0, b = 1; f(); a; b");
   }
 
   public void testRemoveLetDeclaration6() {
-    testEs6("let a = 0, b = a = 1; a", "let a = 0; a = 1; a");
+    test("let a = 0, b = a = 1; a", "let a = 0; a = 1; a");
   }
 
   public void testRemoveLetDeclaration7() {
-    testEs6("let a = 0, b = a = 1", "");
+    test("let a = 0, b = a = 1", "");
   }
 
   public void testRemoveLetDeclaration8() {
-    testEs6("let a;let b = 0, c = a = b = 1", "");
+    test("let a;let b = 0, c = a = b = 1", "");
   }
 
   public void testRemoveLetDeclaration9() {
     // The variable inside the block doesn't get removed (but does get renamed by Normalize).
-    testEs6(
+    test(
         "let x = 1; if (true) { let x = 2; x; }",
         "if (true) { let x$jscomp$1 = 2; x$jscomp$1; }");
   }
 
   // Let/const defined variables in blocks are not global so NameAnalyzer doesn't remove them.
   public void testDontRemoveLetInBlock1() {
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "if (true) {",
             "  let x = 1; alert(x);",
             "}"));
 
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "if (true) {",
             "  let x = 1;",
@@ -156,7 +159,7 @@ public final class NameAnalyzerTest extends Es6CompilerTestCase {
   }
 
   public void testDontRemoveLetInBlock2() {
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "if (true) {",
             "  let x = 1; alert(x);",
@@ -164,7 +167,7 @@ public final class NameAnalyzerTest extends Es6CompilerTestCase {
             "  let x = 1; alert(x);",
             "}"));
 
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "if (true) {",
             "  let x = 1;",
@@ -174,16 +177,16 @@ public final class NameAnalyzerTest extends Es6CompilerTestCase {
   }
 
   public void testRemoveConstDeclaration1() {
-    testEs6("const a = 4;", "");
+    test("const a = 4;", "");
   }
 
   public void testRemoveConstDeclaration2() {
-    testSameEs6("const a = 4; window.x = a;");
+    testSame("const a = 4; window.x = a;");
   }
 
   public void testRemoveConstDeclaration3() {
     // The variable inside the block doesn't get removed (but does get renamed by Normalize).
-    testEs6(
+    test(
         "const x = 1; if (true) { const x = 2; x; }",
         "if (true) { const x$jscomp$1 = 2; x$jscomp$1; }");
   }

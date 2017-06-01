@@ -21,14 +21,15 @@ import static com.google.javascript.jscomp.lint.CheckUselessBlocks.USELESS_BLOCK
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import com.google.javascript.jscomp.Es6CompilerTestCase;
 
 /**
  * Test case for {@link CheckUselessBlocks}.
  */
-public final class CheckUselessBlocksTest extends Es6CompilerTestCase {
+public final class CheckUselessBlocksTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckUselessBlocks(compiler);
@@ -41,6 +42,11 @@ public final class CheckUselessBlocksTest extends Es6CompilerTestCase {
     return options;
   }
 
+  @Override
+  public void setUp() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+  }
+
   public void testCheckUselessBlocks_noWarning() {
     testSame("while (foo) { bar(); }");
     testSame("if (true) { var x = 1; }");
@@ -50,12 +56,12 @@ public final class CheckUselessBlocksTest extends Es6CompilerTestCase {
     testSame("blah: { break blah; }");
     // TODO(moz): For block-scoped function declaration, we should technically
     // warn if we are in non-strict mode and the language mode is ES5 or below.
-    testSameEs6("{ function foo() {} }");
-    testSameEs6("let x = 1;");
-    testSameEs6("{ let x = 1; }");
-    testSameEs6("if (true) { let x = 1; }");
-    testSameEs6("{ const y = 1; }");
-    testSameEs6("{ class Foo {} }");
+    testSame("{ function foo() {} }");
+    testSame("let x = 1;");
+    testSame("{ let x = 1; }");
+    testSame("if (true) { let x = 1; }");
+    testSame("{ const y = 1; }");
+    testSame("{ class Foo {} }");
   }
 
   public void testCheckUselessBlocks_warning() {
@@ -81,8 +87,8 @@ public final class CheckUselessBlocksTest extends Es6CompilerTestCase {
         "  baz();",
         "}"), USELESS_BLOCK);
     testWarning("function bar() { { baz(); } }", USELESS_BLOCK);
-    testWarningEs6("{ let x = function() {}; {} }", USELESS_BLOCK);
-    testWarningEs6("{ let x = function() { {} }; }", USELESS_BLOCK);
-    testWarningEs6("{ var f = class {}; }", USELESS_BLOCK);
+    testWarning("{ let x = function() {}; {} }", USELESS_BLOCK);
+    testWarning("{ let x = function() { {} }; }", USELESS_BLOCK);
+    testWarning("{ var f = class {}; }", USELESS_BLOCK);
   }
 }

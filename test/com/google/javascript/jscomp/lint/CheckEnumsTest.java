@@ -23,14 +23,15 @@ import static com.google.javascript.jscomp.lint.CheckEnums.SHORTHAND_ASSIGNMENT_
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import com.google.javascript.jscomp.Es6CompilerTestCase;
 
 /**
  * Test case for {@link CheckEnums}.
  */
-public final class CheckEnumsTest extends Es6CompilerTestCase {
+public final class CheckEnumsTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckEnums(compiler);
@@ -41,6 +42,11 @@ public final class CheckEnumsTest extends Es6CompilerTestCase {
     super.getOptions(options);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
     return options;
+  }
+
+  @Override
+  public void setUp() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   public void testCheckEnums() throws Exception {
@@ -58,9 +64,9 @@ public final class CheckEnumsTest extends Es6CompilerTestCase {
     testWarning("/** @enum {string} */ var Enum = {A: 'foo', B: 'foo'};",
         DUPLICATE_ENUM_VALUE);
 
-    testWarningEs6("/** @enum {number} */ var Enum = {A};",
+    testWarning("/** @enum {number} */ var Enum = {A};",
         SHORTHAND_ASSIGNMENT_IN_ENUM);
-    testWarningEs6("/** @enum {string} */ var Enum = {['prop' + f()]: 'foo'};",
+    testWarning("/** @enum {string} */ var Enum = {['prop' + f()]: 'foo'};",
         COMPUTED_PROP_NAME_IN_ENUM);
 
     testWarning(

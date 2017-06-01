@@ -20,9 +20,9 @@ import static com.google.javascript.jscomp.lint.CheckPrimitiveAsObject.PRIMITIVE
 
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
-import com.google.javascript.jscomp.Es6CompilerTestCase;
+import com.google.javascript.jscomp.CompilerTestCase;
 
-public final class CheckPrimitiveAsObjectTest extends Es6CompilerTestCase {
+public final class CheckPrimitiveAsObjectTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {

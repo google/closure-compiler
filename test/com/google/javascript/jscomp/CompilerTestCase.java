@@ -781,6 +781,17 @@ public abstract class CompilerTestCase extends TestCase {
 
   /**
    * Verifies that the compiler generates the given warning for the given input.
+   *
+   * @param js Input
+   * @param warning Expected warning
+   */
+  public void testWarning(String js, String expected, DiagnosticType warning) {
+    assertNotNull(warning);
+    test(js, expected, null, warning);
+  }
+
+  /**
+   * Verifies that the compiler generates the given warning for the given input.
    */
   public void testWarning(String[] js, DiagnosticType warning) {
     assertNotNull(warning);

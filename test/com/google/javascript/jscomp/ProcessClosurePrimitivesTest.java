@@ -46,14 +46,17 @@ import com.google.javascript.rhino.Node;
  *
  */
 
-public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
+public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   private String additionalCode;
   private String additionalEndCode;
   private boolean addAdditionalNamespace;
   private boolean preserveGoogProvidesAndRequires;
   private boolean banGoogBase;
 
-  @Override protected void setUp() {
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     additionalCode = null;
     additionalEndCode = null;
     addAdditionalNamespace = false;
@@ -133,6 +136,10 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
     return 1;
   }
 
+  private void testModule(String[] moduleInputs, String[] expected) {
+    test(createModuleStar(moduleInputs), expected, null);
+  }
+
   public void testSimpleProvides() {
     test("goog.provide('foo');", "/** @const */ var foo={};");
     test("goog.provide('foo.bar');", "/** @const */ var foo={}; /** @const */ foo.bar={};");
@@ -202,21 +209,21 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
          "var foo = {a: 0};");
     test("goog.provide('foo'); foo = function(){};",
          "var foo = function(){};");
-    testEs6("goog.provide('foo'); foo = ()=>{};",
+    test("goog.provide('foo'); foo = ()=>{};",
             "var foo = ()=>{};");
 
     test("goog.provide('foo'); var foo = 0;",
          "var foo = 0;");
-    testEs6("goog.provide('foo'); let foo = 0;",
+    test("goog.provide('foo'); let foo = 0;",
             "let foo = 0;");
-    testEs6("goog.provide('foo'); const foo = 0;",
+    test("goog.provide('foo'); const foo = 0;",
             "const foo = 0;");
 
     test("goog.provide('foo'); var foo = {a: 0};",
          "var foo = {a: 0};");
     test("goog.provide('foo'); var foo = function(){};",
          "var foo = function(){};");
-    testEs6("goog.provide('foo'); var foo = ()=>{};", "var foo = ()=>{};");
+    test("goog.provide('foo'); var foo = ()=>{};", "var foo = ()=>{};");
 
     test(
         "goog.provide('foo.bar.Baz'); foo.bar.Baz=function(){};",
@@ -245,7 +252,7 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
             "foo.bar.moo={E:1};",
             "foo.bar.moo={E:2};"));
 
-    testEs6("goog.provide('foo'); var foo = class {}", "var foo = class {}");
+    test("goog.provide('foo'); var foo = class {}", "var foo = class {}");
   }
 
   public void testProvidedDeclaredFunctionError() {
@@ -253,7 +260,7 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
   }
 
   public void testProvidedDeclaredClassError() {
-    testErrorEs6("goog.provide('foo'); class foo {}", CLASS_NAMESPACE_ERROR);
+    testError("goog.provide('foo'); class foo {}", CLASS_NAMESPACE_ERROR);
   }
 
   public void testRemovalMultipleAssignment1() {
@@ -264,14 +271,14 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
   public void testRemovalMultipleAssignment2() {
     test("goog.provide('foo'); var foo = 0; foo = 1",
          "var foo = 0; foo = 1;");
-    testEs6("goog.provide('foo'); let foo = 0; let foo = 1",
+    test("goog.provide('foo'); let foo = 0; let foo = 1",
         "let foo = 0; let foo = 1;");
   }
 
   public void testRemovalMultipleAssignment3() {
     test("goog.provide('foo'); foo = 0; var foo = 1",
          "foo = 0; var foo = 1;");
-    testEs6("goog.provide('foo'); foo = 0; let foo = 1",
+    test("goog.provide('foo'); foo = 0; let foo = 1",
         "foo = 0; let foo = 1;");
   }
 
@@ -294,7 +301,7 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
   }
 
   public void testNoRemovalFunction3() {
-    testEs6(
+    test(
         "goog.provide('foo'); function f(foo = 0){}",
         "/** @const */ var foo = {}; function f(foo = 0){}");
   }
@@ -375,9 +382,9 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
     testError("goog.provide('foo.bar'); goog.provide('foo'); goog.provide('foo');",
         DUPLICATE_NAMESPACE_ERROR);
 
-    testErrorEs6("goog.provide(`template`);", INVALID_ARGUMENT_ERROR);
-    testErrorEs6("goog.provide(tagged`template`);", INVALID_ARGUMENT_ERROR);
-    testErrorEs6("goog.provide(`${template}Sub`);", INVALID_ARGUMENT_ERROR);
+    testError("goog.provide(`template`);", INVALID_ARGUMENT_ERROR);
+    testError("goog.provide(tagged`template`);", INVALID_ARGUMENT_ERROR);
+    testError("goog.provide(`${template}Sub`);", INVALID_ARGUMENT_ERROR);
   }
 
   public void testProvideErrorCases2() {
@@ -430,9 +437,9 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
     testError("goog.require([]);", INVALID_ARGUMENT_ERROR);
     testError("goog.require({});", INVALID_ARGUMENT_ERROR);
 
-    testErrorEs6("goog.require(`template`);", INVALID_ARGUMENT_ERROR);
-    testErrorEs6("goog.require(tagged`template`);", INVALID_ARGUMENT_ERROR);
-    testErrorEs6("goog.require(`${template}Sub`);", INVALID_ARGUMENT_ERROR);
+    testError("goog.require(`template`);", INVALID_ARGUMENT_ERROR);
+    testError("goog.require(tagged`template`);", INVALID_ARGUMENT_ERROR);
+    testError("goog.require(`${template}Sub`);", INVALID_ARGUMENT_ERROR);
   }
 
   public void testLateProvides() {
@@ -484,9 +491,9 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
     testError("goog.forwardDeclare('A.B', 'C.D');",
         ProcessClosurePrimitives.INVALID_FORWARD_DECLARE);
 
-    testErrorEs6("goog.forwardDeclare(`template`);",
+    testError("goog.forwardDeclare(`template`);",
         ProcessClosurePrimitives.INVALID_FORWARD_DECLARE);
-    testErrorEs6("goog.forwardDeclare(`${template}Sub`);",
+    testError("goog.forwardDeclare(`${template}Sub`);",
         ProcessClosurePrimitives.INVALID_FORWARD_DECLARE);
   }
 
@@ -515,14 +522,14 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
   }
 
   public void testSetCssNameMappingByShortHand() {
-    testErrorEs6("goog.setCssNameMapping({shortHandFirst, shortHandSecond});",
+    testError("goog.setCssNameMapping({shortHandFirst, shortHandSecond});",
         NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
   }
 
   public void testSetCssNameMappingByTemplate() {
-    testErrorEs6("goog.setCssNameMapping({foo: `bar`});",
+    testError("goog.setCssNameMapping({foo: `bar`});",
         NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
-    testErrorEs6("goog.setCssNameMapping({foo: `${vari}bar`});",
+    testError("goog.setCssNameMapping({foo: `${vari}bar`});",
         NON_STRING_PASSED_TO_SET_CSS_NAME_MAPPING_ERROR);
   }
 
@@ -813,11 +820,14 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
   }
 
   public void testInvalidProvide() {
-    test("goog.provide('a.class');", "/** @const */ var a = {}; /** @const */ a.class = {};");
+    test(
+        "goog.provide('a.class');",
+        "/** @const */ var a = {}; /** @const */ a.class = {};");
     testError("goog.provide('class.a');", INVALID_PROVIDE_ERROR);
 
-    testError("goog.provide('a.class');", INVALID_PROVIDE_ERROR, LanguageMode.ECMASCRIPT3);
-    testError("goog.provide('class.a');", INVALID_PROVIDE_ERROR, LanguageMode.ECMASCRIPT3);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
+    testError("goog.provide('a.class');", INVALID_PROVIDE_ERROR);
+    testError("goog.provide('class.a');", INVALID_PROVIDE_ERROR);
   }
 
   public void testInvalidRequire() {
@@ -899,12 +909,12 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
   }
 
   public void testInvalidGoogBase10() {
-    testErrorEs6("class Foo extends BaseFoo { constructor() { goog.base(this); } }",
+    testError("class Foo extends BaseFoo { constructor() { goog.base(this); } }",
         GOOG_BASE_CLASS_ERROR);
   }
 
   public void testInvalidGoogBase11() {
-    testErrorEs6("class Foo extends BaseFoo { someMethod() { goog.base(this, 'someMethod'); } }",
+    testError("class Foo extends BaseFoo { someMethod() { goog.base(this, 'someMethod'); } }",
         GOOG_BASE_CLASS_ERROR);
   }
 
@@ -1019,12 +1029,12 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
   }
 
   public void testInvalidGoogBase14() {
-    testErrorEs6("class Foo extends BaseFoo { constructor() { Foo.base(this); } }",
+    testError("class Foo extends BaseFoo { constructor() { Foo.base(this); } }",
         GOOG_BASE_CLASS_ERROR);
   }
 
   public void testInvalidGoogBase14b() {
-    testErrorEs6("class Foo extends BaseFoo { method() { Foo.base(this, 'method'); } }",
+    testError("class Foo extends BaseFoo { method() { Foo.base(this, 'method'); } }",
         GOOG_BASE_CLASS_ERROR);
   }
 
@@ -1272,8 +1282,8 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
     testError(jsdoc + "goog.define('value');", NULL_ARGUMENT_ERROR);
     testError(jsdoc + "goog.define(5);", INVALID_ARGUMENT_ERROR);
 
-    testErrorEs6(jsdoc + "goog.define(`templateName`, 1);", INVALID_ARGUMENT_ERROR);
-    testErrorEs6(jsdoc + "goog.define(`${template}Name`, 1);", INVALID_ARGUMENT_ERROR);
+    testError(jsdoc + "goog.define(`templateName`, 1);", INVALID_ARGUMENT_ERROR);
+    testError(jsdoc + "goog.define(`${template}Name`, 1);", INVALID_ARGUMENT_ERROR);
   }
 
   public void testDefineInExterns() {
@@ -1298,8 +1308,8 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
     testSame("var CLOSURE_DEFINES = {'FOO': 1};");
     testSame("var CLOSURE_DEFINES = {'FOO': 0xABCD};");
     testSame("var CLOSURE_DEFINES = {'FOO': -1};");
-    testSameEs6("let CLOSURE_DEFINES = {'FOO': 'string'};");
-    testSameEs6("const CLOSURE_DEFINES = {'FOO': 'string'};");
+    testSame("let CLOSURE_DEFINES = {'FOO': 'string'};");
+    testSame("const CLOSURE_DEFINES = {'FOO': 'string'};");
   }
 
   public void testDefineValuesErrors() {
@@ -1309,8 +1319,8 @@ public final class ProcessClosurePrimitivesTest extends Es6CompilerTestCase {
     testError("var CLOSURE_DEFINES = {'FOO': !true};", CLOSURE_DEFINES_ERROR);
     testError("var CLOSURE_DEFINES = {'FOO': -true};", CLOSURE_DEFINES_ERROR);
 
-    testErrorEs6("var CLOSURE_DEFINES = {SHORTHAND};", CLOSURE_DEFINES_ERROR);
-    testErrorEs6("var CLOSURE_DEFINES = {'TEMPLATE': `template`};", CLOSURE_DEFINES_ERROR);
-    testErrorEs6("var CLOSURE_DEFINES = {'TEMPLATE': `${template}Sub`};", CLOSURE_DEFINES_ERROR);
+    testError("var CLOSURE_DEFINES = {SHORTHAND};", CLOSURE_DEFINES_ERROR);
+    testError("var CLOSURE_DEFINES = {'TEMPLATE': `template`};", CLOSURE_DEFINES_ERROR);
+    testError("var CLOSURE_DEFINES = {'TEMPLATE': `${template}Sub`};", CLOSURE_DEFINES_ERROR);
   }
 }

@@ -21,10 +21,11 @@ import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.P
 import static com.google.javascript.jscomp.lint.CheckRequiresAndProvidesSorted.REQUIRES_NOT_SORTED;
 
 import com.google.javascript.jscomp.Compiler;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
-import com.google.javascript.jscomp.Es6CompilerTestCase;
+import com.google.javascript.jscomp.CompilerTestCase;
 
-public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCase {
+public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckRequiresAndProvidesSorted(compiler);
@@ -33,6 +34,11 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
   @Override
   protected int getNumRepetitions() {
     return 1;
+  }
+
+  @Override
+  public void setUp() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   public void testNoWarning_require() {
@@ -95,7 +101,7 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
   }
 
   public void testGoogModule_shorthandAndStandalone() {
-    testWarningEs6(
+    testWarning(
         LINE_JOINER.join(
             "goog.module('m');",
             "",
@@ -109,7 +115,7 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
   }
 
   public void testGoogModule_destructuring() {
-    testWarningEs6(
+    testWarning(
         LINE_JOINER.join(
             "goog.module('m');",
             "",
@@ -123,7 +129,7 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
   }
 
   public void testGoogModule_allThreeStyles() {
-    testWarningEs6(
+    testWarning(
         LINE_JOINER.join(
             "/** @fileoverview @suppress {extraRequire} */",
             "goog.module('m');",
@@ -149,7 +155,7 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
   }
 
   public void testGoogModule_shorthand_destructuring() {
-    testWarningEs6(
+    testWarning(
         LINE_JOINER.join(
             "goog.module('m');",
             "",
@@ -183,7 +189,7 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
   }
 
   public void testDuplicate_shorthand() {
-    testWarningEs6(
+    testWarning(
         LINE_JOINER.join(
             "const Bar1 = goog.require('Bar');",
             "const Bar2 = goog.require('Bar');"),
@@ -191,7 +197,7 @@ public final class CheckRequiresAndProvidesSortedTest extends Es6CompilerTestCas
   }
 
   public void testDuplicate_destructuring() {
-    testWarningEs6(
+    testWarning(
         LINE_JOINER.join(
             "const Bar = goog.require('Bar');",
             "const {Foo} = goog.require('Bar');"),

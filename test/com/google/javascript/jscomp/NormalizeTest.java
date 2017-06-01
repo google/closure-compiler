@@ -29,12 +29,18 @@ import java.util.Set;
  * @author johnlenz@google.com (John Lenz)
  *
  */
-public final class NormalizeTest extends Es6CompilerTestCase {
+public final class NormalizeTest extends CompilerTestCase {
 
   private static final String EXTERNS = "var window; var Arguments;";
 
   public NormalizeTest() {
     super(EXTERNS);
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   @Override
@@ -94,19 +100,19 @@ public final class NormalizeTest extends Es6CompilerTestCase {
   }
 
   public void testSplitLet() {
-    testSameEs6("let a");
-    testEs6("let a, b", "let a; let b");
-    testEs6("let a, b, c", "let a; let b; let c");
-    testSameEs6("let a = 0 ");
-    testEs6("let a = 0 , b = foo()", "let a = 0; let b = foo()");
-    testEs6("let a = 0, b = 1, c = 2", "let a = 0; let b = 1; let c = 2");
-    testEs6(
+    testSame("let a");
+    test("let a, b", "let a; let b");
+    test("let a, b, c", "let a; let b; let c");
+    testSame("let a = 0 ");
+    test("let a = 0 , b = foo()", "let a = 0; let b = foo()");
+    test("let a = 0, b = 1, c = 2", "let a = 0; let b = 1; let c = 2");
+    test(
         "let a = foo(1), b = foo(2), c = foo(3)", "let a = foo(1); let b = foo(2); let c = foo(3)");
-    testSameEs6("for (let a = 0, b = 1;;) {}");
+    testSame("for (let a = 0, b = 1;;) {}");
   }
 
   public void testLetManyBlocks() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "let a = 'outer';",
             "{ let a = 'inner1'; }",
@@ -122,7 +128,7 @@ public final class NormalizeTest extends Es6CompilerTestCase {
   }
 
   public void testLetOutsideAndInsideForLoop() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "let a = 'outer';",
             "for (let a = 'inner';;) {",
@@ -138,7 +144,7 @@ public final class NormalizeTest extends Es6CompilerTestCase {
   }
 
   public void testLetOutsideAndInsideBlock() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "let a = 'outer';",
             "{",
@@ -154,7 +160,7 @@ public final class NormalizeTest extends Es6CompilerTestCase {
   }
 
   public void testLetOutsideAndInsideFn() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "let a = 'outer';",
             "function f() {",
@@ -170,21 +176,21 @@ public final class NormalizeTest extends Es6CompilerTestCase {
   }
 
   public void testClassInForLoop() {
-    testSameEs6("for (class a {};;) { break; }");
+    testSame("for (class a {};;) { break; }");
   }
 
   public void testFunctionInForLoop() {
-    testSameEs6("for (function a() {};;) { break; }");
+    testSame("for (function a() {};;) { break; }");
   }
 
   public void testLetInGlobalHoistScope() {
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "if (true) {",
             "  let x = 1; alert(x);",
             "}"));
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             "if (true) {",
             "  let x = 1; alert(x);",
@@ -200,13 +206,13 @@ public final class NormalizeTest extends Es6CompilerTestCase {
   }
 
   public void testConstInGlobalHoistScope() {
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "if (true) {",
             "  const x = 1; alert(x);",
             "}"));
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             "if (true) {",
             "  const x = 1; alert(x);",
@@ -326,10 +332,10 @@ public final class NormalizeTest extends Es6CompilerTestCase {
 
   public void testForIn2() {
     setExpectParseWarningsThisTest();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     // Verify vars are extracted from the FOR-IN node.
     test("for(var a = foo() in b) foo()",
-        "var a = foo(); for(a in b) foo()",
-        LanguageMode.ECMASCRIPT5);
+        "var a = foo(); for(a in b) foo()");
   }
 
   public void testWhile() {
@@ -456,19 +462,19 @@ public final class NormalizeTest extends Es6CompilerTestCase {
         "function f(x) { x; }\nfunction g(x) { x; }",
         "function f(x) { x; }\nfunction g(x$jscomp$1) { x$jscomp$1; }");
 
-    testEs6(
+    test(
         "function f(x) { x; }\nfunction g(...x) { x; }",
         "function f(x) { x; }\nfunction g(...x$jscomp$1) { x$jscomp$1; }");
 
-    testEs6(
+    test(
         "function f(x) { x; }\nfunction g({x: x}) { x; }",
         "function f(x) { x; }\nfunction g({x: x$jscomp$1}) { x$jscomp$1; }");
 
-    testEs6(
+    test(
         "function f(x) { x; }\nfunction g({x}) { x; }",
         "function f(x) { x; }\nfunction g({x: x$jscomp$1}) { x$jscomp$1; }");
 
-    testEs6(
+    test(
         "function f(x) { x; }\nfunction g({y: {x}}) { x; }",
         "function f(x) { x; }\nfunction g({y: {x: x$jscomp$1}}) { x$jscomp$1; }");
   }
@@ -476,13 +482,13 @@ public final class NormalizeTest extends Es6CompilerTestCase {
   public void testNoRenameParamNames() {
     testSame("function f(x) { x; }");
 
-    testSameEs6("function f(...x) { x; }");
+    testSame("function f(...x) { x; }");
 
-    testSameEs6("function f({x: x}) { x; }");
+    testSame("function f({x: x}) { x; }");
 
-    testSameEs6("function f({x}) { x; }");
+    testSame("function f({x}) { x; }");
 
-    testSameEs6("function f({y: {x}}) { x; }");
+    testSame("function f({y: {x}}) { x; }");
   }
 
   public void testRemoveDuplicateVarDeclarations1() {
@@ -590,7 +596,7 @@ public final class NormalizeTest extends Es6CompilerTestCase {
   }
 
   public void testLetsInSeparateBlocks() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "if (x) {",
             "  let e;",
@@ -646,7 +652,7 @@ public final class NormalizeTest extends Es6CompilerTestCase {
   }
 
   public void testDeclInCatchBlock() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "var x;",
             "try {",

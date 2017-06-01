@@ -18,11 +18,12 @@ package com.google.javascript.jscomp.lint;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerPass;
+import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
-import com.google.javascript.jscomp.Es6CompilerTestCase;
 
-public class CheckMissingSemicolonTest extends Es6CompilerTestCase {
+public class CheckMissingSemicolonTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckMissingSemicolon(compiler);
@@ -35,13 +36,15 @@ public class CheckMissingSemicolonTest extends Es6CompilerTestCase {
     return options;
   }
 
+  @Override
+  public void setUp() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+  }
+
   private void testWarning(String js) {
     testWarning(js, CheckMissingSemicolon.MISSING_SEMICOLON);
   }
 
-  private void testWarningEs6(String js) {
-    testWarningEs6(js, CheckMissingSemicolon.MISSING_SEMICOLON);
-  }
 
   public void testWarning() {
     testWarning("var x");
@@ -62,23 +65,23 @@ public class CheckMissingSemicolonTest extends Es6CompilerTestCase {
     testSame("switch (n) { case 5: { alert(6); } }");
     testSame("alert(1); LABEL: while (true) { alert(2); }");
     testSame("for (;;) {}");
-    testSameEs6("for (x of y) {}");
+    testSame("for (x of y) {}");
     testSame("for (x in y) {}");
   }
 
   public void testNoWarning_functionOrClass() {
     testSame("function f() {}");
-    testSameEs6("function* f() {}");
-    testSameEs6("class Example {}");
+    testSame("function* f() {}");
+    testSame("class Example {}");
   }
 
   public void testWarning_export() {
-    testWarningEs6("export var x = 3");
-    testWarningEs6("export * from 'other'");
+    testWarning("export var x = 3");
+    testWarning("export * from 'other'");
   }
 
   public void testNoWarning_export() {
-    testSameEs6("export function f() {}");
-    testSameEs6("export class C {}");
+    testSame("export function f() {}");
+    testSame("export class C {}");
   }
 }

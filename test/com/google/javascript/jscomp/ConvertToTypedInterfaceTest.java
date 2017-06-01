@@ -16,8 +16,15 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /** Unit tests for {@link ConvertToTypedInterface}. */
-public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
+public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+  }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
@@ -62,7 +69,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
   }
 
   public void testConstKeywordJsdocPropagation() {
-    testEs6("const x = 5;", "/** @const {number} */ var x;");
+    test("const x = 5;", "/** @const {number} */ var x;");
   }
 
   public void testThisPropertiesInConstructors() {
@@ -138,7 +145,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
           "/** @constructor @param {!Array<string>} arr */ function Foo(arr) {}",
           "/** @const {!Array<string>} */ Foo.prototype.arr;"));
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             "class Foo {",
             "  constructor(/** number */ x) {",
@@ -151,7 +158,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "}",
             "/** @const {number} */ Foo.prototype.x;"));
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             "class Foo {",
             "  /** @param {number} x */",
@@ -186,14 +193,14 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
   }
 
   public void testConstructorAlias3() {
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "class Foo {}",
             "/** @const */ var FooAlias = Foo;"));
   }
 
   public void testConstructorAlias4() {
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.module('a.b.c');",
             "",
@@ -222,7 +229,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
   }
 
   public void testConstPropagationPrivateProperties2() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "goog.provide('a.b.c');",
             "",
@@ -244,7 +251,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "/** @override */",
             "x.y.z.Bar.prototype.method = function(a, b, c) {};"));
 
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.module('x.y.z');",
             "",
@@ -273,7 +280,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
   }
 
   public void testConstJsdocPropagationForNames_rest() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "/**",
             " * @constructor",
@@ -292,7 +299,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
   }
 
   public void testOptionalRestParamFunction() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "/**",
             " * @param {?Object} o",
@@ -312,7 +319,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
   }
 
   public void testConstJsdocPropagationForNames_defaultValue() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "/**",
             " * @constructor",
@@ -329,7 +336,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "function Foo(str) {}",
             "/** @const {string} */ Foo.prototype.s;"));
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             "class Foo {",
             "  /** @param {string=} str */",
@@ -377,7 +384,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
         "/** @return {number} */ function f(/** number */ x, /** number */ y) { return x + y; }",
         "/** @return {number} */ function f(/** number */ x, /** number */ y) {}");
 
-    testEs6(
+    test(
         "class Foo { method(/** string */ s) { return s.split(','); } }",
         "class Foo { method(/** string */ s) {} }");
   }
@@ -391,7 +398,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "",
             "exports = Foo;"));
 
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.module('x.y.z');",
             "",
@@ -402,7 +409,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "",
             "exports = Foo;"));
 
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.module('x.y.z');",
             "",
@@ -469,7 +476,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
   }
 
   public void testGoogModulesWithUndefinedExports() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "goog.module('x.y.z');",
             "",
@@ -487,7 +494,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "/** @type {Foobar} */",
             "exports.foobar;"));
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             "goog.module('x.y.z');",
             "",
@@ -513,7 +520,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "othermodule.modify.something = othermodule.modify.something + 1;"),
         "goog.module('a.b.c');");
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             "goog.module('a.b.c');",
             "class Foo {}",
@@ -589,7 +596,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
   }
 
   public void testTemplatedClass() {
-    testEs6(
+    test(
         LINE_JOINER.join(
             "/** @template T */",
             "const Foo = goog.defineClass(null, {",
@@ -604,7 +611,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "});",
             "/** @const {T} */ Foo.prototype.x;"));
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             "/** @template T */",
             "class Foo {",
@@ -629,15 +636,15 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
         "/** @constructor */ function Foo(b) { if (b) { /** @type {number} */ this.num = 5; } }",
         "/** @constructor */ function Foo(b) {} /** @type {number} */ Foo.prototype.num;");
 
-    testEs6(
+    test(
         "/** @constructor */ let Foo = function() { /** @type {number} */ this.num = 5;}",
         "/** @constructor */ let Foo = function() {}; /** @type {number} */ Foo.prototype.num;");
 
-    testEs6(
+    test(
         "class Foo { constructor() { /** @type {number} */ this.num = 5;} }",
         "class Foo { constructor() {} } /** @type {number} */ Foo.prototype.num;");
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             "const Foo = goog.defineClass(null, {",
             "  constructor: function() { /** @type {number} */ this.num = 5;},",
@@ -648,7 +655,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "});",
             "/** @type {number} */ Foo.prototype.num;"));
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             "ns.Foo = goog.defineClass(null, {",
             "  constructor: function() { /** @type {number} */ this.num = 5;},",
@@ -659,7 +666,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "});",
             "/** @type {number} */ ns.Foo.prototype.num;"));
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             "const Foo = goog.defineClass(null, {",
             "  /** @return {number} */",
@@ -671,7 +678,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "  foo: function() {},",
             "});"));
 
-    testEs6(
+    test(
         LINE_JOINER.join(
             "const Foo = goog.defineClass(null, {",
             "  /** @return {number} */",
@@ -776,7 +783,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
         "/** @const */ var ns = {}; ns.x = 5; ns.x = 7;",
         "/** @const */ var ns = {}; /** @const {*} */ ns.x;");
 
-    testEs6(
+    test(
         "const ns = {}; /** @type {number} */ ns.x = 5; ns.x = 7;",
         "const ns = {}; /** @type {number} */ ns.x;");
   }
@@ -792,12 +799,12 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
   }
 
   public void testArrowFunctions() {
-    testSameEs6("/** @return {void} */ const f = () => {}");
+    testSame("/** @return {void} */ const f = () => {}");
 
-    testEs6(
+    test(
         "/** @return {number} */ const f = () => 5", "/** @return {number} */ const f = () => {}");
 
-    testEs6(
+    test(
         "/** @return {string} */ const f = () => { return 'str' }",
         "/** @return {string} */ const f = () => {}");
   }
@@ -807,17 +814,17 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
         "goog.module('x.y.z'); var C = goog.require('a.b.C'); exports = new C;",
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
 
-    testSameEs6("goog.module('x.y.z.Foo'); exports = class {};");
+    testSame("goog.module('x.y.z.Foo'); exports = class {};");
 
-    testSameEs6("goog.module('x.y.z'); exports.Foo = class {};");
+    testSame("goog.module('x.y.z'); exports.Foo = class {};");
 
-    testSameEs6("goog.module('x.y.z.Foo'); class Foo {} exports = Foo;");
+    testSame("goog.module('x.y.z.Foo'); class Foo {} exports = Foo;");
 
-    testSameEs6("goog.module('x.y.z'); class Foo {} exports.Foo = Foo;");
+    testSame("goog.module('x.y.z'); class Foo {} exports.Foo = Foo;");
 
-    testSameEs6("goog.module('x.y.z'); class Foo {} exports = {Foo};");
+    testSame("goog.module('x.y.z'); class Foo {} exports = {Foo};");
 
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.module('x.y.z');",
             "const C = goog.require('a.b.C');",
@@ -857,7 +864,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "/** @constructor */",
             "a.b.c.FooAlias = ns.Foo;"));
 
-    testSameEs6(
+    testSame(
         LINE_JOINER.join(
             "goog.module('mymod');",
             "",
@@ -903,7 +910,7 @@ public final class ConvertToTypedInterfaceTest extends Es6CompilerTestCase {
             "};"),
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
 
-    testWarningEs6(
+    testWarning(
         LINE_JOINER.join(
             "goog.module('a.b.c');",
             "",

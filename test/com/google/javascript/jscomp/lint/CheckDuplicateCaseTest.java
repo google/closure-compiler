@@ -20,12 +20,12 @@ import static com.google.javascript.jscomp.lint.CheckDuplicateCase.DUPLICATE_CAS
 
 import com.google.javascript.jscomp.Compiler;
 import com.google.javascript.jscomp.CompilerPass;
-import com.google.javascript.jscomp.Es6CompilerTestCase;
+import com.google.javascript.jscomp.CompilerTestCase;
 
 /**
  * Test case for {@link CheckDuplicateCase}.
  */
-public final class CheckDuplicateCaseTest extends Es6CompilerTestCase {
+public final class CheckDuplicateCaseTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new CheckDuplicateCase(compiler);
