@@ -37,12 +37,14 @@ import java.util.Map;
 final class PolymerClassRewriter {
 
   private final AbstractCompiler compiler;
+  private final int polymerVersion;
 
   private Node polymerElementExterns;
 
-  PolymerClassRewriter(AbstractCompiler compiler, Node polymerElementExterns) {
+  PolymerClassRewriter(AbstractCompiler compiler, Node polymerElementExterns, int polymerVersion) {
     this.compiler = compiler;
     this.polymerElementExterns = polymerElementExterns;
+    this.polymerVersion = polymerVersion;
   }
 
   /**
@@ -53,8 +55,9 @@ final class PolymerClassRewriter {
    * @param cls The extracted {@link PolymerClassDefinition} for the Polymer element created by this
    *     call.
    */
-  void rewritePolymerClass(
+  void rewritePolymerCall(
       Node exprRoot, final PolymerClassDefinition cls, boolean isInGlobalScope) {
+    Preconditions.checkState(cls.descriptor != null);
     Node call = exprRoot.getFirstChild();
     if (call.isAssign()) {
       call = call.getSecondChild();
@@ -73,9 +76,9 @@ final class PolymerClassRewriter {
     objLitDoc.recordLends(cls.target.getQualifiedName() + ".prototype");
     objLit.setJSDocInfo(objLitDoc.build());
 
-    addTypesToFunctions(objLit, cls.target.getQualifiedName());
+    addTypesToFunctions(objLit, cls.target.getQualifiedName(), cls.defType);
     PolymerPassStaticUtils.switchDollarSignPropsToBrackets(objLit, compiler);
-    PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(objLit);
+    PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(cls.descriptor, compiler);
 
     for (MemberDefinition prop : cls.props) {
       if (prop.value.isObjectLit()) {
@@ -117,19 +120,21 @@ final class PolymerClassRewriter {
     appendBehaviorMembersToBlock(cls, block);
     ImmutableList<MemberDefinition> readOnlyProps = parseReadOnlyProperties(cls, block);
     addInterfaceExterns(cls, readOnlyProps);
-    removePropertyDocs(objLit);
+    removePropertyDocs(objLit, PolymerClassDefinition.DefinitionType.ObjectLiteral);
 
     Node statements = block.removeChildren();
     Node parent = exprRoot.getParent();
 
-    // If the call to Polymer() is not in the global scope and the assignment target is not
+    // For Polymer 1, If the call to Polymer() is not in the global scope and the assignment target is not
     // namespaced (which likely means it's exported to the global scope), put the type declaration
     // into the global scope at the start of the current script.
     //
     // This avoids unknown type warnings which are a result of the compiler's poor understanding of
     // types declared inside IIFEs or any non-global scope. We should revisit this decision after
     // moving to the new type inference system which should be able to infer these types better.
-    if (!isInGlobalScope && !cls.target.isGetProp()) {
+    //
+    // Since Polymer 2 class mixins only function with NTI, we do not force Polymer 2 types to be global.
+    if (this.polymerVersion == 1 && !isInGlobalScope && !cls.target.isGetProp()) {
       Node scriptNode = NodeUtil.getEnclosingScript(parent);
       scriptNode.addChildrenToFront(statements);
     } else {
@@ -160,9 +165,52 @@ final class PolymerClassRewriter {
   }
 
   /**
-   * Adds an @this annotation to all functions in the objLit.
+   * Rewrites a class which extends Polymer.Element to a set of declarations and assignments which
+   * can be understood by the compiler.
+   *
+   * @param clazz The class node
+   * @param cls The extracted {@link PolymerClassDefinition} for the Polymer element created by this
+   *     call.
    */
-  private void addTypesToFunctions(Node objLit, String thisType) {
+  void rewritePolymerClassDeclaration(
+      Node clazz, final PolymerClassDefinition cls, boolean isInGlobalScope) {
+
+    if (cls.descriptor != null) {
+      addTypesToFunctions(cls.descriptor, cls.target.getQualifiedName(), cls.defType);
+    }
+    PolymerPassStaticUtils.switchDollarSignPropsToBrackets(
+        NodeUtil.getClassMembers(clazz), compiler);
+
+    for (MemberDefinition prop : cls.props) {
+      if (prop.value.isObjectLit()) {
+        PolymerPassStaticUtils.switchDollarSignPropsToBrackets(prop.value, compiler);
+      }
+    }
+
+    // For simplicity add everything into a block, before adding it to the AST.
+    Node block = IR.block();
+
+    appendPropertiesToBlock(cls, block, cls.target.getQualifiedName() + ".prototype.");
+    ImmutableList<MemberDefinition> readOnlyProps = parseReadOnlyProperties(cls, block);
+    addInterfaceExterns(cls, readOnlyProps);
+
+    if (block.hasChildren()) {
+      removePropertyDocs(cls.descriptor, cls.defType);
+      Node statements = block.removeChildren();
+      Node expr = clazz;
+      while (!(expr.isExprResult() || expr.getParent().isScript())) {
+        expr = expr.getParent();
+      }
+
+      expr.getParent().addChildrenAfter(statements, expr);
+
+      compiler.reportCodeChange();
+    }
+  }
+
+  /** Adds an @this annotation to all functions in the objLit. */
+  private void addTypesToFunctions(
+      Node objLit, String thisType, PolymerClassDefinition.DefinitionType defType) {
     Preconditions.checkState(objLit.isObjectLit());
     for (Node keyNode : objLit.children()) {
       Node value = keyNode.getLastChild();
@@ -175,7 +223,8 @@ final class PolymerClassRewriter {
     }
 
     // Add @this and @return to default property values.
-    for (MemberDefinition property : PolymerPassStaticUtils.extractProperties(objLit, compiler)) {
+    for (MemberDefinition property :
+        PolymerPassStaticUtils.extractProperties(objLit, defType, compiler)) {
       if (!property.value.isObjectLit()) {
         continue;
       }
@@ -265,11 +314,11 @@ final class PolymerClassRewriter {
     }
   }
 
-  /**
-   * Remove all JSDocs from properties of a class definition
-   */
-  private void removePropertyDocs(final Node objLit) {
-    for (MemberDefinition prop : PolymerPassStaticUtils.extractProperties(objLit, compiler)) {
+  /** Remove all JSDocs from properties of a class definition */
+  private void removePropertyDocs(
+      final Node objLit, PolymerClassDefinition.DefinitionType defType) {
+    for (MemberDefinition prop :
+        PolymerPassStaticUtils.extractProperties(objLit, defType, compiler)) {
       prop.name.removeProp(Node.JSDOC_INFO_PROP);
     }
   }
@@ -386,7 +435,20 @@ final class PolymerClassRewriter {
     varNode.setJSDocInfo(info.build());
     block.addChildToBack(varNode);
 
-    appendPropertiesToBlock(cls, block, interfaceName + ".prototype.");
+    if (polymerVersion == 1) {
+      // For Polymer 1, all declared properties are non-renameable
+      appendPropertiesToBlock(cls, block, interfaceName + ".prototype.");
+    } else {
+      // For Polymer 2, only read-only properties are non-renameable.
+      // Other properties follow the ALL_UNQUOTED renaming rules.
+      PolymerClassDefinition tmpDef =
+          new PolymerClassDefinition(
+              cls.defType, cls.target, cls.descriptor, null, null, null, readOnlyProps, null, null);
+
+      // disallow renaming of readonly properties
+      appendPropertiesToBlock(tmpDef, block, interfaceName + ".prototype.");
+    }
+
     for (MemberDefinition prop : readOnlyProps) {
       // Add all _set* functions to avoid renaming.
       String propName = prop.name.getString();

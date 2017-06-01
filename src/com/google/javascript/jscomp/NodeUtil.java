@@ -2212,9 +2212,31 @@ public final class NodeUtil {
     return null;
   }
 
-  /**
-   * @return The first computed property in the objlit whose key matches {@code key}.
-   */
+  /** @return The first getter in the class members that matches the key. */
+  @Nullable
+  static Node getFirstGetterMatchingKey(Node n, String keyName) {
+    Preconditions.checkState(n.isClassMembers() || n.isObjectLit());
+    for (Node keyNode : n.children()) {
+      if (keyNode.isGetterDef() && keyNode.getString().equals(keyName)) {
+        return keyNode;
+      }
+    }
+    return null;
+  }
+
+  /** @return The first setter in the class members that matches the key. */
+  @Nullable
+  static Node getFirstSetterMatchingKey(Node n, String keyName) {
+    Preconditions.checkState(n.isClassMembers() || n.isObjectLit());
+    for (Node keyNode : n.children()) {
+      if (keyNode.isSetterDef() && keyNode.getString().equals(keyName)) {
+        return keyNode;
+      }
+    }
+    return null;
+  }
+
+  /** @return The first computed property in the objlit whose key matches {@code key}. */
   @Nullable
   static Node getFirstComputedPropMatchingKey(Node objlit, Node key) {
     Preconditions.checkState(objlit.isObjectLit());

@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -31,12 +32,25 @@ import com.google.javascript.rhino.Token;
  */
 final class PolymerPassStaticUtils {
 
-  /**
-   * Switches all "this.$.foo" to "this.$['foo']".
-   */
-  static void switchDollarSignPropsToBrackets(Node objLit, final AbstractCompiler compiler) {
-    Preconditions.checkState(objLit.isObjectLit());
-    for (Node keyNode : objLit.children()) {
+  /** @return Whether the call represents a call to the Polymer function. */
+  @VisibleForTesting
+  public static boolean isPolymerCall(Node value) {
+    return value != null && value.isCall() && value.getFirstChild().matchesQualifiedName("Polymer");
+  }
+
+  /** @return Whether the class extends Polymer.Element */
+  @VisibleForTesting
+  public static boolean isPolymerClass(Node value) {
+    return value != null
+        && value.isClass()
+        && !value.getSecondChild().isEmpty()
+        && value.getSecondChild().matchesQualifiedName("Polymer.Element");
+  }
+
+  /** Switches all "this.$.foo" to "this.$['foo']". */
+  static void switchDollarSignPropsToBrackets(Node def, final AbstractCompiler compiler) {
+    Preconditions.checkState(def.isObjectLit() || def.isClassMembers());
+    for (Node keyNode : def.children()) {
       Node value = keyNode.getFirstChild();
       if (value != null && value.isFunction()) {
         NodeUtil.visitPostOrder(
@@ -62,7 +76,7 @@ final class PolymerPassStaticUtils {
   /**
    * Makes sure that the keys for listeners and hostAttributes blocks are quoted to avoid renaming.
    */
-  static void quoteListenerAndHostAttributeKeys(Node objLit) {
+  static void quoteListenerAndHostAttributeKeys(Node objLit, AbstractCompiler compiler) {
     Preconditions.checkState(objLit.isObjectLit());
     for (Node keyNode : objLit.children()) {
       if (keyNode.isComputedProp()) {
@@ -74,6 +88,7 @@ final class PolymerPassStaticUtils {
       }
       for (Node keyToQuote : keyNode.getFirstChild().children()) {
         keyToQuote.setQuotedString();
+        compiler.reportCodeChange();
       }
     }
   }
@@ -83,8 +98,11 @@ final class PolymerPassStaticUtils {
    * descriptor Object literal.
    */
   static ImmutableList<MemberDefinition> extractProperties(
-      Node descriptor, AbstractCompiler compiler) {
-    Node properties = NodeUtil.getFirstPropMatchingKey(descriptor, "properties");
+      Node descriptor, PolymerClassDefinition.DefinitionType defType, AbstractCompiler compiler) {
+    Node properties = descriptor;
+    if (defType == PolymerClassDefinition.DefinitionType.ObjectLiteral) {
+      properties = NodeUtil.getFirstPropMatchingKey(descriptor, "properties");
+    }
     if (properties == null) {
       return ImmutableList.of();
     }

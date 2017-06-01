@@ -16,6 +16,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_CLASS_PROPERTIES_INVALID;
+import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_CLASS_PROPERTIES_NOT_STATIC;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_DESCRIPTOR_NOT_VALID;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_DECLARATION;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_EXTENDS;
@@ -122,31 +124,7 @@ public class PolymerPassTest extends CompilerTestCase {
           "/** @interface */",
           "var PolymerXInputElementInterface = function() {};");
 
-  private static final String READONLY_EXTERNS =
-      EXTERNS
-          + LINE_JOINER.join(
-              "/** @interface */",
-              "var Polymera_BInterface = function() {};",
-              "/** @type {!Array<string>} */",
-              "Polymera_BInterface.prototype.pets;",
-              "/** @private {string} */",
-              "Polymera_BInterface.prototype.name_;",
-              "/** @param {!Array<string>} pets **/",
-              "Polymera_BInterface.prototype._setPets;");
-
-  private static final String BEHAVIOR_READONLY_EXTERNS =
-      EXTERNS
-          + LINE_JOINER.join(
-              "/** @interface */",
-              "var PolymerAInterface = function() {};",
-              "/** @type {boolean} */",
-              "PolymerAInterface.prototype.isFun;",
-              "/** @type {!Array} */",
-              "PolymerAInterface.prototype.pets;",
-              "/** @type {string} */",
-              "PolymerAInterface.prototype.name;",
-              "/** @param {boolean} isFun **/",
-              "PolymerAInterface.prototype._setIsFun;");
+  private int polymerVersion = 1;
 
   public PolymerPassTest() {
     super(EXTERNS);
@@ -154,7 +132,7 @@ public class PolymerPassTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new PolymerPass(compiler);
+    return new PolymerPass(compiler, polymerVersion);
   }
 
   @Override
@@ -186,9 +164,19 @@ public class PolymerPassTest extends CompilerTestCase {
             "X = Polymer(/** @lends {X.prototype} */ {",
             "  is: 'x-element',",
             "});"));
+
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
+    disableTypeCheck();
+    testSameEs6(
+        LINE_JOINER.join(
+            "var X = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() { return { }; }",
+            "};"));
   }
 
   public void testLetTarget() {
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
     disableTypeCheck();
     test(
         LINE_JOINER.join(
@@ -203,15 +191,32 @@ public class PolymerPassTest extends CompilerTestCase {
             " */",
             "var X = function() {};",
             "X = Polymer(/** @lends {X.prototype} */ {is:'x-element'});"));
+
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
+    disableTypeCheck();
+    testSameEs6(
+        LINE_JOINER.join(
+            "let X = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() { return { }; }",
+            "};"));
   }
 
   public void testConstTarget() {
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
     disableTypeCheck();
     testError(
         LINE_JOINER.join(
             "const X = Polymer({",
             "  is: 'x-element',",
             "});"), POLYMER_INVALID_DECLARATION);
+
+    testSameEs6(
+        LINE_JOINER.join(
+            "const X = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() { return { }; }",
+            "};"));
   }
 
   public void testDefaultTypeNameTarget() {
@@ -247,9 +252,20 @@ public class PolymerPassTest extends CompilerTestCase {
             "x.Z = Polymer(/** @lends {x.Z.prototype} */ {",
             "  is: 'x-element',",
             "});"));
+
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
+    disableTypeCheck();
+    testSameEs6(
+        LINE_JOINER.join(
+            "const x = {};",
+            "x.Z = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() { return { }; }",
+            "};"));
   }
 
   public void testComputedPropName() {
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
     disableTypeCheck(); // TypeCheck cannot grab a name from a complicated computedPropName
     test("var X = Polymer({is:'x-element', [name + (() => 42)]: function() {return 42;}});",
         LINE_JOINER.join(
@@ -290,6 +306,18 @@ public class PolymerPassTest extends CompilerTestCase {
             "    sayHi: function() { alert('hi'); },",
             "  });",
             "})()"));
+
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
+    disableTypeCheck();
+    testSameEs6(
+        LINE_JOINER.join(
+            "const x = {};",
+            "(function() {",
+            "  x.Z = class extends Polymer.Element {",
+            "    static get is() { return 'x-element'; }",
+            "    static get properties() { return { }; }",
+            "  };",
+            "})();"));
   }
 
   /**
@@ -299,6 +327,7 @@ public class PolymerPassTest extends CompilerTestCase {
    */
   public void testIIFEExtractionNoAssignmentTarget() {
     test(
+        1,
         LINE_JOINER.join(
             "(function() {",
             "  Polymer({",
@@ -306,7 +335,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "    sayHi: function() { alert('hi'); },",
             "  });",
             "})()"),
-
         LINE_JOINER.join(
             "/**",
             " * @constructor @extends {PolymerElement}",
@@ -320,6 +348,40 @@ public class PolymerPassTest extends CompilerTestCase {
             "    sayHi: function() { alert('hi'); },",
             "  });",
             "})()"));
+
+    test(
+        2,
+        LINE_JOINER.join(
+            "(function() {",
+            "  Polymer({",
+            "    is: 'x',",
+            "    sayHi: function() { alert('hi'); },",
+            "  });",
+            "})()"),
+        LINE_JOINER.join(
+            "(function() {",
+            "  /**",
+            "   * @constructor @extends {PolymerElement}",
+            "   * @implements {PolymerXElementInterface}",
+            "   */",
+            "  var XElement = function() {};",
+            "  Polymer(/** @lends {XElement.prototype} */ {",
+            "    is: 'x',",
+            "    /** @this {XElement} */",
+            "    sayHi: function() { alert('hi'); },",
+            "  });",
+            "})()"));
+
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
+    disableTypeCheck();
+    testSameEs6(
+        LINE_JOINER.join(
+            "(function() {",
+            "  const X = class extends Polymer.Element {",
+            "    static get is() { return 'x-element'; }",
+            "    static get properties() { return { }; }",
+            "  };",
+            "})();"));
   }
 
   /**
@@ -329,6 +391,7 @@ public class PolymerPassTest extends CompilerTestCase {
    */
   public void testIIFEExtractionVarTarget() {
     test(
+        1,
         LINE_JOINER.join(
             "(function() {",
             "  var FooThing = Polymer({",
@@ -336,7 +399,6 @@ public class PolymerPassTest extends CompilerTestCase {
             "    sayHi: function() { alert('hi'); },",
             "  });",
             "})()"),
-
         LINE_JOINER.join(
             "/**",
             " * @constructor @extends {PolymerElement}",
@@ -429,6 +491,28 @@ public class PolymerPassTest extends CompilerTestCase {
             "    alert('Thank you for clicking');",
             "  },",
             "});"));
+
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
+    disableTypeCheck();
+    testEs6(
+        LINE_JOINER.join(
+            "class X extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() { return {}; }",
+            "",
+            "  handleClick(e) {",
+            "    alert('Thank you for clicking');",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "class X extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() { return {}; }",
+            "",
+            "  handleClick(e) {",
+            "    alert('Thank you for clicking');",
+            "  }",
+            "}"));
   }
 
   public void testListenersAndHostAttributeKeysQuoted() {
@@ -497,6 +581,7 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   public void testExtendNonExistentElement() {
+    polymerVersion = 1;
     String js = LINE_JOINER.join(
         "Polymer({",
         "  is: 'x-input',",
@@ -572,9 +657,59 @@ public class PolymerPassTest extends CompilerTestCase {
             "    thingToDo: Function,",
             "  },",
             "});"));
+
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
+    disableTypeCheck();
+    testEs6(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var User = function() {};",
+            "var a = {};",
+            "a.B = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() {",
+            "    return {",
+            "      /** @type {!User} @private */",
+            "      user_: Object,",
+            "      pets: {",
+            "        type: Array,",
+            "        notify: true,",
+            "      },",
+            "      name: String,",
+            "      thingToDo: Function,",
+            "    };",
+            "  }",
+            "};"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var User = function() {};",
+            "var a = {};",
+            "a.B = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() {",
+            "    return {",
+            "      user_: Object,",
+            "      pets: {",
+            "        type: Array,",
+            "        notify: true,",
+            "      },",
+            "      name: String,",
+            "      thingToDo: Function,",
+            "    };",
+            "  }",
+            "};",
+            "/** @type {!User} @private */",
+            "a.B.prototype.user_;",
+            "/** @type {!Array} */",
+            "a.B.prototype.pets;",
+            "/** @type {string} */",
+            "a.B.prototype.name;",
+            "/** @type {!Function} */",
+            "a.B.prototype.thingToDo;"));
   }
 
   public void testPropertiesObjLitShorthand() {
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
     disableTypeCheck();
     testError(
         LINE_JOINER.join(
@@ -584,6 +719,35 @@ public class PolymerPassTest extends CompilerTestCase {
             "    name,",
             "  },",
             "});"),
+        POLYMER_SHORTHAND_NOT_SUPPORTED);
+
+    testErrorEs6(
+        LINE_JOINER.join(
+            "var XElem = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() {",
+            "    return {",
+            "      name",
+            "    };",
+            "  }",
+            "};"),
+        POLYMER_SHORTHAND_NOT_SUPPORTED);
+
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
+    disableTypeCheck();
+    testErrorEs6(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var User = function() {};",
+            "var a = {};",
+            "a.B = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() {",
+            "    return {",
+            "      name,",
+            "    };",
+            "  }",
+            "};"),
         POLYMER_SHORTHAND_NOT_SUPPORTED);
   }
 
@@ -639,6 +803,61 @@ public class PolymerPassTest extends CompilerTestCase {
             "    name: String,",
             "  },",
             "});"));
+
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
+    disableTypeCheck();
+    testEs6(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var User = function() {};",
+            "var a = {};",
+            "a.B = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() {",
+            "    return {",
+            "      /** @type {!User} @private */",
+            "      user_: {",
+            "        type: Object,",
+            "        value: function() { return new User(); },",
+            "      },",
+            "      pets: {",
+            "        type: Array,",
+            "        notify: true,",
+            "        value: function() { return [this.name]; },",
+            "      },",
+            "      name: String,",
+            "    };",
+            "  }",
+            "};"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var User = function() {};",
+            "var a = {};",
+            "a.B = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() {",
+            "    return {",
+            "      user_: {",
+            "        type: Object,",
+            "        /** @this {a.B} @return {!User} */",
+            "        value: function() { return new User(); },",
+            "      },",
+            "      pets: {",
+            "        type: Array,",
+            "        notify: true,",
+            "        /** @this {a.B} @return {!Array} */",
+            "        value: function() { return [this.name]; },",
+            "      },",
+            "      name: String,",
+            "    };",
+            "  }",
+            "};",
+            "/** @type {!User} @private */",
+            "a.B.prototype.user_;",
+            "/** @type {!Array} */",
+            "a.B.prototype.pets;",
+            "/** @type {string} */",
+            "a.B.prototype.name;"));
   }
 
   public void testPropertiesDefaultValueShortHandFunction() {
@@ -677,6 +896,61 @@ public class PolymerPassTest extends CompilerTestCase {
             "    },",
             "  },",
             "});"));
+
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
+    disableTypeCheck();
+    testEs6(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var User = function() {};",
+            "var a = {};",
+            "a.B = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() {",
+            "    return {",
+            "      /** @type {!User} @private */",
+            "      user_: {",
+            "        type: Object,",
+            "        value() { return new User(); },",
+            "      },",
+            "      pets: {",
+            "        type: Array,",
+            "        notify: true,",
+            "        value() { return [this.name]; },",
+            "      },",
+            "      name: String,",
+            "    };",
+            "  }",
+            "};"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "var User = function() {};",
+            "var a = {};",
+            "a.B = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() {",
+            "    return {",
+            "      user_: {",
+            "        type: Object,",
+            "        /** @this {a.B} @return {!User} */",
+            "        value() { return new User(); },",
+            "      },",
+            "      pets: {",
+            "        type: Array,",
+            "        notify: true,",
+            "        /** @this {a.B} @return {!Array} */",
+            "        value() { return [this.name]; },",
+            "      },",
+            "      name: String,",
+            "    };",
+            "  }",
+            "};",
+            "/** @type {!User} @private */",
+            "a.B.prototype.user_;",
+            "/** @type {!Array} */",
+            "a.B.prototype.pets;",
+            "/** @type {string} */",
+            "a.B.prototype.name;"));
   }
 
   public void testReadOnlyPropertySetters() {
@@ -697,6 +971,7 @@ public class PolymerPassTest extends CompilerTestCase {
             "});");
 
     test(
+        1,
         js,
         LINE_JOINER.join(
             "var a = {};",
@@ -719,7 +994,57 @@ public class PolymerPassTest extends CompilerTestCase {
             "  },",
             "});"));
 
-    testExternChanges(EXTERNS, js, READONLY_EXTERNS);
+    testExternChanges(
+        1,
+        EXTERNS,
+        js,
+        LINE_JOINER.join(
+            EXTERNS,
+            "/** @interface */",
+            "var Polymera_BInterface = function() {};",
+            "/** @type {!Array<string>} */",
+            "Polymera_BInterface.prototype.pets;",
+            "/** @private {string} */",
+            "Polymera_BInterface.prototype.name_;",
+            "/** @param {!Array<string>} pets **/",
+            "Polymera_BInterface.prototype._setPets;"));
+
+    test(
+        2,
+        js,
+        LINE_JOINER.join(
+            "var a = {};",
+            "/** @constructor @extends {PolymerElement} @implements {Polymera_BInterface} */",
+            "a.B = function() {};",
+            "/** @type {!Array<string>} */",
+            "a.B.prototype.pets;",
+            "/** @private {string} */",
+            "a.B.prototype.name_;",
+            "/** @override */",
+            "a.B.prototype._setPets = function(pets) {};",
+            "a.B = Polymer(/** @lends {a.B.prototype} */ {",
+            "  is: 'x-element',",
+            "  properties: {",
+            "    pets: {",
+            "      type: Array,",
+            "      readOnly: true,",
+            "    },",
+            "    name_: String,",
+            "  },",
+            "});"));
+
+    testExternChanges(
+        2,
+        EXTERNS,
+        js,
+        LINE_JOINER.join(
+            EXTERNS,
+            "/** @interface */",
+            "var Polymera_BInterface = function() {};",
+            "/** @type {!Array<string>} */",
+            "Polymera_BInterface.prototype.pets;",
+            "/** @param {!Array<string>} pets **/",
+            "Polymera_BInterface.prototype._setPets;"));
   }
 
   public void testShorthandFunctionDefinition() {
@@ -864,6 +1189,29 @@ public class PolymerPassTest extends CompilerTestCase {
             "    alert('Hello, ' + name);",
             "  },",
             "});"));
+
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
+    disableTypeCheck();
+    testSameEs6(
+        LINE_JOINER.join(
+            "class Foo extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() { return {}; }",
+            "  sayHi() {",
+            "    alert('hi');",
+            "  }",
+            "  connectedCallback() {",
+            "    this.sayHi();",
+            "    this.sayHelloTo_('Tester');",
+            "  }",
+            "  /**",
+            "   * @param {string} name",
+            "   * @private",
+            "   */",
+            "  sayHelloTo_(name) {",
+            "    alert('Hello, ' + name);",
+            "  }",
+            "}"));
   }
 
   public void testDollarSignPropsConvertedToBrackets() {
@@ -937,6 +1285,66 @@ public class PolymerPassTest extends CompilerTestCase {
             "    this.$['otherThing'].touch();",
             "  },",
             "});"));
+
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
+    disableTypeCheck();
+    testEs6(
+        LINE_JOINER.join(
+            "class Foo extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() {",
+            "    return {",
+            "      /** @type {!HTMLElement} */",
+            "      propName: {",
+            "        type: Object,",
+            "        value: function() { return this.$.id; },",
+            "      }",
+            "    };",
+            "  }",
+            "  sayHi() {",
+            "    this.$.checkbox.toggle();",
+            "  }",
+            "  connectedCallback() {",
+            "    this.sayHi();",
+            "    this.$.radioButton.switch();",
+            "  }",
+            "  /**",
+            "   * @param {string} name",
+            "   * @private",
+            "   */",
+            "  sayHelloTo_(name) {",
+            "    this.$.otherThing.touch();",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "class Foo extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() {",
+            "    return {",
+            "      propName: {",
+            "        type: Object,",
+            "        /** @this {Foo} @return {!HTMLElement} */",
+            "        value: function() { return this.$['id']; },",
+            "      }",
+            "    };",
+            "  }",
+            "  sayHi() {",
+            "    this.$['checkbox'].toggle();",
+            "  }",
+            "  connectedCallback() {",
+            "    this.sayHi();",
+            "    this.$['radioButton'].switch();",
+            "  }",
+            "  /**",
+            "   * @param {string} name",
+            "   * @private",
+            "   */",
+            "  sayHelloTo_(name) {",
+            "    this.$['otherThing'].touch();",
+            "  }",
+            "}",
+            "/** @type {!HTMLElement} */",
+            "Foo.prototype.propName;"));
   }
 
   public void testDollarSignPropsInShorthandFunctionConvertedToBrackets() {
@@ -1169,53 +1577,56 @@ public class PolymerPassTest extends CompilerTestCase {
   /** If a behavior method is {@code @protected} there is no visibility warning. */
   public void testBehaviorWithProtectedMethod() {
     enableCheckAccessControls(true);
-    test(
-        new String[] {
-          LINE_JOINER.join(
-              "/** @polymerBehavior */",
-              "var FunBehavior = {",
-              "  /** @protected */",
-              "  doSomethingFun: function() {},",
-              "};"),
-          LINE_JOINER.join(
-              "var A = Polymer({",
-              "  is: 'x-element',",
-              "  callBehaviorMethod: function() {",
-              "    this.doSomethingFun();",
-              "  },",
-              "  behaviors: [ FunBehavior ],",
-              "});"),
-        },
-        new String[] {
-          LINE_JOINER.join(
-              "/** @polymerBehavior @nocollapse */",
-              "var FunBehavior = {",
-              "  /**",
-              "   * @suppress {checkTypes|globalThis|visibility}",
-              "   */",
-              "  doSomethingFun: function() {},",
-              "};"),
-          LINE_JOINER.join(
-              "/**",
-              " * @constructor",
-              " * @extends {PolymerElement}",
-              " * @implements {PolymerAInterface}",
-              " */",
-              "var A = function() {};",
-              "",
-              "/**",
-              " * @public",
-              " * @suppress {unusedPrivateMembers}",
-              " */",
-              "A.prototype.doSomethingFun = function(){};",
-              "",
-              "A = Polymer(/** @lends {A.prototype} */ {",
-              "  is: 'x-element',",
-              "  /** @this {A} */",
-              "  callBehaviorMethod: function(){ this.doSomethingFun(); },",
-              "  behaviors: [FunBehavior],",
-              "})"),
-        });
+    for (int i = 1; i <= 2; i++) {
+      this.polymerVersion = i;
+      test(
+          new String[] {
+            LINE_JOINER.join(
+                "/** @polymerBehavior */",
+                "var FunBehavior = {",
+                "  /** @protected */",
+                "  doSomethingFun: function() {},",
+                "};"),
+            LINE_JOINER.join(
+                "var A = Polymer({",
+                "  is: 'x-element',",
+                "  callBehaviorMethod: function() {",
+                "    this.doSomethingFun();",
+                "  },",
+                "  behaviors: [ FunBehavior ],",
+                "});"),
+          },
+          new String[] {
+            LINE_JOINER.join(
+                "/** @polymerBehavior @nocollapse */",
+                "var FunBehavior = {",
+                "  /**",
+                "   * @suppress {checkTypes|globalThis|visibility}",
+                "   */",
+                "  doSomethingFun: function() {},",
+                "};"),
+            LINE_JOINER.join(
+                "/**",
+                " * @constructor",
+                " * @extends {PolymerElement}",
+                " * @implements {PolymerAInterface}",
+                " */",
+                "var A = function() {};",
+                "",
+                "/**",
+                " * @public",
+                " * @suppress {unusedPrivateMembers}",
+                " */",
+                "A.prototype.doSomethingFun = function(){};",
+                "",
+                "A = Polymer(/** @lends {A.prototype} */ {",
+                "  is: 'x-element',",
+                "  /** @this {A} */",
+                "  callBehaviorMethod: function(){ this.doSomethingFun(); },",
+                "  behaviors: [FunBehavior],",
+                "})"),
+          });
+    }
   }
 
   /** If a behavior method is {@code @private} there is a visibility warning. */
@@ -1924,7 +2335,35 @@ public class PolymerPassTest extends CompilerTestCase {
             "  behaviors: [ FunBehavior ],",
             "});"));
 
-    testExternChanges(EXTERNS, js, BEHAVIOR_READONLY_EXTERNS);
+    testExternChanges(
+        1,
+        EXTERNS,
+        js,
+        LINE_JOINER.join(
+            EXTERNS,
+            "/** @interface */",
+            "var PolymerAInterface = function() {};",
+            "/** @type {boolean} */",
+            "PolymerAInterface.prototype.isFun;",
+            "/** @type {!Array} */",
+            "PolymerAInterface.prototype.pets;",
+            "/** @type {string} */",
+            "PolymerAInterface.prototype.name;",
+            "/** @param {boolean} isFun **/",
+            "PolymerAInterface.prototype._setIsFun;"));
+
+    testExternChanges(
+        2,
+        EXTERNS,
+        js,
+        LINE_JOINER.join(
+            EXTERNS,
+            "/** @interface */",
+            "var PolymerAInterface = function() {};",
+            "/** @type {boolean} */",
+            "PolymerAInterface.prototype.isFun;",
+            "/** @param {boolean} isFun **/",
+            "PolymerAInterface.prototype._setIsFun;"));
   }
 
   /**
@@ -2122,6 +2561,7 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   public void testInvalid1() {
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
     disableTypeCheck();
     testWarning("var x = Polymer('blah');", POLYMER_DESCRIPTOR_NOT_VALID);
     testWarning("var x = Polymer('foo-bar', {});", POLYMER_DESCRIPTOR_NOT_VALID);
@@ -2130,6 +2570,22 @@ public class PolymerPassTest extends CompilerTestCase {
     testError("var x = Polymer({is});", POLYMER_MISSING_IS);
     testError("var x = Polymer({is: 'x-element', shortHand,});",
         POLYMER_SHORTHAND_NOT_SUPPORTED);
+
+    testErrorEs6(
+        LINE_JOINER.join(
+            "var x = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() { return '' }",
+            "};"),
+        POLYMER_CLASS_PROPERTIES_INVALID);
+
+    testErrorEs6(
+        LINE_JOINER.join(
+            "var x = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  get properties() { return {} }",
+            "};"),
+        POLYMER_CLASS_PROPERTIES_NOT_STATIC);
   }
 
   public void testInvalidProperties() {
@@ -2168,6 +2624,49 @@ public class PolymerPassTest extends CompilerTestCase {
             "    },",
             "  },",
             "});"),
+        POLYMER_INVALID_PROPERTY);
+
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
+    disableTypeCheck();
+    testErrorEs6(
+        LINE_JOINER.join(
+            "var x = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() {",
+            "    return {",
+            "      isHappy: true,",
+            "    };",
+            "  }",
+            "};"),
+        POLYMER_INVALID_PROPERTY);
+
+    testErrorEs6(
+        LINE_JOINER.join(
+            "var x = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() {",
+            "    return {",
+            "      isHappy: {",
+            "        value: true,",
+            "      }",
+            "    };",
+            "  }",
+            "};"),
+        POLYMER_INVALID_PROPERTY);
+
+    testErrorEs6(
+        LINE_JOINER.join(
+            "var x = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties() {",
+            "    return {",
+            "      isHappy: {",
+            "        type: foo.Bar,",
+            "        value: true,",
+            "      }",
+            "    };",
+            "  }",
+            "};"),
         POLYMER_INVALID_PROPERTY);
   }
 
@@ -2270,6 +2769,7 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   public void testES6FeaturesInFunctionBody() {
+    // Type checker doesn't currently understand ES6 code. Remove when it does.
     disableTypeCheck();
     test(
         LINE_JOINER.join(
@@ -2305,5 +2805,79 @@ public class PolymerPassTest extends CompilerTestCase {
             "    var [eins, zwei, drei] = arr;",
             "  },",
             "});"));
+  }
+
+  @Override
+  public void test(String js, String expected) {
+    polymerVersion = 1;
+    super.test(js, expected);
+
+    polymerVersion = 2;
+    super.test(js, expected);
+  }
+
+  public void test(int polymerVersion, String js, String expected) {
+    this.polymerVersion = polymerVersion;
+    super.test(js, expected);
+  }
+
+  @Override
+  protected void testExternChanges(String extern, String input, String expectedExtern) {
+    polymerVersion = 1;
+    super.testExternChanges(extern, input, expectedExtern);
+
+    polymerVersion = 2;
+    super.testExternChanges(extern, input, expectedExtern);
+  }
+
+  protected void testExternChanges(
+      int polymerVersion, String extern, String input, String expectedExtern) {
+    this.polymerVersion = polymerVersion;
+    super.testExternChanges(extern, input, expectedExtern);
+  }
+
+  @Override
+  public void testEs6(String js, String expected) {
+    polymerVersion = 1;
+    super.testEs6(js, expected);
+
+    polymerVersion = 2;
+    super.testEs6(js, expected);
+  }
+
+  @Override
+  public void testSameEs6(String js) {
+    polymerVersion = 1;
+    super.testSameEs6(js);
+
+    polymerVersion = 2;
+    super.testSameEs6(js);
+  }
+
+  @Override
+  public void testErrorEs6(String js, DiagnosticType error) {
+    polymerVersion = 1;
+    super.testErrorEs6(js, error);
+
+    polymerVersion = 2;
+    super.testErrorEs6(js, error);
+  }
+
+  @Override
+  public void testError(String js, DiagnosticType error) {
+    polymerVersion = 1;
+    super.testError(js, error);
+
+    polymerVersion = 2;
+    super.testError(js, error);
+  }
+
+  @Override
+  public void testWarning(String js, DiagnosticType error) {
+    polymerVersion = 1;
+    super.testWarning(js, error);
+
+    polymerVersion = 2;
+    super.testWarning(js, error);
   }
 }

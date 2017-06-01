@@ -33,6 +33,13 @@ import javax.annotation.Nullable;
  * class.
  */
 final class PolymerClassDefinition {
+  static enum DefinitionType {
+    ObjectLiteral,
+    ES6Class
+  }
+
+  /** The declaration style used for the Polymer definition */
+  final DefinitionType defType;
 
   /** The target node (LHS) for the Polymer element definition. */
   final Node target;
@@ -44,18 +51,19 @@ final class PolymerClassDefinition {
   final MemberDefinition constructor;
 
   /** The name of the native HTML element which this element extends. */
-  final String nativeBaseElement;
+  @Nullable final String nativeBaseElement;
 
   /** Properties declared in the Polymer "properties" block. */
   final List<MemberDefinition> props;
 
   /** Flattened list of behavior definitions used by this element. */
-  final ImmutableList<BehaviorDefinition> behaviors;
+  @Nullable final ImmutableList<BehaviorDefinition> behaviors;
 
   /** Language features that should be carried over to the extraction destination. */
-  final FeatureSet features;
+  @Nullable final FeatureSet features;
 
   PolymerClassDefinition(
+      DefinitionType defType,
       Node target,
       Node descriptor,
       JSDocInfo classInfo,
@@ -64,8 +72,9 @@ final class PolymerClassDefinition {
       List<MemberDefinition> props,
       ImmutableList<BehaviorDefinition> behaviors,
       FeatureSet features) {
+    this.defType = defType;
     this.target = target;
-    Preconditions.checkState(descriptor.isObjectLit());
+    Preconditions.checkState(descriptor == null || descriptor.isObjectLit());
     this.descriptor = descriptor;
     this.constructor = constructor;
     this.nativeBaseElement = nativeBaseElement;
@@ -135,7 +144,9 @@ final class PolymerClassDefinition {
       overwriteMembersIfPresent(allProperties, behavior.props);
     }
     overwriteMembersIfPresent(
-        allProperties, PolymerPassStaticUtils.extractProperties(descriptor, compiler));
+        allProperties,
+        PolymerPassStaticUtils.extractProperties(
+            descriptor, DefinitionType.ObjectLiteral, compiler));
 
     FeatureSet newFeatures = null;
     if (!behaviors.isEmpty()) {
@@ -146,6 +157,7 @@ final class PolymerClassDefinition {
     }
 
     return new PolymerClassDefinition(
+        DefinitionType.ObjectLiteral,
         target,
         descriptor,
         classInfo,
@@ -154,6 +166,80 @@ final class PolymerClassDefinition {
         allProperties,
         behaviors,
         newFeatures);
+  }
+
+  /**
+   * Validates the class definition and if valid, extracts the class definition from the AST. As
+   * opposed to the Polymer 1 extraction, this operation is non-destructive.
+   */
+  @Nullable
+  static PolymerClassDefinition extractFromClassNode(
+      Node classNode, AbstractCompiler compiler, GlobalNamespace globalNames) {
+    Preconditions.checkState(classNode != null && classNode.isClass());
+
+    // The supported case is for the config getter to return an object literal descriptor.
+    Node propertiesDescriptor = null;
+    Node propertiesGetter =
+        NodeUtil.getFirstGetterMatchingKey(NodeUtil.getClassMembers(classNode), "properties");
+    if (propertiesGetter != null) {
+      if (!propertiesGetter.isStaticMember()) {
+        // report bad class definition
+        compiler.report(
+            JSError.make(classNode, PolymerPassErrors.POLYMER_CLASS_PROPERTIES_NOT_STATIC));
+      } else {
+        for (Node child : NodeUtil.getFunctionBody(propertiesGetter.getFirstChild()).children()) {
+          if (child.isReturn()) {
+            if (child.hasChildren() && child.getFirstChild().isObjectLit()) {
+              propertiesDescriptor = child.getFirstChild();
+              break;
+            } else {
+              compiler.report(
+                  JSError.make(
+                      propertiesGetter, PolymerPassErrors.POLYMER_CLASS_PROPERTIES_INVALID));
+            }
+          }
+        }
+      }
+    }
+
+    Node target;
+    if (NodeUtil.isNameDeclaration(classNode.getGrandparent())) {
+      target = IR.name(classNode.getParent().getString());
+    } else if (classNode.getParent().isAssign()
+        && classNode.getParent().getFirstChild().isQualifiedName()) {
+      target = classNode.getParent().getFirstChild();
+    } else if (!classNode.getFirstChild().isEmpty()) {
+      target = classNode.getFirstChild();
+    } else {
+      // issue error - no name found
+      compiler.report(JSError.make(classNode, PolymerPassErrors.POLYMER_CLASS_UNNAMED));
+      return null;
+    }
+
+    JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(classNode);
+
+    JSDocInfo ctorInfo = null;
+    Node constructor =
+        NodeUtil.getFirstPropMatchingKey(NodeUtil.getClassMembers(classNode), "constructor");
+    if (constructor != null) {
+      ctorInfo = NodeUtil.getBestJSDocInfo(constructor);
+    }
+
+    List<MemberDefinition> allProperties;
+    allProperties =
+        PolymerPassStaticUtils.extractProperties(
+            propertiesDescriptor, DefinitionType.ES6Class, compiler);
+
+    return new PolymerClassDefinition(
+        DefinitionType.ES6Class,
+        target,
+        propertiesDescriptor,
+        classInfo,
+        new MemberDefinition(ctorInfo, null, constructor),
+        null,
+        allProperties,
+        null,
+        null);
   }
 
   /**

@@ -48,7 +48,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        new PolymerPass(compiler).process(externs, root);
+        new PolymerPass(compiler, 1).process(externs, root);
         new CheckUnusedPrivateProperties(compiler).process(externs, root);
       }
     };
