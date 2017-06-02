@@ -151,7 +151,7 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
     if (node == null) {
       return false;
     }
-    if (node.isString()) {
+    if (node.isString() || (node.isTemplateLit() && node.hasOneChild())) {
       return true;
     } else if (node.isAdd()) {
       Preconditions.checkState(node.hasTwoChildren());

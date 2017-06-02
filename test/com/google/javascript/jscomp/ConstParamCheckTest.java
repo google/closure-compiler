@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Tests for {@link ConstParamCheck}.
  */
@@ -30,6 +32,7 @@ public final class ConstParamCheckTest extends CompilerTestCase {
   public ConstParamCheckTest() {
     enableInferConsts(true);
     enableNormalize();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   @Override
@@ -47,6 +50,16 @@ public final class ConstParamCheckTest extends CompilerTestCase {
   public void testStringLiteralArgument() {
     testSame(CLOSURE_DEFS
         + "goog.string.Const.from('foo');");
+  }
+
+  public void testTemplateLiteralArgument() {
+    testNoWarning(CLOSURE_DEFS + "goog.string.Const.from(`foo`);");
+  }
+
+  public void testTemplateLiteralWithSubstitutionsArgument() {
+    testError(
+        CLOSURE_DEFS + "goog.string.Const.from(`foo${bar}`);",
+        ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 
   public void testConcatenatedStringLiteralArgument() {
