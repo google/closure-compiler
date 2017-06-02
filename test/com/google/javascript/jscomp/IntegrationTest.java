@@ -4073,8 +4073,9 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testEs6OutDoesntCrash() {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
     options.setSkipTranspilationAndCrash(true);
-    test(options, "function f(x) { if (x) var x=5; }", "function f(x) { if (x) x=5; }");
+    test(options, "function f(x) { if (x) var x=5; }", "function f(x) { if (x) var x=5; }");
   }
 
   public void testExternsProvideIsAllowed() {

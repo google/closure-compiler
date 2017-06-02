@@ -408,7 +408,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(injectRuntimeLibraries);
     }
 
-    if (options.needsTranspilationFrom(FeatureSet.ES6) && !options.skipTranspilationAndCrash) {
+    if (options.needsTranspilationFrom(ES6) && !options.skipTranspilationAndCrash) {
       checks.add(convertStaticInheritance);
     }
 
@@ -1388,6 +1388,11 @@ public final class DefaultPassConfig extends PassConfig {
           /* if we can't find a translation, don't worry about it. */
           false);
     }
+
+    @Override
+    public FeatureSet featureSet() {
+      return ES8;
+    }
   };
 
   private final PassFactory replaceMessagesForChrome =
@@ -1932,6 +1937,11 @@ public final class DefaultPassConfig extends PassConfig {
       }
       return combineChecks(compiler, callbacks);
     }
+
+    @Override
+    public FeatureSet featureSet() {
+      return ES8;
+    }
   };
 
   /** Checks access controls. Depends on type-inference. */
@@ -2173,6 +2183,11 @@ public final class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(AbstractCompiler compiler) {
       return new ConstParamCheck(compiler);
     }
+
+    @Override
+    public FeatureSet featureSet() {
+      return ES5;
+    }
   };
 
   /** Check memory bloat patterns */
@@ -2403,6 +2418,11 @@ public final class DefaultPassConfig extends PassConfig {
             throw new IllegalStateException("No variable inlining option set.");
           }
           return new InlineVariables(compiler, mode, true);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
         }
       };
 
@@ -2782,19 +2802,31 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
-  private final PassFactory hoistVars = new PassFactory("hoistVars", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new HoistVarsOutOfBlocks(compiler);
-    }
-  };
+  private final PassFactory hoistVars =
+      new PassFactory("hoistVars", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new HoistVarsOutOfBlocks(compiler);
+        }
 
-  private final PassFactory normalize = new PassFactory("normalize", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new Normalize(compiler, false);
-    }
-  };
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
+      };
+
+  private final PassFactory normalize =
+      new PassFactory("normalize", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new Normalize(compiler, false);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
+      };
 
   private final PassFactory externExports = new PassFactory("externExports", true) {
     @Override
