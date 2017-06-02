@@ -127,7 +127,9 @@ public final class TypeValidatorTest extends CompilerTestCase {
             "  c: string,",
             "  d: string,",
             "  e: string",
-            "}"));
+            "}",
+            "missing : []",
+            "mismatch: [e]"));
   }
 
   /**
@@ -150,7 +152,9 @@ public final class TypeValidatorTest extends CompilerTestCase {
             "found   : {a: string, b: string, c: string, d: string, e: string, f: string,"
               + " g: string, h: string, i: string, j: string, k: (number|string)}",
             "required: {a: string, b: string, c: string, d: string, e: string, f: string,"
-              + " g: string, h: string, i: string, j: string, k: string}"));
+              + " g: string, h: string, i: string, j: string, k: string}",
+            "missing : []",
+            "mismatch: [k]"));
   }
 
   /**
@@ -176,7 +180,9 @@ public final class TypeValidatorTest extends CompilerTestCase {
             "found   : {a: string, b: string, c: string, d: string, e: string, f: string,"
               + " g: string, h: string, i: string, j: string, k: (number|string)}",
             "required: {a: string, b: string, c: string, d: string, e: string, f: string,"
-              + " g: string, h: string, i: string, j: string, k: string}"));
+              + " g: string, h: string, i: string, j: string, k: string}",
+            "missing : []",
+            "mismatch: [k]"));
   }
 
   public void testNullUndefined() {

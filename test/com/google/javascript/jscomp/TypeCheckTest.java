@@ -251,20 +251,29 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
 
   public void testTypeCheck25() throws Exception {
-    testTypes("function foo(/** {a: number} */ obj) {};"
-        + "foo({b: 'abc'});",
-        "actual parameter 1 of foo does not match formal parameter\n" +
-            "found   : {a: (number|undefined), b: string}\n" +
-            "required: {a: number}");
+    testTypes(
+        LINE_JOINER.join(
+            "function foo(/** {a: number} */ obj) {};",
+            "foo({b: 'abc'});"),
+        LINE_JOINER.join(
+            "actual parameter 1 of foo does not match formal parameter",
+            "found   : {a: (number|undefined), b: string}",
+            "required: {a: number}",
+            "missing : []",
+            "mismatch: [a]"));
   }
 
   public void testTypeCheck26() throws Exception {
-    testTypes("function foo(/** {a: number} */ obj) {};"
-        + "foo({a: 'abc'});",
-        "actual parameter 1 of foo does not match formal parameter\n"
-        + "found   : {a: (number|string)}\n"
-        + "required: {a: number}");
-
+    testTypes(
+        LINE_JOINER.join(
+            "function foo(/** {a: number} */ obj) {};",
+            "foo({a: 'abc'});"),
+        LINE_JOINER.join(
+            "actual parameter 1 of foo does not match formal parameter",
+            "found   : {a: (number|string)}",
+            "required: {a: number}",
+            "missing : []",
+            "mismatch: [a]"));
   }
 
   public void testTypeCheck27() throws Exception {
@@ -13027,12 +13036,16 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testRecordType1() throws Exception {
     testTypes(
-        "/** @param {{prop: number}} x */" +
-        "function f(x) {}" +
-        "f({});",
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : {prop: (number|undefined)}\n" +
-        "required: {prop: number}");
+        LINE_JOINER.join(
+            "/** @param {{prop: number}} x */",
+            "function f(x) {}",
+            "f({});"),
+        LINE_JOINER.join(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : {prop: (number|undefined)}",
+            "required: {prop: number}",
+            "missing : []",
+            "mismatch: [prop]"));
   }
 
   public void testRecordType2() throws Exception {
@@ -13044,12 +13057,16 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
 
   public void testRecordType3() throws Exception {
     testTypes(
-        "/** @param {{prop: number}} x */" +
-        "function f(x) {}" +
-        "f({prop: 'x'});",
-        "actual parameter 1 of f does not match formal parameter\n" +
-        "found   : {prop: (number|string)}\n" +
-        "required: {prop: number}");
+        LINE_JOINER.join(
+            "/** @param {{prop: number}} x */",
+            "function f(x) {}",
+            "f({prop: 'x'});"),
+        LINE_JOINER.join(
+            "actual parameter 1 of f does not match formal parameter",
+            "found   : {prop: (number|string)}",
+            "required: {prop: number}",
+            "missing : []",
+            "mismatch: [prop]"));
   }
 
   public void testRecordType4() throws Exception {
@@ -13063,12 +13080,18 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "function g(x) {}" +
         "var x = {}; f(x); g(x);",
         ImmutableList.of(
-            "actual parameter 1 of f does not match formal parameter\n" +
-            "found   : {prop: (number|string|undefined)}\n" +
-            "required: {prop: (number|undefined)}",
-            "actual parameter 1 of g does not match formal parameter\n" +
-            "found   : {prop: (number|string|undefined)}\n" +
-            "required: {prop: (string|undefined)}"));
+            LINE_JOINER.join(
+                "actual parameter 1 of f does not match formal parameter",
+                "found   : {prop: (number|string|undefined)}",
+                "required: {prop: (number|undefined)}",
+                "missing : []",
+                "mismatch: [prop]"),
+            LINE_JOINER.join(
+                "actual parameter 1 of g does not match formal parameter",
+                "found   : {prop: (number|string|undefined)}",
+                "required: {prop: (string|undefined)}",
+                "missing : []",
+                "mismatch: [prop]")));
   }
 
   public void testRecordType5() throws Exception {
@@ -14715,7 +14738,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "actual parameter 1 of f does not match formal parameter",
             "found   : Foo",
-            "required: WithPropT<number>"));
+            "required: WithPropT<number>",
+        "missing : []",
+        "mismatch: [prop]"));
   }
 
   public void testTemplatizedStructuralMismatch2() throws Exception {
@@ -14731,7 +14756,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "actual parameter 1 of f does not match formal parameter",
             "found   : Foo",
-            "required: WithPropT<number>"));
+            "required: WithPropT<number>",
+        "missing : []",
+        "mismatch: [prop]"));
   }
 
   public void testTemplatizedStructuralMismatch3() throws Exception {
@@ -14753,7 +14780,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "actual parameter 1 of f does not match formal parameter",
             "found   : Foo<string>",
-            "required: WithPropT<number>"));
+            "required: WithPropT<number>",
+        "missing : []",
+        "mismatch: [prop]"));
   }
 
   public void testTemplatizedStructuralMismatch4() throws Exception {
@@ -14776,7 +14805,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "actual parameter 1 of f does not match formal parameter",
             "found   : Foo",
-            "required: WithProp<string>"));
+            "required: WithProp<string>",
+            "missing : []",
+            "mismatch: [prop]"));
   }
 
   public void testTemplatizedStructuralMismatchNotFound() throws Exception {
@@ -15960,7 +15991,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "assignment",
             "found   : {fun: function ((I7|null)): (C7|null), prop: {prop: (C7|null)}}",
-            "required: {fun: function ((C7|null)): (I7|null), prop: {prop: (I7|null)}}"));
+            "required: {fun: function ((C7|null)): (I7|null), prop: {prop: (I7|null)}}",
+            "missing : []",
+        "mismatch: [fun,prop]"));
   }
 
   /**
@@ -16339,7 +16372,10 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "initializing variable",
             "found   : Foo",
-            "required: {str: string, unknown: ?}"));
+            "required: {str: string, unknown: ?}",
+            "missing : [unknown]",
+            "mismatch: []"
+        ));
   }
 
   public void testRecordWithOptionalUnknownProperty() throws Exception {
@@ -16361,7 +16397,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "initializing variable",
             "found   : Foo",
-            "required: {str: string, top: *}"));
+            "required: {str: string, top: *}",
+            "missing : [top]",
+            "mismatch: []"));
   }
 
   public void testStructuralInterfaceWithOptionalProperty() throws Exception {
@@ -16391,7 +16429,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "initializing variable",
             "found   : Foo",
-            "required: Rec"));
+            "required: Rec",
+            "missing : [unknown]",
+            "mismatch: []"));
   }
 
   public void testStructuralInterfaceWithOptionalUnknownProperty() throws Exception {
@@ -16429,7 +16469,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "initializing variable",
             "found   : Foo",
-            "required: Rec"));
+            "required: Rec",
+            "missing : [top]",
+            "mismatch: []"));
   }
 
   public void testStructuralInterfaceCycleDoesntCrash() throws Exception {
@@ -16478,7 +16520,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "initializing variable",
             "found   : Foo",
-            "required: WithProp"));
+            "required: WithProp",
+            "missing : [prop]",
+            "mismatch: []"));
   }
 
   public void testStructuralInterfacesMatchOwnProperties3() throws Exception {
@@ -16495,7 +16539,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "initializing variable",
             "found   : Foo",
-            "required: WithProp"));
+            "required: WithProp",
+            "missing : []",
+            "mismatch: [prop]"));
   }
 
 
@@ -16522,7 +16568,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "initializing variable",
             "found   : function (): undefined",
-            "required: WithProp"));
+            "required: WithProp",
+            "missing : [prop]",
+            "mismatch: []"));
   }
 
   public void testStructuralInterfacesMatchFunctionNamespace3() throws Exception {
@@ -16537,7 +16585,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "initializing variable",
             "found   : function (): undefined",
-            "required: WithProp"));
+            "required: WithProp",
+        "missing : []",
+        "mismatch: [prop]"));
   }
 
   public void testRecursiveTemplatizedStructuralInterface() throws Exception {
@@ -16626,7 +16676,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "assignment",
             "found   : {prop: (C2|null)}",
-            "required: {prop: (C|null), prop2: (C|null)}"));
+            "required: {prop: (C|null), prop2: (C|null)}",
+            "missing : [prop2]",
+            "mismatch: []"));
   }
 
   public void testCovarianceForRecordType5() throws Exception {
@@ -16645,7 +16697,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "assignment",
             "found   : {prop: (C2|null)}",
-            "required: {prop: (C|null)}"));
+            "required: {prop: (C|null)}",
+            "missing : []",
+            "mismatch: [prop]"));
   }
 
   public void testCovarianceForRecordType6() throws Exception {
@@ -16664,7 +16718,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "assignment",
             "found   : {prop: (C|null)}",
-            "required: {prop: (C2|null)}"));
+            "required: {prop: (C2|null)}",
+            "missing : []",
+            "mismatch: [prop]"));
   }
 
   public void testCovarianceForRecordType7() throws Exception {
@@ -16683,7 +16739,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "assignment",
             "found   : {prop: (C2|null), prop2: (C|null)}",
-            "required: {prop: (C2|null), prop2: (C2|null)}"));
+            "required: {prop: (C2|null), prop2: (C2|null)}",
+            "missing : []",
+            "mismatch: [prop2]"));
   }
 
   public void testCovarianceForRecordType8() throws Exception {
@@ -16743,7 +16801,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "assignment",
             "found   : Foo",
-            "required: {x: Foo}"));
+            "required: {x: Foo}",
+            "missing : []",
+            "mismatch: [x]"));
   }
 
   public void testCovarianceForRecordType11() throws Exception {
@@ -17311,7 +17371,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "assignment",
             "found   : {prop1: (A|null|undefined)}",
-            "required: {prop1: (A|null)}"));
+            "required: {prop1: (A|null)}",
+            "missing : []",
+            "mismatch: [prop1]"));
   }
 
   public void testCovarianceForRecordType31() throws Exception {
@@ -17333,7 +17395,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
             "assignment",
             "found   : {prop1: (A|null|undefined)}",
-            "required: {prop1: (A|null)}"));
+            "required: {prop1: (A|null)}",
+            "missing : []",
+            "mismatch: [prop1]"));
   }
 
   public void testDuplicateVariableDefinition1() throws Exception {
