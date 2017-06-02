@@ -389,6 +389,49 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "class Foo { method(/** string */ s) {} }");
   }
 
+  public void testEs6Modules() {
+    testSame("export default class {}");
+
+    testSame("import Foo from 'foo';");
+
+    testSame("export class Foo {}");
+
+    testSame("import {Foo} from 'foo';");
+
+    testSame(
+        LINE_JOINER.join(
+            "import {Baz} from 'baz';",
+            "",
+            "export /** @constructor */ function Foo() {}",
+            "/** @type {!Baz} */ Foo.prototype.baz"));
+
+    testSame(
+        LINE_JOINER.join(
+            "import {Bar, Baz} from 'a/b/c';",
+            "",
+            "class Foo extends Bar {",
+            "  /** @return {!Baz} */ getBaz() {}",
+            "}",
+            "",
+            "export {Foo};"));
+
+    test(
+        LINE_JOINER.join(
+            "export class Foo {",
+            "  /** @return {number} */ getTime() { return Date.now(); }",
+            "}",
+            "export default /** @return {number} */ () => 6",
+            "const BLAH = 'foobar';",
+            "export {BLAH};"),
+        LINE_JOINER.join(
+            "export class Foo {",
+            "  /** @return {number} */ getTime() {}",
+            "}",
+            "export default /** @return {number} */ () => {}",
+            "/** @const {string} */ var BLAH;",
+            "export {BLAH};"));
+  }
+
   public void testGoogModules() {
     testSame(
         LINE_JOINER.join(
