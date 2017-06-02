@@ -47,7 +47,7 @@ import javax.annotation.Nullable;
  */
 public abstract class AbstractCompiler implements SourceExcerptProvider {
   static final DiagnosticType READ_ERROR = DiagnosticType.error(
-      "JSC_READ_ERROR", "Cannot read: {0}");
+      "JSC_READ_ERROR", "Cannot read file {0}: {1}");
 
   private final Map<String, Object> annotationMap = new HashMap<>();
 

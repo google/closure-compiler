@@ -1689,7 +1689,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         try {
           input.getCode();
         } catch (IOException e) {
-          report(JSError.make(AbstractCompiler.READ_ERROR, input.getName()));
+          report(JSError.make(AbstractCompiler.READ_ERROR, input.getName(), e.getMessage()));
         }
       }
     } finally {
