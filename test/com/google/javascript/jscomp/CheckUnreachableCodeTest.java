@@ -29,6 +29,11 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
         new CheckUnreachableCode(compiler));
   }
 
+  @Override
+  public void setUp() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+  }
+
   public void testCorrectSimple() {
     testSame("var x");
     testSame("var x = 1");
@@ -212,7 +217,6 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   }
 
   public void testES6FeaturesInIfExpression() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     // class X{} always eval to true by toBoolean();
     assertUnreachable("if(!class {}) x = 1;");
     assertUnreachable("if(!class A{}) x = 1;");
@@ -231,7 +235,6 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   }
 
   public void testES6FeaturesInTryCatch() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     assertUnreachable("try { let x = 1; } catch(e) {}");
     assertUnreachable("try { const x = 1; } catch(e) {}");
     assertUnreachable("try {()=>42;} catch(e) {}");
@@ -244,14 +247,12 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   }
 
   public void testCorrectForOfBreakAndContinues() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame("for(x of [1, 2, 3]) {foo();}");
     testSame("for(x of [1, 2, 3]) {foo(); break;}");
     testSame("for(x of [1, 2, 3]) {foo(); continue;}");
   }
 
   public void testInCorrectForOfBreakAndContinues() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     assertUnreachable("for(x of [1, 2, 3]) {foo(); break; bar();}");
     assertUnreachable("for(x of [1, 2, 3]) {foo(); continue; bar();}");
 
@@ -260,13 +261,11 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   }
 
   public void testForLoopsEs6() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     assertUnreachable("for(;;) {if(x) {continue; bar();}}");
     assertUnreachable("for(x in y) {if(x) {continue; bar();}}");
   }
 
   public void testReturnsInShorthandFunctionOfObjLit() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(LINE_JOINER.join(
         "var obj = {",
         "  f() { ",
@@ -297,12 +296,10 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   }
 
   public void testObjLit() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     assertUnreachable("var a = {c(){if(true){return;}x = 1;}};");
   }
 
   public void testClass() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame("class C{func(){}}");
     assertUnreachable("class C{func(){if (true){return;} else {return;}}}");
     assertUnreachable("class C{func(){if (true){return;} x = 1;}}");
@@ -311,6 +308,51 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     testSame("var C; C = class{func(){}}");
     testSame("let C; C = class{func(){}}");
     assertUnreachable("var C = class{func(){if (true){return;} x = 1;}}");
+  }
+
+  public void testSubclass() {
+    testSame(
+        LINE_JOINER.join(
+            "class D {foo() {if (true) {return;}}}",
+            "class C extends D {foo() {super.foo();}}"));
+  }
+
+  public void testArrowFunction() {
+    testSame("() => 3");
+    assertUnreachable("() => {return 3; x = 1;}");
+    assertUnreachable("() => { if (false) x = 1;}");
+    testSame("var f = array.filter(g => {if (g % 3) x = 1;});");
+    assertUnreachable("var f = array.filter(g => {if (false) g = 1;});");
+  }
+
+  public void testGenerators() {
+    testSame(
+        LINE_JOINER.join(
+            "function* f() {",
+            "  var i = 0;",
+            "  while(true)",
+            "    yield i++;",
+            "}"));
+
+    assertUnreachable(
+        LINE_JOINER.join(
+            "function* f() {",
+            "  var i = 0;",
+            "  while(true) {",
+            "    yield i++;",
+            "  }",
+            "  i = 1;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function* f() {",
+            "  var i = 0;",
+            "  while(true) {",
+            "    yield i;",
+            "    i++;",
+            "  }",
+            "}"));
   }
 
   private void assertUnreachable(String js) {
