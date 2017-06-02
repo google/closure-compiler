@@ -126,13 +126,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
   public void processFile(Node root, boolean forceRewrite) {
     Preconditions.checkArgument(isEs6ModuleRoot(root), root);
     this.forceRewrite = forceRewrite;
-
-    /*
-     * TODO(heeba): Eventually, Es6CheckModule will be its own compiler pass.
-     **/
-    Es6CheckModule checkModules = new Es6CheckModule(compiler);
-    NodeTraversal.traverseEs6(compiler, root, checkModules);
-
     NodeTraversal.traverseEs6(compiler, root, this);
   }
 
