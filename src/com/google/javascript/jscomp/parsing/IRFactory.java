@@ -1029,11 +1029,15 @@ class IRFactory {
         scriptNode.addChildToBack(transform(child));
       }
       parseDirectives(scriptNode);
-      if (isGoogModuleFile(scriptNode)) {
+      boolean isGoogModule = isGoogModuleFile(scriptNode);
+      if (isGoogModule || features.has(Feature.MODULES)) {
         Node moduleNode = newNode(Token.MODULE_BODY);
         setSourceInfo(moduleNode, rootNode);
         moduleNode.addChildrenToBack(scriptNode.removeChildren());
         scriptNode.addChildToBack(moduleNode);
+        if (isGoogModule) {
+          scriptNode.putBooleanProp(Node.GOOG_MODULE, true);
+        }
       }
       return scriptNode;
     }

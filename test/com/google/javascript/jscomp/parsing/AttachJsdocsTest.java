@@ -779,7 +779,10 @@ public final class AttachJsdocsTest extends BaseJSTypeTestCase {
   public void testInlineInExport() {
     mode = LanguageMode.ECMASCRIPT6;
     Node root = parse("export var /** number */ x;");
-    assertThat(root.getFirstFirstChild().getFirstChild().getJSDocInfo()).isNotNull();
+    Node moduleBody = root.getFirstChild();
+    Node exportNode = moduleBody.getFirstChild();
+    Node varNode = exportNode.getFirstChild();
+    assertThat(varNode.getFirstChild().getJSDocInfo()).isNotNull();
   }
 
   private Node parse(String source, String... warnings) {

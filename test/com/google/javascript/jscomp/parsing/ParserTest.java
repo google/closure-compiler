@@ -799,7 +799,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.MODULES);
 
     Node n = parse("/** @param {string} x */ export function f(x) {};");
-    Node export = n.getFirstChild();
+    Node export = n.getFirstFirstChild();
 
     assertNode(export).hasType(Token.EXPORT);
     assertThat(export.getJSDocInfo()).isNull();

@@ -76,7 +76,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
 
   private Set<String> alreadyRequired = new HashSet<>();
 
-  private boolean isEs6Module;
   private boolean forceRewrite;
 
   private Node googRequireInsertSpot;
@@ -90,17 +89,43 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
   }
 
   /**
-   * If a file contains an ES6 "import" or "export" statement, or the forceRewrite
-   * option is true, rewrite the source as a module.
+   * Return whether or not the given script node represents an ES6 module file.
    */
-  public void processFile(Node root, boolean forceRewrite) {
+  public static boolean isEs6ModuleRoot(Node scriptNode) {
+    Preconditions.checkArgument(scriptNode.isScript());
+    if (scriptNode.getBooleanProp(Node.GOOG_MODULE)) {
+      return false;
+    }
+    return scriptNode.hasChildren() && scriptNode.getFirstChild().isModuleBody();
+  }
+
+  /**
+   * Force rewriting of a file into an ES6 module, such as for imported files that contain no
+   * "import" or "export" statements. Fails if the file contains a goog.provide or goog.module.
+   *
+   * @return True, if the file is now an ES6 module. False, if the file must remain a script.
+   */
+  public boolean forceToEs6Module(Node root) {
+    if (isEs6ModuleRoot(root)) {
+      return true;
+    }
     FindGoogProvideOrGoogModule finder = new FindGoogProvideOrGoogModule();
     NodeTraversal.traverseEs6(compiler, root, finder);
     if (finder.isFound()) {
-      return;
+      return false;
     }
+    Node moduleNode = new Node(Token.MODULE_BODY).srcref(root);
+    moduleNode.addChildrenToBack(root.removeChildren());
+    root.addChildToBack(moduleNode);
+    return true;
+  }
+
+  /**
+   * Rewrite a single ES6 module file to a global script version.
+   */
+  public void processFile(Node root, boolean forceRewrite) {
+    Preconditions.checkArgument(isEs6ModuleRoot(root), root);
     this.forceRewrite = forceRewrite;
-    isEs6Module = forceRewrite;
     NodeTraversal.traverseEs6(compiler, root, this);
   }
 
@@ -144,10 +169,8 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isImport()) {
-      isEs6Module = true;
       visitImport(t, n, parent);
     } else if (n.isExport()) {
-      isEs6Module = true;
       visitExport(t, n, parent);
     } else if (n.isScript()) {
       scriptNodeCount++;
@@ -156,6 +179,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
   }
 
   private void visitImport(NodeTraversal t, Node importDecl, Node parent) {
+    Preconditions.checkArgument(parent.isModuleBody(), parent);
     String moduleName;
     String importName = importDecl.getLastChild().getString();
     boolean isNamespaceImport = importName.startsWith("goog:");
@@ -217,13 +241,12 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
       }
     }
 
-    Node script = NodeUtil.getEnclosingScript(parent);
     // Emit goog.require call for the module.
     if (alreadyRequired.add(moduleName)) {
       Node require = IR.exprResult(
           IR.call(NodeUtil.newQName(compiler, "goog.require"), IR.string(moduleName)));
       require.useSourceInfoIfMissingFromForTree(importDecl);
-      script.addChildAfter(require, googRequireInsertSpot);
+      parent.addChildAfter(require, googRequireInsertSpot);
       googRequireInsertSpot = require;
       t.getInput().addRequire(moduleName);
     }
@@ -233,6 +256,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
   }
 
   private void visitExport(NodeTraversal t, Node export, Node parent) {
+    Preconditions.checkArgument(parent.isModuleBody(), parent);
     if (export.getBooleanProp(Node.EXPORT_DEFAULT)) {
       // export default
 
@@ -351,10 +375,16 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
     }
   }
 
+  private void inlineModuleToGlobalScope(Node moduleNode) {
+    Preconditions.checkState(moduleNode.isModuleBody());
+    Node scriptNode = moduleNode.getParent();
+    moduleNode.detach();
+    scriptNode.addChildrenToFront(moduleNode.removeChildren());
+  }
+
   private void visitScript(NodeTraversal t, Node script) {
-    if (!isEs6Module) {
-      return;
-    }
+
+    inlineModuleToGlobalScope(script.getFirstChild());
 
     ClosureRewriteModule.checkAndSetStrictModeDirective(t, script);
 
