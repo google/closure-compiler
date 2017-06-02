@@ -1241,7 +1241,7 @@ public class Node implements Serializable {
   // We get the last child as first.previous. But last.next is null, not first.
 
   /**
-   * Linked list of properties. Since vast majority of nodes would have no more then 2 properties,
+   * Linked list of properties. Since vast majority of nodes would have no more than 2 properties,
    * linked list saves memory and provides fast lookup. If this does not holds, propListHead can be
    * replaced by UintMap.
    */
@@ -1812,8 +1812,8 @@ public class Node implements Serializable {
 
   /**
    * @param compareType Whether to compare the JSTypes of the nodes.
-   * @param recurse Whether to compare the children of the current node, if not only the the count
-   *     of the children are compared.
+   * @param recurse Whether to compare the children of the current node. If not, only the count of
+   *     the children are compared.
    * @param jsDoc Whether to check that the JsDoc of the nodes are equivalent.
    * @return Whether this node is equivalent semantically to the provided node.
    */
@@ -1823,7 +1823,7 @@ public class Node implements Serializable {
 
   /**
    * @param compareType Whether to compare the JSTypes of the nodes.
-   * @param recurse Whether to compare the children of the current node, if not only the the count
+   * @param recurse Whether to compare the children of the current node. If not, only the count
    *     of the children are compared.
    * @param jsDoc Whether to check that the JsDoc of the nodes are equivalent.
    * @param sideEffect Whether to check that the side-effect flags of the nodes are equivalent.
@@ -1847,8 +1847,9 @@ public class Node implements Serializable {
 
     TypeDeclarationNode thisTDN = this.getDeclaredTypeExpression();
     TypeDeclarationNode thatTDN = node.getDeclaredTypeExpression();
-    if ((thisTDN != null || thatTDN != null) &&
-        (thisTDN == null || thatTDN == null
+    if ((thisTDN != null || thatTDN != null)
+        && (thisTDN == null
+            || thatTDN == null
             || !thisTDN.isEquivalentTo(thatTDN, compareType, recurse, jsDoc))) {
       return false;
     }
@@ -3176,15 +3177,15 @@ public class Node implements Serializable {
     return this.token == Token.SWITCH;
   }
 
-  public boolean isTaggedTemplateLit(){
+  public boolean isTaggedTemplateLit() {
     return this.token == Token.TAGGED_TEMPLATELIT;
   }
 
-  public boolean isTemplateLit(){
+  public boolean isTemplateLit() {
     return this.token == Token.TEMPLATELIT;
   }
 
-  public boolean isTemplateLitSub(){
+  public boolean isTemplateLitSub() {
     return this.token == Token.TEMPLATELIT_SUB;
   }
 
