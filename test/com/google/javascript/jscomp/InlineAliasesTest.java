@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.InlineAliases.ALIAS_CYCLE;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /** Unit tests for {@link InlineAliases}. */
 public class InlineAliasesTest extends CompilerTestCase {
 
@@ -29,6 +31,7 @@ public class InlineAliasesTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
+    options.setLanguage(LanguageMode.ECMASCRIPT_2015);
     options.setJ2clPass(CompilerOptions.J2clPassMode.ON);
     return options;
   }
@@ -242,6 +245,31 @@ public class InlineAliasesTest extends CompilerTestCase {
             "  function g() {",
             "    return x;",
             "  }",
+            "}"));
+  }
+
+  public void testES6AliasClassDeclarationWithNew() {
+    test(
+        "class Foo{}; var /** @const */ alias = Foo; var x = new alias;",
+        "class Foo{}; var /** @const */ alias = Foo; var x = new Foo;");
+  }
+
+  public void testES6AliasClassDeclarationWithoutNew() {
+    test(
+        "class Foo{}; var /** @const */ alias = Foo; var x = alias;",
+        "class Foo{}; var /** @const */ alias = Foo; var x = Foo;");
+  }
+
+  public void testNoInlineAliasesInsideClassConstructor() {
+    testSame(
+        LINE_JOINER.join(
+            "class Foo {",
+            " /** @constructor */",
+            " constructor(x) {",
+            "     var /** @const */ alias1 = this.x;",
+            "     var /** @const */ alias2 = alias1;",
+            "     var z = new alias2;",
+            " }",
             "}"));
   }
 }
