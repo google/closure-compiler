@@ -90,9 +90,20 @@ class CheckMissingReturn implements ScopedCallback {
 
   @Override
   public void enterScope(NodeTraversal t) {
-    JSType returnType = explicitReturnExpected(t.getScopeRoot());
+    Node n = t.getScopeRoot();
+    JSType returnType = explicitReturnExpected(n);
+
     if (returnType == null) {
+      // No return value is expected, so nothing to check.
       return;
+    }
+
+    if (n.isArrowFunction()) {
+      Node functionBody = NodeUtil.getFunctionBody(n);
+      if (!functionBody.isNormalBlock()) {
+        // Body is an expression, which is the implicit return value.
+        return;
+      }
     }
 
     if (fastAllPathsReturnCheck(t.getControlFlowGraph())) {
@@ -155,14 +166,14 @@ class CheckMissingReturn implements ScopedCallback {
    *
    * @return If a return type is expected, returns it. Otherwise, returns null.
    */
-  private JSType explicitReturnExpected(Node scope) {
-    FunctionType scopeType = JSType.toMaybeFunctionType(scope.getJSType());
+  private JSType explicitReturnExpected(Node scopeRoot) {
+    FunctionType scopeType = JSType.toMaybeFunctionType(scopeRoot.getJSType());
 
     if (scopeType == null) {
       return null;
     }
 
-    if (isEmptyFunction(scope)) {
+    if (isEmptyFunction(scopeRoot)) {
       return null;
     }
 
