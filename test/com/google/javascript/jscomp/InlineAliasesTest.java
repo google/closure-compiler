@@ -38,7 +38,7 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testSimpleAliasInJSDoc() {
     test("function Foo(){}; var /** @const */ alias = Foo; /** @type {alias} */ var x;",
-         "function Foo(){}; var /** @const */ alias = Foo; /** @type {Foo} */ var x;");
+        "function Foo(){}; var /** @const */ alias = Foo; /** @type {Foo} */ var x;");
 
     test(
         LINE_JOINER.join(
@@ -67,13 +67,13 @@ public class InlineAliasesTest extends CompilerTestCase {
 
   public void testSimpleAliasInCode() {
     test("function Foo(){}; var /** @const */ alias = Foo; var x = new alias;",
-         "function Foo(){}; var /** @const */ alias = Foo; var x = new Foo;");
+        "function Foo(){}; var /** @const */ alias = Foo; var x = new Foo;");
 
     test("var ns={}; function Foo(){}; /** @const */ ns.alias = Foo; var x = new ns.alias;",
-         "var ns={}; function Foo(){}; /** @const */ ns.alias = Foo; var x = new Foo;");
+        "var ns={}; function Foo(){}; /** @const */ ns.alias = Foo; var x = new Foo;");
 
     test("var ns={}; function Foo(){}; /** @const */ ns.alias = Foo; var x = new ns.alias.Subfoo;",
-         "var ns={}; function Foo(){}; /** @const */ ns.alias = Foo; var x = new Foo.Subfoo;");
+        "var ns={}; function Foo(){}; /** @const */ ns.alias = Foo; var x = new Foo.Subfoo;");
   }
 
   public void testAliasQualifiedName() {
@@ -182,7 +182,7 @@ public class InlineAliasesTest extends CompilerTestCase {
             "var /** @const */ alias1 = ns.Foo;",
             "var /** @const */ alias2 = ns.Foo;",
             "var x = new ns.Foo;"));
-}
+  }
 
   public void testAliasedEnums() {
     test(
@@ -204,7 +204,7 @@ public class InlineAliasesTest extends CompilerTestCase {
   }
 
   public void testConstWithTypesAreNotInlined() {
-      testSame(
+    testSame(
         LINE_JOINER.join(
             "var /** @type {number} */ n = 5",
             "var /** @const {number} */ alias = n;",
@@ -271,5 +271,23 @@ public class InlineAliasesTest extends CompilerTestCase {
             "     var z = new alias2;",
             " }",
             "}"));
+  }
+
+  public void testArrayDestructuringSwapDoesntCrash() {
+    testSame("var a = 1; var b = 3; [a, b] = [b, a];");
+  }
+
+  public void testArrayDestructuringVarAssignDoesntCrash() {
+    testSame("var foo = [1, 2, 3]; var [one, two, three] = foo;");
+  }
+
+  public void testArrayDestructuringFromFunctionDoesntCrash() {
+    testSame(
+        LINE_JOINER.join(
+            "function f() {",
+            "  return [1, 2];",
+            "}",
+            "var a, b;",
+            "[a, b] = f();"));
   }
 }
