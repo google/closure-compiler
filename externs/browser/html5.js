@@ -701,11 +701,26 @@ CanvasRenderingContext2D.prototype.fillColor;
  */
 CanvasRenderingContext2D.prototype.fillStyle;
 
+/** @override */
+CanvasRenderingContext2D.prototype.font;
+
 /** @type {number} */
 CanvasRenderingContext2D.prototype.globalAlpha;
 
 /** @type {string} */
 CanvasRenderingContext2D.prototype.globalCompositeOperation;
+
+/** @override */
+CanvasRenderingContext2D.prototype.lineWidth;
+
+/** @override */
+CanvasRenderingContext2D.prototype.lineCap;
+
+/** @override */
+CanvasRenderingContext2D.prototype.lineJoin;
+
+/** @override */
+CanvasRenderingContext2D.prototype.miterLimit;
 
 /** @type {number} */
 CanvasRenderingContext2D.prototype.shadowBlur;
@@ -728,6 +743,12 @@ CanvasRenderingContext2D.prototype.strokeStyle;
 
 /** @type {string} */
 CanvasRenderingContext2D.prototype.strokeColor;
+
+/** @override */
+CanvasRenderingContext2D.prototype.textAlign;
+
+/** @override */
+CanvasRenderingContext2D.prototype.textBaseline;
 
 /** @type {number} */
 CanvasRenderingContext2D.prototype.lineDashOffset;
