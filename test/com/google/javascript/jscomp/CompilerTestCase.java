@@ -35,6 +35,10 @@ import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1482,6 +1486,7 @@ public abstract class CompilerTestCase extends TestCase {
             root = compiler.getRoot();
             externsRoot = compiler.getExternsRoot();
             mainRoot = compiler.getJsRoot();
+            lastCompiler = compiler;
           }
         }
 
@@ -2022,10 +2027,28 @@ public abstract class CompilerTestCase extends TestCase {
 
   /** A Compiler that records requested runtime libraries, rather than injecting. */
   protected static class NoninjectingCompiler extends Compiler {
+
     protected final Set<String> injected = new HashSet<>();
-    @Override Node ensureLibraryInjected(String library, boolean force) {
+
+    @Override
+    Node ensureLibraryInjected(String library, boolean force) {
       injected.add(library);
       return null;
+    }
+
+    @Override
+    public void saveState(OutputStream outputStream) throws IOException {
+      super.saveState(outputStream);
+      ObjectOutputStream out = new ObjectOutputStream(outputStream);
+      out.writeObject(injected);
+    }
+
+    @Override
+    public void restoreState(InputStream inputStream) throws IOException, ClassNotFoundException {
+      super.restoreState(inputStream);
+      ObjectInputStream in = new ObjectInputStream(inputStream);
+      injected.clear();
+      injected.addAll((Set<String>) in.readObject());
     }
   }
 }

@@ -1183,7 +1183,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           compiler.stage2Passes();
       }
       compiler.performPostCompilationTasks();
-    } catch (IOException e) {
+    } catch (IOException | ClassNotFoundException e) {
       compiler.report(JSError.make(COULD_NOT_DESERIALIZE_AST, filename));
     } finally {
       // Make sure we generate a report of errors and warnings even if the compiler throws an

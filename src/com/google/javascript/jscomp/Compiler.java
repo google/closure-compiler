@@ -3336,67 +3336,67 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @GwtIncompatible("ObjectOutputStream")
   public void saveState(OutputStream outputStream) throws IOException {
-    try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream)) {
-      runInCompilerThread(new Callable<Void>() {
-        @Override
-        public Void call() throws Exception {
-          Tracer tracer = newTracer("serializeCompilerState");
-          objectOutputStream.writeObject(new CompilerState(Compiler.this));
-          stopTracer(tracer, "serializeCompilerState");
-          return null;
-        }
-      });
-   }
+    // Do not close the outputstream, caller is responsible for closing it.
+    final ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+    runInCompilerThread(new Callable<Void>() {
+      @Override
+      public Void call() throws Exception {
+        Tracer tracer = newTracer("serializeCompilerState");
+        objectOutputStream.writeObject(new CompilerState(Compiler.this));
+        stopTracer(tracer, "serializeCompilerState");
+        return null;
+      }
+    });
   }
 
   @GwtIncompatible("ObjectInputStream")
-  public void restoreState(InputStream inputStream) throws IOException  {
+  public void restoreState(InputStream inputStream) throws IOException, ClassNotFoundException  {
     initWarningsGuard(options.getWarningsGuard());
     maybeSetTracker();
-    try (final ObjectInputStream objectInputStream = new ObjectInputStream(inputStream)) {
-      CompilerState compilerState = runInCompilerThread(new Callable<CompilerState>() {
-        @Override
-        public CompilerState call() throws Exception {
-          Tracer tracer = newTracer("deserializeCompilerState");
-          CompilerState compilerState = (CompilerState) objectInputStream.readObject();
-          stopTracer(tracer, "deserializeCompilerState");
-          return compilerState;
-        }
-      });
-      featureSet = compilerState.featureSet;
-      externs = compilerState.externs;
-      inputs = compilerState.inputs;
-      inputsById.clear();
-      inputsById.putAll(compilerState.inputsById);
-      typeRegistry = compilerState.typeRegistry;
-      externAndJsRoot = compilerState.externAndJsRoot;
-      externsRoot = compilerState.externsRoot;
-      jsRoot = compilerState.jsRoot;
-      mostRecentTypechecker = compilerState.mostRecentTypeChecker;
-      synthesizedExternsInput = compilerState.synthesizedExternsInput;
-      synthesizedExternsInputAtEnd = compilerState.synthesizedExternsInputAtEnd;
-      injectedLibraries.clear();
-      injectedLibraries.putAll(compilerState.injectedLibraries);
-      lastInjectedLibrary = compilerState.lastInjectedLibrary;
-      globalRefMap = compilerState.globalRefMap;
-      symbolTable = compilerState.symbolTable;
-      hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
-      typeValidator = compilerState.typeValidator;
-      setLifeCycleStage(compilerState.lifeCycleStage);
-      externProperties = compilerState.externProperties;
-      moduleGraph = compilerState.moduleGraph;
-      modules = compilerState.modules;
-
-      // restore errors.
-      if (compilerState.errors != null) {
-        for (JSError error : compilerState.errors) {
-          report(CheckLevel.ERROR, error);
-        }
+    // Do not close the input stream, caller is responsible for closing it.
+    final ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+    CompilerState compilerState = runInCompilerThread(new Callable<CompilerState>() {
+      @Override
+      public CompilerState call() throws Exception {
+        Tracer tracer = newTracer("deserializeCompilerState");
+        CompilerState compilerState = (CompilerState) objectInputStream.readObject();
+        stopTracer(tracer, "deserializeCompilerState");
+        return compilerState;
       }
-      if (compilerState.warnings != null) {
-        for (JSError warning : compilerState.warnings) {
-          report(CheckLevel.WARNING, warning);
-        }
+    });
+    featureSet = compilerState.featureSet;
+    externs = compilerState.externs;
+    inputs = compilerState.inputs;
+    inputsById.clear();
+    inputsById.putAll(compilerState.inputsById);
+    typeRegistry = compilerState.typeRegistry;
+    externAndJsRoot = compilerState.externAndJsRoot;
+    externsRoot = compilerState.externsRoot;
+    jsRoot = compilerState.jsRoot;
+    mostRecentTypechecker = compilerState.mostRecentTypeChecker;
+    synthesizedExternsInput = compilerState.synthesizedExternsInput;
+    synthesizedExternsInputAtEnd = compilerState.synthesizedExternsInputAtEnd;
+    injectedLibraries.clear();
+    injectedLibraries.putAll(compilerState.injectedLibraries);
+    lastInjectedLibrary = compilerState.lastInjectedLibrary;
+    globalRefMap = compilerState.globalRefMap;
+    symbolTable = compilerState.symbolTable;
+    hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
+    typeValidator = compilerState.typeValidator;
+    setLifeCycleStage(compilerState.lifeCycleStage);
+    externProperties = compilerState.externProperties;
+    moduleGraph = compilerState.moduleGraph;
+    modules = compilerState.modules;
+
+    // restore errors.
+    if (compilerState.errors != null) {
+      for (JSError error : compilerState.errors) {
+        report(CheckLevel.ERROR, error);
+      }
+    }
+    if (compilerState.warnings != null) {
+      for (JSError warning : compilerState.warnings) {
+        report(CheckLevel.WARNING, warning);
       }
     }
   }
