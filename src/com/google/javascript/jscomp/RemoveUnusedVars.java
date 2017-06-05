@@ -103,7 +103,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
   /**
    * Keep track of scopes that we've traversed.
    */
-  private final List<Scope> allFunctionScopes = new ArrayList<>();
+  private final List<Scope> allFunctionParamScopes = new ArrayList<>();
 
   /**
    * Keep track of assigns to variables that we haven't referenced.
@@ -191,7 +191,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
    * Traverses a node recursively. Call this once per pass.
    */
   private void traverseAndRemoveUnusedReferences(Node root) {
-    Scope scope = SyntacticScopeCreator.makeUntyped(compiler).createScope(root, null);
+    Scope scope = new Es6SyntacticScopeCreator(compiler).createScope(root, null);
     traverseNode(root, null, scope);
 
     if (removeGlobals) {
@@ -200,8 +200,8 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
 
     interpretAssigns();
     removeUnreferencedVars();
-    for (Scope fnScope : allFunctionScopes) {
-      removeUnreferencedFunctionArgs(fnScope);
+    for (Scope fparamScope : allFunctionParamScopes) {
+      removeUnreferencedFunctionArgs(fparamScope);
     }
   }
 
@@ -287,8 +287,8 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
         var = scope.getVar(n.getString());
         if (parent.isVar()) {
           Node value = n.getFirstChild();
-          if (value != null && var != null && isRemovableVar(var) &&
-              !NodeUtil.mayHaveSideEffects(value, compiler)) {
+          if (value != null && var != null && isRemovableVar(var)
+              && !NodeUtil.mayHaveSideEffects(value, compiler)) {
             // If the var is unreferenced and creating its value has no side
             // effects, then we can create a continuation for it instead
             // of traversing immediately.
@@ -300,7 +300,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
           // If arguments is escaped, we just assume the worst and continue
           // on all the parameters.
           if ("arguments".equals(n.getString()) && scope.isLocal()) {
-            Node lp = scope.getRootNode().getSecondChild();
+            Node lp = scope.getParentScope().getRootNode().getSecondChild();
             for (Node a = lp.getFirstChild(); a != null; a = a.getNext()) {
               markReferencedVar(scope.getVar(a.getString()));
             }
@@ -354,18 +354,25 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
    * enclosing scope. Because we don't remove catch variables, there's
    * no need to treat CATCH blocks differently like we do functions.
    */
-  private void traverseFunction(Node n, Scope parentScope) {
-    Preconditions.checkState(n.getChildCount() == 3, n);
-    Preconditions.checkState(n.isFunction(), n);
+  private void traverseFunction(Node function, Scope parentScope) {
+    Preconditions.checkState(function.getChildCount() == 3, function);
+    Preconditions.checkState(function.isFunction(), function);
 
-    final Node body = n.getLastChild();
+    final Node body = function.getLastChild();
     Preconditions.checkState(body.getNext() == null && body.isNormalBlock(), body);
 
-    Scope fnScope = SyntacticScopeCreator.makeUntyped(compiler).createScope(n, parentScope);
-    traverseNode(body, n, fnScope);
+    ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
 
-    collectMaybeUnreferencedVars(fnScope);
-    allFunctionScopes.add(fnScope);
+    // Checking the parameters
+    Scope fparamScope = scopeCreator.createScope(function, parentScope);
+
+    // Checking the function body
+    Scope fbodyScope = scopeCreator.createScope(body, fparamScope);
+    traverseNode(body, function, fbodyScope);
+
+    collectMaybeUnreferencedVars(fparamScope);
+    collectMaybeUnreferencedVars(fbodyScope);
+    allFunctionParamScopes.add(fparamScope);
   }
 
   /**
@@ -384,9 +391,9 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
    * Removes unreferenced arguments from a function declaration and when
    * possible the function's callSites.
    *
-   * @param fnScope The scope inside the function
+   * @param fparamScope The function parameter
    */
-  private void removeUnreferencedFunctionArgs(Scope fnScope) {
+  private void removeUnreferencedFunctionArgs(Scope fparamScope) {
     // Notice that removing unreferenced function args breaks
     // Function.prototype.length. In advanced mode, we don't really care
     // about this: we consider "length" the equivalent of reflecting on
@@ -400,8 +407,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
       return;
     }
 
-    Node function = fnScope.getRootNode();
-
+    Node function = fparamScope.getRootNode();
     Preconditions.checkState(function.isFunction());
     if (NodeUtil.isGetOrSetKey(function.getParent())) {
       // The parameters object literal setters can not be removed.
@@ -415,7 +421,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
       // Strip unreferenced args off the end of the function declaration.
       Node lastArg;
       while ((lastArg = argList.getLastChild()) != null) {
-        Var var = fnScope.getVar(lastArg.getString());
+        Var var = fparamScope.getVar(lastArg.getString());
         if (!referenced.contains(var)) {
           compiler.reportChangeToEnclosingScope(lastArg);
           argList.removeChild(lastArg);
@@ -424,7 +430,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
         }
       }
     } else {
-      callSiteOptimizer.optimize(fnScope, referenced);
+      callSiteOptimizer.optimize(fparamScope, referenced);
     }
   }
 
@@ -441,8 +447,8 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
       this.defFinder = defFinder;
     }
 
-    public void optimize(Scope fnScope, Set<Var> referenced) {
-      Node function = fnScope.getRootNode();
+    public void optimize(Scope fparamScope, Set<Var> referenced) {
+      Node function = fparamScope.getRootNode();
       Preconditions.checkState(function.isFunction());
       Node argList = NodeUtil.getFunctionParameters(function);
 
@@ -450,7 +456,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
       // function parameters.
       boolean changeCallSignature = canChangeSignature(function);
       markUnreferencedFunctionArgs(
-          fnScope, function, referenced,
+          fparamScope, function, referenced,
           argList.getFirstChild(), 0, changeCallSignature);
     }
 
@@ -676,15 +682,15 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
         }
 
         // Ignore references within goog.inherits calls.
-        if (parent.isCall() &&
-            convention.getClassesDefinedByCall(parent) != null) {
+        if (parent.isCall()
+            && convention.getClassesDefinedByCall(parent) != null) {
           continue;
         }
 
         // Accessing the property directly prevents rewrite.
         if (!DefinitionUseSiteFinder.isCallOrNewSite(site)) {
-          if (!(parent.isGetProp() &&
-              NodeUtil.isFunctionObjectCall(parent.getParent()))) {
+          if (!(parent.isGetProp()
+              && NodeUtil.isFunctionObjectCall(parent.getParent()))) {
             return false;
           }
         }
@@ -761,8 +767,8 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
 
           if (var.getParentNode().isVar() && !var.getParentNode().getParent().isForIn()) {
             Node value = var.getInitialValue();
-            assignedToUnknownValue = value != null &&
-                !NodeUtil.isLiteralValue(value, true);
+            assignedToUnknownValue = value != null
+                && !NodeUtil.isLiteralValue(value, true);
           } else {
             // This was initialized to a function arg or a catch param
             // or a for...in variable.
@@ -843,7 +849,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
       Preconditions.checkState(
           toRemove.isVar()
               || toRemove.isFunction()
-              || toRemove.isParamList() && parent.isFunction(),
+              || (toRemove.isParamList() && parent.isFunction()),
           "We should only declare vars and functions and function args");
 
       if (toRemove.isParamList()
@@ -940,9 +946,9 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
 
       this.maybeAliased = NodeUtil.isExpressionResultUsed(assignNode);
       this.mayHaveSecondarySideEffects =
-          maybeAliased ||
-          NodeUtil.mayHaveSideEffects(assignNode.getFirstChild()) ||
-          NodeUtil.mayHaveSideEffects(assignNode.getLastChild());
+          maybeAliased
+              || NodeUtil.mayHaveSideEffects(assignNode.getFirstChild())
+              || NodeUtil.mayHaveSideEffects(assignNode.getLastChild());
     }
 
     /**
@@ -963,8 +969,8 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
         current = current.getFirstChild();
         isPropAssign = true;
 
-        if (current.isGetProp() &&
-            current.getLastChild().getString().equals("prototype")) {
+        if (current.isGetProp()
+            && current.getLastChild().getString().equals("prototype")) {
           // Prototype properties sets should be considered like normal
           // property sets.
           current = current.getFirstChild();
