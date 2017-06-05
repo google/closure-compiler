@@ -86,15 +86,11 @@ PerformanceResourceTiming.prototype.decodedBodySize;
 PerformanceResourceTiming.prototype.workerStart;
 
 /**
- * https://w3c.github.io/navigation-timing/#sec-performance-navigation-types
- * @enum {string}
+ * Possible values are 'navigate', 'reload', 'back_forward', and 'prerender'.
+ * See https://w3c.github.io/navigation-timing/#sec-performance-navigation-types
+ * @typedef {string}
  */
-var NavigationType = {
-  NAVIGATE: 'navigate',
-  RELOAD: 'reload',
-  BACK_FORWARD: 'back_forward',
-  PRERENDER: 'prerender'
-};
+var NavigationType;
 
 /**
  * https://w3c.github.io/navigation-timing/#sec-PerformanceNavigationTiming
