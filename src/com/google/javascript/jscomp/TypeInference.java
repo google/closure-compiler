@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
@@ -1756,8 +1755,7 @@ class TypeInference
      * expression.
      */
     FlowScope getOutcomeFlowScope(Token nodeType, boolean outcome) {
-      if (nodeType == Token.AND && outcome ||
-          nodeType == Token.OR && !outcome) {
+      if ((nodeType == Token.AND && outcome) || (nodeType == Token.OR && !outcome)) {
         // We know that the whole expression must have executed.
         return rightScope;
       } else {
