@@ -123,7 +123,12 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
 
     // Computes liveness information first.
     ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
-    liveness = new LiveVariablesAnalysis(cfg, functionScope, compiler);
+    /*TODO (simranarora) We are currently traversing in Es6 for this pass, but the conversion
+     *to an Es6 scope creator is breaking existing test cases
+     */
+    liveness =
+        new LiveVariablesAnalysis(
+            cfg, functionScope, compiler, SyntacticScopeCreator.makeUntyped(compiler));
     liveness.analyze();
     tryRemoveDeadAssignments(t, cfg);
   }

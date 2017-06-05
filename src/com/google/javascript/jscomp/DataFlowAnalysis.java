@@ -540,20 +540,24 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
   }
 
   /**
-   * Compute set of escaped variables. When a variable is escaped in a
-   * dataflow analysis, it can be reference outside of the code that we are
-   * analyzing. A variable is escaped if any of the following is true:
+   * Compute set of escaped variables. When a variable is escaped in a dataflow analysis, it can be
+   * reference outside of the code that we are analyzing. A variable is escaped if any of the
+   * following is true:
    *
-   * <p><ol>
-   * <li>It is defined as the exception name in CATCH clause so it became a
-   * variable local not to our definition of scope.</li>
-   * <li>Exported variables as they can be needed after the script terminates.
-   * </li>
-   * <li>Names of named functions because in JavaScript, <i>function foo(){}</i>
-   * does not kill <i>foo</i> in the dataflow.</li>
+   * <p>
+   *
+   * <ol>
+   *   <li>It is defined as the exception name in CATCH clause so it became a variable local not to
+   *       our definition of scope.
+   *   <li>Exported variables as they can be needed after the script terminates.
+   *   <li>Names of named functions because in JavaScript, <i>function foo(){}</i> does not kill
+   *       <i>foo</i> in the dataflow.
    */
-  static void computeEscaped(final Scope jsScope, final Set<Var> escaped,
-      AbstractCompiler compiler) {
+  static void computeEscaped(
+      final Scope jsScope,
+      final Set<Var> escaped,
+      AbstractCompiler compiler,
+      ScopeCreator scopeCreator) {
     // TODO(user): Very good place to store this information somewhere.
     AbstractPostOrderCallback finder = new AbstractPostOrderCallback() {
       @Override
@@ -570,8 +574,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       }
     };
 
-    NodeTraversal t =
-        new NodeTraversal(compiler, finder, SyntacticScopeCreator.makeUntyped(compiler));
+    NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
     t.traverseAtScope(jsScope);
 
     // 1: Remove the exception name in CATCH which technically isn't local to

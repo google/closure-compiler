@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-
 import junit.framework.TestCase;
 
 /**
@@ -179,7 +178,7 @@ public final class MustBeReachingVariableDefTest extends TestCase {
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
     cfa.process(null, root);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
-    defUse = new MustBeReachingVariableDef(cfg, scope, compiler);
+    defUse = new MustBeReachingVariableDef(cfg, scope, compiler, scopeCreator);
     defUse.analyze();
     def = null;
     use = null;

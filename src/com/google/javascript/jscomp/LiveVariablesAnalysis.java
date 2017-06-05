@@ -115,12 +115,15 @@ class LiveVariablesAnalysis extends
   private final Scope jsScope;
   private final Set<Var> escaped;
 
-  LiveVariablesAnalysis(ControlFlowGraph<Node> cfg, Scope jsScope,
-      AbstractCompiler compiler) {
+  LiveVariablesAnalysis(
+      ControlFlowGraph<Node> cfg,
+      Scope jsScope,
+      AbstractCompiler compiler,
+      ScopeCreator scopeCreator) {
     super(cfg, new LiveVariableJoinOp());
     this.jsScope = jsScope;
     this.escaped = new HashSet<>();
-    computeEscaped(jsScope, escaped, compiler);
+    computeEscaped(jsScope, escaped, compiler, scopeCreator);
   }
 
   public Set<? extends Var> getEscapedLocals() {

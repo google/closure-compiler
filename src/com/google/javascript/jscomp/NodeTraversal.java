@@ -849,6 +849,10 @@ public class NodeTraversal {
     return result;
   }
 
+  public ScopeCreator getScopeCreator() {
+    return scopeCreator;
+  }
+
   /**
    * Determines whether the traversal is currently in the global scope. Note that this returns false
    * in a global block scope.

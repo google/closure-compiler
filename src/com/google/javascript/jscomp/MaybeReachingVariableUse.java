@@ -47,14 +47,17 @@ class MaybeReachingVariableUse extends
   private final Set<Var> escaped;
 
   MaybeReachingVariableUse(
-      ControlFlowGraph<Node> cfg, Scope jsScope, AbstractCompiler compiler) {
+      ControlFlowGraph<Node> cfg,
+      Scope jsScope,
+      AbstractCompiler compiler,
+      ScopeCreator scopeCreator) {
     super(cfg, new ReachingUsesJoinOp());
     this.jsScope = jsScope;
     this.escaped = new HashSet<>();
 
     // TODO(user): Maybe compute it somewhere else and re-use the escape
     // local set here.
-    computeEscaped(jsScope, escaped, compiler);
+    computeEscaped(jsScope, escaped, compiler, scopeCreator);
   }
 
   /**

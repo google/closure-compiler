@@ -32,7 +32,6 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.UnionType;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1249,7 +1248,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
        */
       ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
       LiveVariablesAnalysis liveness =
-          new LiveVariablesAnalysis(cfg, t.getTypedScope(), compiler);
+          new LiveVariablesAnalysis(cfg, t.getTypedScope(), compiler, t.getScopeCreator());
       liveness.analyze();
 
       for (TypedVar v : ((Set<TypedVar>) liveness.getEscapedLocals())) {

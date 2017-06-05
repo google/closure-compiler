@@ -46,12 +46,15 @@ final class MustBeReachingVariableDef extends
   private final Set<Var> escaped;
 
   MustBeReachingVariableDef(
-      ControlFlowGraph<Node> cfg, Scope jsScope, AbstractCompiler compiler) {
+      ControlFlowGraph<Node> cfg,
+      Scope jsScope,
+      AbstractCompiler compiler,
+      ScopeCreator scopeCreator) {
     super(cfg, new MustDefJoin());
     this.jsScope = jsScope;
     this.compiler = compiler;
     this.escaped = new HashSet<>();
-    computeEscaped(jsScope, escaped, compiler);
+    computeEscaped(jsScope, escaped, compiler, scopeCreator);
   }
 
   /**

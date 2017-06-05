@@ -140,7 +140,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
     // Process the body of the function.
     cfa.process(null, t.getScopeRoot());
     cfg = cfa.getCfg();
-    reachingDef = new MustBeReachingVariableDef(cfg, t.getScope(), compiler);
+    reachingDef = new MustBeReachingVariableDef(cfg, t.getScope(), compiler, t.getScopeCreator());
     reachingDef.analyze();
     candidates = new LinkedHashSet<>();
 
@@ -149,7 +149,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
     NodeTraversal.traverseEs6(compiler, t.getScopeRoot().getLastChild(), new GatherCandiates());
 
     // Compute the backward reaching use. The CFG can be reused.
-    reachingUses = new MaybeReachingVariableUse(cfg, t.getScope(), compiler);
+    reachingUses = new MaybeReachingVariableUse(cfg, t.getScope(), compiler, t.getScopeCreator());
     reachingUses.analyze();
     while (!candidates.isEmpty()) {
       Candidate c = candidates.iterator().next();

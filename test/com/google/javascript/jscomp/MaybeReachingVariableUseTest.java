@@ -151,7 +151,7 @@ public final class MaybeReachingVariableUseTest extends TestCase {
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
     cfa.process(null, root);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
-    useDef = new MaybeReachingVariableUse(cfg, scope, compiler);
+    useDef = new MaybeReachingVariableUse(cfg, scope, compiler, scopeCreator);
     useDef.analyze();
     def = null;
     uses = new ArrayList<>();

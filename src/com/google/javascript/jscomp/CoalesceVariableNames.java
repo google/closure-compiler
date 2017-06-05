@@ -110,7 +110,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     Preconditions.checkState(scope.isFunctionScope(), scope);
 
     ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
-    LiveVariablesAnalysis liveness = new LiveVariablesAnalysis(cfg, scope, compiler);
+    LiveVariablesAnalysis liveness =
+        new LiveVariablesAnalysis(cfg, scope, compiler, t.getScopeCreator());
     if (compiler.getOptions().getLanguageOut() == CompilerOptions.LanguageMode.ECMASCRIPT3) {
       // If the function has exactly 2 params, mark them as escaped. This is a work-around for a
       // bug in IE 8 and below, where it throws an exception if you write to the parameters of the
