@@ -273,15 +273,15 @@ public class InlineAliasesTest extends CompilerTestCase {
             "}"));
   }
 
-  public void testArrayDestructuringSwapDoesntCrash() {
+  public void testArrayDestructuringSwap() {
     testSame("var a = 1; var b = 3; [a, b] = [b, a];");
   }
 
-  public void testArrayDestructuringVarAssignDoesntCrash() {
+  public void testArrayDestructuringVarAssign() {
     testSame("var foo = [1, 2, 3]; var [one, two, three] = foo;");
   }
 
-  public void testArrayDestructuringFromFunctionDoesntCrash() {
+  public void testArrayDestructuringFromFunction() {
     testSame(
         LINE_JOINER.join(
             "function f() {",
@@ -291,19 +291,56 @@ public class InlineAliasesTest extends CompilerTestCase {
             "[a, b] = f();"));
   }
 
-  public void testObjectDestructuringBasicAssignDoesntCrash() {
+  public void testObjectDestructuringBasicAssign() {
     testSame("var o = {p: 42, q: true}; var {p, q} = o;");
   }
 
-  public void testObjectDestructuringAssignWithoutDeclarationDoesntCrash() {
+  public void testObjectDestructuringAssignWithoutDeclaration() {
     testSame("var a, b; ({a, b} = {a: 1, b: 2});");
   }
 
-  public void testObjectDestructuringAssignNewVarNamesDoesntCrash() {
+  public void testObjectDestructuringAssignNewVarNames() {
     testSame("var o = {p: 42, q: true}; var {p: foo, q: bar} = o;");
   }
 
-  public void testObjectDestructuringDefaultValsDoesntCrash() {
+  public void testObjectDestructuringDefaultVals() {
     testSame("var {a = 10, b = 5} = {a: 3};");
   }
+
+  public void testArrayDestructuringWithParameter() {
+    testSame(
+        LINE_JOINER.join(
+            "function f([name, val]) {",
+            "   console.log(name, val);",
+            "}",
+            "f(['bar', 42]);"));
+  }
+
+  public void testObjectDestructuringWithParameters() {
+   testSame(
+       LINE_JOINER.join(
+           "function g({",
+           "   name: n,",
+           "   val: v",
+           "}) {",
+           "   console.log(n, v);",
+           "}",
+           "g({",
+           "   name: 'foo',",
+           "   val: 7",
+           "});"));
+  }
+
+  public void testObjectDestructuringWithParametersAndStyleShortcut() {
+   testSame(
+       LINE_JOINER.join(
+           "function h({",
+           "   name,",
+           "   val",
+           "}) {",
+           "   console.log(name, val);",
+           "}",
+           "f({name: 'bar', val: 42});"));
+  }
+
 }
