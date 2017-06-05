@@ -85,7 +85,7 @@ public final class DependencyOptions implements Serializable {
    * manage dependencies on them.
    *
    * If true, we drop these files when we prune dependencies.
-   * If false, we always keep these files an anything they depend on.
+   * If false, we always keep these files and anything they depend on.
    * The default is false.
    *
    * Notice that this option only makes sense if dependency pruning is on,
