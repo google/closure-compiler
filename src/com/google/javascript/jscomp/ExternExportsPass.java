@@ -81,7 +81,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      * it to the externsRoot AST.
      */
     void generateExterns() {
-      appendExtern(getExportedPath(), getValue(value));
+      appendExtern(getExportedPath(), getValue());
     }
 
     /**
@@ -303,7 +303,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      * a function or object literal, the node is returned. Otherwise,
      * {@code null} is returned.
      */
-    protected Node getValue(Node qualifiedNameNode) {
+    protected Node getValue() {
       String qualifiedName = value.getQualifiedName();
 
       if (qualifiedName == null) {
