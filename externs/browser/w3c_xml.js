@@ -391,13 +391,13 @@ XMLHttpRequest.prototype.status;
 XMLHttpRequest.prototype.statusText;
 
 /**
- * @type {Function}
+ * @type {?function(!Event)}
  * @see http://www.w3.org/TR/XMLHttpRequest/#handler-xhr-onreadystatechange
  */
 XMLHttpRequest.prototype.onreadystatechange;
 
 /**
- * @type {Function}
+ * @type {?function(!Event)}
  * @see http://www.w3.org/TR/XMLHttpRequest/#handler-xhr-onerror
  */
 XMLHttpRequest.prototype.onerror;
