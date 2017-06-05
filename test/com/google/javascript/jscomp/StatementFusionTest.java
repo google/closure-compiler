@@ -28,6 +28,7 @@ public final class StatementFusionTest extends CompilerTestCase  {
   public void setUp() throws Exception {
     super.setUp();
     favorsCommas = false;
+    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT5);
   }
 
   @Override

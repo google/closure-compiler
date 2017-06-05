@@ -157,7 +157,7 @@ public abstract class CompilerTestCase extends TestCase {
   /**
    * Whether to accept ES6, ES5 or ES3 source.
    */
-  private LanguageMode acceptedLanguage = LanguageMode.ECMASCRIPT5;
+  private LanguageMode acceptedLanguage = LanguageMode.ECMASCRIPT_2017;
 
   private LanguageMode languageOut = LanguageMode.ECMASCRIPT5;
 

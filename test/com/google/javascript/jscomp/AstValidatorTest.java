@@ -67,6 +67,7 @@ public final class AstValidatorTest extends CompilerTestCase {
   }
 
   public void testQuestionableForIn() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     setExpectParseWarningsThisTest();
     valid("for(var a = 1 in b);");
   }

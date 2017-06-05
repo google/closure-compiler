@@ -949,7 +949,7 @@ public final class CompilerTest extends TestCase {
 
     CompilerOptions options = new CompilerOptions();
     options.setAssumeForwardDeclaredForMissingTypes(true);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
     options.setCheckTypes(true);
     options.setStrictModeInput(true);
@@ -1026,7 +1026,7 @@ public final class CompilerTest extends TestCase {
         ModuleIdentifier.forFile("/index"));
 
     CompilerOptions options = createNewFlagBasedOptions();
-    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
     options.dependencyOptions.setDependencyPruning(true);
     options.dependencyOptions.setDependencySorting(true);
@@ -1053,7 +1053,7 @@ public final class CompilerTest extends TestCase {
         ModuleIdentifier.forFile("/index[0]"));
 
     CompilerOptions options = createNewFlagBasedOptions();
-    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
     options.dependencyOptions.setDependencyPruning(true);
     options.dependencyOptions.setDependencySorting(true);

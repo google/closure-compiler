@@ -44,6 +44,7 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
     late = true;
     useTypes = true;
     this.mode = TypeInferenceMode.NEITHER;
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
 
   @Override
