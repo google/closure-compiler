@@ -64,8 +64,7 @@ class CheckUnreachableCode extends AbstractPreOrderCallback implements ScopedCal
         compiler.report(t.makeError(n, UNREACHABLE_CODE));
         // From now on, we are going to assume the user fixed the error and not
         // give more warning related to code section reachable from this node.
-        new GraphReachability<>(
-            t.getControlFlowGraph()).recompute(n);
+        new GraphReachability<>(t.getControlFlowGraph()).recompute(n);
 
         // Saves time by not traversing children.
         return false;
@@ -75,36 +74,34 @@ class CheckUnreachableCode extends AbstractPreOrderCallback implements ScopedCal
   }
 
   private void initScope(ControlFlowGraph<Node> controlFlowGraph) {
-    new GraphReachability<>(
-        controlFlowGraph, new ReachablePredicate()).compute(
-            controlFlowGraph.getEntry().getValue());
+    new GraphReachability<>(controlFlowGraph, REACHABLE)
+        .compute(controlFlowGraph.getEntry().getValue());
   }
 
   @Override
-  public void exitScope(NodeTraversal t) {
-  }
+  public void exitScope(NodeTraversal t) {}
 
-  private static final class ReachablePredicate implements
-      Predicate<EdgeTuple<Node, ControlFlowGraph.Branch>> {
+  private static final Predicate<EdgeTuple<Node, ControlFlowGraph.Branch>> REACHABLE =
+      new Predicate<EdgeTuple<Node, ControlFlowGraph.Branch>>() {
 
-    @Override
-    public boolean apply(EdgeTuple<Node, Branch> input) {
-      Branch branch = input.edge;
-      if (!branch.isConditional()) {
-        return true;
-      }
-      Node predecessor = input.sourceNode;
-      Node condition = NodeUtil.getConditionExpression(predecessor);
+        @Override
+        public boolean apply(EdgeTuple<Node, Branch> input) {
+          Branch branch = input.edge;
+          if (!branch.isConditional()) {
+            return true;
+          }
+          Node predecessor = input.sourceNode;
+          Node condition = NodeUtil.getConditionExpression(predecessor);
 
-      // TODO(user): Handle more complicated expression like true == true,
-      // etc....
-      if (condition != null) {
-        TernaryValue val = NodeUtil.getImpureBooleanValue(condition);
-        if (val != TernaryValue.UNKNOWN) {
-          return val.toBoolean(true) == (branch == Branch.ON_TRUE);
+          // TODO(user): Handle more complicated expression like true == true,
+          // etc....
+          if (condition != null) {
+            TernaryValue val = NodeUtil.getImpureBooleanValue(condition);
+            if (val != TernaryValue.UNKNOWN) {
+              return val.toBoolean(true) == (branch == Branch.ON_TRUE);
+            }
+          }
+          return true;
         }
-      }
-      return true;
-    }
-  }
+      };
 }
