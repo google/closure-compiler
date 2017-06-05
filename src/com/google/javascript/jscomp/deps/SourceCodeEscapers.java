@@ -17,16 +17,15 @@ package com.google.javascript.jscomp.deps;
 
 import com.google.common.escape.ArrayBasedCharEscaper;
 import com.google.common.escape.Escaper;
-
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A factory for Escaper instances used to escape strings for safe use in
- * various common programming languages.
+ * A factory for Escaper instances used to escape strings for safe use in various common programming
+ * languages.
  *
- * NOTE: This class is cribbed from the Guava libraries SourceCodeEscapers which
- * is not part of the current Guava release.
+ * <p>NOTE: This class is cribbed from the Guava libraries SourceCodeEscapers which is not part of
+ * the current Guava release. https://github.com/google/guava/issues/1620
  */
 public final class SourceCodeEscapers {
   private SourceCodeEscapers() {}
