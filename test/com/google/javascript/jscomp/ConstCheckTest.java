@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests {@link ConstCheck}.
@@ -23,8 +24,10 @@ package com.google.javascript.jscomp;
  */
 public final class ConstCheckTest extends CompilerTestCase {
 
-  public ConstCheckTest() {
+  @Override
+  public void setUp() {
     enableNormalize();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   @Override
@@ -37,12 +40,25 @@ public final class ConstCheckTest extends CompilerTestCase {
     return 1;
   }
 
+  private void testWarning(String js){
+    testWarning(js, ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
+  }
+
   public void testConstantDefinition1() {
     testSame("var XYZ = 1;");
   }
 
   public void testConstantDefinition2() {
     testSame("var a$b$XYZ = 1;");
+  }
+
+  public void testConstantDefinition3() {
+    testNoWarning("const xyz=1;");
+  }
+
+  public void testConstantDefinition4() {
+    System.out.println("HELLO");
+    testNoWarning("const a$b$xyz = 1;");
   }
 
   public void testConstantInitializedInAnonymousNamespace1() {
@@ -65,12 +81,22 @@ public final class ConstCheckTest extends CompilerTestCase {
     testError("var XYZ = {}; XYZ = 2;");
   }
 
+  public void testObjectRedefined2() {
+    testError("const xyz = {}; xyz = 2;");
+  }
+
   public void testConstantRedefined1() {
     testError("var XYZ = 1; XYZ = 2;");
   }
 
   public void testConstantRedefined2() {
     testError("var a$b$XYZ = 1; a$b$XYZ = 2;");
+  }
+
+  // test will be caught be earlier pass, but demonstrates that it returns error upon const
+  // reassigning
+  public void testConstantRedefined3() {
+    testWarning("const xyz = 1; xyz = 2;");
   }
 
   public void testConstantRedefinedInLocalScope1() {
@@ -117,6 +143,10 @@ public final class ConstCheckTest extends CompilerTestCase {
     testError("var a$b$XYZ = 1; --a$b$XYZ;");
   }
 
+  public void testConstantPreDecremented3() {
+    testWarning("const xyz = 1; --xyz;");
+  }
+
   public void testAbbreviatedArithmeticAssignment1() {
     testError("var XYZ = 1; XYZ += 2;");
   }
@@ -141,8 +171,12 @@ public final class ConstCheckTest extends CompilerTestCase {
     testError("var a$b$XYZ = 1; a$b$XYZ <<= 2;");
   }
 
-  public void testConstAnnotation() {
-    testError("/** @const */ var xyz = 1; xyz = 3;");
+  public void testConstAnnotation1() {
+    testWarning("/** @const */ var XYZ = 1; XYZ = 2;");
+  }
+
+  public void testConstAnnotation3() {
+    testWarning("/** @const */ const xyz = 1; xyz = 2;");
   }
 
   public void testConstSuppressionInFileJsDoc() {

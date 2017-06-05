@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -90,30 +89,32 @@ class ConstCheck extends AbstractPostOrderCallback
       case ASSIGN_SUB:
       case ASSIGN_MUL:
       case ASSIGN_DIV:
-      case ASSIGN_MOD: {
-        Node lhs = n.getFirstChild();
-        if (lhs.isName()) {
-          String name = lhs.getString();
-          Var var = t.getScope().getVar(name);
-          if (isConstant(var) && !initializedConstants.add(var)) {
-            reportError(t, n, var, name);
+      case ASSIGN_MOD:
+        {
+          Node lhs = n.getFirstChild();
+          if (lhs.isName()) {
+            String name = lhs.getString();
+            Var var = t.getScope().getVar(name);
+            if (var.isConst() || (isConstant(var) && !initializedConstants.add(var))) {
+              reportError(t, n, var, name);
+            }
           }
+          break;
         }
-        break;
-      }
 
       case INC:
-      case DEC: {
-        Node lhs = n.getFirstChild();
-        if (lhs.isName()) {
-          String name = lhs.getString();
-          Var var = t.getScope().getVar(name);
-          if (isConstant(var)) {
-            reportError(t, n, var, name);
+      case DEC:
+        {
+          Node lhs = n.getFirstChild();
+          if (lhs.isName()) {
+            String name = lhs.getString();
+            Var var = t.getScope().getVar(name);
+            if (var.isConst() || isConstant(var)) {
+              reportError(t, n, var, name);
+            }
           }
+          break;
         }
-        break;
-      }
       default:
         break;
     }
