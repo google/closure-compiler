@@ -410,6 +410,26 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
+  // x.Y is present in the generated externs but lacks the @constructor annotation.
+  public void testExportPrototypePropsWithoutConstructor() {
+    compileAndCheck(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "x.Y = function() {};",
+            "x.Y.prototype.z = function() {};",
+            "goog.exportProperty(x.Y.prototype, 'z', x.Y.prototype.z);"),
+        LINE_JOINER.join(
+            "var x;",
+            "x.Y;",
+            "/**",
+            " * @return {undefined}",
+            " * @this {!x.Y}",
+            " */",
+            "x.Y.prototype.z = function() {",
+            "};",
+            ""));
+  }
+
   public void testExportFunctionWithOptionalArguments1() {
     compileAndCheck(
         LINE_JOINER.join(
