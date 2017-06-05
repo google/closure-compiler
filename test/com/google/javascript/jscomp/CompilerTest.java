@@ -1113,10 +1113,27 @@ public final class CompilerTest extends TestCase {
     Compiler compiler = new Compiler();
 
     Node attachedNode = IR.var(IR.name("foo"));
-    Node function = IR.function(IR.name("bar"), IR.paramList(), IR.block(attachedNode));
+    IR.function(IR.name("bar"), IR.paramList(), IR.block(attachedNode));
 
     // Succeeds without throwing an exception.
     compiler.reportChangeToEnclosingScope(attachedNode);
+  }
+
+  /** See TimelineTest.java for the many behavior tests that don't make sense to duplicate here. */
+  public void testGetChangedScopeNodesForPass_dropsUnattached() {
+    Compiler compiler = new Compiler();
+    Node attachedFunctionNode = IR.function(IR.name("foo"), IR.paramList(), IR.block());
+    Node unattachedFunctionNode = IR.function(IR.name("foo"), IR.paramList(), IR.block());
+    IR.root(IR.script(attachedFunctionNode));
+
+    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).isNull();
+
+    compiler.reportChangeToChangeScope(attachedFunctionNode);
+    compiler.reportChangeToChangeScope(unattachedFunctionNode);
+    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner"))
+        .containsExactly(attachedFunctionNode);
+
+    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).isEmpty();
   }
 
   private static CompilerOptions createNewFlagBasedOptions() {

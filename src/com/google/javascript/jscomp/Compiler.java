@@ -292,6 +292,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // returning 0 if the custom attribute on a node hasn't been set.
   private int changeStamp = 1;
 
+  private final Timeline<Node> changeTimeline = new Timeline<>();
+
   /**
    * Creates a Compiler that reports errors and warnings to its logger.
    */
@@ -2534,6 +2536,24 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
+  List<Node> getChangedScopeNodesForPass(String passName) {
+    List<Node> changedScopeNodes = changeTimeline.getSince(passName);
+    changeTimeline.mark(passName);
+
+    // TODO(stalcup): do this better when the change tracking system knows about deleted scopes.
+    if (changedScopeNodes != null) {
+      // Filter out scope nodes that have been removed from the AST.
+      for (Iterator<Node> iterator = changedScopeNodes.iterator(); iterator.hasNext(); ) {
+        if (!NodeUtil.isAttached(iterator.next())) {
+          iterator.remove();
+        }
+      }
+    }
+
+    return changedScopeNodes;
+  }
+
+  @Override
   public void incrementChangeStamp() {
     changeStamp++;
   }
@@ -2567,6 +2587,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     n.setChangeTime(changeStamp);
     // Every code change happens at a different time
     changeStamp++;
+    changeTimeline.add(n);
   }
 
   @Override
