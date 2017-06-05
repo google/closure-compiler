@@ -159,6 +159,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
       Node name = IR.name(THIS_VAR);
       Node thisVar = IR.constNode(name, IR.thisNode());
       thisVar.useSourceInfoIfMissingFromForTree(scopeBody);
+      makeTreeNonIndexable(thisVar);
       if (thisContext.lastSuperStatement == null) {
         scopeBody.addChildToFront(thisVar);
       } else {
@@ -168,6 +169,13 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
         scopeBody.addChildAfter(thisVar, thisContext.lastSuperStatement);
       }
       compiler.reportChangeToEnclosingScope(thisVar);
+    }
+  }
+
+  private void makeTreeNonIndexable(Node n) {
+    n.makeNonIndexable();
+    for (Node child : n.children()) {
+      makeTreeNonIndexable(child);
     }
   }
 
@@ -184,6 +192,7 @@ public class Es6RewriteArrowFunction implements NodeTraversal.Callback, HotSwapC
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isThis()) {
         Node name = IR.name(THIS_VAR).srcref(n);
+        name.makeNonIndexable();
         if (compiler.getOptions().preservesDetailedSourceInfo()) {
           name.setOriginalName("this");
         }
