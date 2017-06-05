@@ -97,15 +97,26 @@ public final class InferConstsTest extends CompilerTestCase {
   }
 
   public void testForConst() {
-    // Using 'const' here is not allowed, and ConstCheck should warn for this
+    // Using 'const' here is not allowed, and ConstCheck will warn for this
     testConsts("for (const x = 0; x < 2; x++) {}", "x");
+  }
+
+  public void testForConst1() {
     testConsts("for (const x in [1, 2, 3]) {}", "x");
     testConsts("for (const x of {a, b, c}) {}", "x");
+  }
+
+  public void testForConstJSDoc() {
+    testConsts("for (/** @const */ let x = 0; x < 2; x++) {}", "x");
+    testConsts("for (/** @const */ let x in [1, 2, 3]) {}", "x");
+    testConsts("for (/** @const */ let x of {a, b, c}) {}", "x");
   }
 
   public void testFunctionParam() {
     testConsts("var x = function(){};", "x");
     testConsts("var x = ()=>{};", "x");
+    testConsts("const x = ()=>{};", "x");
+    testConsts("/** @const */ let x = ()=>{};", "x");
     testConsts("function fn(a){var b = a + 1}; ", "a", "b");
     testConsts("function fn(a = 1){var b = a + 1}; ", "a", "b");
     testConsts("function fn(a, {b, c}){var d = a + 1}; ", "a", "b", "c", "d");
@@ -113,17 +124,28 @@ public final class InferConstsTest extends CompilerTestCase {
 
   public void testClass() {
     testConsts("var Foo = class {}", "Foo");
+    testConsts("const Foo = class {}", "Foo");
     testConsts("class Foo {}", "Foo");
     testConsts("var Foo = function() {};", "Foo");
+    testConsts("const Foo = function() {}", "Foo");
     testConsts("function Foo() {}", "Foo");
   }
 
-  public void testArguments() {
+  public void testVarArguments() {
     testConsts("var arguments = 3;", "arguments");
+  }
+
+  public void testConstArguments() {
+    testConsts("const arguments = 4;", "arguments");
+  }
+
+  public void testArgumentsJSDoc() {
+    testConsts("/** @const */let arguments = 5;", "arguments");
   }
 
   public void testDestructuring() {
     testConsts("var [a, b, c] = [1, 2, 3];", "a", "b", "c");
+    testConsts("const [a, b, c] = [1, 2, 3];", "a", "b", "c");
     testNotConsts("var [a, b, c] = obj;", "obj");
     testNotConsts(""
         + "var [a, b, c] = [1, 2, 3];"
@@ -131,6 +153,9 @@ public final class InferConstsTest extends CompilerTestCase {
     testConsts(""
         + "var [a, b, c] = [1, 2, 3];"
         + "[a, b]= [1, 2];", "c");
+
+    testNotConsts("var [a, b, c] = [1, 2, 3]; [a, b] = [1, 2];", "a", "b");
+    testConsts("var [a, b, c] = [1, 2, 3]; [a, b] = [1, 2];", "c");
 
     testConsts("var {a: b} = {a: 1}", "b");
     testNotConsts("var {a: b} = {a: 1}", "a");
@@ -143,6 +168,9 @@ public final class InferConstsTest extends CompilerTestCase {
     testNotConsts(""
         + "let fg = '', bg = '';"
         + "({fg, bg} = pal[val - 1]);", "fg", "bg");
+
+    testConsts("var [a, , b] = [1, 2, 3];", "a", "b");
+    testConsts("const [a, , b] = [1, 2, 3];", "a", "b");
   }
 
   public void testDefaultValue() {
@@ -155,6 +183,27 @@ public final class InferConstsTest extends CompilerTestCase {
 
   public void testVarInBlock() {
     testConsts("function f() { if (true) { var x = function() {}; x(); } }", "x");
+  }
+
+  public void testGeneratorFunctionVar() {
+    testNotConsts(
+        LINE_JOINER.join(
+            "function *gen() {",
+            "  var x = 0; ",
+            "  while (x < 3)",
+            "    yield x++;",
+            "}"),
+        "x");
+  }
+
+  public void testGeneratorFunctionConst() {
+    testConsts(
+        LINE_JOINER.join(
+            "function *gen() {",
+            "  var x = 0;",
+            "  yield x;",
+            "}"),
+        "x");
   }
 
   private void testConsts(String js, String... constants) {
