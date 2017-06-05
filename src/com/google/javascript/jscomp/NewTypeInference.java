@@ -3441,8 +3441,7 @@ final class NewTypeInference implements CompilerPass {
     Node callee = callNode.getFirstChild();
     TypeEnv tmpEnv = outEnv;
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
-    Node target = callNode.getFirstChild();
-    for (Node arg = callNode.getLastChild(); arg != target; arg = arg.getPrevious()) {
+    for (Node arg = callee.getNext(); arg != null; arg = arg.getNext()) {
       EnvTypePair pair = analyzeExprBwd(arg, tmpEnv);
       JSType argType = pair.type;
       tmpEnv = pair.env;
