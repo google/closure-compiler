@@ -756,6 +756,21 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
          "/** @define {number} */ goog.define('goog.BLAH');");
   }
 
+  public void testNestedBlocks() {
+    test("{ const x = foobar(); }", "{}");
+
+    test("{ /** @const */ let x = foobar(); }", "{}");
+
+    test("{ /** @const */ let x = foobar(); x = foobaz(); }", "{}");
+
+    testWarning("{ /** @const */ var x = foobar(); }",
+        ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
+  }
+
+  public void testGoogProvidedTopLevelSymbol() {
+    testSame("goog.provide('Foo');  /** @constructor */ Foo = function() {};");
+  }
+
   public void testIfs() {
     test(
         "if (true) { var /** number */ x = 5; }",

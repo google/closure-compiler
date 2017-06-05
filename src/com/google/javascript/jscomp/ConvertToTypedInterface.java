@@ -100,6 +100,12 @@ class ConvertToTypedInterface implements CompilerPass {
               }
               return false;
             case ASSIGN:
+              if (expr.getFirstChild().isName() && !t.inGlobalScope() && !t.inModuleScope()) {
+                NodeUtil.removeChild(parent, n);
+                t.reportCodeChange(parent);
+                return false;
+              }
+              return true;
             case GETPROP:
               return true;
             default:
@@ -143,12 +149,25 @@ class ConvertToTypedInterface implements CompilerPass {
           }
           t.reportCodeChange(parent);
           return true;
-        case MODULE_BODY:
-        case VAR:
         case CONST:
         case LET:
+          if (!t.inGlobalScope() && !t.inModuleScope()) {
+            NodeUtil.removeChild(parent, n);
+            t.reportCodeChange(parent);
+            return false;
+          }
+          return true;
+        case VAR:
+          if (!t.inGlobalHoistScope() && !t.inModuleHoistScope()) {
+            NodeUtil.removeChild(parent, n);
+            t.reportCodeChange(parent);
+            return false;
+          }
+          return true;
+        case MODULE_BODY:
         case CLASS:
         case DEFAULT_CASE:
+        case BLOCK:
         case EXPORT:
         case IMPORT:
           return true;
