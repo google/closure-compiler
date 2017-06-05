@@ -3182,6 +3182,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
           return new WhitespaceWrapGoogModules(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
       };
 
   private final PassFactory removeSuperMethodsPass =
