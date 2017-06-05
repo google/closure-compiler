@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.ReplaceCssNames.UNEXPECTED_STRING_LITERAL_ERROR;
 import static com.google.javascript.jscomp.ReplaceCssNames.UNKNOWN_SYMBOL_WARNING;
 
@@ -132,7 +133,7 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
         .put("disabled", 1)
         .put("buttonbar", 1)
         .build();
-    assertEquals(expected, cssNames);
+    assertThat(cssNames).isEqualTo(expected);
   }
 
   public void testDoNotUseReplacementMapOti() {
@@ -167,7 +168,7 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
         .put("colorswatch", 1)
         .put("elephant", 1)
         .build();
-    assertEquals(expected, cssNames);
+    assertThat(cssNames).isEqualTo(expected);
   }
 
   public void testOneArgWithSimpleStringLiteralsOti() {
@@ -196,7 +197,7 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
         .put("disabled", 1)
         .put("buttonbar", 1)
         .build();
-    assertEquals(expected, cssNames);
+    assertThat(cssNames).isEqualTo(expected);
   }
 
   public void testOneArgWithCompositeClassNamesOti() {
