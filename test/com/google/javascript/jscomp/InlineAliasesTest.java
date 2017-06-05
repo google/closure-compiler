@@ -290,4 +290,20 @@ public class InlineAliasesTest extends CompilerTestCase {
             "var a, b;",
             "[a, b] = f();"));
   }
+
+  public void testObjectDestructuringBasicAssignDoesntCrash() {
+    testSame("var o = {p: 42, q: true}; var {p, q} = o;");
+  }
+
+  public void testObjectDestructuringAssignWithoutDeclarationDoesntCrash() {
+    testSame("var a, b; ({a, b} = {a: 1, b: 2});");
+  }
+
+  public void testObjectDestructuringAssignNewVarNamesDoesntCrash() {
+    testSame("var o = {p: 42, q: true}; var {p: foo, q: bar} = o;");
+  }
+
+  public void testObjectDestructuringDefaultValsDoesntCrash() {
+    testSame("var {a = 10, b = 5} = {a: 3};");
+  }
 }
