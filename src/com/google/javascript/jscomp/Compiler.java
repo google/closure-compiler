@@ -1966,9 +1966,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     JSDocInfo info = n.getJSDocInfo();
     if (info != null && info.isExterns()) {
-      // If the input file is explicitly marked as an externs file, then
-      // assume the programmer made a mistake and throw it into
-      // the externs pile anyways.
+      // If the input file is explicitly marked as an externs file, then move it out of the main
+      // JS root and put it with the other externs.
       externsRoot.addChildToBack(n);
       input.setIsExtern(true);
 
