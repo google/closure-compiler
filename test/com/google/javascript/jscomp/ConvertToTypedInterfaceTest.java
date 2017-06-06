@@ -37,8 +37,6 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   public void testInferAnnotatedTypeFromTypeInference() {
-    enableTypeCheck();
-
     test("/** @const */ var x = 5;", "/** @const {number} */ var x;");
 
     test(
