@@ -22,8 +22,10 @@ import static com.google.javascript.jscomp.Es6RewriteClass.CONFLICTING_GETTER_SE
 import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 
 public final class Es6RewriteClassTest extends CompilerTestCase {
 
@@ -78,6 +80,11 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
       @Override
       protected CompilerPass create(AbstractCompiler compiler) {
         return pass;
+      }
+
+      @Override
+      protected FeatureSet featureSet() {
+        return ES6;
       }
     };
   }

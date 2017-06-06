@@ -111,19 +111,8 @@ public class CompilerOptions implements Serializable {
     return instrumentForCoverageOnly;
   }
 
-  /**
-   * If true, don't transpile ES6 to ES3.
-   *  WARNING: Enabling this option will likely cause the compiler to crash
-   *     or produce incorrect output.
-   */
-  boolean skipTranspilationAndCrash = false;
-
-  /**
-   * Allow disabling ES6 to ES3 transpilation.
-   */
-  public void setSkipTranspilationAndCrash(boolean value) {
-    skipTranspilationAndCrash = value;
-  }
+  @Deprecated
+  public void setSkipTranspilationAndCrash(boolean value) {}
 
   /**
    * Sets the input sourcemap files, indexed by the JS files they refer to.
@@ -2918,7 +2907,6 @@ public class CompilerOptions implements Serializable {
             .add("runtimeTypeCheck", runtimeTypeCheck)
             .add("shadowVariables", shadowVariables)
             .add("skipNonTranspilationPasses", skipNonTranspilationPasses)
-            .add("skipTranspilationAndCrash", skipTranspilationAndCrash)
             .add("smartNameRemoval", smartNameRemoval)
             .add("sourceMapDetailLevel", sourceMapDetailLevel)
             .add("sourceMapFormat", sourceMapFormat)
