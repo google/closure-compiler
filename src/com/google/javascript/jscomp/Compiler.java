@@ -1311,11 +1311,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   Supplier<String> getUniqueNameIdSupplier() {
-    final Compiler self = this;
     return new Supplier<String>() {
       @Override
       public String get() {
-        return String.valueOf(self.nextUniqueNameId());
+        return String.valueOf(Compiler.this.nextUniqueNameId());
       }
     };
   }
@@ -3305,6 +3304,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final JSError[] warnings;
     private final JSModuleGraph moduleGraph;
     private final List<JSModule> modules;
+    private final int uniqueNameId;
 
     CompilerState(Compiler compiler) {
       this.externsRoot = checkNotNull(compiler.externsRoot);
@@ -3330,6 +3330,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.warnings = compiler.errorManager.getWarnings();
       this.moduleGraph = compiler.moduleGraph;
       this.modules = compiler.modules;
+      this.uniqueNameId = compiler.uniqueNameId;
     }
   }
 
@@ -3386,6 +3387,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     externProperties = compilerState.externProperties;
     moduleGraph = compilerState.moduleGraph;
     modules = compilerState.modules;
+    uniqueNameId = compilerState.uniqueNameId;
 
     // restore errors.
     if (compilerState.errors != null) {
