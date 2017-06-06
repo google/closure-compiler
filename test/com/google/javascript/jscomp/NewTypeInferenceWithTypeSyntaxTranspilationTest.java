@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 
 /**
  * Tests for the new type inference on transpiled code that includes
@@ -37,21 +36,6 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
     super.setUp();
     compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT6_TYPED);
     compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT3);
-  }
-
-  @Override
-  protected PassFactory makePassFactory(String name, final CompilerPass pass) {
-    return new PassFactory(name, true/* one-time pass */) {
-      @Override
-      protected CompilerPass create(AbstractCompiler compiler) {
-        return pass;
-      }
-
-      @Override
-      protected FeatureSet featureSet() {
-        return FeatureSet.TYPESCRIPT;
-      }
-    };
   }
 
   public void testSimpleAnnotationsNoWarnings() {
