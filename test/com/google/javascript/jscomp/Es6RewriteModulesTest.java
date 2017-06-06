@@ -66,45 +66,13 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
     return 1;
   }
 
-  static void testModules(CompilerTestCase test, String input, String expected) {
-    // Shared with ProcessCommonJSModulesTest.
-    String fileName = test.getFilename() + ".js";
-    ImmutableList<SourceFile> inputs =
-        ImmutableList.of(
-            SourceFile.fromCode("other.js", "goog.provide('module$other');"),
-            SourceFile.fromCode("yet_another.js", "goog.provide('module$yet_another');"),
-            SourceFile.fromCode(fileName, input));
-    ImmutableList<SourceFile> expecteds =
-        ImmutableList.of(
-            SourceFile.fromCode("other.js", "goog.provide('module$other');"),
-            SourceFile.fromCode("yet_another.js", "goog.provide('module$yet_another');"),
-            SourceFile.fromCode(fileName, expected));
-    test.test(inputs, expecteds);
-  }
-
-  static void testModules(
-      CompilerTestCase test, ImmutableList<SourceFile> inputs, String expected) {
-    ImmutableList<SourceFile> expecteds =
-        ImmutableList.of(
-            SourceFile.fromCode("other.js", "goog.provide('module$other');"),
-            SourceFile.fromCode(test.getFilename() + ".js", expected));
-    test.test(inputs, expecteds);
-  }
-
   void testModules(String input, String expected) {
-    testModules(this, input,
+    ModulesTestUtils.testModules(this, input,
         "/** @fileoverview\n * @suppress {missingProvide|missingRequire}\n */" + expected);
   }
 
-  private static void testModules(CompilerTestCase test, String input, DiagnosticType error) {
-    String fileName = test.getFilename() + ".js";
-    ImmutableList<SourceFile> inputs =
-        ImmutableList.of(SourceFile.fromCode("other.js", ""), SourceFile.fromCode(fileName, input));
-    test.test(inputs, null, error);
-  }
-
   private void testModules(String input, DiagnosticType error) {
-    testModules(this, input, error);
+    ModulesTestUtils.testModules(this, input, error);
   }
 
   public void testImport() {
