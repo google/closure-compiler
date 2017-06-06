@@ -1666,6 +1666,9 @@ HTMLMediaElement.prototype.autobuffer;
 /** @type {!TimeRanges} */
 HTMLMediaElement.prototype.buffered;
 
+/** @type {!MediaStream} */
+HTMLMediaElement.prototype.srcObject;
+
 /**
  * Loads the media element.
  * @return {undefined}
