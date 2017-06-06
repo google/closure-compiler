@@ -273,52 +273,115 @@ public class InlineAliasesTest extends CompilerTestCase {
             "}"));
   }
 
-  public void testArrayDestructuringSwap() {
-    testSame("var a = 1; var b = 3; [a, b] = [b, a];");
-  }
-
   public void testArrayDestructuringVarAssign() {
-    testSame("var foo = [1, 2, 3]; var [one, two, three] = foo;");
+    test(
+        LINE_JOINER.join(
+            "var Foo = class {};",
+            "var /** @const */ A = Foo;",
+            "var a = [5, A];",
+            "var [one, two] = a;"),
+        LINE_JOINER.join(
+            "var Foo = class {};",
+            "var /** @const */ A = Foo;",
+            "var a = [5, Foo];",
+            "var [one, two] = a;"));
   }
 
   public void testArrayDestructuringFromFunction() {
-    testSame(
+    test(
         LINE_JOINER.join(
+            "var Foo = class {};",
+            "var /** @const */ A = Foo;",
             "function f() {",
-            "  return [1, 2];",
+            "  return [A, 3];",
+            "}",
+            "var a, b;",
+            "[a, b] = f();"),
+        LINE_JOINER.join(
+            "var Foo = class {};",
+            "var /** @const */ A = Foo;",
+            "function f() {",
+            "  return [Foo, 3];",
             "}",
             "var a, b;",
             "[a, b] = f();"));
   }
 
   public void testObjectDestructuringBasicAssign() {
-    testSame("var o = {p: 42, q: true}; var {p, q} = o;");
+    test(
+        LINE_JOINER.join(
+            "var Foo = class {};",
+            "var /** @const */ A = Foo;",
+            "var o = {p: A, q: 5};",
+            "var {p, q} = o;"),
+        LINE_JOINER.join(
+            "var Foo = class {};",
+            "var /** @const */ A = Foo;",
+            "var o = {p: Foo, q: 5};",
+            "var {p, q} = o;"));
   }
 
   public void testObjectDestructuringAssignWithoutDeclaration() {
-    testSame("var a, b; ({a, b} = {a: 1, b: 2});");
+    test(
+        LINE_JOINER.join(
+            "var Foo = class {};",
+            "var /** @const */ A = Foo;",
+            "({a, b} = {a: A, b: A});"),
+        LINE_JOINER.join(
+            "var Foo = class {};",
+            "var /** @const */ A = Foo;",
+            "({a, b} = {a: Foo, b: Foo});"));
   }
 
   public void testObjectDestructuringAssignNewVarNames() {
-    testSame("var o = {p: 42, q: true}; var {p: foo, q: bar} = o;");
+    test(
+        LINE_JOINER.join(
+            "var Foo = class {};",
+            "var /** @const */ A = Foo;",
+            "var o = {p: A, q: true};",
+            "var {p: newName1, q: newName2} = o;"),
+        LINE_JOINER.join(
+            "var Foo = class {};",
+            "var /** @const */ A = Foo;",
+            "var o = {p: Foo, q: true};",
+            "var {p: newName1, q: newName2} = o;"));
   }
 
   public void testObjectDestructuringDefaultVals() {
-    testSame("var {a = 10, b = 5} = {a: 3};");
+    test(
+        LINE_JOINER.join(
+            "var Foo = class {};",
+            "var /** @const */ A = Foo;",
+            "var {a = A, b = A} = {a: 13};"),
+        LINE_JOINER.join(
+            "var Foo = class {};",
+            "var /** @const */ A = Foo;",
+            "var {a = Foo, b = Foo} = {a: 13};"));
   }
 
   public void testArrayDestructuringWithParameter() {
-    testSame(
+    test(
         LINE_JOINER.join(
+            "var Foo = class {};",
+            "var /** @const */ A = Foo;",
             "function f([name, val]) {",
             "   console.log(name, val);",
             "}",
-            "f(['bar', 42]);"));
+            "f([A, A]);"),
+        LINE_JOINER.join(
+            "var Foo = class {};",
+            "var /** @const */ A = Foo;",
+            "function f([name, val]) {",
+            "   console.log(name, val);",
+            "}",
+            "f([Foo, Foo]);"));
   }
 
   public void testObjectDestructuringWithParameters() {
-   testSame(
+   test(
        LINE_JOINER.join(
+           "var Foo = class {};",
+           "var /** @const */ A = Foo;",
            "function g({",
            "   name: n,",
            "   val: v",
@@ -326,21 +389,45 @@ public class InlineAliasesTest extends CompilerTestCase {
            "   console.log(n, v);",
            "}",
            "g({",
-           "   name: 'foo',",
-           "   val: 7",
+           "   name: A,",
+           "   val: A",
+           "});"),
+       LINE_JOINER.join(
+           "var Foo = class {};",
+           "var /** @const */ A = Foo;",
+           "function g({",
+           "   name: n,",
+           "   val: v",
+           "}) {",
+           "   console.log(n, v);",
+           "}",
+           "g({",
+           "   name: Foo,",
+           "   val: Foo",
            "});"));
   }
 
   public void testObjectDestructuringWithParametersAndStyleShortcut() {
-   testSame(
+   test(
        LINE_JOINER.join(
+           "var Foo = class {};",
+           "var /** @const */ A = Foo;",
            "function h({",
            "   name,",
            "   val",
            "}) {",
            "   console.log(name, val);",
            "}",
-           "f({name: 'bar', val: 42});"));
+           "h({name: A, val: A});"),
+       LINE_JOINER.join(
+           "var Foo = class {};",
+           "var /** @const */ A = Foo;",
+           "function h({",
+           "   name,",
+           "   val",
+           "}) {",
+           "   console.log(name, val);",
+           "}",
+           "h({name: Foo, val: Foo});"));
   }
-
 }
