@@ -24,8 +24,8 @@ import com.google.common.collect.ImmutableSet;
  * Test case for {@link GatherExternProperties}.
  */
 public final class GatherExternPropertiesTest extends CompilerTestCase {
-  protected void setUp() throws Exception {
-    super.setUp();
+  public GatherExternPropertiesTest() {
+    super();
     enableTypeCheck();
   }
 
@@ -176,6 +176,36 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
         null);
     // Check that no properties were found.
     assertThat(getLastCompiler().getExternProperties()).isEmpty();
+  }
+
+  public void testExternClassNoTypeCheck() {
+    disableTypeCheck();
+    assertExternProperties(
+        LINE_JOINER.join(
+            "class Foo {",
+            "  bar() {",
+            "    return this;",
+            "  }",
+            "}",
+            "var baz = new Foo();",
+            "var bar = baz.bar;"),
+        "bar");
+  }
+
+  public void testExternClassWithTypeCheck() {
+    enableTypeCheck();
+    allowExternsChanges();
+    enableTranspile();
+    assertExternProperties(
+        LINE_JOINER.join(
+            "class Foo {",
+            "  bar() {",
+            "    return this;",
+            "  }",
+            "}",
+            "var baz = new Foo();",
+            "var bar = baz.bar;"),
+        "prototype", "bar");
   }
 
   private void assertExternProperties(String externs, String... properties) {
