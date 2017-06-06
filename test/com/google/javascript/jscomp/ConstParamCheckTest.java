@@ -29,8 +29,10 @@ public final class ConstParamCheckTest extends CompilerTestCase {
       + "goog.string.Const = {};"
       + "goog.string.Const.from = function(x) {};";
 
-  public ConstParamCheckTest() {
-    enableInferConsts(true);
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableInferConsts();
     enableNormalize();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }

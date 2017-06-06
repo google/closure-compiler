@@ -24,7 +24,9 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  */
 public final class CheckMissingReturnTest extends CompilerTestCase {
 
-  public CheckMissingReturnTest() {
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
     enableTypeCheck();
   }
 

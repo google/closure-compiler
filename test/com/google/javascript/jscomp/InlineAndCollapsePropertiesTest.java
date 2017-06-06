@@ -53,7 +53,8 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     enableNormalize();
   }
 

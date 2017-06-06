@@ -39,6 +39,11 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
 
   public AmbiguatePropertiesTest() {
     super(EXTERNS);
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
     enableNormalize();
     enableTypeCheck();
     enableClosurePass();

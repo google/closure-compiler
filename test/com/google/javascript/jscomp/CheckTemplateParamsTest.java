@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
-import java.io.IOException;
 
 /**
  * Tests for the "Too many template parameters" warning. Ideally this would be part of
@@ -26,7 +25,8 @@ import java.io.IOException;
  */
 public final class CheckTemplateParamsTest extends CompilerTestCase {
   @Override
-  public void setUp() throws IOException {
+  protected void setUp() throws Exception {
+    super.setUp();
     enableTypeCheck();
   }
 

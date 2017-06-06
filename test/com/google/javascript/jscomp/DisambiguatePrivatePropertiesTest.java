@@ -47,6 +47,7 @@ public final class DisambiguatePrivatePropertiesTest extends CompilerTestCase {
 
   @Override
   protected void setUp() throws Exception {
+    super.setUp();
     useGoogleCodingConvention = true;
   }
 

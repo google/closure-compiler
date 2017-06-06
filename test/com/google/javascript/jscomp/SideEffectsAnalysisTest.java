@@ -65,7 +65,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() throws Exception {
+  protected void setUp() throws Exception {
     super.setUp();
 
     currentAnalysis = null;

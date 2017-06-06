@@ -46,7 +46,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() throws Exception {
+  protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     this.allowNonGlobalExports  = true;
@@ -54,7 +54,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
 
   @Override
   protected void testExternChanges(String input, String expectedExtern) {
-    this.enableCompareAsTree(false);
+    disableCompareAsTree();
     super.testExternChanges(input, expectedExtern);
   }
 
@@ -298,42 +298,42 @@ public final class GenerateExportsTest extends CompilerTestCase {
   }
 
   public void testExportObjectLit1() {
-    allowExternsChanges(true);
+    allowExternsChanges();
     String code = "var E = {/** @export */ A:1, B:2};";
     testSame(code);
     testExternChanges(code, "Object.prototype.A;");
   }
 
   public void testExportObjectLit2() {
-    allowExternsChanges(true);
+    allowExternsChanges();
     String code = "var E = {/** @export */ get A() { return 1 }, B:2};";
     testSame(code);
     testExternChanges(code, "Object.prototype.A;");
   }
 
   public void testExportObjectLit3() {
-    allowExternsChanges(true);
+    allowExternsChanges();
     String code = "var E = {/** @export */ set A(v) {}, B:2};";
     testSame(code);
     testExternChanges(code, "Object.prototype.A;");
   }
 
   public void testExportObjectLit4() {
-    allowExternsChanges(true);
+    allowExternsChanges();
     String code = "var E = {/** @export */ A:function() {}, B:2};";
     testSame(code);
     testExternChanges(code, "Object.prototype.A;");
   }
 
   public void testExportClassMember1() {
-    allowExternsChanges(true);
+    allowExternsChanges();
     String code = "var E = function() { /** @export */ this.foo = 1; };";
     testSame(code);
     testExternChanges(code, "Object.prototype.foo;");
   }
 
   public void testMemberExportDoesntConflict() {
-    allowExternsChanges(true);
+    allowExternsChanges();
     String code = LINE_JOINER.join(
         "var foo = function() { /** @export */ this.foo = 1; };",
         "/** @export */ foo.method = function(){};");
@@ -346,7 +346,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
   }
 
   public void testExportClassMemberStub() {
-    allowExternsChanges(true);
+    allowExternsChanges();
     String code = "var E = function() { /** @export */ this.foo; };";
     testSame(code);
     testExternChanges(code, "Object.prototype.foo;");

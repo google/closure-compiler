@@ -22,6 +22,11 @@ public class J2clCheckPassTest extends TypeICompilerTestCase {
 
   public J2clCheckPassTest() {
     super(DEFAULT_EXTERNS);
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
     enableTypeCheck();
   }
 

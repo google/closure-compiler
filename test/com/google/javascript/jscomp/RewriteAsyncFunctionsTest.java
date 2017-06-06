@@ -22,10 +22,11 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 public class RewriteAsyncFunctionsTest extends CompilerTestCase {
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
-    runTypeCheckAfterProcessing = true;
+    enableRunTypeCheckAfterProcessing();
   }
 
   @Override

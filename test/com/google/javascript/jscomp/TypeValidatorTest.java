@@ -35,7 +35,9 @@ import java.util.List;
  * @author nicksantos@google.com (Nick Santos)
  */
 public final class TypeValidatorTest extends CompilerTestCase {
-  public TypeValidatorTest() {
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
     enableTypeCheck();
   }
 

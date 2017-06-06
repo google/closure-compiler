@@ -74,10 +74,10 @@ public final class PolymerPassFindExternsTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    allowExternsChanges(true);
+    allowExternsChanges();
     enableTypeCheck();
-    runTypeCheckAfterProcessing = true;
-    parseTypeInfo = true;
+    enableRunTypeCheckAfterProcessing();
+    enableParseTypeInfo();
   }
 
   @Override

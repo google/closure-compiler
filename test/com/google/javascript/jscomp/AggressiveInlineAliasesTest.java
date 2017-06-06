@@ -41,7 +41,8 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     enableNormalize();
   }
 
@@ -450,8 +451,6 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   public void testInlineCtorInObjLit() {
-    compareJsDoc = true;
-
     test(
         LINE_JOINER.join("function Foo() {}", "var Bar = Foo;", "var objlit = { 'prop' : Bar };"),
         LINE_JOINER.join("function Foo() {}", "var Bar = null;", "var objlit = { 'prop': Foo };"));

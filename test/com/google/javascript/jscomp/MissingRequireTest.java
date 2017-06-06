@@ -34,7 +34,8 @@ public final class MissingRequireTest extends CompilerTestCase {
   private CheckRequiresForConstructors.Mode mode;
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     mode = CheckRequiresForConstructors.Mode.FULL_COMPILE;
   }

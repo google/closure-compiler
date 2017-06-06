@@ -34,8 +34,9 @@ public final class ObjectPropertyStringPreprocessTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() {
-    allowExternsChanges(true);
+  protected void setUp() throws Exception {
+    super.setUp();
+    allowExternsChanges();
   }
 
   public void testDeclaration() {

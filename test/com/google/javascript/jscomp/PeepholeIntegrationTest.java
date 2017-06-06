@@ -21,12 +21,14 @@ package com.google.javascript.jscomp;
  */
 public class PeepholeIntegrationTest extends CompilerTestCase {
 
-  private boolean late = true;
+  private boolean late;
+  private int numRepetitions;
 
   @Override
-  public void setUp() throws Exception {
+  protected void setUp() throws Exception {
     super.setUp();
     this.late = false;
+    this.numRepetitions = 2;
   }
 
   @Override
@@ -44,235 +46,224 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
 
   @Override
   protected int getNumRepetitions() {
-    // Reduce this to 2 if we get better expression evaluators.
-    return 4;
-  }
-
-  private void foldSame(String js) {
-    testSame(js);
-  }
-
-  private void fold(String js, String expected) {
-    test(js, expected);
+    return numRepetitions;
   }
 
   public void testTrueFalse() {
     late = false;
-    foldSame("x = true");
-    foldSame("x = false");
-    fold("x = !1", "x = false");
-    fold("x = !0", "x = true");
+    testSame("x = true");
+    testSame("x = false");
+    test("x = !1", "x = false");
+    test("x = !0", "x = true");
     late = true;
-    fold("x = true", "x = !0");
-    fold("x = false", "x = !1");
-    foldSame("x = !1");
-    foldSame("x = !0");
+    test("x = true", "x = !0");
+    test("x = false", "x = !1");
+    testSame("x = !1");
+    testSame("x = !0");
   }
 
   /** Check that removing blocks with 1 child works */
   public void testFoldOneChildBlocksIntegration() {
-     fold("function f(){switch(foo()){default:{break}}}",
+     test("function f(){switch(foo()){default:{break}}}",
           "function f(){foo()}");
 
-     fold("function f(){switch(x){default:{break}}}",
+     test("function f(){switch(x){default:{break}}}",
           "function f(){}");
 
-     fold("function f(){switch(x){default:x;case 1:return 2}}",
+     test("function f(){switch(x){default:x;case 1:return 2}}",
           "function f(){switch(x){default:case 1:return 2}}");
 
      // ensure that block folding does not break hook ifs
-     fold("if(x){if(true){foo();foo()}else{bar();bar()}}",
+     test("if(x){if(true){foo();foo()}else{bar();bar()}}",
           "if(x){foo();foo()}");
 
-     fold("if(x){if(false){foo();foo()}else{bar();bar()}}",
+     test("if(x){if(false){foo();foo()}else{bar();bar()}}",
           "if(x){bar();bar()}");
 
      // Cases where the then clause has no side effects.
-     fold("if(x()){}", "x()");
+     test("if(x()){}", "x()");
 
-     fold("if(x()){} else {x()}", "x()||x()");
-     fold("if(x){}", ""); // Even the condition has no side effect.
-     fold("if(a()){A()} else if (b()) {} else {C()}", "a()?A():b()||C()");
+     test("if(x()){} else {x()}", "x()||x()");
+     test("if(x){}", ""); // Even the condition has no side effect.
+     test("if(a()){A()} else if (b()) {} else {C()}", "a()?A():b()||C()");
 
-     fold("if(a()){} else if (b()) {} else {C()}",
+     test("if(a()){} else if (b()) {} else {C()}",
           "a() || (b() || C())");
-     fold("if(a()){A()} else if (b()) {} else if (c()) {} else{D()}",
+     test("if(a()){A()} else if (b()) {} else if (c()) {} else{D()}",
           "a() ? A() : b() || (c() || D())");
-     fold("if(a()){} else if (b()) {} else if (c()) {} else{D()}",
+     test("if(a()){} else if (b()) {} else if (c()) {} else{D()}",
           "a() || (b() || (c() || D()))");
-     fold("if(a()){A()} else if (b()) {} else if (c()) {} else{}",
+     test("if(a()){A()} else if (b()) {} else if (c()) {} else{}",
           "a()?A():b()||c()");
 
      // Verify that non-global scope works.
-     fold("function foo(){if(x()){}}", "function foo(){x()}");
+     test("function foo(){if(x()){}}", "function foo(){x()}");
 
   }
 
   public void testFoldOneChildBlocksStringCompare() {
-    fold("if (x) {if (y) { var x; } } else{ var z; }",
+    test("if (x) {if (y) { var x; } } else{ var z; }",
          "if (x) { if (y) var x } else var z");
   }
 
   /** Test a particularly hairy edge case. */
   public void testNecessaryDanglingElse() {
-    fold("if (x) if (y){ y(); z() } else; else x()",
+    test("if (x) if (y){ y(); z() } else; else x()",
          "if (x) { if(y) { y(); z() } } else x()");
   }
 
   /** Try to minimize returns */
   public void testFoldReturnsIntegration() {
     // if-then-else duplicate statement removal handles this case:
-    fold("function f(){if(x)return;else return}",
+    test("function f(){if(x)return;else return}",
          "function f(){}");
   }
 
   public void testBug1059649() {
     // ensure that folding blocks with a single var node doesn't explode
-    fold("if(x){var y=3;}var z=5", "if(x)var y=3;var z=5");
+    test("if(x){var y=3;}var z=5", "if(x)var y=3;var z=5");
 
     // With normalization, we no longer have this case.
-    foldSame("if(x){var y=3;}else{var y=4;}var z=5");
-    fold("while(x){var y=3;}var z=5", "while(x)var y=3;var z=5");
-    fold("for(var i=0;i<10;i++){var y=3;}var z=5",
+    testSame("if(x){var y=3;}else{var y=4;}var z=5");
+    test("while(x){var y=3;}var z=5", "while(x)var y=3;var z=5");
+    test("for(var i=0;i<10;i++){var y=3;}var z=5",
          "for(var i=0;i<10;i++)var y=3;var z=5");
-    fold("for(var i in x){var y=3;}var z=5",
+    test("for(var i in x){var y=3;}var z=5",
          "for(var i in x)var y=3;var z=5");
-    fold("do{var y=3;}while(x);var z=5", "do var y=3;while(x);var z=5");
+    test("do{var y=3;}while(x);var z=5", "do var y=3;while(x);var z=5");
   }
 
   public void testHookIfIntegration() {
-    fold("if (false){ x = 1; } else if (cond) { x = 2; } else { x = 3; }",
+    test("if (false){ x = 1; } else if (cond) { x = 2; } else { x = 3; }",
          "x=cond?2:3");
 
-    fold("x?void 0:y()", "x||y()");
-    fold("!x?void 0:y()", "x&&y()");
-    fold("x?y():void 0", "x&&y()");
+    test("x?void 0:y()", "x||y()");
+    test("!x?void 0:y()", "x&&y()");
+    test("x?y():void 0", "x&&y()");
   }
 
   public void testRemoveDuplicateStatementsIntegration() {
-    fold("function z() {if (a) { return true }" +
-         "else if (b) { return true }" +
-         "else { return true }}",
-         "function z() {return true;}");
+    test(
+        LINE_JOINER.join(
+            "function z() {if (a) { return true }",
+            "else if (b) { return true }",
+            "else { return true }}"),
+        "function z() {return true;}");
 
-    fold("function z() {if (a()) { return true }" +
-         "else if (b()) { return true }" +
-         "else { return true }}",
-         "function z() {a()||b();return true;}");
+    test(
+        LINE_JOINER.join(
+            "function z() {if (a()) { return true }",
+            "else if (b()) { return true }",
+            "else { return true }}"),
+        "function z() {a()||b();return true;}");
   }
 
   public void testFoldLogicalOpIntegration() {
     test("if(x && true) z()", "x&&z()");
     test("if(x && false) z()", "");
-    fold("if(x || 3) z()", "z()");
-    fold("if(x || false) z()", "x&&z()");
+    test("if(x || 3) z()", "z()");
+    test("if(x || false) z()", "x&&z()");
     test("if(x==y && false) z()", "");
-    fold("if(y() || x || 3) z()", "y();z()");
+    test("if(y() || x || 3) z()", "y();z()");
   }
 
   public void testFoldBitwiseOpStringCompareIntegration() {
-    fold("while (-1 | 0) {}", "while (1);");
+    test("while (-1 | 0) {}", "while (1);");
   }
 
   public void testVarLiftingIntegration() {
-    fold("if(true);else var a;", "var a");
-    fold("if(false) foo();else var a;", "var a");
-    fold("if(true)var a;else;", "var a");
-    fold("if(false)var a;else;", "var a");
-    fold("if(false)var a,b;", "var b; var a");
-    fold("if(false){var a;var a;}", "var a");
-    fold("if(false)var a=function(){var b};", "var a");
-    fold("if(a)if(false)var a;else var b;", "var a;if(a)var b");
+    test("if(true);else var a;", "var a");
+    test("if(false) foo();else var a;", "var a");
+    test("if(true)var a;else;", "var a");
+    test("if(false)var a;else;", "var a");
+    test("if(false)var a,b;", "var b; var a");
+    test("if(false){var a;var a;}", "var a");
+    test("if(false)var a=function(){var b};", "var a");
+    test("if(a)if(false)var a;else var b;", "var a;if(a)var b");
   }
 
   public void testBug1438784() throws Exception {
-    fold("for(var i=0;i<10;i++)if(x)x.y;", "for(var i=0;i<10;i++);");
+    test("for(var i=0;i<10;i++)if(x)x.y;", "for(var i=0;i<10;i++);");
   }
 
   public void testFoldUselessWhileIntegration() {
-    fold("while(!true) { foo() }", "");
-    fold("while(!false) foo() ", "while(1) foo()");
-    fold("while(!void 0) foo()", "while(1) foo()");
+    test("while(!true) { foo() }", "");
+    test("while(!false) foo() ", "while(1) foo()");
+    test("while(!void 0) foo()", "while(1) foo()");
 
     // Make sure proper empty nodes are inserted.
-    fold("if(foo())while(false){foo()}else bar()", "foo()||bar()");
+    test("if(foo())while(false){foo()}else bar()", "foo()||bar()");
   }
 
   public void testFoldUselessForIntegration() {
-    fold("for(;!true;) { foo() }", "");
-    fold("for(;void 0;) { foo() }", "");
-    fold("for(;undefined;) { foo() }", "");
-    fold("for(;1;) foo()", "for(;;) foo()");
-    fold("for(;!void 0;) foo()", "for(;;) foo()");
+    test("for(;!true;) { foo() }", "");
+    test("for(;void 0;) { foo() }", "");
+    test("for(;undefined;) { foo() }", "");
+    test("for(;1;) foo()", "for(;;) foo()");
+    test("for(;!void 0;) foo()", "for(;;) foo()");
 
     // Make sure proper empty nodes are inserted.
-    fold("if(foo())for(;false;){foo()}else bar()", "foo()||bar()");
+    test("if(foo())for(;false;){foo()}else bar()", "foo()||bar()");
   }
 
   public void testFoldUselessDoIntegration() {
     test("do { foo() } while(!true);", "foo()");
-    fold("do { foo() } while(void 0);", "foo()");
-    fold("do { foo() } while(undefined);", "foo()");
-    fold("do { foo() } while(!void 0);", "do { foo() } while(1);");
+    test("do { foo() } while(void 0);", "foo()");
+    test("do { foo() } while(undefined);", "foo()");
+    test("do { foo() } while(!void 0);", "do { foo() } while(1);");
 
     // Make sure proper empty nodes are inserted.
     test("if(foo())do {foo()} while(false) else bar()", "foo()?foo():bar()");
   }
 
   public void testMinimizeWhileConstantConditionIntegration() {
-    fold("while(!false) foo()", "while(1) foo()");
-    fold("while(202) foo()", "while(1) foo()");
-    fold("while(Infinity) foo()", "while(1) foo()");
-    fold("while('text') foo()", "while(1) foo()");
-    fold("while([]) foo()", "while(1) foo()");
-    fold("while({}) foo()", "while(1) foo()");
-    fold("while(/./) foo()", "while(1) foo()");
+    test("while(!false) foo()", "while(1) foo()");
+    test("while(202) foo()", "while(1) foo()");
+    test("while(Infinity) foo()", "while(1) foo()");
+    test("while('text') foo()", "while(1) foo()");
+    test("while([]) foo()", "while(1) foo()");
+    test("while({}) foo()", "while(1) foo()");
+    test("while(/./) foo()", "while(1) foo()");
   }
 
   public void testMinimizeExpr() {
     test("!!true", "");
 
-    fold("!!x()", "x()");
+    test("!!x()", "x()");
     test("!(!x()&&!y())", "x()||y()");
-    fold("x()||!!y()", "x()||y()");
+    test("x()||!!y()", "x()||y()");
 
     /* This is similar to the !!true case */
-    fold("!!x()&&y()", "x()&&y()");
+    test("!!x()&&y()", "x()&&y()");
   }
 
   public void testBug1509085() {
-    PeepholeIntegrationTest oneRepetitiontest = new PeepholeIntegrationTest() {
-      @Override
-      protected int getNumRepetitions() {
-        return 1;
-      }
-    };
-
-    oneRepetitiontest.test("x ? x() : void 0", "x&&x();");
-    oneRepetitiontest.foldSame("y = x ? x() : void 0");
+    this.numRepetitions = 1;
+    this.late = true;
+    test("x ? x() : void 0", "x&&x();");
+    testSame("y = x ? x() : void 0");
   }
 
   public void testBugIssue3() {
-    foldSame("function foo() {" +
-             "  if(sections.length != 1) children[i] = 0;" +
-             "  else var selectedid = children[i]" +
-             "}");
+    testSame(LINE_JOINER.join(
+        "function foo() {",
+        "  if(sections.length != 1) children[i] = 0;",
+        "  else var selectedid = children[i]",
+        "}"));
   }
 
   public void testBugIssue43() {
-    foldSame("function foo() {" +
-             "  if (a) { var b = 1; } else { a.b = 1; }" +
-             "}");
+    testSame("function foo() {\n  if (a) { var b = 1; } else { a.b = 1; }\n}");
   }
 
   public void testFoldNegativeBug() {
-    fold("while(-3){};", "while(1);");
+    test("while(-3){};", "while(1);");
   }
 
   public void testNoNormalizeLabeledExpr() {
     enableNormalize();
-    foldSame("var x; foo:{x = 3;}");
-    foldSame("var x; foo:x = 3;");
+    testSame("var x; foo:{x = 3;}");
+    testSame("var x; foo:x = 3;");
     disableNormalize();
   }
 
@@ -295,45 +286,45 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   }
 
   public void testMinimizeExprCondition() {
-    fold("(x || true) && y()", "y()");
-    fold("(x || false) && y()", "x&&y()");
-    fold("(x && true) && y()", "x && y()");
-    fold("(x && false) && y()", "");
-    fold("a = x || false ? b : c", "a=x?b:c");
-    fold("do {x()} while((x && false) && y())", "x()");
+    test("(x || true) && y()", "y()");
+    test("(x || false) && y()", "x&&y()");
+    test("(x && true) && y()", "x && y()");
+    test("(x && false) && y()", "");
+    test("a = x || false ? b : c", "a=x?b:c");
+    test("do {x()} while((x && false) && y())", "x()");
   }
 
   // A few miscellaneous cases where one of the peephole passes increases the
   // size, but it does it in such a way that a later pass can decrease it.
   // Test to make sure the overall change is a decrease, not an increase.
   public void testMisc() {
-    fold("x = [foo()] && x", "x = (foo(),x)");
-    fold("x = foo() && false || bar()", "x = (foo(), bar())");
-    fold("if(foo() && false) z()", "foo()");
+    test("x = [foo()] && x", "x = (foo(),x)");
+    test("x = foo() && false || bar()", "x = (foo(), bar())");
+    test("if(foo() && false) z()", "foo()");
   }
 
   public void testTrueFalseFolding() {
     late = true;
-    fold("x = true", "x = !0");
-    fold("x = false", "x = !1");
-    fold("x = !3", "x = !1");
-    fold("x = true && !0", "x = !0");
-    fold("x = !!!!!!!!!!!!3", "x = !0");
-    fold("if(!3){x()}", "");
-    fold("if(!!3){x()}", "x()");
+    test("x = true", "x = !0");
+    test("x = false", "x = !1");
+    test("x = !3", "x = !1");
+    test("x = true && !0", "x = !0");
+    test("x = !!!!!!!!!!!!3", "x = !0");
+    test("if(!3){x()}", "");
+    test("if(!!3){x()}", "x()");
   }
 
   public void testCommaSplitingConstantCondition() {
     late = false;
-    fold("(b=0,b=1);if(b)x=b;", "b=0;b=1;x=b;");
-    fold("(b=0,b=1);if(b)x=b;", "b=0;b=1;x=b;");
+    test("(b=0,b=1);if(b)x=b;", "b=0;b=1;x=b;");
+    test("(b=0,b=1);if(b)x=b;", "b=0;b=1;x=b;");
   }
 
   public void testAvoidCommaSplitting() {
     late = false;
-    fold("x(),y(),z()", "x();y();z()");
+    test("x(),y(),z()", "x();y();z()");
     late = true;
-    foldSame("x(),y(),z()");
+    testSame("x(),y(),z()");
   }
 
   public void testObjectLiteral() {
@@ -351,24 +342,24 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   }
 
   public void testFoldIfs1() {
-    fold("function f() {if (x) return 1; else if (y) return 1;}",
+    test("function f() {if (x) return 1; else if (y) return 1;}",
          "function f() {if (x||y) return 1;}");
-    fold("function f() {if (x) return 1; else {if (y) return 1; else foo();}}",
+    test("function f() {if (x) return 1; else {if (y) return 1; else foo();}}",
          "function f() {if (x||y) return 1; foo();}");
   }
 
   public void testFoldIfs2() {
-    fold("function f() {if (x) { a(); } else if (y) { a() }}",
+    test("function f() {if (x) { a(); } else if (y) { a() }}",
          "function f() {x?a():y&&a();}");
   }
 
   public void testFoldHook2() {
-    fold("function f(a) {if (!a) return a; else return a;}",
+    test("function f(a) {if (!a) return a; else return a;}",
          "function f(a) {return a}");
   }
 
   public void disable_testFoldHook1() {
-    fold("function f(a) {return (!a)?a:a;}",
+    test("function f(a) {return (!a)?a:a;}",
          "function f(a) {return a}");
   }
 }

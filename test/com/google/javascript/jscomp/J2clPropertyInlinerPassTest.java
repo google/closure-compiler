@@ -17,14 +17,14 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.Lists;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import java.util.List;
 
 public class J2clPropertyInlinerPassTest extends CompilerTestCase {
 
-  public J2clPropertyInlinerPassTest() {
-    this.enableNormalize(); // Inlining will fail if normailization hasn't happened yet.
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT6_TYPED);
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableNormalize(); // Inlining will fail if normailization hasn't happened yet.
   }
 
   @Override

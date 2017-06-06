@@ -28,7 +28,8 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   private boolean es6ScopeCreator;
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     setLanguage(ECMASCRIPT_NEXT, ECMASCRIPT_NEXT);
     behavior = null;
     es6ScopeCreator = true;

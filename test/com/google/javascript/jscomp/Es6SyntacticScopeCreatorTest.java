@@ -60,7 +60,8 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   @Override
-  protected void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);

@@ -32,7 +32,8 @@ public final class InferConstsTest extends CompilerTestCase {
   private String[] names;
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
   }
 

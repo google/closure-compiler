@@ -31,7 +31,9 @@ import java.util.List;
 public final class MultiPassTest extends CompilerTestCase {
   private List<PassFactory> passes;
 
-  public MultiPassTest() {
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
     enableNormalize();
     enableGatherExternProperties();
   }

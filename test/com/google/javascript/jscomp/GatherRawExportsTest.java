@@ -31,7 +31,12 @@ public final class GatherRawExportsTest extends CompilerTestCase {
 
   public GatherRawExportsTest() {
     super(EXTERNS);
-    super.enableNormalize();
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableNormalize();
   }
 
   @Override

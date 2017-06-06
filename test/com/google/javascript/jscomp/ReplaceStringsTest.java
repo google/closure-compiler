@@ -76,9 +76,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
     ;
 
   public ReplaceStringsTest() {
-    super(EXTERNS, true);
-    enableNormalize();
-    parseTypeInfo = true;
+    super(EXTERNS);
   }
 
   @Override
@@ -92,7 +90,9 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    super.enableTypeCheck();
+    enableTypeCheck();
+    enableNormalize();
+    enableParseTypeInfo();
     functionsToInspect = defaultFunctionsToInspect;
     reserved = Collections.emptySet();
     previous = null;

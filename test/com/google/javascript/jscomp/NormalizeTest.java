@@ -668,7 +668,7 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   public void testIssue() {
-    super.allowExternsChanges(true);
+    allowExternsChanges();
     test("var a,b,c; var a,b", "a(), b()", "a(), b()", null, null);
   }
 
@@ -787,47 +787,51 @@ public final class NormalizeTest extends CompilerTestCase {
     // we call enableNormalize to make the Normalize.VerifyConstants pass run.
 
     // TODO(johnlenz): fix this so it is just another test case.
-    WithCollapse testCase = new WithCollapse();
-    testCase.testConstantProperties();
-    testCase.tearDown();
-  }
+    CompilerTestCase tester = new CompilerTestCase() {
+      @Override
+      protected int getNumRepetitions() {
+        // The normalize pass is only run once.
+        return 1;
+      }
 
-  public static class WithCollapse extends CompilerTestCase {
-    WithCollapse() {
-      enableNormalize();
-    }
+      @Override
+      protected CompilerPass getProcessor(Compiler compiler) {
+        return new CollapseProperties(compiler);
+      }
+    };
 
-    private void testConstantProperties() {
-      test("var a={}; a.ACONST = 4;var b = 1; b = a.ACONST;",
-          "var a$ACONST = 4; var b = 1; b = a$ACONST;");
+    tester.setUp();
+    tester.enableNormalize();
 
-      test("var a={b:{}}; a.b.ACONST = 4;var b = 1; b = a.b.ACONST;",
-          "var a$b$ACONST = 4;var b = 1; b = a$b$ACONST;");
+    tester.test(
+        "var a={}; a.ACONST = 4;var b = 1; b = a.ACONST;",
+        "var a$ACONST = 4; var b = 1; b = a$ACONST;");
 
-      test("var a = {FOO: 1};var b = 1; b = a.FOO;",
-          "var a$FOO = 1; var b = 1; b = a$FOO;");
+    tester.test(
+        "var a={b:{}}; a.b.ACONST = 4;var b = 1; b = a.b.ACONST;",
+        "var a$b$ACONST = 4;var b = 1; b = a$b$ACONST;");
 
-      testSame("var EXTERN; var ext; ext.FOO;", "var b = EXTERN; var c = ext.FOO", null);
+    tester.test(
+        "var a = {FOO: 1};var b = 1; b = a.FOO;",
+        "var a$FOO = 1; var b = 1; b = a$FOO;");
 
-      test("var a={}; a.ACONST = 4; var b = 1; b = a.ACONST;",
-          "var a$ACONST = 4; var b = 1; b = a$ACONST;");
+    tester.testSame(
+        "var EXTERN; var ext; ext.FOO;",
+        "var b = EXTERN; var c = ext.FOO",
+        null);
 
-      test("var a = {}; function foo() { var d = a.CONST; }; (function(){a.CONST=4})();",
-          "var a$CONST;function foo(){var d = a$CONST;}; (function(){a$CONST = 4})();");
+    tester.test(
+        "var a={}; a.ACONST = 4; var b = 1; b = a.ACONST;",
+        "var a$ACONST = 4; var b = 1; b = a$ACONST;");
 
-      test("var a = {}; a.ACONST = new Foo(); var b = 1; b = a.ACONST;",
-          "var a$ACONST = new Foo(); var b = 1; b = a$ACONST;");
-    }
+    tester.test(
+        "var a = {}; function foo() { var d = a.CONST; }; (function(){a.CONST=4})();",
+        "var a$CONST;function foo(){var d = a$CONST;}; (function(){a$CONST = 4})();");
 
-    @Override
-    protected int getNumRepetitions() {
-      // The normalize pass is only run once.
-      return 1;
-    }
+    tester.test(
+        "var a = {}; a.ACONST = new Foo(); var b = 1; b = a.ACONST;",
+        "var a$ACONST = new Foo(); var b = 1; b = a$ACONST;");
 
-    @Override
-    protected CompilerPass getProcessor(Compiler compiler) {
-      return new CollapseProperties(compiler);
-    }
+    tester.tearDown();
   }
 }

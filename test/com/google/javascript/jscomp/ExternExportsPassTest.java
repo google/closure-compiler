@@ -24,7 +24,7 @@ import static com.google.common.truth.Truth.assertThat;
 public final class ExternExportsPassTest extends CompilerTestCase {
 
   @Override
-  public void setUp() throws Exception {
+  protected void setUp() throws Exception {
     super.setUp();
     enableNormalize();
     enableTypeCheck();

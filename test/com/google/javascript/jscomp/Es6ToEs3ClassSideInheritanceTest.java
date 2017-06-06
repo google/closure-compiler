@@ -24,10 +24,11 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  */
 public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
-    allowExternsChanges(true);
+    allowExternsChanges();
   }
 
   @Override

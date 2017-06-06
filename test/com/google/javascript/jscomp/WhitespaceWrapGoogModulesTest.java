@@ -22,12 +22,13 @@ public class WhitespaceWrapGoogModulesTest extends CompilerTestCase {
   private LanguageMode languageOut;
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     languageOut = LanguageMode.ECMASCRIPT_2015;
     disableTypeCheck();
 
-    enableCompareAsTree(false);
+    disableCompareAsTree();
     // otherwise "use strict" in the expected output moves,
     // from where it should be (deliberately to match ClosureBundler),
     // to the top of the AST and breaks the comparison.

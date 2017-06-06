@@ -23,7 +23,8 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
   @Override
-  public void setUp() throws Exception {
+  protected void setUp() throws Exception {
+    super.setUp();
     enableGatherExternProperties();
   }
 

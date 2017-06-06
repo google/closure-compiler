@@ -55,7 +55,12 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
 
   public CheckAccessControlsTest() {
     super(CompilerTypeTestCase.DEFAULT_EXTERNS);
-    parseTypeInfo = true;
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableParseTypeInfo();
     enableClosurePass();
     enableRewriteClosureCode();
   }

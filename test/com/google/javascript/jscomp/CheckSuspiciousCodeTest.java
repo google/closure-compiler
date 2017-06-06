@@ -22,9 +22,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * Tests for CheckSuspiciousCode
  */
 public final class CheckSuspiciousCodeTest extends CompilerTestCase {
-  public CheckSuspiciousCodeTest() {
-    this.parseTypeInfo = true;
-  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -33,8 +30,10 @@ public final class CheckSuspiciousCodeTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+    enableParseTypeInfo();
   }
 
   @Override

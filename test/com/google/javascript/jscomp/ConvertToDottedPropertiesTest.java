@@ -25,7 +25,8 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
   }
 

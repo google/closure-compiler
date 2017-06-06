@@ -22,7 +22,8 @@ package com.google.javascript.jscomp;
 public final class SubstituteEs6SyntaxTest extends CompilerTestCase {
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
   }
 

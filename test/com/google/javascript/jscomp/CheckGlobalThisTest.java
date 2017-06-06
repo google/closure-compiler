@@ -22,8 +22,11 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * Tests {@link CheckGlobalThis}.
  */
 public final class CheckGlobalThisTest extends CompilerTestCase {
-  public CheckGlobalThisTest() {
-    this.parseTypeInfo = true;
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableParseTypeInfo();
   }
 
   @Override

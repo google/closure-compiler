@@ -70,18 +70,18 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
           "}");
 
   public CheckConformanceTest() {
-    super(EXTERNS, true);
-    enableTranspile();
-    enableClosurePass();
-    enableClosurePassForExpected();
-    enableRewriteClosureCode();
-    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5_STRICT);
+    super(EXTERNS);
   }
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    super.enableClosurePass();
+    enableTranspile();
+    enableClosurePass();
+    enableClosurePassForExpected();
+    enableRewriteClosureCode();
+    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5_STRICT);
+    enableClosurePass();
     configuration = DEFAULT_CONFORMANCE;
     ignoreWarnings(DiagnosticGroups.MISSING_PROPERTIES);
   }

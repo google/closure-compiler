@@ -30,7 +30,9 @@ public final class InlineVariablesTest extends CompilerTestCase {
   private boolean inlineAllStrings = false;
   private boolean inlineLocalsOnly = false;
 
-  public InlineVariablesTest() {
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
     enableNormalize();
     setAcceptedLanguage(ECMASCRIPT_NEXT);
   }

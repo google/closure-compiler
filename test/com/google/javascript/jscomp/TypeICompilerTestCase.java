@@ -55,10 +55,6 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
     super(defaultExterns);
   }
 
-  public TypeICompilerTestCase(String defaultExterns, boolean compareAsTree) {
-    super(defaultExterns, compareAsTree);
-  }
-
   @Override
   protected void setUp() throws Exception {
     super.setUp();

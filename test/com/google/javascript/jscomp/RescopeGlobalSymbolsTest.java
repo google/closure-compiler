@@ -26,9 +26,6 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
 
   private boolean assumeCrossModuleNames = true;
 
-  public RescopeGlobalSymbolsTest() {
-  }
-
   @Override protected CompilerPass getProcessor(Compiler compiler) {
     return new RescopeGlobalSymbols(
         compiler,
@@ -38,7 +35,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() throws Exception {
+  protected void setUp() throws Exception {
     super.setUp();
     assumeCrossModuleNames = true;
   }
@@ -141,7 +138,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "_.o={};for (_.i in _.o)_.i++;");
   }
 
-  public void testFunctionStatements1() {
+  public void testFunctionStatements() {
     test(
         "function test(){}",
         "_.test=function (){}");
@@ -151,10 +148,36 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "if(1)_.test=function (){}");
   }
 
-  public void testFunctionStatements2() throws Exception {
-    StringCompare testCase = new StringCompare();
-    testCase.testFreeCallSemantics();
-    testCase.tearDown();
+  public void testFunctionStatements_freeCallSemantics() throws Exception {
+    disableCompareAsTree();
+
+    // This triggers free call.
+    test(
+        "function x(){this};var y=function(){var val=x()||{}}",
+        "_.x=function(){this};_.y=function(){var val=(0,_.x)()||{}}");
+    test(
+        "function x(){this;x()}",
+        "_.x=function(){this;(0,_.x)()}");
+    test(
+        "var a=function(){this};a()",
+        "_.a=function(){this};(0,_.a)()");
+    // Cases where free call forcing through (0, foo)() is not necessary.
+    test(
+        "var a=function(){};a()",
+        "_.a=function(){};_.a()");
+    test(
+        "function a(){};a()",
+        "_.a=function(){};_.a()");
+    test(
+        "var a;a=function(){};a()",
+        "_.a=function(){};_.a()");
+    // Ambigious cases.
+    test(
+        "var a=1;a=function(){};a()",
+        "_.a=1;_.a=function(){};(0,_.a)()");
+    test(
+        "var b;var a=b;a()",
+        "_.a=_.b;(0,_.a)()");
   }
 
   public void testDeeperScopes() {
@@ -354,50 +377,5 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
         "var x = 1, y = 2; function f() { return x + window.y; }",
         "var x; x = 1; window.y = 2; var f = function() { return x + window.y; }",
         null, null);
-  }
-
-  private class StringCompare extends CompilerTestCase {
-
-    StringCompare() {
-      super("", false);
-    }
-
-    @Override protected CompilerPass getProcessor(Compiler compiler) {
-      return new RescopeGlobalSymbols(
-          compiler,
-          NAMESPACE,
-          false,
-          assumeCrossModuleNames);
-    }
-
-    public void testFreeCallSemantics() {
-      // This triggers free call.
-      test(
-          "function x(){this};var y=function(){var val=x()||{}}",
-          "_.x=function(){this};_.y=function(){var val=(0,_.x)()||{}}");
-      test(
-          "function x(){this;x()}",
-          "_.x=function(){this;(0,_.x)()}");
-      test(
-          "var a=function(){this};a()",
-          "_.a=function(){this};(0,_.a)()");
-      // Cases where free call forcing through (0, foo)() is not necessary.
-      test(
-          "var a=function(){};a()",
-          "_.a=function(){};_.a()");
-      test(
-          "function a(){};a()",
-          "_.a=function(){};_.a()");
-      test(
-          "var a;a=function(){};a()",
-          "_.a=function(){};_.a()");
-      // Ambigious cases.
-      test(
-          "var a=1;a=function(){};a()",
-          "_.a=1;_.a=function(){};(0,_.a)()");
-      test(
-          "var b;var a=b;a()",
-          "_.a=_.b;(0,_.a)()");
-    }
   }
 }

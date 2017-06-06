@@ -27,7 +27,8 @@ public final class ExtractPrototypeMemberDeclarationsTest extends CompilerTestCa
   private Pattern pattern = Pattern.USE_GLOBAL_TEMP;
 
   @Override
-  protected void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     enableNormalize();
     pattern = Pattern.USE_GLOBAL_TEMP;
   }

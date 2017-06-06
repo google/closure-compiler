@@ -51,7 +51,8 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
@@ -104,7 +105,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   public void testIjsModule() {
-    allowExternsChanges(true);
+    allowExternsChanges();
     test(
         // .i.js file
         "goog.module('external'); /** @constructor */ exports = function() {};",
@@ -2129,7 +2130,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   }
 
   public void testIjsFileInExterns() {
-    allowExternsChanges(true);
+    allowExternsChanges();
     test(
         LINE_JOINER.join(
             "/** @externs */",

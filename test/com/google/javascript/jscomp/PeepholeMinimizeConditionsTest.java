@@ -31,7 +31,7 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
   }
 
   @Override
-  public void setUp() throws Exception {
+  protected void setUp() throws Exception {
     super.setUp();
     late = true;
     useTypes = true;

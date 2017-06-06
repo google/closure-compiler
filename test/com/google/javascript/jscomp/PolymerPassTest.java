@@ -161,11 +161,10 @@ public class PolymerPassTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
-    allowExternsChanges(true);
+    allowExternsChanges();
     enableTypeCheck();
-    enableCheckAccessControls(false);
-    runTypeCheckAfterProcessing = true;
-    parseTypeInfo = true;
+    enableRunTypeCheckAfterProcessing();
+    enableParseTypeInfo();
   }
 
   @Override
@@ -1168,7 +1167,7 @@ public class PolymerPassTest extends CompilerTestCase {
 
   /** If a behavior method is {@code @protected} there is no visibility warning. */
   public void testBehaviorWithProtectedMethod() {
-    enableCheckAccessControls(true);
+    enableCheckAccessControls();
     test(
         new String[] {
           LINE_JOINER.join(
@@ -1220,7 +1219,7 @@ public class PolymerPassTest extends CompilerTestCase {
 
   /** If a behavior method is {@code @private} there is a visibility warning. */
   public void testBehaviorWithPrivateMethod() {
-    enableCheckAccessControls(true);
+    enableCheckAccessControls();
     testWarning(
         new String[] {
           LINE_JOINER.join(

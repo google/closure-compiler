@@ -22,15 +22,15 @@ package com.google.javascript.jscomp;
  * @author johnlenz@google.com (john lenz)
  */
 
-public final class InlineFunctionsTest extends CompilerTestCase {
-  boolean allowGlobalFunctionInlining = true;
-  boolean allowBlockInlining = true;
+public class InlineFunctionsTest extends CompilerTestCase {
+  boolean allowGlobalFunctionInlining;
+  boolean allowBlockInlining;
   final boolean allowExpressionDecomposition = true;
   final boolean allowFunctionExpressionInlining = true;
   final boolean allowLocalFunctionInlining = true;
-  boolean assumeStrictThis = false;
-  boolean assumeMinimumCapture = false;
-  int maxSizeAfterInlining = CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING;
+  boolean assumeStrictThis;
+  boolean assumeMinimumCapture;
+  int maxSizeAfterInlining;
 
   final static String EXTERNS =
       "/** @nosideeffects */ function nochg(){}\n" +
@@ -38,18 +38,24 @@ public final class InlineFunctionsTest extends CompilerTestCase {
 
   public InlineFunctionsTest() {
     super(EXTERNS);
-    this.enableNormalize();
-    this.enableComputeSideEffects();
+  }
+
+  // Overridden by one test method that needs to disable this.
+  void maybeEnableInferConsts() {
+    enableInferConsts();
   }
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    enableInferConsts(true);
+    maybeEnableInferConsts();
+    enableNormalize();
+    enableComputeSideEffects();
     allowGlobalFunctionInlining = true;
     allowBlockInlining = true;
     assumeStrictThis = false;
     assumeMinimumCapture = false;
+    maxSizeAfterInlining = CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING;
   }
 
   @Override
@@ -2102,48 +2108,20 @@ public final class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testInlineObject() {
-    new StringCompare().testInlineObject();
-  }
+    disableCompareAsTree();
+    enableMarkNoSideEffects();
 
-  private static class StringCompare extends CompilerTestCase {
-    private boolean allowGlobalFunctionInlining = true;
+    allowGlobalFunctionInlining = false;
+    assumeStrictThis = true;
+    assumeMinimumCapture = true;
 
-    StringCompare() {
-      super("", false);
-      this.enableNormalize();
-      this.enableMarkNoSideEffects();
-    }
-
-    @Override
-    public void setUp() throws Exception {
-      super.setUp();
-      allowGlobalFunctionInlining = true;
-    }
-
-    @Override
-    protected CompilerPass getProcessor(Compiler compiler) {
-      compiler.resetUniqueNameId();
-      return new InlineFunctions(
-          compiler,
-          compiler.getUniqueNameIdSupplier(),
-          allowGlobalFunctionInlining,
-          true,  // allowLocalFunctionInlining
-          true,  // allowBlockInlining
-          true,  // assumeStrictThis
-          true, // assumeMinimumCapture
-          CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING);
-    }
-
-    public void testInlineObject() {
-      allowGlobalFunctionInlining = false;
-      // TODO(johnlenz): normalize the AST so an AST comparison can be done.
-      // As is, the expected AST does not match the actual correct result:
-      // The AST matches "g.a()" with a FREE_CALL annotation, but this as
-      // expected string would fail as it won't be mark as a free call.
-      // "(0,g.a)()" matches the output, but not the resulting AST.
-      test("function inner(){function f(){return g.a}(f())()}",
-           "function inner(){(0,g.a)()}");
-    }
+    // TODO(johnlenz): normalize the AST so an AST comparison can be done.
+    // As is, the expected AST does not match the actual correct result:
+    // The AST matches "g.a()" with a FREE_CALL annotation, but this as
+    // expected string would fail as it won't be mark as a free call.
+    // "(0,g.a)()" matches the output, but not the resulting AST.
+    test("function inner(){function f(){return g.a}(f())()}",
+        "function inner(){(0,g.a)()}");
   }
 
   public void testBug4944818() {
@@ -2435,9 +2413,13 @@ public final class InlineFunctionsTest extends CompilerTestCase {
          );
   }
 
-  public void test6671158() {
-    enableInferConsts(false);
-    test(
+  public void test6671158() throws Exception {
+    CompilerTestCase tester = new InlineFunctionsTest() {
+      @Override void maybeEnableInferConsts() {}
+    };
+
+    tester.setUp();
+    tester.test(
         "function f() {return g()}" +
         "function Y(a){a.loader_()}" +
         "function _Z(){}" +
@@ -2458,6 +2440,7 @@ public final class InlineFunctionsTest extends CompilerTestCase {
         "    JSCompiler_temp_const$jscomp$0," +
         "    JSCompiler_inline_result$jscomp$3," +
         "    g())}");
+    tester.tearDown();
   }
 
   public void test6671158b() {

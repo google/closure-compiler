@@ -19,15 +19,13 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 public final class CheckSideEffectsTest extends CompilerTestCase {
-  public CheckSideEffectsTest() {
-    this.parseTypeInfo = true;
-    allowExternsChanges(true);
-  }
 
   @Override
-  public void setUp() throws Exception {
+  protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+    enableParseTypeInfo();
+    allowExternsChanges();
   }
 
   @Override

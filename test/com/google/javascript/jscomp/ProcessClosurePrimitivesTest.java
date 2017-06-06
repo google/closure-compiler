@@ -54,7 +54,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   private boolean banGoogBase;
 
   @Override
-  public void setUp() throws Exception {
+  protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     additionalCode = null;
@@ -459,7 +459,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   }
 
   public void testProvideInExterns() {
-    allowExternsChanges(true);
+    allowExternsChanges();
 
     test(
         "/** @externs */ goog.provide('animals.Dog');"
@@ -1288,7 +1288,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
   public void testDefineInExterns() {
     String jsdoc = "/** @define {number} */\n";
-    allowExternsChanges(true);
+    allowExternsChanges();
     testErrorExterns(jsdoc + "goog.define('value');", null);
 
     testErrorExterns("goog.define('name');", MISSING_DEFINE_ANNOTATION);

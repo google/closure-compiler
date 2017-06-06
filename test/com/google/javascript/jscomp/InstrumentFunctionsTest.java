@@ -34,7 +34,8 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     this.instrumentationPb = null;
   }
 

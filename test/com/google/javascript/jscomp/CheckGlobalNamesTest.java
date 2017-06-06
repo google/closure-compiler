@@ -66,7 +66,8 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     injectNamespace = false;
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
   }

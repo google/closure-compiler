@@ -24,10 +24,11 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     disableTypeCheck();
-    runTypeCheckAfterProcessing = true;
+    enableRunTypeCheckAfterProcessing();
   }
 
   @Override
@@ -611,7 +612,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
 
   public void testDestructuringPatternInExterns() {
     enableTypeCheck();
-    allowExternsChanges(true);
+    allowExternsChanges();
 
     testSame(
         LINE_JOINER.join(

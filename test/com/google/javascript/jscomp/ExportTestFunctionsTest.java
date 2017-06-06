@@ -39,9 +39,9 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() throws Exception {
+  protected void setUp() throws Exception {
     super.setUp();
-    super.enableLineNumberCheck(false);
+    disableLineNumberCheck();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 

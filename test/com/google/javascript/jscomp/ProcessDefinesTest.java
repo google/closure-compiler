@@ -31,10 +31,6 @@ public final class ProcessDefinesTest extends TypeICompilerTestCase {
 
   public ProcessDefinesTest() {
     super(DEFAULT_EXTERNS + "var externMethod;");
-
-    // ProcessDefines emits warnings if the user tries to re-define a constant,
-    // but the constant is not defined anywhere in the binary.
-    allowSourcelessWarnings();
   }
 
   private Map<String, Node> overrides = new HashMap<>();
@@ -44,6 +40,10 @@ public final class ProcessDefinesTest extends TypeICompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     overrides.clear();
+
+    // ProcessDefines emits warnings if the user tries to re-define a constant,
+    // but the constant is not defined anywhere in the binary.
+    allowSourcelessWarnings();
   }
 
   @Override

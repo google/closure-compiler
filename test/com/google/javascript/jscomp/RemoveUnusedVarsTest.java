@@ -26,7 +26,6 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public RemoveUnusedVarsTest() {
     super("function alert() {}");
-    enableNormalize();
   }
 
   @Override
@@ -37,6 +36,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableNormalize();
     removeGlobal = true;
     preserveFunctionExpressionNames = false;
     modifyCallSites = false;

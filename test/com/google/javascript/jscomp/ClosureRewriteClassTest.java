@@ -54,8 +54,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     disableTypeCheck();
-    runTypeCheckAfterProcessing = true;
-    compareJsDoc = true;
+    enableRunTypeCheckAfterProcessing();
   }
 
   @Override

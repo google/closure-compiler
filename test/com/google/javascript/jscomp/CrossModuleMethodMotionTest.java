@@ -42,7 +42,8 @@ public final class CrossModuleMethodMotionTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     canMoveExterns = false;
     noStubs = false;
   }

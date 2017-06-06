@@ -41,7 +41,7 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   private boolean useTypes = true;
 
   @Override
-  public void setUp() throws Exception {
+  protected void setUp() throws Exception {
     super.setUp();
     late = false;
     useTypes = true;

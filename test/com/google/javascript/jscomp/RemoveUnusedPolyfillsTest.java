@@ -64,7 +64,8 @@ public final class RemoveUnusedPolyfillsTest extends TypeICompilerTestCase {
   }
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     // NTI warns about property accesses on *
     ignoreWarnings(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS);
   }

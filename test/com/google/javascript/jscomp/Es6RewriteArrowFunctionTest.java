@@ -22,11 +22,12 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
   private LanguageMode languageOut;
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     languageOut = LanguageMode.ECMASCRIPT3;
     disableTypeCheck();
-    runTypeCheckAfterProcessing = true;
+    enableRunTypeCheckAfterProcessing();
   }
 
   @Override

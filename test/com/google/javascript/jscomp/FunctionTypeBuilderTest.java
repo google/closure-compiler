@@ -30,8 +30,10 @@ import java.util.List;
  */
 public final class FunctionTypeBuilderTest extends CompilerTestCase {
 
-  public FunctionTypeBuilderTest() {
-    parseTypeInfo = true;
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableParseTypeInfo();
     enableTypeCheck();
   }
 

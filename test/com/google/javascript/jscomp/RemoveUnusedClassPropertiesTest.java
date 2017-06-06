@@ -34,7 +34,6 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
 
   public RemoveUnusedClassPropertiesTest() {
     super(EXTERNS);
-    enableGatherExternProperties();
   }
 
   @Override
@@ -45,6 +44,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableGatherExternProperties();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
   }
 

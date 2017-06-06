@@ -31,9 +31,14 @@ public final class CheckAccessControlsPolymerTest extends TypeICompilerTestCase 
 
   public CheckAccessControlsPolymerTest() {
     super(EXTERNS);
-    parseTypeInfo = true;
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableParseTypeInfo();
     enablePolymerPass();
-    allowExternsChanges(true);
+    allowExternsChanges();
   }
 
   @Override

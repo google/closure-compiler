@@ -30,7 +30,8 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   private CrossModuleReferenceCollector testedCollector;
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     setLanguage(ECMASCRIPT_NEXT, ECMASCRIPT_NEXT);
   }
 

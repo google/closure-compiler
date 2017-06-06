@@ -57,7 +57,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() throws Exception {
+  protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     enableUnusedLocalAssignmentCheck = false;

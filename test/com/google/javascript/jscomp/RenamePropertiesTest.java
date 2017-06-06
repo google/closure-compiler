@@ -31,22 +31,20 @@ public final class RenamePropertiesTest extends CompilerTestCase {
       "var google = { gears: { factory: {}, workerPool: {} } };";
 
   private RenameProperties renameProperties;
-
-  private static boolean generatePseudoNames = false;
-
-  private VariableMap prevUsedPropertyMap = null;
+  private boolean generatePseudoNames;
+  private VariableMap prevUsedPropertyMap;
 
   public RenamePropertiesTest() {
     super(EXTERNS);
-    enableNormalize();
-    enableGatherExternProperties();
   }
 
   @Override
-  protected void tearDown() throws Exception {
-    super.tearDown();
-
+  protected void setUp() throws Exception {
+    super.setUp();
+    generatePseudoNames = false;
     prevUsedPropertyMap = null;
+    enableNormalize();
+    enableGatherExternProperties();
   }
 
   @Override
@@ -231,7 +229,6 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     generatePseudoNames = true;
     test("var foo={}; foo.bar=1; foo['abc']=2",
          "var foo={}; foo.$bar$=1; foo['abc']=2");
-    generatePseudoNames = false;
   }
 
   public void testModules() {

@@ -42,7 +42,7 @@ public final class VarCheckTest extends CompilerTestCase {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     // Setup value set by individual tests to the appropriate defaults.
-    super.allowExternsChanges(true);
+    allowExternsChanges();
     strictModuleDepErrorLevel = CheckLevel.OFF;
     externValidationErrorLevel = null;
     sanityCheck = false;
@@ -621,7 +621,7 @@ public final class VarCheckTest extends CompilerTestCase {
   public void checkSynthesizedExtern(
       String extern, String input, String expectedExtern) {
     declarationCheck = !sanityCheck;
-    this.enableCompareAsTree(false);
+    disableCompareAsTree();
     testExternChanges(extern, input, expectedExtern);
   }
 }

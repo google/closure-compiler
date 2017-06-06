@@ -30,10 +30,11 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   private ImmutableList<String> moduleRoots = null;
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     // ECMASCRIPT5 to trigger module processing after parsing.
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
-    runTypeCheckAfterProcessing = true;
+    enableRunTypeCheckAfterProcessing();
   }
 
   @Override
@@ -671,7 +672,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   public void testAbsoluteImportsWithModuleRoots() {
     moduleRoots = ImmutableList.of("/base");
-    compareJsDoc = false;
+    disableCompareJsDoc();
     test(
         ImmutableList.of(
             SourceFile.fromCode(Compiler.joinPathParts("base", "mod", "name.js"), ""),

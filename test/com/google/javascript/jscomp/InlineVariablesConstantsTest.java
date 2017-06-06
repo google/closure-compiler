@@ -25,10 +25,6 @@ public final class InlineVariablesConstantsTest extends CompilerTestCase {
 
   private boolean inlineAllStrings = false;
 
-  public InlineVariablesConstantsTest() {
-    enableNormalize();
-  }
-
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new InlineVariables(
@@ -36,7 +32,9 @@ public final class InlineVariablesConstantsTest extends CompilerTestCase {
   }
 
   @Override
-  public void tearDown() {
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableNormalize();
     inlineAllStrings = false;
   }
 

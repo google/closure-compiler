@@ -60,100 +60,100 @@ import junit.framework.TestCase;
 public abstract class CompilerTestCase extends TestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
+  // TODO(sdh): Remove this option if there's never a reason to turn it on.
+  private final boolean emitUseStrict = false;
+
   /** Externs for the test */
-  protected final List<SourceFile> externsInputs;
+  private final List<SourceFile> externsInputs;
 
   /** Whether to compare input and output as trees instead of strings */
   private boolean compareAsTree;
 
   /** Whether to parse type info from JSDoc comments */
-  protected boolean parseTypeInfo;
+  private boolean parseTypeInfo;
 
   /** Whether to take JSDoc into account when comparing ASTs. */
-  protected boolean compareJsDoc;
+  private boolean compareJsDoc;
 
   /** Whether we check warnings without source information. */
-  private boolean allowSourcelessWarnings = false;
+  private boolean allowSourcelessWarnings;
 
   /** True iff closure pass runs before pass being tested. */
-  private boolean closurePassEnabled = false;
+  private boolean closurePassEnabled;
 
   /** Whether the closure pass is run on the expected JS. */
-  private boolean closurePassEnabledForExpected = false;
+  private boolean closurePassEnabledForExpected;
 
   /** Whether to rewrite Closure code before the test is run. */
-  private boolean rewriteClosureCode = false;
+  private boolean rewriteClosureCode;
 
   /**
    * If true, run type checking together with the pass being tested. A separate
    * flag controls whether type checking runs before or after the pass.
    */
-  private boolean typeCheckEnabled = false;
+  private boolean typeCheckEnabled;
 
   /**
    * If true, run NTI together with the pass being tested. A separate
    * flag controls whether NTI runs before or after the pass.
    */
-  private boolean newTypeInferenceEnabled = false;
+  private boolean newTypeInferenceEnabled;
 
   /**
    * If true performs the test using multistage compilation.
    */
-  private boolean multistageCompilation = true;
+  private boolean multistageCompilation;
 
   /** Whether to test the compiler pass before the type check. */
-  protected boolean runTypeCheckAfterProcessing = false;
+  private boolean runTypeCheckAfterProcessing;
 
   /** Whether to test the compiler pass before NTI. */
-  protected boolean runNTIAfterProcessing = false;
+  private boolean runNTIAfterProcessing;
 
   /** Whether to scan externs for property names. */
-  private boolean gatherExternPropertiesEnabled = false;
+  private boolean gatherExternPropertiesEnabled;
 
   /**
    * Whether the Normalize pass runs before pass being tested and
    * whether the expected JS strings should be normalized.
    */
-  private boolean normalizeEnabled = false;
+  private boolean normalizeEnabled;
 
-  private boolean polymerPass = false;
+  private boolean polymerPass;
 
   /** Whether the tranpilation passes runs before pass being tested. */
-  private boolean transpileEnabled = false;
-
-  /** Whether the expected JS strings should be transpiled. */
-  private boolean transpileExpected = false;
+  private boolean transpileEnabled;
 
   /** Whether we run InferConsts before checking. */
-  private boolean enableInferConsts = false;
+  private boolean inferConsts;
 
   /** Whether we run CheckAccessControls after the pass being tested. */
-  private boolean checkAccessControls = false;
+  private boolean checkAccessControls;
 
   /** Whether to check that all line number information is preserved. */
-  private boolean checkLineNumbers = true;
+  private boolean checkLineNumbers;
 
   /** Whether to check that changed scopes are marked as changed */
-  private boolean checkAstChangeMarking = true;
+  private boolean checkAstChangeMarking;
 
   /** Whether we expect parse warnings in the current test. */
-  private boolean expectParseWarningsThisTest = false;
+  private boolean expectParseWarningsThisTest;
 
   /**
    * An expected symbol table error. Only useful for testing the
    * symbol table error-handling.
    */
-  private DiagnosticType expectedSymbolTableError = null;
+  private DiagnosticType expectedSymbolTableError;
 
   /**
    * Whether the MarkNoSideEffectsCalls pass runs before the pass being tested
    */
-  private boolean markNoSideEffects = false;
+  private boolean markNoSideEffects;
 
   /**
    * Whether the PureFunctionIdentifier pass runs before the pass being tested
    */
-  private boolean computeSideEffects = false;
+  private boolean computeSideEffects;
 
   /** The most recently used Compiler instance. */
   private Compiler lastCompiler;
@@ -161,25 +161,26 @@ public abstract class CompilerTestCase extends TestCase {
   /**
    * Whether to accept ES6, ES5 or ES3 source.
    */
-  private LanguageMode acceptedLanguage = LanguageMode.ECMASCRIPT_2017;
+  private LanguageMode acceptedLanguage;
 
-  private LanguageMode languageOut = LanguageMode.ECMASCRIPT5;
-
-  private boolean emitUseStrict = false;
+  private LanguageMode languageOut;
 
   /**
    * Whether externs changes should be allowed for this pass.
    */
-  private boolean allowExternsChanges = false;
+  private boolean allowExternsChanges;
 
   /**
    * Whether the AST should be validated.
    */
-  private boolean astValidationEnabled = true;
+  private boolean astValidationEnabled;
 
   private String filename = "testcode";
 
   private final Set<DiagnosticType> ignoredWarnings = new HashSet<>();
+
+  /** Whether {@link #setUp} has run. */
+  private boolean setUpRan = false;
 
   static final String ACTIVE_X_OBJECT_DEF =
       LINE_JOINER.join(
@@ -393,32 +394,60 @@ public abstract class CompilerTestCase extends TestCase {
    *   STATEMENT
    * </pre>
    */
-  protected CompilerTestCase(String externs, boolean compareAsTree) {
-    this.externsInputs = ImmutableList.of(SourceFile.fromCode("externs", externs));
-    this.compareAsTree = compareAsTree;
-    this.parseTypeInfo = false;
-    this.compareJsDoc = true;
-  }
-
-  /**
-   * Constructs a test. Uses AST comparison.
-   * @param externs Externs JS as a string
-   */
   protected CompilerTestCase(String externs) {
-    this(externs, true);
+    this.externsInputs = ImmutableList.of(SourceFile.fromCode("externs", externs));
   }
 
   /**
    * Constructs a test. Uses AST comparison and no externs.
    */
   protected CompilerTestCase() {
-    this("", true);
+    this("");
+  }
+
+  // Overridden here so that we can easily find all classes that override.
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+
+    // TODO(sdh): Initialize *all* the options here, but first we must ensure no subclass
+    // is changing them in the constructor, rather than in their own setUp method.
+    this.acceptedLanguage = LanguageMode.ECMASCRIPT_2017;
+    this.allowExternsChanges = false;
+    this.allowSourcelessWarnings = false;
+    this.astValidationEnabled = true;
+    this.checkAccessControls = false;
+    this.checkAstChangeMarking = true;
+    this.checkLineNumbers = true;
+    this.closurePassEnabled = false;
+    this.closurePassEnabledForExpected = false;
+    this.compareAsTree = true;
+    this.compareJsDoc = true;
+    this.computeSideEffects = false;
+    this.expectParseWarningsThisTest = false;
+    this.expectedSymbolTableError = null;
+    this.gatherExternPropertiesEnabled = false;
+    this.inferConsts = false;
+    this.languageOut = LanguageMode.ECMASCRIPT5;
+    this.markNoSideEffects = false;
+    this.multistageCompilation = true;
+    this.newTypeInferenceEnabled = false;
+    this.normalizeEnabled = false;
+    this.parseTypeInfo = false;
+    this.polymerPass = false;
+    this.rewriteClosureCode = false;
+    this.runNTIAfterProcessing = false;
+    this.runTypeCheckAfterProcessing = false;
+    this.transpileEnabled = false;
+    this.typeCheckEnabled = false;
+
+    this.setUpRan = true;
   }
 
   @Override
   protected void tearDown() throws Exception {
     super.tearDown();
-    expectParseWarningsThisTest = false;
+    this.setUpRan = false;
   }
 
   /**
@@ -466,11 +495,39 @@ public abstract class CompilerTestCase extends TestCase {
     return new GoogleCodingConvention();
   }
 
-  public void setFilename(String filename) {
+  /**
+   * Enables parsing type info from JSDoc comments. This sets the compiler option,
+   * but does not actually run the type checking pass.
+   */
+  protected final void enableParseTypeInfo() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.parseTypeInfo = true;
+  }
+
+  /** Turns off taking JSDoc into account when comparing ASTs. */
+  protected final void disableCompareJsDoc() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.compareJsDoc = false;
+  }
+
+  /** Moves OTI type checking to occur after the processor, instead of before. */
+  protected final void enableRunTypeCheckAfterProcessing() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.runTypeCheckAfterProcessing = true;
+  }
+
+  /** Moves NTI type checking to occur after the processor, instead of before. */
+  protected final void enableRunNTIAfterProcessing() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.runNTIAfterProcessing = true;
+  }
+
+  public final void setFilename(String filename) {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.filename = filename;
   }
 
-  public String getFilename() {
+  public final String getFilename() {
     return filename;
   }
 
@@ -487,18 +544,21 @@ public abstract class CompilerTestCase extends TestCase {
 
   /** Adds the given DiagnosticTypes to the set of warnings to ignore. */
   protected final void ignoreWarnings(DiagnosticType... warnings) {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     ignoredWarnings.addAll(Arrays.asList(warnings));
   }
 
   /** Adds the given DiagnosticGroups to the set of warnings to ignore. */
   protected final void ignoreWarnings(DiagnosticGroup... warnings) {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     for (DiagnosticGroup group : warnings) {
       ignoredWarnings.addAll(group.getTypes());
     }
   }
 
   /** Expect warnings without source information. */
-  void allowSourcelessWarnings() {
+  final void allowSourcelessWarnings() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     allowSourcelessWarnings = true;
   }
 
@@ -510,48 +570,50 @@ public abstract class CompilerTestCase extends TestCase {
   /**
    * What language to allow in source parsing. Also sets the output language.
    */
-  protected void setAcceptedLanguage(LanguageMode lang) {
+  protected final void setAcceptedLanguage(LanguageMode lang) {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     setLanguage(lang, lang);
   }
 
   /**
    * Sets the input and output language modes..
    */
-  protected void setLanguage(LanguageMode langIn, LanguageMode langOut) {
+  protected final void setLanguage(LanguageMode langIn, LanguageMode langOut) {
     this.acceptedLanguage = langIn;
     setLanguageOut(langOut);
   }
 
-  protected void setLanguageOut(LanguageMode acceptedLanguage) {
+  protected final void setLanguageOut(LanguageMode acceptedLanguage) {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.languageOut = acceptedLanguage;
-  }
-
-  protected void setEmitUseStrict(boolean emitUseStrict) {
-    this.emitUseStrict = emitUseStrict;
   }
 
   /**
    * Whether to run InferConsts before passes
    */
-  protected void enableInferConsts(boolean enable) {
-    this.enableInferConsts = enable;
+  protected final void enableInferConsts() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.inferConsts = true;
   }
 
   /**
-   * Whether to run CheckAccessControls after the pass being tested (and checking types).
+   * Enables running CheckAccessControls after the pass being tested (and checking types).
    */
-  protected void enableCheckAccessControls(boolean enable) {
-    this.checkAccessControls = enable;
+  protected final void enableCheckAccessControls() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.checkAccessControls = true;
   }
 
   /**
-   * Whether to allow externs changes.
+   * Allow externs to change.
    */
-  protected void allowExternsChanges(boolean allowExternsChanges) {
-    this.allowExternsChanges = allowExternsChanges;
+  protected final void allowExternsChanges() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.allowExternsChanges = true;
   }
 
-  public void enablePolymerPass() {
+  public final void enablePolymerPass() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     polymerPass = true;
   }
 
@@ -561,42 +623,48 @@ public abstract class CompilerTestCase extends TestCase {
    *
    * @see TypeCheck
    */
-  public void enableTypeCheck() {
+  public final void enableTypeCheck() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     typeCheckEnabled = true;
   }
 
   // Run the new type inference after the test pass. Useful for testing passes
   // that rewrite the AST prior to typechecking, eg, AngularPass or PolymerPass.
   public void enableNewTypeInference() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.newTypeInferenceEnabled = true;
   }
 
   /**
    * Run using multistage compilation.
    */
-  public void enableMultistageCompilation() {
+  public final void enableMultistageCompilation() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     multistageCompilation = true;
   }
 
   /**
    * Run using singlestage compilation.
    */
-  public void disableMultistageCompilation() {
+  public final void disableMultistageCompilation() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     multistageCompilation = false;
   }
 
   /**
-   * Check to make sure that line numbers were preserved.
+   * Disable checking to make sure that line numbers were preserved.
    */
-  public void enableLineNumberCheck(boolean newVal) {
-    checkLineNumbers = newVal;
+  public final void disableLineNumberCheck() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    checkLineNumbers = false;
   }
 
   /**
    * @param newVal Whether to validate AST change marking.
    */
-  public void validateAstChangeMarking(boolean newVal) {
-    checkAstChangeMarking = newVal;
+  public final void disableValidateAstChangeMarking() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    checkAstChangeMarking = false;
   }
 
   /**
@@ -604,36 +672,42 @@ public abstract class CompilerTestCase extends TestCase {
    *
    * @see TypeCheck
    */
-  public void disableTypeCheck() {
+  public final void disableTypeCheck() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     typeCheckEnabled = false;
   }
 
-  public void disableNewTypeInference() {
+  public final void disableNewTypeInference() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.newTypeInferenceEnabled = false;
   }
 
   /**
    * Process closure library primitives.
    */
-  protected void enableClosurePass() {
+  protected final void enableClosurePass() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     closurePassEnabled = true;
   }
 
-  protected void enableClosurePassForExpected() {
+  protected final void enableClosurePassForExpected() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     closurePassEnabledForExpected = true;
   }
 
   /**
    * Rewrite Closure code before the test is run.
    */
-  void enableRewriteClosureCode() {
+  final void enableRewriteClosureCode() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     rewriteClosureCode = true;
   }
 
   /**
    * Don't rewrite Closure code before the test is run.
    */
-  void disableRewriteClosureCode() {
+  final void disableRewriteClosureCode() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     rewriteClosureCode = false;
   }
 
@@ -643,33 +717,25 @@ public abstract class CompilerTestCase extends TestCase {
    *
    * @see Normalize
    */
-  protected void enableNormalize() {
+  protected final void enableNormalize() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.normalizeEnabled = true;
   }
 
   /**
    * Perform AST transpilation before running the test pass.
    */
-  protected void enableTranspile() {
-    enableTranspile(true);
-  }
-
-  /**
-   * Perform AST transpilation before running the test pass.
-   *
-   * @param transpileExpected Whether to perform transpilation on the
-   * expected JS result.
-   */
-  protected void enableTranspile(boolean transpileExpected) {
+  protected final void enableTranspile() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     transpileEnabled = true;
-    this.transpileExpected = transpileExpected;
   }
 
   /**
    * Don't perform AST normalization before running the test pass.
    * @see Normalize
    */
-  protected void disableNormalize() {
+  protected final void disableNormalize() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     normalizeEnabled = false;
   }
 
@@ -678,7 +744,8 @@ public abstract class CompilerTestCase extends TestCase {
    *
    * @see MarkNoSideEffectCalls
    */
-  void enableMarkNoSideEffects() {
+  final void enableMarkNoSideEffects() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     markNoSideEffects = true;
   }
 
@@ -687,33 +754,38 @@ public abstract class CompilerTestCase extends TestCase {
    *
    * @see MarkNoSideEffectCalls
    */
-  void enableComputeSideEffects() {
+  final void enableComputeSideEffects() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     computeSideEffects = true;
   }
 
   /**
    * Scan externs for properties that should not be renamed.
    */
-  void enableGatherExternProperties() {
+  final void enableGatherExternProperties() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     gatherExternPropertiesEnabled = true;
   }
 
   /**
-   * Whether to allow Validate the AST after each run of the pass.
+   * Disable validating the AST after each run of the pass.
    */
-  protected void enableAstValidation(boolean validate) {
-    astValidationEnabled = validate;
+  protected final void disableAstValidation() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    astValidationEnabled = false;
   }
 
   /**
-   * Whether to compare the expected output as a tree or string.
+   * Disable comparing the expected output as a tree or string.
    */
-  protected void enableCompareAsTree(boolean compareAsTree) {
-    this.compareAsTree = compareAsTree;
+  protected final void disableCompareAsTree() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.compareAsTree = false;
   }
 
   /** Whether we should ignore parse warnings for the current test method. */
-  protected void setExpectParseWarningsThisTest() {
+  protected final void setExpectParseWarningsThisTest() {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
     expectParseWarningsThisTest = true;
   }
 
@@ -1381,6 +1453,7 @@ public abstract class CompilerTestCase extends TestCase {
       DiagnosticType warning,
       String description) {
     checkState(!this.typeCheckEnabled || !this.newTypeInferenceEnabled);
+    checkState(this.setUpRan, "CompilerTestCase.setUp not run: call super.setUp() from overrides.");
     RecentChange recentChange = new RecentChange();
     compiler.addChangeHandler(recentChange);
 
@@ -1495,7 +1568,7 @@ public abstract class CompilerTestCase extends TestCase {
           normalizeActualCode(compiler, externsRoot, mainRoot);
         }
 
-        if (enableInferConsts && i == 0) {
+        if (inferConsts && i == 0) {
           new InferConsts(compiler).process(externsRoot, mainRoot);
         }
 
@@ -1832,7 +1905,7 @@ public abstract class CompilerTestCase extends TestCase {
           .process(externsRoot, mainRoot);
     }
 
-    if (transpileEnabled && transpileExpected && !compiler.hasErrors()) {
+    if (transpileEnabled && !compiler.hasErrors()) {
       transpileToEs5(compiler, externsRoot, mainRoot);
     }
     return mainRoot;

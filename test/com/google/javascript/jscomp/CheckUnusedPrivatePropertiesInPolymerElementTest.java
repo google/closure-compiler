@@ -34,13 +34,13 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest
 
   public CheckUnusedPrivatePropertiesInPolymerElementTest() {
     super(EXTERNS);
-    enableGatherExternProperties();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
   }
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableGatherExternProperties();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
   }
 
   @Override
@@ -71,7 +71,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest
   }
 
   public void testPolymerPropertyUsedAsObserver1() {
-    allowExternsChanges(true);
+    allowExternsChanges();
     testNoWarning(
         LINE_JOINER.join(
             "Polymer({",
@@ -89,7 +89,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest
   }
 
   public void testPolymerPropertyUsedAsObserver2() {
-    allowExternsChanges(true);
+    allowExternsChanges();
     testNoWarning(
         LINE_JOINER.join(
             "Polymer({",
@@ -107,7 +107,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest
   }
 
   public void testBehaviorPropertyUsedAsObserver() {
-    allowExternsChanges(true);
+    allowExternsChanges();
     test(
         new String[] {
             LINE_JOINER.join(

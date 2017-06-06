@@ -30,7 +30,8 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
+  public void setUp() throws Exception {
+    super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 

@@ -27,16 +27,13 @@ public final class CreateSyntheticBlocksTest extends CompilerTestCase {
   private static final String START_MARKER = "startMarker";
   private static final String END_MARKER = "endMarker";
 
-  public CreateSyntheticBlocksTest() {
-    // Can't use compare as a tree because of the added synthetic blocks.
-    super("", false);
-  }
-
   @Override
-  public void setUp() throws Exception {
+  protected void setUp() throws Exception {
     super.setUp();
+    // Can't use compare as a tree because of the added synthetic blocks.
+    disableCompareAsTree();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
-    enableLineNumberCheck(false);
+    disableLineNumberCheck();
   }
 
   @Override

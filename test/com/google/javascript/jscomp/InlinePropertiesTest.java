@@ -35,10 +35,6 @@ public final class InlinePropertiesTest extends TypeICompilerTestCase {
 
   public InlinePropertiesTest() {
     super(EXTERNS);
-    enableNormalize();
-    enableClosurePass();
-    enableGatherExternProperties();
-    this.mode = TypeInferenceMode.BOTH;
   }
 
   @Override
@@ -81,7 +77,12 @@ public final class InlinePropertiesTest extends TypeICompilerTestCase {
 
   @Override
   protected void setUp() throws Exception {
-    runSmartNameRemoval = false;
+    super.setUp();
+    enableNormalize();
+    enableClosurePass();
+    enableGatherExternProperties();
+    this.mode = TypeInferenceMode.BOTH;
+    this.runSmartNameRemoval = false;
   }
 
 
@@ -449,7 +450,7 @@ public final class InlinePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testStructuralInterfacesNoPropInlining2() {
-    runSmartNameRemoval = true;
+    this.runSmartNameRemoval = true;
 
     test(
         LINE_JOINER.join(

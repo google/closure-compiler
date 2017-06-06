@@ -75,10 +75,10 @@ public class PolymerPassSuppressBehaviorsTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
-    allowExternsChanges(true);
+    allowExternsChanges();
     enableTypeCheck();
-    runTypeCheckAfterProcessing = true;
-    parseTypeInfo = true;
+    enableRunTypeCheckAfterProcessing();
+    enableParseTypeInfo();
   }
 
   @Override

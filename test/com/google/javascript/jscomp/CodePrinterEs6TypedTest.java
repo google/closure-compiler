@@ -28,7 +28,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 public final class CodePrinterEs6TypedTest extends CodePrinterTestBase {
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
     super.setUp();
     languageMode = LanguageMode.ECMASCRIPT6_TYPED;
   }

@@ -25,7 +25,9 @@ import java.util.List;
  */
 public class J2clPassTest extends CompilerTestCase {
 
-  public J2clPassTest() {
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
     this.enableNormalize();
   }
 

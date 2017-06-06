@@ -29,11 +29,9 @@ public final class SanityCheckTest extends CompilerTestCase {
 
   private CompilerPass otherPass = null;
 
-  public SanityCheckTest() {
-    super("", false);
-  }
-
-  @Override public void setUp() {
+  @Override protected void setUp() throws Exception {
+    super.setUp();
+    disableCompareAsTree();
     otherPass = null;
   }
 

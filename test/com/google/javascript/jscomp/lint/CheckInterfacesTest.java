@@ -39,7 +39,8 @@ public final class CheckInterfacesTest extends CompilerTestCase {
     return options;
   }
 
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     enableTypeCheck();
   }
 

@@ -18,13 +18,15 @@ package com.google.javascript.jscomp;
 
 public final class InlineSimpleMethodsTest extends CompilerTestCase {
 
-  public InlineSimpleMethodsTest() {
-    super("", false);
-  }
-
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new InlineSimpleMethods(compiler);
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    disableCompareAsTree();
   }
 
   /**

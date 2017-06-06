@@ -26,12 +26,13 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
 
   public RuntimeTypeCheckTest() {
     super("/** @const */ var undefined;");
-    enableTypeCheck();
   }
 
   @Override
-  protected void setUp() {
-    super.enableLineNumberCheck(false);
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableTypeCheck();
+    disableLineNumberCheck();
     enableNormalize();
   }
 

@@ -48,8 +48,9 @@ public final class FunctionRewriterTest extends CompilerTestCase {
     "}";
 
   @Override
-  protected void setUp() {
-    super.enableLineNumberCheck(false);
+  protected void setUp() throws Exception {
+    super.setUp();
+    disableLineNumberCheck();
   }
 
   @Override

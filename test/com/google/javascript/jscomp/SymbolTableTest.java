@@ -50,7 +50,7 @@ public final class SymbolTableTest extends TestCase {
   private CompilerOptions options;
 
   @Override
-  public void setUp() throws Exception {
+  protected void setUp() throws Exception {
     super.setUp();
 
     options = new CompilerOptions();

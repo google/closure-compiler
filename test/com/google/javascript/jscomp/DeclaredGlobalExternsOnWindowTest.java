@@ -26,11 +26,12 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
   }
 
   @Override
-  protected void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
-    allowExternsChanges(true);
+    allowExternsChanges();
     enableTypeCheck();
-    runTypeCheckAfterProcessing = true;
+    enableRunTypeCheckAfterProcessing();
   }
 
   @Override

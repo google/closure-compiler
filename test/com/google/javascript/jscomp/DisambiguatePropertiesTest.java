@@ -41,13 +41,13 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
 
   public DisambiguatePropertiesTest() {
     super(DEFAULT_EXTERNS);
-    parseTypeInfo = true;
   }
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    super.enableNormalize();
+    enableNormalize();
+    enableParseTypeInfo();
     ignoreWarnings(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS);
   }
 

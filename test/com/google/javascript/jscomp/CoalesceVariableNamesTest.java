@@ -34,7 +34,8 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   @Override
-  public void setUp() {
+  protected void setUp() throws Exception {
+    super.setUp();
     usePseudoName = false;
   }
 

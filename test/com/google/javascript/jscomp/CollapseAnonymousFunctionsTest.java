@@ -22,7 +22,9 @@ package com.google.javascript.jscomp;
  *
  */
 public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
-  public CollapseAnonymousFunctionsTest() {
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
     this.enableNormalize();
   }
 

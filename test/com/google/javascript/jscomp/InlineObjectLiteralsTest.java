@@ -25,14 +25,11 @@ import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRI
  */
 public final class InlineObjectLiteralsTest extends CompilerTestCase {
 
-  public InlineObjectLiteralsTest() {
-    enableNormalize();
-    setAcceptedLanguage(ECMASCRIPT_NEXT);
-  }
-
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableNormalize();
+    setAcceptedLanguage(ECMASCRIPT_NEXT);
   }
 
   @Override

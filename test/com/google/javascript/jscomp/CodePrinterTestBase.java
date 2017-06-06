@@ -32,7 +32,9 @@ public abstract class CodePrinterTestBase extends TestCase {
   protected LanguageMode languageMode = LanguageMode.ECMASCRIPT5;
   protected Compiler lastCompiler = null;
 
-  @Override public void setUp() {
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
     allowWarnings = false;
     preserveTypeAnnotations = false;
     trustedStrings = true;

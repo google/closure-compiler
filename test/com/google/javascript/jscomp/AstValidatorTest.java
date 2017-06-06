@@ -53,10 +53,10 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   @Override
   protected void setUp() throws Exception {
-    super.enableAstValidation(false);
-    super.disableNormalize();
-    super.enableLineNumberCheck(false);
     super.setUp();
+    disableAstValidation();
+    disableNormalize();
+    disableLineNumberCheck();
   }
 
   public void testForIn() {
