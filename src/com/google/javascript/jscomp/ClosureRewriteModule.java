@@ -1052,7 +1052,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           //   "function() {var Foo = goog.require("bar.Foo");}" to
           //   "function() {var Foo = module$exports$bar$Foo;}"
           Node binaryNamespaceName = IR.name(rewriteState.getBinaryNamespace(legacyNamespace));
-          binaryNamespaceName.putProp(Node.ORIGINALNAME_PROP, legacyNamespace);
+          binaryNamespaceName.setOriginalName(legacyNamespace);
           call.replaceWith(binaryNamespaceName);
           compiler.reportChangeToEnclosingScope(binaryNamespaceName);
         } else if (importHasAlias || !rewriteState.isLegacyModule(legacyNamespace)) {
@@ -1122,7 +1122,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // Replace "goog.module.get('pkg.Foo')" with either "pkg.Foo" or "module$exports$pkg$Foo".
     String exportedNamespace = rewriteState.getExportedNamespaceOrScript(legacyNamespace);
     Node exportedNamespaceName = NodeUtil.newQName(compiler, exportedNamespace).srcrefTree(call);
-    exportedNamespaceName.putProp(Node.ORIGINALNAME_PROP, legacyNamespace);
+    exportedNamespaceName.setOriginalName(legacyNamespace);
     call.replaceWith(exportedNamespaceName);
   }
 
@@ -1319,7 +1319,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       rhs.detach();
       Node exprResultNode = assignNode.getParent();
       Node binaryNamespaceName = IR.name(currentScript.getBinaryNamespace());
-      binaryNamespaceName.putProp(Node.ORIGINALNAME_PROP, currentScript.legacyNamespace);
+      binaryNamespaceName.setOriginalName(currentScript.legacyNamespace);
       Node exportsObjectCreationNode = IR.var(binaryNamespaceName, rhs);
       exportsObjectCreationNode.useSourceInfoIfMissingFromForTree(exprResultNode);
       exportsObjectCreationNode.putBooleanProp(Node.IS_NAMESPACE, true);
@@ -1423,7 +1423,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
 
     Node binaryNamespaceName = IR.name(currentScript.getBinaryNamespace());
-    binaryNamespaceName.putProp(Node.ORIGINALNAME_PROP, currentScript.legacyNamespace);
+    binaryNamespaceName.setOriginalName(currentScript.legacyNamespace);
     Node binaryNamespaceExportNode = IR.var(binaryNamespaceName, IR.objectlit());
     if (addAt == AddAt.BEFORE) {
       atNode.getParent().addChildBefore(binaryNamespaceExportNode, atNode);
