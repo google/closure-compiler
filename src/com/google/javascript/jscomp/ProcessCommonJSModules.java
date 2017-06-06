@@ -883,7 +883,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         Node value = null;
         if (key.isStringKey()) {
           if (key.hasChildren()) {
-            value = key.getFirstChild().detachFromParent();
+            value = key.removeFirstChild();
           } else {
             value = IR.name(key.getString());
           }
@@ -1067,7 +1067,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
             JSDocInfo info = parent.getJSDocInfo();
             parent.setJSDocInfo(null);
             if (nameRef.hasChildren()) {
-              Node assign = IR.assign(getProp, nameRef.getFirstChild().detachFromParent());
+              Node assign = IR.assign(getProp, nameRef.removeFirstChild());
               assign.setJSDocInfo(info);
               Node expr = IR.exprResult(assign).useSourceInfoIfMissingFromForTree(nameRef);
               parent.replaceWith(expr);
@@ -1078,7 +1078,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           } else if (newNameDeclaration != null) {
             // Variable is already defined. Convert this to an assignment.
             Node name = NodeUtil.newName(compiler, newName, nameRef, originalName);
-            Node assign = IR.assign(name, nameRef.getFirstChild().detachFromParent());
+            Node assign = IR.assign(name, nameRef.removeFirstChild());
             JSDocInfo info = parent.getJSDocInfo();
             if (info != null) {
               parent.setJSDocInfo(null);
