@@ -1052,7 +1052,7 @@ public final class AstValidator implements CompilerPass {
     Node caught = n.getFirstChild();
     if (caught.isName()) {
       validateName(caught);
-    } else if (n.isArrayPattern()) {
+    } else if (caught.isArrayPattern()) {
       validateArrayPattern(Token.CATCH, caught);
     } else {
       validateObjectPattern(Token.CATCH, caught);
