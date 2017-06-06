@@ -24,8 +24,9 @@ import com.google.common.collect.ImmutableSet;
  * Test case for {@link GatherExternProperties}.
  */
 public final class GatherExternPropertiesTest extends CompilerTestCase {
-  public GatherExternPropertiesTest() {
-    super();
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
     enableTypeCheck();
   }
 
