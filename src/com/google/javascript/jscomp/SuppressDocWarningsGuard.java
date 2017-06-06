@@ -75,6 +75,9 @@ class SuppressDocWarningsGuard extends WarningsGuard {
         if (type == Token.FUNCTION) {
           info = NodeUtil.getBestJSDocInfo(current);
           visitedFunction = true;
+        } else if (current.isClass()) {
+          // for example: /** @suppress {missingRequire} */ class X extends Y
+          info = current.getJSDocInfo();
         } else if (type == Token.SCRIPT) {
           info = current.getJSDocInfo();
         } else if (current.isVar() || current.isAssign()) {
