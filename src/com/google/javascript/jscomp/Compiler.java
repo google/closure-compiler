@@ -112,6 +112,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       "JSC_MISSING_ENTRY_ERROR",
       "unknown module \"{0}\" specified in entry point spec");
 
+  static final DiagnosticType INCONSISTENT_MODULE_DEFINITIONS = DiagnosticType.error(
+      "JSC_INCONSISTENT_MODULE_DEFINITIONS",
+      "Serialized module definitions are not consistent with the module definitions supplied in "
+          + "the command line");
+
   // Used in PerformanceTracker
   static final String READING_PASS_NAME = "readInputs";
   static final String PARSING_PASS_NAME = "parseInputs";
@@ -3277,6 +3282,22 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
+  private void renameModules(List<JSModule> newModules, List<JSModule> deserializedModules) {
+    if (newModules == null) {
+      return;
+    }
+    if (newModules.size() != deserializedModules.size()) {
+      report(JSError.make(INCONSISTENT_MODULE_DEFINITIONS));
+      return;
+    }
+    for (int i = 0; i < deserializedModules.size(); i++) {
+      JSModule deserializedModule = deserializedModules.get(i);
+      JSModule newModule = newModules.get(i);
+      deserializedModule.setName(newModule.getName());
+    }
+    return;
+  }
+
   /**
    * Serializable state of the compiler.
    */
@@ -3353,6 +3374,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public void restoreState(InputStream inputStream) throws IOException, ClassNotFoundException  {
     initWarningsGuard(options.getWarningsGuard());
     maybeSetTracker();
+
+    List<JSModule> newModules = modules;
+
     // Do not close the input stream, caller is responsible for closing it.
     final ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
     CompilerState compilerState = runInCompilerThread(new Callable<CompilerState>() {
@@ -3364,6 +3388,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         return compilerState;
       }
     });
+
     featureSet = compilerState.featureSet;
     externs = compilerState.externs;
     inputs = compilerState.inputs;
@@ -3388,6 +3413,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     moduleGraph = compilerState.moduleGraph;
     modules = compilerState.modules;
     uniqueNameId = compilerState.uniqueNameId;
+
+    // Reapply module names to deserialized modules
+    renameModules(newModules, modules);
 
     // restore errors.
     if (compilerState.errors != null) {

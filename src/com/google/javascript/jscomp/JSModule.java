@@ -41,7 +41,7 @@ public final class JSModule implements DependencyInfo, Serializable {
   private static final long serialVersionUID = 1;
 
   /** Module name */
-  private final String name;
+  private String name;
 
   /** Source code inputs */
   private final List<CompilerInput> inputs = new ArrayList<>();
@@ -71,6 +71,11 @@ public final class JSModule implements DependencyInfo, Serializable {
   @Override
   public String getName() {
     return name;
+  }
+
+  /** Sets the module name. */
+  public void setName(String name) {
+    this.name = name;
   }
 
   @Override
