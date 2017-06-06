@@ -21,10 +21,12 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
-import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_SYMBOL;
+import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_SYMBOL;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
@@ -275,6 +277,17 @@ class TypeValidator implements Serializable {
   }
 
   /**
+   * Expect the type to be a string or symbol, or a type convertible to a string
+   * or symbol. If the expectation is not met, issue a warning at the
+   * provided node's source code position.
+   */
+  void expectStringOrSymbol(NodeTraversal t, Node n, JSType type, String msg) {
+    if (!type.matchesStringContext() && !type.isSubtype(getNativeType(SYMBOL_TYPE))) {
+      mismatch(t, n, msg, type, STRING_SYMBOL);
+    }
+  }
+
+  /**
    * Expect the type to be a number, or a type convertible to number. If the
    * expectation is not met, issue a warning at the provided node's source code
    * position.
@@ -297,14 +310,14 @@ class TypeValidator implements Serializable {
   }
 
   /**
-   * Expect the type to be a number or string, or a type convertible to a number
-   * or string. If the expectation is not met, issue a warning at the provided
-   * node's source code position.
+   * Expect the type to be a number or string or symbol, or a type convertible to
+   * a number or string or symbol. If the expectation is not met, issue a warning
+   * at the provided node's source code position.
    */
-  void expectStringOrNumber(
+  void expectStringOrNumberOrSymbol(
       NodeTraversal t, Node n, JSType type, String msg) {
-    if (!type.matchesNumberContext() && !type.matchesStringContext()) {
-      mismatch(t, n, msg, type, NUMBER_STRING);
+    if (!type.matchesNumberContext() && !type.matchesStringContext() && ! !type.isSubtype(getNativeType(SYMBOL_TYPE))) {
+      mismatch(t, n, msg, type, NUMBER_STRING_SYMBOL);
     }
   }
 
@@ -393,12 +406,12 @@ class TypeValidator implements Serializable {
                         JSType indexType) {
     Preconditions.checkState(n.isGetElem(), n);
     Node indexNode = n.getLastChild();
-    if (objType.isStruct() && !isWellKnownSymbol(indexNode)) {
+    if (objType.isStruct() && !indexType.isSubtype(getNativeType(SYMBOL_TYPE))) {
       report(JSError.make(indexNode,
                           ILLEGAL_PROPERTY_ACCESS, "'[]'", "struct"));
     }
     if (objType.isUnknownType()) {
-      expectStringOrNumber(t, indexNode, indexType, "property access");
+      expectStringOrNumberOrSymbol(t, indexNode, indexType, "property access");
     } else {
       ObjectType dereferenced = objType.dereference();
       if (dereferenced != null && dereferenced
@@ -410,21 +423,13 @@ class TypeValidator implements Serializable {
       } else if (dereferenced != null && dereferenced.isArrayType()) {
         expectNumber(t, indexNode, indexType, "array access");
       } else if (objType.matchesObjectContext()) {
-        expectString(t, indexNode, indexType, "property access");
+        expectStringOrSymbol(t, indexNode, indexType, "property access");
       } else {
         mismatch(t, n, "only arrays or objects can be accessed",
             objType,
             typeRegistry.createUnionType(ARRAY_TYPE, OBJECT_TYPE));
       }
     }
-  }
-
-  // TODO(sdh): Replace isWellKnownSymbol with a real type-based
-  // check once the type system understands the symbol primitive.
-  // Any @const symbol reference should be allowed for a @struct.
-  private static boolean isWellKnownSymbol(Node n) {
-    return n.isGetProp() && n.getFirstChild().isName()
-        && n.getFirstChild().getString().equals("Symbol");
   }
 
   /**

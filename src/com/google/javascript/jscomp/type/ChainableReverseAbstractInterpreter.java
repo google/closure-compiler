@@ -25,6 +25,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
+import static com.google.javascript.rhino.jstype.JSTypeNative.SYMBOL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
@@ -241,6 +242,11 @@ public abstract class ChainableReverseAbstractInterpreter
       }
 
       @Override
+      public JSType caseSymbolType() {
+        return getNativeType(SYMBOL_TYPE);
+      }
+
+      @Override
       public JSType caseUnionType(UnionType type) {
         return type.getRestrictedUnion(getNativeType(VOID_TYPE));
       }
@@ -337,6 +343,11 @@ public abstract class ChainableReverseAbstractInterpreter
       @Override
       public JSType caseStringType() {
         return getNativeType(STRING_TYPE);
+      }
+
+      @Override
+      public JSType caseSymbolType() {
+        return getNativeType(SYMBOL_TYPE);
       }
 
       @Override
@@ -502,6 +513,11 @@ public abstract class ChainableReverseAbstractInterpreter
     }
 
     @Override
+    public JSType caseSymbolType() {
+          return null;
+      }
+
+    @Override
     public JSType caseStringType() {
       return null;
     }
@@ -557,6 +573,11 @@ public abstract class ChainableReverseAbstractInterpreter
     @Override
     public JSType caseStringType() {
       return getNativeType(STRING_TYPE);
+    }
+
+    @Override
+    public JSType caseSymbolType() {
+      return getNativeType(SYMBOL_TYPE);
     }
 
     @Override
@@ -653,6 +674,11 @@ public abstract class ChainableReverseAbstractInterpreter
     @Override
     public JSType caseStringType() {
       return matchesExpectation("string") ? getNativeType(STRING_TYPE) : null;
+    }
+
+    @Override
+    public JSType caseSymbolType() {
+      return matchesExpectation("symbol") ? getNativeType(SYMBOL_TYPE) : null;
     }
 
     @Override

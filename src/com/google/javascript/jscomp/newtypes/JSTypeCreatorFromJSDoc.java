@@ -405,6 +405,9 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
       case "number":
         checkInvalidGenericsInstantiation(n);
         return this.commonTypes.NUMBER;
+      case "symbol":
+        checkInvalidGenericsInstantiation(n);
+        return this.commonTypes.SYMBOL;
       case "string":
         checkInvalidGenericsInstantiation(n);
         return this.commonTypes.STRING;

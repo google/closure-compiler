@@ -114,6 +114,8 @@ public enum JSTypeNative {
   STRING_OBJECT_FUNCTION_TYPE,
   STRING_TYPE,
 
+  SYMBOL_TYPE,
+
   SYNTAX_ERROR_FUNCTION_TYPE,
   SYNTAX_ERROR_TYPE,
 
@@ -169,6 +171,16 @@ public enum JSTypeNative {
    * (number,string)
    */
   NUMBER_STRING,
+
+  /**
+   * (number,string,symbol)
+   */
+  NUMBER_STRING_SYMBOL,
+
+  /**
+   * (string,symbol)
+   */
+  STRING_SYMBOL,
 
   /** Only used in the new type inference */
   TRUTHY,

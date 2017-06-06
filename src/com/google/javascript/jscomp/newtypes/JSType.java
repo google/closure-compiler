@@ -59,19 +59,20 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   private static final int NULL_MASK = 0x20;
   private static final int NUMBER_MASK = 0x40;
   private static final int STRING_MASK = 0x80;
-  private static final int UNDEFINED_MASK = 0x100;
+  private static final int SYMBOL_MASK = 0x100;
+  private static final int UNDEFINED_MASK = 0x200;
   private static final int END_MASK = UNDEFINED_MASK * 2;
   // When either of the next two bits is set, the rest of the type isn't
   // guaranteed to be in a consistent state.
-  private static final int TRUTHY_MASK = 0x200;
-  private static final int FALSY_MASK = 0x400;
+  private static final int TRUTHY_MASK = 0x400;
+  private static final int FALSY_MASK = 0x800;
   // Room to grow.
   private static final int UNKNOWN_MASK = 0x7fffffff; // @type {?}
   private static final int TOP_MASK = 0xffffffff; // @type {*}
 
   private static final int BOOLEAN_MASK = TRUE_MASK | FALSE_MASK;
   private static final int TOP_SCALAR_MASK =
-      NUMBER_MASK | STRING_MASK | BOOLEAN_MASK | NULL_MASK | UNDEFINED_MASK;
+      NUMBER_MASK | STRING_MASK | SYMBOL_MASK | BOOLEAN_MASK | NULL_MASK | UNDEFINED_MASK;
 
   //Masks for common types:
   private static final int NUMBER_OR_STRING_MASK = NUMBER_MASK | STRING_MASK;
@@ -149,6 +150,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
         return commonTypes.NUMBER;
       case STRING_MASK:
         return commonTypes.STRING;
+      case SYMBOL_MASK:
+        return commonTypes.SYMBOL;
       case UNDEFINED_MASK:
         return commonTypes.UNDEFINED;
       case TRUTHY_MASK:
@@ -242,6 +245,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     types.put("NULL", new MaskType(commonTypes, NULL_MASK));
     types.put("NUMBER", new MaskType(commonTypes, NUMBER_MASK));
     types.put("STRING", new MaskType(commonTypes, STRING_MASK));
+    types.put("SYMBOL", new MaskType(commonTypes, SYMBOL_MASK));
     types.put("TOP", new MaskType(commonTypes, TOP_MASK));
     types.put("TOP_SCALAR", new MaskType(commonTypes, TOP_SCALAR_MASK));
     types.put("TRUE_TYPE", new MaskType(commonTypes, TRUE_MASK));
@@ -352,6 +356,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   public final boolean isScalar() {
     return getMask() == NUMBER_MASK
         || getMask() == STRING_MASK
+        || getMask() == SYMBOL_MASK
         || getMask() == NULL_MASK
         || getMask() == UNDEFINED_MASK
         || isBoolean();
@@ -1592,6 +1597,10 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
                 builder.append("string");
                 tags &= ~STRING_MASK;
                 continue;
+              case SYMBOL_MASK:
+                builder.append("symbol");
+                tags &= ~SYMBOL_MASK;
+                continue;
               case UNDEFINED_MASK:
                 builder.append("undefined");
                 tags &= ~UNDEFINED_MASK;
@@ -2025,6 +2034,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
         this.commonTypes.BOOLEAN,
         this.commonTypes.NUMBER,
         this.commonTypes.STRING,
+        this.commonTypes.SYMBOL,
         this.commonTypes.UNDEFINED,
         this.commonTypes.NULL };
     for (JSType primitiveType : primitiveTypes) {

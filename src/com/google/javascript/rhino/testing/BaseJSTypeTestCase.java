@@ -102,6 +102,7 @@ public abstract class BaseJSTypeTestCase extends TestCase {
   protected JSType STRING_OBJECT_FUNCTION_TYPE;
   protected ObjectType STRING_OBJECT_TYPE;
   protected JSType STRING_TYPE;
+  protected JSType SYMBOL_TYPE;
   protected JSType SYNTAX_ERROR_FUNCTION_TYPE;
   protected ObjectType SYNTAX_ERROR_TYPE;
   protected JSType TYPE_ERROR_FUNCTION_TYPE;
@@ -207,6 +208,8 @@ public abstract class BaseJSTypeTestCase extends TestCase {
         registry.getNativeObjectType(JSTypeNative.STRING_OBJECT_TYPE);
     STRING_TYPE =
         registry.getNativeType(JSTypeNative.STRING_TYPE);
+    SYMBOL_TYPE =
+        registry.getNativeType(JSTypeNative.SYMBOL_TYPE);
     SYNTAX_ERROR_FUNCTION_TYPE =
         registry.getNativeType(JSTypeNative.SYNTAX_ERROR_FUNCTION_TYPE);
     SYNTAX_ERROR_TYPE =
