@@ -60,7 +60,7 @@ class ConvertToTypedInterface implements CompilerPass {
   private void unhoistExternsToCode(Node externs, Node root) {
     root.removeChildren();
     while (externs.hasChildren()) {
-      Node extern = externs.getFirstChild().detach();
+      Node extern = externs.removeFirstChild();
       root.addChildToBack(extern);
       compiler.reportChangeToChangeScope(extern);
     }
@@ -156,7 +156,7 @@ class ConvertToTypedInterface implements CompilerPass {
         case FOR_OF:
         case FOR_IN:
           n.getSecondChild().detach();
-          Node initializer = n.getFirstChild().detach();
+          Node initializer = n.removeFirstChild();
           if (initializer.isVar()) {
             parent.addChildBefore(initializer, n);
           }
@@ -208,6 +208,17 @@ class ConvertToTypedInterface implements CompilerPass {
             Node children = n.removeChildren();
             parent.addChildrenAfter(children, n);
             NodeUtil.removeChild(parent, n);
+            t.reportCodeChange();
+          }
+          break;
+        case VAR:
+        case LET:
+        case CONST:
+          while (n.hasMoreThanOneChild()) {
+            Node nameToSplit = n.getLastChild().detach();
+            Node rhs = nameToSplit.hasChildren() ? nameToSplit.removeFirstChild() : null;
+            Node newDeclaration = IR.declaration(nameToSplit, rhs, n.getToken()).srcref(n);
+            parent.addChildAfter(newDeclaration, n);
             t.reportCodeChange();
           }
           break;

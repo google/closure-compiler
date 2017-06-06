@@ -73,6 +73,21 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testConstKeywordJsdocPropagation() {
     test("const x = 5;", "/** @const {number} */ var x;");
+
+    test(
+        "const x = 5, y = 'str', z = /abc/;",
+        LINE_JOINER.join(
+            "/** @const {number} */ var x;",
+            "/** @const {string} */ var y;",
+            "/** @const {!RegExp} */ var z;"));
+  }
+
+  public void testSplitMultiDeclarations() {
+    test("var /** number */ x = 4, /** string */ y = 'str';",
+        "/** @type {number} */ var x; /** @type {string} */ var y;");
+
+    test("let /** number */ x = 4, /** string */ y = 'str';",
+    "/** @type {number} */ var x; /** @type {string} */ var y;");
   }
 
   public void testThisPropertiesInConstructors() {
