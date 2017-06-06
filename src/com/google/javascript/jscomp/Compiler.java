@@ -1959,7 +1959,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     Node n = input.getAstRoot(this);
 
     // Inputs can have a null AST on a parse error.
-    if (n == null || !options.shouldDoExternsHoisting()) {
+    if (n == null) {
       return false;
     }
 

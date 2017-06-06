@@ -46,6 +46,11 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "/** @constructor */ function Foo() {} \n /** @const {number} */ Foo.prototype.x;");
   }
 
+  public void testAllExternsLibraryPrinted() {
+    allowExternsChanges();
+    test("/** @type {number} */ var x;", "", "/** @type {number} */ var x;", null, null);
+  }
+
   public void testExternsDefinitionsRespected() {
     test("/** @type {number} */ var x;", "x = 7;", "", null, null);
   }

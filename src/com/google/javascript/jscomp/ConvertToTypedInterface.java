@@ -57,8 +57,21 @@ class ConvertToTypedInterface implements CompilerPass {
     this.compiler = compiler;
   }
 
+  private void unhoistExternsToCode(Node externs, Node root) {
+    root.removeChildren();
+    while (externs.hasChildren()) {
+      Node extern = externs.getFirstChild().detach();
+      root.addChildToBack(extern);
+      compiler.reportChangeToChangeScope(extern);
+    }
+  }
+
   @Override
   public void process(Node externs, Node root) {
+    if (!root.hasChildren() || (root.hasOneChild() && !root.getFirstChild().hasChildren())) {
+      unhoistExternsToCode(externs, root);
+      return;
+    }
     NodeTraversal.traverseEs6(compiler, root, new RemoveNonDeclarations());
     NodeTraversal.traverseEs6(compiler, root, new PropagateConstJsdoc());
     SimplifyDeclarations simplify = new SimplifyDeclarations(compiler);
