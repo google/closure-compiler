@@ -229,7 +229,7 @@ class TypedCodeGenerator extends CodeGenerator {
    * Given a method definition node, returns the {@link ObjectTypeI} corresponding
    * to the class the method is defined on, or null if it is not a prototype method.
    */
-  private static ObjectTypeI findMethodOwner(Node n) {
+  private ObjectTypeI findMethodOwner(Node n) {
     if (n == null) {
       return null;
     }
@@ -238,8 +238,8 @@ class TypedCodeGenerator extends CodeGenerator {
     if (parent.isAssign()) {
       Node target = parent.getFirstChild();
       if (NodeUtil.isPrototypeProperty(target)) {
-        TypeI type = target.getFirstFirstChild().getTypeI();
-        ctor = type != null ? type.toMaybeFunctionType() : null;
+        TypeI type = registry.getType(target.getFirstFirstChild().getQualifiedName());
+        ctor = type != null ? ((ObjectTypeI) type).getConstructor() : null;
       }
     } else if (parent.isClass()) {
       // TODO(sdh): test this case once NTI understands ES6 classes
