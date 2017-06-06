@@ -1629,11 +1629,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         // ASSIGN always has two children.
         Node getProp = assign.getFirstChild();
         if (getProp != null && getProp.isGetProp()) {
-          // GETPROP always has two children.
-          Node stringNode = getProp.getLastChild();
-          if (stringNode != null && stringNode.isString()) {
-            stringNode.setSourceEncodedPosition(sourcePosition);
-            stringNode.setLength(length);
+          // GETPROP always has two children: a name node and a string node. They should both take
+          // on the source range of the original variable.
+          for (Node child : getProp.children()) {
+            child.setSourceEncodedPosition(sourcePosition);
+            child.setLength(length);
           }
         }
       }
