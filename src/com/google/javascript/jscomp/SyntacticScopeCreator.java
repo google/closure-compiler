@@ -31,9 +31,6 @@ public class SyntacticScopeCreator implements ScopeCreator {
   private final AbstractCompiler compiler;
   private Scope scope;
   private InputId inputId;
-  private final RedeclarationHandler redeclarationHandler;
-  public static final RedeclarationHandler DEFAULT_REDECLARATION_HANDLER =
-      new DefaultRedeclarationHandler();
 
   // The arguments variable is special, in that it's declared in every local
   // scope, but not explicitly declared.
@@ -41,17 +38,9 @@ public class SyntacticScopeCreator implements ScopeCreator {
 
   private final boolean isTyped;
 
-  private SyntacticScopeCreator(
-      AbstractCompiler compiler, RedeclarationHandler redeclarationHandler) {
-    this.compiler = compiler;
-    this.isTyped = false;
-    this.redeclarationHandler = redeclarationHandler;
-  }
-
   private SyntacticScopeCreator(AbstractCompiler compiler, boolean isTyped) {
     this.compiler = compiler;
     this.isTyped = isTyped;
-    this.redeclarationHandler = DEFAULT_REDECLARATION_HANDLER;
   }
 
   public static SyntacticScopeCreator makeUntyped(AbstractCompiler compiler) {
@@ -60,11 +49,6 @@ public class SyntacticScopeCreator implements ScopeCreator {
 
   static SyntacticScopeCreator makeTyped(AbstractCompiler compiler) {
     return new SyntacticScopeCreator(compiler, true);
-  }
-
-  static SyntacticScopeCreator makeUntypedWithRedeclHandler(
-      AbstractCompiler compiler, RedeclarationHandler redeclarationHandler) {
-    return new SyntacticScopeCreator(compiler, redeclarationHandler);
   }
 
   @Override
@@ -187,22 +171,6 @@ public class SyntacticScopeCreator implements ScopeCreator {
   }
 
   /**
-   * Interface for injectable duplicate handling.
-   */
-  interface RedeclarationHandler {
-    void onRedeclaration(
-        Scope s, String name, Node n, CompilerInput input);
-  }
-
-  /**
-   * The default handler for duplicate declarations.
-   */
-  static class DefaultRedeclarationHandler implements RedeclarationHandler {
-    @Override
-    public void onRedeclaration(Scope s, String name, Node n, CompilerInput input) {}
-  }
-
-  /**
    * Declares a variable.
    *
    * @param n The node corresponding to the variable name.
@@ -212,11 +180,8 @@ public class SyntacticScopeCreator implements ScopeCreator {
 
     CompilerInput input = compiler.getInput(inputId);
     String name = n.getString();
-    if (scope.isDeclared(name, false)
-        || (scope.isLocal() && name.equals(ARGUMENTS))) {
-      redeclarationHandler.onRedeclaration(
-          scope, name, n, input);
-    } else {
+    if (!scope.isDeclared(name, false)
+        && !(scope.isLocal() && name.equals(ARGUMENTS))) {
       if (isTyped) {
         ((TypedScope) scope).declare(name, n, null, input);
       } else {

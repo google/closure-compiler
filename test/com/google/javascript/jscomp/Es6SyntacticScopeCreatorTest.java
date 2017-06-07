@@ -24,7 +24,7 @@ import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
+import com.google.javascript.jscomp.Es6SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.Node;
 import junit.framework.TestCase;
 

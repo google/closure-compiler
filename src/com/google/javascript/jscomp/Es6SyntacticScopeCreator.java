@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 
@@ -41,12 +40,17 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
   // but not explicitly declared.
   private static final String ARGUMENTS = "arguments";
 
+
+  public static final RedeclarationHandler DEFAULT_REDECLARATION_HANDLER =
+      new DefaultRedeclarationHandler();
+
+
   public Es6SyntacticScopeCreator(AbstractCompiler compiler) {
-    this(compiler, SyntacticScopeCreator.DEFAULT_REDECLARATION_HANDLER);
+    this(compiler, DEFAULT_REDECLARATION_HANDLER);
   }
 
   public Es6SyntacticScopeCreator(AbstractCompiler compiler, ScopeFactory scopeFactory) {
-    this(compiler, SyntacticScopeCreator.DEFAULT_REDECLARATION_HANDLER, scopeFactory);
+    this(compiler, DEFAULT_REDECLARATION_HANDLER, scopeFactory);
   }
 
   Es6SyntacticScopeCreator(
@@ -95,7 +99,7 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
     private InputId inputId;
 
     ScopeScanner(AbstractCompiler compiler, Scope scope) {
-      this(compiler, SyntacticScopeCreator.DEFAULT_REDECLARATION_HANDLER, scope);
+      this(compiler, DEFAULT_REDECLARATION_HANDLER, scope);
     }
 
     ScopeScanner(
@@ -331,5 +335,21 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
           throw new RuntimeException("Unsupported node parent: " + parent);
       }
     }
+  }
+
+  /**
+   * Interface for injectable duplicate handling.
+   */
+  interface RedeclarationHandler {
+    void onRedeclaration(
+        Scope s, String name, Node n, CompilerInput input);
+  }
+
+  /**
+   * The default handler for duplicate declarations.
+   */
+  static class DefaultRedeclarationHandler implements RedeclarationHandler {
+    @Override
+    public void onRedeclaration(Scope s, String name, Node n, CompilerInput input) {}
   }
 }

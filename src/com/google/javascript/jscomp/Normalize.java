@@ -705,7 +705,7 @@ class Normalize implements CompilerPass {
    * ScopeCreator duplicate declaration handler.
    */
   private final class DuplicateDeclarationHandler implements
-      SyntacticScopeCreator.RedeclarationHandler {
+      Es6SyntacticScopeCreator.RedeclarationHandler {
 
     private Set<Var> hasOkDuplicateDeclaration = new HashSet<>();
 
