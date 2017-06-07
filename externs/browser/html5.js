@@ -990,6 +990,13 @@ Document.prototype.postMessage = function(message) {};
 Document.prototype.head;
 
 /**
+ * The current document readiness: one of "loading", "interactive", or "complete".
+ * @see https://html.spec.whatwg.org/multipage/dom.html#dom-document-readystate
+ * @type {string}
+ */
+Document.prototype.readyState;
+
+/**
  * @see https://developer.apple.com/webapps/docs/documentation/AppleApplications/Reference/SafariJSRef/DOMApplicationCache/DOMApplicationCache.html
  * @constructor
  * @implements {EventTarget}
