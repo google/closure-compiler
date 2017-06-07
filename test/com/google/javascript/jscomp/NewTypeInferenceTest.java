@@ -19194,6 +19194,18 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "};"));
   }
 
+  public void testDontCrashWhenJoiningNominalTypeWithEmptyTypemap() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "var Foo = function() {};",
+        "Foo.prototype.conditional = function() {",
+        "  return true ? /** @type {Foo<boolean>} */ (new Foo) : this;",
+        "};"));
+  }
+
   public void testSpecializeFunctionReturnType() {
     typeCheck(LINE_JOINER.join(
         "/** @return {?Object} */",

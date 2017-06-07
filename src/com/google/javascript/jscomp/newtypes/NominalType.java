@@ -567,6 +567,9 @@ public final class NominalType implements Serializable {
       builder.put(indexedTypevar, JSType.join(nt1.getIndexedType(), nt2.getIndexedType()));
       return builder.build();
     }
+    if (nt1.typeMap.isEmpty() || nt2.typeMap.isEmpty()) {
+      return ImmutableMap.of();
+    }
     for (String typevar : nt1.typeMap.keySet()) {
       builder.put(typevar, JSType.join(nt1.typeMap.get(typevar), nt2.typeMap.get(typevar)));
     }
