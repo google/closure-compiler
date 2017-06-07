@@ -69,6 +69,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -2970,6 +2971,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return Collections.unmodifiableList(inputs);
   }
 
+  /** Names exported by goog.exportSymbol. */
+  private Set<String> exportedNames = new LinkedHashSet<>();
+
+  @Override
+  public void addExportedNames(Set<String> exportedNames) {
+    this.exportedNames.addAll(exportedNames);
+
+  }
+
+  @Override
+  public Set<String> getExportedNames() {
+    return exportedNames;
+  }
+
   /**
    * Returns an unmodifiable view of the compiler inputs indexed by id.
    */
@@ -3326,6 +3341,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final JSModuleGraph moduleGraph;
     private final List<JSModule> modules;
     private final int uniqueNameId;
+    private final Set<String> exportedNames;
 
     CompilerState(Compiler compiler) {
       this.externsRoot = checkNotNull(compiler.externsRoot);
@@ -3352,6 +3368,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.moduleGraph = compiler.moduleGraph;
       this.modules = compiler.modules;
       this.uniqueNameId = compiler.uniqueNameId;
+      this.exportedNames = compiler.exportedNames;
     }
   }
 
@@ -3413,6 +3430,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     moduleGraph = compilerState.moduleGraph;
     modules = compilerState.modules;
     uniqueNameId = compilerState.uniqueNameId;
+    exportedNames.clear();
+    exportedNames.addAll(compilerState.exportedNames);
 
     // Reapply module names to deserialized modules
     renameModules(newModules, modules);

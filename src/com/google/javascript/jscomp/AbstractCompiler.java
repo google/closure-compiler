@@ -87,6 +87,16 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract List<CompilerInput> getInputsInOrder();
 
+  /**
+   * Adds exported names to keep track.
+   */
+  public abstract void addExportedNames(Set<String> exportedVariableNames);
+
+  /**
+   * Gets the names that have been exported so far.
+   */
+  public abstract Set<String> getExportedNames();
+  
   static enum MostRecentTypechecker {
     NONE,
     OTI,

@@ -55,7 +55,6 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -107,9 +106,6 @@ public final class DefaultPassConfig extends PassConfig {
    */
   private ClosureRewriteModule.GlobalRewriteState moduleRewriteState = null;
 
-  /** Names exported by goog.exportSymbol. */
-  private Set<String> exportedNames = null;
-
   /**
    * Ids for cross-module method stubbing, so that each method has
    * a unique id.
@@ -160,7 +156,7 @@ public final class DefaultPassConfig extends PassConfig {
   protected State getIntermediateState() {
     return new State(
         cssNames == null ? null : new HashMap<>(cssNames),
-        exportedNames == null ? null : Collections.unmodifiableSet(exportedNames),
+        null,
         crossModuleIdGenerator, variableMap, propertyMap,
         anonymousFunctionNameMap, stringMap, functionNames, idGeneratorMap);
   }
@@ -1241,7 +1237,7 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory generateExports =
       new PassFactory("generateExports", true) {
         @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
+        protected CompilerPass create(final AbstractCompiler compiler) {
           CodingConvention convention = compiler.getCodingConvention();
           if (convention.getExportSymbolFunction() != null
               && convention.getExportPropertyFunction() != null) {
@@ -1255,11 +1251,7 @@ public final class DefaultPassConfig extends PassConfig {
               @Override
               public void process(Node externs, Node root) {
                 pass.process(externs, root);
-                if (exportedNames == null) {
-                  exportedNames = new HashSet<>();
-                }
-
-                exportedNames.addAll(pass.getExportedVariableNames());
+                compiler.addExportedNames(pass.getExportedVariableNames());
               }
             };
           } else {
@@ -1312,7 +1304,7 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory gatherRawExports =
       new PassFactory("gatherRawExports", true) {
     @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
+    protected CompilerPass create(final AbstractCompiler compiler) {
       final GatherRawExports pass = new GatherRawExports(
           compiler);
 
@@ -1320,10 +1312,7 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         public void process(Node externs, Node root) {
           pass.process(externs, root);
-          if (exportedNames == null) {
-            exportedNames = new HashSet<>();
-          }
-          exportedNames.addAll(pass.getExportedVariableNames());
+          compiler.addExportedNames(pass.getExportedVariableNames());
         }
       };
     }
@@ -1333,7 +1322,7 @@ public final class DefaultPassConfig extends PassConfig {
   private final HotSwapPassFactory closurePrimitives =
       new HotSwapPassFactory("closurePrimitives", true) {
         @Override
-        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           maybeInitializePreprocessorSymbolTable(compiler);
           final ProcessClosurePrimitives pass =
               new ProcessClosurePrimitives(
@@ -1346,7 +1335,7 @@ public final class DefaultPassConfig extends PassConfig {
             @Override
             public void process(Node externs, Node root) {
               pass.process(externs, root);
-              exportedNames = pass.getExportedVariableNames();
+              compiler.addExportedNames(pass.getExportedVariableNames());
             }
 
             @Override
@@ -2903,9 +2892,7 @@ public final class DefaultPassConfig extends PassConfig {
       // don't use the prefix name as a global symbol.
       reservedNames.add(options.renamePrefixNamespace);
     }
-    if (exportedNames != null) {
-      reservedNames.addAll(exportedNames);
-    }
+    reservedNames.addAll(compiler.getExportedNames());
     reservedNames.addAll(ParserRunner.getReservedVars());
     RenameVars rn = new RenameVars(
         compiler,
