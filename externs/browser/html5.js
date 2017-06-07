@@ -637,7 +637,7 @@ CanvasRenderingContext2D.prototype.setStrokeColor;
 CanvasRenderingContext2D.prototype.getLineDash;
 
 /**
- * @param {Array<number>} segments
+ * @param {!Array<number>} segments
  * @return {undefined}
  */
 CanvasRenderingContext2D.prototype.setLineDash;
