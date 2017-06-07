@@ -685,6 +685,27 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var b = function f(a, b, c) {}; b['$inject']=['a', 'b', 'c']");
   }
 
+  public void testAngularPassOn_transpile() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.angularPass = true;
+    test(options,
+        "class C { /** @ngInject */ constructor(x) {} }",
+        "var C = function(x){}; C['$inject'] = ['x'];");
+  }
+
+  public void testAngularPassOn_Es6Out() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    options.setSkipTranspilationAndCrash(true);
+    options.angularPass = true;
+    test(options,
+        "class C { /** @ngInject */ constructor(x) {} }",
+        "class C { constructor(x){} } C['$inject'] = ['x'];");
+  }
+
   public void testExportTestFunctionsOff() {
     testSame(createCompilerOptions(), "function testFoo() {}");
   }

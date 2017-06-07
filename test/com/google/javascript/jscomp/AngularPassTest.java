@@ -495,6 +495,19 @@ public final class AngularPassTest extends CompilerTestCase {
             "/** @public */ fn['$inject'] = ['a', 'b'];"));
   }
 
+  public void testInEsModule() {
+    String js = LINE_JOINER.join(
+        "import {Foo} from './foo';",
+        "",
+        "class Bar extends Foo { /** @ngInject */ constructor(x, y) {} }");
+    test(
+        js,
+        LINE_JOINER.join(
+            js,
+            "/** @public */",
+            "Bar['$inject'] = ['x', 'y'];"));
+  }
+
   public void testInGoogScope() {
     enableRewriteClosureCode();
     test(

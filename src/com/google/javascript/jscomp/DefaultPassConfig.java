@@ -1358,6 +1358,11 @@ public final class DefaultPassConfig extends PassConfig {
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       return new AngularPass(compiler);
     }
+
+    @Override
+    public FeatureSet featureSet() {
+      return ES8_MODULES;
+    }
   };
 
   /**
