@@ -332,7 +332,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(closurePrimitives);
     }
 
-    if (options.chromePass) {
+    if (options.isChromePassEnabled()) {
       checks.add(chromePass);
     }
 

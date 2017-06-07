@@ -764,7 +764,7 @@ public class CompilerOptions implements Serializable {
   Integer polymerVersion;
 
   /** Processes cr.* functions */
-  boolean chromePass;
+  private boolean chromePass;
 
   /** Processes the output of the Dart Dev Compiler */
   boolean dartPass;
@@ -1741,6 +1741,14 @@ public class CompilerOptions implements Serializable {
     checkArgument(polymerVersion == null || polymerVersion == 1 || polymerVersion == 2,
         "Invalid Polymer version:", polymerVersion);
     this.polymerVersion = polymerVersion;
+  }
+
+  public void setChromePass(boolean chromePass) {
+    this.chromePass = chromePass;
+  }
+
+  public boolean isChromePassEnabled() {
+    return chromePass;
   }
 
   public void setDartPass(boolean dartPass) {

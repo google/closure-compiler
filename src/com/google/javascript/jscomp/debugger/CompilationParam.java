@@ -736,6 +736,13 @@ enum CompilationParam {
     }
   },
 
+  CHROME_PASS(ParamGroup.SPECIAL_PASSES) {
+    @Override
+    void apply(CompilerOptions options, boolean value) {
+      options.setChromePass(value);
+    }
+  },
+
   J2CL_PASS(ParamGroup.SPECIAL_PASSES) {
     @Override
     void apply(CompilerOptions options, boolean value) {
