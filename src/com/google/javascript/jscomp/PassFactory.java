@@ -72,8 +72,8 @@ public abstract class PassFactory {
    * FeatureSet.latest().
    */
   protected FeatureSet featureSet() {
-    // TODO(tbreisacher): Switch this to ES5 when we drop the skipTranspilationAndCrash flag.
-    return FeatureSet.latest();
+    // Most passes only understand ES5 so use that as the default.
+    return FeatureSet.ES5;
   }
 
   /**
