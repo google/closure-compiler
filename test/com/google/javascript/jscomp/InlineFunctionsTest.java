@@ -2533,4 +2533,19 @@ public class InlineFunctionsTest extends CompilerTestCase {
     this.maxSizeAfterInlining =
         CompilerOptions.UNLIMITED_FUN_SIZE_AFTER_INLINING;
   }
+
+  public void testArrowFunctionUndefined() {
+    test("var empty = () => {}; empty();", "void 0;");
+  }
+
+  public void testFunctionProperty() {
+    testSame(
+        LINE_JOINER.join(
+            "function Foo() {",
+            "  this.bar = 0;",
+            "}",
+            "var a = new Foo();",
+            "a.bar;"));
+  }
+
 }
