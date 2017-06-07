@@ -247,6 +247,7 @@ class RenameProperties implements CompilerPass {
       Node parent = n.getParent();
       compiler.reportChangeToEnclosingScope(n);
       n.detach();
+      NodeUtil.markFunctionsDeleted(n, compiler);
       if (!parent.hasChildren() && !parent.isScript()) {
         parent.detach();
       }

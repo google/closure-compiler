@@ -451,6 +451,7 @@ class InlineVariables implements CompilerPass {
         replacement.setTypeI(child.getTypeI());
       }
       parent.replaceChild(child, replacement);
+      NodeUtil.markFunctionsDeleted(child, compiler);
     }
 
     /**

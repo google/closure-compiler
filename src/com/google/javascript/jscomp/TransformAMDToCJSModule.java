@@ -252,6 +252,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
         Node callbackBlock) {
       int curIndex = script.getIndexOfChild(defineParent);
       script.removeChild(defineParent);
+      NodeUtil.markFunctionsDeleted(defineParent, compiler);
       callbackBlock.detach();
       Node before = script.getChildAtIndex(curIndex);
       if (before != null) {

@@ -142,6 +142,7 @@ class FunctionRewriter implements CompilerPass {
      */
     void apply() {
       parent.replaceChild(oldChild, newChild);
+      NodeUtil.markFunctionsDeleted(oldChild, compiler);
       compiler.reportChangeToEnclosingScope(newChild);
     }
 

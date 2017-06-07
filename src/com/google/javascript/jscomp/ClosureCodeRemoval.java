@@ -122,6 +122,7 @@ final class ClosureCodeRemoval implements CompilerPass {
       for (Node ancestor : assignAncestors) {
         if (ancestor.isExprResult()) {
           lastAncestor.removeChild(ancestor);
+          NodeUtil.markFunctionsDeleted(ancestor, compiler);
         } else {
           rhs.detach();
           ancestor.replaceChild(last, rhs);
@@ -223,6 +224,7 @@ final class ClosureCodeRemoval implements CompilerPass {
       Node parent = call.getParent();
       if (parent.isExprResult()) {
         parent.detach();
+        NodeUtil.markFunctionsDeleted(parent, compiler);
       } else {
         // Otherwise, replace the assertion with its first argument,
         // which is the return value of the assertion.
@@ -234,6 +236,7 @@ final class ClosureCodeRemoval implements CompilerPass {
           replacement.setJSType(call.getJSType());
           parent.replaceChild(call, replacement);
         }
+        NodeUtil.markFunctionsDeleted(call, compiler);
       }
     }
   }

@@ -594,6 +594,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       compiler.reportChangeToEnclosingScope(parent);
       if (parent.isFunction() || parent.hasOneChild()) {
         NodeUtil.removeChild(parent.getParent(), parent);
+        NodeUtil.markFunctionsDeleted(parent, compiler);
       } else {
         Preconditions.checkState(parent.isVar());
         parent.removeChild(nameNode);
@@ -648,6 +649,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     public void remove(AbstractCompiler compiler) {
       compiler.reportChangeToEnclosingScope(exprNode);
       NodeUtil.removeChild(exprNode.getParent(), exprNode);
+      NodeUtil.markFunctionsDeleted(exprNode, compiler);
     }
 
     @Override
@@ -703,6 +705,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     public void remove(AbstractCompiler compiler) {
       compiler.reportChangeToEnclosingScope(key);
       map.removeChild(key);
+      NodeUtil.markFunctionsDeleted(key, compiler);
     }
 
     @Override

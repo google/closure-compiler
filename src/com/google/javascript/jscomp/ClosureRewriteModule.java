@@ -956,10 +956,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   private void updateGoogLoadModuleLate(NodeTraversal t, Node exprResultNode) {
     Node call = exprResultNode.removeFirstChild();
-    Node moduleBlockNode = call.getLastChild().getLastChild();
+    Node fnNode = call.getLastChild();
+    Node moduleBlockNode = fnNode.getLastChild();
 
     exprResultNode.setToken(Token.BLOCK);
     exprResultNode.addChildrenToBack(moduleBlockNode.removeChildren());
+    NodeUtil.markFunctionsDeleted(fnNode, compiler);
     currentScript.rootNode = exprResultNode;
     NodeUtil.tryMergeBlock(exprResultNode);
     t.reportCodeChange();

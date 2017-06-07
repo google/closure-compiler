@@ -289,6 +289,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       if (result == null) {
         if (removeUnused) {
           parent.removeChild(n);
+          NodeUtil.markFunctionsDeleted(n, compiler);
         } else {
           result = IR.empty().srcref(n);
           parent.replaceChild(n, result);
@@ -818,6 +819,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         // Remove "if (false) { X }" completely.
         NodeUtil.redeclareVarsInsideBranch(n);
         NodeUtil.removeChild(parent, n);
+        NodeUtil.markFunctionsDeleted(n, compiler);
         reportCodeChange();
         return null;
       }
@@ -863,6 +865,9 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     boolean condHasSideEffects = mayHaveSideEffects(cond);
     // Must detach after checking for side effects, to ensure that the parents
     // of nodes are set correctly.
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+      NodeUtil.markFunctionsDeleted(child, compiler);
+    }
     n.detachChildren();
 
     if (condHasSideEffects) {

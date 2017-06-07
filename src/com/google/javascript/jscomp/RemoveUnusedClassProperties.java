@@ -69,6 +69,7 @@ class RemoveUnusedClassProperties
               || !NodeUtil.mayHaveSideEffects(n.getFirstChild(), compiler)) {
             Node parent = n.getParent();
             parent.removeChild(n);
+            NodeUtil.markFunctionsDeleted(n, compiler);
             compiler.reportChangeToEnclosingScope(parent);
           }
         }

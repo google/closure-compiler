@@ -69,6 +69,61 @@ public final class ChangeVerifierTest extends TestCase {
     }
   }
 
+  public void testDeletedFunction() {
+    Node script = parse("function A() {}");
+
+    Preconditions.checkState(script.isScript());
+
+    Compiler compiler = new Compiler();
+    compiler.incrementChangeStamp();
+    ChangeVerifier verifier = new ChangeVerifier(compiler).snapshot(script);
+
+    // no change
+    verifier.checkRecordedChanges("test1", script);
+
+    // remove the function. report the change in the script but not the function deletion.
+    Node fnNode = script.getFirstChild();
+    fnNode.detach();
+    compiler.reportChangeToChangeScope(script);
+
+    try {
+      verifier.checkRecordedChanges("test2", script);
+      fail("exception expected");
+    } catch (IllegalStateException e) {
+      assertThat(e.getMessage()).contains("deleted scope was not reported");
+    }
+
+    // now try again after reporting the function deletion.
+    compiler.reportFunctionDeleted(fnNode);
+
+    // no longer throws an exception.
+    verifier.checkRecordedChanges("test2", script);
+  }
+
+  public void testNotDeletedFunction() {
+    Node script = parse("function A() {}");
+
+    Preconditions.checkState(script.isScript());
+
+    Compiler compiler = new Compiler();
+    compiler.incrementChangeStamp();
+    ChangeVerifier verifier = new ChangeVerifier(compiler).snapshot(script);
+
+    // no change
+    verifier.checkRecordedChanges("test1", script);
+
+    // mark the function deleted even though it's alive.
+    Node fnNode = script.getFirstChild();
+    compiler.reportFunctionDeleted(fnNode);
+
+    try {
+      verifier.checkRecordedChanges("test2", script);
+      fail("exception expected");
+    } catch (IllegalStateException e) {
+      assertThat(e.getMessage()).contains("existing scope is improperly marked as deleted");
+    }
+  }
+
   public static void testChangeVerification() {
     Compiler compiler = new Compiler();
 

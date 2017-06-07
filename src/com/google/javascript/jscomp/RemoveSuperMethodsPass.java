@@ -52,6 +52,7 @@ public final class RemoveSuperMethodsPass implements CompilerPass {
       Node removalTarget = entry.getValue().getGrandparent();
       Node removalParent = removalTarget.getParent();
       removalTarget.detach();
+      NodeUtil.markFunctionsDeleted(removalTarget, compiler);
       compiler.reportChangeToEnclosingScope(removalParent);
     }
   }

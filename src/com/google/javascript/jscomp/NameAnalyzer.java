@@ -372,8 +372,7 @@ final class NameAnalyzer implements CompilerPass {
         changeProxy.removeChild(grandparent.getParent(), grandparent);
       } else {
         // ... name.prototype.foo = function() { ... } ...
-        changeProxy.replaceWith(grandparent, parent,
-                                parent.getLastChild().detach());
+        changeProxy.replaceWith(grandparent, parent, parent.getLastChild().detach());
       }
     }
   }
@@ -1164,7 +1163,7 @@ final class NameAnalyzer implements CompilerPass {
     this.removeUnreferenced = removeUnreferenced;
     this.reportPath = reportPath;
     this.globalNames = DEFAULT_GLOBAL_NAMES;
-    this.changeProxy = new AstChangeProxy();
+    this.changeProxy = new AstChangeProxy(compiler);
   }
 
   static void createEmptyReport(AbstractCompiler compiler, String reportPath) {
@@ -1843,8 +1842,7 @@ final class NameAnalyzer implements CompilerPass {
       Node valueExpr = Iterables.getLast(replacements);
       valueExpr.detach();
       newReplacements.add(valueExpr);
-      changeProxy.replaceWith(
-          parent, n, collapseReplacements(newReplacements));
+      changeProxy.replaceWith(parent, n, collapseReplacements(newReplacements));
     } else if (n.isAssign() && !parent.isVanillaFor()) {
       // assignment appears in a RHS expression.  we have already
       // considered names in the assignment's RHS as being referenced;

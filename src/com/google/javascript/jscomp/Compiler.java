@@ -2639,6 +2639,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
+  public void reportFunctionDeleted(Node node) {
+    checkState(node.isFunction());
+    node.setDeleted(true);
+  }
+
+  @Override
   void reportChangeToEnclosingScope(Node n) {
     recordChange(getChangeScopeForNode(n));
     notifyChangeHandlers();

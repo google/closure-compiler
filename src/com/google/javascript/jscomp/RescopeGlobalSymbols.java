@@ -522,6 +522,7 @@ final class RescopeGlobalSymbols implements CompilerPass {
       }
       // Remove the var node.
       parent.removeChild(n);
+      NodeUtil.markFunctionsDeleted(n, compiler);
       compiler.reportChangeToEnclosingScope(parent);
     }
 

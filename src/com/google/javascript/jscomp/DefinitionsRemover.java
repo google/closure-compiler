@@ -279,6 +279,7 @@ class DefinitionsRemover {
     public void performRemove(AbstractCompiler compiler) {
       compiler.reportChangeToEnclosingScope(function);
       function.detach();
+      NodeUtil.markFunctionsDeleted(function, compiler);
     }
   }
 

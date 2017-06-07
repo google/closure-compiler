@@ -234,6 +234,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     } else {
       parent.replaceChild(classNode, constructor);
     }
+    NodeUtil.markFunctionsDeleted(classNode, compiler);
 
     if (NodeUtil.isStatement(constructor)) {
       constructor.setJSDocInfo(newInfo.build());

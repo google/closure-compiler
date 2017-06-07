@@ -260,9 +260,11 @@ class InlineSimpleMethods extends MethodCompilerPass {
 
     if (NodeUtil.isExprCall(parent)) {
       parent.replaceWith(IR.empty());
+      NodeUtil.markFunctionsDeleted(parent, compiler);
     } else {
       Node srcLocation = call;
       parent.replaceChild(call, NodeUtil.newUndefinedNode(srcLocation));
+      NodeUtil.markFunctionsDeleted(call, compiler);
     }
     t.reportCodeChange();
   }

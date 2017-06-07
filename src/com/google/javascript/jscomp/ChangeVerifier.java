@@ -17,10 +17,12 @@ package com.google.javascript.jscomp;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
 import com.google.javascript.rhino.Node;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * A Class to assist in AST change tracking verification.  To validate a "snapshot" is taken
@@ -28,7 +30,7 @@ import java.util.Map;
  */
 public class ChangeVerifier {
   private final AbstractCompiler compiler;
-  private final Map<Node, Node> map = new HashMap<>();
+  private final BiMap<Node, Node> clonesByCurrent = HashBiMap.create();
   private int snapshotChange;
 
   ChangeVerifier(AbstractCompiler compiler) {
@@ -37,7 +39,7 @@ public class ChangeVerifier {
 
   ChangeVerifier snapshot(Node root) {
     // remove any existing snapshot data.
-    map.clear();
+    clonesByCurrent.clear();
     snapshotChange = compiler.getChangeStamp();
 
     Node snapshot = root.cloneTree();
@@ -59,8 +61,8 @@ public class ChangeVerifier {
    */
   private void associateClones(Node n, Node snapshot) {
     // TODO(johnlenz): determine if MODULE_BODY is useful here.
-    if (NodeUtil.isChangeScopeRoot(n)) {
-      map.put(n, snapshot);
+    if (n.isRoot() || NodeUtil.isChangeScopeRoot(n)) {
+      clonesByCurrent.put(n, snapshot);
     }
 
     Node child = n.getFirstChild();
@@ -73,18 +75,35 @@ public class ChangeVerifier {
   }
 
   /** Checks that the scope roots marked as changed have indeed changed */
-  private void verifyScopeChangesHaveBeenRecorded(
-      String passName, Node root) {
+  private void verifyScopeChangesHaveBeenRecorded(String passName, Node root) {
     final String passNameMsg = passName.isEmpty() ? "" : passName + ": ";
 
-    NodeUtil.visitPreOrder(root,
+    // Gather all the scope nodes that existed when the snapshot was taken.
+    final Set<Node> snapshotScopeNodes = new HashSet<>();
+    NodeUtil.visitPreOrder(
+        clonesByCurrent.get(root),
+        new Visitor() {
+          @Override
+          public void visit(Node oldNode) {
+            if (NodeUtil.isChangeScopeRoot(oldNode)) {
+              snapshotScopeNodes.add(oldNode);
+            }
+          }
+        },
+        Predicates.<Node>alwaysTrue());
+
+    NodeUtil.visitPreOrder(
+        root,
         new Visitor() {
           @Override
           public void visit(Node n) {
             if (n.isRoot()) {
               verifyRoot(n);
             } else if (NodeUtil.isChangeScopeRoot(n)) {
-              Node clone = map.get(n);
+              Node clone = clonesByCurrent.get(n);
+              // Remove any scope nodes that still exist.
+              snapshotScopeNodes.remove(clone);
+              verifyNode(passNameMsg, n);
               if (clone == null) {
                 verifyNewNode(passNameMsg, n);
               } else {
@@ -94,13 +113,38 @@ public class ChangeVerifier {
           }
         },
         Predicates.<Node>alwaysTrue());
+
+    // Only actually deleted snapshot scope nodes should remain.
+    verifyDeletedScopeNodes(passNameMsg, snapshotScopeNodes);
+  }
+
+  private void verifyDeletedScopeNodes(
+      final String passNameMsg, final Set<Node> deletedScopeNodes) {
+    for (Node snapshotScopeNode : deletedScopeNodes) {
+      Node currentNode = clonesByCurrent.inverse().get(snapshotScopeNode);
+      // If the original was marked deleted, that's fine, ignore it.
+      if (currentNode.isDeleted()) {
+        continue;
+      }
+
+      // But if it was deleted but not marked deleted, that's a problem.
+      throw new IllegalStateException(
+          passNameMsg + "deleted scope was not reported:\n" + currentNode.toStringTree());
+    }
+  }
+
+  private void verifyNode(String passNameMsg, Node n) {
+    if (n.isDeleted()) {
+      throw new IllegalStateException(
+          passNameMsg + "existing scope is improperly marked as deleted:\n" + n.toStringTree());
+    }
   }
 
   private void verifyNewNode(String passNameMsg, Node n) {
     int changeTime = n.getChangeTime();
     if (changeTime == 0 || changeTime < snapshotChange) {
       throw new IllegalStateException(
-          passNameMsg + "new scope not explicitly marked as changed: " + n.toStringTree());
+          passNameMsg + "new scope not explicitly marked as changed:\n" + n.toStringTree());
     }
   }
 

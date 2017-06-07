@@ -154,7 +154,8 @@ public class Node implements Serializable {
       WAS_PREVIOUSLY_PROVIDED = 91, // Indicates a namespace that was provided at some point in the
                                   // past.
       IS_ES6_CLASS = 92,          // Indicates that a FUNCTION node is converted from an ES6 class
-      TRANSPILED = 93;            // Indicates that a SCRIPT represents a transpiled file
+      TRANSPILED = 93,            // Indicates that a SCRIPT represents a transpiled file
+      DELETED = 94;               // For passes that work only on deleted funs.
 
   private static final String propToString(int propType) {
       switch (propType) {
@@ -199,12 +200,12 @@ public class Node implements Serializable {
         case ANALYZED_DURING_GTI:  return "analyzed_during_gti";
         case CONSTANT_PROPERTY_DEF: return "constant_property_def";
         case DECLARED_TYPE_EXPR: return "declared_type_expr";
-        case TYPE_BEFORE_CAST: return "type_before_cast";
-        case OPT_ES6_TYPED:    return "opt_es6_typed";
+        case TYPE_BEFORE_CAST:   return "type_before_cast";
+        case OPT_ES6_TYPED:      return "opt_es6_typed";
         case GENERIC_TYPE_LIST:       return "generic_type";
-        case IMPLEMENTS:       return "implements";
+        case IMPLEMENTS:         return "implements";
         case CONSTRUCT_SIGNATURE: return "construct_signature";
-        case ACCESS_MODIFIER: return "access_modifier";
+        case ACCESS_MODIFIER:    return "access_modifier";
         case NON_INDEXABLE:      return "non_indexable";
         case PARSE_RESULTS:      return "parse_results";
         case GOOG_MODULE:        return "goog_module";
@@ -212,8 +213,9 @@ public class Node implements Serializable {
         case FEATURE_SET:        return "feature_set";
         case IS_MODULE_NAME:     return "is_module_name";
         case WAS_PREVIOUSLY_PROVIDED: return "was_previously_provided";
-        case IS_ES6_CLASS: return "is_es6_class";
-        case TRANSPILED:   return "transpiled";
+        case IS_ES6_CLASS:       return "is_es6_class";
+        case TRANSPILED:         return "transpiled";
+        case DELETED:            return "DELETED";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
@@ -2411,6 +2413,14 @@ public class Node implements Serializable {
     return getIntProp(CHANGE_TIME);
   }
 
+  public void setDeleted(boolean deleted) {
+    putBooleanProp(DELETED, deleted);
+  }
+
+  public boolean isDeleted() {
+    return getBooleanProp(DELETED);
+  }
+
   /**
    * Sets whether this node is a variable length argument node. This
    * method is meaningful only on {@link Token#NAME} nodes
@@ -3272,4 +3282,5 @@ public class Node implements Serializable {
       first.previous = lastChild;
     }
     typei = (TypeI) in.readObject();
-  }}
+  }
+}

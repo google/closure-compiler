@@ -61,6 +61,7 @@ class RemoveUnusedPolyfills implements CompilerPass {
     for (Node node : collector.removableNodes()) {
       Node parent = node.getParent();
       NodeUtil.removeChild(parent, node);
+      NodeUtil.markFunctionsDeleted(node, compiler);
       compiler.reportChangeToEnclosingScope(parent);
     }
   }

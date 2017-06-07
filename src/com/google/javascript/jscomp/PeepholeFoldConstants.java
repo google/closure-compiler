@@ -327,6 +327,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     if (typeNameString != null) {
       Node newNode = IR.string(typeNameString);
       originalTypeofNode.replaceWith(newNode);
+      NodeUtil.markFunctionsDeleted(originalTypeofNode, compiler);
       reportCodeChange();
 
       return newNode;
@@ -454,6 +455,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
       if (replacementNode != null) {
         n.replaceWith(replacementNode);
+        NodeUtil.markFunctionsDeleted(n, compiler);
         reportCodeChange();
         return replacementNode;
       }
@@ -924,6 +926,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     Node newNode = NodeUtil.booleanNode(result.toBoolean(true));
     n.replaceWith(newNode);
+    NodeUtil.markFunctionsDeleted(n, compiler);
     reportCodeChange();
 
     return newNode;
@@ -1422,6 +1425,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     n.replaceWith(replacement);
+    NodeUtil.markFunctionsDeleted(n, compiler);
     reportCodeChange();
     return n;
   }

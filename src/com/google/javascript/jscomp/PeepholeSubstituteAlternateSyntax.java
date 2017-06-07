@@ -274,6 +274,7 @@ class PeepholeSubstituteAlternateSyntax
             IR.string("call").srcref(callTarget));
         NodeUtil.markNewScopesChanged(newCallTarget, compiler);
         n.replaceChild(callTarget, newCallTarget);
+        NodeUtil.markFunctionsDeleted(callTarget, compiler);
         n.addChildAfter(bind.thisValue.cloneTree(), newCallTarget);
         n.putBooleanProp(Node.FREE_CALL, false);
       } else {

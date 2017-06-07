@@ -25,10 +25,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Proxy that provides a high level interface that compiler passes can
- * use to replace or remove sections of the AST.
+ * Proxy that provides a high level interface that compiler passes can use to replace or remove
+ * sections of the AST.
  *
  */
+// TODO(stalcup): delete this class, it's redundant with the new change tracking system.
 class AstChangeProxy {
 
   /**
@@ -42,9 +43,11 @@ class AstChangeProxy {
   }
 
   private final List<ChangeListener> listeners;
+  private final AbstractCompiler compiler;
 
-  AstChangeProxy() {
-    listeners = new ArrayList<>();
+  AstChangeProxy(AbstractCompiler compiler) {
+    this.listeners = new ArrayList<>();
+    this.compiler = compiler;
   }
 
   /**
@@ -77,6 +80,7 @@ class AstChangeProxy {
    */
   final void removeChild(Node parent, Node node) {
     parent.removeChild(node);
+    NodeUtil.markFunctionsDeleted(node, compiler);
 
     notifyOfRemoval(node, parent);
   }
@@ -122,6 +126,7 @@ class AstChangeProxy {
       }
       parent.removeChild(node);
     }
+    NodeUtil.markFunctionsDeleted(node, compiler);
     notifyOfRemoval(node, parent);
   }
 }

@@ -259,6 +259,7 @@ class UnreachableCodeElimination implements CompilerPass {
         logger.fine("Removing " + n);
       }
       NodeUtil.removeChild(n.getParent(), n);
+      NodeUtil.markFunctionsDeleted(n, compiler);
     }
   }
 }

@@ -264,6 +264,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
       }
 
       body.removeChild(firstExpr);
+      NodeUtil.markFunctionsDeleted(firstExpr, compiler);
       compiler.reportChangeToEnclosingScope(body);
       madeChange = true;
     }

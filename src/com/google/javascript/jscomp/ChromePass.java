@@ -433,6 +433,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
           functionTree.removeProp(Node.JSDOC_INFO_PROP);
         }
         this.namespaceBlock.replaceChild(n, exprResult);
+        NodeUtil.markFunctionsDeleted(n, compiler);
         compiler.reportChangeToEnclosingScope(exprResult);
       } else if (n.isName() && this.exports.containsKey(n.getString()) && !parent.isFunction()) {
         if (parent.isVar()) {

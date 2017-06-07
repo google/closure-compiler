@@ -300,6 +300,7 @@ class FunctionInjector {
       newExpression.setTypeI(callNode.getTypeI());
     }
     callParentNode.replaceChild(callNode, newExpression);
+    NodeUtil.markFunctionsDeleted(callNode, compiler);
     return newExpression;
   }
 
@@ -541,7 +542,8 @@ class FunctionInjector {
     switch (callSiteType) {
       case VAR_DECL_SIMPLE_ASSIGNMENT:
         // Remove the call from the name node.
-        parent.removeFirstChild();
+        Node firstChild = parent.removeFirstChild();
+        NodeUtil.markFunctionsDeleted(firstChild, compiler);
         Preconditions.checkState(parent.getFirstChild() == null);
         // Add the call, after the VAR.
         greatGrandParent.addChildAfter(newBlock, grandParent);
@@ -552,12 +554,14 @@ class FunctionInjector {
         // replace it completely.
         Preconditions.checkState(grandParent.isExprResult());
         greatGrandParent.replaceChild(grandParent, newBlock);
+        NodeUtil.markFunctionsDeleted(grandParent, compiler);
         break;
 
       case SIMPLE_CALL:
         // If nothing is looking at the result just replace the call.
         Preconditions.checkState(parent.isExprResult());
         grandParent.replaceChild(parent, newBlock);
+        NodeUtil.markFunctionsDeleted(parent, compiler);
         break;
 
       default:

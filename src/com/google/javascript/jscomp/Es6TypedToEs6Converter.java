@@ -417,9 +417,13 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
     if (!name.isEmpty() && overloadStack.peek().containsKey(name)) {
       compiler.report(JSError.make(n, OVERLOAD_NOT_SUPPORTED));
       if (isMemberFunctionDef) {
+        t.reportCodeChange(parent.getParent());
         parent.detach();
+        NodeUtil.markFunctionsDeleted(parent, compiler);
       } else {
+        t.reportCodeChange(parent);
         n.detach();
+        NodeUtil.markFunctionsDeleted(n, compiler);
       }
       if (!processedOverloads.contains(overloadStack)) {
         Node original = overloadStack.peek().get(name);
@@ -434,7 +438,6 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
             convertWithLocation(TypeDeclarationsIR.namedType("Function")), n.getSourceFileName()));
         originalJsDocNode.setJSDocInfo(builder.build());
       }
-      t.reportCodeChange();
       return;
     }
     overloadStack.peek().put(name, n);
@@ -825,6 +828,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
 
     memberVariable.putBooleanProp(Node.OPT_ES6_TYPED, function.isOptionalEs6Typed());
     member.replaceWith(memberVariable);
+    NodeUtil.markFunctionsDeleted(member, compiler);
     return memberVariable;
   }
 

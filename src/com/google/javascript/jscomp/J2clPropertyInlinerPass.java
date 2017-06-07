@@ -84,9 +84,11 @@ public class J2clPropertyInlinerPass implements CompilerPass {
       }
 
       void remove() {
-        Node objectLit = getKey.getParent().getParent().getParent();
+        Node nodeToDetach = getKey.getGrandparent();
+        Node objectLit = nodeToDetach.getParent();
         Preconditions.checkArgument(objectLit.isObjectLit());
-        getKey.getParent().getParent().detach();
+        nodeToDetach.detach();
+        NodeUtil.markFunctionsDeleted(nodeToDetach, compiler);
         compiler.reportChangeToEnclosingScope(objectLit);
         if (!objectLit.hasChildren()) {
           // Remove the whole Object.defineProperties call if there are no properties left.

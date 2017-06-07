@@ -4899,12 +4899,24 @@ public final class NodeUtil {
     return externsNames.build();
   }
 
+  /** Recurses through a tree, marking all function nodes as changed. */
   static void markNewScopesChanged(Node node, AbstractCompiler compiler) {
     if (node.isFunction()) {
       compiler.reportChangeToChangeScope(node);
     }
     for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
       markNewScopesChanged(child, compiler);
+    }
+  }
+
+  /** Recurses through a tree, marking all function nodes deleted. */
+  static void markFunctionsDeleted(Node node, AbstractCompiler compiler) {
+    if (node.isFunction()) {
+      compiler.reportFunctionDeleted(node);
+    }
+
+    for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
+      markFunctionsDeleted(child, compiler);
     }
   }
 

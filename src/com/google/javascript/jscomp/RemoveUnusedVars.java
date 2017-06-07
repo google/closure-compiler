@@ -506,6 +506,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
 
         compiler.reportChangeToEnclosingScope(n);
         n.detach();
+        NodeUtil.markFunctionsDeleted(n, compiler);
       }
       for (Node n : toReplaceWithZero) {
         // Don't remove any nodes twice since doing so would violate change reporting constraints.
@@ -839,7 +840,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
   private void removeAllAssigns(Var var) {
     for (Assign assign : assignsByVar.get(var)) {
       compiler.reportChangeToEnclosingScope(assign.assignNode);
-      assign.remove();
+      assign.remove(compiler);
     }
   }
 
@@ -919,6 +920,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
       } else if (parent != null) {
         compiler.reportChangeToEnclosingScope(toRemove);
         NodeUtil.removeChild(parent, toRemove);
+        NodeUtil.markFunctionsDeleted(toRemove, compiler);
       }
     }
   }
@@ -1018,10 +1020,8 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
       return null;
     }
 
-    /**
-     * Replace the current assign with its right hand side.
-     */
-    void remove() {
+    /** Replace the current assign with its right hand side. */
+    void remove(AbstractCompiler compiler) {
       Node parent = assignNode.getParent();
       if (mayHaveSecondarySideEffects) {
         Node replacement = assignNode.getLastChild().detach();
@@ -1042,6 +1042,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
         Node grandparent = parent.getParent();
         if (parent.isExprResult()) {
           grandparent.removeChild(parent);
+          NodeUtil.markFunctionsDeleted(parent, compiler);
         } else {
           // mayHaveSecondarySideEffects is false, which means the value isn't needed,
           // but we need to keep the AST valid.
