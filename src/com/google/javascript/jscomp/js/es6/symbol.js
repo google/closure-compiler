@@ -46,8 +46,30 @@ $jscomp.symbolCounter_ = 0;
  * @suppress {reportUnknownTypes}
  */
 $jscomp.Symbol = function(opt_description) {
-  return /** @type {symbol} */ (
-      $jscomp.SYMBOL_PREFIX + (opt_description || '') + ($jscomp.symbolCounter_++));
+  // List of ECMAScript 2015 "Well-known Symbols"
+  // See Table 1 in https://www.ecma-international.org/ecma-262/6.0/#sec-well-known-symbols
+  /** @const @dict @type {!Object<string, string>} */
+  var WELL_KNOWN_SYMBOLS = {
+    'hasInstance': '@@hasInstance',
+    'isConcatSpreadable': '@@isConcatSpreadable',
+    'iterator': '@@iterator',
+    'match': '@@match',
+    'replace': '@@replace',
+    'search': '@@search',
+    'species': '@@species',
+    'split': '@@split',
+    'toPrimitive': '@@toPrimitive',
+    'toStringTag': '@@toStringTag',
+    'unscopables': '@@unscopables',
+  };
+
+  var description = opt_description || '';
+  var symbolName = $jscomp.SYMBOL_PREFIX + description + ($jscomp.symbolCounter_++);
+  if (WELL_KNOWN_SYMBOLS.hasOwnProperty(description)) {
+    symbolName = WELL_KNOWN_SYMBOLS[description];
+  }
+
+  return /** @type {symbol} */(symbolName);
 };
 
 
