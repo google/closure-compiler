@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
@@ -50,7 +49,7 @@ class GlobalNamespace
     implements StaticTypedScope<TypeI>,
     StaticSymbolTable<GlobalNamespace.Name, GlobalNamespace.Ref> {
 
-  private AbstractCompiler compiler;
+  private final AbstractCompiler compiler;
   private final Node root;
   private final Node externsRoot;
   private boolean inExterns;
@@ -65,10 +64,10 @@ class GlobalNamespace
   private int currentPreOrderIndex = 0;
 
   /** Global namespace tree */
-  private List<Name> globalNames = new ArrayList<>();
+  private final List<Name> globalNames = new ArrayList<>();
 
   /** Maps names (e.g. "a.b.c") to nodes in the global namespace tree */
-  private Map<String, Name> nameMap = new HashMap<>();
+  private final Map<String, Name> nameMap = new HashMap<>();
 
   /**
    * Creates an instance that may emit warnings when building the namespace.
@@ -235,6 +234,7 @@ class GlobalNamespace
 
     NodeTraversal.traverseEs6(compiler, root, new BuildGlobalNamespace());
     generated = true;
+    externsScope = null;
   }
 
   /**
