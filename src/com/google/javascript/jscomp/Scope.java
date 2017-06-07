@@ -36,9 +36,9 @@ import java.util.Map;
  *
  */
 public class Scope implements StaticScope, Serializable {
-  private final Map<String, Var> vars = new LinkedHashMap<>();
-  private final Scope parent;
-  protected final int depth;
+  protected final Map<String, Var> vars = new LinkedHashMap<>();
+  protected Scope parent;
+  protected int depth;
   protected final Node rootNode;
   private Var arguments;
 

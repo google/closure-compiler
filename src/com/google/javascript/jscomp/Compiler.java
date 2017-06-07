@@ -171,6 +171,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private final Map<InputId, CompilerInput> inputsById = new ConcurrentHashMap<>();
 
+  private transient IncrementalScopeCreator scopeCreator = null;
+
   /**
    * Subclasses are responsible for loading soures that were not provided as explicit inputs to the
    * compiler. For example, looking up sources referenced within sourcemaps.
@@ -1551,6 +1553,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // Only used by jsdev
   public MemoizedTypedScopeCreator getTypedScopeCreator() {
     return getPassConfig().getTypedScopeCreator();
+  }
+
+  @Override
+  IncrementalScopeCreator getScopeCreator() {
+    return this.scopeCreator;
+  }
+
+  @Override
+  void putScopeCreator(IncrementalScopeCreator creator) {
+    this.scopeCreator = creator;
   }
 
   @SuppressWarnings("unchecked")

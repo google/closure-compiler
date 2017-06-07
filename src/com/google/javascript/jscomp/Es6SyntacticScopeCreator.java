@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.SyntacticScopeCreator.DefaultRedeclarationHandler;
 import com.google.javascript.jscomp.SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -33,23 +32,34 @@ import com.google.javascript.rhino.Node;
  *
  * @author moz@google.com (Michael Zhou)
  */
-public final class Es6SyntacticScopeCreator implements ScopeCreator {
+public class Es6SyntacticScopeCreator implements ScopeCreator {
   private final AbstractCompiler compiler;
   private final RedeclarationHandler redeclarationHandler;
+  private final ScopeFactory scopeFactory;
 
   // The arguments variable is special, in that it's declared for every function,
   // but not explicitly declared.
   private static final String ARGUMENTS = "arguments";
 
   public Es6SyntacticScopeCreator(AbstractCompiler compiler) {
-    this.compiler = compiler;
-    this.redeclarationHandler = new DefaultRedeclarationHandler();
+    this(compiler, SyntacticScopeCreator.DEFAULT_REDECLARATION_HANDLER);
+  }
+
+  public Es6SyntacticScopeCreator(AbstractCompiler compiler, ScopeFactory scopeFactory) {
+    this(compiler, SyntacticScopeCreator.DEFAULT_REDECLARATION_HANDLER, scopeFactory);
   }
 
   Es6SyntacticScopeCreator(
       AbstractCompiler compiler, RedeclarationHandler redeclarationHandler) {
+    this(compiler, redeclarationHandler, new DefaultScopeFactory());
+  }
+
+  Es6SyntacticScopeCreator(
+      AbstractCompiler compiler, RedeclarationHandler redeclarationHandler,
+      ScopeFactory scopeFactory) {
     this.compiler = compiler;
     this.redeclarationHandler = redeclarationHandler;
+    this.scopeFactory = scopeFactory;
   }
 
   @Override
@@ -57,25 +67,41 @@ public final class Es6SyntacticScopeCreator implements ScopeCreator {
     return true;
   }
 
+  /** A simple API for injecting the use of alternative Scope classes */
+  public interface ScopeFactory {
+    Scope create(Scope parent, Node n);
+  }
+
+  private static class DefaultScopeFactory implements ScopeFactory {
+    @Override
+    public Scope create(Scope parent, Node n) {
+      return (parent == null)
+        ? Scope.createGlobalScope(n)
+        : new Scope(parent, n);
+    }
+  }
+
   @Override
   public Scope createScope(Node n, Scope parent) {
-    Scope scope;
-    if (parent == null) {
-      scope = Scope.createGlobalScope(n);
-    } else {
-      scope = new Scope(parent, n);
-    }
-
-    new ScopeScanner(scope).populate();
-
+    Scope scope = scopeFactory.create(parent, n);
+    new ScopeScanner(compiler, redeclarationHandler, scope).populate();
     return scope;
   }
 
-  private class ScopeScanner {
+  static class ScopeScanner {
     private final Scope scope;
+    private final AbstractCompiler compiler;
+    private final RedeclarationHandler redeclarationHandler;
     private InputId inputId;
 
-    ScopeScanner(Scope scope) {
+    ScopeScanner(AbstractCompiler compiler, Scope scope) {
+      this(compiler, SyntacticScopeCreator.DEFAULT_REDECLARATION_HANDLER, scope);
+    }
+
+    ScopeScanner(
+        AbstractCompiler compiler, RedeclarationHandler redeclarationHandler, Scope scope) {
+      this.compiler = compiler;
+      this.redeclarationHandler = redeclarationHandler;
       this.scope = scope;
     }
 

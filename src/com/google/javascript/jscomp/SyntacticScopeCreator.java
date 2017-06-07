@@ -32,6 +32,8 @@ public class SyntacticScopeCreator implements ScopeCreator {
   private Scope scope;
   private InputId inputId;
   private final RedeclarationHandler redeclarationHandler;
+  public static final RedeclarationHandler DEFAULT_REDECLARATION_HANDLER =
+      new DefaultRedeclarationHandler();
 
   // The arguments variable is special, in that it's declared in every local
   // scope, but not explicitly declared.
@@ -49,7 +51,7 @@ public class SyntacticScopeCreator implements ScopeCreator {
   private SyntacticScopeCreator(AbstractCompiler compiler, boolean isTyped) {
     this.compiler = compiler;
     this.isTyped = isTyped;
-    this.redeclarationHandler = new DefaultRedeclarationHandler();
+    this.redeclarationHandler = DEFAULT_REDECLARATION_HANDLER;
   }
 
   public static SyntacticScopeCreator makeUntyped(AbstractCompiler compiler) {
