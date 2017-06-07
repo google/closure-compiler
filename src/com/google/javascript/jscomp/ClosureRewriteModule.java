@@ -24,7 +24,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -291,7 +290,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     String legacyNamespace; // "a.b.c"
     String contentsPrefix; // "module$contents$a$b$c_
     final Set<String> topLevelNames = new HashSet<>(); // For prefixed content renaming.
-    final Deque<ScriptDescription> childScripts = new LinkedList<>(); // For goog.loadModule()
+    final Deque<ScriptDescription> childScripts = new LinkedList<>();
     final Map<String, String> namesToInlineByAlias = new HashMap<>(); // For alias inlining.
 
     /**
@@ -304,9 +303,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     Set<String> namedExports = new HashSet<>();
     Map<Var, ExportDefinition> exportsToInline = new HashMap<>();
 
-    // The root of the module. The SCRIPT node (or for goog.loadModule, the body of the
-    // function) that contains the module contents. For recognizing top level names. Changes when
-    // unwrapping a goog.loadModule() call.
+    // The root of the module. The MODULE_BODY node (or for goog.loadModule, the body of the
+    // function) that contains the module contents. For recognizing top level names.
     Node rootNode;
 
     public void addChildScript(ScriptDescription childScript) {
@@ -334,16 +332,17 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
-  private class ScriptRecorder extends AbstractPreOrderCallback {
+  private class ScriptRecorder implements Callback {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       if (NodeUtil.isGoogModuleFile(n)) {
-        inlineModuleIntoGlobal(n);
-        t.reportCodeChange();
         checkAndSetStrictModeDirective(t, n);
       }
 
       switch (n.getToken()) {
+        case MODULE_BODY:
+          recordModuleBody(n);
+          break;
         case CALL:
           Node method = n.getFirstChild();
           if (!method.isGetProp()) {
@@ -409,15 +408,26 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
       return true;
     }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isModuleBody()) {
+        popScript();
+      }
+    }
   }
 
   private class ScriptUpdater implements Callback {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
+        case MODULE_BODY:
+          updateModuleBodyEarly(n);
+          break;
+
         case EXPR_RESULT:
           if (isGoogLoadModuleStatement(n)) {
-            updateGoogLoadModuleEarly(n);
+            updateModuleBodyEarly(n.getFirstChild().getLastChild().getLastChild());
           }
           break;
 
@@ -472,8 +482,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           }
           break;
 
-        case SCRIPT:
-          updateEndScript();
+        case MODULE_BODY:
+          updateModuleBody(n);
           break;
 
         case NAME:
@@ -699,9 +709,16 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void recordGoogLoadModule(Node call) {
+    Node moduleScopeRoot = call.getLastChild().getLastChild();
+    Preconditions.checkState(NodeUtil.isModuleScopeRoot(moduleScopeRoot),
+        "goog.loadModule called with non-module contents: %s", moduleScopeRoot);
+    recordModuleBody(moduleScopeRoot);
+  }
+
+  private void recordModuleBody(Node moduleRoot) {
     pushScript(new ScriptDescription());
 
-    currentScript.rootNode = NodeUtil.getEnclosingStatement(call).getParent();
+    currentScript.rootNode = moduleRoot;
     currentScript.isModule = true;
   }
 
@@ -713,8 +730,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
     String legacyNamespace = legacyNamespaceNode.getString();
 
-    currentScript.isModule = true;
-    currentScript.rootNode = NodeUtil.getEnclosingStatement(call).getParent();
     currentScript.legacyNamespace = legacyNamespace;
     currentScript.contentsPrefix = toModuleContentsPrefix(legacyNamespace);
 
@@ -939,18 +954,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     popScript();
   }
 
-  static void inlineModuleIntoGlobal(Node scriptNode) {
-    Preconditions.checkArgument(NodeUtil.isGoogModuleFile(scriptNode));
-    Node moduleNode = scriptNode.getFirstChild();
-    scriptNode.removeChild(moduleNode);
-    scriptNode.addChildrenToBack(moduleNode.removeChildren());
-  }
-
-  private void updateGoogLoadModuleEarly(Node exprResultNode) {
+  private void updateModuleBodyEarly(Node moduleScopeRoot) {
     pushScript(currentScript.removeFirstChildScript());
-    Node moduleScopeRoot = exprResultNode.getFirstChild().getLastChild().getLastChild();
-    Preconditions.checkState(NodeUtil.isModuleScopeRoot(moduleScopeRoot),
-        "goog.loadModule called with non-module contents: %s", moduleScopeRoot);
     currentScript.rootNode = moduleScopeRoot;
   }
 
@@ -1137,9 +1142,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     Node exportsNameNode = getpropNode.getFirstChild();
     Preconditions.checkState(exportsNameNode.getString().equals("exports"));
 
-    // Would be just t.inModuleScope() if this ran before the inlineModuleIntoGlobal() call
-    // that happens at the beginning of module rewriting.
-    if (t.inModuleScope() || t.inGlobalScope()) {
+    if (t.inModuleScope()) {
       String exportName = getpropNode.getLastChild().getString();
       currentScript.namedExports.add(exportName);
       Node exportRhs = getpropNode.getNext();
@@ -1218,7 +1221,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       if (namespaceToInline.indexOf('.') != -1) {
         String firstQualifiedName = namespaceToInline.substring(0, namespaceToInline.indexOf('.'));
         Var shadowedVar = t.getScope().getVar(firstQualifiedName);
-        if (shadowedVar != null && shadowedVar.isLocal()) {
+        if (shadowedVar != null && !shadowedVar.getScope().isModuleScope()) {
           t.report(
               shadowedVar.getNode(),
               IMPORT_INLINING_SHADOWS_VAR,
@@ -1374,12 +1377,13 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     popScript();
   }
 
-  private void updateEndScript() {
-    if (!currentScript.isModule) {
-      return;
-    }
+  void updateModuleBody(Node moduleBody) {
+    Preconditions.checkArgument(moduleBody.isModuleBody());
+    moduleBody.setToken(Token.BLOCK);
+    NodeUtil.tryMergeBlock(moduleBody);
 
     updateEndModule();
+    popScript();
   }
 
   private void updateEndModule() {

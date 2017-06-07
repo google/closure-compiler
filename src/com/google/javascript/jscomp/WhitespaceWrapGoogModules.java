@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 
 /**
  * Replicates the effect of {@literal ClosureBundler} in whitespace-only mode and wraps goog.modules
@@ -44,7 +45,9 @@ public class WhitespaceWrapGoogModules implements HotSwapCompilerPass {
     if (!NodeUtil.isGoogModuleFile(scriptRoot)) {
       return;
     }
-    ClosureRewriteModule.inlineModuleIntoGlobal(scriptRoot);
+    Node moduleBody = scriptRoot.getFirstChild();
+    moduleBody.setToken(Token.BLOCK);
+    NodeUtil.tryMergeBlock(moduleBody);
     compiler.reportChangeToEnclosingScope(scriptRoot);
 
     // As per ClosureBundler:
