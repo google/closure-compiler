@@ -2276,6 +2276,28 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "{(function(){arguments;})()}");
   }
 
+  public void testKeepIifeWithThisArgInGlobalScope() {
+    testSame("(function(global){ global.something = 1; })(this);");
+  }
+
+  public void testInlineIifeWithThisArgInNonGlobalScope() {
+    test(
+        LINE_JOINER.join(
+            "function Foo() {",
+            "  (function(foo) {",
+            "    foo.bar = 1;",
+            "  })(this);",
+            "}",
+            "var f = new Foo();"),
+        LINE_JOINER.join(
+            "function Foo() {",
+            "  {",
+            "    this.bar = 1;",
+            "  }",
+            "}",
+            "var f = new Foo();"));
+  }
+
 
   public void testLoopWithFunctionWithFunction() {
     assumeMinimumCapture = true;
