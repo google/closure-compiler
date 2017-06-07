@@ -133,6 +133,8 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
 
   private CallSiteOptimizer callSiteOptimizer;
 
+  private final ScopeCreator scopeCreator;
+
   RemoveUnusedVars(
       AbstractCompiler compiler,
       boolean removeGlobals,
@@ -143,6 +145,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
     this.removeGlobals = removeGlobals;
     this.preserveFunctionExpressionNames = preserveFunctionExpressionNames;
     this.modifyCallSites = modifyCallSites;
+    this.scopeCreator = new Es6SyntacticScopeCreator(compiler);
   }
 
   /**
@@ -191,7 +194,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
    * Traverses a node recursively. Call this once per pass.
    */
   private void traverseAndRemoveUnusedReferences(Node root) {
-    Scope scope = new Es6SyntacticScopeCreator(compiler).createScope(root, null);
+    Scope scope = scopeCreator.createScope(root, null);
     traverseNode(root, null, scope);
 
     if (removeGlobals) {
@@ -283,9 +286,31 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
         }
         break;
 
+      // This case if for if there are let and const variables in block scopes.
+      // Otherwise other variables will be hoisted up into the global scope and already be handled.
+      case BLOCK:
+        // check if we are already traversing that block node
+        if (NodeUtil.createsBlockScope(n)) {
+          Scope blockScope = scopeCreator.createScope(n, scope);
+          collectMaybeUnreferencedVars(blockScope);
+          scope = blockScope;
+        }
+        break;
+
+      case CLASS:
+        // If this class is a removable var, then create a continuation
+        if (NodeUtil.isClassDeclaration(n)) {
+          var = scope.getVar(n.getFirstChild().getString());
+        }
+
+        if (var != null && isRemovableVar(var)) {
+          continuations.put(var, new Continuation(n, scope));
+        }
+        return;
+
       case NAME:
         var = scope.getVar(n.getString());
-        if (parent.isVar()) {
+        if (NodeUtil.isNameDeclaration(parent)) {
           Node value = n.getFirstChild();
           if (value != null && var != null && isRemovableVar(var)
               && !NodeUtil.mayHaveSideEffects(value, compiler)) {
@@ -298,8 +323,8 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
         } else {
 
           // If arguments is escaped, we just assume the worst and continue
-          // on all the parameters.
-          if ("arguments".equals(n.getString()) && scope.isLocal()) {
+          // on all the parameters. Ignored if we are in block scope
+          if ("arguments".equals(n.getString()) && scope.isFunctionBlockScope()) {
             Node lp = scope.getParentScope().getRootNode().getSecondChild();
             for (Node a = lp.getFirstChild(); a != null; a = a.getNext()) {
               markReferencedVar(scope.getVar(a.getString()));
@@ -326,6 +351,10 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
         break;
     }
 
+    traverseChildren(n, scope);
+  }
+
+  private void traverseChildren(Node n, Scope scope) {
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
       traverseNode(c, n, scope);
     }
@@ -336,7 +365,10 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
     if (!removeGlobals && var.isGlobal()) {
       return false;
     }
-
+    // Variables declared in for in and for of loops are off limits
+    if (var.getParentNode() != null && NodeUtil.isEnhancedFor(var.getParentNode().getParent())) {
+      return false;
+    }
     // Referenced variables are off-limits.
     if (referenced.contains(var)) {
       return false;
@@ -347,7 +379,10 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
   }
 
   /**
-   * Traverses a function, which creates a new scope in JavaScript.
+   * Traverses a function
+   *
+   * ES6 scopes of a function include the parameter scope and the body scope
+   * of the function.
    *
    * Note that CATCH blocks also create a new scope, but only for the
    * catch variable. Declarations within the block actually belong to the
@@ -361,14 +396,13 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
     final Node body = function.getLastChild();
     Preconditions.checkState(body.getNext() == null && body.isNormalBlock(), body);
 
-    ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
 
     // Checking the parameters
     Scope fparamScope = scopeCreator.createScope(function, parentScope);
 
     // Checking the function body
     Scope fbodyScope = scopeCreator.createScope(body, fparamScope);
-    traverseNode(body, function, fbodyScope);
+    traverseChildren(body, fbodyScope);
 
     collectMaybeUnreferencedVars(fparamScope);
     collectMaybeUnreferencedVars(fbodyScope);
@@ -765,7 +799,8 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
           boolean assignedToUnknownValue = false;
           boolean hasPropertyAssign = false;
 
-          if (var.getParentNode().isVar() && !var.getParentNode().getParent().isForIn()) {
+          if (NodeUtil.isNameDeclaration(var.getParentNode())
+              && !var.getParentNode().getParent().isForIn()) {
             Node value = var.getInitialValue();
             assignedToUnknownValue = value != null
                 && !NodeUtil.isLiteralValue(value, true);
@@ -845,12 +880,12 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
       Node nameNode = var.nameNode;
       Node toRemove = nameNode.getParent();
       Node parent = toRemove.getParent();
-
       Preconditions.checkState(
-          toRemove.isVar()
+          NodeUtil.isNameDeclaration(toRemove)
               || toRemove.isFunction()
-              || (toRemove.isParamList() && parent.isFunction()),
-          "We should only declare vars and functions and function args");
+              || (toRemove.isParamList() && parent.isFunction())
+              || toRemove.isClass(),
+          "We should only declare Vars and functions and function args and classes");
 
       if (toRemove.isParamList()
           && parent.isFunction()) {
@@ -865,7 +900,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
         // Don't remove bleeding functions.
       } else if (parent.isForIn()) {
         // foreach iterations have 3 children. Leave them alone.
-      } else if (toRemove.isVar()
+      } else if (NodeUtil.isNameDeclaration(toRemove)
           && nameNode.hasChildren()
           && NodeUtil.mayHaveSideEffects(nameNode.getFirstChild(), compiler)) {
         // If this is a single var declaration, we can at least remove the
@@ -876,7 +911,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
           parent.replaceChild(toRemove,
               IR.exprResult(nameNode.removeFirstChild()));
         }
-      } else if (toRemove.isVar() && toRemove.hasMoreThanOneChild()) {
+      } else if (NodeUtil.isNameDeclaration(toRemove) && toRemove.hasMoreThanOneChild()) {
         // For var declarations with multiple names (i.e. var a, b, c),
         // only remove the unreferenced name
         compiler.reportChangeToEnclosingScope(toRemove);
