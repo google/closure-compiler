@@ -383,6 +383,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
       case "InternalError":
       case "Map":
       case "Number":
+      case "Object":
       case "Promise":
       case "Proxy":
       case "RegExp":
