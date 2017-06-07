@@ -1504,32 +1504,26 @@ public final class SymbolTable {
         }
       } else {
         // Otherwise, declare a "this" property when possible.
-        SymbolScope scope = scopes.get(t.getScopeRoot());
-        Preconditions.checkNotNull(scope, "No scope found for node: %s", t.getScopeRoot());
-        Symbol scopeSymbol = getSymbolForScope(scope);
-        if (scopeSymbol != null) {
-          SymbolScope propScope = scopeSymbol.getPropertyScope();
-          if (propScope != null) {
-            // If a function is assigned multiple times, we only want
-            // one addressable "this" symbol.
-            symbol = propScope.getOwnSlot("this");
-            if (symbol == null) {
-              JSType rootType = t.getScopeRoot().getJSType();
-              FunctionType fnType = rootType == null
-                  ? null : rootType.toMaybeFunctionType();
-              JSType type = fnType == null
-                  ? null : fnType.getTypeOfThis();
-              symbol = addSymbol(
-                  "this",
-                  type,
-                  false /* declared */,
-                  scope,
-                  t.getScopeRoot());
+        Node scopeRoot = t.getScopeRoot();
+        SymbolScope scope = scopes.get(scopeRoot);
+        if (NodeUtil.getFunctionBody(scopeRoot).hasChildren()) {
+          Symbol scopeSymbol = getSymbolForScope(scope);
+          if (scopeSymbol != null) {
+            SymbolScope propScope = scopeSymbol.getPropertyScope();
+            if (propScope != null) {
+              // If a function is assigned multiple times, we only want
+              // one addressable "this" symbol.
+              symbol = propScope.getOwnSlot("this");
+              if (symbol == null) {
+                JSType rootType = t.getScopeRoot().getJSType();
+                FunctionType fnType = rootType == null ? null : rootType.toMaybeFunctionType();
+                JSType type = fnType == null ? null : fnType.getTypeOfThis();
+                symbol = addSymbol("this", type, false /* declared */, scope, t.getScopeRoot());
+              }
             }
-
-            // TODO(nicksantos): It's non-obvious where the declaration of
-            // the 'this' symbol should be. Figure this out later.
           }
+        } else {
+          logger.warning("Skipping empty function: " + scopeRoot);
         }
       }
 

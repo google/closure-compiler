@@ -189,6 +189,7 @@ public final class SymbolTableTest extends TestCase {
     assertThat(refs).hasSize(2);
   }
 
+  // No 'this' reference is created for empty functions.
   public void testLocalThisReferences3() throws Exception {
     SymbolTable table = createSymbolTable(
         "/** @constructor */ function F() {}");
@@ -197,10 +198,7 @@ public final class SymbolTableTest extends TestCase {
     assertNotNull(baz);
 
     Symbol t = table.getParameterInFunction(baz, "this");
-    assertNotNull(t);
-
-    List<Reference> refs = table.getReferenceList(t);
-    assertThat(refs).isEmpty();
+    assertNull(t);
   }
 
   public void testNamespacedReferences() throws Exception {
