@@ -257,7 +257,7 @@ Path2D.prototype.arc = function(
     x, y, radius, startAngle, endAngle, optAnticlockwise) {};
 
 /**
- * @param {Path2D} path
+ * @param {!Path2D} path
  * @return {undefined}
  */
 Path2D.prototype.addPath = function(path) {}
@@ -490,20 +490,20 @@ CanvasRenderingContext2D.prototype.ellipse = function(
 };
 
 /**
- * @param {Path2D|string=} optFillRuleOrPath
+ * @param {!Path2D|string=} optFillRuleOrPath
  * @param {string=} optFillRule
  * @return {undefined}
  */
 CanvasRenderingContext2D.prototype.fill = function(optFillRuleOrPath, optFillRule) {};
 
 /**
- * @param {Path2D=} optStroke
+ * @param {!Path2D=} optStroke
  * @return {undefined}
  */
 CanvasRenderingContext2D.prototype.stroke = function(optStroke) {};
 
 /**
- * @param {Path2D|string=} optFillRuleOrPath
+ * @param {!Path2D|string=} optFillRuleOrPath
  * @param {string=} optFillRule
  * @return {undefined}
  */
@@ -556,7 +556,7 @@ CanvasRenderingContext2D.prototype.strokeText = function(
 CanvasRenderingContext2D.prototype.measureText = function(text) {};
 
 /**
- * @param {HTMLImageElement|HTMLCanvasElement|Image|HTMLVideoElement} image
+ * @param {!HTMLImageElement|!HTMLCanvasElement|!Image|!HTMLVideoElement} image
  * @param {number} dx Destination x coordinate.
  * @param {number} dy Destination y coordinate.
  * @param {number=} opt_dw Destination box width.  Defaults to the image width.
@@ -595,7 +595,7 @@ CanvasRenderingContext2D.prototype.createImageData = function(sw, sh) {};
 CanvasRenderingContext2D.prototype.getImageData = function(sx, sy, sw, sh) {};
 
 /**
- * @param {ImageData} imagedata
+ * @param {!ImageData} imagedata
  * @param {number} dx
  * @param {number} dy
  * @param {number=} opt_dirtyX
@@ -637,7 +637,7 @@ CanvasRenderingContext2D.prototype.setStrokeColor;
 CanvasRenderingContext2D.prototype.getLineDash;
 
 /**
- * @param {Array<number>} segments
+ * @param {!Array<number>} segments
  * @return {undefined}
  */
 CanvasRenderingContext2D.prototype.setLineDash;
