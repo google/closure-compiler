@@ -1603,6 +1603,21 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         DUPLICATE_NAMESPACE);
   }
 
+  public void testImportInliningDoesntShadow() {
+    testNoWarning(
+        LINE_JOINER.join(
+            "/** @const */ var a = a || {};",
+            "goog.provide('a.b.c');",
+            "a.b.c = class {};",
+            "goog.loadModule(function(exports) { 'use strict';",
+            "  goog.module('a.b.d');",
+            "  goog.module.declareLegacyNamespace();",
+            "  var c = goog.require('a.b.c');",
+            "  exports.c = new c;",
+            "  return exports;",
+            "});"));
+  }
+
   public void testImportInliningShadowsVar() {
     testError(
         new String[] {
