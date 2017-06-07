@@ -137,17 +137,23 @@ public final class ConstParamCheckTest extends CompilerTestCase {
         + "goog.string.Const.from(FOO);");
   }
 
+  public void testConcatenatedStringLiteralAndConstantArgument() {
+    testSame(CLOSURE_DEFS
+        + "var FOO = 'foo' + 'bar';"
+        + "goog.string.Const.from('foo' + FOO + FOO + 'baz');");
+  }
+
   public void testNotConstantArgument() {
     testError(
         CLOSURE_DEFS + "var foo = window.location.href;" + "goog.string.Const.from(foo);",
-        ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
+        ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 
   public void testNotStringLiteralConstantArgument1() {
     testError(CLOSURE_DEFS
         + "var FOO = null;"
         + "goog.string.Const.from(FOO);",
-        ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
+        ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 
   public void testNotStringLiteralConstantArgument2() {
@@ -155,12 +161,12 @@ public final class ConstParamCheckTest extends CompilerTestCase {
         + "var myFunction = function() {};"
         + "var FOO = myFunction();"
         + "goog.string.Const.from(FOO);",
-        ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
+        ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 
   public void testNotStringLiteralConstantArgument3() {
     testError(
         CLOSURE_DEFS + "goog.myFunc = function(param) { goog.string.Const.from(param) };",
-        ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
+        ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 }

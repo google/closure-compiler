@@ -227,11 +227,11 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     // Without collapsed properties.
     CompilerOptions options = createCompilerOptions();
-    test(options, source, ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
+    test(options, source, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
 
     // With collapsed properties.
     options.setCollapseProperties(true);
-    test(options, source, ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
+    test(options, source, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 
   /**
@@ -252,11 +252,11 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     // Without collapsed properties.
     CompilerOptions options = createCompilerOptions();
-    test(options, source, ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
+    test(options, source, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
 
     // With collapsed properties.
     options.setCollapseProperties(true);
-    test(options, source, ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
+    test(options, source, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 
   public void testBug31301233() {
@@ -269,7 +269,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setSmartNameRemoval(true);
     options.setExtraSmartNameRemoval(true);
-    test(options, source, ConstParamCheck.CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR);
+    test(options, source, ConstParamCheck.CONST_NOT_STRING_LITERAL_ERROR);
   }
 
   public void testAdvancedModeIncludesExtraSmartNameRemoval() {

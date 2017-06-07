@@ -20,7 +20,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import javax.annotation.Nullable;
 
 /**
  * Enforces that invocations of the method {@code goog.string.Const.from} are
@@ -45,13 +44,7 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
   static final DiagnosticType CONST_NOT_STRING_LITERAL_ERROR =
       DiagnosticType.error("JSC_CONSTANT_NOT_STRING_LITERAL_ERROR",
           "Function argument is not a string literal or a constant assigned "
-          + "from a string literal");
-
-  @VisibleForTesting
-  static final DiagnosticType CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR =
-      DiagnosticType.error("JSC_CONSTANT_NOT_ASSIGNED_STRING_LITERAL_ERROR",
-          "Function argument is a variable {0} which is not a constant "
-          + "assigned from a string literal");
+          + "from a string literal or a concatenation of these.");
 
   private final AbstractCompiler compiler;
 
@@ -98,66 +91,45 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
 
       if (name.matchesQualifiedName(CONST_FUNCTION_NAME)
           || name.matchesQualifiedName(CONST_FUNCTION_NAME_COLLAPSED)) {
-        checkArgumentConstant(traversal, argument);
+        if (!isCompileTimeConstant(traversal.getScope(), argument)) {
+          compiler.report(traversal.makeError(argument, CONST_NOT_STRING_LITERAL_ERROR));
+        }
       }
     }
   }
 
   /**
-   * Check the method call argument to be constant string literal.
+   * Checks if the method call argument is made of constant string literals.
    *
-   * <p>This function argument checker will yield an error if:
+   * <p>This function argument checker will return true if:
+   *
    * <ol>
-   * <li>The argument is not a constant variable, or
-   * <li>The constant variable is not assigned from string literal or
-   * concatenation thereof, or
-   * <li>The argument is not an expression that is a string literal or
-   * concatenation thereof.
+   *   <li>The argument is a constant variable assigned from a string literal, or
+   *   <li>The argument is an expression that is a string literal, or
+   *   <li>The argument is a concatenation of the above.
    * </ol>
    *
-   * @param traversal The node traversal object that supplies context, such as
-   *        the scope chain to use in name lookups as well as error reporting.
+   * @param scope The scope chain to use in name lookups.
    * @param argument The node of function argument to check.
    */
-  private void checkArgumentConstant(NodeTraversal traversal, Node argument) {
-    if (argument.isName()) {
+  private boolean isCompileTimeConstant(Scope scope, Node argument) {
+    if (argument.isString() || (argument.isTemplateLit() && argument.hasOneChild())) {
+      return true;
+    } else if (argument.isAdd()) {
+      Node left = argument.getFirstChild();
+      Node right = argument.getLastChild();
+      return isCompileTimeConstant(scope, left) && isCompileTimeConstant(scope, right);
+    } else if (argument.isName()) {
       String name = argument.getString();
-      Scope scope = traversal.getScope();
       Var var = scope.getVar(name);
       if (var == null || !var.isInferredConst()) {
-        compiler.report(traversal.makeError(
-            argument, CONST_NOT_STRING_LITERAL_ERROR, name));
-        return;
+        return false;
       }
-
-      Node valueNode = var.getInitialValue();
-      if (!isStringLiteralValue(valueNode)) {
-        compiler.report(traversal.makeError(
-            argument, CONST_NOT_ASSIGNED_STRING_LITERAL_ERROR, name));
+      Node initialValue = var.getInitialValue();
+      if (initialValue == null) {
+        return false;
       }
-    } else {
-      if (!isStringLiteralValue(argument)) {
-        compiler.report(
-            traversal.makeError(argument, CONST_NOT_STRING_LITERAL_ERROR));
-      }
-    }
-  }
-
-  /**
-   * Returns true iff the value associated with the node is a JS string literal,
-   * or a concatenation thereof.
-   */
-  private static boolean isStringLiteralValue(@Nullable Node node) {
-    if (node == null) {
-      return false;
-    }
-    if (node.isString() || (node.isTemplateLit() && node.hasOneChild())) {
-      return true;
-    } else if (node.isAdd()) {
-      Preconditions.checkState(node.hasTwoChildren());
-      Node left = node.getFirstChild();
-      Node right = node.getLastChild();
-      return isStringLiteralValue(left) && isStringLiteralValue(right);
+      return isCompileTimeConstant(var.getScope(), initialValue);
     }
     return false;
   }
