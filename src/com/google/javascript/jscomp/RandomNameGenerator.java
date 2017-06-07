@@ -18,15 +18,15 @@ package com.google.javascript.jscomp;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.primitives.Chars;
 import com.google.javascript.rhino.TokenStream;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -69,22 +69,22 @@ import javax.annotation.Nullable;
 public final class RandomNameGenerator implements NameGenerator {
 
   /** Generate random names with this first character. */
-  static final char[] FIRST_CHAR = DefaultNameGenerator.FIRST_CHAR;
+  static final ImmutableSet<Character> FIRST_CHAR = asSet(DefaultNameGenerator.FIRST_CHAR);
 
   /** These appear after after the first character */
-  static final char[] NONFIRST_CHAR = DefaultNameGenerator.NONFIRST_CHAR;
+  static final ImmutableSet<Character> NONFIRST_CHAR = asSet(DefaultNameGenerator.NONFIRST_CHAR);
 
   /** The possible first characters, after reserved characters are removed */
-  private LinkedHashSet<Character> firstChars;
+  private ImmutableSet<Character> firstChars;
 
   /** Possible non-first characters, after reserved characters are removed */
-  private LinkedHashSet<Character> nonFirstChars;
+  private ImmutableSet<Character> nonFirstChars;
 
   /** Source of randomness */
   private final Random random;
 
   /** List of reserved names; these are not returned by generateNextName */
-  private Set<String> reservedNames;
+  private ImmutableSet<String> reservedNames;
 
   /** Prefix added to all generated names */
   private String prefix;
@@ -98,14 +98,13 @@ public final class RandomNameGenerator implements NameGenerator {
   private static final int NUM_SHUFFLES = 16;
 
   /** Randomly-shuffled version of firstChars */
-  private List<Character> shuffledFirst;
-  /** Randomly-shuffled versions of nonFirstChard (there are NUM_SUFFLES of
-   * them) */
-  private List<List<Character>> shuffledNonFirst;
+  private String shuffledFirst;
+  /** Randomly-shuffled versions of nonFirstChars (there are NUM_SHUFFLES of them) */
+  private ImmutableList<String> shuffledNonFirst;
 
   public RandomNameGenerator(Random random) {
     this.random = random;
-    reset(new HashSet<String>(), "", null);
+    reset(ImmutableSet.<String>of(), "", null);
   }
 
   RandomNameGenerator(
@@ -155,16 +154,17 @@ public final class RandomNameGenerator implements NameGenerator {
       String prefix,
       @Nullable char[] reservedFirstCharacters,
       @Nullable char[] reservedNonFirstCharacters) {
-    this.reservedNames = reservedNames;
+    this.reservedNames = ImmutableSet.copyOf(reservedNames);
     this.prefix = prefix;
     nameCount = 0;
 
     // Build the character arrays to use
-    this.firstChars = reserveCharacters(FIRST_CHAR, reservedFirstCharacters);
-    this.nonFirstChars = reserveCharacters(NONFIRST_CHAR, reservedNonFirstCharacters);
+    firstChars = Sets.difference(FIRST_CHAR, asSet(reservedFirstCharacters)).immutableCopy();
+    nonFirstChars =
+        Sets.difference(NONFIRST_CHAR, asSet(reservedNonFirstCharacters)).immutableCopy();
 
     checkPrefix(prefix);
-    shuffleAlphabets(random);
+    shuffleAlphabets();
   }
 
   @Override
@@ -176,27 +176,8 @@ public final class RandomNameGenerator implements NameGenerator {
         reservedNames, prefix, reservedCharacters, random);
   }
 
-  /**
-   * Provides the array of available characters based on the specified arrays.
-   * Also nicely converts to LinkedHashSet<Char> which is useful later.
-   *
-   * @param chars The list of characters that are legal
-   * @param reservedCharacters The characters that should not be used
-   * @return An array of characters to use; order from {@code chars} is
-   *     preserved
-   */
-  private LinkedHashSet<Character> reserveCharacters(
-      char[] chars, char[] reservedCharacters) {
-    if (reservedCharacters == null) {
-      reservedCharacters = new char[0];
-    }
-
-    // A LinkedHashSet has a defined iteration ordering, which is that of
-    // insertion.
-    LinkedHashSet<Character> result = Sets.newLinkedHashSet(
-        Chars.asList(chars));
-    result.removeAll(Chars.asList(reservedCharacters));
-    return result;
+  private static ImmutableSet<Character> asSet(@Nullable char[] chars) {
+    return chars == null ? ImmutableSet.<Character>of() : ImmutableSet.copyOf(Chars.asList(chars));
   }
 
   /**
@@ -220,35 +201,20 @@ public final class RandomNameGenerator implements NameGenerator {
     }
   }
 
-  private List<Character> shuffleAndCopyAlphabet(
-      Iterable<Character> input, Random random) {
-    List<Character> shuffled = Lists.newArrayList(input);
+  private static String shuffleAndCopyAlphabet(Set<Character> input, Random random) {
+    List<Character> shuffled = new ArrayList<>(input);
     Collections.shuffle(shuffled, random);
-    return shuffled;
+    return new String(Chars.toArray(shuffled));
   }
 
-  /**
-   * Generates random shuffles of the alphabets.
-   */
-  private void shuffleAlphabets(Random random) {
+  /** Generates random shuffles of the alphabets. */
+  private void shuffleAlphabets() {
     shuffledFirst = shuffleAndCopyAlphabet(firstChars, random);
-    shuffledNonFirst = Lists.newArrayList();
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (int i = 0; i < NUM_SHUFFLES; ++i) {
-      shuffledNonFirst.add(shuffleAndCopyAlphabet(nonFirstChars, random));
+      builder.add(shuffleAndCopyAlphabet(nonFirstChars, random));
     }
-  }
-
-  /**
-   * Gets the alphabet to use for a character at position {@code position}
-   * (0-based) given a previous history for that name stored in {@code past}
-   */
-  private List<Character> getAlphabet(int position, Hasher past) {
-    if (position == 0) {
-      return shuffledFirst;
-    } else {
-      int alphabetIdx = (past.hash().asInt() & 0x7fffffff) % NUM_SHUFFLES;
-      return shuffledNonFirst.get(alphabetIdx);
-    }
+    shuffledNonFirst = builder.build();
   }
 
   /**
@@ -274,24 +240,29 @@ public final class RandomNameGenerator implements NameGenerator {
    * is supposed to go at position {@code position} in the final name
    */
   private String generateSuffix(int position, int nameIdx) {
-    String name = "";
+    StringBuilder name = new StringBuilder();
     int length = getNameLength(position, nameIdx);
-    Hasher hasher = Hashing.murmur3_128().newHasher();
-    hasher.putInt(length);
     nameIdx++;
     do {
       nameIdx--;
-      List<Character> alphabet = getAlphabet(position, hasher);
-      int alphabetSize = alphabet.size();
-
-      Character character = alphabet.get(nameIdx % alphabetSize);
-      name += character;
-      hasher.putChar(character);
+      String alphabet;
+      if (position == 0) {
+        alphabet = shuffledFirst;
+      } else {
+        Hasher hasher = Hashing.murmur3_128().newHasher();
+        hasher.putInt(length);
+        hasher.putUnencodedChars(name);
+        int alphabetIdx = (hasher.hash().asInt() & 0x7fffffff) % NUM_SHUFFLES;
+        alphabet = shuffledNonFirst.get(alphabetIdx);
+      }
+      int alphabetSize = alphabet.length();
+      char character = alphabet.charAt(nameIdx % alphabetSize);
+      name.append(character);
 
       nameIdx /= alphabetSize;
       position++;
     } while (nameIdx > 0);
-    return name;
+    return name.toString();
   }
 
   /**
@@ -303,8 +274,7 @@ public final class RandomNameGenerator implements NameGenerator {
   @Override
   public String generateNextName() {
     while (true) {
-      String name = prefix;
-      name += generateSuffix(prefix.length(), nameCount++);
+      String name = prefix + generateSuffix(prefix.length(), nameCount++);
 
       // Make sure it's not a JS keyword or reserved name.
       if (TokenStream.isKeyword(name) || reservedNames.contains(name)) {

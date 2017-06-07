@@ -72,9 +72,9 @@ public final class RandomNameGeneratorTest extends TestCase {
         reservedNames, prefix, null, random);
     // Generate all 1- and 2-character names.
     // alphabet length, 1st digit
-    int len1 = RandomNameGenerator.NONFIRST_CHAR.length;
+    int len1 = RandomNameGenerator.NONFIRST_CHAR.size();
     // alphabet length, 2nd digit
-    int len2 = RandomNameGenerator.NONFIRST_CHAR.length;
+    int len2 = RandomNameGenerator.NONFIRST_CHAR.size();
     // len1 == len2 because we have a prefix
     int count = len1 * (1 + len2);
     String[] result = generate(ng, count);
@@ -128,8 +128,8 @@ public final class RandomNameGeneratorTest extends TestCase {
     RandomNameGenerator ng = new RandomNameGenerator(
         reservedNames, "", null, random);
     // Generate all 1- and 2-character names.
-    int len1 = RandomNameGenerator.FIRST_CHAR.length;
-    int len2 = RandomNameGenerator.NONFIRST_CHAR.length;
+    int len1 = RandomNameGenerator.FIRST_CHAR.size();
+    int len2 = RandomNameGenerator.NONFIRST_CHAR.size();
     int count = len1 * (1 + len2);
     String[] result = generate(ng, count);
     Set<String> resultSet = Sets.newHashSet(result);
@@ -160,8 +160,8 @@ public final class RandomNameGeneratorTest extends TestCase {
     RandomNameGenerator ng = new RandomNameGenerator(
         reservedNames, prefix, null, random);
     // Generate all 1- and 2-character names.
-    int len1 = RandomNameGenerator.FIRST_CHAR.length;
-    int len2 = RandomNameGenerator.NONFIRST_CHAR.length;
+    int len1 = RandomNameGenerator.FIRST_CHAR.size();
+    int len2 = RandomNameGenerator.NONFIRST_CHAR.size();
     int count = len1 * (1 + len2);
     String[] result = generate(ng, count);
 
@@ -202,8 +202,8 @@ public final class RandomNameGeneratorTest extends TestCase {
         reservedNames, "", null, random);
     // Generate all 1- and 2-character names (and a couple 3-character names,
     // because "x" and "ba", and keywords, shouldn't be used).
-    int count = RandomNameGenerator.FIRST_CHAR.length
-        * (RandomNameGenerator.NONFIRST_CHAR.length + 1);
+    int count =
+        RandomNameGenerator.FIRST_CHAR.size() * (RandomNameGenerator.NONFIRST_CHAR.size() + 1);
     Set<String> result = Sets.newHashSet(generate(ng, count));
 
     assertThat(result).doesNotContain("x");
@@ -221,8 +221,8 @@ public final class RandomNameGeneratorTest extends TestCase {
         reservedNames, "", new char[]{'a', 'b'}, random);
     // Generate all 1- and 2-character names (and also many 3-character names,
     // because "a" and "b" shouldn't be used).
-    int count = RandomNameGenerator.FIRST_CHAR.length
-        * (RandomNameGenerator.NONFIRST_CHAR.length + 1);
+    int count =
+        RandomNameGenerator.FIRST_CHAR.size() * (RandomNameGenerator.NONFIRST_CHAR.size() + 1);
     Set<String> result = Sets.newHashSet(generate(ng, count));
 
     assertThat(result).doesNotContain("a");
