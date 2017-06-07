@@ -58,6 +58,41 @@ EventTarget.prototype.removeEventListener = function(
 EventTarget.prototype.dispatchEvent = function(evt) {};
 
 /**
+ * @constructor
+ * @implements {EventTarget}
+ * @param {string} url
+ * @see https://www.w3.org/TR/2011/WD-eventsource-20110208/#the-eventsource-interface
+ */
+function EventSource(url) {}
+
+/** @const {number} */
+EventSource.CONNECTING = 0;
+
+/** @const {number} */
+EventSource.OPEN = 1;
+
+/** @const {number} */
+EventSource.CLOSED = 2;
+
+/** @const {string} */
+EventSource.prototype.url;
+
+/** @type {number} */
+EventSource.prototype.readyState;
+
+/** @type {?function(!Event)} */
+EventSource.prototype.onopen;
+
+/** @type {?function(!Event)} */
+EventSource.prototype.onmessage;
+
+/** @type {?function(!Event)} */
+EventSource.prototype.onerror;
+
+/** @return {undefined} */
+EventSource.prototype.close = function() {};
+
+/**
  * @interface
  */
 function EventListener() {}
