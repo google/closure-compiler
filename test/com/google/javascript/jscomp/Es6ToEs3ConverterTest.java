@@ -1411,6 +1411,62 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "};"));
   }
 
+  public void testSuperAccessToGettersAndSetters() {
+    // Getters cannot be transpiled to ES3
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        LINE_JOINER.join(
+            "class Base {",
+            "  get g() { return 'base'; }",
+            "  set g(v) { alert('base.prototype.g = ' + v); }",
+            "}",
+            "class Sub extends Base {",
+            "  get g() { return super.g + '-sub'; }",
+            "  set g(v) { super.g = v + '-sub'; }",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var Base = function() {};",
+            "/** @type {?} */",
+            "Base.prototype.g;",
+            "$jscomp.global.Object.defineProperties(",
+            "    Base.prototype,",
+            "    {",
+            "        g:{",
+            "            configurable:true,",
+            "            enumerable:true,",
+            "            /** @this {Base} */",
+            "            get:function(){return\"base\"},",
+            "            /** @this {Base} */",
+            "            set:function(v){alert(\"base.prototype.g = \" + v);}",
+            "        }",
+            "    });",
+            "/**",
+            " * @constructor @struct",
+            " * @extends {Base}",
+            " * @param {...?} var_args",
+            " */",
+            "var Sub = function(var_args) {",
+            "  Base.apply(this, arguments);",
+            "};",
+            "/** @type {?} */",
+            "Sub.prototype.g;",
+            "$jscomp.inherits(Sub, Base);",
+            "$jscomp.global.Object.defineProperties(",
+            "    Sub.prototype,",
+            "    {",
+            "        g:{",
+            "            configurable:true,",
+            "            enumerable:true,",
+            "            /** @this {Sub} */",
+            "            get:function(){return Base.prototype.g + \"-sub\";},",
+            "            /** @this {Sub} */",
+            "            set:function(v){Base.prototype.g = v + \"-sub\";}",
+            "        }",
+            "    });",
+            ""));
+  }
+
   public void testSuperNew() {
     testError("class D {} class C extends D { f() {var s = new super;} }", INVALID_SUPER_CALL);
     testError(
