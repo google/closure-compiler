@@ -175,22 +175,17 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     compilerOptions.setNewTypeInference(true);
     compilerOptions.setWarningLevel(
         DiagnosticGroups.NEW_CHECK_TYPES_ALL_CHECKS, CheckLevel.WARNING);
-    compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     // ES5 is the highest language level that type inference understands.
-    compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    compilerOptions.setLanguage(LanguageMode.ECMASCRIPT5);
     return compilerOptions;
   }
 
-  protected PassFactory makePassFactory(String name, final CompilerPass pass) {
+  protected final PassFactory makePassFactory(
+      String name, final CompilerPass pass) {
     return new PassFactory(name, true/* one-time pass */) {
       @Override
       protected CompilerPass create(AbstractCompiler compiler) {
         return pass;
-      }
-
-      @Override
-      protected FeatureSet featureSet() {
-        return FeatureSet.latest().withoutTypes();
       }
     };
   }

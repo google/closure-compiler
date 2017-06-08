@@ -210,7 +210,8 @@ public final class DefaultPassConfig extends PassConfig {
     // we still need to run these "ES6" passes, because they do the transpilation of the ES7 **
     // operator. If we split that into its own pass then the needsTranspilationFrom(ES7) call here
     // can be removed.
-    if (options.needsTranspilationFrom(ES6) || options.needsTranspilationFrom(ES7)) {
+    if ((options.needsTranspilationFrom(ES6) || options.needsTranspilationFrom(ES7))
+        && !options.skipTranspilationAndCrash) {
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
       TranspilationPasses.addPostCheckPasses(passes);
@@ -383,12 +384,13 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(setFeatureSet(ES7));
     }
 
-    if (options.needsTranspilationFrom(ES6) || options.needsTranspilationFrom(ES7)) {
+    if ((options.needsTranspilationFrom(ES6) || options.needsTranspilationFrom(ES7))
+        && !options.skipTranspilationAndCrash) {
       checks.add(es6ExternsCheck);
       TranspilationPasses.addEs6EarlyPasses(checks);
     }
 
-    if (options.needsTranspilationFrom(ES6)) {
+    if (options.needsTranspilationFrom(ES6) && !options.skipTranspilationAndCrash) {
       TranspilationPasses.addEs6LatePasses(checks);
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(checks);
@@ -402,7 +404,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(injectRuntimeLibraries);
     }
 
-    if (options.needsTranspilationFrom(ES6)) {
+    if (options.needsTranspilationFrom(ES6) && !options.skipTranspilationAndCrash) {
       checks.add(convertStaticInheritance);
     }
 
@@ -412,7 +414,7 @@ public final class DefaultPassConfig extends PassConfig {
       addNonTranspilationCheckPasses(checks);
     }
 
-    if (options.needsTranspilationFrom(ES6)) {
+    if (options.needsTranspilationFrom(ES6) && !options.skipTranspilationAndCrash) {
       TranspilationPasses.addPostCheckPasses(checks);
     }
 
