@@ -123,21 +123,6 @@ public final class ModuleLoader {
       @Nullable ErrorHandler errorHandler,
       Iterable<String> moduleRoots,
       Iterable<? extends DependencyInfo> inputs,
-      PathResolver pathResolver) {
-    this(errorHandler, moduleRoots, inputs, pathResolver, ResolutionMode.LEGACY);
-  }
-
-  public ModuleLoader(
-      @Nullable ErrorHandler errorHandler,
-      Iterable<String> moduleRoots,
-      Iterable<? extends DependencyInfo> inputs) {
-    this(errorHandler, moduleRoots, inputs, PathResolver.RELATIVE, ResolutionMode.LEGACY);
-  }
-
-  public ModuleLoader(
-      @Nullable ErrorHandler errorHandler,
-      Iterable<String> moduleRoots,
-      Iterable<? extends DependencyInfo> inputs,
       PathResolver pathResolver,
       ResolutionMode resolutionMode) {
     this(errorHandler, moduleRoots, inputs, pathResolver, resolutionMode, null);
