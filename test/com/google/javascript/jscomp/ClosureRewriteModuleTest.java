@@ -2213,4 +2213,10 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @constructor @implements {B} */",
             "function A() {}"));
   }
+
+  // This pass only handles goog.modules. ES6 modules are left alone.
+  public void testEs6Module() {
+    testSame("export var x;");
+    testSame("import {x} from 'y';");
+  }
 }
