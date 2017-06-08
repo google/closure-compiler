@@ -834,4 +834,27 @@ public final class NormalizeTest extends CompilerTestCase {
 
     tester.tearDown();
   }
+
+  public void testFunctionBlock1() {
+    test("() => 1;", "() => { return 1; }");
+  }
+
+  public void testFunctionBlock2() {
+    test("var args = 1; var foo = () => args;",
+        "var args = 1; var foo = () => { return args; }");
+  }
+
+  public void testArrowFunctionInFunction(){
+    test(
+        LINE_JOINER.join(
+            "function foo() {",
+            "  var x = () => 1;",
+            "  return x();",
+            "}"),
+        LINE_JOINER.join(
+            "function foo() {",
+            "  var x = () => { return 1; };",
+            "  return x();",
+            "}"));
+  }
 }

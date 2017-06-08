@@ -213,7 +213,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isFunction()) {
-        NormalizeStatements.maybeNormalizeFunctionDeclaration(n, compiler);
+        NormalizeStatements.visitFunction(n, compiler);
       }
     }
   }

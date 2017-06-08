@@ -51,6 +51,7 @@ import java.util.Set;
  *   <li>Removes duplicate variable declarations.
  *   <li>Marks constants with the IS_CONSTANT_NAME annotation.
  *   <li>Finds properties marked @expose, and rewrites them in [] notation.
+ *   <li>Rewrite body of arrow function as a block </li>
  * </ol>
  *
  * @author johnlenz@google.com (johnlenz)
@@ -354,7 +355,7 @@ class Normalize implements CompilerPass {
           break;
 
         case FUNCTION:
-          if (maybeNormalizeFunctionDeclaration(n, compiler)) {
+          if (visitFunction(n, compiler)) {
             reportCodeChange(n, "Function declaration");
           }
           break;
@@ -425,11 +426,17 @@ class Normalize implements CompilerPass {
      *
      * @see https://github.com/google/closure-compiler/pull/429
      */
-    static boolean maybeNormalizeFunctionDeclaration(Node n, AbstractCompiler compiler) {
+    static boolean visitFunction(Node n, AbstractCompiler compiler) {
       Preconditions.checkState(n.isFunction(), n);
       if (NodeUtil.isFunctionDeclaration(n) && !NodeUtil.isHoistedFunctionDeclaration(n)) {
         rewriteFunctionDeclaration(n, compiler);
         return true;
+      } else if (n.isFunction() && !NodeUtil.getFunctionBody(n).isNormalBlock()) {
+        Node returnValue = NodeUtil.getFunctionBody(n);
+        Node body = IR.block(IR.returnNode(returnValue.detach()));
+        body.useSourceInfoIfMissingFromForTree(returnValue);
+        n.addChildToBack(body);
+        compiler.reportChangeToEnclosingScope(body);
       }
       return false;
     }
