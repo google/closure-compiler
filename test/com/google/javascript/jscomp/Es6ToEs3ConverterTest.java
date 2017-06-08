@@ -270,7 +270,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " */",
             "var testcode$classdecl$var0 = function(var_args) {",
-            "  return $jscomp.construct(D, arguments, this.constructor); ",
+            "  return D.apply(this,arguments) || this; ",
             "};",
             "$jscomp.inherits(testcode$classdecl$var0, D);",
             "testcode$classdecl$var0.prototype.f = function() { D.prototype.g.call(this); };",
@@ -595,7 +595,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " */",
             "var C = function(var_args) {",
-            " return $jscomp.construct(ns.D, arguments, this.constructor);",
+            " return ns.D.apply(this, arguments) || this;",
             "};",
             "$jscomp.inherits(C, ns.D);"));
 
@@ -940,7 +940,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "/** @constructor @struct @extends {D} */",
             "var C = function(str, n) {",
             "  var $jscomp$super$this;",
-            "  ($jscomp$super$this = $jscomp.construct(D, [str], this.constructor)).n = n;",
+            "  ($jscomp$super$this = D.call(this,str) || this).n = n;",
             "  return $jscomp$super$this;", // Duplicate because of existing return statement.
             "  return $jscomp$super$this;",
             "}",
@@ -1009,33 +1009,14 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var C = function(str, n) {",
             "  var $jscomp$super$this;",
             "  if (n >= 0) {",
-            "    $jscomp$super$this = $jscomp.construct(D,[\"positive: \"+str],this.constructor);",
+            "    $jscomp$super$this = D.call(this, 'positive: ' + str) || this;",
             "  } else {",
-            "    $jscomp$super$this = $jscomp.construct(D,[\"negative: \"+str],this.constructor);",
+            "    $jscomp$super$this = D.call(this, 'negative: ' + str) || this;",
             "  }",
             "  $jscomp$super$this.n = n;",
             "  return $jscomp$super$this;",
             "}",
             "$jscomp.inherits(C, D);"));
-  }
-
-  public void testTranspiledExtends() {
-    // transpiled class extends a native ES6 class
-    test(
-        LINE_JOINER.join(
-            "class D {}",
-            "/** @constructor @struct @extends {D} */",
-            "var C = function() { }",
-            "$jscomp.inherits(C, D);"
-        ),
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var D = function() {};",
-            "/** @constructor @struct @extends {D} */",
-            "var C = function() {",
-            "}",
-            "$jscomp.inherits(C, D);")
-    );
   }
 
   public void testComputedSuper() {
@@ -1440,7 +1421,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " */",
             "var CodeClass = function(var_args) {",
-            "  return $jscomp.construct(ExternsClass, arguments, this.constructor);",
+            "  return ExternsClass.apply(this,arguments) || this;",
             "};",
             "$jscomp.inherits(CodeClass,ExternsClass)"));
   }

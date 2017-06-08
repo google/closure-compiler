@@ -150,10 +150,11 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
             && firstStatement.getFirstChild() == firstSuperCall) {
           checkState(superCalls.size() == 1, constructor);
           // Super call is the entire constructor, so just replace it with.
-          // `return <newSuperCall>;`
+          // `return <newSuperCall> || this;`
           constructorBody.replaceChild(
               firstStatement,
-              IR.returnNode(createNewSuperCallUsingConstruct(superClassQName, superCalls.get(0)))
+              IR.returnNode(
+                      IR.or(createNewSuperCall(superClassQName, superCalls.get(0)), IR.thisNode()))
                   .useSourceInfoIfMissingFromForTree(firstStatement));
         } else {
           // `this` -> `$jscomp$super$this` throughout the constructor body,
@@ -165,11 +166,11 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
           // End constructor with `return $jscomp$super$this;`
           constructorBody.addChildToBack(
               IR.returnNode(IR.name(SUPER_THIS)).useSourceInfoFromForTree(constructorBody));
-          // Replace each super() call with `($jscomp$super$this = <newSuperCall>)`
+          // Replace each super() call with `($jscomp$super$this = <newSuperCall> || this)`
           for (Node superCall : superCalls) {
-            Node newSuperCall = createNewSuperCallUsingConstruct(superClassQName, superCall);
+            Node newSuperCall = createNewSuperCall(superClassQName, superCall);
             superCall.replaceWith(
-                IR.assign(IR.name(SUPER_THIS), newSuperCall)
+                IR.assign(IR.name(SUPER_THIS), IR.or(newSuperCall, IR.thisNode()))
                     .useSourceInfoIfMissingFromForTree(superCall));
           }
         }
@@ -295,46 +296,6 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
       newSuperCall.addChildToBack(superCall.removeFirstChild());
     }
     return newSuperCall;
-  }
-
-  private Node createNewSuperCallUsingConstruct(String superClassQName, Node superCall) {
-    checkArgument(superCall.isCall(), superCall);
-    Node callee = superCall.removeFirstChild();
-
-    // Goal is to return `$jscomp.construct(parentConstructor, superArgs, this.constructor)`.
-    Node superArgs = null;
-    if (callee.isSuper()) {
-      // `super(arg1, arg2, ...)` case
-      // callee child was removed above, so all remaining children of superCall are arguments.
-      superArgs = IR.arraylit().useSourceInfoFrom(callee);
-      superArgs.addChildrenToBack(superCall.removeChildren());
-    } else {
-      // `super.apply(null|this, superArgs)` case created by rest args expansion.
-      checkState(callee.isGetProp(), callee);
-      Node applyNode = checkNotNull(callee.getSecondChild());
-      checkState(applyNode.getString().equals("apply"), applyNode);
-
-      // The first child of superCall was removed above, what's left is only:
-      //  (null|this, superArgs)
-      checkState(superCall.hasTwoChildren());
-      Node nullOrThisNode = superCall.getFirstChild();
-      if (!nullOrThisNode.isThis()) {
-        checkState(nullOrThisNode.isNull(), nullOrThisNode);
-      }
-      superArgs = superCall.getSecondChild();
-      superArgs.detach();
-    }
-    compiler.ensureLibraryInjected("es6/util/construct", false);
-
-    Node jscompConstruct =
-        NodeUtil.newQName(compiler, "$jscomp.construct").useSourceInfoFromForTree(callee);
-    Node superClassConstructor =
-        NodeUtil.newQName(compiler, superClassQName).useSourceInfoFromForTree(callee);
-    Node thisDotConstructor =
-        IR.getprop(IR.thisNode(), "constructor").useSourceInfoFromForTree(callee);
-    // `$jscomp.construct(SuperClass, superArgs, this.constructor)`
-    return IR.call(jscompConstruct, superClassConstructor, superArgs, thisDotConstructor)
-        .useSourceInfoFrom(superCall);
   }
 
   private void replaceNativeErrorSuperCall(Node superCall, Node newSuperCall) {
