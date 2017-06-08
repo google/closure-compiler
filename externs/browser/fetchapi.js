@@ -64,7 +64,7 @@ Headers.prototype.append = function(name, value) {};
  */
 Headers.prototype.delete = function(name) {};
 
-/** @return {!Iterator<!Array<string>>} */
+/** @return {!IteratorIterable<!Array<string>>} */
 Headers.prototype.entries = function() {};
 
 /**
