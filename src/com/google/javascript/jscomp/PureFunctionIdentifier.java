@@ -145,10 +145,6 @@ class PureFunctionIdentifier implements CompilerPass {
 
     StringBuilder sb = new StringBuilder();
 
-    FunctionNames functionNames = new FunctionNames(compiler);
-    functionNames.process(null, externs);
-    functionNames.process(null, root);
-
     for (Node call : allFunctionCalls) {
       sb.append("  ");
       Iterable<Node> expanded = unwrapCallableExpression(call.getFirstChild());
