@@ -2555,17 +2555,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   List<Node> getChangedScopeNodesForPass(String passName) {
     List<Node> changedScopeNodes = changeTimeline.getSince(passName);
     changeTimeline.mark(passName);
-
-    // TODO(stalcup): do this better when the change tracking system knows about deleted scopes.
-    if (changedScopeNodes != null) {
-      // Filter out scope nodes that have been removed from the AST.
-      for (Iterator<Node> iterator = changedScopeNodes.iterator(); iterator.hasNext(); ) {
-        if (!NodeUtil.isAttached(iterator.next())) {
-          iterator.remove();
-        }
-      }
-    }
-
     return changedScopeNodes;
   }
 
@@ -2639,9 +2628,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  public void reportFunctionDeleted(Node node) {
-    checkState(node.isFunction());
-    node.setDeleted(true);
+  public void reportFunctionDeleted(Node n) {
+    checkState(n.isFunction());
+    n.setDeleted(true);
+    changeTimeline.remove(n);
   }
 
   @Override

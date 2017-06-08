@@ -98,6 +98,26 @@ final class Timeline<T> {
     headEvent = addEvent(value, eventsByValue, headEvent);
   }
 
+  void remove(T value) {
+    Event<T> event = eventsByValue.remove(value);
+
+    // If the event already exists somewhere else in the history then...
+    if (event != null) {
+      // make the rest of the list not reference it...
+      if (event.nextEvent != null) {
+        event.nextEvent.previousEvent = event.previousEvent;
+      } else {
+        // if it was the head element then back the head reference up one node.
+        headEvent = event.previousEvent;
+      }
+      event.previousEvent.nextEvent = event.nextEvent;
+
+      // make it not reference the rest of the list.
+      event.nextEvent = null;
+      event.previousEvent = null;
+    }
+  }
+
   void mark(String timeName) {
     headEvent = addEvent(new Time(timeName), eventsByTime, headEvent);
   }

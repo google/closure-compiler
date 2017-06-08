@@ -4919,14 +4919,4 @@ public final class NodeUtil {
       markFunctionsDeleted(child, compiler);
     }
   }
-
-  static boolean isAttached(Node node) {
-    if (node == null) {
-      return false;
-    }
-    if (node.isRoot()) {
-      return true;
-    }
-    return isAttached(node.getParent());
-  }
 }

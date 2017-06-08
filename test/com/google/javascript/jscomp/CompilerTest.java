@@ -1123,19 +1123,28 @@ public final class CompilerTest extends TestCase {
   }
 
   /** See TimelineTest.java for the many behavior tests that don't make sense to duplicate here. */
-  public void testGetChangedScopeNodesForPass_dropsUnattached() {
+  public void testGetChangedScopeNodesForPass_doesntIncludeDeleted() {
     Compiler compiler = new Compiler();
-    Node attachedFunctionNode = IR.function(IR.name("foo"), IR.paramList(), IR.block());
-    Node unattachedFunctionNode = IR.function(IR.name("foo"), IR.paramList(), IR.block());
-    IR.root(IR.script(attachedFunctionNode));
+    Node function1 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
+    Node function2 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
+    IR.root(IR.script(function1, function2));
 
+    // In the initial state everything is attached and nothing has been marked changed.
     assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).isNull();
 
-    compiler.reportChangeToChangeScope(attachedFunctionNode);
-    compiler.reportChangeToChangeScope(unattachedFunctionNode);
-    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner"))
-        .containsExactly(attachedFunctionNode);
+    // Mark both functions changed, then delete function2 and mark it deleted.
+    compiler.reportChangeToChangeScope(function1);
+    compiler.reportChangeToChangeScope(function2);
+    function2.detach();
+    compiler.reportFunctionDeleted(function2);
 
+    // Only function1 will be seen as changed, since deleting something removes it from the changed
+    // items list.
+    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner"))
+        .containsExactly(function1);
+
+    // Asking for changes again will now show nothing, since no changes have occurred between these
+    // consecutive "FunctionInliner" markings.
     assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).isEmpty();
   }
 
