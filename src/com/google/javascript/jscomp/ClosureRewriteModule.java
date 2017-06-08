@@ -303,8 +303,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     Set<String> namedExports = new HashSet<>();
     Map<Var, ExportDefinition> exportsToInline = new HashMap<>();
 
-    // The root of the module. The MODULE_BODY node (or for goog.loadModule, the body of the
-    // function) that contains the module contents. For recognizing top level names.
+    // The root of the module. The MODULE_BODY node that contains the module contents.
+    // For recognizing top level names.
     Node rootNode;
 
     public void addChildScript(ScriptDescription childScript) {
@@ -348,9 +348,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           if (!method.isGetProp()) {
             break;
           }
-          if (method.matchesQualifiedName(GOOG_LOADMODULE) && n.getLastChild().isFunction()) {
-            recordGoogLoadModule(n);
-          } else if (method.matchesQualifiedName(GOOG_MODULE)) {
+          if (method.matchesQualifiedName(GOOG_MODULE)) {
             recordGoogModule(t, n);
           } else if (method.matchesQualifiedName(GOOG_MODULE_DECLARELEGACYNAMESPACE)) {
             recordGoogDeclareLegacyNamespace();
@@ -397,11 +395,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           maybeRecordExportDeclaration(t, n);
           break;
 
-        case RETURN:
-          if (isTopLevel(t, n, ScopeType.BLOCK)) {
-            recordModuleReturn();
-          }
-          break;
         default:
           break;
       }
@@ -423,12 +416,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       switch (n.getToken()) {
         case MODULE_BODY:
           updateModuleBodyEarly(n);
-          break;
-
-        case EXPR_RESULT:
-          if (isGoogLoadModuleStatement(n)) {
-            updateModuleBodyEarly(n.getFirstChild().getLastChild().getLastChild());
-          }
           break;
 
         case CALL:
@@ -457,11 +444,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           }
           break;
 
-        case RETURN:
-          if (isTopLevel(t, n, ScopeType.EXEC_CONTEXT)) {
-            updateModuleReturn(n);
-          }
-          break;
         default:
           break;
       }
@@ -476,12 +458,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case EXPR_RESULT:
-          if (isGoogLoadModuleStatement(n)) {
-            updateGoogLoadModuleLate(t, n);
-          }
-          break;
-
         case MODULE_BODY:
           updateModuleBody(n);
           break;
@@ -495,12 +471,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           break;
       }
     }
-  }
-
-  private static boolean isGoogLoadModuleStatement(Node exprResult) {
-    Preconditions.checkArgument(exprResult.isExprResult());
-    Node call = exprResult.getFirstChild();
-    return call != null && isCallTo(call, GOOG_LOADMODULE) && call.getLastChild().isFunction();
   }
 
   /**
@@ -591,7 +561,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         }
       };
 
-  // Per script state needed for rewriting including nested goog.loadModule() calls.
+  // Per script state needed for rewriting.
   private Deque<ScriptDescription> scriptStack = new LinkedList<>();
   private ScriptDescription currentScript = null;
 
@@ -650,6 +620,33 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     this.rewriteState = moduleRewriteState != null ? moduleRewriteState : new GlobalRewriteState();
   }
 
+  private class UnwrapGoogLoadModule extends NodeTraversal.AbstractPreOrderCallback {
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      switch (n.getToken()) {
+        case ROOT:
+        case SCRIPT:
+          return true;
+        case EXPR_RESULT:
+          Node call = n.getFirstChild();
+          if (isCallTo(call, GOOG_LOADMODULE) && call.getLastChild().isFunction()) {
+            parent.putBooleanProp(Node.GOOG_MODULE, true);
+            Node functionNode = call.getLastChild();
+            compiler.reportFunctionDeleted(functionNode);
+            Node moduleBody = functionNode.getLastChild().detach();
+            moduleBody.setToken(Token.MODULE_BODY);
+            n.replaceWith(moduleBody);
+            Node returnNode = moduleBody.getLastChild();
+            Preconditions.checkState(returnNode.isReturn(), returnNode);
+            returnNode.detach();
+          }
+          return false;
+        default:
+          return false;
+      }
+    }
+  }
+
   @Override
   public void process(Node externs, Node root) {
     Deque<ScriptDescription> scriptDescriptions = new LinkedList<>();
@@ -661,6 +658,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     if (scriptParent == null) {
       return;
     }
+    NodeTraversal.traverseEs6(compiler, scriptParent, new UnwrapGoogLoadModule());
 
     // Record all the scripts first so that the googModuleNamespaces global state can be complete
     // before doing any updating also queue up scriptDescriptions for later use in ScriptUpdater
@@ -691,6 +689,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     Preconditions.checkState(scriptRoot.isScript());
+    NodeTraversal.traverseEs6(compiler, scriptRoot, new UnwrapGoogLoadModule());
 
     rewriteState.removeRoot(originalRoot);
 
@@ -706,13 +705,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     popScript();
 
     reportUnrecognizedRequires();
-  }
-
-  private void recordGoogLoadModule(Node call) {
-    Node moduleScopeRoot = call.getLastChild().getLastChild();
-    Preconditions.checkState(NodeUtil.isModuleScopeRoot(moduleScopeRoot),
-        "goog.loadModule called with non-module contents: %s", moduleScopeRoot);
-    recordModuleBody(moduleScopeRoot);
   }
 
   private void recordModuleBody(Node moduleRoot) {
@@ -950,26 +942,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     return true;
   }
 
-  private void recordModuleReturn() {
-    popScript();
-  }
-
   private void updateModuleBodyEarly(Node moduleScopeRoot) {
     pushScript(currentScript.removeFirstChildScript());
     currentScript.rootNode = moduleScopeRoot;
-  }
-
-  private void updateGoogLoadModuleLate(NodeTraversal t, Node exprResultNode) {
-    Node call = exprResultNode.removeFirstChild();
-    Node fnNode = call.getLastChild();
-    Node moduleBlockNode = fnNode.getLastChild();
-
-    exprResultNode.setToken(Token.BLOCK);
-    exprResultNode.addChildrenToBack(moduleBlockNode.removeChildren());
-    NodeUtil.markFunctionsDeleted(fnNode, compiler);
-    currentScript.rootNode = exprResultNode;
-    NodeUtil.tryMergeBlock(exprResultNode);
-    t.reportCodeChange();
   }
 
   private void updateGoogModule(Node call) {
@@ -1366,22 +1341,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         currentScript.willCreateExportsObject || currentScript.hasCreatedExportObject);
   }
 
-  private void updateModuleReturn(Node returnNode) {
-    if (!currentScript.isModule) {
-      return;
-    }
-
-    Node returnStatementNode = NodeUtil.getEnclosingStatement(returnNode);
-
-    if (!currentScript.hasCreatedExportObject) {
-      exportTheEmptyBinaryNamespaceAt(returnStatementNode, AddAt.BEFORE);
-    }
-
-    returnStatementNode.detach();
-    updateEndModule();
-    popScript();
-  }
-
   void updateModuleBody(Node moduleBody) {
     Preconditions.checkArgument(moduleBody.isModuleBody(), moduleBody);
     moduleBody.setToken(Token.BLOCK);
@@ -1407,7 +1366,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
    * child of the previous current script if there was one.
    *
    * <p>Keeping track of the current script facilitates aggregation of accurate script state so that
-   * rewriting can run properly. Handles scripts, modules, and nested goog.loadModule() modules.
+   * rewriting can run properly. Handles scripts and nested goog.modules.
    */
   private void pushScript(ScriptDescription newCurrentScript) {
     currentScript = newCurrentScript;

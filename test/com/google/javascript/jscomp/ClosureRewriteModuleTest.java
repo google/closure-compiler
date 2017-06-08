@@ -1630,8 +1630,21 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
                 "  var a = 10;",
                 "  var b = c;",
                 "}")},
-
         IMPORT_INLINING_SHADOWS_VAR);
+  }
+
+  public void testExportsShadowingAllowed() {
+    testNoWarning(
+        LINE_JOINER.join(
+            "goog.loadModule(function(exports) {",
+            "   goog.module('a.b.c');",
+            "",
+            "   class Foo {}",
+            "   /** @const {*} */ Foo.prototype.x;",
+            "   exports.Foo = Foo;",
+            "",
+            "   return exports;",
+            "});"));
   }
 
   public void testExportRewritingShadows() {
