@@ -91,9 +91,6 @@ Event.prototype.scheme;
 /** @type {boolean} */
 Event.prototype.shiftLeft;
 
-/** @type {Window} */
-Event.prototype.source;
-
 /** @type {Element} */
 Event.prototype.srcElement;
 

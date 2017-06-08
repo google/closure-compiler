@@ -2185,14 +2185,33 @@ MessagePort.prototype.close = function() {};
  */
 MessagePort.prototype.onmessage;
 
+/**
+ * @typedef {!Window|!MessagePort|!ServiceWorker}
+ */
+var MessageEventSource;
+
+/**
+ * @see https://html.spec.whatwg.org/multipage/comms.html#messageeventinit
+ * @typedef {{
+ *   data: *,
+ *   origin: (string|undefined),
+ *   lastEventId: (string|undefined),
+ *   source: (?MessageEventSource|undefined),
+ *   ports: (!Array<!MessagePort>|undefined)
+ * }}
+ */
+var MessageEventInit;
+
 // HTML5 MessageEvent class
 /**
- * @see http://dev.w3.org/html5/spec/comms.html#messageevent
+ * @see https://html.spec.whatwg.org/multipage/comms.html#messageevent
+ * @param {string} type
+ * @param {!MessageEventInit=} eventInitDict
  * @constructor
  * @extends {Event}
  * @template T
  */
-function MessageEvent() {}
+function MessageEvent(type, eventInitDict) {}
 
 /**
  * The data payload of the message.
@@ -2215,14 +2234,14 @@ MessageEvent.prototype.lastEventId;
 
 /**
  * The window that dispatched the event.
- * @type {Window}
+ * @type {?MessageEventSource}
  */
 MessageEvent.prototype.source;
 
 /**
  * The Array of MessagePorts sent with the message, for cross-document
  * messaging and channel messaging.
- * @type {Array<MessagePort>}
+ * @type {?Array<!MessagePort>}
  */
 MessageEvent.prototype.ports;
 
