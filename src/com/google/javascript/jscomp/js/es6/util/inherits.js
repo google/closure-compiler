@@ -59,14 +59,22 @@ $jscomp.inherits = function(childCtor, parentCtor) {
   /** @override */
     childCtor.prototype.constructor = childCtor;
 
-  for (var p in parentCtor) {
-    if (Object.defineProperties) {
-      var descriptor = Object.getOwnPropertyDescriptor(parentCtor, p);
-      if (descriptor) {
-        Object.defineProperty(childCtor, p, descriptor);
+  if (Object.defineProperties) {
+    // Copy static properties directly off of the parent constructor
+    // as well as it's prototype.
+    var baseObjects = [parentCtor, Object.getPrototypeOf(parentCtor)];
+    for (var i = 0; i < baseObjects.length; i++) {
+      var propNames = Object.getOwnPropertyNames(baseObjects[i]);
+      for (var j = 0; j < propNames.length; j++) {
+        var descriptor = Object.getOwnPropertyDescriptor(baseObjects[i], propNames[j]);
+        if (descriptor && !(propNames[j] in childCtor)) {
+          Object.defineProperty(childCtor, propNames[j], descriptor);
+        }
       }
-    } else {
-      // Pre-ES5 browser. Just copy with an assignment.
+    }
+  } else {
+    // Pre-ES5 browser. Just copy with an assignment.
+    for (var p in parentCtor) {
       childCtor[p] = parentCtor[p];
     }
   }
