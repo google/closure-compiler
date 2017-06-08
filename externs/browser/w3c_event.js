@@ -100,23 +100,22 @@ EventInit.prototype.composed;
 function Event(type, opt_eventInitDict) {}
 
 /**
- * @type {number}
+ * @const {number}
+ * @see http://www.w3.org/TR/DOM-Level-2-Events/ecma-script-binding.html
+ */
+Event.CAPTURING_PHASE;
+
+/**
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Events/ecma-script-binding.html
  */
 Event.AT_TARGET;
 
 /**
- * @type {number}
+ * @const {number}
  * @see http://www.w3.org/TR/DOM-Level-2-Events/ecma-script-binding.html
  */
 Event.BUBBLING_PHASE;
-
-/**
- * @type {number}
- * @see http://www.w3.org/TR/DOM-Level-2-Events/ecma-script-binding.html
- */
-Event.CAPTURING_PHASE;
-
 
 /** @type {string} */
 Event.prototype.type;
@@ -164,8 +163,8 @@ Event.prototype.preventDefault = function() {};
 
 /**
  * @param {string} eventTypeArg
- * @param {boolean} canBubbleArg
- * @param {boolean} cancelableArg
+ * @param {boolean=} canBubbleArg
+ * @param {boolean=} cancelableArg
  * @return {undefined}
  */
 Event.prototype.initEvent = function(eventTypeArg, canBubbleArg, cancelableArg) {};
