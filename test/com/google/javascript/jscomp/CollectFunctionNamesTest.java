@@ -21,20 +21,21 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Tests for {@link FunctionNames}
+ * Tests for {@link CollectFunctionNames}
  *
  */
-public final class FunctionNamesTest extends CompilerTestCase {
+public final class CollectFunctionNamesTest extends CompilerTestCase {
   private FunctionNames functionNames;
 
-  public FunctionNamesTest() {
+  public CollectFunctionNamesTest() {
     this.functionNames = null;
   }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    functionNames = new FunctionNames(compiler);
-    return functionNames;
+    CollectFunctionNames pass = new CollectFunctionNames(compiler);
+    functionNames = pass.getFunctionNames();
+    return pass;
   }
 
   public void testFunctionsNamesAndIds() {

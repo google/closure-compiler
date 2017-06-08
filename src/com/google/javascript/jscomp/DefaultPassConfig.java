@@ -2198,8 +2198,15 @@ public final class DefaultPassConfig extends PassConfig {
   private final PassFactory computeFunctionNames =
       new PassFactory("computeFunctionNames", true) {
     @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return ((functionNames = new FunctionNames(compiler)));
+    protected CompilerPass create(final AbstractCompiler compiler) {
+      return new CompilerPass() {
+        @Override
+        public void process(Node externs, Node root) {
+          CollectFunctionNames pass = new CollectFunctionNames(compiler);
+          pass.process(externs, root);
+          functionNames = pass.getFunctionNames();
+        }
+      };
     }
   };
 

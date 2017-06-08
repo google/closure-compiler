@@ -252,7 +252,7 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
 
     @Override
     public void process(Node externs, Node root) {
-      FunctionNames functionNames = new FunctionNames(compiler);
+      CollectFunctionNames functionNames = new CollectFunctionNames(compiler);
       functionNames.process(externs, root);
 
       Instrumentation.Builder builder = Instrumentation.newBuilder();
@@ -263,7 +263,7 @@ public final class InstrumentFunctionsTest extends CompilerTestCase {
       }
 
       InstrumentFunctions instrumentation = new InstrumentFunctions(
-          compiler, functionNames, builder.build(), "testfile.js");
+          compiler, functionNames.getFunctionNames(), builder.build(), "testfile.js");
       instrumentation.process(externs, root);
     }
   }

@@ -114,11 +114,11 @@ public final class RecordFunctionInformationTest extends TestCase {
 
   private void test(Compiler compiler, Node externsRoot, Node mainRoot,
       FunctionInformationMap expected) {
-    FunctionNames functionNames = new FunctionNames(compiler);
-    functionNames.process(externsRoot, mainRoot);
+    CollectFunctionNames collectFunctionNames = new CollectFunctionNames(compiler);
+    collectFunctionNames.process(externsRoot, mainRoot);
 
     RecordFunctionInformation processor =
-        new RecordFunctionInformation(compiler, functionNames);
+        new RecordFunctionInformation(compiler, collectFunctionNames.getFunctionNames());
     processor.process(externsRoot, mainRoot);
     FunctionInformationMap result = processor.getMap();
     assertEquals(expected, result);
