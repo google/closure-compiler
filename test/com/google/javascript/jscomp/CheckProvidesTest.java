@@ -57,14 +57,15 @@ public final class CheckProvidesTest extends CompilerTestCase {
   public void testMissingProvideEs6Class() {
     String js = "goog.require('Y'); class X {};";
     String warning = "missing goog.provide('X')";
-    test(js, js, null, MISSING_PROVIDE_WARNING, warning);
+    testSame(srcs(js), warning(MISSING_PROVIDE_WARNING, warning));
+
 
     js = "goog.require('Y'); var X = class {};";
-    test(js, js, null, MISSING_PROVIDE_WARNING, warning);
+    testSame(srcs(js), warning(MISSING_PROVIDE_WARNING, warning));
 
     js = "goog.require('Y'); foo.bar.X = class {};";
     warning = "missing goog.provide('foo.bar.X')";
-    test(js, js, null, MISSING_PROVIDE_WARNING, warning);
+    testSame(srcs(js), warning(MISSING_PROVIDE_WARNING, warning));
   }
 
   public void testNoProvideInnerClass() {
@@ -77,14 +78,14 @@ public final class CheckProvidesTest extends CompilerTestCase {
   public void testMissingGoogProvide(){
     String[] js = new String[] {"goog.require('Y'); /** @constructor */ X = function(){};"};
     String warning = "missing goog.provide('X')";
-    test(js, js, null, MISSING_PROVIDE_WARNING, warning);
+    testWarning(srcs(js), warning(MISSING_PROVIDE_WARNING, warning));
   }
 
   public void testMissingGoogProvideWithNamespace(){
     String[] js =
         new String[] {"goog = {}; goog.require('Y'); /** @constructor */ goog.X = function(){};"};
     String warning = "missing goog.provide('goog.X')";
-    test(js, js, null, MISSING_PROVIDE_WARNING, warning);
+    testWarning(srcs(js), warning(MISSING_PROVIDE_WARNING, warning));
   }
 
   public void testMissingGoogProvideWithinGoogScope(){
@@ -100,7 +101,7 @@ public final class CheckProvidesTest extends CompilerTestCase {
     String bad = "goog.require('Z'); /** @constructor */ X = function(){};";
     String[] js = new String[] {good, bad};
     String warning = "missing goog.provide('X')";
-    test(js, js, null, MISSING_PROVIDE_WARNING, warning);
+    testWarning(srcs(js), warning(MISSING_PROVIDE_WARNING, warning));
   }
 
   public void testGoogProvideMissingConstructorIsOkForNow(){

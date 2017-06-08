@@ -247,41 +247,41 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         "var document;",
         "document",
-        "window.document", null, null);
+        "window.document");
     test(
         "var document;",
         "document.getElementsByTagName('test')",
-        "window.document.getElementsByTagName('test')", null, null);
+        "window.document.getElementsByTagName('test')");
     test(
         "var document;",
         "window.document.getElementsByTagName('test')",
-        "window.document.getElementsByTagName('test')", null, null);
+        "window.document.getElementsByTagName('test')");
     test(
         "var document;document.getElementsByTagName",
         "document.getElementsByTagName('test')",
-        "window.document.getElementsByTagName('test')", null, null);
+        "window.document.getElementsByTagName('test')");
     test(
         "var document,navigator",
         "document.navigator;navigator",
-        "window.document.navigator;window.navigator", null, null);
+        "window.document.navigator;window.navigator");
     test(
         "var iframes",
         "function test() { iframes.resize(); }",
-        "_.test = function() { window.iframes.resize(); }", null, null);
+        "_.test = function() { window.iframes.resize(); }");
     test(
         "var iframes",
         "var foo = iframes;",
-        "_.foo = window.iframes;", null, null);
+        "_.foo = window.iframes;");
     // Special names.
     test(
         "var arguments, window, eval;",
         "arguments;window;eval;",
-        "arguments;window;eval;", null, null);
+        "arguments;window;eval;");
     // Actually not an extern.
     test(
         "",
         "document",
-        "window.document", null, null);
+        "window.document");
     // Javascript builtin objects
     testSame(
         "Object;Function;Array;String;Boolean;Number;Math;"
@@ -293,59 +293,58 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         "/** @const */ var ns = {}; function f() {}",
         "/** @const */ var ns = ns || {};",
-        "/** @const */ window.ns = window.ns || {};", null, null);
+        "/** @const */ window.ns = window.ns || {};");
 
     test(
         "var x;",
         "var x = 1; x = 2;",
-        "window.x = 1; window.x = 2;", null, null);
+        "window.x = 1; window.x = 2;");
 
     test(
         "var x;",
         "var x; x = 1;",
-        "window.x = 1;", null, null);
+        "window.x = 1;");
 
     test(
         "var x;",
         "function f() { var x; x = 1; }",
-        "_.f = function() { var x; x = 1; }", null, null);
+        "_.f = function() { var x; x = 1; }");
 
     test(
         "var x, y;",
         "var x = 1, y = 2;",
-        "window.x = 1; window.y = 2;", null, null);
+        "window.x = 1; window.y = 2;");
 
     test(
         "var x, y;",
         "var x, y = 2;",
-        "window.y = 2;", null, null);
+        "window.y = 2;");
 
     test(
         "var x;",
         "var x = 1, y = 2;",
-        "window.x = 1; _.y = 2;", null, null);
+        "window.x = 1; _.y = 2;");
 
     test(
         "var x;",
         "var y = 2, x = 1;",
-        "_.y = 2; window.x = 1;", null, null);
+        "_.y = 2; window.x = 1;");
 
     test(
         "var x;",
         "var y, x = 1;",
-        "window.x = 1;", null, null);
+        "window.x = 1;");
 
     test(
         "var foo;",
         "var foo = function(x) { if (x > 0) { var y = foo; } };",
-        "window.foo = function(x) { if (x > 0) { var y = window.foo; } };",
-        null, null);
+        "window.foo = function(x) { if (x > 0) { var y = window.foo; } };");
 
     // The parameter x doesn't conflict with the x in the source
     test(
         "function f(x) {}",
         "var f = 1; var x = 2;",
-        "window.f = 1; _.x = 2;", null, null);
+        "window.f = 1; _.x = 2;");
   }
 
   public void testSameVarDeclaredInExternsAndSource2() {
@@ -375,7 +374,6 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     test(
         "var y;",
         "var x = 1, y = 2; function f() { return x + window.y; }",
-        "var x; x = 1; window.y = 2; var f = function() { return x + window.y; }",
-        null, null);
+        "var x; x = 1; window.y = 2; var f = function() { return x + window.y; }");
   }
 }

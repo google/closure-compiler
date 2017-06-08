@@ -300,7 +300,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
 
   public void testJSDocDescInExterns() {
     testWarning("/** @desc Foo. */ x.y.z.MSG_bar;", MISPLACED_MSG_ANNOTATION);
-    testSame("/** @desc Foo. */ x.y.z.MSG_bar;", "", null);
+    testSame("/** @desc Foo. */ x.y.z.MSG_bar;", "");
   }
 
   public void testJSDocTypeAttachment() {

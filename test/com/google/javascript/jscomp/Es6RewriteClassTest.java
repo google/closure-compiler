@@ -1402,9 +1402,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "let CodeClass = function(var_args) {",
             "  return ExternsClass.apply(this,arguments) || this;",
             "};",
-            "$jscomp.inherits(CodeClass,ExternsClass)"),
-        null,
-        null);
+            "$jscomp.inherits(CodeClass,ExternsClass)"));
   }
 
   public void testMockingInFunction() {

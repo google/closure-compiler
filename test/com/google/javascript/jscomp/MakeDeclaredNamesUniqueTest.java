@@ -85,9 +85,9 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   private void testSameWithInversion(String externs, String original) {
     invert = false;
-    testSame(externs, original, null);
+    testSame(externs, original);
     invert = true;
-    testSame(externs, original, null);
+    testSame(externs, original);
     invert = false;
   }
 
@@ -203,7 +203,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     testSameWithInversion(externs, "var extern1 = extern1 || {};");
 
     // Verify global names are untouched.
-    testSame(externs, "var extern1 = extern1 || {};", null);
+    testSame(externs, "var extern1 = extern1 || {};");
   }
 
   public void testMakeLocalNamesUniqueWithContext4() {

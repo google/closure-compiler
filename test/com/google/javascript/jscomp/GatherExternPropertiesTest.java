@@ -173,8 +173,7 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
         // Externs.
         "/** @type {NonExternType} */ var foo;",
         // Normal code.
-        "/** @typedef {{bar: string, baz: string}} */ var NonExternType;",
-        null);
+        "/** @typedef {{bar: string, baz: string}} */ var NonExternType;");
     // Check that no properties were found.
     assertThat(getLastCompiler().getExternProperties()).isEmpty();
   }
@@ -210,7 +209,7 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
   }
 
   private void assertExternProperties(String externs, String... properties) {
-    testSame(externs, "", null);
+    testSame(externs, "");
     assertEquals(ImmutableSet.copyOf(properties),
         getLastCompiler().getExternProperties());
   }

@@ -129,11 +129,15 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
 
   // TypeQuery is currently not supported.
   public void testTypeQuery() {
-    test("var x: typeof y | number;", "var /** ? | number */ x;", null,
-        Es6TypedToEs6Converter.TYPE_QUERY_NOT_SUPPORTED);
+    test(
+        "var x: typeof y | number;",
+        "var /** ? | number */ x;",
+        warning(Es6TypedToEs6Converter.TYPE_QUERY_NOT_SUPPORTED));
 
-    test("var x: (p1: typeof y) => number;", "var /** function(?): number */ x;", null,
-        Es6TypedToEs6Converter.TYPE_QUERY_NOT_SUPPORTED);
+    test(
+        "var x: (p1: typeof y) => number;",
+        "var /** function(?): number */ x;",
+        warning(Es6TypedToEs6Converter.TYPE_QUERY_NOT_SUPPORTED));
   }
 
   public void testTypedParameter() {
@@ -241,8 +245,10 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("var Foo = class<T> {};", "var Foo = /** @template T */ class {};");
 
     // Currently, bounded generics are not supported.
-    test("class Foo<U extends () => boolean, V> {}", "/** @template U, V */ class Foo {}",
-        null, Es6TypedToEs6Converter.CANNOT_CONVERT_BOUNDED_GENERICS);
+    test(
+        "class Foo<U extends () => boolean, V> {}",
+        "/** @template U, V */ class Foo {}",
+        warning(Es6TypedToEs6Converter.CANNOT_CONVERT_BOUNDED_GENERICS));
   }
 
   public void testGenericFunction() {
@@ -348,10 +354,12 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("class Foo { private get() {} }", "class Foo { /** @private */ get() {} }");
     test("class Foo { public set() {} }", "class Foo { /** @public */ set() {} }");
 
-    test("class Foo { private ['foo']() {} }", "class Foo { /** @private */ ['foo']() {} }",
-        null, Es6TypedToEs6Converter.COMPUTED_PROP_ACCESS_MODIFIER);
-    test("class Foo { private ['foo']; }", "class Foo {}  /** @private */ Foo.prototype['foo'];",
-        null, Es6TypedToEs6Converter.COMPUTED_PROP_ACCESS_MODIFIER);
+    test("class Foo { private ['foo']() {} }",
+        "class Foo { /** @private */ ['foo']() {} }",
+        warning(Es6TypedToEs6Converter.COMPUTED_PROP_ACCESS_MODIFIER));
+    test("class Foo { private ['foo']; }",
+        "class Foo {}  /** @private */ Foo.prototype['foo'];",
+        warning(Es6TypedToEs6Converter.COMPUTED_PROP_ACCESS_MODIFIER));
   }
 
   public void testAmbientNamespace() {
@@ -570,13 +578,15 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
   }
 
   public void testOverload() {
-    test("interface I { foo(p1: number): number; foo(p1: number, p2: boolean): string }",
-        "/** @interface */ class I { /** @type {!Function} */ foo() {} }", null,
-        Es6TypedToEs6Converter.OVERLOAD_NOT_SUPPORTED);
+    test(
+        "interface I { foo(p1: number): number; foo(p1: number, p2: boolean): string }",
+        "/** @interface */ class I { /** @type {!Function} */ foo() {} }",
+        warning(Es6TypedToEs6Converter.OVERLOAD_NOT_SUPPORTED));
 
-   test("interface I { foo?(p1: number): number; foo?(p1: number, p2: boolean): string }",
-        "/** @interface */ class I {} /** @type {!Function | undefined} */ I.prototype.foo;", null,
-       Es6TypedToEs6Converter.OVERLOAD_NOT_SUPPORTED);
+    test(
+        "interface I { foo?(p1: number): number; foo?(p1: number, p2: boolean): string }",
+        "/** @interface */ class I {} /** @type {!Function | undefined} */ I.prototype.foo;",
+        warning(Es6TypedToEs6Converter.OVERLOAD_NOT_SUPPORTED));
 
     testDts(LINE_JOINER.join(
         "declare function foo(p1: number): number;",

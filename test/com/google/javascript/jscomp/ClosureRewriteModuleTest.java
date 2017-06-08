@@ -113,8 +113,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         "goog.module('ns.a'); var b = goog.require('external'); /** @type {b} */ new b;",
         LINE_JOINER.join(
             "/** @const */ var module$exports$ns$a = {};",
-            "/** @type {module$exports$external} */ new module$exports$external"),
-        null, null);
+            "/** @type {module$exports$external} */ new module$exports$external"));
   }
 
   public void testDestructuringInsideModule() {
@@ -2146,7 +2145,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
   public void testIjsFileInExterns() {
     allowExternsChanges();
-    test(
+    testNoWarning(
         LINE_JOINER.join(
             "/** @externs */",
             "goog.module('mod_B');",
@@ -2160,10 +2159,9 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "var B = goog.require('mod_B');",
             "",
             "/** @constructor @implements {B} */",
-            "function A() {}"),
-        (String) null, null, null);
+            "function A() {}"));
 
-    test(
+    testNoWarning(
         LINE_JOINER.join(
             "/** @externs */",
             "goog.loadModule(function(exports) { 'use strict';",
@@ -2180,11 +2178,10 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "var B = goog.require('mod_B');",
             "",
             "/** @constructor @implements {B} */",
-            "function A() {}"),
-        (String) null, null, null);
+            "function A() {}"));
 
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
-    test(
+    testNoWarning(
         LINE_JOINER.join(
             "/** @externs */",
             "goog.loadModule(function(exports) { 'use strict';",
@@ -2201,7 +2198,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "var {B} = goog.require('mod_B');",
             "",
             "/** @constructor @implements {B} */",
-            "function A() {}"),
-        (String) null, null, null);
+            "function A() {}"));
   }
 }

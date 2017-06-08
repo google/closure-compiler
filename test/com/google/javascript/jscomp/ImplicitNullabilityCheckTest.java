@@ -121,6 +121,6 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
   }
 
   private void noWarning(String js) {
-    testSame(DEFAULT_EXTERNS, js, null);
+    testSame(DEFAULT_EXTERNS, js);
   }
 }

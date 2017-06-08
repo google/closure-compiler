@@ -211,7 +211,7 @@ public final class ConstCheckTest extends CompilerTestCase {
   public void testConstSuppressionOnVarFromExterns() {
     String externs = "/** @const */ var xyz;";
     String js = "/** @suppress {const} */ var xyz = 3;";
-    test(externs, js, js, null, null);
+    testSame(externs, js);
   }
 
   public void testConstSuppressionOnInc() {
@@ -221,7 +221,7 @@ public final class ConstCheckTest extends CompilerTestCase {
   public void testConstNameInExterns() {
     String externs = "/** @const */ var FOO;";
     String js = "FOO = 1;";
-    test(externs, js, (String) null, null, ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
+    testWarning(externs, js, ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 
   private void testError(String js) {

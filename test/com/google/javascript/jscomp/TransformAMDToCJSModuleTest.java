@@ -34,8 +34,8 @@ public final class TransformAMDToCJSModuleTest extends CompilerTestCase {
     test("define(['foo', 'bar'], function(foo, bar) { foo(bar); bar+1; })",
         "var foo=require('foo'); var bar=require('bar');foo(bar);bar+1");
     test("define(['foo', 'bar'], function(foo, bar, baz) { foo(bar); bar+1; })",
-        "var foo=require('foo'); var bar=require('bar');" +
-        "var baz = null;foo(bar);bar+1");
+        "var foo=require('foo'); var bar=require('bar');"
+        + "var baz = null;foo(bar);bar+1");
     test("define(['foo', 'bar'], function(foo, bar) { return { test: 1 } })",
         "var foo=require('foo'); var bar=require('bar');" +
         "module.exports={test:1}");
@@ -81,15 +81,18 @@ public final class TransformAMDToCJSModuleTest extends CompilerTestCase {
   }
 
   public void testPlugins() {
-    test("define(['foo', 'text!foo'], function(foo, text) {})",
+    test(
+        "define(['foo', 'text!foo'], function(foo, text) {})",
         "var foo = require('foo'); var text = null;",
-        null, TransformAMDToCJSModule.REQUIREJS_PLUGINS_NOT_SUPPORTED_WARNING);
-    test("define(['foo', 'text!foo?bar'], function(foo, bar) {})",
+        warning(TransformAMDToCJSModule.REQUIREJS_PLUGINS_NOT_SUPPORTED_WARNING));
+    test(
+        "define(['foo', 'text!foo?bar'], function(foo, bar) {})",
         "var foo = require('foo'); var bar = require('bar'); ",
-        null, TransformAMDToCJSModule.REQUIREJS_PLUGINS_NOT_SUPPORTED_WARNING);
-    test("define(['foo', 'text!foo?:bar'], function(foo, bar) {})",
+        warning(TransformAMDToCJSModule.REQUIREJS_PLUGINS_NOT_SUPPORTED_WARNING));
+    test(
+        "define(['foo', 'text!foo?:bar'], function(foo, bar) {})",
         "var foo = require('foo'); var bar = null;",
-        null, TransformAMDToCJSModule.REQUIREJS_PLUGINS_NOT_SUPPORTED_WARNING);
+        warning(TransformAMDToCJSModule.REQUIREJS_PLUGINS_NOT_SUPPORTED_WARNING));
   }
 
   public void testUnsupportedForms() {

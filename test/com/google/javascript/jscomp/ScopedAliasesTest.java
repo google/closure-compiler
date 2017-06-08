@@ -443,7 +443,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
             "  };",
             "  x.y('');",
             "});");
-    test(externs, js, null, null, TypeValidator.TYPE_MISMATCH_WARNING);
+    testWarning(externs, js, TypeValidator.TYPE_MISMATCH_WARNING);
 
     js =
         LINE_JOINER.join(
@@ -454,7 +454,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
             "  };",
             "  x.y('');",
             "});");
-    test(externs, js, null, null, TypeValidator.TYPE_MISMATCH_WARNING);
+    testWarning(externs, js, TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
   public void testUsingObjectLiteralToEscapeScoping() {
@@ -604,8 +604,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @const */ var ns = {};",
             "/** @type {{x: string}} */ ns.y = {'goog.Timer': 'x'};"),
-        null,
-        TypeValidator.TYPE_MISMATCH_WARNING);
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   public void testArrayJsDoc() {
@@ -1012,7 +1011,11 @@ public final class ScopedAliasesTest extends CompilerTestCase {
 
   public void testIssue2210c() {
     testScoped(
-        LINE_JOINER.join("foo(() => {", "  const y = function y() {", "    use(y);", "  };", "});"),
+        LINE_JOINER.join(
+            "foo(() => {",
+            "  const y = function y() {",
+            "    use(y);", "  };",
+            "});"),
         LINE_JOINER.join(
             "foo(() => {",
             "  const y = function y$jscomp$1() {",
@@ -1041,8 +1044,7 @@ public final class ScopedAliasesTest extends CompilerTestCase {
             "/** @return {$jscomp.scope.F} */",
             "$jscomp.scope.createFoo = /** @return {$jscomp.scope.F} */ function() { return 1; };",
             "/** @constructor */ $jscomp.scope.F = /** @constructor */ function() { };"),
-            null,
-            TypeValidator.TYPE_MISMATCH_WARNING);
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   // Alias Recording Tests

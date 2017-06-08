@@ -308,26 +308,11 @@ public final class PeepholeSimplifyRegExpTest extends CompilerTestCase {
   }
 
   public final void testMalformedRegularExpressions() {
-    test(
-        "/(?<!foo)/", "/(?<!foo)/",  // Lookbehind not valid in ES.
-        null,  // No error.
-        CheckRegExp.MALFORMED_REGEXP);  // Warning.
-    test(
-        "/(/", "/(/",
-        null,  // No error.
-        CheckRegExp.MALFORMED_REGEXP);  // Warning.
-    test(
-        "/)/", "/)/",
-        null,  // No error.
-        CheckRegExp.MALFORMED_REGEXP);  // Warning.
-    test(
-        "/\\uabc/", "/\\uabc/",
-        null,  // No error.
-        CheckRegExp.MALFORMED_REGEXP);  // Warning.
-    test(
-        "/\\uabcg/", "/\\uabcg/",
-        null,  // No error.
-        CheckRegExp.MALFORMED_REGEXP);  // Warning.
+    test("/(?<!foo)/", "/(?<!foo)/", warning(CheckRegExp.MALFORMED_REGEXP));  // Warning.
+    test("/(/", "/(/", warning(CheckRegExp.MALFORMED_REGEXP));  // Warning.
+    test("/)/", "/)/", warning(CheckRegExp.MALFORMED_REGEXP));  // Warning.
+    test("/\\uabc/", "/\\uabc/", warning(CheckRegExp.MALFORMED_REGEXP));  // Warning.
+    test("/\\uabcg/", "/\\uabcg/", warning(CheckRegExp.MALFORMED_REGEXP));  // Warning.
   }
 
   @Override

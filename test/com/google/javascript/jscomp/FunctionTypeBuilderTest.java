@@ -21,7 +21,6 @@ import static com.google.javascript.rhino.testing.BaseJSTypeTestCase.ALL_NATIVE_
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.ObjectType;
-
 import java.util.List;
 
 /**
@@ -52,7 +51,7 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
   }
 
   public void testValidBuiltInTypeRedefinition() throws Exception {
-    testSame(ALL_NATIVE_EXTERN_TYPES, "", null);
+    testSame(ALL_NATIVE_EXTERN_TYPES, "");
   }
 
   public void testBuiltInTypeDifferentReturnType() throws Exception {
@@ -138,7 +137,7 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
   }
 
   public void testExternSubTypes() throws Exception {
-    testSame(ALL_NATIVE_EXTERN_TYPES, "", null);
+    testSame(ALL_NATIVE_EXTERN_TYPES, "");
 
     List<FunctionType> subtypes = ((ObjectType) getLastCompiler()
         .getTypeRegistry().getType("Error")).getConstructor().getSubTypes();

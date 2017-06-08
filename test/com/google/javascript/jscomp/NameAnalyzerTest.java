@@ -326,8 +326,10 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testNoSideEffectAnnotation2() {
-    test("/**@nosideeffects*/function f(){}", "var a = f();",
-         "", null, null);
+    test(
+        "/**@nosideeffects*/function f(){}",
+        "var a = f();",
+        "");
   }
 
   public void testNoSideEffectAnnotation3() {
@@ -337,7 +339,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
 
   public void testNoSideEffectAnnotation4() {
     test("var f = /**@nosideeffects*/function(){};", "var a = f();",
-         "", null, null);
+         "");
   }
 
   public void testNoSideEffectAnnotation5() {
@@ -347,31 +349,31 @@ public final class NameAnalyzerTest extends CompilerTestCase {
 
   public void testNoSideEffectAnnotation6() {
     test("f = /**@nosideeffects*/function(){};", "var a = f();",
-         "", null, null);
+         "");
   }
 
   public void testNoSideEffectAnnotation7() {
     test("f = /**@nosideeffects*/function(){};",
          "f = function(){};" +
          "var a = f();",
-         "f = function(){}; f();", null, null);
+         "f = function(){}; f();");
   }
 
   public void testNoSideEffectAnnotation8() {
     test("f = function(){};" +
          "f = /**@nosideeffects*/function(){};",
          "var a = f();",
-         "f();", null, null);
+         "f();");
   }
 
   public void testNoSideEffectAnnotation9() {
     test("f = /**@nosideeffects*/function(){};" +
          "f = /**@nosideeffects*/function(){};",
          "var a = f();",
-         "", null, null);
+         "");
 
     test("f = /**@nosideeffects*/function(){};", "var a = f();",
-         "", null, null);
+         "");
   }
 
   public void testNoSideEffectAnnotation10() {
@@ -380,8 +382,10 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testNoSideEffectAnnotation11() {
-    test("var o = {}; o.f = /**@nosideeffects*/function(){};",
-         "var a = o.f();", "", null, null);
+    test(
+        "var o = {}; o.f = /**@nosideeffects*/function(){};",
+        "var a = o.f();",
+        "");
   }
 
   public void testNoSideEffectAnnotation12() {
@@ -390,14 +394,20 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testNoSideEffectAnnotation13() {
-    test("/**@nosideeffects*/function c(){}", "var a = new c",
-         "", null, null);
+    test(
+        "/**@nosideeffects*/function c(){}",
+        "var a = new c",
+        "");
   }
 
   public void testNoSideEffectAnnotation14() {
-    String common = "function c(){};" +
-        "c.prototype.f = /**@nosideeffects*/function(){};";
-    test(common, "var o = new c; var a = o.f()", "new c", null, null);
+    String externs =
+        "function c(){};"
+        + "c.prototype.f = /**@nosideeffects*/function(){};";
+    test(
+        externs,
+        "var o = new c; var a = o.f()",
+        "new c");
   }
 
   public void testNoSideEffectAnnotation15() {
@@ -409,8 +419,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
     test("/**@nosideeffects*/function c(){}" +
          "c.prototype.f = /**@nosideeffects*/function(){};",
          "var a = (new c).f()",
-         "",
-         null, null);
+         "");
   }
 
   public void testFunctionPrototype() {

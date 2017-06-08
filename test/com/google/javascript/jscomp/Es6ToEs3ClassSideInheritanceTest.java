@@ -424,8 +424,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "};",
             "$jscomp.inherits(CodeClass,ExternsClass);",
             "/** @suppress {visibility} */",
-            "CodeClass.m = ExternsClass.m;"),
-        null, null);
+            "CodeClass.m = ExternsClass.m;"));
   }
 
   public void testAliasing() {

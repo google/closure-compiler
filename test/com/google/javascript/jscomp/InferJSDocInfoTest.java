@@ -18,13 +18,13 @@ package com.google.javascript.jscomp;
 
 
 import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE;
+
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -88,7 +88,7 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
   public void testNativeCtor() {
     testSame(OBJECT_EXTERNS,
         "var x = new Object();"
-        + "/** Another object. */ var y = new Object();", null);
+        + "/** Another object. */ var y = new Object();");
     assertEquals(
         "Object.",
         findGlobalNameType("x").getJSDocInfo().getBlockDescription());
@@ -106,7 +106,7 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
         + "function fn(x) {};"
         + "var goog = {};"
         + "/** Another object. \n * @type {Object} */ goog.x = new Object();"
-        + "/** Another function. \n * @param {number} x */ goog.y = fn;", null);
+        + "/** Another function. \n * @param {number} x */ goog.y = fn;");
     assertEquals(
         "(Object|null)",
         globalScope.getVar("goog.x").getType().toString());

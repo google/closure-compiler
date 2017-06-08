@@ -422,7 +422,7 @@ public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
   }
 
   void checkDefinitions(String externs, String source, Set<String> expected) {
-    testSame(externs, source, null);
+    testSame(externs, source);
     assertEquals(expected, found);
     found.clear();
   }

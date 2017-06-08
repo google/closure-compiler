@@ -158,8 +158,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @param {Enum} e*/",
             "function f(e) {}",
-            "f(window.Enum.FOO);"),
-        null);
+            "f(window.Enum.FOO);"));
   }
 
   /**
@@ -172,15 +171,13 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @param {!window.Foo} f*/",
             "function bar(f) {}",
-            "bar(new Foo());"),
-        null);
+            "bar(new Foo());"));
 
     testSame(
         "/** @constructor */ function Foo() {}\n",
         LINE_JOINER.join(
             "/** @param {!Foo} f*/",
             "function bar(f) {}",
-            "bar(new window.Foo());"),
-        null);
+            "bar(new window.Foo());"));
   }
 }

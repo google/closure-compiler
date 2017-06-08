@@ -80,7 +80,7 @@ public final class MissingProvideTest extends CompilerTestCase {
             "goog.require('normal.goog.module.A');",
             "new normal.goog.module.A;");
 
-    test(new String[] {googModule, legacyScript}, null, null, null, null);
+    testNoWarning(srcs(new String[] {googModule, legacyScript}));
   }
 
   public void test_Legacy_Require_Module_Normal_Pass() {
@@ -94,7 +94,7 @@ public final class MissingProvideTest extends CompilerTestCase {
             "goog.provide('legacy.script.B');",
             "goog.require('normal.goog.module.A');");
 
-    test(new String[] {googModule, legacyScript}, null, null, null, null);
+    testNoWarning(srcs(new String[] {googModule, legacyScript}));
   }
 
   public void test_Legacy_Require_Module_Missing_Fail() {
@@ -105,8 +105,8 @@ public final class MissingProvideTest extends CompilerTestCase {
             "  var A = goog.module.get('missing.goog.module.A');",
             "});");
 
-    String warning = "Required namespace \"missing.goog.module.A\" never defined.";
-    test(legacyScript, null, MISSING_MODULE_OR_PROVIDE, null, warning);
+    String msg = "Required namespace \"missing.goog.module.A\" never defined.";
+    testError(legacyScript, MISSING_MODULE_OR_PROVIDE, msg);
   }
 
   public void test_Legacy_ModuleGet_Module_Normal_Pass() {
@@ -122,7 +122,7 @@ public final class MissingProvideTest extends CompilerTestCase {
             "  var A = goog.module.get('normal.goog.module.A');",
             "});");
 
-    test(new String[] {googModule, legacyScript}, null, null, null, null);
+    testNoWarning(srcs(new String[] {googModule, legacyScript}));
   }
 
   public void test_Legacy_ModuleGet_Module_Missing_Fail() {
@@ -133,8 +133,8 @@ public final class MissingProvideTest extends CompilerTestCase {
             "  var A = goog.module.get('missing.goog.module.A');",
             "});");
 
-    String warning = "Required namespace \"missing.goog.module.A\" never defined.";
-    test(legacyScript, null, MISSING_MODULE_OR_PROVIDE, null, warning);
+    String msg = "Required namespace \"missing.goog.module.A\" never defined.";
+    testError(legacyScript, MISSING_MODULE_OR_PROVIDE, msg);
   }
 
   public void test_Module_Require_Module_Normal_Pass() {
@@ -151,7 +151,7 @@ public final class MissingProvideTest extends CompilerTestCase {
             "B.prototype = new A;",
             "exports = B;");
 
-    test(new String[] {googModule1, googModule2}, null, null, null, null);
+    testNoWarning(srcs(new String[] {googModule1, googModule2}));
   }
 
   public void test_Module_Require_Module_Missing_Fail() {
@@ -166,7 +166,7 @@ public final class MissingProvideTest extends CompilerTestCase {
             "exports = B;");
 
     String warning = "Required namespace \"missing.goog.module.A\" never defined.";
-    test(googModule, null, MISSING_MODULE_OR_PROVIDE, null, warning);
+    testError(googModule, MISSING_MODULE_OR_PROVIDE, warning);
   }
 
   public void test_Module_ModuleGet_Module_Normal_Pass() {
@@ -186,7 +186,7 @@ public final class MissingProvideTest extends CompilerTestCase {
             "}",
             "exports = B;");
 
-    test(new String[] {googModule1, googModule2}, null, null, null, null);
+    testNoWarning(srcs(new String[] {googModule1, googModule2}));
   }
 
   public void test_Module_Require_Legacy_Normal_Pass() {
@@ -202,7 +202,7 @@ public final class MissingProvideTest extends CompilerTestCase {
             "B.prototype = new A;",
             "exports = B;");
 
-    test(new String[] {legacyScript, googModule}, null, null, null, null);
+    testNoWarning(srcs(new String[] {legacyScript, googModule}));
   }
 
   public void test_Module_Require_Legacy_Missing_Fail() {
@@ -216,8 +216,8 @@ public final class MissingProvideTest extends CompilerTestCase {
             "B.prototype = new A;",
             "exports = B;");
 
-    String warning = "Required namespace \"legacy.script.A\" never defined.";
-    test(googModule, null, MISSING_MODULE_OR_PROVIDE, null, warning);
+    String msg = "Required namespace \"legacy.script.A\" never defined.";
+    testError(googModule, MISSING_MODULE_OR_PROVIDE, msg);
   }
 
   public void test_Module_ModuleGet_Legacy_Normal_Pass() {
@@ -238,7 +238,7 @@ public final class MissingProvideTest extends CompilerTestCase {
             "}",
             "exports = B;");
 
-    test(new String[] {legacyScript, googModule}, null, null, null, null);
+    testNoWarning(srcs(new String[] {legacyScript, googModule}));
   }
 
   public void test_Module_ModuleGet_Missing_Fail() {
@@ -251,8 +251,8 @@ public final class MissingProvideTest extends CompilerTestCase {
             "}",
             "exports = f;");
 
-    String warning = "Required namespace \"missing.legacy.script.A\" never defined.";
-    test(googModule, null, MISSING_MODULE_OR_PROVIDE, null, warning);
+    String msg = "Required namespace \"missing.legacy.script.A\" never defined.";
+    testError(googModule, MISSING_MODULE_OR_PROVIDE, msg);
   }
 
   public void test_Module_ForwardDeclare_Missing_Fail() {
@@ -264,8 +264,8 @@ public final class MissingProvideTest extends CompilerTestCase {
             "/** @constructor */ function B() {}",
             "exports = B;");
 
-    String warning = "Required namespace \"missing.legacy.script.A\" never defined.";
-    test(googModule, null, MISSING_MODULE_OR_PROVIDE, null, warning);
+    String msg = "Required namespace \"missing.legacy.script.A\" never defined.";
+    testError(googModule, MISSING_MODULE_OR_PROVIDE, msg);
   }
 
   public void test_Legacy_ForwardDeclare_Missing_Pass() {
@@ -277,7 +277,7 @@ public final class MissingProvideTest extends CompilerTestCase {
             "/** @constructor */ function B() {}",
             "exports = B;");
 
-    test(new String[] { googModule }, null, null, null, null);
+    testNoWarning(srcs(new String[] { googModule }));
   }
 
   public void test_Legacy_Require_Legacy_Normal_Pass() {
@@ -291,7 +291,7 @@ public final class MissingProvideTest extends CompilerTestCase {
             "goog.require('legacy.script.A');",
             "new legacy.script.A;");
 
-    test(new String[] {legacyScript, legacyScript2}, null, null, null, null);
+    testNoWarning(srcs(new String[] {legacyScript, legacyScript2}));
   }
 
   public void test_Legacy_Require_Legacy_Missing_Fail() {
@@ -301,8 +301,8 @@ public final class MissingProvideTest extends CompilerTestCase {
             "goog.require('legacy.script.A');",
             "new legacy.script.A;");
 
-    String warning = "required \"legacy.script.A\" namespace never provided";
-    test(legacyScript, null, MISSING_PROVIDE_ERROR, null, warning);
+    String msg = "required \"legacy.script.A\" namespace never provided";
+    testError(legacyScript, MISSING_PROVIDE_ERROR, msg);
   }
 
   public void test_Legacy_ModuleGet_Legacy_Normal_Pass() {
@@ -319,7 +319,7 @@ public final class MissingProvideTest extends CompilerTestCase {
             "  new A;",
             "}");
 
-    test(new String[] {legacyScript, legacyScript2}, null, null, null, null);
+    testNoWarning(srcs(new String[] {legacyScript, legacyScript2}));
   }
 
   public void test_Legacy_ModuleGet_Legacy_Missing_Fail() {
@@ -332,7 +332,7 @@ public final class MissingProvideTest extends CompilerTestCase {
             "  new A;",
             "}");
 
-    String warning = "Required namespace \"legacy.script.A\" never defined.";
-    test(legacyScript, null, MISSING_MODULE_OR_PROVIDE, null, warning);
+    String msg = "Required namespace \"legacy.script.A\" never defined.";
+    testError(legacyScript, MISSING_MODULE_OR_PROVIDE, msg);
   }
 }

@@ -347,7 +347,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
          "Bar.prototype = {new_f: function(){}, b: function(){}, " +
          "a: function(){}};bar.b();",
          "Bar.prototype = {c:function(){}, b:function(){}, a:function(){}};" +
-         "bar.b();", null, null);
+         "bar.b();");
   }
 
   public void testRenamePropertiesWithLeadingUnderscoresStable() {

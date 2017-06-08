@@ -597,7 +597,7 @@ public final class SideEffectsAnalysisTest extends CompilerTestCase {
 
     currentLocationAbstractionIdentifier = locationAbstractionIdentifier;
 
-    testSame(SHARED_EXTERNS, js, null);
+    testSame(SHARED_EXTERNS, js);
 
     currentJsRoot = getLastCompiler().jsRoot;
 

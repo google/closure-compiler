@@ -1186,7 +1186,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "/** @constructor */ function Foo(){};"
         + "/** @constructor\n @extends Foo */"
         + "function Bar() { Foo.call(this); };"; // call should not be renamed
-    testSame(js, null);
+    testSame(js);
   }
 
   public void testSkipNativeObjectMethod() {
@@ -2307,9 +2307,9 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "var Z = new Baz;\n"
         + "Z.foobar = 1\n;";
 
-    test(
-        DEFAULT_EXTERNS + externs, js, (String) null,
-        DisambiguateProperties.Warnings.INVALIDATION_ON_TYPE, null);
+    testError(
+        DEFAULT_EXTERNS + externs, js,
+        DisambiguateProperties.Warnings.INVALIDATION_ON_TYPE);
     assertThat(getLastCompiler().getErrors()[0].toString()).contains("foobar");
   }
 
@@ -2318,7 +2318,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "function f(x) { return x; }",
         "f.prototype.method = function() {};");
 
-    test(DEFAULT_EXTERNS + externs, "" , "", null, null);
+    test(DEFAULT_EXTERNS + externs, "" , "");
   }
 
   private void testSets(String js, String expected, String fieldTypes) {
@@ -2327,12 +2327,13 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   private void testSets(String externs, String js, String expected, String fieldTypes) {
-    testSets(externs, js, expected, fieldTypes, null, null);
+    test(DEFAULT_EXTERNS + externs, js, expected);
+    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }
 
   private void testSets(String externs, String js, String expected,
        String fieldTypes, DiagnosticType warning, String description) {
-    test(DEFAULT_EXTERNS + externs, js, expected, null, warning, description);
+    test(DEFAULT_EXTERNS + externs, js, expected, warning(warning, description));
     assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }
 
@@ -2344,7 +2345,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
    * {field=[[Type1, Type2]]}
    */
   private void testSets(String js, String fieldTypes) {
-    test(js, null, null, null);
+    testNoWarning(js);
     assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
   }
 

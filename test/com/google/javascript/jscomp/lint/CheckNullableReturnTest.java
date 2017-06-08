@@ -243,11 +243,9 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
 
   public void testNonfunctionTypeDoesntCrash() {
     enableClosurePass();
-    test(DEFAULT_EXTERNS,
-        "goog.forwardDeclare('FunType'); /** @type {!FunType} */ (function() { return; })",
-        (String) null,
-        null,
-        null);
+    testNoWarning(
+        DEFAULT_EXTERNS,
+        "goog.forwardDeclare('FunType'); /** @type {!FunType} */ (function() { return; })");
   }
 
   private static String createFunction(String body) {
@@ -259,7 +257,7 @@ public final class CheckNullableReturnTest extends TypeICompilerTestCase {
   }
 
   private void testOk(String js) {
-    testSame(EXTERNS, js, null);
+    testSame(EXTERNS, js);
   }
 
   private void testError(String js) {

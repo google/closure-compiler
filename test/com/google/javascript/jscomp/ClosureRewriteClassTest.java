@@ -85,7 +85,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   private void testRewriteWarning(String code, String expected,
                                   DiagnosticType warning, LanguageMode lang) {
     setAcceptedLanguage(lang);
-    test(code, expected, null, warning);
+    test(code, expected, warning(warning));
   }
 
   private void testRewriteWarning(String code, String expected, DiagnosticType warning) {

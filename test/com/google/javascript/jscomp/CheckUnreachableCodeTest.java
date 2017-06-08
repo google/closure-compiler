@@ -362,6 +362,6 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
   }
 
   private void assertUnreachable(String js) {
-    test(js, js, null, CheckUnreachableCode.UNREACHABLE_CODE);
+    test(js, js, warning(CheckUnreachableCode.UNREACHABLE_CODE));
   }
 }

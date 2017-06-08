@@ -540,8 +540,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "/** @abstract */ class Foo {} var x = new Foo();",
         "/** @abstract @constructor @struct */ var Foo = function() {}; var x = new Foo();",
-        null,
-        INSTANTIATE_ABSTRACT_CLASS);
+        warning(INSTANTIATE_ABSTRACT_CLASS));
   }
 
   /**
@@ -1424,9 +1423,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var CodeClass = function(var_args) {",
             "  return ExternsClass.apply(this,arguments) || this;",
             "};",
-            "$jscomp.inherits(CodeClass,ExternsClass)"),
-        null,
-        null);
+            "$jscomp.inherits(CodeClass,ExternsClass)"));
   }
 
   public void testMockingInFunction() {
@@ -1723,42 +1720,34 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
 
     // Using @type instead of @return on a getter.
-    test(
-        "class C { /** @type {string} */ get value() { } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "/** @type {?} */",
-            "C.prototype.value;",
-            "$jscomp.global.Object.defineProperties(C.prototype, {",
-            "  value: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    /** @type {string} */",
-            "    get: function() {}",
-            "  }",
-            "});"),
-        null,
-        TypeValidator.TYPE_MISMATCH_WARNING);
+    test("class C { /** @type {string} */ get value() { } }", LINE_JOINER.join(
+    "/** @constructor @struct */",
+    "var C = function() {};",
+    "/** @type {?} */",
+    "C.prototype.value;",
+    "$jscomp.global.Object.defineProperties(C.prototype, {",
+    "  value: {",
+    "    configurable: true,",
+    "    enumerable: true,",
+    "    /** @type {string} */",
+    "    get: function() {}",
+    "  }",
+    "});"), warning(TypeValidator.TYPE_MISMATCH_WARNING));
 
     // Using @type instead of @param on a setter.
-    test(
-        "class C { /** @type {string} */ set value(v) { } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "/** @type {?} */",
-            "C.prototype.value;",
-            "$jscomp.global.Object.defineProperties(C.prototype, {",
-            "  value: {",
-            "    configurable: true,",
-            "    enumerable: true,",
-            "    /** @type {string} */",
-            "    set: function(v) {}",
-            "  }",
-            "});"),
-        null,
-        TypeValidator.TYPE_MISMATCH_WARNING);
+    test("class C { /** @type {string} */ set value(v) { } }", LINE_JOINER.join(
+    "/** @constructor @struct */",
+    "var C = function() {};",
+    "/** @type {?} */",
+    "C.prototype.value;",
+    "$jscomp.global.Object.defineProperties(C.prototype, {",
+    "  value: {",
+    "    configurable: true,",
+    "    enumerable: true,",
+    "    /** @type {string} */",
+    "    set: function(v) {}",
+    "  }",
+    "});"), warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   /**

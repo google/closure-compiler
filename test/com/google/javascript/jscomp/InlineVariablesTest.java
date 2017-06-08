@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
 
+
 /**
  * Verifies that valid candidates for inlining are inlined, but
  * that no dangerous inlining occurs.
@@ -752,9 +753,9 @@ public final class InlineVariablesTest extends CompilerTestCase {
     String EXTERNS = "var z; function f(){}";
     test(EXTERNS,
          "var x = f(y.a, y); z = x;",
-         "z = f(y.a, y);", null, null);
+         "z = f(y.a, y);");
     // z.b can be changed by the call to y, so x can not be inlined.
-    testSame(EXTERNS, "var x = f(y.a, y); z.b = x;", null, null);
+    testSame(EXTERNS, "var x = f(y.a, y); z.b = x;");
   }
 
   public void testInlineParameterAlias1() {
@@ -1199,7 +1200,7 @@ public final class InlineVariablesTest extends CompilerTestCase {
   public void testNoInlineRedeclaredExterns() {
     String externs = "var test = 1;";
     String code = "/** @suppress {duplicate} */ var test = 2;alert(test);";
-    test(externs, code, code, null, null);
+    testSame(externs, code);
   }
 
   public void testBug6598844() {

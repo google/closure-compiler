@@ -576,14 +576,14 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     testSame(
         externs,
         "o.prototype.propWithAnnotatedStubAfter",
-        TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH, false);
+        TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH);
     assertThat(noSideEffectCalls).isEmpty();
 
     this.mode = TypeInferenceMode.NTI_ONLY;
     testSame(
         TEST_EXTERNS + externs,
         "o.prototype.propWithAnnotatedStubAfter",
-        GlobalTypeInfo.REDECLARED_PROPERTY, false);
+        GlobalTypeInfo.REDECLARED_PROPERTY);
     assertThat(noSideEffectCalls).isEmpty();
   }
 
@@ -609,13 +609,13 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(externs,
         "o.prototype.propWithAnnotatedStubAfter",
-        TypeValidator.DUP_VAR_DECLARATION, false);
+        TypeValidator.DUP_VAR_DECLARATION);
     assertThat(noSideEffectCalls).isEmpty();
 
     this.mode = TypeInferenceMode.NTI_ONLY;
     testSame(TEST_EXTERNS + externs,
         "o.prototype.propWithAnnotatedStubAfter",
-        GlobalTypeInfo.REDECLARED_PROPERTY, false);
+        GlobalTypeInfo.REDECLARED_PROPERTY);
     assertThat(noSideEffectCalls).isEmpty();
   }
 
@@ -1846,7 +1846,11 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   void assertPureCallsMarked(
       String source, List<String> expected, DiagnosticType warning, LanguageMode mode) {
     setAcceptedLanguage(mode);
-    testSame(source, warning);
+    if (warning != null) {
+      testSame(source, warning);
+    } else {
+      testSame(source);
+    }
     assertEquals(expected, noSideEffectCalls);
   }
 

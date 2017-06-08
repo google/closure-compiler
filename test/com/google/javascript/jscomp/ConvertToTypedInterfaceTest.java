@@ -46,11 +46,11 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
   public void testAllExternsLibraryPrinted() {
     allowExternsChanges();
-    test("/** @type {number} */ var x;", "", "/** @type {number} */ var x;", null, null);
+    test("/** @type {number} */ var x;", "", "/** @type {number} */ var x;");
   }
 
   public void testExternsDefinitionsRespected() {
-    test("/** @type {number} */ var x;", "x = 7;", "", null, null);
+    test("/** @type {number} */ var x;", "x = 7;", "");
   }
 
   public void testSimpleConstJsdocPropagation() {
@@ -68,7 +68,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     test(
         "/** @const */ var x = cond ? true : 5;",
         "/** @const {*} */ var x;",
-        null, ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
+        warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
   }
 
   public void testConstKeywordJsdocPropagation() {
@@ -103,10 +103,11 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "/** @constructor */ function Foo() { /** @type {?number} */ this.x = null; this.x = 5; }",
         "/** @constructor */ function Foo() {} \n /** @type {?number} */ Foo.prototype.x;");
 
+
     test(
         "/** @constructor */ function Foo() { /** @const */ this.x = cond ? true : 5; }",
         "/** @constructor */ function Foo() {}  /** @const {*} */ Foo.prototype.x;",
-        null, ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
+        warning(ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE));
   }
 
   public void testThisPropertiesInConstructorsAndPrototype() {

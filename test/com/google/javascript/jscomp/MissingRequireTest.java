@@ -52,19 +52,19 @@ public final class MissingRequireTest extends CompilerTestCase {
   }
 
   private void testMissingRequireStrict(String js, String warningText) {
-    test(js, js, null, MISSING_REQUIRE_STRICT_WARNING, warningText);
+    testSame(srcs(js), warning(MISSING_REQUIRE_STRICT_WARNING, warningText));
   }
 
   private void testMissingRequire(String js, String warningText) {
-    test(js, js, null, MISSING_REQUIRE_WARNING, warningText);
+    testSame(srcs(js), warning(MISSING_REQUIRE_WARNING, warningText));
   }
 
   private void testMissingRequire(String[] js, String warningText) {
-    test(js, js, null, MISSING_REQUIRE_WARNING, warningText);
+    testSame(srcs(js), warning(MISSING_REQUIRE_WARNING, warningText));
   }
 
   private void testMissingRequireForScope(String[] js, String warningText) {
-    test(js, js, null, MISSING_REQUIRE_FOR_GOOG_SCOPE, warningText);
+    testSame(srcs(js), warning(MISSING_REQUIRE_FOR_GOOG_SCOPE, warningText));
   }
 
   public void testPassWithNoNewNodes() {
@@ -335,7 +335,7 @@ public final class MissingRequireTest extends CompilerTestCase {
 
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "var foo;"));
-    test(externs, js, js, null, null, null);
+    testSame(externs(externs), srcs(js));
 
     testSame("goog.require('foo.bar.baz'); " + js);
     testSame("goog.require('foo.bar'); " + js);
@@ -347,7 +347,7 @@ public final class MissingRequireTest extends CompilerTestCase {
 
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "var foo;"));
-    test(externs, js, js, null, null, null);
+    testSame(externs(externs), srcs(js));
 
     testSame("goog.require('foo.bar.baz.call'); " + js);
     testSame("goog.require('foo.bar.baz'); " + js);
@@ -360,7 +360,7 @@ public final class MissingRequireTest extends CompilerTestCase {
 
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "var foo;"));
-    test(externs, js, js, null, null, null);
+    testSame(externs(externs), srcs(js));
 
     testSame("goog.require('foo.bar.baz.apply'); " + js);
     testSame("goog.require('foo.bar.baz'); " + js);
@@ -457,7 +457,7 @@ public final class MissingRequireTest extends CompilerTestCase {
     String js = "var goog = {}; class SubClass extends SomethingInExterns {}";
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "/** @constructor */ var SomethingInExterns;"));
-    test(externs, js, js, null, null, null);
+    testSame(externs(externs), srcs(js));
   }
 
   public void testEs6ClassExtendsSomethingInExternsWithNS() {
@@ -466,7 +466,7 @@ public final class MissingRequireTest extends CompilerTestCase {
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "var MyExterns;\n"
         + "/** @constructor */ MyExterns.SomethingInExterns;"));
-    test(externs, js, js, null, null, null);
+    testSame(externs(externs), srcs(js));
   }
 
   public void testFailConstant() {
@@ -500,7 +500,7 @@ public final class MissingRequireTest extends CompilerTestCase {
   }
 
   public void testPassConstantFromExterns() {
-    test("var example;", "alert(example.Constants.FOO);", (String) null, null, null);
+    testNoWarning("var example;", "alert(example.Constants.FOO);");
   }
 
   public void testFailWithNestedNewNodes() {
@@ -703,13 +703,13 @@ public final class MissingRequireTest extends CompilerTestCase {
   public void testIgnoresNativeObject() {
     String externs = "/** @constructor */ function String(val) {}";
     String js = "var str = new String('4');";
-    test(externs, js, js, null, null);
+    testSame(externs, js);
   }
 
   public void testPassExterns() {
     String externs = "/** @const */ var google = {};";
     String js = "var ll = new google.maps.LatLng();";
-    test(externs, js, js, null, null);
+    testSame(externs, js);
   }
 
   public void testNewNodesWithMoreThanOneFile() {
@@ -759,9 +759,9 @@ public final class MissingRequireTest extends CompilerTestCase {
   public void testCanStillCallNumberWithoutNewOperator() {
     String externs = "/** @constructor */ function Number(opt_value) {}";
     String js = "var n = Number('42');";
-    test(externs, js, js, null, null);
+    testSame(externs, js);
     js = "var n = Number();";
-    test(externs, js, js, null, null);
+    testSame(externs, js);
   }
 
   public void testRequiresAreCaughtBeforeProcessed() {
@@ -1011,7 +1011,7 @@ public final class MissingRequireTest extends CompilerTestCase {
         + "goog.scope(function() {\n"
         + "  var BASE_URL = location.href;\n"
         + "});";
-    testSame(externs, js, null);
+    testSame(externs, js);
   }
 
   public void testTypedefInGoogScope() {

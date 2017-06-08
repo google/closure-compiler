@@ -53,6 +53,6 @@ class ModulesTestUtils {
     String fileName = test.getFilename() + ".js";
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(SourceFile.fromCode("other.js", ""), SourceFile.fromCode(fileName, input));
-    test.test(inputs, null, error);
+    test.testError(inputs, error);
   }
 }

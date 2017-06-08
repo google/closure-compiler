@@ -791,7 +791,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "var e = new Extern(); e.baz;",
         "/** @constructor */ function Foo() {}" +
         "Foo.prototype.bar;" +
-        "var f = new Foo(); f.baz;", null);
+        "var f = new Foo(); f.baz;");
 
     ObjectType e = (ObjectType) globalScope.getVar("e").getType();
     assertEquals("?", e.getPropertyType("bar").toString());
@@ -807,7 +807,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @constructor */ function Extern() {}" +
         "/** @type {Extern} */ var myExtern;" +
         "/** @type {number} */ myExtern.foo;",
-        "", null);
+        "");
 
     JSType e = globalScope.getVar("myExtern").getType();
     assertEquals("(Extern|null)", e.toString());
@@ -825,7 +825,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @type {number} */ myExtern.foo;" +
         "/** @type {Extern} */ var myExtern;" +
         "/** @constructor */ function Extern() {}",
-        "", null);
+        "");
 
     JSType e = globalScope.getVar("myExtern").getType();
     assertEquals("(Extern|null)", e.toString());
@@ -842,7 +842,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "Extern.prototype.foo;" +
         "/** @constructor */ function Extern() {}",
-        "", null);
+        "");
 
     JSType e = globalScope.getVar("Extern").getType();
     assertEquals("function (new:Extern): ?", e.toString());
@@ -862,7 +862,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @return {number} */ extern.one;",
         "/** @constructor */ function Normal() {}" +
         "/** @type {Normal} */ var normal;" +
-        "/** @return {number} */ normal.one;", null);
+        "/** @return {number} */ normal.one;");
 
     JSType e = globalScope.getVar("Extern").getType();
     ObjectType externInstance = ((FunctionType) e).getInstanceType();
@@ -881,7 +881,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @type {Object} */ var extern;" +
         "/** @return {number} */ extern.one;",
         "/** @type {Object} */ var normal;" +
-        "/** @return {number} */ normal.one;", null);
+        "/** @return {number} */ normal.one;");
 
     JSType e = globalScope.getVar("extern").getType();
     assertFalse(e.dereference().hasOwnProperty("one"));
@@ -894,7 +894,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
     testSame(
         "/** @constructor \n * @param {*=} x @return {!Object} */"
         + "function Object(x) {}" +
-        "/** @type {number} */ Object.one;", "", null);
+        "/** @type {number} */ Object.one;", "");
 
     ObjectType obj = globalScope.getVar("Object").getType().dereference();
     assertTrue(obj.hasOwnProperty("one"));
@@ -906,7 +906,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
         "/** @constructor \n * @param {*} var_args */ " +
         "function Function(var_args) {}" +
         "/** @type {!Function} */ Function.prototype.apply;",
-        "var f = new Function();", null);
+        "var f = new Function();");
 
     ObjectType f = (ObjectType) globalScope.getVar("f").getType();
 
@@ -926,7 +926,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testTypesInExterns() throws Exception {
     testSame(
         CompilerTypeTestCase.DEFAULT_EXTERNS,
-        "", null);
+        "");
 
     TypedVar v = globalScope.getVar("Object");
     FunctionType obj = (FunctionType) v.getType();
@@ -1827,7 +1827,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   public void testActiveXObject() {
     testSame(
         CompilerTestCase.ACTIVE_X_OBJECT_DEF,
-        "var x = new ActiveXObject();", null);
+        "var x = new ActiveXObject();");
     assertEquals(
         "?",
         findNameType("x", globalScope).toString());

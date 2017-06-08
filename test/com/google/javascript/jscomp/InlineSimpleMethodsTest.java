@@ -212,18 +212,17 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
 
   public void testNoInlineOfExternMethods1() {
     testSame("var external={};external.charAt;",
-        "external.charAt()", null);
+        "external.charAt()");
   }
 
   public void testNoInlineOfExternMethods2() {
     testSame("var external={};external.charAt=function(){};",
-        "external.charAt()", null);
+        "external.charAt()");
   }
 
   public void testNoInlineOfExternMethods3() {
     testSame("var external={};external.bar=function(){};",
-        "function Foo(){}Foo.prototype.bar=function(){};(new Foo).bar()",
-        null);
+        "function Foo(){}Foo.prototype.bar=function(){};(new Foo).bar()");
   }
 
   public void testNoInlineOfDangerousProperty() {
@@ -258,20 +257,20 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
 
   public void testObjectLitExtern() {
     String externs = "window.bridge={_sip:function(){}};";
-    testSame(externs, "window.bridge._sip()", null);
+    testSame(externs, "window.bridge._sip()");
   }
 
   public void testExternFunction() {
     String externs = "function emptyFunction() {}";
     testSame(externs,
         "function Foo(){this.empty=emptyFunction}" +
-        "(new Foo).empty()", null);
+        "(new Foo).empty()");
   }
 
   public void testIssue2508576_1() {
     // Method defined by an extern should be left alone.
     String externs = "function alert(a) {}";
-    testSame(externs, "({a:alert,b:alert}).a(\"a\")", null);
+    testSame(externs, "({a:alert,b:alert}).a(\"a\")");
   }
 
   public void testIssue2508576_2() {
@@ -316,7 +315,6 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
         "function Foo(){this.prop=123}"
         + "Foo.prototype.m=function(){return this.prop}"
         + "(new Foo).m();"
-        + "esc(Foo)",
-        null, null);
+        + "esc(Foo)");
   }
 }

@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import java.util.List;
-
 /**
  * CompilerTestCase for passes that run after type checking and use type information.
  * Allows us to test those passes with both type checkers.
@@ -69,86 +67,58 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
   // "post-dominates" any `test` call.
 
   @Override
-  public void test(
-      List<SourceFile> externs,
-      String js,
-      String expected,
-      DiagnosticType error,
-      DiagnosticType warning,
-      String description) {
+  protected void testInternal(
+      Externs externs,
+      Sources js,
+      Expected expected,
+      Diagnostic diagnotic) {
     if (this.mode.runsOTI()) {
-      testOTI(externs, js, expected, error, warning, description);
+      testOTI(externs, js, expected, diagnotic);
     }
     if (this.mode.runsNTI()) {
-      testNTI(externs, js, expected, error, warning, description);
+      testNTI(externs, js, expected, diagnotic);
     }
     if (this.mode.runsNeither()) {
-      super.test(externs, js, expected, error, warning, description);
+      super.testInternal(externs, js, expected, diagnotic);
     }
   }
 
   private void testOTI(
-      List<SourceFile> externs,
-      String js,
-      String expected,
-      DiagnosticType error,
-      DiagnosticType warning,
-      String description) {
+      Externs externs,
+      Sources js,
+      Expected expected,
+      Diagnostic diagnotic) {
     enableTypeCheck();
-    super.test(externs, js, expected, error, warning, description);
+    super.testInternal(externs, js, expected, diagnotic);
     disableTypeCheck();
   }
 
   private void testNTI(
-      List<SourceFile> externs,
-      String js,
-      String expected,
-      DiagnosticType error,
-      DiagnosticType warning,
-      String description) {
+      Externs externs,
+      Sources js,
+      Expected expected,
+      Diagnostic diagnotic) {
     enableNewTypeInference();
-    super.test(externs, js, expected, error, warning, description);
+    super.testInternal(externs, js, expected, diagnotic);
     disableNewTypeInference();
   }
 
   @Override
-  public void test(
-      List<SourceFile> js,
-      List<SourceFile> expected,
-      DiagnosticType error,
-      DiagnosticType warning,
-      String description) {
-    if (this.mode.runsOTI()) {
-      enableTypeCheck();
-      super.test(js, expected, error, warning, description);
-      disableTypeCheck();
-    }
-    if (this.mode.runsNTI()) {
-      enableNewTypeInference();
-      super.test(js, expected, error, warning, description);
-      disableNewTypeInference();
-    }
-    if (this.mode.runsNeither()) {
-      super.test(js, expected, error, warning, description);
-    }
-  }
-
-  @Override
   protected void test(
-      Compiler compiler, List<SourceFile> inputs,
-      List<SourceFile> expected, DiagnosticType error, DiagnosticType warning) {
+      Compiler compiler, Sources inputs,
+      Expected expected, Diagnostic diagnostic) {
     if (this.mode.runsOTI()) {
       enableTypeCheck();
-      super.test(compiler, inputs, expected, error, warning);
+      super.test(compiler, inputs, expected, diagnostic);
       disableTypeCheck();
     }
     if (this.mode.runsNTI()) {
       enableNewTypeInference();
-      super.test(compiler, inputs, expected, error, warning);
+      super.test(compiler, inputs, expected, diagnostic);
       disableNewTypeInference();
     }
     if (this.mode.runsNeither()) {
-      super.test(compiler, inputs, expected, error, warning);
+      super.test(compiler, inputs, expected, diagnostic);
     }
   }
 

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.VarCheck.VAR_MULTIPLY_DECLARED_ERROR;
 
+import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
@@ -142,7 +143,7 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testMultiplyDeclaredVars4() {
-    testSame("x;", "var x = 1; var x = 2;", VAR_MULTIPLY_DECLARED_ERROR, true);
+    testSame("x;", "var x = 1; var x = 2;", error(VAR_MULTIPLY_DECLARED_ERROR));
   }
 
   public void testMultiplyDeclaredLets() {
@@ -188,29 +189,29 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testVarDeclarationInExterns() {
-    testSame("var asdf;", "asdf;", null);
+    testSame("var asdf;", "asdf;");
   }
 
   public void testFunctionDeclarationInExterns() {
-    testSame("function foo(x = 7) {}", "foo();", null);
-    testSame("function foo(...rest) {}", "foo(1,2,3);", null);
+    testSame("function foo(x = 7) {}", "foo();");
+    testSame("function foo(...rest) {}", "foo(1,2,3);");
   }
 
   public void testVarAssignmentInExterns() {
-    testSame("/** @type{{foo:string}} */ var foo; var asdf = foo;", "asdf.foo;", null);
+    testSame("/** @type{{foo:string}} */ var foo; var asdf = foo;", "asdf.foo;");
   }
 
   public void testAliasesInExterns() {
     externValidationErrorLevel = CheckLevel.ERROR;
 
-    testSame("var foo; /** @const */ var asdf = foo;", "", null);
+    testSame("var foo; /** @const */ var asdf = foo;", "");
     testSame(
-        "var Foo; var ns = {}; /** @const */ ns.FooAlias = Foo;", "", null);
+        "var Foo; var ns = {}; /** @const */ ns.FooAlias = Foo;", "");
     testSame(
         LINE_JOINER.join(
             "var ns = {}; /** @constructor */ ns.Foo = function() {};",
             "var ns2 = {}; /** @const */ ns2.Bar = ns.Foo;"),
-        "", null);
+        "");
   }
 
   public void testDuplicateNamespaceInExterns() {
@@ -221,17 +222,16 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testLetDeclarationInExterns() {
-    testSame("let asdf;", "asdf;", null);
+    testSame("let asdf;", "asdf;");
   }
 
   public void testConstDeclarationInExterns() {
-    testSame("const asdf = 1;", "asdf;", null);
+    testSame("const asdf = 1;", "asdf;");
   }
 
   public void testNewInExterns() {
     // Class is not hoisted.
-    testSame("x = new Klass();", "class Klass{}",
-        VarCheck.UNDEFINED_VAR_ERROR, true);
+    testSame("x = new Klass();", "class Klass{}", error(VarCheck.UNDEFINED_VAR_ERROR));
   }
 
   public void testPropReferenceInExterns1() {
@@ -240,8 +240,7 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testPropReferenceInExterns2() {
-    testSame("asdf.foo;", "",
-        VarCheck.UNDEFINED_VAR_ERROR, true);
+    testSame("asdf.foo;", "", error(VarCheck.UNDEFINED_VAR_ERROR));
   }
 
   public void testPropReferenceInExterns3() {
@@ -249,12 +248,10 @@ public final class VarCheckTest extends CompilerTestCase {
         VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
 
     externValidationErrorLevel = CheckLevel.ERROR;
-    testSame(
-        "asdf.foo;", "var asdf;",
-         VarCheck.UNDEFINED_EXTERN_VAR_ERROR, true);
+    testSame("asdf.foo;", "var asdf;", error(VarCheck.UNDEFINED_EXTERN_VAR_ERROR));
 
     externValidationErrorLevel = CheckLevel.OFF;
-    test("asdf.foo;", "var asdf;", "var /** @suppress {duplicate} */ asdf;", null, null);
+    test("asdf.foo;", "var asdf;", "var /** @suppress {duplicate} */ asdf;");
   }
 
   public void testPropReferenceInExterns4() {
@@ -430,6 +427,16 @@ public final class VarCheckTest extends CompilerTestCase {
     testTwoModules(code1, code2, false, error, warning);
   }
 
+  private Diagnostic fromDiagnosticType(
+      DiagnosticType error,
+      DiagnosticType warning,
+      String description) {
+    Preconditions.checkState(error == null || warning == null);
+    Diagnostic diagnotic = (error != null) ? error(error, description)
+                             : (warning != null) ? warning(warning, description) : null;
+    return diagnotic;
+  }
+
   private void testTwoModules(String code1, String code2, boolean m2DependsOnm1,
                               DiagnosticType error, DiagnosticType warning) {
     JSModule m1 = new JSModule("m1");
@@ -441,10 +448,9 @@ public final class VarCheckTest extends CompilerTestCase {
     }
     if (error == null) {
       test(new JSModule[] { m1, m2 },
-           new String[] { code1, code2 }, null, warning);
+           expected(new String[] { code1, code2 }), warning(warning));
     } else {
-      test(new JSModule[] { m1, m2 },
-           null, error, warning);
+      test(new JSModule[] { m1, m2 }, null, fromDiagnosticType(error, warning, null));
     }
   }
 

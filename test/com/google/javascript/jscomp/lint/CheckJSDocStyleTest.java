@@ -781,24 +781,21 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
 
     testSame(
         "/** @fileoverview Some super cool externs.\n * @externs\n */ function Example() {}",
-        "",
-        null);
+        "");
 
     testSame(
         LINE_JOINER.join(
             "/** @fileoverview Some super cool externs.\n * @externs\n */",
             "/** @constructor */ function Example() {}",
             "/** @param {number} x */ function example2(x) {}"),
-        "",
-        null);
+        "");
 
     test(
         new String[] {
             "/** @fileoverview Some externs.\n * @externs\n */ /** @const */ var example;",
             "/** @fileoverview Some more.\n * @externs\n */ /** @const */ var example2;",
         },
-        new String[] {},
-        null, null);
+        new String[] {});
   }
 
   public void testConstructorsDontHaveVisibility() {

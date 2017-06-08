@@ -175,8 +175,7 @@ public final class ProcessDefinesTest extends TypeICompilerTestCase {
     test(
         "/** @define {boolean} */ var DEF_BAD_OVERRIDE = true",
         "/** @define {boolean} */ var DEF_BAD_OVERRIDE = true",
-        null,
-        ProcessDefines.UNKNOWN_DEFINE_WARNING);
+        warning(ProcessDefines.UNKNOWN_DEFINE_WARNING));
   }
 
   public void testCompiledIsKnownDefine() {
@@ -339,8 +338,7 @@ public final class ProcessDefinesTest extends TypeICompilerTestCase {
 
   public void testNamespacedDefine3() {
     overrides.put("a.B", new Node(Token.TRUE));
-    test("var a = {};", "var a = {};", null,
-         ProcessDefines.UNKNOWN_DEFINE_WARNING);
+    test("var a = {};", "var a = {};", warning(ProcessDefines.UNKNOWN_DEFINE_WARNING));
   }
 
   public void testNamespacedDefine4() {

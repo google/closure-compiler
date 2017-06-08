@@ -447,7 +447,7 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
   }
 
   public void testReadPropertyOfGlobalThis() {
-    testSame("Object.prototype.prop;", "f(this.prop);", null);
+    testSame("Object.prototype.prop;", "f(this.prop);");
   }
 
   public void testSetQuotedPropertyOfThis() {

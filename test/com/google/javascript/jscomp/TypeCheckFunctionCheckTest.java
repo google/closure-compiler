@@ -188,7 +188,7 @@ public final class TypeCheckFunctionCheckTest extends CompilerTestCase {
 
     // Extern constructor with explicit return type can be called without
     // the "new" keyword
-    testSame(METHOD_DEFS, "Bar();", null);
+    testSame(METHOD_DEFS, "Bar();");
   }
 
   public void assertOk(String params, String arguments) {

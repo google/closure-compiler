@@ -343,7 +343,7 @@ public final class TypeValidatorTest extends CompilerTestCase {
 
   public void testModuloNullUndef12() {
     // Only warn for the file not ending in .java.js
-    test(ImmutableList.of(
+    testWarning(ImmutableList.of(
         SourceFile.fromCode(
             "foo.js",
             LINE_JOINER.join(
@@ -356,8 +356,6 @@ public final class TypeValidatorTest extends CompilerTestCase {
                 "function g(/** number */ to, /** (number|null) */ from) {",
                 "  to = from;",
                 "}"))),
-        null,
-        null,
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 

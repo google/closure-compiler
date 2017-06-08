@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING;
 
 import com.google.common.collect.ImmutableList;
-
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import java.util.List;
 
@@ -71,14 +70,14 @@ public final class ExtraRequireTest extends CompilerTestCase {
     String js = "goog.require('ns.Foo'); /** @type {ns.Foo} */ var f;";
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "/** @const */ var ns;"));
-    test(externs, js, js, null, null, null);
+    testSame(externs(externs), srcs(js));
   }
 
   public void testNoWarning_externsNew() {
     String js = "goog.require('ns.Foo'); new ns.Foo();";
     List<SourceFile> externs = ImmutableList.of(SourceFile.fromCode("externs",
         "/** @const */ var ns;"));
-    test(externs, js, js, null, null, null);
+    testSame(externs(externs), srcs(js));
   }
 
   public void testNoWarning_objlitShorthand() {

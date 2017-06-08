@@ -930,7 +930,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
         "goog.exportProperty = function(a, b, c) {};",
         js);
 
-    testSame(externs, js, null);
+    testSame(externs, js);
 
     return getLastCompiler().getResult().externExport;
   }

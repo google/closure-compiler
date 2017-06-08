@@ -2237,35 +2237,31 @@ public class PolymerPassTest extends CompilerTestCase {
   }
 
   public void testInvalidTypeAssignment() {
-    test(
-        LINE_JOINER.join(
-            "var X = Polymer({",
-            "  is: 'x-element',",
-            "  properties: {",
-            "    isHappy: Boolean,",
-            "  },",
-            "  /** @override */",
-            "  created: function() {",
-            "    this.isHappy = 7;",
-            "  },",
-            "});"),
-        LINE_JOINER.join(
-            "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
-            "var X = function() {};",
-            "/** @type {boolean} */",
-            "X.prototype.isHappy;",
-            "X = Polymer(/** @lends {X.prototype} */ {",
-            "  is: 'x-element',",
-            "  properties: {",
-            "    isHappy: Boolean,",
-            "  },",
-            "  /** @override @this {X} */",
-            "  created: function() {",
-            "    this.isHappy = 7;",
-            "  },",
-            "});"),
-        null,
-        TYPE_MISMATCH_WARNING);
+    test(LINE_JOINER.join(
+    "var X = Polymer({",
+    "  is: 'x-element',",
+    "  properties: {",
+    "    isHappy: Boolean,",
+    "  },",
+    "  /** @override */",
+    "  created: function() {",
+    "    this.isHappy = 7;",
+    "  },",
+    "});"), LINE_JOINER.join(
+    "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
+    "var X = function() {};",
+    "/** @type {boolean} */",
+    "X.prototype.isHappy;",
+    "X = Polymer(/** @lends {X.prototype} */ {",
+    "  is: 'x-element',",
+    "  properties: {",
+    "    isHappy: Boolean,",
+    "  },",
+    "  /** @override @this {X} */",
+    "  created: function() {",
+    "    this.isHappy = 7;",
+    "  },",
+    "});"), warning(TYPE_MISMATCH_WARNING));
   }
 
   public void testES6FeaturesInFunctionBody() {
