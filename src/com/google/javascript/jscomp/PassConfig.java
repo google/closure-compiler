@@ -25,7 +25,6 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Pass factories and meta-data for native Compiler passes.
@@ -301,7 +300,7 @@ public abstract class PassConfig {
     final FunctionNames functionNames;
     final String idGeneratorMap;
 
-    public State(Map<String, Integer> cssNames, Set<String> exportedNames,
+    public State(Map<String, Integer> cssNames,
         CrossModuleMethodMotion.IdGenerator crossModuleIdGenerator,
         VariableMap variableMap, VariableMap propertyMap,
         VariableMap anonymousFunctionNameMap,

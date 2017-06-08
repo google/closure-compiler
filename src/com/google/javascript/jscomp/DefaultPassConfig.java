@@ -156,7 +156,6 @@ public final class DefaultPassConfig extends PassConfig {
   protected State getIntermediateState() {
     return new State(
         cssNames == null ? null : new HashMap<>(cssNames),
-        null,
         crossModuleIdGenerator, variableMap, propertyMap,
         anonymousFunctionNameMap, stringMap, functionNames, idGeneratorMap);
   }
