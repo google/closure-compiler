@@ -123,9 +123,9 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
   /**
    * Rewrite a single ES6 module file to a global script version.
    */
-  public void processFile(Node root, boolean forceRewrite) {
+  public void processFile(Node root) {
     Preconditions.checkArgument(isEs6ModuleRoot(root), root);
-    this.forceRewrite = forceRewrite;
+    this.forceRewrite = true;
     NodeTraversal.traverseEs6(compiler, root, this);
   }
 
@@ -169,8 +169,10 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isImport()) {
+      forceRewrite = false;
       visitImport(t, n, parent);
     } else if (n.isExport()) {
+      forceRewrite = false;
       visitExport(t, n, parent);
     } else if (n.isScript()) {
       scriptNodeCount++;
