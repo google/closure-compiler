@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -1100,6 +1101,7 @@ class TypeInference
    * a function literal argument from the function parameter type.
    */
   private void updateTypeOfParameters(Node n, FunctionType fnType) {
+    checkState(n.isCall() || n.isNew(), n);
     int i = 0;
     int childCount = n.getChildCount();
     Node iArgument = n.getFirstChild();
