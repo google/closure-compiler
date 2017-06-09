@@ -227,7 +227,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
 
     // If the code is NOT a JsAst, then it was not originally JS code.
     // Look at the Ast for dependency info.
-    if (!(ast instanceof JsAst)) {
+    if (!(ast instanceof JsAst) || !JsFileParser.isSupported()) {
 
       DepsFinder finder = new DepsFinder(compiler.getCodingConvention());
       Node root = getAstRoot(compiler);
@@ -293,27 +293,29 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     }
 
     void visitSubtree(Node n, Node parent) {
-      if (n.isCall()) {
-        boolean isModuleDetected =  codingConvention.extractIsModuleFile(n, parent);
+      switch (n.getToken()) {
+        case CALL:
+          boolean isModuleDetected = codingConvention.extractIsModuleFile(n, parent);
 
-        if (isModuleDetected) {
-          loadFlags.put("module", "goog");
-        }
+          if (isModuleDetected) {
+            loadFlags.put("module", "goog");
+          }
 
-        String require =
-            codingConvention.extractClassNameIfRequire(n, parent);
-        if (require != null) {
-          requires.add(require);
-        }
+          String require = codingConvention.extractClassNameIfRequire(n, parent);
+          if (require != null) {
+            requires.add(require);
+          }
 
-        String provide =
-            codingConvention.extractClassNameIfProvide(n, parent);
-        if (provide != null) {
-          provides.add(provide);
-        }
-        return;
-      } else if (parent != null && !parent.isExprResult() && !NodeUtil.isTopLevel(parent)) {
-        return;
+          String provide = codingConvention.extractClassNameIfProvide(n, parent);
+          if (provide != null) {
+            provides.add(provide);
+          }
+          return;
+        default:
+          if (parent != null && !parent.isExprResult() && !NodeUtil.isTopLevel(parent)) {
+            return;
+          }
+          break;
       }
 
       for (Node child = n.getFirstChild();
@@ -388,10 +390,14 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   }
 
   ModulePath getPath() {
+    return getPath(getName());
+  }
+
+  private ModulePath getPath(String name) {
     if (modulePath == null) {
       // Note: this method will not be called until Es6RewriteModules
       // (and similar), after Compiler.moduleLoader is already set.
-      this.modulePath = compiler.getModuleLoader().resolve(getName());
+      this.modulePath = compiler.getModuleLoader().resolve(name);
     }
     return modulePath;
   }

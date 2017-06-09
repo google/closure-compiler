@@ -64,6 +64,7 @@ import java.io.Serializable;
 import java.nio.file.FileSystems;
 import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1786,8 +1787,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                   processJsonInputs(inputs));
         }
 
-        if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)) {
-          processEs6Modules();
+        if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)) {
+          parsePotentialModules(inputs);
         }
 
         // Modules inferred in ProcessCommonJS pass.
@@ -1819,7 +1820,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         }
 
         if (!inputsToRewrite.isEmpty()) {
-          processEs6Modules(new ArrayList<>(inputsToRewrite.values()), true);
+          forceToEs6Modules(inputsToRewrite.values());
+        }
+
+        if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)) {
+          processEs6Modules();
         }
       } else {
         // Use an empty module loader if we're not actually dealing with modules.
@@ -2055,15 +2060,26 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   void processEs6Modules() {
-    processEs6Modules(inputs, false);
+    processEs6Modules(parsePotentialModules(inputs));
   }
 
-  void processEs6Modules(List<CompilerInput> inputsToProcess, boolean forceRewrite) {
+  void forceToEs6Modules(Collection<CompilerInput> inputsToProcess) {
+    for (CompilerInput input : inputsToProcess) {
+      input.setCompiler(this);
+      Node root = input.getAstRoot(this);
+      if (root == null) {
+        continue;
+      }
+      Es6RewriteModules moduleRewriter = new Es6RewriteModules(this);
+      moduleRewriter.forceToEs6Module(root);
+    }
+  }
+
+  private List<CompilerInput> parsePotentialModules(List<CompilerInput> inputsToProcess) {
     List<CompilerInput> filteredInputs = new ArrayList<>();
     for (CompilerInput input : inputsToProcess) {
-      // Only process files that are detected as ES6 modules or forced to be rewritten
-      if (forceRewrite
-          || !options.dependencyOptions.shouldPruneDependencies()
+      // Only process files that are detected as ES6 modules
+      if (!options.dependencyOptions.shouldPruneDependencies()
           || !JsFileParser.isSupported()
           || (input.getLoadFlags().containsKey("module")
               && input.getLoadFlags().get("module").equals("es6"))) {
@@ -2076,15 +2092,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     for (CompilerInput input : filteredInputs) {
       input.setCompiler(this);
       Node root = input.getAstRoot(this);
+      input.getRequires();
+    }
+    return filteredInputs;
+  }
+
+  void processEs6Modules(List<CompilerInput> inputsToProcess) {
+    for (CompilerInput input : inputsToProcess) {
+      input.setCompiler(this);
+      Node root = input.getAstRoot(this);
       if (root == null) {
         continue;
       }
-      Es6RewriteModules moduleRewriter = new Es6RewriteModules(this);
-      if (forceRewrite) {
-        moduleRewriter.forceToEs6Module(root);
-      }
       if (Es6RewriteModules.isEs6ModuleRoot(root)) {
-        moduleRewriter.processFile(root);
+        new Es6RewriteModules(this).processFile(root);
       }
     }
     setFeatureSet(featureSet.without(Feature.MODULES));
