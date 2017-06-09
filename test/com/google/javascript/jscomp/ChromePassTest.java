@@ -372,6 +372,41 @@ public class ChromePassTest extends CompilerTestCase {
         "cr.ui = cr.ui || {};\n" + "cr.define('cr.ui', function() {\n" + "  return {};\n" + "});");
   }
 
+  public void testCrDefineFunction() throws Exception {
+    test(
+        LINE_JOINER.join(
+            "cr.define('settings', function() {",
+            "  var x = 0;",
+            "  function C() {}",
+            "  return { C: C };",
+            "});"),
+        LINE_JOINER.join(
+            "var settings = settings || {};",
+            "cr.define('settings', function() {",
+            "  var x = 0;",
+            "  settings.C = function C() {};",
+            "  return { C: settings.C };",
+            "});"));
+  }
+
+  // Currently this throws an exception: https://github.com/google/closure-compiler/issues/2526
+  public void disabled_testCrDefineClass() throws Exception {
+    test(
+        LINE_JOINER.join(
+            "cr.define('settings', function() {",
+            "  var x = 0;",
+            "  class C {}",
+            "  return { C: C };",
+            "});"),
+        LINE_JOINER.join(
+            "var settings = settings || {};",
+            "cr.define('settings', function() {",
+            "  var x = 0;",
+            "  settings.C = class C {}",
+            "  return { C: C };",
+            "});"));
+  }
+
   public void testCrExportPathInvalidNumberOfArguments() throws Exception {
     testError("cr.exportPath();", ChromePass.CR_EXPORT_PATH_TOO_FEW_ARGUMENTS);
   }
