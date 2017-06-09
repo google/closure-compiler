@@ -24,7 +24,10 @@ import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 
 /**
  * Test cases for ES6 transpilation. Despite the name, this isn't just testing {@link
@@ -119,7 +122,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2016);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableRunTypeCheckAfterProcessing();
   }
@@ -130,6 +133,11 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
       @Override
       protected CompilerPass create(AbstractCompiler compiler) {
         return pass;
+      }
+
+      @Override
+      protected FeatureSet featureSet() {
+        return ES7;
       }
     };
   }
@@ -278,12 +286,10 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testExponentiationOperator() {
-    setLanguage(LanguageMode.ECMASCRIPT_2016, LanguageMode.ECMASCRIPT5);
     test("2 ** 2;", "Math.pow(2,2)");
   }
 
   public void testExponentiationAssignmentOperator() {
-    setLanguage(LanguageMode.ECMASCRIPT_2016, LanguageMode.ECMASCRIPT5);
     test("x **= 2;", "x=Math.pow(x,2)");
   }
 
