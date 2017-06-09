@@ -186,6 +186,18 @@ jasmine.anything = function() {};
  */
 jasmine.objectContaining = function(sample) {};
 
+/**
+ * @param {!Array} sample
+ * @return {!jasmine.Matchers}
+ */
+jasmine.arrayContaining = function(sample) {};
+
+/**
+ * @param {string|!RegExp} sample
+ * @return {!jasmine.Matchers}
+ */
+jasmine.stringMatching = function(sample) {};
+
 
 
 /** @constructor */
