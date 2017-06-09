@@ -77,6 +77,11 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           "JSC_INVALID_DESTRUCTURING_REQUIRE",
           "Destructuring goog.require must be a simple object pattern.");
 
+  static final DiagnosticType INVALID_DESTRUCTURING_FORWARD_DECLARE =
+      DiagnosticType.error(
+          "JSC_INVALID_DESTRUCTURING_FORWARD_DECLARE",
+          "Cannot destructure a forward-declared type");
+
   static final DiagnosticType LET_GOOG_REQUIRE =
       DiagnosticType.disabled(
           "JSC_LET_GOOG_REQUIRE",
@@ -392,6 +397,9 @@ public final class ClosureCheckModule extends AbstractModuleCallback
     if (lhs.isDestructuringLhs()) {
       if (!isValidDestructuringImport(lhs)) {
         t.report(declaration, INVALID_DESTRUCTURING_REQUIRE);
+      }
+      if (callNode.getFirstChild().matchesQualifiedName("goog.forwardDeclare")) {
+        t.report(lhs, INVALID_DESTRUCTURING_FORWARD_DECLARE);
       }
     } else {
       Preconditions.checkState(lhs.isName());

@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_REFERE
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_GOOG_MODULE_GET;
 import static com.google.javascript.jscomp.ClosureCheckModule.GOOG_MODULE_USES_THROW;
 import static com.google.javascript.jscomp.ClosureCheckModule.INCORRECT_SHORTNAME_CAPITALIZATION;
+import static com.google.javascript.jscomp.ClosureCheckModule.INVALID_DESTRUCTURING_FORWARD_DECLARE;
 import static com.google.javascript.jscomp.ClosureCheckModule.INVALID_DESTRUCTURING_REQUIRE;
 import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.LET_GOOG_REQUIRE;
@@ -545,6 +546,12 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "",
             "let a = goog.require('foo.a');"),
         LET_GOOG_REQUIRE);
+  }
+
+  public void testIllegalDestructuringForwardDeclare() {
+    testError(
+        "goog.module('m'); var {x} = goog.forwardDeclare('a.b.c');",
+        INVALID_DESTRUCTURING_FORWARD_DECLARE);
   }
 
   public void testLegalGoogRequires() {
