@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.testing.BlackHoleErrorManager;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
@@ -165,6 +166,9 @@ public abstract class CompilerTestCase extends TestCase {
   private LanguageMode acceptedLanguage;
 
   private LanguageMode languageOut;
+
+  /** How to interpret ES6 module imports */
+  private ModuleLoader.ResolutionMode moduleResolutionMode;
 
   /**
    * Whether externs changes should be allowed for this pass.
@@ -414,6 +418,7 @@ public abstract class CompilerTestCase extends TestCase {
     // TODO(sdh): Initialize *all* the options here, but first we must ensure no subclass
     // is changing them in the constructor, rather than in their own setUp method.
     this.acceptedLanguage = LanguageMode.ECMASCRIPT_2017;
+    this.moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
     this.allowExternsChanges = false;
     this.allowSourcelessWarnings = false;
     this.astValidationEnabled = true;
@@ -475,6 +480,7 @@ public abstract class CompilerTestCase extends TestCase {
     options.setLanguageIn(acceptedLanguage);
     options.setEmitUseStrict(emitUseStrict);
     options.setLanguageOut(languageOut);
+    options.setModuleResolutionMode(moduleResolutionMode);
 
     // This doesn't affect whether checkSymbols is run--it just affects
     // whether variable warnings are filtered.
@@ -587,6 +593,11 @@ public abstract class CompilerTestCase extends TestCase {
   protected final void setLanguageOut(LanguageMode acceptedLanguage) {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.languageOut = acceptedLanguage;
+  }
+
+  protected final void setModuleResolutionMode(ModuleLoader.ResolutionMode moduleResolutionMode) {
+    checkState(this.setUpRan, "Attempted to configure before running setUp().");
+    this.moduleResolutionMode = moduleResolutionMode;
   }
 
   /**

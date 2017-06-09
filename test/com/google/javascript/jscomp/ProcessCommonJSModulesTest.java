@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -32,6 +33,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     // Trigger module processing after parsing.
     options.setProcessCommonJSModules(true);
+    options.setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
 
     if (moduleRoots != null) {
       options.setModuleRoots(moduleRoots);

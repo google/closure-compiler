@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.Es6RewriteModules.LHS_OF_GOOG_REQUIRE
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -77,21 +78,21 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   public void testImport() {
     testModules(
-        "import name from './other'; use(name);",
+        "import name from './other.js'; use(name);",
         "goog.require('module$other'); use(module$other.default);");
 
-    testModules("import {n as name} from './other';", "goog.require('module$other');");
+    testModules("import {n as name} from './other.js';", "goog.require('module$other');");
 
     testModules(
-        "import x, {f as foo, b as bar} from './other'; use(x);",
-        "goog.require('module$other'); use(module$other.default);");
-
-    testModules(
-        "import {default as name} from './other'; use(name);",
+        "import x, {f as foo, b as bar} from './other.js'; use(x);",
         "goog.require('module$other'); use(module$other.default);");
 
     testModules(
-        "import {class as name} from './other'; use(name);",
+        "import {default as name} from './other.js'; use(name);",
+        "goog.require('module$other'); use(module$other.default);");
+
+    testModules(
+        "import {class as name} from './other.js'; use(name);",
         "goog.require('module$other'); use(module$other.class);");
   }
 
@@ -104,13 +105,13 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   public void testImportStar() {
     testModules(
-        "import * as name from './other'; use(name.foo);",
+        "import * as name from './other.js'; use(name.foo);",
         "goog.require('module$other'); use(module$other.foo)");
   }
 
   public void testTypeNodeRewriting() {
     testModules(
-        "import * as name from './other'; /** @type {name.foo} */ var x;",
+        "import * as name from './other.js'; /** @type {name.foo} */ var x;",
         "goog.require('module$other');"
             + "/** @type {module$other.foo} */ var x$$module$testcode;");
   }
@@ -215,7 +216,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   public void testImportAndExport() {
     testModules(
-        LINE_JOINER.join("import {name as n} from './other';", "use(n);", "export {n as name};"),
+        LINE_JOINER.join("import {name as n} from './other.js';", "use(n);", "export {n as name};"),
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "goog.require('module$other');",
@@ -226,9 +227,9 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   public void testExportFrom() {
     testModules(
         LINE_JOINER.join(
-            "export {name} from './other';",
-            "export {default} from './other';",
-            "export {class} from './other';"),
+            "export {name} from './other.js';",
+            "export {default} from './other.js';",
+            "export {class} from './other.js';"),
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "goog.require('module$other');",
@@ -237,7 +238,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "module$testcode.class = module$other.class;"));
 
     testModules(
-        "export {a, b as c, d} from './other';",
+        "export {a, b as c, d} from './other.js';",
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "goog.require('module$other');",
@@ -246,7 +247,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "module$testcode.d = module$other.d;"));
 
     testModules(
-        "export {a as b, b as a} from './other';",
+        "export {a as b, b as a} from './other.js';",
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "goog.require('module$other');",
@@ -255,9 +256,9 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         LINE_JOINER.join(
-            "export {default as a} from './other';",
-            "export {a as a2, default as b} from './other';",
-            "export {class as switch} from './other';"),
+            "export {default as a} from './other.js';",
+            "export {a as a2, default as b} from './other.js';",
+            "export {class as switch} from './other.js';"),
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "goog.require('module$other');",
@@ -319,7 +320,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   public void testExtendImportedClass() {
     testModules(
         LINE_JOINER.join(
-            "import {Parent} from './other';",
+            "import {Parent} from './other.js';",
             "class Child extends Parent {",
             "  /** @param {Parent} parent */",
             "  useParent(parent) {}",
@@ -333,21 +334,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         LINE_JOINER.join(
-            "import {Parent} from './other';",
-            "class Child extends Parent {",
-            "  /** @param {./other.Parent} parent */",
-            "  useParent(parent) {}",
-            "}"),
-        LINE_JOINER.join(
-            "goog.require('module$other');",
-            "class Child$$module$testcode extends module$other.Parent {",
-            "  /** @param {module$other.Parent} parent */",
-            "  useParent(parent) {}",
-            "}"));
-
-    testModules(
-        LINE_JOINER.join(
-            "import {Parent} from './other';",
+            "import {Parent} from './other.js';",
             "export class Child extends Parent {",
             "  /** @param {Parent} parent */",
             "  useParent(parent) {}",
@@ -390,6 +377,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   }
 
   public void testReferenceToTypeFromOtherModule() {
+    setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
     testModules(
         LINE_JOINER.join(
             "export class Foo {", "  /** @param {./other.Baz} baz */", "  useBaz(baz) {}", "}"),
@@ -414,12 +402,27 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "  useBaz(baz) {}",
             "}",
             "/** @const */ module$testcode.Foo = Foo$$module$testcode;"));
+
+    testModules(
+        LINE_JOINER.join(
+            "import {Parent} from './other.js';",
+            "class Child extends Parent {",
+            "  /** @param {./other.Parent} parent */",
+            "  useParent(parent) {}",
+            "}"),
+        LINE_JOINER.join(
+            "goog.require('module$other');",
+            "class Child$$module$testcode extends module$other.Parent {",
+            "  /** @param {module$other.Parent} parent */",
+            "  useParent(parent) {}",
+            "}"));
+
   }
 
   public void testRenameTypedef() {
     testModules(
         LINE_JOINER.join(
-            "import './other';", "/** @typedef {string|!Object} */", "export var UnionType;"),
+            "import './other.js';", "/** @typedef {string|!Object} */", "export var UnionType;"),
         LINE_JOINER.join(
             "goog.provide('module$testcode');",
             "goog.require('module$other');",
@@ -432,8 +435,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   public void testRenameImportedReference() {
     testModules(
         LINE_JOINER.join(
-            "import {f} from './other';",
-            "import {b as bar} from './other';",
+            "import {f} from './other.js';",
+            "import {b as bar} from './other.js';",
             "f();",
             "function g() {",
             "  f();",
@@ -477,11 +480,11 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "module$testcode.x = x$$module$testcode"));
 
     testModules(
-        "import * as s from './other'; goog.require('foo.bar');",
+        "import * as s from './other.js'; goog.require('foo.bar');",
         "goog.require('module$other'); goog.require('foo.bar');");
 
     testModules(
-        "goog.require('foo.bar'); import * as s from './other';",
+        "goog.require('foo.bar'); import * as s from './other.js';",
         "goog.require('module$other'); goog.require('foo.bar'); ");
   }
 
@@ -505,14 +508,14 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "module$testcode.x = x$$module$testcode"));
 
     testModules(
-        "import * as s from './other'; const bar = goog.require('foo.bar');",
+        "import * as s from './other.js'; const bar = goog.require('foo.bar');",
         LINE_JOINER.join(
             "goog.require('module$other');",
             "goog.require('foo.bar');",
             "const bar$$module$testcode = foo.bar;"));
 
     testModules(
-        "const bar = goog.require('foo.bar'); import * as s from './other';",
+        "const bar = goog.require('foo.bar'); import * as s from './other.js';",
         LINE_JOINER.join(
             "goog.require('module$other');",
             "goog.require('foo.bar');",
@@ -529,18 +532,18 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
         LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
 
     testModules(
-        "import * as s from './other'; var bar = goog.require('foo.bar');",
+        "import * as s from './other.js'; var bar = goog.require('foo.bar');",
         LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
 
     testModules(
-        "var bar = goog.require('foo.bar'); import * as s from './other';",
+        "var bar = goog.require('foo.bar'); import * as s from './other.js';",
         LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
   }
 
   public void testGoogRequiresDestructuring_rewrite() {
     testModules(
         LINE_JOINER.join(
-            "import * as s from './other';",
+            "import * as s from './other.js';",
             "const {foo, bar} = goog.require('some.name.space');",
             "use(foo, bar);"),
         LINE_JOINER.join(
@@ -554,14 +557,14 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         LINE_JOINER.join(
-            "import * as s from './other';",
+            "import * as s from './other.js';",
             "var {foo, bar} = goog.require('some.name.space');",
             "use(foo, bar);"),
         LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
 
     testModules(
         LINE_JOINER.join(
-            "import * as s from './other';",
+            "import * as s from './other.js';",
             "let {foo, bar} = goog.require('some.name.space');",
             "use(foo, bar);"),
         LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
@@ -599,7 +602,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   public void testObjectDestructuringAndObjLitShorthand() {
     testModules(
         LINE_JOINER.join(
-            "import {f} from './other';",
+            "import {f} from './other.js';",
             "const foo = 1;",
             "const {a, b} = f({foo});",
             "use(a, b);"),
@@ -614,11 +617,11 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   }
 
   public void testImportWithoutReferences() {
-    testModules("import './other';", "goog.require('module$other');");
+    testModules("import './other.js';", "goog.require('module$other');");
     // GitHub issue #1819: https://github.com/google/closure-compiler/issues/1819
     // Need to make sure the order of the goog.requires matches the order of the imports.
     testModules(
-        "import './other'; import './yet_another';",
+        "import './other.js'; import './yet_another.js';",
         "goog.require('module$other'); goog.require('module$yet_another');");
   }
 
@@ -646,7 +649,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             SourceFile.fromCode(Compiler.joinPathParts("base", "mod", "name.js"), ""),
             SourceFile.fromCode(
                 Compiler.joinPathParts("base", "test", "sub.js"),
-                "import * as foo from '/mod/name';")),
+                "import * as foo from '/mod/name.js';")),
         ImmutableList.of(
             SourceFile.fromCode(
                 Compiler.joinPathParts("base", "mod", "name.js"),
