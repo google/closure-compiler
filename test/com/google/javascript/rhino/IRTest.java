@@ -60,6 +60,12 @@ public class IRTest extends TestCase {
         "    BLOCK\n");
   }
 
+  public void testArrowFunction() {
+    testIR(
+        IR.arrowFunction(IR.name("hi"), IR.paramList(), IR.block()),
+        "FUNCTION hi [arrow_fn: 1]\n" + "    NAME hi\n" + "    PARAM_LIST\n" + "    BLOCK\n");
+  }
+
   public void testParamList() {
     testIR(IR.paramList(),
         "PARAM_LIST\n");

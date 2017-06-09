@@ -73,6 +73,15 @@ public class IR {
     return new Node(Token.FUNCTION, name, params, body);
   }
 
+  public static Node arrowFunction(Node name, Node params, Node body) {
+    Preconditions.checkState(name.isName());
+    Preconditions.checkState(params.isParamList());
+    Preconditions.checkState(body.isNormalBlock() || mayBeExpression(body));
+    Node func = new Node(Token.FUNCTION, name, params, body);
+    func.setIsArrowFunction(true);
+    return func;
+  }
+
   public static Node paramList() {
     return new Node(Token.PARAM_LIST);
   }
