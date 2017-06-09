@@ -67,6 +67,20 @@ public final class Config {
       }
       throw new IllegalStateException("No input language mode supports feature: " + feature);
     }
+
+    /** Returns the lowest {@link LanguageMode} that supports the specified feature set. */
+    public static LanguageMode minimumRequiredForSet(FeatureSet featureSet) {
+      for (LanguageMode mode : LanguageMode.values()) {
+        if (mode.featureSet.contains(featureSet)) {
+          return mode;
+        }
+      }
+      throw new IllegalStateException("No input language mode supports feature set: " + featureSet);
+    }
+
+    public static LanguageMode latestEcmaScript() {
+      return ECMASCRIPT8;
+    }
   }
 
   /**
