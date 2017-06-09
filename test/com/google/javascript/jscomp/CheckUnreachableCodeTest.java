@@ -311,9 +311,14 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     assertUnreachable("var C = class{func(){if (true){return;} x = 1;}}");
   }
 
-  // TODO(tbreisacher): This should not produce a warning.
-  public void testClass_incorrect() {
-    assertUnreachable("class C {} alert(1);");
+  public void testUnderClass() {
+    testSame("class C {} alert(1);");
+    testSame("class D {} class C extends D {} alert(1)");
+    testSame("class D{} alert(1); class C extends D {}");
+  }
+
+  public void testFunction() {
+    testSame("function f() {} alert(1);");
   }
 
   public void testSubclass() {

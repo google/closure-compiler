@@ -77,7 +77,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   private int astPositionCounter;
   private int priorityCounter;
 
-  private final boolean shouldTraverseFunctionsAndClasses;
+  private final boolean shouldTraverseFunctions;
   private final boolean edgeAnnotations;
 
   // We need to store where we started, in case we aren't doing a flow analysis
@@ -130,10 +130,10 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
    * @param shouldTraverseFunctions Whether functions should be traversed
    * @param edgeAnnotations Whether to allow edge annotations.
    */
-  ControlFlowAnalysis(AbstractCompiler compiler,
-      boolean shouldTraverseFunctionsAndClasses, boolean edgeAnnotations) {
+  ControlFlowAnalysis(
+      AbstractCompiler compiler, boolean shouldTraverseFunctions, boolean edgeAnnotations) {
     this.compiler = compiler;
-    this.shouldTraverseFunctionsAndClasses = shouldTraverseFunctionsAndClasses;
+    this.shouldTraverseFunctions = shouldTraverseFunctions;
     this.edgeAnnotations = edgeAnnotations;
   }
 
@@ -159,7 +159,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     DiGraphNode<Node, Branch> entry = cfg.getEntry();
     prioritizeFromEntryNode(entry);
 
-    if (shouldTraverseFunctionsAndClasses) {
+    if (shouldTraverseFunctions) {
       // If we're traversing inner functions, we need to rank the
       // priority of them too.
       for (DiGraphNode<Node, Branch> candidate : cfg.getDirectedGraphNodes()) {
@@ -213,9 +213,10 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
 
     switch (n.getToken()) {
       case CLASS:
-        return shouldTraverseFunctionsAndClasses;
+        createEdge(n, Branch.UNCOND, n.getNext());
+        return false;
       case FUNCTION:
-        if (shouldTraverseFunctionsAndClasses || n == cfg.getEntry().getValue()) {
+        if (shouldTraverseFunctions || n == cfg.getEntry().getValue()) {
           exceptionHandler.push(n);
           return true;
         }
