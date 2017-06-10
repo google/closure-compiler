@@ -302,6 +302,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private int changeStamp = 1;
 
   private final Timeline<Node> changeTimeline = new Timeline<>();
+  private final Timeline<Node> deleteTimeline = new Timeline<>();
 
   /**
    * Creates a Compiler that reports errors and warnings to its logger.
@@ -2580,6 +2581,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
+  List<Node> getDeletedScopeNodesForPass(String passName) {
+    List<Node> deletedScopeNodes = deleteTimeline.getSince(passName);
+    deleteTimeline.mark(passName);
+    return deletedScopeNodes;
+  }
+
+  @Override
   public void incrementChangeStamp() {
     changeStamp++;
   }
@@ -2610,6 +2618,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   private void recordChange(Node n) {
+    if (n.isDeleted()) {
+      // Some complicated passes (like SmartNameRemoval) might both change and delete a scope in
+      // the same pass, and they might even perform the change after the deletion because of
+      // internal queueing. Just ignore the spurious attempt to mark changed after already marking
+      // deleted. There's no danger of deleted nodes persisting in the AST since this is enforced
+      // separately in ChangeVerifier.
+      return;
+    }
+
     n.setChangeTime(changeStamp);
     // Every code change happens at a different time
     changeStamp++;
@@ -2653,6 +2670,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(n.isFunction());
     n.setDeleted(true);
     changeTimeline.remove(n);
+    deleteTimeline.add(n);
   }
 
   @Override
