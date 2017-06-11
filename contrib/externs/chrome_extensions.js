@@ -11016,3 +11016,72 @@ chrome.downloads.DeterminingFilenameEvent.prototype.hasListeners =
  * https://developer.chrome.com/extensions/downloads#event-onDeterminingFilename
  */
 chrome.downloads.onDeterminingFilename;
+
+
+/**
+ * @const
+ * @see https://developer.chrome.com/extensions/declarativeContent
+ */
+chrome.declarativeContent = {};
+
+
+/** @type {string} */
+chrome.declarativeContent.PageStateMatcherInstanceType;
+
+
+/** @type {string} */
+chrome.declarativeContent.ShowPageActionInstanceType;
+
+
+/** @type {string} */
+chrome.declarativeContent.SetIconInstanceType;
+
+
+/** @type {string} */
+chrome.declarativeContent.RequestContentScriptInstanceType;
+
+
+/**
+ * @typedef {!{
+ *   pageUrl: (!UrlFilter|undefined),
+ *   css: (!Array<string>|undefined),
+ *   isBookmarked: (boolean|undefined)
+ * }}
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-PageStateMatcher
+ */
+chrome.declarativeContent.PageStateMatcher;
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-ShowPageAction
+ */
+chrome.declarativeContent.ShowPageAction = function() {};
+
+
+/**
+ * @typedef {!{
+ *   imageData: (!ImageData|!Object<number, !ImageData>|undefined)
+ * }}
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-SetIcon
+ */
+chrome.declarativeContent.SetIcon;
+
+
+/**
+ * @typedef {!{
+ *   css: (!Array<string>|undefined),
+ *   js: (!Array<string>|undefined),
+ *   allFrames: (boolean|undefined),
+ *   matchAboutBlank: (boolean|undefined)
+ * }}
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-RequestContentScript
+ */
+chrome.declarativeContent.RequestContentScript;
+
+
+/**
+ * @type {!ChromeEvent}
+ * @see https://developer.chrome.com/extensions/declarativeContent#event-onPageChanged
+ */
+chrome.declarativeContent.onPageChanged;

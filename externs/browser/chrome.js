@@ -65,7 +65,7 @@ Port.prototype.disconnect = function() {};
 
 
 /**
- * @see https://developer.chrome.com/extensions/events.html
+ * @see https://developer.chrome.com/extensions/events
  * @constructor
  * TODO(tbreisacher): Update *Listener methods to take {function()}
  * instead of {!Function}. See discussion at go/ChromeEvent-TODO
@@ -76,6 +76,7 @@ function ChromeEvent() {}
 /**
  * @param {!Function} callback
  * @return {undefined}
+ * @see https://developer.chrome.com/extensions/events#method-Event-addListener
  */
 ChromeEvent.prototype.addListener = function(callback) {};
 
@@ -83,6 +84,7 @@ ChromeEvent.prototype.addListener = function(callback) {};
 /**
  * @param {!Function} callback
  * @return {undefined}
+ * @see https://developer.chrome.com/extensions/events#method-Event-removeListener
  */
 ChromeEvent.prototype.removeListener = function(callback) {};
 
@@ -90,15 +92,154 @@ ChromeEvent.prototype.removeListener = function(callback) {};
 /**
  * @param {!Function} callback
  * @return {boolean}
+ * @see https://developer.chrome.com/extensions/events#method-Event-hasListener
  */
 ChromeEvent.prototype.hasListener = function(callback) {};
 
 
-/** @return {boolean} */
+/**
+ * @return {boolean}
+ * @see https://developer.chrome.com/extensions/events#method-Event-hasListeners
+ */
 ChromeEvent.prototype.hasListeners = function() {};
 
-// TODO(tbreisacher): Add the addRules, getRules, and removeRules methods?
 
+/**
+ * @param {!Array<Rule>} rules
+ * @param {function(!Array<Rule>): void=} callback
+ * @see https://developer.chrome.com/extensions/events#method-Event-addRules
+ */
+ChromeEvent.prototype.addRules = function(rules, callback) {};
+
+
+/**
+ * @param {Array<string>} ruleIdentifiers
+ * @param {!function(!Array<Rule>): void} callback
+ * @see https://developer.chrome.com/extensions/events#method-Event-getRules
+ */
+ChromeEvent.prototype.getRules = function(ruleIdentifiers, callback) {};
+
+
+/**
+ * @param {Array<string>=} ruleIdentifiers
+ * @param {function(): void=} callback
+ * @see https://developer.chrome.com/extensions/events#method-Event-removeRules
+ */
+ChromeEvent.prototype.removeRules = function(ruleIdentifiers, callback) {};
+
+
+/**
+ * @see https://developer.chrome.com/extensions/events#type-Rule
+ * @constructor
+ */
+function Rule() {}
+
+
+/** @type {string|undefined} */
+Rule.prototype.id;
+
+
+/** @type {Array<string>|undefined} */
+Rule.prototype.tags;
+
+
+/** @type {!Array<*>} */
+Rule.prototype.conditions;
+
+
+/** @type {!Array<*>} */
+Rule.prototype.actions;
+
+
+/** @type {number|undefined} */
+Rule.prototype.priority;
+
+
+/**
+ * @see https://developer.chrome.com/extensions/events#type-UrlFilter
+ * @constructor
+ */
+function UrlFilter() {}
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.hostContains;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.hostEquals;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.hostPrefix;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.hostSuffix;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.pathContains;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.pathEquals;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.pathPrefix;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.pathSuffix;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.queryContains;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.queryEquals;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.queryPrefix;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.querySuffix;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.urlContains;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.urlEquals;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.urlMatches;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.originAndPathMatches;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.urlPrefix;
+
+
+/** @type {string|undefined} */
+UrlFilter.prototype.urlSuffix;
+
+
+/** @type {Array<string>|undefined} */
+UrlFilter.prototype.schemes;
+
+
+/** @type {Array<(number|Array<number>)>|undefined} */
+UrlFilter.prototype.ports;
 
 
 /**
