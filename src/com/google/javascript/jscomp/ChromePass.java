@@ -405,10 +405,10 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isFunction()
+      if ((n.isFunction() || n.isClass())
           && parent == this.namespaceBlock
           && this.exports.containsKey(n.getFirstChild().getString())) {
-        // It's a top-level function/constructor definition.
+        // It's a top-level function/constructor/class definition.
         //
         // Change
         //
@@ -420,22 +420,35 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
         //   /** Some doc */
         //   my.namespace.name.externalName = function internalName() {};
         //
+        // and change
+        //
+        //   /** Some doc */
+        //   class InternalName {}
+        //
+        // to
+        //
+        //   /** Some doc */
+        //   my.namespace.name.ExternalName = class InternalName {};
+        //
         // by looking up in this.exports for internalName to find the correspondent
         // externalName.
-        Node functionTree = n.cloneTree();
-        NodeUtil.markNewScopesChanged(functionTree, compiler);
+        Node clone = n.cloneTree();
+        NodeUtil.markNewScopesChanged(clone, compiler);
         Node exprResult =
-            IR.exprResult(IR.assign(buildQualifiedName(n.getFirstChild()), functionTree).srcref(n))
+            IR.exprResult(IR.assign(buildQualifiedName(n.getFirstChild()), clone).srcref(n))
                 .srcref(n);
 
         if (n.getJSDocInfo() != null) {
           exprResult.getFirstChild().setJSDocInfo(n.getJSDocInfo());
-          functionTree.removeProp(Node.JSDOC_INFO_PROP);
+          clone.removeProp(Node.JSDOC_INFO_PROP);
         }
         this.namespaceBlock.replaceChild(n, exprResult);
         NodeUtil.markFunctionsDeleted(n, compiler);
         compiler.reportChangeToEnclosingScope(exprResult);
-      } else if (n.isName() && this.exports.containsKey(n.getString()) && !parent.isFunction()) {
+      } else if (n.isName()
+          && this.exports.containsKey(n.getString())
+          && !parent.isFunction()
+          && !parent.isClass()) {
         if (parent.isVar()) {
           if (parent.getParent() == this.namespaceBlock) {
             // It's a top-level exported variable definition (maybe without an

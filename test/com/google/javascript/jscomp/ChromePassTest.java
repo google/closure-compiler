@@ -389,8 +389,7 @@ public class ChromePassTest extends CompilerTestCase {
             "});"));
   }
 
-  // Currently this throws an exception: https://github.com/google/closure-compiler/issues/2526
-  public void disabled_testCrDefineClass() throws Exception {
+  public void testCrDefineClass() throws Exception {
     test(
         LINE_JOINER.join(
             "cr.define('settings', function() {",
@@ -403,7 +402,7 @@ public class ChromePassTest extends CompilerTestCase {
             "cr.define('settings', function() {",
             "  var x = 0;",
             "  settings.C = class C {}",
-            "  return { C: C };",
+            "  return { C: settings.C };",
             "});"));
   }
 
