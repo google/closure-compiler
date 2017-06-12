@@ -409,6 +409,10 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
         "/** @type {Object<string>} */ var foo={};");
   }
 
+  public void testProvideInESModule() {
+    testError("import {x} from 'y'; goog.provide('z');", INVALID_CLOSURE_CALL_ERROR);
+  }
+
   public void testProvideValidObjectType() {
     test(
         "goog.provide('foo'); /** @type {Object<string>} */ var foo = {};",
