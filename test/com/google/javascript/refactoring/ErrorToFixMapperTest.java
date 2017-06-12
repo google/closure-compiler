@@ -35,7 +35,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-
 /**
  * Test case for {@link ErrorToFixMapper}.
  */
@@ -561,6 +560,52 @@ public class ErrorToFixMapperTest {
             "const {destructuring} = goog.require('c');",
             "goog.require('standalone.one');",
             "goog.require('standalone.two');"));
+  }
+
+  @Test
+  public void testSortRequiresInGoogModule_withFwdDeclare() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const s = goog.require('s');",
+            "const g = goog.forwardDeclare('g');",
+            "const f = goog.forwardDeclare('f');",
+            "const r = goog.require('r');",
+            "",
+            "alert(r, s);"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const r = goog.require('r');",
+            "const s = goog.require('s');",
+            "const f = goog.forwardDeclare('f');",
+            "const g = goog.forwardDeclare('g');",
+            "",
+            "alert(r, s);"));
+  }
+
+  @Test
+  public void testSortRequiresAndForwardDeclares() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.provide('x');",
+            "",
+            "goog.require('s');",
+            "goog.forwardDeclare('g');",
+            "goog.forwardDeclare('f');",
+            "goog.require('r');",
+            "",
+            "alert(r, s);"),
+        LINE_JOINER.join(
+            "goog.provide('x');",
+            "",
+            "goog.require('r');",
+            "goog.require('s');",
+            "goog.forwardDeclare('f');",
+            "goog.forwardDeclare('g');",
+            "",
+            "alert(r, s);"));
   }
 
   @Test
