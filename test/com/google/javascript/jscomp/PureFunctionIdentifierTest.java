@@ -1629,9 +1629,13 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testCallGenerator2() {
     this.mode = TypeInferenceMode.NEITHER; // type check for yield not yet implemented
-    String source =
-        LINE_JOINER.join(
-            "function* f() {", "  while (true) {", "    yield 1;", "  }", "}", "var g = f()");
+    String source = LINE_JOINER.join(
+            "function* f() {",
+            "  while (true) {",
+            "    yield 1;",
+            "  }",
+            "}",
+            "var g = f();");
     assertPureCallsMarked(source, ImmutableList.of("f"));
   }
 
