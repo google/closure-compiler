@@ -279,7 +279,7 @@ class PhaseOptimizer implements CompilerPass {
     @Override
     public void process(Node externs, Node root) {
       if (!factory.featureSet().contains(compiler.getFeatureSet())) {
-        logger.fine(
+        logger.warning(
             "Skipping pass " + name
                 + "\nfactory features:  " + factory.featureSet()
                 + "\ncompiler features: " + compiler.getFeatureSet());
