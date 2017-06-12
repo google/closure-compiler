@@ -53,6 +53,9 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
     switch (n.getToken()) {
+      case FUNCTION:
+        visitFunction(t, n);
+        break;
       case PARAM_LIST:
         visitParamList(t, n, parent);
         break;
@@ -79,6 +82,19 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         break;
       default:
         break;
+    }
+  }
+
+  /**
+   * If the function is an arrow function, wrap the body in a block if it is not already a block.
+   */
+  private void visitFunction(NodeTraversal t, Node function) {
+    Node body = function.getLastChild();
+    if (!body.isNormalBlock()) {
+      body.detach();
+      Node replacement = IR.block(IR.returnNode(body)).useSourceInfoIfMissingFromForTree(body);
+      function.addChildToBack(replacement);
+      t.reportCodeChange();
     }
   }
 
@@ -203,7 +219,8 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   }
 
   private void visitObjectPattern(NodeTraversal t, Node objectPattern, Node parent) {
-    Node rhs, nodeToDetach;
+    Node rhs;
+    Node nodeToDetach;
     if (NodeUtil.isNameDeclaration(parent) && !NodeUtil.isEnhancedFor(parent.getParent())) {
       rhs = objectPattern.getNext();
       nodeToDetach = parent;
@@ -244,7 +261,8 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     for (Node child = objectPattern.getFirstChild(), next; child != null; child = next) {
       next = child.getNext();
 
-      Node newLHS, newRHS;
+      Node newLHS;
+      Node newRHS;
       if (child.isStringKey()) {
         if (!child.hasChildren()) { // converting shorthand
           Node name = IR.name(child.getString());
@@ -314,35 +332,35 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   }
 
   private void visitArrayPattern(NodeTraversal t, Node arrayPattern, Node parent) {
-    Node rhs, nodeToDetach;
     if (NodeUtil.isNameDeclaration(parent) && !NodeUtil.isEnhancedFor(parent.getParent())) {
-      rhs = arrayPattern.getNext();
-      nodeToDetach = parent;
+      replaceArrayPattern(t, arrayPattern, arrayPattern.getNext(), parent, parent);
     } else if (parent.isAssign()) {
-      rhs = arrayPattern.getNext();
-      nodeToDetach = parent.getParent();
-      Preconditions.checkState(nodeToDetach.isExprResult());
+      if (parent.getParent().isExprResult()) {
+        replaceArrayPattern(t, arrayPattern, arrayPattern.getNext(), parent, parent.getParent());
+      } else {
+        wrapAssignmentInCallToArrow(t, parent);
+      }
     } else if (parent.isArrayPattern()
         || parent.isRest()
         || parent.isDefaultValue()
         || parent.isStringKey()) {
       // This is a nested array pattern. Don't do anything now; we'll visit it
       // after visiting the parent.
-      return;
     } else if (NodeUtil.isEnhancedFor(parent) || NodeUtil.isEnhancedFor(parent.getParent())) {
       visitDestructuringPatternInEnhancedFor(arrayPattern);
-      return;
     } else if (parent.isCatch()) {
       visitDestructuringPatternInCatch(arrayPattern);
-      return;
     } else {
       throw new IllegalStateException("Unexpected ARRAY_PATTERN parent: " + parent);
     }
+  }
 
-    // Convert 'var [x, y] = rhs' to:
-    // var temp = $jscomp.makeIterator(rhs);
-    // var x = temp.next().value;
-    // var y = temp.next().value;
+  /**
+   * Convert 'var [x, y] = rhs' to: var temp = $jscomp.makeIterator(rhs); var x = temp.next().value;
+   * var y = temp.next().value;
+   */
+  private void replaceArrayPattern(
+      NodeTraversal t, Node arrayPattern, Node rhs, Node parent, Node nodeToDetach) {
     String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
     Node tempDecl = IR.var(
         IR.name(tempVarName),
@@ -361,7 +379,8 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         continue;
       }
 
-      Node newLHS, newRHS;
+      Node newLHS;
+      Node newRHS;
       if (child.isDefaultValue()) {
         //   [x = defaultValue] = rhs;
         // becomes
@@ -421,6 +440,32 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       compiler.ensureLibraryInjected("es6/util/arrayfromiterator", false);
     }
     t.reportCodeChange();
+  }
+
+  /**
+   * Convert the assignment '[x, y] = rhs' (used as an expression and not an expr result) to: (() =>
+   * { var temp = $jscomp.makeIterator(rhs); var x = temp.next().value; var y = temp.next().value;
+   * return temp; })
+   */
+  private void wrapAssignmentInCallToArrow(NodeTraversal t, Node assignment) {
+    String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
+    Node rhs = assignment.getLastChild().detach();
+    Node newAssignment = IR.let(IR.name(tempVarName), rhs);
+    Node replacementExpr = IR.assign(assignment.getFirstChild().detach(), IR.name(tempVarName));
+    Node exprResult = IR.exprResult(replacementExpr);
+    Node returnNode = IR.returnNode(IR.name(tempVarName));
+    Node block = IR.block(newAssignment, exprResult, returnNode);
+    Node call = IR.call(IR.arrowFunction(IR.name(""), IR.paramList(), block));
+    call.useSourceInfoIfMissingFromForTree(assignment);
+    call.putBooleanProp(Node.FREE_CALL, true);
+    assignment.getParent().replaceChild(assignment, call);
+    NodeUtil.markNewScopesChanged(call, compiler);
+    replaceArrayPattern(
+        t,
+        replacementExpr.getFirstChild(),
+        replacementExpr.getLastChild(),
+        replacementExpr,
+        exprResult);
   }
 
   private void visitDestructuringPatternInEnhancedFor(Node pattern) {

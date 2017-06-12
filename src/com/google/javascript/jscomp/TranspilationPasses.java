@@ -44,10 +44,10 @@ public class TranspilationPasses {
   public static void addEs6EarlyPasses(List<PassFactory> passes) {
     passes.add(es6SuperCheck);
     passes.add(es6ConvertSuper);
-    passes.add(es6RewriteArrowFunction);
     passes.add(es6RenameVariablesInParamLists);
     passes.add(es6SplitVariableDeclarations);
     passes.add(es6RewriteDestructuring);
+    passes.add(es6RewriteArrowFunction);
   }
 
   /**
