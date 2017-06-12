@@ -370,6 +370,11 @@ class GlobalNamespace
               isSet = true;
               type = Name.Type.CLASS;
               break;
+            case ARRAY_PATTERN:
+              // Specific case to handle inlining with array destructuring
+              isSet = true;
+              type = Name.Type.CLASS;
+              break;
             default:
               if (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {
                 isSet = true;

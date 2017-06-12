@@ -307,6 +307,38 @@ public class InlineAliasesTest extends CompilerTestCase {
             "[a, b] = f();"));
   }
 
+  public void testArrayDestructuringSwapIsNotInlined() {
+    testSame(
+        LINE_JOINER.join(
+            "var Foo = class {};",
+            "var /** @const */ A = Foo;",
+            "var temp = 3;",
+            "[A, temp] = [temp, A];"));
+  }
+
+  public void testArrayDestructuringSwapIsNotInlinedWithClassDeclaration() {
+    testSame(
+        LINE_JOINER.join(
+            "class Foo {};",
+            "var /** @const */ A = Foo;",
+            "var temp = 3;",
+            "[A, temp] = [temp, A];"));
+  }
+
+  public void testArrayDestructuringAndRedefinedAliasesNotRenamed() {
+    testSame("var x = 0; var /** @const */ alias = x; [x] = [5]; use(alias);");
+  }
+
+  public void testArrayDestructuringTwoVarsAndRedefinedAliasesNotRenamed() {
+    testSame(
+        LINE_JOINER.join(
+            "var x = 0;",
+            "var /** @const */ alias = x;",
+            "var y = 5;",
+            "[x] = [y];",
+            "use(alias);"));
+  }
+
   public void testObjectDestructuringBasicAssign() {
     test(
         LINE_JOINER.join(
