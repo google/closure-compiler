@@ -513,6 +513,15 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(computeFunctionNames);
     }
 
+    if (options.checksOnly) {
+      // Run process defines here so that warnings/errors from that pass are emitted as part of
+      // checks.
+      // TODO(rluble): Split process defines into two stages, one that performs only checks to be
+      // run here, and the one that actually changes the AST that would run in the optimization
+      // phase.
+      checks.add(processDefines);
+    }
+
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       checks.add(j2clChecksPass);
     }
