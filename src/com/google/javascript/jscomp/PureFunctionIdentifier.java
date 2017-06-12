@@ -510,6 +510,10 @@ class PureFunctionIdentifier implements CompilerPass {
         if (node.hasChildren() && !NodeUtil.evaluatesToLocalValue(node.getFirstChild())) {
           sideEffectInfo.setTaintsReturn();
         }
+      } else if (node.isYield()) {
+        if (node.hasChildren() && !NodeUtil.evaluatesToLocalValue(node.getFirstChild())) {
+          sideEffectInfo.setTaintsReturn();
+        }
       } else {
         throw new IllegalArgumentException("Unhandled side effect node type " + node.getToken());
       }

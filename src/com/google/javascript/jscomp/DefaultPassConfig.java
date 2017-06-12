@@ -2443,16 +2443,19 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /**
-   * Use data flow analysis to remove dead branches.
-   */
+  /** Use data flow analysis to remove dead branches. */
   private final PassFactory removeUnreachableCode =
       new PassFactory(Compiler.UNREACHABLE_CODE_ELIM_NAME, false) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new UnreachableCodeElimination(compiler, true);
-    }
-  };
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new UnreachableCodeElimination(compiler, true);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
+      };
 
   /**
    * Use data flow analysis to remove dead branches.
