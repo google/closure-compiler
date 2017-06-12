@@ -1548,10 +1548,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           Node statementParent = nameParent.getParent();
           Node placeholder = IR.empty();
           statementParent.replaceChild(nameParent, placeholder);
-          Node newStatement =
-              NodeUtil.newQNameDeclaration(compiler, newString, nameParent, jsdoc);
+          Node newStatement = NodeUtil.newQNameDeclaration(compiler, newString, nameParent, jsdoc);
           nameParent.setJSDocInfo(null);
           newStatement.useSourceInfoIfMissingFromForTree(nameParent);
+          replaceStringNodeLocationForExportedTopLevelVariable(
+              newStatement, nameNode.getSourcePosition(), nameNode.getLength());
           statementParent.replaceChild(placeholder, newStatement);
           NodeUtil.removeName(nameParent);
           return;
