@@ -83,3 +83,21 @@ function testDestructuringArray() {
   assertEquals(z[0], 0);
   assertEquals(z[1], 1);
 }
+
+function testDestructuringObject() {
+  var x, y, z;
+  x = ({a: y, b: z} = {a: 1, b: 2});
+  assertEquals(y, 1);
+  assertEquals(z, 2);
+  assertEquals(x.a, 1);
+  assertEquals(x.b, 2);
+
+  let id = 0;
+  let getNextId = () => (id++);
+  let a, b, c;
+  a = ({b, c} = {b: getNextId(), c: getNextId()});
+  assertEquals(b, 0);
+  assertEquals(c, 1);
+  assertEquals(a.b, 0);
+  assertEquals(a.c, 1);
+}

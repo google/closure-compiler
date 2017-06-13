@@ -638,7 +638,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
         TYPE_MISMATCH_WARNING);
   }
 
-  public void testDestructuringNotInExprResult() {
+  public void testDestructuringArrayNotInExprResult() {
     test(
         LINE_JOINER.join("var x, a, b;", "x = ([a,b] = [1,2])"),
         LINE_JOINER.join(
@@ -711,6 +711,55 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             " })()){",
             "console.log(x);",
             "}"));
+  }
+
+  public void testDestructuringObjectNotInExprResult() {
+    test(
+        "var x = ({a: b, c: d} = foo());",
+        LINE_JOINER.join(
+            "var x = (()=>{",
+            "   let $jscomp$destructuring$var0 = foo();",
+            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "   b = $jscomp$destructuring$var1.a;",
+            "   d = $jscomp$destructuring$var1.c;",
+            "   return $jscomp$destructuring$var0;",
+            "})();"));
+
+    test(
+        "var x = ({a: b, c: d} = foo());",
+        LINE_JOINER.join(
+            "var x = (()=>{",
+            "   let $jscomp$destructuring$var0 = foo();",
+            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "   b = $jscomp$destructuring$var1.a;",
+            "   d = $jscomp$destructuring$var1.c;",
+            "   return $jscomp$destructuring$var0;",
+            "})();"));
+
+    test(
+        "var x; var y = ({a: x} = foo());",
+        LINE_JOINER.join(
+            "var x;",
+            "var y = (()=>{",
+            "   let $jscomp$destructuring$var0 = foo();",
+            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "   x = $jscomp$destructuring$var1.a;",
+            "   return $jscomp$destructuring$var0;",
+            "})();"));
+
+    test(
+        "var x; var y = (() => {return {a,b} = foo();})();",
+        LINE_JOINER.join(
+            "var x;",
+            "var y = (()=>{",
+            "   return (()=>{",
+            "       let $jscomp$destructuring$var0 = foo();",
+            "       var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "       a = $jscomp$destructuring$var1.a;",
+            "       b = $jscomp$destructuring$var1.b;",
+            "       return $jscomp$destructuring$var0;",
+            "   })();",
+            "})();"));
   }
 
   public void testNestedDestructuring() {

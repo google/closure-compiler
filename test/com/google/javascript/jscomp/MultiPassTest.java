@@ -259,6 +259,53 @@ public final class MultiPassTest extends CompilerTestCase {
             " } ()){",
             "console.log(x);",
             "}"));
+
+    test(
+        "var x = ({a: b, c: d} = foo());",
+        LINE_JOINER.join(
+            "var x = function () {",
+            "   let $jscomp$destructuring$var0 = foo();",
+            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "   b = $jscomp$destructuring$var1.a;",
+            "   d = $jscomp$destructuring$var1.c;",
+            "   return $jscomp$destructuring$var0;",
+            "} ();"));
+
+    test(
+        "var x = ({a: b, c: d} = foo());",
+        LINE_JOINER.join(
+            "var x = function () {",
+            "   let $jscomp$destructuring$var0 = foo();",
+            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "   b = $jscomp$destructuring$var1.a;",
+            "   d = $jscomp$destructuring$var1.c;",
+            "   return $jscomp$destructuring$var0;",
+            "} ();"));
+
+    test(
+        "var x; var y = ({a: x} = foo());",
+        LINE_JOINER.join(
+            "var x;",
+            "var y = function () {",
+            "   let $jscomp$destructuring$var0 = foo();",
+            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "   x = $jscomp$destructuring$var1.a;",
+            "   return $jscomp$destructuring$var0;",
+            "} ();"));
+
+    test(
+        "var x; var y = (() => {return {a,b} = foo();})();",
+        LINE_JOINER.join(
+            "var x;",
+            "var y = function () {",
+            "   return function () {",
+            "       let $jscomp$destructuring$var0 = foo();",
+            "       var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "       a = $jscomp$destructuring$var1.a;",
+            "       b = $jscomp$destructuring$var1.b;",
+            "       return $jscomp$destructuring$var0;",
+            "   } ();",
+            "} ();"));
   }
 
   private void addCollapseObjectLiterals() {

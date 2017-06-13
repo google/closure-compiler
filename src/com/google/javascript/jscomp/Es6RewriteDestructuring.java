@@ -75,10 +75,8 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     }
     switch (n.getToken()) {
       case ARRAY_PATTERN:
-        visitArrayPattern(t, n, parent);
-        break;
       case OBJECT_PATTERN:
-        visitObjectPattern(t, n, parent);
+        visitPattern(t, n, parent);
         break;
       default:
         break;
@@ -218,35 +216,54 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     }
   }
 
-  private void visitObjectPattern(NodeTraversal t, Node objectPattern, Node parent) {
-    Node rhs;
-    Node nodeToDetach;
+  private void visitPattern(NodeTraversal t, Node pattern, Node parent) {
     if (NodeUtil.isNameDeclaration(parent) && !NodeUtil.isEnhancedFor(parent.getParent())) {
-      rhs = objectPattern.getNext();
-      nodeToDetach = parent;
-    } else if (parent.isAssign() && parent.getParent().isExprResult()) {
-      rhs = parent.getLastChild();
-      nodeToDetach = parent.getParent();
+      replacePattern(t, pattern, pattern.getNext(), parent, parent);
+    } else if (parent.isAssign()) {
+      if (parent.getParent().isExprResult()) {
+        replacePattern(t, pattern, pattern.getNext(), parent, parent.getParent());
+      } else {
+        wrapAssignmentInCallToArrow(t, parent);
+      }
     } else if (parent.isRest()
         || parent.isStringKey()
         || parent.isArrayPattern()
         || parent.isDefaultValue()) {
-      // Nested object pattern; do nothing. We will visit it after rewriting the parent.
-      return;
+      // Nested pattern; do nothing. We will visit it after rewriting the parent.
     } else if (NodeUtil.isEnhancedFor(parent) || NodeUtil.isEnhancedFor(parent.getParent())) {
-      visitDestructuringPatternInEnhancedFor(objectPattern);
-      return;
+      visitDestructuringPatternInEnhancedFor(pattern);
     } else if (parent.isCatch()) {
-      visitDestructuringPatternInCatch(objectPattern);
-      return;
+      visitDestructuringPatternInCatch(pattern);
     } else {
-      throw new IllegalStateException("Unexpected OBJECT_PATTERN parent: " + parent);
+      if (pattern.isArrayPattern()) {
+        throw new IllegalStateException("Unexpected ARRAY_PATTERN parent: " + parent);
+      } else {
+        throw new IllegalStateException("Unexpected OBJECT_PATTERN parent: " + parent);
+      }
     }
+  }
 
-    // Convert 'var {a: b, c: d} = rhs' to:
-    // /** @const */ var temp = rhs;
-    // var b = temp.a;
-    // var d = temp.c;
+  private void replacePattern(
+      NodeTraversal t, Node pattern, Node rhs, Node parent, Node nodeToDetach) {
+    switch (pattern.getToken()) {
+      case ARRAY_PATTERN:
+        replaceArrayPattern(t, pattern, rhs, parent, nodeToDetach);
+        break;
+      case OBJECT_PATTERN:
+        replaceObjectPattern(t, pattern, rhs, parent, nodeToDetach);
+        break;
+      default:
+        throw new IllegalStateException("Unexpected pattern: " + parent.getFirstChild());
+    }
+  }
+
+  /**
+   * Convert 'var {a: b, c: d} = rhs' to:
+   *
+   * @const var temp = rhs; var b = temp.a; var d = temp.c;
+   */
+  private void replaceObjectPattern(
+      NodeTraversal t, Node objectPattern, Node rhs, Node parent, Node nodeToDetach) {
     String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
     Node tempDecl = IR.var(IR.name(tempVarName), rhs.detach())
             .useSourceInfoIfMissingFromForTree(objectPattern);
@@ -329,30 +346,6 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
 
     nodeToDetach.detach();
     t.reportCodeChange();
-  }
-
-  private void visitArrayPattern(NodeTraversal t, Node arrayPattern, Node parent) {
-    if (NodeUtil.isNameDeclaration(parent) && !NodeUtil.isEnhancedFor(parent.getParent())) {
-      replaceArrayPattern(t, arrayPattern, arrayPattern.getNext(), parent, parent);
-    } else if (parent.isAssign()) {
-      if (parent.getParent().isExprResult()) {
-        replaceArrayPattern(t, arrayPattern, arrayPattern.getNext(), parent, parent.getParent());
-      } else {
-        wrapAssignmentInCallToArrow(t, parent);
-      }
-    } else if (parent.isArrayPattern()
-        || parent.isRest()
-        || parent.isDefaultValue()
-        || parent.isStringKey()) {
-      // This is a nested array pattern. Don't do anything now; we'll visit it
-      // after visiting the parent.
-    } else if (NodeUtil.isEnhancedFor(parent) || NodeUtil.isEnhancedFor(parent.getParent())) {
-      visitDestructuringPatternInEnhancedFor(arrayPattern);
-    } else if (parent.isCatch()) {
-      visitDestructuringPatternInCatch(arrayPattern);
-    } else {
-      throw new IllegalStateException("Unexpected ARRAY_PATTERN parent: " + parent);
-    }
   }
 
   /**
@@ -443,9 +436,11 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   }
 
   /**
-   * Convert the assignment '[x, y] = rhs' (used as an expression and not an expr result) to: (() =>
-   * { var temp = $jscomp.makeIterator(rhs); var x = temp.next().value; var y = temp.next().value;
-   * return temp; })
+   * Convert the assignment '[x, y] = rhs' that is used as an expression and not an expr result to:
+   * (() => let temp0 = rhs; var temp1 = $jscomp.makeIterator(temp0); var x = temp0.next().value;
+   * var y = temp0.next().value; return temp0; }) And the assignment '{x: a, y: b} = rhs' used as an
+   * expression and not an expr result to: (() => let temp0 = rhs; var temp1 = temp0; var a =
+   * temp0.x; var b = temp0.y; return temp0; })
    */
   private void wrapAssignmentInCallToArrow(NodeTraversal t, Node assignment) {
     String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
@@ -460,7 +455,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     call.putBooleanProp(Node.FREE_CALL, true);
     assignment.getParent().replaceChild(assignment, call);
     NodeUtil.markNewScopesChanged(call, compiler);
-    replaceArrayPattern(
+    replacePattern(
         t,
         replacementExpr.getFirstChild(),
         replacementExpr.getLastChild(),
