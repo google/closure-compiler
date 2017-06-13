@@ -2441,6 +2441,24 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("x?((x)=>0):((x)=>1)", "x?(x)=>0:(x)=>1");
   }
 
+  public void testParensAroundArrowReturnValue() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertPrintSame("()=>({})");
+    assertPrintSame("()=>({a:1})");
+    assertPrintSame("()=>({a:1,b:2})");
+    assertPrint("()=>/** @type {Object} */({})", "()=>({})");
+    assertPrint("()=>/** @type {Object} */({a:1})", "()=>({a:1})");
+    assertPrint("()=>/** @type {Object} */({a:1,b:2})", "()=>({a:1,b:2})");
+    assertPrint("()=>/** @type {number} */(3)", "()=>3");
+
+    assertPrintSame("()=>(1,2)");
+    assertPrintSame("()=>({},2)");
+    assertPrintSame("()=>(1,{})");
+    assertPrint("()=>/** @type {?} */(1,2)", "()=>(1,2)");
+    assertPrint("()=>/** @type {?} */({},2)", "()=>({},2)");
+    assertPrint("()=>/** @type {?} */(1,{})", "()=>(1,{})");
+  }
+
   public void testPrettyArrowFunction() {
     languageMode = LanguageMode.ECMASCRIPT_2015;
     assertPrettyPrint("if (x) {var f = ()=>{alert(1); alert(2)}}",
