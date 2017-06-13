@@ -144,6 +144,24 @@ testSuite({
     });
   },
 
+  testMemberFunctionUsingThisInAsyncArrowFunction() {
+    class C {
+      constructor() {
+        this.value = 0;
+      }
+
+      async delayedIncrementAndReturnThis() {
+        const nestedArrow = async () => { this.value++; return this; };
+        return await nestedArrow();
+      }
+    }
+    const c = new C();
+    return c.delayedIncrementAndReturnThis().then(result => {
+      assertEquals(c, result);
+      assertEquals(1, c.value);
+    });
+  },
+
   testArgumentsHandledCorrectly() {
     const expected1 = {};
     const expected2 = 2;

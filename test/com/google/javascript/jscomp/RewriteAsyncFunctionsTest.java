@@ -84,7 +84,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         "async function f(a, b, ...rest) { return arguments.length; }",
         LINE_JOINER.join(
             "function f(a, b, ...rest) {",
-            "  let $jscomp$async$arguments = arguments;",
+            "  const $jscomp$async$arguments = arguments;",
             "  function* $jscomp$async$generator() {",
             "    return $jscomp$async$arguments.length;", // arguments replaced
             "  }",
@@ -102,7 +102,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         LINE_JOINER.join(
             "function outer() {",
             "  function f() {",
-            "    let $jscomp$async$arguments = arguments;",
+            "    const $jscomp$async$arguments = arguments;",
             "    function* $jscomp$async$generator() {",
             "      return $jscomp$async$arguments.length;", // arguments replaced
             "    }",
@@ -123,7 +123,7 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "function a() {",
-            "  let $jscomp$async$arguments = arguments;",
+            "  const $jscomp$async$arguments = arguments;",
             "  function* $jscomp$async$generator() {",
             "    function inner() {",
             "      return arguments.length;", // unchanged
@@ -140,9 +140,36 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
         LINE_JOINER.join(
             "class A {",
             "  f() {",
-            "    let $jscomp$async$this = this;",
+            "    const $jscomp$async$this = this;",
             "    function* $jscomp$async$generator() {",
             "      return $jscomp$async$this.x;", // this replaced
+            "    }",
+            "    return $jscomp.executeAsyncGenerator($jscomp$async$generator());",
+            "  }",
+            "}"));
+  }
+
+  public void testClassMethodWithAsyncArrow() {
+    test(
+        LINE_JOINER.join(
+            "class A {",
+            "  async f() {",
+            "    let g = async () => { console.log(this); };",
+            "    g();",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "class A {",
+            "  f() {",
+            "    const $jscomp$async$this = this;",
+            "    function *$jscomp$async$generator() {",
+            "      let g = () => {",
+            "        function *$jscomp$async$generator() {",
+            "          console.log($jscomp$async$this);",
+            "        }",
+            "        return $jscomp.executeAsyncGenerator($jscomp$async$generator());",
+            "      };",
+            "      g();",
             "    }",
             "    return $jscomp.executeAsyncGenerator($jscomp$async$generator());",
             "  }",

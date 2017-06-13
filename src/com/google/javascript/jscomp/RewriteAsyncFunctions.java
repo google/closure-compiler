@@ -58,7 +58,6 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
   private static final class LexicalContext {
     final Optional<Node> function; // absent for top level
     final LexicalContext thisAndArgumentsContext;
-    final Optional<LexicalContext> enclosingAsyncContext;
     boolean asyncThisReplacementWasDone = false;
     boolean asyncArgumentsReplacementWasDone = false;
 
@@ -66,7 +65,6 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     LexicalContext() {
       this.function = Optional.absent();
       this.thisAndArgumentsContext = this;
-      this.enclosingAsyncContext = Optional.absent();
     }
 
     LexicalContext(LexicalContext outer, Node function) {
@@ -74,25 +72,24 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
       // An arrow function shares 'this' and 'arguments' with its outer scope.
       this.thisAndArgumentsContext =
           function.isArrowFunction() ? outer.thisAndArgumentsContext : this;
-      this.enclosingAsyncContext =
-          function.isAsyncFunction() ? Optional.of(this) : outer.enclosingAsyncContext;
     }
 
-    boolean isAsyncFunction() {
+    boolean isAsyncContext() {
       return function.isPresent() && function.get().isAsyncFunction();
     }
 
     boolean mustReplaceThisAndArguments() {
-      return enclosingAsyncContext.isPresent()
-          && enclosingAsyncContext.get().thisAndArgumentsContext == thisAndArgumentsContext;
+      return thisAndArgumentsContext.isAsyncContext();
     }
 
     void recordAsyncThisReplacementWasDone() {
-      enclosingAsyncContext.get().asyncThisReplacementWasDone = true;
+      checkState(thisAndArgumentsContext.isAsyncContext());
+      thisAndArgumentsContext.asyncThisReplacementWasDone = true;
     }
 
     void recordAsyncArgumentsReplacementWasDone() {
-      enclosingAsyncContext.get().asyncArgumentsReplacementWasDone = true;
+      checkState(thisAndArgumentsContext.isAsyncContext());
+      thisAndArgumentsContext.asyncArgumentsReplacementWasDone = true;
     }
   }
 
@@ -141,7 +138,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     }
     switch (n.getToken()) {
       case FUNCTION:
-        if (context.isAsyncFunction()) {
+        if (context.isAsyncContext()) {
           convertAsyncFunction(context);
         }
         break;
@@ -161,7 +158,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
         break;
 
       case AWAIT:
-        checkState(context.isAsyncFunction(), "await found within non-async function body");
+        checkState(context.isAsyncContext(), "await found within non-async function body");
         checkState(n.hasOneChild(), "await should have 1 operand, but has %s", n.getChildCount());
         // Awaits become yields in the converted async function's inner generator function.
         parent.replaceChild(n, IR.yield(n.removeFirstChild()).useSourceInfoIfMissingFrom(n));
@@ -180,10 +177,10 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     originalFunction.replaceChild(originalBody, newBody);
 
     if (functionContext.asyncThisReplacementWasDone) {
-      newBody.addChildToBack(IR.let(IR.name(ASYNC_THIS), IR.thisNode()));
+      newBody.addChildToBack(IR.constNode(IR.name(ASYNC_THIS), IR.thisNode()));
     }
     if (functionContext.asyncArgumentsReplacementWasDone) {
-      newBody.addChildToBack(IR.let(IR.name(ASYNC_ARGUMENTS), IR.name("arguments")));
+      newBody.addChildToBack(IR.constNode(IR.name(ASYNC_ARGUMENTS), IR.name("arguments")));
     }
 
     // Normalize arrow function short body to block body
