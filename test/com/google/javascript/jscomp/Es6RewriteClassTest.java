@@ -1850,7 +1850,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   @Override
-  NoninjectingCompiler getLastCompiler() {
+  protected NoninjectingCompiler getLastCompiler() {
     return (NoninjectingCompiler) super.getLastCompiler();
   }
 }

@@ -329,7 +329,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   @Override
-  NoninjectingCompiler getLastCompiler() {
+  protected NoninjectingCompiler getLastCompiler() {
     return (NoninjectingCompiler) super.getLastCompiler();
   }
 
