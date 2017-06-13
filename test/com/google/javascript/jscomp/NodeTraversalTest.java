@@ -21,12 +21,15 @@ import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractNodeTypePruningCallback;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import junit.framework.TestCase;
@@ -373,6 +376,106 @@ public final class NodeTraversalTest extends TestCase {
     t.traverseAtScope(moduleScope);
 
     callback.assertEntered();
+  }
+
+  public void testTraverseEs6ScopeRoots_isLimitedToScope() {
+    Compiler compiler = new Compiler();
+    StringAccumulator callback = new StringAccumulator();
+
+    String code =
+        LINE_JOINER.join(
+            "function foo() {",
+            "  'string in foo';",
+            "  function baz() {",
+            "    'string nested in baz';",
+            "  }",
+            "}",
+            "function bar() {",
+            "  'string in bar';",
+            "}");
+
+    Node tree = parse(compiler, code);
+    Node fooFunction = tree.getFirstChild();
+
+    // Traverse without entering nested scopes.
+    NodeTraversal.traverseEs6ScopeRoots(
+        compiler, fooFunction, Lists.newArrayList(fooFunction), callback, false);
+    assertThat(callback.strings).containsExactly("string in foo");
+
+    callback.strings.clear();
+
+    // Traverse *with* entering nested scopes, now also sees "string nested in baz".
+    NodeTraversal.traverseEs6ScopeRoots(
+        compiler, fooFunction, Lists.newArrayList(fooFunction), callback, true);
+    assertThat(callback.strings).containsExactly("string in foo", "string nested in baz");
+  }
+
+  public void testTraverseEs6ScopeRoots_parentScopesWork() {
+    Compiler compiler = new Compiler();
+    LexicallyScopedVarsAccumulator callback = new LexicallyScopedVarsAccumulator();
+
+    String code =
+        LINE_JOINER.join(
+            "var varDefinedInScript;",
+            "var foo = function() {",
+            "  var varDefinedInFoo;",
+            "  var baz = function() {",
+            "    var varDefinedInBaz;",
+            "  }",
+            "}",
+            "var bar = function() {",
+            "  var varDefinedInBar;",
+            "}");
+
+    Node tree = parse(compiler, code);
+    IR.root(tree);
+    Node fooFunction = tree.getSecondChild().getFirstFirstChild();
+
+    // Traverse without entering nested scopes.
+    NodeTraversal.traverseEs6ScopeRoots(
+        compiler, fooFunction, Lists.newArrayList(fooFunction), callback, false);
+    assertThat(callback.varNames)
+        .containsExactly("varDefinedInScript", "foo", "bar", "varDefinedInFoo", "baz");
+
+    callback.varNames.clear();
+
+    // Traverse *with* entering nested scopes, now also sees "varDefinedInBaz".
+    NodeTraversal.traverseEs6ScopeRoots(
+        compiler, fooFunction, Lists.newArrayList(fooFunction), callback, true);
+    assertThat(callback.varNames)
+        .containsExactly(
+            "varDefinedInScript", "foo", "bar", "varDefinedInFoo", "baz", "varDefinedInBaz");
+  }
+
+  private static final class LexicallyScopedVarsAccumulator extends AbstractPostOrderCallback {
+
+    final Set<String> varNames = new LinkedHashSet<>();
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      Scope firstScope = t.getScope();
+      if (firstScope == null) {
+        return;
+      }
+
+      for (Scope scope = firstScope; scope != null; scope = scope.getParent()) {
+        for (Var var : scope.getVarIterable()) {
+          varNames.add(var.getName());
+        }
+      }
+    }
+  }
+
+  private static final class StringAccumulator extends AbstractPostOrderCallback {
+
+    final List<String> strings = new ArrayList<>();
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isString()) {
+        strings.add(n.getString());
+      }
+    }
   }
 
   // Helper class used to test getCurrentNode

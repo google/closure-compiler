@@ -24,6 +24,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -404,6 +405,54 @@ public class NodeTraversal {
     }
   }
 
+  private void traverseScopeRoot(Node scopeRoot) {
+    try {
+      initTraversal(scopeRoot);
+      curNode = scopeRoot;
+      initScopeRoots(scopeRoot.getParent());
+      // null parent ensures that the shallow callbacks will traverse root
+      traverseBranch(scopeRoot, scopeRoot.getParent());
+    } catch (Exception unexpectedException) {
+      throwUnexpectedException(unexpectedException);
+    }
+  }
+
+  /**
+   * Traverses *just* the contents of provided scope nodes (but not scopes nested within them) but
+   * will fall back on traversing the entire AST from root if a null scope nodes list is provided.
+   */
+  public static void traverseEs6ScopeRoots(
+      AbstractCompiler compiler,
+      Node root,
+      List<Node> scopeNodes,
+      final Callback cb,
+      final boolean traverseNested) {
+    if (scopeNodes == null) {
+      NodeTraversal.traverseEs6(compiler, root, cb);
+    } else {
+      MemoizedScopeCreator scopeCreator =
+          new MemoizedScopeCreator(new Es6SyntacticScopeCreator(compiler));
+
+      for (final Node scopeNode : scopeNodes) {
+        Callback scb =
+            new Callback() {
+              @Override
+              public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+                return (traverseNested || scopeNode == n || !NodeUtil.isChangeScopeRoot(n))
+                    && cb.shouldTraverse(t, n, parent);
+              }
+
+              @Override
+              public void visit(NodeTraversal t, Node n, Node parent) {
+                cb.visit(t, n, parent);
+              }
+            };
+
+        NodeTraversal.traverseEs6ScopeRoot(compiler, scopeNode, scb, scopeCreator);
+      }
+    }
+  }
+
   /**
    * Traverse a function out-of-band of normal traversal.
    *
@@ -551,6 +600,13 @@ public class NodeTraversal {
   public static void traverseEs6(AbstractCompiler compiler, Node root, Callback cb) {
     NodeTraversal t = new NodeTraversal(compiler, cb, new Es6SyntacticScopeCreator(compiler));
     t.traverse(root);
+  }
+
+  /** Traverses from a particular scope node using the ES6SyntacticScopeCreator */
+  private static void traverseEs6ScopeRoot(
+      AbstractCompiler compiler, Node scopeNode, Callback cb, MemoizedScopeCreator scopeCreator) {
+    NodeTraversal t = new NodeTraversal(compiler, cb, scopeCreator);
+    t.traverseScopeRoot(scopeNode);
   }
 
   public static void traverseTyped(AbstractCompiler compiler, Node root, Callback cb) {
@@ -957,6 +1013,34 @@ public class NodeTraversal {
     } else {
       setInputId(null, "");
     }
+  }
+
+  /**
+   * Prefills the scopeRoots stack up to a given spot in the AST. Allows for starting traversal at
+   * any spot while still having correct scope state.
+   */
+  private void initScopeRoots(Node n) {
+    Deque<Node> queuedScopeRoots = new ArrayDeque<>();
+    while (n != null) {
+      if (isScopeRoot(n)) {
+        queuedScopeRoots.addFirst(n);
+      }
+      n = n.getParent();
+    }
+    for (Node queuedScopeRoot : queuedScopeRoots) {
+      pushScope(queuedScopeRoot);
+    }
+  }
+
+  private boolean isScopeRoot(Node n) {
+    if (n.isRoot() && n.getParent() == null) {
+      return true;
+    } else if (n.isFunction()) {
+      return true;
+    } else if (useBlockScope && NodeUtil.createsBlockScope(n)) {
+      return true;
+    }
+    return false;
   }
 
   private void setInputId(InputId id, String sourceName) {
