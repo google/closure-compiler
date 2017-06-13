@@ -74,11 +74,6 @@ public class IRTest extends TestCase {
         "PARAM_LIST\n" +
         "    NAME a\n" +
         "    NAME b\n");
-
-    testIR(IR.paramList(ImmutableList.of(IR.name("a"), IR.name("b"))),
-        "PARAM_LIST\n" +
-        "    NAME a\n" +
-        "    NAME b\n");
   }
 
   public void testBlock() {

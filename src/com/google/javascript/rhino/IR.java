@@ -100,15 +100,6 @@ public class IR {
     return paramList;
   }
 
-  public static Node paramList(List<Node> params) {
-    Node paramList = paramList();
-    for (Node param : params) {
-      Preconditions.checkState(param.isName() || param.isRest());
-      paramList.addChildToBack(param);
-    }
-    return paramList;
-  }
-
   public static Node root(Node ... rootChildren) {
     Node root = new Node(Token.ROOT);
     for (Node child : rootChildren) {
