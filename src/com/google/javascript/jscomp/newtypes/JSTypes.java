@@ -62,21 +62,35 @@ public final class JSTypes implements Serializable {
   // The types that are final don't depend on the externs. The types that
   // are non-final, such as numberInstance, are filled in when we traverse
   // the externs during GlobalTypeInfo.
+  @SuppressWarnings("ConstantField")
   public final JSType BOOLEAN;
+  @SuppressWarnings("ConstantField")
   public final JSType BOTTOM;
+  @SuppressWarnings("ConstantField")
   public final JSType FALSE_TYPE;
+  @SuppressWarnings("ConstantField")
   public final JSType FALSY;
+  @SuppressWarnings("ConstantField")
   public final JSType NULL;
+  @SuppressWarnings("ConstantField")
   public final JSType NUMBER;
+  @SuppressWarnings("ConstantField")
   public final JSType STRING;
+  @SuppressWarnings("ConstantField")
   public final JSType TOP;
+  @SuppressWarnings("ConstantField")
   public final JSType TOP_SCALAR;
+  @SuppressWarnings("ConstantField")
   public final JSType TRUE_TYPE;
+  @SuppressWarnings("ConstantField")
   public final JSType TRUTHY;
+  @SuppressWarnings("ConstantField")
   public final JSType UNDEFINED;
+  @SuppressWarnings("ConstantField")
   public final JSType UNKNOWN;
 
   private ObjectType topObjectType;
+  @SuppressWarnings("ConstantField")
   final PersistentMap<String, Property> BOTTOM_PROPERTY_MAP;
   private JSType topObject;
   private ObjectType looseTopObject;
@@ -85,7 +99,9 @@ public final class JSTypes implements Serializable {
   private ObjectType bottomObject;
 
   // Corresponds to Function, which is a subtype and supertype of all functions.
+  @SuppressWarnings("ConstantField")
   final FunctionType QMARK_FUNCTION;
+  @SuppressWarnings("ConstantField")
   final FunctionType BOTTOM_FUNCTION;
   // Theoretically, the top function takes an infinite number of required
   // arguments of type BOTTOM and returns TOP. If this function is ever called,
@@ -96,19 +112,30 @@ public final class JSTypes implements Serializable {
   // We can't represent the theoretical top function, so we special-case
   // TOP_FUNCTION below. However, the outcome is the same; if our top function
   // is ever called, a warning is inevitable.
+  @SuppressWarnings("ConstantField")
   final FunctionType TOP_FUNCTION;
+  @SuppressWarnings("ConstantField")
   final FunctionType LOOSE_TOP_FUNCTION;
 
+  @SuppressWarnings("ConstantField")
   final Map<String, JSType> MAP_TO_UNKNOWN;
 
   // Commonly-used types. We create them once here and reuse them
+  @SuppressWarnings("ConstantField")
   public final JSType NUMBER_OR_STRING;
+  @SuppressWarnings("ConstantField")
   final JSType UNDEFINED_OR_BOOLEAN;
+  @SuppressWarnings("ConstantField")
   final JSType UNDEFINED_OR_NUMBER;
+  @SuppressWarnings("ConstantField")
   final JSType UNDEFINED_OR_STRING;
+  @SuppressWarnings("ConstantField")
   public final JSType NULL_OR_UNDEFINED;
+  @SuppressWarnings("ConstantField")
   final JSType NULL_OR_BOOLEAN;
+  @SuppressWarnings("ConstantField")
   final JSType NULL_OR_NUMBER;
+  @SuppressWarnings("ConstantField")
   final JSType NULL_OR_STRING;
 
   // Instances of Boolean, Number and String; used for auto-boxing scalars.
