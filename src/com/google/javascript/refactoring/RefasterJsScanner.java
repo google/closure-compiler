@@ -127,27 +127,39 @@ public final class RefasterJsScanner extends Scanner {
     return false;
   }
 
-  @Override public List<SuggestedFix> processMatch(Match match) {
+  @Override
+  public List<SuggestedFix> processMatch(Match match) {
     SuggestedFix.Builder fix = new SuggestedFix.Builder();
-    Node newNode = transformNode(
-        matchedTemplate.afterTemplate.getLastChild(),
-        matchedTemplate.matcher.getTemplateNodeToMatchMap());
+    // Only replace the original source with a version serialized from the AST if the after template
+    // is actually different. Otherwise, we might just add churn (e.g. single quotes into double
+    // quotes and whitespace).
+    if (matchedTemplate
+        .beforeTemplate
+        .getLastChild()
+        .isEquivalentTo(matchedTemplate.afterTemplate.getLastChild())) {
+      return ImmutableList.of();
+    }
+    Node newNode =
+        transformNode(
+            matchedTemplate.afterTemplate.getLastChild(),
+            matchedTemplate.matcher.getTemplateNodeToMatchMap());
     Node nodeToReplace = match.getNode();
     fix.attachMatchedNodeInfo(nodeToReplace, match.getMetadata().getCompiler());
     fix.replace(nodeToReplace, newNode, match.getMetadata().getCompiler());
-    // If the template is a multiline template, make sure to delete the same number of sibling nodes
-    // as the template has.
+    // If the template is a multiline template, make sure to delete the same number of sibling
+    // nodes as the template has.
     Node n = match.getNode().getNext();
     int count = matchedTemplate.beforeTemplate.getLastChild().getChildCount();
     for (int i = 1; i < count; i++) {
       Preconditions.checkNotNull(
-          n, "Found mismatched sibling count between before template and matched node.\n"
-          + "Template: %s\nMatch: %s",
-          matchedTemplate.beforeTemplate.getLastChild(), match.getNode());
+          n,
+          "Found mismatched sibling count between before template and matched node.\n"
+              + "Template: %s\nMatch: %s",
+          matchedTemplate.beforeTemplate.getLastChild(),
+          match.getNode());
       fix.delete(n);
       n = n.getNext();
     }
-
     // Add/remove any goog.requires
     for (String require : matchedTemplate.getGoogRequiresToAdd()) {
       fix.addGoogRequire(match, require);
@@ -227,6 +239,18 @@ public final class RefasterJsScanner extends Scanner {
           Preconditions.checkState(
               !afterTemplates.containsKey(templateName),
               "Found existing template with the same name: %s", afterTemplates.get(templateName));
+          afterTemplates.put(templateName, templateNode);
+        } else if (fnName.startsWith("do_not_change_")) {
+          String templateName = fnName.substring("do_not_change_".length());
+          Preconditions.checkState(
+              !beforeTemplates.containsKey(templateName),
+              "Found existing template with the same name: %s",
+              beforeTemplates.get(templateName));
+          Preconditions.checkState(
+              !afterTemplates.containsKey(templateName),
+              "Found existing template with the same name: %s",
+              afterTemplates.get(templateName));
+          beforeTemplates.put(templateName, templateNode);
           afterTemplates.put(templateName, templateNode);
         }
       }

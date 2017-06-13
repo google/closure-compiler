@@ -43,6 +43,17 @@ refactoring_testcase.nullable_location_href = function(target, val) {
   target.href = val;
 };
 
+//
+// Test case for matching string literals
+//
+
+/**
+ * @param {!Location} target The target.
+ */
+refactoring_testcase.href_string_literal = function(target) {
+  // Should match do_not_change_setHrefStringLiteral.
+  target.href = 'about:blank';
+};
 
 //
 // Test cases for .href assignments that match the un-typed catch-all rule.

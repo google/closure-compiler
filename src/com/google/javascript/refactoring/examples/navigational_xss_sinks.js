@@ -60,6 +60,26 @@ function requiresReview(x) {
 //
 
 
+
+// String literal assignments are implicitly trusted (the URL was
+// code-reviewed).
+
+/**
+ * @param {?} thing1
+ * @param {string} string_literal_thing2
+ */
+function before_setHrefStringLiteral(thing1, string_literal_thing2) {
+  thing1.href = string_literal_thing2;
+}
+
+/**
+ * @param {?} thing1
+ * @param {string} string_literal_thing2
+ */
+function after_setHrefStringLiteral(thing1, string_literal_thing2) {
+  thing1.href = string_literal_thing2;
+}
+
 // Refactorings for assignments to the href property of a Location object into
 // use of the corresponding safe wrapper, goog.dom.safe.setLocationHref.
 //
@@ -184,6 +204,16 @@ function after_setHrefUnknown(thing1, thing2) {
 // implicit cast to !Location for assignments to this property.
 //
 
+// String literal assignments are implicitly trusted (the URL was
+// code-reviewed).
+
+/**
+ * @param {?} thing1
+ * @param {string} string_literal_thing2
+ */
+function do_not_change_setLocationStringLiteral(thing1, string_literal_thing2) {
+  thing1.location = string_literal_thing2;
+}
 
 /**
  * +require {goog.dom.safe}

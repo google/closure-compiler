@@ -241,7 +241,8 @@ public enum Token {
     // Tokens to use for internal bookkeeping,
     // an AST is invalid while these are present.
     PLACEHOLDER1,
-    PLACEHOLDER2;
+  PLACEHOLDER2,
+  PLACEHOLDER3;
 
   /** If the arity isn't always the same, this function returns -1 */
   public static int arity(Token token) {
