@@ -24,6 +24,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * An optimization pass to prune J2CL clinits.
@@ -308,9 +309,9 @@ public class J2clClinitPrunerPass implements CompilerPass {
    */
   private static class HierarchicalSet<T> {
     private Set<T> currentSet = new HashSet<>();
-    private HierarchicalSet<T> parent;
+    @Nullable private final HierarchicalSet<T> parent;
 
-    public HierarchicalSet(HierarchicalSet<T> parent) {
+    public HierarchicalSet(@Nullable HierarchicalSet<T> parent) {
       this.parent = parent;
     }
 
@@ -319,7 +320,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
     }
 
     /** Returns true either my parent or any of its parents contains the item. */
-    private boolean parentsContains(Object o) {
+    private boolean parentsContains(T o) {
       return parent != null && (parent.currentSet.contains(o) || parent.parentsContains(o));
     }
   }
