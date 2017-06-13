@@ -2548,4 +2548,24 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "a.bar;"));
   }
 
+  public void testArrowFunctionRestParam1() {
+    testSame(
+        LINE_JOINER.join(
+            "function foo() {",
+            "  var f = (...args) => args[0];",
+            "  return f(8);",
+            "}",
+            "foo();"));
+  }
+
+  public void testArrowFunctionRestParam2() {
+    testSame(
+        LINE_JOINER.join(
+            "function foo() {",
+              "  var f = (x, ...args) => x + args[0];",
+              "  return f(1, 8);",
+            "}",
+            "foo();"));
+  }
+
 }

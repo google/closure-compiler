@@ -34,6 +34,7 @@ class DefinitionsRemover {
    * @return an {@link Definition} object if the node contains a definition or {@code null}
    *     otherwise.
    */
+
   static Definition getDefinition(Node n, boolean isExtern) {
     Node parent = n.getParent();
     if (parent == null) {
@@ -52,8 +53,10 @@ class DefinitionsRemover {
       return new AssignmentDefinition(parent, isExtern);
     } else if (NodeUtil.isObjectLitKey(n)) {
       return new ObjectLiteralPropertyDefinition(parent, n, n.getFirstChild(), isExtern);
-    } else if (parent.isParamList()) {
-      Node function = parent.getParent();
+    } else if (NodeUtil.getEnclosingType(n, Token.PARAM_LIST) != null
+        && !n.isParamList() && !n.isRest()) {
+      Node paramList = NodeUtil.getEnclosingType(n, Token.PARAM_LIST);
+      Node function = paramList.getParent();
       return new FunctionArgumentDefinition(function, n, isExtern);
     } else if (parent.getToken() == Token.COLON && parent.getFirstChild() == n && isExtern) {
       Node grandparent = parent.getParent();
@@ -174,6 +177,7 @@ class DefinitionsRemover {
     IncompleteDefinition(Node lValue, boolean inExterns) {
       super(inExterns);
       Preconditions.checkNotNull(lValue);
+
       Preconditions.checkArgument(
           ALLOWED_TYPES.contains(lValue.getToken()),
           "Unexpected lValue type %s",

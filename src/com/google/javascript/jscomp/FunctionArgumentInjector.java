@@ -38,6 +38,8 @@ class FunctionArgumentInjector {
   // identifier can be used, so we use "this".
   static final String THIS_MARKER = "this";
 
+  static final String REST_MARKER = "REST";
+
   private FunctionArgumentInjector() {
     // A private constructor to prevent instantiation.
   }
@@ -549,7 +551,11 @@ class FunctionArgumentInjector {
   private static Set<String> getFunctionParameterSet(Node fnNode) {
     Set<String> set = new HashSet<>();
     for (Node n : NodeUtil.getFunctionParameters(fnNode).children()) {
-      set.add(n.getString());
+      if (n.isRest()){
+        set.add(REST_MARKER);
+      } else {
+        set.add(n.getString());
+      }
     }
     return set;
   }
