@@ -240,6 +240,14 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     Preconditions.checkState(node.isSuper(), node);
     Node grandparent = parent.getParent();
 
+    if (NodeUtil.isLValue(parent)) {
+      // We don't support assigning to a super property
+      compiler.report(
+          JSError.make(
+              parent, CANNOT_CONVERT_YET, "Assigning to a super property is not supported."));
+      return;
+    }
+
     Node clazz = NodeUtil.getEnclosingClass(node);
     Node superName = clazz.getSecondChild();
     if (!superName.isQualifiedName()) {
@@ -251,7 +259,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       node.replaceWith(superName.cloneTree());
     } else {
       String newPropName = Joiner.on('.').join(superName.getQualifiedName(), "prototype");
-      Node newprop = NodeUtil.newQName(compiler, newPropName);
+      Node newprop = NodeUtil.newQName(compiler, newPropName, node, "super");
       node.replaceWith(newprop);
     }
 

@@ -1422,7 +1422,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "}",
             "class Sub extends Base {",
             "  get g() { return super.g + '-sub'; }",
-            "  set g(v) { super.g = v + '-sub'; }",
             "}"),
         LINE_JOINER.join(
             "/** @constructor @struct */",
@@ -1460,11 +1459,21 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "            enumerable:true,",
             "            /** @this {Sub} */",
             "            get:function(){return Base.prototype.g + \"-sub\";},",
-            "            /** @this {Sub} */",
-            "            set:function(v){Base.prototype.g = v + \"-sub\";}",
             "        }",
             "    });",
             ""));
+
+    testError(
+        LINE_JOINER.join(
+            "class Base {",
+            "  get g() { return 'base'; }",
+            "  set g(v) { alert('base.prototype.g = ' + v); }",
+            "}",
+            "class Sub extends Base {",
+            "  get g() { return super.g + '-sub'; }",
+            "  set g(v) { super.g = v + '-sub'; }",
+            "}"),
+        CANNOT_CONVERT_YET);
   }
 
   public void testSuperNew() {
