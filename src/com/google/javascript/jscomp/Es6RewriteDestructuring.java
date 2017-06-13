@@ -235,11 +235,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     } else if (parent.isCatch()) {
       visitDestructuringPatternInCatch(pattern);
     } else {
-      if (pattern.isArrayPattern()) {
-        throw new IllegalStateException("Unexpected ARRAY_PATTERN parent: " + parent);
-      } else {
-        throw new IllegalStateException("Unexpected OBJECT_PATTERN parent: " + parent);
-      }
+      throw new IllegalStateException("unexpected parent");
     }
   }
 
@@ -253,7 +249,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         replaceObjectPattern(t, pattern, rhs, parent, nodeToDetach);
         break;
       default:
-        throw new IllegalStateException("Unexpected pattern: " + parent.getFirstChild());
+        throw new IllegalStateException("unexpected");
     }
   }
 
@@ -324,7 +320,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
         Node getprop = IR.getprop(IR.name(tempVarName), IR.string(newLHS.getString()));
         newRHS = defaultValueHook(getprop, defaultValue);
       } else {
-        throw new IllegalStateException("Unexpected OBJECT_PATTERN child: " + child);
+        throw new IllegalStateException("unexpected child");
       }
 
       Node newNode;
