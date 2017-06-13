@@ -20,6 +20,8 @@ import com.google.common.base.Strings;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -55,16 +57,16 @@ public class J2clClinitPrunerPass implements CompilerPass {
    */
   private final class RedundantClinitPruner implements Callback {
 
+    private final Deque<HierarchicalSet<String>> stateStack = new ArrayDeque<>();
     private HierarchicalSet<String> clinitsCalledAtBranch = new HierarchicalSet<>(null);
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node node, Node parent) {
-      if (parent != null && NodeUtil.isFunctionDeclaration(node)) {
+      if (NodeUtil.isFunctionDeclaration(node)) {
         // Unlike function expressions, we don't know when the function in a function declaration
-        // will be executed so lets start a new traversal to avoid inheriting anything from the
-        // current branch.
-        NodeTraversal.traverseEs6(t.getCompiler(), node, new RedundantClinitPruner());
-        return false;
+        // will be executed so lets avoid inheriting anything from the current branch.
+        stateStack.addLast(clinitsCalledAtBranch);
+        clinitsCalledAtBranch = new HierarchicalSet<>(null);
       }
 
       if (isNewControlBranch(parent)) {
@@ -84,6 +86,12 @@ public class J2clClinitPrunerPass implements CompilerPass {
 
       if (isNewControlBranch(parent)) {
         clinitsCalledAtBranch = clinitsCalledAtBranch.parent;
+      }
+
+      if (parent != null && NodeUtil.isFunctionDeclaration(node)) {
+        // Unlike function expressions, we don't know when the function in a function declaration
+        // will be executed so lets avoid inheriting anything from the current branch.
+        clinitsCalledAtBranch = stateStack.removeLast();
       }
     }
 
