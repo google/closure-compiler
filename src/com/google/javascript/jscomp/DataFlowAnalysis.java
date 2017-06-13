@@ -559,6 +559,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       AbstractCompiler compiler,
       ScopeCreator scopeCreator) {
     // TODO(user): Very good place to store this information somewhere.
+
     AbstractPostOrderCallback finder = new AbstractPostOrderCallback() {
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
@@ -582,6 +583,53 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     for (Var var : jsScope.getVarIterable()) {
       if (var.getParentNode().isCatch() ||
           compiler.getCodingConvention().isExported(var.getName())) {
+        escaped.add(var);
+      }
+    }
+  }
+
+  /**
+   * ******************************************************************** Alternate implementation
+   * of compute escaped that accepts the child scope and the current jsScope to help us access both
+   * the function and function body scopes.
+   */
+  static void computeEscaped(
+      final Scope jsScope,
+      final Scope jsScopeChild,
+      final Set<Var> escaped,
+      AbstractCompiler compiler,
+      Es6SyntacticScopeCreator scopeCreator) {
+
+    AbstractPostOrderCallback finder =
+        new AbstractPostOrderCallback() {
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+
+            if (jsScope.getRootNode() == NodeUtil.getEnclosingFunction(n)
+                || !n.isName()
+                || parent.isFunction()) {
+              return;
+            }
+            String name = n.getString();
+            Var var = t.getScope().getVar(name);
+            Node enclosing = NodeUtil.getEnclosingFunction(var.getNode());
+            if (var != null && enclosing == jsScope.getRootNode()) {
+              escaped.add(var);
+            }
+          }
+        };
+
+    NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
+    t.traverseAtScope(jsScope);
+
+    for (Var var : jsScope.getVarIterable()) {
+      if (compiler.getCodingConvention().isExported(var.getName())) {
+        escaped.add(var);
+      }
+    }
+
+    for (Var var : jsScopeChild.getVarIterable()) {
+      if (compiler.getCodingConvention().isExported(var.getName())) {
         escaped.add(var);
       }
     }
