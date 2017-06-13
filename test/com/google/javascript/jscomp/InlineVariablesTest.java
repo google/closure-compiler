@@ -1317,4 +1317,157 @@ public final class InlineVariablesTest extends CompilerTestCase {
             "}",
             "use(x);"));
   }
+
+  public void testLetConst() {
+    test(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  if (true) {",
+            "    let y = x; y; y;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  if (true) {",
+            "    x; x;",
+            "  }",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  if (true) {",
+            "    const y = x; y; y;",
+            "    }",
+            "  }"),
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  if (true) {",
+            "    x; x;",
+            "  }",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  let y;",
+            "  {",
+            "    let y = x; y;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  let y;",
+            "  {",
+            "    x;",
+            "  }",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  let y = x; y; const g = 2; ",
+            "  {",
+            "    const g = 3; let y = g; y;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(x) {",
+            "  x; const g = 2;",
+            "  {3;}",
+            "}"));
+  }
+
+  public void testGenerators() {
+    test(
+        LINE_JOINER.join(
+            "function* f() {",
+            "  let x = 1;",
+            "  yield x;",
+            "}"
+        ),
+        LINE_JOINER.join(
+            "function* f() {",
+            "  yield 1;",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "function* f(x) {",
+            "  let y = x++",
+            "  yield y;",
+            "}"
+        ),
+        LINE_JOINER.join(
+            "function* f(x) {",
+            "  yield x++;",
+            "}"));
+  }
+
+  public void testForOf() {
+    testSame(" var i = 0; for(i of n) {}");
+
+    testSame("for( var i of n) { var x = i; }");
+  }
+
+  public void testTemplateStrings() {
+    testSame(" var name = 'Foo'; `Hello ${name}`");
+
+    test(" var name = 'Foo'; var foo = name; `Hello ${foo}`",
+        " var foo = 'Foo'; `Hello ${foo}`");
+
+    testSame(" var age = 3; `Age: ${age}`");
+  }
+
+  public void testTaggedTemplateLiterals() {
+    test(
+        LINE_JOINER.join(
+            "var name = 'Foo';",
+            "function myTag(strings, nameExp, numExp) {",
+            "  var modStr;",
+            "  if (numExp > 2) {",
+            "    modStr = nameExp + 'Bar'",
+            "  } else { ",
+            "    modStr = nameExp + 'BarBar'",
+            "  }",
+            "}",
+            "var output = myTag`My name is ${name} ${3}`;"
+        ),
+        LINE_JOINER.join(
+            "var name = 'Foo';",
+            "var output = function myTag(strings, nameExp, numExp) {",
+            "  var modStr;",
+            "  if (numExp > 2) {",
+            "    modStr = nameExp + 'Bar'",
+            "  } else { ",
+            "    modStr = nameExp + 'BarBar'",
+            "  }",
+            "}`My name is ${name} ${3}`;"));
+
+    testSame(
+        LINE_JOINER.join(
+            "var name = 'Foo';",
+            "function myTag(strings, nameExp, numExp) {",
+            "  var modStr;",
+            "  if (numExp > 2) {",
+            "    modStr = nameExp + 'Bar'",
+            "  } else { ",
+            "    modStr = nameExp + 'BarBar'",
+            "  }",
+            "}",
+            "var output = myTag`My name is ${name} ${3}`;",
+            "output = myTag`My name is ${name} ${2}`;"));
+  }
+
+  public void testDestructuring() {
+    test(
+        LINE_JOINER.join(
+            "var [a, b, c] = [1, 2, 3]",
+            "var x = a;",
+            "x; x;"
+        ),
+        LINE_JOINER.join(
+            "var [a, b, c] = [1, 2, 3]",
+            "a; a;"));
+  }
 }
