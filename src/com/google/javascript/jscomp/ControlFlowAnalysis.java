@@ -210,11 +210,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   public boolean shouldTraverse(
       NodeTraversal nodeTraversal, Node n, Node parent) {
     astPosition.put(n, astPositionCounter++);
-
     switch (n.getToken()) {
-      case CLASS:
-        createEdge(n, Branch.UNCOND, n.getNext());
-        return false;
       case FUNCTION:
         if (shouldTraverseFunctions || n == cfg.getEntry().getValue()) {
           exceptionHandler.push(n);
@@ -267,6 +263,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
           return n != parent.getFirstChild();
         case FUNCTION:
           return n == parent.getLastChild();
+        case CLASS:
+          return shouldTraverseFunctions && n == parent.getLastChild();
         case CONTINUE:
         case BREAK:
         case EXPR_RESULT:
@@ -288,6 +286,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
             exceptionHandler.pop();
           }
           break;
+        case CLASS_MEMBERS:
+        case MEMBER_FUNCTION_DEF:
         default:
           break;
       }
@@ -354,6 +354,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         handleWith(n);
         return;
       case LABEL:
+      case CLASS_MEMBERS:
+      case MEMBER_FUNCTION_DEF:
         return;
       default:
         handleStmt(n);
