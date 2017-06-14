@@ -416,6 +416,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var goog={};goog.forwardDeclare=function(typeName){};var x;var y");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#90
   public void testIssue90() {
     CompilerOptions options = createCompilerOptions();
     options.setFoldConstants(true);
@@ -2478,6 +2479,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}"));
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#63
   public void testIssue63SourceMap() {
     CompilerOptions options = createCompilerOptions();
     String code = "var a;";
@@ -2763,7 +2765,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         StrictModeCheck.DELETE_VARIABLE);
   }
 
-
+  // http://blickly.github.io/closure-compiler-issues/#598
   public void testIssue598() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT);
@@ -2802,6 +2804,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, "", StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN);
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#701
   public void testIssue701() {
     // Check ASCII art in license comments.
     String ascii = "/**\n" +
@@ -2819,6 +2822,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     assertEquals(result, lastCompiler.toSource());
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#724
   public void testIssue724() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -2838,6 +2842,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, result);
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#730
   public void testIssue730() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS
@@ -3095,6 +3100,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     testParseError(options, "function () {}");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#378
   public void testIssue378() {
     CompilerOptions options = createCompilerOptions();
     options.setInlineVariables(true);
@@ -3104,6 +3110,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "    f.apply(this, arguments); return this;}");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#550
   public void testIssue550() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.SIMPLE_OPTIMIZATIONS
@@ -3121,6 +3128,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "function f(a) { return a += 'xy'; }");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#1168
   public void testIssue1168() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.SIMPLE_OPTIMIZATIONS
@@ -3132,6 +3140,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "for( ; ; );");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#1198
   public void testIssue1198() throws Exception {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.SIMPLE_OPTIMIZATIONS
@@ -3143,6 +3152,7 @@ public final class IntegrationTest extends IntegrationTestCase {
          "function f(a) { return 1; }");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#1131
   public void testIssue1131() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS
@@ -3152,6 +3162,7 @@ public final class IntegrationTest extends IntegrationTestCase {
          "function a(b) { return b(b); } alert(a(a));");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#284
   public void testIssue284() {
     CompilerOptions options = createCompilerOptions();
     options.setSmartNameRemoval(true);
@@ -3171,6 +3182,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#772
   public void testIssue772() throws Exception {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
@@ -3208,6 +3220,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "f();");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#1204
   public void testIssue1204() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS
@@ -3791,6 +3804,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#937
   public void testIssue937() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;
@@ -3878,6 +3892,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "Sub.calledInSubclassOnly();"));
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#787
   public void testIssue787() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;
