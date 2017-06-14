@@ -15,8 +15,15 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /** Tests {@link ChromePass}. */
 public class ChromePassTest extends CompilerTestCase {
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    setLanguage(LanguageMode.ECMASCRIPT_2017, LanguageMode.ECMASCRIPT_2017);
+  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -38,6 +45,10 @@ public class ChromePassTest extends CompilerTestCase {
             + "cr.define('my.namespace.name', function() {\n"
             + "  return {};\n"
             + "});");
+  }
+
+  public void testChromePassIgnoresModules() throws Exception {
+    testSame("export var x;");
   }
 
   public void testCrDefineAssignsExportedFunctionByQualifiedName() throws Exception {

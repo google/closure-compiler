@@ -450,6 +450,42 @@ public final class IntegrationTest extends IntegrationTestCase {
         "'foo';");
   }
 
+  public void testChromePass_noTranspile() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setChromePass(true);
+    options.setLanguage(LanguageMode.ECMASCRIPT_2017);
+    test(
+        options,
+        "cr.define('my.namespace', function() { class X {} return {X: X}; });",
+        LINE_JOINER.join(
+            "var my = my || {};",
+            "my.namespace = my.namespace || {};",
+            "cr.define('my.namespace', function() {",
+            "  my.namespace.X = class X {};",
+            "  return { X: my.namespace.X };",
+            "});"));
+  }
+
+  public void testChromePass_transpile() {
+    CompilerOptions options = createCompilerOptions();
+    options.setChromePass(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        options,
+        "cr.define('my.namespace', function() { class X {} return {X: X}; });",
+        LINE_JOINER.join(
+            "var my = my || {};",
+            "my.namespace = my.namespace || {};",
+            "cr.define('my.namespace', function() {",
+            "  /** @constructor */",
+            "  var i0$classdecl$var0 = function() {};",
+            "  my.namespace.X = i0$classdecl$var0;",
+            "  return { X: my.namespace.X };",
+            "});"));
+  }
+
   public void testCssNameCheck() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
