@@ -74,6 +74,34 @@ function testSubclassGetter() {
   assertEquals(1, s.counter);
 }
 
+class FooWithSuffix extends Sub {
+  constructor() {
+    super();
+    this.foo_ = 'initial-value';
+  }
+
+  /** @return {string} */
+  get foo() {
+    // Invoke super class getter
+    return super.foo + '-' + this.foo_;
+  }
+
+  /** @param {string} val */
+  set foo(val) {
+    this.foo_ = val;
+  }
+}
+
+function testInvokeSuperGetter() {
+  let s1 = new FooWithSuffix();
+  let s2 = new FooWithSuffix();
+
+  s1.foo = 'modified';
+  assertEquals('sub-modified', s1.foo);
+  // s2 should not have been affected
+  assertEquals('sub-initial-value', s2.foo);
+}
+
 var Multiple = class {
   get foo() {
     return 'foo';

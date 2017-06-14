@@ -1025,7 +1025,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   public void testComputedSuper() {
-    testError(
+    test(
         LINE_JOINER.join(
             "class Foo {",
             "  ['m']() { return 1; }",
@@ -1036,7 +1036,14 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "    return super['m']() + 1;",
             "  }",
             "}"),
-        CANNOT_CONVERT_YET);
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let Foo = function() {};",
+            "Foo.prototype['m'] = function() { return 1; };",
+            "/** @constructor @struct @extends {Foo} @param {...?} var_args */",
+            "let Bar = function(var_args) { Foo.apply(this, arguments); };",
+            "$jscomp.inherits(Bar, Foo);",
+            "Bar.prototype['m'] = function () { return Foo.prototype['m'].call(this) + 1; };"));
   }
 
   public void testSuperMethodInGetter() {
@@ -1268,28 +1275,145 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   public void testSuperGet() {
-    testError("class D {} class C extends D { f() {var i = super.c;} }",
-              CANNOT_CONVERT_YET);
+    test(
+        "class D { d() {} } class C extends D { f() {var i = super.d;} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let D = function() {};",
+            "D.prototype.d = function() {};",
+            "/**",
+            " * @constructor @struct",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "let C = function(var_args) {",
+            "  D.apply(this, arguments); ",
+            "};",
+            "$jscomp.inherits(C, D);",
+            "C.prototype.f = function() {",
+            "  var i = D.prototype.d;",
+            "};"));
 
-    testError("class D {} class C extends D { static f() {var i = super.c;} }",
-              CANNOT_CONVERT_YET);
+    test(
+        "class D { ['d']() {} } class C extends D { f() {var i = super['d'];} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let D = function() {};",
+            "D.prototype['d'] = function() {};",
+            "/**",
+            " * @constructor @struct",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "let C = function(var_args) {",
+            "  D.apply(this, arguments); ",
+            "};",
+            "$jscomp.inherits(C, D);",
+            "C.prototype.f = function() {",
+            "  var i = D.prototype['d'];",
+            "};"));
 
-    testError("class D {} class C extends D { f() {var i; i = super[s];} }",
-              CANNOT_CONVERT_YET);
+    test(
+        "class D { d() {}} class C extends D { static f() {var i = super.d;} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let D = function() {};",
+            "D.prototype.d = function() {};",
+            "/**",
+            " * @constructor @struct",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "let C = function(var_args) {",
+            "  D.apply(this, arguments); ",
+            "};",
+            "$jscomp.inherits(C, D);",
+            "C.f = function() {",
+            "  var i = D.d;",
+            "};"));
 
-    testError("class D {} class C extends D { f() {return super.s;} }",
-              CANNOT_CONVERT_YET);
+    test(
+        "class D { ['d']() {}} class C extends D { static f() {var i = super['d'];} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let D = function() {};",
+            "D.prototype['d'] = function() {};",
+            "/**",
+            " * @constructor @struct",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "let C = function(var_args) {",
+            "  D.apply(this, arguments); ",
+            "};",
+            "$jscomp.inherits(C, D);",
+            "C.f = function() {",
+            "  var i = D['d'];",
+            "};"));
 
-    testError("class D {} class C extends D { f() {m(super.s);} }",
-              CANNOT_CONVERT_YET);
+    test(
+        "class D {} class C extends D { f() {return super.s;} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let D = function() {};",
+            "/**",
+            " * @constructor @struct",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "let C = function(var_args) {",
+            "  D.apply(this, arguments); ",
+            "};",
+            "$jscomp.inherits(C, D);",
+            "C.prototype.f = function() {",
+            "  return D.prototype.s;",
+            "};"));
 
-    testError(
-        "class D {} class C extends D { foo() { return super.m.foo(); } }",
-        CANNOT_CONVERT_YET);
+    test(
+        "class D {} class C extends D { f() { m(super.s);} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let D = function() {};",
+            "/**",
+            " * @constructor @struct",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "let C = function(var_args) {",
+            "  D.apply(this, arguments); ",
+            "};",
+            "$jscomp.inherits(C, D);",
+            "C.prototype.f = function() {",
+            "  m(D.prototype.s);",
+            "};"));
 
-    testError(
-        "class D {} class C extends D { static foo() { return super.m.foo(); } }",
-        CANNOT_CONVERT_YET);
+    test(
+        "class D {} class C extends D { foo() { return super.m.foo();} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let D = function() {};",
+            "/**",
+            " * @constructor @struct",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "let C = function(var_args) {",
+            "  D.apply(this, arguments); ",
+            "};",
+            "$jscomp.inherits(C, D);",
+            "C.prototype.foo = function() {",
+            "  return D.prototype.m.foo();",
+            "};"));
+
+    test(
+        "class D {} class C extends D { static foo() { return super.m.foo();} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let D = function() {};",
+            "/**",
+            " * @constructor @struct",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "let C = function(var_args) {",
+            "  D.apply(this, arguments); ",
+            "};",
+            "$jscomp.inherits(C, D);",
+            "C.foo = function() {",
+            "  return D.m.foo();",
+            "};"));
   }
 
   public void testSuperNew() {

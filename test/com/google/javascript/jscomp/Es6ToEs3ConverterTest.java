@@ -1026,7 +1026,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testComputedSuper() {
-    testError(
+    test(
         LINE_JOINER.join(
             "class Foo {",
             "  ['m']() { return 1; }",
@@ -1037,7 +1037,14 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "    return super['m']() + 1;",
             "  }",
             "}"),
-        CANNOT_CONVERT_YET);
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var Foo = function() {};",
+            "Foo.prototype['m'] = function() { return 1; };",
+            "/** @constructor @struct @extends {Foo} @param {...?} var_args */",
+            "var Bar = function(var_args) { Foo.apply(this, arguments); };",
+            "$jscomp.inherits(Bar, Foo);",
+            "Bar.prototype['m'] = function () { return Foo.prototype['m'].call(this) + 1; };"));
   }
 
   public void testSuperMethodInGetter() {
@@ -1269,27 +1276,209 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testSuperGet() {
-    testError("class D {} class C extends D { f() {var i = super.c;} }",
-              CANNOT_CONVERT_YET);
+    test(
+        "class D { d() {} } class C extends D { f() {var i = super.d;} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var D = function() {};",
+            "D.prototype.d = function() {};",
+            "/**",
+            " * @constructor @struct",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "var C = function(var_args) {",
+            "  D.apply(this, arguments); ",
+            "};",
+            "$jscomp.inherits(C, D);",
+            "C.prototype.f = function() {",
+            "  var i = D.prototype.d;",
+            "};"));
 
-    testError("class D {} class C extends D { static f() {var i = super.c;} }",
-              CANNOT_CONVERT_YET);
+    test(
+        "class D { ['d']() {} } class C extends D { f() {var i = super['d'];} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var D = function() {};",
+            "D.prototype['d'] = function() {};",
+            "/**",
+            " * @constructor @struct",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "var C = function(var_args) {",
+            "  D.apply(this, arguments); ",
+            "};",
+            "$jscomp.inherits(C, D);",
+            "C.prototype.f = function() {",
+            "  var i = D.prototype['d'];",
+            "};"));
 
-    testError("class D {} class C extends D { f() {var i; i = super[s];} }",
-              CANNOT_CONVERT_YET);
+    test(
+        "class D { d() {}} class C extends D { static f() {var i = super.d;} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var D = function() {};",
+            "D.prototype.d = function() {};",
+            "/**",
+            " * @constructor @struct",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "var C = function(var_args) {",
+            "  D.apply(this, arguments); ",
+            "};",
+            "$jscomp.inherits(C, D);",
+            "C.f = function() {",
+            "  var i = D.d;",
+            "};"));
 
-    testError("class D {} class C extends D { f() {return super.s;} }",
-              CANNOT_CONVERT_YET);
+    test(
+        "class D { ['d']() {}} class C extends D { static f() {var i = super['d'];} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var D = function() {};",
+            "D.prototype['d'] = function() {};",
+            "/**",
+            " * @constructor @struct",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "var C = function(var_args) {",
+            "  D.apply(this, arguments); ",
+            "};",
+            "$jscomp.inherits(C, D);",
+            "C.f = function() {",
+            "  var i = D['d'];",
+            "};"));
 
-    testError("class D {} class C extends D { f() {m(super.s);} }",
-              CANNOT_CONVERT_YET);
+    test(
+        "class D {} class C extends D { f() {return super.s;} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var D = function() {};",
+            "/**",
+            " * @constructor @struct",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "var C = function(var_args) {",
+            "  D.apply(this, arguments); ",
+            "};",
+            "$jscomp.inherits(C, D);",
+            "C.prototype.f = function() {",
+            "  return D.prototype.s;",
+            "};"));
+
+    test(
+        "class D {} class C extends D { f() { m(super.s);} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var D = function() {};",
+            "/**",
+            " * @constructor @struct",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "var C = function(var_args) {",
+            "  D.apply(this, arguments); ",
+            "};",
+            "$jscomp.inherits(C, D);",
+            "C.prototype.f = function() {",
+            "  m(D.prototype.s);",
+            "};"));
+
+    test(
+        "class D {} class C extends D { foo() { return super.m.foo();} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var D = function() {};",
+            "/**",
+            " * @constructor @struct",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "var C = function(var_args) {",
+            "  D.apply(this, arguments); ",
+            "};",
+            "$jscomp.inherits(C, D);",
+            "C.prototype.foo = function() {",
+            "  return D.prototype.m.foo();",
+            "};"));
+
+    test(
+        "class D {} class C extends D { static foo() { return super.m.foo();} }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var D = function() {};",
+            "/**",
+            " * @constructor @struct",
+            " * @param {...?} var_args",
+            " * @extends{D} */",
+            "var C = function(var_args) {",
+            "  D.apply(this, arguments); ",
+            "};",
+            "$jscomp.inherits(C, D);",
+            "C.foo = function() {",
+            "  return D.m.foo();",
+            "};"));
+  }
+
+  public void testSuperAccessToGettersAndSetters() {
+    // Getters cannot be transpiled to ES3
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        LINE_JOINER.join(
+            "class Base {",
+            "  get g() { return 'base'; }",
+            "  set g(v) { alert('base.prototype.g = ' + v); }",
+            "}",
+            "class Sub extends Base {",
+            "  get g() { return super.g + '-sub'; }",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var Base = function() {};",
+            "/** @type {?} */",
+            "Base.prototype.g;",
+            "$jscomp.global.Object.defineProperties(",
+            "    Base.prototype,",
+            "    {",
+            "        g:{",
+            "            configurable:true,",
+            "            enumerable:true,",
+            "            /** @this {Base} */",
+            "            get:function(){return\"base\"},",
+            "            /** @this {Base} */",
+            "            set:function(v){alert(\"base.prototype.g = \" + v);}",
+            "        }",
+            "    });",
+            "/**",
+            " * @constructor @struct",
+            " * @extends {Base}",
+            " * @param {...?} var_args",
+            " */",
+            "var Sub = function(var_args) {",
+            "  Base.apply(this, arguments);",
+            "};",
+            "/** @type {?} */",
+            "Sub.prototype.g;",
+            "$jscomp.inherits(Sub, Base);",
+            "$jscomp.global.Object.defineProperties(",
+            "    Sub.prototype,",
+            "    {",
+            "        g:{",
+            "            configurable:true,",
+            "            enumerable:true,",
+            "            /** @this {Sub} */",
+            "            get:function(){return Base.prototype.g + \"-sub\";},",
+            "        }",
+            "    });",
+            ""));
 
     testError(
-        "class D {} class C extends D { foo() { return super.m.foo(); } }",
-        CANNOT_CONVERT_YET);
-
-    testError(
-        "class D {} class C extends D { static foo() { return super.m.foo(); } }",
+        LINE_JOINER.join(
+            "class Base {",
+            "  get g() { return 'base'; }",
+            "  set g(v) { alert('base.prototype.g = ' + v); }",
+            "}",
+            "class Sub extends Base {",
+            "  get g() { return super.g + '-sub'; }",
+            "  set g(v) { super.g = v + '-sub'; }",
+            "}"),
         CANNOT_CONVERT_YET);
   }
 

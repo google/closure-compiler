@@ -133,6 +133,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
                   case MEMBER_FUNCTION_DEF:
                   case GETTER_DEF:
                   case SETTER_DEF:
+                  case COMPUTED_PROP:
                     return true;
                   default:
                     return false;
@@ -143,24 +144,20 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     if (parent.isCall()) {
       // super(...)
       visitSuperCall(node, parent, enclosingMemberDef);
-    } else if (parent.isGetProp()) {
+    } else if (parent.isGetProp() || parent.isGetElem()) {
       if (parent.getFirstChild() == node) {
         if (parent.getParent().isCall() && NodeUtil.isCallOrNewTarget(parent)) {
-          // super.something(...)
+          // super.something(...) or super['something'](..)
           visitSuperPropertyCall(node, parent, enclosingMemberDef);
         } else {
-          // super.something
-          compiler.report(JSError.make(node, CANNOT_CONVERT_YET,
-              "Only calls to super or to a method of super are supported."));
+          // super.something or super['something']
+          visitSuperPropertyAccess(node, parent, enclosingMemberDef);
         }
       } else {
         // super.something used in some other way
         compiler.report(JSError.make(node, CANNOT_CONVERT_YET,
             "Only calls to super or to a method of super are supported."));
       }
-    } else if (parent.isGetElem()) {
-      compiler.report(JSError.make(node, CANNOT_CONVERT_YET,
-          "Only calls to super or to a method of super are supported."));
     } else if (parent.isNew()) {
       // new super(...)
       compiler.report(JSError.make(node, INVALID_SUPER_CALL));
@@ -190,8 +187,10 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
         // implementation that should be instantiated.
         // A call to super() shouldn't actually exist for these cases and is problematic to
         // transpile, so just drop it.
-        NodeUtil.getEnclosingStatement(node).detach();
-        compiler.reportCodeChange();
+        Node enclosingStatement = NodeUtil.getEnclosingStatement(node);
+        Node enclosingStatementParent = enclosingStatement.getParent();
+        enclosingStatement.detach();
+        compiler.reportChangeToEnclosingScope(enclosingStatementParent);
       }
       // Calls to super() constructors will be transpiled by Es6ConvertSuperConstructorCalls
       // later.
@@ -204,7 +203,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
   }
 
   private void visitSuperPropertyCall(Node node, Node parent, Node enclosingMemberDef) {
-    Preconditions.checkState(parent.isGetProp(), parent);
+    Preconditions.checkState(parent.isGetProp() || parent.isGetElem(), parent);
     Preconditions.checkState(node.isSuper(), node);
     Node grandparent = parent.getParent();
     Preconditions.checkState(grandparent.isCall());
@@ -233,6 +232,36 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       grandparent.putBooleanProp(Node.FREE_CALL, false);
       grandparent.useSourceInfoIfMissingFromForTree(parent);
     }
+    compiler.reportChangeToEnclosingScope(grandparent);
+  }
+
+  private void visitSuperPropertyAccess(Node node, Node parent, Node enclosingMemberDef) {
+    Preconditions.checkState(parent.isGetProp() || parent.isGetElem(), parent);
+    Preconditions.checkState(node.isSuper(), node);
+    Node grandparent = parent.getParent();
+
+    if (NodeUtil.isLValue(parent)) {
+      // We don't support assigning to a super property
+      compiler.report(
+          JSError.make(parent, CANNOT_CONVERT_YET, "assigning to a super property"));
+      return;
+    }
+
+    Node clazz = NodeUtil.getEnclosingClass(node);
+    Node superName = clazz.getSecondChild();
+    if (!superName.isQualifiedName()) {
+      // This will be reported as an error in Es6ToEs3Converter.
+      return;
+    }
+
+    if (enclosingMemberDef.isStaticMember()) {
+      node.replaceWith(superName.cloneTree());
+    } else {
+      String newPropName = Joiner.on('.').join(superName.getQualifiedName(), "prototype");
+      Node newprop = NodeUtil.newQName(compiler, newPropName, node, "super");
+      node.replaceWith(newprop);
+    }
+
     compiler.reportChangeToEnclosingScope(grandparent);
   }
 
