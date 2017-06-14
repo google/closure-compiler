@@ -3076,6 +3076,11 @@ public final class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(AbstractCompiler compiler) {
       return new ChromePass(compiler);
     }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8;
+    }
   };
 
   /** Rewrites the super accessors calls to support Dart Dev Compiler output. */
