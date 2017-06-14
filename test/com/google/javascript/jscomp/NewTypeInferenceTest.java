@@ -20415,13 +20415,16 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
   public void testBackwardAnalyzedLooseFunctionParametersInRightOrder() {
     // Regression test for https://github.com/google/closure-compiler/issues/2520
     typeCheck(LINE_JOINER.join(
-        "var /** !Array<!Foo>|undefined */ foos;",
-        "/** @constructor */ function Foo() {};",
-        "/** @param {string} str\n @param {number} num */",
+        "var /** !Array<!Foo> */ foos = [];",
+        "/** @constructor */",
+        "function Foo() {};",
+        "/**",
+        " * @param {string} str",
+        " * @param {number} num",
+        " */",
         "Foo.prototype.bar = function(str, num) {",
-        "  if (foos) {",
-        "    Array.prototype.forEach.call(foos, function(foo) { foo.bar(str, num); });",
-        "  }",
+        "  function f(foo) { foo.bar(str, num); }",
+        "  Array.prototype.forEach.call(foos, f);",
         "};"));
   }
 }

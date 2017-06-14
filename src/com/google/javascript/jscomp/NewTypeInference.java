@@ -3458,12 +3458,13 @@ final class NewTypeInference implements CompilerPass {
     Node callee = callNode.getFirstChild();
     TypeEnv tmpEnv = outEnv;
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
-    for (Node arg = callee.getNext(); arg != null; arg = arg.getNext()) {
+    Node target = callNode.getFirstChild();
+    for (Node arg = callNode.getLastChild(); arg != target; arg = arg.getPrevious()) {
       EnvTypePair pair = analyzeExprBwd(arg, tmpEnv);
       JSType argType = pair.type;
       tmpEnv = pair.env;
       // May wait until FWD to get more precise argument types.
-      builder.addReqFormal(isImpreciseType(argType) ? BOTTOM : argType);
+      builder.addReqFormalToFront(isImpreciseType(argType) ? BOTTOM : argType);
     }
 
     JSType looseRetType = retType.isUnknown() ? BOTTOM : retType;

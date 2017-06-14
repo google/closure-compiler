@@ -82,6 +82,15 @@ public final class FunctionTypeBuilder {
     return this;
   }
 
+  public FunctionTypeBuilder addReqFormalToFront(JSType t) {
+    if (!optionalFormals.isEmpty() || restFormals != null) {
+      throw new WrongParameterOrderException(
+          "Cannot add required formal after optional or rest args");
+    }
+    requiredFormals.add(0, t);
+    return this;
+  }
+
   public FunctionTypeBuilder addOptFormal(JSType t) {
     if (restFormals != null) {
       throw new WrongParameterOrderException(
