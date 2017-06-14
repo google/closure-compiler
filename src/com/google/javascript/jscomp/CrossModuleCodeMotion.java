@@ -19,7 +19,8 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
+import com.google.common.base.Objects;
+import com.google.javascript.jscomp.CrossModuleReferenceCollector.TopLevelStatement;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -27,7 +28,6 @@ import java.util.ArrayDeque;
 import java.util.BitSet;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -103,7 +103,6 @@ class CrossModuleCodeMotion implements CompilerPass {
   private void moveCode() {
     for (NamedInfo info : namedInfo.values()) {
       if (info.shouldBeMoved()) {
-        Iterator<Declaration> it = info.declarationIterator();
         // Find the appropriate spot to move it to
         JSModule preferredModule = info.getPreferredModule();
         Node destParent = moduleVarParentMap.get(preferredModule);
@@ -111,24 +110,17 @@ class CrossModuleCodeMotion implements CompilerPass {
           destParent = compiler.getNodeForCodeInsertion(preferredModule);
           moduleVarParentMap.put(preferredModule, destParent);
         }
-        while (it.hasNext()) {
-          Declaration decl = it.next();
-          checkState(decl.module == info.declModule);
-
-          // VAR Nodes are normalized to have only one child.
-          Node declParent = decl.node.getParent();
-          checkState(
-              !declParent.isVar() || declParent.hasOneChild(),
-              "AST not normalized.");
+        for (TopLevelStatement declaringStatement : info.movableDeclaringStatementStack) {
+          Node statementNode = declaringStatement.getStatementNode();
 
           // Remove it
-          compiler.reportChangeToEnclosingScope(declParent);
-          declParent.detach();
+          compiler.reportChangeToEnclosingScope(statementNode);
+          statementNode.detach();
 
           // Add it to the new spot
-          destParent.addChildToFront(declParent);
+          destParent.addChildToFront(statementNode);
 
-          compiler.reportChangeToEnclosingScope(declParent);
+          compiler.reportChangeToEnclosingScope(statementNode);
         }
         // Update variable declaration location.
         info.wasMoved = true;
@@ -139,10 +131,9 @@ class CrossModuleCodeMotion implements CompilerPass {
 
   /** useful information for each variable candidate */
   private class NamedInfo {
-    boolean allowMove = true;
+    private boolean allowMove = true;
 
-    // If movement is allowed, this will be filled with the indices of all modules referring to
-    // the global name.
+    // Indices of all modules referring to the global name.
     private BitSet modulesWithReferences = null;
 
     // A place to stash the results of getPreferredModule() to avoid recalculating it unnecessarily.
@@ -153,35 +144,57 @@ class CrossModuleCodeMotion implements CompilerPass {
 
     private boolean wasMoved = false;
 
-    // information on the spot where the item was declared
-    private final Deque<Declaration> declarations =
-        new ArrayDeque<>();
+    /** Stack of declaring statements. Last in is first to be moved. */
+    private final Deque<TopLevelStatement> movableDeclaringStatementStack = new ArrayDeque<>();
 
-    boolean isAllowedToMove() {
-      return allowMove;
+    void addMovableDeclaringStatement(TopLevelStatement declaringStatement) {
+      // Ignore declaring statements once we've decided we cannot move them.
+      if (allowMove) {
+        if (modulesWithReferences != null) {
+          // We've already started seeing non-declaration references, so we cannot actually
+          // move this statement and must treat it like a non-declaration reference.
+          addReferringStatement(declaringStatement);
+        } else if (declModule == null) {
+          declModule = declaringStatement.getModule();
+          movableDeclaringStatementStack.push(declaringStatement);
+        } else if (declModule.equals(declaringStatement.getModule())) {
+          movableDeclaringStatementStack.push(declaringStatement);
+        } else {
+          // Cannot move declarations not in the same module with the first declaration.
+          addReferringStatement(declaringStatement);
+        }
+      }
     }
 
-    void disallowMovement() {
-      allowMove = false;
-      // If we cannot move it, there's no point tracking where it's used.
-      modulesWithReferences = null;
-      preferredModule = declModule;
+    void addReferringStatement(TopLevelStatement referringStatement) {
+      // Ignore referring statements if we cannot move declaration statements anyway.
+      if (allowMove) {
+        if (declModule == null) {
+          // First reference we see is not a declaration, so we cannot move any declaration
+          // statements.
+          allowMove = false;
+        } else if (referringStatement.getModule().equals(declModule)) {
+          // The first non-declaration reference we see is in the same module as the declaration
+          // statements, so we cannot move them.
+          allowMove = false;
+          movableDeclaringStatementStack.clear();  // save some memory
+          modulesWithReferences = null;
+        } else {
+          addUsedModule(referringStatement.getModule());
+        }
+      }
     }
 
     // Add a Module where it is used
-    void addUsedModule(JSModule m) {
-      // If we are not allowed to move it, don't waste time and space tracking modules with
-      // references.
-      if (allowMove) {
-        if (modulesWithReferences == null) {
-          // first call to this method
-          modulesWithReferences = new BitSet(graph.getModuleCount());
-        }
-        modulesWithReferences.set(m.getIndex());
-        // invalidate preferredModule, so it will be recalculated next time getPreferredModule() is
-        // called.
-        preferredModule = null;
+    private void addUsedModule(JSModule m) {
+      if (modulesWithReferences == null) {
+        // first call to this method
+        modulesWithReferences = new BitSet(graph.getModuleCount());
       }
+      modulesWithReferences.set(m.getIndex());
+      // invalidate preferredModule, so it will be recalculated next time getPreferredModule() is
+      // called.
+      preferredModule = null;
     }
 
     /**
@@ -189,8 +202,6 @@ class CrossModuleCodeMotion implements CompilerPass {
      * to this global name.
      */
     JSModule getPreferredModule() {
-      // It doesn't even make sense to call this method if the declarations cannot be moved.
-      checkState(allowMove);
       if (preferredModule == null) {
         if (modulesWithReferences == null) {
           // If we saw no references, we must at least have seen a declaration.
@@ -204,21 +215,6 @@ class CrossModuleCodeMotion implements CompilerPass {
       return preferredModule;
     }
 
-    /**
-     * Add a declaration for this name.
-     * @return Whether this is a valid declaration. If this returns false,
-     *    this should be added as a reference.
-     */
-    boolean addDeclaration(Declaration d) {
-      // all declarations must appear in the same module.
-      if (declModule != null && d.module != declModule) {
-        return false;
-      }
-      declarations.push(d);
-      declModule = d.module;
-      return true;
-    }
-
     boolean shouldBeMoved() {
       // Only move if all are true:
       // a) allowMove is true
@@ -226,48 +222,6 @@ class CrossModuleCodeMotion implements CompilerPass {
       // c) the all usages depend on the declModule by way of a different, preferred module
       return allowMove && declModule != null && graph.dependsOn(getPreferredModule(), declModule);
     }
-
-    /**
-     * Returns an iterator over the declarations, in the order that they were
-     * declared.
-     */
-    Iterator<Declaration> declarationIterator() {
-      return declarations.iterator();
-    }
-  }
-
-  private static class Declaration {
-    final JSModule module;
-    final Node node;
-
-    Declaration(JSModule module, Node node) {
-      this.module = checkNotNull(module);
-      this.node = checkNotNull(node);
-    }
-  }
-
-  /**
-   * return true if the node has any form of conditional in its ancestry
-   * TODO(nicksantos) keep track of the conditionals in the ancestry, so
-   * that we don't have to recrawl it.
-   */
-  private static boolean hasConditionalAncestor(Node n) {
-    for (Node ancestor : n.getAncestors()) {
-      switch (ancestor.getToken()) {
-        case DO:
-        case FOR:
-        case FOR_IN:
-        case HOOK:
-        case IF:
-        case SWITCH:
-        case WHILE:
-        case FUNCTION:
-          return true;
-        default:
-          break;
-      }
-    }
-    return false;
   }
 
   /**
@@ -282,103 +236,46 @@ class CrossModuleCodeMotion implements CompilerPass {
     return info;
   }
 
-  /**
-   * Process the reads to named variables
-   */
-  private void processRead(Reference ref, NamedInfo info) {
-    // A name is recursively defined if:
-    //   1: It is calling itself.
-    //   2: One of its property calls itself.
-    // Recursive definition should not block movement.
-    String name = ref.getNode().getString();
-    boolean recursive = false;
-    Scope hoistTarget = ref.getScope().getClosestHoistScope();
-    if (hoistTarget.isFunctionBlockScope()) {
-      Node rootNode = hoistTarget.getRootNode().getParent();
-      // CASE #1:
-      String scopeFuncName = rootNode.getFirstChild().getString();
-      Node scopeFuncParent = rootNode.getParent();
-      if (scopeFuncName.equals(name)) {
-        recursive = true;
-      } else if (scopeFuncParent.isName() &&
-          scopeFuncParent.getString().equals(name)) {
-        recursive = true;
-      } else {
-        // CASE #2:
-        // Suppose name is Foo, we keep look up the scope stack to look for
-        // a scope with "Foo.prototype.bar = function() { ..... "
-        for (Scope s = ref.getScope();
-             s.getParent() != null; s = s.getParent()) {
-          Node curRoot = s.getRootNode();
-          if (curRoot.getParent().isAssign()) {
-            Node owner = curRoot.getParent().getFirstChild();
-            while (owner.isGetProp()) {
-              owner = owner.getFirstChild();
-            }
-            if (owner.isName() &&
-                owner.getString().equals(name)) {
-              recursive = true;
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    if (!recursive) {
-      info.addUsedModule(getModule(ref));
-    }
-  }
-
   private void collectReferences(Node root) {
     CrossModuleReferenceCollector collector = new CrossModuleReferenceCollector(
         compiler,
         new Es6SyntacticScopeCreator(compiler));
     collector.process(root);
 
-    for (Var v : collector.getAllSymbols()) {
-      NamedInfo info = getNamedInfo(v);
-      if (info.isAllowedToMove()) {
-        ReferenceCollection refCollection = collector.getReferences(v);
-        for (Reference ref : refCollection) {
-          processReference(collector, ref, info, v);
+    for (TopLevelStatement statement : collector.getTopLevelStatements()) {
+      Var declaredVar = null;
+      if (statement.isDeclarationStatement()) {
+        declaredVar = statement.getDeclaredNameReference().getSymbol();
+        NamedInfo declaredNameInfo = getNamedInfo(declaredVar);
+        if (statement.isMovableDeclaration()) {
+          declaredNameInfo.addMovableDeclaringStatement(statement);
+        } else {
+          // It's a declaration, but not movable, so treat its as a non-declaration reference.
+          declaredNameInfo.addReferringStatement(statement);
         }
       }
-    }
-  }
-
-  private void processReference(
-      CrossModuleReferenceCollector collector, Reference ref, NamedInfo info, Var v) {
-    Node n = ref.getNode();
-    if (isRecursiveDeclaration(v, n)) {
-      return;
-    }
-
-    Node parent = n.getParent();
-    if (maybeProcessDeclaration(collector, ref, info)) {
-      // Check to see if the declaration is conditional starting at the
-      // grandparent of the name node. Since a function declaration
-      // is considered conditional (the function might not be called)
-      // we would need to skip the parent in this check as the name could
-      // just be a function itself.
-      if (hasConditionalAncestor(parent.getParent())) {
-        info.disallowMovement();
-      }
-    } else {
-      if (!parentModuleCanSeeSymbolsDeclaredInChildren) {
-        // Modules are loaded in such a way that Foo really must be defined before any
-        // expressions like `x instanceof Foo` are evaluated.
-        processRead(ref, info);
-      } else {
-        if (isUnguardedInstanceofReference(n)) {
-          // Save a list of unguarded instanceof references.
-          // We'll add undefined typeof guards to them instead of allowing them to block code
-          // motion.
-          instanceofNodes.put(parent, new InstanceofInfo(getModule(ref), info));
-        } else if (!(isUndefinedTypeofGuardReference(n) || isGuardedInstanceofReference(n))) {
-          // Ignore `'undefined' != typeof Ref && x instanceof Ref`
-          // Otherwise, it's a read
-          processRead(ref, info);
+      for (Reference ref : statement.getNonDeclarationReferences()) {
+        Var v = ref.getSymbol();
+        // ignore recursive references
+        if (!Objects.equal(declaredVar, v)) {
+          NamedInfo info = getNamedInfo(v);
+          if (!parentModuleCanSeeSymbolsDeclaredInChildren) {
+            // Modules are loaded in such a way that Foo really must be defined before any
+            // expressions like `x instanceof Foo` are evaluated.
+            info.addReferringStatement(statement);
+          } else {
+            Node n = ref.getNode();
+            if (isUnguardedInstanceofReference(n)) {
+              // Save a list of unguarded instanceof references.
+              // We'll add undefined typeof guards to them instead of allowing them to block code
+              // motion.
+              instanceofNodes.put(n.getParent(), new InstanceofInfo(getModule(ref), info));
+            } else if (!(isUndefinedTypeofGuardReference(n) || isGuardedInstanceofReference(n))) {
+              // Ignore `'undefined' != typeof Ref && x instanceof Ref`
+              // Otherwise, it's a read
+              info.addReferringStatement(statement);
+            }
+          }
         }
       }
     }
@@ -464,150 +361,8 @@ class CrossModuleCodeMotion implements CompilerPass {
     return expression.isInstanceOf() && expression.getLastChild().isEquivalentTo(reference);
   }
 
-  /**
-   * @param variable a variable which may be movable
-   * @param referenceNode a node which is a reference to 'variable'
-   * @return whether the reference to the variable is a recursive declaration
-   *     e.g. function foo() { foo = function() {}; }
-   */
-  private boolean isRecursiveDeclaration(Var variable, Node referenceNode) {
-    if (!referenceNode.getParent().isAssign()) {
-      return false;
-    }
-    Node enclosingFunction = NodeUtil.getEnclosingFunction(referenceNode);
-    return enclosingFunction != null
-      && variable.getName().equals(NodeUtil.getNearestFunctionName(enclosingFunction));
-  }
-
   private JSModule getModule(Reference ref) {
     return compiler.getInput(ref.getInputId()).getModule();
-  }
-
-  /**
-   * Determines whether the given NAME node belongs to a declaration that
-   * can be moved across modules. If it is, registers it properly.
-   *
-   * There are four types of movable declarations:
-   * 1) var NAME = [movable object];
-   * 2) function NAME() {}
-   * 3) NAME = [movable object];
-   *    NAME.prop = [movable object];
-   *    NAME.prop.prop2 = [movable object];
-   *    etc.
-   * 4) Class-defining function calls, like "inherits" and "mixin".
-   *    NAME.inherits([some other name]);
-   * where "movable object" is a literal or a function.
-   */
-  private boolean maybeProcessDeclaration(
-      CrossModuleReferenceCollector collector, Reference ref, NamedInfo info) {
-    Node name = ref.getNode();
-    Node parent = name.getParent();
-    Node grandparent = parent.getParent();
-    switch (parent.getToken()) {
-      case VAR:
-        if (canMoveValue(collector, ref.getScope(), name.getFirstChild())) {
-          return info.addDeclaration(
-              new Declaration(getModule(ref), name));
-        }
-        return false;
-
-      case FUNCTION:
-        if (NodeUtil.isFunctionDeclaration(parent)) {
-          return info.addDeclaration(
-              new Declaration(getModule(ref), name));
-        }
-        return false;
-
-      case ASSIGN:
-      case GETPROP:
-        Node child = name;
-
-        // Look for assignment expressions where the name is the root
-        // of a qualified name on the left hand side of the assignment.
-        for (Node current : name.getAncestors()) {
-          if (current.isGetProp()) {
-            // fallthrough
-          } else if (current.isAssign() &&
-                     current.getFirstChild() == child) {
-            Node currentParent = current.getParent();
-            if (currentParent.isExprResult() &&
-                canMoveValue(
-                    collector, ref.getScope(), current.getLastChild())) {
-              return info.addDeclaration(
-                  new Declaration(getModule(ref), current));
-            }
-          } else {
-            return false;
-          }
-
-          child = current;
-        }
-        return false;
-
-      case CALL:
-        if (NodeUtil.isExprCall(grandparent)) {
-          SubclassRelationship relationship =
-              compiler.getCodingConvention().getClassesDefinedByCall(parent);
-          if (relationship != null &&
-              name.getString().equals(relationship.subclassName)) {
-            return info.addDeclaration(
-                new Declaration(getModule(ref), parent));
-          }
-        }
-        return false;
-
-      default:
-        return false;
-    }
-  }
-
-  /**
-   * Determines whether the given value is eligible to be moved across modules.
-   */
-  private static boolean canMoveValue(
-      CrossModuleReferenceCollector collector, Scope scope, Node n) {
-    // the value is only movable if it's
-    // a) nothing,
-    // b) a constant literal,
-    // c) a function, or
-    // d) an array/object literal of movable values.
-    // e) a function stub generated by CrossModuleMethodMotion.
-    if (n == null || NodeUtil.isLiteralValue(n, true) ||
-        n.isFunction()) {
-      return true;
-    } else if (n.isCall()) {
-      Node functionName = n.getFirstChild();
-      return functionName.isName() &&
-          (functionName.getString().equals(
-              CrossModuleMethodMotion.STUB_METHOD_NAME) ||
-           functionName.getString().equals(
-              CrossModuleMethodMotion.UNSTUB_METHOD_NAME));
-    } else if (n.isArrayLit() || n.isObjectLit()) {
-      boolean isObjectLit = n.isObjectLit();
-      for (Node child = n.getFirstChild(); child != null;
-           child = child.getNext()) {
-        if (!canMoveValue(collector, scope,
-                          isObjectLit ? child.getFirstChild() : child)) {
-          return false;
-        }
-      }
-
-      return true;
-    } else if (n.isName()) {
-      // If the value is guaranteed to never be changed after
-      // this reference, then we can move it.
-      Var v = scope.getVar(n.getString());
-      if (v != null && v.isGlobal()) {
-        ReferenceCollection refCollection = collector.getReferences(v);
-        if (refCollection != null &&
-            refCollection.isWellDefined() &&
-            refCollection.isAssignedOnceInLifetime()) {
-          return true;
-        }
-      }
-    }
-
-    return false;
   }
 
   /**

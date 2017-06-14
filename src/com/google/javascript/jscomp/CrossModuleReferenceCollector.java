@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableMap;
@@ -29,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import javax.annotation.Nullable;
 
 /** Collects global variable references for use by {@link CrossModuleCodeMotion}. */
 public final class CrossModuleReferenceCollector implements ScopedCallback, CompilerPass {
@@ -56,6 +58,8 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
    * JavaScript compiler to use in traversing.
    */
   private final AbstractCompiler compiler;
+
+  private TopLevelStatementDraft topLevelStatementDraft = null;
 
   /**
    * Constructor initializes block stack.
@@ -106,23 +110,33 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
    */
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isName() || (n.isStringKey() && !n.hasChildren())) {
-      String varName = n.getString();
-      Var v = t.getScope().getVar(varName);
+    if (topLevelStatementDraft != null) {
+      if (n.equals(topLevelStatementDraft.statementNode)) {
+        topLevelStatements.add(new TopLevelStatement(topLevelStatementDraft));
+        topLevelStatementDraft = null;
+      } else if (n.isName() || (n.isStringKey() && !n.hasChildren())) {
+        String varName = n.getString();
+        Var v = t.getScope().getVar(varName);
 
-      if (v != null) {
-        // Only global, non-exported names can be moved
-        if (v.isGlobal() && !compiler.getCodingConvention().isExported(v.getName())) {
-          if (varsByName.containsKey(varName)) {
-            checkState(Objects.equals(varsByName.get(varName), v));
-          } else {
-            varsByName.put(varName, v);
+        if (v != null) {
+          // Only global, non-exported names can be moved
+          if (v.isGlobal() && !compiler.getCodingConvention().isExported(v.getName())) {
+            if (varsByName.containsKey(varName)) {
+              checkState(Objects.equals(varsByName.get(varName), v));
+            } else {
+              varsByName.put(varName, v);
+            }
+            Reference reference = new Reference(n, t, peek(blockStack));
+            if (reference.getNode() == topLevelStatementDraft.declaredNameNode) {
+              topLevelStatementDraft.declaredNameReference = reference;
+            } else {
+              topLevelStatementDraft.nonDeclarationReferences.add(reference);
+            }
+            addReferenceToCollection(v, reference);
           }
-          addReference(v, new Reference(n, t, peek(blockStack)));
         }
       }
     }
-
     if (isBlockBoundary(n, parent)) {
       pop(blockStack);
     }
@@ -153,20 +167,77 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
     }
   }
 
-  /**
-   * Updates block stack.
-   */
   @Override
-  public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
-      Node parent) {
+  public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
     if (parent != null && NodeUtil.isTopLevel(parent)) {
-      topLevelStatements.add(new TopLevelStatement(nodeTraversal.getModule(), n));
+      checkState(topLevelStatementDraft == null, n);
+      topLevelStatementDraft = initializeDraftStatement(nodeTraversal.getModule(), n);
     }
     // If node is a new basic block, put on basic block stack
     if (isBlockBoundary(n, parent)) {
       blockStack.add(new BasicBlock(peek(blockStack), n));
     }
     return true;
+  }
+
+  private TopLevelStatementDraft initializeDraftStatement(JSModule module, Node statementNode) {
+    TopLevelStatementDraft draft = new TopLevelStatementDraft(module, statementNode);
+    // Determine whether this statement declares a name or not.
+    // If so, save its name node and value node, if any.
+    if (statementNode.isVar()) {
+      // variable declaration
+      // TODO(bradfordcsmith): handle LET and CONST
+      draft.declaredNameNode = statementNode.getFirstChild();
+      draft.declaredValueNode = statementNode.getFirstFirstChild();
+    } else if (statementNode.isFunction()) {
+      // function declaration
+      draft.declaredNameNode = statementNode.getFirstChild();
+      draft.declaredValueNode = statementNode;
+    } else if (statementNode.isExprResult()) {
+      Node expr = checkNotNull(statementNode.getFirstChild());
+      if (expr.isAssign()) {
+        Node lhs = checkNotNull(expr.getFirstChild());
+        Node rhs = checkNotNull(expr.getSecondChild());
+        if (lhs.isName()) {
+          // `varName = value;`
+          draft.declaredNameNode = lhs;
+          draft.declaredValueNode = rhs;
+        } else if (lhs.isGetProp()) {
+          Node nameNode = checkNotNull(lhs.getFirstChild());
+          while (nameNode.isGetProp()) {
+            nameNode = checkNotNull(nameNode.getFirstChild());
+          }
+          if (nameNode.isName()) {
+            // `varName.some.property = value;`
+            draft.declaredNameNode = nameNode;
+            draft.declaredValueNode = rhs;
+          }
+        }
+      } else if (expr.isCall()) {
+        // Check for $jscomp.inherits(SubC, SuperC), goog.inherits(Sub, SuperC), etc.
+        CodingConvention.SubclassRelationship relationship =
+            compiler.getCodingConvention().getClassesDefinedByCall(expr);
+        if (relationship != null) {
+          String declaredName = checkNotNull(relationship.subclassName);
+          Node nameNode = null;
+          for (Node callArg = expr.getSecondChild(); callArg != null; callArg = callArg.getNext()) {
+            // We're assuming that the child class must be an argument to the function that
+            // establishes its inheritance, which is true for `goog.inherits()` and
+            // `$jscomp.inherits()`
+            // TODO(bradfordcsmith): handle cases like `goog.inherits(x.ChildClass, SuperClass)`
+            if (callArg.isName() && declaredName.equals(callArg.getString())) {
+              nameNode = callArg;
+              break;
+            }
+          }
+          if (nameNode != null) {
+            draft.declaredNameNode = nameNode;
+            draft.declaredValueNode = null;
+          }
+        }
+      }
+    }
+    return draft;
   }
 
   private static <T> T pop(List<T> list) {
@@ -218,8 +289,7 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
     return n.isCase();
   }
 
-  private void addReference(Var v, Reference reference) {
-    peek(topLevelStatements).addReference(reference);
+  private void addReferenceToCollection(Var v, Reference reference) {
     // Create collection if none already
     ReferenceCollection referenceInfo = referenceMap.get(v);
     if (referenceInfo == null) {
@@ -235,20 +305,62 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
     return Collections.unmodifiableList(topLevelStatements);
   }
 
+  /** Determines whether the given value is eligible to be moved across modules. */
+  private boolean canMoveValue(Scope scope, Node valueNode) {
+    // the value is only movable if it's
+    // a) nothing,
+    // b) a constant literal,
+    // c) a function, or
+    // d) an array/object literal of movable values.
+    // e) a function stub generated by CrossModuleMethodMotion.
+    if (valueNode == null || NodeUtil.isLiteralValue(valueNode, true) || valueNode.isFunction()) {
+      return true;
+    } else if (valueNode.isCall()) {
+      Node functionName = checkNotNull(valueNode.getFirstChild());
+      return functionName.isName()
+          && (functionName.getString().equals(CrossModuleMethodMotion.STUB_METHOD_NAME)
+              || functionName.getString().equals(CrossModuleMethodMotion.UNSTUB_METHOD_NAME));
+    } else if (valueNode.isArrayLit() || valueNode.isObjectLit()) {
+      boolean isObjectLit = valueNode.isObjectLit();
+      for (Node child = valueNode.getFirstChild(); child != null; child = child.getNext()) {
+        if (!canMoveValue(scope, isObjectLit ? child.getFirstChild() : child)) {
+          return false;
+        }
+      }
+
+      return true;
+    } else if (valueNode.isName()) {
+      // If the value is guaranteed to never be changed after
+      // this reference, then we can move it.
+      Var v = scope.getVar(valueNode.getString());
+      if (v != null && v.isGlobal()) {
+        ReferenceCollection refCollection = getReferences(v);
+        if (refCollection != null
+            && refCollection.isWellDefined()
+            && refCollection.isAssignedOnceInLifetime()) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
   /** Represents a top-level statement and the references to global names it contains. */
-  static final class TopLevelStatement {
+  final class TopLevelStatement {
 
     private final JSModule module;
     private final Node statementNode;
-    private final List<Reference> containedReferences = new ArrayList<>();
+    private final List<Reference> nonDeclarationReferences;
+    private final Reference declaredNameReference;
+    private final Node declaredValueNode;
 
-    TopLevelStatement(JSModule module, Node statementNode) {
-      this.module = module;
-      this.statementNode = statementNode;
-    }
-
-    private void addReference(Reference reference) {
-      containedReferences.add(reference);
+    TopLevelStatement(TopLevelStatementDraft draft) {
+      this.module = draft.module;
+      this.statementNode = draft.statementNode;
+      this.nonDeclarationReferences = Collections.unmodifiableList(draft.nonDeclarationReferences);
+      this.declaredNameReference = draft.declaredNameReference;
+      this.declaredValueNode = draft.declaredValueNode;
     }
 
     JSModule getModule() {
@@ -259,8 +371,42 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
       return statementNode;
     }
 
-    List<Reference> getContainedReferences() {
-      return Collections.unmodifiableList(containedReferences);
+    List<Reference> getNonDeclarationReferences() {
+      return Collections.unmodifiableList(nonDeclarationReferences);
+    }
+
+    boolean isDeclarationStatement() {
+      return declaredNameReference != null;
+    }
+
+    Reference getDeclaredNameReference() {
+      return checkNotNull(declaredNameReference);
+    }
+
+    @Nullable
+    Node getDeclaredValueNode() {
+      return declaredValueNode;
+    }
+
+    boolean isMovableDeclaration() {
+      return isDeclarationStatement()
+          && canMoveValue(declaredNameReference.getScope(), declaredValueNode);
+    }
+  }
+
+  /** Holds statement info temporarily while the statement is being traversed. */
+  private static final class TopLevelStatementDraft {
+
+    final JSModule module;
+    final Node statementNode;
+    final List<Reference> nonDeclarationReferences = new ArrayList<>();
+    Node declaredValueNode = null;
+    Node declaredNameNode = null;
+    Reference declaredNameReference = null;
+
+    TopLevelStatementDraft(JSModule module, Node statementNode) {
+      this.module = module;
+      this.statementNode = statementNode;
     }
   }
 }
