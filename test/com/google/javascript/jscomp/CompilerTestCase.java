@@ -1069,8 +1069,12 @@ public abstract class CompilerTestCase extends TestCase {
 
     CompilerOptions options = getOptions();
 
-    options.setCheckTypes(parseTypeInfo || this.typeCheckEnabled);
-    compiler.init(externs.externs, inputs.sources, options);
+    if (inputs instanceof FlatSources) {
+      options.setCheckTypes(parseTypeInfo || this.typeCheckEnabled);
+      compiler.init(externs.externs, ((FlatSources) inputs).sources, options);
+    } else {
+      compiler.initModules(externsInputs, ((ModuleSources) inputs).modules, getOptions());
+    }
 
     if (this.typeCheckEnabled) {
       BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());
@@ -1120,9 +1124,16 @@ public abstract class CompilerTestCase extends TestCase {
     if (sources == null) {
       return null;
     }
+    return createSources(name, ImmutableList.copyOf(sources));
+  }
+
+  private List<SourceFile> createSources(String name, List<String> sources) {
+    if (sources == null) {
+      return null;
+    }
     List<SourceFile> expectedSources = new ArrayList<>();
-    for (int i = 0; i < sources.length; i++) {
-      expectedSources.add(SourceFile.fromCode(name + i, sources[i]));
+    for (int i = 0; i < sources.size(); i++) {
+      expectedSources.add(SourceFile.fromCode(name + i, sources.get(i)));
     }
     return expectedSources;
   }
@@ -1134,7 +1145,7 @@ public abstract class CompilerTestCase extends TestCase {
    * @param expected Expected JS outputs (one per module)
    */
   protected void test(JSModule[] modules, String[] expected) {
-    test(modules, expected(expected), null);
+    test(srcs(modules), expected(expected));
   }
 
   /**
@@ -1147,12 +1158,8 @@ public abstract class CompilerTestCase extends TestCase {
    * @param diagnostic the warning or error expected
    */
   protected void test(
-      JSModule[] modules, Expected expected, Diagnostic diagnostic) {
-    Compiler compiler = createCompiler();
-    lastCompiler = compiler;
-
-    compiler.initModules(externsInputs, ImmutableList.copyOf(modules), getOptions());
-    test(compiler, null, expected, diagnostic);
+      JSModule[] modules, String[] expected, Diagnostic diagnostic) {
+    test(srcs(modules), expected(expected), diagnostic);
   }
 
   /**
@@ -1262,7 +1269,7 @@ public abstract class CompilerTestCase extends TestCase {
    * @param modules Module inputs
    */
   protected void testSame(JSModule[] modules) {
-    testSame(modules, null);
+    test(srcs(modules), expected(modules));
   }
 
   /**
@@ -1272,18 +1279,7 @@ public abstract class CompilerTestCase extends TestCase {
    * @param warning A warning, or null for no expected warning.
    */
   protected void testSame(JSModule[] modules, DiagnosticType warning) {
-    try {
-      String[] expected = new String[modules.length];
-      for (int i = 0; i < modules.length; i++) {
-        expected[i] = "";
-        for (CompilerInput input : modules[i].getInputs()) {
-          expected[i] += input.getSourceFile().getCode();
-        }
-      }
-      test(modules, expected(expected), warning(warning));
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    test(srcs(modules), expected(modules), warning(warning));
   }
 
   /**
@@ -1320,7 +1316,10 @@ public abstract class CompilerTestCase extends TestCase {
       Sources inputsObj,  // TODO remove this parameter
       Expected expectedObj,
       Diagnostic diagnostic) {
-    List<SourceFile> inputs = inputsObj != null ? inputsObj.sources : null;
+    List<SourceFile> inputs =
+        (inputsObj instanceof FlatSources)
+            ? ((FlatSources) inputsObj).sources
+            : null;
     List<SourceFile> expected = expectedObj != null ? expectedObj.expected : null;
     checkState(!this.typeCheckEnabled || !this.newTypeInferenceEnabled);
     checkState(this.setUpRan, "CompilerTestCase.setUp not run: call super.setUp() from overrides.");
@@ -1998,15 +1997,19 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   protected Sources srcs(String srcText) {
-    return new Sources(maybeCreateSources(filename,  srcText));
+    return new FlatSources(maybeCreateSources(filename,  srcText));
   }
 
   protected Sources srcs(String[] srcTexts) {
-    return new Sources(createSources("input", srcTexts));
+    return new FlatSources(createSources("input", srcTexts));
   }
 
   protected Sources srcs(List<SourceFile> files) {
-    return new Sources(files);
+    return new FlatSources(files);
+  }
+
+  protected Sources srcs(JSModule[] modules) {
+    return new ModuleSources(modules);
   }
 
   protected Expected expected(String srcText) {
@@ -2019,6 +2022,23 @@ public abstract class CompilerTestCase extends TestCase {
 
   protected Expected expected(List<SourceFile> files) {
     return new Expected(files);
+  }
+
+  protected Expected expected(JSModule[] modules) {
+    // create an expected source output from the list of inputs in the modules in order.
+    List<String> expectedSrcs = new ArrayList<>();
+    for (JSModule module : modules) {
+      String expectedSrc  = "";
+      for (CompilerInput input : module.getInputs()) {
+        try {
+          expectedSrc += input.getSourceFile().getCode();
+        } catch (IOException e) {
+          throw new RuntimeException("ouch", e);
+        }
+      }
+      expectedSrcs.add(expectedSrc);
+    }
+    return expected(expectedSrcs.toArray(new String[0]));
   }
 
   protected Externs externs(String externSrc) {
@@ -2054,19 +2074,31 @@ public abstract class CompilerTestCase extends TestCase {
   protected void testSame(TestPart ...parts) {
     Expected expected = null;
 
+    // Pick out the "srcs" and create a coorisponding "expected" to match.
     int i = 0;
     TestPart[] finalParts = new TestPart[parts.length + 1];
     for (TestPart part : parts) {
       finalParts[i++] = part;
       if (part instanceof Sources) {
         Preconditions.checkState(expected == null);
-        expected = expected(((Sources) part).sources);
+        expected = fromSources((Sources) part);
       }
     }
     Preconditions.checkState(expected != null);
     finalParts[i++] = expected;
 
     test(finalParts);
+  }
+
+  private Expected fromSources(Sources srcs) {
+    if (srcs instanceof FlatSources) {
+      return expected(((FlatSources) srcs).sources);
+    } else if (srcs instanceof ModuleSources) {
+      ModuleSources modules = ((ModuleSources) srcs);
+      return expected(modules.modules.toArray(new JSModule[0]));
+    } else {
+      throw new IllegalStateException("unexpected");
+    }
   }
 
   protected void test(TestPart ...parts) {
@@ -2111,11 +2143,22 @@ public abstract class CompilerTestCase extends TestCase {
     }
   }
 
-  protected static final class Sources implements TestPart {
-    final List<SourceFile> sources;
+  protected abstract static class Sources implements TestPart {
+  }
 
-    Sources(List<SourceFile> files) {
-      sources = files;
+  protected static class FlatSources extends Sources {
+    final ImmutableList<SourceFile> sources;
+
+    FlatSources(List<SourceFile> files) {
+      sources = ImmutableList.copyOf(files);
+    }
+  }
+
+  protected static final class ModuleSources extends Sources {
+    final ImmutableList<JSModule> modules;
+
+    ModuleSources(JSModule[] modules) {
+      this.modules = ImmutableList.copyOf(modules);
     }
   }
 
