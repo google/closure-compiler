@@ -123,6 +123,18 @@ public final class RenameVarsTest extends CompilerTestCase {
         "function c(a, b) {}; function d(a, b) {};");
   }
 
+  public void testRenameLocals_let() {
+    test(
+        "(function () { let var1 = 0; let another = 1; });",
+        "(function () { let a = 0; let b = 1; });");
+  }
+
+  public void testRenameLocals_const() {
+    test(
+        "(function () { const var1 = 0; const another = 1; });",
+        "(function () { const a = 0; const b = 1; });");
+  }
+
   public void testRenameLocalsToSame() {
     preferStableNames = true;
     testSame("(function(a) {})");
