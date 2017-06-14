@@ -51,7 +51,8 @@ import java.util.Set;
  *   <li>Removes duplicate variable declarations.
  *   <li>Marks constants with the IS_CONSTANT_NAME annotation.
  *   <li>Finds properties marked @expose, and rewrites them in [] notation.
- *   <li>Rewrite body of arrow function as a block </li>
+ *   <li>Rewrite body of arrow function as a block
+ *   <li>Removes ES6 shorthand property syntax
  * </ol>
  *
  * @author johnlenz@google.com (johnlenz)
@@ -360,9 +361,15 @@ class Normalize implements CompilerPass {
           }
           break;
 
+        case STRING_KEY:
+          if (n != null && !(n.hasOneChild())) {
+            rewriteEs6ObjectLiteralShorthandPropertySyntax(n, compiler);
+            reportCodeChange(n, "Normalize ES6 shorthand property syntax");
+          }
+          // fall through
+
         case NAME:
         case STRING:
-        case STRING_KEY:
         case GETTER_DEF:
         case SETTER_DEF:
           if (!compiler.getLifeCycleStage().isNormalizedObfuscated()) {
@@ -409,6 +416,18 @@ class Normalize implements CompilerPass {
           n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         }
       }
+    }
+
+    /**
+     * Expand ES6 object literal shorthand property syntax.
+     *
+     * <p>From: obj = {x, y} to: obj = {x:x, y:y}
+     */
+    private static void rewriteEs6ObjectLiteralShorthandPropertySyntax(
+        Node n, AbstractCompiler compiler) {
+      String objLitName = NodeUtil.getObjectLitKeyName(n);
+      Node objLitNameNode = Node.newString(Token.NAME, objLitName).useSourceInfoFrom(n);
+      n.addChildToBack(objLitNameNode);
     }
 
     /**
