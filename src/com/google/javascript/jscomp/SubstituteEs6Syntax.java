@@ -51,6 +51,14 @@ class SubstituteEs6Syntax extends AbstractPostOrderCallback implements HotSwapCo
           maybeSimplifyArrowFunctionBody(n, n.getLastChild());
         }
         break;
+      case STRING_KEY:
+        if (n.hasChildren()
+            && n.getFirstChild().isName()
+            && n.getFirstChild().getString().equals(n.getString())) {
+          n.removeFirstChild();
+          compiler.reportChangeToEnclosingScope(n);
+        }
+        break;
       default:
         break;
     }
