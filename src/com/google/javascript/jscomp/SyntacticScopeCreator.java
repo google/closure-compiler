@@ -43,6 +43,10 @@ public class SyntacticScopeCreator implements ScopeCreator {
     this.isTyped = isTyped;
   }
 
+  /**
+   * @deprecated Use Es6SyntacticScopeCreator instead.
+   */
+  @Deprecated
   public static SyntacticScopeCreator makeUntyped(AbstractCompiler compiler) {
     return new SyntacticScopeCreator(compiler, false);
   }
