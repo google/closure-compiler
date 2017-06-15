@@ -1288,25 +1288,6 @@ public abstract class CompilerTestCase extends TestCase {
    * expected, this method just verifies that the error is encountered.
    *  @param compiler A compiler that has been initialized via
    *     {@link Compiler#init}
-   * @param compiler The compiler which contains the configured inputs.
-   * @param inputsObj The inputs for reference.
-   * @param expected Expected output, or null if an error is expected
-   * @param diagnostic Expected error or warning, or null if none expected
-   */
-  protected void test(
-      Compiler compiler,
-      Sources inputsObj,
-      Expected expectedObj,
-      Diagnostic diagnostic) {
-    testInternal(compiler, inputsObj, expectedObj, diagnostic);
-  }
-
-  /**
-   * Verifies that the compiler pass's JS output matches the expected output
-   * and (optionally) that an expected warning is issued. Or, if an error is
-   * expected, this method just verifies that the error is encountered.
-   *  @param compiler A compiler that has been initialized via
-   *     {@link Compiler#init}
    *  @param inputsObj Input source files
    *  @param expectedObj Expected outputs
    *  @param diagnostic Expected warning/error diagnostic
