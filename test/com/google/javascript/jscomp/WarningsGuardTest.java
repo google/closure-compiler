@@ -365,9 +365,9 @@ public final class WarningsGuardTest extends TestCase {
   public void testSuppressGuard1() {
     Map<String, DiagnosticGroup> map = new HashMap<>();
     map.put("deprecated", new DiagnosticGroup(BAR_WARNING));
-    WarningsGuard guard = new SuppressDocWarningsGuard(map);
-
     Compiler compiler = new Compiler();
+    WarningsGuard guard = new SuppressDocWarningsGuard(compiler, map);
+
     Node code = compiler.parseTestCode(
         "/** @suppress {deprecated} */ function f() { a; } "
         + "function g() { b; }");
@@ -385,9 +385,9 @@ public final class WarningsGuardTest extends TestCase {
   public void testSuppressGuard2() {
     Map<String, DiagnosticGroup> map = new HashMap<>();
     map.put("deprecated", new DiagnosticGroup(BAR_WARNING));
-    WarningsGuard guard = new SuppressDocWarningsGuard(map);
-
     Compiler compiler = new Compiler();
+    WarningsGuard guard = new SuppressDocWarningsGuard(compiler, map);
+
     Node code = compiler.parseTestCode(
         "/** @fileoverview \n * @suppress {deprecated} */ function f() { a; } "
         + "function g() { b; }");
@@ -404,9 +404,9 @@ public final class WarningsGuardTest extends TestCase {
   public void testSuppressGuard3() {
     Map<String, DiagnosticGroup> map = new HashMap<>();
     map.put("deprecated", new DiagnosticGroup(BAR_WARNING));
-    WarningsGuard guard = new SuppressDocWarningsGuard(map);
-
     Compiler compiler = new Compiler();
+    WarningsGuard guard = new SuppressDocWarningsGuard(compiler, map);
+
     Node code = compiler.parseTestCode(
         "/** @suppress {deprecated} */ var f = function() { a; }");
     assertEquals(
@@ -418,9 +418,9 @@ public final class WarningsGuardTest extends TestCase {
   public void testSuppressGuard4() {
     Map<String, DiagnosticGroup> map = new HashMap<>();
     map.put("deprecated", new DiagnosticGroup(BAR_WARNING));
-    WarningsGuard guard = new SuppressDocWarningsGuard(map);
-
     Compiler compiler = new Compiler();
+    WarningsGuard guard = new SuppressDocWarningsGuard(compiler, map);
+
     Node code = compiler.parseTestCode(
         "var goog = {}; "
         + "/** @suppress {deprecated} */ goog.f = function() { a; }");
@@ -433,9 +433,9 @@ public final class WarningsGuardTest extends TestCase {
   public void testSuppressGuard5() {
     Map<String, DiagnosticGroup> map = new HashMap<>();
     map.put("deprecated", new DiagnosticGroup(BAR_WARNING));
-    WarningsGuard guard = new SuppressDocWarningsGuard(map);
-
     Compiler compiler = new Compiler();
+    WarningsGuard guard = new SuppressDocWarningsGuard(compiler, map);
+
     Node code = compiler.parseTestCode(
         "var goog = {}; "
         + "goog.f = function() { /** @suppress {deprecated} */ (a); }");
@@ -445,6 +445,18 @@ public final class WarningsGuardTest extends TestCase {
     assertNull(
         guard.level(JSError.make(
             findNameNode(code, "a"), BAR_WARNING)));
+  }
+
+  public void testSuppressGuard6() {
+    Map<String, DiagnosticGroup> map = new HashMap<>();
+    map.put("deprecated", new DiagnosticGroup(BAR_WARNING));
+    Compiler compiler = new Compiler();
+    WarningsGuard guard = new SuppressDocWarningsGuard(compiler, map);
+
+    Node code = compiler.parseTestCode(
+        "/** @fileoverview @suppress {deprecated} */\n console.log(a);");
+
+    assertThat(guard.level(JSError.make(findNameNode(code, "a"), BAR_WARNING))).isEqualTo(OFF);
   }
 
   public void testComposeGuardCycle() {

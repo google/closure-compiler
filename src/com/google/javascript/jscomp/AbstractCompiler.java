@@ -75,6 +75,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   @Nullable
   abstract SourceFile getSourceFileByName(String sourceName);
 
+  @Nullable
+  abstract Node getScriptNode(String filename);
+
   /**
    * Gets the module graph. May return null if there aren't at least two
    * modules.

@@ -80,6 +80,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
+import javax.annotation.Nullable;
 
 /**
  * Compiler (and the other classes in this package) does the following:
@@ -426,8 +427,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   void initWarningsGuard(WarningsGuard warningsGuard) {
-    this.warningsGuard = new ComposeWarningsGuard(
-        new SuppressDocWarningsGuard(getDiagnosticGroups().getRegisteredGroups()), warningsGuard);
+    this.warningsGuard =
+        new ComposeWarningsGuard(
+            new SuppressDocWarningsGuard(this, getDiagnosticGroups().getRegisteredGroups()),
+            warningsGuard);
   }
 
   /**
@@ -1222,7 +1225,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
+  @Override
+  @Nullable
   final Node getScriptNode(String filename) {
+    checkNotNull(filename);
+    if (jsRoot == null) {
+      return null;
+    }
     for (Node file : jsRoot.children()) {
       if (file.getSourceFileName() != null && file.getSourceFileName().endsWith(filename)) {
         return file;
