@@ -370,6 +370,7 @@ public enum Token {
       case WITH:
         return 2;
       case CLASS:
+      case FOR_IN:
       case FOR_OF:
       case FUNCTION:
       case HOOK:
