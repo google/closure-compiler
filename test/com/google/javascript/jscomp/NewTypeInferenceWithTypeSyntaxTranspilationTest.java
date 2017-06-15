@@ -36,7 +36,7 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
   protected void setUp() throws Exception {
     super.setUp();
     compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT6_TYPED);
-    compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT3);
+    this.mode = InputLanguageMode.TRANSPILATION;
   }
 
   @Override

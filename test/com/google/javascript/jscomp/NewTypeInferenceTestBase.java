@@ -39,6 +39,22 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
 
   protected CompilerOptions compilerOptions;
 
+  protected static enum InputLanguageMode {
+    TRANSPILATION,
+    NO_TRANSPILATION,
+    BOTH;
+
+    boolean checkNative() {
+      return this == NO_TRANSPILATION || this == BOTH;
+    }
+
+    boolean checkTranspiled() {
+      return this == TRANSPILATION || this == BOTH;
+    }
+  }
+
+  protected InputLanguageMode mode = InputLanguageMode.NO_TRANSPILATION;
+
   protected static final String CLOSURE_BASE =
       LINE_JOINER.join(
           "/** @const */",
@@ -245,12 +261,26 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
   }
 
   protected final void typeCheck(String js, DiagnosticType... warningKinds) {
-    typeCheck(DEFAULT_EXTERNS, js, warningKinds);
+    if (this.mode.checkNative()) {
+      compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+      typeCheck(DEFAULT_EXTERNS, js, warningKinds);
+    }
+    if (this.mode.checkTranspiled()) {
+      compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
+      typeCheck(DEFAULT_EXTERNS, js, warningKinds);
+    }
   }
 
   protected final void typeCheckCustomExterns(
       String externs, String js, DiagnosticType... warningKinds) {
-    typeCheck(externs, js, warningKinds);
+    if (this.mode.checkNative()) {
+      compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+      typeCheck(externs, js, warningKinds);
+    }
+    if (this.mode.checkTranspiled()) {
+      compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
+      typeCheck(externs, js, warningKinds);
+    }
   }
 
   private final void typeCheck(
@@ -286,6 +316,18 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
   // It is deliberately less general; no custom externs and only a single
   // warning per test.
   protected final void typeCheckMessageContents(
+      String js, DiagnosticType warningKind, String warningMsg) {
+    if (this.mode.checkNative()) {
+      compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+      typeCheckMessageContentsHelper(js, warningKind, warningMsg);
+    }
+    if (this.mode.checkTranspiled()) {
+      compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
+      typeCheckMessageContentsHelper(js, warningKind, warningMsg);
+    }
+  }
+
+  private final void typeCheckMessageContentsHelper(
       String js, DiagnosticType warningKind, String warningMsg) {
     parseAndTypeCheck(DEFAULT_EXTERNS, js);
     JSError[] warnings = compiler.getWarnings();
