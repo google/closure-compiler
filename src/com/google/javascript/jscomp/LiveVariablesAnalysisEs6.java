@@ -315,12 +315,12 @@ class LiveVariablesAnalysisEs6
 
     // add to the local set if the variable is declared in the function or function body because
     // ES6 separates the scope but hoists variables to the function scope
-    if (jsScope.isDeclared(name, false)) {
+    if (jsScope.isDeclaredSloppy(name, false)) {
       Var var = jsScope.getVar(name);
       if (!escaped.contains(var)) {
         set.set(getVarIndex(var.getName()));
       }
-    } else if (!jsScopeChild.isDeclared(name, false)) {
+    } else if (!jsScopeChild.isDeclaredSloppy(name, false)) {
       return;
     } else {
       Var var = jsScopeChild.getVar(name);
@@ -345,7 +345,7 @@ class LiveVariablesAnalysisEs6
   private boolean isArgumentsName(Node n) {
     return n.isName()
         && n.getString().equals(ARGUMENT_ARRAY_ALIAS)
-        && (!jsScope.isDeclared(ARGUMENT_ARRAY_ALIAS, false)
-            || !jsScopeChild.isDeclared(ARGUMENT_ARRAY_ALIAS, false));
+        && (!jsScope.isDeclaredSloppy(ARGUMENT_ARRAY_ALIAS, false)
+            || !jsScopeChild.isDeclaredSloppy(ARGUMENT_ARRAY_ALIAS, false));
   }
 }
