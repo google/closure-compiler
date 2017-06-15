@@ -373,7 +373,7 @@ class GlobalNamespace
             case ARRAY_PATTERN:
               // Specific case to handle inlining with array destructuring
               isSet = true;
-              type = Name.Type.CLASS;
+              type = Name.Type.OTHER;
               break;
             default:
               if (NodeUtil.isAssignmentOp(parent) && parent.getFirstChild() == n) {
