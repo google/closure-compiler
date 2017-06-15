@@ -191,6 +191,10 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(convertEs6TypedToEs6);
     }
 
+    if (options.needsTranspilationOf(FeatureSet.Feature.MODULES)) {
+      TranspilationPasses.addEs6ModulePass(passes);
+    }
+
     passes.add(checkMissingSuper);
     passes.add(checkVariableReferencesForTranspileOnly);
 
@@ -261,6 +265,7 @@ public final class DefaultPassConfig extends PassConfig {
     List<PassFactory> checks = new ArrayList<>();
 
     if (options.shouldGenerateTypedExterns()) {
+      TranspilationPasses.addEs6ModulePass(checks);
       checks.add(closureGoogScopeAliases);
       checks.add(closureRewriteClass);
       checks.add(generateIjs);
@@ -272,6 +277,14 @@ public final class DefaultPassConfig extends PassConfig {
 
     // Verify JsDoc annotations
     checks.add(checkJsDoc);
+
+    if (options.needsTranspilationFrom(TYPESCRIPT)) {
+      checks.add(convertEs6TypedToEs6);
+    }
+
+    if (options.needsTranspilationOf(FeatureSet.Feature.MODULES)) {
+      TranspilationPasses.addEs6ModulePass(checks);
+    }
 
     if (options.enables(DiagnosticGroups.LINT_CHECKS)) {
       checks.add(lintChecks);
@@ -292,10 +305,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.closurePass) {
       checks.add(closureCheckModule);
       checks.add(closureRewriteModule);
-    }
-
-    if (options.needsTranspilationFrom(TYPESCRIPT)) {
-      checks.add(convertEs6TypedToEs6);
     }
 
     if (options.declaredGlobalExternsOnWindow) {

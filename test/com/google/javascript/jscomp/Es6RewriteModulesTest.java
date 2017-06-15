@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.Es6RewriteModules.LHS_OF_GOOG_REQUIRE
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
-import com.google.javascript.rhino.Node;
 
 /**
  * Unit tests for {@link Es6RewriteModules}
@@ -43,7 +42,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
     CompilerOptions options = super.getOptions();
     // ECMASCRIPT5 to Trigger module processing after parsing.
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.ERROR);
 
     if (moduleRoots != null) {
       options.setModuleRoots(moduleRoots);
@@ -54,12 +53,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new CompilerPass() {
-      @Override
-      public void process(Node externs, Node root) {
-        // No-op, ES6 module handling is done directly after parsing.
-      }
-    };
+    return new Es6RewriteModules(compiler);
   }
 
   @Override
@@ -70,10 +64,6 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   void testModules(String input, String expected) {
     ModulesTestUtils.testModules(this, input,
         "/** @fileoverview\n * @suppress {missingProvide|missingRequire}\n */" + expected);
-  }
-
-  private void testModules(String input, DiagnosticType error) {
-    ModulesTestUtils.testModules(this, input, error);
   }
 
   public void testImport() {
@@ -97,10 +87,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   }
 
   public void testImport_missing() {
-    setExpectParseWarningsThisTest();  // JSC_ES6_MODULE_LOAD_WARNING
-    testModules(
-        "import name from './does_not_exist'; use(name);",
-        "goog.require('module$does_not_exist'); use(module$does_not_exist.default);");
+    ModulesTestUtils.testModulesWarning(this, "import name from './does_not_exist'; use(name);",
+        ModuleLoader.LOAD_WARNING);
   }
 
   public void testImportStar() {
@@ -523,19 +511,17 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   }
 
   public void testGoogRequires_nonConst() {
-    testModules(
-        "var bar = goog.require('foo.bar'); export var x;",
+    ModulesTestUtils.testModulesError(this, "var bar = goog.require('foo.bar'); export var x;",
         LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
 
-    testModules(
-        "export var x; var bar = goog.require('foo.bar');",
+    ModulesTestUtils.testModulesError(this, "export var x; var bar = goog.require('foo.bar');",
         LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
 
-    testModules(
+    ModulesTestUtils.testModulesError(this,
         "import * as s from './other.js'; var bar = goog.require('foo.bar');",
         LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
 
-    testModules(
+    ModulesTestUtils.testModulesError(this,
         "var bar = goog.require('foo.bar'); import * as s from './other.js';",
         LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
   }
@@ -555,19 +541,15 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "} = some.name.space;",
             "use(foo$$module$testcode, bar$$module$testcode);"));
 
-    testModules(
-        LINE_JOINER.join(
+    ModulesTestUtils.testModulesError(this, LINE_JOINER.join(
             "import * as s from './other.js';",
             "var {foo, bar} = goog.require('some.name.space');",
-            "use(foo, bar);"),
-        LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
+            "use(foo, bar);"), LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
 
-    testModules(
-        LINE_JOINER.join(
+    ModulesTestUtils.testModulesError(this, LINE_JOINER.join(
             "import * as s from './other.js';",
             "let {foo, bar} = goog.require('some.name.space');",
-            "use(foo, bar);"),
-        LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
+            "use(foo, bar);"), LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
   }
 
   public void testNamespaceImports() {
@@ -595,7 +577,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @type {other.Foo} */",
             "var foo$$module$testcode = new other.Foo();"));
 
-    testModules("import * as Foo from 'goog:other.Foo';",
+    ModulesTestUtils.testModulesError(this, "import * as Foo from 'goog:other.Foo';",
         Es6RewriteModules.NAMESPACE_IMPORT_CANNOT_USE_STAR);
   }
 
@@ -626,13 +608,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   }
 
   public void testUselessUseStrict() {
-    setExpectParseWarningsThisTest();
-    testModules(LINE_JOINER.join(
-        "'use strict';",
-        "export default undefined;"),
-        LINE_JOINER.join(
-        "'use strict';",
-        "export default undefined;"));
+    ModulesTestUtils.testModulesError(this, "'use strict'; \n export default undefined;",
+        ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE);
   }
 
   public void testUseStrict_noWarning() {

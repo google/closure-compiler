@@ -1823,10 +1823,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         if (!inputsToRewrite.isEmpty()) {
           forceToEs6Modules(inputsToRewrite.values());
         }
-
-        if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)) {
-          processEs6Modules();
-        }
       } else {
         // Use an empty module loader if we're not actually dealing with modules.
         this.moduleLoader = ModuleLoader.EMPTY;
@@ -2060,10 +2056,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return rewriteJson.getPackageJsonMainEntries();
   }
 
-  void processEs6Modules() {
-    processEs6Modules(parsePotentialModules(inputs));
-  }
-
   void forceToEs6Modules(Collection<CompilerInput> inputsToProcess) {
     for (CompilerInput input : inputsToProcess) {
       input.setCompiler(this);
@@ -2096,20 +2088,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       input.getRequires();
     }
     return filteredInputs;
-  }
-
-  void processEs6Modules(List<CompilerInput> inputsToProcess) {
-    for (CompilerInput input : inputsToProcess) {
-      input.setCompiler(this);
-      Node root = input.getAstRoot(this);
-      if (root == null) {
-        continue;
-      }
-      if (Es6RewriteModules.isEs6ModuleRoot(root)) {
-        new Es6RewriteModules(this).processFile(root);
-      }
-    }
-    setFeatureSet(featureSet.without(Feature.MODULES));
   }
 
   /**

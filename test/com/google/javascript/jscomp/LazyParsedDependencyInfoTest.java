@@ -122,7 +122,9 @@ public final class LazyParsedDependencyInfoTest extends TestCase {
 
   public void testModuleConflict() {
     Compiler compiler = new Compiler();
-    compiler.initOptions(new CompilerOptions());
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+    compiler.initOptions(options);
     JsAst ast = new JsAst(SourceFile.fromCode("file.js", "export let foo = 42;"));
     SimpleDependencyInfo delegate =
         new SimpleDependencyInfo("", "my/js.js", EMPTY, EMPTY, ImmutableMap.of("module", "goog"));

@@ -23,8 +23,7 @@ import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
-
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7_MODULES;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -137,7 +136,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
       @Override
       protected FeatureSet featureSet() {
-        return ES7;
+        return ES7_MODULES;
       }
     };
   }

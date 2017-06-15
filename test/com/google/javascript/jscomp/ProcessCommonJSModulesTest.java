@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.deps.ModuleLoader;
-import com.google.javascript.rhino.Node;
 
 /**
  * Unit tests for {@link ProcessCommonJSModules}
@@ -44,12 +43,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new CompilerPass() {
-      @Override
-      public void process(Node externs, Node root) {
-        // No-op, CommonJS module handling is done directly after parsing.
-      }
-    };
+    // CommonJS module handling is done directly after parsing, so not included here.
+    // It also depends on es6 module rewriting, however, so that must be explicitly included.
+    return new Es6RewriteModules(compiler);
   }
 
   @Override

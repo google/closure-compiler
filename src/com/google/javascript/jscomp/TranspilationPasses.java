@@ -30,6 +30,10 @@ import java.util.List;
 public class TranspilationPasses {
   private TranspilationPasses() {}
 
+  public static void addEs6ModulePass(List<PassFactory> passes) {
+    passes.add(es6RewriteModule);
+  }
+
   public static void addEs2017Passes(List<PassFactory> passes) {
     passes.add(rewriteAsyncFunctions);
   }
@@ -72,6 +76,20 @@ public class TranspilationPasses {
   public static void addRewritePolyfillPass(List<PassFactory> passes) {
     passes.add(rewritePolyfills);
   }
+
+  /** Rewrites ES6 modules */
+  private static final HotSwapPassFactory es6RewriteModule =
+      new HotSwapPassFactory("es6RewriteModule", true) {
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          return new Es6RewriteModules(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.ES8_MODULES;
+        }
+      };
 
   private static final PassFactory rewriteAsyncFunctions =
       new PassFactory("rewriteAsyncFunctions", true) {

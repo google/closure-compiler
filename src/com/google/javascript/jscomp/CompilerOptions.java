@@ -1915,6 +1915,11 @@ public class CompilerOptions implements Serializable {
         && !getLanguageOut().toFeatureSet().contains(languageLevel);
   }
 
+  public boolean needsTranspilationOf(FeatureSet.Feature feature) {
+    return getLanguageIn().toFeatureSet().has(feature)
+        && !getLanguageOut().toFeatureSet().has(feature);
+  }
+
   /**
    * Set which set of builtin externs to use.
    */
