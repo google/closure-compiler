@@ -223,6 +223,11 @@ class InlineObjectLiterals implements CompilerPass {
             return false;
           }
 
+          // Don't inline computed property names
+          if (child.isComputedProp()) {
+            return false;
+          }
+
           validProperties.add(child.getString());
 
           Node childVal = child.getFirstChild();

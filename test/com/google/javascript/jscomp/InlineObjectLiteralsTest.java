@@ -355,6 +355,122 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
         "return foo.bar;");
   }
 
+  public void testProto() {
+    testSameLocal(
+        LINE_JOINER.join(
+            "var protoObject = {",
+            "  f: function() {",
+            "    return 1;",
+            "  }",
+            "};",
+            "var object = {",
+            "  __proto__: protoObject,",
+            "};",
+            "g(object.f);"));
+
+    testSame(
+        LINE_JOINER.join(
+            "var protoObject = {",
+            "  f: function() {",
+            "    return 1;",
+            "  }",
+            "};",
+            "var object = {",
+            "  __proto__: protoObject,",
+            "  g: false",
+            "};",
+            "g(object.g);"),
+        LINE_JOINER.join(
+            "var protoObject = {",
+            "  f: function() {",
+            "    return 1;",
+            "  }",
+            "};",
+            "var JSCompiler_object_inline___proto___0=protoObject;",
+            "var JSCompiler_object_inline_g_1=false;",
+            "g(JSCompiler_object_inline_g_1)"));
+  }
+
+  public void testSuper() {
+    testSameLocal(
+        LINE_JOINER.join(
+            "var superObject = {",
+            "  f() {",
+            "    return 1;",
+            "  }",
+            "};",
+            "var object = {",
+            "  __proto__: superObject,",
+            "  f() {",
+            "    return super.f();",
+            "  }",
+            "}",
+            "g(object.f());"));
+  }
+
+  public void testShorthandFunctions() {
+    testSameLocal(
+        LINE_JOINER.join(
+            "var object = {",
+            "  items: [],",
+            "  add(item) {",
+            "    this.items.push(item);",
+            "  },",
+            "};",
+            "object.add(1);"));
+
+    testSameLocal(
+        LINE_JOINER.join(
+            "var object = {", "  one() {", "    return 1", "  },", "};", "object.one();"));
+  }
+
+  public void testShorthandAssignments() {
+    testLocal(
+        LINE_JOINER.join(
+            "var object = {",
+            "  x,",
+            "  y",
+            "};",
+            "f(object.x, object.y);"),
+        LINE_JOINER.join(
+            "var JSCompiler_object_inline_x_0=x;",
+            "var JSCompiler_object_inline_y_1=y;",
+            "f(JSCompiler_object_inline_x_0,JSCompiler_object_inline_y_1)"));
+
+    testLocal(
+        LINE_JOINER.join(
+            "var object = {",
+            "  x,",
+            "};",
+            "object.y = y",
+            "f(object.x, object.y);"),
+        LINE_JOINER.join(
+            "var JSCompiler_object_inline_x_0=x;",
+            "var JSCompiler_object_inline_y_1;",
+            "var JSCompiler_object_inline_y_1=y;",
+            "f(JSCompiler_object_inline_x_0,JSCompiler_object_inline_y_1)"));
+  }
+
+  public void testComputedPropertyName() {
+    testSameLocal(
+        LINE_JOINER.join(
+            "function addBar(name) {",
+            "  return name + 'Bar'",
+            "}",
+            "var object = {",
+            "  [addBar(\"foo\")]: 1",
+            "};"));
+
+    testSameLocal(
+        LINE_JOINER.join(
+            "var sym = Symbol('key');",
+            "var object = {",
+            "  [sym]: 1,",
+            "  x: true",
+            "}",
+            "use(object[sym]);"));
+  }
+
   private static final String LOCAL_PREFIX = "function local(){";
   private static final String LOCAL_POSTFIX = "}";
 
