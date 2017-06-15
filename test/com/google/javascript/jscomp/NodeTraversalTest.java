@@ -352,6 +352,38 @@ public final class NodeTraversalTest extends TestCase {
     callback.assertEntered();
   }
 
+  public void testTraverseAtScopeWithForScope() {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    compiler.initOptions(options);
+    ScopeCreator creator = new Es6SyntacticScopeCreator(compiler);
+    ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
+    NodeTraversal t = new NodeTraversal(compiler, callback, creator);
+
+    String code =
+        LINE_JOINER.join(
+            "function foo() {", "  var b = [0];", "  for (let a of b) {", "    let x;", "  }", "}");
+
+    Node tree = parse(compiler, code);
+    Scope topScope = creator.createScope(tree, null);
+
+    Node forNode =
+        tree // script
+            .getFirstChild() // function
+            .getLastChild() // function body
+            .getSecondChild(); // for (first child is var b)
+
+    Node innerBlock = forNode.getLastChild();
+
+    Scope forScope = creator.createScope(forNode, topScope);
+    creator.createScope(innerBlock, forScope);
+
+    callback.expect(forNode, forNode);
+    t.traverseAtScope(forScope);
+    callback.assertEntered();
+  }
+
   public void testTraverseAtScopeWithModuleScope() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
@@ -499,6 +531,10 @@ public final class NodeTraversalTest extends TestCase {
     public void enterScope(NodeTraversal t) {
       assertNode(t.getCurrentNode()).isEqualTo(node);
       assertNode(t.getScopeRoot()).isEqualTo(scopeRoot);
+      if (t.getScopeCreator().hasBlockScope() && (node.isForIn() || node.isForOf())) {
+        node = node.getLastChild();
+        scopeRoot = scopeRoot.getLastChild();
+      }
       entered = true;
     }
 

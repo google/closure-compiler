@@ -16,9 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 
-import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -313,14 +314,14 @@ public class NodeTraversal {
   void traverseRoots(Node externs, Node root) {
     try {
       Node scopeRoot = externs.getParent();
-      Preconditions.checkNotNull(scopeRoot);
+      checkNotNull(scopeRoot);
 
       initTraversal(scopeRoot);
       curNode = scopeRoot;
       pushScope(scopeRoot);
 
       traverseBranch(externs, scopeRoot);
-      Preconditions.checkState(root.getParent() == scopeRoot);
+      checkState(root.getParent() == scopeRoot);
       traverseBranch(root, scopeRoot);
 
       popScope();
@@ -353,7 +354,7 @@ public class NodeTraversal {
    * {@link #traverseAtScope}.
    */
   void traverseWithScope(Node root, Scope s) {
-    Preconditions.checkState(s.isGlobal() || s.isModuleScope());
+    checkState(s.isGlobal() || s.isModuleScope());
     try {
       initTraversal(root);
       curNode = root;
@@ -398,9 +399,22 @@ public class NodeTraversal {
       traverseChildren(n);
 
       popScope();
+    } else if (NodeUtil.isEnhancedFor(n)) {
+      // ES6 Creates a separate for scope and for-body scope
+      checkState(scopeCreator.hasBlockScope());
+
+      pushScope(s);
+
+      Node forAssignmentParam = n.getFirstChild();
+      Node forIterableParam = forAssignmentParam.getNext();
+      Node forBodyScope = forIterableParam.getNext();
+      traverseBranch(forAssignmentParam, n);
+      traverseBranch(forIterableParam, n);
+      traverseBranch(forBodyScope, n);
+
+      popScope();
     } else {
-      Preconditions.checkState(s.isGlobal() || s.isModuleScope(),
-          "Expected global or module scope. Got:", s);
+      checkState(s.isGlobal() || s.isModuleScope(), "Expected global or module scope. Got:", s);
       traverseWithScope(n, s);
     }
   }
@@ -461,9 +475,9 @@ public class NodeTraversal {
    *     callback events for this scope.
    */
   public void traverseFunctionOutOfBand(Node node, Scope scope) {
-    Preconditions.checkNotNull(scope);
-    Preconditions.checkState(node.isFunction());
-    Preconditions.checkState(scope.getRootNode() != null);
+    checkNotNull(scope);
+    checkState(node.isFunction(), node);
+    checkNotNull(scope.getRootNode());
     initTraversal(node);
     curNode = node.getParent();
     pushScope(scope, true /* quietly */);
@@ -482,7 +496,7 @@ public class NodeTraversal {
    *     the scope stack or in trivial cases that very scope or {@code null}
    */
   void traverseInnerNode(Node node, Node parent, Scope refinedScope) {
-    Preconditions.checkNotNull(parent);
+    checkNotNull(parent);
     initTraversal(node);
     if (refinedScope != null && getScope() != refinedScope) {
       curNode = node;
@@ -790,8 +804,8 @@ public class NodeTraversal {
 
   /** Creates a new scope (e.g. when entering a function). */
   private void pushScope(Node node) {
-    Preconditions.checkState(curNode != null);
-    Preconditions.checkState(node != null);
+    checkState(curNode != null);
+    checkState(node != null);
     scopeRoots.push(node);
     recordScopeRoot(node);
     if (scopeCallback != null) {
@@ -809,7 +823,7 @@ public class NodeTraversal {
    * @param quietly Don't fire an enterScope callback.
    */
   private void pushScope(Scope s, boolean quietly) {
-    Preconditions.checkState(curNode != null);
+    checkState(curNode != null);
     scopes.push(s);
     recordScopeRoot(s.getRootNode());
     if (!quietly && scopeCallback != null) {
@@ -861,8 +875,7 @@ public class NodeTraversal {
 
   public TypedScope getTypedScope() {
     Scope s = getScope();
-    Preconditions.checkState(s instanceof TypedScope,
-        "getTypedScope called for untyped traversal");
+    checkState(s instanceof TypedScope, "getTypedScope called for untyped traversal");
     return (TypedScope) s;
   }
 
@@ -928,7 +941,7 @@ public class NodeTraversal {
    */
   public boolean inGlobalHoistScope() {
     Node cfgRoot = getCfgRoot();
-    Preconditions.checkState(
+    checkState(
         cfgRoot.isScript()
             || cfgRoot.isRoot()
             || cfgRoot.isNormalBlock()
@@ -960,7 +973,7 @@ public class NodeTraversal {
 
   int getScopeDepth() {
     int sum = scopes.size() + scopeRoots.size();
-    Preconditions.checkState(sum > 0);
+    checkState(sum > 0);
     return sum - 1; // Use 0-based scope depth to be consistent within the compiler
   }
 
@@ -973,7 +986,7 @@ public class NodeTraversal {
 
   public void reportCodeChange() {
     Node changeScope = this.currentChangeScope;
-    Preconditions.checkState(changeScope != null && NodeUtil.isChangeScopeRoot(changeScope));
+    checkState(changeScope != null && NodeUtil.isChangeScopeRoot(changeScope));
     compiler.reportChangeToChangeScope(changeScope);
   }
 
