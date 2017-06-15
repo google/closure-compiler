@@ -462,7 +462,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var my = my || {};",
             "my.namespace = my.namespace || {};",
             "cr.define('my.namespace', function() {",
-            "  my.namespace.X = class X {};",
+            "  my.namespace.X = class {};",
             "  return { X: my.namespace.X };",
             "});"));
   }
@@ -480,8 +480,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "my.namespace = my.namespace || {};",
             "cr.define('my.namespace', function() {",
             "  /** @constructor */",
-            "  var i0$classdecl$var0 = function() {};",
-            "  my.namespace.X = i0$classdecl$var0;",
+            "  my.namespace.X = function() {};",
             "  return { X: my.namespace.X };",
             "});"));
   }

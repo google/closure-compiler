@@ -400,7 +400,7 @@ public class ChromePassTest extends CompilerTestCase {
             "});"));
   }
 
-  public void testCrDefineClass() throws Exception {
+  public void testCrDefineClassStatement() throws Exception {
     test(
         LINE_JOINER.join(
             "cr.define('settings', function() {",
@@ -412,7 +412,45 @@ public class ChromePassTest extends CompilerTestCase {
             "var settings = settings || {};",
             "cr.define('settings', function() {",
             "  var x = 0;",
-            "  settings.C = class C {}",
+            "  settings.C = class {}",
+            "  return { C: settings.C };",
+            "});"));
+  }
+
+  public void testCrDefineClassExpression() throws Exception {
+    test(
+        LINE_JOINER.join(
+            "cr.define('settings', function() {",
+            "  var x = 0;",
+            "  var C = class {}",
+            "  return { C: C };",
+            "});"),
+        LINE_JOINER.join(
+            "var settings = settings || {};",
+            "cr.define('settings', function() {",
+            "  var x = 0;",
+            "  settings.C = class {}",
+            "  return { C: settings.C };",
+            "});"));
+  }
+
+  public void testCrDefineClassWithInternalSelfReference() throws Exception {
+    test(
+        LINE_JOINER.join(
+            "cr.define('settings', function() {",
+            "  var x = 0;",
+            "  class C {",
+            "    static create() { return new C; }",
+            "  }",
+            "  return { C: C };",
+            "});"),
+        LINE_JOINER.join(
+            "var settings = settings || {};",
+            "cr.define('settings', function() {",
+            "  var x = 0;",
+            "  settings.C = class {",
+            "    static create() { return new settings.C; }",
+            "  }",
             "  return { C: settings.C };",
             "});"));
   }

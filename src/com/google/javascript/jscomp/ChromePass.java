@@ -433,6 +433,10 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
         // by looking up in this.exports for internalName to find the correspondent
         // externalName.
         Node clone = n.cloneTree();
+        if (clone.isClass()) {
+          Node className = clone.getFirstChild();
+          className.replaceWith(IR.empty().useSourceInfoFrom(className));
+        }
         NodeUtil.markNewScopesChanged(clone, compiler);
         Node exprResult =
             IR.exprResult(IR.assign(buildQualifiedName(n.getFirstChild()), clone).srcref(n))
