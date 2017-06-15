@@ -1301,7 +1301,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   public void testEmitUnknownParamTypesAsAllType() {
-    // TODO(sdh): Why does NTI infer `x` to be optional?
+    // x is unused, so NTI infers that x can be omitted.
     assertTypeAnnotations(
         "var a = function(x) {}",
         LINE_JOINER.join(
@@ -1324,6 +1324,17 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         LINE_JOINER.join(
             "/**",
             " * @param {string=} x",
+            " * @return {undefined}",
+            " */",
+            "var a = function(x) {\n};\n"));
+  }
+
+  public void testOptionalTypesAnnotation2() {
+    assertTypeAnnotations(
+        "/** @param {undefined=} x */ var a = function(x) {}",
+        LINE_JOINER.join(
+            "/**",
+            " * @param {undefined=} x",
             " * @return {undefined}",
             " */",
             "var a = function(x) {\n};\n"));

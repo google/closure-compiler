@@ -2390,7 +2390,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   private String toSource(Node n, SourceMap sourceMap, boolean firstOutput) {
     CodePrinter.Builder builder = new CodePrinter.Builder(n);
-    builder.setTypeRegistry(this.typeRegistry);
+    builder.setTypeRegistry(getTypeIRegistry());
     builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);
     builder.setTagAsExterns(firstOutput && options.shouldGenerateTypedExterns());
