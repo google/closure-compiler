@@ -362,7 +362,7 @@ class Normalize implements CompilerPass {
           break;
 
         case STRING_KEY:
-          if (n != null && !(n.hasOneChild())) {
+          if (!n.hasChildren()) {
             rewriteEs6ObjectLiteralShorthandPropertySyntax(n, compiler);
             reportCodeChange(n, "Normalize ES6 shorthand property syntax");
           }
