@@ -92,7 +92,7 @@ function Iterable() {}
 // TODO(johnlenz): remove the suppression when the compiler understands
 // "symbol" natively
 /**
- * @return {Iterator<VALUE>}
+ * @return {!Iterator<VALUE>}
  * @suppress {externsValidation}
  */
 Iterable.prototype[Symbol.iterator] = function() {};
@@ -1699,6 +1699,7 @@ Date.prototype.valueOf;
 
 /**
  * @constructor
+ * @implements {Iterable<string>}
  * @param {*=} opt_str
  * @return {string}
  * @nosideeffects
