@@ -160,6 +160,7 @@ public final class JSTypes implements Serializable {
   private RawNominalType arguments;
   private RawNominalType iObject;
   private RawNominalType iArrayLike;
+  private RawNominalType iterable;
 
   final boolean allowMethodsAsFunctions;
   final boolean looseSubtypingForLooseObjects;
@@ -309,14 +310,18 @@ public final class JSTypes implements Serializable {
   }
 
   public JSType getIArrayLikeInstance(JSType t) {
-    if (this.iArrayLike == null) {
-      return this.UNKNOWN;
-    }
-    ImmutableList<String> typeParams = iArrayLike.getTypeParameters();
-    Preconditions.checkState(typeParams.size() == 1);
-    String typeParam = Iterables.getOnlyElement(typeParams);
-    return this.iArrayLike.getInstanceAsJSType().substituteGenerics(ImmutableMap.of(typeParam, t));
+    return this.iArrayLike == null
+        ? this.UNKNOWN
+        : this.iArrayLike.getInstanceAsJSType().instantiateGenerics(t);
   }
+
+  public JSType getIterableInstance(JSType t) {
+    return this.iterable == null
+        ? this.UNKNOWN
+        : this.iterable.getInstanceAsJSType().instantiateGenerics(t);
+  }
+  
+  
 
   public NominalType getObjectType() {
     return this.builtinObject == null ? null : this.builtinObject.getAsNominalType();
@@ -510,6 +515,10 @@ public final class JSTypes implements Serializable {
 
   public void setIArrayLikeType(RawNominalType iArrayLike) {
     this.iArrayLike = iArrayLike;
+  }
+
+  public void setIterableType(RawNominalType iterable) {
+    this.iterable = iterable;
   }
 
   public void setRegexpInstance(JSType regexpInstance) {

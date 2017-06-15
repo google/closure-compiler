@@ -1335,6 +1335,13 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
           break;
         case "IArrayLike":
           commonTypes.setIArrayLikeType(rawType);
+          break;
+        case "Iterable":
+          commonTypes.setIterableType(rawType);
+          break;
+        default:
+          // No other type names are added to commonTypes.
+          break;
       }
     }
 

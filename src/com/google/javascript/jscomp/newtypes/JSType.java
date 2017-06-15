@@ -30,6 +30,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -642,6 +643,11 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
         newTypevar, EnumType.normalizeForJoin(newEnums, tmpJoin));
   }
 
+  /**
+   * Creates a new JSType by deeply substituting the type variables in this type with concrete
+   * replacements from the given map. Note that this method works for any type, including function
+   * literals (unlike {@link #instantiateGenerics}, which only works on singleton objects).
+   */
   public final JSType substituteGenerics(Map<String, JSType> concreteTypes) {
     if (isTop()
         || isUnknown()
@@ -666,6 +672,18 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
           concreteTypes.get(getTypeVar()) : fromTypeVar(this.commonTypes, getTypeVar()));
     }
     return current;
+  }
+
+  /**
+   * Creates a new type by filling in the given concrete types into the type parameters of this
+   * generic singleton object type. The number of arguments to the method must match the number of
+   * declared template parameters on this type.
+   */
+  final JSType instantiateGenerics(JSType... types) {
+    Preconditions.checkState(this.isSingletonObj());
+    NominalType uninstantiated = getNominalTypeIfSingletonObj();
+    NominalType instantiated = uninstantiated.instantiateGenerics(Arrays.asList(types));
+    return JSType.fromObjectType(ObjectType.fromNominalType(instantiated));
   }
 
   public final JSType substituteGenericsWithUnknown() {
