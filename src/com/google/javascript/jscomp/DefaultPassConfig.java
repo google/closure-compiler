@@ -265,7 +265,6 @@ public final class DefaultPassConfig extends PassConfig {
     List<PassFactory> checks = new ArrayList<>();
 
     if (options.shouldGenerateTypedExterns()) {
-      TranspilationPasses.addEs6ModulePass(checks);
       checks.add(closureGoogScopeAliases);
       checks.add(closureRewriteClass);
       checks.add(generateIjs);
@@ -1429,7 +1428,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES8_MODULES;
         }
       };
 
@@ -1550,7 +1549,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES8_MODULES;
         }
       };
 
@@ -3213,7 +3212,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES8_MODULES;
         }
       };
 
