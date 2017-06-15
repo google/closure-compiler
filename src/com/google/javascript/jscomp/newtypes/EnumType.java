@@ -235,10 +235,4 @@ public final class EnumType extends Namespace implements TypeWithProperties {
   public Collection<JSType> getSubtypesWithProperty(QualifiedName qname) {
     return declaredType.getSubtypesWithProperty(qname);
   }
-
-  public String toString(ToStringContext ctx) {
-    return ctx.forAnnotation()
-        ? this.declaredType.appendTo(new StringBuilder(), ctx).toString()
-        : this.toString();
-  }
 }

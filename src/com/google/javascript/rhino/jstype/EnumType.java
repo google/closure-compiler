@@ -102,10 +102,15 @@ public class EnumType extends PrototypeObjectType {
     return defineDeclaredProperty(name, elementsType, definingNode);
   }
 
-  /** Gets the elements' type. */
-  @Override
+  /** Gets the elements' type, which is a subtype of the enumerated type. */
   public EnumElementType getElementsType() {
     return elementsType;
+  }
+
+  /** Gets the enumerated type. */
+  @Override
+  public JSType getEnumeratedTypeOfEnumObject() {
+    return elementsType.getPrimitiveType();
   }
 
   @Override

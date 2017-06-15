@@ -148,7 +148,7 @@ public class EnumElementType extends ObjectType {
   @Override
   StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
     if (forAnnotations) {
-      return sb.append(this.primitiveType);
+      return sb.append(getReferenceName());
     }
     return sb.append(getReferenceName()).append("<").append(this.primitiveType).append(">");
   }

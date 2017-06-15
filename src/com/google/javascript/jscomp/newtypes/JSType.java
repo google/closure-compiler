@@ -503,13 +503,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public final TypeI getElementsType() {
-    ObjectType obj = getObjTypeIfSingletonObj();
-    if (obj != null) {
-      EnumType e = obj.getEnumType();
-      return e != null ? e.getEnumeratedType() : null;
-    }
-    return null;
+  public final TypeI getEnumeratedTypeOfEnumObject() {
+    return isEnumObject() ? getObjTypeIfSingletonObj().getEnumType().getEnumeratedType() : null;
   }
 
   public final boolean isUnion() {
@@ -1633,11 +1628,11 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
               }
               case ENUM_MASK: {
                 if (getEnums().size() == 1) {
-                  builder.append(Iterables.getOnlyElement(getEnums()).toString(ctx));
+                  builder.append(Iterables.getOnlyElement(getEnums()).toString());
                 } else {
                   Set<String> strReps = new TreeSet<>();
                   for (EnumType e : getEnums()) {
-                    strReps.add(e.toString(ctx));
+                    strReps.add(e.toString());
                   }
                   PIPE_JOINER.appendTo(builder, strReps);
                 }

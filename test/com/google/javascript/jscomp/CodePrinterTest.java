@@ -1389,7 +1389,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         LINE_JOINER.join(
             "/** @const */ var goog = goog || {};",
             "/** @enum {string} */\ngoog.Enum = {FOO:\"x\", BAR:\"y\"};",
-            "/** @type {{BAR: string=, FOO: string=}} */\ngoog.Enum2 = goog.x ? {} : goog.Enum;",
+            "/** @type {{BAR: goog.Enum=, FOO: goog.Enum=}} */",
+            "goog.Enum2 = goog.x ? {} : goog.Enum;",
             ""));
   }
 
@@ -1397,6 +1398,35 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertTypeAnnotations(
         "/** @enum {!Object} */ var Enum = {FOO: {}};",
         "/** @enum {!Object} */\nvar Enum = {FOO:{}};\n");
+  }
+
+  public void testEnumAnnotation4() {
+    assertTypeAnnotations(
+        LINE_JOINER.join(
+            "/** @enum {number} */ var E = {A:1, B:2};",
+            "function f(/** !E */ x) { return x; }"),
+        LINE_JOINER.join(
+            "/** @enum {number} */",
+            "var E = {A:1, B:2};",
+            "/**",
+            " * @param {E} x",
+            " * @return {?}",
+            " */",
+            "function f(x) {",
+            "  return x;",
+            "}",
+            ""),
+        LINE_JOINER.join(
+            "/** @enum {number} */",
+            "var E = {A:1, B:2};",
+            "/**",
+            " * @param {E} x",
+            " * @return {E}",
+            " */",
+            "function f(x) {",
+            "  return x;",
+            "}",
+            ""));
   }
 
   public void testClosureLibraryTypeAnnotationExamples() {

@@ -89,7 +89,7 @@ class TypedCodeGenerator extends CodeGenerator {
       return getFunctionAnnotation(node);
     } else if (type.isEnumObject()) {
       return "/** @enum {"
-          + type.toMaybeObjectType().getElementsType().toNonNullAnnotationString()
+          + type.toMaybeObjectType().getEnumeratedTypeOfEnumObject().toNonNullAnnotationString()
           + "} */\n";
     } else if (!type.isUnknownType()
         && !type.isBottom()

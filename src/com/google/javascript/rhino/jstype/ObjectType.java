@@ -827,7 +827,7 @@ public abstract class ObjectType
   }
 
   @Override
-  public TypeI getElementsType() {
+  public TypeI getEnumeratedTypeOfEnumObject() {
     return null;
   }
 }

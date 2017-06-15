@@ -157,5 +157,5 @@ public interface ObjectTypeI extends TypeI {
    * If this type is an enum object, returns the declared type of the elements.
    * Otherwise returns null.
    */
-  TypeI getElementsType();
+  TypeI getEnumeratedTypeOfEnumObject();
 }
