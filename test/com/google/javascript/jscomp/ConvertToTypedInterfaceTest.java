@@ -538,6 +538,28 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   public void testGoogModulesWithUndefinedExports() {
+    testWarning(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "const Baz = goog.require('x.y.z.Baz');",
+            "const Foobar = goog.require('f.b.Foobar');",
+            "",
+            "exports = (new Baz).getFoobar();"),
+        ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
+
+   testWarning(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "const Baz = goog.require('x.y.z.Baz');",
+            "const Foobar = goog.require('f.b.Foobar');",
+            "",
+            "exports.foobar = (new Baz).getFoobar();"),
+       ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
+  }
+
+  public void testGoogModulesWithAnnotatedUninferrableExports() {
     test(
         LINE_JOINER.join(
             "goog.module('x.y.z');",
