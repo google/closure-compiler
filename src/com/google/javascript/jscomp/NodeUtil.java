@@ -3844,7 +3844,7 @@ public final class NodeUtil {
   /**
    * A predicate for matching name nodes with the specified node.
    */
-  private static class MatchNameNode implements Predicate<Node>{
+  static class MatchNameNode implements Predicate<Node>{
     final String name;
 
     MatchNameNode(String name){

@@ -133,7 +133,12 @@ public class Scope implements StaticScope, Serializable {
   void undeclare(Var var) {
     checkState(var.scope == this);
     checkState(vars.get(var.name).equals(var));
-    vars.remove(var.name);
+    undeclareInteral(var);
+  }
+
+  /** Without any safety checks */
+  void undeclareInteral(Var var) {
+     vars.remove(var.name);
   }
 
   @Override
