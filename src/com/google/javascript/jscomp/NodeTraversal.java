@@ -399,7 +399,7 @@ public class NodeTraversal {
       traverseChildren(n);
 
       popScope();
-    } else if (NodeUtil.isEnhancedFor(n)) {
+    } else if (NodeUtil.isAnyFor(n)) {
       // ES6 Creates a separate for scope and for-body scope
       checkState(scopeCreator.hasBlockScope());
 
