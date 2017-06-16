@@ -1523,7 +1523,7 @@ public final class SymbolTable {
             }
           }
         } else {
-          logger.warning("Skipping empty function: " + scopeRoot);
+          logger.fine("Skipping empty function: " + scopeRoot);
         }
       }
 
