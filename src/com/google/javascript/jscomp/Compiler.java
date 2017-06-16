@@ -2084,6 +2084,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   void forceToEs6Modules(Collection<CompilerInput> inputsToProcess) {
     for (CompilerInput input : inputsToProcess) {
       input.setCompiler(this);
+      input.addProvide(input.getPath().toModuleName());
       Node root = input.getAstRoot(this);
       if (root == null) {
         continue;
