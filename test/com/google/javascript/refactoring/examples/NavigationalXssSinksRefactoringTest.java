@@ -35,7 +35,7 @@ public class NavigationalXssSinksRefactoringTest {
   /** The RefasterJs template to use. */
   private static final String NAVIGATIONAL_XSS_SINKS_TEMPLATE =
       "src/" +
-      "com/google/javascript/refactoring/examples/navigational_xss_sinks.js";
+      "com/google/javascript/refactoring/examples/refasterjs/navigational_xss_sinks.js";
 
   @Test
   public void test_refactorings() throws Exception {
