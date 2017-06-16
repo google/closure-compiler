@@ -102,8 +102,6 @@ public final class RenameVarsTest extends CompilerTestCase {
     shouldShadow = false;
     preferStableNames = false;
     nameGenerator = null;
-
-    // TODO(johnlenz): Enable Normalize during these tests.
   }
 
   public void testRenameSimple() {
@@ -647,6 +645,219 @@ public final class RenameVarsTest extends CompilerTestCase {
 
     test("var a = function(a, b, c){}",
          "var $a$$ = function($a$$, $b$$, $c$$){}");
+  }
+
+  public void testArrowFunctions(){
+    test("foo => {return foo + 3;}",
+        "a => {return a + 3;}");
+
+    test("(foo, bar) => {return foo + bar + 3;}",
+        "(a, b) => {return a + b + 3;}");
+  }
+
+  public void testClasses() {
+    test("class fooBar {}",
+        "class a {}");
+
+    test(
+        LINE_JOINER.join(
+            "class fooBar {",
+            "  constructor(foo, bar) {",
+            "    this.foo = foo;",
+            "    this.bar = bar;",
+            "  }",
+            "}",
+            "var x = new fooBar(2, 3);"),
+        LINE_JOINER.join(
+            "class a {",
+            "  constructor(b, c) {",
+            "    this.foo = b;",
+            "    this.bar = c;",
+            "  }",
+            "}",
+            "var d = new a(2, 3);"));
+
+    test(
+        LINE_JOINER.join(
+            "class fooBar {",
+            "  constructor(foo, bar) {",
+            "    this.foo = foo;",
+            "    this.bar = bar;",
+            "  }",
+            "  func(x) {",
+            "    return this.foo + x;",
+            "  }",
+            "}",
+            "var x = new fooBar(2,3);",
+            "var abcd = x.func(5);"),
+        LINE_JOINER.join(
+            "class b {",
+            "  constructor(a, c) {",
+            "    this.foo = a;",
+            "    this.bar = c;",
+            "  }",
+            "  func(a) {",
+            "    return this.foo + a;",
+            "  }",
+            "}",
+            "var d = new b(2,3);",
+            "var e = d.func(5);"
+            ));
+
+  }
+
+  public void testLetConst() {
+    test("let xyz;",
+        "let a;"
+    );
+
+    test("const xyz = 1;",
+        "const a = 1");
+
+    test(
+        LINE_JOINER.join(
+            "let zyx = 1; {",
+            "  const xyz = 1;",
+            "  let zyx = 2;",
+            "  zyx = 3;",
+            "}",
+            "let xyz = 'potato';",
+            "zyx = 4;"
+        ),
+        LINE_JOINER.join(
+            "let a = 1; {",
+            "  const c = 1;",
+            "  let b = 2;",
+            "  b = 3;",
+            "}",
+            "let d = 'potato';",
+            "a = 4;"));
+  }
+
+  public void testGenerators() {
+    test(
+        LINE_JOINER.join(
+            "function* gen() {",
+            "  var xyz = 3;",
+            "  yield xyz + 4;",
+            "}",
+            "gen().next()"
+        ),
+        LINE_JOINER.join(
+            "function* a() {",
+            "  var b = 3;",
+            "  yield b + 4;",
+            "}",
+            "a().next()"));
+  }
+
+  public void testForOf() {
+    test(
+        "for (var item of items) {}",
+        "for (var a of items) {}");
+  }
+
+  public void testTemplateStrings() {
+    test(
+        LINE_JOINER.join(
+            "var name = 'Foo';",
+            "`My name is ${name}`;"
+        ),
+        LINE_JOINER.join(
+            "var a = 'Foo';",
+            "`My name is ${a}`;"));
+  }
+
+  public void testArrayDestructuring() {
+    test("var [x, y, z] = [1, 2, 3];",
+        "var [a, b, c] = [1, 2, 3];");
+  }
+
+  public void testObjectDestructuring() {
+    test(
+        LINE_JOINER.join(
+            "var obj = {p: 5, h: false};",
+            "var {p, h} = obj;"),
+        LINE_JOINER.join(
+            "var a = {p: 5, h: false};",
+            "var {p, h} = a;"));
+
+   test(
+        LINE_JOINER.join(
+            "var obj = {p: 5, h: false};",
+            "var {p: x, h: y} = obj;"),
+        LINE_JOINER.join(
+            "var a = {p: 5, h: false};",
+            "var {p: b, h: c} = a;"));
+  }
+
+  public void testDefaultFunction() {
+    test(
+        LINE_JOINER.join(
+            "function f(x, y=12) {",
+            "  return x * y;",
+            "}"
+        ),
+        LINE_JOINER.join(
+            "function c(a, b=12) {",
+            "  return a * b;",
+            "}"));
+  }
+
+  public void testRestFunction() {
+    test(
+        LINE_JOINER.join(
+            "function f(x, ...y) {",
+            "  return x * y[0];",
+            "}"
+        ),
+        LINE_JOINER.join(
+            "function c(a, ...b) {",
+            "  return a * b[0];",
+            "}"));
+  }
+
+  public void testObjectLiterals() {
+    test(
+        LINE_JOINER.join(
+            "var objSuper = {",
+            "  f: 'potato'",
+            "};",
+            "var obj = {",
+            "  __proto__: objSuper,",
+            "  g: false,",
+            "  x() {",
+            "    return super.f;",
+            "  }",
+            "};",
+            "obj.x();"
+        ),
+        LINE_JOINER.join(
+            "var a = {",
+            "  f: 'potato'",
+            "};",
+            "var b = {",
+            "  __proto__: a,",
+            "  g: false,",
+            "  x() {",
+            "    return super.f;",
+            "  }",
+            "};",
+            "b.x();"));
+  }
+
+  public void testImports() {
+    testSameModules("import name from './other.js'; use(name);");
+
+    testSameModules("import * as name from './other.js'; use(name);");
+
+    testSameModules("import {default as name} from './other.js'; use(name);");
+
+    testSameModules("import {name} from './other.js'; use(name);");
+  }
+
+  private void testSameModules(String input) {
+    ModulesTestUtils.testSameModules(this, input);
   }
 
   private void testRenameMapUsingOldMap(String input, String expected,
