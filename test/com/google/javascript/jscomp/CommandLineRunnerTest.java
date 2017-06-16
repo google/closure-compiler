@@ -1831,7 +1831,8 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testES6ImportOfFileWithoutImportsOrExports() {
-    args.add("--dependency_mode=NONE");
+    args.add("--dependency_mode=STRICT");
+    args.add("--entry_point='./app.js'");
     args.add("--language_in=ECMASCRIPT6");
     setFilename(0, "foo.js");
     setFilename(1, "app.js");
@@ -1851,7 +1852,8 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testCommonJSRequireOfFileWithoutExports() {
     args.add("--process_common_js_modules");
-    args.add("--dependency_mode=NONE");
+    args.add("--dependency_mode=STRICT");
+    args.add("--entry_point='./app.js'");
     args.add("--language_in=ECMASCRIPT6");
     setFilename(0, "foo.js");
     setFilename(1, "app.js");
