@@ -525,6 +525,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             boolean nameIsAnAlias =
                 currentScript.namesToInlineByAlias.containsKey(prefixTypeName);
             if (nameIsAnAlias) {
+              maybeAddAliasToSymbolTable(typeRefNode, currentScript.legacyNamespace);
+
               String aliasedNamespace = currentScript.namesToInlineByAlias.get(prefixTypeName);
               safeSetString(typeRefNode, aliasedNamespace + suffix);
               return;
@@ -1013,15 +1015,18 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         // `var Foo` case
         String aliasName = statementNode.getFirstChild().getString();
         recordNameToInline(aliasName, exportedNamespace);
+        maybeAddAliasToSymbolTable(statementNode.getFirstChild(), currentScript.legacyNamespace);
       } else if (lhs.isDestructuringLhs() && lhs.getFirstChild().isObjectPattern()) {
         // `const {Foo}` case
         maybeWarnForInvalidDestructuring(t, lhs.getParent(), legacyNamespace);
         for (Node importSpec : lhs.getFirstChild().children()) {
           String importedProperty = importSpec.getString();
-          String aliasName =
-              importSpec.hasChildren() ? importSpec.getFirstChild().getString() : importedProperty;
+          Node aliasNode = importSpec.hasChildren() ? importSpec.getFirstChild() : importSpec;
+          String aliasName = aliasNode.getString();
           String fullName = exportedNamespace + "." + importedProperty;
           recordNameToInline(aliasName, fullName);
+
+          maybeAddAliasToSymbolTable(aliasNode, currentScript.legacyNamespace);
         }
       } else {
         throw new RuntimeException("Illegal goog.module import: " + lhs);
@@ -1193,6 +1198,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // "new Foo;" to "new module$exports$Foo;"
     boolean nameIsAnAlias = currentScript.namesToInlineByAlias.containsKey(name);
     if (nameIsAnAlias && var.getNode() != nameNode) {
+      maybeAddAliasToSymbolTable(nameNode, currentScript.legacyNamespace);
+
       String namespaceToInline = currentScript.namesToInlineByAlias.get(name);
       if (namespaceToInline.equals(currentScript.getBinaryNamespace())) {
         currentScript.hasCreatedExportObject = true;
@@ -1667,6 +1674,29 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   private void maybeAddToSymbolTable(Node n) {
     if (preprocessorSymbolTable != null) {
       preprocessorSymbolTable.addReference(n);
+    }
+  }
+
+  /**
+   * Add alias nodes to the symbol table as they going to be removed by rewriter. Example aliases:
+   *
+   * const Foo = goog.require('my.project.Foo');
+   * const bar = goog.require('my.project.baz');
+   * const {baz} = goog.require('my.project.utils');
+   */
+  private void maybeAddAliasToSymbolTable(Node n, String module) {
+    if (preprocessorSymbolTable != null) {
+      n.putBooleanProp(Node.GOOG_MODULE_ALIAS, true);
+      // Alias can be used in js types. Types have node type STRING and not NAME so we have to
+      // use their name as string.
+      String nodeName =
+          n.getToken() == Token.STRING
+              ? n.getString()
+              : preprocessorSymbolTable.getQualifiedName(n);
+      // We need to include module as part of the name because aliases are local to current module.
+      // Aliases with the same name from different module should be completely different entities.
+      String name = "alias_" + module + "_" + nodeName;
+      preprocessorSymbolTable.addReference(n, name);
     }
   }
 

@@ -155,7 +155,10 @@ public class Node implements Serializable {
                                   // past.
       IS_ES6_CLASS = 92,          // Indicates that a FUNCTION node is converted from an ES6 class
       TRANSPILED = 93,            // Indicates that a SCRIPT represents a transpiled file
-      DELETED = 94;               // For passes that work only on deleted funs.
+      DELETED = 94,               // For passes that work only on deleted funs.
+      GOOG_MODULE_ALIAS = 95;     // Indicates that the node is an alias of goog.require'd module.
+                                  // Aliases are desugared and inlined by compiler passes but we
+                                  // need to preserve them for building index.
 
   private static final String propToString(int propType) {
       switch (propType) {

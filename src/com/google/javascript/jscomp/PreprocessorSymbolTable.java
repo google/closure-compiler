@@ -90,7 +90,10 @@ final class PreprocessorSymbolTable
   }
 
   void addReference(Node node) {
-    String name = getQualifiedName(node);
+    addReference(node, getQualifiedName(node));
+  }
+
+  void addReference(Node node, String name) {
     Preconditions.checkNotNull(name);
 
     if (!symbols.containsKey(name)) {
