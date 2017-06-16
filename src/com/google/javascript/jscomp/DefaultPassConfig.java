@@ -2044,6 +2044,7 @@ public final class DefaultPassConfig extends PassConfig {
                 n.setTypeI(null);
               }
             });
+        this.compiler.clearTypeIRegistry();
       }
 
       this.compiler.setMostRecentTypechecker(MostRecentTypechecker.OTI);

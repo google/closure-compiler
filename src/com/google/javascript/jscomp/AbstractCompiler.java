@@ -118,6 +118,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
   public abstract TypeIRegistry getTypeIRegistry();
 
+  public abstract void clearTypeIRegistry();
+
   abstract void forwardDeclareType(String typeName);
 
   /**
