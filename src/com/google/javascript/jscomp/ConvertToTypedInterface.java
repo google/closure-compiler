@@ -142,9 +142,11 @@ class ConvertToTypedInterface implements CompilerPass {
               }
               return false;
             case ASSIGN:
-              if (expr.getFirstChild().isName() && !t.inGlobalScope() && !t.inModuleScope()) {
+              if (!expr.getFirstChild().isQualifiedName()
+                  || (expr.getFirstChild().isName() && !t.inGlobalScope() && !t.inModuleScope())) {
                 NodeUtil.removeChild(parent, n);
                 t.reportCodeChange(parent);
+                NodeUtil.markFunctionsDeleted(n, t.getCompiler());
                 return false;
               }
               return true;
@@ -187,7 +189,7 @@ class ConvertToTypedInterface implements CompilerPass {
           n.getSecondChild().detach();
           Node initializer = n.removeFirstChild();
           if (initializer.isVar()) {
-            parent.addChildBefore(initializer, n);
+            n.getLastChild().addChildToFront(initializer);
           }
           t.reportCodeChange(parent);
           return true;
@@ -270,9 +272,8 @@ class ConvertToTypedInterface implements CompilerPass {
         case VAR:
         case CONST:
         case LET:
-          if (n.hasOneChild()) {
-            propagateJsdocAtName(t, n.getFirstChild());
-          }
+          checkState(n.hasOneChild());
+          propagateJsdocAtName(t, n.getFirstChild());
           break;
         default:
           break;
@@ -398,11 +399,11 @@ class ConvertToTypedInterface implements CompilerPass {
               Node callee = expr.getFirstChild();
               if (callee.matchesQualifiedName("goog.provide")) {
                 currentFile.markProvided(expr.getLastChild().getString());
+              } else if (callee.matchesQualifiedName("goog.require")) {
+                currentFile.markImportedName(expr.getLastChild().getString());
               } else if (callee.matchesQualifiedName("goog.define")) {
                 expr.getLastChild().detach();
                 t.reportCodeChange();
-              } else if (callee.matchesQualifiedName("goog.require")) {
-                processRequire(expr);
               } else {
                 checkState(callee.matchesQualifiedName("goog.module"));
               }
@@ -420,15 +421,9 @@ class ConvertToTypedInterface implements CompilerPass {
         case VAR:
         case CONST:
         case LET:
-          if (n.hasOneChild() && NodeUtil.isStatement(n)) {
-            Node lhs = n.getFirstChild();
-            Node rhs = lhs.getLastChild();
-            if (rhs != null && isImportRhs(rhs)) {
-              processRequire(rhs);
-            } else {
-              processName(t, lhs, n);
-            }
-          }
+          checkState(n.hasOneChild() && NodeUtil.isStatement(n));
+          Node lhs = n.getFirstChild();
+          processNameDecl(t, lhs, lhs.getLastChild());
           break;
         default:
           break;
@@ -443,16 +438,13 @@ class ConvertToTypedInterface implements CompilerPass {
       }
     }
 
-    private void processRequire(Node requireNode) {
-      checkArgument(requireNode.isCall());
-      checkArgument(requireNode.getLastChild().isString());
-      Node parent = requireNode.getParent();
-      if (parent.isExprResult()) {
-        currentFile.markImportedName(requireNode.getLastChild().getString());
-      } else {
-        for (Node importedName : NodeUtil.getLhsNodesOfDeclaration(parent.getParent())) {
+    private void processNameDecl(NodeTraversal t, Node lhs, Node rhs) {
+      if (rhs != null && isImportRhs(rhs)) {
+        for (Node importedName : NodeUtil.getLhsNodesOfDeclaration(lhs.getParent())) {
           currentFile.markImportedName(importedName.getString());
         }
+      } else {
+        processName(t, lhs, lhs.getParent());
       }
     }
 
