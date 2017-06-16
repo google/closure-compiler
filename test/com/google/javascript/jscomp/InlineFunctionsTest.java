@@ -2549,23 +2549,54 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testArrowFunctionRestParam1() {
-    testSame(
+    test(
         LINE_JOINER.join(
             "function foo() {",
             "  var f = (...args) => args[0];",
             "  return f(8);",
             "}",
-            "foo();"));
+            "foo();"),
+        "[8][0]");
   }
 
   public void testArrowFunctionRestParam2() {
-    testSame(
+    test(
         LINE_JOINER.join(
             "function foo() {",
-              "  var f = (x, ...args) => x + args[0];",
-              "  return f(1, 8);",
+            "  var f = (x, ...args) => x + args[0];",
+            "  return f(1, 8);",
             "}",
-            "foo();"));
+            "foo();"),
+        LINE_JOINER.join(
+            "{",
+            "  var JSCompiler_inline_result$jscomp$inline_0;",
+            "  {",
+            "     var args$jscomp$inline_1 = [8];",
+            "     JSCompiler_inline_result$jscomp$inline_0 = 1 + args$jscomp$inline_1[0];",
+            "  }",
+            "  JSCompiler_inline_result$jscomp$inline_0",
+            "}"));
   }
 
+  public void testArrowFunctionRestParam3() {
+    test(
+        LINE_JOINER.join(
+            "function foo() {",
+            "  var f = (...args) => args[0].bar;",
+            "  return f({bar: 8});",
+            "}",
+            "foo();"),
+        "[{bar: 8}][0].bar");
+  }
+
+  //TODO(bellashim):Make the test below pass
+  public void disabled_testRestParam1() {
+    test(
+        LINE_JOINER.join(
+            "function countArgs(...{length}) {",
+            "  return length;",
+            "}",
+            "countArgs(1, 1, 1, 1, 1);"),
+        "[1, 1, 1, 1, 1].length;");
+  }
 }

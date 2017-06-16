@@ -4329,6 +4329,25 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "var x = foobar;", VarCheck.UNDEFINED_VAR_ERROR);
   }
 
+  // TODO(bellashim): Add a non-transpiling version of this test when InlineFunctions
+  // can run in that mode.
+  public void testInlineRestParam() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(
+        options,
+        LINE_JOINER.join(
+            "function foo() {",
+            "  var f = (...args) => args[0];",
+            "  return f(8);",
+            "}",
+            "alert(foo());"),
+        "alert(function(c){for(var b=[],a=0;a<arguments.a;++a)b[a-0]"
+            + "=arguments[a];return b[0]}(8))");
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   protected CompilerOptions createCompilerOptions() {

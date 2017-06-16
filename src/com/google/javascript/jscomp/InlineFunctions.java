@@ -266,16 +266,6 @@ class InlineFunctions implements CompilerPass {
       return;
     }
     Node fnNode = fn.getFunctionNode();
-    int i = 0;
-    while (fnNode.getSecondChild().getChildAtIndex(i) != null) {
-      Node param = fnNode.getSecondChild().getChildAtIndex(i);
-      if (param.isRest()) {
-        functionState.setInline(false);
-        return;
-      }
-      i++;
-    }
-
     if (enforceMaxSizeAfterInlining
         && !isAlwaysInlinable(fnNode)
         && maxSizeAfterInlining <= NodeUtil.countAstSizeUpToLimit(fnNode, maxSizeAfterInlining)) {

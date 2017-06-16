@@ -19,6 +19,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.HashSet;
@@ -126,13 +127,29 @@ class FunctionArgumentInjector {
       argMap.put(THIS_MARKER, NodeUtil.newUndefinedNode(callNode));
     }
 
-    for (Node fnArg : NodeUtil.getFunctionParameters(fnNode).children()) {
+    for (Node fnParam : NodeUtil.getFunctionParameters(fnNode).children()) {
       if (cArg != null) {
-        argMap.put(fnArg.getString(), cArg);
-        cArg = cArg.getNext();
+        if (fnParam.isRest()) {
+          Node array = IR.arraylit();
+          array.useSourceInfoIfMissingFromForTree(cArg);
+          while (cArg != null) {
+            array.addChildToBack(cArg.cloneTree());
+            cArg = cArg.getNext();
+          }
+          argMap.put(fnParam.getFirstChild().getString(), array);
+        } else {
+          argMap.put(fnParam.getString(), cArg);
+          cArg = cArg.getNext();
+        }
       } else {
-        Node srcLocation = callNode;
-        argMap.put(fnArg.getString(), NodeUtil.newUndefinedNode(srcLocation));
+        if (fnParam.isRest()) {
+          //No arguments for REST parameters
+          Node array = IR.arraylit();
+          argMap.put(fnParam.getFirstChild().getString(), array);
+        } else {
+          Node srcLocation = callNode;
+          argMap.put(fnParam.getString(), NodeUtil.newUndefinedNode(srcLocation));
+        }
       }
     }
 
