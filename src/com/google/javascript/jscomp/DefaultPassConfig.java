@@ -435,6 +435,12 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(generateExports);
     }
 
+    if (options.polymerVersion != null
+        && options.polymerVersion > 1
+        && options.propertyRenaming != PropertyRenamingPolicy.OFF) {
+      checks.add(polymerProtectStaticProperties);
+    }
+
     checks.add(createEmptyPass("afterStandardChecks"));
 
     assertAllOneTimePasses(checks);
@@ -3068,6 +3074,15 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected FeatureSet featureSet() {
           return ES8;
+        }
+      };
+
+  /** Prevents renaming of static properties on Polymer Element classes */
+  private final PassFactory polymerProtectStaticProperties =
+      new PassFactory("polymerProtectStaticProperties", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new PolymerProtectStaticProperties(compiler);
         }
       };
 
