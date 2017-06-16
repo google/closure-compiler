@@ -1825,7 +1825,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         }
 
         if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)) {
-          processEs6Modules();
+          List<CompilerInput> parsedInputs = parsePotentialModules(inputs);
+          parsedInputs.addAll(inputsToRewrite.values());
+          processEs6Modules(parsedInputs);
         }
       } else {
         // Use an empty module loader if we're not actually dealing with modules.
