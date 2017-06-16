@@ -2228,8 +2228,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     private boolean parseInlineSourceMaps = false;
 
-    public CommandLineConfig setParseInlineSourceMaps(
-        boolean parseInlineSourceMaps) {
+    public CommandLineConfig setParseInlineSourceMaps(boolean parseInlineSourceMaps) {
       this.parseInlineSourceMaps = parseInlineSourceMaps;
       return this;
     }
