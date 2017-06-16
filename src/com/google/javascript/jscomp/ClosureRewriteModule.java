@@ -525,7 +525,16 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             boolean nameIsAnAlias =
                 currentScript.namesToInlineByAlias.containsKey(prefixTypeName);
             if (nameIsAnAlias) {
-              maybeAddAliasToSymbolTable(typeRefNode, currentScript.legacyNamespace);
+              if (preprocessorSymbolTable != null) {
+                // Jsdoc type node is a single STRING node that spans the whole type. For example
+                // STRING node "bar.Foo". When rewriting modules potentially replace only "module"
+                // part of the type: "bar.Foo" => "module$exports$bar$Foo". So we need to remember
+                // that "bar" as alias. To do that we clone type node and make "bar" node from it.
+                Node moduleOnlyNode = typeRefNode.cloneNode();
+                safeSetString(moduleOnlyNode, prefixTypeName);
+                moduleOnlyNode.setLength(prefixTypeName.length());
+                maybeAddAliasToSymbolTable(moduleOnlyNode, currentScript.legacyNamespace);
+              }
 
               String aliasedNamespace = currentScript.namesToInlineByAlias.get(prefixTypeName);
               safeSetString(typeRefNode, aliasedNamespace + suffix);
