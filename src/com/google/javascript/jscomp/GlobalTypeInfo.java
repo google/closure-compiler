@@ -692,7 +692,7 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     }
 
     // Check inherited types of all props
- add_interface_props:
+    add_interface_props:
     for (String pname : propTypesToProcess.keySet()) {
       Collection<JSType> defs = propTypesToProcess.get(pname);
       Preconditions.checkState(!defs.isEmpty());
@@ -702,11 +702,13 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         if (!resultType.isBottom()) {
           resultType = inheritedType;
         } else {
-          warnings.add(JSError.make(
-              rawType.getDefSite(),
-              SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
-              rawType.getName(), pname,
-              defs.toString()));
+          warnings.add(
+              JSError.make(
+                  rawType.getDefSite(),
+                  SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
+                  rawType.getName(),
+                  pname,
+                  defs.toString()));
           continue add_interface_props;
         }
       }
@@ -718,19 +720,21 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
     if (rawType.inheritsFromIObject()) {
       JSType wrapped = rawType.getInstanceAsJSType();
       if (wrapped.getIndexType() == null) {
-        warnings.add(JSError.make(
-            rawType.getDefSite(),
-            SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
-            rawType.getName(),
-            "IObject<K,V>#index",
-            "the keys K have types that can't be joined."));
+        warnings.add(
+            JSError.make(
+                rawType.getDefSite(),
+                SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
+                rawType.getName(),
+                "IObject<K,V>#index",
+                "the keys K have types that can't be joined."));
       } else if (wrapped.getIndexedType() == null) {
-        warnings.add(JSError.make(
-            rawType.getDefSite(),
-            SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
-            rawType.getName(),
-            "IObject<K,V>#index",
-            "the values V should have a common subtype."));
+        warnings.add(
+            JSError.make(
+                rawType.getDefSite(),
+                SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
+                rawType.getName(),
+                "IObject<K,V>#index",
+                "the values V should have a common subtype."));
       }
     }
 
