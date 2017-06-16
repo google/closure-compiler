@@ -776,6 +776,7 @@ class InlineFunctions implements CompilerPass {
         Preconditions.checkState(fn != null);
         verifyAllReferencesInlined(functionState);
         fn.remove();
+        NodeUtil.markFunctionsDeleted(fn.getFunctionNode(), compiler);
       }
     }
   }

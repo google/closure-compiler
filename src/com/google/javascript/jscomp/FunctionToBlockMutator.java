@@ -216,7 +216,6 @@ class FunctionToBlockMutator {
     }
   }
 
-
   /**
    * Fix-up all local names to be unique for this subtree.
    * @param fnNode A mutable instance of the function to be inlined.
@@ -225,16 +224,14 @@ class FunctionToBlockMutator {
     Supplier<String> idSupplier = compiler.getUniqueNameIdSupplier();
     // Make variable names unique to this instance.
     NodeTraversal.traverseEs6(
-        compiler, fnNode, new MakeDeclaredNamesUnique(
+        compiler,
+        fnNode,
+        new MakeDeclaredNamesUnique(
             new InlineRenamer(
-                compiler.getCodingConvention(),
-                idSupplier,
-                "inline_",
-                isCallInLoop,
-                true,
-                null)));
+                compiler.getCodingConvention(), idSupplier, "inline_", isCallInLoop, true, null),
+            false));
     // Make label names unique to this instance.
-    new RenameLabels(compiler, new LabelNameSupplier(idSupplier), false)
+    new RenameLabels(compiler, new LabelNameSupplier(idSupplier), false, false)
         .process(null, fnNode);
   }
 
