@@ -15,7 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.rhino.IR;
@@ -129,7 +131,7 @@ class ConvertToTypedInterface implements CompilerPass {
           switch (expr.getToken()) {
             case CALL:
               Node callee = expr.getFirstChild();
-              Preconditions.checkState(!callee.matchesQualifiedName("goog.scope"));
+              checkState(!callee.matchesQualifiedName("goog.scope"));
               if (!callee.matchesQualifiedName("goog.provide")
                   && !callee.matchesQualifiedName("goog.define")
                   && !callee.matchesQualifiedName("goog.require")
@@ -212,7 +214,7 @@ class ConvertToTypedInterface implements CompilerPass {
         case IMPORT:
           return true;
         default:
-          Preconditions.checkState(!NodeUtil.isStatement(n), n.getToken());
+          checkState(!NodeUtil.isStatement(n), n.getToken());
           return true;
       }
     }
@@ -329,7 +331,7 @@ class ConvertToTypedInterface implements CompilerPass {
     }
 
     void markConstructorToProcess(Node ctorNode) {
-      Preconditions.checkArgument(ctorNode.isFunction());
+      checkArgument(ctorNode.isFunction(), ctorNode);
       constructorsToProcess.add(ctorNode);
     }
 
@@ -402,7 +404,7 @@ class ConvertToTypedInterface implements CompilerPass {
               } else if (callee.matchesQualifiedName("goog.require")) {
                 processRequire(expr);
               } else {
-                Preconditions.checkState(callee.matchesQualifiedName("goog.module"));
+                checkState(callee.matchesQualifiedName("goog.module"));
               }
               break;
             case ASSIGN:
@@ -442,8 +444,8 @@ class ConvertToTypedInterface implements CompilerPass {
     }
 
     private void processRequire(Node requireNode) {
-      Preconditions.checkArgument(requireNode.isCall());
-      Preconditions.checkArgument(requireNode.getLastChild().isString());
+      checkArgument(requireNode.isCall());
+      checkArgument(requireNode.getLastChild().isString());
       Node parent = requireNode.getParent();
       if (parent.isExprResult()) {
         currentFile.markImportedName(requireNode.getLastChild().getString());
@@ -455,7 +457,7 @@ class ConvertToTypedInterface implements CompilerPass {
     }
 
     private void processFunctionParameters(Node paramList) {
-      Preconditions.checkArgument(paramList.isParamList());
+      checkArgument(paramList.isParamList());
       for (Node arg = paramList.getFirstChild(); arg != null; arg = arg.getNext()) {
         if (arg.isDefaultValue()) {
           Node replacement = arg.getFirstChild().detach();
@@ -506,7 +508,7 @@ class ConvertToTypedInterface implements CompilerPass {
             }
           });
       final Node functionBody = function.getLastChild();
-      Preconditions.checkState(functionBody.isNormalBlock());
+      checkState(functionBody.isNormalBlock());
       functionBody.removeChildren();
       compiler.reportChangeToEnclosingScope(functionBody);
     }
@@ -580,7 +582,7 @@ class ConvertToTypedInterface implements CompilerPass {
     }
 
     private void processName(NodeTraversal t, Node nameNode, Node statement) {
-     Preconditions.checkState(NodeUtil.isStatement(statement), statement);
+      checkState(NodeUtil.isStatement(statement), statement);
       if (!nameNode.isQualifiedName()) {
         // We don't track these. We can just remove them.
         removeNode(statement);
@@ -646,7 +648,7 @@ class ConvertToTypedInterface implements CompilerPass {
 
   // TODO(blickly): Move to NodeUtil if it makes more sense there.
   private static boolean isDeclaration(Node nameNode) {
-    Preconditions.checkArgument(nameNode.isQualifiedName());
+    checkArgument(nameNode.isQualifiedName());
     Node parent = nameNode.getParent();
     switch (parent.getToken()) {
       case VAR:
@@ -672,7 +674,7 @@ class ConvertToTypedInterface implements CompilerPass {
   }
 
   private static boolean isClassMemberFunction(Node functionNode) {
-    Preconditions.checkArgument(functionNode.isFunction());
+    checkArgument(functionNode.isFunction());
     Node parent = functionNode.getParent();
     if (parent.isMemberFunctionDef()
         && parent.getParent().isClassMembers()) {
@@ -692,13 +694,13 @@ class ConvertToTypedInterface implements CompilerPass {
       if (parent.isMemberFunctionDef()) {
         // ES6 class
         Node classNode = functionNode.getGrandparent().getParent();
-        Preconditions.checkState(classNode.isClass());
+        checkState(classNode.isClass());
         return NodeUtil.getName(classNode);
       }
       // goog.defineClass
-      Preconditions.checkState(parent.isStringKey());
+      checkState(parent.isStringKey());
       Node defineClassCall = parent.getGrandparent();
-      Preconditions.checkState(defineClassCall.isCall());
+      checkState(defineClassCall.isCall());
       return NodeUtil.getBestLValue(defineClassCall).getQualifiedName();
     }
     return NodeUtil.getName(functionNode);
@@ -716,7 +718,7 @@ class ConvertToTypedInterface implements CompilerPass {
 
     private static JSDocInfo pullJsdocTypeFromAst(
         AbstractCompiler compiler, JSDocInfo oldJSDoc, Node nameNode) {
-      Preconditions.checkArgument(nameNode.isQualifiedName());
+      checkArgument(nameNode.isQualifiedName());
       if (!nameNode.isFromExterns() && !isPrivate(oldJSDoc)) {
         compiler.report(JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
       }
