@@ -40,6 +40,10 @@ class ModulesTestUtils {
     test.test(inputs, expecteds);
   }
 
+  static void testSameModules(CompilerTestCase test, String input) {
+    testModules(test, input, input);
+  }
+
   static void testModulesError(CompilerTestCase test, String input, DiagnosticType error) {
     String fileName = test.getFilename() + ".js";
     ImmutableList<SourceFile> inputs =
