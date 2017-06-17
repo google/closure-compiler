@@ -18,7 +18,9 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -172,6 +174,12 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
     assertNotLiveBeforeX("var a,b;X:a;for(b=a;;){b()};b();", "b");
   }
 
+  public void testForOfLoopsVar() {
+    assertLiveBeforeX("var a; for (a of [1, 2, 3]) {X:{}}", "a");
+    assertLiveAfterX("for (var a of [1, 2, 3]) {X:{}}", "a");
+    assertLiveBeforeX("var a,b; for (var y of a = [0, 1, 2]) { X:a[y] }", "a");
+  }
+
   public void testNestedLoops() {
     assertLiveBeforeX("var a;X:while(1){while(1){a()}}", "a");
     assertLiveBeforeX("var a;X:while(1){while(1){while(1){a()}}}", "a");
@@ -287,6 +295,37 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
     assertLiveBeforeX("try {var x=[]; X:var y=x[0]} finally {foo()}", "x");
   }
 
+  public void testSimpleLet() {
+    // a is defined after X and not used
+    assertNotLiveBeforeX("X:let a;", "a", true);
+    assertNotLiveAfterX("X:let a;", "a", true);
+    assertNotLiveAfterX("X:let a=1;", "a", true);
+
+    // a is used and defined after X
+    assertLiveAfterX("X:let a=1; a()", "a", true);
+    assertNotLiveBeforeX("X:let a=1; a()", "a", true);
+
+    // no assignment to x; let is initialized with undefined
+    assertLiveBeforeX("let a;X:a;", "a", true);
+    assertNotLiveAfterX("let a,b;X:b();", "a", true);
+    assertLiveBeforeX("let a,b;X:b(a);", "a", true);
+    assertNotLiveBeforeX("let a,b;X:a=1;b(a)", "a", true);
+    assertNotLiveAfterX("let a,b;X:b(a);b()", "a", true);
+    assertLiveBeforeX("let a,b;X:b();b=1;a()", "b", true);
+
+    // let initialized afterX
+    assertLiveAfterX("X:a();let a;a()", "a", true);
+    assertNotLiveAfterX("X:a();let a=1;a()", "a", true);
+  }
+
+  public void testSimpleConst() {
+    // a is defined after X and not used
+    assertLiveBeforeX("const a = 4; X:a;", "a", true);
+    assertNotLiveBeforeX("X:let a = 1;", "a", true);
+    assertNotLiveBeforeX("X:const a = 1;", "a", true);
+    assertNotLiveAfterX("X:const a = 1;", "a", true);
+  }
+
   private void assertLiveBeforeX(String src, String var) {
     FlowState<LiveVariablesAnalysisEs6.LiveVariableLattice> state = getFlowStateAtX(src);
     assertNotNull(src + " should contain a label 'X:'", state);
@@ -356,10 +395,14 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
   }
 
   private static LiveVariablesAnalysisEs6 computeLiveness(String src) {
+    // Set up compiler
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
+    options.setLanguage(LanguageMode.ECMASCRIPT_2015);
     options.setCodingConvention(new GoogleCodingConvention());
     compiler.initOptions(options);
+
+    // Set up test case
     src = "function _FUNCTION(param1, param2){" + src + "}";
     Node n = compiler.parseTestCode(src).removeFirstChild();
     checkState(n.isFunction(), n);
@@ -367,14 +410,100 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
     script.setInputId(new InputId("test"));
     assertThat(compiler.getErrors()).isEmpty();
 
+    // Create scopes
     ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
     Scope scope = scopeCreator.createScope(n, Scope.createGlobalScope(script));
     Scope childScope = scopeCreator.createScope(NodeUtil.getFunctionBody(n), scope);
 
+    // Control flow graph
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
     cfa.process(null, n);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
 
+    // Compute livenss of variables
+    LiveVariablesAnalysisEs6 analysis =
+        new LiveVariablesAnalysisEs6(
+            cfg, scope, childScope, compiler, new Es6SyntacticScopeCreator(compiler));
+    analysis.analyze();
+    return analysis;
+  }
+
+  /**
+   * For the following methods, the block boolean signals that whether the test code is being
+   * constructed within a block or within a function. If block is true, then the tests are set up
+   * and run through computeLivenessBlock. Otherwise, they use computeLiveness.
+   *
+   * @param src code body
+   * @param block signals whether to put code body in a block or function set up
+   */
+  private FlowState<LiveVariablesAnalysisEs6.LiveVariableLattice> getFlowStateAtX(
+      String src, boolean block) {
+    if (block) {
+      liveness = computeLivenessBlock(src);
+    } else {
+      liveness = computeLiveness(src);
+    }
+
+    return getFlowStateAtX(liveness.getCfg().getEntry().getValue(), liveness.getCfg());
+  }
+
+  private void assertLiveBeforeX(String src, String var, boolean block) {
+    FlowState<LiveVariablesAnalysisEs6.LiveVariableLattice> state = getFlowStateAtX(src, block);
+    assertWithMessage(src + " should contain a label 'X:'").that(state).isNotNull();
+    assertTrue(
+        "Variable" + var + " should be live before X",
+        state.getIn().isLive(liveness.getVarIndex(var)));
+  }
+
+  private void assertLiveAfterX(String src, String var, boolean block) {
+    FlowState<LiveVariablesAnalysisEs6.LiveVariableLattice> state = getFlowStateAtX(src, block);
+    assertNotNull("Label X should be in the input program.", state);
+    assertTrue(
+        "Variable" + var + " should be live after X",
+        state.getOut().isLive(liveness.getVarIndex(var)));
+  }
+
+  private void assertNotLiveAfterX(String src, String var, boolean block) {
+    FlowState<LiveVariablesAnalysisEs6.LiveVariableLattice> state = getFlowStateAtX(src, block);
+    assertNotNull("Label X should be in the input program.", state);
+    assertFalse(
+        "Variable" + var + " should not be live after X",
+        state.getOut().isLive(liveness.getVarIndex(var)));
+  }
+
+  private void assertNotLiveBeforeX(String src, String var, boolean block) {
+    FlowState<LiveVariablesAnalysisEs6.LiveVariableLattice> state = getFlowStateAtX(src, block);
+    assertNotNull("Label X should be in the input program.", state);
+    assertFalse(
+        "Variable" + var + " should not be live before X",
+        state.getIn().isLive(liveness.getVarIndex(var)));
+  }
+
+  private static LiveVariablesAnalysisEs6 computeLivenessBlock(String src) {
+    // Set up compiler
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguage(LanguageMode.ECMASCRIPT_2015);
+    options.setCodingConvention(new GoogleCodingConvention());
+    compiler.initOptions(options);
+
+    src = "{" + src + "}";
+    Node n = compiler.parseTestCode(src).removeFirstChild();
+    Node script = new Node(Token.SCRIPT, n);
+    script.setInputId(new InputId("test"));
+    assertThat(compiler.getErrors()).isEmpty();
+
+    // Create scopes
+    ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+    Scope scope = scopeCreator.createScope(n, Scope.createGlobalScope(script));
+    Scope childScope = null;
+
+    // Control flow graph
+    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
+    cfa.process(null, script);
+    ControlFlowGraph<Node> cfg = cfa.getCfg();
+
+    // Compute livenss of variables
     LiveVariablesAnalysisEs6 analysis =
         new LiveVariablesAnalysisEs6(
             cfg, scope, childScope, compiler, new Es6SyntacticScopeCreator(compiler));

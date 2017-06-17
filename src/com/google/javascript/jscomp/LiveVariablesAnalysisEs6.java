@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Compute the "liveness" of all local variables. A variable is "live" at a point of a program if
@@ -135,8 +136,8 @@ class LiveVariablesAnalysisEs6
   LiveVariablesAnalysisEs6(
       ControlFlowGraph<Node> cfg,
       Scope jsScope,
-      Scope jsScopeChild,
-      Compiler compiler,
+      @Nullable Scope jsScopeChild,
+      AbstractCompiler compiler,
       Es6SyntacticScopeCreator scopeCreator) {
     super(cfg, new LiveVariableJoinOp());
     this.jsScope = jsScope;
@@ -154,14 +155,37 @@ class LiveVariablesAnalysisEs6
    */
   private void addScopeVariables() {
     int num = 0;
-    for (Var v : jsScope.getVarIterable()) {
-      scopeVariables.put(v.getName(), num);
-      num++;
-    }
+    if (jsScope.isFunctionScope()) {
+      for (Var v : jsScope.getVarIterable()) {
+        scopeVariables.put(v.getName(), num);
+        num++;
+      }
 
-    for (Var v : jsScopeChild.getVarIterable()) {
-      scopeVariables.put(v.getName(), num);
-      num++;
+      if (jsScopeChild != null) {
+        for (Var v : jsScopeChild.getVarIterable()) {
+          // add the hoisted variables from this child scope
+          if ((v.isLet() || v.isConst()) && !jsScope.isFunctionScope()) {
+            continue;
+          }
+          scopeVariables.put(v.getName(), num);
+          num++;
+        }
+      }
+    } else if (jsScope.isFunctionBlockScope()) {
+      for (Var v : jsScope.getParent().getVarIterable()) {
+        scopeVariables.put(v.getName(), num);
+        num++;
+      }
+
+      for (Var v : jsScope.getVarIterable()) {
+        scopeVariables.put(v.getName(), num);
+        num++;
+      }
+    } else {
+      for (Var v : jsScope.getVarIterable()) {
+        scopeVariables.put(v.getName(), num);
+        num++;
+      }
     }
   }
 
@@ -224,9 +248,9 @@ class LiveVariablesAnalysisEs6
 
     switch (n.getToken()) {
       case SCRIPT:
-      case BLOCK:
       case ROOT:
       case FUNCTION:
+      case BLOCK:
         return;
 
       case WHILE:
@@ -236,12 +260,13 @@ class LiveVariablesAnalysisEs6
         computeGenKill(NodeUtil.getConditionExpression(n), gen, kill, conditional);
         return;
 
+      case FOR_OF:
       case FOR_IN:
         {
-          // for(x in y) {...}
+          // for (x in y) {...}
           Node lhs = n.getFirstChild();
-          if (lhs.isVar()) {
-            // for(var x in y) {...}
+          if (NodeUtil.isNameDeclaration(lhs)) {
+            // for (var x in y) {...}
             lhs = lhs.getLastChild();
           }
 
@@ -256,6 +281,8 @@ class LiveVariablesAnalysisEs6
           return;
         }
 
+      case LET:
+      case CONST:
       case VAR:
         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
           if (c.hasChildren()) {
@@ -320,13 +347,15 @@ class LiveVariablesAnalysisEs6
       if (!escaped.contains(var)) {
         set.set(getVarIndex(var.getName()));
       }
-    } else if (!jsScopeChild.isDeclaredSloppy(name, false)) {
-      return;
-    } else {
-      Var var = jsScopeChild.getVar(name);
+    } else if (jsScopeChild != null && jsScope.isFunctionScope()) {
+      if (!jsScopeChild.isDeclared(name, false)) {
+        return;
+      } else {
+        Var var = jsScopeChild.getVar(name);
 
-      if (!escaped.contains(var)) {
-        set.set(getVarIndex(var.getName()));
+        if (!escaped.contains(var)) {
+          set.set(getVarIndex(var.getName()));
+        }
       }
     }
   }
@@ -336,16 +365,23 @@ class LiveVariablesAnalysisEs6
    * escaped set.
    */
   void markAllParametersEscaped() {
-    Node lp = jsScope.getRootNode().getSecondChild();
-    for (Node arg = lp.getFirstChild(); arg != null; arg = arg.getNext()) {
-      escaped.add(jsScope.getVar(arg.getString()));
+    if (jsScope.isFunctionScope()) {
+      Node lp = jsScope.getRootNode().getSecondChild();
+      for (Node arg = lp.getFirstChild(); arg != null; arg = arg.getNext()) {
+        escaped.add(jsScope.getVar(arg.getString()));
+      }
     }
   }
 
   private boolean isArgumentsName(Node n) {
+    boolean childDeclared;
+    if (jsScopeChild != null) {
+      childDeclared = jsScopeChild.isDeclared(ARGUMENT_ARRAY_ALIAS, false);
+    } else {
+      childDeclared = true;
+    }
     return n.isName()
         && n.getString().equals(ARGUMENT_ARRAY_ALIAS)
-        && (!jsScope.isDeclaredSloppy(ARGUMENT_ARRAY_ALIAS, false)
-            || !jsScopeChild.isDeclaredSloppy(ARGUMENT_ARRAY_ALIAS, false));
+        && (!jsScope.isDeclaredSloppy(ARGUMENT_ARRAY_ALIAS, false) || !childDeclared);
   }
 }
