@@ -73,7 +73,7 @@ public final class DataFlowAnalysisTest extends TestCase {
   abstract static class Value {
 
     boolean isNumber() {
-      return this instanceof Number;
+      return this instanceof NumberValue;
     }
 
     boolean isVariable() {
@@ -123,7 +123,7 @@ public final class DataFlowAnalysisTest extends TestCase {
   /**
    * A number constant.
    */
-  static class Number extends Value {
+  static class NumberValue extends Value {
     private final int value;
 
     /**
@@ -131,7 +131,7 @@ public final class DataFlowAnalysisTest extends TestCase {
      *
      * @param v Value
      */
-    Number(int v) {
+    NumberValue(int v) {
       value = v;
     }
 
@@ -146,10 +146,10 @@ public final class DataFlowAnalysisTest extends TestCase {
 
     @Override
     public boolean equals(Object other) {
-      if (!(other instanceof Number)) {
+      if (!(other instanceof NumberValue)) {
         return false;
       }
-      return ((Number) other).value == value;
+      return ((NumberValue) other).value == value;
     }
 
     @Override
@@ -206,7 +206,7 @@ public final class DataFlowAnalysisTest extends TestCase {
      * @param op2 Second Operand.
      */
     ArithmeticInstruction(Variable res, int op1, Operation o, int op2) {
-      this(res, new Number(op1), o, new Number(op2));
+      this(res, new NumberValue(op1), o, new NumberValue(op2));
     }
 
     /**
@@ -218,7 +218,7 @@ public final class DataFlowAnalysisTest extends TestCase {
      * @param op2 Second Operand.
      */
     ArithmeticInstruction(Variable res, Value op1, Operation o, int op2) {
-      this(res, op1, o, new Number(op2));
+      this(res, op1, o, new NumberValue(op2));
     }
 
     /**
@@ -230,7 +230,7 @@ public final class DataFlowAnalysisTest extends TestCase {
      * @param op2 Second Operand.
      */
     ArithmeticInstruction(Variable res, int op1, Operation o, Value op2) {
-      this(res, new Number(op1), o, op2);
+      this(res, new NumberValue(op1), o, op2);
     }
 
     /**
@@ -498,7 +498,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     // be a constant coming in.
     Integer leftConst = null;
     if (aInst.operand1.isNumber()) {
-      leftConst = ((Number) aInst.operand1).value;
+      leftConst = ((NumberValue) aInst.operand1).value;
     } else {
       if (input.constMap.containsKey(aInst.operand1)) {
         leftConst = input.constMap.get(aInst.operand1);
@@ -508,7 +508,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     // Do the same thing to the right.
     Integer rightConst = null;
     if (aInst.operand2.isNumber()) {
-      rightConst = ((Number) aInst.operand2).value;
+      rightConst = ((NumberValue) aInst.operand2).value;
     } else {
       if (input.constMap.containsKey(aInst.operand2)) {
         rightConst = input.constMap.get(aInst.operand2);
