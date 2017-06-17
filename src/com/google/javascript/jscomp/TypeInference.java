@@ -1172,7 +1172,7 @@ class TypeInference
       // For now, we just make sure the current type has enough
       // arguments to match the expected type, and return the
       // expected type if it does.
-      if (currentType.getMaxArguments() <= expectedType.getMaxArguments()) {
+      if (currentType.getMaxArity() <= expectedType.getMaxArity()) {
         return expectedType;
       }
     }

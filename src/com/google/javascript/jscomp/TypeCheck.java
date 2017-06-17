@@ -1910,14 +1910,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     int numArgs = call.getChildCount() - 1;
-    int minArgs = functionType.getMinArguments();
-    int maxArgs = functionType.getMaxArguments();
-    if (minArgs > numArgs || maxArgs < numArgs) {
+    int minArity = functionType.getMinArity();
+    int maxArity = functionType.getMaxArity();
+    if (minArity > numArgs || maxArity < numArgs) {
       report(t, call, WRONG_ARGUMENT_COUNT,
               typeRegistry.getReadableTypeNameNoDeref(call.getFirstChild()),
-              String.valueOf(numArgs), String.valueOf(minArgs),
-              maxArgs != Integer.MAX_VALUE ?
-              " and no more than " + maxArgs + " argument(s)" : "");
+              String.valueOf(numArgs), String.valueOf(minArity),
+              maxArity == Integer.MAX_VALUE ? ""
+                  : " and no more than " + maxArity + " argument(s)");
     }
   }
 

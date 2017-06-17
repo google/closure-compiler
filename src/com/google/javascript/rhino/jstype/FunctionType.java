@@ -326,7 +326,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
 
   /** Gets the minimum number of arguments that this function requires. */
   @Override
-  public int getMinArguments() {
+  public int getMinArity() {
     // NOTE(nicksantos): There are some native functions that have optional
     // parameters before required parameters. This algorithm finds the position
     // of the last required parameter.
@@ -346,7 +346,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * or Integer.MAX_VALUE if this is a variable argument function.
    */
   @Override
-  public int getMaxArguments() {
+  public int getMaxArity() {
     Node params = getParametersNode();
     if (params != null) {
       Node lastParam = params.getLastChild();
@@ -1563,6 +1563,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
 
     int numArgs = argumentTypes.size();
-    return this.getMinArguments() <= numArgs && numArgs <= this.getMaxArguments();
+    return this.getMinArity() <= numArgs && numArgs <= this.getMaxArity();
   }
 }

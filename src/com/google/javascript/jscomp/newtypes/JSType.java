@@ -1865,13 +1865,13 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public final int getMinArguments() {
+  public final int getMinArity() {
     Preconditions.checkState(this.isFunctionType());
     return this.getFunTypeIfSingletonObj().getMinArity();
   }
 
   @Override
-  public final int getMaxArguments() {
+  public final int getMaxArity() {
     Preconditions.checkState(this.isFunctionType());
     return this.getFunTypeIfSingletonObj().getMaxArity();
   }

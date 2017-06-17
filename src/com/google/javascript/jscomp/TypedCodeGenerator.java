@@ -130,12 +130,12 @@ class TypedCodeGenerator extends CodeGenerator {
     }
 
     // Param types
-    int minArgs = funType.getMinArguments();
-    int maxArgs = funType.getMaxArguments();
+    int minArity = funType.getMinArity();
+    int maxArity = funType.getMaxArity();
     List<TypeI> formals = ImmutableList.copyOf(funType.getParameterTypes());
     for (int i = 0; i < formals.size(); i++) {
       sb.append(" * ");
-      appendAnnotation(sb, "param", getParameterJSDocType(formals, i, minArgs, maxArgs));
+      appendAnnotation(sb, "param", getParameterJSDocType(formals, i, minArity, maxArity));
       sb.append(" ")
           .append(paramNode == null ? "p" + i : paramNode.getString())
           .append("\n");

@@ -1109,7 +1109,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
           positionalDisposedParameters.add(DISPOSE_ALL);
         } else {
           // Record index of parameters that are disposed.
-          for (int index = 0; index < funType.getMaxArguments(); ++index) {
+          for (int index = 0; index < funType.getMaxArity(); ++index) {
             // Bail out if the paramNode is not there.
             if (paramNode == null) {
               break;

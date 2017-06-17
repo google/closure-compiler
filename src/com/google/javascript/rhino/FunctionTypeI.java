@@ -99,10 +99,10 @@ public interface FunctionTypeI extends TypeI {
   Iterable<TypeI> getParameterTypes();
 
   /** Returns the number of required arguments. */
-  int getMinArguments();
+  int getMinArity();
 
   /** Returns the maximum number of allowed arguments, or Integer.MAX_VALUE if variadic. */
-  int getMaxArguments();
+  int getMaxArity();
 
   /** Returns the names of all type parameters. */
   Collection<String> getTypeParameters();
