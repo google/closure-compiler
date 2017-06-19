@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeUtil;
@@ -687,6 +688,20 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   public final JSType substituteGenericsWithUnknown() {
     return substituteGenerics(this.commonTypes.MAP_TO_UNKNOWN);
+  }
+
+  /**
+   * Given a type that is a subtype of Iterable, returns what that Iterable is instantiated with.
+   * Needed for typechecking for/of.
+   */
+  public JSType getInstantiatedTypeOfIterable() {
+    String typeParam = ""; //needs to be unique and should never show up in an error message.
+    JSType newTypeVar = JSType.fromTypeVar(this.commonTypes, typeParam);
+    JSType iterableType = this.commonTypes.getIterableInstance(newTypeVar);
+    Multimap<String, JSType> typeMultimap = LinkedHashMultimap.create();
+    iterableType.unifyWith(this, ImmutableList.of(typeParam), typeMultimap);
+    Collection<JSType> types = typeMultimap.get(typeParam);
+    return joinManyTypes(this.commonTypes, types);
   }
 
   private static void updateTypemap(

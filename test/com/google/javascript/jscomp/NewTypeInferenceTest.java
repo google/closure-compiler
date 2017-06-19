@@ -27,6 +27,12 @@ import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 
 public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
 
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    this.mode = InputLanguageMode.NO_TRANSPILATION;
+  }
+
   public void testExterns() {
     typeCheck(
         "/** @param {Array<string>} x */ function f(x) {}; f([5]);",
@@ -5779,6 +5785,171 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  for (x in { a: 1, b: 2 }) { y = x; }",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testForOfBothMode() {
+    this.mode = InputLanguageMode.BOTH;
+
+    // Correctly infer type of x in for of loop should be number
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** number */ y) {",
+            "  for (var x of [1,2,3]) { y = x; }",
+            "}"));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** number */ y) {",
+            "  var /** number */ x = 1;",
+            "  for (x of [1,2,3]) { y = x; }",
+            "}"));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** string */ y) {",
+            "  var x = 'a';",
+            "  for (x of [1,2,3]) { y = x; }",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** number */ y) {",
+            "  var x = 'a';",
+            "  for (x of [1,2,3]) { y = x; }",
+            "}"));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** undefined */ y) {",
+            "  for (var x of [1,2,3]) { y = x; }",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // Correctly infer type of x in for of loop should be string
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** string */ y) {",
+            "  for (var x of 'abc') { y = x; }",
+            "}"));
+
+    // Undefined variable
+    typeCheck(
+        LINE_JOINER.join(
+            "function f() {",
+            "  var z = x + 234;",
+            "  for (var x of ['a', 'b']) ;",
+            "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    // Type checks as long as the elements are iterable
+    typeCheck(
+        LINE_JOINER.join(
+            "var /** !Iterable<number> */ iterable = foo();",
+            "function f(/** number */ y) {",
+            "  for (var x of iterable) { y = x; }",
+            "}"));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "var /** !Iterable<string> */ iterable = foo();",
+            "function f(/** number */ y) {",
+            "  for (var x of iterable) { y = x; }",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testForOf() {
+    // Correctly infer type of x in for of loop should be string
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** number */ y) {",
+            "  for (var x of 'abc') { y = x; }",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // For of expects iterable
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** string */ y) {",
+            "  for (var x of { a: 1, b: 2 }) { y = x; }",
+            "}"),
+        NewTypeInference.FOROF_EXPECTS_ITERABLE);
+
+    typeCheck("for (var x of 123) ;", NewTypeInference.FOROF_EXPECTS_ITERABLE);
+
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** number */ y) {",
+            "  for (var x of 123) { var /** string */ z = {}; y = x; }",
+            "}"),
+        NewTypeInference.FOROF_EXPECTS_ITERABLE,
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // Nested expression as the iterable.
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** string */ y) {",
+            "  var /** string */ x;",
+            "  for (x of (y = [1,2,3])) ;",
+            "}"),
+        NewTypeInference.MISTYPED_FOROF_ELEMENT_TYPE,
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** string */ y) {",
+            "  var /** string */ x = 'a';",
+            "  for (x of [1,2,3]) { y = x; }",
+            "}"),
+        NewTypeInference.MISTYPED_FOROF_ELEMENT_TYPE);
+
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** number */ y) {",
+            "  var /** string */ x = 'a';",
+            "  for (x of [1,2,3]) { y = x; }",
+            "}"),
+        NewTypeInference.MISTYPED_FOROF_ELEMENT_TYPE,
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // Nullable dereference
+    typeCheck(
+        "function f(/** Array<number>? */ m) { for (var x of m); }",
+        NewTypeInference.NULLABLE_DEREFERENCE);
+
+    // Iterating over a union of different types of iterables correctly infers element type
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** number */ y) {",
+            "  var /** !Array<number> | !Iterable<string> */ iterable = foo();",
+            "  for (var x of iterable) { y = x; }",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        LINE_JOINER.join(
+            "function f() {",
+            "  var /** !Array<number> | !Iterable<string> */ iterable = foo();",
+            "  for (var x of iterable) ;",
+            "}"));
+
+    // Correctly identifies that number is not subtype of null
+    typeCheck(
+        LINE_JOINER.join(
+            "function f() {",
+            "  var /** null */ x;",
+            "  for (x of [1,2,3]) ;",
+            "}"),
+        NewTypeInference.MISTYPED_FOROF_ELEMENT_TYPE);
+
+    // In-line declaration of type
+    typeCheck(
+        LINE_JOINER.join(
+            "function f() {",
+            "  for (var /** string */ x of [1,2,3]) ;",
+            "}"),
+        NewTypeInference.MISTYPED_FOROF_ELEMENT_TYPE);
   }
 
   public void testTryCatch() {

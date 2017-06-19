@@ -594,40 +594,6 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
     typeCheck(
         LINE_JOINER.join(
             "function f(/** number */ y) {",
-            "  for (var x of [1,2,3]) { y = x; }",
-            "}"));
-
-    typeCheck(
-        LINE_JOINER.join(
-            "function f(/** number */ y) {",
-            "  var /** number */ x = 1;",
-            "  for (x of [1,2,3]) { y = x; }",
-            "}"));
-
-    typeCheck(
-        LINE_JOINER.join(
-            "function f(/** string */ y) {",
-            "  var /** string */ x = \"a\";",
-            "  for (x of [1,2,3]) { y = x; }",
-            "}"),
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
-
-    typeCheck(
-        LINE_JOINER.join(
-            "function f(/** undefined */ y) {",
-            "  for (var x of [1,2,3]) { y = x; }",
-            "}"),
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
-
-    typeCheck(
-        LINE_JOINER.join(
-            "function f(/** string */ y) {",
-            "  for (var x of \"abc\") { y = x; }",
-            "}"));
-
-    typeCheck(
-        LINE_JOINER.join(
-            "function f(/** number */ y) {",
             "  for (var x of \"abc\") { y = x; }",
             "}"));
     // should be NewTypeInference.MISTYPED_ASSIGN_RHS
@@ -697,14 +663,6 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "function f(/** number */ y) {",
             "  for (var x of iterable) { y = x; }",
             "}"));
-
-    typeCheck(
-        LINE_JOINER.join(
-            "function f(y) {",
-            "  var z = x + 234;",
-            "  for (var x of ['a', 'b']) {}",
-            "}"),
-        NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck(
         "function f(/** Array<number>? */ m) { for (var x of m); }",
