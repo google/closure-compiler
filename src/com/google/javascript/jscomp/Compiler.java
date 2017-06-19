@@ -2110,7 +2110,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     for (CompilerInput input : filteredInputs) {
       input.setCompiler(this);
-      Node root = input.getAstRoot(this);
+      // Call getAstRoot to force parsing to happen.
+      input.getAstRoot(this);
       input.getRequires();
     }
     return filteredInputs;
