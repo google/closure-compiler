@@ -597,7 +597,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         // or: false_with_sideeffects && foo() => false_with_sideeffects, foo()
         // This, combined with PeepholeRemoveDeadCode, helps reduce expressions
         // like "x() || false || z()".
-        NodeUtil.detachChildren(n, compiler);
+        n.detachChildren();
         result = IR.comma(left, right);
       }
     }
@@ -607,7 +607,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     if (result != null) {
       // Fold it!
-      NodeUtil.detachChildren(n, compiler);
+      n.detachChildren();
       parent.replaceChild(n, result);
       reportCodeChange();
 

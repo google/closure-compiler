@@ -70,21 +70,18 @@ final class RenameLabels implements CompilerPass {
   private final AbstractCompiler compiler;
   private final Supplier<String> nameSupplier;
   private final boolean removeUnused;
-  private final boolean markChanges;
 
   RenameLabels(final AbstractCompiler compiler) {
-    this(compiler, new DefaultNameSupplier(), true, true);
+    this(compiler, new DefaultNameSupplier(), true);
   }
 
   RenameLabels(
       AbstractCompiler compiler,
       Supplier<String> supplier,
-      boolean removeUnused,
-      boolean markChanges) {
+      boolean removeUnused) {
     this.compiler = compiler;
     this.nameSupplier = supplier;
     this.removeUnused = removeUnused;
-    this.markChanges = markChanges;
   }
 
   static class DefaultNameSupplier implements Supplier<String> {
@@ -111,10 +108,7 @@ final class RenameLabels implements CompilerPass {
    */
   class ProcessLabels implements ScopedCallback {
 
-    private final boolean markChanges;
-
-    ProcessLabels(boolean markChanges) {
-      this.markChanges = markChanges;
+    ProcessLabels() {
       // Create a entry for global scope.
       namespaceStack.push(new LabelNamespace());
     }
@@ -215,9 +209,7 @@ final class RenameLabels implements CompilerPass {
           if (!name.equals(newName)) {
             // Give it the short name.
             nameNode.setString(newName);
-            if (markChanges) {
-              t.reportCodeChange();
-            }
+            t.reportCodeChange();
           }
         }
       }
@@ -239,9 +231,7 @@ final class RenameLabels implements CompilerPass {
         if (!name.equals(newName)) {
           // ... and it is used, give it the short name.
           nameNode.setString(newName);
-          if (markChanges) {
-            t.reportCodeChange();
-          }
+          t.reportCodeChange();
         }
       } else {
         // ... and it is not referenced, just remove it.
@@ -251,9 +241,7 @@ final class RenameLabels implements CompilerPass {
         if (newChild.isNormalBlock()) {
           NodeUtil.tryMergeBlock(newChild);
         }
-        if (markChanges) {
-          t.reportCodeChange();
-        }
+        t.reportCodeChange();
       }
 
       // Remove the label from the current stack of labels.
@@ -281,8 +269,9 @@ final class RenameLabels implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     // Do variable reference counting.
-    NodeTraversal.traverseEs6(compiler, root, new ProcessLabels(markChanges));
+    NodeTraversal.traverseEs6(compiler, root, new ProcessLabels());
   }
+
 
   private static class LabelInfo {
     boolean referenced = false;

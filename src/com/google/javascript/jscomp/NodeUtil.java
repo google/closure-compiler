@@ -46,7 +46,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -2652,17 +2651,6 @@ public final class NodeUtil {
   }
 
   /**
-   * Removes all children from this node, isolates the children from each other and reports any
-   * nested functions as deleted.
-   */
-  public static void detachChildren(Node n, AbstractCompiler compiler) {
-    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
-      NodeUtil.markFunctionsDeleted(child, compiler);
-    }
-    n.detachChildren();
-  }
-
-  /**
    * Safely remove children while maintaining a valid node structure.
    * In some cases, this is done by removing the parent from the AST as well.
    */
@@ -4943,33 +4931,5 @@ public final class NodeUtil {
     for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
       markFunctionsDeleted(child, compiler);
     }
-  }
-
-  /** Returns the list of scope nodes which are parents of the provided list of scope nodes. */
-  public static List<Node> getParentChangeScopeNodes(List<Node> scopeNodes) {
-    Set<Node> parentScopeNodes = new LinkedHashSet<>(scopeNodes);
-    for (Node scopeNode : scopeNodes) {
-      parentScopeNodes.add(getEnclosingChangeScopeRoot(scopeNode));
-    }
-    return new ArrayList<>(parentScopeNodes);
-  }
-
-  /**
-   * Removes any scope nodes from the provided list that are nested within some other scope node
-   * also in the list. Returns the modified list.
-   */
-  public static List<Node> removeNestedChangeScopeNodes(List<Node> scopeNodes) {
-    Set<Node> uniqueScopeNodes = new LinkedHashSet<>(scopeNodes);
-    for (Node scopeNode : scopeNodes) {
-      for (Node ancestor = scopeNode.getParent();
-          ancestor != null;
-          ancestor = ancestor.getParent()) {
-        if (isChangeScopeRoot(ancestor) && uniqueScopeNodes.contains(ancestor)) {
-          uniqueScopeNodes.remove(scopeNode);
-          break;
-        }
-      }
-    }
-    return new ArrayList<>(uniqueScopeNodes);
   }
 }

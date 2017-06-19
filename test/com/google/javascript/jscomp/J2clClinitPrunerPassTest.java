@@ -21,8 +21,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new J2clClinitPrunerPass(
-        compiler, compiler.getChangedScopeNodesForPass("J2clClinitPrunerPass"));
+    return new J2clClinitPrunerPass(compiler);
   }
 
   @Override

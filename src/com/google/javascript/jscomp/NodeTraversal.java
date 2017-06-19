@@ -432,31 +432,14 @@ public class NodeTraversal {
   }
 
   /**
-   * Traverses *just* the contents of provided scope nodes (and optionally scopes nested within
-   * them) but will fall back on traversing the entire AST from root if a null scope nodes list is
-   * provided.
+   * Traverses *just* the contents of provided scope nodes (but not scopes nested within them) but
+   * will fall back on traversing the entire AST from root if a null scope nodes list is provided.
    */
   public static void traverseEs6ScopeRoots(
       AbstractCompiler compiler,
       Node root,
       List<Node> scopeNodes,
       final Callback cb,
-      final boolean traverseNested) {
-    traverseEs6ScopeRoots(compiler, root, scopeNodes, cb, null, traverseNested);
-  }
-
-  /**
-   * Traverses *just* the contents of provided scope nodes (and optionally scopes nested within
-   * them) but will fall back on traversing the entire AST from root if a null scope nodes list is
-   * provided. Also allows for a callback to notify when starting on one of the provided scope
-   * nodes.
-   */
-  public static void traverseEs6ScopeRoots(
-      AbstractCompiler compiler,
-      Node root,
-      List<Node> scopeNodes,
-      final Callback cb,
-      final FunctionCallback fcb,
       final boolean traverseNested) {
     if (scopeNodes == null) {
       NodeTraversal.traverseEs6(compiler, root, cb);
@@ -465,10 +448,6 @@ public class NodeTraversal {
           new MemoizedScopeCreator(new Es6SyntacticScopeCreator(compiler));
 
       for (final Node scopeNode : scopeNodes) {
-        if (fcb != null) {
-          fcb.enterFunction(compiler, scopeNode);
-        }
-
         Callback scb =
             new Callback() {
               @Override

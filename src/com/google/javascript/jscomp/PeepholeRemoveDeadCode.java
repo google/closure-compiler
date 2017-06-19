@@ -864,7 +864,10 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     boolean condHasSideEffects = mayHaveSideEffects(cond);
     // Must detach after checking for side effects, to ensure that the parents
     // of nodes are set correctly.
-    NodeUtil.detachChildren(n, compiler);
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+      NodeUtil.markFunctionsDeleted(child, compiler);
+    }
+    n.detachChildren();
 
     if (condHasSideEffects) {
       replacement = IR.comma(cond, branchToKeep).srcref(n);

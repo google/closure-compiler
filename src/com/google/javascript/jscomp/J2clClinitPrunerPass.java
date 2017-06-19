@@ -20,12 +20,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.base.Strings;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
-import com.google.javascript.jscomp.NodeTraversal.FunctionCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -36,11 +34,9 @@ public class J2clClinitPrunerPass implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private boolean madeChange = false;
-  private final List<Node> changedScopeNodes;
 
-  J2clClinitPrunerPass(AbstractCompiler compiler, List<Node> changedScopeNodes) {
+  J2clClinitPrunerPass(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.changedScopeNodes = changedScopeNodes;
   }
 
   @Override
@@ -49,41 +45,19 @@ public class J2clClinitPrunerPass implements CompilerPass {
       return;
     }
 
-    RedundantClinitPruner redundantClinitPruner = new RedundantClinitPruner();
-    NodeTraversal.traverseEs6ScopeRoots(
-        compiler,
-        root,
-        getNonNestedParentScopeNodes(),
-        redundantClinitPruner,
-        redundantClinitPruner, // FunctionCallback
-        true);
-    NodeTraversal.traverseEs6ScopeRoots(
-        compiler, root, changedScopeNodes, new LookAheadRedundantClinitPruner(), false);
-    NodeTraversal.traverseEs6ScopeRoots(
-        compiler, root, changedScopeNodes, new EmptyClinitPruner(), false);
+    NodeTraversal.traverseEs6(compiler, root, new RedundantClinitPruner());
+    NodeTraversal.traverseEs6(compiler, root, new LookAheadRedundantClinitPruner());
+    NodeTraversal.traverseEs6(compiler, root, new EmptyClinitPruner());
 
     if (madeChange) {
-      // This invocation is ~70% of ALL the cost of j2clOptBundlePass :(
       new PureFunctionIdentifier.Driver(compiler, null).process(externs, root);
     }
   }
 
-  private List<Node> getNonNestedParentScopeNodes() {
-    return changedScopeNodes == null
-        ? null
-        : NodeUtil.removeNestedChangeScopeNodes(
-            NodeUtil.getParentChangeScopeNodes(changedScopeNodes));
-  }
-
-  /** Removes redundant clinit calls inside method body if it is guaranteed to be called earlier. */
-  private final class RedundantClinitPruner implements Callback, FunctionCallback {
-
-    @Override
-    public void enterFunction(AbstractCompiler compiler, Node fnRoot) {
-      // Reset the clinit call tracking when starting over on a new scope.
-      clinitsCalledAtBranch = new HierarchicalSet<>(null);
-      stateStack.clear();
-    }
+  /**
+   * Removes redundant clinit calls inside method body if it is guaranteed to be called earlier.
+   */
+  private final class RedundantClinitPruner implements Callback {
 
     private final Deque<HierarchicalSet<String>> stateStack = new ArrayDeque<>();
     private HierarchicalSet<String> clinitsCalledAtBranch = new HierarchicalSet<>(null);

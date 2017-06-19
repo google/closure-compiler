@@ -78,8 +78,7 @@ class Normalize implements CompilerPass {
     NodeTraversal.traverseEs6(compiler, js,
         new Normalize.NormalizeStatements(compiler, false));
     NodeTraversal.traverseEs6(
-        compiler,
-        js,
+        compiler, js,
         new MakeDeclaredNamesUnique(
             new BoilerplateRenamer(
                 compiler.getCodingConvention(),

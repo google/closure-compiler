@@ -3116,14 +3116,11 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("j2clOptBundlePass", false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          List<Node> changedScopeNodes = compiler.getChangedScopeNodesForPass(getName());
-
-          final J2clClinitPrunerPass j2clClinitPrunerPass =
-              new J2clClinitPrunerPass(compiler, changedScopeNodes);
+          final J2clClinitPrunerPass j2clClinitPrunerPass = new J2clClinitPrunerPass(compiler);
           final J2clConstantHoisterPass j2clConstantHoisterPass =
-              new J2clConstantHoisterPass(compiler);
+              (new J2clConstantHoisterPass(compiler));
           final J2clEqualitySameRewriterPass j2clEqualitySameRewriterPass =
-              new J2clEqualitySameRewriterPass(compiler, changedScopeNodes);
+              (new J2clEqualitySameRewriterPass(compiler));
           return new CompilerPass() {
 
             @Override
