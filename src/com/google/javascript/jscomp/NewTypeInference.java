@@ -1500,6 +1500,7 @@ final class NewTypeInference implements CompilerPass {
       case BITAND:
       case BITXOR:
       case DIV:
+      case EXPONENT:
       case LSH:
       case MOD:
       case MUL:
@@ -3593,6 +3594,7 @@ final class NewTypeInference implements CompilerPass {
       case BITAND:
       case BITXOR:
       case DIV:
+      case EXPONENT:
       case LSH:
       case MOD:
       case MUL:

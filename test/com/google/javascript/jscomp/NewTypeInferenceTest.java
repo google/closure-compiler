@@ -13626,6 +13626,37 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
+  public void testExponent() {
+    typeCheck(LINE_JOINER.join(
+        "function f(/** number */ x) {",
+        "  var /** number */ n = 1 ** x;",
+        "  var /** number */ s = x ** 1;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** * */ x) {",
+        "  var /** number */ n = x ** 1;",
+        "  var /** number */ s = 1 ** x;",
+        "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE,
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Number */ x) {",
+        "  var /** number */ n = x ** 1;",
+        "  var /** number */ s = 1 ** x;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** number */ x) {",
+        "  var /** string */ s = x ** x;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        "var /** number */ n = 1 ** NaN;");
+  }
+
   public void testUndefinedFunctionCtorNoCrash() {
     typeCheckCustomExterns("", "function f(x) {}",
         GlobalTypeInfo.FUNCTION_CONSTRUCTOR_NOT_DEFINED);

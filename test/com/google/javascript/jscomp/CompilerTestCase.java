@@ -395,6 +395,7 @@ public abstract class CompilerTestCase extends TestCase {
           " * @suppress {externsValidation}",
           " */",
           "Iterable.prototype[Symbol.iterator] = function() {};",
+          "/** @type {number} */ var NaN;",
           ACTIVE_X_OBJECT_DEF);
 
   /**
