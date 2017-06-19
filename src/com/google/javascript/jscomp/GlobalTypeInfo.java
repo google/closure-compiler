@@ -325,6 +325,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   // we don't need to run GatherExternProperties, which uses the OTI-specific
   // Visitor interface.
   private final Set<String> externPropertyNames = new LinkedHashSet<>();
+  // The collection of all RawNominalTypes.
+  private Collection<RawNominalType> rawNominalTypes;
 
   GlobalTypeInfo(AbstractCompiler compiler, Set<String> unknownTypeNames) {
     // TODO(dimvar): it's bad style to refer to DiagnosticGroups after DefaultPassConfig.
@@ -511,6 +513,8 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
         (new FunctionTypeBuilder(this.commonTypes)).
         addReceiverType(globalThisType).buildDeclaration());
 
+    checkState(rawNominalTypes == null);
+    rawNominalTypes = new ArrayList<>(nominaltypesByNode.values());
     nominaltypesByNode = null;
     propertyDefs = null;
     for (NTIScope s : scopes) {
