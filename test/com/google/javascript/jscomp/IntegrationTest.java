@@ -4348,6 +4348,23 @@ public final class IntegrationTest extends IntegrationTestCase {
             + "=arguments[a];return b[0]}(8))");
   }
 
+  // TODO(bellashim): Add a non-transpiling version of this test when InlineFunctions
+  // can run in that mode.
+  public void testDefaultParameters() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    test(options,
+        LINE_JOINER.join(
+            "function foo(a, b = {foo: 5}) {",
+            "  return a + b.foo;",
+            "}",
+            "alert(foo(3, {foo: 9}));"),
+        "var a={a:9},a=void 0===a?{a:5}:a;alert(3+a.a)");
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   protected CompilerOptions createCompilerOptions() {

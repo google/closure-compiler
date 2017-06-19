@@ -57,8 +57,7 @@ class DefinitionsRemover {
       return new AssignmentDefinition(parent, isExtern);
     } else if (NodeUtil.isObjectLitKey(n)) {
       return new ObjectLiteralPropertyDefinition(parent, n, n.getFirstChild(), isExtern);
-    } else if (NodeUtil.getEnclosingType(n, Token.PARAM_LIST) != null
-        && !n.isParamList() && !n.isRest()) {
+    } else if (NodeUtil.getEnclosingType(n, Token.PARAM_LIST) != null && n.isName()) {
       Node paramList = NodeUtil.getEnclosingType(n, Token.PARAM_LIST);
       Node function = paramList.getParent();
       return new FunctionArgumentDefinition(function, n, isExtern);

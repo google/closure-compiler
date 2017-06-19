@@ -42,7 +42,9 @@ class FunctionArgumentInjector {
   // identifier can be used, so we use "this".
   static final String THIS_MARKER = "this";
 
-  static final String REST_MARKER = "REST";
+  static final String REST_MARKER = "rest param";
+
+  static final String DEFAULT_MARKER = "Default Value";
 
   private FunctionArgumentInjector() {
     // A private constructor to prevent instantiation.
@@ -138,15 +140,21 @@ class FunctionArgumentInjector {
             cArg = cArg.getNext();
           }
           argMap.put(fnParam.getFirstChild().getString(), array);
+          return argMap;
+        } else if (fnParam.isDefaultValue()) {
+          argMap.put(fnParam.getFirstChild().getString(), cArg);
         } else {
           argMap.put(fnParam.getString(), cArg);
-          cArg = cArg.getNext();
         }
+        cArg = cArg.getNext();
       } else {
         if (fnParam.isRest()) {
           //No arguments for REST parameters
           Node array = IR.arraylit();
           argMap.put(fnParam.getFirstChild().getString(), array);
+        } else if (fnParam.isDefaultValue()) {
+          Node defaultValue = fnParam.getSecondChild().cloneTree();
+          argMap.put(fnParam.getFirstChild().getString(), defaultValue);
         } else {
           Node srcLocation = callNode;
           argMap.put(fnParam.getString(), NodeUtil.newUndefinedNode(srcLocation));
@@ -158,7 +166,7 @@ class FunctionArgumentInjector {
     // called function.
     while (cArg != null) {
       String uniquePlaceholder =
-        getUniqueAnonymousParameterName(safeNameIdSupplier);
+          getUniqueAnonymousParameterName(safeNameIdSupplier);
       argMap.put(uniquePlaceholder, cArg);
       cArg = cArg.getNext();
     }
@@ -571,6 +579,8 @@ class FunctionArgumentInjector {
     for (Node n : NodeUtil.getFunctionParameters(fnNode).children()) {
       if (n.isRest()){
         set.add(REST_MARKER);
+      } else if (n.isDefaultValue()){
+        set.add(DEFAULT_MARKER);
       } else {
         set.add(n.getString());
       }
