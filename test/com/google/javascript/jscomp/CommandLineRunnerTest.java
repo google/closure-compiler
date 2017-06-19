@@ -1666,6 +1666,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--process_common_js_modules");
     args.add("--entry_point=app");
     args.add("--dependency_mode=STRICT");
+    args.add("--module_resolution=NODE");
     setFilename(0, "base.js");
     setFilename(1, "array.js");
     setFilename(2, "Baz.js");
@@ -1725,6 +1726,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--process_common_js_modules");
     args.add("--dependency_mode=LOOSE");
     args.add("--entry_point=app");
+    args.add("--module_resolution=NODE");
     setFilename(0, "base.js");
     setFilename(1, "array.js");
     setFilename(2, "Baz.js");
@@ -1781,6 +1783,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--entry_point=app");
     args.add("--dependency_mode=STRICT");
     args.add("--language_in=ECMASCRIPT6");
+    args.add("--module_resolution=NODE");
     setFilename(0, "foo.js");
     setFilename(1, "app.js");
     test(
@@ -1809,6 +1812,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--entry_point=app");
     args.add("--dependency_mode=STRICT");
     args.add("--language_in=ECMASCRIPT6");
+    args.add("--module_resolution=NODE");
     setFilename(0, "foo.js");
     setFilename(1, "app.js");
     test(
@@ -1840,7 +1844,7 @@ public final class CommandLineRunnerTest extends TestCase {
     test(
         new String[] {
           CompilerTestCase.LINE_JOINER.join("function foo() { alert('foo'); }", "foo();"),
-          "import './foo';"
+          "import './foo.js';"
         },
         new String[] {
           CompilerTestCase.LINE_JOINER.join(
@@ -1856,6 +1860,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--dependency_mode=STRICT");
     args.add("--entry_point='./app.js'");
     args.add("--language_in=ECMASCRIPT6");
+    args.add("--module_resolution=NODE");
     setFilename(0, "foo.js");
     setFilename(1, "app.js");
     test(
