@@ -27,6 +27,7 @@ import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.Compiler.ExternalSourceLoader;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -136,7 +137,7 @@ public final class CompilerTest extends TestCase {
     JSError[] warnings = manager.getWarnings();
     assertThat(warnings).hasLength(1);
     String error = warnings[0].toString();
-    assertThat(error).contains("Failed to load module \"missing.js\" at /gin.js");
+    assertThat(error).contains("Failed to load module \"missing\" at /gin.js");
   }
 
   private static String normalize(String path) {
@@ -240,6 +241,7 @@ public final class CompilerTest extends TestCase {
     options.dependencyOptions.setMoocherDropping(true);
     options.dependencyOptions.setEntryPoints(entryPoints);
     options.setProcessCommonJSModules(true);
+    options.setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
     Compiler compiler = new Compiler();
     compiler.init(new ArrayList<SourceFile>(), inputs, options);
     compiler.parseInputs();
