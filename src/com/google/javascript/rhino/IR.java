@@ -38,6 +38,8 @@
 
 package com.google.javascript.rhino;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import java.util.List;
 
@@ -54,11 +56,11 @@ public class IR {
   }
 
   public static Node importNode(Node name, Node importSpecs, Node moduleIdentifier) {
-    Preconditions.checkState(name.isName() || name.isEmpty(), name);
-    Preconditions.checkState(
+    checkState(name.isName() || name.isEmpty(), name);
+    checkState(
         importSpecs.isImportSpec() || importSpecs.isImportStar() || importSpecs.isEmpty(),
         importSpecs);
-    Preconditions.checkState(moduleIdentifier.isString(), moduleIdentifier);
+    checkState(moduleIdentifier.isString(), moduleIdentifier);
     return new Node(Token.IMPORT, name, importSpecs, moduleIdentifier);
   }
 
@@ -67,16 +69,16 @@ public class IR {
   }
 
   public static Node function(Node name, Node params, Node body) {
-    Preconditions.checkState(name.isName());
-    Preconditions.checkState(params.isParamList());
-    Preconditions.checkState(body.isNormalBlock());
+    checkState(name.isName());
+    checkState(params.isParamList());
+    checkState(body.isNormalBlock());
     return new Node(Token.FUNCTION, name, params, body);
   }
 
   public static Node arrowFunction(Node name, Node params, Node body) {
-    Preconditions.checkState(name.isName());
-    Preconditions.checkState(params.isParamList());
-    Preconditions.checkState(body.isNormalBlock() || mayBeExpression(body));
+    checkState(name.isName());
+    checkState(params.isParamList());
+    checkState(body.isNormalBlock() || mayBeExpression(body));
     Node func = new Node(Token.FUNCTION, name, params, body);
     func.setIsArrowFunction(true);
     return func;
@@ -87,14 +89,14 @@ public class IR {
   }
 
   public static Node paramList(Node param) {
-    Preconditions.checkState(param.isName() || param.isRest());
+    checkState(param.isName() || param.isRest());
     return new Node(Token.PARAM_LIST, param);
   }
 
   public static Node paramList(Node... params) {
     Node paramList = paramList();
     for (Node param : params) {
-      Preconditions.checkState(param.isName() || param.isRest());
+      checkState(param.isName() || param.isRest());
       paramList.addChildToBack(param);
     }
     return paramList;
@@ -103,7 +105,7 @@ public class IR {
   public static Node root(Node ... rootChildren) {
     Node root = new Node(Token.ROOT);
     for (Node child : rootChildren) {
-      Preconditions.checkState(child.getToken() == Token.ROOT || child.getToken() == Token.SCRIPT);
+      checkState(child.getToken() == Token.ROOT || child.getToken() == Token.SCRIPT);
       root.addChildToBack(child);
     }
     return root;
@@ -115,7 +117,7 @@ public class IR {
   }
 
   public static Node block(Node stmt) {
-    Preconditions.checkState(mayBeStatement(stmt));
+    checkState(mayBeStatement(stmt));
     Node block = new Node(Token.BLOCK, stmt);
     return block;
   }
@@ -123,7 +125,7 @@ public class IR {
   public static Node block(Node ... stmts) {
     Node block = block();
     for (Node stmt : stmts) {
-      Preconditions.checkState(mayBeStatement(stmt));
+      checkState(mayBeStatement(stmt));
       block.addChildToBack(stmt);
     }
     return block;
@@ -132,7 +134,7 @@ public class IR {
   public static Node block(List<Node> stmts) {
     Node paramList = block();
     for (Node stmt : stmts) {
-      Preconditions.checkState(mayBeStatement(stmt));
+      checkState(mayBeStatement(stmt));
       paramList.addChildToBack(stmt);
     }
     return paramList;
@@ -151,7 +153,7 @@ public class IR {
   public static Node script(Node ... stmts) {
     Node block = script();
     for (Node stmt : stmts) {
-      Preconditions.checkState(mayBeStatementNoReturn(stmt));
+      checkState(mayBeStatementNoReturn(stmt));
       block.addChildToBack(stmt);
     }
     return block;
@@ -160,7 +162,7 @@ public class IR {
   public static Node script(List<Node> stmts) {
     Node paramList = script();
     for (Node stmt : stmts) {
-      Preconditions.checkState(mayBeStatementNoReturn(stmt));
+      checkState(mayBeStatementNoReturn(stmt));
       paramList.addChildToBack(stmt);
     }
     return paramList;
@@ -183,9 +185,7 @@ public class IR {
   }
 
   public static Node declaration(Node lhs, Token type) {
-    Preconditions.checkState(
-        lhs.isName() || lhs.isDestructuringPattern() || lhs.isDestructuringLhs(),
-        lhs);
+    checkState(lhs.isName() || lhs.isDestructuringPattern() || lhs.isDestructuringLhs(), lhs);
     if (lhs.isDestructuringPattern()) {
       lhs = new Node(Token.DESTRUCTURING_LHS, lhs);
     }
@@ -194,9 +194,9 @@ public class IR {
 
   public static Node declaration(Node lhs, Node value, Token type) {
     if (lhs.isName()) {
-      Preconditions.checkState(!lhs.hasChildren());
+      checkState(!lhs.hasChildren());
     } else {
-      Preconditions.checkState(lhs.isArrayPattern() || lhs.isObjectPattern());
+      checkState(lhs.isArrayPattern() || lhs.isObjectPattern());
       lhs = new Node(Token.DESTRUCTURING_LHS, lhs);
     }
     Preconditions.checkState(mayBeExpression(value),
@@ -211,7 +211,7 @@ public class IR {
   }
 
   public static Node returnNode(Node expr) {
-    Preconditions.checkState(mayBeExpression(expr));
+    checkState(mayBeExpression(expr));
     return new Node(Token.RETURN, expr);
   }
 
@@ -220,126 +220,126 @@ public class IR {
   }
 
   public static Node await(Node expr) {
-    Preconditions.checkState(mayBeExpression(expr));
+    checkState(mayBeExpression(expr));
     return new Node(Token.AWAIT, expr);
   }
 
   public static Node yield(Node expr) {
-    Preconditions.checkState(mayBeExpression(expr));
+    checkState(mayBeExpression(expr));
     return new Node(Token.YIELD, expr);
   }
 
   public static Node throwNode(Node expr) {
-    Preconditions.checkState(mayBeExpression(expr));
+    checkState(mayBeExpression(expr));
     return new Node(Token.THROW, expr);
   }
 
   public static Node exprResult(Node expr) {
-    Preconditions.checkState(mayBeExpression(expr), expr);
+    checkState(mayBeExpression(expr), expr);
     return new Node(Token.EXPR_RESULT, expr);
   }
 
   public static Node ifNode(Node cond, Node then) {
-    Preconditions.checkState(mayBeExpression(cond));
-    Preconditions.checkState(then.isNormalBlock());
+    checkState(mayBeExpression(cond));
+    checkState(then.isNormalBlock());
     return new Node(Token.IF, cond, then);
   }
 
   public static Node ifNode(Node cond, Node then, Node elseNode) {
-    Preconditions.checkState(mayBeExpression(cond));
-    Preconditions.checkState(then.isNormalBlock());
-    Preconditions.checkState(elseNode.isNormalBlock());
+    checkState(mayBeExpression(cond));
+    checkState(then.isNormalBlock());
+    checkState(elseNode.isNormalBlock());
     return new Node(Token.IF, cond, then, elseNode);
   }
 
   public static Node doNode(Node body, Node cond) {
-    Preconditions.checkState(body.isNormalBlock());
-    Preconditions.checkState(mayBeExpression(cond));
+    checkState(body.isNormalBlock());
+    checkState(mayBeExpression(cond));
     return new Node(Token.DO, body, cond);
   }
 
   public static Node whileNode(Node cond, Node body) {
-    Preconditions.checkState(body.isNormalBlock());
-    Preconditions.checkState(mayBeExpression(cond));
+    checkState(body.isNormalBlock());
+    checkState(mayBeExpression(cond));
     return new Node(Token.WHILE, cond, body);
   }
 
   public static Node forIn(Node target, Node cond, Node body) {
-    Preconditions.checkState(target.isVar() || mayBeExpression(target));
-    Preconditions.checkState(mayBeExpression(cond));
-    Preconditions.checkState(body.isNormalBlock());
+    checkState(target.isVar() || mayBeExpression(target));
+    checkState(mayBeExpression(cond));
+    checkState(body.isNormalBlock());
     return new Node(Token.FOR_IN, target, cond, body);
   }
 
   public static Node forNode(Node init, Node cond, Node incr, Node body) {
-    Preconditions.checkState(init.isVar() || mayBeExpressionOrEmpty(init));
-    Preconditions.checkState(mayBeExpressionOrEmpty(cond));
-    Preconditions.checkState(mayBeExpressionOrEmpty(incr));
-    Preconditions.checkState(body.isNormalBlock());
+    checkState(init.isVar() || mayBeExpressionOrEmpty(init));
+    checkState(mayBeExpressionOrEmpty(cond));
+    checkState(mayBeExpressionOrEmpty(incr));
+    checkState(body.isNormalBlock());
     return new Node(Token.FOR, init, cond, incr, body);
   }
 
   public static Node switchNode(Node cond, Node ... cases) {
-    Preconditions.checkState(mayBeExpression(cond));
+    checkState(mayBeExpression(cond));
     Node switchNode = new Node(Token.SWITCH, cond);
     for (Node caseNode : cases) {
-      Preconditions.checkState(caseNode.isCase() || caseNode.isDefaultCase());
+      checkState(caseNode.isCase() || caseNode.isDefaultCase());
       switchNode.addChildToBack(caseNode);
     }
     return switchNode;
   }
 
   public static Node caseNode(Node expr, Node body) {
-    Preconditions.checkState(mayBeExpression(expr));
-    Preconditions.checkState(body.isNormalBlock());
+    checkState(mayBeExpression(expr));
+    checkState(body.isNormalBlock());
     body.setIsAddedBlock(true);
     return new Node(Token.CASE, expr, body);
   }
 
   public static Node defaultCase(Node body) {
-    Preconditions.checkState(body.isNormalBlock());
+    checkState(body.isNormalBlock());
     body.setIsAddedBlock(true);
     return new Node(Token.DEFAULT_CASE, body);
   }
 
   public static Node label(Node name, Node stmt) {
     // TODO(johnlenz): additional validation here.
-    Preconditions.checkState(name.isLabelName());
-    Preconditions.checkState(mayBeStatement(stmt));
+    checkState(name.isLabelName());
+    checkState(mayBeStatement(stmt));
     Node block = new Node(Token.LABEL, name, stmt);
     return block;
   }
 
   public static Node labelName(String name) {
-    Preconditions.checkState(!name.isEmpty());
+    checkState(!name.isEmpty());
     return Node.newString(Token.LABEL_NAME, name);
   }
 
   public static Node tryFinally(Node tryBody, Node finallyBody) {
-    Preconditions.checkState(tryBody.isNormalBlock());
-    Preconditions.checkState(finallyBody.isNormalBlock());
+    checkState(tryBody.isNormalBlock());
+    checkState(finallyBody.isNormalBlock());
     Node catchBody = block().useSourceInfoIfMissingFrom(tryBody);
     return new Node(Token.TRY, tryBody, catchBody, finallyBody);
   }
 
   public static Node tryCatch(Node tryBody, Node catchNode) {
-    Preconditions.checkState(tryBody.isNormalBlock());
-    Preconditions.checkState(catchNode.isCatch());
+    checkState(tryBody.isNormalBlock());
+    checkState(catchNode.isCatch());
     Node catchBody = blockUnchecked(catchNode).useSourceInfoIfMissingFrom(catchNode);
     return new Node(Token.TRY, tryBody, catchBody);
   }
 
   public static Node tryCatchFinally(
       Node tryBody, Node catchNode, Node finallyBody) {
-    Preconditions.checkState(finallyBody.isNormalBlock());
+    checkState(finallyBody.isNormalBlock());
     Node tryNode = tryCatch(tryBody, catchNode);
     tryNode.addChildToBack(finallyBody);
     return tryNode;
   }
 
   public static Node catchNode(Node expr, Node body) {
-    Preconditions.checkState(expr.isName());
-    Preconditions.checkState(body.isNormalBlock());
+    checkState(expr.isName());
+    checkState(body.isNormalBlock());
     return new Node(Token.CATCH, expr, body);
   }
 
@@ -349,7 +349,7 @@ public class IR {
 
   public static Node breakNode(Node name) {
     // TODO(johnlenz): additional validation here.
-    Preconditions.checkState(name.isLabelName());
+    checkState(name.isLabelName());
     return new Node(Token.BREAK, name);
   }
 
@@ -359,14 +359,14 @@ public class IR {
 
   public static Node continueNode(Node name) {
     // TODO(johnlenz): additional validation here.
-    Preconditions.checkState(name.isLabelName());
+    checkState(name.isLabelName());
     return new Node(Token.CONTINUE, name);
   }
 
   public static Node call(Node target, Node ... args) {
     Node call = new Node(Token.CALL, target);
     for (Node arg : args) {
-      Preconditions.checkState(mayBeExpression(arg), arg);
+      checkState(mayBeExpression(arg), arg);
       call.addChildToBack(arg);
     }
     return call;
@@ -375,7 +375,7 @@ public class IR {
   public static Node newNode(Node target, Node ... args) {
     Node newcall = new Node(Token.NEW, target);
     for (Node arg : args) {
-      Preconditions.checkState(mayBeExpression(arg));
+      checkState(mayBeExpression(arg));
       newcall.addChildToBack(arg);
     }
     return newcall;
@@ -388,24 +388,24 @@ public class IR {
   }
 
   public static Node getprop(Node target, Node prop) {
-    Preconditions.checkState(mayBeExpression(target));
-    Preconditions.checkState(prop.isString());
+    checkState(mayBeExpression(target));
+    checkState(prop.isString());
     return new Node(Token.GETPROP, target, prop);
   }
 
   public static Node getprop(Node target, Node prop, Node ...moreProps) {
-    Preconditions.checkState(mayBeExpression(target));
-    Preconditions.checkState(prop.isString());
+    checkState(mayBeExpression(target));
+    checkState(prop.isString());
     Node result = new Node(Token.GETPROP, target, prop);
     for (Node moreProp : moreProps) {
-      Preconditions.checkState(moreProp.isString());
+      checkState(moreProp.isString());
       result = new Node(Token.GETPROP, result, moreProp);
     }
     return result;
   }
 
   public static Node getprop(Node target, String prop, String ...moreProps) {
-    Preconditions.checkState(mayBeExpression(target));
+    checkState(mayBeExpression(target));
     Node result = new Node(Token.GETPROP, target, IR.string(prop));
     for (String moreProp : moreProps) {
       result = new Node(Token.GETPROP, result, IR.string(moreProp));
@@ -414,21 +414,21 @@ public class IR {
   }
 
   public static Node getelem(Node target, Node elem) {
-    Preconditions.checkState(mayBeExpression(target));
-    Preconditions.checkState(mayBeExpression(elem));
+    checkState(mayBeExpression(target));
+    checkState(mayBeExpression(elem));
     return new Node(Token.GETELEM, target, elem);
   }
 
   public static Node assign(Node target, Node expr) {
-    Preconditions.checkState(target.isValidAssignmentTarget(), target);
-    Preconditions.checkState(mayBeExpression(expr), expr);
+    checkState(target.isValidAssignmentTarget(), target);
+    checkState(mayBeExpression(expr), expr);
     return new Node(Token.ASSIGN, target, expr);
   }
 
   public static Node hook(Node cond, Node trueval, Node falseval) {
-    Preconditions.checkState(mayBeExpression(cond));
-    Preconditions.checkState(mayBeExpression(trueval));
-    Preconditions.checkState(mayBeExpression(falseval));
+    checkState(mayBeExpression(cond));
+    checkState(mayBeExpression(trueval));
+    checkState(mayBeExpression(falseval));
     return new Node(Token.HOOK, cond, trueval, falseval);
   }
 
@@ -531,13 +531,13 @@ public class IR {
   public static Node objectlit(Node ... propdefs) {
     Node objectlit = new Node(Token.OBJECTLIT);
     for (Node propdef : propdefs) {
-      Preconditions.checkState(
+      checkState(
           propdef.isStringKey()
               || propdef.isMemberFunctionDef()
               || propdef.isGetterDef()
               || propdef.isSetterDef());
       if (!propdef.isStringKey()) {
-        Preconditions.checkState(propdef.hasOneChild());
+        checkState(propdef.hasOneChild());
       }
       objectlit.addChildToBack(propdef);
     }
@@ -545,17 +545,17 @@ public class IR {
   }
 
   public static Node computedProp(Node key, Node value) {
-    Preconditions.checkState(mayBeExpression(key), key);
-    Preconditions.checkState(mayBeExpression(value), value);
+    checkState(mayBeExpression(key), key);
+    checkState(mayBeExpression(value), value);
     return new Node(Token.COMPUTED_PROP, key, value);
   }
 
   // TODO(johnlenz): quoted props
 
   public static Node propdef(Node string, Node value) {
-    Preconditions.checkState(string.isStringKey());
-    Preconditions.checkState(!string.hasChildren());
-    Preconditions.checkState(mayBeExpression(value));
+    checkState(string.isStringKey());
+    checkState(!string.hasChildren());
+    checkState(mayBeExpression(value));
     string.addChildToFront(value);
     return string;
   }
@@ -563,20 +563,20 @@ public class IR {
   public static Node arraylit(Node ... exprs) {
     Node arraylit = new Node(Token.ARRAYLIT);
     for (Node expr : exprs) {
-      Preconditions.checkState(mayBeExpressionOrEmpty(expr));
+      checkState(mayBeExpressionOrEmpty(expr));
       arraylit.addChildToBack(expr);
     }
     return arraylit;
   }
 
   public static Node regexp(Node expr) {
-    Preconditions.checkState(expr.isString());
+    checkState(expr.isString());
     return new Node(Token.REGEXP, expr);
   }
 
   public static Node regexp(Node expr, Node flags) {
-    Preconditions.checkState(expr.isString());
-    Preconditions.checkState(flags.isString());
+    checkState(expr.isString());
+    checkState(flags.isString());
     return new Node(Token.REGEXP, expr, flags);
   }
 
@@ -589,7 +589,7 @@ public class IR {
   }
 
   public static Node stringKey(String s, Node value) {
-    Preconditions.checkState(mayBeExpression(value));
+    checkState(mayBeExpression(value));
     Node stringKey = stringKey(s);
     stringKey.addChildToFront(value);
     return stringKey;
@@ -600,7 +600,7 @@ public class IR {
   }
 
   public static Node spread(Node expr) {
-    Preconditions.checkState(mayBeExpression(expr));
+    checkState(mayBeExpression(expr));
     return new Node(Token.SPREAD, expr);
   }
 
@@ -609,7 +609,7 @@ public class IR {
   }
 
   public static Node memberFunctionDef(String name, Node function) {
-    Preconditions.checkState(function.isFunction());
+    checkState(function.isFunction());
     Node member = Node.newString(Token.MEMBER_FUNCTION_DEF, name);
     member.addChildToBack(function);
     return member;
@@ -638,13 +638,13 @@ public class IR {
   // helper methods
 
   private static Node binaryOp(Token token, Node expr1, Node expr2) {
-    Preconditions.checkState(mayBeExpression(expr1), expr1);
-    Preconditions.checkState(mayBeExpression(expr2), expr2);
+    checkState(mayBeExpression(expr1), expr1);
+    checkState(mayBeExpression(expr2), expr2);
     return new Node(token, expr1, expr2);
   }
 
   private static Node unaryOp(Token token, Node expr) {
-    Preconditions.checkState(mayBeExpression(expr));
+    checkState(mayBeExpression(expr));
     return new Node(token, expr);
   }
 

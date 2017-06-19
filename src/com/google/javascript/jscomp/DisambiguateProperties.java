@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
@@ -147,7 +146,7 @@ class DisambiguateProperties implements CompilerPass {
       m = new IdentityHashMap<>();
       gtwpCache.put(field, m);
     }
-    Preconditions.checkState(null == m.put(type, top));
+    checkState(null == m.put(type, top));
   }
 
   private class Property {
@@ -346,8 +345,7 @@ class DisambiguateProperties implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    Preconditions.checkState(
-        compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
+    checkState(compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
     this.ancestorInterfaces = new HashMap<>();
     this.gtwpCache = new HashMap<>();
     // TypeValidator records places where a type A is used in a context that

@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -61,7 +63,7 @@ class MinimizedCondition {
    * minimization.
    */
   static MinimizedCondition fromConditionNode(Node n) {
-    Preconditions.checkState(n.getParent() != null);
+    checkState(n.getParent() != null);
     switch (n.getToken()) {
       case NOT:
       case AND:
@@ -116,7 +118,7 @@ class MinimizedCondition {
    * @return a MinimizedCondition object representing that tree.
    */
   static MinimizedCondition unoptimized(Node n) {
-    Preconditions.checkNotNull(n.getParent());
+    checkNotNull(n.getParent());
     MeasuredNode pos = new MeasuredNode(n, null, 0, false);
     MeasuredNode neg = new MeasuredNode(null, null, Integer.MAX_VALUE, true);
     return new MinimizedCondition(pos, neg);
@@ -232,7 +234,7 @@ class MinimizedCondition {
     }
 
     MeasuredNode withoutNot() {
-      Preconditions.checkState(this.isNot());
+      checkState(this.isNot());
       return (normalizeChildren(node, children)[0]).change();
     }
 
@@ -341,7 +343,7 @@ class MinimizedCondition {
      * replacement of the original node.
      */
     public boolean willChange(Node original) {
-      Preconditions.checkNotNull(original);
+      checkNotNull(original);
       return original != this.node || this.isChanged();
     }
 
@@ -351,8 +353,8 @@ class MinimizedCondition {
      * replacement of the original node.
      */
     public Node applyTo(Node original) {
-      Preconditions.checkNotNull(original);
-      Preconditions.checkState(willChange(original));
+      checkNotNull(original);
+      checkState(willChange(original));
       Node replacement = buildReplacement();
       if (original != replacement) {
         safeDetach(replacement);

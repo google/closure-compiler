@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
@@ -159,7 +160,7 @@ final class RenameLabels implements CompilerPass {
 
         // Store the context for this label name.
         LabelInfo li = new LabelInfo(currentDepth);
-        Preconditions.checkState(!current.renameMap.containsKey(name));
+        checkState(!current.renameMap.containsKey(name));
         current.renameMap.put(name, li);
 
         // Create a new name, if needed, for this depth.
@@ -205,7 +206,7 @@ final class RenameLabels implements CompilerPass {
       if (nameNode != null) {
         // This is a named break or continue;
         String name = nameNode.getString();
-        Preconditions.checkState(!name.isEmpty());
+        checkState(!name.isEmpty());
         LabelInfo li = getLabelInfo(name);
         if (li != null) {
           String newName = getNameForId(li.id);
@@ -229,7 +230,7 @@ final class RenameLabels implements CompilerPass {
      */
     private void visitLabel(NodeTraversal t, Node node, Node parent) {
       Node nameNode = node.getFirstChild();
-      Preconditions.checkState(nameNode != null);
+      checkState(nameNode != null);
       String name = nameNode.getString();
       LabelInfo li = getLabelInfo(name);
       // This is a label...

@@ -15,7 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.FunctionTypeI;
@@ -196,14 +198,14 @@ final class InlineProperties implements CompilerPass {
       }
 
       if (invalidatingPropRef) {
-        Preconditions.checkNotNull(propName);
+        checkNotNull(propName);
         invalidateProperty(propName);
       }
     }
 
     /** @return Whether this is a valid definition for a candidate property. */
     private boolean isValidCandidateDefinition(NodeTraversal t, Node n, Node parent) {
-      Preconditions.checkState(n.isGetProp() && parent.isAssign(), n);
+      checkState(n.isGetProp() && parent.isAssign(), n);
       Node src = n.getFirstChild();
       String propName = n.getLastChild().getString();
 
@@ -254,7 +256,7 @@ final class InlineProperties implements CompilerPass {
      * invalidated. Returns true if the property was successfully added.
      */
     private boolean maybeStoreCandidateValue(TypeI type, String propName, Node value) {
-      Preconditions.checkNotNull(value);
+      checkNotNull(value);
       if (!props.containsKey(propName)
           && !isInvalidatingType(type)
           && NodeUtil.isImmutableValue(value)

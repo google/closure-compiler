@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -82,18 +84,18 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
    *     pass introduces
    */
   OptimizeArgumentsArray(AbstractCompiler compiler, String paramPrefix) {
-    this.compiler = Preconditions.checkNotNull(compiler);
-    this.paramPrefix = Preconditions.checkNotNull(paramPrefix);
+    this.compiler = checkNotNull(compiler);
+    this.paramPrefix = checkNotNull(paramPrefix);
   }
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, Preconditions.checkNotNull(root), this);
+    NodeTraversal.traverseEs6(compiler, checkNotNull(root), this);
   }
 
   @Override
   public void enterScope(NodeTraversal traversal) {
-    Preconditions.checkNotNull(traversal);
+    checkNotNull(traversal);
 
     // This optimization is valid only within a function so we are going to
     // skip over the initial entry to the global scope.
@@ -112,7 +114,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
 
   @Override
   public void exitScope(NodeTraversal traversal) {
-    Preconditions.checkNotNull(traversal);
+    checkNotNull(traversal);
 
     // This is the case when we are exiting the global scope where we had never
     // collected argument access list. Since we do not perform this optimization
@@ -153,9 +155,8 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
 
   @Override
   public void visit(NodeTraversal traversal, Node node, Node parent) {
-    Preconditions.checkNotNull(traversal);
-    Preconditions.checkNotNull(node);
-
+    checkNotNull(traversal);
+    checkNotNull(node);
 
     // Searches for all the references to the arguments array.
 
@@ -183,7 +184,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
   private boolean tryReplaceArguments(Scope scope) {
 
     Node parametersList = scope.getRootNode().getSecondChild();
-    Preconditions.checkState(parametersList.isParamList());
+    checkState(parametersList.isParamList());
 
     // Keep track of rather this function modified the AST and needs to be
     // reported back to the compiler later.

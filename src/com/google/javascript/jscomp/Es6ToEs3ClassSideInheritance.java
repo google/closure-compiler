@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -170,7 +172,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
   private void copyDeclarations(
       JavascriptClass superClass, JavascriptClass subClass, Node inheritsCall) {
     for (Node staticGetProp : superClass.staticFieldAccess) {
-      Preconditions.checkState(staticGetProp.isGetProp());
+      checkState(staticGetProp.isGetProp());
       String memberName = staticGetProp.getLastChild().getString();
       // We only copy declarations that have corresponding Object.defineProperties
       if (!superClass.definedProperties.contains(memberName)) {
@@ -205,7 +207,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
   private void copyStaticMembers(
       JavascriptClass superClass, JavascriptClass subClass, Node inheritsCall) {
     for (Node staticMember : superClass.staticMembers) {
-      Preconditions.checkState(staticMember.isAssign(), staticMember);
+      checkState(staticMember.isAssign(), staticMember);
       String memberName = staticMember.getFirstChild().getLastChild().getString();
       if (superClass.definedProperties.contains(memberName)) {
         continue;
@@ -219,7 +221,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
       if (function.isFunction()) {
         sourceInfoNode = function.getFirstChild();
         Node params = NodeUtil.getFunctionParameters(function);
-        Preconditions.checkState(params.isParamList(), params);
+        checkState(params.isParamList(), params);
         for (Node param : params.children()) {
           if (param.getJSDocInfo() != null) {
             String name = param.getString();
@@ -249,7 +251,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
 
   private boolean isOverriden(JavascriptClass subClass, String memberName) {
     for (Node subclassMember : subClass.staticMembers) {
-      Preconditions.checkState(subclassMember.isAssign(), subclassMember);
+      checkState(subclassMember.isAssign(), subclassMember);
       if (subclassMember.getFirstChild().getLastChild().getString().equals(memberName)) {
         // This subclass overrides the static method, so there is no need to copy the
         // method from the base class.
@@ -333,7 +335,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
     }
 
     private void setAlias(String original, String alias) {
-      Preconditions.checkArgument(classByAlias.containsKey(original));
+      checkArgument(classByAlias.containsKey(original));
       classByAlias.put(alias, classByAlias.get(original));
     }
 

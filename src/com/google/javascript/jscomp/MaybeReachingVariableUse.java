@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -295,7 +297,7 @@ class MaybeReachingVariableUse extends
    */
   Collection<Node> getUses(String name, Node defNode) {
     GraphNode<Node, Branch> n = getCfg().getNode(defNode);
-    Preconditions.checkNotNull(n);
+    checkNotNull(n);
     FlowState<ReachingUses> state = n.getAnnotation();
     return state.getOut().mayUseMap.get(jsScope.getVar(name));
   }

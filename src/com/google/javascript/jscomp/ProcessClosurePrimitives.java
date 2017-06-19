@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -231,7 +235,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    */
   private void replaceGoogDefines(Node n) {
     Node parent = n.getParent();
-    Preconditions.checkState(parent.isExprResult());
+    checkState(parent.isExprResult());
     String name = n.getSecondChild().getString();
     Node value = n.isFromExterns() ? null : n.getChildAtIndex(2).detach();
 
@@ -426,7 +430,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         JSModule providedModule = provided.explicitModule;
 
         if (!provided.isFromExterns()) {
-          Preconditions.checkNotNull(providedModule, n);
+          checkNotNull(providedModule, n);
 
           JSModule module = t.getModule();
           if (moduleGraph != null
@@ -458,7 +462,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
    * Handles a goog.provide call.
    */
   private void processProvideCall(NodeTraversal t, Node n, Node parent) {
-    Preconditions.checkState(n.isCall());
+    checkState(n.isCall());
     Node left = n.getFirstChild();
     Node arg = left.getNext();
     if (verifyProvide(t, left, arg)) {
@@ -1292,8 +1296,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
      */
     void addProvide(Node node, JSModule module, boolean explicit) {
       if (explicit) {
-        Preconditions.checkState(explicitNode == null);
-        Preconditions.checkArgument(node.isExprResult());
+        checkState(explicitNode == null);
+        checkArgument(node.isExprResult());
         explicitNode = node;
         explicitModule = module;
       }
@@ -1319,7 +1323,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
           node.isExprResult() // assign
               || node.isFunction()
               || NodeUtil.isNameDeclaration(node));
-      Preconditions.checkArgument(explicitNode != node);
+      checkArgument(explicitNode != node);
       if ((candidateDefinition == null) || !node.isExprResult()) {
         candidateDefinition = node;
         updateMinimumModule(module);
@@ -1335,8 +1339,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       } else {
         // If there is no module graph, then there must be exactly one
         // module in the program.
-        Preconditions.checkState(newModule == minimumModule,
-                                 "Missing module graph");
+        checkState(newModule == minimumModule, "Missing module graph");
       }
     }
 
@@ -1419,8 +1422,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
             // Add it after the parent namespace.
             ProvidedName parentName =
                 providedNames.get(namespace.substring(0, indexOfDot));
-            Preconditions.checkNotNull(parentName);
-            Preconditions.checkNotNull(parentName.replacementNode);
+            checkNotNull(parentName);
+            checkNotNull(parentName.replacementNode);
             parentName.replacementNode.getParent().addChildAfter(
                 replacementNode, parentName.replacementNode);
           }
@@ -1474,7 +1477,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
         decl.setJSDocInfo(NodeUtil.createConstantJsDoc());
       }
 
-      Preconditions.checkState(isNamespacePlaceholder(decl));
+      checkState(isNamespacePlaceholder(decl));
       setSourceInfo(decl);
       return decl;
     }
@@ -1507,7 +1510,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       if (candidateDefinition == null) {
         decl.getFirstChild().setJSDocInfo(NodeUtil.createConstantJsDoc());
       }
-      Preconditions.checkState(isNamespacePlaceholder(decl));
+      checkState(isNamespacePlaceholder(decl));
       setSourceInfo(decl);
       return decl;
     }

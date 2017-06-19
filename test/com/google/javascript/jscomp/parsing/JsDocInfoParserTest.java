@@ -16,11 +16,11 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.SourceFile;
@@ -4238,9 +4238,9 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "   */\n" +
         "  function f(x) {}");
     Node script = parseFull(sourceFile.getCode());
-    Preconditions.checkState(script.isScript());
+    checkState(script.isScript());
     Node fn = script.getFirstChild();
-    Preconditions.checkState(fn.isFunction());
+    checkState(fn.isFunction());
     JSDocInfo jsdoc = fn.getJSDocInfo();
 
     assertThat(jsdoc.getOriginalCommentPosition()).isEqualTo(6);
@@ -4501,9 +4501,9 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             + " * @desc this is a description\n"
             + " *****/\n"
             + "function x() {}");
-    Preconditions.checkState(script.isScript());
+    checkState(script.isScript());
     Node fn = script.getFirstChild();
-    Preconditions.checkState(fn.isFunction());
+    checkState(fn.isFunction());
 
     JSDocInfo info = fn.getJSDocInfo();
     assertThat(info.getBlockDescription()).isEqualTo(

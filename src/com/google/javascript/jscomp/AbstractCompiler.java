@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -571,7 +573,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * @param object the object to store as the annotation
    */
   void setAnnotation(String key, Object object) {
-    Preconditions.checkArgument(object != null, "The stored annotation value cannot be null.");
+    checkArgument(object != null, "The stored annotation value cannot be null.");
     Preconditions.checkArgument(
         !annotationMap.containsKey(key), "Cannot overwrite the existing annotation '%s'.", key);
     annotationMap.put(key, object);

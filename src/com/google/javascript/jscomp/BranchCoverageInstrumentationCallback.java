@@ -15,8 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.annotations.GwtIncompatible;
-import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -178,7 +179,7 @@ public class BranchCoverageInstrumentationCallback extends NodeTraversal.Abstrac
   private Node newHeaderNode(NodeTraversal traversal, Node srcref) {
     String fileName = traversal.getSourceName();
     FileInstrumentationData data = instrumentationData.get(fileName);
-    Preconditions.checkNotNull(data);
+    checkNotNull(data);
 
     // var JSCompiler_lcov_branch_data_xx = [];
     // __jscov.branchesTaken.push(JSCompiler_lcov_branch_data_xx);

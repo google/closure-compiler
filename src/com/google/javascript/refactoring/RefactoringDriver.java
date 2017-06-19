@@ -16,9 +16,10 @@
 
 package com.google.javascript.refactoring;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CheckLevel;
@@ -178,7 +179,7 @@ public final class RefactoringDriver {
     }
 
     public Builder withCompilerOptions(CompilerOptions compilerOptions) {
-      this.compilerOptions = Preconditions.checkNotNull(compilerOptions);
+      this.compilerOptions = checkNotNull(compilerOptions);
       return this;
     }
 

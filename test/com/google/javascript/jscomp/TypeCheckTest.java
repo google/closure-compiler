@@ -16,12 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.parsing.JsDocInfoParser.BAD_TYPE_WIKI_LINK;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -5058,7 +5058,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         LINE_JOINER.join(
           " * @implements {IObject<?, T>} ",
           " * @implements {IArrayLike<T>} "));
-    Preconditions.checkState(DEFAULT_EXTERNS.length() != externs.length());
+    checkState(DEFAULT_EXTERNS.length() != externs.length());
     testTypesWithExterns(externs, "var a = []; var b = a['hi'];");
   }
 

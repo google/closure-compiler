@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
@@ -65,9 +66,8 @@ class TypeInferencePass implements CompilerPass {
   @Override
   public void process(Node externsRoot, Node jsRoot) {
     Node externsAndJs = jsRoot.getParent();
-    Preconditions.checkState(externsAndJs != null);
-    Preconditions.checkState(
-        externsRoot == null || externsAndJs.hasChild(externsRoot));
+    checkState(externsAndJs != null);
+    checkState(externsRoot == null || externsAndJs.hasChild(externsRoot));
 
     inferAllScopes(externsAndJs);
   }

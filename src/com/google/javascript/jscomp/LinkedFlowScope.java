@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.type.FlowScope;
@@ -25,7 +26,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.SimpleSlot;
 import com.google.javascript.rhino.jstype.StaticTypedScope;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
-
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -101,7 +101,7 @@ class LinkedFlowScope implements FlowScope {
 
   @Override
   public void inferSlotType(String symbol, JSType type) {
-    Preconditions.checkState(!frozen);
+    checkState(!frozen);
     lastSlot = new LinkedFlowSlot(symbol, type, lastSlot);
     depth++;
     cache.dirtySymbols.add(symbol);

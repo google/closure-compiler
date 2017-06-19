@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
@@ -80,7 +81,7 @@ class PrepareAst implements CompilerPass {
          child != null; child = child.getNext()) {
       // This pass is run during the CompilerTestCase validation, so this
       // parent pointer check serves as a more general check.
-      Preconditions.checkState(child.getParent() == n);
+      checkState(child.getParent() == n);
 
       normalizeNodeTypes(child);
     }
@@ -131,7 +132,7 @@ class PrepareAst implements CompilerPass {
      * "this" values (what we are call "free" calls) and direct call to eval.
      */
     private static void annotateCalls(Node n) {
-      Preconditions.checkState(n.isCall(), n);
+      checkState(n.isCall(), n);
 
       // Keep track of of the "this" context of a call.  A call without an
       // explicit "this" is a free call.

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static java.nio.charset.StandardCharsets.US_ASCII;
@@ -23,7 +25,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -2353,8 +2354,8 @@ public final class CommandLineRunnerTest extends TestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT5);
     compiler.init(externs, inputs, options);
     Node all = compiler.parseInputs();
-    Preconditions.checkState(compiler.getErrorCount() == 0);
-    Preconditions.checkNotNull(all);
+    checkState(compiler.getErrorCount() == 0);
+    checkNotNull(all);
     Node n = all.getLastChild();
     return n;
   }
@@ -2368,7 +2369,7 @@ public final class CommandLineRunnerTest extends TestCase {
       return "input" + i;
     }
     String name = filenames.get(i);
-    Preconditions.checkState(name != null && !name.isEmpty());
+    checkState(name != null && !name.isEmpty());
     return name;
   }
 }

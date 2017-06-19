@@ -17,6 +17,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -134,14 +136,14 @@ public final class JSModule implements DependencyInfo, Serializable {
 
   /** Adds a source code input to this module directly after other. */
   public void addAfter(CompilerInput input, CompilerInput other) {
-    Preconditions.checkState(inputs.contains(other));
+    checkState(inputs.contains(other));
     inputs.add(inputs.indexOf(other), input);
     input.setModule(this);
   }
 
   /** Adds a dependency on another module. */
   public void addDependency(JSModule dep) {
-    Preconditions.checkNotNull(dep);
+    checkNotNull(dep);
     Preconditions.checkState(dep != this, "Cannot add dependency on self", this);
     deps.add(dep);
   }

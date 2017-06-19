@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -77,7 +78,7 @@ public class JsAst implements SourceAst {
 
   @Override
   public void setSourceFile(SourceFile file) {
-    Preconditions.checkState(fileName.equals(file.getName()));
+    checkState(fileName.equals(file.getName()));
     sourceFile = file;
   }
 

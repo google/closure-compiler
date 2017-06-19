@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -74,7 +78,7 @@ public final class FunctionType implements Serializable {
       ImmutableList<String> typeParameters,
       boolean isLoose,
       boolean isAbstract) {
-    Preconditions.checkNotNull(commonTypes);
+    checkNotNull(commonTypes);
     this.commonTypes = commonTypes;
     this.requiredFormals = requiredFormals;
     this.optionalFormals = optionalFormals;
@@ -96,12 +100,12 @@ public final class FunctionType implements Serializable {
   // we do not want to accidentally make a top function be equals() to some other
   // function type. The return type is unknown for convenience.
   private FunctionType(JSTypes commonTypes, boolean isLoose) {
-    Preconditions.checkNotNull(commonTypes);
+    checkNotNull(commonTypes);
     this.commonTypes = commonTypes;
     this.requiredFormals = null;
     this.optionalFormals = null;
     this.restFormals = null;
-    this.returnType = Preconditions.checkNotNull(this.commonTypes.UNKNOWN);
+    this.returnType = checkNotNull(this.commonTypes.UNKNOWN);
     this.nominalType = null;
     this.receiverType = null;
     this.outerVarPreconditions = null;
@@ -124,19 +128,19 @@ public final class FunctionType implements Serializable {
     Preconditions.checkNotNull(requiredFormals,
         "null required formals for function: %s", this);
     for (JSType formal : requiredFormals) {
-      Preconditions.checkNotNull(formal);
+      checkNotNull(formal);
       // A loose function has bottom formals in the bwd direction of NTI.
       // See NTI#analyzeLooseCallNodeBwd.
-      Preconditions.checkState(isLoose || !formal.isBottom());
+      checkState(isLoose || !formal.isBottom());
     }
     Preconditions.checkNotNull(optionalFormals,
         "null optional formals for function: %s", this);
     for (JSType formal : optionalFormals) {
-      Preconditions.checkNotNull(formal);
-      Preconditions.checkState(!formal.isBottom());
+      checkNotNull(formal);
+      checkState(!formal.isBottom());
     }
-    Preconditions.checkState(restFormals == null || !restFormals.isBottom());
-    Preconditions.checkNotNull(returnType);
+    checkState(restFormals == null || !restFormals.isBottom());
+    checkNotNull(returnType);
   }
 
   /** Returns the JSTypes instance stored by this object. */
@@ -305,7 +309,7 @@ public final class FunctionType implements Serializable {
    * @throws IllegalStateException if this is not a unique constructor.
    */
   public JSType getSuperPrototype() {
-    Preconditions.checkState(isUniqueConstructor());
+    checkState(isUniqueConstructor());
     NominalType nt = getNominalTypeIfSingletonObj(this.nominalType);
     NominalType superClass = nt.getInstantiatedSuperclass();
     return superClass == null ? null : superClass.getPrototypePropertyOfCtor();
@@ -339,7 +343,7 @@ public final class FunctionType implements Serializable {
    * @throws IllegalStateException if there is no rest parameter.
    */
   public JSType getRestFormalsType() {
-    Preconditions.checkNotNull(restFormals);
+    checkNotNull(restFormals);
     return restFormals;
   }
 
@@ -350,7 +354,7 @@ public final class FunctionType implements Serializable {
    * @throws IllegalStateException if this is the top function (rather than returning bottom).
    */
   public JSType getFormalType(int argpos) {
-    Preconditions.checkState(!isTopFunction());
+    checkState(!isTopFunction());
     int numReqFormals = requiredFormals.size();
     if (argpos < numReqFormals) {
       return requiredFormals.get(argpos);
@@ -375,7 +379,7 @@ public final class FunctionType implements Serializable {
    * @throws IllegalStateException if this is the top function.
    */
   public JSType getOuterVarPrecondition(String name) {
-    Preconditions.checkState(!isTopFunction());
+    checkState(!isTopFunction());
     return outerVarPreconditions.get(name);
   }
 
@@ -386,7 +390,7 @@ public final class FunctionType implements Serializable {
    *     effectively-infinite minimum arity.
    */
   public int getMinArity() {
-    Preconditions.checkState(!isTopFunction());
+    checkState(!isTopFunction());
     return requiredFormals.size();
   }
 
@@ -398,7 +402,7 @@ public final class FunctionType implements Serializable {
    * @throws IllegalStateException if this is the top function.
    */
   public int getMaxArity() {
-    Preconditions.checkArgument(!isTopFunction());
+    checkArgument(!isTopFunction());
     if (restFormals != null) {
       return Integer.MAX_VALUE; // "Infinite" arity
     } else {
@@ -581,7 +585,7 @@ public final class FunctionType implements Serializable {
   // TODO(dimvar): we need to clean up the combination of loose functions with
   // new: and/or this: types. Eg, this.nominalType doesn't appear at all.
   private static FunctionType looseMerge(FunctionType f1, FunctionType f2) {
-    Preconditions.checkArgument(f1.isLoose() || f2.isLoose());
+    checkArgument(f1.isLoose() || f2.isLoose());
 
     FunctionTypeBuilder builder = new FunctionTypeBuilder(f1.commonTypes);
     int minRequiredArity = Math.min(f1.getMinArity(), f2.getMinArity());
@@ -634,7 +638,7 @@ public final class FunctionType implements Serializable {
    */
   static void whyNotSubtypeOf(FunctionType f1, FunctionType f2,
       SubtypeCache subSuperMap, MismatchInfo[] boxedInfo) {
-    Preconditions.checkArgument(boxedInfo.length == 1);
+    checkArgument(boxedInfo.length == 1);
     f1.isSubtypeOfHelper(f2, true, subSuperMap, boxedInfo);
   }
 
@@ -671,7 +675,7 @@ public final class FunctionType implements Serializable {
     // NOTE(dimvar): We never happen to call isSubtypeOf for loose functions.
     // If some analyzed program changes this, the preconditions check will tell
     // us so we can handle looseness correctly.
-    Preconditions.checkState(!isLoose() && !other.isLoose());
+    checkState(!isLoose() && !other.isLoose());
     if (this.isGeneric()) {
       if (this.equals(other)) {
         return true;
@@ -977,7 +981,7 @@ public final class FunctionType implements Serializable {
    */
   // TODO(sdh): make this method static to emphasize parameter symmetry.
   boolean isLooseSubtypeOf(FunctionType f2) {
-    Preconditions.checkState(this.isLoose() || f2.isLoose());
+    checkState(this.isLoose() || f2.isLoose());
     if (this.isTopFunction() || f2.isTopFunction()) {
       return true;
     }
@@ -1045,9 +1049,8 @@ public final class FunctionType implements Serializable {
       Multimap<String, JSType> typeMultimap, SubtypeCache subSuperMap) {
     Preconditions.checkState(this.typeParameters.isEmpty(),
         "Non-empty type parameters %s", this.typeParameters);
-    Preconditions.checkState(this == this.commonTypes.LOOSE_TOP_FUNCTION
-        || this.outerVarPreconditions.isEmpty());
-    Preconditions.checkState(this != this.commonTypes.TOP_FUNCTION);
+    checkState(this == this.commonTypes.LOOSE_TOP_FUNCTION || this.outerVarPreconditions.isEmpty());
+    checkState(this != this.commonTypes.TOP_FUNCTION);
 
     if (this == this.commonTypes.LOOSE_TOP_FUNCTION || other.isTopFunction() || other.isLoose()) {
       return true;
@@ -1125,7 +1128,7 @@ public final class FunctionType implements Serializable {
    * @return The unified type, or null if unification fails
    */
   static FunctionType unifyUnknowns(FunctionType f1, FunctionType f2) {
-    Preconditions.checkState(f1 != null || f2 != null);
+    checkState(f1 != null || f2 != null);
     if (f1 == null || f2 == null) {
       return null;
     }
@@ -1135,7 +1138,7 @@ public final class FunctionType implements Serializable {
     if (!f2.typeParameters.isEmpty()) {
       f2 = f2.instantiateGenericsWithUnknown();
     }
-    Preconditions.checkState(!f1.isLoose() && !f2.isLoose());
+    checkState(!f1.isLoose() && !f2.isLoose());
     if (f1.equals(f2)) {
       return f1;
     }
@@ -1242,7 +1245,7 @@ public final class FunctionType implements Serializable {
       // Before we switched to unique generated names for type variables, a method's type variables
       // could shadow type variables defined on the class. Check that this no longer happens.
       for (String typeParam : this.typeParameters) {
-        Preconditions.checkState(!typeMap.containsKey(typeParam));
+        checkState(!typeMap.containsKey(typeParam));
       }
     }
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
@@ -1342,7 +1345,7 @@ public final class FunctionType implements Serializable {
    * variables found in formal parameters and returns.
    */
   public FunctionType instantiateGenerics(Map<String, JSType> typeMap) {
-    Preconditions.checkState(isGeneric());
+    checkState(isGeneric());
     return substituteParametricGenerics(typeMap);
   }
 
@@ -1353,7 +1356,7 @@ public final class FunctionType implements Serializable {
    * @throws IllegalStateException if this is not a generic function.
    */
   public FunctionType instantiateGenericsFromArgumentTypes(JSType recvtype, List<JSType> argTypes) {
-    Preconditions.checkState(isGeneric());
+    checkState(isGeneric());
     if (argTypes.size() < getMinArity() || argTypes.size() > getMaxArity()) {
       return null;
     }

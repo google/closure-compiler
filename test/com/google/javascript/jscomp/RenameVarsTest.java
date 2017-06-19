@@ -16,8 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -918,7 +919,7 @@ public final class RenameVarsTest extends CompilerTestCase {
   }
 
   private VariableMap makeVariableMap(String... keyValPairs) {
-    Preconditions.checkArgument(keyValPairs.length % 2 == 0);
+    checkArgument(keyValPairs.length % 2 == 0);
 
     ImmutableMap.Builder<String, String> renameMap = ImmutableMap.builder();
     for (int i = 0; i < keyValPairs.length; i += 2) {

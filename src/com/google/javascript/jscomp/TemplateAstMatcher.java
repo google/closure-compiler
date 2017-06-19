@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.TypeMatchingStrategy.MatchResult;
 import com.google.javascript.rhino.IR;
@@ -97,7 +100,7 @@ public final class TemplateAstMatcher {
       TypeIRegistry typeRegistry,
       Node templateFunctionNode,
       TypeMatchingStrategy typeMatchingStrategy) {
-    Preconditions.checkNotNull(typeRegistry);
+    checkNotNull(typeRegistry);
     Preconditions.checkState(
         templateFunctionNode.isFunction(),
         "Template node must be a function node. Received: %s",
@@ -105,7 +108,7 @@ public final class TemplateAstMatcher {
 
     this.typeRegistry = typeRegistry;
     this.templateStart = initTemplate(templateFunctionNode);
-    this.typeMatchingStrategy = Preconditions.checkNotNull(typeMatchingStrategy);
+    this.typeMatchingStrategy = checkNotNull(typeMatchingStrategy);
   }
 
   /**
@@ -215,7 +218,7 @@ public final class TemplateAstMatcher {
           "Missing JSDoc for parameter %s of template function %s",
           name, fnName);
       TypeI type = typeRegistry.evaluateTypeExpressionInGlobalScope(expression);
-      Preconditions.checkNotNull(type);
+      checkNotNull(type);
       params.add(name);
       paramTypes.put(name, type);
     }
@@ -287,8 +290,8 @@ public final class TemplateAstMatcher {
 
   /** Creates a template parameter or string literal template node. */
   private Node createTemplateParameterNode(int index, TypeI type, boolean isStringLiteral) {
-    Preconditions.checkState(index >= 0);
-    Preconditions.checkNotNull(type);
+    checkState(index >= 0);
+    checkNotNull(type);
     Node n = Node.newNumber(index);
     if (isStringLiteral) {
       n.setToken(TEMPLATE_STRING_LITERAL);
@@ -304,7 +307,7 @@ public final class TemplateAstMatcher {
   }
 
   private Node createTemplateLocalNameNode(int index) {
-    Preconditions.checkState(index >= 0);
+    checkState(index >= 0);
     Node n = Node.newNumber(index);
     n.setToken(TEMPLATE_LOCAL_NAME);
     return n;
@@ -397,7 +400,7 @@ public final class TemplateAstMatcher {
       // the template function to express arbitrary expressions.
       TypeI templateType = template.getTypeI();
 
-      Preconditions.checkNotNull(templateType, "null template parameter type.");
+      checkNotNull(templateType, "null template parameter type.");
 
       // TODO(johnlenz): We shouldn't spend time checking template whose
       // types whose definitions aren't included (NoResolvedType). Alternately

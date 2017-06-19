@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.javascript.jscomp.JsAst.ParseResult;
 import com.google.javascript.jscomp.JsAst.RhinoError;
 import com.google.javascript.rhino.ErrorReporter;
@@ -50,7 +51,7 @@ public class RecoverableJsAst implements SourceAst {
    * compilations.
    */
   public RecoverableJsAst(SourceAst realSource, boolean reportParseErrors) {
-    Preconditions.checkNotNull(realSource);
+    checkNotNull(realSource);
     this.realSource = realSource;
     this.reportParseErrors = reportParseErrors;
   }

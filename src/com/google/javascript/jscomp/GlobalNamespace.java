@@ -15,10 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.GLOBAL_THIS;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.JSDocInfo;
@@ -184,7 +186,7 @@ class GlobalNamespace
 
     @Override
     public boolean equals(Object obj) {
-      Preconditions.checkState(obj instanceof AstChange);
+      checkState(obj instanceof AstChange);
       AstChange other = (AstChange) obj;
       return Objects.equals(this.module, other.module)
           && Objects.equals(this.scope, other.scope)
@@ -452,7 +454,7 @@ class GlobalNamespace
      */
     String getNameForObjLitKey(Node n) {
       Node parent = n.getParent();
-      Preconditions.checkState(parent.isObjectLit());
+      checkState(parent.isObjectLit());
 
       Node grandparent = parent.getParent();
       if (grandparent == null) {
@@ -520,7 +522,7 @@ class GlobalNamespace
      */
     String getNameForClassMembers(Node n) {
       Node parent = n.getParent();
-      Preconditions.checkState(parent.isClassMembers());
+      checkState(parent.isClassMembers());
       String className = NodeUtil.getName(parent.getParent());
       return className == null ? null : className + '.' + n.getString();
     }
@@ -1188,7 +1190,7 @@ class GlobalNamespace
       // Don't try to collapse if the one global set is a twin reference.
       // We could theoretically handle this case in CollapseProperties, but
       // it's probably not worth the effort.
-      Preconditions.checkNotNull(declaration);
+      checkNotNull(declaration);
       if (declaration.getTwin() != null) {
         return false;
       }
@@ -1439,7 +1441,7 @@ class GlobalNamespace
     }
 
     static void markTwins(Ref a, Ref b) {
-      Preconditions.checkArgument(
+      checkArgument(
           (a.type == Type.ALIASING_GET || b.type == Type.ALIASING_GET)
               && (a.type == Type.SET_FROM_GLOBAL
                   || a.type == Type.SET_FROM_LOCAL

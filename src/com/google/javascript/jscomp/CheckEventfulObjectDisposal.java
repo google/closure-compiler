@@ -16,7 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimaps;
@@ -412,7 +415,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     // This pass should not have gotten added in this case
-    Preconditions.checkArgument(checkingPolicy != DisposalCheckingPolicy.OFF);
+    checkArgument(checkingPolicy != DisposalCheckingPolicy.OFF);
 
     // Initialize types
     googDisposableInterfaceType = this.typeRegistry.getType(DISPOSABLE_INTERFACE_TYPE_NAME);
@@ -597,7 +600,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
     }
 
     private Boolean inConstructorScope() {
-      Preconditions.checkNotNull(isConstructorStack);
+      checkNotNull(isConstructorStack);
       if (!isDisposalStack.isEmpty()) {
         return isConstructorStack.peek();
       }
@@ -605,7 +608,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
     }
 
     private Boolean inDisposalScope() {
-      Preconditions.checkNotNull(isDisposalStack);
+      checkNotNull(isDisposalStack);
       if (!isDisposalStack.isEmpty()) {
         return isDisposalStack.peek();
       }
@@ -739,7 +742,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
      * Is the current node a call to goog.events.unlisten
      */
     private void isGoogEventsUnlisten(Node n) {
-      Preconditions.checkArgument(n.getChildCount() > 3);
+      checkArgument(n.getChildCount() > 3);
 
       Node listener = n.getChildAtIndex(3);
 
@@ -1056,7 +1059,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
       List<Node> variableNodes = maybeGetValueNodesFromCall(n);
 
       for (Node variableNode : variableNodes) {
-        Preconditions.checkState(variableNode != null);
+        checkState(variableNode != null);
 
         // Only consider removals on eventful object
         boolean isTrackedRemoval = false;
@@ -1091,7 +1094,7 @@ public final class CheckEventfulObjectDisposal implements CompilerPass {
      * Check function definitions to add custom dispose methods.
      */
     public void visitFunction(NodeTraversal t, Node n) {
-      Preconditions.checkArgument(n.isFunction());
+      checkArgument(n.isFunction());
       JSDocInfo jsDocInfo = NodeUtil.getBestJSDocInfo(n);
 
       // Function annotated to dispose of

@@ -15,7 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.Es6RewriteClass.ClassDeclarationMetadata;
 import com.google.javascript.rhino.IR;
@@ -651,7 +652,7 @@ public final class Es6TypedToEs6Converter implements NodeTraversal.Callback, Hot
   }
 
   private Node convertDeclaredTypeToJSDoc(Node type) {
-    Preconditions.checkArgument(type instanceof TypeDeclarationNode);
+    checkArgument(type instanceof TypeDeclarationNode);
     switch (type.getToken()) {
       // "Primitive" types.
       case STRING_TYPE:

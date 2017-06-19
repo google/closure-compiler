@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * When the expected and the found type don't match, this class contains
@@ -92,19 +93,19 @@ public class MismatchInfo {
   //// Getters
 
   public String getPropName() {
-    return Preconditions.checkNotNull(this.propName);
+    return checkNotNull(this.propName);
   }
 
   public JSType getFoundType() {
-    return Preconditions.checkNotNull(this.found);
+    return checkNotNull(this.found);
   }
 
   public JSType getExpectedType() {
-    return Preconditions.checkNotNull(this.expected);
+    return checkNotNull(this.expected);
   }
 
   public int getArgIndex() {
-    Preconditions.checkState(this.argIndex >= 0);
+    checkState(this.argIndex >= 0);
     return this.argIndex;
   }
 

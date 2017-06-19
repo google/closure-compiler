@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.newtypes.JSType;
@@ -492,7 +493,7 @@ public final class CodingConventions {
 
     @Override
     public boolean isInlinableFunction(Node n) {
-      Preconditions.checkState(n.isFunction(), n);
+      checkState(n.isFunction(), n);
       return true;
     }
 

@@ -16,9 +16,10 @@
 
 package com.google.javascript.jscomp.gwt.client;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -353,7 +354,7 @@ public class JsfileParser implements EntryPoint {
       if (node.isImport()) {
         Node moduleSpecifier = node.getChildAtIndex(2);
         // NOTE: previous tool was more forgiving here.
-        Preconditions.checkState(moduleSpecifier.isString());
+        checkState(moduleSpecifier.isString());
         info.loadFlags.add(JsArray.of("module", "es6"));
         info.importedModules.add(moduleSpecifier.getString());
       } else if (node.isExport()) {

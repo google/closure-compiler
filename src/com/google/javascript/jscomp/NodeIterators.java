@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
@@ -48,7 +49,7 @@ class NodeIterators {
      *     exposed in the iteration.
      */
     FunctionlessLocalScope(Node ... ancestors) {
-      Preconditions.checkArgument(ancestors.length > 0);
+      checkArgument(ancestors.length > 0);
 
       for (Node n : ancestors) {
         if (n.isFunction()) {
@@ -161,8 +162,8 @@ class NodeIterators {
      */
     static LocalVarMotion forVar(
         Node name, Node var, Node block) {
-      Preconditions.checkArgument(NodeUtil.isNameDeclaration(var));
-      Preconditions.checkArgument(NodeUtil.isStatement(var));
+      checkArgument(NodeUtil.isNameDeclaration(var));
+      checkArgument(NodeUtil.isStatement(var));
       // The FunctionlessLocalScope must start at "name" as this may be used
       // before the Normalize pass, and thus the VAR node may define multiple
       // names and the "name" node may have siblings.  The actual assigned
@@ -177,8 +178,8 @@ class NodeIterators {
      */
     static LocalVarMotion forAssign(
         Node name, Node assign, Node expr, Node block) {
-      Preconditions.checkArgument(assign.isAssign());
-      Preconditions.checkArgument(expr.isExprResult());
+      checkArgument(assign.isAssign());
+      checkArgument(expr.isExprResult());
       // The FunctionlessLocalScope must start at "assign", to skip the value
       // assigned to "name" (which would be its sibling).
       return new LocalVarMotion(
@@ -190,7 +191,7 @@ class NodeIterators {
      *     beginning with the deepest ancestor.
      */
     private LocalVarMotion(Node nameNode, FunctionlessLocalScope iterator) {
-      Preconditions.checkArgument(nameNode.isName());
+      checkArgument(nameNode.isName());
       Node valueNode = NodeUtil.getAssignedValue(nameNode);
       this.varName = nameNode.getString();
       this.valueHasSideEffects = valueNode != null && NodeUtil.mayHaveSideEffects(valueNode);

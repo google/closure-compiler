@@ -16,14 +16,15 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
-
 import javax.annotation.Nullable;
 
 /**
@@ -77,8 +78,8 @@ class InferJSDocInfo extends AbstractPostOrderCallback
 
   @Override
   public void hotSwapScript(Node root, Node originalRoot) {
-    Preconditions.checkNotNull(root);
-    Preconditions.checkState(root.isScript());
+    checkNotNull(root);
+    checkState(root.isScript());
     NodeTraversal.traverseEs6(compiler, root, this);
   }
 

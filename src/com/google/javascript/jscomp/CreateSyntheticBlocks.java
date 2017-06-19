@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -130,8 +131,8 @@ class CreateSyntheticBlocks extends AbstractPostOrderCallback implements Compile
    * If end is null, move the last child of the block.
    */
   private void moveSiblingExclusive(Node dest, Node start, Node end) {
-    Preconditions.checkNotNull(start);
-    Preconditions.checkNotNull(end);
+    checkNotNull(start);
+    checkNotNull(end);
     while (start.getNext() != end) {
       Node child = start.getNext().detach();
       dest.addChildToBack(child);

@@ -18,8 +18,9 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Ascii.isUpperCase;
 import static com.google.common.base.Ascii.toLowerCase;
 import static com.google.common.base.Ascii.toUpperCase;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.NodeTraversal.AbstractModuleCallback;
 import com.google.javascript.rhino.JSDocInfo;
@@ -192,7 +193,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       Node call = firstStatement.getFirstChild();
       Node callee = call.getFirstChild();
       if (callee.matchesQualifiedName("goog.module")) {
-        Preconditions.checkState(currentModule == null);
+        checkState(currentModule == null);
         String moduleName = extractFirstArgumentName(call);
         if (moduleName == null) {
           t.report(scopeRoot, ClosureRewriteModule.INVALID_MODULE_NAMESPACE);
@@ -336,9 +337,9 @@ public final class ClosureCheckModule extends AbstractModuleCallback
   }
 
   private void checkModuleExport(NodeTraversal t, Node n, Node parent) {
-    Preconditions.checkArgument(n.isAssign());
+    checkArgument(n.isAssign());
     Node lhs = n.getFirstChild();
-    Preconditions.checkState(isExportLhs(lhs));
+    checkState(isExportLhs(lhs));
     if (currentModule.defaultExportNode == null && (!t.inModuleScope() || !parent.isExprResult())) {
       // Invalid export location.
       t.report(n, EXPORT_NOT_A_MODULE_LEVEL_STATEMENT);
@@ -369,7 +370,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
   }
 
   private void checkRequireCall(NodeTraversal t, Node callNode, Node parent) {
-    Preconditions.checkState(callNode.isCall());
+    checkState(callNode.isCall());
     switch (parent.getToken()) {
       case EXPR_RESULT:
         currentModule.importsByLongRequiredName.put(extractFirstArgumentName(callNode), parent);
@@ -402,7 +403,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
         t.report(lhs, INVALID_DESTRUCTURING_FORWARD_DECLARE);
       }
     } else {
-      Preconditions.checkState(lhs.isName());
+      checkState(lhs.isName());
       checkShortName(t, lhs, callNode.getLastChild().getString());
     }
     currentModule.importsByLongRequiredName.put(extractFirstArgumentName(callNode), lhs);
@@ -432,7 +433,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
   }
 
   private static boolean isValidDestructuringImport(Node destructuringLhs) {
-    Preconditions.checkArgument(destructuringLhs.isDestructuringLhs());
+    checkArgument(destructuringLhs.isDestructuringLhs());
     Node objectPattern = destructuringLhs.getFirstChild();
     if (!objectPattern.isObjectPattern()) {
       return false;

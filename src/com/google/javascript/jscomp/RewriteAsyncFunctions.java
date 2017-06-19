@@ -15,10 +15,10 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
@@ -97,7 +97,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
   private final AbstractCompiler compiler;
 
   public RewriteAsyncFunctions(AbstractCompiler compiler) {
-    Preconditions.checkNotNull(compiler);
+    checkNotNull(compiler);
     this.compiler = compiler;
     this.contextStack = new ArrayDeque<>();
     this.contextStack.addFirst(new LexicalContext());

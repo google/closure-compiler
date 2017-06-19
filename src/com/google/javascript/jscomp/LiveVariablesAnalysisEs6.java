@@ -15,7 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.LatticeElement;
@@ -75,19 +77,19 @@ class LiveVariablesAnalysisEs6
     }
 
     private LiveVariableLattice(LiveVariableLattice other) {
-      Preconditions.checkNotNull(other);
+      checkNotNull(other);
       this.liveSet = (BitSet) other.liveSet.clone();
     }
 
     @Override
     public boolean equals(Object other) {
-      Preconditions.checkNotNull(other);
+      checkNotNull(other);
       return (other instanceof LiveVariableLattice)
           && this.liveSet.equals(((LiveVariableLattice) other).liveSet);
     }
 
     public boolean isLive(Var v) {
-      Preconditions.checkNotNull(v);
+      checkNotNull(v);
       return liveSet.get(v.index);
     }
 
@@ -337,7 +339,7 @@ class LiveVariablesAnalysisEs6
   }
 
   private void addToSetIfLocal(Node node, BitSet set) {
-    Preconditions.checkState(node.isName(), node);
+    checkState(node.isName(), node);
     String name = node.getString();
 
     // add to the local set if the variable is declared in the function or function body because

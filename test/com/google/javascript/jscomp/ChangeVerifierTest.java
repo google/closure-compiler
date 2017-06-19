@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import junit.framework.TestCase;
@@ -27,7 +27,7 @@ public final class ChangeVerifierTest extends TestCase {
 
   public void testCorrectValidationOfScriptWithChangeAfterFunction() {
     Node script = parse("function A() {} if (0) { A(); }");
-    Preconditions.checkState(script.isScript());
+    checkState(script.isScript());
 
     Compiler compiler = new Compiler();
     compiler.incrementChangeStamp();
@@ -47,7 +47,7 @@ public final class ChangeVerifierTest extends TestCase {
 
   public void testChangeToScriptNotReported() {
     Node script = parse("function A() {} if (0) { A(); }");
-    Preconditions.checkState(script.isScript());
+    checkState(script.isScript());
 
     Compiler compiler = new Compiler();
     compiler.incrementChangeStamp();
@@ -72,7 +72,7 @@ public final class ChangeVerifierTest extends TestCase {
   public void testDeletedFunction() {
     Node script = parse("function A() {}");
 
-    Preconditions.checkState(script.isScript());
+    checkState(script.isScript());
 
     Compiler compiler = new Compiler();
     compiler.incrementChangeStamp();
@@ -103,7 +103,7 @@ public final class ChangeVerifierTest extends TestCase {
   public void testNotDeletedFunction() {
     Node script = parse("function A() {}");
 
-    Preconditions.checkState(script.isScript());
+    checkState(script.isScript());
 
     Compiler compiler = new Compiler();
     compiler.incrementChangeStamp();

@@ -16,10 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -50,7 +50,7 @@ class GatherRawExports extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
+    checkState(compiler.getLifeCycleStage().isNormalized());
     NodeTraversal.traverseEs6(compiler, root, this);
   }
 

@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
@@ -171,7 +172,7 @@ class MarkNoSideEffectCalls implements CompilerPass {
       boolean maybeFunction = false;
       for (Definition def : definitions) {
         Node lValue = def.getLValue();
-        Preconditions.checkNotNull(lValue);
+        checkNotNull(lValue);
         if (definitionTypeContainsFunctionType(def)) {
           maybeFunction = true;
           if (!noSideEffectFunctionNames.contains(lValue)) {

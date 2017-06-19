@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.LatticeElement;
@@ -80,19 +82,19 @@ class LiveVariablesAnalysis extends
     }
 
     private LiveVariableLattice(LiveVariableLattice other) {
-      Preconditions.checkNotNull(other);
+      checkNotNull(other);
       this.liveSet = (BitSet) other.liveSet.clone();
     }
 
     @Override
     public boolean equals(Object other) {
-      Preconditions.checkNotNull(other);
+      checkNotNull(other);
       return (other instanceof LiveVariableLattice) &&
           this.liveSet.equals(((LiveVariableLattice) other).liveSet);
     }
 
     public boolean isLive(Var v) {
-      Preconditions.checkNotNull(v);
+      checkNotNull(v);
       return liveSet.get(v.index);
     }
 
@@ -275,7 +277,7 @@ class LiveVariablesAnalysis extends
   }
 
   private void addToSetIfLocal(Node node, BitSet set) {
-    Preconditions.checkState(node.isName());
+    checkState(node.isName());
     String name = node.getString();
     if (!jsScope.isDeclaredSloppy(name, false)) {
       return;

@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -184,7 +185,7 @@ class RenameProperties implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
+    checkState(compiler.getLifeCycleStage().isNormalized());
 
     NodeTraversal.traverseEs6(compiler, root, new ProcessProperties());
 
@@ -211,7 +212,7 @@ class RenameProperties implements CompilerPass {
       String oldName = n.getString();
       Property p = propertyMap.get(oldName);
       if (p != null && p.newName != null) {
-        Preconditions.checkState(oldName.equals(p.oldName));
+        checkState(oldName.equals(p.oldName));
         n.setString(p.newName);
         if (!p.newName.equals(oldName)) {
           compiler.reportChangeToEnclosingScope(n);
@@ -228,7 +229,7 @@ class RenameProperties implements CompilerPass {
         Property p = propertyMap.get(oldName);
         String replacement;
         if (p != null && p.newName != null) {
-          Preconditions.checkState(oldName.equals(p.oldName));
+          checkState(oldName.equals(p.oldName));
           replacement = p.newName;
         } else {
           replacement = oldName;

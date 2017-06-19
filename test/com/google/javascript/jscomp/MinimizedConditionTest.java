@@ -16,8 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.MinimizedCondition.MinimizationStyle;
 import com.google.javascript.rhino.Node;
@@ -50,7 +51,7 @@ public final class MinimizedConditionTest extends TestCase {
   }
 
   private static Node cloneAttachedTree(Node n) {
-    Preconditions.checkState(n.getParent().getFirstChild() == n);
+    checkState(n.getParent().getFirstChild() == n);
     return n.getParent().cloneTree().getFirstChild();
   }
 

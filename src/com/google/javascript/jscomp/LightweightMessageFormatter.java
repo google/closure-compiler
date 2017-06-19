@@ -15,9 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.SourceExcerptProvider.SourceExcerpt.LINE;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.SourceExcerptProvider.ExcerptFormatter;
@@ -51,7 +51,7 @@ public final class LightweightMessageFormatter extends AbstractMessageFormatter 
   public LightweightMessageFormatter(SourceExcerptProvider source,
       SourceExcerpt excerpt) {
     super(source);
-    Preconditions.checkNotNull(source);
+    checkNotNull(source);
     this.excerpt = excerpt;
   }
 

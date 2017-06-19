@@ -16,8 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -72,8 +75,8 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     protected final Node value;
 
     Export(String symbolName, Node value) {
-      this.symbolName = Preconditions.checkNotNull(symbolName);
-      this.value = Preconditions.checkNotNull(value);
+      this.symbolName = checkNotNull(symbolName);
+      this.value = checkNotNull(value);
     }
 
     /**
@@ -144,7 +147,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
             if (valueToExport.isFunction()) {
               initializer = createExternFunction(valueToExport);
             } else {
-              Preconditions.checkState(valueToExport.isObjectLit());
+              checkState(valueToExport.isObjectLit());
               initializer = createExternObjectLit(valueToExport);
             }
           } else if (!isCompletePathPrefix && exportedValueDefinesNewType) {
@@ -205,7 +208,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
         if (pathDefinition.isExprResult()) {
           pathDefinition.getFirstChild().setJSDocInfo(jsdoc);
         } else {
-          Preconditions.checkState(pathDefinition.isVar());
+          checkState(pathDefinition.isVar());
           pathDefinition.setJSDocInfo(jsdoc);
         }
       }
@@ -249,7 +252,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     }
 
     private void deleteInlineJsdocs(Node fn) {
-      Preconditions.checkArgument(fn.isFunction());
+      checkArgument(fn.isFunction());
       for (Node param : NodeUtil.getFunctionParameters(fn).children()) {
         param.setJSDocInfo(null);
       }
@@ -373,7 +376,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
     public PropertyExport(String exportPath, String symbolName, Node value) {
       super(symbolName, value);
 
-      this.exportPath = Preconditions.checkNotNull(exportPath);
+      this.exportPath = checkNotNull(exportPath);
     }
 
     @Override

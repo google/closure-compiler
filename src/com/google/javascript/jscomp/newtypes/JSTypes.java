@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -168,34 +171,34 @@ public final class JSTypes implements Serializable {
 
   private JSTypes(boolean inCompatibilityMode) {
     Map<String, JSType> types = JSType.createScalars(this);
-    this.BOOLEAN = Preconditions.checkNotNull(types.get("BOOLEAN"));
-    this.BOTTOM = Preconditions.checkNotNull(types.get("BOTTOM"));
-    this.FALSE_TYPE = Preconditions.checkNotNull(types.get("FALSE_TYPE"));
-    this.FALSY = Preconditions.checkNotNull(types.get("FALSY"));
-    this.NULL = Preconditions.checkNotNull(types.get("NULL"));
-    this.NUMBER = Preconditions.checkNotNull(types.get("NUMBER"));
-    this.STRING = Preconditions.checkNotNull(types.get("STRING"));
-    this.TOP = Preconditions.checkNotNull(types.get("TOP"));
-    this.TOP_SCALAR = Preconditions.checkNotNull(types.get("TOP_SCALAR"));
-    this.TRUE_TYPE = Preconditions.checkNotNull(types.get("TRUE_TYPE"));
-    this.TRUTHY = Preconditions.checkNotNull(types.get("TRUTHY"));
-    this.UNDEFINED = Preconditions.checkNotNull(types.get("UNDEFINED"));
-    this.UNKNOWN = Preconditions.checkNotNull(types.get("UNKNOWN"));
+    this.BOOLEAN = checkNotNull(types.get("BOOLEAN"));
+    this.BOTTOM = checkNotNull(types.get("BOTTOM"));
+    this.FALSE_TYPE = checkNotNull(types.get("FALSE_TYPE"));
+    this.FALSY = checkNotNull(types.get("FALSY"));
+    this.NULL = checkNotNull(types.get("NULL"));
+    this.NUMBER = checkNotNull(types.get("NUMBER"));
+    this.STRING = checkNotNull(types.get("STRING"));
+    this.TOP = checkNotNull(types.get("TOP"));
+    this.TOP_SCALAR = checkNotNull(types.get("TOP_SCALAR"));
+    this.TRUE_TYPE = checkNotNull(types.get("TRUE_TYPE"));
+    this.TRUTHY = checkNotNull(types.get("TRUTHY"));
+    this.UNDEFINED = checkNotNull(types.get("UNDEFINED"));
+    this.UNKNOWN = checkNotNull(types.get("UNKNOWN"));
 
-    this.UNDEFINED_OR_BOOLEAN = Preconditions.checkNotNull(types.get("UNDEFINED_OR_BOOLEAN"));
-    this.UNDEFINED_OR_NUMBER = Preconditions.checkNotNull(types.get("UNDEFINED_OR_NUMBER"));
-    this.UNDEFINED_OR_STRING = Preconditions.checkNotNull(types.get("UNDEFINED_OR_STRING"));
-    this.NULL_OR_BOOLEAN = Preconditions.checkNotNull(types.get("NULL_OR_BOOLEAN"));
-    this.NULL_OR_NUMBER = Preconditions.checkNotNull(types.get("NULL_OR_NUMBER"));
-    this.NULL_OR_STRING = Preconditions.checkNotNull(types.get("NULL_OR_STRING"));
-    this.NULL_OR_UNDEFINED = Preconditions.checkNotNull(types.get("NULL_OR_UNDEFINED"));
-    this.NUMBER_OR_STRING = Preconditions.checkNotNull(types.get("NUMBER_OR_STRING"));
+    this.UNDEFINED_OR_BOOLEAN = checkNotNull(types.get("UNDEFINED_OR_BOOLEAN"));
+    this.UNDEFINED_OR_NUMBER = checkNotNull(types.get("UNDEFINED_OR_NUMBER"));
+    this.UNDEFINED_OR_STRING = checkNotNull(types.get("UNDEFINED_OR_STRING"));
+    this.NULL_OR_BOOLEAN = checkNotNull(types.get("NULL_OR_BOOLEAN"));
+    this.NULL_OR_NUMBER = checkNotNull(types.get("NULL_OR_NUMBER"));
+    this.NULL_OR_STRING = checkNotNull(types.get("NULL_OR_STRING"));
+    this.NULL_OR_UNDEFINED = checkNotNull(types.get("NULL_OR_UNDEFINED"));
+    this.NUMBER_OR_STRING = checkNotNull(types.get("NUMBER_OR_STRING"));
 
     Map<String, FunctionType> functions = FunctionType.createInitialFunctionTypes(this);
-    this.QMARK_FUNCTION = Preconditions.checkNotNull(functions.get("QMARK_FUNCTION"));
-    this.BOTTOM_FUNCTION = Preconditions.checkNotNull(functions.get("BOTTOM_FUNCTION"));
-    this.TOP_FUNCTION = Preconditions.checkNotNull(functions.get("TOP_FUNCTION"));
-    this.LOOSE_TOP_FUNCTION = Preconditions.checkNotNull(functions.get("LOOSE_TOP_FUNCTION"));
+    this.QMARK_FUNCTION = checkNotNull(functions.get("QMARK_FUNCTION"));
+    this.BOTTOM_FUNCTION = checkNotNull(functions.get("BOTTOM_FUNCTION"));
+    this.TOP_FUNCTION = checkNotNull(functions.get("TOP_FUNCTION"));
+    this.LOOSE_TOP_FUNCTION = checkNotNull(functions.get("LOOSE_TOP_FUNCTION"));
     this.BOTTOM_PROPERTY_MAP = PersistentMap.of("_", Property.make(this.BOTTOM, this.BOTTOM));
 
     this.allowMethodsAsFunctions = inCompatibilityMode;
@@ -532,8 +535,8 @@ public final class JSTypes implements Serializable {
   }
 
   public void setNumberInstance(JSType t) {
-    Preconditions.checkState(numberInstance == null);
-    Preconditions.checkNotNull(t);
+    checkState(numberInstance == null);
+    checkNotNull(t);
     numberInstance = t;
     numberOrNumber = JSType.join(this.NUMBER, numberInstance);
     numberInstanceObjtype = Iterables.getOnlyElement(t.getObjs());
@@ -543,15 +546,15 @@ public final class JSTypes implements Serializable {
   }
 
   public void setBooleanInstance(JSType t) {
-    Preconditions.checkState(booleanInstance == null);
-    Preconditions.checkNotNull(t);
+    checkState(booleanInstance == null);
+    checkNotNull(t);
     booleanInstance = t;
     booleanInstanceObjtype = Iterables.getOnlyElement(t.getObjs());
   }
 
   public void setStringInstance(JSType t) {
-    Preconditions.checkState(stringInstance == null);
-    Preconditions.checkNotNull(t);
+    checkState(stringInstance == null);
+    checkNotNull(t);
     stringInstance = t;
     stringOrString = JSType.join(this.STRING, stringInstance);
     stringInstanceObjtype = Iterables.getOnlyElement(t.getObjs());

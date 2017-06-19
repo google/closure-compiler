@@ -15,7 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
@@ -138,7 +139,7 @@ final class PolymerBehaviorExtractor {
    * @return A list of functions from a behavior which should be copied to the element prototype.
    */
   private static ImmutableList<MemberDefinition> getBehaviorFunctionsToCopy(Node behaviorObjLit) {
-    Preconditions.checkState(behaviorObjLit.isObjectLit());
+    checkState(behaviorObjLit.isObjectLit());
     ImmutableList.Builder<MemberDefinition> functionsToCopy = ImmutableList.builder();
 
     for (Node keyNode : behaviorObjLit.children()) {
@@ -158,7 +159,7 @@ final class PolymerBehaviorExtractor {
    *     should still be copied to the element prototype.
    */
   private static ImmutableList<MemberDefinition> getNonPropertyMembersToCopy(Node behaviorObjLit) {
-    Preconditions.checkState(behaviorObjLit.isObjectLit());
+    checkState(behaviorObjLit.isObjectLit());
     ImmutableList.Builder<MemberDefinition> membersToCopy = ImmutableList.builder();
 
     for (Node keyNode : behaviorObjLit.children()) {

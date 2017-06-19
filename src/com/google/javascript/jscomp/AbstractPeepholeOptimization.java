@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 
@@ -70,7 +71,7 @@ abstract class AbstractPeepholeOptimization {
     /* Our implementation delegates to the compiler. We provide this
      * method because we don't want to expose Compiler to PeepholeOptimizations.
      */
-    Preconditions.checkNotNull(compiler);
+    checkNotNull(compiler);
     return compiler.areNodesEqualForInlining(n1, n2);
   }
 
@@ -79,7 +80,7 @@ abstract class AbstractPeepholeOptimization {
    *  and has the Denormalize pass not yet been run?)
    */
   protected boolean isASTNormalized() {
-    Preconditions.checkNotNull(compiler);
+    checkNotNull(compiler);
 
     return compiler.getLifeCycleStage().isNormalized();
   }

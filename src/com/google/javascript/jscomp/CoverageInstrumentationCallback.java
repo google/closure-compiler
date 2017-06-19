@@ -16,8 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.annotations.GwtIncompatible;
-import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -115,7 +116,7 @@ class CoverageInstrumentationCallback extends
     String fileName = getFileName(traversal);
     String arrayName = createArrayName(traversal);
     FileInstrumentationData data = instrumentationData.get(fileName);
-    Preconditions.checkNotNull(data);
+    checkNotNull(data);
 
     String objName = CoverageInstrumentationPass.JS_INSTRUMENTATION_OBJECT_NAME;
 

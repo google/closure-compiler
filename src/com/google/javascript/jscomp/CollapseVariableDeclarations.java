@@ -16,14 +16,14 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -103,7 +103,7 @@ class CollapseVariableDeclarations implements CompilerPass {
   private final Set<Node> nodesToCollapse = new HashSet<>();
 
   CollapseVariableDeclarations(AbstractCompiler compiler) {
-    Preconditions.checkState(!compiler.getLifeCycleStage().isNormalized());
+    checkState(!compiler.getLifeCycleStage().isNormalized());
     this.compiler = compiler;
   }
 
@@ -228,7 +228,7 @@ class CollapseVariableDeclarations implements CompilerPass {
       for (Node n = collapse.startNode; n != collapse.endNode;) {
         Node next = n.getNext();
 
-        Preconditions.checkState(var.getNext() == n);
+        checkState(var.getNext() == n);
         collapse.parent.removeChild(var.getNext());
 
         if (n.isVar()) {
@@ -238,7 +238,7 @@ class CollapseVariableDeclarations implements CompilerPass {
         } else {
           Node assign = n.getFirstChild();
           Node lhs = assign.getFirstChild();
-          Preconditions.checkState(lhs.isName());
+          checkState(lhs.isName());
           Node rhs = assign.getLastChild();
           lhs.addChildToBack(rhs.detach());
           var.addChildToBack(lhs.detach());

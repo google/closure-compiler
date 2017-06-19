@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp.gwt.linker;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.gwt.core.ext.LinkerContext;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
@@ -108,7 +109,7 @@ public class MinimalLinker extends AbstractLinker {
 
     for (CompilationResult result : toReturn.find(CompilationResult.class)) {
       String[] js = result.getJavaScript();
-      Preconditions.checkArgument(js.length == 1, "MinimalLinker doesn't support GWT.runAsync");
+      checkArgument(js.length == 1, "MinimalLinker doesn't support GWT.runAsync");
 
       String output = formatOutput(js[0], export);
       toReturn.add(emitString(logger, output, context.getModuleName() + ".js"));

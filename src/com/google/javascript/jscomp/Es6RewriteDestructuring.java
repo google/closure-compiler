@@ -15,9 +15,10 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.makeIterator;
 
-import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -205,7 +206,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
     } else {
       tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
     }
-    Preconditions.checkState(TokenStream.isJSIdentifier(tempVarName));
+    checkState(TokenStream.isJSIdentifier(tempVarName));
     return tempVarName;
   }
 
@@ -460,7 +461,7 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
   }
 
   private void visitDestructuringPatternInEnhancedFor(Node pattern) {
-    Preconditions.checkArgument(pattern.isDestructuringPattern());
+    checkArgument(pattern.isDestructuringPattern());
     String tempVarName = DESTRUCTURING_TEMP_VAR + (destructuringVarCounter++);
     if (NodeUtil.isEnhancedFor(pattern.getParent())) {
       Node forNode = pattern.getParent();
@@ -473,10 +474,10 @@ public final class Es6RewriteDestructuring implements NodeTraversal.Callback, Ho
       block.addChildToFront(exprResult);
     } else {
       Node destructuringLhs = pattern.getParent();
-      Preconditions.checkState(destructuringLhs.isDestructuringLhs());
+      checkState(destructuringLhs.isDestructuringLhs());
       Node declarationNode = destructuringLhs.getParent();
       Node forNode = declarationNode.getParent();
-      Preconditions.checkState(NodeUtil.isEnhancedFor(forNode));
+      checkState(NodeUtil.isEnhancedFor(forNode));
       Node block = forNode.getLastChild();
       declarationNode.replaceChild(
           destructuringLhs, IR.name(tempVarName).useSourceInfoFrom(pattern));

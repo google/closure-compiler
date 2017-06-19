@@ -16,6 +16,9 @@
 
 package com.google.javascript.refactoring;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Ascii;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -37,7 +40,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
-
 
 /**
  * Object representing the fixes to apply to the source code to create the
@@ -158,8 +160,8 @@ public final class SuggestedFix {
      * Inserts a new node as the first child of the provided node.
      */
     public Builder addChildToFront(Node parentNode, String content) {
-      Preconditions.checkState(parentNode.isNormalBlock(),
-          "addChildToFront is only supported for BLOCK statements.");
+      checkState(
+          parentNode.isNormalBlock(), "addChildToFront is only supported for BLOCK statements.");
       int startPosition = parentNode.getSourceOffset() + 1;
       replacements.put(
           parentNode.getSourceFileName(), CodeReplacement.create(startPosition, 0, "\n" + content));
@@ -331,7 +333,7 @@ public final class SuggestedFix {
       } else if (n.isStringKey()) {
         nodeToRename = n;
       } else if (n.isString()) {
-        Preconditions.checkState(n.getParent().isGetProp(), n);
+        checkState(n.getParent().isGetProp(), n);
         nodeToRename = n;
       } else {
         // TODO(mknichel): Implement the rest of this function.
@@ -348,7 +350,7 @@ public final class SuggestedFix {
      * Replaces a range of nodes with the given content.
      */
     public Builder replaceRange(Node first, Node last, String newContent) {
-      Preconditions.checkState(first.getParent() == last.getParent());
+      checkState(first.getParent() == last.getParent());
 
       int start;
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(first);
@@ -413,7 +415,7 @@ public final class SuggestedFix {
      * Removes a cast from the given node.
      */
     public Builder removeCast(Node n, AbstractCompiler compiler) {
-      Preconditions.checkArgument(n.isCast());
+      checkArgument(n.isCast());
       JSDocInfo jsDoc = n.getJSDocInfo();
       replacements.put(
           n.getSourceFileName(),
@@ -494,8 +496,7 @@ public final class SuggestedFix {
      * Inserts arguments into an existing function call.
      */
     public Builder insertArguments(Node n, int position, String... args) {
-      Preconditions.checkArgument(
-          n.isCall(), "insertArguments is only applicable to function call nodes.");
+      checkArgument(n.isCall(), "insertArguments is only applicable to function call nodes.");
       int startPosition;
       Node argument = n.getSecondChild();
       int i = 0;
@@ -504,7 +505,7 @@ public final class SuggestedFix {
         i++;
       }
       if (argument == null) {
-        Preconditions.checkArgument(
+        checkArgument(
             position == i, "The specified position must be less than the number of arguments.");
         startPosition = n.getSourceOffset() + n.getLength() - 1;
       } else {
@@ -534,15 +535,15 @@ public final class SuggestedFix {
      *     considers the comment to belong to the next argument.
      */
     public Builder deleteArgument(Node n, int position) {
-      Preconditions.checkArgument(
-          n.isCall(), "deleteArgument is only applicable to function call nodes.");
+      checkArgument(n.isCall(), "deleteArgument is only applicable to function call nodes.");
 
       // A CALL node's first child is the name of the function being called, and subsequent children
       // are the arguments being passed to that function.
       int numArguments = n.getChildCount() - 1;
-      Preconditions.checkState(numArguments > 0,
-          "deleteArgument() cannot be used on a function call with no arguments");
-      Preconditions.checkArgument(position >= 0 && position < numArguments,
+      checkState(
+          numArguments > 0, "deleteArgument() cannot be used on a function call with no arguments");
+      checkArgument(
+          position >= 0 && position < numArguments,
           "The specified position must be less than the number of arguments.");
       Node argument = n.getSecondChild();
 

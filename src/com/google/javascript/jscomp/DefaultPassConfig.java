@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
@@ -25,7 +28,6 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.TYPESCRIPT;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
@@ -1096,14 +1098,14 @@ public final class DefaultPassConfig extends PassConfig {
   /** Verify that all the passes are one-time passes. */
   private static void assertAllOneTimePasses(List<PassFactory> passes) {
     for (PassFactory pass : passes) {
-      Preconditions.checkState(pass.isOneTimePass());
+      checkState(pass.isOneTimePass());
     }
   }
 
   /** Verify that all the passes are multi-run passes. */
   private static void assertAllLoopablePasses(List<PassFactory> passes) {
     for (PassFactory pass : passes) {
-      Preconditions.checkState(!pass.isOneTimePass());
+      checkState(!pass.isOneTimePass());
     }
   }
 
@@ -1115,7 +1117,7 @@ public final class DefaultPassConfig extends PassConfig {
     int pass1Index = passList.indexOf(pass1);
     int pass2Index = passList.indexOf(pass2);
     if (pass1Index != -1 && pass2Index != -1) {
-      Preconditions.checkState(pass1Index < pass2Index, msg);
+      checkState(pass1Index < pass2Index, msg);
     }
   }
 
@@ -1153,7 +1155,7 @@ public final class DefaultPassConfig extends PassConfig {
         "The Dart super accessors pass must run before ES6->ES3 super lowering.");
 
     if (checks.contains(closureGoogScopeAliases)) {
-      Preconditions.checkState(
+      checkState(
           checks.contains(checkVariableReferences),
           "goog.scope processing requires variable checking");
     }
@@ -1850,23 +1852,24 @@ public final class DefaultPassConfig extends PassConfig {
   /** Runs type inference. */
   final HotSwapPassFactory inferTypes =
       new HotSwapPassFactory("inferTypes", true) {
-    @Override
-    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      return new HotSwapCompilerPass() {
         @Override
-        public void process(Node externs, Node root) {
-          Preconditions.checkNotNull(topScope);
-          Preconditions.checkNotNull(getTypedScopeCreator());
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+          return new HotSwapCompilerPass() {
+            @Override
+            public void process(Node externs, Node root) {
+              checkNotNull(topScope);
+              checkNotNull(getTypedScopeCreator());
 
-          makeTypeInference(compiler).process(externs, root);
-        }
-        @Override
-        public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-          makeTypeInference(compiler).inferAllScopes(scriptRoot);
+              makeTypeInference(compiler).process(externs, root);
+            }
+
+            @Override
+            public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+              makeTypeInference(compiler).inferAllScopes(scriptRoot);
+            }
+          };
         }
       };
-    }
-  };
 
   private final PassFactory symbolTableForNewTypeInference =
       new PassFactory("GlobalTypeInfo", true) {
@@ -1886,46 +1889,48 @@ public final class DefaultPassConfig extends PassConfig {
 
   private final HotSwapPassFactory inferJsDocInfo =
       new HotSwapPassFactory("inferJsDocInfo", true) {
-  @Override
-  protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-    return new HotSwapCompilerPass() {
-      @Override
-      public void process(Node externs, Node root) {
-        Preconditions.checkNotNull(topScope);
-        Preconditions.checkNotNull(getTypedScopeCreator());
+        @Override
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+          return new HotSwapCompilerPass() {
+            @Override
+            public void process(Node externs, Node root) {
+              checkNotNull(topScope);
+              checkNotNull(getTypedScopeCreator());
 
-        makeInferJsDocInfo(compiler).process(externs, root);
-      }
-      @Override
-      public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-        makeInferJsDocInfo(compiler).hotSwapScript(scriptRoot, originalRoot);
-      }
-    };
-  }
-};
+              makeInferJsDocInfo(compiler).process(externs, root);
+            }
+
+            @Override
+            public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+              makeInferJsDocInfo(compiler).hotSwapScript(scriptRoot, originalRoot);
+            }
+          };
+        }
+      };
 
   /** Checks type usage */
   private final HotSwapPassFactory checkTypes =
       new HotSwapPassFactory("checkTypes", true) {
-    @Override
-    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      return new HotSwapCompilerPass() {
         @Override
-        public void process(Node externs, Node root) {
-          Preconditions.checkNotNull(topScope);
-          Preconditions.checkNotNull(getTypedScopeCreator());
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+          return new HotSwapCompilerPass() {
+            @Override
+            public void process(Node externs, Node root) {
+              checkNotNull(topScope);
+              checkNotNull(getTypedScopeCreator());
 
-          TypeCheck check = makeTypeCheck(compiler);
-          check.process(externs, root);
-          compiler.getErrorManager().setTypedPercent(check.getTypedPercent());
-        }
-        @Override
-        public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-          makeTypeCheck(compiler).check(scriptRoot, false);
+              TypeCheck check = makeTypeCheck(compiler);
+              check.process(externs, root);
+              compiler.getErrorManager().setTypedPercent(check.getTypedPercent());
+            }
+
+            @Override
+            public void hotSwapScript(Node scriptRoot, Node originalRoot) {
+              makeTypeCheck(compiler).check(scriptRoot, false);
+            }
+          };
         }
       };
-    }
-  };
 
   /**
    * Checks possible execution paths of the program for problems: missing return
@@ -2020,7 +2025,7 @@ public final class DefaultPassConfig extends PassConfig {
   /** Executes the given callbacks with a {@link CombinedCompilerPass}. */
   private static HotSwapCompilerPass combineChecks(AbstractCompiler compiler,
       List<Callback> callbacks) {
-    Preconditions.checkArgument(!callbacks.isEmpty());
+    checkArgument(!callbacks.isEmpty());
     return new CombinedCompilerPass(compiler, callbacks);
   }
 
@@ -2882,7 +2887,7 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("renameProperties", true) {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
-          Preconditions.checkState(options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED);
+          checkState(options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED);
           final VariableMap prevPropertyMap = options.inputPropertyMap;
           return new CompilerPass() {
             @Override

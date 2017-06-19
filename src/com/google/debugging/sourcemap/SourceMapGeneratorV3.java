@@ -16,8 +16,10 @@
 
 package com.google.debugging.sourcemap;
 
-import com.google.debugging.sourcemap.SourceMapConsumerV3.EntryVisitor;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
+import com.google.debugging.sourcemap.SourceMapConsumerV3.EntryVisitor;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -189,8 +191,8 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
    */
   @Override
   public void setStartingPosition(int offsetLine, int offsetIndex) {
-    Preconditions.checkState(offsetLine >= 0);
-    Preconditions.checkState(offsetIndex >= 0);
+    checkState(offsetLine >= 0);
+    checkState(offsetIndex >= 0);
     offsetPosition = new FilePosition(offsetLine, offsetIndex);
   }
 
@@ -769,7 +771,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
       int nextLine = getAdjustedLine(m.startPosition);
       int nextCol = getAdjustedCol(m.startPosition);
       // If the previous value is null, no mapping exists.
-      Preconditions.checkState(line < nextLine || col <= nextCol);
+      checkState(line < nextLine || col <= nextCol);
       if (line < nextLine || (line == nextLine && col < nextCol)) {
         visit(v, parent, nextLine, nextCol);
       }
@@ -782,8 +784,8 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
     private void visit(MappingVisitor v, Mapping m,
         int nextLine, int nextCol)
         throws IOException {
-      Preconditions.checkState(line <= nextLine);
-      Preconditions.checkState(line < nextLine || col < nextCol);
+      checkState(line <= nextLine);
+      checkState(line < nextLine || col < nextCol);
 
       if (line == nextLine && col == nextCol) {
         // Nothing to do.
@@ -918,7 +920,7 @@ public final class SourceMapGeneratorV3 implements SourceMapGenerator {
           previousLine = line;
           previousColumn = col;
         } else {
-          Preconditions.checkState(m == null);
+          checkState(m == null);
         }
       }
 

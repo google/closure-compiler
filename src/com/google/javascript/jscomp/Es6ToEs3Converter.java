@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -392,7 +394,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    *     new Function.prototype.bind.apply(F, [].concat($jscomp.arrayFromIterable(args)))
    */
   private void visitArrayLitOrCallWithSpread(Node node, Node parent) {
-    Preconditions.checkArgument(node.isCall() || node.isArrayLit() || node.isNew());
+    checkArgument(node.isCall() || node.isArrayLit() || node.isNew());
     List<Node> groups = new ArrayList<>();
     Node currGroup = null;
     Node callee = node.isArrayLit() ? null : node.removeFirstChild();
@@ -464,7 +466,7 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
   }
 
   private void visitObjectWithComputedProperty(Node obj) {
-    Preconditions.checkArgument(obj.isObjectLit());
+    checkArgument(obj.isObjectLit());
     List<Node> props = new ArrayList<>();
     Node currElement = obj.getFirstChild();
 

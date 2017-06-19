@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.HashBasedTable;
@@ -302,7 +305,7 @@ public final class SymbolTable {
    * Gets the symbol for the given constructor or interface.
    */
   public Symbol getSymbolDeclaredBy(FunctionType fn) {
-    Preconditions.checkState(fn.isConstructor() || fn.isInterface());
+    checkState(fn.isConstructor() || fn.isInterface());
     ObjectType instanceType = fn.getInstanceType();
     return getSymbolForName(fn.getSource(), instanceType.getReferenceName());
   }
@@ -331,7 +334,7 @@ public final class SymbolTable {
    * Gets the symbol for the prototype of the given constructor or interface.
    */
   public Symbol getSymbolForInstancesOf(FunctionType fn) {
-    Preconditions.checkState(fn.isConstructor() || fn.isInterface());
+    checkState(fn.isConstructor() || fn.isInterface());
     ObjectType pType = fn.getPrototype();
     return getSymbolForName(fn.getSource(), pType.getReferenceName());
   }
@@ -632,7 +635,7 @@ public final class SymbolTable {
   private Symbol copySymbolTo(
       StaticSlot sym, Node declNode, SymbolScope scope) {
     // All symbols must have declaration nodes.
-    Preconditions.checkNotNull(declNode);
+    checkNotNull(declNode);
     return declareSymbol(
         sym.getName(), getType(sym), isTypeInferred(sym), scope, declNode,
         sym.getJSDocInfo());
@@ -1068,8 +1071,7 @@ public final class SymbolTable {
 
       if (otherScopeParent == null) {
         // The global scope must be created before any local scopes.
-        Preconditions.checkState(
-            globalScope == null, "Global scopes found at different roots");
+        checkState(globalScope == null, "Global scopes found at different roots");
       }
 
       myScope = new SymbolScope(
@@ -1151,7 +1153,7 @@ public final class SymbolTable {
 
     /** Sets the declaration node. May only be called once. */
     void setDeclaration(Reference ref) {
-      Preconditions.checkState(this.declaration == null);
+      checkState(this.declaration == null);
       this.declaration = ref;
     }
 
@@ -1741,13 +1743,12 @@ public final class SymbolTable {
 
   private final Ordering<SymbolScope> lexicalScopeOrdering =
       new Ordering<SymbolScope>() {
-    @Override
-    public int compare(SymbolScope a, SymbolScope b) {
-      Preconditions.checkState(a.isLexicalScope() && b.isLexicalScope(),
-                               "We can only sort lexical scopes");
-      return nodeOrdering.compare(a.getRootNode(), b.getRootNode());
-    }
-  };
+        @Override
+        public int compare(SymbolScope a, SymbolScope b) {
+          checkState(a.isLexicalScope() && b.isLexicalScope(), "We can only sort lexical scopes");
+          return nodeOrdering.compare(a.getRootNode(), b.getRootNode());
+        }
+      };
 
   private final Ordering<Symbol> symbolOrdering = new Ordering<Symbol>() {
     @Override
@@ -1779,9 +1780,9 @@ public final class SymbolTable {
     if (scope.isLexicalScope() || scope.isDocScope()) {
       return scope.getScopeDepth();
     } else {
-      Preconditions.checkState(scope.isPropertyScope());
+      checkState(scope.isPropertyScope());
       Symbol sym = scope.getSymbolForScope();
-      Preconditions.checkNotNull(sym);
+      checkNotNull(sym);
       return getLexicalScopeDepth(getScope(sym)) + 1;
     }
   }

@@ -16,7 +16,10 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -64,8 +67,8 @@ public final class DeclaredFunctionType implements Serializable {
       JSType receiverType,
       ImmutableList<String> typeParameters,                                            
       boolean isAbstract) {
-    Preconditions.checkArgument(retType == null || !retType.isBottom());
-    Preconditions.checkNotNull(commonTypes);
+    checkArgument(retType == null || !retType.isBottom());
+    checkNotNull(commonTypes);
     this.commonTypes = commonTypes;
     this.requiredFormals = requiredFormals;
     this.optionalFormals = optionalFormals;
@@ -165,7 +168,7 @@ public final class DeclaredFunctionType implements Serializable {
   }
 
   public JSType getRestFormalsType() {
-    Preconditions.checkState(restFormals != null);
+    checkState(restFormals != null);
     return restFormals;
   }
 
@@ -310,7 +313,7 @@ public final class DeclaredFunctionType implements Serializable {
    * substituting the TTL type variables with unknown.
    */
   private FunctionTypeBuilder substituteGenerics(Map<String, JSType> typeMap) {
-    Preconditions.checkState(!typeMap.isEmpty());
+    checkState(!typeMap.isEmpty());
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
     for (JSType reqFormal : requiredFormals) {
       builder.addReqFormal(reqFormal == null ? null : reqFormal.substituteGenerics(typeMap));

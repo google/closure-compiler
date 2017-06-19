@@ -15,8 +15,9 @@
  */
 package com.google.javascript.jscomp.newtypes;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -66,7 +67,7 @@ public final class QualifiedName {
   }
 
   public QualifiedName getAllButLeftmost() {
-    Preconditions.checkArgument(!isIdentifier());
+    checkArgument(!isIdentifier());
     return new QualifiedName(parts.subList(1, parts.size()));
   }
 
@@ -75,7 +76,7 @@ public final class QualifiedName {
   }
 
   public QualifiedName getAllButRightmost() {
-    Preconditions.checkArgument(!isIdentifier());
+    checkArgument(!isIdentifier());
     return new QualifiedName(parts.subList(0, parts.size() - 1));
   }
 

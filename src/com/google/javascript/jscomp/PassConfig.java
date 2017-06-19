@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.graph.GraphvizGraph;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
@@ -81,7 +82,7 @@ public abstract class PassConfig {
    * @param scriptRoot The root of the AST used to generate global scope.
    */
   void patchGlobalTypedScope(AbstractCompiler compiler, Node scriptRoot) {
-    Preconditions.checkNotNull(internalScopeCreator);
+    checkNotNull(internalScopeCreator);
     internalScopeCreator.patchGlobalScope(topScope, scriptRoot);
   }
 

@@ -16,8 +16,11 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CodingConvention;
@@ -210,7 +213,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
   public JSTypeCreatorFromJSDoc(JSTypes commonTypes,
       CodingConvention convention, UniqueNameGenerator nameGen,
       Function<String, Void> recordPropertyName) {
-    Preconditions.checkNotNull(commonTypes);
+    checkNotNull(commonTypes);
     this.commonTypes = commonTypes;
     this.qmarkFunctionDeclared = new FunctionAndSlotType(
         null, DeclaredFunctionType.qmarkFunctionDeclaration(commonTypes));
@@ -277,7 +280,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
 
   private JSType getTypeFromCommentHelper(
       Node n, DeclaredTypeRegistry registry, ImmutableList<String> typeParameters) {
-    Preconditions.checkNotNull(n);
+    checkNotNull(n);
     if (typeParameters == null) {
       typeParameters = ImmutableList.of();
     }
@@ -475,8 +478,9 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
   }
 
   public void resolveTypedef(Typedef td, DeclaredTypeRegistry registry) {
-    Preconditions.checkState(td != null, "getTypedef should only be " +
-        "called when we know that the typedef is defined");
+    checkState(
+        td != null,
+        "getTypedef should only be " + "called when we know that the typedef is defined");
     if (td.isResolved()) {
       return;
     }
@@ -498,8 +502,8 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
   }
 
   public void resolveEnum(EnumType e, DeclaredTypeRegistry registry) {
-    Preconditions.checkState(e != null, "getEnum should only be " +
-        "called when we know that the enum is defined");
+    checkState(
+        e != null, "getEnum should only be " + "called when we know that the enum is defined");
     if (e.isResolved()) {
       return;
     }
@@ -529,7 +533,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
 
   private void checkInvalidGenericsInstantiation(Node n) {
     if (n.hasChildren()) {
-      Preconditions.checkState(n.getFirstChild().isNormalBlock(), n);
+      checkState(n.getFirstChild().isNormalBlock(), n);
       warnings.add(JSError.make(n, INVALID_GENERICS_INSTANTIATION,
               "", "0", String.valueOf(n.getFirstChild().getChildCount())));
     }
@@ -544,7 +548,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
     ImmutableList.Builder<JSType> typeList = ImmutableList.builder();
     if (n.hasChildren()) {
       // Compute instantiation of polymorphic class/interface.
-      Preconditions.checkState(n.getFirstChild().isNormalBlock(), n);
+      checkState(n.getFirstChild().isNormalBlock(), n);
       for (Node child : n.getFirstChild().children()) {
         typeList.add(getTypeFromCommentHelper(child, registry, outerTypeParameters));
       }
@@ -756,7 +760,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
     int index = -1;
 
     ParamIterator(Node params, JSDocInfo jsdoc) {
-      Preconditions.checkArgument(params != null || jsdoc != null);
+      checkArgument(params != null || jsdoc != null);
       if (params != null) {
         this.params = params;
         this.paramNames = null;
@@ -862,7 +866,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
 
     if (jsdoc.hasThisType()) {
       Node thisRoot = jsdoc.getThisType().getRoot();
-      Preconditions.checkState(thisRoot.getToken() == Token.BANG);
+      checkState(thisRoot.getToken() == Token.BANG);
       builder.addReceiverType(
           getThisOrNewType(thisRoot.getFirstChild(), registry, typeParameters));
     }
@@ -964,7 +968,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
     if (parentClass == null) {
       return getMaybeHigherOrderParentClass(docNode, functionName, funNode, extendedType, registry);
     } else {
-      Preconditions.checkState(parentClass.isInterface());
+      checkState(parentClass.isInterface());
       warnings.add(JSError.make(funNode, CONFLICTING_EXTENDED_TYPE,
               "constructor", functionName));
     }
@@ -1019,7 +1023,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
       warnings.add(JSError.make(funNode, DICT_IMPLEMENTS_INTERF, className));
     }
     boolean noCycles = constructorType.addInterfaces(implementedIntfs);
-    Preconditions.checkState(noCycles);
+    checkState(noCycles);
     builder.addNominalType(constructorType.getInstanceAsJSType());
   }
 

@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import java.util.Set;
@@ -238,7 +238,7 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
             return;
           }
           inputId = n.getInputId();
-          Preconditions.checkNotNull(inputId);
+          checkNotNull(inputId);
           break;
 
         case MODULE_BODY:

@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.GraphNode;
@@ -424,7 +425,7 @@ final class MustBeReachingVariableDef extends
    * @param useNode the location of the use where the definition reaches.
    */
   Definition getDef(String name, Node useNode) {
-    Preconditions.checkArgument(getCfg().hasNode(useNode));
+    checkArgument(getCfg().hasNode(useNode));
     GraphNode<Node, Branch> n = getCfg().getNode(useNode);
     FlowState<MustDef> state = n.getAnnotation();
     return state.getIn().reachingDef.get(jsScope.getVar(name));

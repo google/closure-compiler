@@ -16,6 +16,8 @@
 
 package com.google.javascript.refactoring;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -23,12 +25,6 @@ import com.google.javascript.jscomp.CommandLineRunner;
 import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.ErrorManager;
 import com.google.javascript.jscomp.TypeMatchingStrategy;
-
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.CmdLineParser;
-import org.kohsuke.args4j.Option;
-import org.kohsuke.args4j.spi.BooleanOptionHandler;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,6 +34,10 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.spi.BooleanOptionHandler;
 
 /**
  * Main binary that drives a RefasterJS refactoring.
@@ -94,10 +94,10 @@ final class RefasterJs {
       p.printUsage(System.out);
       return;
     }
-    Preconditions.checkArgument(
+    checkArgument(
         !Strings.isNullOrEmpty(refasterJsTemplate), "--refasterjs_template must be provided");
     List<String> fileInputs = getInputs();
-    Preconditions.checkArgument(
+    checkArgument(
         !fileInputs.isEmpty(), "At least one input must be provided in the --inputs flag.");
     for (String input : fileInputs) {
       Preconditions.checkArgument(

@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -117,8 +121,8 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     Node root = ast.getAstRoot(compiler);
     // The root maybe null if the AST can not be created.
     if (root != null) {
-      Preconditions.checkState(root.isScript());
-      Preconditions.checkNotNull(root.getInputId());
+      checkState(root.isScript());
+      checkNotNull(root.getInputId());
     }
     return root;
   }
@@ -280,7 +284,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
 
     void visitTree(Node n) {
       visitSubtree(n, null);
-      Preconditions.checkArgument(n.isScript());
+      checkArgument(n.isScript());
       FeatureSet features = (FeatureSet) n.getProp(Node.FEATURE_SET);
       if (features != null) {
         // Only add the "lang" load flag if it's not the default (es3), so that
@@ -337,8 +341,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   /** Sets the module to which the input belongs. */
   public void setModule(JSModule module) {
     // An input may only belong to one module.
-    Preconditions.checkArgument(
-        module == null || this.module == null || this.module == module);
+    checkArgument(module == null || this.module == null || this.module == module);
     this.module = module;
   }
 

@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
@@ -150,8 +152,8 @@ import java.util.Set;
   public boolean safeToMoveBefore(Node source,
       AbstractMotionEnvironment environment,
       Node destination) {
-    Preconditions.checkNotNull(locationAbstraction);
-    Preconditions.checkArgument(!nodeHasAncestor(destination, source));
+    checkNotNull(locationAbstraction);
+    checkArgument(!nodeHasAncestor(destination, source));
 
     // It is always safe to move pure code.
     if (isPure(source)) {
@@ -789,7 +791,7 @@ import java.util.Set;
      * Calculates the effect mask for a variable reference.
      */
     private int effectMaskForVariableReference(Node variableReference) {
-      Preconditions.checkArgument(variableReference.isName());
+      checkArgument(variableReference.isName());
 
       int effectMask = VISIBILITY_LOCATION_NONE;
 
@@ -845,7 +847,7 @@ import java.util.Set;
      * Return true if the storage node is an r-value.
      */
     private static boolean storageNodeIsRValue(Node node) {
-      Preconditions.checkArgument(isStorageNode(node));
+      checkArgument(isStorageNode(node));
 
       // We consider all names to be r-values unless
       // LHS of Token.ASSIGN
@@ -874,7 +876,7 @@ import java.util.Set;
      * Return true if the storage node is an l-value.
      */
     private static boolean storageNodeIsLValue(Node node) {
-      Preconditions.checkArgument(isStorageNode(node));
+      checkArgument(isStorageNode(node));
       return NodeUtil.isLValue(node);
     }
 
@@ -898,8 +900,7 @@ import java.util.Set;
 
       @Override
       public boolean intersectsLocation(EffectLocation otherLocation) {
-        Preconditions.checkArgument(otherLocation instanceof
-            VisibilityBasedEffectLocation);
+        checkArgument(otherLocation instanceof VisibilityBasedEffectLocation);
 
         int otherMask =
             ((VisibilityBasedEffectLocation) otherLocation).visibilityMask;
@@ -914,8 +915,7 @@ import java.util.Set;
 
       @Override
       public EffectLocation join(EffectLocation otherLocation) {
-        Preconditions.checkArgument(otherLocation instanceof
-            VisibilityBasedEffectLocation);
+        checkArgument(otherLocation instanceof VisibilityBasedEffectLocation);
 
         int otherMask =
             ((VisibilityBasedEffectLocation) otherLocation).visibilityMask;
@@ -978,7 +978,7 @@ import java.util.Set;
      * or {@code null} otherwise.
      */
     public Node findDeclaringNameNodeForUse(Node usingNameNode) {
-      Preconditions.checkArgument(usingNameNode.isName());
+      checkArgument(usingNameNode.isName());
 
       return referencesByNameNode.get(usingNameNode);
     }

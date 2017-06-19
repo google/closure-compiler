@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp.graph;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
 
@@ -63,7 +64,7 @@ public final class GraphReachability<N, E> implements EdgeCallback<N, E> {
 
   public void recompute(N reachableNode) {
     GraphNode<N, E> newReachable = graph.getNode(reachableNode);
-    Preconditions.checkState(newReachable.getAnnotation() != REACHABLE);
+    checkState(newReachable.getAnnotation() != REACHABLE);
     newReachable.setAnnotation(REACHABLE);
     FixedPointGraphTraversal.newTraversal(this)
         .computeFixedPoint(graph, reachableNode);

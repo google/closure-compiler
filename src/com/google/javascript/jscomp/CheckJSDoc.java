@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
@@ -372,7 +373,7 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
     if (nameNode.isName() || nameNode.isStringKey()) {
       return nameNode.getString().startsWith("MSG_");
     } else {
-      Preconditions.checkState(nameNode.isQualifiedName());
+      checkState(nameNode.isQualifiedName());
       return nameNode.getLastChild().getString().startsWith("MSG_");
     }
   }

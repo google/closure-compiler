@@ -780,8 +780,7 @@ public class Node implements Serializable {
    * Add 'child' before 'node'.
    */
   public void addChildBefore(Node newChild, Node node) {
-    checkArgument(node.parent == this,
-        "The existing child node of the parent should not be null.");
+    checkArgument(node.parent == this, "The existing child node of the parent should not be null.");
     checkArgument(newChild.next == null, "The new child node has next siblings.");
     checkArgument(newChild.previous == null, "The new child node has previous siblings.");
     checkArgument(newChild.parent == null, "The new child node already has a parent.");

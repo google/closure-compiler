@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
@@ -55,7 +57,7 @@ public class DefinitionUseSiteFinder extends NameBasedDefinitionProvider {
    * @return use site collection.
    */
   public Collection<UseSite> getUseSites(Definition definition) {
-    Preconditions.checkState(hasProcessBeenRun, "The process was not run");
+    checkState(hasProcessBeenRun, "The process was not run");
     String name = getSimplifiedName(definition.getLValue());
     return nameUseSiteMultimap.get(name);
   }
@@ -75,7 +77,7 @@ public class DefinitionUseSiteFinder extends NameBasedDefinitionProvider {
       Definition first = defs.iterator().next();
 
       String name = getSimplifiedName(first.getLValue());
-      Preconditions.checkNotNull(name);
+      checkNotNull(name);
       nameUseSiteMultimap.put(
           name,
           new UseSite(node, traversal.getScope(), traversal.getModule()));
@@ -126,8 +128,8 @@ public class DefinitionUseSiteFinder extends NameBasedDefinitionProvider {
         return false;
       }
 
-      Preconditions.checkState(!singleSiteDefinitions.isEmpty());
-      Preconditions.checkState(singleSiteDefinitions.contains(definition));
+      checkState(!singleSiteDefinitions.isEmpty());
+      checkState(singleSiteDefinitions.contains(definition));
     }
 
     return true;

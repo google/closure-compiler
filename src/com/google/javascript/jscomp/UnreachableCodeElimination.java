@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.NodeTraversal.FunctionCallback;
@@ -154,12 +155,12 @@ class UnreachableCodeElimination implements CompilerPass {
           // branches to the same node. If after removing it control still
           // branches to the same node, it is safe to remove.
           List<DiGraphEdge<Node, Branch>> outEdges = gNode.getOutEdges();
-          if (outEdges.size() == 1 &&
+          if (outEdges.size() == 1
+              &&
               // If there is a next node, this jump is not useless.
               (n.getNext() == null || n.getNext().isFunction())) {
 
-            Preconditions.checkState(
-                outEdges.get(0).getValue() == Branch.UNCOND);
+            checkState(outEdges.get(0).getValue() == Branch.UNCOND);
             Node fallThrough = computeFollowing(n);
             Node nextCfgNode = outEdges.get(0).getDestination().getValue();
             if (nextCfgNode == fallThrough && !inFinally(n.getParent(), n)) {

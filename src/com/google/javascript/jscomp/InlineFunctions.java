@@ -15,6 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
@@ -77,8 +80,8 @@ class InlineFunctions implements CompilerPass {
       boolean assumeStrictThis,
       boolean assumeMinimumCapture,
       int maxSizeAfterInlining) {
-    Preconditions.checkArgument(compiler != null);
-    Preconditions.checkArgument(safeNameIdSupplier != null);
+    checkArgument(compiler != null);
+    checkArgument(safeNameIdSupplier != null);
     this.compiler = compiler;
 
     this.inlineGlobalFunctions = inlineGlobalFunctions;
@@ -106,7 +109,7 @@ class InlineFunctions implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
+    checkState(compiler.getLifeCycleStage().isNormalized());
 
     NodeTraversal.traverseEs6(compiler, root, new FindCandidateFunctions());
     if (fns.isEmpty()) {
@@ -141,7 +144,7 @@ class InlineFunctions implements CompilerPass {
   }
 
   private static boolean isAlwaysInlinable(Node fn) {
-    Preconditions.checkArgument(fn.isFunction());
+    checkArgument(fn.isFunction());
     Node body = NodeUtil.getFunctionBody(fn);
     return (!body.hasChildren()) || (body.hasOneChild() && body.getFirstChild().isReturn());
   }
@@ -391,7 +394,7 @@ class InlineFunctions implements CompilerPass {
           } else if (child.isFunction()) {
             name = anonFunctionMap.get(child);
           } else if (NodeUtil.isFunctionObjectCall(n)) {
-            Preconditions.checkState(NodeUtil.isGet(child));
+            checkState(NodeUtil.isGet(child));
             Node fnIdentifingNode = child.getFirstChild();
             if (fnIdentifingNode.isName()) {
               name = fnIdentifingNode.getString();
@@ -418,7 +421,7 @@ class InlineFunctions implements CompilerPass {
   /** @return Whether the name is used in a way that might be a candidate for inlining. */
   static boolean isCandidateUsage(Node name) {
     Node parent = name.getParent();
-    Preconditions.checkState(name.isName());
+    checkState(name.isName());
     if (parent.isVar() || parent.isFunction()) {
       // This is a declaration.  Duplicate declarations are handle during
       // function candidate gathering.
@@ -528,7 +531,7 @@ class InlineFunctions implements CompilerPass {
 
     /** Find functions that can be inlined. */
     private void checkNameUsage(Node n, Node parent) {
-      Preconditions.checkState(n.isName(), n);
+      checkState(n.isName(), n);
 
       if (isCandidateUsage(n)) {
         return;
@@ -578,7 +581,7 @@ class InlineFunctions implements CompilerPass {
 
     @Override
     public void visitCallSite(NodeTraversal t, Node callNode, FunctionState functionState) {
-      Preconditions.checkState(functionState.hasExistingFunctionDefinition());
+      checkState(functionState.hasExistingFunctionDefinition());
       if (functionState.canInline()) {
         Reference ref = functionState.getReference(callNode);
 
@@ -730,7 +733,7 @@ class InlineFunctions implements CompilerPass {
 
   /** @see #findCalledFunctions(Node) */
   private static void findCalledFunctions(Node node, Set<String> changed) {
-    Preconditions.checkArgument(changed != null);
+    checkArgument(changed != null);
     // For each referenced function, add a new reference
     if (node.isName() && isCandidateUsage(node)) {
       changed.add(node.getString());
@@ -762,8 +765,8 @@ class InlineFunctions implements CompilerPass {
     for (FunctionState functionState : fns.values()) {
       if (functionState.canRemove()) {
         Function fn = functionState.getFn();
-        Preconditions.checkState(functionState.canInline());
-        Preconditions.checkState(fn != null);
+        checkState(functionState.canInline());
+        checkState(fn != null);
         verifyAllReferencesInlined(functionState);
         fn.remove();
         NodeUtil.markFunctionsDeleted(fn.getFunctionNode(), compiler);
@@ -841,7 +844,7 @@ class InlineFunctions implements CompilerPass {
     }
 
     public void setFn(Function fn) {
-      Preconditions.checkState(this.fn == null);
+      checkState(this.fn == null);
       this.fn = fn;
     }
 

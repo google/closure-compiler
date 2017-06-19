@@ -15,12 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_DECLARATION;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_EXTENDS;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISSING_EXTERNS;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -93,7 +93,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
   @Override
   public void visit(NodeTraversal traversal, Node node, Node parent) {
-    Preconditions.checkState(
+    checkState(
         polymerElementExterns != null && polymerElementProps != null && globalNames != null,
         "Cannot call visit() before process()");
     if (isPolymerCall(node)) {

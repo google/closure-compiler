@@ -16,7 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Predicate;
 import com.google.javascript.jscomp.MinimizedCondition.MeasuredNode;
 import com.google.javascript.jscomp.MinimizedCondition.MinimizationStyle;
@@ -397,7 +400,7 @@ class PeepholeMinimizeConditions
 
   static boolean isExceptionPossible(Node n) {
     // TODO(johnlenz): maybe use ControlFlowAnalysis.mayThrowException?
-    Preconditions.checkState(n.isReturn() || n.isThrow(), n);
+    checkState(n.isReturn() || n.isThrow(), n);
     return n.isThrow()
         || (n.hasChildren()
             && !NodeUtil.isLiteralValue(n.getLastChild(), true));
@@ -413,7 +416,7 @@ class PeepholeMinimizeConditions
    * Returns the replacement for n or the original if no change was made
    */
   private Node tryMinimizeNot(Node n) {
-    Preconditions.checkArgument(n.isNot());
+    checkArgument(n.isNot());
     Node parent = n.getParent();
 
     Node notChild = n.getFirstChild();
@@ -696,7 +699,7 @@ class PeepholeMinimizeConditions
       if (name1.hasChildren()
           && maybeName2.isName()
           && name1.getString().equals(maybeName2.getString())) {
-        Preconditions.checkState(name1.hasOneChild());
+        checkState(name1.hasOneChild());
         Node thenExpr = name1.removeFirstChild();
         Node elseExpr = elseAssign.getLastChild().detach();
         Node replacementCond = replaceNode(originalCond, shortCond).detach();
@@ -722,7 +725,7 @@ class PeepholeMinimizeConditions
           && maybeName1.isName()
           && maybeName1.getString().equals(name2.getString())) {
         Node thenExpr = thenAssign.getLastChild().detach();
-        Preconditions.checkState(name2.hasOneChild());
+        checkState(name2.hasOneChild());
         Node elseExpr = name2.removeFirstChild();
         Node replacementCond = replaceNode(originalCond, shortCond).detach();
         Node hookNode = IR.hook(replacementCond, thenExpr, elseExpr).srcref(n);
@@ -762,7 +765,7 @@ class PeepholeMinimizeConditions
    * @param n The IF node to examine.
    */
   private void tryRemoveRepeatedStatements(Node n) {
-    Preconditions.checkState(n.isIf(), n);
+    checkState(n.isIf(), n);
 
     Node parent = n.getParent();
     if (!NodeUtil.isStatementBlock(parent)) {
@@ -774,8 +777,8 @@ class PeepholeMinimizeConditions
     Node cond = n.getFirstChild();
     Node trueBranch = cond.getNext();
     Node falseBranch = trueBranch.getNext();
-    Preconditions.checkNotNull(trueBranch);
-    Preconditions.checkNotNull(falseBranch);
+    checkNotNull(trueBranch);
+    checkNotNull(falseBranch);
 
     while (true) {
       Node lastTrue = trueBranch.getLastChild();
@@ -832,7 +835,7 @@ class PeepholeMinimizeConditions
    * @return The expression node.
    */
   private static Node getBlockExpression(Node n) {
-    Preconditions.checkState(isFoldableExpressBlock(n));
+    checkState(isFoldableExpressBlock(n));
     return n.getFirstChild();
   }
 
@@ -882,7 +885,7 @@ class PeepholeMinimizeConditions
    * @return The expression that is part of the return.
    */
   private static Node getBlockReturnExpression(Node n) {
-    Preconditions.checkState(isReturnExpressBlock(n));
+    checkState(isReturnExpressBlock(n));
     return n.getFirstFirstChild();
   }
 
@@ -907,7 +910,7 @@ class PeepholeMinimizeConditions
    * @return The var node.
    */
   private static Node getBlockVar(Node n) {
-    Preconditions.checkState(isVarBlock(n));
+    checkState(isVarBlock(n));
     return n.getFirstChild();
   }
 
@@ -1028,7 +1031,7 @@ class PeepholeMinimizeConditions
 
     Token op = n.getToken();
     boolean isShallow = op == Token.SHEQ || op == Token.SHNE;
-    Preconditions.checkArgument(op == Token.EQ || op == Token.NE || isShallow);
+    checkArgument(op == Token.EQ || op == Token.NE || isShallow);
 
     Node left = n.getFirstChild();
     Node right = n.getLastChild();

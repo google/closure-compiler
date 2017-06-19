@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
@@ -124,7 +126,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       return; // Don't even brother. All global variables are likely escaped.
     }
 
-    Preconditions.checkState(t.getScopeRoot().isFunction());
+    checkState(t.getScopeRoot().isFunction());
     Node scopeRoot = t.getScopeRoot();
     if (!isCandidateFunction(scopeRoot)) {
       return;
@@ -314,7 +316,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
 
     Candidate(String varName, Definition defMetadata,
         Node use, Node useCfgNode) {
-      Preconditions.checkArgument(use.isName());
+      checkArgument(use.isName());
       this.varName = varName;
       this.defMetadata = defMetadata;
       this.use = use;
@@ -468,7 +470,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
         Node rhs = def.getLastChild();
         rhs.detach();
         // Oh yes! I have grandparent to remove this.
-        Preconditions.checkState(defParent.isExprResult());
+        checkState(defParent.isExprResult());
         while (defParent.getParent().isLabel()) {
           defParent = defParent.getParent();
         }

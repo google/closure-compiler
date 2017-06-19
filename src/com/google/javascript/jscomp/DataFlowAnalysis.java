@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -339,8 +341,8 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
      * @param outState Output.
      */
     private FlowState(L inState, L outState) {
-      Preconditions.checkNotNull(inState);
-      Preconditions.checkNotNull(outState);
+      checkNotNull(inState);
+      checkNotNull(outState);
       this.in = inState;
       this.out = outState;
     }
@@ -350,7 +352,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     }
 
     void setIn(L in) {
-      Preconditions.checkNotNull(in);
+      checkNotNull(in);
       this.in = in;
     }
 
@@ -359,7 +361,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     }
 
     void setOut(L out) {
-      Preconditions.checkNotNull(out);
+      checkNotNull(out);
       this.out = out;
     }
 
@@ -455,7 +457,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       BranchedFlowState<L> state = node.getAnnotation();
       List<L> outBefore = state.out;
       state.out = branchedFlowThrough(node.getValue(), state.in);
-      Preconditions.checkState(outBefore.size() == state.out.size());
+      checkState(outBefore.size() == state.out.size());
       for (int i = 0; i < outBefore.size(); i++) {
         if (!outBefore.get(i).equals(state.out.get(i))) {
           return true;
@@ -504,8 +506,8 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
      * @param outState Output.
      */
     private BranchedFlowState(L inState, List<L> outState) {
-      Preconditions.checkNotNull(inState);
-      Preconditions.checkNotNull(outState);
+      checkNotNull(inState);
+      checkNotNull(outState);
       this.in = inState;
       this.out = outState;
     }
@@ -515,7 +517,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     }
 
     void setIn(L in) {
-      Preconditions.checkNotNull(in);
+      checkNotNull(in);
       this.in = in;
     }
 

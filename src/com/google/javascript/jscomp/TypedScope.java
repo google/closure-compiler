@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
@@ -135,7 +136,7 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType>, TypeI
       return ObjectType.cast(rootNode.getJSType());
     }
 
-    Preconditions.checkState(rootNode.isFunction());
+    checkState(rootNode.isFunction());
     JSType nodeType = rootNode.getJSType();
     if (nodeType != null && nodeType.isFunctionType()) {
       return nodeType.toMaybeFunctionType().getTypeOfThis();
@@ -157,7 +158,7 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType>, TypeI
 
   TypedVar declare(String name, Node nameNode,
       JSType type, CompilerInput input, boolean inferred) {
-    Preconditions.checkState(name != null && !name.isEmpty());
+    checkState(name != null && !name.isEmpty());
     TypedVar var = new TypedVar(inferred, name, nameNode, type, this, vars.size(), input);
     vars.put(name, var);
     return var;
@@ -166,8 +167,8 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType>, TypeI
   @Override
   void undeclare(Var var) {
     TypedVar tvar = (TypedVar) var;
-    Preconditions.checkState(tvar.scope == this);
-    Preconditions.checkState(vars.get(tvar.name) == tvar);
+    checkState(tvar.scope == this);
+    checkState(vars.get(tvar.name) == tvar);
     vars.remove(tvar.name);
   }
 

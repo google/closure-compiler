@@ -16,7 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
 import com.google.javascript.jscomp.LiveVariablesAnalysis.LiveVariableLattice;
@@ -52,8 +55,8 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
 
   @Override
   public void process(Node externs, Node root) {
-    Preconditions.checkNotNull(externs);
-    Preconditions.checkNotNull(root);
+    checkNotNull(externs);
+    checkNotNull(root);
     NodeTraversal.traverseEs6(compiler, root, this);
   }
 
@@ -85,8 +88,8 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
   }
 
   private void eliminateDeadAssignments(NodeTraversal t) {
-    Preconditions.checkArgument(t.inFunctionBlockScope());
-    Preconditions.checkState(!functionStack.isEmpty());
+    checkArgument(t.inFunctionBlockScope());
+    checkState(!functionStack.isEmpty());
 
     // Skip unchanged functions (note that the scope root is the function block, not the function).
     if (!compiler.hasScopeChanged(t.getScopeRoot().getParent())) {
@@ -117,7 +120,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
     // Elevate all variable declarations up till the function scope
     // so the liveness analysis has all variables for the process.
     for (Var var : blockScope.getVarIterable()) {
-      Preconditions.checkArgument(!var.isClass() && !var.isLet() && !var.isConst());
+      checkArgument(!var.isClass() && !var.isLet() && !var.isConst());
       functionScope.declare(var.getName(), var.getNameNode(), var.getInput());
     }
 
@@ -239,7 +242,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
         return; // Not a local variable assignment.
       }
       String name = lhs.getString();
-      Preconditions.checkState(t.getScope().isFunctionBlockScope());
+      checkState(t.getScope().isFunctionBlockScope());
       Scope functionScope = t.getScope().getParent();
       if (!functionScope.isDeclaredSloppy(name, false)) {
         return;
@@ -411,7 +414,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
 
     if (n.isName() && variable.equals(n.getString())) {
       if (NodeUtil.isVarOrSimpleAssignLhs(n, n.getParent())) {
-        Preconditions.checkState(n.getParent().isAssign(), n.getParent());
+        checkState(n.getParent().isAssign(), n.getParent());
         // The expression to which the assignment is made is evaluated before
         // the RHS is evaluated (normal left to right evaluation) but the KILL
         // occurs after the RHS is evaluated.

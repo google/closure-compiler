@@ -15,8 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.PolymerBehaviorExtractor.BehaviorDefinition;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
@@ -65,7 +66,7 @@ final class PolymerClassDefinition {
       ImmutableList<BehaviorDefinition> behaviors,
       FeatureSet features) {
     this.target = target;
-    Preconditions.checkState(descriptor.isObjectLit());
+    checkState(descriptor.isObjectLit());
     this.descriptor = descriptor;
     this.constructor = constructor;
     this.nativeBaseElement = nativeBaseElement;

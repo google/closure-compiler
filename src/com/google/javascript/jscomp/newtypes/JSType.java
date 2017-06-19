@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -96,7 +100,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   public static boolean mockToString = false;
 
   private JSType(JSTypes commonTypes) {
-    Preconditions.checkNotNull(commonTypes);
+    checkNotNull(commonTypes);
     this.commonTypes = commonTypes;
   }
 
@@ -104,13 +108,13 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
       int mask, ImmutableSet<ObjectType> objs,
       String typeVar, ImmutableSet<EnumType> enums) {
     // Fix up the mask for objects and enums
-    if (Preconditions.checkNotNull(enums).isEmpty()) {
+    if (checkNotNull(enums).isEmpty()) {
       mask &= ~ENUM_MASK;
     } else {
       mask |= ENUM_MASK;
     }
 
-    if (Preconditions.checkNotNull(objs).isEmpty()) {
+    if (checkNotNull(objs).isEmpty()) {
       mask &= ~NON_SCALAR_MASK;
     } else {
       mask |= NON_SCALAR_MASK;
@@ -435,7 +439,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     if (isUnknown()) {
       return false;
     }
-    Preconditions.checkState(!getObjs().isEmpty());
+    checkState(!getObjs().isEmpty());
     for (ObjectType objType : getObjs()) {
       if (!objType.isDict()) {
         return false;
@@ -597,8 +601,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   // When joining w/ TOP or UNKNOWN, avoid setting more fields on them, eg, obj.
   public static JSType join(JSType lhs, JSType rhs) {
-    Preconditions.checkNotNull(lhs);
-    Preconditions.checkNotNull(rhs);
+    checkNotNull(lhs);
+    checkNotNull(rhs);
     JSTypes commonTypes = lhs.commonTypes;
     if (lhs.isTop() || rhs.isTop()) {
       return commonTypes.TOP;
@@ -675,7 +679,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
    * declared template parameters on this type.
    */
   final JSType instantiateGenerics(JSType... types) {
-    Preconditions.checkState(this.isSingletonObj());
+    checkState(this.isSingletonObj());
     NominalType uninstantiated = getNominalTypeIfSingletonObj();
     NominalType instantiated = uninstantiated.instantiateGenerics(Arrays.asList(types));
     return JSType.fromObjectType(ObjectType.fromNominalType(instantiated));
@@ -688,7 +692,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   private static void updateTypemap(
       Multimap<String, JSType> typeMultimap,
       String typeParam, JSType type) {
-    Preconditions.checkNotNull(type);
+    checkNotNull(type);
     Set<JSType> typesToRemove = new LinkedHashSet<>();
     for (JSType other : typeMultimap.get(typeParam)) {
       if (type.isUnknown()) {
@@ -746,8 +750,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
    * JSType.UNKNOWN as a "hole" to be filled.
    * @return The unified type, or null if unification fails */
   static JSType unifyUnknowns(JSType t1, JSType t2) {
-    Preconditions.checkNotNull(t1);
-    Preconditions.checkNotNull(t2);
+    checkNotNull(t1);
+    checkNotNull(t2);
     if (t1.isUnknown() || t1.isLoose()) {
       return t2;
     } else if (t2.isUnknown() || t2.isLoose()) {
@@ -1183,7 +1187,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
       MismatchInfo[] boxedInfo = new MismatchInfo[1];
       boolean areSubtypes =
           found.isSubtypeOfHelper(true, expected, SubtypeCache.create(), boxedInfo);
-      Preconditions.checkState(!areSubtypes);
+      checkState(!areSubtypes);
       return boxedInfo[0];
     }
     return null;
@@ -1315,8 +1319,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   // Adds ft to this type, replacing the current function, if any.
   public final JSType withFunction(FunctionType ft, NominalType fnNominal) {
     // This method is used for a very narrow purpose, hence these checks.
-    Preconditions.checkNotNull(ft);
-    Preconditions.checkState(this.isNamespace());
+    checkNotNull(ft);
+    checkState(this.isNamespace());
     return fromObjectType(
         getObjTypeIfSingletonObj().withFunction(ft, fnNominal));
   }
@@ -1385,7 +1389,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   /** Turns the class-less object of this type (if any) into a loose object */
   public final JSType withLoose() {
     if (getObjs().isEmpty()) {
-      Preconditions.checkState(!getEnums().isEmpty());
+      checkState(!getEnums().isEmpty());
       return this;
     }
     // TODO(dimvar): here, a lot of the time the set of objects will only contain objects for which
@@ -1413,7 +1417,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     if (isUnknown()) {
       return this.commonTypes.UNKNOWN;
     }
-    Preconditions.checkState(!getObjs().isEmpty() || !getEnums().isEmpty());
+    checkState(!getObjs().isEmpty() || !getEnums().isEmpty());
     return nullAcceptingJoin(
         TypeWithPropertiesStatics.getDeclaredProp(getObjs(), qname),
         TypeWithPropertiesStatics.getDeclaredProp(getEnums(), qname));
@@ -1437,7 +1441,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   public final boolean hasConstantProp(QualifiedName pname) {
-    Preconditions.checkArgument(pname.isIdentifier());
+    checkArgument(pname.isIdentifier());
     return TypeWithPropertiesStatics.hasConstantProp(getObjs(), pname) ||
         TypeWithPropertiesStatics.hasConstantProp(getEnums(), pname);
   }
@@ -1445,7 +1449,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   @Override
   public final boolean containsArray() {
     ObjectType arrayType = this.commonTypes.getArrayInstance().getObjTypeIfSingletonObj();
-    Preconditions.checkNotNull(arrayType);
+    checkNotNull(arrayType);
     for (ObjectType objType : this.getObjs()) {
       if (objType.isSubtypeOf(arrayType, SubtypeCache.create())) {
         return true;
@@ -1462,7 +1466,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   public final JSType withProperty(QualifiedName qname, JSType type) {
-    Preconditions.checkArgument(type != null);
+    checkArgument(type != null);
     if (isUnknown() || isBottom() || getObjs().isEmpty()) {
       return this;
     }
@@ -1475,7 +1479,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   public final JSType withDeclaredProperty(
       QualifiedName qname, JSType type, boolean isConstant) {
-    Preconditions.checkState(!getObjs().isEmpty());
+    checkState(!getObjs().isEmpty());
     if (type == null && isConstant) {
       type = this.commonTypes.UNKNOWN;
     }
@@ -1501,7 +1505,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   // has a property called pname. If it can't safely find a subtype, it
   // returns bottom.
   public final JSType findSubtypeWithProp(QualifiedName pname) {
-    Preconditions.checkArgument(pname.isIdentifier());
+    checkArgument(pname.isIdentifier());
     // common cases first
     if (isTop() || isUnknown() || (getMask() & NON_SCALAR_MASK) == 0) {
       return this.commonTypes.BOTTOM;
@@ -1539,7 +1543,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   public final boolean isPropDefinedOnSubtype(QualifiedName pname) {
-    Preconditions.checkArgument(pname.isIdentifier());
+    checkArgument(pname.isIdentifier());
     for (ObjectType obj : getObjs()) {
       if (obj.isPropDefinedOnSubtype(pname)) {
         return true;
@@ -1797,20 +1801,20 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public final TypeI convertMethodToFunction() {
-    Preconditions.checkState(this.isFunctionType());
+    checkState(this.isFunctionType());
     FunctionType devirtualized = getFunTypeIfSingletonObj().devirtualize();
     return commonTypes.fromFunctionType(devirtualized);
   }
 
   @Override
   public final boolean hasInstanceType() {
-    Preconditions.checkState(this.isFunctionType());
+    checkState(this.isFunctionType());
     return getFunTypeIfSingletonObj().getInstanceTypeOfCtor() != null;
   }
 
   @Override
   public final ObjectTypeI getInstanceType() {
-    Preconditions.checkState(this.isFunctionType());
+    checkState(this.isFunctionType());
     JSType instanceType = getFunTypeIfSingletonObj().getInstanceTypeOfCtor();
     return instanceType == null ? null : instanceType.toMaybeObjectType();
   }
@@ -1838,13 +1842,13 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public final TypeI getTypeOfThis() {
-    Preconditions.checkState(this.isFunctionType());
+    checkState(this.isFunctionType());
     return getFunTypeIfSingletonObj().getThisType();
   }
 
   @Override
   public final boolean acceptsArguments(List<? extends TypeI> argumentTypes) {
-    Preconditions.checkState(this.isFunctionType());
+    checkState(this.isFunctionType());
 
     int numArgs = argumentTypes.size();
     FunctionType fnType = this.getFunTypeIfSingletonObj();
@@ -1866,19 +1870,19 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public final int getMinArity() {
-    Preconditions.checkState(this.isFunctionType());
+    checkState(this.isFunctionType());
     return this.getFunTypeIfSingletonObj().getMinArity();
   }
 
   @Override
   public final int getMaxArity() {
-    Preconditions.checkState(this.isFunctionType());
+    checkState(this.isFunctionType());
     return this.getFunTypeIfSingletonObj().getMaxArity();
   }
 
   @Override
   public final List<String> getTypeParameters() {
-    Preconditions.checkState(this.isFunctionType());
+    checkState(this.isFunctionType());
     return this.getFunTypeIfSingletonObj().getTypeParameters();
   }
 
@@ -1894,13 +1898,13 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public final TypeI getReturnType() {
-    Preconditions.checkState(this.isFunctionType());
+    checkState(this.isFunctionType());
     return getFunTypeIfSingletonObj().getReturnType();
   }
 
   @Override
   public final FunctionTypeI getConstructor() {
-    Preconditions.checkState(this.isSingletonObj());
+    checkState(this.isSingletonObj());
     FunctionType ctorType = this.getNominalTypeIfSingletonObj().getConstructorFunction();
     return this.commonTypes.fromFunctionType(ctorType);
   }
@@ -1916,7 +1920,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public final JSType getPrototypeObject() {
-    Preconditions.checkState(this.isSingletonObj());
+    checkState(this.isSingletonObj());
     JSType proto = getNominalTypeIfSingletonObj().getPrototypePropertyOfCtor();
     if (this.equals(proto)) {
       // In JS's dynamic semantics, the only object without a __proto__ is
@@ -1951,20 +1955,20 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public final Node getOwnPropertyDefSite(String propertyName) {
-    Preconditions.checkState(this.isSingletonObj());
+    checkState(this.isSingletonObj());
     return this.getObjTypeIfSingletonObj().getOwnPropertyDefSite(propertyName);
   }
 
   @Override
   public final Node getPropertyDefSite(String propertyName) {
-    Preconditions.checkState(this.isSingletonObj());
+    checkState(this.isSingletonObj());
     return this.getObjTypeIfSingletonObj().getPropertyDefSite(propertyName);
   }
 
   /** Returns the names of all the properties directly on this type. */
   @Override
   public final Iterable<String> getOwnPropertyNames() {
-    Preconditions.checkState(this.isSingletonObj());
+    checkState(this.isSingletonObj());
     // TODO(aravindpg): this might need to also include the extra properties as stored in the
     // ObjectType::props. If so, demonstrate a test case that needs it and fix this.
     Set<String> props = getNominalTypeIfSingletonObj().getAllOwnClassProps();
@@ -2017,14 +2021,14 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public final boolean isInstanceType() {
-    Preconditions.checkState(this.isSingletonObj());
+    checkState(this.isSingletonObj());
     return this.getNominalTypeIfSingletonObj().isClassy();
   }
 
   @Override
   public final boolean hasProperty(String propertyName) {
-    Preconditions.checkState(this.isSingletonObj());
-    Preconditions.checkArgument(!propertyName.contains("."));
+    checkState(this.isSingletonObj());
+    checkArgument(!propertyName.contains("."));
     return hasProp(new QualifiedName(propertyName));
   }
 
@@ -2205,7 +2209,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public final Iterable<TypeI> getParameterTypes() {
-    return Preconditions.checkNotNull(getFunType()).getParameterTypes();
+    return checkNotNull(getFunType()).getParameterTypes();
   }
 
   @Override
@@ -2253,8 +2257,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     UnionType(JSTypes commonTypes, int mask, ImmutableSet<ObjectType> objs,
         String typeVar, ImmutableSet<EnumType> enums) {
       super(commonTypes);
-      this.enums = Preconditions.checkNotNull(enums);
-      this.objs = Preconditions.checkNotNull(objs);
+      this.enums = checkNotNull(enums);
+      this.objs = checkNotNull(objs);
 
       if (typeVar != null) {
         mask |= TYPEVAR_MASK;
@@ -2278,7 +2282,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
     @Override
     protected ImmutableSet<ObjectType> getObjs() {
-      return Preconditions.checkNotNull(objs);
+      return checkNotNull(objs);
     }
 
     @Override
@@ -2288,7 +2292,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
     @Override
     protected ImmutableSet<EnumType> getEnums() {
-      return Preconditions.checkNotNull(enums);
+      return checkNotNull(enums);
     }
   }
 
@@ -2327,7 +2331,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
     ObjsType(JSTypes commonTypes, ImmutableSet<ObjectType> objs) {
       super(commonTypes);
-      this.objs = Preconditions.checkNotNull(objs);
+      this.objs = checkNotNull(objs);
     }
 
     @Override
@@ -2357,7 +2361,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
     NullableObjsType(JSTypes commonTypes, ImmutableSet<ObjectType> objs) {
       super(commonTypes);
-      this.objs = Preconditions.checkNotNull(objs);
+      this.objs = checkNotNull(objs);
     }
 
     @Override

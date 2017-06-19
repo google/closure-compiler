@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
@@ -56,7 +57,7 @@ public class Var implements StaticSlot, StaticRef {
   }
 
   static Var makeArgumentsVar(Scope scope) {
-    Preconditions.checkArgument(!(scope instanceof TypedScope));
+    checkArgument(!(scope instanceof TypedScope));
     return new Arguments(scope);
   }
 

@@ -16,10 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -104,7 +105,7 @@ class GlobalVarReferenceMap implements ReferenceMap, Serializable {
     }
 
     InputId inputId = root.getInputId();
-    Preconditions.checkNotNull(inputId);
+    checkNotNull(inputId);
     // Note there are two assumptions here (i) the order of compiler inputs
     // has not changed and (ii) all references are in the order they appear
     // in AST (this is enforced in ReferenceCollectionCallback).
@@ -118,7 +119,7 @@ class GlobalVarReferenceMap implements ReferenceMap, Serializable {
   }
 
   private void removeScriptReferences(InputId inputId) {
-    Preconditions.checkNotNull(inputId);
+    checkNotNull(inputId);
 
     if (!inputOrder.containsKey(inputId)) {
       return; // Input did not exist when last computed, so skip
@@ -162,7 +163,7 @@ class GlobalVarReferenceMap implements ReferenceMap, Serializable {
    */
   private SourceRefRange findSourceRefRange(List<Reference> refList,
       InputId inputId) {
-    Preconditions.checkNotNull(inputId);
+    checkNotNull(inputId);
 
     // TODO(bashir): We can do binary search here, but since this is fast enough
     // right now, we just do a linear search for simplicity.
@@ -170,10 +171,10 @@ class GlobalVarReferenceMap implements ReferenceMap, Serializable {
     int firstAfter = refList.size();
     int index = 0;
 
-    Preconditions.checkState(inputOrder.containsKey(inputId), inputId.getIdName());
+    checkState(inputOrder.containsKey(inputId), inputId.getIdName());
     int sourceInputOrder = inputOrder.get(inputId);
     for (Reference ref : refList) {
-      Preconditions.checkNotNull(ref.getInputId());
+      checkNotNull(ref.getInputId());
       int order = inputOrder.get(ref.getInputId());
       if (order < sourceInputOrder) {
         lastBefore = index;

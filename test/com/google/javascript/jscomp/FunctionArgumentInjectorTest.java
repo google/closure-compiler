@@ -16,19 +16,17 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.Node;
-
-import junit.framework.TestCase;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import junit.framework.TestCase;
 
 /**
  * Inline function tests.
@@ -472,8 +470,7 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         callee = n.getFirstFirstChild();
         Node prop = callee.getNext();
         // Only "call" is support at this point.
-        Preconditions.checkArgument(prop.isString() &&
-            prop.getString().equals("call"));
+        checkArgument(prop.isString() && prop.getString().equals("call"));
       } else {
         callee = n.getFirstChild();
       }

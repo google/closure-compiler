@@ -15,6 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.BoilerplateRenamer;
@@ -251,8 +254,8 @@ class Normalize implements CompilerPass {
     @Override
     public void process(Node externs, Node root) {
       Node externsAndJs = root.getParent();
-      Preconditions.checkState(externsAndJs != null);
-      Preconditions.checkState(externsAndJs.hasChild(externs));
+      checkState(externsAndJs != null);
+      checkState(externsAndJs.hasChild(externs));
       NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
     }
 
@@ -391,12 +394,8 @@ class Normalize implements CompilerPass {
      * Mark names and properties that are constants by convention.
      */
     private void annotateConstantsByConvention(Node n, Node parent) {
-      Preconditions.checkState(
-          n.isName()
-          || n.isString()
-          || n.isStringKey()
-          || n.isGetterDef()
-          || n.isSetterDef());
+      checkState(
+          n.isName() || n.isString() || n.isStringKey() || n.isGetterDef() || n.isSetterDef());
 
       // There are only two cases where a string token
       // may be a variable reference: The right side of a GETPROP
@@ -447,7 +446,7 @@ class Normalize implements CompilerPass {
      * @see https://github.com/google/closure-compiler/pull/429
      */
     static boolean visitFunction(Node n, AbstractCompiler compiler) {
-      Preconditions.checkState(n.isFunction(), n);
+      checkState(n.isFunction(), n);
       if (NodeUtil.isFunctionDeclaration(n) && !NodeUtil.isHoistedFunctionDeclaration(n)) {
         rewriteFunctionDeclaration(n, compiler);
         return true;
@@ -536,7 +535,7 @@ class Normalize implements CompilerPass {
      * place as the named continues are not allowed for labeled blocks.
      */
     private void normalizeLabels(Node n) {
-      Preconditions.checkArgument(n.isLabel());
+      checkArgument(n.isLabel());
 
       Node last = n.getLastChild();
       // TODO(moz): Avoid adding blocks for cases like "label: let x;"
@@ -658,8 +657,7 @@ class Normalize implements CompilerPass {
      * statement of the function to the beginning of the function definition.
      */
     private void moveNamedFunctions(Node functionBody) {
-      Preconditions.checkState(
-          functionBody.getParent().isFunction());
+      checkState(functionBody.getParent().isFunction());
       Node insertAfter = null;
       Node current = functionBody.getFirstChild();
       // Skip any declarations at the beginning of the function body, they
@@ -743,7 +741,7 @@ class Normalize implements CompilerPass {
     @Override
     public void onRedeclaration(
         Scope s, String name, Node n, CompilerInput input) {
-      Preconditions.checkState(n.isName());
+      checkState(n.isName());
       Node parent = n.getParent();
       Var v = s.getVar(name);
 
@@ -767,7 +765,7 @@ class Normalize implements CompilerPass {
               v.getParentNode().getParent());
         }
       } else if (parent.isVar()) {
-        Preconditions.checkState(parent.hasOneChild());
+        checkState(parent.hasOneChild());
 
         replaceVarWithAssignment(n, parent, parent.getParent());
       }
@@ -813,7 +811,7 @@ class Normalize implements CompilerPass {
           parent.removeChild(n);
           grandparent.replaceChild(parent, n);
         } else {
-          Preconditions.checkState(grandparent.isLabel());
+          checkState(grandparent.isLabel());
           // We should never get here. LABELs with a single VAR statement should
           // already have been normalized to have a BLOCK.
           throw new IllegalStateException("Unexpected LABEL");

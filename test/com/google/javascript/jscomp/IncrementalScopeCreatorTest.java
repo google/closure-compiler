@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -54,11 +55,11 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     compiler.init(externs, srcs, options);
     compiler.parseInputs();
 
-    Preconditions.checkState(!compiler.hasErrors());
+    checkState(!compiler.hasErrors());
 
     Node root = compiler.getRoot();
     Node fnFoo = findDecl(root, "foo");
-    Preconditions.checkState(fnFoo.isFunction());
+    checkState(fnFoo.isFunction());
 
     Scope globalScope = creator.createScope(root, null);
     Scope globalFunction = creator.createScope(fnFoo, globalScope);
@@ -116,7 +117,7 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     compiler.init(externs, srcs, options);
     compiler.parseInputs();
 
-    Preconditions.checkState(!compiler.hasErrors());
+    checkState(!compiler.hasErrors());
 
     Node root = compiler.getRoot();
 

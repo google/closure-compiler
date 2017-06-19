@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
-import com.google.javascript.rhino.Node;
+import static com.google.common.base.Preconditions.checkArgument;
 
+import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -95,9 +95,7 @@ class VariableVisibilityAnalysis implements CompilerPass {
   public VariableVisibility getVariableVisibility(Node declaringNameNode) {
     Node parent = declaringNameNode.getParent();
 
-    Preconditions.checkArgument(parent.isVar()
-        || parent.isFunction()
-        || parent.isParamList());
+    checkArgument(parent.isVar() || parent.isFunction() || parent.isParamList());
 
     return visibilityByDeclaringNameNode.get(declaringNameNode);
   }

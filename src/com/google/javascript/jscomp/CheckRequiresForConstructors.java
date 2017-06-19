@@ -16,8 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
@@ -529,7 +530,7 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
   }
 
   private void visitQualifiedName(NodeTraversal t, Node n, Node parent) {
-    Preconditions.checkState(n.isName() || n.isGetProp() || n.isStringKey(), n);
+    checkState(n.isName() || n.isGetProp() || n.isStringKey(), n);
     String qualifiedName = n.isStringKey() ? n.getString() : n.getQualifiedName();
     addWeakUsagesOfAllPrefixes(qualifiedName);
     if (mode != Mode.SINGLE_FILE) {  // TODO(tbreisacher): Fix violations and remove this check.
@@ -631,7 +632,7 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
    * inside a goog.scope function.
    */
   private void maybeAddGoogScopeUsage(NodeTraversal t, Node n, Node parent) {
-    Preconditions.checkState(NodeUtil.isNameDeclaration(n));
+    checkState(NodeUtil.isNameDeclaration(n));
     if (n.hasOneChild() && parent == googScopeBlock) {
       Node rhs = n.getFirstFirstChild();
       if (rhs != null && rhs.isQualifiedName()) {

@@ -16,10 +16,10 @@
 
 package com.google.javascript.jscomp.graph;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
-
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -122,8 +122,7 @@ public final class FixedPointGraphTraversal<N, E> {
       }
     }
 
-    Preconditions.checkState(cycleCount != maxIterations,
-        NON_HALTING_ERROR_MSG);
+    checkState(cycleCount != maxIterations, NON_HALTING_ERROR_MSG);
   }
 
   /** Edge callback */

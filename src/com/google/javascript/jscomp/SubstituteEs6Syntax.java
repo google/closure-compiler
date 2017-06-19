@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -68,7 +69,7 @@ class SubstituteEs6Syntax extends AbstractPostOrderCallback implements HotSwapCo
    * If possible, replace functions of the form ()=>{ return x; } with ()=>x
    */
   private void maybeSimplifyArrowFunctionBody(Node arrowFunction, Node body) {
-    Preconditions.checkArgument(arrowFunction.isArrowFunction());
+    checkArgument(arrowFunction.isArrowFunction());
     if (!body.isNormalBlock() || !body.hasOneChild() || !body.getFirstChild().isReturn()) {
       return;
     }

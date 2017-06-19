@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableSet;
@@ -131,7 +133,7 @@ class AmbiguateProperties implements CompilerPass {
       AbstractCompiler compiler,
       char[] reservedFirstCharacters,
       char[] reservedNonFirstCharacters) {
-    Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
+    checkState(compiler.getLifeCycleStage().isNormalized());
     this.compiler = compiler;
     this.reservedFirstCharacters = reservedFirstCharacters;
     this.reservedNonFirstCharacters = reservedNonFirstCharacters;
@@ -190,7 +192,7 @@ class AmbiguateProperties implements CompilerPass {
   }
 
   Map<String, String> getRenamingMap() {
-    Preconditions.checkNotNull(renamingMap);
+    checkNotNull(renamingMap);
     return renamingMap;
   }
 
@@ -258,7 +260,7 @@ class AmbiguateProperties implements CompilerPass {
       String oldName = n.getString();
       Property p = propertyMap.get(oldName);
       if (p != null && p.newName != null) {
-        Preconditions.checkState(oldName.equals(p.oldName));
+        checkState(oldName.equals(p.oldName));
         if (!p.newName.equals(oldName)) {
           n.setString(p.newName);
           compiler.reportChangeToEnclosingScope(n);

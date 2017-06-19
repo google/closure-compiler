@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -29,7 +31,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -391,7 +392,7 @@ class TypeValidator implements Serializable {
    */
   void expectIndexMatch(NodeTraversal t, Node n, JSType objType,
                         JSType indexType) {
-    Preconditions.checkState(n.isGetElem(), n);
+    checkState(n.isGetElem(), n);
     Node indexNode = n.getLastChild();
     if (objType.isStruct() && !isWellKnownSymbol(indexNode)) {
       report(JSError.make(indexNode,
@@ -624,7 +625,7 @@ class TypeValidator implements Serializable {
             n.getFirstChild().setJSType(varType);
           }
         } else {
-          Preconditions.checkState(parent.isFunction());
+          checkState(parent.isFunction());
           parent.setJSType(varType);
         }
       } else {
@@ -740,7 +741,7 @@ class TypeValidator implements Serializable {
    * the super classes on the inheritance chain are implemented.
    */
   void expectAbstractMethodsImplemented(Node n, FunctionType ctorType) {
-    Preconditions.checkArgument(ctorType.isConstructor());
+    checkArgument(ctorType.isConstructor());
 
     Map<String, ObjectType> abstractMethodSuperTypeMap = new LinkedHashMap<>();
     FunctionType currSuperCtor = ctorType.getSuperClassConstructor();

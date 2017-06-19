@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -395,7 +397,7 @@ class PhaseOptimizer implements CompilerPass {
 
     @Override
     public void process(Node externs, Node root) {
-      Preconditions.checkState(!inLoop, "Nested loops are forbidden");
+      checkState(!inLoop, "Nested loops are forbidden");
       inLoop = true;
       optimizePasses();
       this.isCodeRemovalLoop = isCodeRemovalLoop();
@@ -474,7 +476,7 @@ class PhaseOptimizer implements CompilerPass {
               return;
             }
           } else {
-            Preconditions.checkState(state == State.RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER);
+            checkState(state == State.RUN_PASSES_THAT_CHANGED_STH_IN_PREV_ITER);
             if (!lastIterMadeChanges || !isAstSufficientlyChanging(previousAstSize, astSize)) {
               state = State.RUN_PASSES_NOT_RUN_IN_PREV_ITER;
             }

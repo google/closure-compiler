@@ -15,7 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.PolymerBehaviorExtractor.BehaviorDefinition;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
@@ -163,7 +164,7 @@ final class PolymerClassRewriter {
    * Adds an @this annotation to all functions in the objLit.
    */
   private void addTypesToFunctions(Node objLit, String thisType) {
-    Preconditions.checkState(objLit.isObjectLit());
+    checkState(objLit.isObjectLit());
     for (Node keyNode : objLit.children()) {
       Node value = keyNode.getLastChild();
       if (value != null && value.isFunction()) {
@@ -412,7 +413,7 @@ final class PolymerClassRewriter {
   }
 
   private static boolean hasShorthandAssignment(Node objLit) {
-    Preconditions.checkState(objLit.isObjectLit());
+    checkState(objLit.isObjectLit());
     for (Node property : objLit.children()){
       if (property.isStringKey() && !property.hasChildren()){
         return true;

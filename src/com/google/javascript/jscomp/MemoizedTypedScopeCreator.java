@@ -16,13 +16,14 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSymbolTable;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -80,14 +81,14 @@ class MemoizedTypedScopeCreator implements ScopeCreator, StaticSymbolTable<Typed
   // ScopeCreator#createScope has type: <T extends Scope> T createScope(...);
   // TypedScope is the only subclass of Scope, so the suppression is safe.
   public TypedScope createScope(Node n, Scope parent) {
-    Preconditions.checkArgument(parent == null || parent instanceof TypedScope);
+    checkArgument(parent == null || parent instanceof TypedScope);
     TypedScope typedParent = (TypedScope) parent;
     TypedScope scope = scopes.get(n);
     if (scope == null) {
       scope = delegate.createScope(n, typedParent);
       scopes.put(n, scope);
     } else {
-      Preconditions.checkState(typedParent == scope.getParent());
+      checkState(typedParent == scope.getParent());
     }
     return scope;
   }

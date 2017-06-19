@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.TypeDeclarationsIR.anyType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.arrayType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.booleanType;
@@ -28,7 +30,6 @@ import static com.google.javascript.rhino.TypeDeclarationsIR.undefinedType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.unionType;
 import static com.google.javascript.rhino.TypeDeclarationsIR.voidType;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -424,7 +425,7 @@ class IRFactory {
         n = work.poll();
       }
     }
-    Preconditions.checkState(work.isEmpty());
+    checkState(work.isEmpty());
   }
 
   private void validate(Node n) {
@@ -974,7 +975,7 @@ class IRFactory {
         ret = processString(token.asLiteral());
         ret.putBooleanProp(Node.QUOTED_PROP, true);
       }
-      Preconditions.checkState(ret.isString());
+      checkState(ret.isString());
       return ret;
     }
 
@@ -1043,7 +1044,7 @@ class IRFactory {
     }
 
     private boolean isGoogModuleFile(Node scriptNode) {
-      Preconditions.checkArgument(scriptNode.isScript());
+      checkArgument(scriptNode.isScript());
       if (!scriptNode.hasChildren()) {
         return false;
       }
@@ -1290,7 +1291,7 @@ class IRFactory {
       if (!isArrow && !isSignature && !bodyNode.isNormalBlock()) {
         // When in "keep going" mode the parser tries to parse some constructs the
         // compiler doesn't support, repair it here.
-        Preconditions.checkState(config.keepGoing == Config.RunMode.KEEP_GOING);
+        checkState(config.keepGoing == Config.RunMode.KEEP_GOING);
         bodyNode = IR.block();
       }
       parseDirectives(bodyNode);
@@ -1325,9 +1326,12 @@ class IRFactory {
           Node paramNode = transformNodeWithInlineJsDoc(param);
           // Children must be simple names, default parameters, rest
           // parameters, or destructuring patterns.
-          Preconditions.checkState(paramNode.isName() || paramNode.isRest()
-              || paramNode.isArrayPattern() || paramNode.isObjectPattern()
-              || paramNode.isDefaultValue());
+          checkState(
+              paramNode.isName()
+                  || paramNode.isRest()
+                  || paramNode.isArrayPattern()
+                  || paramNode.isObjectPattern()
+                  || paramNode.isDefaultValue());
           params.addChildToBack(paramNode);
         }
       }
@@ -1473,18 +1477,18 @@ class IRFactory {
     }
 
     Node processString(LiteralToken token) {
-      Preconditions.checkArgument(token.type == TokenType.STRING);
+      checkArgument(token.type == TokenType.STRING);
       Node node = newStringNode(Token.STRING, normalizeString(token, false));
       setSourceInfo(node, token);
       return node;
     }
 
     Node processTemplateLiteralToken(LiteralToken token) {
-      Preconditions.checkArgument(
+      checkArgument(
           token.type == TokenType.NO_SUBSTITUTION_TEMPLATE
-          || token.type == TokenType.TEMPLATE_HEAD
-          || token.type == TokenType.TEMPLATE_MIDDLE
-          || token.type == TokenType.TEMPLATE_TAIL);
+              || token.type == TokenType.TEMPLATE_HEAD
+              || token.type == TokenType.TEMPLATE_MIDDLE
+              || token.type == TokenType.TEMPLATE_TAIL);
       Node node = newStringNode(normalizeString(token, true));
       node.putProp(Node.RAW_STRING_VALUE, token.value);
       setSourceInfo(node, token);
@@ -2196,10 +2200,9 @@ class IRFactory {
       maybeWarnForFeature(tree, Feature.MODULES);
       Node decls = null;
       if (tree.isExportAll) {
-        Preconditions.checkState(
-            tree.declaration == null && tree.exportSpecifierList == null);
+        checkState(tree.declaration == null && tree.exportSpecifierList == null);
       } else if (tree.declaration != null) {
-        Preconditions.checkState(tree.exportSpecifierList == null);
+        checkState(tree.exportSpecifierList == null);
         decls = transform(tree.declaration);
       } else {
         decls = transformList(Token.EXPORT_SPECS, tree.exportSpecifierList);
@@ -2996,9 +2999,8 @@ class IRFactory {
     String value = token.value;
     SourceRange location = token.location;
     int length = value.length();
-    Preconditions.checkState(length > 0);
-    Preconditions.checkState(value.charAt(0) != '-'
-        && value.charAt(0) != '+');
+    checkState(length > 0);
+    checkState(value.charAt(0) != '-' && value.charAt(0) != '+');
     if (value.charAt(0) == '.') {
       return Double.valueOf('0' + value);
     } else if (value.charAt(0) == '0' && length > 1) {

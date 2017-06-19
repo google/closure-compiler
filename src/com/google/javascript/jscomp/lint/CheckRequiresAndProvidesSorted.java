@@ -16,9 +16,9 @@
 package com.google.javascript.jscomp.lint;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Ordering;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CodePrinter;
@@ -101,12 +101,11 @@ public final class CheckRequiresAndProvidesSorted extends AbstractShallowCallbac
               // Case 2: var {y} = goog.require('w.x');
               // All case 2 nodes should come after all case 1 nodes. ('{' sorts after a-z)
               Node pattern = n.getFirstFirstChild();
-              Preconditions.checkState(pattern.isObjectPattern(), pattern);
+              checkState(pattern.isObjectPattern(), pattern);
               Node call = n.getFirstChild().getLastChild();
-              Preconditions.checkState(call.isCall(), call);
-              Preconditions.checkState(
-                  call.getFirstChild().matchesQualifiedName("goog.require"),
-                  call.getFirstChild());
+              checkState(call.isCall(), call);
+              checkState(
+                  call.getFirstChild().matchesQualifiedName("goog.require"), call.getFirstChild());
               if (!pattern.hasChildren()) {
                 key = "{";
               } else {

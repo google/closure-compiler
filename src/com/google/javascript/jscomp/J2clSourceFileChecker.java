@@ -15,7 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.rhino.Node;
 
 /**
@@ -34,7 +35,7 @@ final class J2clSourceFileChecker implements CompilerPass {
 
   private static Boolean hasJ2cl(Node root) {
     for (Node script : root.children()) {
-      Preconditions.checkState(script.isScript());
+      checkState(script.isScript());
       if (script.getSourceFileName() != null
           && script.getSourceFileName().endsWith(".java.js")
           && script.getSourceFileName().contains(".js.zip!")) {

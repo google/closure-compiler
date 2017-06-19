@@ -15,7 +15,10 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
@@ -65,9 +68,7 @@ class FunctionArgumentInjector {
       Node replacementTemplate = replacements.get(node.getString());
       if (replacementTemplate != null) {
         // This should not be replacing declared names.
-        Preconditions.checkState(!parent.isFunction()
-            || !parent.isVar()
-            || !parent.isCatch());
+        checkState(!parent.isFunction() || !parent.isVar() || !parent.isCatch());
         // The name may need to be replaced more than once,
         // so we need to clone the node.
         Node replacement = replacementTemplate.cloneTree();
@@ -76,7 +77,7 @@ class FunctionArgumentInjector {
       }
     } else if (replaceThis && node.isThis()) {
       Node replacementTemplate = replacements.get(THIS_MARKER);
-      Preconditions.checkNotNull(replacementTemplate);
+      checkNotNull(replacementTemplate);
       if (!replacementTemplate.isThis()) {
         // The name may need to be replaced more than once,
         // so we need to clone the node.
@@ -123,7 +124,7 @@ class FunctionArgumentInjector {
       cArg = cArg.getNext();
     } else {
       // 'apply' isn't supported yet.
-      Preconditions.checkState(!NodeUtil.isFunctionObjectApply(callNode));
+      checkState(!NodeUtil.isFunctionObjectApply(callNode));
       argMap.put(THIS_MARKER, NodeUtil.newUndefinedNode(callNode));
     }
 
@@ -211,7 +212,7 @@ class FunctionArgumentInjector {
   private static Set<String> findModifiedParameters(
       Node n, Node parent, Set<String> names, Set<String> unsafe,
       boolean inInnerFunction) {
-    Preconditions.checkArgument(unsafe != null);
+    checkArgument(unsafe != null);
     if (n.isName()) {
       if (names.contains(n.getString()) && (inInnerFunction || canNameValueChange(n, parent))) {
         unsafe.add(n.getString());
@@ -267,7 +268,7 @@ class FunctionArgumentInjector {
       return;
     }
 
-    Preconditions.checkArgument(fnNode.isFunction());
+    checkArgument(fnNode.isFunction());
     Node block = fnNode.getLastChild();
 
     int argCount = argMap.size();

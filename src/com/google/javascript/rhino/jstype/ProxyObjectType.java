@@ -39,7 +39,8 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
@@ -67,7 +68,7 @@ public class ProxyObjectType extends ObjectType {
   ProxyObjectType(JSTypeRegistry registry, JSType referencedType,
                   TemplateTypeMap templateTypeMap) {
     super(registry, templateTypeMap);
-    setReferencedType(Preconditions.checkNotNull(referencedType));
+    setReferencedType(checkNotNull(referencedType));
   }
 
   @Override

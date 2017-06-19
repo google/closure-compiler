@@ -17,12 +17,13 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Ascii;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -1383,7 +1384,7 @@ public class CompilerOptions implements Serializable {
       } else if (value instanceof Double) {
         map.put(name, IR.number(((Double) value).doubleValue()));
       } else {
-        Preconditions.checkState(value instanceof String);
+        checkState(value instanceof String);
         map.put(name, IR.string((String) value));
       }
     }
@@ -1602,7 +1603,7 @@ public class CompilerOptions implements Serializable {
   }
 
   public void setMaxFunctionSizeAfterInlining(int funAstSize) {
-    Preconditions.checkArgument(funAstSize > 0);
+    checkArgument(funAstSize > 0);
     this.maxFunctionSizeAfterInlining = funAstSize;
   }
 
@@ -1809,7 +1810,7 @@ public class CompilerOptions implements Serializable {
    *     will always be left in.
    */
   public void setManageClosureDependencies(List<String> entryPoints) {
-    Preconditions.checkNotNull(entryPoints);
+    checkNotNull(entryPoints);
     setManageClosureDependencies(true);
 
     List<ModuleIdentifier> normalizedEntryPoints = new ArrayList<>();
@@ -1877,7 +1878,7 @@ public class CompilerOptions implements Serializable {
    * Sets ECMAScript version to use.
    */
   public void setLanguage(LanguageMode language) {
-    Preconditions.checkState(language != LanguageMode.NO_TRANSPILE);
+    checkState(language != LanguageMode.NO_TRANSPILE);
     this.languageIn = language;
     this.languageOut = language;
   }
@@ -1887,7 +1888,7 @@ public class CompilerOptions implements Serializable {
    * transpiling from one version to another, use #setLanguage instead.
    */
   public void setLanguageIn(LanguageMode languageIn) {
-    Preconditions.checkState(languageIn != LanguageMode.NO_TRANSPILE);
+    checkState(languageIn != LanguageMode.NO_TRANSPILE);
     this.languageIn = languageIn;
   }
 

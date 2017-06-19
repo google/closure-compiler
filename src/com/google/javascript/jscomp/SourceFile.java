@@ -16,12 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.io.CharStreams;
 import com.google.common.io.Resources;
 import com.google.javascript.rhino.StaticSourceFile;
@@ -374,7 +374,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
   @GwtIncompatible("java.io.File")
   private static SourceFile fromZipEntry(String zipURL, Charset inputCharset) {
-    Preconditions.checkArgument(isZipEntry(zipURL));
+    checkArgument(isZipEntry(zipURL));
     String[] components = zipURL.split(BANG_SLASH);
     try {
       String zipPath = components[0];

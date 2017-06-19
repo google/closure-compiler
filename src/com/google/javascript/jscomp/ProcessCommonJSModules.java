@@ -15,7 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -95,7 +97,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
    */
   @Override
   public void process(Node externs, Node root) {
-    Preconditions.checkState(root.isScript());
+    checkState(root.isScript());
     FindImportsAndExports finder = new FindImportsAndExports();
     NodeTraversal.traverseEs6(compiler, root, finder);
 
@@ -174,7 +176,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
    * @return Whether an IIFE wrapper was found and removed.
    */
   private boolean removeIIFEWrapper(Node root) {
-    Preconditions.checkState(root.isScript());
+    checkState(root.isScript());
     Node n = root.getFirstChild();
 
     // Sometimes scripts start with a semicolon for easy concatenation.
@@ -263,7 +265,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
       if (n.isScript()) {
-        Preconditions.checkState(this.script == null);
+        checkState(this.script == null);
         this.script = n;
       }
       return true;
@@ -860,11 +862,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
      * <p>module.exports.foo = bar; // removed later module.exports.baz = function() {};
      */
     private void expandObjectLitAssignment(NodeTraversal t, Node export) {
-      Preconditions.checkState(export.getParent().isAssign());
+      checkState(export.getParent().isAssign());
       Node insertionRef = export.getParent().getParent();
-      Preconditions.checkState(insertionRef.isExprResult());
+      checkState(insertionRef.isExprResult());
       Node insertionParent = insertionRef.getParent();
-      Preconditions.checkNotNull(insertionParent);
+      checkNotNull(insertionParent);
 
       Node rValue = NodeUtil.getRValueOfLValue(export);
       Node key = rValue.getFirstChild();
@@ -919,9 +921,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
      * file is a commonjs module.
      */
     private void maybeUpdateName(NodeTraversal t, Node n, Var var) {
-      Preconditions.checkNotNull(var);
-      Preconditions.checkState(n.isName() || n.isGetProp());
-      Preconditions.checkState(n.getParent() != null);
+      checkNotNull(var);
+      checkState(n.isName() || n.isGetProp());
+      checkState(n.getParent() != null);
       String importedModuleName = getModuleImportName(t, var.getNode());
       String originalName = n.getOriginalQualifiedName();
 
@@ -990,8 +992,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
         String newName,
         boolean requireFunctionExpressions) {
       Node parent = nameRef.getParent();
-      Preconditions.checkNotNull(parent);
-      Preconditions.checkNotNull(newName);
+      checkNotNull(parent);
+      checkNotNull(newName);
       boolean newNameIsQualified = newName.indexOf('.') >= 0;
 
       Var newNameDeclaration = t.getScope().getVar(newName);

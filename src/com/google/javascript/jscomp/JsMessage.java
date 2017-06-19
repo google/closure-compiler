@@ -16,11 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Ascii;
-import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import java.util.Collections;
 import java.util.HashSet;
@@ -106,8 +107,8 @@ public final class JsMessage {
       String id, List<CharSequence> parts, Set<String> placeholders,
       String desc, boolean hidden, String meaning) {
 
-    Preconditions.checkState(key != null);
-    Preconditions.checkState(id != null);
+    checkState(key != null);
+    checkState(id != null);
 
     this.key = key;
     this.id = id;
@@ -356,7 +357,7 @@ public final class JsMessage {
      * Appends a placeholder reference to the message
      */
     public Builder appendPlaceholderReference(String name) {
-      Preconditions.checkNotNull(name, "Placeholder name could not be null");
+      checkNotNull(name, "Placeholder name could not be null");
       parts.add(new PlaceholderReference(name));
       placeholders.add(name);
       return this;
@@ -364,8 +365,7 @@ public final class JsMessage {
 
     /** Appends a translatable string literal to the message. */
     public Builder appendStringPart(String part) {
-      Preconditions.checkNotNull(part,
-          "String part of the message could not be null");
+      checkNotNull(part, "String part of the message could not be null");
       parts.add(part);
       return this;
     }

@@ -16,10 +16,20 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.annotations.GwtIncompatible;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
+import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.annotations.GwtIncompatible;
+import com.google.common.collect.Iterables;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.util.HashMap;
+import java.util.Map;
+import javax.annotation.Nullable;
+import javax.xml.XMLConstants;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.Attributes;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.EntityResolver;
@@ -27,18 +37,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.Locator;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.annotation.Nullable;
-import javax.xml.XMLConstants;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 
 /**
  * A MessageBundle that parses messages from an XML Translation Bundle (XTB)
@@ -69,7 +67,7 @@ public final class XtbMessageBundle implements MessageBundle {
    * @param projectId  the translation console project id (i.e. name)
    */
   public XtbMessageBundle(InputStream xtb, @Nullable String projectId) {
-    Preconditions.checkState(!"".equals(projectId));
+    checkState(!"".equals(projectId));
     this.messages = new HashMap<>();
     this.idGenerator = new GoogleJsMessageIdGenerator(projectId);
 
@@ -157,16 +155,16 @@ public final class XtbMessageBundle implements MessageBundle {
     public void startElement(String uri, String localName, String qName,
                              Attributes atts) {
       if (BUNDLE_ELEM_NAME.equals(qName)) {
-        Preconditions.checkState(lang == null);
+        checkState(lang == null);
         lang = atts.getValue(LANG_ATT_NAME);
-        Preconditions.checkState(lang != null && !lang.isEmpty());
+        checkState(lang != null && !lang.isEmpty());
       } else if (TRANSLATION_ELEM_NAME.equals(qName)) {
-        Preconditions.checkState(msgBuilder == null);
+        checkState(msgBuilder == null);
         String id = atts.getValue(MESSAGE_ID_ATT_NAME);
-        Preconditions.checkState(id != null && !id.isEmpty());
+        checkState(id != null && !id.isEmpty());
         msgBuilder = new JsMessage.Builder(id);
       } else if (PLACEHOLDER_ELEM_NAME.equals(qName)) {
-        Preconditions.checkState(msgBuilder != null);
+        checkState(msgBuilder != null);
         String phRef = atts.getValue(PLACEHOLDER_NAME_ATT_NAME);
         phRef = JsMessageVisitor.toLowerCamelCaseWithNumericSuffixes(phRef);
         msgBuilder.appendPlaceholderReference(phRef);
@@ -176,7 +174,7 @@ public final class XtbMessageBundle implements MessageBundle {
     @Override
     public void endElement(String uri, String localName, String qName) {
       if (TRANSLATION_ELEM_NAME.equals(qName)) {
-        Preconditions.checkState(msgBuilder != null);
+        checkState(msgBuilder != null);
         if (!msgBuilder.hasParts()) {
           msgBuilder.appendStringPart("");
         }

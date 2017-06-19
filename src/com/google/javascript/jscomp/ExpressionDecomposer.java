@@ -15,6 +15,10 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -60,9 +64,9 @@ class ExpressionDecomposer {
       Supplier<String> safeNameIdSupplier,
       Set<String> constNames,
       Scope scope) {
-    Preconditions.checkNotNull(compiler);
-    Preconditions.checkNotNull(safeNameIdSupplier);
-    Preconditions.checkNotNull(constNames);
+    checkNotNull(compiler);
+    checkNotNull(safeNameIdSupplier);
+    checkNotNull(constNames);
     this.compiler = compiler;
     this.safeNameIdSupplier = safeNameIdSupplier;
     this.knownConstants = constNames;
@@ -97,7 +101,7 @@ class ExpressionDecomposer {
    */
   void exposeExpression(Node expression) {
     Node expressionRoot = findExpressionRoot(expression);
-    Preconditions.checkState(expressionRoot != null);
+    checkState(expressionRoot != null);
     Node change = expressionRoot.getParent();
     exposeExpression(expressionRoot, expression);
     compiler.reportChangeToEnclosingScope(change);
@@ -114,10 +118,10 @@ class ExpressionDecomposer {
   void moveExpression(Node expression) {
     String resultName = getResultValueName();
     Node injectionPoint = findInjectionPoint(expression);
-    Preconditions.checkNotNull(injectionPoint);
+    checkNotNull(injectionPoint);
     Node injectionPointParent = injectionPoint.getParent();
-    Preconditions.checkNotNull(injectionPointParent);
-    Preconditions.checkState(NodeUtil.isStatementBlock(injectionPointParent));
+    checkNotNull(injectionPointParent);
+    checkState(NodeUtil.isStatementBlock(injectionPointParent));
 
     // Replace the expression with a reference to the new name.
     Node expressionParent = expression.getParent();
@@ -167,8 +171,7 @@ class ExpressionDecomposer {
              child = parent,
              parent = child.getParent()) {
       Token parentType = parent.getToken();
-      Preconditions.checkState(
-          !isConditionalOp(parent) || child == parent.getFirstChild());
+      checkState(!isConditionalOp(parent) || child == parent.getFirstChild());
       if (parentType == Token.ASSIGN) {
           if (isSafeAssign(parent, state.sideEffects)) {
             // It is always safe to inline "foo()" for expressions such as
@@ -186,7 +189,7 @@ class ExpressionDecomposer {
             Node left = parent.getFirstChild();
           Token type = left.getToken();
             if (left != child) {
-              Preconditions.checkState(NodeUtil.isGet(left));
+            checkState(NodeUtil.isGet(left));
               if (type == Token.GETELEM) {
                 decomposeSubExpressions(left.getLastChild(), null, state);
               }
@@ -202,8 +205,7 @@ class ExpressionDecomposer {
             && functionExpression.getFirstChild() != grandchild) {
           // TODO(johnlenz): In Internet Explorer, non-JavaScript objects such
           // as DOM objects can not be decomposed.
-          Preconditions.checkState(allowObjectCallDecomposing(),
-              "Object method calls can not be decomposed.");
+          checkState(allowObjectCallDecomposing(), "Object method calls can not be decomposed.");
           // Either there were preexisting side-effects, or this node has
           // side-effects.
           state.sideEffects = true;
@@ -305,7 +307,7 @@ class ExpressionDecomposer {
     }
 
     // Never try to decompose an object literal key.
-    Preconditions.checkState(!NodeUtil.isObjectLitKey(n));
+    checkState(!NodeUtil.isObjectLitKey(n));
 
     // Decompose the children in reverse evaluation order.  This simplifies
     // determining if the any of the children following have side-effects.
@@ -396,7 +398,7 @@ class ExpressionDecomposer {
     } else {
       // Only conditionals that are the direct child of an expression statement
       // don't need results, for those simply replace the expression statement.
-      Preconditions.checkArgument(parent.isExprResult());
+      checkArgument(parent.isExprResult());
       Node grandparent = parent.getParent();
       grandparent.replaceChild(parent, ifNode);
     }
@@ -471,7 +473,7 @@ class ExpressionDecomposer {
     // If it is ASSIGN_XXX, keep the assignment in place and extract the
     // original value of the LHS operand.
     if (isLhsOfAssignOp) {
-      Preconditions.checkState(expr.isName() || NodeUtil.isGet(expr));
+      checkState(expr.isName() || NodeUtil.isGet(expr));
       // Transform "x += 2" into "x = temp + 2"
       Node opNode = new Node(NodeUtil.getOpFromAssignmentOp(parent))
           .useSourceInfoIfMissingFrom(parent);
@@ -517,9 +519,9 @@ class ExpressionDecomposer {
    * @return The replacement node.
    */
   private Node rewriteCallExpression(Node call, DecompositionState state) {
-    Preconditions.checkArgument(call.isCall());
+    checkArgument(call.isCall());
     Node first = call.getFirstChild();
-    Preconditions.checkArgument(NodeUtil.isGet(first));
+    checkArgument(NodeUtil.isGet(first));
 
     // Extracts the expression representing the function to call. For example:
     //   "a['b'].c" from "a['b'].c()"
@@ -530,7 +532,7 @@ class ExpressionDecomposer {
     // Extracts the object reference to be used as "this". For example:
     //   "a['b']" from "a['b'].c"
     Node getExprNode = getVarNode.getFirstFirstChild();
-    Preconditions.checkArgument(NodeUtil.isGet(getExprNode));
+    checkArgument(NodeUtil.isGet(getExprNode));
     Node thisVarNode = extractExpression(
         getExprNode.getFirstChild(), state.extractBeforeStatement);
     state.extractBeforeStatement = thisVarNode;
@@ -619,7 +621,7 @@ class ExpressionDecomposer {
    */
   static Node findInjectionPoint(Node subExpression) {
     Node expressionRoot = findExpressionRoot(subExpression);
-    Preconditions.checkNotNull(expressionRoot);
+    checkNotNull(expressionRoot);
 
     Node injectionPoint = expressionRoot;
 
@@ -629,8 +631,7 @@ class ExpressionDecomposer {
       parent = injectionPoint.getParent();
     }
 
-    Preconditions.checkState(
-        NodeUtil.isStatementBlock(injectionPoint.getParent()));
+    checkState(NodeUtil.isStatementBlock(injectionPoint.getParent()));
     return injectionPoint;
   }
 

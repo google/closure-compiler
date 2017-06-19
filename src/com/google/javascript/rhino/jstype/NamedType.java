@@ -39,7 +39,8 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
@@ -112,7 +113,7 @@ public class NamedType extends ProxyObjectType {
       String sourceName, int lineno, int charno) {
     super(registry, registry.getNativeObjectType(JSTypeNative.UNKNOWN_TYPE));
 
-    Preconditions.checkNotNull(reference);
+    checkNotNull(reference);
     this.reference = reference;
     this.sourceName = sourceName;
     this.lineno = lineno;

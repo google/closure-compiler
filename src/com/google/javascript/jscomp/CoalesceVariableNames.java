@@ -16,8 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
@@ -74,7 +75,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
    * to foo, rename both variable to foo_bar.
    */
   CoalesceVariableNames(AbstractCompiler compiler, boolean usePseudoNames) {
-    Preconditions.checkState(!compiler.getLifeCycleStage().isNormalized());
+    checkState(!compiler.getLifeCycleStage().isNormalized());
 
     this.compiler = compiler;
     colorings = new LinkedList<>();
@@ -107,7 +108,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       return;
     }
 
-    Preconditions.checkState(scope.isFunctionScope(), scope);
+    checkState(scope.isFunctionScope(), scope);
 
     ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
     LiveVariablesAnalysis liveness =

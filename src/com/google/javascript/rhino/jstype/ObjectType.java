@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
@@ -638,8 +639,8 @@ public abstract class ObjectType
   boolean isStructuralSubtype(ObjectType superType,
       ImplCache implicitImplCache, SubtypingMode subtypingMode) {
     // Union types should be handled by isSubtype already
-    Preconditions.checkArgument(!this.isUnionType());
-    Preconditions.checkArgument(!superType.isUnionType());
+    checkArgument(!this.isUnionType());
+    checkArgument(!superType.isUnionType());
     Preconditions.checkArgument(superType.isStructuralType(),
         "isStructuralSubtype should be called with structural supertype. Found %s", superType);
 

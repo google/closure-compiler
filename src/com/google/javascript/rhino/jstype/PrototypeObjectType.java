@@ -41,7 +41,6 @@ package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.JSDocInfo;
@@ -466,7 +465,7 @@ public class PrototypeObjectType extends ObjectType {
 
   @Override
   void setOwnerFunction(FunctionType type) {
-    Preconditions.checkState(ownerFunction == null || type == null);
+    checkState(ownerFunction == null || type == null);
     ownerFunction = type;
   }
 

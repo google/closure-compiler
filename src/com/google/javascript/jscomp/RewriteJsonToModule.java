@@ -15,7 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -58,7 +59,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
    */
   @Override
   public void process(Node externs, Node root) {
-    Preconditions.checkState(root.isScript());
+    checkState(root.isScript());
     NodeTraversal.traverseEs6(compiler, root, this);
   }
 

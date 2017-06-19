@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -88,7 +92,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   private DeclaredFunctionType declaredType;
 
   NTIScope(Node root, NTIScope parent, List<String> formals, JSTypes commonTypes) {
-    Preconditions.checkNotNull(commonTypes);
+    checkNotNull(commonTypes);
     if (parent == null) {
       this.name = null;
       this.externs = new LinkedHashMap<>();
@@ -112,7 +116,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   }
 
   Node getBody() {
-    Preconditions.checkArgument(root.isFunction());
+    checkArgument(root.isFunction());
     return NodeUtil.getFunctionBody(root);
   }
 
@@ -132,7 +136,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   }
 
   void setDeclaredType(DeclaredFunctionType declaredType) {
-    Preconditions.checkNotNull(declaredType);
+    checkNotNull(declaredType);
     Map<String, Node> typeTransformations = getTypeTransformations();
     if (typeTransformations.isEmpty()) {
       this.declaredType = declaredType;
@@ -179,21 +183,21 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   }
 
   boolean isPrototypeMethod() {
-    Preconditions.checkArgument(root != null);
+    checkArgument(root != null);
     return NodeUtil.isPrototypeMethod(root);
   }
 
   void addUnknownTypeNames(Set<String> names) {
     // TODO(dimvar): if sm uses a goog.forwardDeclare in a local scope, give
     // an error instead of crashing.
-    Preconditions.checkState(this.isTopLevel());
+    checkState(this.isTopLevel());
     this.unknownTypeNames = ImmutableSet.copyOf(names);
   }
 
   void addLocalFunDef(String name, NTIScope scope) {
-    Preconditions.checkArgument(!name.isEmpty());
-    Preconditions.checkArgument(!name.contains("."));
-    Preconditions.checkArgument(!isDefinedLocally(name, false));
+    checkArgument(!name.isEmpty());
+    checkArgument(!name.contains("."));
+    checkArgument(!isDefinedLocally(name, false));
     localFunDefs.put(name, scope);
   }
 
@@ -211,8 +215,8 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   }
 
   boolean isFunctionNamespace(String name) {
-    Preconditions.checkArgument(!name.contains("."));
-    Preconditions.checkState(isFrozen);
+    checkArgument(!name.contains("."));
+    checkState(isFrozen);
     Declaration d = getDeclaration(name, false);
     if (d == null || d.getFunctionScope() == null || d.getTypeOfSimpleDecl() == null) {
       return false;
@@ -225,8 +229,8 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   // But because our typedefs and enums are var declarations, they are in the
   // same namespace as other variables.
   boolean isDefinedLocally(String name, boolean includeTypes) {
-    Preconditions.checkNotNull(name);
-    Preconditions.checkState(!name.contains("."));
+    checkNotNull(name);
+    checkState(!name.contains("."));
     if (locals.containsKey(name)
         || formals.contains(name)
         || localNamespaces.containsKey(name)
@@ -246,7 +250,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   // For variables it is the same as isDefinedLocally; for properties it looks
   // for a definition in any scope.
   boolean isDefined(Node qnameNode) {
-    Preconditions.checkArgument(qnameNode.isQualifiedName());
+    checkArgument(qnameNode.isQualifiedName());
     if (qnameNode.isName()) {
       return isDefinedLocally(qnameNode.getString(), false);
     } else if (qnameNode.isThis()) {
@@ -281,7 +285,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   }
 
   boolean isNamespace(String name) {
-    Preconditions.checkArgument(!name.contains("."));
+    checkArgument(!name.contains("."));
     Declaration decl = getDeclaration(name, false);
     if (decl == null) {
       return false;
@@ -291,20 +295,20 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   }
 
   boolean isVisibleInScope(String name) {
-    Preconditions.checkArgument(!name.contains("."));
+    checkArgument(!name.contains("."));
     return isDefinedLocally(name, false)
         || name.equals(this.name)
         || (parent != null && parent.isVisibleInScope(name));
   }
 
   boolean isConstVar(String name) {
-    Preconditions.checkArgument(!name.contains("."));
+    checkArgument(!name.contains("."));
     Declaration decl = getDeclaration(name, false);
     return decl != null && decl.isConstant();
   }
 
   boolean isOuterVarEarly(String name) {
-    Preconditions.checkArgument(!name.contains("."));
+    checkArgument(!name.contains("."));
     return !isDefinedLocally(name, false)
         && parent != null && parent.isVisibleInScope(name);
   }
@@ -321,7 +325,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   }
 
   boolean isUndeclaredFormal(String name) {
-    Preconditions.checkArgument(!name.contains("."));
+    checkArgument(!name.contains("."));
     return formals.contains(name) && getDeclaredTypeOf(name) == null;
   }
 
@@ -357,7 +361,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
 
   @Override
   public JSType getDeclaredTypeOf(String name) {
-    Preconditions.checkArgument(!name.contains("."));
+    checkArgument(!name.contains("."));
     if ("this".equals(name)) {
       if (!hasThis()) {
         return null;
@@ -379,7 +383,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
         return this.commonTypes.fromFunctionType(
             funScope.getDeclaredFunctionType().toFunctionType());
       }
-      Preconditions.checkState(decl.getNamespace() == null);
+      checkState(decl.getNamespace() == null);
       return null;
     }
     // When a function is a namespace, the parent scope has a better type.
@@ -419,7 +423,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   }
 
   boolean isKnownFunction(String fnName) {
-    Preconditions.checkArgument(!fnName.contains("."));
+    checkArgument(!fnName.contains("."));
     return getScopeHelper(new QualifiedName(fnName)) != null;
   }
 
@@ -434,7 +438,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
 
   NTIScope getScope(String fnName) {
     NTIScope s = getScopeHelper(new QualifiedName(fnName));
-    Preconditions.checkState(s != null);
+    checkState(s != null);
     return s;
   }
 
@@ -452,7 +456,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   // overwrites the previous ones. For correctness, we rely on the fact that
   // the var-check passes run before type checking.
   void addLocal(String name, JSType declType, boolean isConstant, boolean isFromExterns) {
-    Preconditions.checkArgument(!name.contains("."));
+    checkArgument(!name.contains("."));
     if (isConstant) {
       constVars.add(name);
     }
@@ -482,7 +486,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   }
 
   Typedef getTypedef(String name) {
-    Preconditions.checkState(!name.contains("."));
+    checkState(!name.contains("."));
     Declaration decl = getDeclaration(name, false);
     return decl == null ? null : decl.getTypedef();
   }
@@ -493,7 +497,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   }
 
   Namespace getNamespace(String name) {
-    Preconditions.checkArgument(!name.contains("."));
+    checkArgument(!name.contains("."));
     Declaration decl = getDeclaration(name, false);
     return decl == null ? null : decl.getNamespace();
   }
@@ -501,13 +505,13 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   void addFunNamespace(Node qnameNode) {
     if (qnameNode.isName()) {
       String varName = qnameNode.getString();
-      Preconditions.checkArgument(isDefinedLocally(varName, false));
-      Preconditions.checkState(!this.localNamespaces.containsKey(varName));
-      NTIScope s = Preconditions.checkNotNull(this.localFunDefs.get(varName));
+      checkArgument(isDefinedLocally(varName, false));
+      checkState(!this.localNamespaces.containsKey(varName));
+      NTIScope s = checkNotNull(this.localFunDefs.get(varName));
       this.localNamespaces.put(varName,
           new FunctionNamespace(this.commonTypes, varName, s, qnameNode));
     } else {
-      Preconditions.checkArgument(!isNamespace(qnameNode));
+      checkArgument(!isNamespace(qnameNode));
       QualifiedName qname = QualifiedName.fromNode(qnameNode);
       Namespace ns = getNamespace(qname.getLeftmostName());
       NTIScope s = (NTIScope) ns.getDeclaration(qname).getFunctionScope();
@@ -538,11 +542,10 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
 
   void addTypedef(Node qnameNode, Typedef td) {
     if (qnameNode.isName()) {
-      Preconditions.checkState(
-          !localTypedefs.containsKey(qnameNode.getString()));
+      checkState(!localTypedefs.containsKey(qnameNode.getString()));
       localTypedefs.put(qnameNode.getString(), td);
     } else {
-      Preconditions.checkState(!isDefined(qnameNode));
+      checkState(!isDefined(qnameNode));
       QualifiedName qname = QualifiedName.fromNode(qnameNode);
       Namespace ns = getNamespace(qname.getLeftmostName());
       ns.addTypedef(qname.getAllButLeftmost(), td);
@@ -565,7 +568,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
         this.externs.put(qnameNode.getString(), null);
       }
     } else {
-      Preconditions.checkState(!isDefined(qnameNode));
+      checkState(!isDefined(qnameNode));
       QualifiedName qname = QualifiedName.fromNode(qnameNode);
       Namespace rootns = getNamespace(qname.getLeftmostName());
       rootns.addNamespace(qname.getAllButLeftmost(), ns);
@@ -579,7 +582,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   }
 
   private Declaration getLocalDeclaration(String name, boolean includeTypes) {
-    Preconditions.checkArgument(!name.contains("."));
+    checkArgument(!name.contains("."));
     if (!isDefinedLocally(name, includeTypes)) {
       return null;
     }
@@ -648,7 +651,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   }
 
   public Declaration getDeclaration(String name, boolean includeTypes) {
-    Preconditions.checkArgument(!name.contains("."));
+    checkArgument(!name.contains("."));
     Declaration decl = getLocalDeclaration(name, includeTypes);
     if (decl != null) {
       return decl;
@@ -657,8 +660,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   }
 
   public JSType getType(String typeName) {
-    Preconditions.checkNotNull(
-        preservedNamespaces, "Failed to preserve namespaces post-finalization");
+    checkNotNull(preservedNamespaces, "Failed to preserve namespaces post-finalization");
     QualifiedName qname = QualifiedName.fromQualifiedString(typeName);
     Namespace ns = preservedNamespaces.get(qname.getLeftmostName());
     if (ns != null && !qname.isIdentifier()) {

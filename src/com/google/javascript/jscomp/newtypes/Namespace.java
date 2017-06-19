@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.Node;
@@ -55,7 +59,7 @@ public abstract class Namespace implements Serializable {
   protected Namespace(JSTypes commonTypes, String name, Node defSite) {
     this.name = name;
     this.commonTypes = commonTypes;
-    this.defSite = Preconditions.checkNotNull(defSite);
+    this.defSite = checkNotNull(defSite);
   }
 
   protected abstract JSType computeJSType();
@@ -91,22 +95,22 @@ public abstract class Namespace implements Serializable {
   }
 
   public void addNamespace(QualifiedName qname, Namespace ns) {
-    Preconditions.checkState(!isDefined(qname));
-    Preconditions.checkState(this.namespaceType == null);
+    checkState(!isDefined(qname));
+    checkState(this.namespaceType == null);
     Namespace subns = getReceiverNamespace(qname);
     if (subns.namespaces.isEmpty()) {
       subns.namespaces = new LinkedHashMap<>();
     }
     String name = qname.getRightmostName();
-    Preconditions.checkState(!subns.namespaces.containsKey(name));
+    checkState(!subns.namespaces.containsKey(name));
     subns.namespaces.put(name, ns);
   }
 
   // For a function namespace, when we compute the function summary during NTI,
   // we update the type here for more precision.
   void updateNamespaceType(JSType t) {
-    Preconditions.checkNotNull(t);
-    Preconditions.checkNotNull(this.namespaceType);
+    checkNotNull(t);
+    checkNotNull(this.namespaceType);
     this.namespaceType = t;
   }
 
@@ -129,8 +133,8 @@ public abstract class Namespace implements Serializable {
   }
 
   public final void addTypedef(QualifiedName qname, Typedef td) {
-    Preconditions.checkState(!isDefined(qname));
-    Preconditions.checkState(this.namespaceType == null);
+    checkState(!isDefined(qname));
+    checkState(this.namespaceType == null);
     Namespace ns = getReceiverNamespace(qname);
     if (ns.typedefs.isEmpty()) {
       ns.typedefs = new LinkedHashMap<>();
@@ -168,14 +172,14 @@ public abstract class Namespace implements Serializable {
     if (prop == null) {
       return false;
     }
-    Preconditions.checkState(!prop.isOptional());
+    checkState(!prop.isOptional());
     return true;
   }
 
   /** Add a new non-optional declared property to this namespace */
   public final void addProperty(
       String pname, Node defSite, JSType type, boolean isConstant) {
-    Preconditions.checkState(this.namespaceType == null);
+    checkState(this.namespaceType == null);
     if (type == null && isConstant) {
       type = this.commonTypes.UNKNOWN;
     }
@@ -187,7 +191,7 @@ public abstract class Namespace implements Serializable {
   /** Add a new undeclared property to this namespace */
   public final void addUndeclaredProperty(
       String pname, Node defSite, JSType t, boolean isConstant) {
-    Preconditions.checkState(this.namespaceType == null);
+    checkState(this.namespaceType == null);
     if (otherProps.containsKey(pname) && otherProps.get(pname).isDeclared()) {
       return;
     }
@@ -204,7 +208,7 @@ public abstract class Namespace implements Serializable {
   final Property getNsProp(String pname) {
     if (this.namespaces.containsKey(pname)) {
       Namespace subns = this.namespaces.get(pname);
-      Preconditions.checkState(subns.namespaceType != null);
+      checkState(subns.namespaceType != null);
       return Property.makeWithDefsite(subns.getDefSite(), subns.namespaceType, subns.namespaceType);
     }
     if (this.otherProps.containsKey(pname)) {
@@ -230,7 +234,7 @@ public abstract class Namespace implements Serializable {
 
   public final JSType toJSType() {
     if (this.namespaceType == null) {
-      Preconditions.checkNotNull(commonTypes);
+      checkNotNull(commonTypes);
       for (Namespace ns : this.namespaces.values()) {
         if (this.duringComputeJSType) {
           return null;
@@ -239,7 +243,7 @@ public abstract class Namespace implements Serializable {
         ns.toJSType();
         this.duringComputeJSType = false;
       }
-      this.namespaceType = Preconditions.checkNotNull(computeJSType());
+      this.namespaceType = checkNotNull(computeJSType());
     }
     return this.namespaceType;
   }
@@ -247,10 +251,11 @@ public abstract class Namespace implements Serializable {
   // Copy properties from window to Window.prototype, because in rare cases
   // people pass window around rather than using it directly.
   public final void copyWindowProperties(JSTypes commonTypes, RawNominalType win) {
-    Preconditions.checkArgument(win.getName().equals("Window"));
-    Preconditions.checkNotNull(this.namespaces,
+    checkArgument(win.getName().equals("Window"));
+    checkNotNull(
+        this.namespaces,
         "The built-in types are missing from window. "
-        + "Perhaps you forgot to run DeclaredGlobalExternsOnWindow?");
+            + "Perhaps you forgot to run DeclaredGlobalExternsOnWindow?");
 
     for (Map.Entry<String, Namespace> entry : this.namespaces.entrySet()) {
       Namespace ns = entry.getValue();

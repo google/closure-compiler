@@ -93,8 +93,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     if (nameStack.isEmpty()) {
       // If the contextual renamer is being used, the starting context can not
       // be a function.
-      checkState(
-          !declarationRoot.isFunction() || !(rootRenamer instanceof ContextualRenamer));
+      checkState(!declarationRoot.isFunction() || !(rootRenamer instanceof ContextualRenamer));
       checkState(t.inGlobalScope());
       renamer = rootRenamer;
     } else {

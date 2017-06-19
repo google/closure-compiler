@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -45,9 +49,10 @@ public final class NominalType implements Serializable {
   private static final Pattern NUMERIC_PATTERN = Pattern.compile("\\d+");
 
   NominalType(ImmutableMap<String, JSType> typeMap, RawNominalType rawType) {
-    Preconditions.checkState(typeMap.isEmpty()
-        || typeMap.keySet().containsAll(rawType.getTypeParameters())
-        && rawType.getTypeParameters().containsAll(typeMap.keySet()));
+    checkState(
+        typeMap.isEmpty()
+            || typeMap.keySet().containsAll(rawType.getTypeParameters())
+                && rawType.getTypeParameters().containsAll(typeMap.keySet()));
     this.typeMap = typeMap;
     this.rawType = rawType;
   }
@@ -57,7 +62,7 @@ public final class NominalType implements Serializable {
   // the raw nominal type directly they will get the uninstantiated generic types instead.
   public RawNominalType getRawNominalType() {
     // If the raw nominal type is frozen, then we are not in GlobalTypeInfo any more.
-    Preconditions.checkState(!this.rawType.isFrozen());
+    checkState(!this.rawType.isFrozen());
     return this.rawType;
   }
 
@@ -201,7 +206,7 @@ public final class NominalType implements Serializable {
 
   NominalType instantiateGenerics(List<JSType> types) {
     ImmutableList<String> typeParams = this.rawType.getTypeParameters();
-    Preconditions.checkState(types.size() == typeParams.size());
+    checkState(types.size() == typeParams.size());
     Map<String, JSType> typeMap = new LinkedHashMap<>();
     for (int i = 0; i < typeParams.size(); i++) {
       typeMap.put(typeParams.get(i), types.get(i));
@@ -261,7 +266,7 @@ public final class NominalType implements Serializable {
   }
 
   NominalType instantiateGenericsWithIdentity() {
-    Preconditions.checkState(isUninstantiatedGenericType());
+    checkState(isUninstantiatedGenericType());
     Map<String, JSType> m = new LinkedHashMap<>();
     for (String typeParam : this.getTypeParameters()) {
       m.put(typeParam, JSType.fromTypeVar(this.getCommonTypes(), typeParam));
@@ -323,7 +328,7 @@ public final class NominalType implements Serializable {
   }
 
   public NominalType getInstantiatedSuperclass() {
-    Preconditions.checkState(this.rawType.isFrozen());
+    checkState(this.rawType.isFrozen());
     if (this.rawType.getSuperClass() == null) {
       return null;
     }
@@ -331,14 +336,14 @@ public final class NominalType implements Serializable {
   }
 
   public JSType getPrototypePropertyOfCtor() {
-    Preconditions.checkState(this.rawType.isFrozen());
+    checkState(this.rawType.isFrozen());
     return this.rawType.getCtorPropDeclaredType("prototype");
   }
 
   // We require a frozen type for the interfaces here because the inheritance
   // chain of each type may not be correct until after the type is frozen.
   public ImmutableSet<NominalType> getInstantiatedInterfaces() {
-    Preconditions.checkState(this.rawType.isFrozen());
+    checkState(this.rawType.isFrozen());
     ImmutableSet.Builder<NominalType> result = ImmutableSet.builder();
     for (NominalType interf : this.rawType.getInterfaces()) {
       result.add(interf.instantiateGenerics(typeMap));
@@ -378,7 +383,7 @@ public final class NominalType implements Serializable {
       if (typeMap.isEmpty()) {
         return Property.make(getCommonTypes().UNKNOWN, null);
       }
-      Preconditions.checkState(typeMap.size() == 1);
+      checkState(typeMap.size() == 1);
       JSType elmType = Iterables.getOnlyElement(typeMap.values());
       return Property.make(elmType, null);
     }
@@ -420,7 +425,7 @@ public final class NominalType implements Serializable {
   }
 
   private boolean isStructuralSubtypeOf(NominalType other, SubtypeCache subSuperMap) {
-    Preconditions.checkArgument(other.isStructuralInterface());
+    checkArgument(other.isStructuralInterface());
     for (String pname : other.getAllPropsOfInterface()) {
       Property prop2 = other.getProp(pname);
       Property prop1 = this.getProp(pname);
@@ -464,15 +469,14 @@ public final class NominalType implements Serializable {
   }
 
   boolean isIObjectSubtypeOf(NominalType other) {
-    Preconditions.checkState(
-        this.inheritsFromIObjectReflexive() && other.inheritsFromIObjectReflexive());
+    checkState(this.inheritsFromIObjectReflexive() && other.inheritsFromIObjectReflexive());
     // Contravariance for the index type and covariance for the indexed type.
     return other.getIndexType().isSubtypeOf(this.getIndexType())
         && this.getIndexedType().isSubtypeOf(other.getIndexedType());
   }
 
   private boolean areTypeMapsCompatible(NominalType other) {
-    Preconditions.checkState(this.rawType.equals(other.rawType));
+    checkState(this.rawType.equals(other.rawType));
     if (this.typeMap.isEmpty()) {
       return other.instantiationIsUnknownOrIdentity();
     }
@@ -557,7 +561,7 @@ public final class NominalType implements Serializable {
   }
 
   private static ImmutableMap<String, JSType> joinTypeMaps(NominalType nt1, NominalType nt2) {
-    Preconditions.checkState(nt1.rawType.equals(nt2.rawType));
+    checkState(nt1.rawType.equals(nt2.rawType));
     ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
     if (nt1.isIObject()) {
       // Special case IObject, whose first type parameter is contravariant.
@@ -595,7 +599,7 @@ public final class NominalType implements Serializable {
     // c1's inheritance chain and get instantiated ancestors until we reach the ancestor with the
     // same raw type as c2, and then join.
     // Putting the preconditions check in order to get notified if we ever need to handle this.
-    Preconditions.checkState(!c1.isRawSubtypeOf(c2) && !c2.isRawSubtypeOf(c1));
+    checkState(!c1.isRawSubtypeOf(c2) && !c2.isRawSubtypeOf(c1));
     return null;
   }
 
@@ -665,12 +669,12 @@ public final class NominalType implements Serializable {
   }
 
   boolean isPropDefinedOnSubtype(QualifiedName pname) {
-    Preconditions.checkArgument(pname.isIdentifier());
+    checkArgument(pname.isIdentifier());
     return this.rawType.isPropDefinedOnSubtype(pname.getLeftmostName());
   }
 
   Set<JSType> getSubtypesWithProperty(QualifiedName pname) {
-    Preconditions.checkArgument(pname.isIdentifier());
+    checkArgument(pname.isIdentifier());
     return this.rawType.getSubtypesWithProperty(pname.getLeftmostName());
   }
 
@@ -692,7 +696,7 @@ public final class NominalType implements Serializable {
     }
     builder.append(this.rawType.name);
     ImmutableList<String> typeParams = this.rawType.getTypeParameters();
-    Preconditions.checkState(this.typeMap.keySet().containsAll(typeParams));
+    checkState(this.typeMap.keySet().containsAll(typeParams));
     boolean firstIteration = true;
     builder.append('<');
     for (String typeParam : typeParams) {
@@ -702,7 +706,7 @@ public final class NominalType implements Serializable {
         builder.append(',');
       }
       JSType concrete = this.typeMap.get(typeParam);
-      Preconditions.checkNotNull(concrete).appendTo(builder, ctx);
+      checkNotNull(concrete).appendTo(builder, ctx);
     }
     builder.append('>');
     return builder;
@@ -718,7 +722,7 @@ public final class NominalType implements Serializable {
     if (other == null) {
       return false;
     }
-    Preconditions.checkState(other instanceof NominalType);
+    checkState(other instanceof NominalType);
     NominalType o = (NominalType) other;
     return this.rawType.equals(o.rawType) && Objects.equals(typeMap, o.typeMap);
   }

@@ -15,7 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +36,7 @@ final class Timeline<T> {
     T value;
 
     Event(T value) {
-      Preconditions.checkNotNull(value);
+      checkNotNull(value);
       this.value = value;
     }
   }
@@ -44,7 +45,7 @@ final class Timeline<T> {
     final String name;
 
     Time(String name) {
-      Preconditions.checkNotNull(name);
+      checkNotNull(name);
       this.name = name;
     }
 

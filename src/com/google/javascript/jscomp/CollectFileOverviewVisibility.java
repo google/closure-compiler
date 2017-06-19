@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
@@ -44,7 +45,7 @@ class CollectFileOverviewVisibility implements HotSwapCompilerPass {
     for (Node script = root.getFirstChild();
         script != null;
         script = script.getNext()) {
-      Preconditions.checkState(script.isScript());
+      checkState(script.isScript());
       visit(script);
     }
   }

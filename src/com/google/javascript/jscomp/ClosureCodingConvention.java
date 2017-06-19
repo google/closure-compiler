@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -353,7 +355,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
 
   @Override
   public boolean isPropertyTestFunction(Node call) {
-    Preconditions.checkArgument(call.isCall());
+    checkArgument(call.isCall());
     return propertyTestFunctions.contains(
         call.getFirstChild().getQualifiedName()) ||
         super.isPropertyTestFunction(call);

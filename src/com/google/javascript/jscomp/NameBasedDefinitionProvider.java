@@ -16,7 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
@@ -62,7 +65,7 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
 
   @Override
   public void process(Node externs, Node source) {
-    Preconditions.checkState(!hasProcessBeenRun, "The definition provider is already initialized.");
+    checkState(!hasProcessBeenRun, "The definition provider is already initialized.");
     this.hasProcessBeenRun = true;
 
     NodeTraversal.traverseEs6(compiler, externs, new DefinitionGatheringCallback(true));
@@ -105,7 +108,7 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
                 DefinitionSite site = definitionNodeByDefinitionSite.remove(def.getLValue());
 
                 // Since it's a stub we know its keyed by the name/getProp node.
-                Preconditions.checkNotNull(site);
+                checkNotNull(site);
                 break;
               }
             }
@@ -117,8 +120,8 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
 
   @Override
   public Collection<Definition> getDefinitionsReferencedAt(Node useSite) {
-    Preconditions.checkState(hasProcessBeenRun, "The process was not run");
-    Preconditions.checkArgument(useSite.isGetProp() || useSite.isName());
+    checkState(hasProcessBeenRun, "The process was not run");
+    checkArgument(useSite.isGetProp() || useSite.isName());
     if (definitionNodes.contains(useSite)) {
       return null;
     }
@@ -263,13 +266,13 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
    * @return definition site collection.
    */
   public Collection<DefinitionSite> getDefinitionSites() {
-    Preconditions.checkState(hasProcessBeenRun, "The process was not run");
+    checkState(hasProcessBeenRun, "The process was not run");
     return definitionNodeByDefinitionSite.values();
   }
 
   public DefinitionSite getDefinitionForFunction(Node function) {
-    Preconditions.checkState(hasProcessBeenRun, "The process was not run");
-    Preconditions.checkState(function.isFunction());
+    checkState(hasProcessBeenRun, "The process was not run");
+    checkState(function.isFunction());
     return definitionNodeByDefinitionSite.get(NodeUtil.getNameNode(function));
   }
 }

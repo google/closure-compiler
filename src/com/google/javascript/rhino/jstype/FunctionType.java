@@ -39,6 +39,9 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.OBJECT_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 
@@ -165,8 +168,8 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
         nativeType, templateTypeMap);
     setPrettyPrint(true);
 
-    Preconditions.checkArgument(source == null || Token.FUNCTION == source.getToken());
-    Preconditions.checkNotNull(arrowType);
+    checkArgument(source == null || Token.FUNCTION == source.getToken());
+    checkNotNull(arrowType);
     this.source = source;
     if (isConstructor) {
       this.kind = Kind.CONSTRUCTOR;
@@ -192,8 +195,8 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
         false, typeParameters);
     setPrettyPrint(true);
 
-    Preconditions.checkArgument(source == null || Token.FUNCTION == source.getToken());
-    Preconditions.checkArgument(name != null);
+    checkArgument(source == null || Token.FUNCTION == source.getToken());
+    checkArgument(name != null);
     this.source = source;
     this.call = new ArrowType(registry, new Node(Token.PARAM_LIST), null);
     this.kind = Kind.INTERFACE;
@@ -544,7 +547,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * @return true if implemented
    */
   public boolean explicitlyImplOrExtInterface(FunctionType interfaceType) {
-    Preconditions.checkArgument(interfaceType.isInterface());
+    checkArgument(interfaceType.isInterface());
     for (ObjectType implementedInterface : getAllImplementedInterfaces()) {
       FunctionType ctor = implementedInterface.getConstructor();
       if (ctor != null && ctor.checkEquivalenceHelper(
@@ -829,7 +832,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     // If there are unknown parameters or return types making things
     // ambiguous, then sup(A, B) is always the top function type, and
     // inf(A, B) is always the bottom function type.
-    Preconditions.checkNotNull(that);
+    checkNotNull(that);
 
     if (isEquivalentTo(that)) {
       return this;
@@ -933,7 +936,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    */
   @Override
   public FunctionType getSuperClassConstructor() {
-    Preconditions.checkArgument(isConstructor() || isInterface());
+    checkArgument(isConstructor() || isInterface());
     ObjectType maybeSuperInstanceType = getPrototype().getImplicitPrototype();
     if (maybeSuperInstanceType == null) {
       return null;
@@ -947,8 +950,8 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * constructor).
    */
   public ObjectType getTopMostDefiningType(String propertyName) {
-    Preconditions.checkState(isConstructor() || isInterface());
-    Preconditions.checkArgument(getInstanceType().hasProperty(propertyName));
+    checkState(isConstructor() || isInterface());
+    checkArgument(getInstanceType().hasProperty(propertyName));
     FunctionType ctor = this;
 
     if (isInterface()) {
@@ -1444,7 +1447,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * @param flag indicates whether or not it should support SMI
    */
   public void setImplicitMatch(boolean flag) {
-    Preconditions.checkState(isInterface());
+    checkState(isInterface());
     isStructuralInterface = flag;
   }
 

@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.FunctionInjector.Reference;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -86,7 +87,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
       void remove() {
         Node nodeToDetach = getKey.getGrandparent();
         Node objectLit = nodeToDetach.getParent();
-        Preconditions.checkArgument(objectLit.isObjectLit());
+        checkArgument(objectLit.isObjectLit());
         nodeToDetach.detach();
         NodeUtil.markFunctionsDeleted(nodeToDetach, compiler);
         compiler.reportChangeToEnclosingScope(objectLit);

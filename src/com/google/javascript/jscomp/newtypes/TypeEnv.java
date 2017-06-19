@@ -16,10 +16,12 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -51,19 +53,19 @@ public final class TypeEnv {
 
   private TypeEnv(PersistentMap<String, JSType> typeMap,
       PersistentSet<String> changedVars) {
-    Preconditions.checkState(typeMap.size() >= SIZE_THRESHOLD);
+    checkState(typeMap.size() >= SIZE_THRESHOLD);
     this.typeMap = typeMap;
     this.changedVars = changedVars;
   }
 
   public JSType getType(String n) {
-    Preconditions.checkArgument(!n.contains("."));
+    checkArgument(!n.contains("."));
     return typeMap.get(n);
   }
 
   public TypeEnv putType(String n, JSType t) {
-    Preconditions.checkArgument(!n.contains("."));
-    Preconditions.checkArgument(t != null);
+    checkArgument(!n.contains("."));
+    checkArgument(t != null);
     if (changedVars == null) {
       return new TypeEnv(typeMap.with(n, t));
     }
@@ -97,7 +99,7 @@ public final class TypeEnv {
   // This is OK because we use reference equality for type envs.
   // Don't override equals to do logical equality!
   public static TypeEnv join(Collection<TypeEnv> envs) {
-    Preconditions.checkArgument(!envs.isEmpty());
+    checkArgument(!envs.isEmpty());
     Iterator<TypeEnv> envsIter = envs.iterator();
     TypeEnv firstEnv = envsIter.next();
 
