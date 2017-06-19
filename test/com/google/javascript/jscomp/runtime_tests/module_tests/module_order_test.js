@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import { record } from './module_test_resources/moduleOrderRecorder';
-import { A } from './module_test_resources/moduleOrderA';
-import { B } from './module_test_resources/moduleOrderB';
-import { C } from './module_test_resources/moduleOrderC';
+import { record } from './module_test_resources/moduleOrderRecorder.js';
+import { A } from './module_test_resources/moduleOrderA.js';
+import { B } from './module_test_resources/moduleOrderB.js';
+import { C } from './module_test_resources/moduleOrderC.js';
 
 function testModuleOrder() {
   assertEquals(record[0], 'processed module C');

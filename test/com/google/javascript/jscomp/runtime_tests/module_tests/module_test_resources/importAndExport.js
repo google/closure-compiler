@@ -14,6 +14,6 @@
  * limitations under the License.
  */
 
-import {alpha, beta} from './simpleExport';
+import {alpha, beta} from './simpleExport.js';
 
 export {alpha, beta as gamma};

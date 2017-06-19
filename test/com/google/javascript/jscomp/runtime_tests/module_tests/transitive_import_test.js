@@ -18,7 +18,7 @@
  * @fileoverview Tests to make sure things work correctly when a value is
  * imported and then re-exported.
  */
-import {alpha, gamma} from './module_test_resources/importAndExport';
+import {alpha, gamma} from './module_test_resources/importAndExport.js';
 
 function testTransitiveImport() {
   assertEquals(3, alpha);

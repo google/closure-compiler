@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as m from './module_test_resources/simpleExport';
+import * as m from './module_test_resources/simpleExport.js';
 
 function testImportStar() {
   assertEquals('g', m.g());

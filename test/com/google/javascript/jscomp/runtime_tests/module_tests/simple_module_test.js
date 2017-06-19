@@ -20,9 +20,9 @@
  * @author moz@google.com (Michael Zhou)
  */
 
-import {foo as f} from './module_test_resources/simpleExport';
-import {bar as b, alpha, beta} from './module_test_resources/simpleExport';
-import {a} from './module_test_resources/+subdir/module_es6';
+import {foo as f} from './module_test_resources/simpleExport.js';
+import {bar as b, alpha, beta} from './module_test_resources/simpleExport.js';
+import {a} from './module_test_resources/+subdir/module_es6.js';
 
 goog.require('goog.testing.asserts');
 
