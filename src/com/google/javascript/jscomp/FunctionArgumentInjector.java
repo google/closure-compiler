@@ -70,7 +70,7 @@ class FunctionArgumentInjector {
       Node replacementTemplate = replacements.get(node.getString());
       if (replacementTemplate != null) {
         // This should not be replacing declared names.
-        checkState(!parent.isFunction() || !parent.isVar() || !parent.isCatch());
+        checkState(!(parent.isFunction() || parent.isVar() || parent.isCatch()), parent);
         // The name may need to be replaced more than once,
         // so we need to clone the node.
         Node replacement = replacementTemplate.cloneTree();
