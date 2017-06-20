@@ -757,10 +757,9 @@ public class CommandLineRunner extends
       usage =
           "Specifies how the compiler locates modules. BROWSER requires all module imports "
               + "to begin with a '.' or '/' and have a file extension. NODE uses the node module "
-              + "rules. LEGACY prepends a '/' to any import not already beginning with a "
-              + "'.' or '/'."
+              + "rules."
     )
-    private ModuleLoader.ResolutionMode moduleResolutionMode = ModuleLoader.ResolutionMode.LEGACY;
+    private ModuleLoader.ResolutionMode moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
 
     @Argument
     private List<String> arguments = new ArrayList<>();
