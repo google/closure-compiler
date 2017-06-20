@@ -873,21 +873,20 @@ final class FunctionTypeBuilder {
    */
   private static boolean hasMoreTagsToResolve(ObjectType objectType) {
     checkArgument(objectType.isUnknownType());
+    FunctionType ctor = objectType.getConstructor();
+    if (ctor != null) {
+      // interface extends interfaces
+      for (ObjectType interfaceType : ctor.getExtendedInterfaces()) {
+        if (!interfaceType.isResolved()) {
+          return true;
+        }
+      }
+    }
     if (objectType.getImplicitPrototype() != null) {
       // constructor extends class
       return !objectType.getImplicitPrototype().isResolved();
-    } else {
-      // interface extends interfaces
-      FunctionType ctor = objectType.getConstructor();
-      if (ctor != null) {
-        for (ObjectType interfaceType : ctor.getExtendedInterfaces()) {
-          if (!interfaceType.isResolved()) {
-            return true;
-          }
-        }
-      }
-      return false;
     }
+    return false;
   }
 
   /** Holds data dynamically inferred about functions. */
