@@ -722,6 +722,9 @@ public final class NominalType implements Serializable {
     if (other == null) {
       return false;
     }
+    if (this == other) {
+      return true;
+    }
     checkState(other instanceof NominalType);
     NominalType o = (NominalType) other;
     return this.rawType.equals(o.rawType) && Objects.equals(typeMap, o.typeMap);
