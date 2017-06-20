@@ -341,7 +341,7 @@ public final class ModuleLoader {
           null,
           ImmutableList.<String>of(),
           ImmutableList.<DependencyInfo>of(),
-          ResolutionMode.LEGACY);
+          ResolutionMode.BROWSER);
 
   /** An enum used to specify what algorithm to use to locate non path-based modules */
   public enum ResolutionMode {

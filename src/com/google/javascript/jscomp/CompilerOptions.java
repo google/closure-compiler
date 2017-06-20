@@ -1179,7 +1179,7 @@ public class CompilerOptions implements Serializable {
     environment = Environment.BROWSER;
 
     // Modules
-    moduleResolutionMode = ModuleLoader.ResolutionMode.LEGACY;
+    moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
 
     // Checks
     skipNonTranspilationPasses = false;
