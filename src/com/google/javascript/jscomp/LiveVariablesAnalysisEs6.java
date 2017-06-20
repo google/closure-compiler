@@ -168,22 +168,21 @@ class LiveVariablesAnalysisEs6
           // add the hoisted variables from this child scope
           if ((v.isLet() || v.isConst()) && !jsScope.isFunctionScope()) {
             continue;
+
           }
           scopeVariables.put(v.getName(), num);
           num++;
         }
       }
-    } else if (jsScope.isFunctionBlockScope()) {
-      for (Var v : jsScope.getParent().getVarIterable()) {
-        scopeVariables.put(v.getName(), num);
-        num++;
+    } else {
+
+      if (jsScope.isFunctionBlockScope()) {
+        for (Var v : jsScope.getParent().getVarIterable()) {
+          scopeVariables.put(v.getName(), num);
+          num++;
+        }
       }
 
-      for (Var v : jsScope.getVarIterable()) {
-        scopeVariables.put(v.getName(), num);
-        num++;
-      }
-    } else {
       for (Var v : jsScope.getVarIterable()) {
         scopeVariables.put(v.getName(), num);
         num++;
@@ -368,8 +367,14 @@ class LiveVariablesAnalysisEs6
    */
   void markAllParametersEscaped() {
     if (jsScope.isFunctionScope()) {
-      Node lp = jsScope.getRootNode().getSecondChild();
-      for (Node arg = lp.getFirstChild(); arg != null; arg = arg.getNext()) {
+      Node paramList = NodeUtil.getFunctionParameters(jsScope.getRootNode());
+      for (Node arg = paramList.getFirstChild(); arg != null; arg = arg.getNext()) {
+        escaped.add(jsScope.getVar(arg.getString()));
+      }
+    } else {
+      Node enclosingFunction = NodeUtil.getEnclosingFunction(jsScope.getRootNode());
+      Node paramList = NodeUtil.getFunctionParameters(enclosingFunction);
+      for (Node arg = paramList.getFirstChild(); arg != null; arg = arg.getNext()) {
         escaped.add(jsScope.getVar(arg.getString()));
       }
     }
