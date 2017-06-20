@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6_MODULES;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
@@ -282,6 +283,8 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.needsTranspilationFrom(TYPESCRIPT)) {
       checks.add(convertEs6TypedToEs6);
     }
+
+    checks.add(es6CheckModule);
 
     if (options.needsTranspilationOf(FeatureSet.Feature.MODULES)) {
       TranspilationPasses.addEs6ModulePass(checks);
@@ -1457,6 +1460,19 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected FeatureSet featureSet() {
           return ES8;
+        }
+      };
+
+  private final HotSwapPassFactory es6CheckModule =
+      new HotSwapPassFactory("es6CheckModule", true) {
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          return new Es6CheckModule(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES6_MODULES;
         }
       };
 

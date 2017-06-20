@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Node;
  */
 public final class Es6CheckModule extends AbstractPostOrderCallback implements HotSwapCompilerPass {
   static final DiagnosticType ES6_MODULE_REFERENCES_THIS =
-      DiagnosticType.error(
+      DiagnosticType.warning(
           "ES6_MODULE_REFERENCES_THIS", "The body of an ES6 module cannot reference 'this'.");
 
   private final AbstractCompiler compiler;

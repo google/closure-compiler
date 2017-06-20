@@ -36,11 +36,11 @@ public final class Es6CheckModuleTest extends CompilerTestCase {
   }
 
   public void testEs6ThisWithExportModule() {
-    testError("export {};\nfoo.call(this, 1, 2, 3);", Es6CheckModule.ES6_MODULE_REFERENCES_THIS);
+    testWarning("export {};\nfoo.call(this, 1, 2, 3);", Es6CheckModule.ES6_MODULE_REFERENCES_THIS);
   }
 
   public void testEs6ThisWithImportModule() {
-    testError(
+    testWarning(
         LINE_JOINER.join("import ln from 'other.x'", "if (x) {", "  alert(this);", "}"),
         Es6CheckModule.ES6_MODULE_REFERENCES_THIS);
   }
