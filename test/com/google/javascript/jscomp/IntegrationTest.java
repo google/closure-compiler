@@ -2871,8 +2871,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "     '[object Function]';" +
         "};";
     String result =
-        "isFunction=function(a){var b={};" +
-        "return a&&\"[object Function]\"===b.b.a(a)}";
+        "isFunction=function(a){var b={}; return a && '[object Function]' === b.a.apply(a)}";
 
     test(options, code, result);
   }

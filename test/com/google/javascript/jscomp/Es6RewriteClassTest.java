@@ -196,7 +196,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " */",
             "const testcode$classdecl$var0 = function(var_args) {",
-            "  return D.apply(this,arguments) || this; ",
+            "  return $jscomp.construct(D, arguments, this.constructor) ",
             "};",
             "$jscomp.inherits(testcode$classdecl$var0, D);",
             "testcode$classdecl$var0.prototype.f = function() { D.prototype.g.call(this); };",
@@ -568,7 +568,8 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             " */",
             "let C = function(var_args) { D.apply(this, arguments); };",
             "$jscomp.inherits(C, D);"));
-    assertThat(getLastCompiler().injected).containsExactly("es6/util/inherits");
+    assertThat(getLastCompiler().injected)
+        .containsExactly("es6/util/inherits", "es6/util/construct");
 
     test(
         "class D {} class C extends D { constructor() { super(); } }",
@@ -600,7 +601,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " */",
             "let C = function(var_args) {",
-            " return ns.D.apply(this, arguments) || this;",
+            " return $jscomp.construct(ns.D, arguments, this.constructor);",
             "};",
             "$jscomp.inherits(C, ns.D);"));
 
@@ -945,7 +946,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "/** @constructor @struct @extends {D} */",
             "let C = function(str, n) {",
             "  var $jscomp$super$this;",
-            "  ($jscomp$super$this = D.call(this,str) || this).n = n;",
+            "  ($jscomp$super$this = $jscomp.construct(D, [str], this.constructor)).n = n;",
             "  return $jscomp$super$this;", // Duplicate because of existing return statement.
             "  return $jscomp$super$this;",
             "}",
@@ -1014,9 +1015,9 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "let C = function(str, n) {",
             "  var $jscomp$super$this;",
             "  if (n >= 0) {",
-            "    $jscomp$super$this = D.call(this, 'positive: ' + str) || this;",
+            "    $jscomp$super$this = $jscomp.construct(D,[\"positive: \"+str],this.constructor);",
             "  } else {",
-            "    $jscomp$super$this = D.call(this, 'negative: ' + str) || this;",
+            "    $jscomp$super$this = $jscomp.construct(D,[\"negative: \"+str],this.constructor);",
             "  }",
             "  $jscomp$super$this.n = n;",
             "  return $jscomp$super$this;",
@@ -1424,7 +1425,6 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
   }
 
   public void testSuperCallNonConstructor() {
-
     testError("class S extends B { static f() { super(); } }", INVALID_SUPER_CALL);
 
     testError("class S extends B { f() { super(); } }", INVALID_SUPER_CALL);
@@ -1531,7 +1531,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " */",
             "let CodeClass = function(var_args) {",
-            "  return ExternsClass.apply(this,arguments) || this;",
+            "  return $jscomp.construct(ExternsClass, arguments, this.constructor);",
             "};",
             "$jscomp.inherits(CodeClass,ExternsClass)"));
   }
