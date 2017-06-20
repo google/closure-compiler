@@ -96,7 +96,7 @@ var IntersectionObserverCallback;
  * Options for the IntersectionObserver.
  * @see https://wicg.github.io/IntersectionObserver/#intersection-observer-init
  * @typedef {{
- *   threshold: (!Array<number>|undefined),
+ *   threshold: (!Array<number>|number|undefined),
  *   root: (!Element|undefined),
  *   rootMargin: (string|undefined)
  * }}
