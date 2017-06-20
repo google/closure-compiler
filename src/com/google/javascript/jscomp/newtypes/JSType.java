@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -35,6 +36,10 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -2261,13 +2266,11 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   private static final class UnionType extends JSType {
     final int mask;
     // objs is empty for scalar types
-    // TODO(rluble): Serialize this field (guava issue #1554)
-    final transient ImmutableSet<ObjectType> objs;
+    transient Collection<ObjectType> objs;
     // typeVar is null for non-generic types
     final String typeVar;
     // enums is empty for types that don't have enums
-    // TODO(rluble): Serialize this field (guava issue #1554)
-    final transient ImmutableSet<EnumType> enums;
+    transient Collection<EnumType> enums;
 
     UnionType(JSTypes commonTypes, int mask, ImmutableSet<ObjectType> objs,
         String typeVar, ImmutableSet<EnumType> enums) {
@@ -2296,18 +2299,40 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     }
 
     @Override
-    protected ImmutableSet<ObjectType> getObjs() {
-      return checkNotNull(objs);
-    }
-
-    @Override
     protected String getTypeVar() {
       return typeVar;
     }
 
     @Override
+    protected ImmutableSet<ObjectType> getObjs() {
+      checkNotNull(this.objs);
+      if (!(this.objs instanceof ImmutableSet)) {
+        this.objs = ImmutableSet.copyOf(this.objs);
+      }
+      return (ImmutableSet<ObjectType>) this.objs;
+    }
+
+    @Override
     protected ImmutableSet<EnumType> getEnums() {
-      return checkNotNull(enums);
+      checkNotNull(this.enums);
+      if (!(this.enums instanceof ImmutableSet)) {
+        this.enums = ImmutableSet.copyOf(this.enums);
+      }
+      return (ImmutableSet<EnumType>) this.enums;
+    }
+
+    @GwtIncompatible("ObjectOutputStream")
+    private void writeObject(ObjectOutputStream out) throws IOException {
+      out.defaultWriteObject();
+      out.writeObject(new ArrayList<>(this.objs));
+      out.writeObject(new ArrayList<>(this.enums));
+    }
+
+    @GwtIncompatible("ObjectInputStream")
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+      in.defaultReadObject();
+      this.objs = (ArrayList<ObjectType>) in.readObject();
+      this.enums = (ArrayList<EnumType>) in.readObject();
     }
   }
 
@@ -2341,8 +2366,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   private static final class ObjsType extends JSType {
-    // TODO(rluble): Serialize this field (guava issue #1554)
-    final transient ImmutableSet<ObjectType> objs;
+    transient Collection<ObjectType> objs;
 
     ObjsType(JSTypes commonTypes, ImmutableSet<ObjectType> objs) {
       super(commonTypes);
@@ -2355,24 +2379,39 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     }
 
     @Override
-    protected ImmutableSet<ObjectType> getObjs() {
-      return objs;
+    protected String getTypeVar() {
+      return null;
     }
 
     @Override
-    protected String getTypeVar() {
-      return null;
+    protected ImmutableSet<ObjectType> getObjs() {
+      checkNotNull(this.objs);
+      if (!(this.objs instanceof ImmutableSet)) {
+        this.objs = ImmutableSet.copyOf(this.objs);
+      }
+      return (ImmutableSet<ObjectType>) this.objs;
     }
 
     @Override
     protected ImmutableSet<EnumType> getEnums() {
       return ImmutableSet.of();
     }
+
+    @GwtIncompatible("ObjectOutputStream")
+    private void writeObject(ObjectOutputStream out) throws IOException {
+      out.defaultWriteObject();
+      out.writeObject(new ArrayList<>(this.objs));
+    }
+
+    @GwtIncompatible("ObjectInputStream")
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+      in.defaultReadObject();
+      this.objs = (ArrayList<ObjectType>) in.readObject();
+    }
   }
 
   private static final class NullableObjsType extends JSType {
-    // TODO(rluble): Serialize this field (guava issue #1554)
-    final transient ImmutableSet<ObjectType> objs;
+    transient Collection<ObjectType> objs;
 
     NullableObjsType(JSTypes commonTypes, ImmutableSet<ObjectType> objs) {
       super(commonTypes);
@@ -2385,18 +2424,34 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     }
 
     @Override
-    protected ImmutableSet<ObjectType> getObjs() {
-      return objs;
-    }
-
-    @Override
     protected String getTypeVar() {
       return null;
     }
 
     @Override
+    protected ImmutableSet<ObjectType> getObjs() {
+      checkNotNull(this.objs);
+      if (!(this.objs instanceof ImmutableSet)) {
+        this.objs = ImmutableSet.copyOf(this.objs);
+      }
+      return (ImmutableSet<ObjectType>) this.objs;
+    }
+
+    @Override
     protected ImmutableSet<EnumType> getEnums() {
       return ImmutableSet.of();
+    }
+
+    @GwtIncompatible("ObjectOutputStream")
+    private void writeObject(ObjectOutputStream out) throws IOException {
+      out.defaultWriteObject();
+      out.writeObject(new ArrayList<>(this.objs));
+    }
+
+    @GwtIncompatible("ObjectInputStream")
+    private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+      in.defaultReadObject();
+      this.objs = (ArrayList<ObjectType>) in.readObject();
     }
   }
 }
