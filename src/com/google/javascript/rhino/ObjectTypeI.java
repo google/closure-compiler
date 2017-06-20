@@ -40,6 +40,7 @@
 package com.google.javascript.rhino;
 
 import com.google.common.collect.ImmutableList;
+import java.util.Collection;
 
 /**
  * @author blickly@google.com (Ben Lickly)
@@ -131,6 +132,8 @@ public interface ObjectTypeI extends TypeI {
    * Only called on instances of NamedType. See also isLegacyNamedType.
    */
   TypeI getLegacyResolvedType();
+
+  Collection<? extends FunctionTypeI> getDirectImplementors();
 
   /**
    * Given an interface and a property, finds a top-most super interface

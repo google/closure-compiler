@@ -1851,17 +1851,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public final Collection<FunctionTypeI> getSubTypes() {
-    Preconditions.checkState(this.isConstructor() || this.isInterface());
-    ImmutableList.Builder<FunctionTypeI> result = ImmutableList.builder();
-    NominalType nt =
-        getFunTypeIfSingletonObj().getInstanceTypeOfCtor().getNominalTypeIfSingletonObj();
-    if (nt != null) {
-      for (RawNominalType rawType : nt.getSubtypes()) {
-        result.add(this.commonTypes.fromFunctionType(rawType.getConstructorFunction()));
-      }
-    }
-    return result.build();
+  public final List<? extends FunctionTypeI> getSubTypes() {
+    throw new UnsupportedOperationException("getSubTypes not implemented yet");
   }
 
   @Override
@@ -2184,6 +2175,18 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   @Override
   public final TypeI getGreatestSubtypeWithProperty(String pname) {
     return joinManyTypes(this.commonTypes, getSubtypesWithProperty(new QualifiedName(pname)));
+  }
+
+  @Override
+  public final Collection<JSType> getDirectImplementors() {
+    Set<JSType> result = new HashSet<>();
+    NominalType nt = getNominalTypeIfSingletonObj();
+    if (nt != null) {
+      for (RawNominalType rawType : nt.getSubtypes()) {
+        result.add(this.commonTypes.fromFunctionType(rawType.getConstructorFunction()));
+      }
+    }
+    return result;
   }
 
   @Override

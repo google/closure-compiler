@@ -76,12 +76,11 @@ public interface FunctionTypeI extends TypeI {
   Node getSource();
 
   /**
-   * Returns a list of direct types that are subtypes of this type. This is only
-   * valid for constructors and interfaces, and will not be null. This allows a
-   * downward traversal of the subtype graph.
+   * Returns a list of types that are subtypes of this type. This is only
+   * valid for constructor functions, and may be null. This allows a downward
+   * traversal of the subtype graph.
    */
-  // TODO(sdh): change the name to getDirectSubTypes()
-  Collection<FunctionTypeI> getSubTypes();
+  List<? extends FunctionTypeI> getSubTypes();
 
   /** Gets the type of {@code this} in this function. */
   TypeI getTypeOfThis();

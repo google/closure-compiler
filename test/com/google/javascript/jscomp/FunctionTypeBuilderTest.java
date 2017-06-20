@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.rhino.testing.BaseJSTypeTestCase.ALL_NATIVE_EXTERN_TYPES;
 
-import com.google.common.collect.ImmutableList;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -141,11 +139,9 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
   public void testExternSubTypes() throws Exception {
     testSame(ALL_NATIVE_EXTERN_TYPES, "");
 
-    List<FunctionTypeI> subtypes =
-        ImmutableList.copyOf(
-            ((ObjectType) getLastCompiler().getTypeRegistry().getType("Error"))
-                .getConstructor().getSubTypes());
-    for (FunctionTypeI type : subtypes) {
+    List<FunctionType> subtypes = ((ObjectType) getLastCompiler()
+        .getTypeRegistry().getType("Error")).getConstructor().getSubTypes();
+    for (FunctionType type : subtypes) {
       String typeName = type.getInstanceType().toString();
       FunctionType typeInRegistry = ((ObjectType) getLastCompiler()
           .getTypeRegistry().getType(typeName)).getConstructor();

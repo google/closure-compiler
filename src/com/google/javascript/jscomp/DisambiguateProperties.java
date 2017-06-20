@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
@@ -780,7 +779,6 @@ class DisambiguateProperties implements CompilerPass {
   }
 
   /** Returns a map from field name to types for which it will be renamed. */
-  @VisibleForTesting
   Multimap<String, Collection<TypeI>> getRenamedTypesForTesting() {
     Multimap<String, Collection<TypeI>> ret = HashMultimap.create();
     for (Map.Entry<String, Property> entry : properties.entrySet()) {
@@ -888,10 +886,11 @@ class DisambiguateProperties implements CompilerPass {
       return type.getUnionMembers();
     } else {
       ObjectTypeI objType = type.toMaybeObjectType();
-      FunctionTypeI constructor = objType != null ? objType.getConstructor() : null;
-      if (constructor != null && constructor.isInterface()) {
+      if (objType != null
+          && objType.getConstructor() != null
+          && objType.getConstructor().isInterface()) {
         List<TypeI> list = new ArrayList<>();
-        for (FunctionTypeI impl : constructor.getSubTypes()) {
+        for (FunctionTypeI impl : objType.getDirectImplementors()) {
           list.add(impl.getInstanceType());
         }
         return list.isEmpty() ? null : list;

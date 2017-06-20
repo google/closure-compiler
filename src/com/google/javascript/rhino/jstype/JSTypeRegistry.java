@@ -56,7 +56,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.ErrorReporter;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -185,7 +184,7 @@ public class JSTypeRegistry implements TypeIRegistry {
        new HashMap<>();
 
   // A map from interface name to types that implement it.
-  private final Multimap<String, FunctionTypeI> interfaceToImplementors =
+  private final Multimap<String, FunctionType> interfaceToImplementors =
       LinkedHashMultimap.create();
 
   // All the unresolved named types.
@@ -955,7 +954,7 @@ public class JSTypeRegistry implements TypeIRegistry {
    * be returned.  {@code interfaceInstance} must be an ObjectType for the
    * instance of the interface.
    */
-  public Collection<FunctionTypeI> getDirectImplementors(ObjectType interfaceInstance) {
+  public Collection<FunctionType> getDirectImplementors(ObjectType interfaceInstance) {
     return interfaceToImplementors.get(interfaceInstance.getReferenceName());
   }
 

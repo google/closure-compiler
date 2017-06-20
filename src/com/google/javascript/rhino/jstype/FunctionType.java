@@ -150,7 +150,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * The types which are subtypes of this function. It is only relevant for
    * constructors and may be {@code null}.
    */
-  private List<FunctionTypeI> subTypes;
+  private List<FunctionType> subTypes;
 
   /** Creates an instance for a function that might be a constructor. */
   FunctionType(
@@ -1246,8 +1246,8 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     super.clearCachedValues();
 
     if (subTypes != null) {
-      for (FunctionTypeI subType : subTypes) {
-        ((FunctionType) subType).clearCachedValues();
+      for (FunctionType subType : subTypes) {
+        subType.clearCachedValues();
       }
     }
 
@@ -1262,9 +1262,14 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
   }
 
+  /**
+   * Returns a list of types that are subtypes of this type. This is only valid
+   * for constructor functions, and may be null. This allows a downward
+   * traversal of the subtype graph.
+   */
   @Override
-  public Collection<FunctionTypeI> getSubTypes() {
-    return subTypes != null ? subTypes : this.registry.getDirectImplementors(this);
+  public List<FunctionType> getSubTypes() {
+    return subTypes;
   }
 
   @Override
@@ -1313,9 +1318,8 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
 
     if (subTypes != null) {
       for (int i = 0; i < subTypes.size(); i++) {
-        FunctionType subType = (FunctionType) subTypes.get(i);
         subTypes.set(
-            i, JSType.toMaybeFunctionType(subType.resolve(t, scope)));
+            i, JSType.toMaybeFunctionType(subTypes.get(i).resolve(t, scope)));
       }
     }
 

@@ -53,6 +53,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -250,7 +251,7 @@ public abstract class ObjectType
   }
 
   @Override
-  public final boolean isUnknownObject() {
+  public boolean isUnknownObject() {
     return !hasReferenceName();
   }
 
@@ -311,6 +312,11 @@ public abstract class ObjectType
       }
     }
     return foundType;
+  }
+
+  @Override
+  public Collection<FunctionType> getDirectImplementors() {
+    return this.registry.getDirectImplementors(this);
   }
 
   /**
