@@ -30,6 +30,7 @@ import com.google.javascript.jscomp.graph.GraphColoring;
 import com.google.javascript.jscomp.graph.GraphColoring.GreedyGraphColoring;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.SubGraph;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -337,16 +338,10 @@ class AmbiguateProperties implements CompilerPass {
 
     // An instance is related to its subclasses.
     FunctionType constructor = type.toObjectType().getConstructor();
-    if (constructor != null && constructor.getSubTypes() != null) {
-      for (FunctionType subType : constructor.getSubTypes()) {
-        addRelatedInstance(subType, related);
+    if (constructor != null) {
+      for (FunctionTypeI subType : constructor.getSubTypes()) {
+        addRelatedInstance((FunctionType) subType, related);
       }
-    }
-
-    // An interface is related to its implementors.
-    for (FunctionType implementor : compiler.getTypeRegistry()
-        .getDirectImplementors(type.toObjectType())) {
-      addRelatedInstance(implementor, related);
     }
   }
 
