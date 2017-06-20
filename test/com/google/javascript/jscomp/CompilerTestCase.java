@@ -1419,10 +1419,8 @@ public abstract class CompilerTestCase extends TestCase {
         if (multistageCompilation && runNormalization) {
           // Only run multistage compilation when normalizing.
 
-          // TODO(rluble): Use the multistage pipeline for NTI and modules.
-          if (!newTypeInferenceEnabled
-              && inputs != null
-              && compiler.getModuleGraph() == null) {
+          // TODO(rluble): enable multistage compilation when invoking with modules.
+          if (inputs != null && compiler.getModuleGraph() == null) {
             compiler = multistageSerializeAndDeserialize(compiler, inputs, recentChange);
             root = compiler.getRoot();
             externsRoot = compiler.getExternsRoot();

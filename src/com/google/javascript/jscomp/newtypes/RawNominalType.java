@@ -19,6 +19,7 @@ package com.google.javascript.jscomp.newtypes;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -26,6 +27,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -64,7 +67,7 @@ public final class RawNominalType extends Namespace {
   // TODO(rluble): Serialize this field. If this field is serialized naively, a cycle is introduced
   // which results in NPE when attempting to deserialize an HashSet that contains object that are
   // only partially deserialized.
-  private final transient Set<RawNominalType> subtypes = new LinkedHashSet<>();
+  private transient Set<RawNominalType> subtypes = new LinkedHashSet<>();
   private ImmutableSet<NominalType> interfaces = null;
   private final Kind kind;
   private final boolean isAbstractClass;
@@ -727,6 +730,29 @@ public final class RawNominalType extends Namespace {
 
   public JSType getInstanceWithNullability(boolean includeNull) {
     return includeNull ? wrappedAsNullableJSType : wrappedAsJSType;
+  }
+
+  public void fixSubtypesAfterDeserialization() {
+    if (this.superclass != null) {
+      this.superclass.getRawNominalType().addSubtype(this);
+    }
+    for (NominalType superInterface : this.interfaces) {
+      superInterface.getRawNominalType().addSubtype(this);
+    }
+  }
+
+  public void unfreezeForDeserialization() {
+    this.isFrozen = false;
+  }
+
+  public void refreezeAfterDeserialization() {
+    this.isFrozen = true;
+  }
+
+  @GwtIncompatible("ObjectInputStream")
+  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    in.defaultReadObject();
+    this.subtypes = new LinkedHashSet<>();
   }
 
   // equals and hashCode default to reference equality, which is what we want

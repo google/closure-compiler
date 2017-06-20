@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
@@ -58,6 +59,8 @@ import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -2955,5 +2958,19 @@ class GlobalTypeInfo implements CompilerPass, TypeIRegistry {
   @Override
   public TypeI buildRecordTypeFromObject(ObjectTypeI obj) {
     throw new UnsupportedOperationException();
+  }
+
+  @GwtIncompatible("ObjectInputStream")
+  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    in.defaultReadObject();
+    for (RawNominalType rawNominalType : this.rawNominalTypes) {
+      rawNominalType.unfreezeForDeserialization();
+    }
+    for (RawNominalType rawNominalType : this.rawNominalTypes) {
+      rawNominalType.fixSubtypesAfterDeserialization();
+    }
+    for (RawNominalType rawNominalType : this.rawNominalTypes) {
+      rawNominalType.refreezeAfterDeserialization();
+    }
   }
 }
