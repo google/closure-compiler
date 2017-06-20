@@ -16,11 +16,13 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Objects;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.PriorityQueue;
+import java.util.Set;
 
 /**
  * <p>A basic error manager that sorts all errors and warnings reported to it to
@@ -33,15 +35,19 @@ import java.util.TreeSet;
  *
  */
 public abstract class BasicErrorManager implements ErrorManager {
-  private final SortedSet<ErrorWithLevel> messages =
-      new TreeSet<>(new LeveledJSErrorComparator());
+  private final PriorityQueue<ErrorWithLevel> messages =
+      new PriorityQueue<ErrorWithLevel>(1, new LeveledJSErrorComparator());
+  private final Set<ErrorWithLevel> alreadyAdded = new HashSet<>();
   private int errorCount = 0;
   private int warningCount = 0;
   private double typedPercent = 0.0;
 
   @Override
   public void report(CheckLevel level, JSError error) {
-    if (messages.add(new ErrorWithLevel(error, level))) {
+    ErrorWithLevel e = new ErrorWithLevel(error, level);
+    if (!alreadyAdded.contains(e)) {
+      alreadyAdded.add(e);
+      messages.add(e);
       if (level == CheckLevel.ERROR) {
         errorCount++;
       } else if (level == CheckLevel.WARNING) {
@@ -52,9 +58,13 @@ public abstract class BasicErrorManager implements ErrorManager {
 
   @Override
   public void generateReport() {
-    for (ErrorWithLevel message : messages) {
+    List<ErrorWithLevel> list = new ArrayList<>();
+    for (ErrorWithLevel message = messages.poll(); message != null; message = messages.poll()) {
       println(message.level, message.error);
+      list.add(message);
     }
+    // Restore the messages since some tests assert the values after generating the report.
+    messages.addAll(list);
     printSummary();
   }
 
@@ -110,16 +120,14 @@ public abstract class BasicErrorManager implements ErrorManager {
   }
 
   /**
-   * <p>Comparator of {@link JSError} with an associated {@link CheckLevel}.
-   * The ordering is the standard lexical ordering on the quintuple
-   * (file name, line number, {@link CheckLevel},
-   * character number, description).</p>
+   * Comparator of {@link JSError} with an associated {@link CheckLevel}. The ordering is the
+   * standard lexical ordering on the quintuple (file name, line number, {@link CheckLevel},
+   * character number, description).
    *
-   * <p>Note: this comparator imposes orderings that are inconsistent with
-   * {@link JSError#equals(Object)}.</p>
+   * <p>Note: this comparator imposes orderings that are inconsistent with {@link
+   * JSError#equals(Object)}.
    */
-  static final class LeveledJSErrorComparator
-      implements Comparator<ErrorWithLevel> {
+  static final class LeveledJSErrorComparator implements Comparator<ErrorWithLevel> {
     private static final int P1_LT_P2 = -1;
     private static final int P1_GT_P2 = 1;
 
@@ -184,6 +192,17 @@ public abstract class BasicErrorManager implements ErrorManager {
     ErrorWithLevel(JSError error, CheckLevel level) {
       this.error = error;
       this.level = level;
+    }
+
+    @Override
+    public int hashCode() {
+      return Objects.hashCode(
+          level, error.description, error.sourceName, error.lineNumber, error.getCharno());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      return obj.hashCode() == this.hashCode();
     }
   }
 }

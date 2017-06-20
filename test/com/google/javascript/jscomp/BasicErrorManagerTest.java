@@ -123,6 +123,33 @@ public final class BasicErrorManagerTest extends TestCase {
     assertThat(printedErrors).hasSize(1);
   }
 
+  // Ensure that more warnings can be added from generating the report.
+  // One case in which this happened is when the report tries to use the source maps to map back to
+  // the original source, yet a warning was produced because of a corrupted source map. This test
+  // ensures that there is no java.util.ConcurrentModificationException while adding a new warning
+  // when iterating over the existing warnings to print them out.
+  public void testGenerateReportCausesMoreWarnings() {
+    BasicErrorManager manager =
+        new BasicErrorManager() {
+          private int printed = 0;
+
+          @Override
+          public void println(CheckLevel level, JSError error) {
+            if (error.getType().equals(FOO_TYPE)) {
+              this.report(CheckLevel.ERROR, JSError.make(NULL_SOURCE, -1, -1, JOO_TYPE));
+            }
+            printed++;
+          }
+
+          @Override
+          protected void printSummary() {
+            assertEquals(2, printed);
+          }
+        };
+    manager.report(CheckLevel.ERROR, JSError.make(NULL_SOURCE, -1, -1, FOO_TYPE));
+    manager.generateReport();
+  }
+
   private ErrorWithLevel error(JSError e) {
     return new ErrorWithLevel(e, CheckLevel.ERROR);
   }
