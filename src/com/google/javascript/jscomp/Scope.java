@@ -118,7 +118,7 @@ public class Scope implements StaticScope, Serializable {
    * @param input the input in which this variable is defined.
    */
   Var declare(String name, Node nameNode, CompilerInput input) {
-    checkState(name != null && !name.isEmpty());
+    checkState(name != null && !name.isEmpty(), name);
     // Make sure that it's declared only once
     checkState(vars.get(name) == null);
     Var var = new Var(name, nameNode, this, vars.size(), input);
