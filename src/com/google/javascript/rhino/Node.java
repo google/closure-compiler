@@ -219,6 +219,7 @@ public class Node implements Serializable {
         case IS_ES6_CLASS:       return "is_es6_class";
         case TRANSPILED:         return "transpiled";
         case DELETED:            return "DELETED";
+        case GOOG_MODULE_ALIAS:  return "goog_module_alias";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
