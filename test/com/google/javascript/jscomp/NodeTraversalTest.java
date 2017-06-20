@@ -384,6 +384,41 @@ public final class NodeTraversalTest extends TestCase {
     callback.assertEntered();
   }
 
+  public void testTraverseAtScopeWithSwitchScope() {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    compiler.initOptions(options);
+    ScopeCreator creator = new Es6SyntacticScopeCreator(compiler);
+    ExpectNodeOnEnterScope callback = new ExpectNodeOnEnterScope();
+    NodeTraversal t = new NodeTraversal(compiler, callback, creator);
+
+    String code =
+        LINE_JOINER.join(
+            "function foo() {",
+            "  var b = [0];",
+            "  switch(b) {",
+            "    case 1:",
+            "       return b;",
+            "    case 2:",
+            "  }",
+            "}");
+
+    Node tree = parse(compiler, code);
+    Scope topScope = creator.createScope(tree, null);
+
+    Node innerBlock =
+        tree // script
+            .getFirstChild() // function
+            .getLastChild() // function body
+            .getSecondChild(); // switch (first child is var b)
+
+    Scope blockScope = creator.createScope(innerBlock, topScope);
+    callback.expect(innerBlock, innerBlock);
+    t.traverseAtScope(blockScope);
+    callback.assertEntered();
+  }
+
   public void testTraverseAtScopeWithModuleScope() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();

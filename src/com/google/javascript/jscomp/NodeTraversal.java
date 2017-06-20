@@ -413,6 +413,16 @@ public class NodeTraversal {
       traverseBranch(forBodyScope, n);
 
       popScope();
+    } else if (n.isSwitch()) {
+      // ES6 creates a separate switch scope with cases
+      checkState(scopeCreator.hasBlockScope());
+
+      pushScope(s);
+
+      traverseChildren(n);
+
+      popScope();
+
     } else {
       checkState(s.isGlobal() || s.isModuleScope(), "Expected global or module scope. Got:", s);
       traverseWithScope(n, s);

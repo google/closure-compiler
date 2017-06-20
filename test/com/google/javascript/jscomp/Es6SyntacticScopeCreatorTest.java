@@ -491,6 +491,24 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertTrue(secondLevelBLockScope.isDeclared("X", false));
   }
 
+  public void testSwitchScope() {
+    String js =
+        "switch (b) { "
+            + "  case 1: "
+            + "    b; "
+            + "  case 2: "
+            + "    let c = 4; "
+            + "    c; "
+            + "}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertFalse(globalScope.isDeclared("c", false));
+
+    Node switchNode = root.getFirstChild();
+    Scope switchScope = scopeCreator.createScope(switchNode, globalScope);
+    assertTrue(switchScope.isDeclared("c", false));
+  }
+
   public void testForLoopScope() {
     String js = "for (let i = 0;;) { let x; }";
     Node root = getRoot(js);
