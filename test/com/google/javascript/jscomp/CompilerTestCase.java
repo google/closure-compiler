@@ -284,8 +284,6 @@ public abstract class CompilerTestCase extends TestCase {
           "Object.prototype.hasOwnProperty = function(propertyName) {};",
           "/** @type {?Function} */ Object.prototype.constructor;",
           "Object.defineProperties = function(obj, descriptors) {};",
-          "Object.create;",
-          "",
           "/** @type {!Function} */ Function.prototype.apply;",
           "/** @type {!Function} */ Function.prototype.bind;",
           "/** @type {!Function} */ Function.prototype.call;",
