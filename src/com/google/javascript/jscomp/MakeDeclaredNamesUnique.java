@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multiset;
+import com.google.javascript.jscomp.MakeDeclaredNamesUnique.ContextualRenameInverter;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -61,17 +62,23 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
   // In addition, ES6 introduced block scopes, which we also need to handle.
   private final Deque<Renamer> nameStack = new ArrayDeque<>();
   private final Renamer rootRenamer;
+  private final boolean markChanges;
 
   MakeDeclaredNamesUnique() {
-    this(new ContextualRenamer());
+    this(new ContextualRenamer(), true);
   }
 
   MakeDeclaredNamesUnique(Renamer renamer) {
+    this(renamer, true);
+  }
+
+  MakeDeclaredNamesUnique(Renamer renamer, boolean markChanges) {
     this.rootRenamer = renamer;
+    this.markChanges = markChanges;
   }
 
   static CompilerPass getContextualRenameInverter(AbstractCompiler compiler) {
-    return new ContextualRenameInverter(compiler);
+    return new ContextualRenameInverter(compiler, true);
   }
 
   @Override
@@ -185,6 +192,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         break;
     }
   }
+
   private void visitName(NodeTraversal t, Node n, Node parent) {
     String newName = getReplacementName(n.getString());
     if (newName != null) {
@@ -194,11 +202,13 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         n.removeProp(Node.IS_CONSTANT_NAME);
       }
       n.setString(newName);
-      t.reportCodeChange();
-      // If we are renaming a function declaration, make sure the containing scope
-      // has the opporunity to act on the change.
-      if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
-        t.getCompiler().reportChangeToEnclosingScope(parent);
+      if (markChanges) {
+        t.reportCodeChange();
+        // If we are renaming a function declaration, make sure the containing scope
+        // has the opporunity to act on the change.
+        if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
+          t.getCompiler().reportChangeToEnclosingScope(parent);
+        }
       }
     }
   }
@@ -300,8 +310,12 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     private final ListMultimap<String, Node> nameMap =
         MultimapBuilder.hashKeys().arrayListValues().build();
 
-    private ContextualRenameInverter(AbstractCompiler compiler) {
+    // Whether to report changes to the compiler.
+    private final boolean markChanges;
+
+    private ContextualRenameInverter(AbstractCompiler compiler, boolean markChanges) {
       this.compiler = compiler;
+      this.markChanges = markChanges;
     }
 
     @Override
@@ -378,12 +392,14 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         for (Node n : references) {
           checkState(n.isName(), n);
           n.setString(newName);
-          compiler.reportChangeToEnclosingScope(n);
-          Node parent = n.getParent();
-          // If we are renaming a function declaration, make sure the containing scope
-          // has the opportunity to act on the change.
-          if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
-            compiler.reportChangeToEnclosingScope(parent);
+          if (markChanges) {
+            compiler.reportChangeToEnclosingScope(n);
+            Node parent = n.getParent();
+            // If we are renaming a function declaration, make sure the containing scope
+            // has the opportunity to act on the change.
+            if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
+              compiler.reportChangeToEnclosingScope(parent);
+            }
           }
         }
         nameMap.removeAll(name);

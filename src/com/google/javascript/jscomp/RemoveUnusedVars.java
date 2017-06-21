@@ -517,6 +517,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
 
         compiler.reportChangeToEnclosingScope(n);
         n.replaceWith(IR.number(0).srcref(n));
+        NodeUtil.markFunctionsDeleted(n, compiler);
       }
     }
 

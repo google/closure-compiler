@@ -25,6 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractNodeTypePruningCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.FunctionCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -512,6 +513,44 @@ public final class NodeTraversalTest extends TestCase {
     assertThat(callback.varNames)
         .containsExactly(
             "varDefinedInScript", "foo", "bar", "varDefinedInFoo", "baz", "varDefinedInBaz");
+  }
+
+  public void testTraverseEs6ScopeRoots_callsEnterFunction() {
+    Compiler compiler = new Compiler();
+    EnterFunctionAccumulator callback = new EnterFunctionAccumulator();
+
+    String code = LINE_JOINER.join(
+        "function foo() {}",
+        "function bar() {}",
+        "function baz() {}");
+
+    Node tree = parse(compiler, code);
+    Node fooFunction = tree.getFirstChild();
+    Node barFunction = fooFunction.getNext();
+    Node bazFunction = barFunction.getNext();
+
+    NodeTraversal.traverseEs6ScopeRoots(
+        compiler,
+        fooFunction,
+        Lists.newArrayList(fooFunction, barFunction, bazFunction),
+        callback,
+        callback, // FunctionCallback
+        false);
+    assertThat(callback.enteredFunctions).containsExactly(fooFunction, barFunction, bazFunction);
+  }
+
+  private static final class EnterFunctionAccumulator extends AbstractPostOrderCallback
+      implements FunctionCallback {
+
+    List<Node> enteredFunctions = new ArrayList<>();
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {}
+
+    @Override
+    public void enterFunction(AbstractCompiler compiler, Node fnRoot) {
+      enteredFunctions.add(fnRoot);
+    }
   }
 
   private static final class LexicallyScopedVarsAccumulator extends AbstractPostOrderCallback {
