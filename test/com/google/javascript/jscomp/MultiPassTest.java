@@ -324,7 +324,7 @@ public final class MultiPassTest extends CompilerTestCase {
         new PassFactory("removeUnreachableCode", false) {
           @Override
           protected CompilerPass create(AbstractCompiler compiler) {
-            return new UnreachableCodeElimination(compiler, true);
+            return new UnreachableCodeElimination(compiler);
           }
         });
   }

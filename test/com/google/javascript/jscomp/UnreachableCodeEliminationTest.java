@@ -21,17 +21,14 @@ package com.google.javascript.jscomp;
  *
  */
 public final class UnreachableCodeEliminationTest extends CompilerTestCase {
-  private boolean removeNoOpStatements = true;
-
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new UnreachableCodeElimination(compiler, removeNoOpStatements);
+    return new UnreachableCodeElimination(compiler);
   }
 
   @Override protected void setUp() throws Exception {
     super.setUp();
     enableComputeSideEffects();
-    removeNoOpStatements = true;
   }
 
   public void testRemoveUnreachableCode() {
@@ -106,13 +103,6 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
 
   public void testNoRemoveUseStrict() {
     test("'use strict';", "'use strict'");
-  }
-
-  public void testNoRemoveUselessNameStatements() {
-    removeNoOpStatements = false;
-    testSame("a;");
-    testSame("a.b;");
-    testSame("a.b.MyClass.prototype.memberName;");
   }
 
   public void testRemoveDo() {
@@ -418,8 +408,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   }
 
   public void testDontRemoveBreakInTryFinallySwitch() throws Exception {
-    testSame("function f() {b:try{throw 9} finally {" +
-             "switch(x) {case 1: break b} } return 1;}");
+    testSame("function f() {b:try{throw 9} finally { switch(x) {case 1: break b} } return 1; }");
   }
 
   public void testIssue1001() throws Exception {

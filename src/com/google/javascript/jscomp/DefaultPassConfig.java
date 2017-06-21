@@ -2478,7 +2478,7 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory(Compiler.UNREACHABLE_CODE_ELIM_NAME, false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new UnreachableCodeElimination(compiler, true);
+          return new UnreachableCodeElimination(compiler);
         }
 
         @Override
