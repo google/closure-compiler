@@ -18,6 +18,8 @@
  * @fileoverview Polyfill for ES6 extends keyword.
  */
 'require base';
+'require util/objectcreate';
+'require es6/util/setprototypeof';
 
 
 /**
@@ -51,23 +53,23 @@
  * @param {!Function} parentCtor Parent class.
  */
 $jscomp.inherits = function(childCtor, parentCtor) {
-  /** @constructor */
-  function tempCtor() {}
-  tempCtor.prototype = parentCtor.prototype;
-  childCtor.superClass_ = parentCtor.prototype;
-  childCtor.prototype = new tempCtor();
-  /** @override */
-    childCtor.prototype.constructor = childCtor;
-
-  for (var p in parentCtor) {
-    if (Object.defineProperties) {
-      var descriptor = Object.getOwnPropertyDescriptor(parentCtor, p);
-      if (descriptor) {
-        Object.defineProperty(childCtor, p, descriptor);
+  childCtor.prototype = $jscomp.objectCreate(parentCtor.prototype);
+  /** @override */ childCtor.prototype.constructor = childCtor;
+  if (!$jscomp.setPrototypeOf(childCtor, parentCtor)) {
+    // setPrototypeOf is not available so we need to copy the static
+    // methods to the child
+    for (var p in parentCtor) {
+      if (Object.defineProperties) {
+        var descriptor = Object.getOwnPropertyDescriptor(parentCtor, p);
+        if (descriptor) {
+          Object.defineProperty(childCtor, p, descriptor);
+        }
+      } else {
+        // Pre-ES5 browser. Just copy with an assignment.
+        childCtor[p] = parentCtor[p];
       }
-    } else {
-      // Pre-ES5 browser. Just copy with an assignment.
-      childCtor[p] = parentCtor[p];
     }
   }
+
+  childCtor.superClass_ = parentCtor.prototype;
 };

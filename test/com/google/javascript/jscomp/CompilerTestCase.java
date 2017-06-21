@@ -388,6 +388,18 @@ public abstract class CompilerTestCase extends TestCase {
           " * @return {!Object}",
           " */",
           "Object.defineProperty = function(obj, prop, descriptor) {};",
+          "/**",
+          " * @param {!Object} proto",
+          " * @param {!Object=} opt_properties",
+          " * @return {!Object}",
+          " */",
+          "Object.create = function(proto, opt_properties) {};",
+          "/**",
+          " * @param {!Object} child",
+          " * @param {!Object} parent",
+          " * @return {!Object}",
+          " */",
+          "Object.setPrototypeOf = function(child, parent) {};",
           "/** @type {?} */ var unknown;", // For producing unknowns in tests.
           "/** @typedef {?} */ var symbol;", // TODO(sdh): remove once primitive 'symbol' supported
           "/** @constructor */ function Symbol() {}",

@@ -15,6 +15,7 @@
  */
 
 'require util/polyfill';
+'require es6/util/setprototypeof';
 
 
 $jscomp.polyfill('Object.setPrototypeOf', function(orig) {
@@ -34,10 +35,7 @@ $jscomp.polyfill('Object.setPrototypeOf', function(orig) {
    * @return {!Object}
    */
   var polyfill = function(target, proto) {
-    target.__proto__ = proto;
-    if (target.__proto__ !== proto) {
-      throw new TypeError(target + ' is not extensible');
-    }
+    $jscomp.setPrototypeOf(target, proto);
     return target;
   };
   return polyfill;
