@@ -87,8 +87,18 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
          "class C {} /** @type {number} */ C.prototype.mv;");
   }
 
+  public void testMemberVariable_noCtor_withES6Modules() {
+    test(
+        "export class C { mv: number; }",
+        "export class C {} /** @type {number} */ C.prototype.mv;");
+  }
+
   public void testMemberVariable_static() {
     test("class C { static smv; }", "class C {} C.smv;");
+  }
+
+  public void testMemberVariable_static_withES6Modules() {
+    test("export class C { static smv; }", "export class C {} C.smv;");
   }
 
   public void testMemberVariable_anonymousClass() {
@@ -123,8 +133,18 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
          "class C {} /** @type {number} */ C['smv' + 2];");
   }
 
+  public void testComputedPropertyVariable_static_withES6Modules() {
+    test(
+        "export class C { static ['smv' + 2]: number; }",
+        "export class C {} /** @type {number} */ C['smv' + 2];");
+  }
+
   public void testUnionType() {
     test("var x: string | number;", "var /** string | number */ x;");
+  }
+
+  public void testUnionType_withES6Modules() {
+    test("export var x: string | number;", "export var /** string | number */ x;");
   }
 
   // TypeQuery is currently not supported.
@@ -140,13 +160,28 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         warning(Es6TypedToEs6Converter.TYPE_QUERY_NOT_SUPPORTED));
   }
 
+  public void testTypeQuery_withES6Modules() {
+    test(
+        "export var x: typeof y | number;",
+        "export var /** ? | number */ x;",
+        warning(Es6TypedToEs6Converter.TYPE_QUERY_NOT_SUPPORTED));
+  }
+
   public void testTypedParameter() {
     test("function f(p1: number) {}", "function f(/** number */ p1) {}");
+  }
+
+  public void testTypedParameter_withES6Modulesl() {
+    test("export function f(p1: number) {}", "export function f(/** number */ p1) {}");
   }
 
   public void testOptionalParameter() {
     test("function f(p1?: number) {}", "function f(/** number= */ p1) {}");
     test("function f(p1?) {}", "function f(/** ?= */ p1) {}");
+  }
+
+  public void testOptionalParameter_withES6Modules() {
+    test("export function f(p1?: number) {}", "export function f(/** number= */ p1) {}");
   }
 
   public void testOptionalProperty() {
@@ -170,15 +205,29 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
          "/** @type {(function(): ?) | undefined} */ I.prototype.foo;"));
   }
 
+  public void testOptionalProperty_withES6Modules() {
+    test("export var x: {foo?};", "export var /** {foo: (? | undefined)} */ x;");
+  }
+
   public void testRestParameter() {
     test("function f(...p1: number[]) {}", "function f(/** ...number */ ...p1) {}");
     testSame("function f(...p1) {}");
+  }
+
+  public void testRestParameter_withES6Modules() {
+    test("export function f(...p1: number[]) {}", "export function f(/** ...number */ ...p1) {}");
   }
 
   public void testReturnType() {
     test("function f(...p1: number[]): void {}",
          "/** @return{void} */ function f(/** ...number */ ...p1) {}");
     testSame("function f(...p1) {}");
+  }
+
+  public void testReturnType_withES6Modules() {
+    test(
+        "export function f(...p1: number[]): void {}",
+        "export /** @return{void} */ function f(/** ...number */ ...p1) {}");
   }
 
   public void testBuiltins() {
@@ -189,15 +238,27 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("var x: void;", "var /** void */ x;");
   }
 
+  public void testBuiltins_withES6Modules() {
+    test("export var x: any;", "export var /** ? */ x;");
+  }
+
   public void testNamedType() {
     test("var x: foo;", "var /** !foo */ x;");
     test("var x: foo.bar.Baz;", "var /** !foo.bar.Baz */ x;");
+  }
+
+  public void testNamedType_withES6Modules() {
+    test("export var x: foo;", "export var /** !foo */ x;");
   }
 
   public void testArrayType() {
     test("var x: string[];", "var /** !Array.<string> */ x;");
     test("var x: string[][];", "var /** !Array.<!Array.<string>> */ x;");
     test("var x: test.Type[];", "var /** !Array.<!test.Type> */ x;");
+  }
+
+  public void testArrayType_withES6Modules() {
+    test("export var x: string[];", "export var /** !Array.<string> */ x;");
   }
 
   public void testRecordType() {
@@ -220,14 +281,26 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
          "var /** {constructor: function(): ?, q: number} */ x;");
   }
 
+  public void testRecordType_withES6Modules() {
+    test("export var x: {p; q};", "export var /** {p: ?, q: ?} */ x;");
+  }
+
   public void testParameterizedType() {
     test("var x: test.Type<string>;", "var /** !test.Type<string> */ x;");
     test("var x: test.Type<A, B>;", "var /** !test.Type<!A, !B> */ x;");
     test("var x: test.Type<A<X>, B>;", "var /** !test.Type<!A<!X>, !B> */ x;");
   }
 
+  public void testParameterizedType_withES6Modules() {
+    test("export var x: test.Type<string>;", "export var /** !test.Type<string> */ x;");
+  }
+
   public void testParameterizedArrayType() {
     test("var x: test.Type<number>[];", "var /** !Array.<!test.Type<number>> */ x;");
+  }
+
+  public void testParameterizedArrayType_withES6Modules() {
+    test("export var x: test.Type<number>[];", "export var /** !Array.<!test.Type<number>> */ x;");
   }
 
   public void testFunctionType() {
@@ -237,6 +310,12 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("var x: (foo, bar?: number) => boolean;", "var /** function(?, number=): boolean */ x;");
     test("var x: (foo: string, ...bar) => boolean;",
          "var /** function(string, ...?): boolean */ x;");
+  }
+
+  public void testFunctionType_withES6Modules() {
+    test(
+        "export var x: (foo: number) => boolean;",
+        "export var /** function(number): boolean */ x;");
   }
 
   public void testGenericClass() {
@@ -251,6 +330,10 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         warning(Es6TypedToEs6Converter.CANNOT_CONVERT_BOUNDED_GENERICS));
   }
 
+  public void testGenericClass_withES6Modules() {
+    test("export class Foo<T> {}", "export /** @template T */ class Foo {}");
+  }
+
   public void testGenericFunction() {
     test("function foo<T>() {}", "/** @template T */ function foo() {}");
 //     test("var x = <K, V>(p) => 3;", "var x = /** @template K, V */ (p) => 3");
@@ -259,9 +342,19 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     test("function* foo<T>() {}", "/** @template T */ function* foo() {}");
   }
 
+  public void testGenericFunction_withES6Modules() {
+    test("export function foo<T>() {}", "export /** @template T */ function foo() {}");
+  }
+
   public void testGenericInterface() {
     test("interface I<T> { foo: T; }",
          "/** @interface @template T */ class I {} /** @type {!T} */ I.prototype.foo;");
+  }
+
+  public void testGenericInterface_withES6Modules() {
+    test(
+        "export interface I<T> { foo: T; }",
+        "export /** @interface @template T */ class I {} /** @type {!T} */ I.prototype.foo;");
   }
 
   public void testImplements() {
@@ -272,8 +365,18 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
          "/** @implements {Baz} */ class Foo extends Bar {}");
   }
 
+  public void testImplements_withES6Modules() {
+    test(
+        "export class Foo implements Bar, Baz {}",
+        "export /** @implements {Bar} @implements {Baz} */ class Foo {}");
+  }
+
   public void testEnum() {
     test("enum E { Foo, Bar }", "/** @enum {number} */ var E = { Foo: 0, Bar: 1 }");
+  }
+
+  public void testEnum_withES6Modules() {
+    test("export enum E { Foo, Bar }", "export /** @enum {number} */ var E = { Foo: 0, Bar: 1 }");
   }
 
   public void testInterface() {
@@ -299,12 +402,22 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         "/** @interface */ foo.I = class {}; /** @type {number} */ foo.I.prototype.bar;"));
   }
 
+  public void testInterface_withES6Modules01() {
+    test(
+        "export interface I { foo: string; }",
+        "export /** @interface */ class I {} /** @type {string} */ I.prototype.foo;");
+  }
+
   public void testTypeAlias() {
     test("type Foo = number;", "/** @typedef{number} */ var Foo;");
     testError("type Foo = number; var Foo = 3; ",
         Es6TypedToEs6Converter.TYPE_ALIAS_ALREADY_DECLARED);
     testError("let Foo = 3; type Foo = number;",
         Es6TypedToEs6Converter.TYPE_ALIAS_ALREADY_DECLARED);
+  }
+
+  public void testValidTypeAlias_withES6Modules() {
+    test("export type Foo = number;", "export /** @typedef{number} */ var Foo;");
   }
 
   public void testAmbientDeclaration() {
@@ -327,6 +440,14 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
     testWarning("declare var x;", Es6TypedToEs6Converter.DECLARE_IN_NON_EXTERNS);
   }
 
+  public void testValidAmbientDeclaration_withES6Modules() {
+    testDts("export declare var x: number;", "export var /** number */ x;");
+  }
+
+  public void testInvalidAmbientDeclaration_withES6Modules() {
+    testWarning("export declare var x;", Es6TypedToEs6Converter.DECLARE_IN_NON_EXTERNS);
+  }
+
   public void testIndexSignature() {
     test("interface I { [foo: string]: Bar<Baz>; }",
          "/** @interface @extends {IObject<string, !Bar<!Baz>>} */ class I {}");
@@ -339,10 +460,27 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         Es6TypedToEs6Converter.UNSUPPORTED_RECORD_TYPE);
   }
 
+  public void testValidIndexSignature_withES6Modules() {
+    testError(
+        "export var x: { [foo: string]: number; };",
+        Es6TypedToEs6Converter.UNSUPPORTED_RECORD_TYPE);
+  }
+
+  public void testInvalidIndexSignature_withES6Modules() {
+    testError(
+        "export var x: { [foo: string]: number; };",
+        Es6TypedToEs6Converter.UNSUPPORTED_RECORD_TYPE);
+  }
+
   public void testCallSignature() {
     testError("interface I { (): string }", Es6TypedToEs6Converter.CALL_SIGNATURE_NOT_SUPPORTED);
     testError("interface I { new (): string }",
         Es6TypedToEs6Converter.CALL_SIGNATURE_NOT_SUPPORTED);
+  }
+
+  public void testCallSignature_withES6Modules() {
+    testError(
+        "export interface I { (): string }", Es6TypedToEs6Converter.CALL_SIGNATURE_NOT_SUPPORTED);
   }
 
   public void testAccessibilityModifier() {
@@ -359,6 +497,19 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         warning(Es6TypedToEs6Converter.COMPUTED_PROP_ACCESS_MODIFIER));
     test("class Foo { private ['foo']; }",
         "class Foo {}  /** @private */ Foo.prototype['foo'];",
+        warning(Es6TypedToEs6Converter.COMPUTED_PROP_ACCESS_MODIFIER));
+  }
+
+  public void testValidAccessibilityModifier_withES6Modules() {
+    test(
+        "export class Foo { private constructor() {} }",
+        "export class Foo { /** @private */ constructor() {} }");
+  }
+
+  public void testInvalidAccessibilityModifier_withES6Modules() {
+    test(
+        "export class Foo { private ['foo']() {} }",
+        "export class Foo { /** @private */ ['foo']() {} }",
         warning(Es6TypedToEs6Converter.COMPUTED_PROP_ACCESS_MODIFIER));
   }
 
@@ -645,6 +796,24 @@ public final class Es6TypedToEs6ConverterTest extends CompilerTestCase {
         "function h() {",
         "  function g() {}",
         "}"));
+  }
+
+  public void testInvalidOverload_withES6Modules() {
+    test(
+        "export interface I { foo(p1: number): number; foo(p1: number, p2: boolean): string }",
+        "export /** @interface */ class I { /** @type {!Function} */ foo() {} }",
+        warning(Es6TypedToEs6Converter.OVERLOAD_NOT_SUPPORTED));
+  }
+
+  public void testValidOverload_withES6Modules() {
+    testSame(
+        LINE_JOINER.join(
+            "export function f() {",
+            "  function g() {}",
+            "}",
+            "export function h() {",
+            "  function g() {}",
+            "}"));
   }
 
   public void testSpecializedSignature() {
