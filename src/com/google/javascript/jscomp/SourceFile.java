@@ -557,7 +557,9 @@ public class SourceFile implements StaticSourceFile, Serializable {
     private static final long serialVersionUID = 1L;
     // Avoid serializing generator and remove the burden to make classes that implement
     // Generator serializable. There should be no need to obtain generated source in the
-    // second stage of compilation.
+    // second stage of compilation. Making the generator transient relies on not clearing the
+    // code cache for these classes up serialization which might be quite wasteful.
+    // TODO(rluble): Find a better solution to avoid serializing the code cache.
     private final transient Generator generator;
 
     // Not private, so that LazyInput can extend it.
@@ -665,6 +667,8 @@ public class SourceFile implements StaticSourceFile, Serializable {
 
     @GwtIncompatible("ObjectOutputStream")
     private void writeObject(java.io.ObjectOutputStream out) throws Exception {
+      // Clear the cached source.
+      clearCachedSource();
       out.defaultWriteObject();
       out.writeObject(inputCharset != null ? inputCharset.name() : null);
       out.writeObject(path != null ? path.toUri() : null);
@@ -766,12 +770,12 @@ public class SourceFile implements StaticSourceFile, Serializable {
     public Charset getCharset() {
       return Charset.forName(inputCharset);
     }
-  }
 
-  @GwtIncompatible("ObjectOutputStream")
-  private void writeObject(java.io.ObjectOutputStream out) throws Exception {
-    // Remove cached source before serializing.
-    clearCachedSource();
-    out.defaultWriteObject();
+    @GwtIncompatible("ObjectOutputStream")
+    private void writeObject(java.io.ObjectOutputStream out) throws Exception {
+      // Remove cached source before serializing.
+      clearCachedSource();
+      out.defaultWriteObject();
+    }
   }
 }
