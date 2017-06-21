@@ -57,6 +57,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import javax.annotation.Nullable;
 
 /**
  * Object type.
@@ -207,6 +208,7 @@ public abstract class ObjectType
    * @return the object's name or {@code null} if this is an anonymous
    *         object
    */
+  @Nullable
   public abstract String getReferenceName();
 
   /**
@@ -218,6 +220,7 @@ public abstract class ObjectType
    * The normalized reference name does not have these suffixes, and as such,
    * recollapses these implicit types back to their real type.
    */
+  @Nullable
   public String getNormalizedReferenceName() {
     String name = getReferenceName();
     if (name != null) {
@@ -243,7 +246,6 @@ public abstract class ObjectType
   }
 
   /**
-   * Returns true if the object is named.
    * @return true if the object is named, false if it is anonymous
    */
   public boolean hasReferenceName() {

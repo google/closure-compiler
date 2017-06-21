@@ -154,7 +154,7 @@ public class PrototypeObjectType extends ObjectType {
    * Creates an object type, allowing specification of the implicit prototype,
    * whether the object is native, and any templatized types.
    */
-  PrototypeObjectType(JSTypeRegistry registry, String className,
+  private PrototypeObjectType(JSTypeRegistry registry, String className,
       ObjectType implicitPrototype, boolean nativeType,
       TemplateTypeMap templateTypeMap, boolean anonymousType) {
     super(registry, templateTypeMap);
