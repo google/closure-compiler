@@ -1409,7 +1409,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             "/** @enum {number} */",
             "var E = {A:1, B:2};",
             "/**",
-            " * @param {E} x",
+            " * @param {number} x",
             " * @return {?}",
             " */",
             "function f(x) {",
