@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -236,6 +236,15 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     @Nullable Node rhs;
     // Null if the export is of anything other than a name
     @Nullable Var nameDecl;
+
+    public String toString() {
+      return MoreObjects.toStringHelper(this)
+          .add("exportName", exportName)
+          .add("rhs", rhs)
+          .add("nameDecl", nameDecl)
+          .omitNullValues()
+          .toString();
+    }
 
     private static final ImmutableSet<Token> INLINABLE_NAME_PARENTS =
         ImmutableSet.of(Token.VAR, Token.CONST, Token.LET, Token.FUNCTION, Token.CLASS);
@@ -1475,8 +1484,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void recordExportToInline(ExportDefinition exportDefinition) {
-    checkState(exportDefinition.hasInlinableName(currentScript.exportsToInline.keySet()));
-    Preconditions.checkState(
+    checkState(
+        exportDefinition.hasInlinableName(currentScript.exportsToInline.keySet()),
+        "exportDefinition: %s\n\nexportsToInline keys: %s",
+        exportDefinition,
+        currentScript.exportsToInline.keySet());
+    checkState(
         null == currentScript.exportsToInline.put(exportDefinition.nameDecl, exportDefinition),
         "Already found a mapping for inlining export: %s", exportDefinition.nameDecl);
     String localName = exportDefinition.getLocalName();
@@ -1488,7 +1501,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   private void recordNameToInline(String aliasName, String legacyNamespace) {
     checkNotNull(aliasName);
     checkNotNull(legacyNamespace);
-    Preconditions.checkState(
+    checkState(
         null == currentScript.namesToInlineByAlias.put(aliasName, legacyNamespace),
         "Already found a mapping for inlining short name: %s", aliasName);
   }
