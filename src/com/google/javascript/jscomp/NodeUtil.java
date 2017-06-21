@@ -2651,6 +2651,26 @@ public final class NodeUtil {
   }
 
   /**
+   * Permanently delete the given node from the AST, as well as report
+   * the related AST changes/deletions to the given compiler.
+   */
+  public static void deleteNode(Node n, AbstractCompiler compiler) {
+    Node parent = n.getParent();
+    NodeUtil.markFunctionsDeleted(n, compiler);
+    n.detach();
+    compiler.reportChangeToEnclosingScope(parent);
+  }
+
+  /**
+   * Permanently delete all the children of the given node, including reporting changes.
+   */
+  public static void deleteChildren(Node n, AbstractCompiler compiler) {
+    while (n.hasChildren()) {
+      deleteNode(n.getFirstChild(), compiler);
+    }
+  }
+
+  /**
    * Safely remove children while maintaining a valid node structure.
    * In some cases, this is done by removing the parent from the AST as well.
    */

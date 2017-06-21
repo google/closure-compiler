@@ -63,9 +63,7 @@ class ConvertToTypedInterface implements CompilerPass {
     // Clear out the contents of existing scripts.
     for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
       if (script.hasChildren()) {
-        NodeUtil.markFunctionsDeleted(script, compiler);
-        script.removeChildren();
-        compiler.reportChangeToChangeScope(script);
+        NodeUtil.deleteChildren(script, compiler);
       }
     }
 
@@ -136,25 +134,20 @@ class ConvertToTypedInterface implements CompilerPass {
                   && !callee.matchesQualifiedName("goog.define")
                   && !callee.matchesQualifiedName("goog.require")
                   && !callee.matchesQualifiedName("goog.module")) {
-                n.detach();
-                NodeUtil.markFunctionsDeleted(n, t.getCompiler());
-                t.reportCodeChange();
+                NodeUtil.deleteNode(n, t.getCompiler());
               }
               return false;
             case ASSIGN:
               if (!expr.getFirstChild().isQualifiedName()
                   || (expr.getFirstChild().isName() && !t.inGlobalScope() && !t.inModuleScope())) {
-                NodeUtil.removeChild(parent, n);
-                t.reportCodeChange(parent);
-                NodeUtil.markFunctionsDeleted(n, t.getCompiler());
+                NodeUtil.deleteNode(n, t.getCompiler());
                 return false;
               }
               return true;
             case GETPROP:
               return true;
             default:
-              n.detach();
-              t.reportCodeChange();
+              NodeUtil.deleteNode(n, t.getCompiler());
               return false;
           }
         case THROW:
@@ -164,8 +157,7 @@ class ConvertToTypedInterface implements CompilerPass {
         case DEBUGGER:
         case EMPTY:
           if (NodeUtil.isStatementParent(parent)) {
-            NodeUtil.removeChild(parent, n);
-            t.reportCodeChange();
+            NodeUtil.deleteNode(n, compiler);
           }
           return false;
         case LABEL:
@@ -174,24 +166,23 @@ class ConvertToTypedInterface implements CompilerPass {
         case CASE:
         case WHILE:
           // First child can't have declaration. Statement itself will be removed post-order.
-          n.removeFirstChild();
+          NodeUtil.deleteNode(n.getFirstChild(), compiler);
           return true;
         case TRY:
         case DO:
           // Second child can't have declarations. Statement itself will be removed post-order.
-          n.getSecondChild().detach();
+          NodeUtil.deleteNode(n.getSecondChild(), compiler);
           return true;
         case FOR:
-          n.getSecondChild().detach();
+          NodeUtil.deleteNode(n.getSecondChild(), compiler);
           // fall-through
         case FOR_OF:
         case FOR_IN:
-          n.getSecondChild().detach();
+          NodeUtil.deleteNode(n.getSecondChild(), compiler);
           Node initializer = n.removeFirstChild();
           if (initializer.isVar()) {
             n.getLastChild().addChildToFront(initializer);
           }
-          t.reportCodeChange(parent);
           return true;
         case CONST:
         case LET:
@@ -409,8 +400,7 @@ class ConvertToTypedInterface implements CompilerPass {
               } else if (callee.matchesQualifiedName("goog.require")) {
                 currentFile.markImportedName(expr.getLastChild().getString());
               } else if (callee.matchesQualifiedName("goog.define")) {
-                expr.getLastChild().detach();
-                t.reportCodeChange();
+                NodeUtil.deleteNode(expr.getLastChild(), compiler);
               } else {
                 checkState(callee.matchesQualifiedName("goog.module"));
               }
@@ -508,8 +498,7 @@ class ConvertToTypedInterface implements CompilerPass {
           });
       final Node functionBody = function.getLastChild();
       checkState(functionBody.isNormalBlock());
-      functionBody.removeChildren();
-      compiler.reportChangeToEnclosingScope(functionBody);
+      NodeUtil.deleteChildren(functionBody, compiler);
     }
 
     enum RemovalType {
