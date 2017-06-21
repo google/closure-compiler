@@ -137,7 +137,7 @@ public final class ParserRunner {
         comments = p.getComments();
       }
     }
-    return new ParseResult(root, comments, features, p.getInlineSourceMap());
+    return new ParseResult(root, comments, features, p.getSourceMapURL());
   }
 
   private static com.google.javascript.jscomp.parsing.parser.Parser.Config newParserConfig(
@@ -223,14 +223,13 @@ public final class ParserRunner {
     public final Node ast;
     public final List<Comment> comments;
     public final FeatureSet features;
-    @Nullable
-    public final String sourceMap;
+    @Nullable public final String sourceMapURL;
 
-    public ParseResult(Node ast, List<Comment> comments, FeatureSet features, String sourceMap) {
+    public ParseResult(Node ast, List<Comment> comments, FeatureSet features, String sourceMapURL) {
       this.ast = ast;
       this.comments = comments;
       this.features = features;
-      this.sourceMap = sourceMap;
+      this.sourceMapURL = sourceMapURL;
     }
   }
 }

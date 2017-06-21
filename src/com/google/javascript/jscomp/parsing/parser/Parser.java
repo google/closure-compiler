@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp.parsing.parser;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.BaseEncoding;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -124,7 +123,6 @@ import com.google.javascript.jscomp.parsing.parser.util.LookaheadErrorReporter.P
 import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import com.google.javascript.jscomp.parsing.parser.util.Timer;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -182,29 +180,28 @@ public class Parser {
   private final Scanner scanner;
   private final ErrorReporter errorReporter;
   private final Config config;
-  private final boolean parseInlineSourceMaps;
   private final CommentRecorder commentRecorder = new CommentRecorder();
   private final ArrayDeque<FunctionFlavor> functionContextStack = new ArrayDeque<>();
   private FeatureSet features = FeatureSet.ES3;
   private SourcePosition lastSourcePosition;
-  @Nullable
-  private String inlineSourceMap;
+  @Nullable private String sourceMapURL;
 
-  public Parser(Config config, ErrorReporter errorReporter, SourceFile source, int offset,
-      boolean initialGeneratorContext, boolean parseInlineSourceMaps) {
+  public Parser(
+      Config config,
+      ErrorReporter errorReporter,
+      SourceFile source,
+      int offset,
+      boolean initialGeneratorContext) {
     this.config = config;
     this.errorReporter = errorReporter;
-    this.parseInlineSourceMaps = parseInlineSourceMaps;
     this.scanner = new Scanner(errorReporter, commentRecorder, source, offset);
     this.functionContextStack.addLast(
         initialGeneratorContext ? FunctionFlavor.GENERATOR : FunctionFlavor.NORMAL);
     lastSourcePosition = scanner.getPosition();
   }
 
-  public Parser(
-      Config config, ErrorReporter errorReporter,
-      SourceFile source, int offset) {
-    this(config, errorReporter, source, offset, false, true);
+  public Parser(Config config, ErrorReporter errorReporter, SourceFile source, int offset) {
+    this(config, errorReporter, source, offset, false);
   }
 
   public Parser(Config config, ErrorReporter errorReporter, SourceFile source) {
@@ -241,23 +238,15 @@ public class Parser {
   }
 
   private static final String SOURCE_MAPPING_URL_PREFIX = "//# sourceMappingURL=";
-  private static final String BASE64_URL_PREFIX = "data:application/json;base64,";
 
   private class CommentRecorder implements Scanner.CommentRecorder {
     private final ImmutableList.Builder<Comment> comments = ImmutableList.builder();
+
     @Override
-    public void recordComment(
-        Comment.Type type, SourceRange range, String value) {
+    public void recordComment(Comment.Type type, SourceRange range, String value) {
       value = value.trim();
-      if (parseInlineSourceMaps) {
-        if (value.startsWith(SOURCE_MAPPING_URL_PREFIX)) {
-          String url = value.substring(SOURCE_MAPPING_URL_PREFIX.length());
-          if (url.startsWith(BASE64_URL_PREFIX)) {
-            byte[] data = BaseEncoding.base64().decode(url.substring(BASE64_URL_PREFIX.length()));
-            String source = new String(data, StandardCharsets.UTF_8);
-            inlineSourceMap = source;
-          }
-        }
+      if (value.startsWith(SOURCE_MAPPING_URL_PREFIX)) {
+        sourceMapURL = value.substring(SOURCE_MAPPING_URL_PREFIX.length());
       }
       comments.add(new Comment(value, range, type));
     }
@@ -275,13 +264,10 @@ public class Parser {
     return features;
   }
 
-  /**
-   * Returns the decoded JSON source of an inline source map comment if any was found, or
-   * {@code null} otherwise.
-   */
+  /** Returns the url provided by the sourceMappingURL if any was found. */
   @Nullable
-  public String getInlineSourceMap() {
-    return inlineSourceMap;
+  public String getSourceMapURL() {
+    return sourceMapURL;
   }
 
   // 14 Program
@@ -4078,12 +4064,12 @@ public class Parser {
    */
   @Deprecated
   private Parser createLookaheadParser() {
-    return new Parser(config,
+    return new Parser(
+        config,
         new LookaheadErrorReporter(),
         this.scanner.getFile(),
         this.scanner.getOffset(),
-        inGeneratorContext(),
-        true);
+        inGeneratorContext());
   }
 
   /**

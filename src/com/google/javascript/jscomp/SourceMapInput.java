@@ -1,5 +1,5 @@
 /*
- * Copyright 2014 The Closure Compiler Authors.
+ * Copyright 2017 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,42 +19,48 @@ package com.google.javascript.jscomp;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapParseException;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * A lazy-loaded SourceMapConsumerV3 instance.
  */
 public final class SourceMapInput {
-
-  private static final Logger logger =
-      Logger.getLogger(SourceMapInput.class.getName());
-
   private final SourceFile sourceFile;
   private volatile SourceMapConsumerV3 parsedSourceMap = null;
+  private volatile boolean cached = false;
+
+  static final DiagnosticType SOURCEMAP_RESOLVE_FAILED =
+      DiagnosticType.warning("SOURCEMAP_RESOLVE_FAILED", "Failed to resolve sourcemap: {0}");
+
+  static final DiagnosticType SOURCEMAP_PARSE_FAILED =
+      DiagnosticType.warning("SOURCEMAP_PARSE_FAILED", "Failed to parse malformed sourcemap: {0}");
 
   public SourceMapInput(SourceFile sourceFile) {
     this.sourceFile = sourceFile;
   }
 
   /**
-   * Gets the source map, reading from disk and parsing if necessary.
+   * Gets the source map, reading from disk and parsing if necessary. Returns null if the sourcemap
+   * cannot be resolved or is malformed.
    */
-  public SourceMapConsumerV3 getSourceMap() {
-    if (parsedSourceMap == null) {
-      synchronized (this) {
-        if (parsedSourceMap == null) {
-          parsedSourceMap = new SourceMapConsumerV3();
-          try {
-            parsedSourceMap.parse(sourceFile.getCode());
-          } catch (IOException | SourceMapParseException parseFailure) {
-            logger.log(
-                Level.WARNING, "Failed to parse sourcemap", parseFailure);
-          }
-        }
+  public synchronized @Nullable SourceMapConsumerV3 getSourceMap(ErrorManager errorManager) {
+    if (!cached) {
+      // Avoid re-reading or reparsing files.
+      cached = true;
+      String sourceMapPath = sourceFile.getOriginalPath();
+      try {
+        String sourceMapContents = sourceFile.getCode();
+        SourceMapConsumerV3 consumer = new SourceMapConsumerV3();
+        consumer.parse(sourceMapContents);
+        parsedSourceMap = consumer;
+      } catch (IOException e) {
+        JSError error = JSError.make(SourceMapInput.SOURCEMAP_RESOLVE_FAILED, sourceMapPath);
+        errorManager.report(error.getDefaultLevel(), error);
+      } catch (SourceMapParseException e) {
+        JSError error = JSError.make(SourceMapInput.SOURCEMAP_PARSE_FAILED, sourceMapPath);
+        errorManager.report(error.getDefaultLevel(), error);
       }
     }
-
     return parsedSourceMap;
   }
 

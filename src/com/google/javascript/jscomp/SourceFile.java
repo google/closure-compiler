@@ -369,7 +369,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
   static final String JAR_URL_PREFIX = "jar:file:";
 
   private static boolean isZipEntry(String path) {
-    return path.contains(".zip!/") && path.endsWith(".js");
+    return path.contains(".zip!/") && (path.endsWith(".js") || path.endsWith(".js.map"));
   }
 
   @GwtIncompatible("java.io.File")
@@ -518,20 +518,16 @@ public class SourceFile implements StaticSourceFile, Serializable {
     }
 
     @GwtIncompatible("java.io.InputStream")
-    public SourceFile buildFromInputStream(String fileName, InputStream s)
-        throws IOException {
-      return buildFromCode(fileName,
-          CharStreams.toString(new InputStreamReader(s, charset)));
+    public SourceFile buildFromInputStream(String fileName, InputStream s) throws IOException {
+      return buildFromCode(fileName, CharStreams.toString(new InputStreamReader(s, charset)));
     }
 
     @GwtIncompatible("java.io.Reader")
-    public SourceFile buildFromReader(String fileName, Reader r)
-        throws IOException {
+    public SourceFile buildFromReader(String fileName, Reader r) throws IOException {
       return buildFromCode(fileName, CharStreams.toString(r));
     }
 
-    public SourceFile buildFromGenerator(String fileName,
-        Generator generator) {
+    public SourceFile buildFromGenerator(String fileName, Generator generator) {
       return new Generated(fileName, originalPath, generator);
     }
   }

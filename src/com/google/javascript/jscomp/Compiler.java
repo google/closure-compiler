@@ -27,6 +27,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
@@ -61,7 +62,6 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
-import java.nio.file.FileSystems;
 import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -185,23 +185,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  private ExternalSourceLoader originalSourcesLoader =
-      new ExternalSourceLoader() {
-        // TODO(tdeegan): The @GwtIncompatible tree needs to be cleaned up.
-        @Override
-        @GwtIncompatible("SourceFile.fromFile")
-        public SourceFile loadSource(String filename) {
-          return SourceFile.fromFile(filename);
-        }
-      };
-
   // Original sources referenced by the source maps.
-  private ConcurrentHashMap<String, SourceFile> sourceMapOriginalSources
-      = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, SourceFile> sourceMapOriginalSources =
+      new ConcurrentHashMap<>();
 
   /** Configured {@link SourceMapInput}s, plus any source maps discovered in source files. */
-  private final ConcurrentHashMap<String, SourceMapInput> inputSourceMaps =
-      new ConcurrentHashMap<>();
+  ConcurrentHashMap<String, SourceMapInput> inputSourceMaps = new ConcurrentHashMap<>();
 
   // Map from filenames to lists of all the comments in each file.
   private Map<String, List<Comment>> commentsPerFile = new ConcurrentHashMap<>();
@@ -347,11 +336,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return options.errorFormat.toFormatter(this, colorize);
   }
 
-  @VisibleForTesting
-  void setOriginalSourcesLoader(ExternalSourceLoader originalSourcesLoader) {
-    this.originalSourcesLoader = originalSourcesLoader;
-  }
-
   /**
    * Initializes the compiler options. It's called as part of a normal compile() job.
    * Public for the callers that are not doing a normal compile() job.
@@ -421,9 +405,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   public void printConfig(PrintStream printStream) {
     printStream.println("==== CompilerOptions ====");
-    printStream.println(options.toString());
+    printStream.println(options);
     printStream.println("==== WarningsGuard ====");
-    printStream.println(warningsGuard.toString());
+    printStream.println(warningsGuard);
   }
 
   void initWarningsGuard(WarningsGuard warningsGuard) {
@@ -679,19 +663,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   static final DiagnosticType DUPLICATE_EXTERN_INPUT =
       DiagnosticType.error("JSC_DUPLICATE_EXTERN_INPUT",
           "Duplicate extern input: {0}");
-
-  /**
-   * Returns the relative path, resolved relative to the base path, where the
-   * base path is interpreted as a filename rather than a directory. E.g.:
-   *   getRelativeTo("../foo/bar.js", "baz/bam/qux.js") --> "baz/foo/bar.js"
-   */
-  private static String getRelativeTo(String relative, String base) {
-    return FileSystems.getDefault().getPath(base)
-        .resolveSibling(relative)
-        .normalize()
-        .toString()
-        .replace(File.separator, "/");
-  }
 
   /**
    * Creates a map to make looking up an input by name fast. Also checks for
@@ -2341,7 +2312,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
               delimiter =
                   delimiter
                       .replaceAll("%name%", Matcher.quoteReplacement(inputName))
-                      .replaceAll("%num%", String.valueOf(inputSeqNum));
+                      .replace("%num%", String.valueOf(inputSeqNum));
 
               cb.append(delimiter).append("\n");
             }
@@ -2892,8 +2863,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  public OriginalMapping getSourceMapping(String sourceName, int lineNumber,
-      int columnNumber) {
+  @Nullable
+  public OriginalMapping getSourceMapping(String sourceName, int lineNumber, int columnNumber) {
     if (sourceName == null) {
       return null;
     }
@@ -2902,22 +2873,29 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return null;
     }
 
-    // JSCompiler uses 1-indexing for lineNumber and 0-indexing for
-    // columnNumber.
-    // SourceMap uses 1-indexing for both.
-    OriginalMapping result = sourceMap.getSourceMap()
-        .getMappingForLine(lineNumber, columnNumber + 1);
+    // JSCompiler uses 1-indexing for lineNumber and 0-indexing for columnNumber.
+    // Sourcemaps use 1-indexing for both.
+    SourceMapConsumerV3 consumer = sourceMap.getSourceMap(errorManager);
+    if (consumer == null) {
+      return null;
+    }
+    OriginalMapping result = consumer.getMappingForLine(lineNumber, columnNumber + 1);
     if (result == null) {
       return null;
     }
 
     // The sourcemap will return a path relative to the sourcemap's file.
     // Translate it to one relative to our base directory.
-    String path =
-        getRelativeTo(result.getOriginalFile(), sourceMap.getOriginalPath());
-    sourceMapOriginalSources.putIfAbsent(path, originalSourcesLoader.loadSource(path));
-    return result.toBuilder()
-        .setOriginalFile(path)
+    SourceFile source =
+        SourceMapResolver.getRelativePath(sourceMap.getOriginalPath(), result.getOriginalFile());
+    if (source == null) {
+      return null;
+    }
+    String originalPath = source.getOriginalPath();
+    sourceMapOriginalSources.putIfAbsent(originalPath, source);
+    return result
+        .toBuilder()
+        .setOriginalFile(originalPath)
         .setColumnPosition(result.getColumnPosition() - 1)
         .build();
   }
@@ -3024,7 +3002,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /** Names exported by goog.exportSymbol. */
-  private Set<String> exportedNames = new LinkedHashSet<>();
+  private final Set<String> exportedNames = new LinkedHashSet<>();
 
   @Override
   public void addExportedNames(Set<String> exportedNames) {
