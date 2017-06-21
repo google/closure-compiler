@@ -666,7 +666,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   public void testTryCatch() {
     test(
         "try { /** @type {number} */ var n = foo(); } catch (e) { console.log(e); }",
-        "{ /** @type {number} */ var n; }");
+        "/** @type {number} */ var n;");
 
     test(
         LINE_JOINER.join(
@@ -676,7 +676,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "} finally {",
             "  /** @type {number} */ var end = Date.now();",
             "}"),
-        "{ /** @type {number} */ var start; } {/** @type {number} */ var end; }");
+        "/** @type {number} */ var start; /** @type {number} */ var end;");
   }
 
   public void testTemplatedClass() {
@@ -798,11 +798,11 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   public void testNestedBlocks() {
-    test("{ const x = foobar(); }", "{}");
+    test("{ const x = foobar(); }", "");
 
-    test("{ /** @const */ let x = foobar(); }", "{}");
+    test("{ /** @const */ let x = foobar(); }", "");
 
-    test("{ /** @const */ let x = foobar(); x = foobaz(); }", "{}");
+    test("{ /** @const */ let x = foobar(); x = foobaz(); }", "");
 
     testWarning("{ /** @const */ var x = foobar(); }",
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
@@ -815,49 +815,49 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   public void testIfs() {
     test(
         "if (true) { var /** number */ x = 5; }",
-        "{/** @type {number} */ var x;}");
+        "/** @type {number} */ var x;");
 
     test(
         "if (true) { var /** number */ x = 5; } else { var /** string */ y = 'str'; }",
-        "{/** @type {number} */ var x;} {/** @type {string} */ var  y; }");
+        "/** @type {number} */ var x; /** @type {string} */ var  y;");
 
     test(
         "if (true) { if (false) { var /** number */ x = 5; } }",
-        "{{/** @type {number} */ var x;}}");
+        "/** @type {number} */ var x;");
 
     test(
         "if (true) {} else { if (false) {} else { var /** number */ x = 5; } }",
-        "{}{{}{/** @type {number} */ var x;}}");
+        "/** @type {number} */ var x;");
   }
 
   public void testLoops() {
-    test("while (true) { foo(); break; }", "{}");
+    test("while (true) { foo(); break; }", "");
 
     test("for (var i = 0; i < 10; i++) { var field = 88; }",
-        "{ /** @const {*} */ var i; /** @const {*} */ var field;}");
+        "/** @const {*} */ var i; /** @const {*} */ var field;");
 
     test("for (var i = 0, arraySize = getSize(); i < arraySize; i++) { foo(arr[i]); }",
-        "{/** @const {*} */ var i; /** @const {*} */ var arraySize; }");
+        "/** @const {*} */ var i; /** @const {*} */ var arraySize;");
 
     test(
         "while (i++ < 10) { var /** number */ field = i; }",
-        "{ /** @type {number } */ var field; }");
+        "/** @type {number } */ var field;");
 
     test(
         "do { var /** number */ field = i; } while (i++ < 10);",
-        "{ /** @type {number } */ var field; }");
+        "/** @type {number } */ var field;");
 
     test(
         "for (var /** number */ i = 0; i < 10; i++) { var /** number */ field = i; }",
-        "{ /** @type {number} */ var i; /** @type {number } */ var field; }");
+        "/** @type {number} */ var i; /** @type {number } */ var field;");
 
     test(
         "for (i = 0; i < 10; i++) { var /** number */ field = i; }",
-        "{ /** @type {number } */ var field; }");
+        "/** @type {number } */ var field;");
 
     test(
         "for (var i = 0; i < 10; i++) { var /** number */ field = i; }",
-        "{ /** @const {*} */ var i; /** @type {number } */ var field; }");
+        "/** @const {*} */ var i; /** @type {number } */ var field;");
   }
 
   public void testNamespaces() {

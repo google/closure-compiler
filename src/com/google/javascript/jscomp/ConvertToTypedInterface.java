@@ -253,6 +253,13 @@ class ConvertToTypedInterface implements CompilerPass {
             t.reportCodeChange();
           }
           break;
+        case BLOCK:
+          if (!parent.isFunction()) {
+            parent.addChildrenAfter(n.removeChildren(), n);
+            n.detach();
+            t.reportCodeChange(parent);
+          }
+          break;
         default:
           break;
       }
