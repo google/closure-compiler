@@ -4360,13 +4360,14 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
 
-    test(options,
+    test(
+        options,
         LINE_JOINER.join(
             "function foo(a, b = {foo: 5}) {",
             "  return a + b.foo;",
             "}",
             "alert(foo(3, {foo: 9}));"),
-        "var a={a:9},a=void 0===a?{a:5}:a;alert(3+a.a)");
+        "var a={a:9}; a=void 0===a?{a:5}:a;alert(3+a.a)");
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */

@@ -41,6 +41,10 @@ public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
     // Some already collapsed with values
     test("var a = 1;var b = 2, c = 3;var d = 4;",
          "var a=1,b=2,c=3,d=4;");
+    // Consecutive vars get collapsed
+    test(
+        "var x = 2; foo(x); x = 3; x = 1; var y = 2; var z = 4; x = 5",
+        "var x = 2; foo(x); x = 3; x = 1; var y = 2, z = 4; x = 5");
   }
 
   public void testIssue820() throws Exception {
@@ -51,36 +55,6 @@ public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
 
   public void testIfElseVarDeclarations() throws Exception {
     testSame("if (x) var a = 1; else var b = 2;");
-  }
-
-  public void testAggressiveRedeclaration() {
-    test(
-        "var x = 2; foo(x); x = 3; var y = 2;",
-        LINE_JOINER.join(
-            "var x = 2; foo(x);",
-            "/** @suppress {duplicate} */",
-            "var x = 3, y = 2;"));
-
-    test(
-        "var x = 2; foo(x); x = 3; x = 1; var y = 2;",
-        LINE_JOINER.join(
-            "var x = 2; foo(x);",
-            "/** @suppress {duplicate} */",
-            "var x = 3, x = 1, y = 2;"));
-
-    test(
-        "var x = 2; foo(x); x = 3; x = 1; var y = 2; var z = 4",
-        LINE_JOINER.join(
-            "var x = 2; foo(x);",
-            "/** @suppress {duplicate} */",
-            "var x = 3, x = 1, y = 2, z = 4"));
-
-    test(
-        "var x = 2; foo(x); x = 3; x = 1; var y = 2; var z = 4; x = 5",
-        LINE_JOINER.join(
-            "var x = 2; foo(x);",
-            "/** @suppress {duplicate} */",
-            "var x = 3, x = 1, y = 2, z = 4, x = 5"));
   }
 
   public void testAggressiveRedeclarationInFor() {
