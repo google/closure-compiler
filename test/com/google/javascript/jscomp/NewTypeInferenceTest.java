@@ -19396,7 +19396,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "};"));
   }
 
-  public void testDontCrashWhenJoiningNominalTypeWithEmptyTypemap() {
+  public void testJoiningNominalTypeWithEmptyTypemap() {
     typeCheck(LINE_JOINER.join(
         "/**",
         " * @constructor",
@@ -19405,6 +19405,27 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var Foo = function() {};",
         "Foo.prototype.conditional = function() {",
         "  return true ? /** @type {Foo<boolean>} */ (new Foo) : this;",
+        "};"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "var Foo = function() {};",
+        "Foo.prototype.conditional = function() {",
+        "  var /** !Foo<boolean> */ n = true ? /** @type {!Foo<boolean>} */ (new Foo) : this;",
+        "};"));
+
+    // The result of the join is Foo<?>
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "var Foo = function() {};",
+        "Foo.prototype.conditional = function() {",
+        "  var /** !Foo<number> */ n = true ? /** @type {!Foo<boolean>} */ (new Foo) : this;",
         "};"));
   }
 

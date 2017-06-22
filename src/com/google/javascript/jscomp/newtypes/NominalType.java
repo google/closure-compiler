@@ -580,7 +580,7 @@ public final class NominalType implements Serializable {
     return true;
   }
 
-  private static ImmutableMap<String, JSType> joinTypeMaps(NominalType nt1, NominalType nt2) {
+  private static NominalType joinTypeMaps(NominalType nt1, NominalType nt2) {
     checkState(nt1.rawType.equals(nt2.rawType));
     ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
     if (nt1.isIObject()) {
@@ -589,18 +589,20 @@ public final class NominalType implements Serializable {
       builder.put(indexTypevar, JSType.meet(nt1.getIndexType(), nt2.getIndexType()));
       String indexedTypevar = nt1.rawType.getTypeParameters().get(1);
       builder.put(indexedTypevar, JSType.join(nt1.getIndexedType(), nt2.getIndexedType()));
-      return builder.build();
+      return new NominalType(builder.build(), nt1.rawType);
     }
     if (nt1.typeMap.isEmpty() || nt2.typeMap.isEmpty()) {
-      return ImmutableMap.of();
+      return nt1.instantiateGenericsWithUnknown();
     }
     for (String typevar : nt1.typeMap.keySet()) {
       builder.put(typevar, JSType.join(nt1.typeMap.get(typevar), nt2.typeMap.get(typevar)));
     }
-    return builder.build();
+    return new NominalType(builder.build(), nt1.rawType);
   }
 
-  // A special-case of join.
+  /**
+   * A special-case of join. If either argument is null, it returns null.
+   */
   static NominalType join(NominalType c1, NominalType c2) {
     if (c1 == null || c2 == null) {
       return null;
@@ -612,7 +614,7 @@ public final class NominalType implements Serializable {
       return c1;
     }
     if (c1.rawType.equals(c2.rawType)) {
-      return c1.isGeneric() ? new NominalType(joinTypeMaps(c1, c2), c1.rawType) : c1;
+      return c1.isGeneric() ? joinTypeMaps(c1, c2) : c1;
     }
     // If c1.isRawSubtypeOf(c2) but not c1.isNominalSubtypeOf(c2), we would want to change
     // joinTypeMaps to handle type maps with different domains. Basically, we want to go up
