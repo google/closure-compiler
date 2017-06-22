@@ -3522,7 +3522,7 @@ google.maps.MapsEventListener = function() {};
 google.maps.MapsEventListener.prototype.remove = function() {};
 
 /**
- * @param {(google.maps.MarkerOptions|Object.<string>)=} opt_opts
+ * @param {(google.maps.MarkerOptions|Object<string, ?>)=} opt_opts
  * @extends {google.maps.MVCObject}
  * @constructor
  */
