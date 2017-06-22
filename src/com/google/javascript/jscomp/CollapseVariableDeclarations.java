@@ -136,13 +136,16 @@ class CollapseVariableDeclarations implements CompilerPass {
       }
 
       Node varNode = n;
+      Token nType = n.getToken();
 
       // Find variable declarations that follow this one (if any)
       n = n.getNext();
-
       boolean hasNodesToCollapse = false;
 
-      while (n != null && n.isVar()) {
+      // we only want to collapse lets with lets, vars with vars, and consts with consts so we
+      // check to make sure the declaration types match
+      while (n != null && nType == n.getToken()) {
+
         nodesToCollapse.add(n);
         hasNodesToCollapse = true;
 
@@ -161,7 +164,8 @@ class CollapseVariableDeclarations implements CompilerPass {
       Node var = collapse.startNode;
       compiler.reportChangeToEnclosingScope(var);
 
-      while (var.getNext() != null && var.getNext().getToken() == Token.VAR) {
+      while (var.getNext() != null
+          && (var.getNext().getToken() == var.getToken())) {
         Node next = collapse.parent.removeChildAfter(var);
 
         // Move all children of the next var node into the first one.

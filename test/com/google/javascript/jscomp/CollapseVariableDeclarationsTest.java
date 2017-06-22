@@ -26,22 +26,25 @@ public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
     // Basic collapsing
     test("var a;var b;",
          "var a,b;");
+
     // With initial values
     test("var a = 1;var b = 1;",
          "var a=1,b=1;");
+
     // Already collapsed
-    test("var a, b;",
-         "var a,b;");
+    testSame("var a, b;");
+
     // Already collapsed with values
-    test("var a = 1, b = 1;",
-         "var a=1,b=1;");
+    testSame("var a = 1, b = 1;");
+
     // Some already collapsed
     test("var a;var b, c;var d;",
          "var a,b,c,d;");
+
     // Some already collapsed with values
     test("var a = 1;var b = 2, c = 3;var d = 4;",
          "var a=1,b=2,c=3,d=4;");
-    // Consecutive vars get collapsed
+
     test(
         "var x = 2; foo(x); x = 3; x = 1; var y = 2; var z = 4; x = 5",
         "var x = 2; foo(x); x = 3; x = 1; var y = 2, z = 4; x = 5");
@@ -66,15 +69,96 @@ public final class CollapseVariableDeclarationsTest extends CompilerTestCase {
   public void testIssue397() {
     test("var x; var y = 3; x = 5;",
          "var x, y = 3; x = 5;");
+
     testSame("var x; x = 5; var z = 7;");
+
     test("var x; var y = 3; x = 5; var z = 7;",
          "var x, y = 3; x = 5; var z = 7;");
+
     test("var a = 1; var x; var y = 3; x = 5;",
          "var a = 1, x, y = 3; x = 5;");
   }
 
   public void testArgumentsAssignment() {
     testSame("function f() {arguments = 1;}");
+  }
+
+  // ES6 Tests
+  public void testCollapsingLetConst() throws Exception {
+    // Basic collapsing
+    test("let a;let b;",
+         "let a,b;");
+
+    // With initial values
+    test("const a = 1;const b = 1;",
+         "const a=1,b=1;");
+
+    // Already collapsed
+    testSame("let a, b;");
+
+    // Already collapsed with values
+    testSame("let a = 1, b = 1;");
+
+    // Some already collapsed
+    test("let a;let b, c;let d;",
+         "let a,b,c,d;");
+
+    // Some already collapsed with values
+    test("let a = 1;let b = 2, c = 3;let d = 4;",
+         "let a=1,b=2,c=3,d=4;");
+
+    // Different variable types
+    testSame("let a = 1; const b = 2;");
+  }
+
+  public void testIfElseVarDeclarationsLet() throws Exception {
+    testSame("if (x) { let a = 1; } else { let b = 2; }");
+  }
+
+  public void testAggressiveRedeclarationOfLetInFor() {
+    testSame("for(let x = 1; x = 2; x = 3) {x = 4}");
+    testSame("for(let x = 1; y = 2; z = 3) {let a = 4}");
+    testSame("let x; for(x = 1; x = 2; z = 3) {x = 4}");
+  }
+
+  public void testRedeclarationLetInFunction() {
+    test(
+        "function f() { let x = 1; let y = 2; let z = 3; x + y + z; }",
+        "function f() { let x = 1, y = 2, z = 3; x + y + z; } ");
+
+    // recognize local scope version of x
+    test(
+        "var x = 1; function f() { let x = 1; let y = 2; x + y; }",
+        "var x = 1; function f() { let x = 1, y = 2; x + y } ");
+
+    // do not redeclare function parameters
+    // incompatible with strict mode
+    testSame("function f(x) { let y = 3; x = 4; x + y; }");
+  }
+
+  public void testArrowFunction() {
+    test("() => {let x = 1; let y = 2; x + y; }",
+         "() => {let x = 1, y = 2; x + y; }");
+
+    // do not redeclare function parameters
+    // incompatible with strict mode
+    testSame("(x) => {x = 4; let y = 2; x + y; }");
+  }
+
+  public void testUncollapsableDeclarations() {
+    testSame("let x = 1; var y = 2; const z = 3");
+
+    testSame("let x = 1; var y = 2; let z = 3;");
+  }
+
+  public void testMixedDeclarationTypes() {
+    //lets, vars, const declarations consecutive
+
+    test("let x = 1; let z = 3; var y = 2;",
+         "let x = 1, z = 3; var y = 2;");
+
+    test("let x = 1; let y = 2; var z = 3; var a = 4;",
+         "let x = 1, y = 2; var z = 3, a = 4");
   }
 
   @Override
