@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.deps.ModuleNames;
 import java.io.Serializable;
 
@@ -28,6 +29,7 @@ import java.io.Serializable;
  * be based on the input name rather than the
  * normalized version.
  */
+@Immutable
 public class ModuleIdentifier implements Serializable {
   private final String name;
   private final String closureNamespace;
