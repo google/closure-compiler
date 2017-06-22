@@ -48,9 +48,9 @@ public final class CheckInterfacesTest extends CompilerTestCase {
     testSame("/** @interface */ function A(x) {}",
         CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS);
 
-    testSame("var ns = {};\n"
-        + "/** @interface */\n"
-        + "ns.SomeInterface = function(x) {};",
+    testSame(
+        LINE_JOINER.join(
+            "var ns = {};\n", "/** @interface */\n", "ns.SomeInterface = function(x) {};"),
         CheckInterfaces.INTERFACE_SHOULD_NOT_TAKE_ARGS);
   }
 
@@ -58,9 +58,11 @@ public final class CheckInterfacesTest extends CompilerTestCase {
     testSame("/** @interface */ function A() { this.foo; }",
         CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY);
 
-    testSame("var ns = {};\n"
-        + "/** @interface */\n"
-        + "ns.SomeInterface = function() { this.foo; };",
+    testSame(
+        LINE_JOINER.join(
+            "var ns = {};\n",
+            "/** @interface */\n",
+            "ns.SomeInterface = function() { this.foo; };"),
         CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY);
   }
 }
