@@ -316,6 +316,15 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract void removeChangeHandler(CodeChangeHandler handler);
 
+  /** Register a provider for some type of index. */
+  abstract void addIndexProvider(IndexProvider<?> indexProvider);
+
+  /**
+   * Returns, from a provider, the desired index of type T, otherwise null if no provider is
+   * registered for the given type.
+   */
+  abstract <T> T getIndex(Class<T> type);
+
   /** Let the PhaseOptimizer know which scope a pass is currently analyzing */
   abstract void setChangeScope(Node n);
 

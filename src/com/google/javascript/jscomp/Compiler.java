@@ -304,9 +304,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /**
    * Creates a Compiler that reports errors and warnings to an output stream.
    */
-  public Compiler(PrintStream stream) {
+  public Compiler(PrintStream outStream) {
     addChangeHandler(recentChange);
-    this.outStream = stream;
+    this.outStream = outStream;
   }
 
   /**
@@ -2500,6 +2500,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   protected final RecentChange recentChange = new RecentChange();
   private final List<CodeChangeHandler> codeChangeHandlers = new ArrayList<>();
+  private final Map<Class<?>, IndexProvider<?>> indexProvidersByType =
+      new LinkedHashMap<>();
 
   /** Name of the synthetic input that holds synthesized externs. */
   static final String SYNTHETIC_EXTERNS = "{SyntheticVarsDeclar}";
@@ -2523,6 +2525,25 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   void removeChangeHandler(CodeChangeHandler handler) {
     codeChangeHandlers.remove(handler);
+  }
+
+  @Override
+  void addIndexProvider(IndexProvider<?> indexProvider) {
+    Class<?> type = indexProvider.getType();
+    if (indexProvidersByType.put(type, indexProvider) != null) {
+      throw new IllegalStateException(
+          "A provider is already registered for index of type " + type.getSimpleName());
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  <T> T getIndex(Class<T> key) {
+    IndexProvider<T> indexProvider = (IndexProvider<T>) indexProvidersByType.get(key);
+    if (indexProvider == null) {
+      return null;
+    }
+    return indexProvider.get();
   }
 
   Node getExternsRoot() {
@@ -2585,12 +2606,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return n;
     }
 
-    n = NodeUtil.getEnclosingChangeScopeRoot(n.getParent());
-    if (n == null) {
+    Node enclosingScopeNode = NodeUtil.getEnclosingChangeScopeRoot(n.getParent());
+    if (enclosingScopeNode == null) {
       throw new IllegalStateException(
           "An enclosing scope is required for change reports but node " + n + " doesn't have one.");
     }
-    return n;
+    return enclosingScopeNode;
   }
 
   private void recordChange(Node n) {

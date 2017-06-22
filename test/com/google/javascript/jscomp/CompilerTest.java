@@ -1337,6 +1337,66 @@ public final class CompilerTest extends TestCase {
     assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).isEmpty();
   }
 
+  public void testAddIndexProvider_ThenGetIndex() {
+    Compiler compiler = new Compiler();
+
+    compiler.addIndexProvider(new IndexProvider<String>() {
+      @Override
+      public String get() {
+        // Normally some shared index would be constructed/updated/returned here.
+        return "String";
+      }
+
+      @Override
+      public Class<String> getType() {
+        return String.class;
+      }});
+    compiler.addIndexProvider(new IndexProvider<Double>() {
+      @Override
+      public Double get() {
+        // Normally some shared index would be constructed/updated/returned here.
+        return Double.MAX_VALUE;
+      }
+
+      @Override
+      public Class<Double> getType() {
+        return Double.class;
+      }});
+
+    // Have registered providers.
+    assertThat(compiler.getIndex(String.class)).isEqualTo("String");
+    assertThat(compiler.getIndex(Double.class)).isEqualTo(Double.MAX_VALUE);
+
+    // Has no registered provider.
+    assertThat(compiler.getIndex(Object.class)).isNull();
+  }
+
+  public void testAddIndexProviderTwice_isException() {
+    Compiler compiler = new Compiler();
+
+    IndexProvider<String> stringIndexProvider =
+        new IndexProvider<String>() {
+          @Override
+          public String get() {
+            // Normally some shared index would be constructed/updated/returned here.
+            return "String";
+          }
+
+          @Override
+          public Class<String> getType() {
+            return String.class;
+          }
+        };
+    compiler.addIndexProvider(stringIndexProvider);
+
+    try {
+      compiler.addIndexProvider(stringIndexProvider);
+      fail("expected duplicate index addition to fail");
+    } catch (IllegalStateException e) {
+      // expected
+    }
+  }
+
   private static CompilerOptions createNewFlagBasedOptions() {
     CompilerOptions opt = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(opt);
