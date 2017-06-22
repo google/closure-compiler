@@ -58,7 +58,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
    * Implementation:
    *
    * This pass first perform a traversal to gather a list of Candidates that
-   * could be inlined using {@link GatherCandiates}.
+   * could be inlined using {@link GatherCandidates}.
    *
    * The second step involves verifying that each candidate is actually safe
    * to inline with {@link Candidate#canInline(Scope)} and finally perform
@@ -126,9 +126,13 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       return; // Don't even brother. All global variables are likely escaped.
     }
 
-    checkState(t.getScopeRoot().isFunction());
-    Node scopeRoot = t.getScopeRoot();
-    if (!isCandidateFunction(scopeRoot)) {
+    if (!t.getScope().isFunctionBlockScope()) {
+      return; // Only want to do the following if its a function block scope.
+    }
+
+    Node functionScopeRoot = t.getScopeRoot().getParent(); // Function Scope Root
+
+    if (!isCandidateFunction(functionScopeRoot)) {
       return;
     }
 
@@ -136,22 +140,25 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       return;
     }
 
+    Es6SyntacticScopeCreator scopeCreator = (Es6SyntacticScopeCreator) t.getScopeCreator();
+
     // Compute the forward reaching definition.
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
 
     // Process the body of the function.
-    cfa.process(null, t.getScopeRoot());
+    cfa.process(null, functionScopeRoot);
     cfg = cfa.getCfg();
-    reachingDef = new MustBeReachingVariableDef(cfg, t.getScope(), compiler, t.getScopeCreator());
+
+    reachingDef = new MustBeReachingVariableDef(cfg, t.getScope(), compiler, scopeCreator);
     reachingDef.analyze();
     candidates = new LinkedHashSet<>();
 
     // Using the forward reaching definition search to find all the inline
     // candidates
-    NodeTraversal.traverseEs6(compiler, t.getScopeRoot().getLastChild(), new GatherCandiates());
+    NodeTraversal.traverseEs6(compiler, t.getScopeRoot(), new GatherCandidates());
 
     // Compute the backward reaching use. The CFG can be reused.
-    reachingUses = new MaybeReachingVariableUse(cfg, t.getScope(), compiler, t.getScopeCreator());
+    reachingUses = new MaybeReachingVariableUse(cfg, t.getScope(), compiler, scopeCreator);
     reachingUses.analyze();
     while (!candidates.isEmpty()) {
       Candidate c = candidates.iterator().next();
@@ -219,7 +226,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
 
   @Override
   public void process(Node externs, Node root) {
-    (new NodeTraversal(compiler, this, SyntacticScopeCreator.makeUntyped(compiler)))
+    (new NodeTraversal(compiler, this,  new Es6SyntacticScopeCreator(compiler)))
         .traverseRoots(externs, root);
   }
 
@@ -232,7 +239,7 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
     // time.
   }
 
-  private class GatherCandiatesCfgNodeCallback extends AbstractCfgNodeTraversalCallback {
+  private class GatherCandidatesCfgNodeCallback extends AbstractCfgNodeTraversalCallback {
     Node cfgNode = null;
 
     public void setCfgNode(Node cfgNode) {
@@ -278,8 +285,8 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
    * be later verified with {@link Candidate#canInline(Scope)} when
    * {@link MaybeReachingVariableUse} has been performed.
    */
-  private class GatherCandiates extends AbstractShallowCallback {
-    final GatherCandiatesCfgNodeCallback gatherCb = new GatherCandiatesCfgNodeCallback();
+  private class GatherCandidates extends AbstractShallowCallback {
+    final GatherCandidatesCfgNodeCallback gatherCb = new GatherCandidatesCfgNodeCallback();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -381,7 +388,6 @@ class FlowSensitiveInlineVariables implements CompilerPass, ScopedCallback {
       if (NodeUtil.isWithinLoop(use)) {
         return false;
       }
-
 
       Collection<Node> uses = reachingUses.getUses(varName, getDefCfgNode());
 

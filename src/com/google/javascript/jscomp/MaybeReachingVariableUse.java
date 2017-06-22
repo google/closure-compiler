@@ -52,14 +52,14 @@ class MaybeReachingVariableUse extends
       ControlFlowGraph<Node> cfg,
       Scope jsScope,
       AbstractCompiler compiler,
-      ScopeCreator scopeCreator) {
+      Es6SyntacticScopeCreator scopeCreator) {
     super(cfg, new ReachingUsesJoinOp());
     this.jsScope = jsScope;
     this.escaped = new HashSet<>();
 
     // TODO(user): Maybe compute it somewhere else and re-use the escape
     // local set here.
-    computeEscaped(jsScope, escaped, compiler, scopeCreator);
+    computeEscaped(jsScope.getParent(), jsScope, escaped, compiler, scopeCreator);
   }
 
   /**
@@ -262,7 +262,8 @@ class MaybeReachingVariableUse extends
    */
   private void addToUseIfLocal(String name, Node node, ReachingUses use) {
     Var var = jsScope.getVar(name);
-    if (var == null || var.scope != jsScope) {
+    if (var == null
+        || (var.scope != jsScope && var.scope != jsScope.getParent())) {
       return;
     }
     if (!escaped.contains(var)) {
@@ -277,7 +278,8 @@ class MaybeReachingVariableUse extends
    */
   private void removeFromUseIfLocal(String name, ReachingUses use) {
     Var var = jsScope.getVar(name);
-    if (var == null || var.scope != jsScope) {
+    if (var == null
+        || (var.scope != jsScope && var.scope != jsScope.getParent())) {
       return;
     }
     if (!escaped.contains(var)) {
