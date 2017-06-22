@@ -22,7 +22,6 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.PassFactory.createEmptyPass;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES5;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6;
-import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6_MODULES;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
@@ -1472,7 +1471,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES6_MODULES;
+          return ES8_MODULES;
         }
       };
 
