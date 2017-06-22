@@ -48,10 +48,22 @@ public class CheckEmptyStatementsTest extends CompilerTestCase {
     testWarning("alert(1);;");
   }
 
+  public void testWarning_withES6Modules02() {
+    testWarning("export var x;;");
+  }
+
   public void testNoWarning() {
     testSame("function f() {}");
     testSame("var x;");
     testSame("alert(1);");
     testSame("if (x); y;");
+  }
+
+  public void testNoWarning_withES6Modules01() {
+    testSame("export function f() {}");
+  }
+
+  public void testNoWarning_withES6Modules02() {
+    testSame("export var x;");
   }
 }
