@@ -443,7 +443,7 @@ public final class FunctionType implements Serializable {
     NominalType nominal = getNominalTypeIfSingletonObj(this.nominalType);
     return nominal == null
         ? null
-        : nominal.instantiateGenerics(this.commonTypes.MAP_TO_UNKNOWN).getInstanceAsJSType();
+        : nominal.substituteGenerics(this.commonTypes.MAP_TO_UNKNOWN).getInstanceAsJSType();
   }
 
   /**
@@ -1226,8 +1226,7 @@ public final class FunctionType implements Serializable {
     if (typeMap.isEmpty()) {
       return nt;
     }
-    return JSType.fromObjectType(ObjectType.fromNominalType(
-        tmp.instantiateGenerics(typeMap)));
+    return JSType.fromObjectType(ObjectType.fromNominalType(tmp.substituteGenerics(typeMap)));
   }
 
   /**

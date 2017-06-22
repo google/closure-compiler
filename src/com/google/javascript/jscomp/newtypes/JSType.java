@@ -649,9 +649,21 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   /**
-   * Creates a new JSType by deeply substituting the type variables in this type with concrete
-   * replacements from the given map. Note that this method works for any type, including function
-   * literals (unlike {@link #instantiateGenerics}, which only works on singleton objects).
+   * Creates a new JSType by deeply substituting the *free* type variables in this type with
+   * concrete replacements from the given map.
+   * This is also what all other substituteGenerics methods in this package do.
+   *
+   * Do not confuse with the instantiateGenerics methods, which take an *uninstantiated*
+   * generic type (a nominal type or a generic function), and substitute the *bound* type variables
+   * with the concrete types from the map.
+
+   * For example, when you define a class Foo with T, an
+   * uninstantiated Foo object has type: {@code ForAll T.Foo<T>}.
+   * When you define a generic function f with U, that takes a {@code Foo<U>} as an argument and
+   * returns a U, f's type is {@code ForAll U.Foo<U> => U}.
+   * When you call f with some argument, say Foo of string, you instantiate U in f's type.
+   * The part of f's type without the ForAll contains U as a free type variable.
+   * So you call substituteGenerics in order to convert the {@code Foo<U>} to a {@code Foo<string>}
    */
   public final JSType substituteGenerics(Map<String, JSType> concreteTypes) {
     if (isTop()
@@ -680,9 +692,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   /**
-   * Creates a new type by filling in the given concrete types into the type parameters of this
-   * generic singleton object type. The number of arguments to the method must match the number of
-   * declared template parameters on this type.
+   * Assume that this JSType wraps an uninstantiated nominal type, and instantiate it using
+   * the given types.
    */
   final JSType instantiateGenerics(JSType... types) {
     checkState(this.isSingletonObj());

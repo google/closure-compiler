@@ -275,6 +275,11 @@ public final class JSTypes implements Serializable {
       public boolean equals(Object o) {
         return o == this;
       }
+
+      @Override
+      public String toString() {
+        return "MAP_TO_UNKNOWN";
+      }
     }
 
     this.MAP_TO_UNKNOWN = new MapToUnknown();
@@ -323,8 +328,6 @@ public final class JSTypes implements Serializable {
         ? this.UNKNOWN
         : this.iterable.getInstanceAsJSType().instantiateGenerics(t);
   }
-  
-  
 
   public NominalType getObjectType() {
     return this.builtinObject == null ? null : this.builtinObject.getAsNominalType();
@@ -371,13 +374,12 @@ public final class JSTypes implements Serializable {
       return this.UNKNOWN;
     }
     ImmutableList<String> typeParams = arrayType.getTypeParameters();
-    JSType result = arrayType.getInstanceAsJSType();
     // typeParams can be != 1 in old externs files :-S
     if (typeParams.size() == 1) {
-      String typeParam = Iterables.getOnlyElement(typeParams);
-      result = result.substituteGenerics(ImmutableMap.of(typeParam, t));
+      return JSType.fromObjectType(ObjectType.fromNominalType(
+          this.arrayType.getAsNominalType().instantiateGenerics(ImmutableList.of(t))));
     }
-    return result;
+    return arrayType.getInstanceAsJSType();
   }
 
   public JSType getArgumentsArrayType(JSType t) {

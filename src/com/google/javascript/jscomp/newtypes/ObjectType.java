@@ -1212,8 +1212,8 @@ final class ObjectType implements TypeWithProperties {
    *
    * TODO(dimvar): handle greatest lower bound of interface types.
    * If we do that, we need to normalize the output, otherwise it could
-   * contain two object types that are in a subtype relation, e.g., see
-   * {@link NewTypeInferenceTest#testDifficultObjectSpecialization}.
+   * contain two object types that are in a subtype relation, e.g.,
+   * see NewTypeInferenceTest#testDifficultObjectSpecialization.
    */
   static ImmutableSet<ObjectType> meetSetsHelper(
       boolean specializeObjs1, Set<ObjectType> objs1, Set<ObjectType> objs2) {
@@ -1535,21 +1535,21 @@ final class ObjectType implements TypeWithProperties {
    * M, then it gets deeply replaced with the corresponding concrete type
    * in the returned ObjectType.
    */
-  ObjectType substituteGenerics(Map<String, JSType> concreteTypes) {
-    if (isTopObject() || concreteTypes.isEmpty()) {
+  ObjectType substituteGenerics(Map<String, JSType> typeMap) {
+    if (isTopObject() || typeMap.isEmpty()) {
       return this;
     }
     PersistentMap<String, Property> newProps = PersistentMap.create();
     for (Map.Entry<String, Property> propsEntry : this.props.entrySet()) {
       String pname = propsEntry.getKey();
       Property newProp =
-          propsEntry.getValue().substituteGenerics(concreteTypes);
+          propsEntry.getValue().substituteGenerics(typeMap);
       newProps = newProps.with(pname, newProp);
     }
-    FunctionType newFn = fn == null ? null : fn.substituteGenerics(concreteTypes);
+    FunctionType newFn = fn == null ? null : fn.substituteGenerics(typeMap);
     return makeObjectType(
         this.commonTypes,
-        this.nominalType.instantiateGenerics(concreteTypes),
+        this.nominalType.substituteGenerics(typeMap),
         newProps,
         newFn,
         this.ns,

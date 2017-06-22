@@ -855,7 +855,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
       return builder.buildDeclaration();
     } else if (jsdoc.isConstructor()) {
       handleConstructorAnnotation(functionName, funNode, constructorType,
-          parentClass, implementedIntfs, registry, builder);
+          parentClass, implementedIntfs, builder);
     } else if (jsdoc.isInterface()) {
       handleInterfaceAnnotation(jsdoc, functionName, funNode, constructorType,
           implementedIntfs, typeParameters, registry, builder);
@@ -1010,7 +1010,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
   private void handleConstructorAnnotation(
       String functionName, Node funNode, RawNominalType constructorType,
       NominalType parentClass, ImmutableSet<NominalType> implementedIntfs,
-      DeclaredTypeRegistry registry, FunctionTypeBuilder builder) {
+      FunctionTypeBuilder builder) {
     String className = constructorType.toString();
     NominalType builtinObject = this.commonTypes.getObjectType();
     if (parentClass == null && !functionName.equals("Object")) {
@@ -1049,7 +1049,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
     }
     builder.addNominalType(constructorType.getInstanceAsJSType());
   }
-  
+
   // /** @param {...?} var_args */ function f(var_args) { ... }
   // var_args shouldn't be used in the body of f
   public static boolean isRestArg(JSDocInfo funJsdoc, String formalParamName) {
