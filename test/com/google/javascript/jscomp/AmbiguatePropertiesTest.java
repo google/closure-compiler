@@ -687,6 +687,22 @@ public final class AmbiguatePropertiesTest extends CompilerTestCase {
     test(js, output);
   }
 
+  public void testInterfaceWithSubInterfaceAndDirectImplementors() {
+    test(
+        LINE_JOINER.join(
+            "/** @interface */ function Foo(){};",
+            "Foo.prototype.foo = function(){};",
+            "/** @interface @extends {Foo} */ function Bar(){};",
+            "/** @suppress {checkTypes}\n @constructor @implements {Foo} */ function Baz(){};",
+            "Baz.prototype.baz = function(){};"),
+        LINE_JOINER.join(
+            "/** @interface */ function Foo(){};",
+            "Foo.prototype.b = function(){};",
+            "/** @interface @extends {Foo} */ function Bar(){};",
+            "/** @suppress {checkTypes}\n @constructor @implements {Foo} */ function Baz(){};",
+            "Baz.prototype.a = function(){};"));
+  }
+
   public void testFunctionSubType() {
     String js = LINE_JOINER.join(
         "Function.prototype.a = 1;",

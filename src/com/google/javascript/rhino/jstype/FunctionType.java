@@ -48,6 +48,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TY
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
@@ -150,7 +151,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
    * The types which are subtypes of this function. It is only relevant for
    * constructors and may be {@code null}.
    */
-  private List<FunctionType> subTypes;
+  private List<FunctionTypeI> subTypes;
 
   /** Creates an instance for a function that might be a constructor. */
   FunctionType(
@@ -1246,8 +1247,8 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     super.clearCachedValues();
 
     if (subTypes != null) {
-      for (FunctionType subType : subTypes) {
-        subType.clearCachedValues();
+      for (FunctionTypeI subType : subTypes) {
+        ((FunctionType) subType).clearCachedValues();
       }
     }
 
@@ -1262,14 +1263,11 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
   }
 
-  /**
-   * Returns a list of types that are subtypes of this type. This is only valid
-   * for constructor functions, and may be null. This allows a downward
-   * traversal of the subtype graph.
-   */
   @Override
-  public List<FunctionType> getSubTypes() {
-    return subTypes;
+  public Iterable<FunctionTypeI> getSubTypes() {
+    return Iterables.concat(
+        subTypes != null ? subTypes : ImmutableList.<FunctionTypeI>of(),
+        this.registry.getDirectImplementors(this));
   }
 
   @Override
@@ -1318,8 +1316,9 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
 
     if (subTypes != null) {
       for (int i = 0; i < subTypes.size(); i++) {
+        FunctionType subType = (FunctionType) subTypes.get(i);
         subTypes.set(
-            i, JSType.toMaybeFunctionType(subTypes.get(i).resolve(t, scope)));
+            i, JSType.toMaybeFunctionType(subType.resolve(t, scope)));
       }
     }
 

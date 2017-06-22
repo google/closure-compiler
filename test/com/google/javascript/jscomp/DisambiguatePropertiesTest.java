@@ -1297,6 +1297,17 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
             + " b=[[Foo.prototype, I.prototype], [Z.prototype]]}");
   }
 
+  public void testInterface_subInterfaceAndDirectImplementors() {
+    String js = LINE_JOINER.join(
+        "/** @interface */ function I() {};",
+        "I.prototype.a;",
+        "/** @constructor @implements {I} */ function Foo() {};",
+        "Foo.prototype.a;",
+        "/** @interface @extends {I} */ function Bar() {};",
+        "Bar.prototype.a;");
+    testSets(js, "{a=[[Bar.prototype, Foo.prototype, I.prototype]]}");
+  }
+
   public void testInterfaceOfSuperclass() {
     String js = ""
         + "/** @interface */ function I() {};\n"
