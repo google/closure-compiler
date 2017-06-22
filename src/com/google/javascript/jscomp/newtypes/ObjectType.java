@@ -569,12 +569,11 @@ final class ObjectType implements TypeWithProperties {
   }
 
   /**
-   * Loosely joins two property maps. Properties that are only present in
-   * one or the other are added as "required" properties to the result.
-   * Properties in both maps are joined as normal.
+   * Loosely joins two property maps. Properties are marked as required because there
+   * is no concept of optional properties on loose types. @see #withLoose.
    */
   private static PersistentMap<String, Property> joinPropsLoosely(
-      JSTypes commonTypes, Map<String, Property> props1, Map<String, Property> props2) {
+      Map<String, Property> props1, Map<String, Property> props2) {
     // Note: If ever newProps == BOTTOM_PROPERTY_MAP, it could be returned early,
     // but as long as it only ever comes from with(), that is impossible. We may
     // want to bail out early if either props1 or props2 is bottom.
@@ -750,6 +749,9 @@ final class ObjectType implements TypeWithProperties {
    *     if the name is known.
    * (4) Remember in the property map whether a property name was declared as
    *     quoted or not. This will likely involve a lot of extra plumbing.
+   *
+   * NOTE(sdh): if the index of the IObject is a string enum, we can do extra checking in this
+   * method; we can check that the record type's properties match the enum keys. Useful or overkill?
    */
   private boolean compareRecordTypeToIObject(NominalType otherNt, SubtypeCache subSuperMap) {
     JSType keyType = otherNt.getIndexType();
@@ -763,7 +765,6 @@ final class ObjectType implements TypeWithProperties {
       if (keyType.isNumber() && Ints.tryParse(pname) == null) {
         return false;
       }
-      // TODO(sdh): support string-enum keys.
       // Bracket accesses on the IObject (or on an Array) can generally return undefined
       // and we don't warn about that; so ignore undefined for the object literal as well.
       if (!ptype.removeType(this.commonTypes.UNDEFINED).isSubtypeOf(valueType, subSuperMap)) {
@@ -1093,7 +1094,7 @@ final class ObjectType implements TypeWithProperties {
     PersistentMap<String, Property> props;
     if (isLoose) {
       // Do a simple union of the maps
-      props = joinPropsLoosely(commonTypes, obj1.props, obj2.props);
+      props = joinPropsLoosely(obj1.props, obj2.props);
     } else {
       props = meetPropsHelper(commonTypes, false, resultNomType, obj1.props, obj2.props);
     }
@@ -1134,7 +1135,7 @@ final class ObjectType implements TypeWithProperties {
     PersistentMap<String, Property> props;
     if (isLoose) {
       fn = fn == null ? null : fn.withLoose();
-      props = joinPropsLoosely(commonTypes, obj1.props, obj2.props);
+      props = joinPropsLoosely(obj1.props, obj2.props);
     } else {
       props = joinProps(obj1.props, obj2.props, nt1, nt2);
     }
@@ -1154,10 +1155,11 @@ final class ObjectType implements TypeWithProperties {
   }
 
   /**
-   * Joins two sets of object types. This is somewhat complicated
-   * because individual pairs of ObjectTypes may only be joined if
-   * their nominal types are related. All such pairs are joined
-   * recursively.
+   * Joins two sets of object types.
+   * First, we put the types from both sets in a collection.
+   * Then, we iterate over the collection and normalize it, so that no two elements in the
+   * collection are in the subtype relationship. Joining the elements of objs1 and objs2 pairwise
+   * does not ensure that the result is normalized.
    */
   static ImmutableSet<ObjectType> joinSets(
       ImmutableSet<ObjectType> objs1, ImmutableSet<ObjectType> objs2) {
