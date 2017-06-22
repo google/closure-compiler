@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
@@ -36,6 +37,12 @@ import java.util.Collection;
 public class DefinitionUseSiteFinder extends NameBasedDefinitionProvider {
 
   private final Multimap<String, UseSite> nameUseSiteMultimap;
+
+  @VisibleForTesting
+  Multimap<String, UseSite> getNameUseSiteMultimap() {
+    // Defensive copy.
+    return LinkedHashMultimap.create(nameUseSiteMultimap);
+  }
 
   public DefinitionUseSiteFinder(AbstractCompiler compiler) {
     super(compiler, false);

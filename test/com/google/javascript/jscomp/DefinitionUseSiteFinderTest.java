@@ -30,7 +30,7 @@ import java.util.TreeSet;
  * Tests for {@link DefinitionUseSiteFinder}
  *
  */
-public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
+public final class DefinitionUseSiteFinderTest extends CompilerTestCase {
   Set<String> found = new TreeSet<>();
 
   @Override
@@ -298,14 +298,12 @@ public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
     checkDefinitionsInExterns(
         "var a = {}; a.b = 10",
         ImmutableSet.of("DEF GETPROP a.b -> EXTERN NUMBER",
-                        "DEF NAME a -> EXTERN <null>",
-                        "USE NAME a -> [EXTERN <null>]"));
+                        "DEF NAME a -> EXTERN <null>"));
 
     checkDefinitionsInExterns(
         "var a = {}; a.b",
         ImmutableSet.of("DEF GETPROP a.b -> EXTERN <null>",
-                        "DEF NAME a -> EXTERN <null>",
-                        "USE NAME a -> [EXTERN <null>]"));
+                        "DEF NAME a -> EXTERN <null>"));
 
     checkDefinitions(
         "var a = {}",
@@ -330,15 +328,13 @@ public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
         "var ns = {};" +
         "/** @type {number} */ ns.NUM;",
         ImmutableSet.of("DEF NAME ns -> EXTERN <null>",
-                        "DEF GETPROP ns.NUM -> EXTERN <null>",
-                        "USE NAME ns -> [EXTERN <null>]"));
+                        "DEF GETPROP ns.NUM -> EXTERN <null>"));
 
     checkDefinitionsInExterns(
         "var ns = {};" +
         "/** @type {function(T,T):number} @template T */ ns.COMPARATOR;",
         ImmutableSet.of("DEF NAME ns -> EXTERN <null>",
-                        "DEF GETPROP ns.COMPARATOR -> EXTERN <null>",
-                        "USE NAME ns -> [EXTERN <null>]"));
+                        "DEF GETPROP ns.COMPARATOR -> EXTERN <null>"));
 
     checkDefinitionsInExterns(
         "/** @type {{ prop1 : number, prop2 : string}} */" +
@@ -390,14 +386,7 @@ public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
         ImmutableSet.of(
             "DEF NAME goog -> EXTERN <null>",
             "DEF GETPROP goog.Response -> EXTERN FUNCTION",
-            "DEF GETPROP goog.Response.prototype.get -> EXTERN <null>",
-            "USE NAME goog -> [EXTERN <null>]",
-            "USE GETPROP goog.Response -> [EXTERN FUNCTION]",
-            "USE GETPROP goog.Response.prototype.get -> [EXTERN <null>]",
-            // This one refers to the get prop goog.Response.prototype.get().get which doesn't have
-            // a qualified name but does refer to the definition goog.Response.prototype.get since
-            // it only compares the last component.
-            "USE GETPROP null -> [EXTERN <null>]"));
+            "DEF GETPROP goog.Response.prototype.get -> EXTERN <null>"));
   }
 
   public void testDoubleNamedFunction() {
@@ -432,58 +421,35 @@ public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
     return new DefinitionEnumerator(compiler);
   }
 
-  /**
-   * Run DefinitionUseSiteFinder, then gather a list of definitions.
-   */
-  private class DefinitionEnumerator
-      extends AbstractPostOrderCallback implements CompilerPass {
-    private final NameBasedDefinitionProvider passUnderTest;
-    private final Compiler compiler;
+  private static void buildFound(DefinitionUseSiteFinder definitionFinder, Set<String> found) {
+    for (DefinitionSite defSite : definitionFinder.getDefinitionSites()) {
+      Node node = defSite.node;
+      Definition definition = defSite.definition;
+      StringBuilder sb = new StringBuilder();
+      sb.append("DEF ");
+      sb.append(node.getToken());
+      sb.append(" ");
+      sb.append(node.getQualifiedName());
+      sb.append(" -> ");
 
-    DefinitionEnumerator(Compiler compiler) {
-      this.passUnderTest = new NameBasedDefinitionProvider(compiler, true);
-      this.compiler = compiler;
-    }
-
-    @Override
-    public void process(Node externs, Node root) {
-      passUnderTest.process(externs, root);
-      NodeTraversal.traverseEs6(compiler, externs, this);
-      NodeTraversal.traverseEs6(compiler, root, this);
-
-      for (DefinitionSite defSite : passUnderTest.getDefinitionSites()) {
-        Node node = defSite.node;
-        Definition definition = defSite.definition;
-        StringBuilder sb = new StringBuilder();
-        sb.append("DEF ");
-        sb.append(node.getToken());
-        sb.append(" ");
-        sb.append(node.getQualifiedName());
-        sb.append(" -> ");
-
-        if (definition.isExtern()) {
-          sb.append("EXTERN ");
-        }
-
-        Node rValue = definition.getRValue();
-        if (rValue != null) {
-          sb.append(rValue.getToken());
-        } else {
-          sb.append("<null>");
-        }
-
-        found.add(sb.toString());
+      if (definition.isExtern()) {
+        sb.append("EXTERN ");
       }
 
+      Node rValue = definition.getRValue();
+      if (rValue != null) {
+        sb.append(rValue.getToken());
+      } else {
+        sb.append("<null>");
+      }
+
+      found.add(sb.toString());
     }
 
-    @Override
-    public void visit(NodeTraversal traversal, Node node, Node parent) {
-      if (!node.isName() && !node.isGetProp()) {
-        return;
-      }
-      Collection<Definition> defs =
-          passUnderTest.getDefinitionsReferencedAt(node);
+    for (UseSite useSite : definitionFinder.getNameUseSiteMultimap().values()) {
+      Node node = useSite.node;
+      Collection<Definition> defs = definitionFinder.getDefinitionsReferencedAt(node);
+
       if (defs != null) {
         StringBuilder sb = new StringBuilder();
         sb.append("USE ");
@@ -513,5 +479,31 @@ public final class NameBasedDefinitionProviderTest extends CompilerTestCase {
         found.add(sb.toString());
       }
     }
+  }
+
+  /**
+   * Run DefinitionUseSiteFinder, then gather a set of what's found.
+   */
+  private class DefinitionEnumerator
+      extends AbstractPostOrderCallback implements CompilerPass {
+    private final DefinitionUseSiteFinder passUnderTest;
+    private final Compiler compiler;
+
+    DefinitionEnumerator(Compiler compiler) {
+      this.passUnderTest = new DefinitionUseSiteFinder(compiler);
+      this.compiler = compiler;
+    }
+
+    @Override
+    public void process(Node externs, Node root) {
+      passUnderTest.process(externs, root);
+      NodeTraversal.traverseEs6(compiler, externs, this);
+      NodeTraversal.traverseEs6(compiler, root, this);
+
+      buildFound(passUnderTest, found);
+    }
+
+    @Override
+    public void visit(NodeTraversal traversal, Node node, Node parent) {}
   }
 }
