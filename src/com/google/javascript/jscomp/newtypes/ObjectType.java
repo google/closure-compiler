@@ -528,8 +528,10 @@ final class ObjectType implements TypeWithProperties {
   }
 
   /**
-   * Looks up the property from the property map, falling back on the given
-   * nominal type if it's not in the map.
+   * Looks up the property in the property map, falling back on the given nominal type
+   * if it's not in the map.
+   * Called only when joining two ObjectTypes; that's why it does not deal with namespaces.
+   * @see #join
    */
   private static Property getProp(Map<String, Property> props, NominalType nom, String pname) {
     if (props.containsKey(pname)) {
