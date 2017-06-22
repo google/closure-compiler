@@ -18,20 +18,15 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
-import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * InlineProperties attempts to find references to properties that are known to be constants and
@@ -63,45 +58,18 @@ final class InlineProperties implements CompilerPass {
 
   private final Map<String, PropertyInfo> props = new HashMap<>();
 
-  private final Set<TypeI> invalidatingTypes = new HashSet<>();
+  private final InvalidatingTypes invalidatingTypes;
 
   InlineProperties(AbstractCompiler compiler) {
     this.compiler = compiler;
-    buildInvalidatingTypeSet();
+    this.invalidatingTypes = new InvalidatingTypes.Builder(compiler.getTypeIRegistry())
+        .addTypesInvalidForPropertyRenaming()
+        // NOTE: Mismatches are less important to this pass than to (dis)ambiguate properties.
+        // This pass doesn't remove values (it only inlines them when the type is known), so
+        // it isn't necessary to invalidate due to implicit interface uses.
+        .addAllTypeMismatches(compiler.getTypeMismatches())
+        .build();
     invalidateExternProperties();
-  }
-
-  // TODO(johnlenz): this is a direct copy of the invalidation code
-  // from AmbiguateProperties, if in the end we don't need to modify it
-  // we should move it to a common location.
-  private void buildInvalidatingTypeSet() {
-    TypeIRegistry registry = compiler.getTypeIRegistry();
-    invalidatingTypes.addAll(
-        ImmutableList.of(
-            registry.getNativeType(JSTypeNative.ALL_TYPE),
-            registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
-            registry.getNativeType(JSTypeNative.NO_TYPE),
-            registry.getNativeType(JSTypeNative.NULL_TYPE),
-            registry.getNativeType(JSTypeNative.VOID_TYPE),
-            registry.getNativeType(JSTypeNative.FUNCTION_FUNCTION_TYPE),
-            registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
-            registry.getNativeType(JSTypeNative.FUNCTION_PROTOTYPE),
-            registry.getNativeType(JSTypeNative.GLOBAL_THIS),
-            registry.getNativeType(JSTypeNative.OBJECT_TYPE),
-            registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
-            registry.getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE),
-            registry.getNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE),
-            registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)));
-
-    for (TypeMismatch mis : compiler.getTypeMismatches()) {
-      addInvalidatingType(mis.typeA);
-      addInvalidatingType(mis.typeB);
-    }
-
-    // NOTE: Mismatches are less important to this pass than to disabmiguate/ambiguate
-    // properties. This pass doesn't remove values (it only inlines them when the type
-    // is known), so it isn't necessary to record the invalidation from
-    // "getImplicitInterfaceUses".
   }
 
   private void invalidateExternProperties() {
@@ -109,46 +77,6 @@ final class InlineProperties implements CompilerPass {
     for (String name : compiler.getExternProperties()) {
       props.put(name, INVALIDATED);
     }
-  }
-
-  /** Invalidates the given type, so that no properties on it will be inlined. */
-  private void addInvalidatingType(TypeI type) {
-    type = type.restrictByNotNullOrUndefined();
-    if (type.isUnionType()) {
-      for (TypeI alt : type.getUnionMembers()) {
-        addInvalidatingType(alt);
-      }
-    }
-
-    invalidatingTypes.add(type);
-    ObjectTypeI objType = type.toMaybeObjectType();
-    if (objType != null && objType.isInstanceType()) {
-      invalidatingTypes.add(objType.getPrototypeObject());
-    }
-  }
-
-  /** Returns true if properties on this type should not be inlined. */
-  private boolean isInvalidatingType(TypeI type) {
-    if (type.isUnionType()) {
-      type = type.restrictByNotNullOrUndefined();
-      if (type.isUnionType()) {
-        for (TypeI alt : type.getUnionMembers()) {
-          if (isInvalidatingType(alt)) {
-            return true;
-          }
-        }
-        return false;
-      }
-    }
-    ObjectTypeI objType = type.toMaybeObjectType();
-    return objType == null
-        || invalidatingTypes.contains(objType)
-        || objType.isUnknownObject()
-        || objType.isUnknownType()
-        || objType.isBottom()
-        || objType.isEnumObject()
-        || objType.isBoxableScalar()
-        || !(type.isConstructor() || objType.isInstanceType());
   }
 
   /** This method gets the JSType from the Node argument and verifies that it is present. */
@@ -258,7 +186,7 @@ final class InlineProperties implements CompilerPass {
     private boolean maybeStoreCandidateValue(TypeI type, String propName, Node value) {
       checkNotNull(value);
       if (!props.containsKey(propName)
-          && !isInvalidatingType(type)
+          && !invalidatingTypes.isInvalidating(type)
           && NodeUtil.isImmutableValue(value)
           && NodeUtil.isExecutedExactlyOnce(value)) {
         props.put(propName, new PropertyInfo(type, value));
@@ -300,7 +228,7 @@ final class InlineProperties implements CompilerPass {
     private boolean isMatchingType(Node n, TypeI src) {
       src = src.restrictByNotNullOrUndefined();
       TypeI dest = getTypeI(n).restrictByNotNullOrUndefined();
-      if (!isInvalidatingType(dest)) {
+      if (!invalidatingTypes.isInvalidating(dest)) {
         if (dest.isConstructor() || src.isConstructor()) {
           // Don't inline constructor properties referenced from
           // subclass constructor references. This would be appropriate
