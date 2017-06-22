@@ -182,25 +182,52 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
    * @return true if any modification has been done to the AST
    */
   private boolean tryReplaceArguments(Scope scope) {
-
     Node parametersList = scope.getRootNode().getSecondChild();
     checkState(parametersList.isParamList());
 
     // Keep track of rather this function modified the AST and needs to be
     // reported back to the compiler later.
-    boolean changed = false;
 
     // Number of parameter that can be accessed without using the arguments
     // array.
-    int numNamedParameter = parametersList.getChildCount();
+    int numParameters = parametersList.getChildCount();
 
     // We want to guess what the highest index that has been access from the
     // arguments array. We will guess that it does not use anything index higher
     // than the named parameter list first until we see other wise.
-    int highestIndex = numNamedParameter - 1;
+    int highestIndex = numParameters - 1;
+    highestIndex = getHighestIndex(highestIndex);
+    if (highestIndex < 0) {
+      return false;
+    }
 
-    // Iterate through all the references to arguments array in the function to
-    // determine the real highestIndex.
+    // Number of extra arguments we need.
+    // For example: function() { arguments[3] } access index 3 so
+    // it will need 4 extra named arguments to changed into:
+    // function(a,b,c,d) { d }.
+    int numExtraArgs = highestIndex - numParameters + 1;
+
+    // Temporary holds the new names as string for quick access later.
+    String[] argNames = new String[numExtraArgs];
+
+    boolean changed = false;
+    boolean changedSignature = changeMethodSignature(numExtraArgs, parametersList, argNames);
+    boolean changedBody = changeBody(numParameters, argNames, parametersList);
+    changed = changedSignature;
+    if (changedBody) {
+      changed = changedBody;
+    }
+    return changed;
+  }
+
+  /**
+   * Iterate through all the references to arguments array in the
+   * function to determine the real highestIndex. Returns -1 when we should not
+   * be replacing any arguments for this scope - we should exit tryReplaceArguments
+   *
+   * @param highestIndex highest index that has been accessed from the arguments array
+   */
+  private int getHighestIndex(int highestIndex) {
     for (Node ref : currentArgumentsAccess) {
 
       Node getElem = ref.getParent();
@@ -209,7 +236,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
       // TODO(user): We might not need to bail out all the time, there might
       // be more cases that we can cover.
       if (!getElem.isGetElem() || ref != getElem.getFirstChild()) {
-        return false;
+        return -1;
       }
 
       Node index = ref.getNext();
@@ -221,7 +248,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
         // inference did a 'semi value propagation'. If we know that string
         // is never a subclass of the type of the index. We'd know that
         // it is never 'callee'.
-        return false; // Give up.
+        return -1; // Give up.
       }
 
       Node getElemParent = getElem.getParent();
@@ -231,7 +258,7 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
           getElemParent.getFirstChild() == getElem) {
         // TODO(user): We can consider using .call() if aliasing that
         // argument allows shorter alias for other arguments.
-        return false;
+        return -1;
       }
 
       // Replace the highest index if we see an access that has a higher index
@@ -241,18 +268,21 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
         highestIndex = value;
       }
     }
+    return highestIndex;
+  }
 
-    // Number of extra arguments we need.
-    // For example: function() { arguments[3] } access index 3 so
-    // it will need 4 extra named arguments to changed into:
-    // function(a,b,c,d) { d }.
-    int numExtraArgs = highestIndex - numNamedParameter + 1;
+  /**
+   * Insert the formal parameter to the method's signature. Example: function() -->
+   * function(r0, r1, r2)
+   *
+   * @param numExtraArgs num extra method parameters needed to replace all the arguments[i]
+   * @param parametersList node representing the function signature
+   * @param argNames holds the replacement names in a String array
+   */
+  private boolean changeMethodSignature(int numExtraArgs, Node parametersList, String[] argNames) {
 
-    // Temporary holds the new names as string for quick access later.
-    String[] argNames = new String[numExtraArgs];
+    boolean changed = false;
 
-    // Insert the formal parameter to the method's signature.
-    // Example: function() --> function(r0, r1, r2)
     for (int i = 0; i < numExtraArgs; i++) {
       String name = getNewName();
       argNames[i] = name;
@@ -260,8 +290,14 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
           IR.name(name).useSourceInfoIfMissingFrom(parametersList));
       changed = true;
     }
+    return changed;
+  }
 
-    // This loop performs the replacement of arguments[x] -> a if x is known.
+  /**
+   * Performs the replacement of arguments[x] -> a if x is known.
+   */
+  private boolean changeBody(int numNamedParameter, String[] argNames, Node parametersList) {
+    boolean changed = false;
     for (Node ref : currentArgumentsAccess) {
       Node index = ref.getNext();
 
@@ -292,7 +328,6 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
       }
       changed = true;
     }
-
     return changed;
   }
 
