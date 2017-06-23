@@ -474,8 +474,7 @@ PolymerElement.prototype.linkPaths = function(to, from) {}
  */
 PolymerElement.prototype.unlinkPaths = function(path) {}
 
-/** @const */
-Polymer.Base = {};
+Polymer.Base;
 
 /**
  * Used by the promise-polyfill on its own.
@@ -522,8 +521,7 @@ Polymer.Base.getPropertyInfo = function(property) {};
  */
 Polymer.Base.mixin = function(target, source) {};
 
-/** @const */
-Polymer.Gestures = {};
+Polymer.Gestures;
 
 /**
  * Gets the original target of the given event.
@@ -931,8 +929,7 @@ PolymerEventApi.prototype.path;
 PolymerEventApi.prototype.event;
 
 
-/** @const */
-Polymer.Async = {};
+Polymer.Async;
 
 /**
  * @param {function()} callback
@@ -991,8 +988,7 @@ Polymer.dom.addDebouncer = function(debouncer) {};
 Polymer.isInstance = function(object) {};
 
 
-/** @const */
-Polymer.CaseMap = {};
+Polymer.CaseMap;
 
 /**
  * Convert a string from dash to camel-case.
@@ -1079,9 +1075,8 @@ Polymer.Collection.applySplices = function(userArray, splices) {};
 /**
  * Settings pulled from
  * https://github.com/Polymer/polymer/blob/master/src/lib/settings.html
- * @const
  */
-Polymer.Settings = {};
+Polymer.Settings;
 
 /** @type {boolean} */
 Polymer.Settings.wantShadow;
@@ -1404,8 +1399,7 @@ Polymer.ResolveUrl.resolveAttrs = function(element, ownerDocument) {}
  */
 Polymer.ResolveUrl.resolveUrl = function(url, baseURI) {}
 
-/** @const */
-Polymer.RenderStatus = {};
+Polymer.RenderStatus;
 
 /**
  * Makes callback when first render occurs or immediately if render has occured.
@@ -1425,7 +1419,7 @@ Polymer.RenderStatus.afterNextRender = function(element, fn, args) {}
 
 /**
  * Static analysis for Polymer.
- * @const
+ * @type {!Object}
  */
 var hydrolysis = {};
 
@@ -1451,9 +1445,9 @@ hydrolysis.Analyzer.analyze = function(href, opt_options) {};
 /**
  * Contains information useful for debugging. Should not be used in production
  * code and the API may change on short notice.
- * @const
+ * @type {!Object}
  */
-Polymer.telemetry = {};
+Polymer.telemetry;
 
 /**
  * Number of elements instantiated so far.
@@ -1468,8 +1462,7 @@ Polymer.telemetry.instanceCount;
  */
 Polymer.telemetry.registrations;
 
-/** @const */
-Polymer.AppLayout = {};
+Polymer.AppLayout;
 
 /** @constructor */
 Polymer.AppLayout.LocalDomWithBackground = function(){};
