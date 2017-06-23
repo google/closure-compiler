@@ -500,6 +500,7 @@ public final class NodeUtilTest extends TestCase {
 
     assertSideEffect(false, "Math.random();");
     assertSideEffect(true, "Math.random(seed);");
+    assertSideEffect(false, "[1, 1].foo;");
   }
 
   public void testObjectMethodSideEffects() {

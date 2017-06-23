@@ -4348,8 +4348,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  return f(8);",
             "}",
             "alert(foo());"),
-        "alert(function(c){for(var b=[],a=0;a<arguments.a;++a)b[a-0]"
-            + "=arguments[a];return b[0]}(8))");
+        "alert(function(c){for(var b=[],a=0;a<arguments.length;++a)"
+            + "b[a-0]=arguments[a];return b[0]}(8))");
   }
 
   // TODO(bellashim): Add a non-transpiling version of this test when InlineFunctions
@@ -4368,6 +4368,29 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}",
             "alert(foo(3, {foo: 9}));"),
         "var a={a:9}; a=void 0===a?{a:5}:a;alert(3+a.a)");
+  }
+
+  // TODO(bellashim): Add a non-transpiling version of this test when InlineFunctions
+  // can run in that mode.
+  public void testRestObjectPatternParameters() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    externs = DEFAULT_EXTERNS;
+
+    test(
+        options,
+        LINE_JOINER.join(
+            "function countArgs(x, ...{length}) {",
+            "  return length;",
+            "}",
+            "alert(countArgs(1, 1, 1, 1, 1));"),
+        "alert(function (c,d) {"
+            + "  for(var b=[], a=1; a < arguments.length; ++a)"
+            + "    b[a-1] = arguments[a];"
+            + "    return b.length "
+            + "}(1,1,1,1,1))");
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */

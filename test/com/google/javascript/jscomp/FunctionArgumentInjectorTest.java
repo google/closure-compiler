@@ -460,12 +460,11 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         "function foo(x, ...args) {return args;} foo(1, 2);", "foo", ImmutableSet.of("args"));
   }
 
-  //TODO:@BellaShim get this test to pass
-  public void disabled_testMaybeAddTempsForCallArgumentsObjectLit2() {
+  public void testMaybeAddTempsForCallArgumentsObjectLit1() {
     testNeededTemps(
-        "function foo(x, ...{length}) {return length;} foo(1, 1, 1);",
+        "function foo(x, ...{length: length}) {return length;} foo(1, 1, 1);",
         "foo",
-        ImmutableSet.of("length"));
+        EMPTY_STRING_SET);
   }
 
   public void testArgMapWithDefaultParam1() {
@@ -570,9 +569,11 @@ public final class FunctionArgumentInjectorTest extends TestCase {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(ECMASCRIPT_2017);
+
     compiler.initOptions(options);
     Node n = compiler.parseTestCode(js);
     assertEquals(0, compiler.getErrorCount());
     return n;
   }
 }
+

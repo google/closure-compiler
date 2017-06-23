@@ -2589,8 +2589,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "[{bar: 8}][0].bar");
   }
 
-  //TODO(bellashim):Make the test below pass
-  public void disabled_testRestParam1() {
+  public void testRestObjectPattern1() {
     test(
         LINE_JOINER.join(
             "function countArgs(...{length}) {",
@@ -2598,6 +2597,42 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "}",
             "countArgs(1, 1, 1, 1, 1);"),
         "[1, 1, 1, 1, 1].length;");
+  }
+
+  public void testRestObjectPattern2() {
+    test(
+        LINE_JOINER.join(
+            "function countArgs(x, ...{length}) {",
+            "  return length;",
+            "}",
+            "countArgs(1, 1, 1, 1, 1);"),
+        "[1, 1, 1, 1].length;");
+  }
+
+  public void testRestObjectPattern3() {
+    test(
+        LINE_JOINER.join(
+            "function countArgs(x, ...{length: length}) {",
+            "  return length;",
+            "}",
+            "countArgs(1, 1, 1, 1, 1);"),
+        "[1, 1, 1, 1].length;");
+  }
+
+  public void testRestObjectPattern4() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(...{3: x}) { ",
+            "  return x; ",
+            "}",
+            "f(null,null,null,3,null);"));
+  }
+
+  public void testRestObjectPattern5() {
+    test(
+        LINE_JOINER.join(
+            "function f(...{x: y}) { ", "  return y; ", "} ", "f(null,null,null,3,null);"),
+        "[null,null,null,3,null].x");
   }
 
   public void testDefaultParam1() {

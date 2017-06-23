@@ -19,6 +19,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
 import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.FunctionInjector.CanInlineResult;
 import com.google.javascript.jscomp.FunctionInjector.InliningMode;
@@ -317,11 +319,16 @@ class InlineFunctions implements CompilerPass {
             functionState.setInline(false);
           }
         }
+
       }
 
       // Check if block inlining is allowed.
       if (functionState.canInline() && !functionState.canInlineDirectly()
           && !blockFunctionInliningEnabled) {
+        functionState.setInline(false);
+      }
+
+      if (hasParamWithNumberObjectLit(fnNode)) {
         functionState.setInline(false);
       }
     }
@@ -693,6 +700,30 @@ class InlineFunctions implements CompilerPass {
     for (FunctionState functionState : fns.values()) {
       resolveInlineConflictsForFunction(functionState);
     }
+  }
+
+  /**
+   * @return whether the function has a param with an OBJECT_PATTERN STRING_KEY that is a number.
+   *     Prevents such functions from being inlined.
+   */
+  private static boolean hasParamWithNumberObjectLit(Node fnNode) {
+    Predicate<Node> hasParamWithNumberObjectLitPredicate =
+        new Predicate<Node>() {
+          @Override
+          public boolean apply(Node input) {
+            if (input.isObjectPattern()) {
+              for (char c : input.getFirstChild().getString().toCharArray()) {
+                if (Character.isDigit(c)) {
+                  return true;
+                }
+              }
+            }
+            return false;
+          }
+        };
+
+    return NodeUtil.has(fnNode, hasParamWithNumberObjectLitPredicate,
+        Predicates.<Node>alwaysTrue());
   }
 
   /** @see #resolveInlineConflicts */

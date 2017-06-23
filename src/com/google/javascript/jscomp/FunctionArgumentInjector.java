@@ -139,7 +139,14 @@ class FunctionArgumentInjector {
             array.addChildToBack(cArg.cloneTree());
             cArg = cArg.getNext();
           }
-          argMap.put(fnParam.getFirstChild().getString(), array);
+          if (fnParam.getFirstChild().isObjectPattern()) {
+            Node prop = IR.string(fnParam.getFirstFirstChild().getString());
+            Node getProp = IR.getprop(array, prop);
+            getProp.useSourceInfoIfMissingFromForTree(array);
+            argMap.put(fnParam.getFirstFirstChild().getFirstChild().getString(), getProp);
+          } else {
+            argMap.put(fnParam.getFirstChild().getString(), array);
+          }
           return argMap;
         } else if (fnParam.isDefaultValue()) {
           argMap.put(fnParam.getFirstChild().getString(), cArg);
@@ -326,7 +333,15 @@ class FunctionArgumentInjector {
         //   x( [] );
         //
         //   The parameter in the call to foo should not become "[]".
-        safe = false;
+        if (cArg.isGetProp()) {
+          if (!NodeUtil.mayHaveSideEffects(cArg)) {
+            safe = true;
+          } else {
+            safe = false;
+          }
+        } else {
+          safe = false;
+        }
       } else if (argSideEffects) {
         // Even if there are no references, we still need to evaluate the
         // expression if it has side-effects.
