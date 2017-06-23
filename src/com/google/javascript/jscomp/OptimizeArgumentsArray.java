@@ -126,6 +126,8 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
     Node function = traversal.getScopeRoot();
     if (!function.isFunction()) {
       return;
+    } else if (function.isArrowFunction()) {
+      return;
     }
 
     // Attempt to replace the argument access and if the AST has been change,
@@ -251,11 +253,15 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
         return -1; // Give up.
       }
 
+      //We want to bail out if someone tries to access arguments[0.5] for example
+      if (index.getDouble() != Math.floor(index.getDouble())){
+        return -1;
+      }
+
       Node getElemParent = getElem.getParent();
       // When we have argument[0](), replacing it with a() is semantically
       // different if argument[0] is a function call that refers to 'this'
-      if (getElemParent.isCall() &&
-          getElemParent.getFirstChild() == getElem) {
+      if (getElemParent.isCall() && getElemParent.getFirstChild() == getElem) {
         // TODO(user): We can consider using .call() if aliasing that
         // argument allows shorter alias for other arguments.
         return -1;
@@ -298,36 +304,63 @@ class OptimizeArgumentsArray implements CompilerPass, ScopedCallback {
    */
   private boolean changeBody(int numNamedParameter, String[] argNames, Node parametersList) {
     boolean changed = false;
-    for (Node ref : currentArgumentsAccess) {
-      Node index = ref.getNext();
+    boolean nextArguments = true;
 
-      // Skip if it is unknown.
-      if (!index.isNumber()) {
-        continue;
-      }
-      int value = (int) index.getDouble();
+    while (nextArguments) {
 
-      // Unnamed parameter.
-      if (value >= numNamedParameter) {
-        ref.getGrandparent().replaceChild(ref.getParent(),
-            IR.name(argNames[value - numNamedParameter]));
-      } else {
+      nextArguments = false;
 
-        // Here, for no apparent reason, the user is accessing a named parameter
-        // with arguments[idx]. We can replace it with the actual name for them.
-        Node name = parametersList.getFirstChild();
-
-        // This is a linear search for the actual name from the signature.
-        // It is not necessary to make this fast because chances are the user
-        // will not deliberately write code like this.
-        for (int i = 0; i < value; i++) {
-          name = name.getNext();
+      for (Node ref : currentArgumentsAccess) {
+        if (NodeUtil.getEnclosingFunction(ref).isArrowFunction()) {
+          nextArguments = true;
         }
-        ref.getGrandparent().replaceChild(ref.getParent(),
-            IR.name(name.getString()));
+
+        Node index = ref.getNext();
+        Node grandParent = ref.getGrandparent();
+        Node parent = ref.getParent();
+
+        // Skip if it is unknown.
+        if (!index.isNumber()) {
+          continue;
+        }
+        int value = (int) index.getDouble();
+
+        // Unnamed parameter.
+        if (value >= numNamedParameter) {
+          grandParent.replaceChild(parent, IR.name(argNames[value - numNamedParameter]));
+          compiler.reportChangeToEnclosingScope(grandParent);
+        } else {
+
+          // Here, for no apparent reason, the user is accessing a named parameter
+          // with arguments[idx]. We can replace it with the actual name for them.
+          Node name = parametersList.getFirstChild();
+
+          // This is a linear search for the actual name from the signature.
+          // It is not necessary to make this fast because chances are the user
+          // will not deliberately write code like this.
+          for (int i = 0; i < value; i++) {
+            name = parametersList.getChildAtIndex(value);
+          }
+          grandParent.replaceChild(parent, IR.name(name.getString()));
+          compiler.reportChangeToEnclosingScope(grandParent);
+        }
+        changed = true;
       }
-      changed = true;
+
+      if (nextArguments) {
+        // After the attempt to replace the arguments. The currentArgumentsAccess
+        // is stale and as we exit the Scope, no longer holds all the access to the
+        // current scope anymore. We'll pop the access list from the outer scope
+        // and set it as currentArgumentsAccess if the outer scope is not the global
+        // scope.
+        if (!argumentsAccessStack.isEmpty()) {
+          currentArgumentsAccess = argumentsAccessStack.pop();
+        } else {
+          currentArgumentsAccess = null;
+        }
+      }
     }
+
     return changed;
   }
 
