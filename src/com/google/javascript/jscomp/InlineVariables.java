@@ -584,10 +584,6 @@ class InlineVariables implements CompilerPass {
         }
       }
 
-      if (isRefTemplateLiteral(reference)) {
-        return false;
-      }
-
       return canMoveAggressively(value) ||
           canMoveModerately(initialization, reference);
     }
@@ -729,19 +725,11 @@ class InlineVariables implements CompilerPass {
 
       for (int i = startingReadRef; i < refSet.size(); i++) {
         Reference ref = refSet.get(i);
-        if (!isValidReference(ref) || isRefTemplateLiteral(ref)) {
+        if (!isValidReference(ref)) {
           return false;
         }
       }
       return true;
     }
-
-    private boolean isRefTemplateLiteral(Reference ref) {
-      if (ref.getParent().isTemplateLitSub()) {
-        return true;
-      }
-      return false;
-    }
-
   }
 }

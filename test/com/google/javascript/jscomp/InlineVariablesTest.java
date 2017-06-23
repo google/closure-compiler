@@ -1411,12 +1411,14 @@ public final class InlineVariablesTest extends CompilerTestCase {
   }
 
   public void testTemplateStrings() {
-    testSame(" var name = 'Foo'; `Hello ${name}`");
+    test(" var name = 'Foo'; `Hello ${name}`",
+        "`Hello ${'Foo'}`");
 
     test(" var name = 'Foo'; var foo = name; `Hello ${foo}`",
-        " var foo = 'Foo'; `Hello ${foo}`");
+        " `Hello ${'Foo'}`");
 
-    testSame(" var age = 3; `Age: ${age}`");
+    test(" var age = 3; `Age: ${age}`",
+        "`Age: ${3}`");
   }
 
   public void testTaggedTemplateLiterals() {
@@ -1434,7 +1436,6 @@ public final class InlineVariablesTest extends CompilerTestCase {
             "var output = myTag`My name is ${name} ${3}`;"
         ),
         LINE_JOINER.join(
-            "var name = 'Foo';",
             "var output = function myTag(strings, nameExp, numExp) {",
             "  var modStr;",
             "  if (numExp > 2) {",
@@ -1442,9 +1443,9 @@ public final class InlineVariablesTest extends CompilerTestCase {
             "  } else { ",
             "    modStr = nameExp + 'BarBar'",
             "  }",
-            "}`My name is ${name} ${3}`;"));
+            "}`My name is ${'Foo'} ${3}`;"));
 
-    testSame(
+    test(
         LINE_JOINER.join(
             "var name = 'Foo';",
             "function myTag(strings, nameExp, numExp) {",
@@ -1456,7 +1457,18 @@ public final class InlineVariablesTest extends CompilerTestCase {
             "  }",
             "}",
             "var output = myTag`My name is ${name} ${3}`;",
-            "output = myTag`My name is ${name} ${2}`;"));
+            "output = myTag`My name is ${name} ${2}`;"),
+        LINE_JOINER.join(
+            "function myTag(strings, nameExp, numExp) {",
+            "  var modStr;",
+            "  if (numExp > 2) {",
+            "    modStr = nameExp + 'Bar'",
+            "  } else { ",
+            "    modStr = nameExp + 'BarBar'",
+            "  }",
+            "}",
+            "var output = myTag`My name is ${'Foo'} ${3}`;",
+            "output = myTag`My name is ${'Foo'} ${2}`;"));
   }
 
   public void testDestructuring() {
