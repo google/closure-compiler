@@ -92,8 +92,8 @@ ObjectPropertyDescriptor.prototype.configurable;
 
 
 /**
- * @param {Object} proto
- * @param {Object=} opt_properties  A map of ObjectPropertyDescriptors.
+ * @param {?Object} proto
+ * @param {?Object=} opt_properties  A map of ObjectPropertyDescriptors.
  * @return {!Object}
  * @nosideeffects
  * @see https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/create
