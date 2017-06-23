@@ -88,7 +88,7 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
   @Nullable
   private Node googScopeBlock;
 
-  static final DiagnosticType MISSING_REQUIRE_WARNING =
+  public static final DiagnosticType MISSING_REQUIRE_WARNING =
       DiagnosticType.disabled(
           "JSC_MISSING_REQUIRE_WARNING", "missing require: ''{0}''");
   static final DiagnosticType MISSING_REQUIRE_FOR_GOOG_SCOPE =
@@ -96,7 +96,7 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
           "JSC_MISSING_REQUIRE_FOR_GOOG_SCOPE", "missing require: ''{0}''");
 
   // TODO(tbreisacher): Remove this and just use MISSING_REQUIRE_WARNING.
-  static final DiagnosticType MISSING_REQUIRE_STRICT_WARNING =
+  public static final DiagnosticType MISSING_REQUIRE_STRICT_WARNING =
       DiagnosticType.disabled("JSC_MISSING_REQUIRE_STRICT_WARNING", "missing require: ''{0}''");
 
   public static final DiagnosticType EXTRA_REQUIRE_WARNING = DiagnosticType.disabled(

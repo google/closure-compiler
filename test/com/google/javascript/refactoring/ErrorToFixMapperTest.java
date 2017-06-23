@@ -1131,6 +1131,57 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testShortRequireInGoogModule4() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var object = goog.require('goog.object');",
+            "",
+            "alert(goog.object.values({x:1}));"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var object = goog.require('goog.object');",
+            "",
+            "alert(object.values({x:1}));"));
+  }
+
+  @Test
+  public void testShortRequireInGoogModule5() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var Widget = goog.require('goog.Widget');",
+            "",
+            "alert(new goog.Widget());"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var Widget = goog.require('goog.Widget');",
+            "",
+            "alert(new Widget());"));
+  }
+
+  @Test
+  public void testShortRequireInGoogModule6() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var GoogWidget = goog.require('goog.Widget');",
+            "",
+            "alert(new goog.Widget());"),
+        LINE_JOINER.join(
+            "goog.module('m');",
+            "",
+            "var GoogWidget = goog.require('goog.Widget');",
+            "",
+            "alert(new GoogWidget());"));
+  }
+
+  @Test
   public void testProvidesSorted1() {
     assertChanges(
         LINE_JOINER.join(
