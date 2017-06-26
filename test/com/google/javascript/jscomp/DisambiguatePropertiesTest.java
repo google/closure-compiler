@@ -399,13 +399,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "B.a = 0;\n"
         + "/** @constructor */ function Baz() {}\n"
         + "Baz.prototype.a = 0;\n";
-
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, "{a=[[Bar.prototype, Foo.prototype], [Baz.prototype]]}");
-
-    // NTI knows that B has type Bar
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testSets(js, "{a=[[Bar.prototype], [Baz.prototype], [Foo.prototype]]}");
   }
 
   public void testUnionType_2() {

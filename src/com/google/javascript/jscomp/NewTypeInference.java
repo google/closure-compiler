@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -915,7 +916,7 @@ final class NewTypeInference implements CompilerPass {
             inEnv = outEnv;
           } else {
             JSType declRetType = this.currentScope.getDeclaredFunctionType().getReturnType();
-            declRetType = declRetType == null ? UNKNOWN : declRetType;
+            declRetType = firstNonNull(declRetType, UNKNOWN);
             inEnv = analyzeExprBwd(retExp, outEnv, declRetType).env;
           }
           break;
@@ -1083,9 +1084,8 @@ final class NewTypeInference implements CompilerPass {
           if (NodeUtil.isTypedefDecl(n)) {
             break;
           }
-          for (Node nameNode = n.getFirstChild(); nameNode != null;
-               nameNode = nameNode.getNext()) {
-            outEnv = processVarDeclaration(nameNode, outEnv);
+          for (Node nameNode : n.children()) {
+            outEnv = processVarDeclFwd(nameNode, outEnv);
           }
           break;
         case SWITCH:
@@ -1369,8 +1369,11 @@ final class NewTypeInference implements CompilerPass {
     return false;
   }
 
-  /** Processes a single variable declaration in a VAR statement. */
-  private TypeEnv processVarDeclaration(Node nameNode, TypeEnv inEnv) {
+  /**
+   * This method processes a single variable declaration in a VAR statement, in the forward
+   * phase of the analysis.
+   */
+  private TypeEnv processVarDeclFwd(Node nameNode, TypeEnv inEnv) {
     String varName = nameNode.getString();
     JSType declType = this.currentScope.getDeclaredTypeOf(varName);
 
@@ -1387,31 +1390,35 @@ final class NewTypeInference implements CompilerPass {
       maybeSetTypeI(nameNode, declType);
       return envPutType(inEnv, varName, declType);
     }
+
     TypeEnv outEnv = inEnv;
-    JSType rhsType;
-    if (rhs == null) {
-      rhsType = UNDEFINED;
-    } else {
-      EnvTypePair pair = analyzeExprFwd(rhs, inEnv, declType != null ? declType : UNKNOWN);
+    JSType rhsType = null;
+    if (rhs != null) {
+      EnvTypePair pair = analyzeExprFwd(rhs, inEnv, firstNonNull(declType, UNKNOWN));
       outEnv = pair.env;
       rhsType = pair.type;
-    }
-    if (declType != null && rhs != null) {
-      if (!rhsType.isSubtypeOf(declType)) {
-        registerMismatchAndWarn(
-            JSError.make(rhs, MISTYPED_ASSIGN_RHS, errorMsgWithTypeDiff(declType, rhsType)),
-            rhsType, declType);
-        // Don't flow the wrong initialization
-        rhsType = declType;
-      } else {
-        registerImplicitUses(rhs, rhsType, declType);
-        // We do this to preserve type attributes like declaredness of
-        // a property
-        rhsType = declType.specialize(rhsType);
+      if (declType != null) {
+        if (rhsType.isSubtypeOf(declType)) {
+          registerImplicitUses(rhs, rhsType, declType);
+        } else {
+          registerMismatchAndWarn(
+              JSError.make(rhs, MISTYPED_ASSIGN_RHS, errorMsgWithTypeDiff(declType, rhsType)),
+              rhsType, declType);
+        }
       }
     }
-    maybeSetTypeI(nameNode, rhsType);
-    return envPutType(outEnv, varName, rhsType);
+    JSType varType = rhsType;
+    if (rhs == null) {
+      varType = UNDEFINED;
+    } else if (declType != null) {
+      // If the declared type comes from a @const that was inferred during GTI, don't use here.
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(nameNode);
+      if (jsdoc != null && (!jsdoc.hasConstAnnotation() || jsdoc.hasType())) {
+        varType = declType;
+      }
+    }
+    maybeSetTypeI(nameNode, varType);
+    return envPutType(outEnv, varName, varType);
   }
 
   private EnvTypePair analyzeExprFwd(Node expr, TypeEnv inEnv) {
@@ -3282,7 +3289,7 @@ final class NewTypeInference implements CompilerPass {
   // you want to pass around the result type and it has to be non-null.
   private JSType getIndexedTypeOrUnknown(JSType t) {
     JSType tmp = t.getIndexedType();
-    return tmp == null ? UNKNOWN : tmp;
+    return firstNonNull(tmp, UNKNOWN);
   }
 
   private EnvTypePair analyzePropAccessFwd(Node receiver, String pname,
@@ -3350,7 +3357,7 @@ final class NewTypeInference implements CompilerPass {
     if (this.convention.isSuperClassReference(pname)) {
       if (ft != null && ft.isUniqueConstructor()) {
         JSType result = ft.getSuperPrototype();
-        pair.type = result != null ? result : UNDEFINED;
+        pair.type = firstNonNull(result, UNDEFINED);
         return pair;
       }
     }
@@ -3727,7 +3734,7 @@ final class NewTypeInference implements CompilerPass {
       // unintuitive warnings.
       // It's a trade-off.
       JSType declType = this.currentScope.getDeclaredTypeOf(varName);
-      preciseType = declType == null ? requiredType : declType;
+      preciseType = firstNonNull(declType, requiredType);
     }
     return EnvTypePair.addBinding(outEnv, varName, preciseType);
   }
@@ -4453,8 +4460,7 @@ final class NewTypeInference implements CompilerPass {
         String name = expr.getQualifiedName();
         JSType declType = this.currentScope.getDeclaredTypeOf(name);
         if (doSlicing) {
-          pair.env = envPutType(pair.env, name,
-              declType != null ? declType : UNKNOWN);
+          pair.env = envPutType(pair.env, name, firstNonNull(declType, UNKNOWN));
         }
         return new LValueResultBwd(pair.env, pair.type,
             pair.type.hasNonScalar() ? new QualifiedName(name) : null);

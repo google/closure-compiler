@@ -2433,10 +2433,21 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
-  public void testInferPreciseTypeWithDeclaredUnknown() {
+  public void testDeclaredVersusInferredTypeForVar() {
+    typeCheck("var /** ? */ x = 'str'; x - 123;");
+
     typeCheck(
-        "var /** ? */ x = 'str'; x - 123;",
+        "var /** ? */ x; x - 123;",
         NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** number|undefined */ x) {",
+        "  if (x !== undefined) {",
+        "    /** @const */",
+        "    var c = x;",
+        "    return c - 5;",
+        "  }",
+        "}"));
   }
 
   public void testSimpleLooseObjects() {
@@ -7502,9 +7513,9 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function Foo() {}",
         "/** @param {T} x */",
         "Foo.prototype.method = function(x) {};",
-        "var /** @type {Foo<string>} */ foo = null;",
+        "var /** @type {?Foo<string>} */ foo = null;",
         "foo.method('asdf');"),
-        NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT);
+        NewTypeInference.NULLABLE_DEREFERENCE);
   }
 
   public void testLooserCheckingForInferredProperties() {
@@ -8272,7 +8283,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
 
   public void testDeclaredGenericArrayTypes() {
     typeCheck(LINE_JOINER.join(
-        "/** @type {Array<string>} */",
+        "/** @type {!Array<string>} */",
         "var arr = ['str'];",
         "arr[0]++;"),
         NewTypeInference.INVALID_OPERAND_TYPE);
@@ -8308,13 +8319,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
 
     // We warn here even though the declared type of the lvalue includes null.
     typeCheck(LINE_JOINER.join(
-        "/** @type {Array<number>} */",
-        "var arr = [1, 2, 3];",
-        "arr[0] = 'str';"),
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
-
-    typeCheck(LINE_JOINER.join(
-        "function f(/** Array<number> */ arr) {",
+        "function f(/** ?Array<number> */ arr) {",
         "  arr[0] = 'str';",
         "}"),
         NewTypeInference.NULLABLE_DEREFERENCE,
@@ -8337,7 +8342,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "arr[0] = new Super;"));
 
     typeCheck(LINE_JOINER.join(
-        "/** @type {Array<number>} */ var arr = [];",
+        "/** @type {!Array<number>} */ var arr = [];",
         "arr[0] = 'str';"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
@@ -16879,7 +16884,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"));
 
     typeCheck(LINE_JOINER.join(
-        "/** @type {!Array<number>|number} */",
+        "/** @type {!Array<number>} */",
         "var x = [1,2,3];",
         "x[0] = 'asdf';"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
@@ -18279,7 +18284,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " * @extends {Bar}",
         " */",
         "function Foo() {};",
-        "/** @type {Foo} */",
+        "/** @type {!Foo} */",
         "var foo = new Foo();",
         "/** @type {number} */",
         "foo.CONST = 0;"),
