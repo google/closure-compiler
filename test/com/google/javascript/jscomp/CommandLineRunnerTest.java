@@ -1831,7 +1831,8 @@ public final class CommandLineRunnerTest extends TestCase {
               "/** @constructor */ var module$foo = function(){};",
               "module$foo.prototype.bar=function(){console.log(\"bar\")};"),
           LINE_JOINER.join(
-              "var baz$$module$app = new module$foo();", "console.log(baz$$module$app.bar());")
+              "var module$app = {}, baz$$module$app = new module$foo();",
+              "console.log(baz$$module$app.bar());")
         });
   }
 
@@ -1851,7 +1852,33 @@ public final class CommandLineRunnerTest extends TestCase {
               "/** @const */ var module$foo={};",
               "function foo$$module$foo(){ alert('foo'); }",
               "foo$$module$foo();"),
-          "'use strict';"
+          "var module$app = {};"
+        });
+  }
+
+  public void testES6ImportOfFileWithImportsButNoExports() {
+    args.add("--dependency_mode=STRICT");
+    args.add("--entry_point='./app.js'");
+    args.add("--language_in=ECMASCRIPT6");
+    setFilename(0, "message.js");
+    setFilename(1, "foo.js");
+    setFilename(2, "app.js");
+    test(
+        new String[] {
+          "export default 'message';",
+          "import message from './message.js';\n  function foo() { alert(message); }\n  foo();",
+          "import './foo.js';"
+        },
+        new String[] {
+          CompilerTestCase.LINE_JOINER.join(
+              "/** @const */ var module$message={},",
+              "  $jscompDefaultExport$$module$message = 'message';",
+              "module$message.default = $jscompDefaultExport$$module$message;"),
+          CompilerTestCase.LINE_JOINER.join(
+              "/** @const */ var module$foo={};",
+              "function foo$$module$foo(){ alert(module$message.default); }",
+              "foo$$module$foo();"),
+          "var module$app = {};"
         });
   }
 

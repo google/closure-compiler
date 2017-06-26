@@ -80,8 +80,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   private Set<String> alreadyRequired;
 
-  private boolean forceRewrite;
-
   private Node googRequireInsertSpot;
 
   /**
@@ -158,7 +156,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     this.classes = new HashSet<>();
     this.typedefs = new HashSet<>();
     this.alreadyRequired = new HashSet<>();
-    this.forceRewrite = true;
     this.googRequireInsertSpot = null;
   }
 
@@ -202,10 +199,8 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     if (n.isImport()) {
-      forceRewrite = false;
       visitImport(t, n, parent);
     } else if (n.isExport()) {
-      forceRewrite = false;
       visitExport(t, n, parent);
     } else if (n.isScript()) {
       scriptNodeCount++;
@@ -472,14 +467,12 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     // Rename vars to not conflict in global scope.
     NodeTraversal.traverseEs6(compiler, script, new RenameGlobalVars(moduleName));
 
-    if (!exportMap.isEmpty() || forceRewrite) {
-      // Add goog.provide call.
-      Node googProvide = IR.exprResult(
-          IR.call(NodeUtil.newQName(compiler, "goog.provide"),
-              IR.string(moduleName)));
-      script.addChildToFront(googProvide.useSourceInfoIfMissingFromForTree(script));
-      t.getInput().addProvide(moduleName);
-    }
+    // Add goog.provide call.
+    Node googProvide = IR.exprResult(
+        IR.call(NodeUtil.newQName(compiler, "goog.provide"),
+            IR.string(moduleName)));
+    script.addChildToFront(googProvide.useSourceInfoIfMissingFromForTree(script));
+    t.getInput().addProvide(moduleName);
 
     JSDocInfoBuilder jsDocInfo = script.getJSDocInfo() == null
         ? new JSDocInfoBuilder(false)

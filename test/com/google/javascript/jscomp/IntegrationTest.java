@@ -679,7 +679,7 @@ public final class IntegrationTest extends IntegrationTestCase {
           "import {x} from './i1'; alert(x);", "export var x = 5;",
         },
         new String[] {
-          "goog.require('module$i1'); alert(module$i1.x);",
+          "goog.provide('module$i0'); goog.require('module$i1'); alert(module$i1.x);",
           "goog.provide('module$i1'); var x$$module$i1 = 5; module$i1.x = x$$module$i1;",
         });
   }

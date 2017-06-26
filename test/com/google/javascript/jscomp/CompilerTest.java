@@ -1160,18 +1160,18 @@ public final class CompilerTest extends TestCase {
   }
 
   public void testEs6ModulePathWithOddCharacters() throws Exception {
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode(
-            "/index[0].js", "import foo from './foo'; foo('hello');"),
-        SourceFile.fromCode("/foo.js",
-            "export default (foo) => { alert(foo); }"));
+    // Note that this is not yet compatible with transpilation, since the generated goog.provide
+    // statements are not valid identifiers.
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("/index[0].js", "import foo from './foo'; foo('hello');"),
+            SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
 
     List<ModuleIdentifier> entryPoints = ImmutableList.of(
-        ModuleIdentifier.forFile("/index[0]"));
+        ModuleIdentifier.forFile("/index[0].js"));
 
     CompilerOptions options = createNewFlagBasedOptions();
-    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
-    options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+    options.setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
     options.dependencyOptions.setDependencyPruning(true);
     options.dependencyOptions.setDependencySorting(true);
     options.dependencyOptions.setEntryPoints(entryPoints);
