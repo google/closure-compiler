@@ -109,37 +109,6 @@ public final class DefaultPassConfig extends PassConfig {
   private ClosureRewriteModule.GlobalRewriteState moduleRewriteState = null;
 
   /**
-   * Ids for cross-module method stubbing, so that each method has
-   * a unique id.
-   */
-  private CrossModuleMethodMotion.IdGenerator crossModuleIdGenerator =
-      new CrossModuleMethodMotion.IdGenerator();
-
-  /**
-   * Keys are arguments passed to getCssName() found during compilation; values
-   * are the number of times the key appeared as an argument to getCssName().
-   */
-  private Map<String, Integer> cssNames = null;
-
-  /** The variable renaming map */
-  private VariableMap variableMap = null;
-
-  /** The property renaming map */
-  private VariableMap propertyMap = null;
-
-  /** The naming map for anonymous functions */
-  private VariableMap anonymousFunctionNameMap = null;
-
-  /** Fully qualified function names and globally unique ids */
-  private FunctionNames functionNames = null;
-
-  /** String replacement map */
-  private VariableMap stringMap = null;
-
-  /** Id generator map */
-  private String idGeneratorMap = null;
-
-  /**
    * Whether to protect "hidden" side-effects.
    * @see CheckSideEffects
    */
@@ -152,14 +121,6 @@ public final class DefaultPassConfig extends PassConfig {
     // wrap them in a function call that is stripped later, this shouldn't
     // be done in IDE mode where AST changes may be unexpected.
     protectHiddenSideEffects = options != null && options.shouldProtectHiddenSideEffects();
-  }
-
-  @Override
-  protected State getIntermediateState() {
-    return new State(
-        cssNames == null ? null : new HashMap<>(cssNames),
-        crossModuleIdGenerator, variableMap, propertyMap,
-        anonymousFunctionNameMap, stringMap, functionNames, idGeneratorMap);
   }
 
   GlobalNamespace getGlobalNamespace() {
@@ -1638,7 +1599,7 @@ public final class DefaultPassConfig extends PassConfig {
               newCssNames,
               options.cssRenamingWhitelist);
           pass.process(externs, jsRoot);
-          cssNames = newCssNames;
+          compiler.setCssNames(newCssNames);
         }
       };
     }
@@ -2239,7 +2200,7 @@ public final class DefaultPassConfig extends PassConfig {
         public void process(Node externs, Node root) {
           CollectFunctionNames pass = new CollectFunctionNames(compiler);
           pass.process(externs, root);
-          functionNames = pass.getFunctionNames();
+          compiler.setFunctionNames(pass.getFunctionNames());
         }
       };
     }
@@ -2267,7 +2228,7 @@ public final class DefaultPassConfig extends PassConfig {
                   compiler, options.idGenerators, options.generatePseudoNames,
                   options.idGeneratorsMapSerialized, options.xidHashFunction);
           pass.process(externs, root);
-          idGeneratorMap = pass.getSerializedIdMappings();
+          compiler.setIdGeneratorMap(pass.getSerializedIdMappings());
         }
       };
     }
@@ -2286,7 +2247,7 @@ public final class DefaultPassConfig extends PassConfig {
               options.replaceStringsReservedStrings,
               options.replaceStringsInputMap);
           pass.process(externs, root);
-          stringMap = pass.getStringMap();
+          compiler.setStringMap(pass.getStringMap());
         }
       };
     }
@@ -2667,7 +2628,7 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new CrossModuleMethodMotion(
-          compiler, crossModuleIdGenerator,
+          compiler, compiler.getCrossModuleIdGenerator(),
           // Only move properties in externs if we're not treating
           // them as exports.
           options.removeUnusedPrototypePropertiesInExterns,
@@ -2786,7 +2747,7 @@ public final class DefaultPassConfig extends PassConfig {
               new NameAnonymousFunctionsMapped(
                   compiler, options.inputAnonymousFunctionNamingMap);
           naf.process(externs, root);
-          anonymousFunctionNameMap = naf.getFunctionMap();
+          compiler.setAnonymousFunctionNameMap(naf.getFunctionMap());
         }
       };
     }
@@ -2916,7 +2877,7 @@ public final class DefaultPassConfig extends PassConfig {
                       options.getPropertyReservedNamingNonFirstChars(),
                       options.nameGenerator);
               rprop.process(externs, root);
-              propertyMap = rprop.getPropertyMap();
+              compiler.setPropertyMap(rprop.getPropertyMap());
             }
           };
         }
@@ -2929,8 +2890,8 @@ public final class DefaultPassConfig extends PassConfig {
       final VariableMap prevVariableMap = options.inputVariableMap;
       return new CompilerPass() {
         @Override public void process(Node externs, Node root) {
-          variableMap = runVariableRenaming(
-              compiler, prevVariableMap, externs, root);
+          compiler.setVariableMap(runVariableRenaming(
+              compiler, prevVariableMap, externs, root));
         }
       };
     }
@@ -3017,7 +2978,8 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(final AbstractCompiler compiler) {
       return new InstrumentFunctions(
-          compiler, functionNames, options.instrumentationTemplate, options.appNameStr);
+          compiler, compiler.getFunctionNames(),
+          options.instrumentationTemplate, options.appNameStr);
     }
   };
 

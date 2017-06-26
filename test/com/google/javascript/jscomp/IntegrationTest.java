@@ -1034,7 +1034,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "  return \"bar\";"
         + "}");
     assertEquals(
-        ImmutableMap.of("foo", 1), lastCompiler.getPassConfig().getIntermediateState().cssNames);
+        ImmutableMap.of("foo", 1), lastCompiler.getCssNames());
   }
 
   public void testReplaceIdGeneratorsTest() {

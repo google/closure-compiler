@@ -21,7 +21,6 @@ import com.google.javascript.jscomp.AnalyzePrototypeProperties.Property;
 import com.google.javascript.jscomp.AnalyzePrototypeProperties.Symbol;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -254,29 +253,5 @@ class CrossModuleMethodMotion implements CompilerPass {
       }
     }
     return false;
-  }
-
-  static class IdGenerator implements Serializable {
-    private static final long serialVersionUID = 0L;
-
-    /**
-     * Ids for cross-module method stubbing, so that each method has
-     * a unique id.
-     */
-    private int currentId = 0;
-
-    /**
-     * Returns whether we've generated any new ids.
-     */
-    boolean hasGeneratedAnyIds() {
-      return currentId != 0;
-    }
-
-    /**
-     * Creates a new id for stubbing a method.
-     */
-    int newId() {
-      return currentId++;
-    }
   }
 }

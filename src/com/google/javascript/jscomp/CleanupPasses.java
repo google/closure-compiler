@@ -33,8 +33,6 @@ import java.util.List;
  */
 class CleanupPasses extends PassConfig {
 
-  private State state;
-
   public CleanupPasses(CompilerOptions options) {
     super(options);
   }
@@ -46,11 +44,6 @@ class CleanupPasses extends PassConfig {
     checks.add(scopeCleanupPassFactory);
     checks.add(globalVarRefCleanupPassFactory);
     return checks;
-  }
-
-  @Override
-  protected State getIntermediateState() {
-    return state;
   }
 
   @Override

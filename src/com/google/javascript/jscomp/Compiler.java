@@ -1234,7 +1234,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * Returns the result of the compilation.
    */
   public Result getResult() {
-    PassConfig.State state = getPassConfig().getIntermediateState();
     Set<SourceFile> transpiledFiles = new HashSet<>();
     if (jsRoot != null) {
       for (Node scriptNode : jsRoot.children()) {
@@ -1244,9 +1243,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     }
     return new Result(getErrors(), getWarnings(), debugLog.toString(),
-        state.variableMap, state.propertyMap,
-        state.anonymousFunctionNameMap, state.stringMap, functionInformationMap,
-        sourceMap, externExports, state.cssNames, state.idGeneratorMap, transpiledFiles);
+        this.variableMap, this.propertyMap,
+        this.anonymousFunctionNameMap, this.stringMap, this.functionInformationMap,
+        this.sourceMap, this.externExports, this.cssNames, this.idGeneratorMap, transpiledFiles);
   }
 
   /**
@@ -2491,8 +2490,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     logger.fine("Recording function information");
     startPass("recordFunctionInformation");
     RecordFunctionInformation recordFunctionInfoPass =
-        new RecordFunctionInformation(
-            this, getPassConfig().getIntermediateState().functionNames);
+        new RecordFunctionInformation(this, this.functionNames);
     process(recordFunctionInfoPass);
     functionInformationMap = recordFunctionInfoPass.getMap();
     endPass("recordFunctionInformation");
@@ -2970,18 +2968,111 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return sourceMap;
   }
 
+  /**
+   * Ids for cross-module method stubbing, so that each method has
+   * a unique id.
+   */
+  private IdGenerator crossModuleIdGenerator =
+      new IdGenerator();
+
+  /**
+   * Keys are arguments passed to getCssName() found during compilation; values
+   * are the number of times the key appeared as an argument to getCssName().
+   */
+  private Map<String, Integer> cssNames = null;
+
+  /** The variable renaming map */
+  private VariableMap variableMap = null;
+
+  /** The property renaming map */
+  private VariableMap propertyMap = null;
+
+  /** The naming map for anonymous functions */
+  private VariableMap anonymousFunctionNameMap = null;
+
+  /** Fully qualified function names and globally unique ids */
+  private FunctionNames functionNames = null;
+
+  /** String replacement map */
+  private VariableMap stringMap = null;
+
+  /** Id generator map */
+  private String idGeneratorMap = null;
+
+  /** Names exported by goog.exportSymbol. */
+  private final Set<String> exportedNames = new LinkedHashSet<>();
+
+  @Override
+  public void setVariableMap(VariableMap variableMap) {
+    this.variableMap = variableMap;
+  }
+
   VariableMap getVariableMap() {
-    return getPassConfig().getIntermediateState().variableMap;
+    return variableMap;
+  }
+
+  @Override
+  public void setPropertyMap(VariableMap propertyMap) {
+    this.propertyMap = propertyMap;
   }
 
   VariableMap getPropertyMap() {
-    return getPassConfig().getIntermediateState().propertyMap;
+    return this.propertyMap;
+  }
+
+  @Override
+  public void setStringMap(VariableMap stringMap) {
+    this.stringMap = stringMap;
+  }
+
+  @Override
+  public void setFunctionNames(FunctionNames functionNames) {
+    this.functionNames = functionNames;
+  }
+
+  @Override
+  public void setCssNames(Map<String, Integer> cssNames) {
+    this.cssNames = cssNames;
+  }
+
+  Map<String, Integer> getCssNames() {
+    return cssNames;
+  }
+
+  @Override
+  public void setIdGeneratorMap(String serializedIdMappings) {
+    this.idGeneratorMap = serializedIdMappings;
+  }
+
+  @Override
+  public IdGenerator getCrossModuleIdGenerator() {
+    return crossModuleIdGenerator;
+  }
+
+  @Override
+  public void setAnonymousFunctionNameMap(VariableMap functionMap) {
+    this.anonymousFunctionNameMap = functionMap;
+  }
+
+  @Override
+  public FunctionNames getFunctionNames() {
+    return functionNames;
   }
 
   VariableMap getStringMap() {
-    return getPassConfig().getIntermediateState().stringMap;
+    return this.stringMap;
   }
 
+
+  @Override
+  public void addExportedNames(Set<String> exportedNames) {
+    this.exportedNames.addAll(exportedNames);
+  }
+
+  @Override
+  public Set<String> getExportedNames() {
+    return exportedNames;
+  }
   @Override
   CompilerOptions getOptions() {
     return options;
@@ -3020,20 +3111,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   List<CompilerInput> getInputsInOrder() {
     return Collections.unmodifiableList(inputs);
-  }
-
-  /** Names exported by goog.exportSymbol. */
-  private final Set<String> exportedNames = new LinkedHashSet<>();
-
-  @Override
-  public void addExportedNames(Set<String> exportedNames) {
-    this.exportedNames.addAll(exportedNames);
-
-  }
-
-  @Override
-  public Set<String> getExportedNames() {
-    return exportedNames;
   }
 
   /**
@@ -3393,6 +3470,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final List<JSModule> modules;
     private final int uniqueNameId;
     private final Set<String> exportedNames;
+    private final Map<String, Integer> cssNames;
+    private final VariableMap variableMap;
+    private final VariableMap propertyMap;
+    private final VariableMap anonymousFunctionaMap;
+    private final FunctionNames functioNames;
+    private final VariableMap stringMap;
+    private final String idGeneratorMap;
+    private final IdGenerator crossModuleIdGenerator;
 
     CompilerState(Compiler compiler) {
       this.externsRoot = checkNotNull(compiler.externsRoot);
@@ -3420,6 +3505,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.modules = compiler.modules;
       this.uniqueNameId = compiler.uniqueNameId;
       this.exportedNames = compiler.exportedNames;
+      this.cssNames = compiler.cssNames;
+      this.variableMap = compiler.variableMap;
+      this.propertyMap = compiler.propertyMap;
+      this.anonymousFunctionaMap = compiler.anonymousFunctionNameMap;
+      this.functioNames = compiler.functionNames;
+      this.stringMap = compiler.stringMap;
+      this.idGeneratorMap = compiler.idGeneratorMap;
+      this.crossModuleIdGenerator = compiler.crossModuleIdGenerator;
+
     }
   }
 
@@ -3483,6 +3577,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     uniqueNameId = compilerState.uniqueNameId;
     exportedNames.clear();
     exportedNames.addAll(compilerState.exportedNames);
+    cssNames = compilerState.cssNames;
+    variableMap = compilerState.variableMap;
+    propertyMap = compilerState.propertyMap;
+    stringMap = compilerState.stringMap;
+    anonymousFunctionNameMap = compilerState.anonymousFunctionaMap;
+    idGeneratorMap = compilerState.idGeneratorMap;
+    crossModuleIdGenerator = compilerState.crossModuleIdGenerator;
+    functionNames = compilerState.functioNames;
 
     // Reapply module names to deserialized modules
     renameModules(newModules, modules);

@@ -92,16 +92,46 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract List<CompilerInput> getInputsInOrder();
 
-  /**
-   * Adds exported names to keep track.
-   */
+  //
+  // Intermediate state and results produced and needed by particular passes.
+  // TODO(rluble): move these into the general structure for keeping state between pass runs.
+  //
+  /** Adds exported names to keep track. */
   public abstract void addExportedNames(Set<String> exportedVariableNames);
 
-  /**
-   * Gets the names that have been exported so far.
-   */
+  /** Gets the names that have been exported. */
   public abstract Set<String> getExportedNames();
-  
+
+  /** Sets the variable renaming map */
+  public abstract void setVariableMap(VariableMap variableMap);
+
+  /** Sets the property renaming map */
+  public abstract void setPropertyMap(VariableMap propertyMap);
+
+  /** Sets the string replacement map */
+  public abstract void setStringMap(VariableMap stringMap);
+
+  /** Sets the fully qualified function name and globally unique id mapping. */
+  public abstract void setFunctionNames(FunctionNames functionNames);
+
+  /** Gets the fully qualified function name and globally unique id mapping. */
+  public abstract FunctionNames getFunctionNames();
+
+  /** Sets the css names found during compilation. */
+  public abstract void setCssNames(Map<String, Integer> newCssNames);
+
+  /** Sets the id generator for cross-module motion. */
+  public abstract void setIdGeneratorMap(String serializedIdMappings);
+
+  /** Gets the id generator for cross-module motion. */
+  public abstract IdGenerator getCrossModuleIdGenerator();
+
+  /** Sets the naming map for anonymous functions */
+  public abstract void setAnonymousFunctionNameMap(VariableMap functionMap);
+  //
+  // End of intermediate state needed by passes.
+  //
+
   static enum MostRecentTypechecker {
     NONE,
     OTI,
