@@ -170,3 +170,21 @@ function before_indexOfLessThanZero(str, subStr) {
 function after_indexOfLessThanZero(str, subStr) {
   !str.includes(subStr);
 }
+
+/**
+ * @param {string} str
+ * @param {string} subStr
+ * @suppress {uselessCode}
+ */
+function before_bitwiseNot(str, subStr) {
+  ~str.indexOf(subStr);
+}
+
+/**
+ * @param {string} str
+ * @param {string} subStr
+ * @suppress {uselessCode}
+ */
+function after_bitwiseNot(str, subStr) {
+  str.includes(subStr);
+}

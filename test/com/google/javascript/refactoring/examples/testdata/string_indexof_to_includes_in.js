@@ -121,6 +121,21 @@ refactoring_testcase.less_than_zero = function(str, subStr) {
 };
 
 /**
+ * @param {string} str The string.
+ * @param {string} subStr The sub-string to check.
+ * @return {number|boolean} Whether the sub-string is found the string.
+ *     Returns true/truthy if the value is found, false/falsy otherwise.
+ */
+refactoring_testcase.bitwise_not = function(str, subStr) {
+  const strA = 'abc';
+  const foundA = ~strA.indexOf('b');
+
+  const foundB = ~'xyz'.indexOf('x');
+
+  return ~str.indexOf(subStr);
+};
+
+/**
  * The refactoring should ignore calls to indexOf on non-array objects.
  * @param {string} str A string.
  * @param {string} subStr The substring to check.
