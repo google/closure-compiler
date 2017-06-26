@@ -100,12 +100,6 @@ class TypeValidator implements Serializable {
           "from: {0}\n" +
           "to  : {1}");
 
-  static final DiagnosticType UNNECESSARY_CAST =
-      DiagnosticType.disabled("JSC_UNNECESSARY_CAST",
-          "unnecessary cast\n" +
-          "from: {0}\n" +
-          "to  : {1}");
-
   static final DiagnosticType TYPE_MISMATCH_WARNING =
       DiagnosticType.warning(
           "JSC_TYPE_MISMATCH",
