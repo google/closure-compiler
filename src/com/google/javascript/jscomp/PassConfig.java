@@ -242,8 +242,18 @@ public abstract class PassConfig {
    * Get intermediate state for a running pass config, so it can
    * be paused and started again later.
    */
-  protected abstract State getIntermediateState();
-
+  protected State getIntermediateState() {
+    return new State(
+        /* cssNames */ null,
+        /* crossModuleIdGenerator */ null,
+        /* variableMap */ null,
+        /* propertyMap */ null,
+        /* anonymousFunctionNameMap */ null,
+        /* stringMap */ null,
+        /* functionNames */ null,
+        /* idGeneratorMap */ null);
+  }
+ 
   /**
    * An implementation of PassConfig that just proxies all its method calls
    * into an inner class.
