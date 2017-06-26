@@ -363,9 +363,29 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testWarning("goog.module('a.b.c'); var f = function() {};", MISSING_JSDOC);
   }
 
+  public void testMissingJsDoc_ES6Module01() {
+    testWarning("export default abc; function f() {}", MISSING_JSDOC);
+  }
+
+  public void testMissingJsDoc_ES6Module02() {
+    testWarning("export default abc; var f = function() {};", MISSING_JSDOC);
+  }
+
+  public void testMissingJsDoc_ES6Module03() {
+    testWarning("export function f() {};", MISSING_JSDOC);
+  }
+
   public void testMissingJsDoc_googModule_noWarning() {
     testSame("goog.module('a.b.c'); /** @type {function()} */ function f() {}");
     testSame("goog.module('a.b.c'); /** @type {function()} */ var f = function() {};");
+  }
+
+  public void testMissingJsDoc_ES6Module_noWarning01() {
+    testSame("export default abc; /** @type {function()} */ function f() {}");
+  }
+
+  public void testMissingJsDoc_ES6Module_noWarning02() {
+    testSame("export default abc; /** @type {function()} */ var f = function() {};");
   }
 
   private static String inIIFE(String js) {
