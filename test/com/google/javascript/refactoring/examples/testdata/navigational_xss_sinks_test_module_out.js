@@ -14,16 +14,21 @@
  * limitations under the License.
  */
 
-/** @fileoverview Required pieces of Closure's base.js . */
+/**
+ * @fileoverview Test cases for the navigational_xss_sinks.js RefasterJs
+ * template.
+ */
 
-/** @const */
-var goog = goog || {};
+goog.module('refactoring_testcase');
+const foo = goog.require('goog.foo');
+const safe = goog.require('goog.dom.safe');
 
-/** @param {string} name */
-goog.provide = function(name) {};
-
-/** @param {string} name */
-goog.require = function(name) {};
-
-/** @param {string} name */
-goog.module = function(name) {};
+/**
+ * @param {!Location} target The target.
+ * @param {string} val The value.
+ */
+exports.nonnull_location_href = function(target, val) {
+  foo.bar();
+  // Should match before_setLocationHref.
+  safe.setLocationHref(target, val);
+};

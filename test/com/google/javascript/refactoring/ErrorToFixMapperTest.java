@@ -651,7 +651,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testMissingRequire_unsorted2() {
     // Both the fix for requires being unsorted, and the fix for the missing require, are applied.
-    // However, the end result is still out of order.
+    // The end result is ordered.
     assertChanges(
         LINE_JOINER.join(
             "goog.module('module');",
@@ -664,10 +664,10 @@ public class ErrorToFixMapperTest {
             "alert(new DomHelper());"),
         LINE_JOINER.join(
             "goog.module('module');",
-            "const Xray = goog.require('goog.rays.Xray');",
             "",
             "const Anteater = goog.require('goog.Anteater');",
             "const DomHelper = goog.require('goog.dom.DomHelper');",
+            "const Xray = goog.require('goog.rays.Xray');",
             "",
             "alert(new Anteater());",
             "alert(new Xray());",

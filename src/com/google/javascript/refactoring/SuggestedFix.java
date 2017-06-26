@@ -27,6 +27,8 @@ import com.google.common.collect.SetMultimap;
 import com.google.javascript.jscomp.AbstractCompiler;
 import com.google.javascript.jscomp.CodePrinter;
 import com.google.javascript.jscomp.CompilerOptions;
+import com.google.javascript.jscomp.NodeTraversal;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.IR;
@@ -99,6 +101,7 @@ public final class SuggestedFix {
     return sb.toString();
   }
 
+  // TODO(bangert): Find a non-conflicting name.
   static String getShortNameForRequire(String namespace) {
     int lastDot = namespace.lastIndexOf('.');
     if (lastDot == -1) {
@@ -201,7 +204,8 @@ public final class SuggestedFix {
     private Builder insertBefore(Node nodeToInsertBefore, String content, String sortKey) {
       int startPosition = nodeToInsertBefore.getSourceOffset();
       JSDocInfo jsDoc = NodeUtil.getBestJSDocInfo(nodeToInsertBefore);
-      if (jsDoc != null) {
+      // ClosureRewriteModule adds jsDOC everywhere.
+      if (jsDoc != null && jsDoc.getOriginalCommentString() != null) {
         startPosition = jsDoc.getOriginalCommentPosition();
       }
       Preconditions.checkNotNull(nodeToInsertBefore.getSourceFileName(),
@@ -603,7 +607,7 @@ public final class SuggestedFix {
       insertBefore(existingNode, "const " + shortName + " = ");
       return this;
     }
-
+    
     /**
      * Adds a goog.require for the given namespace to the file if it does not
      * already exist.
@@ -630,8 +634,8 @@ public final class SuggestedFix {
           IR.string(namespace));
 
       String shortName = getShortNameForRequire(namespace);
-
-      if (script.isModuleBody()) {
+      boolean useConstRequire = usesConstGoogRequires(metadata, script);
+      if (useConstRequire) {
         googRequireNode = IR.constNode(IR.name(shortName), googRequireNode);
       } else {
         googRequireNode = IR.exprResult(googRequireNode);
@@ -642,6 +646,9 @@ public final class SuggestedFix {
       Node nodeToInsertBefore = null;
       Node child = script.getFirstChild();
       while (child != null) {
+        if (Matchers.googModule().matches(child, metadata)) {
+          lastModuleOrProvideNode = child;
+        }
         if (NodeUtil.isExprCall(child)) {
           // TODO(mknichel): Replace this logic with a function argument
           // Matcher when it exists.
@@ -659,7 +666,13 @@ public final class SuggestedFix {
         } else if (NodeUtil.isNameDeclaration(child)
             && child.getFirstFirstChild() != null
             && Matchers.googRequire().matches(child.getFirstFirstChild(), metadata)) {
-          if (shortName.compareTo(child.getFirstChild().getString()) < 0) {
+          lastGoogRequireNode = child.getFirstFirstChild();
+          String requireName = child.getFirstChild().getString();
+          String originalName = child.getFirstChild().getOriginalName();
+          if (originalName != null) {
+            requireName = originalName;
+          }
+          if (shortName.compareTo(requireName) < 0) {
             nodeToInsertBefore = child;
             break;
           }
@@ -698,6 +711,39 @@ public final class SuggestedFix {
 
       return insertBefore(
           nodeToInsertBefore, googRequireNode, m.getMetadata().getCompiler(), namespace);
+    }
+
+    /**
+     * If the namespace has a short name, return it. Otherwise return the full name.
+     *
+     * <p>Assumes {@link addGoogRequire} was already called.
+     */
+    public String getRequireName(Match m, String namespace) {
+      Node existingNode = findGoogRequireNode(m.getNode(), m.getMetadata(), namespace);
+      if (existingNode != null && (existingNode.isConst() || existingNode.isVar())) {
+        Node lhsAssign = existingNode.getFirstChild();
+        String originalName = lhsAssign.getOriginalName();
+        if (originalName != null) {
+          return originalName; // The import was renamed inside a module.
+        }
+        return lhsAssign.getQualifiedName();
+      }
+      Node script = NodeUtil.getEnclosingScript(m.getNode());
+
+      if (script != null && usesConstGoogRequires(m.getMetadata(), script)) {
+        return getShortNameForRequire(namespace);
+      }
+      return namespace;
+    }
+
+    /** True if the file uses {@code const foo = goog.require('namespace.foo');} */
+    private boolean usesConstGoogRequires(final NodeMetadata metadata, Node script) {
+      if (script.isModuleBody()) {
+        return true;
+      }
+      HasConstRequireOrModuleCallback callback = new HasConstRequireOrModuleCallback(metadata);
+      NodeTraversal.traverseEs6(metadata.getCompiler(), script, callback);
+      return callback.getUsesConstRequires();
     }
 
     /**
@@ -824,6 +870,36 @@ public final class SuggestedFix {
 
     public boolean isInClosurizedFile() {
       return isInClosurizedFile;
+    }
+  }
+
+  /** Traverse an AST and find {@code goog.module} or {@code const X = goog.require('...');}. */
+  private static class HasConstRequireOrModuleCallback extends AbstractPreOrderCallback {
+    private boolean usesConstRequires;
+    final NodeMetadata metadata;
+
+    public HasConstRequireOrModuleCallback(NodeMetadata metadata) {
+      this.usesConstRequires = false;
+      this.metadata = metadata;
+    }
+
+    boolean getUsesConstRequires() {
+      return usesConstRequires;
+    }
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+      if (Matchers.googModule().matches(n, metadata) || isConstRequire(n, metadata)) {
+        usesConstRequires = true;
+        return false;
+      }
+      return true;
+    }
+
+    private static boolean isConstRequire(Node node, NodeMetadata metadata) {
+      return node.isConst()
+          && node.getFirstFirstChild() != null
+          && Matchers.googRequire().matches(node.getFirstFirstChild(), metadata);
     }
   }
 }

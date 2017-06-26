@@ -209,6 +209,17 @@ public class MatchersTest {
   }
 
   @Test
+  public void testGoogModule() {
+    String input = "goog.module('testcase');";
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    Node fnCall = root.getFirstFirstChild();
+    NodeMetadata metadata = new NodeMetadata(compiler);
+    assertTrue(Matchers.googModule().matches(fnCall, metadata));
+    assertTrue(Matchers.googModuleOrProvide().matches(fnCall, metadata));
+  }
+
+  @Test
   public void testEnum() {
     String input = "/** @enum {string} */ var foo = {BAR: 'baz'};";
     Node root = compileToScriptRoot(getCompiler(input));
