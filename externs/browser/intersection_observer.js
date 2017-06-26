@@ -27,7 +27,7 @@
 /**
  * These contain the information provided from a change event.
  * @see https://wicg.github.io/IntersectionObserver/#intersection-observer-entry
- * @constructor
+ * @record
  */
 function IntersectionObserverEntry() {}
 
