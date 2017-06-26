@@ -2071,8 +2071,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       // Only process files that are detected as ES6 modules
       if (!options.dependencyOptions.shouldPruneDependencies()
           || !JsFileParser.isSupported()
-          || (input.getLoadFlags().containsKey("module")
-              && input.getLoadFlags().get("module").equals("es6"))) {
+          || "es6".equals(input.getLoadFlags().get("module"))) {
         filteredInputs.add(input);
       }
     }

@@ -393,14 +393,10 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   }
 
   ModulePath getPath() {
-    return getPath(getName());
-  }
-
-  private ModulePath getPath(String name) {
     if (modulePath == null) {
       // Note: this method will not be called until Es6RewriteModules
       // (and similar), after Compiler.moduleLoader is already set.
-      this.modulePath = compiler.getModuleLoader().resolve(name);
+      this.modulePath = compiler.getModuleLoader().resolve(getName());
     }
     return modulePath;
   }
