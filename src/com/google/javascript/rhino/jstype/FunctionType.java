@@ -70,7 +70,7 @@ import java.util.Set;
  * This derived type provides extended information about a function, including
  * its return type and argument types.<p>
  *
- * Note: the parameters list is the LP node that is the parent of the
+ * Note: the parameters list is the PARAM_LIST node that is the parent of the
  * actual NAME node containing the parsed argument list (annotated with
  * JSDOC_TYPE_PROP's for the compile-time type of each argument.
  */
@@ -323,7 +323,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     return types;
   }
 
-  /** Gets an LP node that contains all params. May be null. */
+  /** Gets a PARAM_LIST node that contains all params. May be null. */
   public Node getParametersNode() {
     return call.parameters;
   }
