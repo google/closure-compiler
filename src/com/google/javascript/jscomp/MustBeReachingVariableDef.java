@@ -278,6 +278,8 @@ final class MustBeReachingVariableDef extends
         computeMustDef(n.getLastChild(), cfgNode, output, true);
         return;
 
+      case LET:
+      case CONST:
       case VAR:
         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
           if (c.hasChildren()) {

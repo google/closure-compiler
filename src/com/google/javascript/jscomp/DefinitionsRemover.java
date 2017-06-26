@@ -33,7 +33,7 @@ import com.google.javascript.rhino.Token;
 class DefinitionsRemover {
 
   /**
-   * This logic must match {@link isDefinitionNode}.
+   * This logic must match {@link #isDefinitionNode(Node n)}.
    *
    * @return an {@link Definition} object if the node contains a definition or {@code null}
    *     otherwise.
@@ -53,6 +53,14 @@ class DefinitionsRemover {
       } else if (!n.getString().isEmpty()) {
         return new FunctionExpressionDefinition(parent, isExtern);
       }
+    } else if (parent.isClass() && parent.getFirstChild() == n) {
+      if (!NodeUtil.isClassExpression(parent)) {
+        return new NamedClassDefinition(parent, isExtern);
+      } else if (!n.isEmpty()) {
+        return new ClassExpressionDefinition(parent, isExtern);
+      }
+    } else if (n.isMemberFunctionDef() && parent.isClassMembers()) {
+      return new MemberFunctionDefinition(n, isExtern);
     } else if (parent.isAssign() && parent.getFirstChild() == n) {
       return new AssignmentDefinition(parent, isExtern);
     } else if (NodeUtil.isObjectLitKey(n)) {
@@ -73,7 +81,7 @@ class DefinitionsRemover {
   }
 
   /**
-   * This logic must match {@link getDefinition}.
+   * This logic must match {@link #getDefinition(Node, boolean)}.
    *
    * @return Whether a definition object can be created.
    */
@@ -91,6 +99,14 @@ class DefinitionsRemover {
       } else if (!n.getString().isEmpty()) {
         return true;
       }
+    } else if (parent.isClass() && parent.getFirstChild() == n) {
+      if (!NodeUtil.isClassExpression(parent)) {
+        return true;
+      } else if (!n.isEmpty()) {
+        return true;
+      }
+    } else if (n.isMemberFunctionDef() && parent.isClassMembers()) {
+      return true;
     } else if (parent.isAssign() && parent.getFirstChild() == n) {
       return true;
     } else if (NodeUtil.isObjectLitKey(n)) {
@@ -309,6 +325,89 @@ class DefinitionsRemover {
   }
 
   /**
+   * Represents a class member function.
+   */
+
+  static final class MemberFunctionDefinition extends FunctionDefinition {
+
+    protected final Node memberFunctionDef;
+
+    MemberFunctionDefinition(Node node, boolean inExterns) {
+      super(node.getFirstChild(), inExterns);
+      memberFunctionDef = node;
+    }
+
+    @Override
+    public void performRemove(AbstractCompiler compiler) {
+      NodeUtil.deleteNode(memberFunctionDef, compiler);
+    }
+
+    @Override
+    public Node getLValue() {
+      // As far as we know, only the property name matters so the target can be an object literal
+      return IR.getprop(IR.objectlit(), memberFunctionDef.getString());
+    }
+  }
+
+  /**
+   * Represents a class declaration or function expression.
+   */
+  abstract static class ClassDefinition extends Definition {
+
+    protected final Node c;
+
+    ClassDefinition(Node node, boolean inExterns) {
+      super(inExterns);
+      Preconditions.checkArgument(node.isClass());
+      c = node;
+    }
+
+    @Override
+    public Node getLValue() {
+      return c.getFirstChild();
+    }
+
+    @Override
+    public Node getRValue() {
+      return c;
+    }
+  }
+
+  /**
+   * Represents a function declaration without assignment node such as
+   * {@code function foo()}.
+   */
+  static final class NamedClassDefinition extends ClassDefinition {
+    NamedClassDefinition(Node node, boolean inExterns) {
+      super(node, inExterns);
+    }
+
+    @Override
+    public void performRemove(AbstractCompiler compiler) {
+      NodeUtil.deleteNode(c, compiler);
+    }
+  }
+
+  /**
+   * Represents a class expression that acts as a RHS.  The defined
+   * name is only reachable from within the function.
+   */
+  static final class ClassExpressionDefinition extends ClassDefinition {
+    ClassExpressionDefinition(Node node, boolean inExterns) {
+      super(node, inExterns);
+      Preconditions.checkArgument(
+          NodeUtil.isClassExpression(node));
+    }
+
+    @Override
+    public void performRemove(AbstractCompiler compiler) {
+      // replace internal name with ""
+      c.replaceChild(c.getFirstChild(), IR.empty());
+      compiler.reportChangeToEnclosingScope(c.getFirstChild());
+    }
+  }
+
+  /**
    * Represents a declaration within an assignment.
    */
   static final class AssignmentDefinition extends Definition {
@@ -401,7 +500,7 @@ class DefinitionsRemover {
               IR.objectlit(),
               IR.string(name.getString()));
         default:
-          throw new IllegalStateException("unexpected");
+          throw new IllegalStateException("Unexpected left Token: " + name.getToken());
       }
     }
 

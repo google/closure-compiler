@@ -603,6 +603,158 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "function f() { var x; return '' + '1' + '2' + '3' + '4' + '5' + '6' + '7'; }");
   }
 
+  public void testInlineInArrowFunctions() {
+    test("() => {var v; v = 1; return v;} ",
+        "() => {var v; return 1;}");
+
+    test("(v) => {v = 1; return v;}",
+        "(v) => {return 1;}");
+  }
+
+  public void testInlineInClassMemberFunctions() {
+    test(
+        LINE_JOINER.join(
+            "class C {",
+            "  func() {",
+            "    var x;",
+            "    x = 1;",
+            "    return x;",
+            "  }",
+            "}"
+        ),
+        LINE_JOINER.join(
+            "class C {",
+            "  func() {",
+            "    var x;",
+            "    return 1;",
+            "  }",
+            "}"
+        )
+    );
+  }
+
+  public void testInlineLet() {
+    inline("let a = 1; print(a + 1)",
+         "let a; print(1 + 1)");
+
+    inline("let a; a = 1; print(a + 1)",
+        "let a; print(1 + 1)");
+
+    noInline("let a = noSFX(); print(a)");
+  }
+
+  public void testInlineConst() {
+    inline("const a = 1; print(a + 1)",
+        "const a = undefined; print(1 + 1)");
+
+    inline("const a = 1; const b = a; print(b + 1)",
+        "const a = undefined; const b = undefined; print(1 + 1)");
+
+    noInline("const a = noSFX(); print(a)");
+
+  }
+
+  public void testSpecific() {
+    inline("let a = 1; print(a + 1)",
+        "let a; print(1 + 1)");
+  }
+
+  // Will be handled in a follow-up
+  public void testBlockScoping() {
+    noInline(
+        LINE_JOINER.join(
+            "let a = 1",
+            "  {",
+            "  let b = 2;",
+            "  print(b + 1);",
+            "  }",
+            "print(a + 1);"
+        ));
+
+    noInline(
+        LINE_JOINER.join(
+            "let a = 1",
+            "  {",
+            "  let a = 2;",
+            "  print(a + 1);",
+            "  }",
+            "print(a + 1);"
+        ));
+  }
+
+  public void notworking_testBlockScoping() {
+    inline(
+        LINE_JOINER.join(
+            "let a = 1",
+            "  {",
+            "  let b = 2;",
+            "  print(b + 1);",
+            "  }",
+            "print(a + 1);"
+        ),
+        LINE_JOINER.join(
+            "let a = 1",
+            "  {",
+            "  let b = 2;",
+            "  print(2 + 1);",
+            "  }",
+            "print(1 + 1);"));
+    inline(
+        LINE_JOINER.join(
+            "let a = 1",
+            "  {",
+            "  let a = 2;",
+            "  print(a + 1);",
+            "  }",
+            "print(a + 1);"
+        ),
+        LINE_JOINER.join(
+            "let a = 1",
+            "  {",
+            "  let a = 2;",
+            "  print(2 + 1);",
+            "  }",
+            "print(1 + 1);"));
+  }
+
+  public void testInlineInGenerators() {
+    test(
+        LINE_JOINER.join(
+            "function* f() {",
+            "  var x = 1;",
+            "  return x + 1;",
+            "}"
+        ),
+        LINE_JOINER.join(
+            "function* f() {",
+            "  var x;",
+            "  return 1 + 1;",
+            "}"
+        )
+    );
+  }
+
+  public void testNoInlineForOf() {
+    noInline("for (var x of n){} ");
+
+    noInline("var x = 1; var n = {}; for(x of n) {}");
+  }
+
+  public void testTemplateStrings() {
+    inline("var name = 'Foo'; `Hello ${name}`",
+        "var name; `Hello ${'Foo'}`");
+
+    inline("var name = 'Foo'; var foo = name; `Hello ${foo}`",
+        "var name; var foo; `Hello ${'Foo'}`");
+
+    inline(" var age = 3; `Age: ${age}`",
+        "var age; `Age: ${3}`");
+  }
+
+  public void testDestructuring() {
+    noInline("var [a, b, c] = [1, 2, 3]; print(a + b + c);");
+  }
+
   private void noInline(String input) {
     inline(input, input);
   }
