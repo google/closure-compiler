@@ -318,7 +318,7 @@ public abstract class CompilerTestCase extends TestCase {
           "/**",
           " * @param {...T} var_args",
           " * @return {number} The new length of the array.",
-          " * @this {{length: number}|!Array.<T>}",
+          " * @this {IArrayLike<T>}",
           " * @template T",
           " * @modifies {this}",
           " */",

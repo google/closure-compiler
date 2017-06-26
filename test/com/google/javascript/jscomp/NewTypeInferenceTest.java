@@ -13433,7 +13433,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " */",
         "function f(x, y) {}",
         "f.bind(new Foo('asdf'), 1, 2);"),
-        NewTypeInference.INVALID_THIS_TYPE_IN_BIND);
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
 
     typeCheck(LINE_JOINER.join(
         "/**",
@@ -15793,9 +15793,6 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "f.bind(new Foo, new Bar);"),
         NewTypeInference.NOT_UNIQUE_INSTANTIATION);
 
-    // We miss the incompatibility between MyArray<number> and  MyArray<string>.
-    // We don't catch it because our heuristic for using the receiver type to
-    // calculate the instantiation is not enough here.
     typeCheck(LINE_JOINER.join(
         "/**",
         " * @interface",
@@ -15818,7 +15815,14 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " * @template T",
         " */",
         "MyArray.prototype.m = function(x) {};",
-        "(new MyArray(123)).m(new MyArray('asdf'));"));
+        "(new MyArray(123)).m(new MyArray('asdf'));"),
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Array<number> */ arr) {",
+        "  arr.push('asdf');",
+        "}"),
+        NewTypeInference.NOT_UNIQUE_INSTANTIATION);
   }
 
   public void testDontCrashWhenShadowingANamespace() {

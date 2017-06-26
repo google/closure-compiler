@@ -2672,11 +2672,11 @@ final class NewTypeInference implements CompilerPass {
    * Here, the receiver type of f is Foo<T>, but the T is the class's T,
    * not the T of f's template declaration.
    * OTOH, if f had a @this annotation that contained T, T would refer to
-   * f's T. There is no way of knowing what's the scope of the type variables
-   * in the receiver of the function type.
-   * But when THIS comes from the class, it is always a singleton object. So,
-   * we use a heuristic: if THIS is not a singleton obj, we know it comes from
-   * @this, and we use it for the instantiation.
+   * f's T. We have no way of knowing whether THIS comes from the class or from @this.
+   * However, we just go ahead and unify anyway; it is safe to do because we give a unique ID
+   * to each type variable. We end up doing redundant work when THIS comes from the class.
+   * In the past, before switching to unique IDs for type variables, we used to have a heuristic
+   * to decide whether to use the receiver type for unification.
    */
   private ImmutableMap<String, JSType> calcTypeInstantiation(
       Node callNode, Node receiver, Node firstArg,
@@ -2685,7 +2685,7 @@ final class NewTypeInference implements CompilerPass {
     List<String> typeParameters = funType.getTypeParameters();
     Multimap<String, JSType> typeMultimap = LinkedHashMultimap.create();
     JSType funRecvType = funType.getThisType();
-    if (receiver != null && funRecvType != null && !funRecvType.isSingletonObj()) {
+    if (receiver != null && funRecvType != null) {
       JSType recvType = (JSType) receiver.getTypeI();
       if (recvType == null) {
         EnvTypePair pair = analyzeExprFwd(receiver, typeEnv);
