@@ -2310,8 +2310,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
               delimiter =
                   delimiter
-                      .replaceAll("%name%", Matcher.quoteReplacement(inputName))
-                      .replace("%num%", String.valueOf(inputSeqNum));
+                      .replace("%name%", Matcher.quoteReplacement(inputName))
+                      .replace("%num%", String.valueOf(inputSeqNum))
+                      .replace("%n%", "\n");
 
               cb.append(delimiter).append("\n");
             }
