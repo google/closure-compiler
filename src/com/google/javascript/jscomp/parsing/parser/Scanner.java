@@ -857,7 +857,7 @@ public class Scanner {
 
   private boolean skipStringLiteralChar() {
     if (peek('\\')) {
-      return skipStringLiteralEscapeSequence();
+      return skipStringLiteralEscapeSequence(false);
     }
     nextChar();
     return true;
@@ -869,7 +869,7 @@ public class Scanner {
         case '`':
           return;
         case '\\':
-          skipStringLiteralEscapeSequence();
+          skipStringLiteralEscapeSequence(true);
           break;
         case '$':
           if (peekChar(1) == '{') {
@@ -883,7 +883,7 @@ public class Scanner {
   }
 
   @SuppressWarnings("IdentityBinaryExpression")
-  private boolean skipStringLiteralEscapeSequence() {
+  private boolean skipStringLiteralEscapeSequence(boolean templateLiteral) {
     nextChar();
     if (isAtEnd()) {
       reportError("Unterminated string literal escape sequence");
@@ -929,9 +929,8 @@ public class Scanner {
       default:
         if (next == '/') {
           // Don't warn for '\/' (for now) since it's common in "<\/script>"
-        } else if (next == '$') {
+        } else if (templateLiteral && next == '$') {
           // Don't warn for '\$' in template literal.
-          // TODO(tbreisacher): We should still warn for '\$' in a regular string literal.
         } else {
           reportWarning("Unnecessary escape: '\\%s' is equivalent to just '%s'", next, next);
         }
