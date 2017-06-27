@@ -118,8 +118,6 @@ final class CompilerExecutor {
         result = callable.call();
       } catch (Exception e) {
         exception[0] = e;
-      } finally {
-        Tracer.clearCurrentThreadTrace();
       }
     }
 
