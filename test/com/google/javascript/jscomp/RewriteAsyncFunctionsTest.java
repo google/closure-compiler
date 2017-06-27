@@ -149,12 +149,12 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "}"));
   }
 
-  public void testClassMethodWithAsyncArrow() {
+  public void testAsyncClassMethodWithAsyncArrow() {
     test(
         LINE_JOINER.join(
             "class A {",
             "  async f() {",
-            "    let g = async () => { console.log(this); };",
+            "    let g = async () => { console.log(this, arguments); };",
             "    g();",
             "  }",
             "}"),
@@ -162,16 +162,42 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
             "class A {",
             "  f() {",
             "    const $jscomp$async$this = this;",
+            "    const $jscomp$async$arguments = arguments;",
             "    function *$jscomp$async$generator() {",
             "      let g = () => {",
             "        function *$jscomp$async$generator() {",
-            "          console.log($jscomp$async$this);",
+            "          console.log($jscomp$async$this, $jscomp$async$arguments);",
             "        }",
             "        return $jscomp.executeAsyncGenerator($jscomp$async$generator());",
             "      };",
             "      g();",
             "    }",
             "    return $jscomp.executeAsyncGenerator($jscomp$async$generator());",
+            "  }",
+            "}"));
+  }
+
+  public void testNonAsyncClassMethodWithAsyncArrow() {
+    test(
+        LINE_JOINER.join(
+            "class A {",
+            "  f() {",
+            "    let g = async () => { console.log(this, arguments); };",
+            "    g();",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "class A {",
+            "  f() {",
+            "    let g = () => {",
+            "      const $jscomp$async$this = this;",
+            "      const $jscomp$async$arguments = arguments;",
+            "      function *$jscomp$async$generator() {",
+            "        console.log($jscomp$async$this, $jscomp$async$arguments);",
+            "      }",
+            "      return $jscomp.executeAsyncGenerator($jscomp$async$generator());",
+            "    };",
+            "    g();",
             "  }",
             "}"));
   }

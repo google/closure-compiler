@@ -58,8 +58,8 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
   private static final class LexicalContext {
     final Optional<Node> function; // absent for top level
     final LexicalContext thisAndArgumentsContext;
-    boolean asyncThisReplacementWasDone = false;
-    boolean asyncArgumentsReplacementWasDone = false;
+    boolean mustAddAsyncThisVariable = false;
+    boolean mustAddAsyncArgumentsVariable = false;
 
     /** Creates root-level context. */
     LexicalContext() {
@@ -79,17 +79,29 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     }
 
     boolean mustReplaceThisAndArguments() {
-      return thisAndArgumentsContext.isAsyncContext();
+      return isAsyncContext() || thisAndArgumentsContext.isAsyncContext();
     }
 
     void recordAsyncThisReplacementWasDone() {
-      checkState(thisAndArgumentsContext.isAsyncContext());
-      thisAndArgumentsContext.asyncThisReplacementWasDone = true;
+      if (thisAndArgumentsContext.isAsyncContext()) {
+        thisAndArgumentsContext.mustAddAsyncThisVariable = true;
+      } else {
+        // The current context is an async arrow function within a non-async function,
+        // so it must define its own replacement variable.
+        checkState(isAsyncContext());
+        mustAddAsyncThisVariable = true;
+      }
     }
 
     void recordAsyncArgumentsReplacementWasDone() {
-      checkState(thisAndArgumentsContext.isAsyncContext());
-      thisAndArgumentsContext.asyncArgumentsReplacementWasDone = true;
+      if (thisAndArgumentsContext.isAsyncContext()) {
+        thisAndArgumentsContext.mustAddAsyncArgumentsVariable = true;
+      } else {
+        // The current context is an async arrow function within a non-async function,
+        // so it must define its own replacement variable.
+        checkState(isAsyncContext());
+        mustAddAsyncArgumentsVariable = true;
+      }
     }
   }
 
@@ -176,10 +188,10 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
     Node newBody = IR.block().useSourceInfoIfMissingFrom(originalBody);
     originalFunction.replaceChild(originalBody, newBody);
 
-    if (functionContext.asyncThisReplacementWasDone) {
+    if (functionContext.mustAddAsyncThisVariable) {
       newBody.addChildToBack(IR.constNode(IR.name(ASYNC_THIS), IR.thisNode()));
     }
-    if (functionContext.asyncArgumentsReplacementWasDone) {
+    if (functionContext.mustAddAsyncArgumentsVariable) {
       newBody.addChildToBack(IR.constNode(IR.name(ASYNC_ARGUMENTS), IR.name("arguments")));
     }
 
