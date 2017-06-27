@@ -244,14 +244,14 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(convertEs6TypedToEs6);
     }
 
+    if (options.enables(DiagnosticGroups.LINT_CHECKS)) {
+      checks.add(lintChecks);
+    }
+
     checks.add(es6CheckModule);
 
     if (options.needsTranspilationOf(FeatureSet.Feature.MODULES)) {
       TranspilationPasses.addEs6ModulePass(checks);
-    }
-
-    if (options.enables(DiagnosticGroups.LINT_CHECKS)) {
-      checks.add(lintChecks);
     }
 
     if (options.closurePass && options.enables(DiagnosticGroups.LINT_CHECKS)) {
@@ -1963,7 +1963,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES8_MODULES;
         }
       };
 
