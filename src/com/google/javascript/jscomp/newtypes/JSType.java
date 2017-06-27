@@ -1732,7 +1732,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   public final boolean isSomeUnknownType() {
     FunctionType ft = this.getFunTypeIfSingletonObj();
     return isUnknown()
-        || (isUnknownObject() && isLoose())
+        || (isAmbiguousObject() && isLoose())
         || (ft != null && ft.isTopFunction());
   }
 
@@ -2021,14 +2021,9 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public final boolean isUnknownObject() {
-    if (isSingletonObj()) {
-      ObjectType obj = getObjTypeIfSingletonObj();
-      NominalType nt = getNominalTypeIfSingletonObj();
-      return (nt.isBuiltinObject() || nt.isLiteralObject())
-          && !obj.isEnumObject() && !obj.isPrototypeObject();
-    }
-    return false;
+  public final boolean isAmbiguousObject() {
+    ObjectType obj = getObjTypeIfSingletonObj();
+    return obj != null && obj.isAmbiguousObject();
   }
 
   final boolean isBuiltinObjectPrototype() {

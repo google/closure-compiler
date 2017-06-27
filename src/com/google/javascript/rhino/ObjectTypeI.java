@@ -115,10 +115,11 @@ public interface ObjectTypeI extends TypeI {
   ObjectTypeI normalizeObjectForCheckAccessControls();
 
   /**
-   * Returns true if this object is an anonymous object type (i.e. the builtin Object type, or an
-   * object literal). Everything else has a named reference type and returns false.
+   * Returns true if this object is an anonymous object or function type (i.e. the builtin Object
+   * or Function type, or a record or function literal). These types are ambiguous and should not
+   * participate in property renaming. Everything else has a named reference type and returns false.
    */
-  boolean isUnknownObject();
+  boolean isAmbiguousObject();
 
   /**
    * The old type checker uses NamedType to wrap types (e.g., defined by typedefs), and to represent

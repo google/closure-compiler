@@ -829,7 +829,7 @@ class DisambiguateProperties implements CompilerPass {
       // isUnknownObject to return false for object literals. I deliberately followed the behavior
       // of OTI to help with the migration, but can revisit in the future to improve
       // disambiguation.
-      return objType.isUnknownObject()
+      return objType.isAmbiguousObject()
           // Invalidate constructors of already-invalidated types
           || (ft != null && ft.isConstructor() && isInvalidatingType(ft.getInstanceType()));
     }

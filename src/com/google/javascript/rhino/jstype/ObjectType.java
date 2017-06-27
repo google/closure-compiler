@@ -252,7 +252,7 @@ public abstract class ObjectType
   }
 
   @Override
-  public final boolean isUnknownObject() {
+  public final boolean isAmbiguousObject() {
     return !hasReferenceName();
   }
 

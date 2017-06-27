@@ -50,7 +50,7 @@ final class InvalidatingTypes {
     ObjectTypeI objType = type.toMaybeObjectType();
     return objType == null
         || types.contains(objType)
-        || objType.isUnknownObject()
+        || objType.isAmbiguousObject()
         || objType.isUnknownType()
         || objType.isBottom()
         || objType.isEnumObject()

@@ -1563,12 +1563,34 @@ final class ObjectType implements TypeWithProperties {
 
   /**
    * Looks for the given property name (which must be a non-qualified
-   * identifier) on any nominal subtypes.  The built-in object type
+   * identifier) on any nominal subtypes. The built-in object type
    * always returns true.
    */
   boolean isPropDefinedOnSubtype(QualifiedName pname) {
     checkArgument(pname.isIdentifier());
     return this.nominalType.isBuiltinObject() || this.nominalType.isPropDefinedOnSubtype(pname);
+  }
+
+  /**
+   * Returns true if this object refers to the type of an ambiguous object
+   */
+  boolean isAmbiguousObject() {
+    // TODO(sdh): It's somewhat odd that we treat function namespaces differently
+    // from object namespaces. The reason is for consistency with OTI, which treats
+    // most object literals as anonymous objects, but not so for functions. We
+    // could remove the 'fn' check and simply return true for all namespaces, but
+    // we'll need to update a bunch of expectations in DisambiguatePropertiesTest
+    // (which will then differ from OTI).
+    if (isEnumObject() || isPrototypeObject() || (this.ns != null && this.fn != null)) {
+      return false;
+    }
+    // All constructors have "Function" as their nominalType, so look at instance
+    // types instead for these cases.
+    NominalType nt =
+        (fn != null && fn.isSomeConstructorOrInterface())
+        ? fn.getInstanceTypeOfCtor().getObjTypeIfSingletonObj().nominalType
+        : this.nominalType;
+    return nt.isFunction() || nt.isBuiltinObject() || nt.isLiteralObject();
   }
 
   @Override
@@ -1590,9 +1612,9 @@ final class ObjectType implements TypeWithProperties {
       }
       return this.nominalType.appendTo(builder, ctx);
     }
-    if (!nominalType.getName().equals("Function")
-        && !nominalType.getName().equals("Object")
-        && !nominalType.getName().equals(JSTypes.OBJLIT_CLASS_NAME)) {
+    if (!nominalType.isFunction()
+        && !nominalType.isBuiltinObject()
+        && !nominalType.isLiteralObject()) {
       nominalType.appendTo(builder, ctx);
     } else if (isStruct()) {
       builder.append("struct");
