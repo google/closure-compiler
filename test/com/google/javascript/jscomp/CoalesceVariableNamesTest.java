@@ -30,7 +30,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
   @Override
   protected int getNumRepetitions() {
-   return 1;
+    return 1;
   }
 
   @Override
@@ -184,22 +184,25 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     // Make sure that we do not merge two-arg functions because of the
     // IE sort bug (see comments in computeEscaped)
     setLanguageOut(LanguageMode.ECMASCRIPT3);
-    test("function FUNC(x, y) {var a,b; y; a=0; a; x; b=0; b}",
-         "function FUNC(x, y) {var a; y; a=0; a; x; a=0; a}");
+    test(
+        "function FUNC(x, y) {var a,b; y; a=0; a; x; b=0; b}",
+        "function FUNC(x, y) {var a; y; a=0; a; x; a=0; a}");
   }
 
   public void testParameter4b() {
     // Go ahead and merge, if language-out is ES5, because that means IE8 does
     // not need to be supported.
     setLanguageOut(LanguageMode.ECMASCRIPT5);
-    test("function FUNC(x, y) {var a,b; y; a=0; a; x; b=0; b}",
-         "function FUNC(x, y) {         y; y=0; y; x; x=0; x}");
+    test(
+        "function FUNC(x, y) {var a,b; y; a=0; a; x; b=0; b}",
+        "function FUNC(x, y) {         y; y=0; y; x; x=0; x}");
   }
 
   public void testParameter5() {
     // Merge parameters
-    test("function FUNC(x, y, z) {var a,b; y; a=0; a; x; b=0; b}",
-         "function FUNC(x, y, z) {         y; y=0; y; x; x=0; x}");
+    test(
+        "function FUNC(x, y, z) {var a,b; y; a=0; a; x; b=0; b}",
+        "function FUNC(x, y, z) {         y; y=0; y; x; x=0; x}");
   }
 
   public void testLiveRangeChangeWithinCfgNode() {
@@ -214,16 +217,13 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   public void testLiveRangeChangeWithinCfgNode2() {
-    inFunction("var x; var y; var a; var b;" +
-               "y = 1, a = 1, y, a, x = 1, b = 1; x; b");
-    inFunction("var x; var y; var a; var b;" +
-               "y = 1, a = 1, y, a, x = 1; x; b = 1; b",
-               "var x; var y; var a;       " +
-               "y = 1, a = 1, y, a, x = 1; x; x = 1; x");
-    inFunction("var x; var y; var a; var b;" +
-               "y = 1, a = 1, y, x = 1; a; x; b = 1; b",
-               "var x; var y; var a;       " +
-               "y = 1, a = 1, y, x = 1; a; x; x = 1; x");
+    inFunction("var x; var y; var a; var b; y = 1, a = 1, y, a, x = 1, b = 1; x; b");
+    inFunction(
+        "var x; var y; var a; var b; y = 1, a = 1, y, a, x = 1; x; b = 1; b",
+        "var x; var y; var a;        y = 1, a = 1, y, a, x = 1; x; x = 1; x");
+    inFunction(
+        "var x; var y; var a; var b; y = 1, a = 1, y, x = 1; a; x; b = 1; b",
+        "var x; var y; var a;        y = 1, a = 1, y, x = 1; a; x; x = 1; x");
   }
 
   public void testFunctionNameReuse() {
@@ -428,8 +428,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
   public void testMaxVars() {
     String code = "";
-    for (int i = 0;
-         i < LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE + 1; i++) {
+    for (int i = 0; i < LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE + 1; i++) {
       code += String.format("var x%d = 0; print(x%d);", i, i);
     }
     inFunction(code);
