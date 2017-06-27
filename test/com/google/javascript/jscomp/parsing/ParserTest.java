@@ -2063,6 +2063,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
     testTemplateLiteral("{ `in ${block}` }");
   }
 
+  public void testTemplateLiteralWithNulChar() {
+    expectFeatures(Feature.TEMPLATE_LITERALS);
+    mode = LanguageMode.ECMASCRIPT6;
+
+    strictMode = SLOPPY;
+    parse("var test = `\nhello\\0`");
+
+    strictMode = STRICT;
+    parse("var test = `\nhello\\0`");
+  }
+
   public void testTemplateLiteralWithNewline() {
     expectFeatures(Feature.TEMPLATE_LITERALS);
     assertSimpleTemplateLiteral("hello\nworld", "`hello\nworld`");
@@ -2110,10 +2121,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testIncorrectEscapeSequenceInTemplateLiteral() {
+    mode = LanguageMode.ECMASCRIPT6;
+
     parseError("`hello\\x",
         "Hex digit expected");
     parseError("`hello\\x`",
         "Hex digit expected");
+
+    parseError("`hello\\1`", "Invalid escape sequence");
+    parseError("`hello\\2`", "Invalid escape sequence");
+    parseError("`hello\\3`", "Invalid escape sequence");
+    parseError("`hello\\4`", "Invalid escape sequence");
+    parseError("`hello\\5`", "Invalid escape sequence");
+    parseError("`hello\\6`", "Invalid escape sequence");
+    parseError("`hello\\7`", "Invalid escape sequence");
   }
 
   public void testExponentialLiterals() {
@@ -2549,12 +2570,34 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseWarning("var str = '\\1'", "Unnecessary escape: '\\1' is equivalent to just '1'");
     parseWarning("var str = '\\2'", "Unnecessary escape: '\\2' is equivalent to just '2'");
     parseWarning("var str = '\\3'", "Unnecessary escape: '\\3' is equivalent to just '3'");
+    parseWarning("var str = '\\4'", "Unnecessary escape: '\\4' is equivalent to just '4'");
+    parseWarning("var str = '\\5'", "Unnecessary escape: '\\5' is equivalent to just '5'");
+    parseWarning("var str = '\\6'", "Unnecessary escape: '\\6' is equivalent to just '6'");
+    parseWarning("var str = '\\7'", "Unnecessary escape: '\\7' is equivalent to just '7'");
+    parseWarning("var str = '\\8'", "Unnecessary escape: '\\8' is equivalent to just '8'");
+    parseWarning("var str = '\\9'", "Unnecessary escape: '\\9' is equivalent to just '9'");
     parseWarning("var str = '\\%'", "Unnecessary escape: '\\%' is equivalent to just '%'");
 
     parseWarning("var str = '\\$'", "Unnecessary escape: '\\$' is equivalent to just '$'");
+  }
 
+  public void testUnnecessaryEscapeTemplateLiterals() {
     mode = LanguageMode.ECMASCRIPT6;
     expectFeatures(Feature.TEMPLATE_LITERALS);
+
+    parseWarning("var str = `\\a`", "Unnecessary escape: '\\a' is equivalent to just 'a'");
+    parse("var str = `\\b`");
+    parseWarning("var str = `\\c`", "Unnecessary escape: '\\c' is equivalent to just 'c'");
+    parseWarning("var str = `\\d`", "Unnecessary escape: '\\d' is equivalent to just 'd'");
+    parseWarning("var str = `\\e`", "Unnecessary escape: '\\e' is equivalent to just 'e'");
+    parse("var str = `\\f`");
+    parse("var str = `\\/`");
+    parse("var str = `\\0`");
+    parseWarning("var str = `\\8`", "Unnecessary escape: '\\8' is equivalent to just '8'");
+    parseWarning("var str = `\\9`", "Unnecessary escape: '\\9' is equivalent to just '9'");
+    parseWarning("var str = `\\%`", "Unnecessary escape: '\\%' is equivalent to just '%'");
+
+    // $ needs to be escaped to distinguish it from use of ${}
     parse("var str = `\\$`");
   }
 

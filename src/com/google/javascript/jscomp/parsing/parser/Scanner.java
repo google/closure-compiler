@@ -908,6 +908,18 @@ public class Scanner {
       case 'v':
       case '0':
         return true;
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+        if (templateLiteral) {
+          reportError("Invalid escape sequence");
+          return false;
+        }
+        break;
       case 'x':
         return skipHexDigit() && skipHexDigit();
       case 'u':
@@ -927,15 +939,17 @@ public class Scanner {
           return skipHexDigit() && skipHexDigit() && skipHexDigit() && skipHexDigit();
         }
       default:
-        if (next == '/') {
-          // Don't warn for '\/' (for now) since it's common in "<\/script>"
-        } else if (templateLiteral && next == '$') {
-          // Don't warn for '\$' in template literal.
-        } else {
-          reportWarning("Unnecessary escape: '\\%s' is equivalent to just '%s'", next, next);
-        }
-        return true;
+        break;
     }
+
+    if (next == '/') {
+      // Don't warn for '\/' (for now) since it's common in "<\/script>"
+    } else if (templateLiteral && next == '$') {
+      // Don't warn for '\$' in template literal.
+    } else {
+      reportWarning("Unnecessary escape: '\\%s' is equivalent to just '%s'", next, next);
+    }
+    return true;
   }
 
   private boolean skipHexDigit() {

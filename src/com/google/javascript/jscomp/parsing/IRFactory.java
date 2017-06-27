@@ -2912,10 +2912,15 @@ class IRFactory {
           }
           // line continuation, skip the line break
           break;
-        case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
+        case '0':
+          if (cur + 1 >= value.length()) {
+            break;
+          }
+          // fall through
+        case '1': case '2': case '3': case '4': case '5': case '6': case '7':
           char next1 = value.charAt(cur + 1);
 
-          if (inStrictContext()) {
+          if (inStrictContext() || templateLiteral) {
             if (c == '0' && !isOctalDigit(next1)) {
               // No warning: "\0" followed by a character which is not an octal digit
               // is allowed in strict mode.
