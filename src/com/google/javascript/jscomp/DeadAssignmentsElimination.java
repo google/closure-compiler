@@ -57,6 +57,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
   public void process(Node externs, Node root) {
     checkNotNull(externs);
     checkNotNull(root);
+    checkState(compiler.getLifeCycleStage().isNormalized());
     NodeTraversal.traverseEs6(compiler, root, this);
   }
 
@@ -120,7 +121,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
     // Elevate all variable declarations up till the function scope
     // so the liveness analysis has all variables for the process.
     for (Var var : blockScope.getVarIterable()) {
-      checkArgument(!var.isClass() && !var.isLet() && !var.isConst());
+      checkArgument(!var.isClass());
       functionScope.declare(var.getName(), var.getNameNode(), var.getInput());
     }
 
@@ -169,7 +170,8 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
           continue;
         case FOR:
         case FOR_IN:
-          if (!n.isForIn()) {
+        case FOR_OF:
+          if (n.isVanillaFor()) {
             tryRemoveAssignment(t, NodeUtil.getConditionExpression(n), state);
           }
           continue;
