@@ -434,6 +434,103 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction(code);
   }
 
+  // Correct outputs are commented out for the following (currently the ES6 Scope Creator is
+  // not in place)
+  public void testCoalesceInInnerBlock() {
+
+    inFunction("{ var x = 1; var y = 2; y }",
+               "{ var x = 1;     x = 2; x }");
+
+    inFunction("var x = 1; var y = 2; y;",
+               "var x = 1;     x = 2; x;");
+
+    inFunction(
+        "var x = 0; if(1) { let x = 2; let y = 4; y; }",
+        // "var x = 0; if (1) { let x = 2;     x = 4; x; }");
+        "var x = 0; if(1) { let x = 2; let y = 4; y; }");
+  }
+
+  public void testLetSimple() {
+    inFunction(
+        "let x = 0; x; let y = 5; y",
+        // "let x = 0; x;     x = 5; x");
+        "let x = 0; x; let y = 5; y");
+
+    inFunction(
+        "var x = 1; var y = 2; { let x = 3; y }",
+        // "var x = 1; var y = 2; {     x = 3; y }");
+        "var x = 1; var y = 2; { let x = 3; y }");
+  }
+
+  public void testLetDifferentBlocks() {
+    inFunction("var x = 0; if (1) { let x = 1; x } else { let y = 1; y}");
+
+    inFunction("var x = 0; if (1) { let x = 1; x } else { let y = 1 + x; y}");
+
+    inFunction("var x = 0; if (1) { let x = 1; x } else { let y = 1; y}; x");
+
+    inFunction("if (1) { var x = 0; let y = 1; y + x} else { let z = 1; z}");
+
+    inFunction(
+        "if(1) { var x = 0; x } else { var y = 0; y }",
+        "if(1) { var x = 0; x } else {     x = 0; x }");
+
+    inFunction(LINE_JOINER.join(
+        "if (a) {",
+        "   return a;",
+        " } else {",
+        "   let b = a;",
+        "   let c = 1;",
+        "   return c;",
+        " }",
+        " return a;"),
+        /*"if (a) {"
+        + "    return a;"
+        + "  } else {"
+        + "    let b = a;"
+        + "        b = 1;"
+        + "    return b;"
+        + "  }"
+        + "  return a;");*/
+        LINE_JOINER.join(
+        "if (a) {",
+        "   return a;",
+        " } else {",
+        "   let b = a;",
+        "   let c = 1;",
+        "   return c;",
+        " }",
+        " return a;"));
+  }
+
+  public void testLetLoops() {
+    inFunction("let x = 1; while (1) { x = 2; x; let y = 0; y }");
+
+    inFunction("var x = 1; while (1) { if (1) { let x = 0; x } else { x = 2; let y = 3; y } }");
+
+    inFunction(
+        "var x = 1; if (1) { x = 2; let x = 3; let y = 4; y; }",
+        // "var x = 1; if (1) { x = 2; let x = 3;     x = 4; x; }");
+        "var x = 1; if (1) { x = 2; let x = 3; let y = 4; y; }");
+
+    inFunction("var x = 1; var y = 2; for (let x = 0; x < 2; x ++) { y ++; y }");
+  }
+
+  public void testArrowFunctions() {
+    inFunction(
+        "var x = 1; var y = () => { let x = 0; x }",
+        // "var x = 1;     x = () => { let x = 0; x }");
+        "var x = 1; var y = () => { let x = 0; x }");
+
+    inFunction(
+        "var x = () => { let z = 0; let y = 1; y }",
+        // "var x = () => { let z = 0;     z = 1; z }");
+        "var x = () => { let z = 0; let y = 1; y }");
+
+    inFunction(
+        "var x = 1; var y = 2; var f = () => x + 1", "var x = 1; var y = 2;     y = () => x + 1");
+  }
+
   private void inFunction(String src) {
     testSame("function FUNC(){" + src + "}");
   }
