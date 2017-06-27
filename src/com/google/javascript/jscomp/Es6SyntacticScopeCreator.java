@@ -92,6 +92,9 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
     return scope;
   }
 
+  /**
+   * A class to traverse the AST looking for name definitions and add them to the Scope.
+   */
   static class ScopeScanner {
     private final Scope scope;
     private final AbstractCompiler compiler;
