@@ -232,6 +232,33 @@ public class Scope implements StaticScope, Serializable {
     return vars.values();
   }
 
+  /**
+   * Return an iterable over all of the variables accessible to this scope (i.e. the variables in
+   * this scope and its parent scopes). Any variables declared in the local scope with the same name
+   * as a variable declared in a parent scope gain precedence - if let x exists in the block scope,
+   * a declaration let x from the parent scope would not be included because the parent scope's
+   * variable gets shadowed.
+   *
+   * <p>The iterable contains variables from inner scopes before adding variables from outer parent
+   * scopes.
+   *
+   * <p>We do not include the special 'arguments' variable.
+   */
+  public Iterable<? extends Var> getAllAccessibleVariables() {
+    Map<String, Var> accessibleVars = new LinkedHashMap<>();
+    Scope s = this;
+
+    while (s != null) {
+      for (Var v : s.getVarIterable()) {
+        if (!accessibleVars.containsKey(v.getName())){
+          accessibleVars.put(v.getName(), v);
+        }
+      }
+      s = s.getParent();
+    }
+    return accessibleVars.values();
+  }
+
   public Iterable<? extends Var> getAllSymbols() {
     return Collections.unmodifiableCollection(vars.values());
   }

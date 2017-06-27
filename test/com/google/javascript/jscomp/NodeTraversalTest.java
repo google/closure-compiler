@@ -364,7 +364,11 @@ public final class NodeTraversalTest extends TestCase {
 
     String code =
         LINE_JOINER.join(
-            "function foo() {", "  var b = [0];", "  for (let a of b) {", "    let x;", "  }", "}");
+            "function foo() {",
+            "  var b = [0];",
+            "  for (let a of b) {",
+            "    let x;", "  }",
+            "}");
 
     Node tree = parse(compiler, code);
     Scope topScope = creator.createScope(tree, null);
@@ -444,6 +448,84 @@ public final class NodeTraversalTest extends TestCase {
     t.traverseAtScope(moduleScope);
 
     callback.assertEntered();
+  }
+
+  public void testGetVarAccessible() {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    compiler.initOptions(options);
+    ScopeCreator creator = new Es6SyntacticScopeCreator(compiler);
+    AccessibleCallback callback = new AccessibleCallback();
+    NodeTraversal t = new NodeTraversal(compiler, callback, creator);
+
+    // variables are hoisted to their enclosing scope
+    String code =
+        LINE_JOINER.join(
+            "var varDefinedInScript;",
+            "var foo = function(param) {",
+            "  var varDefinedInFoo;",
+            "  var baz = function() {",
+            "    var varDefinedInBaz;",
+            "  }",
+            "}",
+            "var bar = function() {",
+            "  var varDefinedInBar;",
+            "}");
+
+    // the function scope should have access to all variables defined before and in the function
+    // scope
+    Node tree = parse(compiler, code);
+    Node fooNode =
+        tree // script
+        .getSecondChild() // var foo declaration (first child is var varDefinedInScript)
+        .getFirstFirstChild(); // child of the var foo declaration is the foo function
+    Scope topScope = creator.createScope(tree, null);
+    Scope fooScope = creator.createScope(fooNode, topScope);
+    callback.expect(4);
+    t.traverseAtScope(fooScope);
+    callback.assertAccessible(fooScope);
+
+    // the function block scope should have access to all variables defined in the global, function,
+    // and function block scopes
+    Node fooBlockNode = fooNode.getLastChild();
+    Scope fooBlockScope = creator.createScope(fooBlockNode, fooScope);
+    callback.expect(6);
+    t.traverseAtScope(fooBlockScope);
+    callback.assertAccessible(fooBlockScope);
+
+    // let and const variables are block scoped
+    code =
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  var varDefinedInFoo;",
+            "  var baz = function() {",
+            "    var varDefinedInBaz;",
+            "    let varDefinedInFoo;", // shadows parent scope
+            "  }",
+            "  let bar = 1;",
+            "}");
+
+    // the baz block scope has access to variables in its scope and parent scopes
+    tree = parse(compiler, code);
+    fooNode =
+        tree // script
+        .getFirstChild()// var foo declaration (first child is var varDefinedInScript)
+        .getFirstFirstChild(); // child of the var foo declaration is the foo function
+    fooBlockNode = fooNode.getLastChild(); // first child is param list of foo
+    Node bazNode = fooBlockNode.getSecondChild().getFirstFirstChild();
+    Node bazBlockNode = bazNode.getLastChild();
+
+    topScope = creator.createScope(tree, null);
+    fooScope = creator.createScope(fooNode, topScope);
+    fooBlockScope = creator.createScope(fooBlockNode, fooScope);
+    Scope bazScope = creator.createScope(bazNode, fooBlockScope);
+    Scope bazBlockScope = creator.createScope(bazBlockNode, bazScope);
+
+    // bar, baz, foo, varDefinedInFoo(in baz function), varDefinedInBaz
+    callback.expect(5);
+    t.traverseAtScope(bazBlockScope);
+    callback.assertAccessible(bazBlockScope);
   }
 
   public void testTraverseEs6ScopeRoots_isLimitedToScope() {
@@ -553,6 +635,7 @@ public final class NodeTraversalTest extends TestCase {
     }
   }
 
+  // Helper class used to collect all the vars from current scope and its parent scopes
   private static final class LexicallyScopedVarsAccumulator extends AbstractPostOrderCallback {
 
     final Set<String> varNames = new LinkedHashSet<>();
@@ -613,6 +696,32 @@ public final class NodeTraversalTest extends TestCase {
     }
 
     @Override
+    public void exitScope(NodeTraversal t) {}
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      return true;
+    }
+  }
+
+  // Helper class used to test accessible variables
+  private static class AccessibleCallback extends NodeTraversal.AbstractPreOrderCallback
+      implements NodeTraversal.ScopedCallback {
+    private int numAccessible;
+
+    private void expect(int accessible) {
+      this.numAccessible = accessible;
+    }
+
+    private void assertAccessible(Scope s) {
+      assertThat(s.getAllAccessibleVariables()).hasSize(numAccessible);
+    }
+
+    @Override
+    public void enterScope(NodeTraversal t) {
+    }
+
+    @Override
     public void exitScope(NodeTraversal t) {
     }
 
@@ -635,3 +744,4 @@ public final class NodeTraversalTest extends TestCase {
     return IR.root(IR.root(extern), IR.root(main));
   }
 }
+
