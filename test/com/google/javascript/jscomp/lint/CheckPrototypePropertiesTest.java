@@ -47,9 +47,17 @@ public final class CheckPrototypePropertiesTest extends CompilerTestCase {
     testSame("function C() {}; /** @enum {number} */ C.prototype.foo = { BAR: 0 };");
   }
 
+  public void testNoWarning_withES6Modules() {
+    testSame("export function C() {}; C.prototype.foo = null;");
+  }
+
   public void testWarnings() {
     testSame("function C() {}; C.prototype.foo = [];", ILLEGAL_PROTOTYPE_MEMBER);
     testSame("function C() {}; C.prototype.foo = {};", ILLEGAL_PROTOTYPE_MEMBER);
     testSame("function C() {}; C.prototype.foo = { BAR: 0 };", ILLEGAL_PROTOTYPE_MEMBER);
+  }
+
+  public void testWarnings_withES6Modules() {
+    testSame("export function C() {}; C.prototype.foo = [];", ILLEGAL_PROTOTYPE_MEMBER);
   }
 }
