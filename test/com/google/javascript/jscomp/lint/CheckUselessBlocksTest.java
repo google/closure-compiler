@@ -65,6 +65,10 @@ public final class CheckUselessBlocksTest extends CompilerTestCase {
     testSame("{ class Foo {} }");
   }
 
+  public void testCheckUselessBlocks_withES6Modules_noWarning() {
+    testSame("export function f() { switch (x) { case 1: { return 5; } } }");
+  }
+
   public void testCheckUselessBlocks_warning() {
     testWarning("{}", USELESS_BLOCK);
     testWarning("{ var f = function() {}; }", USELESS_BLOCK);
@@ -91,5 +95,9 @@ public final class CheckUselessBlocksTest extends CompilerTestCase {
     testWarning("{ let x = function() {}; {} }", USELESS_BLOCK);
     testWarning("{ let x = function() { {} }; }", USELESS_BLOCK);
     testWarning("{ var f = class {}; }", USELESS_BLOCK);
+  }
+
+  public void testCheckUselessBlocks_withES6Modules_warning() {
+    testWarning("export function bar() { { baz(); } }", USELESS_BLOCK);
   }
 }
