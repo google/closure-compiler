@@ -22,7 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
-import com.google.javascript.jscomp.LiveVariablesAnalysis.LiveVariableLattice;
+import com.google.javascript.jscomp.LiveVariablesAnalysisEs6.LiveVariableLattice;
 import com.google.javascript.jscomp.NodeTraversal.AbstractScopedCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.rhino.IR;
@@ -32,7 +32,7 @@ import java.util.Deque;
 
 /**
  * Removes local variable assignments that are useless based on information from {@link
- * LiveVariablesAnalysis}. If there is an assignment to variable {@code x} and {@code x} is dead
+ * LiveVariablesAnalysisEs6}. If there is an assignment to variable {@code x} and {@code x} is dead
  * after this assignment, we know that the current content of {@code x} will not be read and this
  * assignment is useless.
  *
@@ -40,7 +40,7 @@ import java.util.Deque;
 class DeadAssignmentsElimination extends AbstractScopedCallback implements CompilerPass {
 
   private final AbstractCompiler compiler;
-  private LiveVariablesAnalysis liveness;
+  private LiveVariablesAnalysisEs6 liveness;
   private final Deque<BailoutInformation> functionStack;
 
   private static final class BailoutInformation {
@@ -126,12 +126,9 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
 
     // Computes liveness information first.
     ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
-    /*TODO (simranarora) We are currently traversing in Es6 for this pass, but the conversion
-     *to an Es6 scope creator is breaking existing test cases
-     */
     liveness =
-        new LiveVariablesAnalysis(
-            cfg, functionScope, compiler, SyntacticScopeCreator.makeUntyped(compiler));
+        new LiveVariablesAnalysisEs6(
+            cfg, functionScope, blockScope, compiler, new Es6SyntacticScopeCreator(compiler));
     liveness.analyze();
     tryRemoveDeadAssignments(t, cfg);
   }
@@ -266,12 +263,12 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
         return;
       }
 
-      if (state.getOut().isLive(var)) {
+      if (state.getOut().isLive(liveness.getVarIndex(var.name))) {
         return; // Variable not dead.
       }
 
-      if (state.getIn().isLive(var) &&
-          isVariableStillLiveWithinExpression(n, exprRoot, var.name)) {
+      if (state.getIn().isLive(liveness.getVarIndex(var.name))
+          && isVariableStillLiveWithinExpression(n, exprRoot, var.name)) {
         // The variable is killed here but it is also live before it.
         // This is possible if we have say:
         //    if (X = a && a = C) {..} ; .......; a = S;

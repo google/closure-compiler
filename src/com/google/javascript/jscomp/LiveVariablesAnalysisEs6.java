@@ -88,16 +88,10 @@ class LiveVariablesAnalysisEs6
           && this.liveSet.equals(((LiveVariableLattice) other).liveSet);
     }
 
-    public boolean isLive(Var v) {
-      checkNotNull(v);
-      return liveSet.get(v.index);
-    }
-
+    // There is only a version of this function with index since var.index will
+    // return the wrong one. Use an instantiation of
+    // LiveVariablesAnalysisEs6 and getVarIndex(var) to get the right index.
     public boolean isLive(int index) {
-      return liveSet.get(index);
-    }
-
-    public boolean isLive(Var v, int index) {
       return liveSet.get(index);
     }
 
