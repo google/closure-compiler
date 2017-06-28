@@ -336,6 +336,11 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
     assertUnreachable("var f = array.filter(g => {if (false) g = 1;});");
   }
 
+  // TODO(tbreisacher): Fix and enable this test.
+  public void disabled_testArrowFunctionInCall() {
+    testNoWarning("listen('click', e => onclick(e), true);");
+  }
+
   public void testGenerators() {
     testSame(
         LINE_JOINER.join(
