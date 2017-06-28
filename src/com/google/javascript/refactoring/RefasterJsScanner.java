@@ -29,7 +29,6 @@ import com.google.javascript.jscomp.JsAst;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.TypeMatchingStrategy;
-import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeIRegistry;
@@ -141,18 +140,10 @@ public final class RefasterJsScanner extends Scanner {
         .isEquivalentTo(matchedTemplate.afterTemplate.getLastChild())) {
       return ImmutableList.of();
     }
-
-    HashMap<String, String> shortNames = new HashMap<>();
-    for (String require : matchedTemplate.getGoogRequiresToAdd()) {
-      fix.addGoogRequire(match, require);
-      shortNames.put(require, fix.getRequireName(match, require));
-    }
-
     Node newNode =
         transformNode(
             matchedTemplate.afterTemplate.getLastChild(),
-            matchedTemplate.matcher.getTemplateNodeToMatchMap(),
-            shortNames);
+            matchedTemplate.matcher.getTemplateNodeToMatchMap());
     Node nodeToReplace = match.getNode();
     fix.attachMatchedNodeInfo(nodeToReplace, match.getMetadata().getCompiler());
     fix.replace(nodeToReplace, newNode, match.getMetadata().getCompiler());
@@ -170,7 +161,10 @@ public final class RefasterJsScanner extends Scanner {
       fix.delete(n);
       n = n.getNext();
     }
-
+    // Add/remove any goog.requires
+    for (String require : matchedTemplate.getGoogRequiresToAdd()) {
+      fix.addGoogRequire(match, require);
+    }
     for (String require : matchedTemplate.getGoogRequiresToRemove()) {
       fix.removeGoogRequire(match, require);
     }
@@ -178,13 +172,10 @@ public final class RefasterJsScanner extends Scanner {
   }
 
   /**
-   * Transforms the template node to a replacement node by mapping the template names to the ones
-   * that were matched against in the JsSourceMatcher.
+   * Transforms the template node to a replacement node by mapping the template names to
+   * the ones that were matched against in the JsSourceMatcher.
    */
-  private Node transformNode(
-      Node templateNode,
-      Map<String, Node> templateNodeToMatchMap,
-      Map<String, String> shortNames) {
+  private Node transformNode(Node templateNode, Map<String, Node> templateNodeToMatchMap) {
     Node clone = templateNode.cloneNode();
     if (templateNode.isName()) {
       String name = templateNode.getString();
@@ -210,17 +201,8 @@ public final class RefasterJsScanner extends Scanner {
         clone.putBooleanProp(Node.FREE_CALL, false);
       }
     }
-    if (templateNode.isQualifiedName()) {
-      String name = templateNode.getQualifiedName();
-      if (shortNames.containsKey(name)) {
-        String shortName = shortNames.get(name);
-        if (!shortName.equals(name)) {
-          return IR.name(shortNames.get(name));
-        }
-      }
-    }
     for (Node child : templateNode.children()) {
-      clone.addChildToBack(transformNode(child, templateNodeToMatchMap, shortNames));
+      clone.addChildToBack(transformNode(child, templateNodeToMatchMap));
     }
     return clone;
   }

@@ -198,7 +198,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   private final AbstractCompiler compiler;
   private final PreprocessorSymbolTable preprocessorSymbolTable;
-  private final boolean preserveSugar;
 
   /**
    * Indicates where new nodes should be added in relation to some other node.
@@ -647,7 +646,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     this.compiler = compiler;
     this.preprocessorSymbolTable = preprocessorSymbolTable;
     this.rewriteState = moduleRewriteState != null ? moduleRewriteState : new GlobalRewriteState();
-    this.preserveSugar = compiler.getOptions().shouldPreserveGoogModule();
   }
 
   private class UnwrapGoogLoadModule extends NodeTraversal.AbstractPreOrderCallback {
@@ -995,7 +993,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       exportTheEmptyBinaryNamespaceAt(NodeUtil.getEnclosingStatement(call), AddAt.AFTER);
     }
 
-    if (!currentScript.declareLegacyNamespace && !preserveSugar) {
+    if (!currentScript.declareLegacyNamespace) {
       // Otherwise it's a regular module and the goog.module() line can be removed.
       compiler.reportChangeToEnclosingScope(call);
       NodeUtil.getEnclosingStatement(call).detach();
@@ -1058,11 +1056,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
     if (currentScript.isModule || targetIsNonLegacyGoogModule) {
       if (isDestructuring) {
-        if (!preserveSugar) {
-          // Delete the goog.require() because we're going to inline its alias later.
-          compiler.reportChangeToEnclosingScope(statementNode);
-          statementNode.detach();
-        }
+        // Delete the goog.require() because we're going to inline its alias later.
+        compiler.reportChangeToEnclosingScope(statementNode);
+        statementNode.detach();
       } else if (targetIsNonLegacyGoogModule) {
         if (!isTopLevel(t, statementNode, ScopeType.EXEC_CONTEXT)) {
           // Rewrite
@@ -1073,15 +1069,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           call.replaceWith(binaryNamespaceName);
           compiler.reportChangeToEnclosingScope(binaryNamespaceName);
         } else if (importHasAlias || !rewriteState.isLegacyModule(legacyNamespace)) {
-          if (!preserveSugar) {
-            // Delete the goog.require() because we're going to inline its alias later.
-            compiler.reportChangeToEnclosingScope(statementNode);
-            statementNode.detach();
-          }
+          // Delete the goog.require() because we're going to inline its alias later.
+          compiler.reportChangeToEnclosingScope(statementNode);
+          statementNode.detach();
         }
       } else {
-        // TODO(bangert): make this compatible with preserveSugar. const B = goog.require('b') runs
-        // into problems because the type checker cannot handle const.
         // Rewrite
         //   "var B = goog.require('B');" to
         //   "goog.require('B');"
@@ -1091,7 +1083,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         statementNode.replaceWith(IR.exprResult(call));
         compiler.reportChangeToEnclosingScope(call);
       }
-      if (targetIsNonLegacyGoogModule && !preserveSugar) {
+      if (targetIsNonLegacyGoogModule) {
         // Add goog.require() and namespace name to preprocessor table because they're removed
         // by current pass. If target is not a module then goog.require() is retained for
         // ProcessClosurePrimitives pass and symbols will be added there instead.
@@ -1480,6 +1472,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     Node nameNode = rhsNode.getParent();
     nameNode.detach();
     rhsNode.detach();
+
     statementNode.getParent().addChildBefore(IR.var(nameNode, rhsNode), statementNode);
   }
 
@@ -1536,9 +1529,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
                 legacyNamespace));
         // Remove the require node so this problem isn't reported all over again in
         // ProcessClosurePrimitives.
-        if (!preserveSugar) {
-          NodeUtil.getEnclosingStatement(requireNode).detach();
-        }
+        NodeUtil.getEnclosingStatement(requireNode).detach();
         continue;
       }
 
