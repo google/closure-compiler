@@ -100,15 +100,18 @@ final class PolymerClassDefinition {
       return null;
     }
 
-    String elNameString = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, elName.getString());
-    elNameString += "Element";
-
     Node target;
     if (NodeUtil.isNameDeclaration(callNode.getGrandparent())) {
       target = IR.name(callNode.getParent().getString());
     } else if (callNode.getParent().isAssign()) {
       target = callNode.getParent().getFirstChild().cloneTree();
     } else {
+      String elNameStringBase =
+          elName.isQualifiedName()
+              ? elName.getQualifiedName().replace('.', '$')
+              : elName.getString();
+      String elNameString = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, elNameStringBase);
+      elNameString += "Element";
       target = IR.name(elNameString);
     }
 

@@ -75,6 +75,46 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
     assertThat(def.props).hasSize(3);
   }
 
+  public void testDynamicDescriptor() {
+    PolymerClassDefinition def = parseAndExtractClassDef(
+        LINE_JOINER.join(
+            "var A = Polymer({",
+            "  is: x,",
+            "});"));
+
+    assertEquals("A", def.target.getString());
+  }
+
+  public void testDynamicDescriptor1() {
+    PolymerClassDefinition def = parseAndExtractClassDef(
+        LINE_JOINER.join(
+            "Polymer({",
+            "  is: x,",
+            "});"));
+
+    assertEquals("XElement", def.target.getString());
+  }
+
+  public void testDynamicDescriptor2() {
+    PolymerClassDefinition def = parseAndExtractClassDef(
+        LINE_JOINER.join(
+            "Polymer({",
+            "  is: foo.bar,",
+            "});"));
+
+    assertEquals("Foo$barElement", def.target.getString());
+  }
+
+  public void testDynamicDescriptor3() {
+    PolymerClassDefinition def = parseAndExtractClassDef(
+        LINE_JOINER.join(
+            "Polymer({",
+            "  is: this.bar,",
+            "});"));
+
+    assertEquals("This$barElement", def.target.getString());
+  }
+
   private PolymerClassDefinition parseAndExtractClassDef(String code) {
     Node rootNode = compiler.parseTestCode(code);
     GlobalNamespace globalNamespace =  new GlobalNamespace(compiler, rootNode);
