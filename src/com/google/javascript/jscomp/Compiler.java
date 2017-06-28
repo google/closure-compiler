@@ -257,7 +257,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       DiagnosticType.error("JSC_OPTIMIZE_LOOP_ERROR",
           "Exceeded max number of code motion iterations: {0}");
 
-  private final CompilerExecutor compilerExecutor = new CompilerExecutor();
+  private final CompilerExecutor compilerExecutor = getCompilerExecutor();
 
   /**
    * Logger for the whole com.google.javascript.jscomp domain -
@@ -3439,6 +3439,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       deserializedModule.setName(newModule.getName());
     }
     return;
+  }
+
+  protected CompilerExecutor getCompilerExecutor() {
+    return new CompilerExecutor();
   }
 
   /**

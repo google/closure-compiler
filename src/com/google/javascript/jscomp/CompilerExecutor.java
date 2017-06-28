@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.throwIfUnchecked;
 
+import com.google.common.annotations.GwtIncompatible;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -34,23 +35,7 @@ final class CompilerExecutor {
   // of the tree.
   private static final long COMPILER_STACK_SIZE = (1 << 24); // About 16MB
 
-  /**
-   * Under JRE 1.6, the JS Compiler overflows the stack when running on some
-   * large or complex JS code. When threads are available, we run all compile
-   * jobs on a separate thread with a larger stack.
-   *
-   * That way, we don't have to increase the stack size for *every* thread
-   * (which is what -Xss does).
-   */
-  private static final ExecutorService compilerExecutor =
-      Executors.newCachedThreadPool(new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable r) {
-          Thread t = new Thread(null, r, "jscompiler", COMPILER_STACK_SIZE);
-          t.setDaemon(true);  // Do not prevent the JVM from exiting.
-          return t;
-        }
-    });
+  private final ExecutorService compilerExecutor;
 
   /**
    * Use a dedicated compiler thread per Compiler instance.
@@ -61,6 +46,35 @@ final class CompilerExecutor {
   private boolean useThreads = true;
 
   private int timeout = 0;
+
+  CompilerExecutor() {
+    this(getDefaultExecutorService());
+  }
+
+  @GwtIncompatible("java.util.concurrent.ExecutorService")
+  CompilerExecutor(ExecutorService compilerExecutorService) {
+    this.compilerExecutor = compilerExecutorService;
+  }
+
+  /**
+   * Under JRE 1.6, the JS Compiler overflows the stack when running on some
+   * large or complex JS code. When threads are available, we run all compile
+   * jobs on a separate thread with a larger stack.
+   *
+   * That way, we don't have to increase the stack size for *every* thread
+   * (which is what -Xss does).
+   */
+  @GwtIncompatible("java.util.concurrent.ExecutorService")
+  static ExecutorService getDefaultExecutorService() {
+    return Executors.newCachedThreadPool(new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+          Thread t = new Thread(null, r, "jscompiler", COMPILER_STACK_SIZE);
+          t.setDaemon(true);  // Do not prevent the JVM from exiting.
+          return t;
+        }
+    });
+  }
 
   void disableThreads() {
     useThreads = false;
