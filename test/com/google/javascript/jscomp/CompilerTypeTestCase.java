@@ -75,6 +75,7 @@ abstract class CompilerTypeTestCase extends BaseJSTypeTestCase {
     options.setWarningLevel(
         DiagnosticGroups.INVALID_CASTS, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.JSDOC_MISSING_TYPE, CheckLevel.WARNING);
     options.setCodingConvention(getCodingConvention());
     return options;
   }
