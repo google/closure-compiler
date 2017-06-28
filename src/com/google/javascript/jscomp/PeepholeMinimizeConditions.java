@@ -1068,10 +1068,9 @@ class PeepholeMinimizeConditions
   /**
    * Determines whether the types on either side of an (in)equality operation
    * are amenable to converting to a simple truthiness check.  Specifically,
-   * this is the case when comparing an object type against null or undefined,
-   * or when comparing a numeric type against zero.
+   * this is the case when comparing an object type against null or undefined.
    */
-  private static BooleanCoercability canConvertComparisonToBooleanCoercion(
+  private BooleanCoercability canConvertComparisonToBooleanCoercion(
       Node left, Node right, boolean isShallow) {
     // Convert null or undefined check of an object to coercion.
     boolean leftIsNull = left.isNull();
@@ -1096,15 +1095,6 @@ class PeepholeMinimizeConditions
       }
     }
 
-    // Convert comparing a number to zero with coercion.
-    boolean leftIsZero = (left.isNumber() && left.getDouble() == 0);
-    boolean rightIsZero = (right.isNumber() && right.getDouble() == 0);
-    boolean leftIsNumberType = isNumberType(left);
-    boolean rightIsNumberType = isNumberType(right);
-    if ((leftIsNumberType && rightIsZero) || (rightIsNumberType && leftIsZero)) {
-      return leftIsZero ? BooleanCoercability.RIGHT : BooleanCoercability.LEFT;
-    }
-
     return BooleanCoercability.NONE;
   }
 
@@ -1124,21 +1114,6 @@ class PeepholeMinimizeConditions
         && type.isObjectType();
   }
 
-  /**
-   * Returns whether the node's type is a numeric type, which can be reduced
-   * to a truthiness check when compared against zero.
-   */
-  private static boolean isNumberType(Node n) {
-    TypeI type = n.getTypeI();
-    if (type == null) {
-      return false;
-    }
-    // Don't restrict by nullable. Nullable numbers are not coercable.
-    return !type.isUnknownType()
-        && !type.isBottom()
-        && !type.isTop()
-        && type.isNumberValueType();
-  }
 
   private Node replaceNode(Node original, MeasuredNode measuredNodeReplacement) {
     if (measuredNodeReplacement.willChange(original)) {
