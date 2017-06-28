@@ -891,7 +891,7 @@ class DisambiguateProperties implements CompilerPass {
       FunctionTypeI constructor = objType != null ? objType.getConstructor() : null;
       if (constructor != null && constructor.isInterface()) {
         List<TypeI> list = new ArrayList<>();
-        for (FunctionTypeI impl : constructor.getSubTypes()) {
+        for (FunctionTypeI impl : constructor.getDirectSubTypes()) {
           list.add(impl.getInstanceType());
         }
         return list.isEmpty() ? null : list;

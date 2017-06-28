@@ -1264,7 +1264,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   }
 
   @Override
-  public Iterable<FunctionTypeI> getSubTypes() {
+  public Iterable<FunctionTypeI> getDirectSubTypes() {
     return Iterables.concat(
         subTypes != null ? subTypes : ImmutableList.<FunctionTypeI>of(),
         this.registry.getDirectImplementors(this));

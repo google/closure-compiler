@@ -6186,19 +6186,19 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testObjectGetSubTypes() throws Exception {
     assertTrue(
         containsType(
-            OBJECT_FUNCTION_TYPE.getSubTypes(), googBar));
+            OBJECT_FUNCTION_TYPE.getDirectSubTypes(), googBar));
     assertTrue(
         containsType(
-            googBar.getSubTypes(), googSubBar));
+            googBar.getDirectSubTypes(), googSubBar));
     assertFalse(
         containsType(
-            googBar.getSubTypes(), googSubSubBar));
+            googBar.getDirectSubTypes(), googSubSubBar));
     assertFalse(
         containsType(
-            googSubBar.getSubTypes(), googSubBar));
+            googSubBar.getDirectSubTypes(), googSubBar));
     assertTrue(
         containsType(
-            googSubBar.getSubTypes(), googSubSubBar));
+            googSubBar.getDirectSubTypes(), googSubSubBar));
   }
 
   public void testImplementingType() throws Exception {

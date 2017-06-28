@@ -144,7 +144,7 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
     List<FunctionTypeI> subtypes =
         ImmutableList.copyOf(
             ((ObjectType) getLastCompiler().getTypeRegistry().getType("Error"))
-                .getConstructor().getSubTypes());
+                .getConstructor().getDirectSubTypes());
     for (FunctionTypeI type : subtypes) {
       String typeName = type.getInstanceType().toString();
       FunctionType typeInRegistry = ((ObjectType) getLastCompiler()

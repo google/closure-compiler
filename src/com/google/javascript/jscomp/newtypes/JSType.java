@@ -1867,7 +1867,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public final Collection<FunctionTypeI> getSubTypes() {
+  public final Collection<FunctionTypeI> getDirectSubTypes() {
     Preconditions.checkState(this.isConstructor() || this.isInterface());
     ImmutableList.Builder<FunctionTypeI> result = ImmutableList.builder();
     NominalType nt =

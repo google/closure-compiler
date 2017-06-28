@@ -302,7 +302,7 @@ class AmbiguateProperties implements CompilerPass {
     // A class/interface is related to its subclasses/implementors.
     FunctionTypeI constructor = type.toMaybeObjectType().getConstructor();
     if (constructor != null) {
-      for (FunctionTypeI subType : constructor.getSubTypes()) {
+      for (FunctionTypeI subType : constructor.getDirectSubTypes()) {
         addRelatedInstance(subType, related);
       }
     }

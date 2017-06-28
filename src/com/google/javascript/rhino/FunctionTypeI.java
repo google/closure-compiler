@@ -81,7 +81,7 @@ public interface FunctionTypeI extends TypeI {
    * null. This allows a downward traversal of the subtype graph.
    */
   // TODO(sdh): change the name to getDirectSubTypes()
-  Iterable<FunctionTypeI> getSubTypes();
+  Iterable<FunctionTypeI> getDirectSubTypes();
 
   /** Gets the type of {@code this} in this function. */
   TypeI getTypeOfThis();
