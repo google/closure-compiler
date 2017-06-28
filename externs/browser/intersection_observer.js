@@ -86,6 +86,14 @@ IntersectionObserverEntry.prototype.intersectionRatio;
 IntersectionObserverEntry.prototype.target;
 
 /**
+ * Whether or not the target is intersecting with the root.
+ * @see https://wicg.github.io/IntersectionObserver/#dom-intersectionobserverentry-isintersecting
+ * @type {boolean}
+ * @const
+ */
+IntersectionObserverEntry.prototype.isIntersecting;
+
+/**
  * Callback for the IntersectionObserver.
  * @see https://wicg.github.io/IntersectionObserver/#intersection-observer-callback
  * @typedef {function(!Array<!IntersectionObserverEntry>,!IntersectionObserver)}
