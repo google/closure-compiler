@@ -2040,12 +2040,96 @@ TextTrackCue.prototype.endTime;
 TextTrackCue.prototype.text;
 
 
+
+/**
+ * @see https://w3c.github.io/webvtt/#vttregion
+ * @constructor
+ */
+function VTTRegion() {}
+
+/** @type {string} */
+VTTRegion.prototype.id;
+
+/** @type {number} */
+VTTRegion.prototype.width;
+
+/** @type {number} */
+VTTRegion.prototype.lines;
+
+/** @type {number} */
+VTTRegion.prototype.regionAnchorX;
+
+/** @type {number} */
+VTTRegion.prototype.regionAnchorY;
+
+/** @type {number} */
+VTTRegion.prototype.viewportAnchorX;
+
+/** @type {number} */
+VTTRegion.prototype.viewportAnchorY;
+
+/**
+ * @see https://w3c.github.io/webvtt/#enumdef-scrollsetting
+ * @type {string}
+ */
+VTTRegion.prototype.scroll;
+
+
+
 /**
  * @see http://dev.w3.org/html5/webvtt/#the-vttcue-interface
  * @constructor
  * @extends {TextTrackCue}
+ * @param {number} startTime
+ * @param {number} endTime
+ * @param {string} text
  */
 function VTTCue(startTime, endTime, text) {}
+
+/** @type {?VTTRegion} */
+VTTCue.prototype.region;
+
+/**
+ * @see https://w3c.github.io/webvtt/#enumdef-directionsetting
+ * @type {string}
+ */
+VTTCue.prototype.vertical;
+
+/** @type {boolean} */
+VTTCue.prototype.snapToLines;
+
+/** @type {(number|string)} */
+VTTCue.prototype.line;
+
+/**
+ * @see https://w3c.github.io/webvtt/#enumdef-linealignsetting
+ * @type {string}
+ */
+VTTCue.prototype.lineAlign;
+
+/** @type {(number|string)} */
+VTTCue.prototype.position;
+
+/**
+ * @see https://w3c.github.io/webvtt/#enumdef-positionalignsetting
+ * @type {string}
+ */
+VTTCue.prototype.positionAlign;
+
+/** @type {number} */
+VTTCue.prototype.size;
+
+/**
+ * @see https://w3c.github.io/webvtt/#enumdef-alignsetting
+ * @type {string}
+ */
+VTTCue.prototype.align;
+
+/** @type {string} */
+VTTCue.prototype.text;
+
+/** @return {!DocumentFragment} */
+VTTCue.prototype.getCueAsHTML = function() {};
 
 
 /**
