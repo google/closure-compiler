@@ -1702,12 +1702,14 @@ RTCPeerConnection.prototype.removeTrack = function(sender) {};
 
 // TODO(bemasc): Add identity provider stuff once implementations exist
 
+// TODO(rjogrady): Per w3c spec, getStats() should always return a Promise.
+// Remove RTCStatsReport from the return value once Firefox supports that.
 /**
  * Firefox' getstats is synchronous and returns a much simpler
  * {!RTCStatsReport} Map-like object.
  * @param {!RTCStatsCallback=} successCallback
  * @param {MediaStreamTrack=} selector
- * @return {undefined|!RTCStatsReport}
+ * @return {undefined|!RTCStatsReport|!Promise<!RTCStatsReport>}
  */
 RTCPeerConnection.prototype.getStats = function(successCallback, selector) {};
 
