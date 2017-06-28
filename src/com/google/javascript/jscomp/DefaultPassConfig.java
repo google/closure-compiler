@@ -2156,6 +2156,11 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
     }
+
+    @Override
+    public FeatureSet featureSet() {
+      return FeatureSet.latest();
+    }
   };
 
   /** Checks that all constants are not modified */
