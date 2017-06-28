@@ -234,9 +234,11 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
    */
   private void visitMemberFunctionDefInObjectLit(Node n, Node parent) {
     String name = n.getString();
+    Node nameNode = n.getFirstFirstChild();
     Node stringKey = IR.stringKey(name, n.getFirstChild().detach());
     stringKey.setJSDocInfo(n.getJSDocInfo());
     parent.replaceChild(n, stringKey);
+    stringKey.useSourceInfoFrom(nameNode);
     compiler.reportChangeToEnclosingScope(stringKey);
   }
 

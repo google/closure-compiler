@@ -400,11 +400,16 @@ class ClosureRewriteClass extends AbstractPostOrderCallback
       Node objlit) {
     List<MemberDefinition> result = new ArrayList<>();
     for (Node keyNode : objlit.children()) {
+      Node name = keyNode;
+      // The span of a member function def is the whole function. The NAME node should be the
+      // first-first child, which will have a span for just the name of the function.
+      if (keyNode.isMemberFunctionDef()) {
+        name = keyNode.getFirstFirstChild().cloneNode();
+        name.setString(keyNode.getString());
+      }
       result.add(
           new MemberDefinition(
-                NodeUtil.getBestJSDocInfo(keyNode),
-                keyNode,
-                keyNode.removeFirstChild()));
+              NodeUtil.getBestJSDocInfo(keyNode), name, keyNode.removeFirstChild()));
     }
     objlit.detachChildren();
     return result;

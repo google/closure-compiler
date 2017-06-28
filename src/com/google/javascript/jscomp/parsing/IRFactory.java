@@ -1304,7 +1304,7 @@ class IRFactory {
 
       Node result;
 
-      if (functionTree.kind == FunctionDeclarationTree.Kind.MEMBER) {
+      if (isMember) {
         setSourceInfo(node, functionTree);
         Node member = newStringNode(Token.MEMBER_FUNCTION_DEF, name.value);
         member.addChildToBack(node);
