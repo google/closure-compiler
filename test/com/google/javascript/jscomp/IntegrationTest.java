@@ -4280,7 +4280,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testWarnUnnecessaryBackslashInStringLiteral() {
     CompilerOptions options = createCompilerOptions();
-    options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.UNNECESSARY_ESCAPE, CheckLevel.WARNING);
     test(options,
         "var str = '\\q';",
         "var str = 'q';",

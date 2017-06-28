@@ -599,6 +599,9 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("jsdocMissingType",
               RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING);
 
+  public static final DiagnosticGroup UNNECESSARY_ESCAPE =
+      DiagnosticGroups.registerGroup("unnecessaryEscape", RhinoErrorReporter.UNNECESSARY_ESCAPE);
+
   // Warnings reported by the linter. If you enable these as errors in your build targets,
   // the JS Compiler team will break your build and not rollback.
   public static final DiagnosticGroup LINT_CHECKS =
@@ -633,7 +636,6 @@ public class DiagnosticGroups {
               ClosureCheckModule.REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME,
               ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
               ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE,
-              RhinoErrorReporter.UNNECESSARY_ESCAPE,
               RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING));
 
   static final DiagnosticGroup STRICT_MODULE_CHECKS =
