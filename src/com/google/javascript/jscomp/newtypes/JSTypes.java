@@ -164,6 +164,7 @@ public final class JSTypes implements Serializable {
   private RawNominalType iObject;
   private RawNominalType iArrayLike;
   private RawNominalType iterable;
+  private RawNominalType iTemplateArray;
 
   final boolean allowMethodsAsFunctions;
   final boolean looseSubtypingForLooseObjects;
@@ -432,6 +433,10 @@ public final class JSTypes implements Serializable {
     return getArgumentsArrayType(this.UNKNOWN);
   }
 
+  public JSType getITemplateArrayType() {
+    return iTemplateArray != null ? iTemplateArray.getInstanceAsJSType() : UNKNOWN;
+  }
+
   public JSType getNativeType(JSTypeNative typeId) {
     // NOTE(aravindpg): not all JSTypeNative variants are handled here; add more as-needed.
     switch (typeId) {
@@ -524,6 +529,10 @@ public final class JSTypes implements Serializable {
 
   public void setIterableType(RawNominalType iterable) {
     this.iterable = iterable;
+  }
+
+  public void setITemplateArrayType(RawNominalType iTemplateArray) {
+    this.iTemplateArray = iTemplateArray;
   }
 
   public void setRegexpInstance(JSType regexpInstance) {

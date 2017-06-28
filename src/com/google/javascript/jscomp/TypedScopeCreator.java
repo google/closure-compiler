@@ -2073,7 +2073,7 @@ final class TypedScopeCreator implements ScopeCreator {
       Node astParameters = functionNode.getSecondChild();
       Node iifeArgumentNode = null;
 
-      if (NodeUtil.isCallOrNewTarget(functionNode)) {
+      if (NodeUtil.isInvocationTarget(functionNode)) {
         iifeArgumentNode = functionNode.getNext();
       }
 
@@ -2086,7 +2086,7 @@ final class TypedScopeCreator implements ScopeCreator {
           for (Node astParameter : astParameters.children()) {
             JSType paramType = jsDocParameter == null ?
                 unknownType : jsDocParameter.getJSType();
-            boolean inferred = paramType == null || paramType == unknownType;
+            boolean inferred = paramType == null || paramType.equals(unknownType);
 
             if (iifeArgumentNode != null && inferred) {
               String argumentName = iifeArgumentNode.getQualifiedName();

@@ -122,12 +122,13 @@ class TypeInference
   /**
    * Infers all of a function's arguments if their types aren't declared.
    */
+  @SuppressWarnings("ReferenceEquality") // unknownType is a singleton
   private void inferArguments(TypedScope functionScope) {
     Node functionNode = functionScope.getRootNode();
     Node astParameters = functionNode.getSecondChild();
     Node iifeArgumentNode = null;
 
-    if (NodeUtil.isCallOrNewTarget(functionNode)) {
+    if (NodeUtil.isInvocationTarget(functionNode)) {
       iifeArgumentNode = functionNode.getNext();
     }
 
@@ -1548,7 +1549,7 @@ class TypeInference
     if (n.isQualifiedName()) {
       JSType type = getJSType(n);
       JSType narrowed = type.restrictByNotNullOrUndefined();
-      if (type != narrowed) {
+      if (!type.equals(narrowed)) {
         scope = narrowScope(scope, n, narrowed);
       }
     }

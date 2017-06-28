@@ -20659,4 +20659,137 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  Array.prototype.forEach.call(foos, f);",
         "};"));
   }
+
+  public void testTemplateLitBothMode() {
+    this.mode = InputLanguageMode.BOTH;
+
+    // Normal case
+    typeCheck(
+        LINE_JOINER.join(
+            "var a, b",
+            "var /** string */ s = `template ${a} string ${b}`;"));
+
+    // Template strings can take many types.
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** * */ x){",
+            "  var /** string */ s = `template ${x} string`;",
+            "}"));
+
+    // Check that we analyze inside the Template Sub
+    typeCheck(
+          "var s = `template ${1 - 'asdf'} string`;",
+          NewTypeInference.INVALID_OPERAND_TYPE);
+
+    // Check template string has type string
+    typeCheck(
+          "var /** number */ n = `${1}`;",
+          NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testTaggedTemplateBothMode() {
+    this.mode = InputLanguageMode.BOTH;
+
+    // ITemplateArray as first argument
+    typeCheck("String.raw`one ${1} two`");
+
+    // Infers first argument of tag function is supertype of ITemplateArray.
+    typeCheck(
+        LINE_JOINER.join(
+            "function tag(strings, /** number */ a){",
+            "  var str0 = strings[0];",
+            "  return ''",
+            "}",
+            "var /** string */ s = tag`template ${1} string`;"));
+
+    // ?Array<string> works as first argument.
+    typeCheck(
+        LINE_JOINER.join(
+            "function tag(/** ?Array<string> */ strings){}",
+            "tag`template string`;"));
+
+    // Check argument count to tag function
+    typeCheck(
+        LINE_JOINER.join(
+            "function tag(/** !ITemplateArray */ strings, /** number */ x, /** string */ y) {}",
+            "tag`template ${123} string`;"),
+        NewTypeInference.WRONG_ARGUMENT_COUNT);
+
+    // Check argument count with no strings in template lit
+    typeCheck(
+        LINE_JOINER.join(
+            "function tag(/** !ITemplateArray */ strings, /** number */ x){}",
+            "tag`${0}${1}`;"),
+        NewTypeInference.WRONG_ARGUMENT_COUNT);
+
+    // Check argument count with optional arguments
+    typeCheck(LINE_JOINER.join(
+        "/** @param {number=} y */",
+        "function tag(strings, y){}",
+        "tag`str`;"));
+
+    // Simply having Object as first parameter is fine
+    typeCheck(
+        LINE_JOINER.join(
+          "function tag(/** Object */ strings){}",
+          "tag `template string`;"));
+
+    // Check argument type
+    typeCheck(
+        LINE_JOINER.join(
+            "function tag(/** !ITemplateArray */ strings, /** string */ y){}",
+            "tag`template string ${1}`;"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    // Tag function does not have to return strings
+    typeCheck(
+        LINE_JOINER.join(
+            "function tag(strings){",
+            "  return (function (){});",
+            "}",
+            "var g = tag`template string`;",
+            "g()"));
+  }
+
+  public void testTaggedTemplateBadTagFunction() {
+    // Invalid first parameter type for specific object
+    typeCheck(
+        LINE_JOINER.join(
+            "function tag(/** {a:number} */ strings){}",
+            "tag `template string`;"),
+        NewTypeInference.TEMPLATE_ARGUMENT_MISMATCH);
+
+    // !Array<number> does not work as first argument.
+    typeCheck(
+        LINE_JOINER.join(
+            "function tag(/** !Array<number> */ strings){}",
+            "tag`template string`;"),
+        NewTypeInference.TEMPLATE_ARGUMENT_MISMATCH);
+
+    // Check argument count with tag function that has no parameters
+    typeCheck(
+        LINE_JOINER.join(
+            "function tag(){}",
+            "tag``;"),
+        NewTypeInference.TEMPLATE_ARGUMENT_MISMATCH,
+        NewTypeInference.WRONG_ARGUMENT_COUNT);
+
+    // Tag function not a function
+    typeCheck(
+        LINE_JOINER.join(
+            "var tag = 42;",
+            "tag `template string`;"),
+        NewTypeInference.NOT_CALLABLE);
+
+    // Check backwards-infer type of template sub from type of tag function.
+    typeCheck(
+        LINE_JOINER.join(
+            "function tag(/** !Array<string> */ strs, /** string */ x){}",
+            "function h(x) {",
+            "  tag `asdf ${x} asdf`;",
+            "  return x - 2;",
+            "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE
+        );
+  }
 }

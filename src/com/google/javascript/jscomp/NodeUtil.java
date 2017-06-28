@@ -23,7 +23,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
+import com.google.common.collect.AbstractIterator;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -45,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -4440,9 +4444,10 @@ public final class NodeUtil {
   /**
    * Returns whether this is a target of a call or new.
    */
-  static boolean isCallOrNewTarget(Node n) {
+  static boolean isInvocationTarget(Node n) {
     Node parent = n.getParent();
-    return parent != null && isCallOrNew(parent) && parent.getFirstChild() == n;
+    return parent != null && (isCallOrNew(parent) || parent.isTaggedTemplateLit())
+        && parent.getFirstChild() == n;
   }
 
   static boolean isCallOrNewArgument(Node n) {
@@ -4980,5 +4985,68 @@ public final class NodeUtil {
       }
     }
     return new ArrayList<>(uniqueScopeNodes);
+  }
+
+  static Iterable<Node> getInvocationArgsAsIterable(Node invocation){
+    if (invocation.isTaggedTemplateLit()) {
+      return new TemplateArgsIterable(invocation.getLastChild());
+    } else {
+      return getCallArgsAsIterable(invocation);
+    }
+  }
+
+  /** Returns an iterable of arguments of this call node */
+  private static Iterable<Node> getCallArgsAsIterable(Node call){
+    if (call.hasOneChild()) {
+      return ImmutableList.<Node>of();
+    }
+    return call.getSecondChild().siblings();
+  }
+
+  /**
+   * Returns the number of arguments in this invocation. For template literals it takes into
+   * account the implicit first argument of ITemplateArray
+   */
+  static int getInvocationArgsCount(Node invocation) {
+    if (invocation.isTaggedTemplateLit()) {
+      Iterable<Node> args = new TemplateArgsIterable(invocation.getLastChild());
+      return Iterables.size(args) + 1;
+    } else {
+      return invocation.getChildCount() - 1;
+    }
+  }
+
+  /**
+   * Represents an iterable of the children of templatelit_sub nodes of a template lit node
+   * This iterable will skip over the String children of the template lit node.
+   */
+  private static final class TemplateArgsIterable implements Iterable<Node>{
+    private final Node templateLit;
+
+    TemplateArgsIterable(Node templateLit) {
+      checkState(templateLit.isTemplateLit());
+      this.templateLit = templateLit;
+    }
+
+    @Override
+    public Iterator<Node> iterator() {
+      return new AbstractIterator<Node>() {
+        @Nullable private Node nextChild = templateLit.getFirstChild();
+
+        @Override
+        protected Node computeNext() {
+          while (nextChild != null && !nextChild.isTemplateLitSub()) {
+            nextChild = nextChild.getNext();
+          }
+          if (nextChild == null) {
+            return endOfData();
+          } else {
+            Node result = nextChild.getFirstChild();
+            nextChild = nextChild.getNext();
+            return result;
+          }
+        }
+      };
+    }
   }
 }

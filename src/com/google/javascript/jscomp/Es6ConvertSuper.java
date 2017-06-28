@@ -146,7 +146,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       visitSuperCall(node, parent, enclosingMemberDef);
     } else if (parent.isGetProp() || parent.isGetElem()) {
       if (parent.getFirstChild() == node) {
-        if (parent.getParent().isCall() && NodeUtil.isCallOrNewTarget(parent)) {
+        if (parent.getParent().isCall() && NodeUtil.isInvocationTarget(parent)) {
           // super.something(...) or super['something'](..)
           visitSuperPropertyCall(node, parent, enclosingMemberDef);
         } else {
