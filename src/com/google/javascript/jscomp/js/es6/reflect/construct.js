@@ -23,5 +23,6 @@
 'require util/polyfill';
 
 $jscomp.polyfill('Reflect.construct', function(orig) {
-   return orig || $jscomp.construct;
-  }, 'es6', 'es3');
+  // NOTE: This is just Reflect.construct if it's present and functional.
+  return $jscomp.construct;
+}, 'es6', 'es3');
