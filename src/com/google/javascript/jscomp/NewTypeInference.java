@@ -49,10 +49,8 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -747,115 +745,6 @@ final class NewTypeInference implements CompilerPass {
     return changeTypeIfFunctionNamespace(fnScope, fnType);
   }
 
-  private void buildWorkset(
-      DiGraphNode<Node, ControlFlowGraph.Branch> dn,
-      List<DiGraphNode<Node, ControlFlowGraph.Branch>> workset) {
-    buildWorksetHelper(dn, workset,
-        new LinkedHashSet<DiGraphNode<Node, ControlFlowGraph.Branch>>());
-  }
-
-  private void buildWorksetHelper(
-      DiGraphNode<Node, ControlFlowGraph.Branch> dn,
-      List<DiGraphNode<Node, ControlFlowGraph.Branch>> workset,
-      Set<DiGraphNode<Node, ControlFlowGraph.Branch>> seen) {
-    if (seen.contains(dn) || dn == this.cfg.getImplicitReturn()) {
-      return;
-    }
-    switch (dn.getValue().getToken()) {
-      case DO:
-      case WHILE:
-      case FOR:
-      case FOR_IN:
-      case FOR_OF:
-        // Do the loop body first, then the loop follow.
-        // For DO loops, we do BODY-CONDT-CONDF-FOLLOW
-        // Since CONDT is currently unused, this could be optimized.
-        List<DiGraphEdge<Node, ControlFlowGraph.Branch>> outEdges = dn.getOutEdges();
-        seen.add(dn);
-        workset.add(dn);
-        for (DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge : outEdges) {
-          if (outEdge.getValue() == ControlFlowGraph.Branch.ON_TRUE) {
-            buildWorksetHelper(outEdge.getDestination(), workset, seen);
-          }
-        }
-        workset.add(dn);
-        for (DiGraphEdge<Node, ControlFlowGraph.Branch> outEdge : outEdges) {
-          if (outEdge.getValue() == ControlFlowGraph.Branch.ON_FALSE) {
-            buildWorksetHelper(outEdge.getDestination(), workset, seen);
-          }
-        }
-        break;
-      default: {
-        // Wait for all other incoming edges at join nodes.
-        for (DiGraphEdge<Node, ControlFlowGraph.Branch> inEdge :
-            dn.getInEdges()) {
-          if (!seen.contains(inEdge.getSource())
-              && !inEdge.getSource().getValue().isDo()) {
-            return;
-          }
-        }
-        seen.add(dn);
-        if (this.cfg.getEntry() != dn) {
-          workset.add(dn);
-        }
-        // Don't recur for straight-line code
-        while (true) {
-          Node n = dn.getValue();
-          if (n.isTry()) {
-            maybeAddDeadCode(workset, seen, n.getSecondChild());
-          } else if (n.isBreak() || n.isContinue() || n.isThrow()) {
-            maybeAddDeadCode(workset, seen, n.getNext());
-          }
-          List<DiGraphNode<Node, ControlFlowGraph.Branch>> succs =
-              this.cfg.getDirectedSuccNodes(dn);
-          if (succs.size() != 1) {
-            break;
-          }
-          DiGraphNode<Node, ControlFlowGraph.Branch> succ = succs.get(0);
-          if (succ == this.cfg.getImplicitReturn()) {
-            if (n.getNext() != null) {
-              maybeAddDeadCode(workset, seen, n.getNext());
-            }
-            return;
-          }
-          // Make sure that succ isn't a join node
-          if (this.cfg.getDirectedPredNodes(succ).size() > 1) {
-            break;
-          }
-          workset.add(succ);
-          seen.add(succ);
-          dn = succ;
-        }
-        for (DiGraphNode<Node, ControlFlowGraph.Branch> succ :
-          this.cfg.getDirectedSuccNodes(dn)) {
-          buildWorksetHelper(succ, workset, seen);
-        }
-        break;
-      }
-    }
-  }
-
-  // Analyze dead code, such as a catch that is never executed or a statement
-  // following a return/break/continue. This code can be a predecessor of live
-  // code in the cfg. We wait on incoming edges before adding nodes to the
-  // workset, and don't want dead code to block live code from being analyzed.
-  private void maybeAddDeadCode(
-      List<DiGraphNode<Node, ControlFlowGraph.Branch>> workset,
-      Set<DiGraphNode<Node, ControlFlowGraph.Branch>> seen,
-      Node maybeDeadNode) {
-    if (maybeDeadNode == null) {
-      return;
-    }
-    DiGraphNode<Node, ControlFlowGraph.Branch> cfgNode =
-        this.cfg.getDirectedGraphNode(maybeDeadNode);
-    if (cfgNode == null) {
-      return;
-    }
-    if (this.cfg.getDirectedPredNodes(cfgNode).isEmpty()) {
-      buildWorksetHelper(cfgNode, workset, seen);
-    }
-  }
-
   private void analyzeFunction(NTIScope scope) {
     println("=== Analyzing function: ", scope.getReadableName(), " ===");
     currentScope = scope;
@@ -865,13 +754,10 @@ final class NewTypeInference implements CompilerPass {
     println(this.cfg);
     // The size is > 1 when multiple files are compiled
     // Preconditions.checkState(cfg.getEntry().getOutEdges().size() == 1);
-    List<DiGraphNode<Node, ControlFlowGraph.Branch>> workset =
-        new LinkedList<>();
-    buildWorkset(this.cfg.getEntry(), workset);
+    NTIWorkset workset = new NTIWorkset(this.cfg);
     /* println("Workset: ", workset); */
     this.typeEnvFromDeclaredTypes = getTypeEnvFromDeclaredTypes();
     if (scope.isFunction() && scope.hasUndeclaredFormalsOrOuters()) {
-      Collections.reverse(workset);
       // Ideally, we would like to only set the in-edges of the implicit return
       // rather than all edges. However, we cannot do that because of a bug in
       // workset construction. (The test testBadWorksetConstruction would fail.)
@@ -884,7 +770,6 @@ final class NewTypeInference implements CompilerPass {
         envs.put(e, this.typeEnvFromDeclaredTypes);
       }
       analyzeFunctionBwd(workset);
-      Collections.reverse(workset);
       // TODO(dimvar): Revisit what we throw away after the bwd analysis
       TypeEnv entryEnv = getEntryTypeEnv();
       initEdgeEnvsFwd(entryEnv);
@@ -905,9 +790,8 @@ final class NewTypeInference implements CompilerPass {
     }
   }
 
-  private void analyzeFunctionBwd(
-      List<DiGraphNode<Node, ControlFlowGraph.Branch>> workset) {
-    for (DiGraphNode<Node, ControlFlowGraph.Branch> dn : workset) {
+  private void analyzeFunctionBwd(NTIWorkset workset) {
+    for (DiGraphNode<Node, ControlFlowGraph.Branch> dn : workset.backward()) {
       Node n = dn.getValue();
       TypeEnv outEnv = checkNotNull(getOutEnv(dn));
       TypeEnv inEnv;
@@ -999,9 +883,8 @@ final class NewTypeInference implements CompilerPass {
     }
   }
 
-  private void analyzeFunctionFwd(
-      List<DiGraphNode<Node, ControlFlowGraph.Branch>> workset) {
-    for (DiGraphNode<Node, ControlFlowGraph.Branch> dn : workset) {
+  private void analyzeFunctionFwd(NTIWorkset workset) {
+    for (DiGraphNode<Node, ControlFlowGraph.Branch> dn : workset.forward()) {
       Node n = dn.getValue();
       Node parent = n.getParent();
       checkState(n != null, "Implicit return should not be in workset.");
@@ -4213,7 +4096,7 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private static JSType envGetType(TypeEnv env, String pname) {
-    checkArgument(!pname.contains("."));
+    checkArgument(!pname.contains("."), pname);
     return env.getType(pname);
   }
 

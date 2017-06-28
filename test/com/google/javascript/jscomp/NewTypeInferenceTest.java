@@ -13214,7 +13214,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
 
     typeCheck(LINE_JOINER.join(
         "function f(/** !Boolean */ x) {",
-        "  if (x) { return 123; };",
+        "  if (x) { return 123; }",
         "}"));
   }
 
@@ -20791,5 +20791,34 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "}"),
         NewTypeInference.INVALID_OPERAND_TYPE
         );
+  }
+
+  public void testReanalyzeLoopConditionAfterLoopBody() {
+    typeCheckMessageContents(
+        LINE_JOINER.join(
+            "var x = 123;",
+            "var y = 234;",
+            "for (; x = y;) {",
+            "  y = 'asdf';",
+            "}",
+            "var z = x - 1;"),
+        NewTypeInference.INVALID_OPERAND_TYPE,
+        LINE_JOINER.join(
+            "Invalid type(s) for operator SUB.",
+            "Expected : number",
+            "Found    : number|string",
+            "More details:",
+            "The found type is a union that includes an unexpected type: string"));
+  }
+
+  public void testDoWhileDontCrash() {
+    typeCheck(LINE_JOINER.join(
+        "function f() {",
+        "  var i = 0;",
+        "  if (2 < 5) {",
+        "    do {} while (i < 5);",
+        "  }",
+        "  return 3;",
+        "}"));
   }
 }
