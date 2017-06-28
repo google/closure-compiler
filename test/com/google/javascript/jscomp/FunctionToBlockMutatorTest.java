@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
@@ -210,15 +211,16 @@ public final class FunctionToBlockMutatorTest extends TestCase {
     Node expectedRoot = parse(compiler, expectedResult);
     checkState(compiler.getErrorCount() == 0);
     final Node expected = expectedRoot.getFirstChild();
-    final Node tree = parse(compiler, code);
+    final Node script = parse(compiler, code);
     checkState(compiler.getErrorCount() == 0);
 
-    Node externsRoot = new Node(Token.EMPTY);
-    Node mainRoot = tree;
+    compiler.externsRoot = new Node(Token.ROOT);
+    compiler.jsRoot = IR.root(script);
+    compiler.externAndJsRoot = IR.root(compiler.externsRoot, compiler.jsRoot);
     MarkNoSideEffectCalls mark = new MarkNoSideEffectCalls(compiler);
-    mark.process(externsRoot, mainRoot);
+    mark.process(compiler.externsRoot, compiler.jsRoot);
 
-    final Node fnNode = findFunction(tree, fnName);
+    final Node fnNode = findFunction(script, fnName);
 
     // Fake precondition.
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
@@ -242,7 +244,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
 
     compiler.resetUniqueNameId();
     TestCallback test = new TestCallback(fnName, tester);
-    NodeTraversal.traverseEs6(compiler, tree, test);
+    NodeTraversal.traverseEs6(compiler, script, test);
   }
 
   interface Method {
