@@ -152,13 +152,32 @@ class LiveVariablesAnalysisEs6
   private void addScopeVariables() {
     int num = 0;
     if (jsScope.isFunctionScope()) {
-      checkNotNull(jsScopeChild);
-      for (Var v : jsScopeChild.getAllAccessibleVariables()) {
+      for (Var v : jsScope.getVarIterable()) {
         scopeVariables.put(v.getName(), num);
         num++;
       }
+
+      if (jsScopeChild != null) {
+        for (Var v : jsScopeChild.getVarIterable()) {
+          // add the hoisted variables from this child scope
+          if ((v.isLet() || v.isConst()) && !jsScope.isFunctionScope()) {
+            continue;
+
+          }
+          scopeVariables.put(v.getName(), num);
+          num++;
+        }
+      }
     } else {
-      for (Var v : jsScope.getAllAccessibleVariables()) {
+
+      if (jsScope.isFunctionBlockScope()) {
+        for (Var v : jsScope.getParent().getVarIterable()) {
+          scopeVariables.put(v.getName(), num);
+          num++;
+        }
+      }
+
+      for (Var v : jsScope.getVarIterable()) {
         scopeVariables.put(v.getName(), num);
         num++;
       }
