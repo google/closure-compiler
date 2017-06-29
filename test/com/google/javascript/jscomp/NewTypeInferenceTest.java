@@ -246,7 +246,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.INEXISTENT_PROPERTY);
   }
 
-  public void testAlhpaRenamingDoesntChangeType() {
+  public void testAlphaRenamingDoesntChangeType() {
     typeCheck(LINE_JOINER.join(
         "/**",
         " * @param {U} x",
@@ -20854,5 +20854,12 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
                 + " for argument 1.",
             "Expected a supertype of : T#1",
             "but found               : T#2"));
+  }
+
+  public void testDontCrashOnKnownPropertyOfGlobalThis() {
+    typeCheck(
+        "function f(){ this.constructor['fubar'] = 1; }",
+        NewTypeInference.NULLABLE_DEREFERENCE,
+        NewTypeInference.GLOBAL_THIS);
   }
 }

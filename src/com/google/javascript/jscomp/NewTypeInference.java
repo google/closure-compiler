@@ -3382,6 +3382,11 @@ final class NewTypeInference implements CompilerPass {
           String objName = qname.getLeftmostName();
           QualifiedName props = qname.getAllButLeftmost();
           JSType objType = envGetType(env, objName);
+          if (objType == null) {
+            // Don't specialize THIS properties in functions where THIS is unknown.
+            checkState(objName.equals("this"));
+            return env;
+          }
           // TODO(dimvar): In analyzeNameFwd/Bwd, we are careful to not
           // specialize namespaces, and we need the same check here. But
           // currently, stopping specialization here causes tests to fail,
@@ -4307,8 +4312,7 @@ final class NewTypeInference implements CompilerPass {
       JSType minusNull = recvType.removeType(NULL_OR_UNDEFINED);
       if (!minusNull.isBottom()) {
         if (this.reportNullDeref) {
-          warnings.add(JSError.make(
-              obj, NULLABLE_DEREFERENCE, recvType.toString()));
+          warnings.add(JSError.make(obj, NULLABLE_DEREFERENCE, recvType.toString()));
         }
         TypeEnv outEnv = inEnv;
         if (obj.isQualifiedName()) {
