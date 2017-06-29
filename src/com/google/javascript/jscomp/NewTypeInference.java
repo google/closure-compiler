@@ -755,7 +755,7 @@ final class NewTypeInference implements CompilerPass {
     println(this.cfg);
     // The size is > 1 when multiple files are compiled
     // Preconditions.checkState(cfg.getEntry().getOutEdges().size() == 1);
-    NTIWorkset workset = new NTIWorkset(this.cfg);
+    NTIWorkset workset = NTIWorkset.create(this.cfg);
     /* println("Workset: ", workset); */
     this.typeEnvFromDeclaredTypes = getTypeEnvFromDeclaredTypes();
     if (scope.isFunction() && scope.hasUndeclaredFormalsOrOuters()) {
