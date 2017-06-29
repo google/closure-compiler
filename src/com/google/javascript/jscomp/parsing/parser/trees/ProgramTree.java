@@ -17,20 +17,23 @@
 package com.google.javascript.jscomp.parsing.parser.trees;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 
 public class ProgramTree extends ParseTree {
-
   public final ImmutableList<ParseTree> sourceElements;
   public final ImmutableList<Comment> sourceComments;
+  public final FeatureSet features;
 
   public ProgramTree(
       SourceRange location,
       ImmutableList<ParseTree> sourceElements,
-      ImmutableList<Comment> sourceComments) {
+      ImmutableList<Comment> sourceComments,
+      FeatureSet features) {
     super(ParseTreeType.PROGRAM, location);
 
     this.sourceElements = sourceElements;
     this.sourceComments = sourceComments;
+    this.features = features;
   }
 }

@@ -2116,7 +2116,7 @@ public abstract class CompilerTestCase extends TestCase {
         checkState(diagnostic == null);
         diagnostic = (Diagnostic) part;
       } else {
-        throw new IllegalStateException("unexepected " + part.getClass().getName());
+        throw new IllegalStateException("unexpected " + part.getClass().getName());
       }
     }
     if (externs == null) {

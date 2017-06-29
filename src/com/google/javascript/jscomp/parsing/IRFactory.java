@@ -286,9 +286,9 @@ class IRFactory {
                     StaticSourceFile sourceFile,
                     Config config,
                     ErrorReporter errorReporter,
-                    ImmutableList<Comment> comments) {
+                    ProgramTree tree) {
     this.sourceString = sourceString;
-    this.nextCommentIter = comments.iterator();
+    this.nextCommentIter = tree.sourceComments.iterator();
     this.currentComment = skipNonJsDoc(nextCommentIter);
     this.newlines = new ArrayList<>();
     this.sourceFile = sourceFile;
@@ -320,6 +320,10 @@ class IRFactory {
     } else {
       reservedKeywords = ES5_RESERVED_KEYWORDS;
     }
+
+    for (Feature feature : tree.features.getFeatures()) {
+      maybeWarnForFeature(tree, feature);
+    }
   }
 
   private static Comment skipNonJsDoc(UnmodifiableIterator<Comment> comments) {
@@ -348,7 +352,7 @@ class IRFactory {
                                         Config config,
                                         ErrorReporter errorReporter) {
     IRFactory irFactory = new IRFactory(sourceString, sourceFile,
-        config, errorReporter, tree.sourceComments);
+        config, errorReporter, tree);
 
     // don't call transform as we don't want standard jsdoc handling.
     Node n = irFactory.transformDispatcher.process(tree);
@@ -376,7 +380,7 @@ class IRFactory {
   static FeatureSet detectFeatures(
       ProgramTree tree, StaticSourceFile sourceFile, String sourceString) {
     IRFactory irFactory =
-        new IRFactory(sourceString, sourceFile, NULL_CONFIG, NULL_REPORTER, tree.sourceComments);
+        new IRFactory(sourceString, sourceFile, NULL_CONFIG, NULL_REPORTER, tree);
     Node n = irFactory.transformDispatcher.process(tree);
     irFactory.validateAll(n);
 
@@ -396,6 +400,21 @@ class IRFactory {
     @Override
     public void error(String message, String sourceName, int line, int lineOffset) {}
   };
+
+  void maybeWarnForFeature(ParseTree node, Feature feature) {
+    if (!features.has(feature)) {
+      features = features.with(feature);
+      if (!isSupportedForInputLanguageMode(feature)) {
+        errorReporter.warning(
+            "this language feature is only supported for "
+            + LanguageMode.minimumRequiredFor(feature)
+            + " mode or better: "
+            + feature,
+            sourceName,
+            lineno(node), charno(node));
+      }
+    }
+  }
 
   Node getResultNode() {
     return resultNode;
@@ -2563,20 +2582,6 @@ class IRFactory {
         return newNode(Token.EMPTY);
       } else {
         return transformList(type, list);
-      }
-    }
-
-    void maybeWarnForFeature(ParseTree node, Feature feature) {
-      features = features.with(feature);
-      if (!isSupportedForInputLanguageMode(feature)) {
-
-        errorReporter.warning(
-            "this language feature is only supported for "
-            + LanguageMode.minimumRequiredFor(feature)
-            + " mode or better: "
-            + feature,
-            sourceName,
-            lineno(node), charno(node));
       }
     }
 

@@ -42,12 +42,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private static final String SUSPICIOUS_COMMENT_WARNING =
       IRFactory.SUSPICIOUS_COMMENT_WARNING;
 
-  private static final String TRAILING_COMMA_MESSAGE =
-      "Trailing comma is not legal in an ECMA-262 object initializer";
-
   private static final String MISSING_GT_MESSAGE =
       "Bad type annotation. missing closing >" + BAD_TYPE_WIKI_LINK;
-
 
   private static final String UNLABELED_BREAK = "unlabelled break must be inside loop or switch";
 
@@ -1157,6 +1153,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testComputedPropertiesObjLit() {
+    mode = LanguageMode.ECMASCRIPT6;
     expectFeatures(Feature.COMPUTED_PROPERTIES);
 
     // Method
@@ -1241,7 +1238,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse(js);
     mode = LanguageMode.ECMASCRIPT5;
     String warning = getRequiresEs6Message(Feature.COMPUTED_PROPERTIES);
-    parseWarning(js, warning, warning);
+    parseWarning(js, warning);
   }
 
   private void testComputedProperty(String js) {
@@ -1262,16 +1259,21 @@ public final class ParserTest extends BaseJSTypeTestCase {
   }
 
   public void testTrailingCommaWarning3() {
-    expectFeatures(Feature.TRAILING_COMMA);
-    parseWarning("var a = ['foo', 'bar',];", TRAILING_COMMA_MESSAGE);
+    parseWarning(
+        "var a = ['foo', 'bar',];",
+        requiresLanguageModeMessage(LanguageMode.ECMASCRIPT5, Feature.TRAILING_COMMA));
+
     mode = LanguageMode.ECMASCRIPT5;
+    expectFeatures(Feature.TRAILING_COMMA);
     strictMode = SLOPPY;
     parse("var a = ['foo', 'bar',];");
   }
 
   public void testTrailingCommaWarning4() {
     expectFeatures(Feature.TRAILING_COMMA);
-    parseWarning("var a = [,];", TRAILING_COMMA_MESSAGE);
+    parseWarning(
+        "var a = ['foo', 'bar',];",
+        requiresLanguageModeMessage(LanguageMode.ECMASCRIPT5, Feature.TRAILING_COMMA));
     mode = LanguageMode.ECMASCRIPT5;
     strictMode = SLOPPY;
     parse("var a = [,];");
@@ -1283,7 +1285,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   public void testTrailingCommaWarning6() {
     expectFeatures(Feature.TRAILING_COMMA);
-    parseWarning("var a = {'foo': 'bar',};", TRAILING_COMMA_MESSAGE);
+    parseWarning(
+        "var a = ['foo', 'bar',];",
+        requiresLanguageModeMessage(LanguageMode.ECMASCRIPT5, Feature.TRAILING_COMMA));
     mode = LanguageMode.ECMASCRIPT5;
     strictMode = SLOPPY;
     parse("var a = {'foo': 'bar',};");
@@ -1432,7 +1436,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning(
         "var [first, ...rest] = foo();",
-        getRequiresEs6Message(Feature.DESTRUCTURING));
+        getRequiresEs6Message(Feature.DESTRUCTURING),
+        getRequiresEs6Message(Feature.ARRAY_PATTERN_REST));
   }
 
   public void testArrayDestructuringAssignRest() {
@@ -1456,7 +1461,8 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
     mode = LanguageMode.ECMASCRIPT5;
     parseWarning("var [first, ...rest] = foo();",
-        getRequiresEs6Message(Feature.DESTRUCTURING));
+        getRequiresEs6Message(Feature.DESTRUCTURING),
+        getRequiresEs6Message(Feature.ARRAY_PATTERN_REST));
   }
 
   public void testArrayDestructuringFnDeclaration() {
@@ -1711,22 +1717,17 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testComprehensions() {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
-    String error = "unsupported language feature:"
-        + " array/generator comprehensions";
+    String error = "unsupported language feature: array/generator comprehensions";
 
     // array comprehensions
     parseError("[for (x of y) z];", error);
-    expectFeatures(Feature.DESTRUCTURING); // Note: the object pattern triggers this
     parseError("[for ({x,y} of z) x+y];", error);
-    expectFeatures();
     parseError("[for (x of y) if (x<10) z];", error);
     parseError("[for (a = 5 of v) a];", "'identifier' expected");
 
     // generator comprehensions
     parseError("(for (x of y) z);", error);
-    expectFeatures(Feature.DESTRUCTURING); // Note: the object pattern triggers this
     parseError("(for ({x,y} of z) x+y);", error);
-    expectFeatures();
     parseError("(for (x of y) if (x<10) z);", error);
     parseError("(for (a = 5 of v) a);", "'identifier' expected");
   }

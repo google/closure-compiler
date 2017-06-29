@@ -124,7 +124,9 @@ class RhinoErrorReporter {
         ImmutableMap.<Pattern, DiagnosticType>builder()
             // Trailing comma
             .put(
-                Pattern.compile("Trailing comma is not legal in an ECMA-262 object initializer"),
+                Pattern.compile(
+                    "this language feature is only supported for ECMASCRIPT5 mode or better:"
+                        + " trailing comma"),
                 TRAILING_COMMA)
 
             // Duplicate parameter

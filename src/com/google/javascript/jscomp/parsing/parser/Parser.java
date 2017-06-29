@@ -224,16 +224,11 @@ public class Parser {
     private final boolean parseTypeSyntax;
     private final boolean atLeast6;
     private final boolean isStrictMode;
-    private final boolean warnTrailingCommas;
 
     public Config(Mode mode, boolean isStrictMode) {
       parseTypeSyntax = mode == Mode.TYPESCRIPT;
       atLeast6 = !(mode == Mode.ES3 || mode == Mode.ES5);
       this.isStrictMode = isStrictMode;
-
-      // Generally, we allow everything that is valid in any mode
-      // we only warn about things that are not represented in the AST.
-      this.warnTrailingCommas = mode == Mode.ES3;
     }
   }
 
@@ -279,7 +274,7 @@ public class Parser {
       eat(TokenType.END_OF_FILE);
       t.end();
       return new ProgramTree(
-          getTreeLocation(start), sourceElements, commentRecorder.getComments());
+          getTreeLocation(start), sourceElements, commentRecorder.getComments(), features);
     } catch (StackOverflowError e) {
       reportError("Too deep recursion while parsing");
       return null;
@@ -2414,12 +2409,6 @@ public class Parser {
   void maybeReportTrailingComma(Token commaToken) {
     if (commaToken != null) {
       features = features.with(Feature.TRAILING_COMMA);
-      if (config.warnTrailingCommas) {
-        // In ES3 mode warn about trailing commas which aren't accepted by
-        // older browsers (such as IE8).
-        errorReporter.reportWarning(commaToken.location.start,
-            "Trailing comma is not legal in an ECMA-262 object initializer");
-      }
     }
   }
 
@@ -3873,7 +3862,7 @@ public class Parser {
 
   private TokenType maybeParseAccessibilityModifier() {
     if (config.parseTypeSyntax && peekAccessibilityModifier()) {
-      features = features.union(FeatureSet.TYPESCRIPT);
+      features = features.with(Feature.ACCESSIBILITY_MODIFIER);
       return nextToken().type;
     } else {
       return null;
