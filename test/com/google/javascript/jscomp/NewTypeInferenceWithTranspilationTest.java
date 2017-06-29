@@ -196,7 +196,7 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         LINE_JOINER.join(
             "class A {  someMethod(x) {}  }",
             "class B extends A {  someMethod(x, y) { return y + 1; }  }"),
-        GlobalTypeInfo.INVALID_PROP_OVERRIDE);
+        GlobalTypeInfoCollector.INVALID_PROP_OVERRIDE);
 
     typeCheck(
         LINE_JOINER.join(

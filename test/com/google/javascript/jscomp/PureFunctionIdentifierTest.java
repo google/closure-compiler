@@ -582,7 +582,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     testSame(
         TEST_EXTERNS + externs,
         "o.prototype.propWithAnnotatedStubAfter",
-        GlobalTypeInfo.REDECLARED_PROPERTY);
+        GlobalTypeInfoCollector.REDECLARED_PROPERTY);
     assertThat(noSideEffectCalls).isEmpty();
   }
 
@@ -614,7 +614,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     this.mode = TypeInferenceMode.NTI_ONLY;
     testSame(TEST_EXTERNS + externs,
         "o.prototype.propWithAnnotatedStubAfter",
-        GlobalTypeInfo.REDECLARED_PROPERTY);
+        GlobalTypeInfoCollector.REDECLARED_PROPERTY);
     assertThat(noSideEffectCalls).isEmpty();
   }
 

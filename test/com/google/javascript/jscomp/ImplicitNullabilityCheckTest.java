@@ -85,7 +85,8 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
 
     this.mode = TypeInferenceMode.NTI_ONLY;
     testSame(
-        DEFAULT_EXTERNS, "/** @type {gibberish} */ var x;", GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+        DEFAULT_EXTERNS, "/** @type {gibberish} */ var x;",
+        GlobalTypeInfoCollector.UNRECOGNIZED_TYPE_NAME);
   }
 
   public void testThrowsDoesntWarn() {

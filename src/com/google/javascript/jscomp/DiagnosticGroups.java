@@ -290,13 +290,13 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup NEW_CHECK_TYPES_COMPATIBILITY_MODE =
       DiagnosticGroups.registerGroup("newCheckTypesCompatibility",  // undocumented
           JSTypeCreatorFromJSDoc.COMPATIBLE_DIAGNOSTICS,
-          GlobalTypeInfo.COMPATIBLE_DIAGNOSTICS,
+          GlobalTypeInfoCollector.COMPATIBLE_DIAGNOSTICS,
           NewTypeInference.COMPATIBLE_DIAGNOSTICS);
 
   public static final DiagnosticGroup NEW_CHECK_TYPES_EXTRA_CHECKS =
       DiagnosticGroups.registerGroup("newCheckTypesExtraChecks",  // undocumented
           JSTypeCreatorFromJSDoc.NEW_DIAGNOSTICS,
-          GlobalTypeInfo.NEW_DIAGNOSTICS,
+          GlobalTypeInfoCollector.NEW_DIAGNOSTICS,
           NewTypeInference.NEW_DIAGNOSTICS);
 
   // Part of the new type inference
@@ -325,30 +325,30 @@ public class DiagnosticGroups {
           JSTypeCreatorFromJSDoc.IMPLEMENTS_WITHOUT_CONSTRUCTOR,
           JSTypeCreatorFromJSDoc.INHERITANCE_CYCLE,
           JSTypeCreatorFromJSDoc.UNION_IS_UNINHABITABLE,
-          GlobalTypeInfo.ABSTRACT_METHOD_IN_CONCRETE_CLASS,
-          GlobalTypeInfo.ANONYMOUS_NOMINAL_TYPE,
-          GlobalTypeInfo.CANNOT_INIT_TYPEDEF,
-          GlobalTypeInfo.CANNOT_OVERRIDE_FINAL_METHOD,
-          GlobalTypeInfo.CONST_WITHOUT_INITIALIZER,
+          GlobalTypeInfoCollector.ABSTRACT_METHOD_IN_CONCRETE_CLASS,
+          GlobalTypeInfoCollector.ANONYMOUS_NOMINAL_TYPE,
+          GlobalTypeInfoCollector.CANNOT_INIT_TYPEDEF,
+          GlobalTypeInfoCollector.CANNOT_OVERRIDE_FINAL_METHOD,
+          GlobalTypeInfoCollector.CONST_WITHOUT_INITIALIZER,
 //           GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE,
-          GlobalTypeInfo.CTOR_IN_DIFFERENT_SCOPE,
-          GlobalTypeInfo.DICT_WITHOUT_CTOR,
-          GlobalTypeInfo.DUPLICATE_JSDOC,
-          GlobalTypeInfo.DUPLICATE_PROP_IN_ENUM,
-          GlobalTypeInfo.EXPECTED_CONSTRUCTOR,
-          GlobalTypeInfo.EXPECTED_INTERFACE,
-          GlobalTypeInfo.INEXISTENT_PARAM,
-          GlobalTypeInfo.INTERFACE_METHOD_NOT_IMPLEMENTED,
+          GlobalTypeInfoCollector.CTOR_IN_DIFFERENT_SCOPE,
+          GlobalTypeInfoCollector.DICT_WITHOUT_CTOR,
+          GlobalTypeInfoCollector.DUPLICATE_JSDOC,
+          GlobalTypeInfoCollector.DUPLICATE_PROP_IN_ENUM,
+          GlobalTypeInfoCollector.EXPECTED_CONSTRUCTOR,
+          GlobalTypeInfoCollector.EXPECTED_INTERFACE,
+          GlobalTypeInfoCollector.INEXISTENT_PARAM,
+          GlobalTypeInfoCollector.INTERFACE_METHOD_NOT_IMPLEMENTED,
 //           GlobalTypeInfo.INVALID_PROP_OVERRIDE,
-          GlobalTypeInfo.LENDS_ON_BAD_TYPE,
-          GlobalTypeInfo.MALFORMED_ENUM,
-          GlobalTypeInfo.MISPLACED_CONST_ANNOTATION,
-          GlobalTypeInfo.ONE_TYPE_FOR_MANY_VARS,
+          GlobalTypeInfoCollector.LENDS_ON_BAD_TYPE,
+          GlobalTypeInfoCollector.MALFORMED_ENUM,
+          GlobalTypeInfoCollector.MISPLACED_CONST_ANNOTATION,
+          GlobalTypeInfoCollector.ONE_TYPE_FOR_MANY_VARS,
 //           GlobalTypeInfo.REDECLARED_PROPERTY,
-          GlobalTypeInfo.STRUCT_WITHOUT_CTOR_OR_INTERF,
-          GlobalTypeInfo.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
-          GlobalTypeInfo.UNKNOWN_OVERRIDE,
-          GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME,
+          GlobalTypeInfoCollector.STRUCT_WITHOUT_CTOR_OR_INTERF,
+          GlobalTypeInfoCollector.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
+          GlobalTypeInfoCollector.UNKNOWN_OVERRIDE,
+          GlobalTypeInfoCollector.UNRECOGNIZED_TYPE_NAME,
           NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE,
           NewTypeInference.ASSERT_FALSE,
           NewTypeInference.CANNOT_BIND_CTOR,
@@ -449,7 +449,7 @@ public class DiagnosticGroups {
           TypeValidator.DUP_VAR_DECLARATION,
           TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH,
           VariableReferenceCheck.REDECLARED_VARIABLE,
-          GlobalTypeInfo.REDECLARED_PROPERTY);
+          GlobalTypeInfoCollector.REDECLARED_PROPERTY);
 
   public static final DiagnosticGroup ES3 =
       DiagnosticGroups.registerGroup("es3",

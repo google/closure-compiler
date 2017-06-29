@@ -267,9 +267,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract Iterable<TypeMismatch> getImplicitInterfaceUses();
 
   /**
-   * Used only by the new type inference
+   * Global type registry used by NTI.
    */
-  abstract CompilerPass getSymbolTable();
+  abstract <T extends TypeIRegistry> T getGlobalTypeInfo();
 
   /**
    * Used by three passes that run in sequence (optimize-returns,

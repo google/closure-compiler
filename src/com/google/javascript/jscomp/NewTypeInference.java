@@ -504,7 +504,7 @@ final class NewTypeInference implements CompilerPass {
   @Override
   public void process(Node externs, Node root) {
     try {
-      this.symbolTable = (GlobalTypeInfo) compiler.getSymbolTable();
+      this.symbolTable = (GlobalTypeInfo) compiler.getGlobalTypeInfo();
       this.commonTypes = symbolTable.getCommonTypes();
       this.mismatches = symbolTable.getMismatches();
       this.implicitInterfaceUses = symbolTable.getImplicitInterfaceUses();

@@ -694,7 +694,7 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
 
   public void testInterfaceWithSubInterfaceAndDirectImplementors() {
     ignoreWarnings(
-        GlobalTypeInfo.INTERFACE_METHOD_NOT_IMPLEMENTED,
+        GlobalTypeInfoCollector.INTERFACE_METHOD_NOT_IMPLEMENTED,
         TypeValidator.INTERFACE_METHOD_NOT_IMPLEMENTED);
     test(
         LINE_JOINER.join(

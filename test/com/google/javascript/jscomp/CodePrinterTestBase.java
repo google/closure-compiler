@@ -69,8 +69,7 @@ public abstract class CodePrinterTestBase extends TestCase {
     Node externs = externsAndJs.getFirstChild();
 
     if (mode.runsNTI()) {
-      GlobalTypeInfo gti = compiler.getSymbolTable();
-      gti.process(externs, root);
+      new GlobalTypeInfoCollector(compiler).process(externs, root);
       NewTypeInference nti = new NewTypeInference(compiler);
       nti.process(externs, root);
     } else if (mode.runsOTI()) {

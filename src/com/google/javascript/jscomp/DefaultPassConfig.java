@@ -1872,7 +1872,7 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("GlobalTypeInfo", true) {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
-          return compiler.getSymbolTable();
+          return new GlobalTypeInfoCollector(compiler);
         }
       };
 

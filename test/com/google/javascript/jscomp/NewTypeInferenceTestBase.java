@@ -257,7 +257,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
       TranspilationPasses.addEs6LatePasses(passes);
       TranspilationPasses.addRewritePolyfillPass(passes);
     }
-    passes.add(makePassFactory("GlobalTypeInfo", compiler.getSymbolTable()));
+    passes.add(makePassFactory("GlobalTypeInfo", new GlobalTypeInfoCollector(compiler)));
     passes.add(makePassFactory("NewTypeInference", new NewTypeInference(compiler)));
 
     PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);

@@ -240,8 +240,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // Types that have been forward declared
   private Set<String> forwardDeclaredTypes = new HashSet<>();
 
-  // For use by the new type inference
-  private GlobalTypeInfo symbolTable;
+  // Type registry used by new type inference.
+  private GlobalTypeInfo globalTypeInfo;
 
   private MostRecentTypechecker mostRecentTypechecker = MostRecentTypechecker.NONE;
 
@@ -1500,11 +1500,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         // the constructor asks for a type registry, and this may happen before type checking
         // runs. So, in the NONE case, if NTI is enabled, return a new registry, since NTI is
         // the relevant type checker. If NTI is not enabled, return an old registry.
-        return options.getNewTypeInference() ? getSymbolTable() : getTypeRegistry();
+        return options.getNewTypeInference() ? getGlobalTypeInfo() : getTypeRegistry();
       case OTI:
         return getTypeRegistry();
       case NTI:
-        return getSymbolTable();
+        return getGlobalTypeInfo();
       default:
         throw new RuntimeException("Unhandled typechecker " + mostRecentTypechecker);
     }
@@ -1517,7 +1517,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         typeRegistry = null;
         return;
       case NTI:
-        symbolTable = null;
+        globalTypeInfo = null;
         return;
       case NONE:
         return;
@@ -1646,7 +1646,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       case OTI:
         return getTypeValidator().getMismatches();
       case NTI:
-        return getSymbolTable().getMismatches();
+        return getGlobalTypeInfo().getMismatches();
       default:
         throw new RuntimeException("Can't ask for type mismatches before type checking.");
     }
@@ -1658,18 +1658,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       case OTI:
         return getTypeValidator().getImplicitInterfaceUses();
       case NTI:
-        return getSymbolTable().getImplicitInterfaceUses();
+        return getGlobalTypeInfo().getImplicitInterfaceUses();
       default:
         throw new RuntimeException("Can't ask for type mismatches before type checking.");
     }
   }
 
   @Override
-  GlobalTypeInfo getSymbolTable() {
-    if (this.symbolTable == null) {
-      this.symbolTable = new GlobalTypeInfo(this, forwardDeclaredTypes);
+  GlobalTypeInfo getGlobalTypeInfo() {
+    if (this.globalTypeInfo == null) {
+      this.globalTypeInfo = new GlobalTypeInfo(this, forwardDeclaredTypes);
     }
-    return this.symbolTable;
+    return this.globalTypeInfo;
   }
 
   @Override
@@ -3464,7 +3464,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final Map<String, Node> injectedLibraries;
     private final Node lastInjectedLibrary;
     private final GlobalVarReferenceMap globalRefMap;
-    private final GlobalTypeInfo symbolTable;
+    private final GlobalTypeInfo globalTypeInfo;
     private final boolean hasRegExpGlobalReferences;
     private final LifeCycleStage lifeCycleStage;
     private final Set<String> externProperties;
@@ -3498,7 +3498,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.injectedLibraries = compiler.injectedLibraries;
       this.globalRefMap = compiler.globalRefMap;
       this.lastInjectedLibrary = compiler.lastInjectedLibrary;
-      this.symbolTable = compiler.symbolTable;
+      this.globalTypeInfo = compiler.globalTypeInfo;
       this.hasRegExpGlobalReferences = compiler.hasRegExpGlobalReferences;
       this.typeValidator = compiler.typeValidator;
       this.lifeCycleStage = compiler.getLifeCycleStage();
@@ -3571,7 +3571,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     injectedLibraries.putAll(compilerState.injectedLibraries);
     lastInjectedLibrary = compilerState.lastInjectedLibrary;
     globalRefMap = compilerState.globalRefMap;
-    symbolTable = compilerState.symbolTable;
+    globalTypeInfo = compilerState.globalTypeInfo;
     hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
     typeValidator = compilerState.typeValidator;
     setLifeCycleStage(compilerState.lifeCycleStage);

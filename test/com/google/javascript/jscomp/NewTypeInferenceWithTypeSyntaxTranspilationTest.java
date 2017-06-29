@@ -199,7 +199,7 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
         "}",
         "class Bar implements Foo {",
         "}"),
-        GlobalTypeInfo.INTERFACE_METHOD_NOT_IMPLEMENTED);
+        GlobalTypeInfoCollector.INTERFACE_METHOD_NOT_IMPLEMENTED);
 
     typeCheck(LINE_JOINER.join(
         "interface Foo {",
@@ -220,7 +220,7 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
         "  prop: string;",
         "}",
         "interface Baz extends Foo, Bar {}"),
-        GlobalTypeInfo.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES);
+        GlobalTypeInfoCollector.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES);
   }
 
   public void testAmbientDeclarationsInCode() {

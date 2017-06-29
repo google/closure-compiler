@@ -906,7 +906,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         "/** @type {ASDF} */ var x;",
-        GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME);
+        GlobalTypeInfoCollector.UNRECOGNIZED_TYPE_NAME);
 
     options.setWarningLevel(
         DiagnosticGroups.REPORT_UNKNOWN_TYPES, CheckLevel.WARNING);
