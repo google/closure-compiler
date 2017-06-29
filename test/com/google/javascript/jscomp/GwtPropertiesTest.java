@@ -31,13 +31,32 @@ public final class GwtPropertiesTest extends TestCase {
   }
 
   public void testLoadWithComments() {
-    String src = "\n"
-        + "# not.set=value\n"
-        + "is.set=value\n";
+    String src =
+        "\n"
+            + "# not.set=value\n"
+            + "is.set=value\n"
+            + "a = aaa\n"
+            + "b  = bbb\n"
+            + "c =ccc\n"
+            + "d= ddd\n"
+            + "e=  eee\n";
     GwtProperties p = GwtProperties.load(src);
 
     assertEquals(null, p.getProperty("not.set"));
     assertEquals("value", p.getProperty("is.set"));
+    assertEquals("aaa", p.getProperty("a"));
+    assertEquals("bbb", p.getProperty("b"));
+    assertEquals("ccc", p.getProperty("c"));
+    assertEquals("ddd", p.getProperty("d"));
+    assertEquals("eee", p.getProperty("e"));
+  }
+
+  // https://en.wikipedia.org/wiki/.properties
+  public void testSpaceEscapeNotSupported() {
+    String src = "key\\ with\\ spaces = value\n";
+    GwtProperties p = GwtProperties.load(src);
+    // Asserts that we do not correctly handle escaped spaces.
+    assertThat(p.getProperty("key\\ with\\ spaces")).isNotEqualTo("value");
   }
 
   public void testNoEquals() {
