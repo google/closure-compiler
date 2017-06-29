@@ -1028,6 +1028,11 @@ public final class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(final AbstractCompiler compiler) {
       return new CheckSideEffects.StripProtection(compiler);
     }
+
+    @Override
+    public FeatureSet featureSet() {
+      return FeatureSet.latest();
+    }
   };
 
   /** Checks for code that is probably wrong (such as stray expressions). */
@@ -1284,8 +1289,7 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("gatherRawExports", true) {
     @Override
     protected CompilerPass create(final AbstractCompiler compiler) {
-      final GatherRawExports pass = new GatherRawExports(
-          compiler);
+      final GatherRawExports pass = new GatherRawExports(compiler);
 
       return new CompilerPass() {
         @Override
@@ -1294,6 +1298,13 @@ public final class DefaultPassConfig extends PassConfig {
           compiler.addExportedNames(pass.getExportedVariableNames());
         }
       };
+    }
+
+    @Override
+    public FeatureSet featureSet() {
+      // Should be FeatureSet.latest() since it's a trivial pass, but must match "normalize"
+      // TODO(johnlenz): Update this and normalize to latest()
+      return ES8;
     }
   };
 
@@ -1650,6 +1661,11 @@ public final class DefaultPassConfig extends PassConfig {
       }
       return new InlineVariables(compiler, mode, true);
     }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8;
+    }
   };
 
   /** Various peephole optimizations. */
@@ -1823,6 +1839,11 @@ public final class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(AbstractCompiler compiler) {
       return new ClearTypedScope();
     }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return FeatureSet.latest();
+    }
   };
 
   /** Runs type inference. */
@@ -1921,8 +1942,7 @@ public final class DefaultPassConfig extends PassConfig {
         callbacks.add(new CheckUnreachableCode(compiler));
       }
       if (!options.getNewTypeInference() && !options.disables(DiagnosticGroups.MISSING_RETURN)) {
-        callbacks.add(
-            new CheckMissingReturn(compiler));
+        callbacks.add(new CheckMissingReturn(compiler));
       }
       return combineChecks(compiler, callbacks);
     }
@@ -2436,6 +2456,11 @@ public final class DefaultPassConfig extends PassConfig {
       return new InlineVariables(
           compiler, InlineVariables.Mode.CONSTANTS_ONLY, true);
     }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8;
+    }
   };
 
   /** Use data flow analysis to remove dead branches. */
@@ -2497,6 +2522,11 @@ public final class DefaultPassConfig extends PassConfig {
            NameAnalyzer.createEmptyReport(compiler, options.reportPath);
          }
        };
+     }
+
+     @Override
+     protected FeatureSet featureSet() {
+       return FeatureSet.latest();
      }
   };
 
@@ -2811,6 +2841,11 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
     }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return FeatureSet.latest();
+    }
   };
 
   private final PassFactory hoistVars =
@@ -2835,6 +2870,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
+          // TODO(johnlenz): Update this and "gatherRawExports" to latest()
           return ES8;
         }
       };
@@ -2959,7 +2995,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return FeatureSet.latest();
         }
       };
 
