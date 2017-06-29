@@ -20771,8 +20771,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         LINE_JOINER.join(
             "function tag(){}",
             "tag``;"),
-        NewTypeInference.TEMPLATE_ARGUMENT_MISMATCH,
-        NewTypeInference.WRONG_ARGUMENT_COUNT);
+        NewTypeInference.TEMPLATE_ARGUMENT_MISSING);
 
     // Tag function not a function
     typeCheck(
@@ -20789,8 +20788,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "  tag `asdf ${x} asdf`;",
             "  return x - 2;",
             "}"),
-        NewTypeInference.INVALID_OPERAND_TYPE
-        );
+        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testReanalyzeLoopConditionAfterLoopBody() {

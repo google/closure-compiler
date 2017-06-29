@@ -4991,16 +4991,10 @@ public final class NodeUtil {
     if (invocation.isTaggedTemplateLit()) {
       return new TemplateArgsIterable(invocation.getLastChild());
     } else {
-      return getCallArgsAsIterable(invocation);
+      Preconditions.checkState(isCallOrNew(invocation));
+      return invocation.hasOneChild()
+          ? ImmutableList.<Node>of() : invocation.getSecondChild().siblings();
     }
-  }
-
-  /** Returns an iterable of arguments of this call node */
-  private static Iterable<Node> getCallArgsAsIterable(Node call){
-    if (call.hasOneChild()) {
-      return ImmutableList.<Node>of();
-    }
-    return call.getSecondChild().siblings();
   }
 
   /**

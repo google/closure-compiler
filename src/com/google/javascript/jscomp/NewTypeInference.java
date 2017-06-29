@@ -104,6 +104,10 @@ final class NewTypeInference implements CompilerPass {
       "Invalid type for the first parameter of tag function {0}.\n"
       + "{1}");
 
+  static final DiagnosticType TEMPLATE_ARGUMENT_MISSING = DiagnosticType.warning(
+      "JSC_NTI_TEMPLATE_ARGUMENT_MISSING",
+      "A tag function must take at least one argument.\n");
+
   static final DiagnosticType CROSS_SCOPE_GOTCHA = DiagnosticType.warning(
       "JSC_NTI_CROSS_SCOPE_GOTCHA",
       "Variable {0} typed inconsistently across scopes.\n" +
@@ -380,6 +384,7 @@ final class NewTypeInference implements CompilerPass {
           INVALID_OPERAND_TYPE,
           INVALID_THIS_TYPE_IN_BIND,
           TEMPLATE_ARGUMENT_MISMATCH,
+          TEMPLATE_ARGUMENT_MISSING,
           NOT_UNIQUE_INSTANTIATION,
           PROPERTY_ACCESS_ON_NONOBJECT,
           UNKNOWN_NAMESPACE_PROPERTY);
@@ -2004,7 +2009,7 @@ final class NewTypeInference implements CompilerPass {
         return analyzeInvocationArgsFwdWhenError(expr, envAfterCallee);
       }
     } else if (expr.isTaggedTemplateLit()) {
-      checkTaggedFunctionFirstParam(expr.getLastChild(), expr.getFirstChild(), funType);
+      funType = checkTaggedFunctionFirstParam(expr.getLastChild(), expr.getFirstChild(), funType);
     }
 
     if (!isInvocationArgCountCorrectAndWarn(funType, expr, callee)) {
@@ -2070,16 +2075,23 @@ final class NewTypeInference implements CompilerPass {
     return new EnvTypePair(tmpEnv, retType);
   }
 
-  /** Check first argument of tagged function is a ITemplateArray */
-  private void checkTaggedFunctionFirstParam(Node taggedLit, Node funcName, FunctionType funType) {
+  /**
+   * Check that the first argument of a tagged function is a ITemplateArray.
+   * If the argument is missing, return Function, to avoid giving two warnings for the same issue.
+   */
+  private FunctionType checkTaggedFunctionFirstParam(
+      Node taggedLit, Node funcName, FunctionType funType) {
     JSType firstArgType = funType.getFormalType(0);
     JSType templateArray = this.commonTypes.getITemplateArrayType();
-    firstArgType = firstArgType == null ? BOTTOM : firstArgType;
-    if (firstArgType.isBottom() || !templateArray.isSubtypeOf(firstArgType)) {
+    if (firstArgType == null) {
+      warnings.add(JSError.make(taggedLit, TEMPLATE_ARGUMENT_MISSING));
+      return this.commonTypes.qmarkFunction().getFunTypeIfSingletonObj();
+    } else if (!templateArray.isSubtypeOf(firstArgType)) {
       JSError error = JSError.make(taggedLit, TEMPLATE_ARGUMENT_MISMATCH,
           getReadableCalleeName(funcName), errorMsgWithTypeDiff(templateArray, firstArgType));
       registerMismatchAndWarn(error, firstArgType, templateArray);
     }
+    return funType;
   }
 
   private boolean isInvocationArgCountCorrectAndWarn(
@@ -2387,10 +2399,8 @@ final class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeTemplateLitFwd(Node expr, TypeEnv inEnv) {
     TypeEnv env = inEnv;
-    for (Node child = expr.getFirstChild(); child != null;
-         child = child.getNext()) {
-      EnvTypePair pair = analyzeExprFwd(child, env);
-      env = pair.env;
+    for (Node child : expr.children()) {
+      env = analyzeExprFwd(child, env).env;
     }
     return new EnvTypePair(env, STRING);
   }
@@ -3831,9 +3841,8 @@ final class NewTypeInference implements CompilerPass {
     TypeEnv tmpEnv = envAfterCallee;
     // In bwd direction, analyze arguments in reverse
     Node target = expr.isTaggedTemplateLit() ? null : expr.getFirstChild();
-    Node start = expr.isTaggedTemplateLit()
-        ? expr.getLastChild().getLastChild()
-        : expr.getLastChild();
+    Node start =
+        expr.isTaggedTemplateLit() ? expr.getLastChild().getLastChild() : expr.getLastChild();
     int i = numArgs;
     for (Node arg = start; arg != target; arg = arg.getPrevious()) {
       if (expr.isTaggedTemplateLit() && !arg.isTemplateLitSub()) {
@@ -3910,8 +3919,7 @@ final class NewTypeInference implements CompilerPass {
   private EnvTypePair analyzeTemplateLitBwd(Node expr, TypeEnv outEnv) {
     TypeEnv env = outEnv;
     for (Node elm = expr.getLastChild(); elm != null; elm = elm.getPrevious()) {
-      EnvTypePair pair = analyzeExprBwd(elm, env);
-      env = pair.env;
+      env = analyzeExprBwd(elm, env).env;
     }
     return new EnvTypePair(env, STRING);
   }
