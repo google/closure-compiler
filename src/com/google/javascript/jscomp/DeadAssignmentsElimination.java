@@ -118,13 +118,6 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
       return;
     }
 
-    // Elevate all variable declarations up till the function scope
-    // so the liveness analysis has all variables for the process.
-    for (Var var : blockScope.getVarIterable()) {
-      checkArgument(!var.isClass());
-      functionScope.declare(var.getName(), var.getNameNode(), var.getInput());
-    }
-
     // Computes liveness information first.
     ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
     liveness =
@@ -242,11 +235,11 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
       }
       String name = lhs.getString();
       checkState(t.getScope().isFunctionBlockScope());
-      Scope functionScope = t.getScope().getParent();
-      if (!functionScope.isDeclaredSloppy(name, false)) {
+      Scope functionBlockScope = t.getScope();
+      if (!functionBlockScope.isDeclaredSloppy(name, false)) {
         return;
       }
-      Var var = functionScope.getVar(name);
+      Var var = functionBlockScope.getVar(name);
 
       if (liveness.getEscapedLocals().contains(var)) {
         return; // Local variable that might be escaped due to closures.
