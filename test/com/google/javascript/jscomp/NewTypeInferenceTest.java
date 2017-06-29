@@ -20821,4 +20821,40 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  return 3;",
         "}"));
   }
+
+  public void testPrintTypevarIDs() {
+    typeCheckMessageContents(
+        LINE_JOINER.join(
+            "/**",
+            " * @interface",
+            " * @template T, U",
+            " */",
+            "function Base() {}",
+            "Base.prototype.method = function(/** T */ x, /** U */ y) {};",
+            "/**",
+            " * @constructor",
+            " * @implements {Base<T>}",
+            " * @template T, V",
+            " */",
+            "function Foo() {}",
+            "Foo.prototype.method = function(/** T */ x, /** V */ y) {};",
+            "/**",
+            " * @constructor",
+            " * @implements {Base<T, W>}",
+            " * @template T, W",
+            " */",
+            "function Bar() {}",
+            "/** @type {function(this: ?, T, W)} */",
+            "Bar.prototype.method = Foo.prototype.method;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS,
+        LINE_JOINER.join(
+            "The right side in the assignment is not a subtype of the left side.",
+            "Expected : function(this:?,T#1,W):?",
+            "Found    : function(this:Foo,T#2,?):?",
+            "More details:",
+            "The expected and found types are functions which have incompatible types"
+                + " for argument 1.",
+            "Expected a supertype of : T#1",
+            "but found               : T#2"));
+  }
 }

@@ -1591,6 +1591,10 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return appendTo(new StringBuilder(), ToStringContext.TO_STRING).toString();
   }
 
+  public final String toString(ToStringContext ctx) {
+    return appendTo(new StringBuilder(), ctx).toString();
+  }
+
   /** For use in {@link #appendTo} */
   private static final Joiner PIPE_JOINER = Joiner.on("|");
 

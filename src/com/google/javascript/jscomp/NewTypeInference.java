@@ -41,6 +41,7 @@ import com.google.javascript.jscomp.newtypes.JSTypes;
 import com.google.javascript.jscomp.newtypes.MismatchInfo;
 import com.google.javascript.jscomp.newtypes.NominalType;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
+import com.google.javascript.jscomp.newtypes.ToStringContext;
 import com.google.javascript.jscomp.newtypes.TypeEnv;
 import com.google.javascript.jscomp.newtypes.UniqueNameGenerator;
 import com.google.javascript.rhino.JSDocInfo;
@@ -3008,24 +3009,25 @@ final class NewTypeInference implements CompilerPass {
 
   private static String errorMsgWithTypeDiff(JSType expected, JSType found) {
     MismatchInfo mismatch = JSType.whyNotSubtypeOf(found, expected);
+    ToStringContext ctx = ToStringContext.disambiguateTypeVars(expected, found);
     if (mismatch == null) {
-      return "Expected : " + expected + "\n"
-          + "Found    : " + found + "\n";
+      return "Expected : " + expected.toString(ctx) + "\n"
+          + "Found    : " + found.toString(ctx) + "\n";
     }
     StringBuilder builder =
         new StringBuilder("Expected : ")
-            .append(expected)
+            .append(expected.toString(ctx))
             .append("\n" + "Found    : ")
-            .append(found)
+            .append(found.toString(ctx))
             .append("\n" + "More details:\n");
     if (mismatch.isPropMismatch()) {
       builder
           .append("Incompatible types for property ")
           .append(mismatch.getPropName())
           .append(".\n" + "Expected : ")
-          .append(mismatch.getExpectedType())
+          .append(mismatch.getExpectedType().toString(ctx))
           .append("\n" + "Found    : ")
-          .append(mismatch.getFoundType());
+          .append(mismatch.getFoundType().toString(ctx));
     } else if (mismatch.isMissingProp()) {
       builder.append("The found type is missing property ").append(mismatch.getPropName());
     } else if (mismatch.wantedRequiredFoundOptional()) {
@@ -3040,22 +3042,22 @@ final class NewTypeInference implements CompilerPass {
                   + " incompatible types for argument ")
           .append(mismatch.getArgIndex() + 1)
           .append(".\n" + "Expected a supertype of : ")
-          .append(mismatch.getExpectedType())
+          .append(mismatch.getExpectedType().toString(ctx))
           .append("\n" + "but found               : ")
-          .append(mismatch.getFoundType());
+          .append(mismatch.getFoundType().toString(ctx));
     } else if (mismatch.isRetTypeMismatch()) {
       builder
           .append(
               "The expected and found types are functions which have"
                   + " incompatible return types.\n"
                   + "Expected a subtype of : ")
-          .append(mismatch.getExpectedType())
+          .append(mismatch.getExpectedType().toString(ctx))
           .append("\n" + "but found             : ")
-          .append(mismatch.getFoundType());
+          .append(mismatch.getFoundType().toString(ctx));
     } else if (mismatch.isUnionTypeMismatch()) {
       builder
           .append("The found type is a union that includes an unexpected type: ")
-          .append(mismatch.getFoundType());
+          .append(mismatch.getFoundType().toString(ctx));
     }
     return builder.toString();
   }
@@ -4620,4 +4622,3 @@ final class NewTypeInference implements CompilerPass {
     }
   }
 }
-
