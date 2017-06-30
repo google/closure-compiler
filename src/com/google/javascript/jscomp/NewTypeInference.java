@@ -1525,6 +1525,18 @@ final class NewTypeInference implements CompilerPass {
       case TEMPLATELIT_SUB:
         resultPair = analyzeExprFwd(expr.getFirstChild(), inEnv, requiredType);
         break;
+      case STRING_KEY:
+        if (expr.hasChildren()) {
+          resultPair = analyzeExprFwd(expr.getFirstChild(), inEnv, requiredType, specializedType);
+        } else {
+          resultPair = analyzeNameFwd(expr, inEnv, requiredType, specializedType);
+        }
+        break;
+//      case MEMBER_FUNCTION_DEF:
+//      case COMPUTED_PROP:
+//        // TODO(dimvar): fix passes that run after type checking but falsely assume ES6 input
+//        resultPair = analyzeExprFwd(expr.getFirstChild(), inEnv, requiredType, specializedType);
+//        break;
       default:
         throw new RuntimeException("Unhandled expression type: " + expr.getToken());
     }
@@ -2795,7 +2807,7 @@ final class NewTypeInference implements CompilerPass {
         } else {
           reqPtype = specPtype = UNKNOWN;
         }
-        EnvTypePair pair = analyzeExprFwd(prop.getFirstChild(), env, reqPtype, specPtype);
+        EnvTypePair pair = analyzeExprFwd(prop, env, reqPtype, specPtype);
         if (jsdocType != null) {
           // First declare it; then set the maybe more precise inferred type
           result = result.withDeclaredProperty(qname, jsdocType, false);
@@ -2864,8 +2876,7 @@ final class NewTypeInference implements CompilerPass {
     }
     TypeEnv env = inEnv;
     for (Node prop : objLit.children()) {
-      EnvTypePair pair =
-          analyzeExprFwd(prop.getFirstChild(), env, enumeratedType);
+      EnvTypePair pair = analyzeExprFwd(prop, env, enumeratedType);
       if (!pair.type.isSubtypeOf(enumeratedType)) {
         warnings.add(JSError.make(
             prop, INVALID_OBJLIT_PROPERTY_TYPE,
@@ -3653,6 +3664,15 @@ final class NewTypeInference implements CompilerPass {
         return analyzeTemplateLitBwd(expr, outEnv);
       case TEMPLATELIT_SUB:
         return analyzeExprBwd(expr.getFirstChild(), outEnv, requiredType);
+      case STRING_KEY:
+        if (expr.hasChildren()) {
+          return analyzeExprBwd(expr.getFirstChild(), outEnv, requiredType);
+        } else {
+          return analyzeNameBwd(expr, outEnv, requiredType);
+        }
+//      case MEMBER_FUNCTION_DEF:
+//      case COMPUTED_PROP:
+//        return analyzeExprBwd(expr.getFirstChild(), outEnv, requiredType);
       default:
         throw new RuntimeException(
             "BWD: Unhandled expression type: "
@@ -3994,7 +4014,7 @@ final class NewTypeInference implements CompilerPass {
         } else {
           reqPtype = UNKNOWN;
         }
-        EnvTypePair pair = analyzeExprBwd(prop.getFirstChild(), env, reqPtype);
+        EnvTypePair pair = analyzeExprBwd(prop, env, reqPtype);
         result = result.withProperty(pname, pair.type);
         env = pair.env;
       }
@@ -4017,7 +4037,7 @@ final class NewTypeInference implements CompilerPass {
     for (Node prop = objLit.getLastChild();
          prop != null;
          prop = prop.getPrevious()) {
-      env = analyzeExprBwd(prop.getFirstChild(), env, enumeratedType).env;
+      env = analyzeExprBwd(prop, env, enumeratedType).env;
     }
     return new EnvTypePair(env, requiredType);
   }
@@ -4634,3 +4654,4 @@ final class NewTypeInference implements CompilerPass {
     }
   }
 }
+

@@ -2433,6 +2433,35 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
+  public void testObjectLiteralShorthandProperty() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        "@param {{ p: number }} obj",
+        "@param {number} p",
+        "*/",
+        "function f(obj, p) {",
+        "  obj = { p };",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        "@param {{ p: number }} obj",
+        "@param {string} p",
+        "*/",
+        "function f(obj, p) {",
+        "  obj = { p };",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(obj, /** number */ p, q) {",
+        "  obj = { p, q };",
+        "  obj.q - 5;",
+        "  var /** string */ s = q;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
   public void testDeclaredVersusInferredTypeForVar() {
     typeCheck("var /** ? */ x = 'str'; x - 123;");
 
@@ -11871,6 +11900,49 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  function f(/** ns1.e1 */ x) {}",
         "  f(ns2.e2.A);",
         "}"));
+  }
+
+
+  // We don't expect the object-literal shorthand syntax to be used often for enums,
+  // because enum keys must be all caps.
+  public void testEnumShorthandObjLit() {
+    typeCheck(LINE_JOINER.join(
+        "var a = 1;",
+        "/** @enum {number} */",
+        "var E = { a };",
+        "function f(/** E */ x) { x < 'str'; }"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "var a = 1;",
+        "var b = 2;",
+        "/** @enum {number} */",
+        "var E = { a, b };",
+        "function f(/** E */ x) {}",
+        "function g(/** number */ x) {}",
+        "f(E.b);",
+        "g(E.b);"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** number */ a, /** string */ b){",
+        "  /** @enum {number} */",
+        "  var E = { a, b };",
+        "}"),
+        NewTypeInference.INVALID_OBJLIT_PROPERTY_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "var a = 1;",
+        "/** @enum {number} */",
+        "var E = { a, a };"),
+        GlobalTypeInfoCollector.DUPLICATE_PROP_IN_ENUM);
+
+    // Check that not having the rhs defined in externs would not cause an error.
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @enum {number} */",
+            "var E = { A };"),
+            "var /** number */ x = E.A");
   }
 
   public void testNoDoubleWarnings() {
