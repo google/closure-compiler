@@ -1276,7 +1276,6 @@ class PeepholeMinimizeConditions
     Node newNode = IR.number(num);
     if (!newNode.isEquivalentTo(n)) {
       parent.replaceChild(n, newNode);
-      NodeUtil.markFunctionsDeleted(n, compiler);
       reportCodeChange();
 
       return newNode;

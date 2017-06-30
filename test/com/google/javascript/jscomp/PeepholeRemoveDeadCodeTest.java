@@ -115,7 +115,6 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   public void testIf() {
     fold("if (1){ x=1; } else { x = 2;}", "x=1");
-    fold("if (1) {} else { function foo(){} }", "");
     fold("if (false){ x = 1; } else { x = 2; }", "x=2");
     fold("if (undefined){ x = 1; } else { x = 2; }", "x=2");
     fold("if (null){ x = 1; } else { x = 2; }", "x=2");

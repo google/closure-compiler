@@ -397,8 +397,6 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
     // This test uses constant folding logic, so is only here for completeness.
     // These could be simplified to "for(;;) ..."
     fold("for(;!!true;) foo()", "for(;1;) foo()");
-    // Verify function deletion tracking.
-    fold("if(!!true||function(){}) {}", "if(1) {}");
     // Don't bother with FOR inits as there are normalized out.
     fold("for(!!true;;) foo()", "for(!0;;) foo()");
 
