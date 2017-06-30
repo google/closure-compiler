@@ -122,49 +122,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testFunction() {
     parse("var f = function(x,y,z) { return 0; }");
     parse("function f(x,y,z) { return 0; }");
-  }
 
-  public void testFunctionTrailingComma() {
-    mode = LanguageMode.ECMASCRIPT8;
-
-    expectFeatures(Feature.TRAILING_COMMA_IN_PARAM_LIST);
-    parse("var f = function(x,y,z,) {}");
-    parse("function f(x,y,z,) {}");
-  }
-
-  public void testFunctionTrailingCommaPreES8() {
-    mode = LanguageMode.ECMASCRIPT7;
-
-    parseError(
-        "var f = function(x,y,z,) {}",
+    parseError("var f = function(x,y,z,) {}",
         "Invalid trailing comma in formal parameter list");
-    parseError(
-        "function f(x,y,z,) {}",
+    parseError("function f(x,y,z,) {}",
         "Invalid trailing comma in formal parameter list");
-  }
-
-  public void testFunctionExtraTrailingComma() {
-    parseError("var f = function(x,y,z,,) {}", "')' expected");
-    parseError("function f(x,y,z,,) {}", "')' expected");
-  }
-
-  public void testCallTrailingComma() {
-    mode = LanguageMode.ECMASCRIPT8;
-
-    expectFeatures(Feature.TRAILING_COMMA_IN_PARAM_LIST);
-    parse("f(x,y,z,);");
-  }
-
-  public void testCallTrailingCommaPreES8() {
-    mode = LanguageMode.ECMASCRIPT7;
-
-    parseError(
-        "f(x,y,z,);",
-        "Invalid trailing comma in arguments list");
-  }
-
-  public void testCallExtraTrailingComma() {
-    parseError("f(x,y,z,,);", "')' expected");
   }
 
   public void testWhile() {
@@ -2698,6 +2660,20 @@ public final class ParserTest extends BaseJSTypeTestCase {
         "'(' expected");
     parseError("var x = function a.b() {}",
         "'(' expected");
+  }
+
+  public void testGetPropFunctionNameIdeMode() {
+    // In IDE mode, we try to fix up the tree, but sometimes
+    // this leads to even more errors.
+    isIdeMode = true;
+    parseError("function a.b() {}",
+        "'(' expected",
+        "',' expected",
+        "Invalid trailing comma in formal parameter list");
+    parseError("var x = function a.b() {}",
+        "'(' expected",
+        "',' expected",
+        "Invalid trailing comma in formal parameter list");
   }
 
   public void testIdeModePartialTree() {

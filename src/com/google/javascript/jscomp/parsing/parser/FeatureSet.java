@@ -113,12 +113,11 @@ public final class FeatureSet implements Serializable {
     DEFAULT_PARAMETERS("default parameter", LangVersion.ES6),
     MODULES("modules", LangVersion.ES6),
 
-    // ES 2016 only added one new feature:
+    // '**' operator
     EXPONENT_OP("exponent operator (**)", LangVersion.ES7),
 
-    // ES 2017 features:
+    // http://tc39.github.io/ecmascript-asyncawait/
     ASYNC_FUNCTIONS("async function", LangVersion.ES8),
-    TRAILING_COMMA_IN_PARAM_LIST("trailing comma in param list", LangVersion.ES8),
 
     // ES6 typed features that are not at all implemented in browsers
     ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),
