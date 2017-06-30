@@ -120,6 +120,7 @@ public final class FeatureSet implements Serializable {
     ASYNC_FUNCTIONS("async function", LangVersion.ES8),
 
     // ES6 typed features that are not at all implemented in browsers
+    ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),
     AMBIENT_DECLARATION("ambient declaration", LangVersion.TYPESCRIPT),
     CALL_SIGNATURE("call signature", LangVersion.TYPESCRIPT),
     CONSTRUCTOR_SIGNATURE("constructor signature", LangVersion.TYPESCRIPT),

@@ -1310,7 +1310,7 @@ class IRFactory {
         Node member = newStringNode(Token.MEMBER_FUNCTION_DEF, name.value);
         member.addChildToBack(node);
         member.setStaticMember(functionTree.isStatic);
-        maybeProcessAccessibilityModifier(member, functionTree.access);
+        maybeProcessAccessibilityModifier(functionTree, member, functionTree.access);
         node.setDeclaredTypeExpression(node.getDeclaredTypeExpression());
         result = member;
       } else {
@@ -1598,14 +1598,14 @@ class IRFactory {
 
     Node processComputedPropertyMemberVariable(ComputedPropertyMemberVariableTree tree) {
       maybeWarnForFeature(tree, Feature.COMPUTED_PROPERTIES);
-      maybeWarnTypeSyntax(tree, Feature.COMPUTED_PROPERTIES);
+      maybeWarnTypeSyntax(tree, Feature.MEMBER_VARIABLE_IN_CLASS);
 
       Node n = newNode(Token.COMPUTED_PROP, transform(tree.property));
       maybeProcessType(n, tree.declaredType);
       n.putBooleanProp(Node.COMPUTED_PROP_VARIABLE, true);
       n.putProp(Node.ACCESS_MODIFIER, tree.access);
       n.setStaticMember(tree.isStatic);
-      maybeProcessAccessibilityModifier(n, tree.access);
+      maybeProcessAccessibilityModifier(tree, n, tree.access);
       return n;
     }
 
@@ -1618,7 +1618,7 @@ class IRFactory {
       if (tree.method.asFunctionDeclaration().isStatic) {
         n.setStaticMember(true);
       }
-      maybeProcessAccessibilityModifier(n, tree.access);
+      maybeProcessAccessibilityModifier(tree, n, tree.access);
       return n;
     }
 
@@ -2177,7 +2177,7 @@ class IRFactory {
       maybeProcessType(member, tree.declaredType);
       member.setStaticMember(tree.isStatic);
       member.putBooleanProp(Node.OPT_ES6_TYPED, tree.isOptional);
-      maybeProcessAccessibilityModifier(member, tree.access);
+      maybeProcessAccessibilityModifier(tree, member, tree.access);
       return member;
     }
 
@@ -2581,7 +2581,7 @@ class IRFactory {
       }
     }
 
-    void maybeProcessAccessibilityModifier(Node n, TokenType type) {
+    void maybeProcessAccessibilityModifier(ParseTree parseTree, Node n, @Nullable TokenType type) {
       if (type != null) {
         Visibility access;
         switch (type) {
@@ -2597,6 +2597,7 @@ class IRFactory {
           default:
             throw new IllegalStateException("Unexpected access modifier type");
         }
+        maybeWarnTypeSyntax(parseTree, Feature.ACCESSIBILITY_MODIFIER);
         n.putProp(Node.ACCESS_MODIFIER, access);
       }
     }

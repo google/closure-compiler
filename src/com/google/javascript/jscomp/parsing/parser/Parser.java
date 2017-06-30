@@ -3849,7 +3849,6 @@ public class Parser {
 
   private TokenType maybeParseAccessibilityModifier() {
     if (config.parseTypeSyntax && peekAccessibilityModifier()) {
-      features = features.union(FeatureSet.TYPESCRIPT);
       return nextToken().type;
     } else {
       return null;
