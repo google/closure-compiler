@@ -101,6 +101,11 @@ public interface ObjectTypeI extends TypeI {
 
   boolean hasOwnProperty(String propertyName);
 
+  /**
+   * Returns the names of all properties that exist on all instances of this type.
+   * Does not return any extras that exist only on this instance.
+   * Does not return prototype properties, or properties of ancestor types.
+   */
   Iterable<String> getOwnPropertyNames();
 
   /**
