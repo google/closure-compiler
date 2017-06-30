@@ -902,21 +902,26 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       if (rhs == null || !rhs.isQualifiedName()) {
         return false;
       }
+      Node parent = qnameNode.getParent();
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(qnameNode);
-      if (jsdoc == null) {
-        return (qnameNode.isFromExterns()
-            // An ES6-module default export is transpiled to an assignment without @const,
-            // but we still consider it an alias.
-            || (qnameNode.isGetProp()
-            && qnameNode.getLastChild().getString().equals("default")
-            && this.currentScope.isNamespace(qnameNode.getFirstChild())))
-            // If the aliased namespace is a variable, do the aliasing at
-            // declaration, not at a random assignment later.
-            && (qnameNode.getParent().isVar() || !qnameNode.isName())
-            && this.currentScope.isNamespace(rhs);
-      } else {
+      if (jsdoc != null) {
         return jsdoc.isConstructorOrInterface() || jsdoc.hasConstAnnotation();
       }
+      // You can only alias variable namespaces at declaration, not at a random assignment later.
+      if (qnameNode.isName() && !parent.isVar()) {
+        return false;
+      }
+      if (!this.currentScope.isNamespace(rhs)) {
+        return false;
+      }
+      return qnameNode.isFromExterns()
+          // An ES6-module default export is transpiled to an assignment without @const,
+          // but we still consider it an alias.
+          || (qnameNode.isGetProp()
+              && qnameNode.getLastChild().getString().equals("default"))
+          // Aliased object-literal property; can happen after goog.module rewriting.
+          || (qnameNode.isStringKey()
+              && this.currentScope.isNamespace(NodeUtil.getBestLValue(parent)));
     }
 
     private boolean isQualifiedFunctionDefinition(Node qnameNode) {
@@ -968,8 +973,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         markAssignNodeAsAnalyzed(qnameNode.getParent());
       }
       if (currentScope.isDefined(qnameNode)) {
-        if (qnameNode.isGetProp()
-            && !NodeUtil.getRValueOfLValue(qnameNode).isOr()) {
+        if (qnameNode.isGetProp() && !NodeUtil.getRValueOfLValue(qnameNode).isOr()) {
           warnings.add(JSError.make(qnameNode, REDECLARED_PROPERTY,
               qnameNode.getLastChild().getString(),
               qnameNode.getFirstChild().getQualifiedName()));
@@ -990,8 +994,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       for (Node propNode : maybeObjlit.children()) {
         if (isAliasedNamespaceDefinition(propNode)) {
           // Pretend that the alias was defined as an assignment to a qname
-          Node fakeGetprop =
-              IR.getprop(qnameNode.cloneTree(), IR.string(propNode.getString()));
+          Node fakeGetprop = IR.getprop(qnameNode.cloneTree(), IR.string(propNode.getString()));
           IR.assign(fakeGetprop, propNode.getFirstChild().cloneTree());
           visitAliasedNamespace(fakeGetprop);
         }
@@ -1526,8 +1529,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         lendsObjlits.add(objLitNode);
       }
       Node maybeLvalue = parent.isAssign() ? parent.getFirstChild() : parent;
-      if (NodeUtil.isNamespaceDecl(maybeLvalue)
-          && currentScope.isNamespace(maybeLvalue)) {
+      if (NodeUtil.isNamespaceDecl(maybeLvalue) && currentScope.isNamespace(maybeLvalue)) {
         for (Node prop : objLitNode.children()) {
           recordPropertyName(prop.getString(), prop);
           visitNamespacePropertyDeclaration(prop, maybeLvalue, prop.getString());
@@ -1536,10 +1538,9 @@ public class GlobalTypeInfoCollector implements CompilerPass {
           && !NodeUtil.isPrototypeAssignment(maybeLvalue)) {
         for (Node prop : objLitNode.children()) {
           recordPropertyName(prop.getString(), prop);
-          if (prop.getJSDocInfo() != null) {
-            getDeclaredObjLitProps().put(prop,
-                getDeclaredTypeOfNode(
-                    prop.getJSDocInfo(), currentScope));
+          JSDocInfo propJsdoc = prop.getJSDocInfo();
+          if (propJsdoc != null) {
+            getDeclaredObjLitProps().put(prop, getDeclaredTypeOfNode(propJsdoc, currentScope));
           }
           if (isAnnotatedAsConst(prop)) {
             warnings.add(JSError.make(prop, MISPLACED_CONST_ANNOTATION));
@@ -1802,13 +1803,12 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       visitNamespacePropertyDeclaration(getProp, recv, pname);
     }
 
-    private void visitNamespacePropertyDeclaration(
-        Node declNode, Node recv, String pname) {
+    private void visitNamespacePropertyDeclaration(Node declNode, Node recv, String pname) {
       checkArgument(
           declNode.isGetProp()
-              || declNode.isStringKey()
-              || declNode.isGetterDef()
-              || declNode.isSetterDef(),
+          || declNode.isStringKey()
+          || declNode.isGetterDef()
+          || declNode.isSetterDef(),
           declNode);
       checkArgument(currentScope.isNamespace(recv));
       if (declNode.isGetterDef()) {
