@@ -75,6 +75,9 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
    * to foo, rename both variable to foo_bar.
    */
   CoalesceVariableNames(AbstractCompiler compiler, boolean usePseudoNames) {
+    // The code is normalized at this point in the compilation process, however as a result of this
+    // pass, the code becomes unnormalized (since we are reusing variable names) and so we want to
+    // unconditionally mark the code as unnormalized. We mark unnormalized right before this pass.
     checkState(!compiler.getLifeCycleStage().isNormalized());
 
     this.compiler = compiler;
