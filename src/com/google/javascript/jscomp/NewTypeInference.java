@@ -1532,11 +1532,6 @@ final class NewTypeInference implements CompilerPass {
           resultPair = analyzeNameFwd(expr, inEnv, requiredType, specializedType);
         }
         break;
-//      case MEMBER_FUNCTION_DEF:
-//      case COMPUTED_PROP:
-//        // TODO(dimvar): fix passes that run after type checking but falsely assume ES6 input
-//        resultPair = analyzeExprFwd(expr.getFirstChild(), inEnv, requiredType, specializedType);
-//        break;
       default:
         throw new RuntimeException("Unhandled expression type: " + expr.getToken());
     }
@@ -3670,9 +3665,6 @@ final class NewTypeInference implements CompilerPass {
         } else {
           return analyzeNameBwd(expr, outEnv, requiredType);
         }
-//      case MEMBER_FUNCTION_DEF:
-//      case COMPUTED_PROP:
-//        return analyzeExprBwd(expr.getFirstChild(), outEnv, requiredType);
       default:
         throw new RuntimeException(
             "BWD: Unhandled expression type: "
