@@ -212,7 +212,9 @@ public class Parser {
     public static enum Mode {
       ES3,
       ES5,
-      ES6_OR_GREATER,
+      ES6,
+      ES7,
+      ES8_OR_GREATER,
       TYPESCRIPT,
     }
 
@@ -223,12 +225,14 @@ public class Parser {
     //     this is false.
     private final boolean parseTypeSyntax;
     private final boolean atLeast6;
+    private final boolean atLeast8;
     private final boolean isStrictMode;
     private final boolean warnTrailingCommas;
 
     public Config(Mode mode, boolean isStrictMode) {
       parseTypeSyntax = mode == Mode.TYPESCRIPT;
       atLeast6 = !(mode == Mode.ES3 || mode == Mode.ES5);
+      atLeast8 = mode == Mode.ES8_OR_GREATER;
       this.isStrictMode = isStrictMode;
 
       // Generally, we allow everything that is valid in any mode
@@ -1343,7 +1347,10 @@ public class Parser {
       if (!peek(TokenType.CLOSE_PAREN)) {
         Token comma = eat(TokenType.COMMA);
         if (peek(TokenType.CLOSE_PAREN)) {
-          reportError(comma, "Invalid trailing comma in formal parameter list");
+          features = features.with(Feature.TRAILING_COMMA_IN_PARAM_LIST);
+          if (!config.atLeast8) {
+            reportError(comma, "Invalid trailing comma in formal parameter list");
+          }
         }
       }
     }
@@ -3476,9 +3483,12 @@ public class Parser {
       arguments.add(parseAssignmentOrSpread());
 
       if (!peek(TokenType.CLOSE_PAREN)) {
-        eat(TokenType.COMMA);
+        Token comma = eat(TokenType.COMMA);
         if (peek(TokenType.CLOSE_PAREN)) {
-          reportError("Invalid trailing comma in arguments list");
+          features = features.with(Feature.TRAILING_COMMA_IN_PARAM_LIST);
+          if (!config.atLeast8) {
+            reportError(comma, "Invalid trailing comma in arguments list");
+          }
         }
       }
     }
