@@ -16,15 +16,13 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 /**
  * Checks that references to properties in strings, in Polymer elements, are counted as usages of
  * those properties.
  */
-public final class CheckUnusedPrivatePropertiesInPolymerElementTest
-    extends TypeICompilerTestCase {
+public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends TypeICompilerTestCase {
 
   private static final String EXTERNS = LINE_JOINER.join(
       DEFAULT_EXTERNS,
@@ -40,7 +38,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest
   protected void setUp() throws Exception {
     super.setUp();
     enableGatherExternProperties();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_NEXT);
+    enableTranspile();
   }
 
   @Override

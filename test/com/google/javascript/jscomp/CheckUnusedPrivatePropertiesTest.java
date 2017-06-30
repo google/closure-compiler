@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
 /**
  * @author johnlenz@google.com (John Lenz)
  */
@@ -46,7 +44,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
   protected void setUp() throws Exception {
     super.setUp();
     enableGatherExternProperties();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    enableTranspile();
   }
 
   @Override

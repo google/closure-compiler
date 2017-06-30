@@ -35,6 +35,12 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
     return 1;
   }
 
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableTranspile();
+  }
+
   public void testExplicitJsdocDoesntWarn() {
     noWarning("/** @type {boolean} */ var x;");
     noWarning("/** @type {null} */ var x;");
@@ -58,8 +64,7 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
     warnImplicitlyNullable("var /** Object */ x;");
     warnImplicitlyNullable("/** @typedef {Object} */ var x;");
     warnImplicitlyNullable("/** @param {Object} x */ function f(x){}");
-    warnImplicitlyNullable(
-        "/** @return {Object} */ function f(x){ return {}; }");
+    warnImplicitlyNullable("/** @return {Object} */ function f(x){ return {}; }");
   }
 
   public void testParameterizedObject() {
@@ -72,8 +77,7 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
     // Arguable whether or not this deserves a warning, so leaving
     // out of NTI for now.
     this.mode = TypeInferenceMode.OTI_ONLY;
-    warnImplicitlyNullable(
-        "/** @typedef {?number} */ var Num; var /** Num */ x;");
+    warnImplicitlyNullable("/** @typedef {?number} */ var Num; var /** Num */ x;");
   }
 
   public void testUnkownTypenameDoesntWarn() {

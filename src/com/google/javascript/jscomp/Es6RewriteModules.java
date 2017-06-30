@@ -126,7 +126,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   @Override
   public void process(Node externs, Node root) {
-    checkState(compiler.getOptions().getLanguageIn().toFeatureSet().has(MODULES));
     for (Node file = root.getFirstChild(); file != null; file = file.getNext()) {
       hotSwapScript(file, null);
     }
