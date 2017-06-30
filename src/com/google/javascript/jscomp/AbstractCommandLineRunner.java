@@ -495,12 +495,9 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
    * compiler.
    */
   public final void run() {
-    int result = 0;
-    int runs = 1;
+    int result;
     try {
-      for (int i = 0; i < runs && result == 0; i++) {
-        result = doRun();
-      }
+      result = doRun();
     } catch (AbstractCommandLineRunner.FlagUsageException e) {
       err.println(e.getMessage());
       result = -1;
