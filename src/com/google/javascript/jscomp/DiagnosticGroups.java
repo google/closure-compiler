@@ -487,8 +487,8 @@ public class DiagnosticGroups {
           ClosureRewriteModule.MISSING_MODULE_OR_PROVIDE);
 
   public static final DiagnosticGroup MISSING_REQUIRE =
-      DiagnosticGroups.registerGroup("missingRequire",
-          CheckRequiresForConstructors.MISSING_REQUIRE_WARNING);
+      DiagnosticGroups.registerGroup(
+          "missingRequire", CheckMissingAndExtraRequires.MISSING_REQUIRE_WARNING);
 
   /**
    * A set of diagnostics expected when parsing and type checking partial programs. Useful for clutz
@@ -511,19 +511,21 @@ public class DiagnosticGroups {
           DiagnosticGroup.forType(Es6ExternsCheck.MISSING_ES6_EXTERNS));
 
   public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
-      DiagnosticGroups.registerGroup("strictMissingRequire",
-          CheckRequiresForConstructors.MISSING_REQUIRE_WARNING,
-          CheckRequiresForConstructors.MISSING_REQUIRE_FOR_GOOG_SCOPE,
-          CheckRequiresForConstructors.MISSING_REQUIRE_STRICT_WARNING);
+      DiagnosticGroups.registerGroup(
+          "strictMissingRequire",
+          CheckMissingAndExtraRequires.MISSING_REQUIRE_WARNING,
+          CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE,
+          CheckMissingAndExtraRequires.MISSING_REQUIRE_STRICT_WARNING);
 
   public static final DiagnosticGroup STRICT_REQUIRES =
-      DiagnosticGroups.registerGroup("legacyGoogScopeRequire",
-          CheckRequiresForConstructors.MISSING_REQUIRE_FOR_GOOG_SCOPE,
-          CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING);
+      DiagnosticGroups.registerGroup(
+          "legacyGoogScopeRequire",
+          CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE,
+          CheckMissingAndExtraRequires.EXTRA_REQUIRE_WARNING);
 
   public static final DiagnosticGroup EXTRA_REQUIRE =
-      DiagnosticGroups.registerGroup("extraRequire",
-          CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING);
+      DiagnosticGroups.registerGroup(
+          "extraRequire", CheckMissingAndExtraRequires.EXTRA_REQUIRE_WARNING);
 
   @GwtIncompatible("java.util.regex")
   public static final DiagnosticGroup MISSING_GETCSSNAME =

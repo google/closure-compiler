@@ -15,14 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING;
-import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_WARNING;
+import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.EXTRA_REQUIRE_WARNING;
+import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.MISSING_REQUIRE_WARNING;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
-/**
- * Tests for {@link CheckRequiresForConstructors} in single-file mode.
- */
+/** Tests for {@link CheckMissingAndExtraRequires} in single-file mode. */
 public final class SingleFileCheckRequiresTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
@@ -39,8 +37,8 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CheckRequiresForConstructors(compiler,
-        CheckRequiresForConstructors.Mode.SINGLE_FILE);
+    return new CheckMissingAndExtraRequires(
+        compiler, CheckMissingAndExtraRequires.Mode.SINGLE_FILE);
   }
 
   public void testReferenceToSingleName() {

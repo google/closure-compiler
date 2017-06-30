@@ -37,23 +37,24 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * This pass walks the AST to create a Collection of 'new' nodes and
- * 'goog.require' nodes. It reconciles these Collections, creating a
- * warning for each discrepancy.
+ * Walks the AST looking for usages of qualified names, and 'goog.require's of those names.
+ * Then, reconciles the two lists, and reports warning for any discrepancies.
  *
- * <p>The rules on when a warning is reported are: <ul>
- * <li>Type is referenced in code → goog.require is required
- *     (missingRequires check fails if it's not there)
- * <li>Type is referenced in an @extends or @implements → goog.require is required
- *     (missingRequires check fails if it's not there)
- * <li>Type is referenced in other JsDoc (@type etc) → goog.require is optional
- *     (don't warn, regardless of if it is there)
- * <li>Type is not referenced at all → goog.require is forbidden
- *     (extraRequires check fails if it is there)
+ * <p>The rules on when a warning is reported are:
+ *
+ * <ul>
+ *   <li>Type is referenced in code → goog.require is required (missingRequires check fails if it's
+ *       not there)
+ *   <li>Type is referenced in an @extends or @implements → goog.require is required
+ *       (missingRequires check fails if it's not there)
+ *   <li>Type is referenced in other JsDoc (@type etc) → goog.require is optional (don't warn,
+ *       regardless of if it is there)
+ *   <li>Type is not referenced at all → goog.require is forbidden (extraRequires check fails if it
+ *       is there)
  * </ul>
  *
  */
-public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTraversal.Callback {
+public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTraversal.Callback {
   private final AbstractCompiler compiler;
   private final CodingConvention codingConvention;
 
@@ -106,7 +107,7 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
       ImmutableSet.of(
           "goog.testing.asserts", "goog.testing.jsunit", "goog.testing.JsTdTestCaseAdapter");
 
-  CheckRequiresForConstructors(AbstractCompiler compiler, Mode mode) {
+  CheckMissingAndExtraRequires(AbstractCompiler compiler, Mode mode) {
     this.compiler = compiler;
     this.mode = mode;
     this.codingConvention = compiler.getCodingConvention();

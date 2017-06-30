@@ -16,15 +16,13 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING;
+import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.EXTRA_REQUIRE_WARNING;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import java.util.List;
 
-/**
- * Tests for the "extra requires" check in {@link CheckRequiresForConstructors}.
- */
+/** Tests for the "extra requires" check in {@link CheckMissingAndExtraRequires}. */
 public final class ExtraRequireTest extends CompilerTestCase {
   public ExtraRequireTest() {
     super();
@@ -44,8 +42,8 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new CheckRequiresForConstructors(compiler,
-        CheckRequiresForConstructors.Mode.FULL_COMPILE);
+    return new CheckMissingAndExtraRequires(
+        compiler, CheckMissingAndExtraRequires.Mode.FULL_COMPILE);
   }
 
   public void testNoWarning() {

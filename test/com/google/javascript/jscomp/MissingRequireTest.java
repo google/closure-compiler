@@ -17,27 +17,27 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_FOR_GOOG_SCOPE;
-import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_STRICT_WARNING;
-import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_WARNING;
+import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE;
+import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.MISSING_REQUIRE_STRICT_WARNING;
+import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.MISSING_REQUIRE_WARNING;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import java.util.List;
 
 /**
- * Tests for the "missing requires" check in {@link CheckRequiresForConstructors}.
+ * Tests for the "missing requires" check in {@link CheckMissingAndExtraRequires}.
  *
  */
 
 public final class MissingRequireTest extends CompilerTestCase {
-  private CheckRequiresForConstructors.Mode mode;
+  private CheckMissingAndExtraRequires.Mode mode;
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
-    mode = CheckRequiresForConstructors.Mode.FULL_COMPILE;
+    mode = CheckMissingAndExtraRequires.Mode.FULL_COMPILE;
   }
 
   @Override
@@ -48,7 +48,7 @@ public final class MissingRequireTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new CheckRequiresForConstructors(compiler, mode);
+    return new CheckMissingAndExtraRequires(compiler, mode);
   }
 
   private void testMissingRequireStrict(String js, String warningText) {
@@ -470,7 +470,7 @@ public final class MissingRequireTest extends CompilerTestCase {
   }
 
   public void testFailConstant() {
-    mode = CheckRequiresForConstructors.Mode.SINGLE_FILE;
+    mode = CheckMissingAndExtraRequires.Mode.SINGLE_FILE;
     testMissingRequireStrict(
         "goog.require('example.Class'); alert(example.Constants.FOO);",
         "missing require: 'example.Constants'");
@@ -480,7 +480,7 @@ public final class MissingRequireTest extends CompilerTestCase {
   }
 
   public void testFailGoogArray() {
-    mode = CheckRequiresForConstructors.Mode.SINGLE_FILE;
+    mode = CheckMissingAndExtraRequires.Mode.SINGLE_FILE;
     testMissingRequireStrict(
         "console.log(goog.array.contains([1, 2, 3], 4));",
         "missing require: 'goog.array'");

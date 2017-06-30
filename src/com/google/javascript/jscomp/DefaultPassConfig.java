@@ -1171,11 +1171,11 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Checks that all constructed classes are goog.require()d. */
   private final HotSwapPassFactory checkRequires =
-      new HotSwapPassFactory("checkRequires", true) {
+      new HotSwapPassFactory("checkMissingAndExtraRequires", true) {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new CheckRequiresForConstructors(
-              compiler, CheckRequiresForConstructors.Mode.FULL_COMPILE);
+          return new CheckMissingAndExtraRequires(
+              compiler, CheckMissingAndExtraRequires.Mode.FULL_COMPILE);
         }
 
         @Override
