@@ -130,7 +130,7 @@ public final class ParserRunner {
       IRFactory factory =
           IRFactory.transformTree(tree, sourceFile, sourceString, config, errorReporter);
       root = factory.getResultNode();
-      features = factory.getFeatures();
+      features = features.union(factory.getFeatures());
       root.putProp(Node.FEATURE_SET, features);
 
       if (config.parseJsDocDocumentation.shouldParseDescriptions()) {
@@ -220,13 +220,12 @@ public final class ParserRunner {
    * Holds results of parsing.
    */
   public static class ParseResult {
-    @Nullable public final Node ast;
+    public final Node ast;
     public final List<Comment> comments;
     public final FeatureSet features;
     @Nullable public final String sourceMapURL;
 
-    public ParseResult(
-        @Nullable Node ast, List<Comment> comments, FeatureSet features, String sourceMapURL) {
+    public ParseResult(Node ast, List<Comment> comments, FeatureSet features, String sourceMapURL) {
       this.ast = ast;
       this.comments = comments;
       this.features = features;

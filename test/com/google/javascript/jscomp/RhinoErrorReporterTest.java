@@ -48,12 +48,15 @@ public final class RhinoErrorReporterTest extends TestCase {
         "var x = [1,];",
         RhinoErrorReporter.TRAILING_COMMA,
         message);
-    assertError(
+    JSError error = assertError(
         "var x = {\n" +
         "    1: 2,\n" +
         "};",
         RhinoErrorReporter.TRAILING_COMMA,
         message);
+
+    assertEquals(2, error.getLineNumber());
+    assertEquals(8, error.getCharno());
   }
 
   public void testInvalidEs3Prop() throws Exception {
