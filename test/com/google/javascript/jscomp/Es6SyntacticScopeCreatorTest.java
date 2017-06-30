@@ -557,7 +557,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Scope fBlockScope = scopeCreator.createScope(functionBlock, functionScope);
 
     assertFalse(fBlockScope.isDeclared("x", false));
-    assertTrue(fBlockScope.isDeclaredSloppy("x", false));
+    assertTrue(fBlockScope.isDeclaredInFunctionBlockOrParameter("x"));
     assertFalse(fBlockScope.isDeclared("y", false));
 
     Node ifBlock = functionBlock.getLastChild().getLastChild();
@@ -699,7 +699,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node fBlock = NodeUtil.getFunctionBody(fNode);
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
     assertFalse(fBlockScope.isDeclared("x", false));
-    assertTrue(fBlockScope.isDeclaredSloppy("x", false));
+    assertTrue(fBlockScope.isDeclaredInFunctionBlockOrParameter("x"));
   }
 
   public void testOnlyOneDeclaration() {
@@ -713,7 +713,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node fBlock = fNode.getLastChild();
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
     assertFalse(fBlockScope.isDeclared("x", false));
-    assertTrue(fBlockScope.isDeclaredSloppy("x", false));
+    assertTrue(fBlockScope.isDeclaredInFunctionBlockOrParameter("x"));
 
     Node ifBlock = fBlock.getFirstChild().getLastChild();
     Scope ifBlockScope = scopeCreator.createScope(ifBlock, fBlockScope);

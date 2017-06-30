@@ -201,13 +201,10 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType>, TypeI
     throw new IllegalStateException("Method getArgumentsVar cannot be called on typed scopes.");
   }
 
-  /**
-   * @deprecated use #isDeclared instead
-   */
-  @Deprecated
   @Override
-  public boolean isDeclaredSloppy(String name, boolean recurse) {
-    return isDeclared(name, false);
+  public boolean isDeclaredInFunctionBlockOrParameter(String name) {
+    throw new IllegalStateException(
+        "Method isDeclaredInFunctionBlockOrParameter cannot be called on typed scopes.");
   }
 
   @Override

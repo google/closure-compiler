@@ -334,10 +334,16 @@ class LiveVariablesAnalysisEs6
   private void addToSetIfLocal(Node node, BitSet set) {
     checkState(node.isName(), node);
     String name = node.getString();
+    boolean local;
 
     // add to the local set if the variable is declared in the function or function body because
     // ES6 separates the scope but hoists variables to the function scope
-    if (jsScope.isDeclaredSloppy(name, false)) {
+    if (jsScope.isFunctionBlockScope()) {
+      local = jsScope.isDeclaredInFunctionBlockOrParameter(name);
+    } else {
+      local = jsScope.isDeclared(name, false);
+    }
+    if (local) {
       Var var = jsScope.getVar(name);
       if (!escaped.contains(var)) {
         set.set(getVarIndex(var.getName()));
@@ -383,6 +389,6 @@ class LiveVariablesAnalysisEs6
     }
     return n.isName()
         && n.getString().equals(ARGUMENT_ARRAY_ALIAS)
-        && (!jsScope.isDeclaredSloppy(ARGUMENT_ARRAY_ALIAS, false) || !childDeclared);
+        && (!jsScope.isDeclared(ARGUMENT_ARRAY_ALIAS, false) || !childDeclared);
   }
 }

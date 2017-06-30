@@ -188,22 +188,15 @@ public class Scope implements StaticScope, Serializable {
   }
 
   /**
-   * @deprecated use #isDeclared instead
+   * Use only when in a function block scope and want to tell if a name is either at the top of the
+   * function block scope or the function parameter scope
    */
-  @Deprecated
-  public boolean isDeclaredSloppy(String name, boolean recurse) {
+  public boolean isDeclaredInFunctionBlockOrParameter(String name) {
     // In ES6, we create a separate "function parameter scope" above the function block scope to
     // handle default parameters. Since nothing in the function block scope is allowed to shadow
     // the variables in the function scope, we treat the two scopes as one in this method.
-    checkState(recurse == false);
-    if (!isDeclared(name, false)) {
-      if (parent != null && isFunctionBlockScope()) {
-        return parent.isDeclared(name, false);
-      }
-      return false;
-    } else {
-      return true;
-    }
+    checkState(isFunctionBlockScope());
+    return isDeclared(name, false) || parent.isDeclared(name, false);
   }
 
   /**

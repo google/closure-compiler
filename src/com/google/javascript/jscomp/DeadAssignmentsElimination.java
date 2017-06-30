@@ -236,7 +236,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
       String name = lhs.getString();
       checkState(t.getScope().isFunctionBlockScope());
       Scope functionBlockScope = t.getScope();
-      if (!functionBlockScope.isDeclaredSloppy(name, false)) {
+      if (!functionBlockScope.isDeclaredInFunctionBlockOrParameter(name)) {
         return;
       }
       Var var = functionBlockScope.getVar(name);
