@@ -66,7 +66,7 @@ final class CompilerExecutor {
    */
   @GwtIncompatible("java.util.concurrent.ExecutorService")
   static ExecutorService getDefaultExecutorService() {
-    return Executors.newCachedThreadPool(new ThreadFactory() {
+    return Executors.newSingleThreadExecutor(new ThreadFactory() {
         @Override
         public Thread newThread(Runnable r) {
           Thread t = new Thread(null, r, "jscompiler", COMPILER_STACK_SIZE);
