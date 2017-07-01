@@ -65,16 +65,6 @@ public class Matcher {
     return false;
   }
 
-  public String group(int index) {
-    if (!hasExecuted) {
-      throw new IllegalStateException("regex not executed yet");
-    } else if (result == null) {
-      throw new IllegalStateException("regex did not match");
-    } else {
-      return result.getGroup(index);
-    }
-  }
-
   public static String quoteReplacement(String input) {
     return RegExp.quote(input);
   }

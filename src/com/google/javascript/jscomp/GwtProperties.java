@@ -19,20 +19,12 @@ package com.google.javascript.jscomp;
 import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
- * GWT-compatible helper for dealing with Java .properties files. The format is probably not
- * fully parsed by this code, but is suitable for simple use-cases inside Closure.
+ * GWT-compatible helper for dealing with Java .properties files. The format is probably not fully
+ * parsed by this code, but is suitable for simple use-cases inside Closure.
  */
 public class GwtProperties {
-  // Matches the first part of a property, e.g. "foo.bar.baz = "
-  private static final Pattern PROP_DEF = Pattern.compile("^(\\w+(\\.\\w+)*)\\s*[:= ]");
-
-  // Matches a value part of a property, e.g. "  value\" (continuation) or "value"
-  private static final Pattern PROP_LINE = Pattern.compile("^\\s*(.*?)(\\\\?)$");  // literal "\"
-
   private final Map<String, String> contents;
 
   private GwtProperties(Map<String, String> contents) {
@@ -47,13 +39,34 @@ public class GwtProperties {
     return contents.get(key);
   }
 
-  /**
-   * @return The collection of property names.
-   */
+  /** @return The collection of property names. */
   public Collection<String> propertyNames() {
     return contents.keySet();
   }
 
+  private static String trimLeft(String str) {
+    for (int i = 0; i < str.length(); i++) {
+      if (str.charAt(i) != ' ') {
+        return str.substring(i);
+      }
+    }
+    return str;
+  }
+
+  private static int findDelimiter(String line) {
+    if (line.contains(":") || line.contains("=")) {
+      if (line.indexOf(':') == -1) {
+        return line.indexOf("=");
+      }
+      if (line.indexOf('=') == -1) {
+        return line.indexOf(':');
+      }
+      // Both delimeters exist!
+      return Math.min(line.indexOf('='), line.indexOf(':'));
+    }
+    // If no : or =, delimiter is first whitespace.
+    return line.indexOf(' ');
+  }
   /**
    * Constructs a new {@link GwtProperties} from the given source string.
    *
@@ -67,37 +80,35 @@ public class GwtProperties {
     for (int i = 0; i < lines.length; ++i) {
       String line = lines[i];
       if (line.isEmpty() || line.startsWith("#") || line.startsWith("!")) {
-        continue;  // skip if empty or starts with # or !
+        continue; // skip if empty or starts with # or !
       }
 
-      Matcher m = PROP_DEF.matcher(line);
-      if (!m.find()) {
-        continue;
-      }
-      String key = m.group(1);
       String data = "";
 
-      line = line.substring(m.group(0).length());  // remove matched part
-      for (;;) {
-        Matcher lineMatch = PROP_LINE.matcher(line);
-        if (!lineMatch.matches()) {
-          // Should never happen, since PROP_LINE contains .* and no hard requirements.
-          throw new RuntimeException("Properties parser failed on line: " + line);
-        }
-        data += lineMatch.group(1);  // add content found
-
-        // If the line ends with "/", then consume another line if possible.
-        boolean isLastLine = lineMatch.group(2).isEmpty();
-        if (isLastLine || i + 1 == lines.length) {
+      int delimeterIndex = findDelimiter(line);
+      if (delimeterIndex == -1) {
+        continue;
+      }
+      // Remove whitespace on both sides of key.
+      String key = line.substring(0, delimeterIndex).trim();
+      // Remove whitespace only on left side of data value. Trailing white space is data.
+      line = trimLeft(line.substring(delimeterIndex + 1));
+      while (true) {
+        if (line.endsWith("\\")) {
+          data += line.substring(0, line.length() - 1);
+          if (i + 1 == lines.length) {
+            break;
+          }
+          line = trimLeft(lines[++i]);
+        } else {
+          data += line;
           break;
         }
-        line = lines[++i];
+        }
+      builder.put(key, data);
       }
 
-      builder.put(key, data);
+    return new GwtProperties(builder.build());
     }
 
-    return new GwtProperties(builder.build());
   }
-
-}

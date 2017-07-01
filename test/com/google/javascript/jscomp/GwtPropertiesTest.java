@@ -52,11 +52,17 @@ public final class GwtPropertiesTest extends TestCase {
   }
 
   // https://en.wikipedia.org/wiki/.properties
-  public void testSpaceEscapeNotSupported() {
+  public void testSpaceEscape() {
     String src = "key\\ with\\ spaces = value\n";
     GwtProperties p = GwtProperties.load(src);
-    // Asserts that we do not correctly handle escaped spaces.
-    assertThat(p.getProperty("key\\ with\\ spaces")).isNotEqualTo("value");
+    assertThat(p.getProperty("key\\ with\\ spaces")).isEqualTo("value");
+
+    // Technically this is valid too but we do not support this, and definitely don't use it in
+    // our own .properties files.
+    String srcWithSpace = "key\\ with\\ spaces value\n";
+    GwtProperties pWithSpace = GwtProperties.load(srcWithSpace);
+    // Incorrect behaviour.
+    assertThat(pWithSpace.getProperty("key\\ with\\ spaces")).isNotEqualTo("value");
   }
 
   public void testNoEquals() {
