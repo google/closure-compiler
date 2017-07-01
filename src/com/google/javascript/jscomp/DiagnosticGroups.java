@@ -456,8 +456,12 @@ public class DiagnosticGroups {
           RhinoErrorReporter.INVALID_ES3_PROP_NAME,
           RhinoErrorReporter.TRAILING_COMMA);
 
+  // In the conversion from ES5 to ES6, we remove the strict check that asserts functions
+  // must be declared at the top of a new scope or immediately within the declaration of another
+  // function
   static final DiagnosticGroup ES5_STRICT_UNCOMMON =
-      DiagnosticGroups.registerGroup("es5StrictUncommon",
+      DiagnosticGroups.registerGroup(
+          "es5StrictUncommon",
           RhinoErrorReporter.INVALID_OCTAL_LITERAL,
           RhinoErrorReporter.DUPLICATE_PARAM,
           StrictModeCheck.USE_OF_WITH,
@@ -466,8 +470,7 @@ public class DiagnosticGroups {
           StrictModeCheck.ARGUMENTS_DECLARATION,
           StrictModeCheck.ARGUMENTS_ASSIGNMENT,
           StrictModeCheck.DELETE_VARIABLE,
-          StrictModeCheck.DUPLICATE_OBJECT_KEY,
-          StrictModeCheck.BAD_FUNCTION_DECLARATION);
+          StrictModeCheck.DUPLICATE_OBJECT_KEY);
 
   static final DiagnosticGroup ES5_STRICT_REFLECTION =
       DiagnosticGroups.registerGroup("es5StrictReflection",

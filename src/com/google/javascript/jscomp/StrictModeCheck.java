@@ -19,7 +19,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -75,6 +74,11 @@ class StrictModeCheck extends AbstractPostOrderCallback
       "JSC_FUNCTION_ARGUMENTS_PROP_FORBIDDEN",
       "A function''s \"arguments\" property cannot be used in strict mode");
 
+  static final DiagnosticType BAD_FUNCTION_DECLARATION = DiagnosticType.warning(
+      "JSC_BAD_FUNCTION_DECLARATION",
+      "functions can only be declared at top level or immediately within"
+          + " another function in ES5 strict mode");
+
   static final DiagnosticType DELETE_VARIABLE = DiagnosticType.warning(
       "JSC_DELETE_VARIABLE",
       "variables, functions, and arguments cannot be deleted in strict mode");
@@ -86,11 +90,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
   static final DiagnosticType DUPLICATE_CLASS_METHODS = DiagnosticType.error(
       "JSC_DUPLICATE_CLASS_METHODS",
       "Class contain duplicate method name \"{0}\"");
-
-  static final DiagnosticType BAD_FUNCTION_DECLARATION = DiagnosticType.error(
-      "JSC_BAD_FUNCTION_DECLARATION",
-      "functions can only be declared at top level or immediately within"
-      + " another function in strict mode");
 
   private final AbstractCompiler compiler;
 
@@ -104,9 +103,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
   }
 
   @Override public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isFunction()) {
-      checkFunctionUse(t, n);
-    } else if (n.isAssign()) {
+    if (n.isAssign()) {
       checkAssignment(t, n);
     } else if (n.isDelProp()) {
       checkDelete(t, n);
@@ -126,13 +123,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
         info != null && info.getSuppressions().contains("with");
     if (!allowWith) {
       t.report(n, USE_OF_WITH);
-    }
-  }
-
-  /** Checks that the function is used legally. */
-  private static void checkFunctionUse(NodeTraversal t, Node n) {
-    if (NodeUtil.isFunctionDeclaration(n) && !NodeUtil.isHoistedFunctionDeclaration(n)) {
-      t.report(n, BAD_FUNCTION_DECLARATION);
     }
   }
 

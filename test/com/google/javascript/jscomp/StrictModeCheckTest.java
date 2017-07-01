@@ -226,15 +226,9 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
 
     testSame("{var g = function () {}}");
     testSame("{(function g() {})()}");
-    testError("{function g() {}}", StrictModeCheck.BAD_FUNCTION_DECLARATION);
 
     testSame("var x;if (x) {var g = function () {}}");
     testSame("var x;if (x) {(function g() {})()}");
-    testError("var x;if (x) { function g(){} }", StrictModeCheck.BAD_FUNCTION_DECLARATION);
-  }
-
-  public void testFunctionDecl2() {
-    testError("{function g() {}}", StrictModeCheck.BAD_FUNCTION_DECLARATION);
   }
 
   public void testClass() {
@@ -256,16 +250,6 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
         StrictModeCheck.DUPLICATE_CLASS_METHODS);
 
     // Function declaration / call test.
-    testError(
-        LINE_JOINER.join(
-            "class A {",
-            "  method() {",
-            "    for(;;) {",
-            "      function a(){}",
-            "    }",
-            "  }",
-            "}"),
-        StrictModeCheck.BAD_FUNCTION_DECLARATION);
     // The two following tests should have reported FUNCTION_CALLER_FORBIDDEN and
     // FUNCTION_ARGUMENTS_PROP_FORBIDDEN. Typecheck needed for them to work.
     // TODO(user): Add tests for these after typecheck supports class.
