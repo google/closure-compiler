@@ -226,6 +226,10 @@ public class Parser {
     private final boolean isStrictMode;
     private final boolean warnTrailingCommas;
 
+    public Config() {
+      this(Mode.ES6_OR_GREATER, /* isStrictMode */ false);
+    }
+
     public Config(Mode mode, boolean isStrictMode) {
       parseTypeSyntax = mode == Mode.TYPESCRIPT;
       atLeast6 = !(mode == Mode.ES3 || mode == Mode.ES5);
