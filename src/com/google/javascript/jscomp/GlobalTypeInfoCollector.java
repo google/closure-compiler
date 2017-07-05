@@ -687,7 +687,9 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         }
       }
     } else {
-      PropertyDef propdef = checkNotNull(getPropDefFromClass(superType, pname));
+      PropertyDef propdef = checkNotNull(
+          getPropDefFromClass(superType, pname),
+          "getPropDefFromClass(%s, %s) returned null", superType, pname);
       inheritedPropDefs = ImmutableSet.of(propdef);
     }
     if (superType.isInterface()
