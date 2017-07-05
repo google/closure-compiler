@@ -640,6 +640,15 @@ md.$mdThemingProvider.prototype.theme = function(name, opt_parentTheme) {};
 /** @param {string} nonce */
 md.$mdThemingProvider.prototype.setNonce = function(nonce) {};
 
+/** @param {string} styles */
+md.$mdThemingProvider.prototype.registerStyles = function(styles) {};
+
+/**
+ * @param {?Object=} options
+ * @return {!Function}
+ */
+md.$mdThemingProvider.prototype.enableBrowserColor = function(options) {};
+
 /******************************************************************************
  * $mdTheming service
  *****************************************************************************/
