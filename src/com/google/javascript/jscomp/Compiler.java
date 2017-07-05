@@ -1174,6 +1174,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         System.out.println("// " + passName + " yields:");
         System.out.println("// ************************************");
         System.out.println(currentJsSource);
+        System.out.println("// ************************************");
         lastJsSource = currentJsSource;
       }
     }
