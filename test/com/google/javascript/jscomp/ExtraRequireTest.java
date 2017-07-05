@@ -92,6 +92,15 @@ public final class ExtraRequireTest extends CompilerTestCase {
             "alert({X});"));
   }
 
+  public void testNoWarning_objlitShorthand_withES6Modules() {
+    testSame(
+        LINE_JOINER.join(
+            "import 'example.module';",
+            "",
+            "import X from 'example.X';",
+            "alert({X});"));
+  }
+
   public void testNoWarning_InnerClassInExtends() {
     String js =
         LINE_JOINER.join(
@@ -293,6 +302,19 @@ public final class ExtraRequireTest extends CompilerTestCase {
             "var {assert : googAssert} = goog.require('goog.asserts');",
             "",
             "exports = function() {",
+            "  assert(true);",
+            "};"),
+        EXTRA_REQUIRE_WARNING);
+  }
+
+  public void testES6ModuleWithDestructuringRequire() {
+    testError(
+        LINE_JOINER.join(
+            "import 'example';",
+            "",
+            "import {assert, fail} from 'goog.asserts';",
+            "",
+            "export default function() {",
             "  assert(true);",
             "};"),
         EXTRA_REQUIRE_WARNING);

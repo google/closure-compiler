@@ -72,6 +72,11 @@ public final class MissingRequireTest extends CompilerTestCase {
     testSame(js);
   }
 
+  public void testPassWithNoNewNodes_withES6Modules() {
+    String js = "export var str = 'g4'; /* does not use new */";
+    testSame(js);
+  }
+
   public void testPassWithOneNew() {
     String js =
         LINE_JOINER.join(
@@ -84,9 +89,15 @@ public final class MissingRequireTest extends CompilerTestCase {
     testSame("class C {}; var c = new C();");
   }
 
+  public void testPassWithNewDeclaredClass_withES6Modules() {
+    testSame("export class C {}; var c = new C();");
+  }
+
   public void testClassRecognizedAsConstructor() {
-    testSame("/** @constructor */ module$test.A = function() {};"
-                + "class C extends module$test.A {}");
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */ module$test.A = function() {};",
+            "class C extends module$test.A {}"));
     testSame("module$test.A = class {}; class C extends module$test.A {}");
   }
 
@@ -208,6 +219,23 @@ public final class MissingRequireTest extends CompilerTestCase {
         "missing require: 'goog.dom'");
   }
 
+  public void testWarnES6Module_noRewriting() {
+    testMissingRequireStrict(
+        LINE_JOINER.join(
+            "import 'example';",
+            "",
+            "/**",
+            " * @param {Array<string>} ids",
+            " * @return {Array<HTMLElement>}",
+            " */",
+            "function getElems(ids) {",
+            "  return ids.map(function(id) { return goog.dom.getElement(id); });",
+            "}",
+            "",
+            "export default getElems();"),
+        "missing require: 'goog.dom'");
+  }
+
   public void testPassForwardDeclare() {
     testSame(
         LINE_JOINER.join(
@@ -319,6 +347,24 @@ public final class MissingRequireTest extends CompilerTestCase {
             "}",
             "",
             "exports = getElems;"));
+  }
+
+  public void testPassES6Module_noRewriting() {
+    testSame(
+        LINE_JOINER.join(
+            "import 'example';",
+            "",
+            "import dom from 'goog.dom';",
+            "",
+            "/**",
+            " * @param {Array<string>} ids",
+            " * @return {Array<HTMLElement>}",
+            " */",
+            "function getElems(ids) {",
+            "  return ids.map(id => dom.getElement(id));",
+            "}",
+            "",
+            "export default getElems();"));
   }
 
   public void testGoogModuleGet() {

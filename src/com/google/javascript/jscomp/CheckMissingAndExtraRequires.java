@@ -37,8 +37,8 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Walks the AST looking for usages of qualified names, and 'goog.require's of those names.
- * Then, reconciles the two lists, and reports warning for any discrepancies.
+ * Walks the AST looking for usages of qualified names, and 'goog.require's of those names. Then,
+ * reconciles the two lists, and reports warning for any discrepancies.
  *
  * <p>The rules on when a warning is reported are:
  *
@@ -67,6 +67,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
     // Used during a normal compilation. The entire program + externs are available.
     FULL_COMPILE
   };
+
   private Mode mode;
 
   private final Set<String> providedNames = new HashSet<>();
@@ -86,22 +87,20 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
   private final Set<String> weakUsages = new HashSet<>();
 
   // The body of the goog.scope function, if any.
-  @Nullable
-  private Node googScopeBlock;
+  @Nullable private Node googScopeBlock;
 
   public static final DiagnosticType MISSING_REQUIRE_WARNING =
-      DiagnosticType.disabled(
-          "JSC_MISSING_REQUIRE_WARNING", "missing require: ''{0}''");
+      DiagnosticType.disabled("JSC_MISSING_REQUIRE_WARNING", "missing require: ''{0}''");
+
   static final DiagnosticType MISSING_REQUIRE_FOR_GOOG_SCOPE =
-      DiagnosticType.disabled(
-          "JSC_MISSING_REQUIRE_FOR_GOOG_SCOPE", "missing require: ''{0}''");
+      DiagnosticType.disabled("JSC_MISSING_REQUIRE_FOR_GOOG_SCOPE", "missing require: ''{0}''");
 
   // TODO(tbreisacher): Remove this and just use MISSING_REQUIRE_WARNING.
   public static final DiagnosticType MISSING_REQUIRE_STRICT_WARNING =
       DiagnosticType.disabled("JSC_MISSING_REQUIRE_STRICT_WARNING", "missing require: ''{0}''");
 
-  public static final DiagnosticType EXTRA_REQUIRE_WARNING = DiagnosticType.disabled(
-      "JSC_EXTRA_REQUIRE_WARNING", "extra require: ''{0}''");
+  public static final DiagnosticType EXTRA_REQUIRE_WARNING =
+      DiagnosticType.disabled("JSC_EXTRA_REQUIRE_WARNING", "extra require: ''{0}''");
 
   private static final ImmutableSet<String> DEFAULT_EXTRA_NAMESPACES =
       ImmutableSet.of(
@@ -131,14 +130,12 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
   // Return true if the name is a class name (starts with an uppercase
   // character, but is not in all-caps).
   private static boolean isClassName(String name) {
-    return isClassOrConstantName(name)
-        && !name.equals(name.toUpperCase());
+    return isClassOrConstantName(name) && !name.equals(name.toUpperCase());
   }
 
   // Return true if the name looks like a class name or a constant name.
   private static boolean isClassOrConstantName(String name) {
-    return name != null && name.length() > 1
-        && Character.isUpperCase(name.charAt(0));
+    return name != null && name.length() > 1 && Character.isUpperCase(name.charAt(0));
   }
 
   // Return the shortest prefix of the className that refers to a class,
@@ -382,8 +379,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
 
   /**
    * @param localName The name that should be used in this file.
-   *
-   * <pre>
+   *     <pre>
    * Require style                        | localName
    * -------------------------------------|----------
    * goog.require('foo.bar');             | foo.bar
@@ -534,7 +530,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
     checkState(n.isName() || n.isGetProp() || n.isStringKey(), n);
     String qualifiedName = n.isStringKey() ? n.getString() : n.getQualifiedName();
     addWeakUsagesOfAllPrefixes(qualifiedName);
-    if (mode != Mode.SINGLE_FILE) {  // TODO(tbreisacher): Fix violations and remove this check.
+    if (mode != Mode.SINGLE_FILE) { // TODO(tbreisacher): Fix violations and remove this check.
       return;
     }
     if (!n.isStringKey() && !NodeUtil.isLhsOfAssign(n) && !parent.isExprResult()) {
@@ -568,8 +564,7 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
 
     String name = root.getString();
     Var var = t.getScope().getVar(name);
-    if (var != null
-        && (var.isExtern() || var.getSourceFile() == newNode.getStaticSourceFile())) {
+    if (var != null && (var.isExtern() || var.getSourceFile() == newNode.getStaticSourceFile())) {
       return;
     }
     usages.put(qNameNode.getQualifiedName(), newNode);
@@ -629,8 +624,8 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
   }
 
   /**
-   * "var Dog = some.cute.Dog;" counts as a usage of some.cute.Dog, if it's immediately
-   * inside a goog.scope function.
+   * "var Dog = some.cute.Dog;" counts as a usage of some.cute.Dog, if it's immediately inside a
+   * goog.scope function.
    */
   private void maybeAddGoogScopeUsage(NodeTraversal t, Node n, Node parent) {
     checkState(NodeUtil.isNameDeclaration(n));
@@ -649,13 +644,16 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
   }
 
   /**
-   * If this returns true, check for @extends and @implements annotations on this node.
-   * Otherwise, it's probably an alias for an existing class, so skip those annotations.
+   * If this returns true, check for @extends and @implements annotations on this node. Otherwise,
+   * it's probably an alias for an existing class, so skip those annotations.
    *
    * @return Whether the given node declares a function. True for the following forms:
-   *      <li><pre>function foo() {}</pre>
-   *      <li><pre>var foo = function() {};</pre>
-   *      <li><pre>foo.bar = function() {};</pre>
+   *     <li>
+   *         <pre>function foo() {}</pre>
+   *     <li>
+   *         <pre>var foo = function() {};</pre>
+   *     <li>
+   *         <pre>foo.bar = function() {};</pre>
    */
   private boolean declaresFunctionOrClass(Node n) {
     if (n.isFunction() || n.isClass()) {
@@ -700,18 +698,18 @@ public class CheckMissingAndExtraRequires implements HotSwapCompilerPass, NodeTr
 
   /**
    * Adds a weak usage for the given type expression (unless it references a variable that is
-   * defined in the externs, in which case no goog.require() is needed). When a "weak usage"
-   * is added, it means that a goog.require for that type is optional: No
-   * warning is given whether the require is there or not.
+   * defined in the externs, in which case no goog.require() is needed). When a "weak usage" is
+   * added, it means that a goog.require for that type is optional: No warning is given whether the
+   * require is there or not.
    */
   private void maybeAddWeakUsage(NodeTraversal t, Node n, Node typeNode) {
     maybeAddUsage(t, n, typeNode, false, Predicates.<Node>alwaysTrue());
   }
 
   /**
-   * Adds a usage for the given type expression (unless it references a variable that is
-   * defined in the externs, in which case no goog.require() is needed). When a usage is
-   * added, it means that there should be a goog.require for that type.
+   * Adds a usage for the given type expression (unless it references a variable that is defined in
+   * the externs, in which case no goog.require() is needed). When a usage is added, it means that
+   * there should be a goog.require for that type.
    */
   private void maybeAddUsage(NodeTraversal t, Node n, final JSTypeExpression expr) {
     // Just look at the root node, don't traverse.
