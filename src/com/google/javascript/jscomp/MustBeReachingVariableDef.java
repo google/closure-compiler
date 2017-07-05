@@ -18,12 +18,12 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -43,9 +43,9 @@ final class MustBeReachingVariableDef extends
     DataFlowAnalysis<Node, MustBeReachingVariableDef.MustDef> {
 
   // The scope of the function that we are analyzing.
-  private final Scope jsScope;
   private final AbstractCompiler compiler;
   private final Set<Var> escaped;
+  private final Map<String, Var> allVarsInFn;
 
   MustBeReachingVariableDef(
       ControlFlowGraph<Node> cfg,
@@ -53,10 +53,12 @@ final class MustBeReachingVariableDef extends
       AbstractCompiler compiler,
       Es6SyntacticScopeCreator scopeCreator) {
     super(cfg, new MustDefJoin());
-    this.jsScope = jsScope;
     this.compiler = compiler;
     this.escaped = new HashSet<>();
+    this.allVarsInFn = new HashMap<>();
     computeEscaped(jsScope.getParent(), jsScope, escaped, compiler, scopeCreator);
+    NodeUtil.getAllVarsDeclaredInFunction(
+        allVarsInFn, compiler, scopeCreator, jsScope.getParent());
   }
 
   /**
@@ -127,12 +129,9 @@ final class MustBeReachingVariableDef extends
       reachingDef = new HashMap<>();
     }
 
-    public MustDef(Iterable<? extends Var> vars) {
+    public MustDef(Collection<Var> vars) {
       this();
       for (Var var : vars) {
-        // Every variable in the scope is defined once in the beginning of the
-        // function: all the declared variables are undefined, all functions
-        // have been assigned and all arguments has its value from the caller.
         reachingDef.put(var, new Definition(var.scope.getRootNode()));
       }
     }
@@ -209,7 +208,7 @@ final class MustBeReachingVariableDef extends
 
   @Override
   MustDef createEntryLattice() {
-    return new MustDef(returnAllVars());
+    return new MustDef(allVarsInFn.values());
   }
 
   @Override
@@ -340,12 +339,11 @@ final class MustBeReachingVariableDef extends
    */
   private void addToDefIfLocal(String name, @Nullable Node node,
       @Nullable Node rValue, MustDef def) {
-    Var var = jsScope.getVar(name);
+    Var var = allVarsInFn.get(name);
 
     // var might be null because the variable might be defined in the extern
     // that we might not traverse.
-    if (var == null
-        || (var.scope != jsScope && var.scope != jsScope.getParent())) {
+    if (var == null) {
       return;
     }
 
@@ -373,8 +371,7 @@ final class MustBeReachingVariableDef extends
   }
 
   private void escapeParameters(MustDef output) {
-    Iterable<? extends Var> allVars = returnAllVars();
-    for (Var v : allVars) {
+    for (Var v : allVarsInFn.values()) {
       if (isParameter(v)) {
         // Assume we no longer know where the parameter comes from
         // anymore.
@@ -410,7 +407,7 @@ final class MustBeReachingVariableDef extends
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
         if (n.isName()) {
-          Var dep = jsScope.getVar(n.getString());
+          Var dep = allVarsInFn.get(n.getString());
           if (dep == null) {
             def.unknownDependencies = true;
           } else {
@@ -433,7 +430,7 @@ final class MustBeReachingVariableDef extends
     checkArgument(getCfg().hasNode(useNode));
     GraphNode<Node, Branch> n = getCfg().getNode(useNode);
     FlowState<MustDef> state = n.getAnnotation();
-    return state.getIn().reachingDef.get(jsScope.getVar(name));
+    return state.getIn().reachingDef.get(allVarsInFn.get(name));
   }
 
   Node getDefNode(String name, Node useNode) {
@@ -447,14 +444,11 @@ final class MustBeReachingVariableDef extends
     }
 
     for (Var s : def.depends) {
-      if (s.scope != jsScope && s.scope != jsScope.getParent()) {
+      // Don't inline try catch
+      if (s.scope.isCatchScope()) {
         return true;
       }
     }
     return false;
-  }
-
-  Iterable<? extends Var> returnAllVars() {
-    return Iterables.concat(jsScope.getVarIterable(), jsScope.getParent().getVarIterable());
   }
 }

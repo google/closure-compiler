@@ -659,62 +659,62 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
         "let a; print(1 + 1)");
   }
 
-  // Will be handled in a follow-up
   public void testBlockScoping() {
-    noInline(
-        LINE_JOINER.join(
-            "let a = 1",
-            "  {",
-            "  let b = 2;",
-            "  print(b + 1);",
-            "  }",
-            "print(a + 1);"
-        ));
-
-    noInline(
-        LINE_JOINER.join(
-            "let a = 1",
-            "  {",
-            "  let a = 2;",
-            "  print(a + 1);",
-            "  }",
-            "print(a + 1);"
-        ));
-  }
-
-  public void notworking_testBlockScoping() {
     inline(
         LINE_JOINER.join(
             "let a = 1",
-            "  {",
+            "print(a + 1);",
+            "{",
             "  let b = 2;",
             "  print(b + 1);",
-            "  }",
+            "}"
+        ),
+        LINE_JOINER.join(
+            "let a;",
+            "print(1 + 1);",
+            "{",
+            "  let b;",
+            "  print(2 + 1);",
+            "}"));
+
+    inline(
+        LINE_JOINER.join(
+            "let a = 1",
+            "{",
+            "  let a = 2;",
+            "  print(a + 1);",
+            "}",
             "print(a + 1);"
         ),
         LINE_JOINER.join(
             "let a = 1",
-            "  {",
-            "  let b = 2;",
+            "{",
+            "  let a;",
             "  print(2 + 1);",
-            "  }",
-            "print(1 + 1);"));
+            "}",
+            "print(a + 1);"));
+
     inline(
         LINE_JOINER.join(
-            "let a = 1",
-            "  {",
-            "  let a = 2;",
-            "  print(a + 1);",
-            "  }",
-            "print(a + 1);"
+            "let a = 1;",
+            "  {let b;}",
+            "print(a)"
         ),
         LINE_JOINER.join(
-            "let a = 1",
-            "  {",
-            "  let a = 2;",
-            "  print(2 + 1);",
-            "  }",
-            "print(1 + 1);"));
+            "let a;",
+            "  {let b;}",
+            "print(1)"));
+
+    // This test fails to inline due to CheckPathsBetweenNodes analysis in the canInline function
+    // in FlowSensitiveInlineVariables.
+    noInline(
+        LINE_JOINER.join(
+            "let a = 1;",
+            "{",
+            "  let b;",
+            "  f(b);",
+            "}",
+            "return(a)"));
   }
 
   public void testInlineInGenerators() {
