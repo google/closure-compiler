@@ -20,9 +20,6 @@ import java.util.concurrent.Callable;
 
 /** GWT compatible replacement for {@code CompilerExecutor} */
 final class CompilerExecutor {
-
-  CompilerExecutor() {}
-
   <T> T runInCompilerThread(Callable<T> callable, boolean dumpTraceReport) {
     try {
       return callable.call();

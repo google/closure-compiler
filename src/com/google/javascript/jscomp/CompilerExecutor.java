@@ -30,12 +30,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /** Run the compiler in a separate thread with a larger stack */
-final class CompilerExecutor {
+class CompilerExecutor {
   // We use many recursive algorithms that use O(d) memory in the depth
   // of the tree.
   private static final long COMPILER_STACK_SIZE = (1 << 24); // About 16MB
-
-  private final ExecutorService compilerExecutor;
 
   /**
    * Use a dedicated compiler thread per Compiler instance.
@@ -47,15 +45,6 @@ final class CompilerExecutor {
 
   private int timeout = 0;
 
-  CompilerExecutor() {
-    this(getDefaultExecutorService());
-  }
-
-  @GwtIncompatible("java.util.concurrent.ExecutorService")
-  CompilerExecutor(ExecutorService compilerExecutorService) {
-    this.compilerExecutor = compilerExecutorService;
-  }
-
   /**
    * Under JRE 1.6, the JS Compiler overflows the stack when running on some
    * large or complex JS code. When threads are available, we run all compile
@@ -65,7 +54,7 @@ final class CompilerExecutor {
    * (which is what -Xss does).
    */
   @GwtIncompatible("java.util.concurrent.ExecutorService")
-  static ExecutorService getDefaultExecutorService() {
+  ExecutorService getExecutorService() {
     return Executors.newSingleThreadExecutor(new ThreadFactory() {
         @Override
         public Thread newThread(Runnable r) {
@@ -86,6 +75,7 @@ final class CompilerExecutor {
 
   @SuppressWarnings("unchecked")
   <T> T runInCompilerThread(final Callable<T> callable, final boolean dumpTraceReport) {
+    ExecutorService executor = getExecutorService();
     T result = null;
     final Throwable[] exception = new Throwable[1];
 
@@ -118,7 +108,7 @@ final class CompilerExecutor {
           }
         };
 
-        Future<T> future = compilerExecutor.submit(bootCompilerThread);
+        Future<T> future = executor.submit(bootCompilerThread);
         if (timeout > 0) {
           result = future.get(timeout, TimeUnit.SECONDS);
         } else {
@@ -126,6 +116,8 @@ final class CompilerExecutor {
         }
       } catch (InterruptedException | TimeoutException | ExecutionException e) {
         throw new RuntimeException(e);
+      } finally {
+        executor.shutdown();
       }
     } else {
       try {
