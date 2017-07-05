@@ -39,11 +39,11 @@ $jscomp.construct = /** @type {function(): !Function} */ (function() {
   // Check for https://github.com/Microsoft/ChakraCore/issues/3217
   /** @return {boolean} */
   function reflectConstructWorks() {
-    /** @constructor */ var BaseTestClass = function() {};
-    /** @constructor */ var DerivedTestClass = function() {};
-    new BaseTestClass();
-    Reflect.construct(BaseTestClass, [], DerivedTestClass);
-    return new BaseTestClass() instanceof BaseTestClass;
+    /** @constructor */ function Base() {}
+    /** @constructor */ function Derived() {}
+    new Base();
+    Reflect.construct(Base, [], Derived);
+    return new Base() instanceof Base;
   }
 
   if (typeof Reflect != 'undefined' && Reflect.construct) {

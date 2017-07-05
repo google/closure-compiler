@@ -2871,7 +2871,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "      getType.toString.apply(functionToCheck) === '[object Function]';",
             "};");
     String result =
-        "isFunction = function(a){ var b={}; return a && '[object Function]' === b.a.apply(a); }";
+        "isFunction = function(a){ var b={}; return a && '[object Function]' === b.b.a(a); }";
 
     test(options, code, result);
   }
@@ -3871,9 +3871,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setCodingConvention(convention);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-
-    // Skip injecting the $jscomp.construct library.
-    options.setPreventLibraryInjection(true);
     Compiler compiler = compile(options, LINE_JOINER.join(
         "class Base {}",
         "class Sub extends Base {}",
