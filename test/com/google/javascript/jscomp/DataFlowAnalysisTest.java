@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
 
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
@@ -674,8 +675,6 @@ public final class DataFlowAnalysisTest extends TestCase {
         .hasSize(1);
     assertThat(computeEscapedLocals("function f() {var _x}")).hasSize(1);
     assertThat(computeEscapedLocals("function f() {try{} catch(e){}}")).isEmpty();
-    assertThat(computeEscapedLocals("{var x = 0; setTimeout(function() { x++; }); alert(x);}"))
-        .isEmpty();
   }
 
   public void testEscapedFunctionLayered() {
@@ -709,7 +708,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     // block containing "const value ..." is analyzed, 'x' is not considered an escaped var
     assertThat(
             computeEscapedLocals(
-                "{const value = () => {",
+                "function f() {const value = () => {",
                 "    var x = 0; ",
                 "    setTimeout(function() { x++; }); ",
                 "    alert(x);",
@@ -726,6 +725,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     options.setLanguage(LanguageMode.ECMASCRIPT_2015);
     options.setCodingConvention(new GoogleCodingConvention());
     compiler.initOptions(options);
+    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
 
     String src = LINE_JOINER.join(lines);
     Node n = compiler.parseTestCode(src).removeFirstChild();
@@ -748,7 +748,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     cfa.process(null, script);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
 
-    // Compute livenss of variables
+    // Compute liveness of variables
     LiveVariablesAnalysisEs6 analysis =
         new LiveVariablesAnalysisEs6(
             cfg, scope, childScope, compiler, (Es6SyntacticScopeCreator) scopeCreator);

@@ -28,7 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 /**
  * Compute the "liveness" of all local variables. A variable is "live" at a point of a program if
@@ -118,29 +117,35 @@ class LiveVariablesAnalysisEs6
   // represents the equivalent of the variable index property within a scope
   private final Map<String, Integer> scopeVariables;
 
+  private final Map<String, Var> allVarsInFn;
   /**
    * ******************************************************* Live Variables Analysis using the ES6
-   * scope creator. Based on our preconditions, the child scope will only be passed in if the
-   * jsScope is function scope.
+   * scope creator. This analysis should only be done on a function where jsScope is the function
+   * scope and jsScopeChild should be the function body scope.
    *
    * @param cfg
    * @param jsScope
-   * @param jsScopeChild used if jsScope is function scope in order to pass along function body
+   * @param jsScopeChild
    * @param compiler
    * @param scopeCreator Es6 Scope creator
    */
   LiveVariablesAnalysisEs6(
       ControlFlowGraph<Node> cfg,
       Scope jsScope,
-      @Nullable Scope jsScopeChild,
+      Scope jsScopeChild,
       AbstractCompiler compiler,
       Es6SyntacticScopeCreator scopeCreator) {
     super(cfg, new LiveVariableJoinOp());
+    checkState(jsScope.isFunctionScope(), jsScope);
+    checkState(jsScopeChild.isFunctionBlockScope(), jsScopeChild);
+    checkState(compiler.getLifeCycleStage().isNormalized());
     this.jsScope = jsScope;
     this.jsScopeChild = jsScopeChild;
     this.escaped = new HashSet<>();
     this.scopeVariables = new HashMap<>();
+    this.allVarsInFn = new HashMap<>();
     computeEscaped(jsScope, jsScopeChild, escaped, compiler, scopeCreator);
+    NodeUtil.getAllVarsDeclaredInFunction(allVarsInFn, compiler, scopeCreator, jsScope);
     addScopeVariables();
   }
 
@@ -151,41 +156,18 @@ class LiveVariablesAnalysisEs6
    */
   private void addScopeVariables() {
     int num = 0;
-    if (jsScope.isFunctionScope()) {
-      for (Var v : jsScope.getVarIterable()) {
-        scopeVariables.put(v.getName(), num);
-        num++;
-      }
-
-      if (jsScopeChild != null) {
-        for (Var v : jsScopeChild.getVarIterable()) {
-          // add the hoisted variables from this child scope
-          if ((v.isLet() || v.isConst()) && !jsScope.isFunctionScope()) {
-            continue;
-
-          }
-          scopeVariables.put(v.getName(), num);
-          num++;
-        }
-      }
-    } else {
-
-      if (jsScope.isFunctionBlockScope()) {
-        for (Var v : jsScope.getParent().getVarIterable()) {
-          scopeVariables.put(v.getName(), num);
-          num++;
-        }
-      }
-
-      for (Var v : jsScope.getVarIterable()) {
-        scopeVariables.put(v.getName(), num);
-        num++;
-      }
+    for (String name : allVarsInFn.keySet()) {
+      scopeVariables.put(name, num);
+      num++;
     }
   }
 
   public Set<? extends Var> getEscapedLocals() {
     return escaped;
+  }
+
+  public Map<String, Var> getAllVariables() {
+    return allVarsInFn;
   }
 
   public int getVarIndex(String var) {
@@ -199,12 +181,12 @@ class LiveVariablesAnalysisEs6
 
   @Override
   LiveVariableLattice createEntryLattice() {
-    return new LiveVariableLattice(jsScope.getVarCount());
+    return new LiveVariableLattice(allVarsInFn.size());
   }
 
   @Override
   LiveVariableLattice createInitialEstimateLattice() {
-    return new LiveVariableLattice(jsScope.getVarCount());
+    return new LiveVariableLattice(allVarsInFn.size());
   }
 
   @Override
@@ -340,24 +322,20 @@ class LiveVariablesAnalysisEs6
     // ES6 separates the scope but hoists variables to the function scope
     if (jsScope.isFunctionBlockScope()) {
       local = jsScope.isDeclaredInFunctionBlockOrParameter(name);
+    } else if (jsScopeChild != null && jsScope.isFunctionScope()) {
+      local = jsScopeChild.isDeclaredInFunctionBlockOrParameter(name);
     } else {
       local = jsScope.isDeclared(name, false);
     }
-    if (local) {
-      Var var = jsScope.getVar(name);
-      if (!escaped.contains(var)) {
-        set.set(getVarIndex(var.getName()));
-      }
-    } else if (jsScopeChild != null && jsScope.isFunctionScope()) {
-      if (!jsScopeChild.isDeclared(name, false)) {
-        return;
-      } else {
-        Var var = jsScopeChild.getVar(name);
 
-        if (!escaped.contains(var)) {
-          set.set(getVarIndex(var.getName()));
-        }
-      }
+    if (!local) {
+      return;
+    }
+
+    Var var = allVarsInFn.get(name);
+
+    if (!escaped.contains(var)) {
+      set.set(getVarIndex(var.getName()));
     }
   }
 
