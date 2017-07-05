@@ -277,7 +277,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " */",
             "var testcode$classdecl$var0 = function(var_args) {",
-            "  return D.apply(this,arguments) || this; ",
+            "  return $jscomp.construct(D, arguments, this.constructor); ",
             "};",
             "$jscomp.inherits(testcode$classdecl$var0, D);",
             "testcode$classdecl$var0.prototype.f = function() { D.prototype.g.call(this); };",
@@ -568,7 +568,8 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " */",
             "var C = function(var_args) { D.apply(this, arguments); };",
             "$jscomp.inherits(C, D);"));
-    assertThat(getLastCompiler().injected).containsExactly("es6/util/inherits");
+    assertThat(getLastCompiler().injected)
+        .containsExactly("es6/util/inherits", "es6/util/construct");
 
     test(
         "class D {} class C extends D { constructor() { super(); } }",
@@ -600,7 +601,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " */",
             "var C = function(var_args) {",
-            " return ns.D.apply(this, arguments) || this;",
+            " return $jscomp.construct(ns.D, arguments, this.constructor);",
             "};",
             "$jscomp.inherits(C, ns.D);"));
 
@@ -945,7 +946,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "/** @constructor @struct @extends {D} */",
             "var C = function(str, n) {",
             "  var $jscomp$super$this;",
-            "  ($jscomp$super$this = D.call(this,str) || this).n = n;",
+            "  ($jscomp$super$this = $jscomp.construct(D, [str], this.constructor)).n = n;",
             "  return $jscomp$super$this;", // Duplicate because of existing return statement.
             "  return $jscomp$super$this;",
             "}",
@@ -1014,13 +1015,31 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "var C = function(str, n) {",
             "  var $jscomp$super$this;",
             "  if (n >= 0) {",
-            "    $jscomp$super$this = D.call(this, 'positive: ' + str) || this;",
+            "    $jscomp$super$this = $jscomp.construct(D,[\"positive: \"+str],this.constructor);",
             "  } else {",
-            "    $jscomp$super$this = D.call(this, 'negative: ' + str) || this;",
+            "    $jscomp$super$this = $jscomp.construct(D,[\"negative: \"+str],this.constructor);",
             "  }",
             "  $jscomp$super$this.n = n;",
             "  return $jscomp$super$this;",
             "}",
+            "$jscomp.inherits(C, D);"));
+  }
+
+  public void testTranspiledExtendsNative() {
+    // transpiled class extends a native ES6 class
+    allowExternsChanges();
+    test(
+        "class D {}", // externs
+        "class C extends D {}",
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor @struct",
+            " * @extends {D}",
+            " * @param {...?} var_args",
+            " */",
+            "var C = function(var_args) {",
+            "  return $jscomp.construct(D, arguments, this.constructor);",
+            "};",
             "$jscomp.inherits(C, D);"));
   }
 
@@ -1505,7 +1524,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "};",
             "$jscomp.inherits(C,D);"));
     assertThat(getLastCompiler().injected)
-        .containsExactly("es6/util/arrayfromiterable", "es6/util/inherits");
+        .containsExactly("es6/util/arrayfromiterable", "es6/util/inherits", "es6/util/construct");
   }
 
   public void testSuperCallNonConstructor() {
@@ -1615,7 +1634,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " */",
             "var CodeClass = function(var_args) {",
-            "  return ExternsClass.apply(this,arguments) || this;",
+            "  return $jscomp.construct(ExternsClass, arguments, this.constructor);",
             "};",
             "$jscomp.inherits(CodeClass,ExternsClass)"));
   }
