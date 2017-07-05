@@ -252,16 +252,16 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkRequiresAndProvidesSorted);
     }
 
-    checks.add(es6CheckModule);
-
-    if (options.needsTranspilationOf(FeatureSet.Feature.MODULES)) {
-      TranspilationPasses.addEs6ModulePass(checks);
-    }
-
     if (options.enables(DiagnosticGroups.MISSING_REQUIRE)
         || options.enables(DiagnosticGroups.STRICT_MISSING_REQUIRE)
         || options.enables(DiagnosticGroups.EXTRA_REQUIRE)) {
       checks.add(checkRequires);
+    }
+
+    checks.add(es6CheckModule);
+
+    if (options.needsTranspilationOf(FeatureSet.Feature.MODULES)) {
+      TranspilationPasses.addEs6ModulePass(checks);
     }
 
     checks.add(checkVariableReferences);
