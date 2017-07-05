@@ -51,7 +51,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   static final DiagnosticType READ_ERROR = DiagnosticType.error(
       "JSC_READ_ERROR", "Cannot read file {0}: {1}");
 
-  private final Map<String, Object> annotationMap = new HashMap<>();
+  protected Map<String, Object> annotationMap = new HashMap<>();
 
   /** Will be called before each pass runs. */
   abstract void beforePass(String passName);
