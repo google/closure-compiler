@@ -16,7 +16,8 @@
 
 package java.util.regex;
 
-import com.google.gwt.regexp.shared.RegExp;
+import elemental2.core.RegExp;
+import jsinterop.annotations.JsMethod;
 
 /**
  * GWT compatible minimal emulation of {@code Pattern}
@@ -30,10 +31,11 @@ public final class Pattern {
 
   public static Pattern compile(String string) {
     Pattern pattern = new Pattern();
-    pattern.regExp = RegExp.compile(string);
+    pattern.regExp = new RegExp(string);
     return pattern;
   }
 
+  @JsMethod
   public static native String quote(String input) /*-{
     return input.replace(/[.?*+^$[\]\\(){}|-]/g, '\\$&');
   }-*/;
