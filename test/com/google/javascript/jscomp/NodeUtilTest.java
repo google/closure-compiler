@@ -32,8 +32,11 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import junit.framework.TestCase;
 
@@ -2482,6 +2485,41 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isObjectDefinePropertyDefinition(
         getCallNode("Object.defineProperty();")));
   }
+
+  public void testGetAllVars1() {
+    String fnString = "var h; function g(x, y) {var z; h = 2; {let a; const b = 1} let c}";
+    Node ast = parse(fnString);
+    Node functionNode = getFunctionNode(fnString);
+    Compiler compiler = new Compiler();
+    ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+    Scope globalScope = Scope.createGlobalScope(ast);
+    Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
+    Map<String, Var> allVariables = new HashMap<>();
+    NodeUtil.getAllVarsDeclaredInFunction(allVariables, compiler, scopeCreator, functionScope);
+    Set<String> keySet = new HashSet<>(Arrays.asList("a", "b", "c", "z", "x", "y"));
+    assertEquals(keySet, allVariables.keySet());
+  }
+
+  public void testGetAllVars2() {
+    String fnString =
+          "function g(x, y) "
+            + "{var z; "
+              + "{let a = (no1, no2, no3) => { let no6, no7; }; "
+            + "const b = 1} "
+        + "let c} "
+        + "function u(h) {let e}";
+    Node ast = parse(fnString);
+    Node functionNode = getFunctionNode(fnString); // Will get the first function
+    Compiler compiler = new Compiler();
+    ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+    Scope globalScope = Scope.createGlobalScope(ast);
+    Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
+    Map<String, Var> allVariables = new HashMap<>();
+    NodeUtil.getAllVarsDeclaredInFunction(allVariables, compiler, scopeCreator, functionScope);
+    Set<String> keySet = new HashSet<>(Arrays.asList("x", "y", "z", "a", "b", "c"));
+    assertEquals(keySet, allVariables.keySet());
+  }
+
 
   private boolean executedOnceTestCase(String code) {
     Node ast = parse(code);

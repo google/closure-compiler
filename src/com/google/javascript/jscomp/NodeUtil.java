@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
@@ -5042,5 +5043,44 @@ public final class NodeUtil {
         }
       };
     }
+  }
+
+  /**
+   * Function that returns a mapping of names to vars of everything reachable in a function.
+   * Should only be called with a function scope. Does not enter new control flow areas aka embedded
+   * functions.
+   */
+  static void getAllVarsDeclaredInFunction (
+      final Map<String, Var> nameVarMap,
+      AbstractCompiler compiler,
+      ScopeCreator scopeCreator,
+      final Scope scope){
+
+    checkState(scope.isFunctionScope());
+
+    ScopedCallback finder = new ScopedCallback() {
+      @Override
+      public void enterScope(NodeTraversal t) {
+        Scope currentScope = t.getScope();
+        for (Var v : currentScope.getVarIterable()) {
+          nameVarMap.put(v.getName(), v);
+        }
+      }
+
+      @Override
+      public void exitScope(NodeTraversal t) {}
+
+      @Override
+      public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+        // Don't enter any new functions
+        return !n.isFunction() || n == scope.getRootNode();
+      }
+
+      @Override
+      public void visit(NodeTraversal t, Node n, Node parent) {}
+    };
+
+    NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
+    t.traverseAtScope(scope);
   }
 }
