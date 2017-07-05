@@ -2193,6 +2193,23 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.UNKNOWN_ASSERTION_TYPE);
 
     typeCheck("goog.asserts.assert(false, 'this code should not run');");
+
+    // If the type after the assert is the vague truthy type, then there would be no warning here.
+    typeCheck(LINE_JOINER.join(
+        CLOSURE_BASE,
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  /** @type {?Foo} */",
+        "  this.myprop = null;",
+        "}",
+        "function f() {",
+        "  var x = goog.asserts.assert((new Bar).myprop);",
+        "  var /** !Foo */ y = x;",
+        "  var /** !Bar */ z = x;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testDontInferBottom() {

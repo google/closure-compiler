@@ -1250,6 +1250,9 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     if (isTheFalsyType()) {
       return !other.makeFalsy().isBottom();
     }
+    if (other.isTheTruthyType()) {
+      return isAnyTruthyType();
+    }
     if (!EnumType.areSubtypes(this, other, subSuperMap)) {
       return false;
     }
