@@ -2606,7 +2606,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "  return length;",
             "}",
             "countArgs(1, 1, 1, 1, 1);"),
-        "[1, 1, 1, 1].length;");
+        "{var length$jscomp$inline_1=[1,1,1,1].length;length$jscomp$inline_1}");
   }
 
   public void testRestObjectPattern3() {
@@ -2616,7 +2616,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "  return length;",
             "}",
             "countArgs(1, 1, 1, 1, 1);"),
-        "[1, 1, 1, 1].length;");
+        "{var length$jscomp$inline_1=[1,1,1,1].length;length$jscomp$inline_1}");
   }
 
   public void testRestObjectPattern4() {
@@ -2631,8 +2631,215 @@ public class InlineFunctionsTest extends CompilerTestCase {
   public void testRestObjectPattern5() {
     test(
         LINE_JOINER.join(
-            "function f(...{x: y}) { ", "  return y; ", "} ", "f(null,null,null,3,null);"),
+            "function f(...{x: y}) { ",
+            "  return y; ",
+            "} ",
+            "f(null,null,null,3,null);"),
         "[null,null,null,3,null].x");
+  }
+
+  public void testObjectPatternParam1() {
+    test(
+        LINE_JOINER.join(
+            "function foo({x}) {",
+            "  return x+1;",
+            "}",
+            "foo({x:5});"),
+        "({x:5}).x+1");
+  }
+
+  public void testObjectPatternParam2() {
+    test(
+        LINE_JOINER.join(
+            "function foo({x:y}) {",
+            "  return y+1;",
+            "}",
+            "foo({x:5});"),
+        "({x:5}).x+1");
+  }
+
+  public void testObjectPatternParam3() {
+    test(
+        LINE_JOINER.join(
+            "function foo({x}, {y}) {",
+            "  return x+y;",
+            "}",
+            "foo({x:5}, {y:6});"),
+        LINE_JOINER.join(
+            "{var x$jscomp$inline_0={x:5}.x;var y$jscomp$inline_1={y:6}.y;",
+            "x$jscomp$inline_0+y$jscomp$inline_1}"));
+  }
+
+  public void testObjectPatternParam4() {
+    test(
+        LINE_JOINER.join(
+            "function foo({x}, {y}) {",
+            "  return x+1;",
+            "}",
+            "foo({x:5}, {y:6});"),
+        "{var x$jscomp$inline_0={x:5}.x;x$jscomp$inline_0+1}");
+  }
+
+  public void testObjectPatternParam5() {
+    testSame(
+        LINE_JOINER.join(
+            "function foo({x: {y}}) {",
+            "  return y + 1;",
+            "}",
+            "foo(obj);"));
+  }
+
+  public void testObjectPatternParam6() {
+    testSame(
+        LINE_JOINER.join(
+            "function foo({a: b, x: {y}}) {",
+            "  return y + 1;",
+            "}",
+            "foo(obj);"));
+  }
+
+  public void testObjectPatternParam7() {
+    test(
+        LINE_JOINER.join(
+            "function f({x}) {",
+            "  return x;",
+            "}",
+            "class Foo {constructor() {this.x = 0;}}",
+            "f(new Foo());"),
+        LINE_JOINER.join(
+            "class Foo {constructor() {this.x = 0;}}",
+            "(new Foo()).x"));
+  }
+
+  public void testObjectPatternParam8() {
+    test(
+        LINE_JOINER.join(
+            "function f({x}) {",
+            "  alert(x);",
+            "  alert(x)",
+            "}",
+            "class Foo {constructor() {this.x = 0;}}",
+            "f(new Foo());"),
+        LINE_JOINER.join(
+            "class Foo {constructor() {this.x = 0;}}",
+            "{",
+            "  var x$jscomp$inline_0=(new Foo).x;",
+            "  alert(x$jscomp$inline_0);",
+            "  alert(x$jscomp$inline_0);",
+            "}"));
+  }
+
+  public void testObjectPatternParam9() {
+    test(
+        LINE_JOINER.join(
+            "function f({x}, {y}) {",
+            "  alert(x);",
+            "  alert(x);",
+            "  return y;",
+            "}",
+            "class Foo {constructor() {this.x = 0;}}",
+            "f(new Foo(), {y:6});"),
+        LINE_JOINER.join(" class Foo{constructor(){this.x=0}}",
+            "{var x$jscomp$inline_0=(new Foo).x;var y$jscomp$inline_1={y:6}.y;",
+            "alert(x$jscomp$inline_0);alert(x$jscomp$inline_0);y$jscomp$inline_1}"));
+  }
+
+  public void testObjectPatternParam10() {
+    test(
+        LINE_JOINER.join(
+            "function f({x, y}) {",
+            "  return x + y;",
+            "}",
+            "f(obj);"),
+        "obj.x + obj.y");
+  }
+
+  public void testObjectPatternParam11() {
+    test(
+        LINE_JOINER.join(
+            "function f({x, y}, {z}) {",
+            "  alert(z);",
+            "  return x + y;",
+            "}",
+            "f(obj, new Foo());"),
+        LINE_JOINER.join(
+            "{var x$jscomp$inline_0=obj.x;",
+            "var y$jscomp$inline_1=obj.y;",
+            "var z$jscomp$inline_2=(new Foo).z;",
+            "alert(z$jscomp$inline_2);",
+            "x$jscomp$inline_0+y$jscomp$inline_1}"));
+  }
+
+  public void testObjectPatternParam12() {
+    test(
+        LINE_JOINER.join(
+          "function f({x, y}) {",
+            "  return x + y;",
+            "}",
+            "f(getArg());"
+        ),
+        LINE_JOINER.join(
+            "{var x$jscomp$inline_0=getArg().x;",
+            "var y$jscomp$inline_1=getArg().y;",
+            "x$jscomp$inline_0+y$jscomp$inline_1}"));
+  }
+
+  public void testObjectPatternParam13() {
+    test(
+        LINE_JOINER.join(
+            "function f({a, b, c}) {",
+            "  return b + c;",
+            "}",
+            "f(x);"
+        ),
+        "x.b + x.c");
+  }
+
+  public void testDefaultObjectPatternParam1() {
+    test(
+        LINE_JOINER.join(
+            "function foo({x} = {x:5}) {",
+            "  return x+1;",
+            "}",
+            "foo();"),
+        "({x:5}).x+1");
+  }
+
+  public void testDefaultObjectPatternParam2() {
+    test(
+        LINE_JOINER.join(
+            "function foo({x} = {x:5}, {y} = {y:3}) {",
+            "  return x+y;",
+            "}",
+            "foo();"),
+        LINE_JOINER.join(
+            "{var x$jscomp$inline_0={x:5}.x;var y$jscomp$inline_1={y:3}.y;",
+            "x$jscomp$inline_0+y$jscomp$inline_1}"));
+  }
+
+  public void testDefaultObjectPatternParam3() {
+    test(
+        LINE_JOINER.join(
+            "let defaultObj = {x: 5};",
+            "function foo({x} = defaultObj) {",
+            "  return x;",
+            "}",
+            "foo();"),
+        "let defaultObj = {x: 5}; defaultObj.x");
+  }
+
+  public void testDefaultObjectPatternParam4() {
+    test(
+        LINE_JOINER.join(
+            "function f({a, b, c} = {a:1, b:2, c:3}) {",
+            " return b+c; ",
+            "}",
+            "f();"
+        ),
+        LINE_JOINER.join(
+            "{var b$jscomp$inline_1={a:1,b:2,c:3}.b;",
+            "var c$jscomp$inline_2={a:1,b:2,c:3}.c;",
+            "b$jscomp$inline_1+c$jscomp$inline_2}"));
   }
 
   public void testDefaultParam1() {

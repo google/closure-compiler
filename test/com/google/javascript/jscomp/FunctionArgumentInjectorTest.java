@@ -460,16 +460,50 @@ public final class FunctionArgumentInjectorTest extends TestCase {
         "function foo(x, ...args) {return args;} foo(1, 2);", "foo", ImmutableSet.of("args"));
   }
 
-  public void testMaybeAddTempsForCallArgumentsObjectLit1() {
+  public void testMaybeAddTempsForCallArgumentsRestObjectLit1() {
     testNeededTemps(
         "function foo(x, ...{length: length}) {return length;} foo(1, 1, 1);",
         "foo",
+        ImmutableSet.of("length"));
+  }
+
+  public void testMaybeAddTempsForCallNewObject1() {
+    testNeededTemps(
+        "function foo({x:x}) {alert(x); alert(x);} foo(new Bar());",
+        "foo",
+        ImmutableSet.of("x"));
+  }
+
+  public void testMaybeAddTempsForCallNewObject2() {
+    testNeededTemps(
+        "function foo({x:x}) {alert(x);} foo(new Bar());",
+        "foo",
         EMPTY_STRING_SET);
+  }
+
+  public void testMaybeAddTempsForCallNewObject3() {
+    testNeededTemps(
+        "function foo({x:x, y:y}, {z:z}) {alert(z);} foo(obj, new Bar());",
+        "foo",
+        ImmutableSet.of("z"));
+  }
+
+  public void testMaybeAddTempsForCallNewObject4() {
+    testNeededTemps(
+        "function foo({x:x, y:y}, {z:z}) {alert(z); return x+y;} foo(obj, new Bar());",
+        "foo",
+        ImmutableSet.of("x", "y", "z"));
   }
 
   public void testArgMapWithDefaultParam1() {
     assertArgMapHasKeys(
         "function foo(a = 5, b = 2){return a;} foo();", "foo", ImmutableSet.of("this", "a", "b"));
+  }
+
+  public void testArgMapWithDefaultParam2() {
+    assertArgMapHasKeys(
+        "function foo({x:x}={x:5},{y:y}={y:3}) {return x+y;} foo();", "foo",
+        ImmutableSet.of("this", "x", "y"));
   }
 
   public void testArgMapWithRestParam1() {

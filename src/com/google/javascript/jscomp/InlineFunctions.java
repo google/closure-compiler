@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
@@ -27,6 +28,7 @@ import com.google.javascript.jscomp.FunctionInjector.InliningMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -331,6 +333,10 @@ class InlineFunctions implements CompilerPass {
       if (hasParamWithNumberObjectLit(fnNode)) {
         functionState.setInline(false);
       }
+
+      if (hasComplexDestructuringPattern(NodeUtil.getFunctionParameters(fnNode))) {
+        functionState.setInline(false);
+      }
     }
   }
 
@@ -377,8 +383,8 @@ class InlineFunctions implements CompilerPass {
   private static class CallVisitor extends AbstractPostOrderCallback {
 
     protected CallVisitorCallback callback;
-    private Map<String, FunctionState> functionMap;
-    private Map<Node, String> anonFunctionMap;
+    private final Map<String, FunctionState> functionMap;
+    private final Map<Node, String> anonFunctionMap;
 
     CallVisitor(
         Map<String, FunctionState> fns, Map<Node, String> anonFns, CallVisitorCallback callback) {
@@ -723,6 +729,28 @@ class InlineFunctions implements CompilerPass {
         };
 
     return NodeUtil.has(fnNode, hasParamWithNumberObjectLitPredicate,
+        Predicates.<Node>alwaysTrue());
+  }
+
+  /**
+   * @return whether the function has a param with complex OBJECT_PATTERNS (e.g. OBJECT_PATTERN
+   * with child OBJECT_PATTERN). Prevents such functions from being inlined.
+   */
+  private static boolean hasComplexDestructuringPattern(Node node) {
+    checkNotNull(node);
+
+    Predicate<Node> hasComplexDestructuringPatternPredicate =
+        new Predicate<Node>() {
+          @Override
+          public boolean apply(Node input) {
+            checkNotNull(input);
+            return input.isDestructuringPattern()
+                && (NodeUtil.getEnclosingType(input.getParent(), Token.ARRAY_PATTERN) != null
+                || NodeUtil.getEnclosingType(input.getParent(), Token.OBJECT_PATTERN) != null);
+          }
+        };
+
+    return NodeUtil.has(node, hasComplexDestructuringPatternPredicate,
         Predicates.<Node>alwaysTrue());
   }
 

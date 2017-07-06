@@ -46,6 +46,8 @@ class FunctionArgumentInjector {
 
   static final String DEFAULT_MARKER = "Default Value";
 
+  static final String OBJECT_PATTERN_MARKER = "object pattern";
+
   private FunctionArgumentInjector() {
     // A private constructor to prevent instantiation.
   }
@@ -148,6 +150,12 @@ class FunctionArgumentInjector {
             argMap.put(fnParam.getFirstChild().getString(), array);
           }
           return argMap;
+        } else if (fnParam.isObjectPattern()) {
+          for (Node n = fnParam.getFirstChild(); n != null; n = n.getNext()) {
+            Node getProp = IR.getprop(cArg.cloneTree(), n.getString());
+            getProp.useSourceInfoIfMissingFromForTree(cArg);
+            argMap.put(n.getFirstChild().getString(), getProp);
+          }
         } else if (fnParam.isDefaultValue()) {
           argMap.put(fnParam.getFirstChild().getString(), cArg);
         } else {
@@ -160,8 +168,18 @@ class FunctionArgumentInjector {
           Node array = IR.arraylit();
           argMap.put(fnParam.getFirstChild().getString(), array);
         } else if (fnParam.isDefaultValue()) {
-          Node defaultValue = fnParam.getSecondChild().cloneTree();
-          argMap.put(fnParam.getFirstChild().getString(), defaultValue);
+          if (fnParam.getFirstChild().isObjectPattern()) {
+            Node defaultValue = fnParam.getSecondChild();
+            for (Node stringKey = fnParam.getFirstFirstChild();
+                stringKey != null; stringKey = stringKey.getNext()) {
+              Node getProp = IR.getprop(defaultValue.cloneTree(), stringKey.getString());
+              getProp.useSourceInfoIfMissingFromForTree(defaultValue);
+              argMap.put(stringKey.getFirstChild().getString(), getProp);
+            }
+          } else {
+            Node defaultValue = fnParam.getSecondChild().cloneTree();
+            argMap.put(fnParam.getFirstChild().getString(), defaultValue);
+          }
         } else {
           Node srcLocation = callNode;
           argMap.put(fnParam.getString(), NodeUtil.newUndefinedNode(srcLocation));
@@ -333,15 +351,7 @@ class FunctionArgumentInjector {
         //   x( [] );
         //
         //   The parameter in the call to foo should not become "[]".
-        if (cArg.isGetProp()) {
-          if (!NodeUtil.mayHaveSideEffects(cArg)) {
-            safe = true;
-          } else {
-            safe = false;
-          }
-        } else {
           safe = false;
-        }
       } else if (argSideEffects) {
         // Even if there are no references, we still need to evaluate the
         // expression if it has side-effects.
@@ -457,7 +467,7 @@ class FunctionArgumentInjector {
     private final Set<String> parameters;
     private final Set<String> locals;
     private boolean sideEffectSeen = false;
-    private Set<String> parametersReferenced = new HashSet<>();
+    private final Set<String> parametersReferenced = new HashSet<>();
     private int loopsEntered = 0;
 
     ReferencedAfterSideEffect(Set<String> parameters, Set<String> locals) {
@@ -596,6 +606,8 @@ class FunctionArgumentInjector {
         set.add(REST_MARKER);
       } else if (n.isDefaultValue()){
         set.add(DEFAULT_MARKER);
+      } else if (n.isObjectPattern()){
+        set.add(OBJECT_PATTERN_MARKER);
       } else {
         set.add(n.getString());
       }
