@@ -82,6 +82,26 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testDoubleTryCatch_withES6Modules() {
+    testSame(
+        LINE_JOINER.join(
+            "export",
+            "function g() {",
+            "  return f;",
+            "",
+            "  function f() {",
+            "    try {",
+            "    } catch (e) {",
+            "      alert(e);",
+            "    }",
+            "    try {",
+            "    } catch (e) {",
+            "      alert(e);",
+            "    }",
+            "  }",
+            "}"));
+  }
+
   public void testCorrectCode() {
     assertNoWarning("function foo(d) { (function() { d.foo(); }); d.bar(); } ");
     assertNoWarning("function foo() { bar(); } function bar() { foo(); } ");
@@ -95,8 +115,16 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarningEs6("try { let e; } catch (e) { let x; }");
   }
 
+  public void testCorrectCode_withES6Modules() {
+    assertNoWarning("export function foo(d) { (function() { d.foo(); }); d.bar(); } ");
+  }
+
   public void testCorrectShadowing() {
     assertNoWarning(VARIABLE_RUN + "function f() { " + VARIABLE_RUN + "}");
+  }
+
+  public void testCorrectShadowing_withES6Modules() {
+    assertNoWarning(VARIABLE_RUN + "export function f() { " + VARIABLE_RUN + "}");
   }
 
   public void testCorrectRedeclare() {
@@ -104,13 +132,25 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
         "function f() { if (1) { var a = 2; } else { var a = 3; } }");
   }
 
+  public void testCorrectRedeclare_withES6Modules() {
+    assertNoWarning("export function f() { if (1) { var a = 2; } else { var a = 3; } }");
+  }
+
   public void testCorrectRecursion() {
     assertNoWarning("function f() { var x = function() { x(); }; }");
+  }
+
+  public void testCorrectRecursion_withES6Modules() {
+    assertNoWarning("export function f() { var x = function() { x(); }; }");
   }
 
   public void testCorrectCatch() {
     assertNoWarning("function f() { try { var x = 2; } catch (x) {} }");
     assertNoWarning("function f(e) { e = 3; try {} catch (e) {} }");
+  }
+
+  public void testCorrectCatch_withES6Modules() {
+    assertNoWarning("export function f() { try { var x = 2; } catch (x) {} }");
   }
 
   public void testRedeclare() {
@@ -124,6 +164,11 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarningEs6("function f() { let f = 1; }");
   }
 
+  public void testRedeclare_withES6Modules() {
+    assertRedeclare("export function f() { var a = 2; var a = 3; }");
+    assertNoWarningEs6("export function f() { let f = 1; }");
+  }
+
   public void testIssue166a() {
     testError(
         "try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
@@ -133,6 +178,20 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   public void testIssue166b() {
     testError(
         "function a() { try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 } };",
+        REDECLARED_VARIABLE_ERROR);
+  }
+
+  public void testIssue166b_withES6Modules() {
+    testError(
+        LINE_JOINER.join(
+            "export function a() {",
+            "  try {",
+            "    throw 1",
+            "  } catch (e) {",
+            "      /** @suppress {duplicate} */",
+            "      var e = 2",
+            "  }",
+            "};"),
         REDECLARED_VARIABLE_ERROR);
   }
 
@@ -157,6 +216,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     testSame("var e = 2; try { throw 1 } catch(e) {}");
   }
 
+  public void testIssue166e_withES6Modules() {
+    testSame("export var e = 2; try { throw 1 } catch(e) {}");
+  }
+
   public void testIssue166f() {
     testSame(
         LINE_JOINER.join(
@@ -170,10 +233,18 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertUndeclared("function f() { a = 2; var a = 3; }");
   }
 
+  public void testEarlyReference_withES6Modules() {
+    assertUndeclared("export function f() { a = 2; var a = 3; }");
+  }
+
   public void testCorrectEarlyReference() {
     assertNoWarning("var goog = goog || {}");
     assertNoWarning("var google = google || window['google'] || {}");
     assertNoWarning("function f() { a = 2; } var a = 2;");
+  }
+
+  public void testCorrectEarlyReference_withES6Modules() {
+    assertNoWarning("export function f() { a = 2; } var a = 2;");
   }
 
   public void testUnreferencedBleedingFunction() {
@@ -181,8 +252,16 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarning("var x = function y() {}; var y = 1;");
   }
 
+  public void testUnreferencedBleedingFunction_withES6Modules() {
+    assertNoWarning("export var x = function y() {}");
+  }
+
   public void testReferencedBleedingFunction() {
     assertNoWarning("var x = function y() { return y(); }");
+  }
+
+  public void testReferencedBleedingFunction_withES6Modules() {
+    assertNoWarning("export var x = function y() { return y(); }");
   }
 
   public void testDoubleDeclaration() {
@@ -193,12 +272,20 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertRedeclare("function x() { var y; if (true) { var y; } }");
   }
 
+  public void testDoubleDeclaration_withES6Modules() {
+    assertRedeclare("export function x(y) { if (true) { var y; } }");
+  }
+
   public void testHoistedFunction1() {
     assertNoWarning("f(); function f() {}");
   }
 
   public void testHoistedFunction2() {
     assertNoWarning("function g() { f(); function f() {} }");
+  }
+
+  public void testHoistedFunction_withES6Modules() {
+    assertNoWarning("export function g() { f(); function f() {} }");
   }
 
   public void testNonHoistedFunction() {
@@ -229,6 +316,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertUndeclaredEs6("function g() { if (false) { f(); function f() {} }}");
   }
 
+  public void testNonHoistedFunction_withES6Modules() {
+    assertUndeclaredEs6("export function g() { if (false) { f(); function f() {} }}");
+  }
+
   public void testNonHoistedRecursiveFunction1() {
     assertNoWarningEs6("if (false) { function f() { f(); }}");
   }
@@ -239,6 +330,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   public void testNonHoistedRecursiveFunction3() {
     assertNoWarningEs6("function g() { if (false) { function f() { f(); g(); }}}");
+  }
+
+  public void testNonHoistedRecursiveFunction_withES6Modules() {
+    assertNoWarningEs6("export function g() { if (false) { function f() { f(); g(); }}}");
   }
 
   public void testForOf() {
@@ -268,11 +363,22 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     testSame(externs, code);
   }
 
+  public void testNoWarnInExterns_withES6Modules() {
+    String externs = "export var google; /** @suppress {duplicate} */ var google";
+    String code = "";
+    testSame(externs, code);
+  }
+
   public void testUnusedLocalVar() {
     enableUnusedLocalAssignmentCheck = true;
     assertUnused("function f() { var a; }");
     assertUnused("function f() { var a = 2; }");
     assertUnused("function f() { var a; a = 2; }");
+  }
+
+  public void testUnusedLocalVar_withES6Modules() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertUnused("export function f() { var a; }");
   }
 
   public void testUnusedTypedefInModule() {
@@ -284,6 +390,14 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     testSame("goog.module('m'); /** @typedef {string} */ let x;");
   }
 
+  public void testUnusedTypedefInES6Module() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertUnused("import 'm'; var x;");
+    assertUnusedEs6("import 'm'; let x;");
+
+    testSame("import 'm'; /** @typedef {string} */ var x;");
+  }
+
   public void testAliasInModule() {
     enableUnusedLocalAssignmentCheck = true;
     testSame(
@@ -292,6 +406,17 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
             "const x = goog.require('x');",
             "const y = x.y;",
             "/** @type {y} */ var z;",
+            "alert(z);"));
+  }
+
+  public void testAliasInES6Module() {
+    enableUnusedLocalAssignmentCheck = true;
+    testSame(
+        LINE_JOINER.join(
+            "import 'm';",
+            "import x from 'x';",
+            "export const y = x.y;",
+            "export /** @type {y} */ var z;",
             "alert(z);"));
   }
 
@@ -312,9 +437,19 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertUnusedEs6("function f() { let a; a = 2; }");
   }
 
+  public void testUnusedLocalLet_withES6Modules() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertUnusedEs6("export function f() { let a; }");
+  }
+
   public void testUnusedLocalConst() {
     enableUnusedLocalAssignmentCheck = true;
     assertUnusedEs6("function f() { const a = 2; }");
+  }
+
+  public void testUnusedLocalConst_withES6Modules() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertUnusedEs6("export function f() { const a = 2; }");
   }
 
   public void testUnusedLocalArgNoWarning() {
@@ -322,9 +457,19 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarning("function f(a) {}");
   }
 
+  public void testUnusedLocalArgNoWarning_withES6Modules() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("export function f(a) {}");
+  }
+
   public void testUnusedGlobalNoWarning() {
     enableUnusedLocalAssignmentCheck = true;
     assertNoWarning("var a = 2;");
+  }
+
+  public void testUnusedGlobalNoWarning_withES6Modules() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("export var a = 2;");
   }
 
   public void testUnusedGlobalInBlockNoWarning() {
@@ -343,6 +488,11 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertUnused("function f() { var x = 1; function g() { x = 2; } }");
   }
 
+  public void testUnusedAssignedInInnerFunction_withES6Modules() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertUnused("export function f() { var x = 1; function g() { x = 2; } }");
+  }
+
   public void testIncrementDecrementResultUsed() {
     enableUnusedLocalAssignmentCheck = true;
     assertNoWarning("function f() { var x = 5; while (x-- > 0) {} }");
@@ -351,9 +501,19 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarning("function f() { var x = -5; while (++x < 0) {} }");
   }
 
+  public void testIncrementDecrementResultUsed_withES6Modules() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("export function f() { var x = 5; while (x-- > 0) {} }");
+  }
+
   public void testUsedInInnerFunction() {
     enableUnusedLocalAssignmentCheck = true;
     assertNoWarning("function f() { var x = 1; function g() { use(x); } }");
+  }
+
+  public void testUsedInInnerFunction_withES6Modules() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("export function f() { var x = 1; function g() { use(x); } }");
   }
 
   public void testUsedInShorthandObjLit() {
@@ -364,14 +524,30 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     testSame("function f() { var x = 1; return {x}; }");
   }
 
+  public void testUsedInShorthandObjLit_withES6Modules() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertUndeclaredEs6("export var z = {x}; z(); var x;");
+    testSame("export var {x} = foo();");
+  }
+
   public void testUnusedCatch() {
     enableUnusedLocalAssignmentCheck = true;
     assertNoWarning("function f() { try {} catch (x) {} }");
   }
 
+  public void testUnusedCatch_withES6Modules() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("export function f() { try {} catch (x) {} }");
+  }
+
   public void testIncrementCountsAsUse() {
     enableUnusedLocalAssignmentCheck = true;
     assertNoWarning("var a = 2; var b = []; b[a++] = 1;");
+  }
+
+  public void testIncrementCountsAsUse_withES6Modules() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("export var a = 2; var b = []; b[a++] = 1;");
   }
 
   public void testForIn() {
@@ -399,15 +575,35 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testUnusedCompoundAssign_withES6Modules() {
+    assertNoWarningEs6(
+        LINE_JOINER.join(
+            "export function f(elapsed) {",
+            "  let fakeMs = 0;",
+            "  stubs.replace(goog, 'now', () => fakeMs -= elapsed);",
+            "}"));
+  }
+
   public void testChainedAssign() {
     enableUnusedLocalAssignmentCheck = true;
     assertNoWarning("var a, b = 0, c; a = b = c; alert(a);");
+  }
+
+  public void testChainedAssign_withES6Modules() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("export var a, b = 0, c; a = b = c; alert(a);");
   }
 
   public void testGoogModule() {
     enableUnusedLocalAssignmentCheck = true;
     assertNoWarning("goog.module('example'); var X = 3; use(X);");
     assertUnused("goog.module('example'); var X = 3;");
+  }
+
+  public void testES6Module() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("import 'example'; var X = 3; use(X);");
+    assertUnused("import 'example'; var X = 3;");
   }
 
   public void testGoogModule_bundled() {
@@ -427,11 +623,21 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarningEs6("goog.module('example'); var {x} = goog.require('y');");
   }
 
+  public void testES6Module_destructuring() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarningEs6("import 'example'; import {x} from 'y'; use(x);");
+  }
+
   public void testGoogModule_require() {
     enableUnusedLocalAssignmentCheck = true;
     assertNoWarning("goog.module('example'); var X = goog.require('foo.X'); use(X);");
     // We could warn here, but it's already caught by the extra require check.
     assertNoWarning("goog.module('example'); var X = goog.require('foo.X');");
+  }
+
+  public void testES6Module_import() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning("import 'example'; import X from 'foo.X'; use(X);");
   }
 
   public void testGoogModule_forwardDeclare() {
@@ -454,6 +660,12 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
         "goog.module('example'); var X = goog.require('foo.X'); /** @type {X} */ var y; use(y);");
   }
 
+  public void testES6Module_usedInTypeAnnotation() {
+    enableUnusedLocalAssignmentCheck = true;
+    assertNoWarning(
+        "import 'example'; import X from 'foo.X'; export /** @type {X} */ var y; use(y);");
+  }
+
   public void testGoogModule_duplicateRequire() {
     assertRedeclareError(
         "goog.module('bar'); const X = goog.require('foo.X'); const X = goog.require('foo.X');");
@@ -474,6 +686,11 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
         "  x++;",
         "  let x = 3;",
         "}"));
+  }
+
+  public void testUndeclaredLet_withES6Modules() {
+    assertEarlyReferenceError(
+        LINE_JOINER.join("export var x = 1;", "if (true) {", "  x++;", "  let x = 3;", "}"));
   }
 
   public void testUndeclaredConst() {
@@ -526,6 +743,18 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertRedeclareError("let x; let x;");
   }
 
+  public void testIllegalLetShadowing_withES6Modules() {
+    assertRedeclareError(
+        LINE_JOINER.join(
+            "export function f() {", "  let x;", "  if (a) {", "    var x;", "  }", "}"));
+
+    assertNoWarningEs6(
+        LINE_JOINER.join(
+            "export function f() {", "  if (a) {", "    let x;", "  }", "  var x;", "}"));
+
+    assertRedeclareError("export let x; var x;");
+  }
+
   public void testDuplicateLetConst() {
     assertRedeclareError("let x, x;");
     assertRedeclareError("const x = 0, x = 0;");
@@ -555,6 +784,12 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
         "}"));
   }
 
+  public void testIllegalConstShadowing_withES6Modules() {
+    assertRedeclareError(
+        LINE_JOINER.join(
+            "export function f() {", "  const x = 3;", "  if (a) {", "    var x;", "  }", "}"));
+  }
+
   public void testVarShadowing() {
     assertRedeclareGlobal("if (a) { var x; var x;}");
     assertRedeclareError("if (a) { var x; let x;}");
@@ -569,6 +804,24 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
             "  if (a) { var x; }",
             "  if (b) { let x; }",
             "}"));
+  }
+
+  public void testVarShadowing_withES6Modules01() {
+    assertRedeclare("export function f() { var x; if (a) { var x; }}");
+  }
+
+  public void testVarShadowing_withES6Modules02() {
+    assertRedeclareError("export function f() { if (a) { var x; } let x;}");
+  }
+
+  public void testVarShadowing_withES6Modules03() {
+    assertNoWarningEs6("export function f() { var x; if (a) { let x; }}");
+  }
+
+  public void testVarShadowing_withES6Modules04() {
+    assertNoWarningEs6(
+        LINE_JOINER.join(
+            "export function f() {", "  if (a) { var x; }", "  if (b) { let x; }", "}"));
   }
 
   public void testParameterShadowing() {
@@ -599,6 +852,20 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
     assertRedeclareEs6("function f({a, b}) { var a = 2 }");
     assertRedeclareEs6("function f({a, b}) { if (!a) var a = 6; }");
+  }
+
+  public void testParameterShadowing_withES6Modules() {
+    assertRedeclareError("export function f(x) { let x; }");
+
+    assertRedeclare("export function f(x) { function x() {} }");
+
+    assertRedeclareEs6("export function f(x=3) { var x; }");
+
+    assertNoWarningEs6("export function f(...x) {}");
+
+    assertNoWarning(
+        LINE_JOINER.join(
+            "export function outer(x) {", "  function inner() {", "    var x = 1;", "  }", "}"));
   }
 
   public void testReassignedConst() {
@@ -641,6 +908,12 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarningEs6("var odds = [1,2,3,4].filter((n) => n%2 == 1)");
     assertRedeclareEs6("var f = x => {var x;}");
     assertRedeclareError("var f = x => {let x;}");
+  }
+
+  public void testArrowFunction_withES6Modules() {
+    assertNoWarningEs6("export var f = x => { return x+1; };");
+    assertRedeclareEs6("export var f = x => {var x;}");
+    assertRedeclareError("export var f = x => {let x;}");
   }
 
   public void testTryCatch() {
@@ -686,16 +959,43 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testTryCatch_withES6Modules() {
+    assertRedeclareError(
+        LINE_JOINER.join(
+            "export function f() {",
+            "  try {",
+            "    let e = 0;",
+            "    if (true) {",
+            "      let e = 1;",
+            "    }",
+            "  } catch (e) {",
+            "    let e;",
+            "  }",
+            "}"));
+  }
+
   public void testClass() {
     assertNoWarningEs6("class A { f() { return 1729; } }");
+  }
+
+  public void testClass_withES6Modules() {
+    assertNoWarningEs6("export class A { f() { return 1729; } }");
   }
 
   public void testRedeclareClassName() {
     assertNoWarningEs6("var Clazz = class Foo {}; var Foo = 3;");
   }
 
+  public void testRedeclareClassName_withES6Modules() {
+    assertNoWarningEs6("export var Clazz = class Foo {}; var Foo = 3;");
+  }
+
   public void testClassExtend() {
     assertNoWarningEs6("class A {} class C extends A {} C = class extends A {}");
+  }
+
+  public void testClassExtend_withES6Modules() {
+    assertNoWarningEs6("export class A {} class C extends A {} C = class extends A {}");
   }
 
   public void testArrayPattern() {
@@ -708,6 +1008,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertUndeclaredEs6("[a, b] = [1]; var b;");
   }
 
+  public void testArrayPattern_withES6Modules01() {
+    assertNoWarningEs6("export var [a] = [1];");
+  }
+
   public void testArrayPattern_defaultValue() {
     assertNoWarningEs6("var [a = 1] = [2];");
     assertNoWarningEs6("var [a = 1] = [];");
@@ -716,6 +1020,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
     assertUndeclaredEs6("alert(a); var [a = b] = [1];");
     assertUndeclaredEs6("alert(a); var [a = b] = [];");
+  }
+
+  public void testArrayPattern_defaultValue_withES6Modules01() {
+    assertNoWarningEs6("export var [a = 1] = [2];");
   }
 
   public void testObjectPattern() {
@@ -733,6 +1041,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertUndeclaredEs6("({a: b} = {}); var a, b;");
   }
 
+  public void testObjectPattern_withES6Modules01() {
+    assertNoWarningEs6("export var {a: b} = {a: 1};");
+  }
+
   public void testObjectPattern_defaultValue() {
     assertUndeclaredEs6("alert(b); var {a: b = c} = {a: 1};");
     assertUndeclaredEs6("alert(b); var c; var {a: b = c} = {a: 1};");
@@ -740,6 +1052,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertUndeclaredEs6("alert(b); var {a: b = c} = {};");
     assertUndeclaredEs6("alert(a); var {a = c} = {a: 1};");
     assertUndeclaredEs6("alert(a); var {a = c} = {};");
+  }
+
+  public void testObjectPattern_defaultValue_withES6Modules() {
+    assertUndeclaredEs6("export var {a: b = c} = {a: 1}; var c;");
   }
 
   /**
@@ -765,6 +1081,11 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarningEs6("function f(y = () => x, x = 5) { return y(); }");
     assertNoWarningEs6("function f(x = new foo.bar()) {}");
     assertNoWarningEs6("var foo = {}; foo.bar = class {}; function f(x = new foo.bar()) {}");
+  }
+
+  public void testDefaultParam_withES6Modules() {
+    assertEarlyReferenceError("export function f(x=a) { let a; }");
+    assertNoWarningEs6("export function f(x=()=>x) {}");
   }
 
   public void testDestructuring() {
@@ -803,6 +1124,24 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
         "}"));
   }
 
+  public void testDestructuring_withES6Modules() {
+    testSame(
+        LINE_JOINER.join(
+            "export function f() { ", "  var obj = {a:1, b:2}; ", "  var {a:c, b:d} = obj; ", "}"));
+
+    assertRedeclareEs6(
+        LINE_JOINER.join(
+            "export function f() { ",
+            "  var obj = {a:1, b:2}; ",
+            "  var {a:c, b:d} = obj; ",
+            "  var c = b;",
+            "}"));
+
+    assertUndeclaredEs6(
+        LINE_JOINER.join(
+            "export function f() { ", "  var {a:c, b:d} = obj;", "  var obj = {a:1, b:2};", "}"));
+  }
+
   public void testDestructuringInLoop() {
     testSame("for (let {length: x} in obj) {}");
 
@@ -816,6 +1155,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     testSame("for (var x of [x]);");
     testSame("for (let x of [() => x]);");
     testSame("let x = 1; for (let y of [x]);");
+  }
+
+  public void testEnhancedForLoopTemporalDeadZone_withES6Modules() {
+    testSame("export let x = 1; for (let y of [x]);");
   }
 
   /**
