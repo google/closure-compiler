@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp.graph;
 
+import com.google.common.annotations.GwtCompatible;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.Collection;
 import java.util.Set;
 
@@ -32,6 +34,7 @@ import java.util.Set;
  *
  * @param <E> element type
  */
+@GwtCompatible
 public interface UnionFind<E> {
 
   /**
@@ -43,13 +46,12 @@ public interface UnionFind<E> {
   public void add(E e);
 
   /**
-   * Unions the equivalence classes of {@code a} and {@code b} and returns the
-   * representative of the resulting equivalence class.  The elements will be
-   * added if they are not already present.
+   * Unions the equivalence classes of {@code a} and {@code b} and returns the representative of the
+   * resulting equivalence class. The elements will be added if they are not already present.
    *
-   * @throws UnsupportedOperationException if the add operation is not
-   *     supported by this union-find.
+   * @throws UnsupportedOperationException if the add operation is not supported by this union-find.
    */
+  @CanIgnoreReturnValue
   public E union(E a, E b);
 
   /** Returns the representative of the equivalence class of {@code e}. */

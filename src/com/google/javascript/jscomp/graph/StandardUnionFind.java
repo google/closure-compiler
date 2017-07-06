@@ -18,21 +18,20 @@ package com.google.javascript.jscomp.graph;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.Iterators.filter;
 
+import com.google.common.annotations.GwtCompatible;
+import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
+import com.google.common.collect.Maps;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.Serializable;
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-
 import javax.annotation.Nullable;
 
 /**
@@ -47,12 +46,11 @@ import javax.annotation.Nullable;
  *
  * @param <E> element type
  */
-public final class StandardUnionFind<E> implements Serializable, UnionFind<E> {
-
-  private static final long serialVersionUID = -1L;
+@GwtCompatible
+public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
 
   /** All values with the same root node are in the same equivalence set. */
-  private final Map<E, Node<E>> elmap = new LinkedHashMap<>();
+  private final Map<E, Node<E>> elmap = Maps.newLinkedHashMap();
 
   /** Creates an empty UnionFind structure. */
   public StandardUnionFind() {
@@ -67,44 +65,49 @@ public final class StandardUnionFind<E> implements Serializable, UnionFind<E> {
    */
   public StandardUnionFind(UnionFind<E> other) {
     for (E elem : other.elements()) {
-      union(elem, other.find(elem));
+      union(other.find(elem), elem);
     }
   }
 
   @Override
-  public void add(E e) {
+  public void add(@Nullable E e) {
     union(e, e);
   }
 
+  @CanIgnoreReturnValue
   @Override
-  public E union(E a, E b) {
+  public E union(@Nullable E a, @Nullable E b) {
     Node<E> nodeA = findRootOrCreateNode(a);
     Node<E> nodeB = findRootOrCreateNode(b);
 
     if (nodeA == nodeB) {
       return nodeA.element;
     }
-    if (nodeA.rank > nodeB.rank) {
+    // If possible, prefer nodeA over nodeB, to preserve insertion order.
+    if (nodeA.rank >= nodeB.rank) {
       nodeB.parent = nodeA;
       nodeA.size += nodeB.size;
+      if (nodeA.rank == nodeB.rank) {
+        nodeA.rank++;
+      }
       return nodeA.element;
     }
     nodeA.parent = nodeB;
-    if (nodeA.rank == nodeB.rank) {
-      nodeB.rank++;
-    }
     nodeB.size += nodeA.size;
+    E temp = nodeB.element;
+    nodeB.element = nodeA.element;
+    nodeA.element = temp;
     return nodeB.element;
   }
 
   @Override
-  public E find(E e) {
+  public E find(@Nullable E e) {
     checkArgument(elmap.containsKey(e), "Element does not exist: %s", e);
     return findRoot(elmap.get(e)).element;
   }
 
   @Override
-  public boolean areEquivalent(E a, E b) {
+  public boolean areEquivalent(@Nullable E a, @Nullable E b) {
     E aRep = find(a);
     E bRep = find(b);
     return aRep == bRep;
@@ -117,7 +120,7 @@ public final class StandardUnionFind<E> implements Serializable, UnionFind<E> {
 
   @Override
   public Collection<Set<E>> allEquivalenceClasses() {
-    Map<Node<E>, ImmutableSet.Builder<E>> groupsTmp = new HashMap<>();
+    Map<Node<E>, ImmutableSet.Builder<E>> groupsTmp = Maps.newLinkedHashMap();
     for (Node<E> elem : elmap.values()) {
       Node<E> root = findRoot(elem);
       ImmutableSet.Builder<E> builder = groupsTmp.get(root);
@@ -145,7 +148,7 @@ public final class StandardUnionFind<E> implements Serializable, UnionFind<E> {
     if (node != null) {
       return findRoot(node);
     }
-    node = new Node<>(e);
+    node = new Node<E>(e);
     elmap.put(e, node);
     return node;
   }
@@ -165,7 +168,7 @@ public final class StandardUnionFind<E> implements Serializable, UnionFind<E> {
   }
 
   @Override
-  public Set<E> findAll(final E value) {
+  public Set<E> findAll(@Nullable final E value) {
     checkArgument(elmap.containsKey(value), "Element does not exist: %s", value);
 
     final Predicate<Object> isSameRoot = new Predicate<Object>() {
@@ -175,7 +178,7 @@ public final class StandardUnionFind<E> implements Serializable, UnionFind<E> {
 
       @Override
       public boolean apply(@Nullable Object b) {
-        if (Objects.equals(value, b)) {
+        if (Objects.equal(value, b)) {
           return true;
         }
         Node<E> nodeForB = elmap.get(b);
@@ -194,8 +197,7 @@ public final class StandardUnionFind<E> implements Serializable, UnionFind<E> {
       }
 
       @Override public Iterator<E> iterator() {
-        return filter(elmap.keySet().iterator(),
-            isSameRoot);
+        return filter(elmap.keySet().iterator(), isSameRoot);
       }
 
       @Override public int size() {
@@ -210,7 +212,7 @@ public final class StandardUnionFind<E> implements Serializable, UnionFind<E> {
     Node<E> parent;
 
     /** The element represented by this node. */
-    final E element;
+    E element;
 
     /** A bound on the depth of the subtree rooted to this node. */
     int rank = 0;
