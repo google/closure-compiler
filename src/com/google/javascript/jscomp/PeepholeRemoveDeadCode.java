@@ -580,6 +580,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         //    include: EMPTY nodes, control structures without children
         //    (removing infinite loops), empty try blocks.  What else?
         n.removeChild(c);
+        NodeUtil.markFunctionsDeleted(c, compiler);
         reportCodeChange();
       } else {
         tryOptimizeConditionalAfterAssign(c);
@@ -832,6 +833,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       NodeUtil.redeclareVarsInsideBranch(branchToRemove);
       n.removeChild(branchToKeep);
       parent.replaceChild(n, branchToKeep);
+      NodeUtil.markFunctionsDeleted(n, compiler);
       reportCodeChange();
       return branchToKeep;
     }
