@@ -384,7 +384,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   public void testUnusedTypedefInModule() {
     enableUnusedLocalAssignmentCheck = true;
     assertUnused("goog.module('m'); var x;");
-    assertUnusedEs6("goog.module('m'); let x;");
+    assertUnused("goog.module('m'); let x;");
 
     testSame("goog.module('m'); /** @typedef {string} */ var x;");
     testSame("goog.module('m'); /** @typedef {string} */ let x;");
@@ -393,7 +393,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   public void testUnusedTypedefInES6Module() {
     enableUnusedLocalAssignmentCheck = true;
     assertUnused("import 'm'; var x;");
-    assertUnusedEs6("import 'm'; let x;");
+    assertUnused("import 'm'; let x;");
 
     testSame("import 'm'; /** @typedef {string} */ var x;");
   }
@@ -432,24 +432,24 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   public void testUnusedLocalLet() {
     enableUnusedLocalAssignmentCheck = true;
-    assertUnusedEs6("function f() { let a; }");
-    assertUnusedEs6("function f() { let a = 2; }");
-    assertUnusedEs6("function f() { let a; a = 2; }");
+    assertUnused("function f() { let a; }");
+    assertUnused("function f() { let a = 2; }");
+    assertUnused("function f() { let a; a = 2; }");
   }
 
   public void testUnusedLocalLet_withES6Modules() {
     enableUnusedLocalAssignmentCheck = true;
-    assertUnusedEs6("export function f() { let a; }");
+    assertUnused("export function f() { let a; }");
   }
 
   public void testUnusedLocalConst() {
     enableUnusedLocalAssignmentCheck = true;
-    assertUnusedEs6("function f() { const a = 2; }");
+    assertUnused("function f() { const a = 2; }");
   }
 
   public void testUnusedLocalConst_withES6Modules() {
     enableUnusedLocalAssignmentCheck = true;
-    assertUnusedEs6("export function f() { const a = 2; }");
+    assertUnused("export function f() { const a = 2; }");
   }
 
   public void testUnusedLocalArgNoWarning() {
@@ -479,8 +479,8 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   public void testUnusedLocalInBlock() {
     enableUnusedLocalAssignmentCheck = true;
-    assertUnusedEs6("if (true) { let a = 2; }");
-    assertUnusedEs6("if (true) { const a = 2; }");
+    assertUnused("if (true) { let a = 2; }");
+    assertUnused("if (true) { const a = 2; }");
   }
 
   public void testUnusedAssignedInInnerFunction() {
@@ -1213,13 +1213,6 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
    * Expects the JS to generate one unused local error.
    */
   private void assertUnused(String js) {
-    testWarning(js, UNUSED_LOCAL_ASSIGNMENT);
-  }
-
-  /**
-   * Expects the JS to generate one unused local error.
-   */
-  private void assertUnusedEs6(String js) {
     testWarning(js, UNUSED_LOCAL_ASSIGNMENT);
   }
 
