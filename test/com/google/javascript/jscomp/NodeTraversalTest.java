@@ -283,7 +283,7 @@ public final class NodeTraversalTest extends TestCase {
         + "visit FUNCTION foo [source_file: [testcode]] @2:0\n"
         + "visit SCRIPT [source_file: [testcode]] "
         + "[input_id: InputId: [testcode]] "
-        + "[feature_set: []] @1:0\n";
+        + "[feature_set: [block function]] @1:0\n";
 
     assertEquals(expectedResult, builder.toString());
   }

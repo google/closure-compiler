@@ -1795,6 +1795,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
         getRequiresEs6Message(Feature.LET_DECLARATIONS));
   }
 
+  // Ensure that we only add the feature for function declarations (i.e.
+  // function f() {} ) and not function expressions (e.g. var f = function() {} )
+  public void testBlockScopeFunctionDeclaration() {
+    expectFeatures(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
+    parse("if (1) { function f() {} }");
+
+    mode = LanguageMode.ECMASCRIPT3;
+    expectFeatures();
+    Node result = parse("if (1) { var f = function() {} }");
+    FeatureSet features = (FeatureSet) result.getProp(Node.FEATURE_SET);
+    assertFS(features).doesNotHave(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
+  }
+
   public void testLetForbidden3() {
     mode = LanguageMode.ECMASCRIPT5;
     strictMode = STRICT;

@@ -112,6 +112,7 @@ public final class FeatureSet implements Serializable {
     REGEXP_FLAG_U("RegExp flag 'u'", LangVersion.ES6),
     DEFAULT_PARAMETERS("default parameter", LangVersion.ES6),
     MODULES("modules", LangVersion.ES6),
+    BLOCK_SCOPED_FUNCTION_DECLARATION("block function", LangVersion.ES6),
 
     // ES 2016 only added one new feature:
     EXPONENT_OP("exponent operator (**)", LangVersion.ES7),

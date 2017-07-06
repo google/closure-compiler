@@ -1256,6 +1256,12 @@ class IRFactory {
         maybeWarnForFeature(functionTree, Feature.ASYNC_FUNCTIONS);
       }
 
+      // Add a feature so that transpilation process hoists block scoped functions through
+      // var redeclaration in ES3 and ES5
+      if (isDeclaration) {
+        features = features.with(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
+      }
+
       IdentifierToken name = functionTree.name;
       Node newName;
       if (name != null) {
