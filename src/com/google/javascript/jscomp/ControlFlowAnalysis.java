@@ -294,6 +294,12 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         default:
           break;
       }
+      // Don't traverse further in an arrow function expression
+      if (parent.getParent() != null
+          && parent.getParent().isArrowFunction()
+          && !parent.isNormalBlock()) {
+        return false;
+      }
     }
     return true;
   }

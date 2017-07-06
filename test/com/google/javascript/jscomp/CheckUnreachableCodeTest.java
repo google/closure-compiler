@@ -330,15 +330,14 @@ public final class CheckUnreachableCodeTest extends CompilerTestCase {
 
   public void testArrowFunction() {
     testSame("() => 3");
+    testSame("e => e + 1");
+    testSame("listen('click', e => onclick(e), true);");
+    testSame("listen('click', e => { onclick(e); }, true);");
+    assertUnreachable("listen('click', e => { return 0; onclick(e); }, true);");
     assertUnreachable("() => {return 3; x = 1;}");
     assertUnreachable("() => { if (false) x = 1;}");
     testSame("var f = array.filter(g => {if (g % 3) x = 1;});");
     assertUnreachable("var f = array.filter(g => {if (false) g = 1;});");
-  }
-
-  // TODO(tbreisacher): Fix and enable this test.
-  public void disabled_testArrowFunctionInCall() {
-    testNoWarning("listen('click', e => onclick(e), true);");
   }
 
   public void testGenerators() {
