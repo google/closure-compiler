@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * {@link RenameProperties} tests.
@@ -275,7 +276,6 @@ public final class RenamePropertiesTest extends CompilerTestCase {
                  compiler.toSource(module3));
   }
 
-
   public void testPropertyAffinityOff() {
     test("var foo={};foo.x=1;foo.y=2;foo.z=3;" +
          "function f1() { foo.z; foo.z; foo.z; foo.y}" +
@@ -392,6 +392,101 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     test(input1, expected1);
     prevUsedPropertyMap = renameProperties.getPropertyMap();
     test(input2, expected2);
+  }
+
+  // Test cases added for ES6 Features - some tests have the correct result commented out
+  public void testPrototypePropertyForArrowFunction() {
+    test(
+        "Bar.prototype = {2: () => {}, getA: () => {}}; bar[2]();",
+        "Bar.prototype = {2: () => {}, a:    () => {}}; bar[2]();");
+  }
+
+  public void testDestructuredProperties() {
+    //using destructuring shorthand
+    test("var { foo, bar } = { foo: 1, bar: 2 }",
+         "var { foo:foo, bar:bar } = {   b: 1,   a: 2 }");
+          // "var{ a:foo, b:bar } = { a:1, b:2 }"
+
+    //without destructuring shorthand
+    test("var { foo:foo, bar:bar } = { foo:1, bar:2 }",
+         "var { foo:foo, bar:bar } = {   b: 1,   a: 2 }");
+         //"var {   a:foo,   b:bar } = {   a:1,   b:2 }");
+
+    test(
+        "var foo = { bar: 1, baz: 2 }; var foo1 = foo.bar; var foo2 = foo.baz; ",
+        "var foo = {   a: 1,   b: 2 }; var foo1 = foo.a;   var foo2 = foo.b;");
+  }
+
+  public void testClasses() {
+    test(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  getB(x) {}",
+            "}",
+            "var too;",
+            "var too = new Bar();",
+            "too.getB(too);"),
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  getB(x) {}",
+            "}",
+            "var too;",
+            "var too = new Bar();",
+            "too.a(too);"));
+    /*LINE_JOINER.join(
+    "class Bar {",
+    "  constructor(){}",
+    "  a(x) {}",
+    "}",
+    "var too;",
+    "var too = new Bar();",
+    "too.a(too);"));*/
+  }
+
+  public void testPropertyMethodAssignment() {
+    // ES5 version
+    setLanguage(LanguageMode.ECMASCRIPT3, LanguageMode.ECMASCRIPT3);
+    test(
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  bar: 1, ",
+            "  myFunc: function myFunc() {",
+            "    return this.bar",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  a: 1, ",
+            "  b: function myFunc() {",
+            "    return this.a",
+            "  }",
+            "};",
+            "foo.b();")
+        );
+
+    //ES6 version
+    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT_2015);
+    test(
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  bar: 1, ",
+            "  myFunc() {",
+            "    return this.bar",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  a: 1, ",
+            "  b() {",
+            "    return this.a",
+            "  }",
+            "};",
+            "foo.b();")
+        );
   }
 
   private Compiler compileModules(String externs, JSModule[] modules) {
