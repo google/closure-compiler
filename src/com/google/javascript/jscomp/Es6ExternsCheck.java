@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPreOrderCallback;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -42,13 +40,7 @@ final class Es6ExternsCheck extends AbstractPreOrderCallback implements Compiler
     for (Node script : root.children()) {
       checkState(script.isScript());
       if (TranspilationPasses.isScriptEs6OrHigher(script)) {
-        FeatureSet features = (FeatureSet) script.getProp(script.FEATURE_SET);
-        if (!features.has(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION)) {
-          return true;
-        } else {
-          features = features.without(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
-          return !FeatureSet.ES5.contains(features);
-        }
+        return true;
       }
     }
     return false;
