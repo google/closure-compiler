@@ -442,6 +442,9 @@ class InlineFunctions implements CompilerPass {
     }
 
     if (parent.isCall() && parent.getFirstChild() == name) {
+      if (hasSpreadCallArgument(parent)) {
+        return false;
+      }
       // This is a normal reference to the function.
       return true;
     }
@@ -731,7 +734,6 @@ class InlineFunctions implements CompilerPass {
     return NodeUtil.has(fnNode, hasParamWithNumberObjectLitPredicate,
         Predicates.<Node>alwaysTrue());
   }
-
   /**
    * @return whether the function has a param with complex OBJECT_PATTERNS (e.g. OBJECT_PATTERN
    * with child OBJECT_PATTERN). Prevents such functions from being inlined.
@@ -751,6 +753,19 @@ class InlineFunctions implements CompilerPass {
         };
 
     return NodeUtil.has(node, hasComplexDestructuringPatternPredicate,
+        Predicates.<Node>alwaysTrue());
+  }
+
+  private static boolean hasSpreadCallArgument(Node callNode) {
+    Predicate<Node> hasSpreadCallArgumentPredicate =
+        new Predicate<Node>() {
+          @Override
+          public boolean apply(Node input) {
+            return input.isSpread();
+          }
+        };
+
+    return NodeUtil.has(callNode, hasSpreadCallArgumentPredicate,
         Predicates.<Node>alwaysTrue());
   }
 

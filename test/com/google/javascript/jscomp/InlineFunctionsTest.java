@@ -2933,4 +2933,52 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "foo(3, [7, 8]);"),
         "{ var b$jscomp$inline_1=[7,8];3+b$jscomp$inline_1[1] }");
   }
+
+  public void testSpreadCall1() {
+    testSame(
+        LINE_JOINER.join(
+            "function foo(x, y) {",
+            "  return x + y;",
+            "}",
+            "var args = [0, 1];",
+            "foo(...args);"));
+  }
+
+  public void testSpreadCall2() {
+    testSame(
+        LINE_JOINER.join(
+            "function foo(x, y, z) {",
+            "  return x + y + z;",
+            "}",
+            "var args = [0, 1];",
+            "foo(2, ...args);"));
+  }
+
+  public void testSpreadCall3() {
+    testSame(
+        LINE_JOINER.join(
+            "function foo(x, y) {",
+            "  return x + y;",
+            "}",
+            "foo(...[0, 1]);"));
+  }
+
+  public void testSpreadCall4() {
+    testSame(
+        LINE_JOINER.join(
+            "function foo(x, y) {",
+            "  return x + y;",
+            "}",
+            "var args = [0];",
+            "foo(...args, ...[1]);"));
+  }
+
+  public void testSpreadCall5() {
+    testSame(
+        LINE_JOINER.join(
+            "function foo(...args) {",
+            "  return args.length;",
+            "}",
+            "foo(...[0,1]);"));
+  }
 }
