@@ -373,9 +373,9 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testArrayDestructuringParams() {
     // Default values in array pattern unused
-    test("function f([x,y] = [1,2]) {}; f();", "function f([,] = [1,2]) {}; f();");
+    test("function f([x,y] = [1,2]) {}; f();", "function f() {}; f();");
 
-    test("function f([x,y] = [1,2], z) { z; }; f();", "function f([,] = [1,2], z) { z; }; f();");
+    test("function f([x,y] = [1,2], z) { z; }; f();", "function f([] = [1,2], z) { z; }; f();");
 
     // Default values in array pattern used
     test("function f([x,y,z] =[1,2,3]) { y; }; f();", "function f([,y] = [1,2,3]) { y; }; f();");
@@ -1348,34 +1348,34 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     test("var [...a] = [];", "var [] = [];");
     test("var [...[...a]] = [];", "var [...[]] = [];");
 
-    test("var [a, b] = [];", "var [,] = [];");
-    test("var [a, ...b] = [];", "var [,] = [];");
+    test("var [a, b] = [];", "var [] = [];");
+    test("var [a, ...b] = [];", "var [] = [];");
     test("var [a, ...[...b]] = [];", "var [,...[]] = [];");
 
     test("var [a, b, c] = []; use(a, b);", "var [a,b  ] = []; use(a, b);");
     test("var [a, b, c] = []; use(a, c);", "var [a, ,c] = []; use(a, c);");
     test("var [a, b, c] = []; use(b, c);", "var [ ,b,c] = []; use(b, c);");
 
-    test("var [a, b, c] = []; use(a);", "var [a, , ] = []; use(a);");
+    test("var [a, b, c] = []; use(a);", "var [a] = []; use(a);");
     test("var [a, b, c] = []; use(b);", "var [ ,b, ] = []; use(b);");
     test("var [a, b, c] = []; use(c);", "var [ , ,c] = []; use(c);");
 
-    test("var a, b, c; [a, b, c] = []; use(a);", "var a; [a, , ] = []; use(a);");
+    test("var a, b, c; [a, b, c] = []; use(a);", "var a; [a] = []; use(a);");
     test("var a, b, c; [a, b, c] = []; use(b);", "var b; [ ,b, ] = []; use(b);");
     test("var a, b, c; [a, b, c] = []; use(c);", "var c; [ , ,c] = []; use(c);");
 
-    test("var a, b, c; [[a, b, c]] = []; use(a);", "var a; [[a, , ]] = []; use(a);");
+    test("var a, b, c; [[a, b, c]] = []; use(a);", "var a; [[a]] = []; use(a);");
     test("var a, b, c; [{a, b, c}] = []; use(a);", "var a; [{a}] = []; use(a);");
-    test("var a, b, c; ({x:[a, b, c]} = []); use(a);", "var a; ({x:[a,,]} = []); use(a);");
+    test("var a, b, c; ({x:[a, b, c]} = []); use(a);", "var a; ({x:[a]} = []); use(a);");
 
-    test("var a, b, c; [[a, b, c]] = []; use(b);", "var b; [[ ,b, ]] = []; use(b);");
+    test("var a, b, c; [[a, b, c]] = []; use(b);", "var b; [[ ,b]] = []; use(b);");
     test("var a, b, c; [[a, b, c]] = []; use(c);", "var c; [[ , ,c]] = []; use(c);");
 
-    test("var a, b, c; [a, b, ...c] = []; use(a);", "var a; [a, , ] = []; use(a);");
+    test("var a, b, c; [a, b, ...c] = []; use(a);", "var a; [a] = []; use(a);");
     test("var a, b, c; [a, b, ...c] = []; use(b);", "var b; [ ,b, ] = []; use(b);");
     test("var a, b, c; [a, b, ...c] = []; use(c);", "var c; [ , ,...c] = []; use(c);");
 
-    test("var a, b, c; [a=1, b=2, c=3] = []; use(a);", "var a; [a=1,   , ] = []; use(a);");
+    test("var a, b, c; [a=1, b=2, c=3] = []; use(a);", "var a; [a=1] = []; use(a);");
     test("var a, b, c; [a=1, b=2, c=3] = []; use(b);", "var b; [   ,b=2, ] = []; use(b);");
     test("var a, b, c; [a=1, b=2, c=3] = []; use(c);", "var c; [   ,   ,c=3] = []; use(c);");
 
@@ -1394,7 +1394,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
             "var a; var b",
             "[a, b] = [1, 2]"),
         lines(
-            "[,] = [1, 2]"));
+            "[] = [1, 2]"));
 
     test(
         lines(
@@ -1508,7 +1508,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     // Array destructuring
     test("var [a, b] = [1, 2]; f(a);", "var [a] = [1, 2]; f(a);");
 
-    test("var [a, b] = [1, 2];", "var [,] = [1, 2];");
+    test("var [a, b] = [1, 2];", "var [] = [1, 2];");
 
     // Object pattern destructuring
     test("var {a, b} = {a:1, b:2}; f(a);", "var {a,  } = {a:1, b:2}; f(a);");

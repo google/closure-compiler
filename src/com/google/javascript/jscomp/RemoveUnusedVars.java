@@ -1081,58 +1081,6 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
     }
   }
 
-  private void removeRestNode(Node toRemove, Node parent) {
-    // There are four places we expect default values:
-    //   in a PARAM_LIST, in ARRAY_PATTERN
-    // in the first cases, the rest is removed from the AST.
-    switch (parent.getToken()) {
-      // As the rest node is always last it isn't necessary to preserve the slot
-      // and in functions it doesn't change the function.length.
-      case ARRAY_PATTERN:
-      case PARAM_LIST:
-        checkState(toRemove == parent.getLastChild());
-        NodeUtil.deleteNode(toRemove, compiler);
-        break;
-      default:
-        throw new IllegalStateException("unexpected");
-    }
-  }
-
-  private void removeDefaultValueNode(Node toRemove, Node parent) {
-    // There are four places we expect default values:
-    //   in a PARAM_LIST, in ARRAY_PATTERN, in a STRING_KEY, COMPUTED_PROP
-    // in the first cases, the default_value is removed from the AST,
-    // in the last two the parent is.  In any case, it should already be removed.
-    switch (parent.getToken()) {
-      case ARRAY_PATTERN:
-        // preserve the slot in the array pattern
-        compiler.reportChangeToEnclosingScope(toRemove);
-        NodeUtil.removeChild(parent, toRemove);
-        NodeUtil.markFunctionsDeleted(toRemove, compiler);
-        break;
-      case PARAM_LIST:
-        compiler.reportChangeToEnclosingScope(toRemove);
-        // preserve the slot in the parameter list
-        Node name = toRemove.getFirstChild();
-        checkState(name.isName());
-        if (toRemove == parent.getLastChild() && removeGlobals && canRemoveParameters(parent)) {
-          toRemove.detach();
-        } else {
-          toRemove.replaceWith(name.detach());
-        }
-        NodeUtil.markFunctionsDeleted(toRemove, compiler);
-        break;
-      case COMPUTED_PROP:
-      case STRING_KEY:
-        checkState(!parent.isComputedProp()
-            || !NodeUtil.mayHaveSideEffects(parent.getFirstChild()));
-        NodeUtil.deleteNode(parent, compiler);
-        break;
-      default:
-        throw new IllegalStateException("unexpected");
-    }
-  }
-
   /**
    * Our progress in a traversal can be expressed completely as the
    * current node and scope. The continuation lets us save that
@@ -1180,24 +1128,60 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
     @Override
     public void remove(AbstractCompiler compiler) {
       Node removableParent = removableNode.getParent();
-      if (removableNode.isRest()) {
-        removeRestNode(removableNode, removableParent);
-      } else if (removableNode.isDefaultValue()) {
-        removeDefaultValueNode(removableNode, removableParent);
-      } else {
-        compiler.reportChangeToEnclosingScope(removableNode);
-        if (removableParent.isArrayPattern()) {
-          if (removableNode == removableParent.getLastChild()) {
-            removableNode.detach();
-          } else {
-            removableNode.replaceWith(IR.empty().srcref(removableNode));
-          }
-        } else if (removableParent.isObjectPattern()) {
+      if (removableParent.isArrayPattern()) {
+        // [a, removableName, b] = something;
+        // [a, ...removableName] = something;
+        // [a, removableName = removableValue, b] = something;
+        // [a, ...removableName = removableValue] = something;
+        compiler.reportChangeToEnclosingScope(removableParent);
+        if (removableNode == removableParent.getLastChild()) {
           removableNode.detach();
         } else {
-          throw new IllegalStateException("unexpected");
+          removableNode.replaceWith(IR.empty().srcref(removableNode));
+        }
+        // We prefer `[a, b]` to `[a, b, , , , ]`
+        // So remove any trailing empty nodes.
+        for (Node maybeEmpty = removableParent.getLastChild();
+            maybeEmpty != null && maybeEmpty.isEmpty();
+            maybeEmpty = removableParent.getLastChild()) {
+          maybeEmpty.detach();
         }
         NodeUtil.markFunctionsDeleted(removableNode, compiler);
+      } else if (removableParent.isParamList() && removableNode.isDefaultValue()) {
+        // function(removableName = removableValue)
+        compiler.reportChangeToEnclosingScope(removableNode);
+        // preserve the slot in the parameter list
+        Node name = removableNode.getFirstChild();
+        checkState(name.isName());
+        if (removableNode == removableParent.getLastChild()
+            && removeGlobals
+            && canRemoveParameters(removableParent)) {
+          // function(p1, removableName = removableDefault)
+          // and we're allowed to remove the parameter entirely
+          removableNode.detach();
+        } else {
+          // function(removableName = removableDefault, otherParam)
+          // or removableName is at the end, but cannot be completely removed.
+          removableNode.replaceWith(name.detach());
+        }
+        NodeUtil.markFunctionsDeleted(removableNode, compiler);
+      } else if (removableNode.isDefaultValue()) {
+        // { a: removableName = removableValue }
+        // { [removableExpression]: removableName = removableValue }
+        checkState(
+            removableParent.isStringKey()
+                || (removableParent.isComputedProp()
+                    && !NodeUtil.mayHaveSideEffects(removableParent.getFirstChild())));
+        // Remove the whole property, not just its default value part.
+        NodeUtil.deleteNode(removableParent, compiler);
+      } else {
+        // { removableStringKey: removableName }
+        // function(...removableName) {}
+        // function(...removableName = default)
+        checkState(
+            removableParent.isObjectPattern()
+                || (removableParent.isParamList() && removableNode.isRest()));
+        NodeUtil.deleteNode(removableNode, compiler);
       }
     }
   }
