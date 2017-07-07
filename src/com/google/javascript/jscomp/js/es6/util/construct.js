@@ -39,11 +39,11 @@ $jscomp.construct = /** @type {function(): !Function} */ (function() {
   // Check for https://github.com/Microsoft/ChakraCore/issues/3217
   /** @return {boolean} */
   function reflectConstructWorks() {
-    /** @constructor */ var BaseTestClass = function() {};
-    /** @constructor */ var DerivedTestClass = function() {};
-    new BaseTestClass();
-    Reflect.construct(BaseTestClass, [], DerivedTestClass);
-    return new BaseTestClass() instanceof BaseTestClass;
+    /** @constructor */ function Base() {}
+    /** @constructor */ function Derived() {}
+    new Base();
+    Reflect.construct(Base, [], Derived);
+    return new Base() instanceof Base;
   }
 
   if (typeof Reflect != 'undefined' && Reflect.construct) {
@@ -55,12 +55,7 @@ $jscomp.construct = /** @type {function(): !Function} */ (function() {
      * @param {function(new: TARGET, ...?)=} opt_newTarget The constructor to instantiate.
      * @return {TARGET} The result of the function call.
      * @template TARGET
-     *
-     * Ignore the missingPolyfill warning because this is only being called
-     * when Reflect.construct is defined, and every browser that includes
-     * Reflect.construct also includes Reflect.setPrototypeOf.
-     *
-     * @suppress {reportUnknownTypes,missingPolyfill}
+     * @suppress {reportUnknownTypes}
      */
     var patchedConstruct = function(target, argList, opt_newTarget) {
       var out = brokenConstruct(target, argList);

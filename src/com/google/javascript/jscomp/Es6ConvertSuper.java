@@ -104,10 +104,6 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
           new JSTypeExpression(
               new Node(Token.ELLIPSIS, new Node(Token.QMARK)), "<Es6ConvertSuper>"));
       memberDef.setJSDocInfo(info.build());
-
-      // Es6ConvertSuperConstructorCalls will add a call to $jcomp.construct. Inject it now
-      // so that it's present in the AST before typechecking.
-      compiler.ensureLibraryInjected("es6/util/construct", false);
     }
     memberDef.useSourceInfoIfMissingFromForTree(classNode);
     classMembers.addChildToFront(memberDef);
@@ -195,12 +191,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
         Node enclosingStatementParent = enclosingStatement.getParent();
         enclosingStatement.detach();
         compiler.reportChangeToEnclosingScope(enclosingStatementParent);
-      } else {
-        // Es6ConvertSuperConstructorCalls will add a call to $jcomp.construct. Inject it now
-        // so that it's present in the AST before typechecking.
-        compiler.ensureLibraryInjected("es6/util/construct", false);
       }
-
       // Calls to super() constructors will be transpiled by Es6ConvertSuperConstructorCalls
       // later.
       return;
