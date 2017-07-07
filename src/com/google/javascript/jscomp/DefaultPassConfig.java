@@ -2128,7 +2128,7 @@ public final class DefaultPassConfig extends PassConfig {
           replacements.putAll(compiler.getDefaultDefineValues());
           replacements.putAll(getAdditionalReplacements(options));
           replacements.putAll(options.getDefineReplacements());
-          new ProcessDefines(compiler, ImmutableMap.copyOf(replacements))
+          new ProcessDefines(compiler, ImmutableMap.copyOf(replacements), options.checksOnly)
               .injectNamespace(namespaceForChecks).process(externs, jsRoot);
         }
       };

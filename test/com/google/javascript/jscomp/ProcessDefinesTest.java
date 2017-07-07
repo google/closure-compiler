@@ -92,6 +92,31 @@ public final class ProcessDefinesTest extends TypeICompilerTestCase {
         ProcessDefines.INVALID_DEFINE_INIT_ERROR);
   }
 
+  public void testDefineInExterns() {
+    testSame(
+        DEFAULT_EXTERNS + "/** @define {boolean} */ var EXTERN_DEF;",
+        "");
+  }
+
+  public void testDefineInExternsPlusUsage() {
+    testSame(
+        DEFAULT_EXTERNS + "/** @define {boolean} */ var EXTERN_DEF;",
+        "/** @define {boolean} */ var DEF = EXTERN_DEF");
+  }
+
+  public void testNonDefineInExternsPlusUsage() {
+    testError(
+        DEFAULT_EXTERNS + "/** @const {boolean} */ var EXTERN_NON_DEF;",
+        "/** @define {boolean} */ var DEF = EXTERN_NON_DEF",
+        ProcessDefines.INVALID_DEFINE_INIT_ERROR);
+  }
+
+  public void testDefineCompiledInExterns() {
+    testSame(
+        DEFAULT_EXTERNS + "/** @define {boolean} */ var COMPILED;",
+        "");
+  }
+
   public void testDefineWithDependentValue() {
     test(
         LINE_JOINER.join(
@@ -362,8 +387,8 @@ public final class ProcessDefinesTest extends TypeICompilerTestCase {
 
     @Override
     public void process(Node externs, Node js) {
-      namespace = new GlobalNamespace(compiler, js);
-      new ProcessDefines(compiler, overrides)
+      namespace = new GlobalNamespace(compiler, externs, js);
+      new ProcessDefines(compiler, overrides, false)
           .injectNamespace(namespace)
           .process(externs, js);
     }
