@@ -600,6 +600,11 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         NodeUtil.deleteChildren(n, compiler);
         result = IR.comma(left, right);
       }
+    } else if (n.getParent().getToken() == type) {
+      if ((right.isFalse() && type == Token.OR)
+          || (right.isTrue() && type == Token.AND)) {
+        result = left;
+      }
     }
 
     // Note: Right hand side folding is handled by

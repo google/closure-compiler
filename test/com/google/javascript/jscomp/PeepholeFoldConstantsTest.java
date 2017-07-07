@@ -508,27 +508,34 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
     fold("x = false || 0", "x = 0");
 
     // unfoldable, because the right-side may be the result
-    fold("a = x && true", "a=x&&true");
-    fold("a = x && false", "a=x&&false");
-    fold("a = x || 3", "a=x||3");
-    fold("a = x || false", "a=x||false");
-    fold("a = b ? c : x || false", "a=b?c:x||false");
-    fold("a = b ? x || false : c", "a=b?x||false:c");
-    fold("a = b ? c : x && true", "a=b?c:x&&true");
-    fold("a = b ? x && true : c", "a=b?x&&true:c");
+    fold("a = x && true", "a=x && true");
+    fold("a = x && false", "a=x && false");
+    fold("a = x || 3", "a=x || 3");
+    fold("a = x || false", "a=x || false");
+    fold("a = b ? c : x || false", "a=b ? c:x || false");
+    fold("a = b ? x || false : c", "a=b ? x || false:c");
+    fold("a = b ? c : x && true", "a=b ? c:x && true");
+    fold("a = b ? x && true : c", "a=b ? x && true:c");
 
     // folded, but not here.
     foldSame("a = x || false ? b : c");
     foldSame("a = x && true ? b : c");
 
-    fold("x = foo() || true || bar()", "x = foo()||true");
-    fold("x = foo() || true && bar()", "x = foo()||bar()");
-    fold("x = foo() || false && bar()", "x = foo()||false");
-    fold("x = foo() && false && bar()", "x = foo()&&false");
-    fold("x = foo() && false || bar()", "x = (foo()&&false,bar())");
-    // TODO(tbreisacher): Fix and re-enable.
-    //fold("x = foo() || false || bar()", "x = foo()||bar()");
-    //fold("x = foo() && true && bar()", "x = foo()&&bar()");
+    fold("x = foo() || true || bar()", "x = foo() || true");
+    fold("x = foo() || true && bar()", "x = foo() || bar()");
+    fold("x = foo() || false && bar()", "x = foo() || false");
+    fold("x = foo() && false && bar()", "x = foo() && false");
+    fold("x = foo() && false || bar()", "x = (foo() && false,bar())");
+    fold("x = foo() || false || bar()", "x = foo() || bar()");
+    fold("x = foo() && true && bar()", "x = foo() && bar()");
+    fold("x = foo() || true || bar()", "x = foo() || true");
+    fold("x = foo() && false && bar()", "x = foo() && false");
+    fold("x = foo() && 0 && bar()", "x = foo() && 0");
+    foldSame("x = foo() && 1 && bar()");
+    foldSame("x = foo() || 0 || bar()");
+    fold("x = foo() || 1 || bar()", "x = foo() || 1");
+    foldSame("x = foo() || bar() || baz()");
+    foldSame("x = foo() && bar() && baz()");
 
     fold("1 && b()", "b()");
     fold("a() && (1 && b())", "a() && b()");
@@ -537,8 +544,11 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
     foldSame("(a() && 1) && b()");
 
     // Really not foldable, because it would change the type of the
-    // expression if foo() returns something equivalent, but not
-    // identical, to true. Cf. FoldConstants.tryFoldAndOr().
+    // expression if foo() returns something truthy but not true.
+    // Cf. FoldConstants.tryFoldAndOr().
+    // An example would be if foo() is 1 (truthy) and bar() is 0 (falsey):
+    // (1 && true) || 0 == true
+    // 1 || 0 == 1, but true =/= 1
     foldSame("x = foo() && true || bar()");
     foldSame("foo() && true || bar()");
   }
