@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.resources;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.resources.client.ClientBundle;
@@ -31,7 +31,7 @@ public final class ResourceLoader {
 
     // This is a generated file containing all the text resources we want to package
     // as a single JSON string mapping (relative) filename to file content strings.
-    @Source("resources.json")
+    @Source("com/google/javascript/jscomp/resources.json")
     TextResource resources();
   }
 

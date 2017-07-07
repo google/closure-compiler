@@ -236,6 +236,7 @@
           <excludes>
             <exclude>**/debugger/**</exclude>
             <exclude>**/gwt/**</exclude>
+            <exclude>**/super-gwt/**</exclude>
             <exclude>**/super/**</exclude>
             <exclude>**/testing/**</exclude>
             <exclude>**/webservice/**</exclude>
@@ -266,7 +267,7 @@
             <link>http://docs.oracle.com/javase/7/docs/api/</link>
           </links>
           <detectLinks>true</detectLinks>
-          <excludePackageNames>*.gwt.*:*.testing.*:*.debugger.*:*.webservice.*:*.debugging.*:*.ant.*</excludePackageNames>
+          <excludePackageNames>*.resources.*:*.gwt.*:*.testing.*:*.debugger.*:*.webservice.*:*.debugging.*:*.ant.*</excludePackageNames>
         </configuration>
       </plugin>
 

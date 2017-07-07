@@ -250,6 +250,7 @@
             <exclude>**/gwt/public/**</exclude>
             <exclude>**/gwt/super/**</exclude>
             <exclude>**/super/**</exclude>
+            <exclude>**/super-gwt/**</exclude>
             <exclude>**/testing/**</exclude>
             <exclude>**/transpile/**</exclude>
             <exclude>**/webservice/**</exclude>

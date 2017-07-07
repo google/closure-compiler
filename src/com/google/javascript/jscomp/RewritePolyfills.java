@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.resources.ResourceLoader;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.LinkedHashSet;

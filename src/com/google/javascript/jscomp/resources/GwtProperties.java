@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp;
+package com.google.javascript.jscomp.resources;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
