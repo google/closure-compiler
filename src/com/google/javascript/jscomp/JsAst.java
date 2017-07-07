@@ -157,7 +157,7 @@ public class JsAst implements SourceAst {
       if (compiler.getOptions().preservesDetailedSourceInfo()) {
         compiler.addComments(sourceFile.getName(), result.comments);
       }
-      if (result.sourceMapURL != null) {
+      if (result.sourceMapURL != null && compiler.getOptions().resolveSourceMapAnnotations) {
         boolean parseInline = compiler.getOptions().parseInlineSourceMaps;
         SourceFile sourceMapSourceFile =
             SourceMapResolver.extractSourceMap(sourceFile, result.sourceMapURL, parseInline);

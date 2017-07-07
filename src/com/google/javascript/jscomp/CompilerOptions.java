@@ -1066,6 +1066,12 @@ public class CompilerOptions implements Serializable {
    */
   boolean applyInputSourceMaps = false;
 
+  /**
+   * Whether to resolve source mapping annotations. Cannot do this in an appengine or js environment
+   * since we don't have access to the filesystem.
+   */
+  boolean resolveSourceMapAnnotations = true;
+
   public List<SourceMap.LocationMapping> sourceMapLocationMappings =
       Collections.emptyList();
 
@@ -2620,6 +2626,10 @@ public class CompilerOptions implements Serializable {
 
   public void setApplyInputSourceMaps(boolean applyInputSourceMaps) {
     this.applyInputSourceMaps = applyInputSourceMaps;
+  }
+
+  public void setResolveSourceMapAnnotations(boolean resolveSourceMapAnnotations) {
+    this.resolveSourceMapAnnotations = resolveSourceMapAnnotations;
   }
 
   public void setSourceMapIncludeSourcesContent(boolean sourceMapIncludeSourcesContent) {
