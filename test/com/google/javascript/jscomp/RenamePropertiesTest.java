@@ -402,22 +402,137 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   }
 
   public void testDestructuredProperties() {
+    //TODO (simranarora) make this pass
     //using destructuring shorthand
     test("var { foo, bar } = { foo: 1, bar: 2 }",
          "var { foo:foo, bar:bar } = {   b: 1,   a: 2 }");
-          // "var{ a:foo, b:bar } = { a:1, b:2 }"
+         //"var{ a:foo, b:bar } = { a:1, b:2 }");
 
-    //without destructuring shorthand
-    test("var { foo:foo, bar:bar } = { foo:1, bar:2 }",
-         "var { foo:foo, bar:bar } = {   b: 1,   a: 2 }");
-         //"var {   a:foo,   b:bar } = {   a:1,   b:2 }");
+    // without destructuring shorthand
+    test(
+        "var { foo:foo, bar:bar } = { foo:1, bar:2 }",
+        "var { foo:foo, bar:bar } = {   b: 1,   a: 2 }");
+        //"var {   a:foo,   b:bar } = {   a:1,   b:2 }");
 
     test(
         "var foo = { bar: 1, baz: 2 }; var foo1 = foo.bar; var foo2 = foo.baz; ",
         "var foo = {   a: 1,   b: 2 }; var foo1 = foo.a;   var foo2 = foo.b;");
   }
 
+  public void testComputedPropertyNamesInObjectLit() {
+    // A restriction of this pass is that quoted and unquoted property references cannot be mixed.
+    /*testSame(
+        LINE_JOINER.join(
+            "var a = {",
+            "  ['val' + ++i]: i,",
+            "  ['val' + ++i]: i",
+            "};",
+            "a.val1;*/
+    test(
+        LINE_JOINER.join(
+            "var a = {",
+            "  ['val' + ++i]: i,",
+            "  ['val' + ++i]: i",
+            "};",
+            "a.val1;"),
+        LINE_JOINER.join(
+            "var a = {",
+            "  ['val' + ++i]: i,",
+            "  ['val' + ++i]: i",
+            "};",
+            "a.a;"));
+  }
+
+  public void testComputedMethodPropertyNamesInClass() {
+    // A restriction of this pass is that quoted and unquoted property references cannot be mixed.
+    /*testSame(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  ['f'+'oo']() {",
+            "    return 1",
+            "  }",
+            "}",
+            "var bar = new Bar()",
+            "bar.foo();"));*/
+
+    test(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  ['f'+'oo']() {",
+            "    return 1",
+            "  }",
+            "}",
+            "var bar = new Bar()",
+            "bar.foo();"),
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  ['f'+'oo']() {",
+            "    return 1",
+            "  }",
+            "}",
+            "var bar = new Bar()",
+            "bar.a();"));
+  }
+
   public void testClasses() {
+    // Call class method inside class scope - due to the scoping rules of javascript, the "getA()"
+    // call inside of getB() refers to a method getA() in the outer scope and not the getA() method
+    // inside the Bar class
+    test(
+        LINE_JOINER.join(
+            "function getA() {};",
+            "class Bar {",
+            "  constructor(){}",
+            "  getA() {",
+            "    return 1",
+            "  }",
+            "  getB(x) {",
+            "    getA();",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function getA() {};",
+            "class Bar {",
+            "  constructor(){}",
+            "  a() {",
+            "    return 1",
+            "  }",
+            "  b(x) {",
+            "    getA();",
+            "  }",
+            "}"));
+
+    // Call class method inside class scope - due to the scoping rules of javascript,
+    // the "this.getA()" call inside of getB() refers to a method getA() in the Bar class and
+    // not the getA() method in the outer scope
+    test(
+        LINE_JOINER.join(
+            "function getA() {};",
+            "class Bar {",
+            "  constructor(){}",
+            "  getA() {",
+            "    return 1",
+            "  }",
+            "  getB(x) {",
+            "    this.getA();",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function getA() {};",
+            "class Bar {",
+            "  constructor(){}",
+            "  a() {",
+            "    return 1",
+            "  }",
+            "  b(x) {",
+            "    this.a();",
+            "  }",
+            "}"));
+
+    // Call class method outside class scope
     test(
         LINE_JOINER.join(
             "class Bar {",
@@ -430,19 +545,11 @@ public final class RenamePropertiesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "class Bar {",
             "  constructor(){}",
-            "  getB(x) {}",
+            "  a(x) {}",
             "}",
             "var too;",
             "var too = new Bar();",
             "too.a(too);"));
-    /*LINE_JOINER.join(
-    "class Bar {",
-    "  constructor(){}",
-    "  a(x) {}",
-    "}",
-    "var too;",
-    "var too = new Bar();",
-    "too.a(too);"));*/
   }
 
   public void testPropertyMethodAssignment() {

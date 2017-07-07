@@ -332,6 +332,8 @@ class RenameProperties implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
+        case COMPUTED_PROP:
+          break;
         case GETPROP:
           Node propNode = n.getSecondChild();
           if (propNode.isString()) {
@@ -345,7 +347,10 @@ class RenameProperties implements CompilerPass {
           break;
         case OBJECTLIT:
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-            if (key.isQuotedString()) {
+            if (key.isComputedProp()) {
+              // We don't want to rename computed properties
+              continue;
+            } else if (key.isQuotedString()) {
               // Ensure that we never rename some other property in a way
               // that could conflict with this quoted key.
               quotedNames.add(key.getString());
@@ -378,11 +383,39 @@ class RenameProperties implements CompilerPass {
           }
           break;
         }
-        case FUNCTION: {
-          // We eliminate any stub implementations of JSCompiler_renameProperty
-          // that we encounter.
-          if (NodeUtil.isFunctionDeclaration(n)) {
-            String name = n.getFirstChild().getString();
+        case CLASS_MEMBERS:
+          {
+            // Replace function names defined in a class scope
+            for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
+              if (key.isComputedProp()) {
+                // We don't want to rename computed properties.
+                continue;
+              } else {
+                Node member = key.getFirstChild();
+
+                String memberDefName = key.getString();
+                if (member.isFunction()) {
+                  Node fnName = member.getFirstChild();
+                  if (compiler.getCodingConvention().blockRenamingForProperty(memberDefName)) {
+                    externedNames.add(fnName.getString());
+                  } else if (memberDefName.equals("constructor")
+                      || memberDefName.equals("superClass_")) {
+                    // TODO (simarora) is there a better way to identify these externs?
+                    externedNames.add(fnName.getString());
+                  } else {
+                    maybeMarkCandidate(key);
+                  }
+                }
+              }
+            }
+            break;
+          }
+        case FUNCTION:
+          {
+            // We eliminate any stub implementations of JSCompiler_renameProperty
+            // that we encounter.
+            if (NodeUtil.isFunctionDeclaration(n)) {
+              String name = n.getFirstChild().getString();
               if (NodeUtil.JSC_PROPERTY_NAME_FN.equals(name)) {
                 toRemove.add(n);
               }
@@ -404,9 +437,9 @@ class RenameProperties implements CompilerPass {
                   && exprResult.getFirstChild().isAssign()) {
                 toRemove.add(exprResult);
               }
+            }
+            break;
           }
-          break;
-        }
         default:
           break;
       }
