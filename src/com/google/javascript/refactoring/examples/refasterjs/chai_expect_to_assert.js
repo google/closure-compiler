@@ -54,3 +54,45 @@ function before_false(param) {
 function after_false(param) {
   assert.isFalse(param);
 }
+
+/**
+ * @param {?} param
+ */
+function before_null(param) {
+  expect(param).to.be.null;
+}
+
+/**
+ * @param {?} param
+ */
+function after_null(param) {
+  assert.isNull(param);
+}
+
+/**
+ * @param {?} param
+ */
+function before_undefined(param) {
+  expect(param).to.be.undefined;
+}
+
+/**
+ * @param {?} param
+ */
+function after_undefined(param) {
+  assert.isUndefined(param);
+}
+
+/**
+ * @param {?} param
+ */
+function before_ok(param) {
+  expect(param).to.be.ok;
+}
+
+/**
+ * @param {?} param
+ */
+function after_ok(param) {
+  assert.isOk(param);
+}

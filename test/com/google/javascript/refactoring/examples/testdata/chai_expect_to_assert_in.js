@@ -19,8 +19,21 @@
  * @suppress {uselessCode}
  */
 
+var someVar;
+
 /** Example test */
 function mathTest() {
   expect(1 > 0).to.be.true;
   expect(2 < 0).to.be.false;
+}
+
+/** Another example */
+function nullAndUndefinedTest() {
+  expect(false || null).to.be.null;
+  expect(someVar).to.be.undefined;
+}
+
+/** Truthiness! */
+function okTest() {
+  expect('a string').to.be.ok;
 }

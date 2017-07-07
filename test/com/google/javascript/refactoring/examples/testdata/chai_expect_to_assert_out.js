@@ -19,8 +19,21 @@
  * @suppress {uselessCode}
  */
 
+var someVar;
+
 /** Example test */
 function mathTest() {
   assert.isTrue(1 > 0);
   assert.isFalse(2 < 0);
+}
+
+/** Another example */
+function nullAndUndefinedTest() {
+  assert.isNull(false || null);
+  assert.isUndefined(someVar);
+}
+
+/** Truthiness! */
+function okTest() {
+  assert.isOk('a string');
 }
