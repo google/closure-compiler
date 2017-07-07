@@ -21,6 +21,7 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.PassFactory.HotSwapPassFactory;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 import java.util.List;
 
@@ -336,9 +337,15 @@ public class TranspilationPasses {
       AbstractCompiler compiler, Node combinedRoot, Callback... callbacks) {
     if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
       for (Node singleRoot : combinedRoot.children()) {
+        FeatureSet features = (FeatureSet) singleRoot.getProp(Node.FEATURE_SET);
         if (isScriptEs6OrHigher(singleRoot)) {
           for (Callback callback : callbacks) {
             singleRoot.putBooleanProp(Node.TRANSPILED, true);
+            NodeTraversal.traverseEs6(compiler, singleRoot, callback);
+          }
+        } else if (features != null && features.has(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION)) {
+          // We want to traverse, but not give this node the transpiled property.
+          for (Callback callback : callbacks) {
             NodeTraversal.traverseEs6(compiler, singleRoot, callback);
           }
         }
