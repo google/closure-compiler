@@ -165,6 +165,28 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         "var x; try{1;throw 1;x} finally{x=2}; x");
   }
 
+  public void testErrorHandling2() {
+    inFunction(LINE_JOINER.join(
+        "try {",
+        "} catch (e) {",
+        "  e = 1; ",
+        "  let g = e;",
+        "  print(g)",
+        "}"
+    ));
+
+    inFunction(LINE_JOINER.join(
+        "try {",
+        "} catch (e) {",
+        "    e = 1;",
+        "    {",
+        "      let g = e;",
+        "      print(g)",
+        "    }",
+        "}"
+    ));
+  }
+
   public void testDeadVarDeclarations1() {
     inFunction("var x=1; x=2; x", "var x; 1; x=2; x");
   }
@@ -703,7 +725,7 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "let x;",
             "{",
             "  let x$jscomp$1;",
-            "  x$jscomp$1 = 1;",
+            "  1;",
             "}",
             "x = 2;",
             "return x;"));
@@ -723,10 +745,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
             "x = 2;",
             "{",
             "  let x$jscomp$1;",
-            "  x$jscomp$1 = 1;",
+            "  1;",
             "}",
             "print(x);"));
   }
-
-
 }

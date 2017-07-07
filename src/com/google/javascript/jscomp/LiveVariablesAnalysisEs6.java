@@ -316,23 +316,29 @@ class LiveVariablesAnalysisEs6
   private void addToSetIfLocal(Node node, BitSet set) {
     checkState(node.isName(), node);
     String name = node.getString();
-    boolean local;
 
+    Var var = allVarsInFn.get(name);
+    if (var == null) {
+      return;
+    }
+
+    boolean local;
+    Scope localScope = var.getScope();
     // add to the local set if the variable is declared in the function or function body because
-    // ES6 separates the scope but hoists variables to the function scope
-    if (jsScope.isFunctionBlockScope()) {
-      local = jsScope.isDeclaredInFunctionBlockOrParameter(name);
-    } else if (jsScopeChild != null && jsScope.isFunctionScope()) {
+    // ES6 separates the scope but if the variable is declared in the param it should be local
+    // to the function body.
+    if (localScope.isFunctionBlockScope()) {
+      local = localScope.isDeclaredInFunctionBlockOrParameter(name);
+    } else if (jsScopeChild != null && localScope == jsScope) {
       local = jsScopeChild.isDeclaredInFunctionBlockOrParameter(name);
     } else {
-      local = jsScope.isDeclared(name, false);
+      local = localScope.isDeclared(name, false);
     }
 
     if (!local) {
       return;
     }
 
-    Var var = allVarsInFn.get(name);
 
     if (!escaped.contains(var)) {
       set.set(getVarIndex(var.getName()));
