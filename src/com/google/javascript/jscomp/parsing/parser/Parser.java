@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp.parsing.parser;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
@@ -124,7 +125,6 @@ import com.google.javascript.jscomp.parsing.parser.util.SourcePosition;
 import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 import com.google.javascript.jscomp.parsing.parser.util.Timer;
 import java.util.ArrayDeque;
-import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -1372,8 +1372,10 @@ public class Parser {
 
   private ParseTree parseType() {
     SourcePosition start = getTreeStartLocation();
-    if (!peekId() && !EnumSet.of(TokenType.VOID, TokenType.OPEN_PAREN, TokenType.OPEN_CURLY,
-          TokenType.TYPEOF).contains(peekType())) {
+    if (!peekId()
+        && !ImmutableSet.of(
+                TokenType.VOID, TokenType.OPEN_PAREN, TokenType.OPEN_CURLY, TokenType.TYPEOF)
+            .contains(peekType())) {
       reportError("Unexpected token '%s' in type expression", peekType());
       return new TypeNameTree(getTreeLocation(start), ImmutableList.of("error"));
     }
@@ -3841,12 +3843,12 @@ public class Parser {
 
   private boolean peekId(int index) {
     TokenType type = peekType(index);
-    return EnumSet.of(
-        TokenType.IDENTIFIER,
-        TokenType.TYPE,
-        TokenType.DECLARE,
-        TokenType.MODULE,
-        TokenType.NAMESPACE)
+    return ImmutableSet.of(
+                TokenType.IDENTIFIER,
+                TokenType.TYPE,
+                TokenType.DECLARE,
+                TokenType.MODULE,
+                TokenType.NAMESPACE)
             .contains(type)
         || (!inStrictContext() && Keywords.isStrictKeyword(type));
   }
@@ -3857,7 +3859,7 @@ public class Parser {
   }
 
   private boolean peekAccessibilityModifier() {
-    return EnumSet.of(TokenType.PUBLIC, TokenType.PROTECTED, TokenType.PRIVATE)
+    return ImmutableSet.of(TokenType.PUBLIC, TokenType.PROTECTED, TokenType.PRIVATE)
         .contains(peekType());
   }
 

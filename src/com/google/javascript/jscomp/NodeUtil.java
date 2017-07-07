@@ -48,7 +48,6 @@ import com.google.javascript.rhino.jstype.TernaryValue;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -2579,7 +2578,7 @@ public final class NodeUtil {
   };
 
   private static final Set<Token> DEFINITE_CFG_ROOTS =
-      EnumSet.of(Token.FUNCTION, Token.SCRIPT, Token.MODULE_BODY, Token.ROOT);
+      ImmutableSet.of(Token.FUNCTION, Token.SCRIPT, Token.MODULE_BODY, Token.ROOT);
 
   static boolean isValidCfgRoot(Node n) {
     return DEFINITE_CFG_ROOTS.contains(n.getToken());
@@ -2599,8 +2598,8 @@ public final class NodeUtil {
     }
   };
 
-  private static final Set<Token> IS_STATEMENT_PARENT =
-      EnumSet.of(
+  private static final ImmutableSet<Token> IS_STATEMENT_PARENT =
+      ImmutableSet.of(
           Token.SCRIPT,
           Token.MODULE_BODY,
           Token.BLOCK,
