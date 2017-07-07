@@ -62,11 +62,11 @@ public enum TypeMatchingStrategy {
     if (templateType.isUnknownType()) {
       // If the template type is '?', then any type is a match and this is not considered a loose
       // match.
-      return new MatchResult(true, false);
+      return MatchResult.MATCH;
     }
 
     if (type == null || type.isUnknownType() || type.isTop()) {
-      return new MatchResult(allowLooseMatches, allowLooseMatches);
+      return allowLooseMatches ? MatchResult.LOOSE_MATCH : MatchResult.NO_MATCH;
     }
 
     if (allowSubtypes) {
@@ -74,37 +74,34 @@ public enum TypeMatchingStrategy {
         type = type.restrictByNotNullOrUndefined();
       }
       if (type.isSubtypeOf(templateType)) {
-        return new MatchResult(true, false);
+        return MatchResult.MATCH;
       }
     }
 
     boolean nullableMismatch = templateType.isNullable() != type.isNullable();
     boolean voidableMismatch = templateType.isVoidable() != type.isVoidable();
     if (!ignoreNullability && (nullableMismatch || voidableMismatch)) {
-      return new MatchResult(false, false);
+      return MatchResult.NO_MATCH;
     }
 
-    return new MatchResult(type.isEquivalentTo(templateType), false);
+    return type.isEquivalentTo(templateType) ? MatchResult.MATCH : MatchResult.NO_MATCH;
   }
 
   /**
    * The result of comparing two different {@code TypeI} instances.
    */
-  public static class MatchResult {
-    private final boolean isMatch;
-    private final boolean isLooseMatch;
+  public enum MatchResult {
+    MATCH,
+    NO_MATCH,
+    LOOSE_MATCH;
 
-    public MatchResult(boolean isMatch, boolean isLooseMatch) {
-      this.isMatch = isMatch;
-      this.isLooseMatch = isLooseMatch;
-    }
 
     public boolean isMatch() {
-      return isMatch;
+      return this != NO_MATCH;
     }
 
     public boolean isLooseMatch() {
-      return isLooseMatch;
+      return this == LOOSE_MATCH;
     }
   }
 }
