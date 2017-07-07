@@ -98,6 +98,7 @@ public final class TypeMatchingStrategyTest extends TestCase {
     assertMatch(SUBTYPES, "?", "string", true, false);
     assertMatch(SUBTYPES, "?", "?", true, false);
     assertMatch(SUBTYPES, "?", "*", true, false);
+    assertMatch(SUBTYPES, "*", "?", false, false);
   }
 
   public void testMatch_exact() {
