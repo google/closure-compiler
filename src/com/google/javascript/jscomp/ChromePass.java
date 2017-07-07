@@ -453,7 +453,7 @@ public class ChromePass extends AbstractPostOrderCallback implements CompilerPas
           && this.exports.containsKey(n.getString())
           && !parent.isFunction()
           && !parent.isClass()) {
-        if (parent.isVar()) {
+        if (NodeUtil.isNameDeclaration(parent)) {
           if (parent.getParent() == this.namespaceBlock) {
             // It's a top-level exported variable definition (maybe without an
             // assignment).

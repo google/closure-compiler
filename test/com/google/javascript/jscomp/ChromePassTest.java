@@ -253,6 +253,70 @@ public class ChromePassTest extends CompilerTestCase {
             + "});");
   }
 
+  public void testCrDefineConstEnum() {
+    test(
+        LINE_JOINER.join(
+            "cr.define('foo', function() {",
+            "  /** ",
+            "   * @enum {string}",
+            "   */",
+            "  const DangerType = {",
+            "    NOT_DANGEROUS: 'NOT_DANGEROUS',",
+            "    DANGEROUS: 'DANGEROUS',",
+            "  };",
+            "",
+            "  return {",
+            "    DangerType: DangerType,",
+            "  };",
+            "});"),
+        LINE_JOINER.join(
+            "var foo = foo || {};",
+            "cr.define('foo', function() {",
+            "  /** @enum {string} */",
+            "  foo.DangerType = {",
+            "    NOT_DANGEROUS:'NOT_DANGEROUS',",
+            "    DANGEROUS:'DANGEROUS',",
+            "  };",
+            "",
+            "  return {",
+            "    DangerType: foo.DangerType",
+            "  }",
+            "})",
+            ""));
+  }
+
+  public void testCrDefineLetEnum() {
+    test(
+        LINE_JOINER.join(
+            "cr.define('foo', function() {",
+            "  /** ",
+            "   * @enum {string}",
+            "   */",
+            "  let DangerType = {",
+            "    NOT_DANGEROUS: 'NOT_DANGEROUS',",
+            "    DANGEROUS: 'DANGEROUS',",
+            "  };",
+            "",
+            "  return {",
+            "    DangerType: DangerType,",
+            "  };",
+            "});"),
+        LINE_JOINER.join(
+            "var foo = foo || {};",
+            "cr.define('foo', function() {",
+            "  /** @enum {string} */",
+            "  foo.DangerType = {",
+            "    NOT_DANGEROUS:'NOT_DANGEROUS',",
+            "    DANGEROUS:'DANGEROUS',",
+            "  };",
+            "",
+            "  return {",
+            "    DangerType: foo.DangerType",
+            "  }",
+            "})",
+            ""));
+  }
+
   public void testCrDefineWrongNumberOfArguments() throws Exception {
     testError(
         "cr.define('namespace', function() { return {}; }, 'invalid argument')\n",
