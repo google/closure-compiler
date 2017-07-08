@@ -1080,6 +1080,27 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testUnsortedAndMissingLhs() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('foo');",
+            "",
+            "goog.require('example.controller');",
+            "const Bar = goog.require('example.Bar');",
+            "",
+            "alert(example.controller.SOME_CONSTANT);",
+            "alert(Bar.doThings);"),
+        LINE_JOINER.join(
+            "goog.module('foo');",
+            "",
+            "const Bar = goog.require('example.Bar');",
+            "goog.require('example.controller');",
+            "",
+            "alert(example.controller.SOME_CONSTANT);",
+            "alert(Bar.doThings);"));
+  }
+
+  @Test
   public void testShortRequireInGoogModule1() {
     assertChanges(
         LINE_JOINER.join(
