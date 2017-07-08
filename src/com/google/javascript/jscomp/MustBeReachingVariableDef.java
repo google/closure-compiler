@@ -49,7 +49,7 @@ final class MustBeReachingVariableDef extends
   private final Set<Var> escaped;
   private final Map<String, Var> allVarsInFn;
   private final List<Var> orderedVars;
-  private final List<Scope> scopeStack;
+  private final List<Scope> scopesInFunction;
 
   MustBeReachingVariableDef(
       ControlFlowGraph<Node> cfg,
@@ -61,10 +61,10 @@ final class MustBeReachingVariableDef extends
     this.escaped = new HashSet<>();
     this.allVarsInFn = new HashMap<>();
     this.orderedVars = new LinkedList<>();
-    this.scopeStack = new LinkedList<>();
+    this.scopesInFunction = new LinkedList<>();
     computeEscapedEs6(jsScope.getParent(), escaped, compiler, scopeCreator);
     NodeUtil.getAllVarsDeclaredInFunction(
-        allVarsInFn, orderedVars, scopeStack, compiler, scopeCreator, jsScope.getParent());
+        allVarsInFn, orderedVars, scopesInFunction, compiler, scopeCreator, jsScope.getParent());
   }
 
   /**

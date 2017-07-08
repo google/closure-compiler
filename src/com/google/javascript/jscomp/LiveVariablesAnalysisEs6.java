@@ -122,7 +122,7 @@ class LiveVariablesAnalysisEs6
   private final List<Var> orderedVars;
 
   // The scopes within a given function
-  private final List<Scope> scopeStack;
+  private final List<Scope> scopesInFunction;
 
   private final Map<String, Var> allVarsInFn;
   /**
@@ -152,11 +152,11 @@ class LiveVariablesAnalysisEs6
     this.scopeVariables = new HashMap<>();
     this.allVarsInFn = new HashMap<>();
     this.orderedVars = new LinkedList<>();
-    this.scopeStack = new LinkedList<>();
+    this.scopesInFunction = new LinkedList<>();
 
     computeEscapedEs6(jsScope, escaped, compiler, scopeCreator);
     NodeUtil.getAllVarsDeclaredInFunction(
-        allVarsInFn, orderedVars, scopeStack, compiler, scopeCreator, jsScope);
+        allVarsInFn, orderedVars, scopesInFunction, compiler, scopeCreator, jsScope);
     addScopeVariables();
   }
 
@@ -185,8 +185,8 @@ class LiveVariablesAnalysisEs6
     return orderedVars;
   }
 
-  public List<Scope> getScopeStack() {
-    return scopeStack;
+  public List<Scope> getAllScopesInFunction() {
+    return scopesInFunction;
   }
 
   public int getVarIndex(String var) {

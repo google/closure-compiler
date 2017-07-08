@@ -158,7 +158,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     // We want to coalesce all the variables within a given function in one go, so we collect the
     // function scope, function block scope, and any inner scopes. We then traverse all of these
     // scopes together.
-    List<Scope> allScopes = liveness.getScopeStack();
+    List<Scope> allScopes = liveness.getAllScopesInFunction();
     Node root = allScopes.get(0).getRootNode();
     while (!allScopes.isEmpty()) {
       Scope s = allScopes.remove(0);

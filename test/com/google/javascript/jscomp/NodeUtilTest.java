@@ -2524,9 +2524,9 @@ public final class NodeUtilTest extends TestCase {
 
     Map<String, Var> allVariables = new HashMap<>();
     List<Var> orderedVars = new LinkedList<>();
-    List<Scope> scopeStack = new LinkedList<>();
+    List<Scope> scopesInFunction = new LinkedList<>();
     NodeUtil.getAllVarsDeclaredInFunction(
-        allVariables, orderedVars, scopeStack, compiler, scopeCreator, functionScope);
+        allVariables, orderedVars, scopesInFunction, compiler, scopeCreator, functionScope);
     Set<String> keySet = new HashSet<>(Arrays.asList("a", "b", "c", "z", "x", "y"));
     assertEquals(keySet, allVariables.keySet());
 
@@ -2534,7 +2534,7 @@ public final class NodeUtilTest extends TestCase {
     scopeList.add(functionScope);
     scopeList.add(functionBlockScope);
     scopeList.add(innerBlockScope);
-    assertThat(scopeStack.toString()).isEqualTo(scopeList.toString());
+    assertThat(scopesInFunction.toString()).isEqualTo(scopeList.toString());
   }
 
   public void testGetAllVars2() {
@@ -2562,9 +2562,9 @@ public final class NodeUtilTest extends TestCase {
 
     Map<String, Var> allVariables = new HashMap<>();
     List<Var> orderedVars = new LinkedList<>();
-    List<Scope> scopeStack = new LinkedList<>();
+    List<Scope> scopesInFunction = new LinkedList<>();
     NodeUtil.getAllVarsDeclaredInFunction(
-        allVariables, orderedVars, scopeStack, compiler, scopeCreator, functionScope);
+        allVariables, orderedVars, scopesInFunction, compiler, scopeCreator, functionScope);
     Set<String> keySet = new HashSet<>(Arrays.asList("x", "y", "z", "a", "b", "c"));
     assertEquals(keySet, allVariables.keySet());
 
@@ -2572,7 +2572,7 @@ public final class NodeUtilTest extends TestCase {
     scopeList.add(functionScope);
     scopeList.add(functionBlockScope);
     scopeList.add(innerBlockScope);
-    assertThat(scopeStack.toString()).isEqualTo(scopeList.toString());
+    assertThat(scopesInFunction.toString()).isEqualTo(scopeList.toString());
   }
 
   private boolean executedOnceTestCase(String code) {

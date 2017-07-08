@@ -638,9 +638,9 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
     Map<String, Var> allVarsInFn = new HashMap<>();
     List<Var> orderedVars = new LinkedList<>();
-    List<Scope> scopeStack = new LinkedList<>();
+    List<Scope> scopesInFunction = new LinkedList<>();
     NodeUtil.getAllVarsDeclaredInFunction(
-        allVarsInFn, orderedVars, scopeStack, compiler, scopeCreator, jsScope);
+        allVarsInFn, orderedVars, scopesInFunction, compiler, scopeCreator, jsScope);
     NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
     t.traverseAtScope(jsScope);
 

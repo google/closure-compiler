@@ -5102,20 +5102,20 @@ public final class NodeUtil {
    *     values being variable objects
    * @param orderedVars an empty list that gets populated with variable objects in the order that
    *     they appear in the fn
-   * @param scopeStack an empty list that gets populated with the scope objects within a given
+   * @param scopesInFunction an empty list that gets populated with the scope objects within a given
    *     function
    */
   static void getAllVarsDeclaredInFunction(
       final Map<String, Var> nameVarMap,
       final List<Var> orderedVars,
-      final List<Scope> scopeStack,
+      final List<Scope> scopesInFunction,
       AbstractCompiler compiler,
       ScopeCreator scopeCreator,
       final Scope scope) {
 
     checkState(nameVarMap.isEmpty());
     checkState(orderedVars.isEmpty());
-    checkState(scopeStack.isEmpty());
+    checkState(scopesInFunction.isEmpty());
     checkState(scope.isFunctionScope(), scope);
 
     ScopedCallback finder =
@@ -5123,7 +5123,7 @@ public final class NodeUtil {
           @Override
           public void enterScope(NodeTraversal t) {
             Scope currentScope = t.getScope();
-            scopeStack.add(currentScope);
+            scopesInFunction.add(currentScope);
             for (Var v : currentScope.getVarIterable()) {
               nameVarMap.put(v.getName(), v);
               orderedVars.add(v);
