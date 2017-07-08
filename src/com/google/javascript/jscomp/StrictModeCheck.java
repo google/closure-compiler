@@ -177,6 +177,9 @@ class StrictModeCheck extends AbstractPostOrderCallback
     for (Node key = n.getFirstChild();
          key != null;
          key = key.getNext()) {
+      if (key.isEmpty()) {
+        continue;
+      }
       String keyName = key.getString();
       if (!key.isSetterDef()) {
         // normal property and getter cases

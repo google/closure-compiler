@@ -201,12 +201,13 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
          StrictModeCheck.DUPLICATE_OBJECT_KEY);
 
     testSame(
-        "'use strict';\n" +
-        "/** @constructor */ function App() {}\n" +
-        "App.prototype = {\n" +
-        "  get appData() { return this.appData_; },\n" +
-        "  set appData(data) { this.appData_ = data; }\n" +
-        "};");
+        LINE_JOINER.join(
+            "'use strict';",
+            "/** @constructor */ function App() {}",
+            "App.prototype = {",
+            "  get appData() { return this.appData_; },",
+            "  set appData(data) { this.appData_ = data; }",
+            "};"));
 
     this.mode = TypeInferenceMode.NEITHER;
     testError("var x = {a: 2, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
@@ -325,6 +326,11 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
         "class A {",
         "  method() {arguments.caller}",
         "}"), StrictModeCheck.ARGUMENTS_CALLER_FORBIDDEN);
+  }
+
+  public void testClassWithEmptyMembers() {
+    this.mode = TypeInferenceMode.NEITHER;
+    testError("class Foo { dup() {}; dup() {}; }", StrictModeCheck.DUPLICATE_CLASS_METHODS);
   }
 
   /**
