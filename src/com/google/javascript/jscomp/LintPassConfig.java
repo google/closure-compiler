@@ -72,6 +72,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckSideEffects(
                       compiler, /* report */ true, /* protectSideEffectFreeCode */ false),
                   new CheckUnusedLabels(compiler),
+                  new CheckUnusedPrivateProperties(compiler),
                   new CheckUselessBlocks(compiler),
                   new ClosureCheckModule(compiler),
                   new Es6SuperCheck(compiler)));
