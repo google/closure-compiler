@@ -2673,7 +2673,7 @@ public final class NodeUtil {
 
   /** Whether the child node is the FINALLY block of a try. */
   static boolean isTryFinallyNode(Node parent, Node child) {
-    return parent.isTry() && parent.getChildCount() == 3
+    return parent.isTry() && parent.hasXChildren(3)
         && child == parent.getLastChild();
   }
 
@@ -3844,7 +3844,7 @@ public final class NodeUtil {
    */
   static boolean isObjectDefinePropertyDefinition(Node n) {
     return n.isCall()
-        && n.getChildCount() == 4
+        && n.hasXChildren(4)
         && n.getFirstChild().matchesQualifiedName("Object.defineProperty");
   }
 
@@ -4234,7 +4234,7 @@ public final class NodeUtil {
    */
   static boolean hasFinally(Node n) {
     checkArgument(n.isTry());
-    return n.getChildCount() == 3;
+    return n.hasXChildren(3);
   }
 
   /**
