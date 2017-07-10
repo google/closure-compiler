@@ -108,6 +108,8 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
   @Override
   public void process(Node externs, Node root) {
+    // Since block-scoped function declarations can appear in any language mode, we need to run
+    // this pass unconditionally.
     NodeTraversal.traverseEs6(compiler, root, new CollectUndeclaredNames());
     NodeTraversal.traverseEs6(compiler, root, this);
     // Needed for let / const declarations in .d.ts externs.
@@ -117,13 +119,9 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     NodeTraversal.traverseEs6(compiler, root, transformer);
     transformer.transformLoopClosure();
     varify();
-
-    // Block scoped function declarations can occur in any language mode, however for
-    // transpilation to ES3 and ES5, we want to hoist the functions from the block-scope by
-    // redeclaring them in var assignments
-    RewriteBlockScopedFunctionDeclaration rewriteFunction =
-        new RewriteBlockScopedFunctionDeclaration();
-    TranspilationPasses.processTranspile(compiler, root, rewriteFunction);
+    TranspilationPasses.processTranspile(
+        compiler, externs, new RewriteBlockScopedFunctionDeclaration());
+    NodeTraversal.traverseEs6(compiler, root, new RewriteBlockScopedFunctionDeclaration());
   }
 
   @Override

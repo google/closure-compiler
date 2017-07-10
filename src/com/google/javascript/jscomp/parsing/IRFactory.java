@@ -279,7 +279,7 @@ class IRFactory {
   private boolean currentFileIsExterns = false;
   private boolean hasJsDocTypeAnnotations = false;
 
-  private FeatureSet features = FeatureSet.BARE_MINIMUM;
+  private FeatureSet features = FeatureSet.ES3;
   private Node resultNode;
 
   private IRFactory(String sourceString,
@@ -1254,12 +1254,6 @@ class IRFactory {
 
       if (isAsync) {
         maybeWarnForFeature(functionTree, Feature.ASYNC_FUNCTIONS);
-      }
-
-      // Add a feature so that transpilation process hoists block scoped functions through
-      // var redeclaration in ES3 and ES5
-      if (isDeclaration) {
-        features = features.with(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
       }
 
       IdentifierToken name = functionTree.name;

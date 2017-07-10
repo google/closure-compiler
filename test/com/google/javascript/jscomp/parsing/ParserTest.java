@@ -82,7 +82,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
     isIdeMode = false;
-    expectedFeatures = FeatureSet.BARE_MINIMUM;
+    expectedFeatures = FeatureSet.ES3;
   }
 
   public void testExponentOperator() {
@@ -1793,18 +1793,6 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.LET_DECLARATIONS);
     parseWarning("function f() { let x = 3; };",
         getRequiresEs6Message(Feature.LET_DECLARATIONS));
-  }
-
-  // Ensure that we only add the feature for function declarations (i.e.
-  // function f() {} ) and not function expressions (e.g. var f = function() {} )
-  public void testBlockScopeFunctionDeclaration() {
-    expectFeatures(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
-    parse("if (1) { function f() {} }");
-
-    expectFeatures();
-    Node result = parse("if (1) { var f = function() {} }");
-    FeatureSet features = (FeatureSet) result.getProp(Node.FEATURE_SET);
-    assertFS(features).doesNotHave(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION);
   }
 
   public void testLetForbidden3() {
@@ -3812,7 +3800,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
 
   /** Sets expectedFeatures based on the list of features. */
   private void expectFeatures(Feature... features) {
-    expectedFeatures = FeatureSet.BARE_MINIMUM.with(features);
+    expectedFeatures = FeatureSet.ES3.with(features);
   }
 
   private static class ParserResult {
