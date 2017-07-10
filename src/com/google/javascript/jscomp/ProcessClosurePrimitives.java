@@ -230,6 +230,22 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
   }
 
+  private Node getAnyValueOfType(JSDocInfo jsdoc) {
+    checkArgument(jsdoc.hasType());
+    Node typeAst = jsdoc.getType().getRoot();
+    checkState(typeAst.isString());
+    switch (typeAst.getString()) {
+      case "boolean":
+        return IR.falseNode();
+      case "string":
+        return IR.string("");
+      case "number":
+        return IR.number(0);
+      default:
+        throw new RuntimeException(typeAst.getString());
+    }
+  }
+
   /**
    * @param n
    */
@@ -237,10 +253,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     Node parent = n.getParent();
     checkState(parent.isExprResult());
     String name = n.getSecondChild().getString();
-    Node value = n.isFromExterns() ? null : n.getChildAtIndex(2).detach();
+    JSDocInfo jsdoc = n.getJSDocInfo();
+    Node value =
+        n.isFromExterns() ? getAnyValueOfType(jsdoc).srcref(n) : n.getChildAtIndex(2).detach();
 
-    Node replacement = NodeUtil.newQNameDeclaration(
-        compiler, name, value, n.getJSDocInfo());
+    Node replacement = NodeUtil.newQNameDeclaration(compiler, name, value, jsdoc);
     replacement.useSourceInfoIfMissingFromForTree(parent);
     parent.replaceWith(replacement);
     compiler.reportChangeToEnclosingScope(replacement);
