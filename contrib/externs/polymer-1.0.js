@@ -528,6 +528,15 @@ Polymer.Base.extend = function(target, source) {};
 Polymer.Base.getPropertyInfo = function(property) {};
 
 /**
+ * Dynamically imports an HTML document.
+ * @param {string} href
+ * @param {Function=} onload
+ * @param {Function=} onerror
+ * @param {boolean=} async
+ */
+Polymer.Base.importHref = function(href, onload, onerror, async) {};
+
+/**
  * Copies props from a source object to a target object.
  *
  * Note, this method uses a simple `for...in` strategy for enumerating
@@ -671,8 +680,9 @@ PolymerElement.prototype.translate3d = function(x, y, z, node) {};
  * @param {string} href
  * @param {Function=} onload
  * @param {Function=} onerror
+ * @param {boolean=} async
  */
-PolymerElement.prototype.importHref = function(href, onload, onerror) {};
+PolymerElement.prototype.importHref = function(href, onload, onerror, async) {};
 
 /**
  * Checks whether an element is in this element's light DOM tree.
