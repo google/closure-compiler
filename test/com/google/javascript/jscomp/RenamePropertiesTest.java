@@ -552,6 +552,59 @@ public final class RenamePropertiesTest extends CompilerTestCase {
             "too.a(too);"));
   }
 
+  public void testGetSetInClass() {
+    test(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(foo){",
+            "    this.foo = foo;",
+            "  }",
+            "  get foo() {",
+            "    return this.foo;",
+            "  }",
+            "  set foo(x) {",
+            "    this.foo = x;",
+            "  }",
+            "}",
+            "var barObj = new Bar();",
+            "barObj.foo();",
+            "barObj.foo(1);"),
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(foo){",
+            "    this.a = foo;",
+            "  }",
+            "  get a() {",
+            "    return this.a;",
+            "  }",
+            "  set a(x) {",
+            "    this.a = x;",
+            "  }",
+            "}",
+            "var barObj = new Bar();",
+            "barObj.a();",
+            "barObj.a(1);"));
+  }
+
+  public void testStaticMethodInClass() {
+
+    test(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  static double(n) {",
+            "    return n*2",
+            "  }",
+            "}",
+            "Bar.double(1);"),
+        LINE_JOINER.join(
+            "class Bar {",
+            "  static a(n) {",
+            "    return n*2",
+            "  }",
+            "}",
+            "Bar.a(1);"));
+  }
+
   public void testPropertyMethodAssignment() {
     // ES5 version
     setLanguage(LanguageMode.ECMASCRIPT3, LanguageMode.ECMASCRIPT3);
