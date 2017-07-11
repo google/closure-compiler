@@ -95,30 +95,38 @@ public class GlobalTypeInfo implements TypeIRegistry {
     boolean inCompatibilityMode =
         compiler.getOptions().disables(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS);
     this.varNameGen = new UniqueNameGenerator();
-
     this.mismatches = new ArrayList<>();
     this.implicitInterfaceUses = new ArrayList<>();
-
     this.allPropertyNames.add("prototype");
     this.unknownTypeNames = unknownTypeNames;
     this.commonTypes = JSTypes.init(inCompatibilityMode);
-    class CallBack implements Function<String, Void>, Serializable {
-      @Override
-      public Void apply(String pname) {
-        allPropertyNames.add(pname);
-        externPropertyNames.add(pname);
-        return null;
-      }
-    }
-
     this.typeParser = new JSTypeCreatorFromJSDoc(
-        this.getCommonTypes(), compiler.getCodingConvention(), this.varNameGen, new CallBack());
+        this.getCommonTypes(),
+        compiler.getCodingConvention(),
+        this.varNameGen,
+        new RecordPropertyCallBack());
+  }
+
+  class RecordPropertyCallBack implements Function<Node, Void>, Serializable {
+    @Override
+    public Void apply(Node pnameNode) {
+      recordPropertyName(pnameNode);
+      return null;
+    }
   }
 
   void initGlobalTypeInfo(Node root) {
     this.globalScope = new NTIScope(root, null, ImmutableList.<String>of(), this.getCommonTypes());
     this.globalScope.addUnknownTypeNames(this.unknownTypeNames);
     this.scopes.add(this.globalScope);
+  }
+
+  void recordPropertyName(Node pnameNode) {
+    String pname = pnameNode.getString();
+    allPropertyNames.add(pname);
+    if (pnameNode.isFromExterns()) {
+      externPropertyNames.add(pname);
+    }
   }
 
   Set<String> getExternPropertyNames() {

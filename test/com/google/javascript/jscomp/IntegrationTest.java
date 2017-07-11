@@ -889,6 +889,40 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "var x = x || {}; x.f = function() {}; x.f(3);", TypeCheck.WRONG_ARGUMENT_COUNT);
   }
 
+  public void testRenamingOfTypedefPropertiesWithNTI() {
+    CompilerOptions options = new CompilerOptions();
+    options.setNewTypeInference(true);
+    options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
+
+    test(options,
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {",
+            "  this.myprop = 123;",
+            "}",
+            "/** @typedef {{myprop: number}} */",
+            "var MyType;"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {",
+            "  this.a = 123;",
+            "}",
+            "/** @typedef {{myprop: number}} */",
+            "var MyType;"));
+
+    ImmutableList.Builder<SourceFile> externsList = ImmutableList.builder();
+    externsList.addAll(externs);
+    externsList.add(
+        SourceFile.fromCode("extraExterns", "/** @typedef {{myprop: number}} */ var MyType;"));
+    externs = externsList.build();
+    testSame(options,
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {",
+            "  this.myprop = 123;",
+            "}"));
+  }
+
   public void testBothTypeCheckersRunNoDupWarning() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);

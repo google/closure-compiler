@@ -201,7 +201,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
   private final JSTypes commonTypes;
 
   // Callback passed by GlobalTypeInfo to record property names
-  private final Function<String, Void> recordPropertyName;
+  private final Function<Node, Void> recordPropertyName;
 
   // Used to communicate state between methods when resolving enum types
   private int howmanyTypeVars = 0;
@@ -212,7 +212,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
 
   public JSTypeCreatorFromJSDoc(JSTypes commonTypes,
       CodingConvention convention, UniqueNameGenerator nameGen,
-      Function<String, Void> recordPropertyName) {
+      Function<Node, Void> recordPropertyName) {
     checkNotNull(commonTypes);
     this.commonTypes = commonTypes;
     this.qmarkFunctionDeclared = new FunctionAndSlotType(
@@ -356,9 +356,8 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
       return false;
     }
     for (Node child : n.children()) {
-      if (child.getToken() == Token.VOID
-          || child.getToken() == Token.STRING
-              && (child.getString().equals("void") || child.getString().equals("undefined"))) {
+      if (child.isVoid() || child.isString()
+          && (child.getString().equals("void") || child.getString().equals("undefined"))) {
         return true;
       }
     }
@@ -377,9 +376,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
       if (propName.startsWith("'") || propName.startsWith("\"")) {
         propName = propName.substring(1, propName.length() - 1);
       }
-      if (n.isFromExterns()) {
-        this.recordPropertyName.apply(propName);
-      }
+      this.recordPropertyName.apply(propNameNode);
       JSType propType = !isPropDeclared
           ? this.commonTypes.UNKNOWN
           : getTypeFromCommentHelper(propNode.getLastChild(), registry, typeParameters);
@@ -480,7 +477,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
   public void resolveTypedef(Typedef td, DeclaredTypeRegistry registry) {
     checkState(
         td != null,
-        "getTypedef should only be " + "called when we know that the typedef is defined");
+        "getTypedef should only be called when we know that the typedef is defined");
     if (td.isResolved()) {
       return;
     }
@@ -492,6 +489,16 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
       tdType = this.commonTypes.UNKNOWN;
     } else {
       tdType = getTypeFromJSTypeExpression(texp, registry, null);
+      // If the typedef is an object-literal type, record the names of the properties.
+      if (tdType.isSingletonObj()) {
+        Node texpRoot = texp.getRoot();
+        if (texpRoot.getToken() == Token.LC) {
+          for (Node propNode : texpRoot.getFirstChild().children()) {
+            Node propNameNode = propNode.hasChildren() ? propNode.getFirstChild() : propNode;
+            this.recordPropertyName.apply(propNameNode);
+          }
+        }
+      }
     }
     td.resolveTypedef(tdType);
   }

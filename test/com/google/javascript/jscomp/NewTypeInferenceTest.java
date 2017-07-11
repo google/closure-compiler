@@ -20962,4 +20962,30 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.NULLABLE_DEREFERENCE,
         NewTypeInference.GLOBAL_THIS);
   }
+
+  public void testRegisterPropertyOfTypedef() {
+    typeCheck(LINE_JOINER.join(
+        "/** @typedef {{p1: number}} */",
+        "var MyType;",
+        "function f(x) {",
+        "  x = /** @type {MyType} */ (x);",
+        "  return x.p1;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @typedef {{p1, p2}} */",
+        "var MyType;",
+        "function f(x) {",
+        "  x = /** @type {MyType} */ (x);",
+        "  return x.p1;",
+        "}"));
+  }
+
+  public void testRegisterPropertyOfRecord() {
+    typeCheck(LINE_JOINER.join(
+        "function f(/** {myprop: number} */ x) {}",
+        "function g(x) {",
+        "  return x.myprop;",
+        "}"));
+  }
 }

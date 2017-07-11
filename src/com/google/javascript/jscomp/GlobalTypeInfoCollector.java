@@ -302,13 +302,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     this.convention = compiler.getCodingConvention();
   }
 
-  void recordPropertyName(String pname, Node defSite) {
-    getAllPropertyNames().add(pname);
-    if (defSite.isFromExterns()) {
-      getExternPropertyNames().add(pname);
-    }
-  }
-
   @Override
   public void process(Node externs, Node root) {
     checkNotNull(warnings, "Cannot rerun GlobalTypeInfoCollector.process");
@@ -1054,7 +1047,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         if (propNames.contains(pname)) {
           warnings.add(JSError.make(qnameNode, DUPLICATE_PROP_IN_ENUM, pname));
         }
-        recordPropertyName(pname, qnameNode);
+        recordPropertyName(prop);
         propNames.add(pname);
       }
       currentScope.addNamespace(qnameNode,
@@ -1443,11 +1436,11 @@ public class GlobalTypeInfoCollector implements CompilerPass {
             // on them. So, we warn even if x has foo. Then, to avoid spurious warnings,
             // we consider property tests as definition sites, otherwise we would warn
             // for code like this: function f(x) { if (x.foo) { return x.foo + 1; } }
-            recordPropertyName(n.getLastChild().getString(), n);
+            recordPropertyName(n.getLastChild());
           }
           if (n.getFirstChild().isName()
               && n.getFirstChild().getString().startsWith("$jscomp$destructuring$")) {
-            recordPropertyName(n.getLastChild().getString(), n);
+            recordPropertyName(n.getLastChild());
           }
           if (parent.isExprResult() && n.isQualifiedName()) {
             visitPropertyDeclaration(n);
@@ -1533,13 +1526,13 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       Node maybeLvalue = parent.isAssign() ? parent.getFirstChild() : parent;
       if (NodeUtil.isNamespaceDecl(maybeLvalue) && currentScope.isNamespace(maybeLvalue)) {
         for (Node prop : objLitNode.children()) {
-          recordPropertyName(prop.getString(), prop);
+          recordPropertyName(prop);
           visitNamespacePropertyDeclaration(prop, maybeLvalue, prop.getString());
         }
       } else if (!NodeUtil.isEnumDecl(maybeLvalue)
           && !NodeUtil.isPrototypeAssignment(maybeLvalue)) {
         for (Node prop : objLitNode.children()) {
-          recordPropertyName(prop.getString(), prop);
+          recordPropertyName(prop);
           JSDocInfo propJsdoc = prop.getJSDocInfo();
           if (propJsdoc != null) {
             getDeclaredObjLitProps().put(prop, getDeclaredTypeOfNode(propJsdoc, currentScope));
@@ -1568,7 +1561,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     }
 
     private void visitPropertyDeclaration(Node getProp) {
-      recordPropertyName(getProp.getLastChild().getString(), getProp);
+      recordPropertyName(getProp.getLastChild());
       // Property declaration on THIS; most commonly a class property
       if (isPropertyDeclarationOnThis(getProp, currentScope)) {
         visitPropertyDeclarationOnThis(getProp);
@@ -2761,10 +2754,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     }
   }
 
-  private Collection<String> getAllPropertyNames() {
-    return this.globalTypeInfo.getAllPropertyNames();
-  }
-
   private Map<Node, String> getAnonFunNames() {
     return this.globalTypeInfo.getAnonFunNames();
   }
@@ -2803,5 +2792,9 @@ public class GlobalTypeInfoCollector implements CompilerPass {
 
   private Map<Node, JSType> getCastTypes() {
     return this.globalTypeInfo.getCastTypes();
+  }
+
+  private void recordPropertyName(Node pnameNode) {
+    this.globalTypeInfo.recordPropertyName(pnameNode);
   }
 }
