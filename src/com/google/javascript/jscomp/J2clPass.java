@@ -235,7 +235,7 @@ public class J2clPass implements CompilerPass {
      * Re-writes Util.getDefine to make it work for compiled mode.
      */
     Set<String> defines =
-        new ProcessDefines(compiler, null, false).collectDefines(externs, root).keySet();
+        new ProcessDefines(compiler, null, true).collectDefines(externs, root).keySet();
     NodeTraversal.traverseEs6(compiler, root, new GetDefineRewriter(defines));
 
     /*

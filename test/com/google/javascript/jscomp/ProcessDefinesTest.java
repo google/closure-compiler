@@ -35,11 +35,13 @@ public final class ProcessDefinesTest extends TypeICompilerTestCase {
 
   private Map<String, Node> overrides = new HashMap<>();
   private GlobalNamespace namespace;
+  private boolean doReplacements;
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     overrides.clear();
+    doReplacements = true;
 
     // ProcessDefines emits warnings if the user tries to re-define a constant,
     // but the constant is not defined anywhere in the binary.
@@ -80,6 +82,17 @@ public final class ProcessDefinesTest extends TypeICompilerTestCase {
 
   public void testDefineBadType() {
     testError("/** @define {Object} */ var DEF = {}", ProcessDefines.INVALID_DEFINE_TYPE_ERROR);
+  }
+
+  public void testChecksOnlyProducesErrors() {
+    doReplacements = false;
+    testError("/** @define {Object} */ var DEF = {}", ProcessDefines.INVALID_DEFINE_TYPE_ERROR);
+  }
+
+  public void testChecksOnlyProducesUnknownDefineWarning() {
+    doReplacements = false;
+    overrides.put("a.B", new Node(Token.TRUE));
+    test("var a = {};", "var a = {};", warning(ProcessDefines.UNKNOWN_DEFINE_WARNING));
   }
 
   public void testDefineWithBadValue1() {
@@ -388,7 +401,7 @@ public final class ProcessDefinesTest extends TypeICompilerTestCase {
     @Override
     public void process(Node externs, Node js) {
       namespace = new GlobalNamespace(compiler, externs, js);
-      new ProcessDefines(compiler, overrides, false)
+      new ProcessDefines(compiler, overrides, doReplacements)
           .injectNamespace(namespace)
           .process(externs, js);
     }

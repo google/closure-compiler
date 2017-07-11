@@ -56,7 +56,7 @@ class ProcessDefines implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final Map<String, Node> dominantReplacements;
-  private final boolean checksOnly;
+  private final boolean doReplacements;
 
   private GlobalNamespace namespace = null;
 
@@ -98,10 +98,11 @@ class ProcessDefines implements CompilerPass {
    * @param replacements A hash table of names of defines to their replacements.
    *   All replacements <b>must</b> be literals.
    */
-  ProcessDefines(AbstractCompiler compiler, Map<String, Node> replacements, boolean checksOnly) {
+  ProcessDefines(
+      AbstractCompiler compiler, Map<String, Node> replacements, boolean doReplacements) {
     this.compiler = compiler;
     this.dominantReplacements = replacements;
-    this.checksOnly = checksOnly;
+    this.doReplacements = doReplacements;
   }
 
   /**
@@ -120,25 +121,24 @@ class ProcessDefines implements CompilerPass {
   }
 
   private void overrideDefines(Map<String, DefineInfo> allDefines) {
-    if (checksOnly) {
-      return;
-    }
-    for (Map.Entry<String, DefineInfo> def : allDefines.entrySet()) {
-      String defineName = def.getKey();
-      DefineInfo info = def.getValue();
-      Node inputValue = dominantReplacements.get(defineName);
-      Node finalValue = inputValue != null ?
-          inputValue : info.getLastValue();
-      if (finalValue != info.initialValue) {
-        compiler.addToDebugLog("Overriding @define variable " + defineName);
-        boolean changed =
-            finalValue.getToken() != info.initialValue.getToken()
-            || !finalValue.isEquivalentTo(info.initialValue);
-        if (changed) {
-          info.initialValueParent.replaceChild(
-              info.initialValue, finalValue.cloneTree());
+    if (doReplacements) {
+      for (Map.Entry<String, DefineInfo> def : allDefines.entrySet()) {
+        String defineName = def.getKey();
+        DefineInfo info = def.getValue();
+        Node inputValue = dominantReplacements.get(defineName);
+        Node finalValue = inputValue != null ?
+            inputValue : info.getLastValue();
+        if (finalValue != info.initialValue) {
+          compiler.addToDebugLog("Overriding @define variable " + defineName);
+          boolean changed =
+              finalValue.getToken() != info.initialValue.getToken()
+              || !finalValue.isEquivalentTo(info.initialValue);
           if (changed) {
-            compiler.reportChangeToEnclosingScope(info.initialValueParent);
+            info.initialValueParent.replaceChild(
+                info.initialValue, finalValue.cloneTree());
+            if (changed) {
+              compiler.reportChangeToEnclosingScope(info.initialValueParent);
+            }
           }
         }
       }
