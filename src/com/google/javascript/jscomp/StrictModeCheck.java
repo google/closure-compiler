@@ -135,9 +135,10 @@ class StrictModeCheck extends AbstractPostOrderCallback
       case LET:
       case CONST:
       case VAR:
-      case FUNCTION:
       case CATCH:
         return true;
+      case FUNCTION:
+        return n == n.getParent().getFirstChild();
 
       case PARAM_LIST:
         return n.getGrandparent().isFunction();
@@ -211,7 +212,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
   /** Checks that are performed on non-extern code only. */
   private static class NonExternChecks extends AbstractPostOrderCallback {
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
-      if ((n.isName()) && isDeclaration(n)) {
+      if (n.isName() && isDeclaration(n)) {
         checkDeclaration(t, n);
       } else if (n.isGetProp()) {
         checkGetProp(t, n);

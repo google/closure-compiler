@@ -131,6 +131,11 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
     testSame("var o = {arguments: 3};");
   }
 
+  public void testArguments6() {
+    this.mode = TypeInferenceMode.NEITHER;
+    testSame("(() => arguments)();");
+  }
+
   public void testArgumentsCallee() {
     testWarning("function foo() {arguments.callee}", StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN);
   }
