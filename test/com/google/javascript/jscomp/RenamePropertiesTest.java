@@ -416,14 +416,8 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   }
 
   public void testComputedPropertyNamesInObjectLit() {
-    // A restriction of this pass is that quoted and unquoted property references cannot be mixed.
-    /*testSame(
-        LINE_JOINER.join(
-            "var a = {",
-            "  ['val' + ++i]: i,",
-            "  ['val' + ++i]: i",
-            "};",
-            "a.val1;*/
+    // TODO (simranarora) A restriction of this pass is that quoted and unquoted property
+    // references cannot be mixed.
     test(
         LINE_JOINER.join(
             "var a = {",
@@ -433,25 +427,17 @@ public final class RenamePropertiesTest extends CompilerTestCase {
             "a.val1;"),
         LINE_JOINER.join(
             "var a = {",
-            "  ['val' + ++i]: i,",
+            "  ['val' + ++i]: i,", // don't rename here
             "  ['val' + ++i]: i",
             "};",
-            "a.a;"));
+            "a.a;")); // rename here
   }
 
   public void testComputedMethodPropertyNamesInClass() {
-    // A restriction of this pass is that quoted and unquoted property references cannot be mixed.
-    /*testSame(
-        LINE_JOINER.join(
-            "class Bar {",
-            "  constructor(){}",
-            "  ['f'+'oo']() {",
-            "    return 1",
-            "  }",
-            "}",
-            "var bar = new Bar()",
-            "bar.foo();"));*/
+    // TODO (simranarora) A restriction of this pass is that quoted and unquoted property
+    // references cannot be mixed.
 
+    // Concatination for computed property
     test(
         LINE_JOINER.join(
             "class Bar {",
@@ -465,12 +451,33 @@ public final class RenamePropertiesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "class Bar {",
             "  constructor(){}",
-            "  ['f'+'oo']() {",
+            "  ['f'+'oo']() {", //don't rename here
             "    return 1",
             "  }",
             "}",
             "var bar = new Bar()",
-            "bar.a();"));
+            "bar.a();")); //rename here
+
+    // Without property concatination
+    test(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  ['foo']() {",
+            "    return 1",
+            "  }",
+            "}",
+            "var bar = new Bar()",
+            "bar.foo();"),
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  ['foo']() {", //don't rename here
+            "    return 1",
+            "  }",
+            "}",
+            "var bar = new Bar()",
+            "bar.a();")); //rename here
   }
 
   public void testClasses() {
@@ -601,7 +608,7 @@ public final class RenamePropertiesTest extends CompilerTestCase {
             "Bar.a(1);"));
   }
 
-  public void testPropertyMethodAssignment() {
+  public void testObjectMethodProperty() {
     // ES5 version
     setLanguage(LanguageMode.ECMASCRIPT3, LanguageMode.ECMASCRIPT3);
     test(
