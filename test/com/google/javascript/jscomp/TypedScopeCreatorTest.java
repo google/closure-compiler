@@ -997,6 +997,14 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
              "goog.reflect.object(A.B, {isEnabled: 3})\n" +
              "var x = (new A.B()).isEnabled;");
 
+    // Verify that "$jscomp.reflectObject" does not modify the types on
+    // "A.B"
+    testSame(
+        "/** @constructor */ A.B = function() {}\n"
+            + "A.B.prototype.isEnabled = true;\n"
+            + "$jscomp.reflectObject(A.B, {isEnabled: 3})\n"
+            + "var x = (new A.B()).isEnabled;");
+
     assertEquals("A.B",
         findTokenType(Token.OBJECTLIT, globalScope).toString());
     assertEquals("boolean",

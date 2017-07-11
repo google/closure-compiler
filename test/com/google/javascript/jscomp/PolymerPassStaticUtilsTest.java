@@ -18,20 +18,39 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.javascript.rhino.IR;
-
 import junit.framework.TestCase;
 
 public final class PolymerPassStaticUtilsTest extends TestCase {
 
   public void testGetPolymerElementType_noNativeElement() {
-    PolymerClassDefinition def = new PolymerClassDefinition(
-        null, IR.objectlit(), null, null, null, null, null, null);
+    PolymerClassDefinition def =
+        new PolymerClassDefinition(
+            PolymerClassDefinition.DefinitionType.ObjectLiteral,
+            null,
+            null,
+            IR.objectlit(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
     assertThat(PolymerPassStaticUtils.getPolymerElementType(def)).isEqualTo("PolymerElement");
   }
 
   public void testGetPolymerElementType_inputBaseElement() {
-    PolymerClassDefinition def = new PolymerClassDefinition(
-        null, IR.objectlit(), null, null, "input", null, null, null);
+    PolymerClassDefinition def =
+        new PolymerClassDefinition(
+            PolymerClassDefinition.DefinitionType.ES6Class,
+            null,
+            null,
+            IR.objectlit(),
+            null,
+            null,
+            "input",
+            null,
+            null,
+            null);
     assertThat(PolymerPassStaticUtils.getPolymerElementType(def)).isEqualTo("PolymerInputElement");
   }
 

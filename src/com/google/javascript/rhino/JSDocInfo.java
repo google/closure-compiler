@@ -94,16 +94,21 @@ public class JSDocInfo implements Serializable {
   // Bitfield property indicies.
   static class Property {
     static final int
-      NG_INJECT = 0,
-      WIZ_ACTION = 1,
+        NG_INJECT = 0,
+        WIZ_ACTION = 1,
 
-       // Flags for Jagger dependency injection prototype
-      JAGGER_INJECT = 2,
-      JAGGER_MODULE = 3,
-      JAGGER_PROVIDE_PROMISE = 4,
-      JAGGER_PROVIDE = 5,
+        // Flags for Jagger dependency injection prototype
+        JAGGER_INJECT = 2,
+        JAGGER_MODULE = 3,
+        JAGGER_PROVIDE_PROMISE = 4,
+        JAGGER_PROVIDE = 5,
 
-      POLYMER_BEHAVIOR = 6;
+        // Polymer specific
+        POLYMER_BEHAVIOR = 6,
+        POLYMER = 7,
+        CUSTOM_ELEMENT = 8,
+        MIXIN_CLASS = 9,
+        MIXIN_FUNCTION = 10;
   }
 
   private static final class LazilyInitializedInfo implements Serializable {
@@ -1737,9 +1742,47 @@ public class JSDocInfo implements Serializable {
     info.setBit(Property.POLYMER_BEHAVIOR, polymerBehavior);
   }
 
-  /**
-   * Returns whether JSDoc is annotated with {@code @disposes} annotation.
-   */
+  /** Returns whether JSDoc is annotated with {@code @polymer} annotation. */
+  public boolean isPolymer() {
+    return (info != null) && info.isBitSet(Property.POLYMER);
+  }
+
+  void setPolymer(boolean polymer) {
+    lazyInitInfo();
+    info.setBit(Property.POLYMER, polymer);
+  }
+
+  /** Returns whether JSDoc is annotated with {@code @customElement} annotation. */
+  public boolean isCustomElement() {
+    return (info != null) && info.isBitSet(Property.CUSTOM_ELEMENT);
+  }
+
+  void setCustomElement(boolean customElement) {
+    lazyInitInfo();
+    info.setBit(Property.CUSTOM_ELEMENT, customElement);
+  }
+
+  /** Returns whether JSDoc is annotated with {@code @mixinClass} annotation. */
+  public boolean isMixinClass() {
+    return (info != null) && info.isBitSet(Property.MIXIN_CLASS);
+  }
+
+  void setMixinClass(boolean mixinClass) {
+    lazyInitInfo();
+    info.setBit(Property.MIXIN_CLASS, mixinClass);
+  }
+
+  /** Returns whether JSDoc is annotated with {@code @mixinFunction} annotation. */
+  public boolean isMixinFunction() {
+    return (info != null) && info.isBitSet(Property.MIXIN_FUNCTION);
+  }
+
+  void setMixinFunction(boolean mixinFunction) {
+    lazyInitInfo();
+    info.setBit(Property.MIXIN_FUNCTION, mixinFunction);
+  }
+
+  /** Returns whether JSDoc is annotated with {@code @disposes} annotation. */
   public boolean isDisposes() {
     return (info == null) ? false : info.disposedParameters != null;
   }

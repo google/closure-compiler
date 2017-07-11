@@ -1346,6 +1346,68 @@ public final class JSDocInfoBuilder {
     }
   }
 
+  /** Returns whether current JSDoc is annotated with {@code @polymer}. */
+  public boolean isPolymerRecorded() {
+    return currentInfo.isPolymer();
+  }
+
+  /** Records that this method is to be exposed as a polymer element. */
+  public boolean recordPolymer() {
+    if (!isPolymerRecorded()) {
+      currentInfo.setPolymer(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /** Returns whether current JSDoc is annotated with {@code @customElement}. */
+  public boolean isCustomElementRecorded() {
+    return currentInfo.isCustomElement();
+  }
+
+  /** Records that this method is to be exposed as a customElement. */
+  public boolean recordCustomElement() {
+    if (!isCustomElementRecorded()) {
+      currentInfo.setCustomElement(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }/** Returns whether current JSDoc is annotated with {@code @mixinClass}. */
+  public boolean isMixinClassRecorded() {
+    return currentInfo.isMixinClass();
+  }
+
+  /** Records that this method is to be exposed as a mixinClass. */
+  public boolean recordMixinClass() {
+    if (!isMixinClassRecorded()) {
+      currentInfo.setMixinClass(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /** Returns whether current JSDoc is annotated with {@code @mixinFunction}. */
+  public boolean isMixinFunctionRecorded() {
+    return currentInfo.isMixinFunction();
+  }
+
+  /** Records that this method is to be exposed as a mixinFunction. */
+  public boolean recordMixinFunction() {
+    if (!isMixinFunctionRecorded()) {
+      currentInfo.setMixinFunction(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   public void mergePropertyBitfieldFrom(JSDocInfo other) {
     currentInfo.mergePropertyBitfieldFrom(other);
   }

@@ -3094,7 +3094,10 @@ public final class DefaultPassConfig extends PassConfig {
       new HotSwapPassFactory("polymerPass", true) {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new PolymerPass(compiler);
+          return new PolymerPass(
+              compiler,
+              compiler.getOptions().polymerVersion,
+              compiler.getOptions().propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED);
         }
 
         @Override
