@@ -124,6 +124,13 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
             + "google_exportSymbol('testBar',testBar)");
   }
 
+  // https://github.com/google/closure-compiler/issues/2563
+  public void testFunctionExpressionsInAssignAreExported() {
+    test(
+        "testBar = function() {};",
+        "testBar = function() {}; google_exportSymbol('testBar',testBar)");
+  }
+
   public void testFunctionExpressionsByLetAreExported() {
     testSame("let Foo = function() {var testA = function() {}}");
     test(

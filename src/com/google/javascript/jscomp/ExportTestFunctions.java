@@ -31,8 +31,8 @@ public class ExportTestFunctions implements CompilerPass {
 
   private static final Pattern TEST_FUNCTIONS_NAME_PATTERN =
       Pattern.compile(
-          "^(?:((\\w+\\.)+prototype\\.||window\\.)*" +
-          "(setUpPage|setUp|shouldRunTests|tearDown|tearDownPage|test[\\w\\$]+))$");
+          "^(?:((\\w+\\.)+prototype\\.||window\\.)*"
+              + "(setUpPage|setUp|shouldRunTests|tearDown|tearDownPage|test[\\w\\$]+))$");
 
   private AbstractCompiler compiler;
   private final String exportSymbolFunction;
@@ -54,9 +54,7 @@ public class ExportTestFunctions implements CompilerPass {
     this.exportPropertyFunction = exportPropertyFunction;
   }
 
-  private class ExportTestFunctionsNodes extends
-      NodeTraversal.AbstractShallowCallback {
-
+  private class ExportTestFunctionsNodes extends NodeTraversal.AbstractShallowCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
 
@@ -81,14 +79,17 @@ public class ExportTestFunctions implements CompilerPass {
         } else if (n.isClass()) {
           exportClass(parent, n);
         }
-      } else if (NodeUtil.isExprAssign(parent) &&
-            !n.getLastChild().isAssign()) {
+      } else if (NodeUtil.isExprAssign(parent) && !n.getLastChild().isAssign()) {
         // Check for a test method assignment.
         Node grandparent = parent.getParent();
         if (grandparent != null && grandparent.isScript()) {
           String functionName = n.getFirstChild().getQualifiedName();
           if (isTestFunction(functionName)) {
-            exportTestFunctionAsProperty(functionName, parent, n, grandparent);
+            if (n.getFirstChild().isName()) {
+              exportTestFunctionAsSymbol(functionName, parent, grandparent);
+            } else {
+              exportTestFunctionAsProperty(functionName, parent, n, grandparent);
+            }
           }
         }
       } else if (n.isObjectLit()
