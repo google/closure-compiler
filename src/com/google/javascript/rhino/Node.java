@@ -2585,6 +2585,7 @@ public class Node implements Serializable {
    * method is meaningful only on {@link Token#FUNCTION}
    */
   public void setIsArrowFunction(boolean isArrow) {
+    checkState(isFunction());
     putBooleanProp(ARROW_FN, isArrow);
   }
 
@@ -2592,7 +2593,7 @@ public class Node implements Serializable {
    * Returns whether this node is a arrow function node.
    */
   public boolean isArrowFunction() {
-    return getBooleanProp(ARROW_FN);
+    return isFunction() && getBooleanProp(ARROW_FN);
   }
 
   /**
@@ -2600,6 +2601,7 @@ public class Node implements Serializable {
    * method is meaningful only on {@link Token#FUNCTION}
    */
   public void setIsAsyncFunction(boolean isAsync) {
+    checkState(isFunction());
     putBooleanProp(ASYNC_FN, isAsync);
   }
 
@@ -2607,7 +2609,7 @@ public class Node implements Serializable {
    * Returns whether this is an async function node.
    */
   public boolean isAsyncFunction() {
-    return getBooleanProp(ASYNC_FN);
+    return isFunction() && getBooleanProp(ASYNC_FN);
   }
 
   /**
