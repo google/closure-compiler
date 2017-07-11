@@ -7135,11 +7135,11 @@ CookieStore.prototype.tabIds;
 function OnClickData() {}
 
 
-/** @type {number} */
+/** @type {number|string} */
 OnClickData.prototype.menuItemId;
 
 
-/** @type {number} */
+/** @type {number|string} */
 OnClickData.prototype.parentMenuItemId;
 
 
@@ -7163,12 +7163,24 @@ OnClickData.prototype.pageUrl;
 OnClickData.prototype.frameUrl;
 
 
+/** @type {number} */
+OnClickData.prototype.frameId;
+
+
 /** @type {string} */
 OnClickData.prototype.selectionText;
 
 
-/** @type {string} */
+/** @type {boolean} */
 OnClickData.prototype.editable;
+
+
+/** @type {boolean} */
+OnClickData.prototype.wasChecked;
+
+
+/** @type {boolean} */
+OnClickData.prototype.checked;
 
 
 
