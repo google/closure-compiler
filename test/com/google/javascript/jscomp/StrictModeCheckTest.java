@@ -328,6 +328,36 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
         "}"), StrictModeCheck.ARGUMENTS_CALLER_FORBIDDEN);
   }
 
+  public void testStaticAndNonstaticMethodWithSameName() {
+    this.mode = TypeInferenceMode.NEITHER;
+    testSame(
+        LINE_JOINER.join(
+            "class Example {",
+            "  foo() {}",
+            "  static foo() {}",
+            "}"));
+  }
+
+  public void testStaticAndNonstaticGetterWithSameName() {
+    this.mode = TypeInferenceMode.NEITHER;
+    testSame(
+        LINE_JOINER.join(
+            "class Example {",
+            "  get foo() {}",
+            "  static get foo() {}",
+            "}"));
+  }
+
+  public void testStaticAndNonstaticSetterWithSameName() {
+    this.mode = TypeInferenceMode.NEITHER;
+    testSame(
+        LINE_JOINER.join(
+            "class Example {",
+            "  set foo(x) {}",
+            "  static set foo(x) {}",
+            "}"));
+  }
+
   public void testClassWithEmptyMembers() {
     this.mode = TypeInferenceMode.NEITHER;
     testError("class Foo { dup() {}; dup() {}; }", StrictModeCheck.DUPLICATE_CLASS_METHODS);

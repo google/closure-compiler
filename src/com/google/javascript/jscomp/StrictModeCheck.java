@@ -174,6 +174,8 @@ class StrictModeCheck extends AbstractPostOrderCallback
   private static void checkObjectLiteralOrClass(NodeTraversal t, Node n) {
     Set<String> getters = new HashSet<>();
     Set<String> setters = new HashSet<>();
+    Set<String> staticGetters = new HashSet<>();
+    Set<String> staticSetters = new HashSet<>();
     for (Node key = n.getFirstChild();
          key != null;
          key = key.getNext()) {
@@ -183,7 +185,8 @@ class StrictModeCheck extends AbstractPostOrderCallback
       String keyName = key.getString();
       if (!key.isSetterDef()) {
         // normal property and getter cases
-        if (!getters.add(keyName)) {
+        Set<String> set = key.isStaticMember() ? staticGetters : getters;
+        if (!set.add(keyName)) {
           if (n.isClassMembers()) {
             t.report(key, DUPLICATE_CLASS_METHODS, keyName);
           } else {
@@ -193,7 +196,8 @@ class StrictModeCheck extends AbstractPostOrderCallback
       }
       if (!key.isGetterDef()) {
         // normal property and setter cases
-        if (!setters.add(keyName)) {
+        Set<String> set = key.isStaticMember() ? staticSetters : setters;
+        if (!set.add(keyName)) {
           if (n.isClassMembers()) {
             t.report(key, DUPLICATE_CLASS_METHODS, keyName);
           } else {
