@@ -183,6 +183,24 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertTypeEquals(createUnionType(NUMBER_TYPE, STRING_TYPE), info.getTypedefType());
   }
 
+  // https://github.com/google/closure-compiler/issues/2543
+  public void testTypedefType4() {
+    JSDocInfo info = parse(LINE_JOINER.join(
+        "@typedef {{",
+        " *  boo: ?,",
+        " *  goo: ?",
+        " * }}",
+        " */"));
+    assertThat(info.hasTypedefType()).isTrue();
+
+    JSType recordType =
+        createRecordTypeBuilder()
+            .addProperty("boo", UNKNOWN_TYPE, null)
+            .addProperty("goo", UNKNOWN_TYPE, null)
+            .build();
+    assertTypeEquals(recordType, info.getTypedefType());
+  }
+
   public void testParseStringType1() {
     assertTypeEquals(STRING_TYPE, parse("@type {string}*/").getType());
   }

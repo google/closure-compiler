@@ -2074,6 +2074,7 @@ public final class JsDocInfoParser {
           || token == JsDocToken.PIPE
           || token == JsDocToken.RIGHT_ANGLE
           || token == JsDocToken.EOC
+          || token == JsDocToken.EOL
           || token == JsDocToken.EOF) {
         restoreLookAhead(token);
         return newNode(Token.QMARK);
