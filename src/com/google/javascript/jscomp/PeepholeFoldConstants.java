@@ -601,9 +601,12 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         result = IR.comma(left, right);
       }
     } else if (n.getParent().getToken() == type) {
-      if ((right.isFalse() && type == Token.OR)
-          || (right.isTrue() && type == Token.AND)) {
-        result = left;
+      TernaryValue rightValue = NodeUtil.getImpureBooleanValue(right);
+      if (!mayHaveSideEffects(right)) {
+        if ((rightValue == TernaryValue.FALSE && type == Token.OR)
+            || (rightValue == TernaryValue.TRUE && type == Token.AND)) {
+          result = left;
+        }
       }
     }
 

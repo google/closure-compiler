@@ -531,17 +531,16 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
     fold("x = foo() || true || bar()", "x = foo() || true");
     fold("x = foo() && false && bar()", "x = foo() && false");
     fold("x = foo() && 0 && bar()", "x = foo() && 0");
-    foldSame("x = foo() && 1 && bar()");
-    foldSame("x = foo() || 0 || bar()");
+    fold("x = foo() && 1 && bar()", "x = foo() && bar()");
+    fold("x = foo() || 0 || bar()", "x = foo() || bar()");
     fold("x = foo() || 1 || bar()", "x = foo() || 1");
     foldSame("x = foo() || bar() || baz()");
     foldSame("x = foo() && bar() && baz()");
 
+    fold ("0 || b()", "b()");
     fold("1 && b()", "b()");
     fold("a() && (1 && b())", "a() && b()");
-    // TODO(johnlenz): Consider folding the following to:
-    //   "(a(),1) && b();
-    foldSame("(a() && 1) && b()");
+    fold("(a() && 1) && b()", "a() && b()");
 
     // Really not foldable, because it would change the type of the
     // expression if foo() returns something truthy but not true.
