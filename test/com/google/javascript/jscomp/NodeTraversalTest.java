@@ -267,23 +267,24 @@ public final class NodeTraversalTest extends TestCase {
     );
 
     // Note the char numbers are 0-indexed but the line numbers are 1-indexed.
-    String expectedResult = ""
-        + "visit NAME a [source_file: [testcode]] @1:4\n"
-        + "visit VAR [source_file: [testcode]] @1:0\n"
-        + "visit NAME foo [source_file: [testcode]] @2:9\n"
-        + "visit PARAM_LIST [source_file: [testcode]] @2:12\n"
-        + "visit NAME b [source_file: [testcode]] @3:6\n"
-        + "visit VAR [source_file: [testcode]] @3:2\n"
-        + "visit NAME a [source_file: [testcode]] @4:6\n"
-        + "visit NAME c [source_file: [testcode]] @4:15\n"
-        + "visit VAR [source_file: [testcode]] @4:11\n"
-        + "visit BLOCK [source_file: [testcode]] @4:9\n"
-        + "visit IF [source_file: [testcode]] @4:2\n"
-        + "visit BLOCK [source_file: [testcode]] @2:15\n"
-        + "visit FUNCTION foo [source_file: [testcode]] @2:0\n"
-        + "visit SCRIPT [source_file: [testcode]] "
-        + "[input_id: InputId: [testcode]] "
-        + "[feature_set: []] @1:0\n";
+    String expectedResult =
+        ""
+            + "visit NAME a [source_file: [testcode]] @1:4\n"
+            + "visit VAR [source_file: [testcode]] @1:0\n"
+            + "visit NAME foo [source_file: [testcode]] @2:9\n"
+            + "visit PARAM_LIST [source_file: [testcode]] @2:12\n"
+            + "visit NAME b [source_file: [testcode]] @3:6\n"
+            + "visit VAR [source_file: [testcode]] @3:2\n"
+            + "visit NAME a [source_file: [testcode]] @4:6\n"
+            + "visit NAME c [source_file: [testcode]] @4:15\n"
+            + "visit VAR [source_file: [testcode]] @4:11\n"
+            + "visit BLOCK [source_file: [testcode]] @4:9\n"
+            + "visit IF [source_file: [testcode]] @4:2\n"
+            + "visit BLOCK [source_file: [testcode]] @2:15\n"
+            + "visit FUNCTION foo [source_file: [testcode]] @2:0\n"
+            + "visit SCRIPT [source_file: [testcode]] "
+            + "[input_id: InputId: [testcode]] "
+            + "[feature_set: [block function]] @1:0\n";
 
     assertEquals(expectedResult, builder.toString());
   }

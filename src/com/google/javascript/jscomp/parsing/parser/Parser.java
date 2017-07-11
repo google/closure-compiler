@@ -182,7 +182,7 @@ public class Parser {
   private final Config config;
   private final CommentRecorder commentRecorder = new CommentRecorder();
   private final ArrayDeque<FunctionFlavor> functionContextStack = new ArrayDeque<>();
-  private FeatureSet features = FeatureSet.ES3;
+  private FeatureSet features = FeatureSet.BARE_MINIMUM;
   private SourcePosition lastSourcePosition;
   @Nullable private String sourceMapURL;
 

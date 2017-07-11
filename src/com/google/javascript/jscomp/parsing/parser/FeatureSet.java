@@ -43,8 +43,11 @@ import java.util.Set;
 public final class FeatureSet implements Serializable {
   private final ImmutableSet<Feature> features;
 
-  /** The bare minimum set of features in ES3. */
-  public static final FeatureSet ES3 = new FeatureSet(ImmutableSet.<Feature>of());
+  /** The bare minimum set of features. */
+  public static final FeatureSet BARE_MINIMUM = new FeatureSet(ImmutableSet.<Feature>of());
+
+  /** Features from ES3. */
+  public static final FeatureSet ES3 = BARE_MINIMUM.with(LangVersion.ES3.features());
 
   /** Features from ES5 only. */
   public static final FeatureSet ES5 = ES3.with(LangVersion.ES5.features());
@@ -66,7 +69,12 @@ public final class FeatureSet implements Serializable {
   public static final FeatureSet TYPESCRIPT = ES8_MODULES.with(LangVersion.TYPESCRIPT.features());
 
   private enum LangVersion {
-    ES5, ES6, ES7, ES8, TYPESCRIPT;
+    ES3,
+    ES5,
+    ES6,
+    ES7,
+    ES8,
+    TYPESCRIPT;
 
     private Set<Feature> features() {
       Set<Feature> set = new HashSet<>();
@@ -81,6 +89,15 @@ public final class FeatureSet implements Serializable {
 
   /** Specific features that can be included in a FeatureSet. */
   public enum Feature {
+    // ES3 features
+    // Functions can be declared in the block scope for all ES versions. However, for ES3 and ES5,
+    // we want to hoist the functions from the block scope by redeclaring them as vars (i.e.
+    // { function f() {} } becomes { var f = function {} }. To prevent this feature from causing
+    // code to run additional transpilation passes beyond rewriting block scoped functions, we mark
+    // block scoped functions as an ES3 feature and then manually determine whether to rewrite
+    // functions inside the processTranspile method of TranspilationPasses.java
+    BLOCK_SCOPED_FUNCTION_DECLARATION("block function", LangVersion.ES3),
+
     // ES5 features
     ES3_KEYWORDS_AS_IDENTIFIERS("ES3 keywords as identifiers", LangVersion.ES5),
     GETTER("getters", LangVersion.ES5),
