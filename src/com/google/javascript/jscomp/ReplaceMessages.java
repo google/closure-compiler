@@ -16,8 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.annotations.GwtIncompatible;
-import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -316,7 +317,7 @@ final class ReplaceMessages extends JsMessageVisitor {
    */
   private static Node constructStringExprNode(
       Iterator<CharSequence> parts, Node objLitNode, Node refNode) throws MalformedException {
-    Preconditions.checkNotNull(refNode);
+    checkNotNull(refNode);
 
     CharSequence part = parts.next();
     Node partNode = null;

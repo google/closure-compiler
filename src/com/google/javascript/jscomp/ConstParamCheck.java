@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
@@ -49,12 +51,12 @@ class ConstParamCheck extends AbstractPostOrderCallback implements CompilerPass 
   private final AbstractCompiler compiler;
 
   public ConstParamCheck(AbstractCompiler compiler) {
-    this.compiler = Preconditions.checkNotNull(compiler);
+    this.compiler = checkNotNull(compiler);
   }
 
   @Override
   public void process(Node externs, Node root) {
-    Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
+    checkState(compiler.getLifeCycleStage().isNormalized());
     NodeTraversal.traverseEs6(compiler, root, this);
   }
 

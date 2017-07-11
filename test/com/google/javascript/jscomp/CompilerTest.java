@@ -18,15 +18,17 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Files;
 import com.google.debugging.sourcemap.FilePosition;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
-import com.google.javascript.jscomp.Compiler.ExternalSourceLoader;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -136,7 +138,7 @@ public final class CompilerTest extends TestCase {
     JSError[] warnings = manager.getWarnings();
     assertThat(warnings).hasLength(1);
     String error = warnings[0].toString();
-    assertThat(error).contains("Failed to load module \"missing.js\" at /gin.js");
+    assertThat(error).contains("Failed to load module \"missing\" at /gin.js");
   }
 
   private static String normalize(String path) {
@@ -158,9 +160,7 @@ public final class CompilerTest extends TestCase {
     CompilerOptions options = new CompilerOptions();
     options.inputSourceMaps = inputSourceMaps;
     Compiler compiler = new Compiler();
-    compiler.setOriginalSourcesLoader(createFileLoader(originalSources));
-    compiler.init(new ArrayList<SourceFile>(),
-         new ArrayList<SourceFile>(), options);
+    compiler.init(new ArrayList<SourceFile>(), originalSources, options);
 
     assertEquals(
         OriginalMapping.newBuilder()
@@ -170,8 +170,7 @@ public final class CompilerTest extends TestCase {
             .setIdentifier("testSymbolName")
             .build(),
         compiler.getSourceMapping(normalize("generated_js/example.js"), 3, 3));
-    assertEquals("<div ng-show='foo()'>",
-        compiler.getSourceLine(origSourceName, 1));
+    assertEquals("<div ng-show='foo()'>", compiler.getSourceLine(origSourceName, 1));
   }
 
   private SourceMapInput sourcemap(String sourceMapPath, String originalSource,
@@ -182,22 +181,119 @@ public final class CompilerTest extends TestCase {
     StringBuilder output = new StringBuilder();
     sourceMap.appendTo(output, "unused.js");
 
-    return new SourceMapInput(
-        SourceFile.fromCode(sourceMapPath, output.toString()));
+    return new SourceMapInput(SourceFile.fromCode(sourceMapPath, output.toString()));
   }
 
-  private ExternalSourceLoader createFileLoader(final List<SourceFile> sourceFiles) {
-    return new ExternalSourceLoader() {
-      @Override
-      public SourceFile loadSource(String filename) {
-        for (SourceFile file : sourceFiles) {
-          if (file.getOriginalPath().equals(filename)) {
-            return file;
-          }
-        }
-        return null;
-      }
-    };
+  private static final String SOURCE_MAP_TEST_CODE =
+      Joiner.on("\n")
+          .join(
+              "var X = (function () {",
+              "    function X(input) {",
+              "        this.y = input;",
+              "    }",
+              "    return X;",
+              "}());",
+              "console.log(new X(1));");
+
+  private static final String SOURCE_MAP =
+      "{\"version\":3,\"file\":\"foo.js\",\"sourceRoot\":\"\",\"sources\":[\"foo.ts\"],\"names\":[],\"mappings\":\"AAAA;IAGE,WAAY,KAAa;QACvB,IAAI,CAAC,CAAC,GAAG,KAAK,CAAC;IACjB,CAAC;IACH,QAAC;AAAD,CAAC,AAND,IAMC;AAED,OAAO,CAAC,GAAG,CAAC,IAAI,CAAC,CAAC,CAAC,CAAC,CAAC,CAAC\"}";
+  private static final String BASE64_ENCODED_SOURCE_MAP =
+      "data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQUFBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQyxDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==";
+
+  public void testInputSourceMapInline() throws Exception {
+    Compiler compiler = new Compiler();
+    compiler.initCompilerOptionsIfTesting();
+    String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=" + BASE64_ENCODED_SOURCE_MAP;
+    CompilerInput input = new CompilerInput(SourceFile.fromCode("tmp", code));
+    input.getAstRoot(compiler);
+    SourceMapInput inputSourceMap = compiler.inputSourceMaps.get("tmp");
+    SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
+    assertThat(sourceMap.getOriginalSources()).containsExactly("foo.ts");
+  }
+
+  public void testResolveRelativeSourceMap() throws Exception {
+    Compiler compiler = new Compiler();
+    compiler.initCompilerOptionsIfTesting();
+    File tempDir = Files.createTempDir();
+    String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=foo.js.map";
+    File jsFile = new File(tempDir, "foo.js");
+    Files.write(code, jsFile, Charsets.UTF_8);
+    File sourceMapFile = new File(tempDir, "foo.js.map");
+    Files.write(SOURCE_MAP, sourceMapFile, Charsets.UTF_8);
+
+    CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
+    input.getAstRoot(compiler);
+    // The source map is still
+    assertThat(compiler.inputSourceMaps.size()).isEqualTo(1);
+
+    for (SourceMapInput inputSourceMap : compiler.inputSourceMaps.values()) {
+      SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
+      assertThat(sourceMap.getOriginalSources()).containsExactly("foo.ts");
+    }
+  }
+
+  // Make sure that the sourcemap resolution can find a sourcemap in a relative directory.
+  public void testResolveRelativeDirSourceMap() throws Exception {
+    Compiler compiler = new Compiler();
+    compiler.initCompilerOptionsIfTesting();
+    File tempDir = Files.createTempDir();
+    File relativedir = new File(tempDir, "/relativedir");
+    relativedir.mkdir();
+    String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=relativedir/foo.js.map";
+    File jsFile = new File(tempDir, "foo.js");
+    Files.write(code, jsFile, Charsets.UTF_8);
+    File sourceMapFile = new File(relativedir, "foo.js.map");
+    Files.write(SOURCE_MAP, sourceMapFile, Charsets.UTF_8);
+
+    CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
+    input.getAstRoot(compiler);
+    // The source map is still
+    assertThat(compiler.inputSourceMaps.size()).isEqualTo(1);
+
+    for (SourceMapInput inputSourceMap : compiler.inputSourceMaps.values()) {
+      SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
+      assertThat(sourceMap.getOriginalSources()).containsExactly("foo.ts");
+    }
+  }
+
+  public void testMissingSourceMapFile() throws Exception {
+    Compiler compiler = new Compiler();
+    compiler.initCompilerOptionsIfTesting();
+    File tempDir = Files.createTempDir();
+    String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=foo-does-not-exist.js.map";
+    File jsFile = new File(tempDir, "foo2.js");
+    Files.write(code, jsFile, Charsets.UTF_8);
+
+    CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
+    input.getAstRoot(compiler);
+    assertThat(compiler.inputSourceMaps.size()).isEqualTo(1);
+
+    TestErrorManager errorManager = new TestErrorManager();
+    for (SourceMapInput inputSourceMap : compiler.inputSourceMaps.values()) {
+      SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(errorManager);
+      assertNull(sourceMap);
+    }
+
+    // WARNING: Failed to resolve input sourcemap: foo-does-not-exist.js.map
+    assertEquals(1, errorManager.getWarningCount());
+  }
+
+  public void testNoWarningMissingAbsoluteSourceMap() throws Exception {
+    TestErrorManager errorManager = new TestErrorManager();
+    Compiler compiler = new Compiler(errorManager);
+    compiler.initCompilerOptionsIfTesting();
+    File tempDir = Files.createTempDir();
+    String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=/some/missing/path/foo.js.map";
+    File jsFile = new File(tempDir, "foo.js");
+    Files.write(code, jsFile, Charsets.UTF_8);
+
+    CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
+    input.getAstRoot(compiler);
+    // The source map is still
+    assertThat(compiler.inputSourceMaps.size()).isEqualTo(0);
+
+    // No warnings for unresolved absolute paths.
+    assertEquals(0, errorManager.getWarningCount());
   }
 
   public void testApplyInputSourceMaps() throws Exception {
@@ -240,6 +336,7 @@ public final class CompilerTest extends TestCase {
     options.dependencyOptions.setMoocherDropping(true);
     options.dependencyOptions.setEntryPoints(entryPoints);
     options.setProcessCommonJSModules(true);
+    options.setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
     Compiler compiler = new Compiler();
     compiler.init(new ArrayList<SourceFile>(), inputs, options);
     compiler.parseInputs();
@@ -837,15 +934,33 @@ public final class CompilerTest extends TestCase {
    */
   private static class TestErrorManager implements ErrorManager {
     private boolean output = false;
+    private int warningCount = 0;
+    private int errorCount = 0;
 
-    @Override public void report(CheckLevel level, JSError error) {
+    @Override
+    public void report(CheckLevel level, JSError error) {
       output = true;
+      if (level == CheckLevel.WARNING) {
+        warningCount++;
+      }
+      if (level == CheckLevel.ERROR) {
+        errorCount++;
+      }
     }
 
     // Methods we don't care about
     @Override public void generateReport() {}
-    @Override public int getErrorCount() { return 0; }
-    @Override public int getWarningCount() { return 0; }
+
+    @Override
+    public int getErrorCount() {
+      return errorCount;
+    }
+
+    @Override
+    public int getWarningCount() {
+      return warningCount;
+    }
+
     @Override public JSError[] getErrors() { return null; }
     @Override public JSError[] getWarnings() { return null; }
     @Override public void setTypedPercent(double typedPercent) {}
@@ -982,11 +1097,10 @@ public final class CompilerTest extends TestCase {
 
     compiler = new Compiler(new TestErrorManager());
     compiler.options = options;
-    ByteArrayInputStream byteArrayInputStream =
-        new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
-    compiler.restoreState(byteArrayInputStream);
-    byteArrayInputStream.close();
-
+    try (ByteArrayInputStream byteArrayInputStream =
+        new ByteArrayInputStream(byteArrayOutputStream.toByteArray())) {
+      compiler.restoreState(byteArrayInputStream);
+    }
 
     compiler.performOptimizations();
     String source = compiler.toSource();
@@ -1122,15 +1236,47 @@ public final class CompilerTest extends TestCase {
     compiler.reportChangeToEnclosingScope(attachedNode);
   }
 
-  /** See TimelineTest.java for the many behavior tests that don't make sense to duplicate here. */
-  public void testGetChangedScopeNodesForPass_doesntIncludeDeleted() {
+  /**
+   * See TimelineTest.java for the many timeline behavior tests that don't make sense to duplicate
+   * here.
+   */
+  public void testGetChangesAndDeletions_baseline() {
+    Compiler compiler = new Compiler();
+
+    // In the initial state nothing has been marked changed or deleted.
+    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).isNull();
+    assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).isNull();
+  }
+
+  public void testGetChangesAndDeletions_changeReportsVisible() {
     Compiler compiler = new Compiler();
     Node function1 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
     Node function2 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
     IR.root(IR.script(function1, function2));
 
-    // In the initial state everything is attached and nothing has been marked changed.
-    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).isNull();
+    // Mark original baseline.
+    compiler.getChangedScopeNodesForPass("FunctionInliner");
+    compiler.getDeletedScopeNodesForPass("FunctionInliner");
+
+    // Mark both functions changed.
+    compiler.reportChangeToChangeScope(function1);
+    compiler.reportChangeToChangeScope(function2);
+
+    // Both function1 and function2 are seen as changed and nothing is seen as deleted.
+    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner"))
+        .containsExactly(function1, function2);
+    assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).isEmpty();
+  }
+
+  public void testGetChangesAndDeletions_deleteOverridesChange() {
+    Compiler compiler = new Compiler();
+    Node function1 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
+    Node function2 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
+    IR.root(IR.script(function1, function2));
+
+    // Mark original baseline.
+    compiler.getChangedScopeNodesForPass("FunctionInliner");
+    compiler.getDeletedScopeNodesForPass("FunctionInliner");
 
     // Mark both functions changed, then delete function2 and mark it deleted.
     compiler.reportChangeToChangeScope(function1);
@@ -1138,14 +1284,117 @@ public final class CompilerTest extends TestCase {
     function2.detach();
     compiler.reportFunctionDeleted(function2);
 
-    // Only function1 will be seen as changed, since deleting something removes it from the changed
-    // items list.
-    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner"))
-        .containsExactly(function1);
+    // Now function1 will be seen as changed and function2 will be seen as deleted, since delete
+    // overrides change.
+    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).containsExactly(function1);
+    assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).containsExactly(function2);
+  }
 
-    // Asking for changes again will now show nothing, since no changes have occurred between these
-    // consecutive "FunctionInliner" markings.
+  public void testGetChangesAndDeletions_changeDoesntOverrideDelete() {
+    Compiler compiler = new Compiler();
+    Node function1 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
+    Node function2 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
+    IR.root(IR.script(function1, function2));
+
+    // Mark original baseline.
+    compiler.getChangedScopeNodesForPass("FunctionInliner");
+    compiler.getDeletedScopeNodesForPass("FunctionInliner");
+
+    // Mark function1 changed and function2 deleted, then try to mark function2 changed.
+    compiler.reportChangeToChangeScope(function1);
+    function2.detach();
+    compiler.reportFunctionDeleted(function2);
+    compiler.reportChangeToChangeScope(function2);
+
+    // Now function1 will be seen as changed and function2 will be seen as deleted, since change
+    // does not override delete.
+    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).containsExactly(function1);
+    assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).containsExactly(function2);
+  }
+
+  public void testGetChangesAndDeletions_onlySeesChangesSinceLastRequest() {
+    Compiler compiler = new Compiler();
+    Node function1 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
+    Node function2 = IR.function(IR.name("foo"), IR.paramList(), IR.block());
+    IR.root(IR.script(function1, function2));
+
+    // Mark original baseline.
+    compiler.getChangedScopeNodesForPass("FunctionInliner");
+    compiler.getDeletedScopeNodesForPass("FunctionInliner");
+
+    // Mark function1 changed and function2 deleted.
+    compiler.reportChangeToChangeScope(function1);
+    function2.detach();
+    compiler.reportFunctionDeleted(function2);
+
+    // Verify their respective states are seen.
+    assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).containsExactly(function1);
+    assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).containsExactly(function2);
+
+    // Check states again. Should find nothing since nothing has changed since the last
+    // 'FunctionInliner' request.
     assertThat(compiler.getChangedScopeNodesForPass("FunctionInliner")).isEmpty();
+    assertThat(compiler.getDeletedScopeNodesForPass("FunctionInliner")).isEmpty();
+  }
+
+  public void testAddIndexProvider_ThenGetIndex() {
+    Compiler compiler = new Compiler();
+
+    compiler.addIndexProvider(new IndexProvider<String>() {
+      @Override
+      public String get() {
+        // Normally some shared index would be constructed/updated/returned here.
+        return "String";
+      }
+
+      @Override
+      public Class<String> getType() {
+        return String.class;
+      }});
+    compiler.addIndexProvider(new IndexProvider<Double>() {
+      @Override
+      public Double get() {
+        // Normally some shared index would be constructed/updated/returned here.
+        return Double.MAX_VALUE;
+      }
+
+      @Override
+      public Class<Double> getType() {
+        return Double.class;
+      }});
+
+    // Have registered providers.
+    assertThat(compiler.getIndex(String.class)).isEqualTo("String");
+    assertThat(compiler.getIndex(Double.class)).isEqualTo(Double.MAX_VALUE);
+
+    // Has no registered provider.
+    assertThat(compiler.getIndex(Object.class)).isNull();
+  }
+
+  public void testAddIndexProviderTwice_isException() {
+    Compiler compiler = new Compiler();
+
+    IndexProvider<String> stringIndexProvider =
+        new IndexProvider<String>() {
+          @Override
+          public String get() {
+            // Normally some shared index would be constructed/updated/returned here.
+            return "String";
+          }
+
+          @Override
+          public Class<String> getType() {
+            return String.class;
+          }
+        };
+    compiler.addIndexProvider(stringIndexProvider);
+
+    try {
+      compiler.addIndexProvider(stringIndexProvider);
+      fail("expected duplicate index addition to fail");
+    } catch (IllegalStateException e) {
+      // expected
+    }
   }
 
   private static CompilerOptions createNewFlagBasedOptions() {
@@ -1156,9 +1405,9 @@ public final class CompilerTest extends TestCase {
 
   private static byte[] serialize(Object obj) throws IOException {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    ObjectOutputStream out = new ObjectOutputStream(baos);
-    out.writeObject(obj);
-    out.close();
+    try (ObjectOutputStream out = new ObjectOutputStream(baos)) {
+      out.writeObject(obj);
+    }
     return baos.toByteArray();
   }
 

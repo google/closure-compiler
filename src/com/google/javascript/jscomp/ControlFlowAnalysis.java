@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -77,7 +80,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   private int astPositionCounter;
   private int priorityCounter;
 
-  private final boolean shouldTraverseFunctionsAndClasses;
+  private final boolean shouldTraverseFunctions;
   private final boolean edgeAnnotations;
 
   // We need to store where we started, in case we aren't doing a flow analysis
@@ -130,10 +133,10 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
    * @param shouldTraverseFunctions Whether functions should be traversed
    * @param edgeAnnotations Whether to allow edge annotations.
    */
-  ControlFlowAnalysis(AbstractCompiler compiler,
-      boolean shouldTraverseFunctionsAndClasses, boolean edgeAnnotations) {
+  ControlFlowAnalysis(
+      AbstractCompiler compiler, boolean shouldTraverseFunctions, boolean edgeAnnotations) {
     this.compiler = compiler;
-    this.shouldTraverseFunctionsAndClasses = shouldTraverseFunctionsAndClasses;
+    this.shouldTraverseFunctions = shouldTraverseFunctions;
     this.edgeAnnotations = edgeAnnotations;
   }
 
@@ -159,7 +162,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     DiGraphNode<Node, Branch> entry = cfg.getEntry();
     prioritizeFromEntryNode(entry);
 
-    if (shouldTraverseFunctionsAndClasses) {
+    if (shouldTraverseFunctions) {
       // If we're traversing inner functions, we need to rank the
       // priority of them too.
       for (DiGraphNode<Node, Branch> candidate : cfg.getDirectedGraphNodes()) {
@@ -210,12 +213,9 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
   public boolean shouldTraverse(
       NodeTraversal nodeTraversal, Node n, Node parent) {
     astPosition.put(n, astPositionCounter++);
-
     switch (n.getToken()) {
-      case CLASS:
-        return shouldTraverseFunctionsAndClasses;
       case FUNCTION:
-        if (shouldTraverseFunctionsAndClasses || n == cfg.getEntry().getValue()) {
+        if (shouldTraverseFunctions || n == cfg.getEntry().getValue()) {
           exceptionHandler.push(n);
           return true;
         }
@@ -266,6 +266,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
           return n != parent.getFirstChild();
         case FUNCTION:
           return n == parent.getLastChild();
+        case CLASS:
+          return shouldTraverseFunctions && n == parent.getLastChild();
         case CONTINUE:
         case BREAK:
         case EXPR_RESULT:
@@ -283,10 +285,12 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
            */
           if ((!NodeUtil.hasFinally(parent) && n == NodeUtil.getCatchBlock(parent))
               || NodeUtil.isTryFinallyNode(parent, n)) {
-            Preconditions.checkState(exceptionHandler.peek() == parent);
+            checkState(exceptionHandler.peek() == parent);
             exceptionHandler.pop();
           }
           break;
+        case CLASS_MEMBERS:
+        case MEMBER_FUNCTION_DEF:
         default:
           break;
       }
@@ -353,6 +357,8 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         handleWith(n);
         return;
       case LABEL:
+      case CLASS_MEMBERS:
+      case MEMBER_FUNCTION_DEF:
         return;
       default:
         handleStmt(n);
@@ -468,7 +474,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     // Look for the next CASE, skipping over DEFAULT.
     Node next = getNextSiblingOfType(node.getNext(), Token.CASE);
     if (next != null) { // Found a CASE
-      Preconditions.checkState(next.isCase());
+      checkState(next.isCase());
       createEdge(node, Branch.ON_FALSE, next);
     } else { // No more CASE found, go back and search for a DEFAULT.
       Node parent = node.getParent();
@@ -538,11 +544,11 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
 
   private void handleFunction(Node node) {
     // A block transfer control to its first child if it is not empty.
-    Preconditions.checkState(node.isFunction());
-    Preconditions.checkState(node.getChildCount() == 3);
+    checkState(node.isFunction());
+    checkState(node.getChildCount() == 3);
     createEdge(node, Branch.UNCOND,
         computeFallThrough(node.getLastChild()));
-    Preconditions.checkState(exceptionHandler.peek() == node);
+    checkState(exceptionHandler.peek() == node);
     exceptionHandler.pop();
   }
 
@@ -635,7 +641,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         }
         lastJump = cur;
       }
-      Preconditions.checkState(cur.getParent() != null, "Cannot find continue target.");
+      checkState(cur.getParent() != null, "Cannot find continue target.");
       previous = cur;
     }
     Node iter = cur;
@@ -855,7 +861,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
         if (handler.isFunction()) {
           return;
         }
-        Preconditions.checkState(handler.isTry());
+        checkState(handler.isTry());
         Node catchBlock = NodeUtil.getCatchBlock(handler);
 
         boolean lastJumpInCatchBlock = false;
@@ -1077,7 +1083,7 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
      */
     private int getPosition(DiGraphNode<Node, Branch> n) {
       Integer priority = priorities.get(n);
-      Preconditions.checkNotNull(priority);
+      checkNotNull(priority);
       return priority;
     }
   }

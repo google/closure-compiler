@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,6 +36,7 @@ public final class MultiPassTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
     enableNormalize();
     enableGatherExternProperties();
   }
@@ -51,6 +54,11 @@ public final class MultiPassTest extends CompilerTestCase {
         });
     compiler.setPhaseOptimizer(phaseopt);
     return phaseopt;
+  }
+
+  @Override
+  protected int getNumRepetitions() {
+    return 1;
   }
 
   @Override
@@ -138,6 +146,168 @@ public final class MultiPassTest extends CompilerTestCase {
     test("var x = '';", "");
   }
 
+  public void testDestructuringAndArrowFunction() {
+    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT5);
+    disableNormalize();
+    allowExternsChanges();
+
+    passes = new LinkedList<>();
+    addRenameVariablesInParamListsPass();
+    addSplitVariableDeclarationsPass();
+    addDestructuringPass();
+    addArrowFunctionPass();
+
+    test(
+        LINE_JOINER.join(
+            "var foo = (x,y) => x===y;",
+            "var f = ({key: value}) => foo('v', value);",
+            "f({key: 'v'})"),
+        LINE_JOINER.join(
+            "var foo = function(x,y) {return x===y;};",
+            "var f = function ($jscomp$destructuring$var0) {",
+            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "   var value = $jscomp$destructuring$var1.key;",
+            "   return foo('v', value);",
+            "};",
+            "f({key:'v'})"));
+
+    test(
+        LINE_JOINER.join("var x, a, b;", "x = ([a,b] = [1,2])"),
+        LINE_JOINER.join(
+            "var x, a, b;",
+            "x = function () {",
+            "   let $jscomp$destructuring$var0 = [1,2];",
+            "   var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
+            "   a = $jscomp$destructuring$var1.next().value;",
+            "   b = $jscomp$destructuring$var1.next().value;",
+            "   return $jscomp$destructuring$var0;",
+            "} ();"));
+
+    test(
+        LINE_JOINER.join("var x, a, b;", "x = (() => {console.log(); return [a,b] = [1,2];})()"),
+        LINE_JOINER.join(
+            "var x, a, b;",
+            "x = function () {",
+            "   console.log();",
+            "   return function () {",
+            "       let $jscomp$destructuring$var0 = [1,2];",
+            "       var $jscomp$destructuring$var1 = ",
+            "$jscomp.makeIterator($jscomp$destructuring$var0);",
+            "       a = $jscomp$destructuring$var1.next().value;",
+            "       b = $jscomp$destructuring$var1.next().value;",
+            "       return $jscomp$destructuring$var0;",
+            "       } ();",
+            "} ();"));
+
+    test(
+        LINE_JOINER.join(
+            "var foo = function () {", "var x, a, b;", "x = ([a,b] = [1,2]);", "}", "foo();"),
+        LINE_JOINER.join(
+            "var foo = function () {",
+            "var x, a, b;",
+            " x = function () {",
+            "   let $jscomp$destructuring$var0 = [1,2];",
+            "   var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
+            "   a = $jscomp$destructuring$var1.next().value;",
+            "   b = $jscomp$destructuring$var1.next().value;",
+            "   return $jscomp$destructuring$var0;",
+            " } ();",
+            "}",
+            "foo();"));
+
+    test(
+        LINE_JOINER.join("var prefix;", "for (;;[, prefix] = /\\.?([^.]+)$/.exec(prefix)){", "}"),
+        LINE_JOINER.join(
+            "var prefix;",
+            "for (;;function () {",
+            "   let $jscomp$destructuring$var0 = /\\.?([^.]+)$/.exec(prefix)",
+            "   var $jscomp$destructuring$var1 = ",
+            "$jscomp.makeIterator($jscomp$destructuring$var0);",
+            "   $jscomp$destructuring$var1.next();",
+            "   prefix = $jscomp$destructuring$var1.next().value;",
+            "   return $jscomp$destructuring$var0;",
+            " }()){",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "var prefix;",
+            "for (;;[, prefix] = /\\.?([^.]+)$/.exec(prefix)){",
+            "   console.log(prefix);",
+            "}"),
+        LINE_JOINER.join(
+            "var prefix;",
+            "for (;;function () {",
+            "   let $jscomp$destructuring$var0 = /\\.?([^.]+)$/.exec(prefix)",
+            "   var $jscomp$destructuring$var1 = ",
+            "$jscomp.makeIterator($jscomp$destructuring$var0);",
+            "   $jscomp$destructuring$var1.next();",
+            "   prefix = $jscomp$destructuring$var1.next().value;",
+            "   return $jscomp$destructuring$var0;",
+            " } ()){",
+            " console.log(prefix);",
+            "}"));
+
+    test(
+        LINE_JOINER.join("for (var x = 1; x < 3; [x,] = [3,4]){", "   console.log(x);", "}"),
+        LINE_JOINER.join(
+            "for (var x = 1; x < 3; function () {",
+            "   let $jscomp$destructuring$var0 = [3,4]",
+            "   var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
+            "   x = $jscomp$destructuring$var1.next().value;",
+            "   return $jscomp$destructuring$var0;",
+            " } ()){",
+            "console.log(x);",
+            "}"));
+
+    test(
+        "var x = ({a: b, c: d} = foo());",
+        LINE_JOINER.join(
+            "var x = function () {",
+            "   let $jscomp$destructuring$var0 = foo();",
+            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "   b = $jscomp$destructuring$var1.a;",
+            "   d = $jscomp$destructuring$var1.c;",
+            "   return $jscomp$destructuring$var0;",
+            "} ();"));
+
+    test(
+        "var x = ({a: b, c: d} = foo());",
+        LINE_JOINER.join(
+            "var x = function () {",
+            "   let $jscomp$destructuring$var0 = foo();",
+            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "   b = $jscomp$destructuring$var1.a;",
+            "   d = $jscomp$destructuring$var1.c;",
+            "   return $jscomp$destructuring$var0;",
+            "} ();"));
+
+    test(
+        "var x; var y = ({a: x} = foo());",
+        LINE_JOINER.join(
+            "var x;",
+            "var y = function () {",
+            "   let $jscomp$destructuring$var0 = foo();",
+            "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "   x = $jscomp$destructuring$var1.a;",
+            "   return $jscomp$destructuring$var0;",
+            "} ();"));
+
+    test(
+        "var x; var y = (() => {return {a,b} = foo();})();",
+        LINE_JOINER.join(
+            "var x;",
+            "var y = function () {",
+            "   return function () {",
+            "       let $jscomp$destructuring$var0 = foo();",
+            "       var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
+            "       a = $jscomp$destructuring$var1.a;",
+            "       b = $jscomp$destructuring$var1.b;",
+            "       return $jscomp$destructuring$var0;",
+            "   } ();",
+            "} ();"));
+  }
+
   private void addCollapseObjectLiterals() {
     passes.add(
         new PassFactory("collapseObjectLiterals", false) {
@@ -154,7 +324,7 @@ public final class MultiPassTest extends CompilerTestCase {
         new PassFactory("removeUnreachableCode", false) {
           @Override
           protected CompilerPass create(AbstractCompiler compiler) {
-            return new UnreachableCodeElimination(compiler, true);
+            return new UnreachableCodeElimination(compiler);
           }
         });
   }
@@ -235,5 +405,70 @@ public final class MultiPassTest extends CompilerTestCase {
             };
           }
         });
+  }
+
+  private void addDestructuringPass() {
+    passes.add(
+        new PassFactory("destructuringPass", true) {
+          @Override
+          protected CompilerPass create(final AbstractCompiler compiler) {
+            return new Es6RewriteDestructuring(compiler);
+          }
+
+          @Override
+          protected FeatureSet featureSet() {
+            return FeatureSet.ES8_MODULES;
+          }
+        });
+  }
+
+  private void addArrowFunctionPass() {
+    passes.add(
+        new PassFactory("arrowFunctionPass", true) {
+          @Override
+          protected CompilerPass create(final AbstractCompiler compiler) {
+            return new Es6RewriteArrowFunction(compiler);
+          }
+
+          @Override
+          protected FeatureSet featureSet() {
+            return FeatureSet.ES8_MODULES;
+          }
+        });
+  }
+
+  private void addSplitVariableDeclarationsPass() {
+    passes.add(
+        new PassFactory("splitVariableDeclarationsPass", true) {
+          @Override
+          protected CompilerPass create(final AbstractCompiler compiler) {
+            return new Es6SplitVariableDeclarations(compiler);
+          }
+
+          @Override
+          protected FeatureSet featureSet() {
+            return FeatureSet.ES8_MODULES;
+          }
+        });
+  }
+
+  private void addRenameVariablesInParamListsPass() {
+    passes.add(
+        new PassFactory("renameVariablesInParamListsPass", true) {
+          @Override
+          protected CompilerPass create(final AbstractCompiler compiler) {
+            return new Es6RenameVariablesInParamLists(compiler);
+          }
+
+          @Override
+          protected FeatureSet featureSet() {
+            return FeatureSet.ES8_MODULES;
+          }
+        });
+  }
+
+  @Override
+  protected Compiler createCompiler() {
+    return new NoninjectingCompiler();
   }
 }

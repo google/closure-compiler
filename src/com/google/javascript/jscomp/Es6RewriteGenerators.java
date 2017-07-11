@@ -15,10 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.makeIterator;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.IR;
@@ -88,7 +89,7 @@ public final class Es6RewriteGenerators
   private boolean hasTranslatedTry;
 
   public Es6RewriteGenerators(AbstractCompiler compiler) {
-    Preconditions.checkNotNull(compiler);
+    checkNotNull(compiler);
     this.compiler = compiler;
     this.currentLoopContext = new ArrayList<>();
     this.currentExceptionContext = new ArrayList<>();
@@ -469,7 +470,7 @@ public final class Es6RewriteGenerators
   }
 
   private void visitContinue() {
-    Preconditions.checkState(currentLoopContext.get(0).continueCase != -1);
+    checkState(currentLoopContext.get(0).continueCase != -1);
     int continueCase;
     if (currentStatement.hasChildren()) {
       continueCase = getLoopContext(currentStatement.removeFirstChild().getString()).continueCase;
@@ -775,7 +776,7 @@ public final class Es6RewriteGenerators
       incr = currentStatement.removeFirstChild();
       body = currentStatement.removeFirstChild();
     } else {
-      Preconditions.checkState(currentStatement.isDo());
+      checkState(currentStatement.isDo());
       initializer = IR.empty();
       incr = IR.assign(IR.name(GENERATOR_DO_WHILE_INITIAL), IR.falseNode());
 
@@ -916,7 +917,7 @@ public final class Es6RewriteGenerators
   private Node getUnique(Node node, Token type) {
     List<Node> matches = new ArrayList<>();
     insertAll(node, type, matches);
-    Preconditions.checkState(matches.size() == 1, matches);
+    checkState(matches.size() == 1, matches);
     return matches.get(0);
   }
 

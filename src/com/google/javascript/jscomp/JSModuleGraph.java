@@ -16,11 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedListMultimap;
@@ -443,7 +443,7 @@ public final class JSModuleGraph implements Serializable {
         LinkedListMultimap.create();
     for (CompilerInput input : entryPointInputs) {
       JSModule module = input.getModule();
-      Preconditions.checkNotNull(module);
+      checkNotNull(module);
       entryPointInputsPerModule.put(module, input);
     }
 

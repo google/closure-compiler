@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 The Closure Compiler Authors.
+ * Copyright 2017 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,32 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview A module which references a type from another module,
- *     without importing it.
- */
+goog.require('goog.testing.jsunit');
 
-/**
- * @param {./exportClass.Parent} parent
- */
-export default function(parent) {
-  return parent.constructor.staticFunction();
+// Make 'prototype' an enumerable property of functions.
+Function.prototype.prototype = {};
+
+var Base = class {
+  /** @return {string} */
+  toString() {
+    return 'base';
+  }
+};
+
+var Sub = class extends Base {
+  /** @override */
+  toString() {
+    return 'sub';
+  }
+};
+
+function testBaseClass() {
+  var b = new Base();
+  assertEquals('base', b.toString());
+}
+
+
+function testSubclass() {
+  var s = new Sub();
+  assertEquals('sub', s.toString());
 }

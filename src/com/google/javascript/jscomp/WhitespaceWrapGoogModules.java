@@ -15,7 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -35,7 +36,7 @@ public class WhitespaceWrapGoogModules implements HotSwapCompilerPass {
   @Override
   public void process(Node externs, Node root) {
     for (Node c = root.getFirstChild(); c != null; c = c.getNext()) {
-      Preconditions.checkState(c.isScript());
+      checkState(c.isScript());
       hotSwapScript(c, null);
     }
   }

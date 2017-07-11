@@ -17,12 +17,12 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import junit.framework.TestCase;
 
 /**
@@ -208,10 +208,10 @@ public final class FunctionToBlockMutatorTest extends TestCase {
     final FunctionToBlockMutator mutator = new FunctionToBlockMutator(
         compiler, compiler.getUniqueNameIdSupplier());
     Node expectedRoot = parse(compiler, expectedResult);
-    Preconditions.checkState(compiler.getErrorCount() == 0);
+    checkState(compiler.getErrorCount() == 0);
     final Node expected = expectedRoot.getFirstChild();
     final Node tree = parse(compiler, code);
-    Preconditions.checkState(compiler.getErrorCount() == 0);
+    checkState(compiler.getErrorCount() == 0);
 
     Node externsRoot = new Node(Token.EMPTY);
     Node mainRoot = tree;

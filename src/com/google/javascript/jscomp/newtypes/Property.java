@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.Node;
 import java.io.Serializable;
@@ -49,7 +50,7 @@ class Property implements Serializable {
   private final Attribute attribute;
 
   private Property(Node defSite, JSType inferredType, JSType declaredType, Attribute attribute) {
-    Preconditions.checkArgument(inferredType != null);
+    checkArgument(inferredType != null);
     this.defSite = defSite;
     this.inferredType = inferredType;
     this.declaredType = declaredType;
@@ -241,7 +242,7 @@ class Property implements Serializable {
     if (this == o) {
       return true;
     }
-    Preconditions.checkArgument(o instanceof Property);
+    checkArgument(o instanceof Property);
     Property p2 = (Property) o;
     return inferredType.equals(p2.inferredType) &&
         attribute == p2.attribute;

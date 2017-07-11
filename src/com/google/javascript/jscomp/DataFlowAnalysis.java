@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -32,6 +34,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import javax.annotation.Nullable;
 
 /**
  * A framework to help writing static program analysis. A subclass of
@@ -338,8 +341,8 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
      * @param outState Output.
      */
     private FlowState(L inState, L outState) {
-      Preconditions.checkNotNull(inState);
-      Preconditions.checkNotNull(outState);
+      checkNotNull(inState);
+      checkNotNull(outState);
       this.in = inState;
       this.out = outState;
     }
@@ -349,7 +352,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     }
 
     void setIn(L in) {
-      Preconditions.checkNotNull(in);
+      checkNotNull(in);
       this.in = in;
     }
 
@@ -358,7 +361,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     }
 
     void setOut(L out) {
-      Preconditions.checkNotNull(out);
+      checkNotNull(out);
       this.out = out;
     }
 
@@ -454,7 +457,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       BranchedFlowState<L> state = node.getAnnotation();
       List<L> outBefore = state.out;
       state.out = branchedFlowThrough(node.getValue(), state.in);
-      Preconditions.checkState(outBefore.size() == state.out.size());
+      checkState(outBefore.size() == state.out.size());
       for (int i = 0; i < outBefore.size(); i++) {
         if (!outBefore.get(i).equals(state.out.get(i))) {
           return true;
@@ -503,8 +506,8 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
      * @param outState Output.
      */
     private BranchedFlowState(L inState, List<L> outState) {
-      Preconditions.checkNotNull(inState);
-      Preconditions.checkNotNull(outState);
+      checkNotNull(inState);
+      checkNotNull(outState);
       this.in = inState;
       this.out = outState;
     }
@@ -514,7 +517,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     }
 
     void setIn(L in) {
-      Preconditions.checkNotNull(in);
+      checkNotNull(in);
       this.in = in;
     }
 
@@ -559,6 +562,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       AbstractCompiler compiler,
       ScopeCreator scopeCreator) {
     // TODO(user): Very good place to store this information somewhere.
+
     AbstractPostOrderCallback finder = new AbstractPostOrderCallback() {
       @Override
       public void visit(NodeTraversal t, Node n, Node parent) {
@@ -583,6 +587,65 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       if (var.getParentNode().isCatch() ||
           compiler.getCodingConvention().isExported(var.getName())) {
         escaped.add(var);
+      }
+    }
+  }
+
+  /**
+   * Alternate implementation of compute escaped that accepts the child scope and the current
+   * jsScope to help us access both the function and function body scopes.
+   *
+   * @param jsScopeChild If jsScope is a function scope, jsScopeChild is the scope for the body of
+   *     that function. If not, jsScopeChild is null.
+   */
+  static void computeEscaped(
+      final Scope jsScope,
+      @Nullable final Scope jsScopeChild,
+      final Set<Var> escaped,
+      AbstractCompiler compiler,
+      Es6SyntacticScopeCreator scopeCreator) {
+
+    AbstractPostOrderCallback finder =
+        new AbstractPostOrderCallback() {
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+
+            Node enclosingBlock = NodeUtil.getEnclosingScopeRoot(n);
+            if (jsScope.isFunctionScope()) {
+              enclosingBlock = NodeUtil.getEnclosingFunction(n);
+            }
+            if (jsScope.getRootNode() == enclosingBlock || !n.isName() || parent.isFunction()) {
+              return;
+            }
+
+            String name = n.getString();
+            Var var = t.getScope().getVar(name);
+            if (var != null) {
+              Node enclosingScopeNode = NodeUtil.getEnclosingScopeRoot(var.getNode());
+              if (jsScope.isFunctionScope()) {
+                enclosingScopeNode = NodeUtil.getEnclosingFunction(var.getNode());
+              }
+              if (enclosingScopeNode == jsScope.getRootNode()) {
+                escaped.add(var);
+              }
+            }
+          }
+        };
+
+    NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
+    t.traverseAtScope(jsScope);
+
+    for (Var var : jsScope.getVarIterable()) {
+      if (compiler.getCodingConvention().isExported(var.getName())) {
+        escaped.add(var);
+      }
+    }
+
+    if (jsScopeChild != null) {
+      for (Var var : jsScopeChild.getVarIterable()) {
+        if (compiler.getCodingConvention().isExported(var.getName())) {
+          escaped.add(var);
+        }
       }
     }
   }

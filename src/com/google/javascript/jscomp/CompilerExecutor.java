@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.throwIfUnchecked;
 
-import com.google.common.base.Preconditions;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -75,7 +75,7 @@ final class CompilerExecutor {
     T result = null;
     final Throwable[] exception = new Throwable[1];
 
-    Preconditions.checkState(
+    checkState(
         compilerThread == null || compilerThread == Thread.currentThread(),
         "Please do not share the Compiler across threads");
 

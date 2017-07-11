@@ -15,7 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -41,7 +42,7 @@ class Es6TemplateLiterals {
       n.replaceWith(IR.string("\"\""));
     } else {
       Node first = n.removeFirstChild();
-      Preconditions.checkState(first.isString());
+      checkState(first.isString());
       if (length == 1) {
         n.replaceWith(first);
       } else {

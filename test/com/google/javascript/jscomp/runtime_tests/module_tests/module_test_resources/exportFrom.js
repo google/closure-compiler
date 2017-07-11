@@ -20,7 +20,7 @@ var alpha = 'a';
 var beta = 'b';
 var gamma = 'c';
 
-export {alpha, beta as gamma} from './simpleExport';
+export {alpha, beta as gamma} from './simpleExport.js';
 
 function testVarsNotAddedToThisScope() {
   assertEquals('a', alpha);

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.GlobalNamespace.AstChange;
@@ -75,14 +77,14 @@ class AggressiveInlineAliases implements CompilerPass {
             if (gparent.isAssign()) {
               target = gparent.getFirstChild();
             } else {
-              Preconditions.checkState(NodeUtil.isObjectLitKey(gparent));
+              checkState(NodeUtil.isObjectLitKey(gparent));
               target = gparent;
             }
           } else {
             throw new IllegalStateException("unexpected: " + target);
           }
         }
-        Preconditions.checkState(target.isGetProp() || target.isName());
+        checkState(target.isGetProp() || target.isName());
         Node newValue = value.cloneTree();
         target.replaceWith(newValue);
         compiler.reportChangeToEnclosingScope(newValue);

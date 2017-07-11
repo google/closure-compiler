@@ -101,7 +101,7 @@ public final class TranspileResult {
   @Override
   public String toString() {
     return String.format(
-        "TranspileResut{path=%s, original=%s, transpiled=%s, sourceMap=%s}",
+        "TranspileResut{path=%s, original=%s, transpiled=%s, sourceMapURL=%s}",
         path, original, transpiled, sourceMap);
   }
 }

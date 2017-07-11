@@ -16,13 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.javascript.jscomp.TypeCheck.BAD_IMPLEMENTED_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.FUNCTION_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableList;
@@ -222,7 +223,7 @@ final class FunctionTypeBuilder {
    */
   FunctionTypeBuilder(String fnName, AbstractCompiler compiler,
       Node errorRoot, TypedScope scope) {
-    Preconditions.checkNotNull(errorRoot);
+    checkNotNull(errorRoot);
 
     this.fnName = nullToEmpty(fnName);
     this.codingConvention = compiler.getCodingConvention();
@@ -871,22 +872,21 @@ final class FunctionTypeBuilder {
    * @return true if objectType is resolvable in the future
    */
   private static boolean hasMoreTagsToResolve(ObjectType objectType) {
-    Preconditions.checkArgument(objectType.isUnknownType());
+    checkArgument(objectType.isUnknownType());
+    FunctionType ctor = objectType.getConstructor();
+    if (ctor != null) {
+      // interface extends interfaces
+      for (ObjectType interfaceType : ctor.getExtendedInterfaces()) {
+        if (!interfaceType.isResolved()) {
+          return true;
+        }
+      }
+    }
     if (objectType.getImplicitPrototype() != null) {
       // constructor extends class
       return !objectType.getImplicitPrototype().isResolved();
-    } else {
-      // interface extends interfaces
-      FunctionType ctor = objectType.getConstructor();
-      if (ctor != null) {
-        for (ObjectType interfaceType : ctor.getExtendedInterfaces()) {
-          if (!interfaceType.isResolved()) {
-            return true;
-          }
-        }
-      }
-      return false;
     }
+    return false;
   }
 
   /** Holds data dynamically inferred about functions. */

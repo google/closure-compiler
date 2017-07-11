@@ -485,9 +485,9 @@ public final class NormalizeTest extends CompilerTestCase {
 
     testSame("function f({x: x}) { x; }");
 
-    testSame("function f({x}) { x; }");
+    test("function f({x}) { x; }", "function f({x: x}) { x; }");
 
-    testSame("function f({y: {x}}) { x; }");
+    test("function f({y: {x}}) { x; }", "function f({y: {x: x}}) { x; }");
   }
 
   public void testRemoveDuplicateVarDeclarations1() {
@@ -854,5 +854,37 @@ public final class NormalizeTest extends CompilerTestCase {
             "  var x = () => { return 1; };",
             "  return x();",
             "}"));
+  }
+
+  public void testES6ShorthandPropertySyntax01() {
+    test("obj = {x, y};", "obj = {x: x, y: y}");
+  }
+
+  public void testES6ShorthandPropertySyntax02() {
+    test("var foo = {x, y};", "var foo = {x: x, y: y}");
+  }
+
+  public void testES6ShorthandPropertySyntax03() {
+    test(
+        LINE_JOINER.join(
+            "function foo(a, b, c) {",
+            "  return {",
+            "    a,",
+            "    b,",
+            "    c",
+            "  };",
+            "}"),
+        LINE_JOINER.join(
+            "function foo(a, b, c) {",
+            "  return {",
+            "    a: a,",
+            "    b: b,",
+            "    c: c",
+            "  };",
+            "}"));
+  }
+
+  public void testES6ShorthandPropertySyntax04() {
+    test("var foo = {x};", "var foo = {x: x}");
   }
 }

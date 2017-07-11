@@ -16,6 +16,8 @@
 
 package com.google.debugging.sourcemap;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.debugging.sourcemap.Base64VLQ.CharIterator;
@@ -159,9 +161,8 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
       return null;
     }
 
-    Preconditions.checkState(lineNumber >= 0);
-    Preconditions.checkState(column >= 0);
-
+    checkState(lineNumber >= 0);
+    checkState(column >= 0);
 
     // If the line is empty return the previous mapping.
     if (lines.get(lineNumber) == null) {
@@ -170,7 +171,7 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
 
     ArrayList<Entry> entries = lines.get(lineNumber);
     // No empty lists.
-    Preconditions.checkState(!entries.isEmpty());
+    checkState(!entries.isEmpty());
     if (entries.get(0).getGeneratedColumn() > column) {
       return getPreviousMapping(lineNumber);
     }
@@ -296,10 +297,8 @@ public final class SourceMapConsumerV3 implements SourceMapConsumer,
     private void validateEntry(Entry entry) {
       Preconditions.checkState((lineCount < 0) || (line < lineCount),
           "line=%s, lineCount=%s", line, lineCount);
-      Preconditions.checkState(entry.getSourceFileId() == UNMAPPED
-          || entry.getSourceFileId() < sources.length);
-      Preconditions.checkState(entry.getNameId() == UNMAPPED
-          || entry.getNameId() < names.length);
+      checkState(entry.getSourceFileId() == UNMAPPED || entry.getSourceFileId() < sources.length);
+      checkState(entry.getNameId() == UNMAPPED || entry.getNameId() < names.length);
     }
 
     /**

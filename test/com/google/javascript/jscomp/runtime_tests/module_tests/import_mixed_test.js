@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import defaultStr, * as mod from './module_test_resources/exportDefault';
-import defaultStr, {nonDefaultExport} from './module_test_resources/exportDefault';
+import defaultStr, * as mod from './module_test_resources/exportDefault.js';
+import defaultStr, {nonDefaultExport} from './module_test_resources/exportDefault.js';
 
 function testImportMixed() {
   assertEquals('this is the default export', defaultStr);

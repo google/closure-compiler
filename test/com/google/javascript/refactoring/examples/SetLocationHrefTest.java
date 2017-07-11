@@ -35,7 +35,7 @@ public class SetLocationHrefTest {
   /** The RefasterJs template to use. */
   private static final String SET_LOCATION_HREF_TEMPLATE =
       "src/" +
-      "com/google/javascript/refactoring/examples/set_location_href.js";
+      "com/google/javascript/refactoring/examples/refasterjs/set_location_href.js";
 
   @Test
   public void test_refactorings() throws Exception {

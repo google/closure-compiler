@@ -31,9 +31,10 @@ public final class RenameLabelsTest extends CompilerTestCase {
   public void testRenameInFunction() {
     test("function x(){ Foo:a(); }",
          "function x(){ a(); }");
+
     test("function x(){ Foo:{ a(); break Foo; } }",
          "function x(){ a:{ a(); break a; } }");
-    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+
     test("function x() { " +
             "Foo:{ " +
               "function goo() {" +
@@ -45,6 +46,7 @@ public final class RenameLabelsTest extends CompilerTestCase {
             "}" +
           "}",
           "function x(){function goo(){a:{ a(); break a; }}}");
+
     test("function x() { " +
           "Foo:{ " +
             "function goo() {" +
@@ -57,6 +59,36 @@ public final class RenameLabelsTest extends CompilerTestCase {
           "}" +
         "}",
         "function x(){a:{function goo(){a:{ a(); break a; }} break a;}}");
+  }
+
+  public void testRenameForArrowFunction() {
+    //remove label that is not referenced
+    test("() => { Foo:a(); } ",
+         "() => {     a(); }");
+
+    test("Foo:() => { a(); }",
+         "    () => { a(); }");
+
+    //label is referenced
+    test("() => { Foo:{ a(); break Foo; } }",
+         "() => {   a:{ a(); break   a; } }");
+  }
+
+  public void testRenameForOf() {
+    test(LINE_JOINER.join(
+         "loop:",
+         "for (let x of [1, 2, 3]) {",
+         "  if (x > 2) {",
+         "    break loop;",
+         "  }",
+         "}"),
+         LINE_JOINER.join(
+         "a:" ,
+         "for (let x of [1, 2, 3]) {",
+         "  if (x > 2) {",
+         "    break a;",
+         "  }",
+         "}"));
   }
 
   public void testRenameGlobals() {

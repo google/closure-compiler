@@ -60,6 +60,10 @@ $jscomp.inherits = function(childCtor, parentCtor) {
     childCtor.prototype.constructor = childCtor;
 
   for (var p in parentCtor) {
+    if (p == 'prototype') {
+      // Don't copy parentCtor.prototype to childCtor.
+      continue;
+    }
     if (Object.defineProperties) {
       var descriptor = Object.getOwnPropertyDescriptor(parentCtor, p);
       if (descriptor) {

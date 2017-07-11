@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_BOOLEAN;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
@@ -339,7 +339,7 @@ class ProcessDefines implements CompilerPass {
           n.removeChild(last);
           parent.replaceChild(n, last);
         } else {
-          Preconditions.checkState(n.isName(), n);
+          checkState(n.isName(), n);
           n.removeFirstChild();
         }
         t.reportCodeChange();

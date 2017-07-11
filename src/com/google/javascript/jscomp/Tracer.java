@@ -16,11 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -392,7 +392,7 @@ final class Tracer {
    * @return The time that this trace actually ran
    */
   long stop(int silenceThreshold) {
-    Preconditions.checkState(Thread.currentThread() == startThread);
+    checkState(Thread.currentThread() == startThread);
 
     ThreadTrace trace = getThreadTrace();
     // Do nothing if the thread trace was not initialized.
@@ -741,7 +741,7 @@ final class Tracer {
     void startEvent(Tracer t) {
       events.add(new Event(true, t));
       boolean notAlreadyOutstanding = outstandingEvents.add(t);
-      Preconditions.checkState(notAlreadyOutstanding);
+      checkState(notAlreadyOutstanding);
     }
 
     /**
@@ -777,7 +777,7 @@ final class Tracer {
         for (int i = 0; i < events.size(); i++) {
           Event e = events.get(i);
           if (e.tracer == t) {
-            Preconditions.checkState(e.isStart);
+            checkState(e.isStart);
             events.remove(i);
             removed = true;
             break;
@@ -786,7 +786,7 @@ final class Tracer {
 
         // Only assert if we didn't find the original and the events
         // weren't truncated.
-        Preconditions.checkState(removed || isEventsTruncated);
+        checkState(removed || isEventsTruncated);
       } else {
         events.add(new Event(false, t));
       }

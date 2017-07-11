@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.GraphNode;
@@ -49,12 +51,12 @@ final class MustBeReachingVariableDef extends
       ControlFlowGraph<Node> cfg,
       Scope jsScope,
       AbstractCompiler compiler,
-      ScopeCreator scopeCreator) {
+      Es6SyntacticScopeCreator scopeCreator) {
     super(cfg, new MustDefJoin());
     this.jsScope = jsScope;
     this.compiler = compiler;
     this.escaped = new HashSet<>();
-    computeEscaped(jsScope, escaped, compiler, scopeCreator);
+    computeEscaped(jsScope.getParent(), jsScope, escaped, compiler, scopeCreator);
   }
 
   /**
@@ -207,7 +209,7 @@ final class MustBeReachingVariableDef extends
 
   @Override
   MustDef createEntryLattice() {
-    return new MustDef(jsScope.getVarIterable());
+    return new MustDef(returnAllVars());
   }
 
   @Override
@@ -340,7 +342,8 @@ final class MustBeReachingVariableDef extends
 
     // var might be null because the variable might be defined in the extern
     // that we might not traverse.
-    if (var == null || var.scope != jsScope) {
+    if (var == null
+        || (var.scope != jsScope && var.scope != jsScope.getParent())) {
       return;
     }
 
@@ -368,7 +371,8 @@ final class MustBeReachingVariableDef extends
   }
 
   private void escapeParameters(MustDef output) {
-    for (Var v : jsScope.getVarIterable()) {
+    Iterable<? extends Var> allVars = returnAllVars();
+    for (Var v : allVars) {
       if (isParameter(v)) {
         // Assume we no longer know where the parameter comes from
         // anymore.
@@ -424,7 +428,7 @@ final class MustBeReachingVariableDef extends
    * @param useNode the location of the use where the definition reaches.
    */
   Definition getDef(String name, Node useNode) {
-    Preconditions.checkArgument(getCfg().hasNode(useNode));
+    checkArgument(getCfg().hasNode(useNode));
     GraphNode<Node, Branch> n = getCfg().getNode(useNode);
     FlowState<MustDef> state = n.getAnnotation();
     return state.getIn().reachingDef.get(jsScope.getVar(name));
@@ -441,10 +445,14 @@ final class MustBeReachingVariableDef extends
     }
 
     for (Var s : def.depends) {
-      if (s.scope != jsScope) {
+      if (s.scope != jsScope && s.scope != jsScope.getParent()) {
         return true;
       }
     }
     return false;
+  }
+
+  Iterable<? extends Var> returnAllVars() {
+    return Iterables.concat(jsScope.getVarIterable(), jsScope.getParent().getVarIterable());
   }
 }

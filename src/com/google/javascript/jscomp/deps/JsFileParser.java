@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.deps;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.CharMatcher;
 import com.google.javascript.jscomp.CheckLevel;
@@ -136,6 +138,7 @@ public final class JsFileParser extends JsFileLineParser {
    * @return this for easy chaining.
    */
   public JsFileParser setIncludeGoogBase(boolean include) {
+    checkState(JsFileParser.isSupported());
     includeGoogBase = include;
     return this;
   }

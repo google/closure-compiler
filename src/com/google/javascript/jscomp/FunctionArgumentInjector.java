@@ -15,10 +15,14 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.javascript.jscomp.NodeUtil.Visitor;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.HashSet;
@@ -37,6 +41,10 @@ class FunctionArgumentInjector {
   // A string to use to represent "this".  Anything that is not a valid
   // identifier can be used, so we use "this".
   static final String THIS_MARKER = "this";
+
+  static final String REST_MARKER = "rest param";
+
+  static final String DEFAULT_MARKER = "Default Value";
 
   private FunctionArgumentInjector() {
     // A private constructor to prevent instantiation.
@@ -62,9 +70,7 @@ class FunctionArgumentInjector {
       Node replacementTemplate = replacements.get(node.getString());
       if (replacementTemplate != null) {
         // This should not be replacing declared names.
-        Preconditions.checkState(!parent.isFunction()
-            || !parent.isVar()
-            || !parent.isCatch());
+        checkState(!(parent.isFunction() || parent.isVar() || parent.isCatch()), parent);
         // The name may need to be replaced more than once,
         // so we need to clone the node.
         Node replacement = replacementTemplate.cloneTree();
@@ -73,7 +79,7 @@ class FunctionArgumentInjector {
       }
     } else if (replaceThis && node.isThis()) {
       Node replacementTemplate = replacements.get(THIS_MARKER);
-      Preconditions.checkNotNull(replacementTemplate);
+      checkNotNull(replacementTemplate);
       if (!replacementTemplate.isThis()) {
         // The name may need to be replaced more than once,
         // so we need to clone the node.
@@ -120,17 +126,46 @@ class FunctionArgumentInjector {
       cArg = cArg.getNext();
     } else {
       // 'apply' isn't supported yet.
-      Preconditions.checkState(!NodeUtil.isFunctionObjectApply(callNode));
+      checkState(!NodeUtil.isFunctionObjectApply(callNode));
       argMap.put(THIS_MARKER, NodeUtil.newUndefinedNode(callNode));
     }
 
-    for (Node fnArg : NodeUtil.getFunctionParameters(fnNode).children()) {
+    for (Node fnParam : NodeUtil.getFunctionParameters(fnNode).children()) {
       if (cArg != null) {
-        argMap.put(fnArg.getString(), cArg);
+        if (fnParam.isRest()) {
+          Node array = IR.arraylit();
+          array.useSourceInfoIfMissingFromForTree(cArg);
+          while (cArg != null) {
+            array.addChildToBack(cArg.cloneTree());
+            cArg = cArg.getNext();
+          }
+          if (fnParam.getFirstChild().isObjectPattern()) {
+            Node prop = IR.string(fnParam.getFirstFirstChild().getString());
+            Node getProp = IR.getprop(array, prop);
+            getProp.useSourceInfoIfMissingFromForTree(array);
+            argMap.put(fnParam.getFirstFirstChild().getFirstChild().getString(), getProp);
+          } else {
+            argMap.put(fnParam.getFirstChild().getString(), array);
+          }
+          return argMap;
+        } else if (fnParam.isDefaultValue()) {
+          argMap.put(fnParam.getFirstChild().getString(), cArg);
+        } else {
+          argMap.put(fnParam.getString(), cArg);
+        }
         cArg = cArg.getNext();
       } else {
-        Node srcLocation = callNode;
-        argMap.put(fnArg.getString(), NodeUtil.newUndefinedNode(srcLocation));
+        if (fnParam.isRest()) {
+          //No arguments for REST parameters
+          Node array = IR.arraylit();
+          argMap.put(fnParam.getFirstChild().getString(), array);
+        } else if (fnParam.isDefaultValue()) {
+          Node defaultValue = fnParam.getSecondChild().cloneTree();
+          argMap.put(fnParam.getFirstChild().getString(), defaultValue);
+        } else {
+          Node srcLocation = callNode;
+          argMap.put(fnParam.getString(), NodeUtil.newUndefinedNode(srcLocation));
+        }
       }
     }
 
@@ -138,7 +173,7 @@ class FunctionArgumentInjector {
     // called function.
     while (cArg != null) {
       String uniquePlaceholder =
-        getUniqueAnonymousParameterName(safeNameIdSupplier);
+          getUniqueAnonymousParameterName(safeNameIdSupplier);
       argMap.put(uniquePlaceholder, cArg);
       cArg = cArg.getNext();
     }
@@ -192,7 +227,7 @@ class FunctionArgumentInjector {
   private static Set<String> findModifiedParameters(
       Node n, Node parent, Set<String> names, Set<String> unsafe,
       boolean inInnerFunction) {
-    Preconditions.checkArgument(unsafe != null);
+    checkArgument(unsafe != null);
     if (n.isName()) {
       if (names.contains(n.getString()) && (inInnerFunction || canNameValueChange(n, parent))) {
         unsafe.add(n.getString());
@@ -248,7 +283,7 @@ class FunctionArgumentInjector {
       return;
     }
 
-    Preconditions.checkArgument(fnNode.isFunction());
+    checkArgument(fnNode.isFunction());
     Node block = fnNode.getLastChild();
 
     int argCount = argMap.size();
@@ -288,7 +323,7 @@ class FunctionArgumentInjector {
         //
         // This is done to help inline common trivial functions
         safe = true;
-      } else  if (NodeUtil.mayEffectMutableState(cArg) && references > 0) {
+      } else if (NodeUtil.mayEffectMutableState(cArg) && references > 0) {
         // Note: Mutable arguments should be assigned to temps, as the
         // may be within in a loop:
         //   function x(a) {
@@ -298,7 +333,15 @@ class FunctionArgumentInjector {
         //   x( [] );
         //
         //   The parameter in the call to foo should not become "[]".
-        safe = false;
+        if (cArg.isGetProp()) {
+          if (!NodeUtil.mayHaveSideEffects(cArg)) {
+            safe = true;
+          } else {
+            safe = false;
+          }
+        } else {
+          safe = false;
+        }
       } else if (argSideEffects) {
         // Even if there are no references, we still need to evaluate the
         // expression if it has side-effects.
@@ -549,7 +592,13 @@ class FunctionArgumentInjector {
   private static Set<String> getFunctionParameterSet(Node fnNode) {
     Set<String> set = new HashSet<>();
     for (Node n : NodeUtil.getFunctionParameters(fnNode).children()) {
-      set.add(n.getString());
+      if (n.isRest()){
+        set.add(REST_MARKER);
+      } else if (n.isDefaultValue()){
+        set.add(DEFAULT_MARKER);
+      } else {
+        set.add(n.getString());
+      }
     }
     return set;
   }

@@ -416,6 +416,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var goog={};goog.forwardDeclare=function(typeName){};var x;var y");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#90
   public void testIssue90() {
     CompilerOptions options = createCompilerOptions();
     options.setFoldConstants(true);
@@ -447,6 +448,41 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var COMPILED = true;" +
         "var goog = {}; goog.getCssName = function(x) {};" +
         "'foo';");
+  }
+
+  public void testChromePass_noTranspile() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setChromePass(true);
+    options.setLanguage(LanguageMode.ECMASCRIPT_2017);
+    test(
+        options,
+        "cr.define('my.namespace', function() { class X {} return {X: X}; });",
+        LINE_JOINER.join(
+            "var my = my || {};",
+            "my.namespace = my.namespace || {};",
+            "cr.define('my.namespace', function() {",
+            "  my.namespace.X = class {};",
+            "  return { X: my.namespace.X };",
+            "});"));
+  }
+
+  public void testChromePass_transpile() {
+    CompilerOptions options = createCompilerOptions();
+    options.setChromePass(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    test(
+        options,
+        "cr.define('my.namespace', function() { class X {} return {X: X}; });",
+        LINE_JOINER.join(
+            "var my = my || {};",
+            "my.namespace = my.namespace || {};",
+            "cr.define('my.namespace', function() {",
+            "  /** @constructor */",
+            "  my.namespace.X = function() {};",
+            "  return { X: my.namespace.X };",
+            "});"));
   }
 
   public void testCssNameCheck() {
@@ -699,7 +735,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
-    options.setSkipTranspilationAndCrash(true);
     options.angularPass = true;
     test(options,
         "class C { /** @ngInject */ constructor(x) {} }",
@@ -2479,6 +2514,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}"));
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#63
   public void testIssue63SourceMap() {
     CompilerOptions options = createCompilerOptions();
     String code = "var a;";
@@ -2764,7 +2800,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         StrictModeCheck.DELETE_VARIABLE);
   }
 
-
+  // http://blickly.github.io/closure-compiler-issues/#598
   public void testIssue598() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT);
@@ -2803,6 +2839,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, "", StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN);
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#701
   public void testIssue701() {
     // Check ASCII art in license comments.
     String ascii = "/**\n" +
@@ -2820,25 +2857,26 @@ public final class IntegrationTest extends IntegrationTestCase {
     assertEquals(result, lastCompiler.toSource());
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#724
   public void testIssue724() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setCheckSymbols(false);
     options.setCheckTypes(false);
     String code =
-        "isFunction = function(functionToCheck) {" +
-        "  var getType = {};" +
-        "  return functionToCheck && " +
-        "      getType.toString.apply(functionToCheck) === " +
-        "     '[object Function]';" +
-        "};";
+        LINE_JOINER.join(
+            "isFunction = function(functionToCheck) {",
+            "  var getType = {};",
+            "  return functionToCheck && ",
+            "      getType.toString.apply(functionToCheck) === '[object Function]';",
+            "};");
     String result =
-        "isFunction=function(a){var b={};" +
-        "return a&&\"[object Function]\"===b.b.a(a)}";
+        "isFunction = function(a){ var b={}; return a && '[object Function]' === b.b.a(a); }";
 
     test(options, code, result);
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#730
   public void testIssue730() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS
@@ -3096,6 +3134,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     testParseError(options, "function () {}");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#378
   public void testIssue378() {
     CompilerOptions options = createCompilerOptions();
     options.setInlineVariables(true);
@@ -3105,6 +3144,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "    f.apply(this, arguments); return this;}");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#550
   public void testIssue550() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.SIMPLE_OPTIMIZATIONS
@@ -3122,6 +3162,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "function f(a) { return a += 'xy'; }");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#1168
   public void testIssue1168() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.SIMPLE_OPTIMIZATIONS
@@ -3133,6 +3174,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "for( ; ; );");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#1198
   public void testIssue1198() throws Exception {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.SIMPLE_OPTIMIZATIONS
@@ -3144,6 +3186,7 @@ public final class IntegrationTest extends IntegrationTestCase {
          "function f(a) { return 1; }");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#1131
   public void testIssue1131() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS
@@ -3153,6 +3196,7 @@ public final class IntegrationTest extends IntegrationTestCase {
          "function a(b) { return b(b); } alert(a(a));");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#284
   public void testIssue284() {
     CompilerOptions options = createCompilerOptions();
     options.setSmartNameRemoval(true);
@@ -3172,6 +3216,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#772
   public void testIssue772() throws Exception {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
@@ -3209,6 +3254,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "f();");
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#1204
   public void testIssue1204() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS
@@ -3792,6 +3838,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#937
   public void testIssue937() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;
@@ -3811,7 +3858,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT5_STRICT);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
-    options.setSkipTranspilationAndCrash(true);
     CompilationLevel.SIMPLE_OPTIMIZATIONS
         .setOptionsForCompilationLevel(options);
     String code = "f = function(c) { for (var i = 0; i < c.length; i++) {} };";
@@ -3880,6 +3926,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "Sub.calledInSubclassOnly();"));
   }
 
+  // http://blickly.github.io/closure-compiler-issues/#787
   public void testIssue787() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel level = CompilationLevel.SIMPLE_OPTIMIZATIONS;
@@ -3997,18 +4044,22 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     // property name preserved due to export
     test(options, code,
-        "alert((new function(){this.abc = 1}).abc + " +
-            "(new function(){this.abc = 1}).abc);");
+        "alert((new function(){this.abc = 1}).abc + (new function(){this.abc = 1}).abc);");
 
     // unreferenced property not removed due to export.
-    test(options, "" +
-        "/** @constructor */ var X = function() {" +
-        "/** @export */ this.abc = 1;};\n" +
-        "/** @constructor */ var Y = function() {" +
-        "/** @export */ this.abc = 1;};\n" +
-        "alert(new X() + new Y());",
-        "alert((new function(){this.abc = 1}) + " +
-            "(new function(){this.abc = 1}));");
+    test(
+        options,
+        LINE_JOINER.join(
+            "/** @constructor */ var X = function() {",
+            "  /** @export */ this.abc = 1;",
+            "};",
+            "",
+            "/** @constructor */ var Y = function() {",
+            "  /** @export */ this.abc = 1;",
+            "};",
+            "",
+            "alert(new X() + new Y());"),
+        "alert((new function(){this.abc = 1}) + (new function(){this.abc = 1}));");
 
     // disambiguate and ambiguate properties respect the exports.
     options.setCheckTypes(true);
@@ -4016,9 +4067,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setAmbiguateProperties(true);
     options.propertyInvalidationErrors = ImmutableMap.of("abc", CheckLevel.ERROR);
 
-    test(options, code,
-        "alert((new function(){this.abc = 1}).abc + " +
-            "(new function(){this.abc = 1}).abc);");
+    test(
+        options,
+        code,
+        "alert((new function(){this.abc = 1}).abc + (new function(){this.abc = 1}).abc);");
 
     // unreferenced property not removed due to export.
     test(
@@ -4095,7 +4147,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
-    options.setSkipTranspilationAndCrash(true);
     test(options, "function f(x) { if (x) var x=5; }", "function f(x) { if (x) var x=5; }");
   }
 
@@ -4280,6 +4331,66 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(options, "var x = foobar;", VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
+  // TODO(bellashim): Add a non-transpiling version of this test when InlineFunctions
+  // can run in that mode.
+  public void testInlineRestParam() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(
+        options,
+        LINE_JOINER.join(
+            "function foo() {",
+            "  var f = (...args) => args[0];",
+            "  return f(8);",
+            "}",
+            "alert(foo());"),
+        "alert(function(c){for(var b=[],a=0;a<arguments.length;++a)"
+            + "b[a-0]=arguments[a];return b[0]}(8))");
+  }
+
+  // TODO(bellashim): Add a non-transpiling version of this test when InlineFunctions
+  // can run in that mode.
+  public void testDefaultParameters() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    test(
+        options,
+        LINE_JOINER.join(
+            "function foo(a, b = {foo: 5}) {",
+            "  return a + b.foo;",
+            "}",
+            "alert(foo(3, {foo: 9}));"),
+        "var a={a:9}; a=void 0===a?{a:5}:a;alert(3+a.a)");
+  }
+
+  // TODO(bellashim): Add a non-transpiling version of this test when InlineFunctions
+  // can run in that mode.
+  public void testRestObjectPatternParameters() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    externs = DEFAULT_EXTERNS;
+
+    test(
+        options,
+        LINE_JOINER.join(
+            "function countArgs(x, ...{length}) {",
+            "  return length;",
+            "}",
+            "alert(countArgs(1, 1, 1, 1, 1));"),
+        "alert(function (c,d) {"
+            + "  for(var b=[], a=1; a < arguments.length; ++a)"
+            + "    b[a-1] = arguments[a];"
+            + "    return b.length "
+            + "}(1,1,1,1,1))");
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */

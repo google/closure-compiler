@@ -27,6 +27,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CoverageInstrumentationPass.CoverageReach;
@@ -61,9 +62,9 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Serializable;
-import java.nio.file.FileSystems;
 import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,6 +80,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
+import javax.annotation.Nullable;
 
 /**
  * Compiler (and the other classes in this package) does the following:
@@ -183,23 +185,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  private ExternalSourceLoader originalSourcesLoader =
-      new ExternalSourceLoader() {
-        // TODO(tdeegan): The @GwtIncompatible tree needs to be cleaned up.
-        @Override
-        @GwtIncompatible("SourceFile.fromFile")
-        public SourceFile loadSource(String filename) {
-          return SourceFile.fromFile(filename);
-        }
-      };
-
   // Original sources referenced by the source maps.
-  private ConcurrentHashMap<String, SourceFile> sourceMapOriginalSources
-      = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, SourceFile> sourceMapOriginalSources =
+      new ConcurrentHashMap<>();
 
   /** Configured {@link SourceMapInput}s, plus any source maps discovered in source files. */
-  private final ConcurrentHashMap<String, SourceMapInput> inputSourceMaps =
-      new ConcurrentHashMap<>();
+  ConcurrentHashMap<String, SourceMapInput> inputSourceMaps = new ConcurrentHashMap<>();
 
   // Map from filenames to lists of all the comments in each file.
   private Map<String, List<Comment>> commentsPerFile = new ConcurrentHashMap<>();
@@ -301,6 +292,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private int changeStamp = 1;
 
   private final Timeline<Node> changeTimeline = new Timeline<>();
+  private final Timeline<Node> deleteTimeline = new Timeline<>();
 
   /**
    * Creates a Compiler that reports errors and warnings to its logger.
@@ -312,9 +304,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   /**
    * Creates a Compiler that reports errors and warnings to an output stream.
    */
-  public Compiler(PrintStream stream) {
+  public Compiler(PrintStream outStream) {
     addChangeHandler(recentChange);
-    this.outStream = stream;
+    this.outStream = outStream;
   }
 
   /**
@@ -342,11 +334,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private MessageFormatter createMessageFormatter() {
     boolean colorize = options.shouldColorizeErrorOutput();
     return options.errorFormat.toFormatter(this, colorize);
-  }
-
-  @VisibleForTesting
-  void setOriginalSourcesLoader(ExternalSourceLoader originalSourcesLoader) {
-    this.originalSourcesLoader = originalSourcesLoader;
   }
 
   /**
@@ -418,14 +405,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   public void printConfig(PrintStream printStream) {
     printStream.println("==== CompilerOptions ====");
-    printStream.println(options.toString());
+    printStream.println(options);
     printStream.println("==== WarningsGuard ====");
-    printStream.println(warningsGuard.toString());
+    printStream.println(warningsGuard);
   }
 
   void initWarningsGuard(WarningsGuard warningsGuard) {
-    this.warningsGuard = new ComposeWarningsGuard(
-        new SuppressDocWarningsGuard(getDiagnosticGroups().getRegisteredGroups()), warningsGuard);
+    this.warningsGuard =
+        new ComposeWarningsGuard(
+            new SuppressDocWarningsGuard(this, getDiagnosticGroups().getRegisteredGroups()),
+            warningsGuard);
   }
 
   /**
@@ -674,19 +663,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   static final DiagnosticType DUPLICATE_EXTERN_INPUT =
       DiagnosticType.error("JSC_DUPLICATE_EXTERN_INPUT",
           "Duplicate extern input: {0}");
-
-  /**
-   * Returns the relative path, resolved relative to the base path, where the
-   * base path is interpreted as a filename rather than a directory. E.g.:
-   *   getRelativeTo("../foo/bar.js", "baz/bam/qux.js") --> "baz/foo/bar.js"
-   */
-  private static String getRelativeTo(String relative, String base) {
-    return FileSystems.getDefault().getPath(base)
-        .resolveSibling(relative)
-        .normalize()
-        .toString()
-        .replace(File.separator, "/");
-  }
 
   /**
    * Creates a map to make looking up an input by name fast. Also checks for
@@ -1220,7 +1196,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
+  @Override
+  @Nullable
   final Node getScriptNode(String filename) {
+    checkNotNull(filename);
+    if (jsRoot == null) {
+      return null;
+    }
     for (Node file : jsRoot.children()) {
       if (file.getSourceFileName() != null && file.getSourceFileName().endsWith(filename)) {
         return file;
@@ -1530,6 +1512,22 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
+  public void clearTypeIRegistry() {
+    switch (mostRecentTypechecker) {
+      case OTI:
+        typeRegistry = null;
+        return;
+      case NTI:
+        symbolTable = null;
+        return;
+      case NONE:
+        return;
+      default:
+        throw new RuntimeException("Unhandled typechecker " + mostRecentTypechecker);
+    }
+  }
+
+  @Override
   public JSTypeRegistry getTypeRegistry() {
     if (typeRegistry == null) {
       typeRegistry = new JSTypeRegistry(oldErrorReporter, forwardDeclaredTypes);
@@ -1786,8 +1784,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                   processJsonInputs(inputs));
         }
 
-        if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)) {
-          processEs6Modules();
+        if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)) {
+          parsePotentialModules(inputs);
         }
 
         // Modules inferred in ProcessCommonJS pass.
@@ -1819,7 +1817,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         }
 
         if (!inputsToRewrite.isEmpty()) {
-          processEs6Modules(new ArrayList<>(inputsToRewrite.values()), true);
+          forceToEs6Modules(inputsToRewrite.values());
         }
       } else {
         // Use an empty module loader if we're not actually dealing with modules.
@@ -2054,19 +2052,26 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return rewriteJson.getPackageJsonMainEntries();
   }
 
-  void processEs6Modules() {
-    processEs6Modules(inputs, false);
+  void forceToEs6Modules(Collection<CompilerInput> inputsToProcess) {
+    for (CompilerInput input : inputsToProcess) {
+      input.setCompiler(this);
+      input.addProvide(input.getPath().toModuleName());
+      Node root = input.getAstRoot(this);
+      if (root == null) {
+        continue;
+      }
+      Es6RewriteModules moduleRewriter = new Es6RewriteModules(this);
+      moduleRewriter.forceToEs6Module(root);
+    }
   }
 
-  void processEs6Modules(List<CompilerInput> inputsToProcess, boolean forceRewrite) {
+  private List<CompilerInput> parsePotentialModules(List<CompilerInput> inputsToProcess) {
     List<CompilerInput> filteredInputs = new ArrayList<>();
     for (CompilerInput input : inputsToProcess) {
-      // Only process files that are detected as ES6 modules or forced to be rewritten
-      if (forceRewrite
-          || !options.dependencyOptions.shouldPruneDependencies()
+      // Only process files that are detected as ES6 modules
+      if (!options.dependencyOptions.shouldPruneDependencies()
           || !JsFileParser.isSupported()
-          || (input.getLoadFlags().containsKey("module")
-              && input.getLoadFlags().get("module").equals("es6"))) {
+          || "es6".equals(input.getLoadFlags().get("module"))) {
         filteredInputs.add(input);
       }
     }
@@ -2075,19 +2080,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     for (CompilerInput input : filteredInputs) {
       input.setCompiler(this);
-      Node root = input.getAstRoot(this);
-      if (root == null) {
-        continue;
-      }
-      Es6RewriteModules moduleRewriter = new Es6RewriteModules(this);
-      if (forceRewrite) {
-        moduleRewriter.forceToEs6Module(root);
-      }
-      if (Es6RewriteModules.isEs6ModuleRoot(root)) {
-        moduleRewriter.processFile(root);
-      }
+      // Call getAstRoot to force parsing to happen.
+      input.getAstRoot(this);
+      input.getRequires();
     }
-    setFeatureSet(featureSet.without(Feature.MODULES));
+    return filteredInputs;
   }
 
   /**
@@ -2314,7 +2311,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
               delimiter =
                   delimiter
                       .replaceAll("%name%", Matcher.quoteReplacement(inputName))
-                      .replaceAll("%num%", String.valueOf(inputSeqNum));
+                      .replace("%num%", String.valueOf(inputSeqNum));
 
               cb.append(delimiter).append("\n");
             }
@@ -2368,7 +2365,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   private String toSource(Node n, SourceMap sourceMap, boolean firstOutput) {
     CodePrinter.Builder builder = new CodePrinter.Builder(n);
-    builder.setTypeRegistry(this.typeRegistry);
+    builder.setTypeRegistry(getTypeIRegistry());
     builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);
     builder.setTagAsExterns(firstOutput && options.shouldGenerateTypedExterns());
@@ -2502,6 +2499,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   protected final RecentChange recentChange = new RecentChange();
   private final List<CodeChangeHandler> codeChangeHandlers = new ArrayList<>();
+  private final Map<Class<?>, IndexProvider<?>> indexProvidersByType =
+      new LinkedHashMap<>();
 
   /** Name of the synthetic input that holds synthesized externs. */
   static final String SYNTHETIC_EXTERNS = "{SyntheticVarsDeclar}";
@@ -2525,6 +2524,25 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   void removeChangeHandler(CodeChangeHandler handler) {
     codeChangeHandlers.remove(handler);
+  }
+
+  @Override
+  void addIndexProvider(IndexProvider<?> indexProvider) {
+    Class<?> type = indexProvider.getType();
+    if (indexProvidersByType.put(type, indexProvider) != null) {
+      throw new IllegalStateException(
+          "A provider is already registered for index of type " + type.getSimpleName());
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  <T> T getIndex(Class<T> key) {
+    IndexProvider<T> indexProvider = (IndexProvider<T>) indexProvidersByType.get(key);
+    if (indexProvider == null) {
+      return null;
+    }
+    return indexProvider.get();
   }
 
   Node getExternsRoot() {
@@ -2559,6 +2577,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
+  List<Node> getDeletedScopeNodesForPass(String passName) {
+    List<Node> deletedScopeNodes = deleteTimeline.getSince(passName);
+    deleteTimeline.mark(passName);
+    return deletedScopeNodes;
+  }
+
+  @Override
   public void incrementChangeStamp() {
     changeStamp++;
   }
@@ -2580,15 +2605,24 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return n;
     }
 
-    n = NodeUtil.getEnclosingChangeScopeRoot(n.getParent());
-    if (n == null) {
+    Node enclosingScopeNode = NodeUtil.getEnclosingChangeScopeRoot(n.getParent());
+    if (enclosingScopeNode == null) {
       throw new IllegalStateException(
           "An enclosing scope is required for change reports but node " + n + " doesn't have one.");
     }
-    return n;
+    return enclosingScopeNode;
   }
 
   private void recordChange(Node n) {
+    if (n.isDeleted()) {
+      // Some complicated passes (like SmartNameRemoval) might both change and delete a scope in
+      // the same pass, and they might even perform the change after the deletion because of
+      // internal queueing. Just ignore the spurious attempt to mark changed after already marking
+      // deleted. There's no danger of deleted nodes persisting in the AST since this is enforced
+      // separately in ChangeVerifier.
+      return;
+    }
+
     n.setChangeTime(changeStamp);
     // Every code change happens at a different time
     changeStamp++;
@@ -2632,6 +2666,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkState(n.isFunction());
     n.setDeleted(true);
     changeTimeline.remove(n);
+    deleteTimeline.add(n);
   }
 
   @Override
@@ -2848,8 +2883,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  public OriginalMapping getSourceMapping(String sourceName, int lineNumber,
-      int columnNumber) {
+  @Nullable
+  public OriginalMapping getSourceMapping(String sourceName, int lineNumber, int columnNumber) {
     if (sourceName == null) {
       return null;
     }
@@ -2858,22 +2893,29 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return null;
     }
 
-    // JSCompiler uses 1-indexing for lineNumber and 0-indexing for
-    // columnNumber.
-    // SourceMap uses 1-indexing for both.
-    OriginalMapping result = sourceMap.getSourceMap()
-        .getMappingForLine(lineNumber, columnNumber + 1);
+    // JSCompiler uses 1-indexing for lineNumber and 0-indexing for columnNumber.
+    // Sourcemaps use 1-indexing for both.
+    SourceMapConsumerV3 consumer = sourceMap.getSourceMap(errorManager);
+    if (consumer == null) {
+      return null;
+    }
+    OriginalMapping result = consumer.getMappingForLine(lineNumber, columnNumber + 1);
     if (result == null) {
       return null;
     }
 
     // The sourcemap will return a path relative to the sourcemap's file.
     // Translate it to one relative to our base directory.
-    String path =
-        getRelativeTo(result.getOriginalFile(), sourceMap.getOriginalPath());
-    sourceMapOriginalSources.putIfAbsent(path, originalSourcesLoader.loadSource(path));
-    return result.toBuilder()
-        .setOriginalFile(path)
+    SourceFile source =
+        SourceMapResolver.getRelativePath(sourceMap.getOriginalPath(), result.getOriginalFile());
+    if (source == null) {
+      return null;
+    }
+    String originalPath = source.getOriginalPath();
+    sourceMapOriginalSources.putIfAbsent(originalPath, source);
+    return result
+        .toBuilder()
+        .setOriginalFile(originalPath)
         .setColumnPosition(result.getColumnPosition() - 1)
         .build();
   }
@@ -2980,7 +3022,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /** Names exported by goog.exportSymbol. */
-  private Set<String> exportedNames = new LinkedHashSet<>();
+  private final Set<String> exportedNames = new LinkedHashSet<>();
 
   @Override
   public void addExportedNames(Set<String> exportedNames) {

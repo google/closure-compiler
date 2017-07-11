@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.rhino.IR;
@@ -34,6 +38,7 @@ class DefinitionsRemover {
    * @return an {@link Definition} object if the node contains a definition or {@code null}
    *     otherwise.
    */
+
   static Definition getDefinition(Node n, boolean isExtern) {
     Node parent = n.getParent();
     if (parent == null) {
@@ -52,13 +57,14 @@ class DefinitionsRemover {
       return new AssignmentDefinition(parent, isExtern);
     } else if (NodeUtil.isObjectLitKey(n)) {
       return new ObjectLiteralPropertyDefinition(parent, n, n.getFirstChild(), isExtern);
-    } else if (parent.isParamList()) {
-      Node function = parent.getParent();
+    } else if (NodeUtil.getEnclosingType(n, Token.PARAM_LIST) != null && n.isName()) {
+      Node paramList = NodeUtil.getEnclosingType(n, Token.PARAM_LIST);
+      Node function = paramList.getParent();
       return new FunctionArgumentDefinition(function, n, isExtern);
     } else if (parent.getToken() == Token.COLON && parent.getFirstChild() == n && isExtern) {
       Node grandparent = parent.getParent();
-      Preconditions.checkState(grandparent.getToken() == Token.LB);
-      Preconditions.checkState(grandparent.getParent().getToken() == Token.LC);
+      checkState(grandparent.getToken() == Token.LB);
+      checkState(grandparent.getParent().getToken() == Token.LC);
       return new RecordTypePropertyDefinition(n);
     } else if (isExtern && n.isGetProp() && parent.isExprResult() && n.isQualifiedName()) {
       return new ExternalNameOnlyDefinition(n);
@@ -95,8 +101,8 @@ class DefinitionsRemover {
         && parent.getFirstChild() == n
         && n.isFromExterns()) {
       Node grandparent = parent.getParent();
-      Preconditions.checkState(grandparent.getToken() == Token.LB);
-      Preconditions.checkState(grandparent.getParent().getToken() == Token.LC);
+      checkState(grandparent.getToken() == Token.LB);
+      checkState(grandparent.getParent().getToken() == Token.LC);
       return true;
     } else if (n.isFromExterns() && parent.isExprResult() && n.isGetProp() && n.isQualifiedName()) {
       return true;
@@ -173,7 +179,8 @@ class DefinitionsRemover {
 
     IncompleteDefinition(Node lValue, boolean inExterns) {
       super(inExterns);
-      Preconditions.checkNotNull(lValue);
+      checkNotNull(lValue);
+
       Preconditions.checkArgument(
           ALLOWED_TYPES.contains(lValue.getToken()),
           "Unexpected lValue type %s",
@@ -231,8 +238,8 @@ class DefinitionsRemover {
         Node argumentName,
         boolean inExterns) {
       super(argumentName, inExterns);
-      Preconditions.checkArgument(function.isFunction());
-      Preconditions.checkArgument(argumentName.isName());
+      checkArgument(function.isFunction());
+      checkArgument(argumentName.isName());
     }
 
     @Override
@@ -251,7 +258,7 @@ class DefinitionsRemover {
 
     FunctionDefinition(Node node, boolean inExterns) {
       super(inExterns);
-      Preconditions.checkArgument(node.isFunction());
+      checkArgument(node.isFunction());
       function = node;
     }
 
@@ -290,8 +297,7 @@ class DefinitionsRemover {
   static final class FunctionExpressionDefinition extends FunctionDefinition {
     FunctionExpressionDefinition(Node node, boolean inExterns) {
       super(node, inExterns);
-      Preconditions.checkArgument(
-          NodeUtil.isFunctionExpression(node));
+      checkArgument(NodeUtil.isFunctionExpression(node));
     }
 
     @Override
@@ -310,7 +316,7 @@ class DefinitionsRemover {
 
     AssignmentDefinition(Node node, boolean inExterns) {
       super(inExterns);
-      Preconditions.checkArgument(node.isAssign());
+      checkArgument(node.isAssign());
       assignment = node;
     }
 
@@ -343,7 +349,7 @@ class DefinitionsRemover {
     RecordTypePropertyDefinition(Node name) {
       super(IR.getprop(IR.objectlit(), name.cloneNode()),
             /** isExtern */ true);
-      Preconditions.checkArgument(name.isString());
+      checkArgument(name.isString());
     }
 
     @Override
@@ -412,7 +418,7 @@ class DefinitionsRemover {
     private final Node name;
     VarDefinition(Node node, boolean inExterns) {
       super(inExterns);
-      Preconditions.checkArgument(NodeUtil.isVarDeclaration(node));
+      checkArgument(NodeUtil.isVarDeclaration(node));
       Preconditions.checkArgument(inExterns || node.hasChildren(),
           "VAR Declaration of %s must be assigned a value.", node.getString());
       name = node;
@@ -421,11 +427,10 @@ class DefinitionsRemover {
     @Override
     public void performRemove(AbstractCompiler compiler) {
       Node var = name.getParent();
-      Preconditions.checkState(var.getFirstChild() == var.getLastChild(),
-          "AST should be normalized first");
+      checkState(var.getFirstChild() == var.getLastChild(), "AST should be normalized first");
       Node parent = var.getParent();
       Node rValue = name.removeFirstChild();
-      Preconditions.checkState(!NodeUtil.isLoopStructure(parent));
+      checkState(!NodeUtil.isLoopStructure(parent));
       parent.replaceChild(var, NodeUtil.newExpr(rValue));
       compiler.reportChangeToEnclosingScope(parent);
     }

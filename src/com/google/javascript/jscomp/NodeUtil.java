@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -43,9 +46,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nullable;
 
 /**
@@ -441,7 +446,7 @@ public final class NodeUtil {
    * @return the node best representing the class's name
    */
   public static Node getNameNode(Node n) {
-    Preconditions.checkState(n.isFunction() || n.isClass());
+    checkState(n.isFunction() || n.isClass());
     Node parent = n.getParent();
     switch (parent.getToken()) {
       case NAME:
@@ -470,7 +475,7 @@ public final class NodeUtil {
 
   /** Set the given function/class node to an empty name */
   public static void removeName(Node n) {
-    Preconditions.checkState(n.isFunction() || n.isClass());
+    checkState(n.isFunction() || n.isClass());
     Node originalName = n.getFirstChild();
     Node emptyName = n.isFunction() ? IR.name("") : IR.empty();
     n.replaceChild(originalName, emptyName.useSourceInfoFrom(originalName));
@@ -521,7 +526,7 @@ public final class NodeUtil {
   }
 
   public static Node getClassMembers(Node n) {
-    Preconditions.checkArgument(n.isClass());
+    checkArgument(n.isClass());
     return n.getLastChild();
   }
 
@@ -702,7 +707,7 @@ public final class NodeUtil {
     if (node.isString()) {
       return true;
     } else if (node.isAdd()) {
-      Preconditions.checkState(node.hasTwoChildren(), node);
+      checkState(node.hasTwoChildren(), node);
       Node left = node.getFirstChild();
       Node right = node.getLastChild();
       return isStringLiteralValue(left) && isStringLiteralValue(right);
@@ -1261,7 +1266,7 @@ public final class NodeUtil {
    */
   static boolean functionCallHasSideEffects(
       Node callNode, @Nullable AbstractCompiler compiler) {
-    Preconditions.checkState(callNode.isCall() || callNode.isTaggedTemplateLit(), callNode);
+    checkState(callNode.isCall() || callNode.isTaggedTemplateLit(), callNode);
 
     if (callNode.isNoSideEffectsCall()) {
       return false;
@@ -1391,7 +1396,7 @@ public final class NodeUtil {
    * @return Whether the call has a local result.
    */
   static boolean callHasLocalResult(Node n) {
-    Preconditions.checkState(n.isCall(), n);
+    checkState(n.isCall(), n);
     return (n.getSideEffectFlags() & Node.FLAG_LOCAL_RESULTS) > 0;
   }
 
@@ -1399,7 +1404,7 @@ public final class NodeUtil {
    * @return Whether the new has a local result.
    */
   static boolean newHasLocalResult(Node n) {
-    Preconditions.checkState(n.isNew(), n);
+    checkState(n.isNew(), n);
     return n.isOnlyModifiesThisCall();
   }
 
@@ -2127,6 +2132,7 @@ public final class NodeUtil {
   /**
    * Gets the closest ancestor to the given node of the provided type.
    */
+  @CheckReturnValue
   public static Node getEnclosingType(Node n, final Token type) {
     return getEnclosingNode(
         n,
@@ -2141,6 +2147,7 @@ public final class NodeUtil {
   /**
    * Finds the class member function containing the given node.
    */
+  @CheckReturnValue
   static Node getEnclosingClassMemberFunction(Node n) {
     return getEnclosingType(n, Token.MEMBER_FUNCTION_DEF);
   }
@@ -2148,6 +2155,7 @@ public final class NodeUtil {
   /**
    * Finds the class containing the given node.
    */
+  @CheckReturnValue
   public static Node getEnclosingClass(Node n) {
     return getEnclosingType(n, Token.CLASS);
   }
@@ -2155,6 +2163,7 @@ public final class NodeUtil {
   /**
    * Finds the function containing the given node.
    */
+  @CheckReturnValue
   public static Node getEnclosingFunction(Node n) {
     return getEnclosingType(n, Token.FUNCTION);
   }
@@ -2162,6 +2171,7 @@ public final class NodeUtil {
   /**
    * Finds the script containing the given node.
    */
+  @CheckReturnValue
   public static Node getEnclosingScript(Node n) {
     return getEnclosingType(n, Token.SCRIPT);
   }
@@ -2169,14 +2179,17 @@ public final class NodeUtil {
   /**
    * Finds the block containing the given node.
    */
+  @CheckReturnValue
   public static Node getEnclosingBlock(Node n) {
     return getEnclosingType(n, Token.BLOCK);
   }
 
+  @CheckReturnValue
   public static Node getEnclosingBlockScopeRoot(Node n) {
     return getEnclosingNode(n, createsBlockScope);
   }
 
+  @CheckReturnValue
   public static Node getEnclosingScopeRoot(Node n) {
     return getEnclosingNode(n, createsScope);
   }
@@ -2185,10 +2198,12 @@ public final class NodeUtil {
     return getEnclosingFunction(n) != null;
   }
 
+  @CheckReturnValue
   public static Node getEnclosingStatement(Node n) {
     return getEnclosingNode(n, isStatement);
   }
 
+  @CheckReturnValue
   public static Node getEnclosingNode(Node n, Predicate<Node> pred) {
     Node curr = n;
     while (curr != null && !pred.apply(curr)) {
@@ -2202,7 +2217,7 @@ public final class NodeUtil {
    */
   @Nullable
   static Node getFirstPropMatchingKey(Node n, String keyName) {
-    Preconditions.checkState(n.isObjectLit() || n.isClassMembers());
+    checkState(n.isObjectLit() || n.isClassMembers());
     for (Node keyNode : n.children()) {
       if ((keyNode.isStringKey() || keyNode.isMemberFunctionDef())
           && keyNode.getString().equals(keyName)) {
@@ -2217,7 +2232,7 @@ public final class NodeUtil {
    */
   @Nullable
   static Node getFirstComputedPropMatchingKey(Node objlit, Node key) {
-    Preconditions.checkState(objlit.isObjectLit());
+    checkState(objlit.isObjectLit());
     for (Node child : objlit.children()) {
       if (child.isComputedProp() && child.getFirstChild().isEquivalentTo(key)) {
         return child.getLastChild();
@@ -2325,7 +2340,7 @@ public final class NodeUtil {
    * @return The value node representing the new value.
    */
   public static Node getAssignedValue(Node n) {
-    Preconditions.checkState(n.isName(), n);
+    checkState(n.isName(), n);
     Node parent = n.getParent();
     if (parent.isVar()) {
       return n.getFirstChild();
@@ -2637,6 +2652,26 @@ public final class NodeUtil {
   }
 
   /**
+   * Permanently delete the given node from the AST, as well as report
+   * the related AST changes/deletions to the given compiler.
+   */
+  public static void deleteNode(Node n, AbstractCompiler compiler) {
+    Node parent = n.getParent();
+    NodeUtil.markFunctionsDeleted(n, compiler);
+    n.detach();
+    compiler.reportChangeToEnclosingScope(parent);
+  }
+
+  /**
+   * Permanently delete all the children of the given node, including reporting changes.
+   */
+  public static void deleteChildren(Node n, AbstractCompiler compiler) {
+    while (n.hasChildren()) {
+      deleteNode(n.getFirstChild(), compiler);
+    }
+  }
+
+  /**
    * Safely remove children while maintaining a valid node structure.
    * In some cases, this is done by removing the parent from the AST as well.
    */
@@ -2652,13 +2687,13 @@ public final class NodeUtil {
     } else if (node.isCatch()) {
       // The CATCH can can only be removed if there is a finally clause.
       Node tryNode = node.getGrandparent();
-      Preconditions.checkState(NodeUtil.hasFinally(tryNode));
+      checkState(NodeUtil.hasFinally(tryNode));
       node.detach();
     } else if (isTryCatchNodeContainer(node)) {
       // The container node itself can't be removed, but the contained CATCH
       // can if there is a 'finally' clause
       Node tryNode = node.getParent();
-      Preconditions.checkState(NodeUtil.hasFinally(tryNode));
+      checkState(NodeUtil.hasFinally(tryNode));
       node.detachChildren();
     } else if (node.isNormalBlock()) {
       // Simply empty the block.  This maintains source location and
@@ -2701,8 +2736,8 @@ public final class NodeUtil {
    * @param newStatement The statement to replace with.
    */
   public static void replaceDeclarationChild(Node declChild, Node newStatement) {
-    Preconditions.checkArgument(isNameDeclaration(declChild.getParent()));
-    Preconditions.checkArgument(null == newStatement.getParent());
+    checkArgument(isNameDeclaration(declChild.getParent()));
+    checkArgument(null == newStatement.getParent());
 
     Node decl = declChild.getParent();
     Node declParent = decl.getParent();
@@ -2715,7 +2750,7 @@ public final class NodeUtil {
       decl.removeChild(declChild);
       declParent.addChildBefore(newStatement, decl);
     } else {
-      Preconditions.checkState(decl.hasMoreThanOneChild());
+      checkState(decl.hasMoreThanOneChild());
       Node newDecl = new Node(decl.getToken()).srcref(decl);
       for (Node after = declChild.getNext(), next; after != null; after = next) {
         next = after.getNext();
@@ -2731,7 +2766,7 @@ public final class NodeUtil {
    * Add a finally block if one does not exist.
    */
   static void maybeAddFinally(Node tryNode) {
-    Preconditions.checkState(tryNode.isTry());
+    checkState(tryNode.isTry());
     if (!NodeUtil.hasFinally(tryNode)) {
       tryNode.addChildToBack(IR.block().srcref(tryNode));
     }
@@ -2742,7 +2777,7 @@ public final class NodeUtil {
    * @return Whether the block was removed.
    */
   public static boolean tryMergeBlock(Node block) {
-    Preconditions.checkState(block.isNormalBlock());
+    checkState(block.isNormalBlock());
     Node parent = block.getParent();
     // Try to remove the block if its parent is a block/script or if its
     // parent is label and it has exactly one child.
@@ -2772,7 +2807,7 @@ public final class NodeUtil {
    * Return a BLOCK node for the given FUNCTION node.
    */
   public static Node getFunctionBody(Node fn) {
-    Preconditions.checkArgument(fn.isFunction(), fn);
+    checkArgument(fn.isFunction(), fn);
     return fn.getLastChild();
   }
 
@@ -2897,7 +2932,7 @@ public final class NodeUtil {
    */
   static boolean isVarArgsFunction(Node function) {
     // TODO(johnlenz): rename this function
-    Preconditions.checkArgument(function.isFunction());
+    checkArgument(function.isFunction());
     return isNameReferenced(
         function.getLastChild(),
         "arguments",
@@ -3296,10 +3331,8 @@ public final class NodeUtil {
     }
 
     // make sure that the adding root looks ok
-    Preconditions.checkState(
-        addingRoot.isNormalBlock() || addingRoot.isModuleBody() || addingRoot.isScript());
-    Preconditions.checkState(
-        addingRoot.getFirstChild() == null || !addingRoot.getFirstChild().isScript());
+    checkState(addingRoot.isNormalBlock() || addingRoot.isModuleBody() || addingRoot.isScript());
+    checkState(addingRoot.getFirstChild() == null || !addingRoot.getFirstChild().isScript());
     return addingRoot;
   }
 
@@ -3595,7 +3628,7 @@ public final class NodeUtil {
         if (n.hasChildren()) {
           getLhsNodesHelper(n.getLastChild(), lhsNodes);
         } else {
-          Preconditions.checkState(isLValue(n));
+          checkState(isLValue(n));
           lhsNodes.add(n);
         }
         break;
@@ -3611,7 +3644,7 @@ public final class NodeUtil {
    * Retrieves lhs nodes declared in the current declaration.
    */
   static Iterable<Node> getLhsNodesOfDeclaration(Node declNode) {
-    Preconditions.checkArgument(
+    checkArgument(
         isNameDeclaration(declNode) || declNode.isParamList() || declNode.isCatch(), declNode);
     ArrayList<Node> lhsNodes = new ArrayList<>();
     getLhsNodesHelper(declNode, lhsNodes);
@@ -3659,7 +3692,7 @@ public final class NodeUtil {
    * @return A list of STRING_KEY properties defined by a Object.defineProperties(o, {...}) call
    */
   static Iterable<Node> getObjectDefinedPropertiesKeys(Node definePropertiesCall) {
-    Preconditions.checkArgument(NodeUtil.isObjectDefinePropertiesDefinition(definePropertiesCall));
+    checkArgument(NodeUtil.isObjectDefinePropertiesDefinition(definePropertiesCall));
     List<Node> properties = new ArrayList<>();
     Node objectLiteral = definePropertiesCall.getLastChild();
     for (Node key : objectLiteral.children()) {
@@ -3833,7 +3866,7 @@ public final class NodeUtil {
   /**
    * A predicate for matching name nodes with the specified node.
    */
-  private static class MatchNameNode implements Predicate<Node>{
+  static class MatchNameNode implements Predicate<Node>{
     final String name;
 
     MatchNameNode(String name){
@@ -4043,7 +4076,7 @@ public final class NodeUtil {
    * @return Whether a TRY node has a finally block.
    */
   static boolean hasFinally(Node n) {
-    Preconditions.checkArgument(n.isTry());
+    checkArgument(n.isTry());
     return n.getChildCount() == 3;
   }
 
@@ -4052,7 +4085,7 @@ public final class NodeUtil {
    * of a TRY.
    */
   static Node getCatchBlock(Node n) {
-    Preconditions.checkArgument(n.isTry());
+    checkArgument(n.isTry());
     return n.getSecondChild();
   }
 
@@ -4061,7 +4094,7 @@ public final class NodeUtil {
    * @see NodeUtil#getCatchBlock
    */
   static boolean hasCatchHandler(Node n) {
-    Preconditions.checkArgument(n.isNormalBlock());
+    checkArgument(n.isNormalBlock());
     return n.hasChildren() && n.getFirstChild().isCatch();
   }
 
@@ -4070,7 +4103,7 @@ public final class NodeUtil {
     * @return The Node containing the Function parameters.
     */
   public static Node getFunctionParameters(Node fnNode) {
-    Preconditions.checkArgument(fnNode.isFunction());
+    checkArgument(fnNode.isFunction());
     return fnNode.getSecondChild();
   }
 
@@ -4206,12 +4239,12 @@ public final class NodeUtil {
   // lineNo and columNo are 1-based.
   // Column number 1 represents a cursor at the start of the line.
   public static Node getNodeByLineCol(Node ancestor, int lineNo, int columNo) {
-    Preconditions.checkArgument(ancestor.isScript());
+    checkArgument(ancestor.isScript());
     Node current = ancestor;
     Node result = null;
     while (current != null) {
       int currLineNo = current.getLineno();
-      Preconditions.checkState(current.getLineno() <= lineNo);
+      checkState(current.getLineno() <= lineNo);
       Node nextSibling = current.getNext();
       if (nextSibling != null) {
         int nextSiblingLineNo = nextSibling.getLineno();
@@ -4389,7 +4422,7 @@ public final class NodeUtil {
    * argument or null if no such parameter exists.
    */
   static Node getArgumentForFunction(Node function, int index) {
-    Preconditions.checkState(function.isFunction());
+    checkState(function.isFunction());
     return getNthSibling(
         function.getSecondChild().getFirstChild(), index);
   }
@@ -4399,7 +4432,7 @@ public final class NodeUtil {
    * argument of the call or null if no such argument exists.
    */
   static Node getArgumentForCallOrNew(Node call, int index) {
-    Preconditions.checkState(isCallOrNew(call));
+    checkState(isCallOrNew(call));
     return getNthSibling(
       call.getSecondChild(), index);
   }
@@ -4429,7 +4462,7 @@ public final class NodeUtil {
   /** Return declared JSDoc type for the given name declaration, or null if none present. */
   @Nullable
   static JSTypeExpression getDeclaredTypeExpression(Node declaration) {
-    Preconditions.checkArgument(declaration.isName() || declaration.isStringKey());
+    checkArgument(declaration.isName() || declaration.isStringKey());
     JSDocInfo nameJsdoc = getBestJSDocInfo(declaration);
     if (nameJsdoc != null) {
       return nameJsdoc.getType();
@@ -4723,6 +4756,7 @@ public final class NodeUtil {
   /**
    * @return the change scope root
    */
+  @CheckReturnValue
   static Node getEnclosingChangeScopeRoot(Node n) {
     while (n != null && !isChangeScopeRoot(n)) {
       n = n.getParent();
@@ -4918,5 +4952,33 @@ public final class NodeUtil {
     for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
       markFunctionsDeleted(child, compiler);
     }
+  }
+
+  /** Returns the list of scope nodes which are parents of the provided list of scope nodes. */
+  public static List<Node> getParentChangeScopeNodes(List<Node> scopeNodes) {
+    Set<Node> parentScopeNodes = new LinkedHashSet<>(scopeNodes);
+    for (Node scopeNode : scopeNodes) {
+      parentScopeNodes.add(getEnclosingChangeScopeRoot(scopeNode));
+    }
+    return new ArrayList<>(parentScopeNodes);
+  }
+
+  /**
+   * Removes any scope nodes from the provided list that are nested within some other scope node
+   * also in the list. Returns the modified list.
+   */
+  public static List<Node> removeNestedChangeScopeNodes(List<Node> scopeNodes) {
+    Set<Node> uniqueScopeNodes = new LinkedHashSet<>(scopeNodes);
+    for (Node scopeNode : scopeNodes) {
+      for (Node ancestor = scopeNode.getParent();
+          ancestor != null;
+          ancestor = ancestor.getParent()) {
+        if (isChangeScopeRoot(ancestor) && uniqueScopeNodes.contains(ancestor)) {
+          uniqueScopeNodes.remove(scopeNode);
+          break;
+        }
+      }
+    }
+    return new ArrayList<>(uniqueScopeNodes);
   }
 }

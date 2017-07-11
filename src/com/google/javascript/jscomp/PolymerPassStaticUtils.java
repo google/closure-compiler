@@ -15,8 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
@@ -35,7 +36,7 @@ final class PolymerPassStaticUtils {
    * Switches all "this.$.foo" to "this.$['foo']".
    */
   static void switchDollarSignPropsToBrackets(Node objLit, final AbstractCompiler compiler) {
-    Preconditions.checkState(objLit.isObjectLit());
+    checkState(objLit.isObjectLit());
     for (Node keyNode : objLit.children()) {
       Node value = keyNode.getFirstChild();
       if (value != null && value.isFunction()) {
@@ -63,7 +64,7 @@ final class PolymerPassStaticUtils {
    * Makes sure that the keys for listeners and hostAttributes blocks are quoted to avoid renaming.
    */
   static void quoteListenerAndHostAttributeKeys(Node objLit) {
-    Preconditions.checkState(objLit.isObjectLit());
+    checkState(objLit.isObjectLit());
     for (Node keyNode : objLit.children()) {
       if (keyNode.isComputedProp()) {
         continue;

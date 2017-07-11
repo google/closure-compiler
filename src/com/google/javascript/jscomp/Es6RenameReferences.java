@@ -64,7 +64,7 @@ final class Es6RenameReferences extends AbstractPostOrderCallback {
         n.setString(newName);
         t.reportCodeChange();
         return;
-      } else if (current.isDeclared(oldName, false)) {
+      } else if (current.isDeclaredSloppy(oldName, false)) {
         return;
       } else {
         current = current.getParent();

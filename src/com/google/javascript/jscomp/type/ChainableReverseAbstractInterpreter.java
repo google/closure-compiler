@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp.type;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
@@ -29,7 +31,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TY
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
-import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.EnumElementType;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -76,7 +77,7 @@ public abstract class ChainableReverseAbstractInterpreter
    */
   public ChainableReverseAbstractInterpreter append(
       ChainableReverseAbstractInterpreter lastLink) {
-    Preconditions.checkArgument(lastLink.nextLink == null);
+    checkArgument(lastLink.nextLink == null);
     this.nextLink = lastLink;
     lastLink.firstLink = this.firstLink;
     return lastLink;
@@ -162,7 +163,7 @@ public abstract class ChainableReverseAbstractInterpreter
 
       case GETPROP:
         String qualifiedName = node.getQualifiedName();
-        Preconditions.checkNotNull(qualifiedName);
+        checkNotNull(qualifiedName);
 
         JSType origType = node.getJSType();
         origType = origType == null ? getNativeType(UNKNOWN_TYPE) : origType;

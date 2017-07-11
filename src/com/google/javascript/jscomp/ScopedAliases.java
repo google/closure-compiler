@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.ImmutableSet;
@@ -224,7 +227,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       Node replacement = aliasDefinition.cloneTree();
       replacement.useSourceInfoFromForTree(aliasReference);
       if (aliasReference.isStringKey()) {
-        Preconditions.checkState(!aliasReference.hasChildren());
+        checkState(!aliasReference.hasChildren());
         aliasReference.addChildToFront(replacement);
       } else {
         aliasReference.replaceWith(replacement);
@@ -247,8 +250,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         // Already visited.
         return;
       }
-      String aliasExpanded =
-          Preconditions.checkNotNull(aliasDefinition.getQualifiedName());
+      String aliasExpanded = checkNotNull(aliasDefinition.getQualifiedName());
       Preconditions.checkState(typeName.startsWith(aliasName),
           "%s must start with %s", typeName, aliasName);
       String replacement =

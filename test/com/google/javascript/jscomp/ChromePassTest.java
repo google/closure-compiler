@@ -15,8 +15,15 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /** Tests {@link ChromePass}. */
 public class ChromePassTest extends CompilerTestCase {
+  @Override
+  public void setUp() throws Exception {
+    super.setUp();
+    setLanguage(LanguageMode.ECMASCRIPT_2017, LanguageMode.ECMASCRIPT_2017);
+  }
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -38,6 +45,10 @@ public class ChromePassTest extends CompilerTestCase {
             + "cr.define('my.namespace.name', function() {\n"
             + "  return {};\n"
             + "});");
+  }
+
+  public void testChromePassIgnoresModules() throws Exception {
+    testSame("export var x;");
   }
 
   public void testCrDefineAssignsExportedFunctionByQualifiedName() throws Exception {
@@ -370,6 +381,78 @@ public class ChromePassTest extends CompilerTestCase {
     test(
         "cr.define('cr.ui', function() {\n" + "  return {};\n" + "});",
         "cr.ui = cr.ui || {};\n" + "cr.define('cr.ui', function() {\n" + "  return {};\n" + "});");
+  }
+
+  public void testCrDefineFunction() throws Exception {
+    test(
+        LINE_JOINER.join(
+            "cr.define('settings', function() {",
+            "  var x = 0;",
+            "  function C() {}",
+            "  return { C: C };",
+            "});"),
+        LINE_JOINER.join(
+            "var settings = settings || {};",
+            "cr.define('settings', function() {",
+            "  var x = 0;",
+            "  settings.C = function C() {};",
+            "  return { C: settings.C };",
+            "});"));
+  }
+
+  public void testCrDefineClassStatement() throws Exception {
+    test(
+        LINE_JOINER.join(
+            "cr.define('settings', function() {",
+            "  var x = 0;",
+            "  class C {}",
+            "  return { C: C };",
+            "});"),
+        LINE_JOINER.join(
+            "var settings = settings || {};",
+            "cr.define('settings', function() {",
+            "  var x = 0;",
+            "  settings.C = class {}",
+            "  return { C: settings.C };",
+            "});"));
+  }
+
+  public void testCrDefineClassExpression() throws Exception {
+    test(
+        LINE_JOINER.join(
+            "cr.define('settings', function() {",
+            "  var x = 0;",
+            "  var C = class {}",
+            "  return { C: C };",
+            "});"),
+        LINE_JOINER.join(
+            "var settings = settings || {};",
+            "cr.define('settings', function() {",
+            "  var x = 0;",
+            "  settings.C = class {}",
+            "  return { C: settings.C };",
+            "});"));
+  }
+
+  public void testCrDefineClassWithInternalSelfReference() throws Exception {
+    test(
+        LINE_JOINER.join(
+            "cr.define('settings', function() {",
+            "  var x = 0;",
+            "  class C {",
+            "    static create() { return new C; }",
+            "  }",
+            "  return { C: C };",
+            "});"),
+        LINE_JOINER.join(
+            "var settings = settings || {};",
+            "cr.define('settings', function() {",
+            "  var x = 0;",
+            "  settings.C = class {",
+            "    static create() { return new settings.C; }",
+            "  }",
+            "  return { C: settings.C };",
+            "});"));
   }
 
   public void testCrExportPathInvalidNumberOfArguments() throws Exception {

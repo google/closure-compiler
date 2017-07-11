@@ -16,12 +16,12 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -170,7 +170,7 @@ class CheckUnusedPrivateProperties
   }
 
   private boolean isCandidatePropertyDefinition(Node n) {
-    Preconditions.checkState(n.isGetProp(), n);
+    checkState(n.isGetProp(), n);
     Node target = n.getFirstChild();
     return target.isThis()
         || (isConstructor(target))

@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -23,6 +27,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -61,7 +67,7 @@ public final class RawNominalType extends Namespace {
   // TODO(rluble): Serialize this field. If this field is serialized naively, a cycle is introduced
   // which results in NPE when attempting to deserialize an HashSet that contains object that are
   // only partially deserialized.
-  private final transient Set<RawNominalType> subtypes = new LinkedHashSet<>();
+  private transient Set<RawNominalType> subtypes = new LinkedHashSet<>();
   private ImmutableSet<NominalType> interfaces = null;
   private final Kind kind;
   private final boolean isAbstractClass;
@@ -89,7 +95,7 @@ public final class RawNominalType extends Namespace {
       JSTypes commonTypes, Node defSite, String name,
       ImmutableList<String> typeParameters, Kind kind, ObjectKind objectKind, boolean isAbstract) {
     super(commonTypes, name, defSite);
-    Preconditions.checkNotNull(objectKind);
+    checkNotNull(objectKind);
     Preconditions.checkState(isValidDefsite(defSite), "Invalid defsite %s", defSite);
     if (typeParameters == null) {
       typeParameters = ImmutableList.of();
@@ -164,7 +170,7 @@ public final class RawNominalType extends Namespace {
   }
 
   JSType getPrototypeObject() {
-    Preconditions.checkState(this.isFrozen);
+    checkState(this.isFrozen);
     return this.protoObject;
   }
 
@@ -200,7 +206,7 @@ public final class RawNominalType extends Namespace {
 
   public boolean isStruct() {
     // The objectKind of interfaces can change during GTI.
-    Preconditions.checkState(isFrozen() || isClass());
+    checkState(isFrozen() || isClass());
     return this.objectKind.isStruct();
   }
 
@@ -229,12 +235,12 @@ public final class RawNominalType extends Namespace {
   }
 
   public void setCtorFunction(FunctionType ctorFn) {
-    Preconditions.checkState(!this.isFrozen);
+    checkState(!this.isFrozen);
     this.ctorFn = ctorFn;
   }
 
   boolean hasAncestorClass(RawNominalType ancestor) {
-    Preconditions.checkState(ancestor.isClass());
+    checkState(ancestor.isClass());
     if (this == ancestor) {
       return true;
     } else if (this.superclass == null) {
@@ -246,8 +252,8 @@ public final class RawNominalType extends Namespace {
 
   /** @return Whether the superclass can be added without creating a cycle. */
   public boolean addSuperClass(NominalType superclass) {
-    Preconditions.checkState(!this.isFrozen);
-    Preconditions.checkState(this.superclass == null);
+    checkState(!this.isFrozen);
+    checkState(this.superclass == null);
     if (superclass.hasAncestorClass(this)) {
       return false;
     }
@@ -257,7 +263,7 @@ public final class RawNominalType extends Namespace {
   }
 
   private void addSubtype(RawNominalType subtype) {
-    Preconditions.checkState(!this.isFrozen);
+    checkState(!this.isFrozen);
     if (!isBuiltinObject()) {
       this.subtypes.add(subtype);
     }
@@ -283,7 +289,7 @@ public final class RawNominalType extends Namespace {
   }
 
   boolean hasAncestorInterface(RawNominalType ancestor) {
-    Preconditions.checkState(ancestor.isInterface());
+    checkState(ancestor.isInterface());
     if (this == ancestor) {
       return true;
     } else if (this.interfaces == null) {
@@ -318,9 +324,9 @@ public final class RawNominalType extends Namespace {
 
   /** @return Whether the interface can be added without creating a cycle. */
   public boolean addInterfaces(ImmutableSet<NominalType> interfaces) {
-    Preconditions.checkState(!this.isFrozen);
-    Preconditions.checkState(this.interfaces == null);
-    Preconditions.checkNotNull(interfaces);
+    checkState(!this.isFrozen);
+    checkState(this.interfaces == null);
+    checkNotNull(interfaces);
     if (this.isInterface()) {
       for (NominalType interf : interfaces) {
         if (interf.hasAncestorInterface(this)) {
@@ -407,7 +413,7 @@ public final class RawNominalType extends Namespace {
   }
 
   private Property getPropFromClass(String pname) {
-    Preconditions.checkState(isClass());
+    checkState(isClass());
     Property p = getOwnProp(pname);
     if (p != null) {
       return p;
@@ -422,7 +428,7 @@ public final class RawNominalType extends Namespace {
   }
 
   private Property getPropFromInterface(String pname) {
-    Preconditions.checkState(isInterface());
+    checkState(isInterface());
     Property p = getOwnProp(pname);
     if (p != null) {
       return p;
@@ -482,7 +488,7 @@ public final class RawNominalType extends Namespace {
       return null;
     }
     if (isClass()) {
-      Preconditions.checkState(this.name.equals("Object"));
+      checkState(this.name.equals("Object"));
       return getAllPropsOfClass();
     }
     if (this.allProps == null) {
@@ -498,8 +504,8 @@ public final class RawNominalType extends Namespace {
   }
 
   ImmutableSet<String> getAllPropsOfClass() {
-    Preconditions.checkState(isClass());
-    Preconditions.checkState(this.isFrozen);
+    checkState(isClass());
+    checkState(this.isFrozen);
     if (this.allProps == null) {
       ImmutableSet.Builder<String> builder = ImmutableSet.builder();
       if (this.superclass != null) {
@@ -511,7 +517,7 @@ public final class RawNominalType extends Namespace {
   }
 
   public void addPropertyWhichMayNotBeOnAllInstances(String pname, JSType type) {
-    Preconditions.checkState(!this.isFrozen);
+    checkState(!this.isFrozen);
     if (this.classProps.containsKey(pname) || this.protoProps.containsKey(pname)) {
       return;
     }
@@ -525,7 +531,7 @@ public final class RawNominalType extends Namespace {
 
   /** Add a new non-optional declared property to instances of this class */
   public void addClassProperty(String pname, Node defSite, JSType type, boolean isConstant) {
-    Preconditions.checkState(!this.isFrozen);
+    checkState(!this.isFrozen);
     if (type == null && isConstant) {
       type = this.commonTypes.UNKNOWN;
     }
@@ -543,7 +549,7 @@ public final class RawNominalType extends Namespace {
 
   /** Add a new undeclared property to instances of this class */
   public void addUndeclaredClassProperty(String pname, JSType type, Node defSite) {
-    Preconditions.checkState(!this.isFrozen);
+    checkState(!this.isFrozen);
     // Only do so if there isn't a declared prop already.
     if (mayHaveProp(pname)) {
       return;
@@ -555,7 +561,7 @@ public final class RawNominalType extends Namespace {
 
   /** Add a new declared prototype property to this class */
   public void addProtoProperty(String pname, Node defSite, JSType type, boolean isConstant) {
-    Preconditions.checkState(!this.isFrozen);
+    checkState(!this.isFrozen);
     if (type == null && isConstant) {
       type = this.commonTypes.UNKNOWN;
     }
@@ -587,7 +593,7 @@ public final class RawNominalType extends Namespace {
 
   /** Add a new undeclared prototype property to this class */
   public void addUndeclaredProtoProperty(String pname, Node defSite, JSType inferredType) {
-    Preconditions.checkState(!this.isFrozen);
+    checkState(!this.isFrozen);
     Property existingProp = this.protoProps.get(pname);
     if (existingProp != null && existingProp.isDeclared()) {
       return;
@@ -610,13 +616,13 @@ public final class RawNominalType extends Namespace {
 
   /** Add a new non-optional declared property to this class's constructor */
   public void addCtorProperty(String pname, Node defSite, JSType type, boolean isConstant) {
-    Preconditions.checkState(!this.isFrozen);
+    checkState(!this.isFrozen);
     super.addProperty(pname, defSite, type, isConstant);
   }
 
   /** Add a new undeclared property to this class's constructor */
   public void addUndeclaredCtorProperty(String pname, Node defSite, JSType inferredType) {
-    Preconditions.checkState(!this.isFrozen);
+    checkState(!this.isFrozen);
     Property existingProp = getNsProp(pname);
     if (existingProp != null && !existingProp.isDeclared()) {
       inferredType = JSType.join(existingProp.getType(), inferredType);
@@ -664,8 +670,9 @@ public final class RawNominalType extends Namespace {
     }
     NominalType protoNT = this.superclass;
     if (protoNT == null) {
-      NominalType builtinObj = Preconditions.checkNotNull(this.commonTypes.getObjectType(),
-          "Missing externs for the builtin Object type");
+      NominalType builtinObj =
+          checkNotNull(
+              this.commonTypes.getObjectType(), "Missing externs for the builtin Object type");
       protoNT = builtinObj;
     }
     // When Bar<T> extends Foo<T>, all Bar instances (Bar<number>, Bar<string>, ...) have the same
@@ -704,7 +711,7 @@ public final class RawNominalType extends Namespace {
   @Override
   protected JSType computeJSType() {
     Preconditions.checkState(this.isFrozen, "Unexpected not-frozen type: %s", this);
-    Preconditions.checkState(this.namespaceType == null);
+    checkState(this.namespaceType == null);
     return JSType.fromObjectType(ObjectType.makeObjectType(
         this.commonTypes, this.commonTypes.getFunctionType(), null, this.ctorFn,
         this, this.ctorFn.isLoose(), ObjectKind.UNRESTRICTED));
@@ -723,6 +730,29 @@ public final class RawNominalType extends Namespace {
 
   public JSType getInstanceWithNullability(boolean includeNull) {
     return includeNull ? wrappedAsNullableJSType : wrappedAsJSType;
+  }
+
+  public void fixSubtypesAfterDeserialization() {
+    if (this.superclass != null) {
+      this.superclass.getRawNominalType().addSubtype(this);
+    }
+    for (NominalType superInterface : this.interfaces) {
+      superInterface.getRawNominalType().addSubtype(this);
+    }
+  }
+
+  public void unfreezeForDeserialization() {
+    this.isFrozen = false;
+  }
+
+  public void refreezeAfterDeserialization() {
+    this.isFrozen = true;
+  }
+
+  @GwtIncompatible("ObjectInputStream")
+  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    in.defaultReadObject();
+    this.subtypes = new LinkedHashSet<>();
   }
 
   // equals and hashCode default to reference equality, which is what we want

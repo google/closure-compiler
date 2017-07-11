@@ -15,7 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.TypeICompilerTestCase.TypeInferenceMode;
@@ -47,7 +48,7 @@ public abstract class CodePrinterTestBase extends TestCase {
   }
 
   Node parse(String js, TypeInferenceMode mode) {
-    Preconditions.checkArgument(mode != TypeInferenceMode.BOTH);
+    checkArgument(mode != TypeInferenceMode.BOTH);
     Compiler compiler = new Compiler();
     lastCompiler = compiler;
     CompilerOptions options = new CompilerOptions();

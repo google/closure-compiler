@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Supplier;
@@ -75,6 +77,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   @Nullable
   abstract SourceFile getSourceFileByName(String sourceName);
 
+  @Nullable
+  abstract Node getScriptNode(String filename);
+
   /**
    * Gets the module graph. May return null if there aren't at least two
    * modules.
@@ -114,6 +119,8 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   public abstract JSTypeRegistry getTypeRegistry();
 
   public abstract TypeIRegistry getTypeIRegistry();
+
+  public abstract void clearTypeIRegistry();
 
   abstract void forwardDeclareType(String typeName);
 
@@ -309,6 +316,15 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract void removeChangeHandler(CodeChangeHandler handler);
 
+  /** Register a provider for some type of index. */
+  abstract void addIndexProvider(IndexProvider<?> indexProvider);
+
+  /**
+   * Returns, from a provider, the desired index of type T, otherwise null if no provider is
+   * registered for the given type.
+   */
+  abstract <T> T getIndex(Class<T> type);
+
   /** Let the PhaseOptimizer know which scope a pass is currently analyzing */
   abstract void setChangeScope(Node n);
 
@@ -321,6 +337,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * is the first time the pass has run.
    */
   abstract List<Node> getChangedScopeNodesForPass(String passName);
+
+  /**
+   * An accumulation of deleted scope nodes since the last time the given pass was run. A returned
+   * null or empty list means no scope nodes have been deleted since the last run or this is the
+   * first time the pass has run.
+   */
+  abstract List<Node> getDeletedScopeNodesForPass(String passName);
 
   /** Called to indicate that the current change stamp has been used */
   abstract void incrementChangeStamp();
@@ -559,7 +582,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * @param object the object to store as the annotation
    */
   void setAnnotation(String key, Object object) {
-    Preconditions.checkArgument(object != null, "The stored annotation value cannot be null.");
+    checkArgument(object != null, "The stored annotation value cannot be null.");
     Preconditions.checkArgument(
         !annotationMap.containsKey(key), "Cannot overwrite the existing annotation '%s'.", key);
     annotationMap.put(key, object);

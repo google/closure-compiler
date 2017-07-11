@@ -15,6 +15,10 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -63,8 +67,8 @@ class FunctionInjector {
       boolean allowDecomposition,
       boolean assumeStrictThis,
       boolean assumeMinimumCapture) {
-    Preconditions.checkNotNull(compiler);
-    Preconditions.checkNotNull(safeNameIdSupplier);
+    checkNotNull(compiler);
+    checkNotNull(safeNameIdSupplier);
     this.compiler = compiler;
     this.safeNameIdSupplier = safeNameIdSupplier;
     this.allowDecomposition = allowDecomposition;
@@ -143,7 +147,7 @@ class FunctionInjector {
     }
 
     final String fnRecursionName = fnNode.getFirstChild().getString();
-    Preconditions.checkState(fnRecursionName != null);
+    checkState(fnRecursionName != null);
 
     // If the function references "arguments" directly in the function
     boolean referencesArguments = NodeUtil.isNameReferenced(
@@ -246,7 +250,7 @@ class FunctionInjector {
    * Inline a function into the call site.
    */
   Node inline(Reference ref, String fnName, Node fnNode) {
-    Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
+    checkState(compiler.getLifeCycleStage().isNormalized());
     Node result;
     if (ref.mode == InliningMode.DIRECT) {
       result = inlineReturnValue(ref, fnNode);
@@ -282,13 +286,13 @@ class FunctionInjector {
       newExpression = NodeUtil.newUndefinedNode(srcLocation);
     } else {
       Node returnNode = block.getFirstChild();
-      Preconditions.checkArgument(returnNode.isReturn());
+      checkArgument(returnNode.isReturn());
 
       // Clone the return node first.
       Node safeReturnNode = returnNode.cloneTree();
       Node inlineResult = FunctionArgumentInjector.inject(
           null, safeReturnNode, null, argMap);
-      Preconditions.checkArgument(safeReturnNode == inlineResult);
+      checkArgument(safeReturnNode == inlineResult);
       newExpression = safeReturnNode.removeFirstChild();
       NodeUtil.markNewScopesChanged(newExpression, compiler);
     }
@@ -382,7 +386,7 @@ class FunctionInjector {
 
         // Reclassify after move
         CallSiteType callSiteType = injector.classifyCallSite(ref);
-        Preconditions.checkState(this != callSiteType);
+        checkState(this != callSiteType);
         callSiteType.prepare(injector, ref);
       }
     },
@@ -400,7 +404,7 @@ class FunctionInjector {
 
         // Reclassify after decomposition
         CallSiteType callSiteType = injector.classifyCallSite(ref);
-        Preconditions.checkState(this != callSiteType);
+        checkState(this != callSiteType);
         callSiteType.prepare(injector, ref);
       }
     };
@@ -455,7 +459,7 @@ class FunctionInjector {
         } else if (type == DecompositionType.DECOMPOSABLE) {
           return CallSiteType.DECOMPOSABLE_EXPRESSION;
         } else {
-          Preconditions.checkState(type == DecompositionType.UNDECOMPOSABLE);
+          checkState(type == DecompositionType.UNDECOMPOSABLE);
         }
       }
     }
@@ -491,7 +495,7 @@ class FunctionInjector {
     // TODO(johnlenz): Consider storing the callSite classification in the
     // reference object and passing it in here.
     CallSiteType callSiteType = classifyCallSite(ref);
-    Preconditions.checkArgument(callSiteType != CallSiteType.UNSUPPORTED);
+    checkArgument(callSiteType != CallSiteType.UNSUPPORTED);
 
     // Store the name for the result. This will be used to
     // replace "return expr" statements with "resultName = expr"
@@ -753,7 +757,7 @@ class FunctionInjector {
         cArg = cArg.getNext();
       } else {
         // ".apply" call should be filtered before this.
-        Preconditions.checkState(!NodeUtil.isFunctionObjectApply(callNode));
+        checkState(!NodeUtil.isFunctionObjectApply(callNode));
       }
     }
 
@@ -954,7 +958,7 @@ class FunctionInjector {
   public void setKnownConstants(Set<String> knownConstants) {
     // This is only expected to be set once. The same set should be used
     // when evaluating call-sites and inlining calls.
-    Preconditions.checkState(this.knownConstants.isEmpty());
+    checkState(this.knownConstants.isEmpty());
     this.knownConstants = knownConstants;
   }
 }

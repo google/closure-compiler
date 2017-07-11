@@ -177,7 +177,7 @@ $jscomp.polyfill('Promise',
 
     /**
      * These functions must be executed when this promise settles.
-     * @private {Array<function()>}
+     * @private {?Array<function()>}
      */
     this.onSettledCallbacks_ = [];
 

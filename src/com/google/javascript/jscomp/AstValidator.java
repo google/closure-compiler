@@ -920,7 +920,7 @@ public final class AstValidator implements CompilerPass {
 
   private void validateForIn(Node n) {
     validateNodeType(Token.FOR_IN, n);
-    validateChildCount(n, 3);
+    validateChildCount(n);
     validateVarOrAssignmentTarget(n.getFirstChild());
     validateExpression(n.getSecondChild());
     validateBlock(n.getLastChild());

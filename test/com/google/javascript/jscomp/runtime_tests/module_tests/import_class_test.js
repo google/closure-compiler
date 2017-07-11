@@ -20,11 +20,11 @@
  * @author moz@google.com (Michael Zhou)
  */
 
-import {Parent} from './module_test_resources/exportClass';
+import {Parent} from './module_test_resources/exportClass.js';
 
 export class Child extends Parent {
   /**
-   * @param {./module_test_resources/exportClass.Parent} parent The parent.
+   * @param {Parent} parent The parent.
    */
   useParent(parent) {
   }

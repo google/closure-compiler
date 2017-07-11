@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Used to cut-off recursion when checking structural interfaces for subtyping.
@@ -40,7 +40,7 @@ final class SubtypeCache {
   }
 
   SubtypeCache with(NominalType key, NominalType value) {
-    Preconditions.checkArgument(value.isInterface());
+    checkArgument(value.isInterface());
     return new SubtypeCache(this.m.with(key, value));
   }
 }

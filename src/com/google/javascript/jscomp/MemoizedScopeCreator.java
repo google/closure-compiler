@@ -16,9 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
-import com.google.javascript.rhino.Node;
+import static com.google.common.base.Preconditions.checkState;
 
+import com.google.javascript.rhino.Node;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,7 +51,7 @@ class MemoizedScopeCreator implements ScopeCreator {
       scope = delegate.createScope(n, parent);
       scopesByScopeRoot.put(n, scope);
     } else {
-      Preconditions.checkState(parent == scope.getParent());
+      checkState(parent == scope.getParent());
     }
     return scope;
   }

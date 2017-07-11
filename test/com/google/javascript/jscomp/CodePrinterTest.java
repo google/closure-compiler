@@ -1301,7 +1301,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
   }
 
   public void testEmitUnknownParamTypesAsAllType() {
-    // TODO(sdh): Why does NTI infer `x` to be optional?
+    // x is unused, so NTI infers that x can be omitted.
     assertTypeAnnotations(
         "var a = function(x) {}",
         LINE_JOINER.join(
@@ -1324,6 +1324,17 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         LINE_JOINER.join(
             "/**",
             " * @param {string=} x",
+            " * @return {undefined}",
+            " */",
+            "var a = function(x) {\n};\n"));
+  }
+
+  public void testOptionalTypesAnnotation2() {
+    assertTypeAnnotations(
+        "/** @param {undefined=} x */ var a = function(x) {}",
+        LINE_JOINER.join(
+            "/**",
+            " * @param {undefined=} x",
             " * @return {undefined}",
             " */",
             "var a = function(x) {\n};\n"));
@@ -1378,7 +1389,8 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         LINE_JOINER.join(
             "/** @const */ var goog = goog || {};",
             "/** @enum {string} */\ngoog.Enum = {FOO:\"x\", BAR:\"y\"};",
-            "/** @type {{BAR: string=, FOO: string=}} */\ngoog.Enum2 = goog.x ? {} : goog.Enum;",
+            "/** @type {{BAR: goog.Enum=, FOO: goog.Enum=}} */",
+            "goog.Enum2 = goog.x ? {} : goog.Enum;",
             ""));
   }
 
@@ -1386,6 +1398,35 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertTypeAnnotations(
         "/** @enum {!Object} */ var Enum = {FOO: {}};",
         "/** @enum {!Object} */\nvar Enum = {FOO:{}};\n");
+  }
+
+  public void testEnumAnnotation4() {
+    assertTypeAnnotations(
+        LINE_JOINER.join(
+            "/** @enum {number} */ var E = {A:1, B:2};",
+            "function f(/** !E */ x) { return x; }"),
+        LINE_JOINER.join(
+            "/** @enum {number} */",
+            "var E = {A:1, B:2};",
+            "/**",
+            " * @param {number} x",
+            " * @return {?}",
+            " */",
+            "function f(x) {",
+            "  return x;",
+            "}",
+            ""),
+        LINE_JOINER.join(
+            "/** @enum {number} */",
+            "var E = {A:1, B:2};",
+            "/**",
+            " * @param {E} x",
+            " * @return {E}",
+            " */",
+            "function f(x) {",
+            "  return x;",
+            "}",
+            ""));
   }
 
   public void testClosureLibraryTypeAnnotationExamples() {
@@ -2439,6 +2480,24 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     // Parens required for first operand to a conditional, but not the rest.
     assertPrintSame("((x)=>1)?a:b");
     assertPrint("x?((x)=>0):((x)=>1)", "x?(x)=>0:(x)=>1");
+  }
+
+  public void testParensAroundArrowReturnValue() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertPrintSame("()=>({})");
+    assertPrintSame("()=>({a:1})");
+    assertPrintSame("()=>({a:1,b:2})");
+    assertPrint("()=>/** @type {Object} */({})", "()=>({})");
+    assertPrint("()=>/** @type {Object} */({a:1})", "()=>({a:1})");
+    assertPrint("()=>/** @type {Object} */({a:1,b:2})", "()=>({a:1,b:2})");
+    assertPrint("()=>/** @type {number} */(3)", "()=>3");
+
+    assertPrintSame("()=>(1,2)");
+    assertPrintSame("()=>({},2)");
+    assertPrintSame("()=>(1,{})");
+    assertPrint("()=>/** @type {?} */(1,2)", "()=>(1,2)");
+    assertPrint("()=>/** @type {?} */({},2)", "()=>({},2)");
+    assertPrint("()=>/** @type {?} */(1,{})", "()=>(1,{})");
   }
 
   public void testPrettyArrowFunction() {

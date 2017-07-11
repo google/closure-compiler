@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {x} from './module_test_resources/exportSpec';
+import {x} from './module_test_resources/exportSpec.js';
 
 function testX() {
   assertEquals(5, x);

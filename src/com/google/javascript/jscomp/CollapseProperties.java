@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
@@ -233,7 +237,7 @@ class CollapseProperties implements CompilerPass {
         name.getFullName());
     Node varNode = IR.var(nameNode).useSourceInfoIfMissingFrom(nameNode);
 
-    Preconditions.checkState(ref.node.getParent().isExprResult());
+    checkState(ref.node.getParent().isExprResult());
     Node parent = ref.node.getParent();
     Node grandparent = parent.getParent();
     grandparent.replaceChild(parent, varNode);
@@ -330,7 +334,7 @@ class CollapseProperties implements CompilerPass {
     Token nType = n.getToken();
     boolean isQName = nType == Token.NAME || nType == Token.GETPROP;
     boolean isObjKey = NodeUtil.isObjectLitKey(n);
-    Preconditions.checkState(isObjKey || isQName);
+    checkState(isObjKey || isQName);
     if (isQName) {
       for (int i = 1; i < depth && n.hasChildren(); i++) {
         n = n.getFirstChild();
@@ -465,7 +469,7 @@ class CollapseProperties implements CompilerPass {
       compiler.reportChangeToEnclosingScope(varNode);
     } else {
       // This must be a complex assignment.
-      Preconditions.checkNotNull(ref.getTwin());
+      checkNotNull(ref.getTwin());
 
       // BEFORE:
       // ... (x.y = 3);
@@ -809,9 +813,9 @@ class CollapseProperties implements CompilerPass {
    * @param addAfter The child of after which new variables should be added
    */
   private void addStubsForUndeclaredProperties(Name n, String alias, Node parent, Node addAfter) {
-    Preconditions.checkState(n.canCollapseUnannotatedChildNames(), n);
-    Preconditions.checkArgument(NodeUtil.isStatementBlock(parent), parent);
-    Preconditions.checkNotNull(addAfter);
+    checkState(n.canCollapseUnannotatedChildNames(), n);
+    checkArgument(NodeUtil.isStatementBlock(parent), parent);
+    checkNotNull(addAfter);
     if (n.props == null) {
       return;
     }

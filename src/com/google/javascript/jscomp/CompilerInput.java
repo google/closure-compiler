@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -117,8 +121,8 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     Node root = ast.getAstRoot(compiler);
     // The root maybe null if the AST can not be created.
     if (root != null) {
-      Preconditions.checkState(root.isScript());
-      Preconditions.checkNotNull(root.getInputId());
+      checkState(root.isScript());
+      checkNotNull(root.getInputId());
     }
     return root;
   }
@@ -227,7 +231,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
 
     // If the code is NOT a JsAst, then it was not originally JS code.
     // Look at the Ast for dependency info.
-    if (!(ast instanceof JsAst)) {
+    if (!(ast instanceof JsAst) || !JsFileParser.isSupported()) {
 
       DepsFinder finder = new DepsFinder(compiler.getCodingConvention());
       Node root = getAstRoot(compiler);
@@ -280,7 +284,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
 
     void visitTree(Node n) {
       visitSubtree(n, null);
-      Preconditions.checkArgument(n.isScript());
+      checkArgument(n.isScript());
       FeatureSet features = (FeatureSet) n.getProp(Node.FEATURE_SET);
       if (features != null) {
         // Only add the "lang" load flag if it's not the default (es3), so that
@@ -293,27 +297,29 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     }
 
     void visitSubtree(Node n, Node parent) {
-      if (n.isCall()) {
-        boolean isModuleDetected =  codingConvention.extractIsModuleFile(n, parent);
+      switch (n.getToken()) {
+        case CALL:
+          boolean isModuleDetected = codingConvention.extractIsModuleFile(n, parent);
 
-        if (isModuleDetected) {
-          loadFlags.put("module", "goog");
-        }
+          if (isModuleDetected) {
+            loadFlags.put("module", "goog");
+          }
 
-        String require =
-            codingConvention.extractClassNameIfRequire(n, parent);
-        if (require != null) {
-          requires.add(require);
-        }
+          String require = codingConvention.extractClassNameIfRequire(n, parent);
+          if (require != null) {
+            requires.add(require);
+          }
 
-        String provide =
-            codingConvention.extractClassNameIfProvide(n, parent);
-        if (provide != null) {
-          provides.add(provide);
-        }
-        return;
-      } else if (parent != null && !parent.isExprResult() && !NodeUtil.isTopLevel(parent)) {
-        return;
+          String provide = codingConvention.extractClassNameIfProvide(n, parent);
+          if (provide != null) {
+            provides.add(provide);
+          }
+          return;
+        default:
+          if (parent != null && !parent.isExprResult() && !NodeUtil.isTopLevel(parent)) {
+            return;
+          }
+          break;
       }
 
       for (Node child = n.getFirstChild();
@@ -335,8 +341,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   /** Sets the module to which the input belongs. */
   public void setModule(JSModule module) {
     // An input may only belong to one module.
-    Preconditions.checkArgument(
-        module == null || this.module == null || this.module == module);
+    checkArgument(module == null || this.module == null || this.module == module);
     this.module = module;
   }
 

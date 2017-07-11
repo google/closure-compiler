@@ -16,10 +16,10 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.javascript.jscomp.graph.LatticeElement;
+import static com.google.common.base.Preconditions.checkArgument;
 
+import com.google.common.base.Function;
+import com.google.javascript.jscomp.graph.LatticeElement;
 import java.util.Iterator;
 import java.util.List;
 
@@ -36,7 +36,7 @@ interface JoinOp<L extends LatticeElement> extends Function<List<L>, L> {
       implements JoinOp<L> {
     @Override
     public L apply(List<L> values) {
-      Preconditions.checkArgument(!values.isEmpty());
+      checkArgument(!values.isEmpty());
       int size = values.size();
       if (size == 1) {
         return values.get(0);

@@ -491,6 +491,24 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertTrue(secondLevelBLockScope.isDeclared("X", false));
   }
 
+  public void testSwitchScope() {
+    String js =
+        "switch (b) { "
+            + "  case 1: "
+            + "    b; "
+            + "  case 2: "
+            + "    let c = 4; "
+            + "    c; "
+            + "}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertFalse(globalScope.isDeclared("c", false));
+
+    Node switchNode = root.getFirstChild();
+    Scope switchScope = scopeCreator.createScope(switchNode, globalScope);
+    assertTrue(switchScope.isDeclared("c", false));
+  }
+
   public void testForLoopScope() {
     String js = "for (let i = 0;;) { let x; }";
     Node root = getRoot(js);
@@ -538,7 +556,8 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Node functionBlock = NodeUtil.getFunctionBody(function);
     Scope fBlockScope = scopeCreator.createScope(functionBlock, functionScope);
 
-    assertTrue(fBlockScope.isDeclared("x", false));
+    assertFalse(fBlockScope.isDeclared("x", false));
+    assertTrue(fBlockScope.isDeclaredSloppy("x", false));
     assertFalse(fBlockScope.isDeclared("y", false));
 
     Node ifBlock = functionBlock.getLastChild().getLastChild();
@@ -679,7 +698,8 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
 
     Node fBlock = NodeUtil.getFunctionBody(fNode);
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
-    assertTrue(fBlockScope.isDeclared("x", false));
+    assertFalse(fBlockScope.isDeclared("x", false));
+    assertTrue(fBlockScope.isDeclaredSloppy("x", false));
   }
 
   public void testOnlyOneDeclaration() {
@@ -692,7 +712,8 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
 
     Node fBlock = fNode.getLastChild();
     Scope fBlockScope = scopeCreator.createScope(fBlock, fScope);
-    assertTrue(fBlockScope.isDeclared("x", false));
+    assertFalse(fBlockScope.isDeclared("x", false));
+    assertTrue(fBlockScope.isDeclaredSloppy("x", false));
 
     Node ifBlock = fBlock.getFirstChild().getLastChild();
     Scope ifBlockScope = scopeCreator.createScope(ifBlock, fBlockScope);

@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
@@ -225,7 +226,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       } else {
         // TODO(moz): It's not yet clear if we need another kind of NameContext for block scopes
         // in ES6, use anonymous node for now and investigate later.
-        Preconditions.checkState(NodeUtil.createsBlockScope(root), scope);
+        checkState(NodeUtil.createsBlockScope(root), scope);
         symbolStack.push(new NameContext(anonymousNode, scope));
       }
     }
@@ -575,9 +576,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     GlobalFunction(Node nameNode, Var var, JSModule module) {
       Node parent = nameNode.getParent();
-      Preconditions.checkState(
-          parent.isVar() ||
-          NodeUtil.isFunctionDeclaration(parent));
+      checkState(parent.isVar() || NodeUtil.isFunctionDeclaration(parent));
       this.nameNode = nameNode;
       this.var = var;
       this.module = module;
@@ -596,7 +595,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
         NodeUtil.removeChild(parent.getParent(), parent);
         NodeUtil.markFunctionsDeleted(parent, compiler);
       } else {
-        Preconditions.checkState(parent.isVar());
+        checkState(parent.isVar());
         parent.removeChild(nameNode);
       }
     }

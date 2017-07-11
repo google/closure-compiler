@@ -39,9 +39,9 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
@@ -1464,7 +1464,7 @@ public abstract class JSType implements TypeI {
    */
   static boolean isSubtypeHelper(JSType thisType, JSType thatType,
       ImplCache implicitImplCache, SubtypingMode subtypingMode) {
-    Preconditions.checkNotNull(thisType);
+    checkNotNull(thisType);
     // unknown
     if (thatType.isUnknownType()) {
       return true;

@@ -16,6 +16,10 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -45,9 +49,10 @@ public final class NominalType implements Serializable {
   private static final Pattern NUMERIC_PATTERN = Pattern.compile("\\d+");
 
   NominalType(ImmutableMap<String, JSType> typeMap, RawNominalType rawType) {
-    Preconditions.checkState(typeMap.isEmpty()
-        || typeMap.keySet().containsAll(rawType.getTypeParameters())
-        && rawType.getTypeParameters().containsAll(typeMap.keySet()));
+    checkState(
+        typeMap.isEmpty()
+            || typeMap.keySet().containsAll(rawType.getTypeParameters())
+                && rawType.getTypeParameters().containsAll(typeMap.keySet()));
     this.typeMap = typeMap;
     this.rawType = rawType;
   }
@@ -57,7 +62,7 @@ public final class NominalType implements Serializable {
   // the raw nominal type directly they will get the uninstantiated generic types instead.
   public RawNominalType getRawNominalType() {
     // If the raw nominal type is frozen, then we are not in GlobalTypeInfo any more.
-    Preconditions.checkState(!this.rawType.isFrozen());
+    checkState(!this.rawType.isFrozen());
     return this.rawType;
   }
 
@@ -199,14 +204,39 @@ public final class NominalType implements Serializable {
     return this.rawType.getConstructorFunction().instantiateGenerics(this.typeMap);
   }
 
-  NominalType instantiateGenerics(List<JSType> types) {
-    ImmutableList<String> typeParams = this.rawType.getTypeParameters();
-    Preconditions.checkState(types.size() == typeParams.size());
-    Map<String, JSType> typeMap = new LinkedHashMap<>();
-    for (int i = 0; i < typeParams.size(); i++) {
-      typeMap.put(typeParams.get(i), types.get(i));
+  /**
+   * Substitute the free type variables in this type using the provided type map.
+   * The most common case when this happens is when a nominal type has already been "instantiated"
+   * to type variables, and now we want to substitute concrete types for these type variables.
+   * For example, in the program below, Array's T is instantiated to U in the type of f,
+   * and when we call f, we substitute boolean for U.
+   */
+  // Written as line comment to enable use of jsdoc
+  // /**
+  //  * @template U
+  //  * @param {!Array<U>} x
+  //  */
+  // function f(x) { return x[0]; }
+  // f([true, false]);
+  NominalType substituteGenerics(Map<String, JSType> newTypeMap) {
+    if (!isGeneric()) {
+      return this.rawType.getAsNominalType();
     }
-    return instantiateGenerics(typeMap);
+    // NOTE(dimvar): in rare cases, because of the way we represent types, we may end up calling
+    // substituteGenerics on a nominal type that has an empty type map, which is counter-intuitive.
+    // Might be worth it at some point to identify all those cases and make sure that types are
+    // instantiated to identity, rather than having an empty type map. Not super important though.
+    if (this.typeMap.isEmpty()) {
+      return instantiateGenerics(newTypeMap);
+    }
+    if (newTypeMap.isEmpty()) {
+      return this;
+    }
+    ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
+    for (String oldKey : this.typeMap.keySet()) {
+      builder.put(oldKey, this.typeMap.get(oldKey).substituteGenerics(newTypeMap));
+    }
+    return new NominalType(builder.build(), this.rawType);
   }
 
   NominalType instantiateGenerics(Map<String, JSType> newTypeMap) {
@@ -216,43 +246,38 @@ public final class NominalType implements Serializable {
     if (!this.rawType.isGeneric()) {
       return this.rawType.getAsNominalType();
     }
+    Preconditions.checkState(this.typeMap.isEmpty(),
+        "Expected empty typemap, found: %s", this.typeMap);
     ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
     ImmutableMap<String, JSType> resultMap;
-    if (!typeMap.isEmpty()) {
-      // This branch is entered when a generic type appears "instantiated"
-      // in some other type, and now we're actually instantiating it to concrete
-      // types rather than to type variables, eg, here we instantiate Array's T to U,
-      // and when we call f, we instantiate U to boolean.
-      // /**
-      //  * @template U
-      //  * @param {!Array<U>} x
-      //  */
-      // function f(x) { return x[0]; }
-      // f([true, false]);
-      for (String oldKey : typeMap.keySet()) {
-        builder.put(oldKey, typeMap.get(oldKey).substituteGenerics(newTypeMap));
-      }
-      resultMap = builder.build();
-    } else {
-      ImmutableList<String> typeParams = this.rawType.getTypeParameters();
-      for (String newKey : typeParams) {
-        if (newTypeMap.containsKey(newKey)) {
-          builder.put(newKey, newTypeMap.get(newKey));
-        }
-      }
-      resultMap = builder.build();
-      if (resultMap.isEmpty()) {
-        return this;
-      }
-      // This works around a bug in FunctionType, because we can't know where
-      // FunctionType#receiverType is coming from.
-      // If the condition is true, receiverType comes from a method declaration,
-      // and we should not create a new type here.
-      if (resultMap.size() < typeParams.size()) {
-        return this;
+    ImmutableList<String> typeParams = getTypeParameters();
+    for (String newKey : typeParams) {
+      if (newTypeMap.containsKey(newKey)) {
+        builder.put(newKey, newTypeMap.get(newKey));
       }
     }
+    resultMap = builder.build();
+    if (resultMap.isEmpty()) {
+      return this;
+    }
+    // This works around a bug in FunctionType, because we can't know where
+    // FunctionType#receiverType is coming from.
+    // If the condition is true, receiverType comes from a method declaration,
+    // and we should not create a new type here.
+    if (resultMap.size() < typeParams.size()) {
+      return this;
+    }
     return new NominalType(resultMap, this.rawType);
+  }
+
+  NominalType instantiateGenerics(List<JSType> types) {
+    ImmutableList<String> typeParams = this.rawType.getTypeParameters();
+    checkState(types.size() == typeParams.size());
+    Map<String, JSType> typeMap = new LinkedHashMap<>();
+    for (int i = 0; i < typeParams.size(); i++) {
+      typeMap.put(typeParams.get(i), types.get(i));
+    }
+    return instantiateGenerics(typeMap);
   }
 
   NominalType instantiateGenericsWithUnknown() {
@@ -261,7 +286,7 @@ public final class NominalType implements Serializable {
   }
 
   NominalType instantiateGenericsWithIdentity() {
-    Preconditions.checkState(isUninstantiatedGenericType());
+    checkState(isUninstantiatedGenericType());
     Map<String, JSType> m = new LinkedHashMap<>();
     for (String typeParam : this.getTypeParameters()) {
       m.put(typeParam, JSType.fromTypeVar(this.getCommonTypes(), typeParam));
@@ -323,25 +348,25 @@ public final class NominalType implements Serializable {
   }
 
   public NominalType getInstantiatedSuperclass() {
-    Preconditions.checkState(this.rawType.isFrozen());
+    checkState(this.rawType.isFrozen());
     if (this.rawType.getSuperClass() == null) {
       return null;
     }
-    return this.rawType.getSuperClass().instantiateGenerics(typeMap);
+    return this.rawType.getSuperClass().substituteGenerics(typeMap);
   }
 
   public JSType getPrototypePropertyOfCtor() {
-    Preconditions.checkState(this.rawType.isFrozen());
+    checkState(this.rawType.isFrozen());
     return this.rawType.getCtorPropDeclaredType("prototype");
   }
 
   // We require a frozen type for the interfaces here because the inheritance
   // chain of each type may not be correct until after the type is frozen.
   public ImmutableSet<NominalType> getInstantiatedInterfaces() {
-    Preconditions.checkState(this.rawType.isFrozen());
+    checkState(this.rawType.isFrozen());
     ImmutableSet.Builder<NominalType> result = ImmutableSet.builder();
     for (NominalType interf : this.rawType.getInterfaces()) {
-      result.add(interf.instantiateGenerics(typeMap));
+      result.add(interf.substituteGenerics(typeMap));
     }
     return result.build();
   }
@@ -352,7 +377,7 @@ public final class NominalType implements Serializable {
     ImmutableSet.Builder<NominalType> result = ImmutableSet.builder();
     for (NominalType interf : this.rawType.getInterfaces()) {
       if (interf.inheritsFromIObjectReflexive()) {
-        result.add(interf.instantiateGenerics(typeMap));
+        result.add(interf.substituteGenerics(typeMap));
       }
     }
     return result.build();
@@ -378,7 +403,7 @@ public final class NominalType implements Serializable {
       if (typeMap.isEmpty()) {
         return Property.make(getCommonTypes().UNKNOWN, null);
       }
-      Preconditions.checkState(typeMap.size() == 1);
+      checkState(typeMap.size() == 1);
       JSType elmType = Iterables.getOnlyElement(typeMap.values());
       return Property.make(elmType, null);
     }
@@ -420,7 +445,7 @@ public final class NominalType implements Serializable {
   }
 
   private boolean isStructuralSubtypeOf(NominalType other, SubtypeCache subSuperMap) {
-    Preconditions.checkArgument(other.isStructuralInterface());
+    checkArgument(other.isStructuralInterface());
     for (String pname : other.getAllPropsOfInterface()) {
       Property prop2 = other.getProp(pname);
       Property prop1 = this.getProp(pname);
@@ -453,26 +478,25 @@ public final class NominalType implements Serializable {
     if (other.isInterface()) {
       // If thisRaw is not frozen, thisRaw.interfaces may be null.
       for (NominalType i : thisRaw.getInterfaces()) {
-        if (i.instantiateGenerics(this.typeMap).isNominalSubtypeOf(other)) {
+        if (i.substituteGenerics(this.typeMap).isNominalSubtypeOf(other)) {
           return true;
         }
       }
     }
     // Note that other can still be an interface here (implemented by a superclass)
     return isClass() && thisRaw.getSuperClass() != null
-      && thisRaw.getSuperClass().instantiateGenerics(this.typeMap).isNominalSubtypeOf(other);
+      && thisRaw.getSuperClass().substituteGenerics(this.typeMap).isNominalSubtypeOf(other);
   }
 
   boolean isIObjectSubtypeOf(NominalType other) {
-    Preconditions.checkState(
-        this.inheritsFromIObjectReflexive() && other.inheritsFromIObjectReflexive());
+    checkState(this.inheritsFromIObjectReflexive() && other.inheritsFromIObjectReflexive());
     // Contravariance for the index type and covariance for the indexed type.
     return other.getIndexType().isSubtypeOf(this.getIndexType())
         && this.getIndexedType().isSubtypeOf(other.getIndexedType());
   }
 
   private boolean areTypeMapsCompatible(NominalType other) {
-    Preconditions.checkState(this.rawType.equals(other.rawType));
+    checkState(this.rawType.equals(other.rawType));
     if (this.typeMap.isEmpty()) {
       return other.instantiationIsUnknownOrIdentity();
     }
@@ -556,8 +580,8 @@ public final class NominalType implements Serializable {
     return true;
   }
 
-  private static ImmutableMap<String, JSType> joinTypeMaps(NominalType nt1, NominalType nt2) {
-    Preconditions.checkState(nt1.rawType.equals(nt2.rawType));
+  private static NominalType joinTypeMaps(NominalType nt1, NominalType nt2) {
+    checkState(nt1.rawType.equals(nt2.rawType));
     ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
     if (nt1.isIObject()) {
       // Special case IObject, whose first type parameter is contravariant.
@@ -565,18 +589,20 @@ public final class NominalType implements Serializable {
       builder.put(indexTypevar, JSType.meet(nt1.getIndexType(), nt2.getIndexType()));
       String indexedTypevar = nt1.rawType.getTypeParameters().get(1);
       builder.put(indexedTypevar, JSType.join(nt1.getIndexedType(), nt2.getIndexedType()));
-      return builder.build();
+      return new NominalType(builder.build(), nt1.rawType);
     }
     if (nt1.typeMap.isEmpty() || nt2.typeMap.isEmpty()) {
-      return ImmutableMap.of();
+      return nt1.instantiateGenericsWithUnknown();
     }
     for (String typevar : nt1.typeMap.keySet()) {
       builder.put(typevar, JSType.join(nt1.typeMap.get(typevar), nt2.typeMap.get(typevar)));
     }
-    return builder.build();
+    return new NominalType(builder.build(), nt1.rawType);
   }
 
-  // A special-case of join.
+  /**
+   * A special-case of join. If either argument is null, it returns null.
+   */
   static NominalType join(NominalType c1, NominalType c2) {
     if (c1 == null || c2 == null) {
       return null;
@@ -588,14 +614,14 @@ public final class NominalType implements Serializable {
       return c1;
     }
     if (c1.rawType.equals(c2.rawType)) {
-      return c1.isGeneric() ? new NominalType(joinTypeMaps(c1, c2), c1.rawType) : c1;
+      return c1.isGeneric() ? joinTypeMaps(c1, c2) : c1;
     }
     // If c1.isRawSubtypeOf(c2) but not c1.isNominalSubtypeOf(c2), we would want to change
     // joinTypeMaps to handle type maps with different domains. Basically, we want to go up
     // c1's inheritance chain and get instantiated ancestors until we reach the ancestor with the
     // same raw type as c2, and then join.
     // Putting the preconditions check in order to get notified if we ever need to handle this.
-    Preconditions.checkState(!c1.isRawSubtypeOf(c2) && !c2.isRawSubtypeOf(c1));
+    checkState(!c1.isRawSubtypeOf(c2) && !c2.isRawSubtypeOf(c1));
     return null;
   }
 
@@ -650,7 +676,7 @@ public final class NominalType implements Serializable {
     }
     if (other.isInterface()) {
       for (NominalType i : thisRaw.getInterfaces()) {
-        NominalType nt = i.instantiateGenerics(this.typeMap).findMatchingAncestorWith(other);
+        NominalType nt = i.substituteGenerics(this.typeMap).findMatchingAncestorWith(other);
         if (nt != null) {
           return nt;
         }
@@ -658,19 +684,19 @@ public final class NominalType implements Serializable {
     }
     // Note that other can still be an interface here (implemented by a superclass)
     if (isClass() && thisRaw.getSuperClass() != null) {
-      return thisRaw.getSuperClass().instantiateGenerics(this.typeMap)
-        .findMatchingAncestorWith(other);
+      return thisRaw.getSuperClass().substituteGenerics(this.typeMap)
+          .findMatchingAncestorWith(other);
     }
     return null;
   }
 
   boolean isPropDefinedOnSubtype(QualifiedName pname) {
-    Preconditions.checkArgument(pname.isIdentifier());
+    checkArgument(pname.isIdentifier());
     return this.rawType.isPropDefinedOnSubtype(pname.getLeftmostName());
   }
 
   Set<JSType> getSubtypesWithProperty(QualifiedName pname) {
-    Preconditions.checkArgument(pname.isIdentifier());
+    checkArgument(pname.isIdentifier());
     return this.rawType.getSubtypesWithProperty(pname.getLeftmostName());
   }
 
@@ -692,7 +718,7 @@ public final class NominalType implements Serializable {
     }
     builder.append(this.rawType.name);
     ImmutableList<String> typeParams = this.rawType.getTypeParameters();
-    Preconditions.checkState(this.typeMap.keySet().containsAll(typeParams));
+    checkState(this.typeMap.keySet().containsAll(typeParams));
     boolean firstIteration = true;
     builder.append('<');
     for (String typeParam : typeParams) {
@@ -702,7 +728,7 @@ public final class NominalType implements Serializable {
         builder.append(',');
       }
       JSType concrete = this.typeMap.get(typeParam);
-      Preconditions.checkNotNull(concrete).appendTo(builder, ctx);
+      checkNotNull(concrete).appendTo(builder, ctx);
     }
     builder.append('>');
     return builder;
@@ -718,7 +744,10 @@ public final class NominalType implements Serializable {
     if (other == null) {
       return false;
     }
-    Preconditions.checkState(other instanceof NominalType);
+    if (this == other) {
+      return true;
+    }
+    checkState(other instanceof NominalType);
     NominalType o = (NominalType) other;
     return this.rawType.equals(o.rawType) && Objects.equals(typeMap, o.typeMap);
   }

@@ -137,7 +137,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   }
 
   private void testModule(String[] moduleInputs, String[] expected) {
-    test(createModuleStar(moduleInputs), expected(expected), null);
+    test(createModuleStar(moduleInputs), expected);
   }
 
   public void testSimpleProvides() {
@@ -409,6 +409,10 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
         "/** @type {Object<string>} */ var foo={};");
   }
 
+  public void testProvideInESModule() {
+    testError("import {x} from 'y'; goog.provide('z');", INVALID_CLOSURE_CALL_ERROR);
+  }
+
   public void testProvideValidObjectType() {
     test(
         "goog.provide('foo'); /** @type {Object<string>} */ var foo = {};",
@@ -576,7 +580,7 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
   public void testBadCrossModuleRequire() {
     test(
         createModuleStar("", "goog.provide('goog.ui');", "goog.require('goog.ui');"),
-        expected(new String[] {"", "/** @const */ goog.ui = {};", ""}),
+        new String[] {"", "/** @const */ goog.ui = {};", ""},
         warning(XMODULE_REQUIRE_ERROR));
   }
 

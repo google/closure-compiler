@@ -827,6 +827,85 @@ public final class ControlFlowAnalysisTest extends TestCase {
     testCfg(src, expected);
   }
 
+  public void testSimpleClass() {
+    String src = "class C{} f();";
+    String expected =
+        "digraph AST {\n"
+            + "  node [color=lightblue2, style=filled];\n"
+            + "  node0 [label=\"SCRIPT\"];\n"
+            + "  node1 [label=\"CLASS\"];\n"
+            + "  node0 -> node1 [weight=1];\n"
+            + "  node2 [label=\"NAME\"];\n"
+            + "  node1 -> node2 [weight=1];\n"
+            + "  node3 [label=\"EMPTY\"];\n"
+            + "  node1 -> node3 [weight=1];\n"
+            + "  node4 [label=\"CLASS_MEMBERS\"];\n"
+            + "  node1 -> node4 [weight=1];\n"
+            + "  node5 [label=\"EXPR_RESULT\"];\n"
+            + "  node1 -> node5 "
+            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+            + "  node0 -> node5 [weight=1];\n"
+            + "  node6 [label=\"CALL\"];\n"
+            + "  node5 -> node6 [weight=1];\n"
+            + "  node7 [label=\"NAME\"];\n"
+            + "  node6 -> node7 [weight=1];\n"
+            + "  node5 -> RETURN "
+            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+            + "  node0 -> node1 "
+            + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+            + "}\n";
+    testCfg(src, expected);
+  }
+
+  public void testClassWithMemberFunctions() {
+    String src = "class C{ f(){} g(){} }";
+    String expected = "digraph AST {\n"
+        + "  node [color=lightblue2, style=filled];\n"
+        + "  node0 [label=\"SCRIPT\"];\n"
+        + "  node1 [label=\"CLASS\"];\n"
+        + "  node0 -> node1 [weight=1];\n"
+        + "  node2 [label=\"NAME\"];\n"
+        + "  node1 -> node2 [weight=1];\n"
+        + "  node3 [label=\"EMPTY\"];\n"
+        + "  node1 -> node3 [weight=1];\n"
+        + "  node4 [label=\"CLASS_MEMBERS\"];\n"
+        + "  node1 -> node4 [weight=1];\n"
+        + "  node5 [label=\"MEMBER_FUNCTION_DEF\"];\n"
+        + "  node4 -> node5 [weight=1];\n"
+        + "  node6 [label=\"FUNCTION\"];\n"
+        + "  node5 -> node6 [weight=1];\n"
+        + "  node7 [label=\"NAME\"];\n"
+        + "  node6 -> node7 [weight=1];\n"
+        + "  node8 [label=\"PARAM_LIST\"];\n"
+        + "  node6 -> node8 [weight=1];\n"
+        + "  node9 [label=\"BLOCK\"];\n"
+        + "  node6 -> node9 [weight=1];\n"
+        + "  node9 -> RETURN "
+        + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "  node6 -> node9 "
+        + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "  node10 [label=\"MEMBER_FUNCTION_DEF\"];\n"
+        + "  node4 -> node10 [weight=1];\n"
+        + "  node11 [label=\"FUNCTION\"];\n"
+        + "  node10 -> node11 [weight=1];\n"
+        + "  node12 [label=\"NAME\"];\n"
+        + "  node11 -> node12 [weight=1];\n"
+        + "  node13 [label=\"PARAM_LIST\"];\n"
+        + "  node11 -> node13 [weight=1];\n"
+        + "  node14 [label=\"BLOCK\"];\n"
+        + "  node11 -> node14 [weight=1];\n"
+        + "  node14 -> RETURN "
+        + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "  node11 -> node14 "
+        + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "  node1 -> RETURN "
+        + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "  node0 -> node1 "
+        + "[label=\"UNCOND\", fontcolor=\"red\", weight=0.01, color=\"red\"];\n"
+        + "}\n";
+    testCfg(src, expected);
+  }
+
   public void testSimpleCatch() {
     String src = "try{ throw x; x(); x['stuff']; x.x; x} catch (e) { e() }";
     String expected = "digraph AST {\n"

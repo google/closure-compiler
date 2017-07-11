@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.VarCheck.VAR_MULTIPLY_DECLARED_ERROR;
 
-import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
@@ -427,16 +426,6 @@ public final class VarCheckTest extends CompilerTestCase {
     testTwoModules(code1, code2, false, error, warning);
   }
 
-  private Diagnostic fromDiagnosticType(
-      DiagnosticType error,
-      DiagnosticType warning,
-      String description) {
-    Preconditions.checkState(error == null || warning == null);
-    Diagnostic diagnotic = (error != null) ? error(error, description)
-                             : (warning != null) ? warning(warning, description) : null;
-    return diagnotic;
-  }
-
   private void testTwoModules(String code1, String code2, boolean m2DependsOnm1,
                               DiagnosticType error, DiagnosticType warning) {
     JSModule m1 = new JSModule("m1");
@@ -446,11 +435,12 @@ public final class VarCheckTest extends CompilerTestCase {
     if (m2DependsOnm1) {
       m2.addDependency(m1);
     }
-    if (error == null) {
-      test(new JSModule[] { m1, m2 },
-           expected(new String[] { code1, code2 }), warning(warning));
+    if (error == null && warning == null) {
+      test(new JSModule[] { m1, m2 }, new String[] { code1, code2 });
+    } else if (error == null) {
+      test(new JSModule[] { m1, m2 }, new String[] { code1, code2 }, warning(warning));
     } else {
-      test(new JSModule[] { m1, m2 }, null, fromDiagnosticType(error, warning, null));
+      testError(srcs(new JSModule[] { m1, m2 }), error(error));
     }
   }
 

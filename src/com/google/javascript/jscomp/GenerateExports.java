@@ -16,10 +16,11 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -53,9 +54,9 @@ class GenerateExports implements CompilerPass {
       boolean allowNonGlobalExports,
       String exportSymbolFunction,
       String exportPropertyFunction) {
-    Preconditions.checkNotNull(compiler);
-    Preconditions.checkNotNull(exportSymbolFunction);
-    Preconditions.checkNotNull(exportPropertyFunction);
+    checkNotNull(compiler);
+    checkNotNull(exportSymbolFunction);
+    checkNotNull(exportPropertyFunction);
 
     this.compiler = compiler;
     this.allowNonGlobalExports = allowNonGlobalExports;
@@ -212,7 +213,7 @@ class GenerateExports implements CompilerPass {
    * @return property name.
    */
   private static String getPropertyName(Node node) {
-    Preconditions.checkArgument(node.isGetProp() || node.getParent().isMemberFunctionDef());
+    checkArgument(node.isGetProp() || node.getParent().isMemberFunctionDef());
     if (node.isGetProp()) {
       return node.getLastChild().getString();
     } else {

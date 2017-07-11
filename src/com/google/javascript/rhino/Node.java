@@ -155,7 +155,10 @@ public class Node implements Serializable {
                                   // past.
       IS_ES6_CLASS = 92,          // Indicates that a FUNCTION node is converted from an ES6 class
       TRANSPILED = 93,            // Indicates that a SCRIPT represents a transpiled file
-      DELETED = 94;               // For passes that work only on deleted funs.
+      DELETED = 94,               // For passes that work only on deleted funs.
+      GOOG_MODULE_ALIAS = 95;     // Indicates that the node is an alias of goog.require'd module.
+                                  // Aliases are desugared and inlined by compiler passes but we
+                                  // need to preserve them for building index.
 
   private static final String propToString(int propType) {
       switch (propType) {
@@ -216,6 +219,7 @@ public class Node implements Serializable {
         case IS_ES6_CLASS:       return "is_es6_class";
         case TRANSPILED:         return "transpiled";
         case DELETED:            return "DELETED";
+        case GOOG_MODULE_ALIAS:  return "goog_module_alias";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
@@ -777,8 +781,7 @@ public class Node implements Serializable {
    * Add 'child' before 'node'.
    */
   public void addChildBefore(Node newChild, Node node) {
-    checkArgument(node.parent == this,
-        "The existing child node of the parent should not be null.");
+    checkArgument(node.parent == this, "The existing child node of the parent should not be null.");
     checkArgument(newChild.next == null, "The new child node has next siblings.");
     checkArgument(newChild.previous == null, "The new child node has previous siblings.");
     checkArgument(newChild.parent == null, "The new child node already has a parent.");

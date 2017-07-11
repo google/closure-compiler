@@ -60,16 +60,17 @@ public class IRTest extends TestCase {
         "    BLOCK\n");
   }
 
+  public void testArrowFunction() {
+    testIR(
+        IR.arrowFunction(IR.name("hi"), IR.paramList(), IR.block()),
+        "FUNCTION hi [arrow_fn: 1]\n" + "    NAME hi\n" + "    PARAM_LIST\n" + "    BLOCK\n");
+  }
+
   public void testParamList() {
     testIR(IR.paramList(),
         "PARAM_LIST\n");
 
     testIR(IR.paramList(IR.name("a"), IR.name("b")),
-        "PARAM_LIST\n" +
-        "    NAME a\n" +
-        "    NAME b\n");
-
-    testIR(IR.paramList(ImmutableList.of(IR.name("a"), IR.name("b"))),
         "PARAM_LIST\n" +
         "    NAME a\n" +
         "    NAME b\n");

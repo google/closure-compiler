@@ -21,17 +21,14 @@ package com.google.javascript.jscomp;
  *
  */
 public final class UnreachableCodeEliminationTest extends CompilerTestCase {
-  private boolean removeNoOpStatements = true;
-
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new UnreachableCodeElimination(compiler, removeNoOpStatements);
+    return new UnreachableCodeElimination(compiler);
   }
 
   @Override protected void setUp() throws Exception {
     super.setUp();
     enableComputeSideEffects();
-    removeNoOpStatements = true;
   }
 
   public void testRemoveUnreachableCode() {
@@ -106,13 +103,6 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
 
   public void testNoRemoveUseStrict() {
     test("'use strict';", "'use strict'");
-  }
-
-  public void testNoRemoveUselessNameStatements() {
-    removeNoOpStatements = false;
-    testSame("a;");
-    testSame("a.b;");
-    testSame("a.b.MyClass.prototype.memberName;");
   }
 
   public void testRemoveDo() {
@@ -418,8 +408,7 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
   }
 
   public void testDontRemoveBreakInTryFinallySwitch() throws Exception {
-    testSame("function f() {b:try{throw 9} finally {" +
-             "switch(x) {case 1: break b} } return 1;}");
+    testSame("function f() {b:try{throw 9} finally { switch(x) {case 1: break b} } return 1; }");
   }
 
   public void testIssue1001() throws Exception {
@@ -427,5 +416,56 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
          "function f(x) { x.property = 3; }");
     test("function f(x) { x.property = 3; } new f({})",
          "function f(x) { x.property = 3; }");
+  }
+
+  public void testLetConstBlocks() {
+    test("function f() {return 1; let a; }", "function f() {return 1;}");
+
+    test("function f() {return 1; const a = 1; }", "function f() {return 1;}");
+
+    test(
+        "function f() { x = 1; {let g; return x} let y}",
+        "function f() { x = 1; {let g; return x;}} ");
+  }
+
+  public void testArrowFunctions() {
+    test("f(x => {return x; j = 1})", "f(x => {return x;})");
+
+    testSame("f( () => {return 1;})");
+  }
+
+  public void testGenerators() {
+    test(
+        LINE_JOINER.join(
+            "function* f() {", "  while(true) {", "    yield 1;", "  }", "  x = 1;", "}"),
+        LINE_JOINER.join("function* f() {", "  while(true) {", "    yield 1;", "  }", "}"));
+
+    testSame(LINE_JOINER.join("function* f() {", "  while(true) {", "    yield 1;", "  }", "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function* f() {",
+            "  let i = 0;",
+            "  while (true) {",
+            "    if (i < 10) {",
+            "      yield i;",
+            "    } else {",
+            "      break;",
+            "    }",
+            "  }",
+            "  let x = 1;",
+            "}"));
+  }
+
+  public void testForOf() {
+    test("for(x of i){ 1; }", "for(x of i) {}");
+
+    testSame("for(x of i){}");
+  }
+
+  public void testRemoveUselessTemplateStrings() {
+    test("`hi`", "");
+
+    testSame("`hello visitor # ${i++}`");
   }
 }

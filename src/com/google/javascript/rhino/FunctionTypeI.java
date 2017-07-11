@@ -76,11 +76,12 @@ public interface FunctionTypeI extends TypeI {
   Node getSource();
 
   /**
-   * Returns a list of types that are subtypes of this type. This is only
-   * valid for constructor functions, and may be null. This allows a downward
-   * traversal of the subtype graph.
+   * Returns an iterable of direct types that are subtypes of this type.
+   * This is only valid for constructors and interfaces, and will not be
+   * null. This allows a downward traversal of the subtype graph.
    */
-  List<? extends FunctionTypeI> getSubTypes();
+  // TODO(sdh): change the name to getDirectSubTypes()
+  Iterable<FunctionTypeI> getSubTypes();
 
   /** Gets the type of {@code this} in this function. */
   TypeI getTypeOfThis();
@@ -99,10 +100,10 @@ public interface FunctionTypeI extends TypeI {
   Iterable<TypeI> getParameterTypes();
 
   /** Returns the number of required arguments. */
-  int getMinArguments();
+  int getMinArity();
 
   /** Returns the maximum number of allowed arguments, or Integer.MAX_VALUE if variadic. */
-  int getMaxArguments();
+  int getMaxArity();
 
   /** Returns the names of all type parameters. */
   Collection<String> getTypeParameters();

@@ -17,6 +17,8 @@
 package com.google.javascript.refactoring;
 
 import static com.google.javascript.jscomp.CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING;
+import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_STRICT_WARNING;
+import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_WARNING;
 import static com.google.javascript.jscomp.ClosureCheckModule.JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
 import static com.google.javascript.jscomp.ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME;
 
@@ -68,10 +70,14 @@ public class FixingErrorManager extends BasicErrorManager {
     boolean containsFixableShorthandModuleWarning = containsFixableShorthandModuleWarning();
     Collection<SuggestedFix> fixes = new ArrayList<>();
     for (JSError error : getErrors()) {
-      // Sometimes code will produce a spurious extra-require error as well as a warning about
-      // using a full namespace instead of a shorthand type.
-      if (error.getType().equals(EXTRA_REQUIRE_WARNING) && containsFixableShorthandModuleWarning) {
-        // In this case, don't apply the extra-require fix.
+      // Sometimes code will produce a spurious extra-require or missing-require error,
+      // as well as a warning about using a full namespace instead of a shorthand type. In this case
+      // don't apply the extra/missing require fix.
+      if (containsFixableShorthandModuleWarning
+          && (error.getType().equals(EXTRA_REQUIRE_WARNING)
+              || error.getType().equals(MISSING_REQUIRE_STRICT_WARNING)
+              || error.getType().equals(MISSING_REQUIRE_WARNING))) {
+        // Don't apply this fix.
       } else {
         fixes.addAll(getFixesForJsError(error));
       }

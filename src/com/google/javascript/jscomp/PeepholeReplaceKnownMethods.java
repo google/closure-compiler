@@ -16,9 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
-import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -82,7 +83,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    *    .indexOf(), .substr(), .substring()
    */
   private Node tryFoldKnownStringMethods(Node subtree, Node callTarget) {
-    Preconditions.checkArgument(subtree.isCall());
+    checkArgument(subtree.isCall());
 
     // check if this is a call on a string method
     // then dispatch to specific folding method.
@@ -162,7 +163,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    *    parseInt(), parseFloat()
    */
   private Node tryFoldKnownNumericMethods(Node subtree, Node callTarget) {
-    Preconditions.checkArgument(subtree.isCall());
+    checkArgument(subtree.isCall());
 
     if (isASTNormalized()) {
       // check if this is a call on a string method
@@ -243,7 +244,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    */
   private Node tryFoldParseNumber(
       Node n, String functionName, Node firstArg) {
-    Preconditions.checkArgument(n.isCall());
+    checkArgument(n.isCall());
 
     boolean isParseInt = functionName.equals("parseInt");
     Node secondArg = firstArg.getNext();
@@ -374,8 +375,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    */
   private Node tryFoldStringIndexOf(
       Node n, String functionName, Node lstringNode, Node firstArg) {
-    Preconditions.checkArgument(n.isCall());
-    Preconditions.checkArgument(lstringNode.isString());
+    checkArgument(n.isCall());
+    checkArgument(lstringNode.isString());
 
     String lstring = NodeUtil.getStringValue(lstringNode);
     boolean isIndexOf = functionName.equals("indexOf");
@@ -453,7 +454,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         sb.append(NodeUtil.getArrayElementStringValue(elem));
       } else {
         if (sb != null) {
-          Preconditions.checkNotNull(prev);
+          checkNotNull(prev);
           // + 2 for the quotes.
           foldedSize += sb.length() + 2;
           arrayFoldedChildren.add(
@@ -468,7 +469,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     }
 
     if (sb != null) {
-      Preconditions.checkNotNull(prev);
+      checkNotNull(prev);
       // + 2 for the quotes.
       foldedSize += sb.length() + 2;
       arrayFoldedChildren.add(
@@ -527,9 +528,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    * Try to fold .substr() calls on strings
    */
   private Node tryFoldStringSubstr(Node n, Node stringNode, Node arg1) {
-    Preconditions.checkArgument(n.isCall());
-    Preconditions.checkArgument(stringNode.isString());
-    Preconditions.checkArgument(arg1 != null);
+    checkArgument(n.isCall());
+    checkArgument(stringNode.isString());
+    checkArgument(arg1 != null);
 
     int start;
     int length;
@@ -583,9 +584,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    * Try to fold .substring() or .slice() calls on strings
    */
   private Node tryFoldStringSubstringOrSlice(Node n, Node stringNode, Node arg1) {
-    Preconditions.checkArgument(n.isCall());
-    Preconditions.checkArgument(stringNode.isString());
-    Preconditions.checkArgument(arg1 != null);
+    checkArgument(n.isCall());
+    checkArgument(stringNode.isString());
+    checkArgument(arg1 != null);
 
     int start;
     int end;
@@ -647,8 +648,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    * Try to fold .charAt() calls on strings
    */
   private Node tryFoldStringCharAt(Node n, Node stringNode, Node arg1) {
-    Preconditions.checkArgument(n.isCall());
-    Preconditions.checkArgument(stringNode.isString());
+    checkArgument(n.isCall());
+    checkArgument(stringNode.isString());
 
     int index;
     String stringAsString = stringNode.getString();
@@ -678,8 +679,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    * Try to fold .charCodeAt() calls on strings
    */
   private Node tryFoldStringCharCodeAt(Node n, Node stringNode, Node arg1) {
-    Preconditions.checkArgument(n.isCall());
-    Preconditions.checkArgument(stringNode.isString());
+    checkArgument(n.isCall());
+    checkArgument(stringNode.isString());
 
     int index;
     String stringAsString = stringNode.getString();
@@ -728,8 +729,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    * Implement the JS String.split method using a string separator.
    */
   private String[] jsSplit(String stringValue, String separator, int limit) {
-    Preconditions.checkArgument(limit >= 0);
-    Preconditions.checkArgument(stringValue != null);
+    checkArgument(limit >= 0);
+    checkArgument(stringValue != null);
 
     // For limits of 0, return an empty array
     if (limit == 0) {
@@ -781,8 +782,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       return n;
     }
 
-    Preconditions.checkArgument(n.isCall());
-    Preconditions.checkArgument(stringNode.isString());
+    checkArgument(n.isCall());
+    checkArgument(stringNode.isString());
 
     String separator = null;
     String stringValue = stringNode.getString();

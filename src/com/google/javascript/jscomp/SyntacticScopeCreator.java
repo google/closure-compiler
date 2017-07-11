@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -43,6 +46,10 @@ public class SyntacticScopeCreator implements ScopeCreator {
     this.isTyped = isTyped;
   }
 
+  /**
+   * @deprecated Use Es6SyntacticScopeCreator instead.
+   */
+  @Deprecated
   public static SyntacticScopeCreator makeUntyped(AbstractCompiler compiler) {
     return new SyntacticScopeCreator(compiler, false);
   }
@@ -91,10 +98,10 @@ public class SyntacticScopeCreator implements ScopeCreator {
       }
 
       // Args: Declare function variables
-      Preconditions.checkState(args.isParamList());
+      checkState(args.isParamList());
       for (Node a = args.getFirstChild(); a != null;
            a = a.getNext()) {
-        Preconditions.checkState(a.isName());
+        checkState(a.isName());
         declareVar(a);
       }
 
@@ -152,7 +159,7 @@ public class SyntacticScopeCreator implements ScopeCreator {
 
       case SCRIPT:
         inputId = n.getInputId();
-        Preconditions.checkNotNull(inputId);
+        checkNotNull(inputId);
         break;
       default:
         break;
@@ -176,7 +183,7 @@ public class SyntacticScopeCreator implements ScopeCreator {
    * @param n The node corresponding to the variable name.
    */
   private void declareVar(Node n) {
-    Preconditions.checkState(n.isName(), n);
+    checkState(n.isName(), n);
 
     CompilerInput input = compiler.getInput(inputId);
     String name = n.getString();

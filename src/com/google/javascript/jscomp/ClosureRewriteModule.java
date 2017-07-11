@@ -15,8 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -232,6 +236,15 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     @Nullable Node rhs;
     // Null if the export is of anything other than a name
     @Nullable Var nameDecl;
+
+    public String toString() {
+      return MoreObjects.toStringHelper(this)
+          .add("exportName", exportName)
+          .add("rhs", rhs)
+          .add("nameDecl", nameDecl)
+          .omitNullValues()
+          .toString();
+    }
 
     private static final ImmutableSet<Token> INLINABLE_NAME_PARENTS =
         ImmutableSet.of(Token.VAR, Token.CONST, Token.LET, Token.FUNCTION, Token.CLASS);
@@ -525,6 +538,17 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             boolean nameIsAnAlias =
                 currentScript.namesToInlineByAlias.containsKey(prefixTypeName);
             if (nameIsAnAlias) {
+              if (preprocessorSymbolTable != null) {
+                // Jsdoc type node is a single STRING node that spans the whole type. For example
+                // STRING node "bar.Foo". When rewriting modules potentially replace only "module"
+                // part of the type: "bar.Foo" => "module$exports$bar$Foo". So we need to remember
+                // that "bar" as alias. To do that we clone type node and make "bar" node from it.
+                Node moduleOnlyNode = typeRefNode.cloneNode();
+                safeSetString(moduleOnlyNode, prefixTypeName);
+                moduleOnlyNode.setLength(prefixTypeName.length());
+                maybeAddAliasToSymbolTable(moduleOnlyNode, currentScript.legacyNamespace);
+              }
+
               String aliasedNamespace = currentScript.namesToInlineByAlias.get(prefixTypeName);
               safeSetString(typeRefNode, aliasedNamespace + suffix);
               return;
@@ -584,7 +608,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
 
     boolean isLegacyModule(String legacyNamespace) {
-      Preconditions.checkArgument(containsModule(legacyNamespace));
+      checkArgument(containsModule(legacyNamespace));
       return scriptDescriptionsByGoogModuleNamespace.get(legacyNamespace).declareLegacyNamespace;
     }
 
@@ -641,7 +665,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
             moduleBody.setToken(Token.MODULE_BODY);
             n.replaceWith(moduleBody);
             Node returnNode = moduleBody.getLastChild();
-            Preconditions.checkState(returnNode.isReturn(), returnNode);
+            checkState(returnNode.isReturn(), returnNode);
             returnNode.detach();
           }
           return false;
@@ -668,7 +692,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // before doing any updating also queue up scriptDescriptions for later use in ScriptUpdater
     // runs.
     for (Node c = scriptParent.getFirstChild(); c != null; c = c.getNext()) {
-      Preconditions.checkState(c.isScript(), c);
+      checkState(c.isScript(), c);
       pushScript(new ScriptDescription());
       currentScript.rootNode = c;
       scriptDescriptions.addLast(currentScript);
@@ -692,7 +716,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    Preconditions.checkState(scriptRoot.isScript(), scriptRoot);
+    checkState(scriptRoot.isScript(), scriptRoot);
     NodeTraversal.traverseEs6(compiler, scriptRoot, new UnwrapGoogLoadModule());
 
     rewriteState.removeRoot(originalRoot);
@@ -875,7 +899,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void rewriteShortObjectKey(NodeTraversal t, Node n) {
-    Preconditions.checkArgument(n.isStringKey(), n);
+    checkArgument(n.isStringKey(), n);
     if (!n.hasChildren()) {
       Node nameNode = IR.name(n.getString()).srcref(n);
       n.addChildToBack(nameNode);
@@ -890,8 +914,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       return;
     }
 
-    Preconditions.checkState(
-        currentScript.defaultExportRhs == null, currentScript.defaultExportRhs);
+    checkState(currentScript.defaultExportRhs == null, currentScript.defaultExportRhs);
     Node exportRhs = n.getNext();
     if (isNamedExportsLiteral(exportRhs)) {
       boolean areAllExportsInlinable = true;
@@ -953,7 +976,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void updateGoogModule(Node call) {
-    Preconditions.checkState(currentScript.isModule, currentScript);
+    checkState(currentScript.isModule, currentScript);
 
     // If it's a goog.module() with a legacy namespace.
     if (currentScript.declareLegacyNamespace) {
@@ -966,7 +989,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // we'll need to do it ourselves, and so we might as well create it as early as possible to
     // avoid ordering issues with goog.define().
     if (!currentScript.willCreateExportsObject) {
-      Preconditions.checkState(!currentScript.hasCreatedExportObject, currentScript);
+      checkState(!currentScript.hasCreatedExportObject, currentScript);
       exportTheEmptyBinaryNamespaceAt(NodeUtil.getEnclosingStatement(call), AddAt.AFTER);
     }
 
@@ -1013,15 +1036,18 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         // `var Foo` case
         String aliasName = statementNode.getFirstChild().getString();
         recordNameToInline(aliasName, exportedNamespace);
+        maybeAddAliasToSymbolTable(statementNode.getFirstChild(), currentScript.legacyNamespace);
       } else if (lhs.isDestructuringLhs() && lhs.getFirstChild().isObjectPattern()) {
         // `const {Foo}` case
         maybeWarnForInvalidDestructuring(t, lhs.getParent(), legacyNamespace);
         for (Node importSpec : lhs.getFirstChild().children()) {
           String importedProperty = importSpec.getString();
-          String aliasName =
-              importSpec.hasChildren() ? importSpec.getFirstChild().getString() : importedProperty;
+          Node aliasNode = importSpec.hasChildren() ? importSpec.getFirstChild() : importSpec;
+          String aliasName = aliasNode.getString();
           String fullName = exportedNamespace + "." + importedProperty;
           recordNameToInline(aliasName, fullName);
+
+          maybeAddAliasToSymbolTable(aliasNode, currentScript.legacyNamespace);
         }
       } else {
         throw new RuntimeException("Illegal goog.module import: " + lhs);
@@ -1073,7 +1099,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   // by structuring the imports/exports in a consistent way.
   private void maybeWarnForInvalidDestructuring(
       NodeTraversal t, Node importNode, String importedNamespace) {
-    Preconditions.checkArgument(importNode.getFirstChild().isDestructuringLhs(), importNode);
+    checkArgument(importNode.getFirstChild().isDestructuringLhs(), importNode);
     ScriptDescription importedModule =
         rewriteState.scriptDescriptionsByGoogModuleNamespace.get(importedNamespace);
     if (importedModule == null) {
@@ -1119,10 +1145,10 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
 
     Node parent = getpropNode.getParent();
-    Preconditions.checkState(parent.isAssign() || parent.isExprResult(), parent);
+    checkState(parent.isAssign() || parent.isExprResult(), parent);
 
     Node exportsNameNode = getpropNode.getFirstChild();
-    Preconditions.checkState(exportsNameNode.getString().equals("exports"), exportsNameNode);
+    checkState(exportsNameNode.getString().equals("exports"), exportsNameNode);
 
     if (t.inModuleScope()) {
       String exportName = getpropNode.getLastChild().getString();
@@ -1144,11 +1170,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
 
     Node parent = getpropNode.getParent();
-    Preconditions.checkState(parent.isAssign() || parent.isExprResult(), parent);
+    checkState(parent.isAssign() || parent.isExprResult(), parent);
 
     // Update "exports.foo = Foo" to "module$exports$pkg$Foo.foo = Foo";
     Node exportsNameNode = getpropNode.getFirstChild();
-    Preconditions.checkState(exportsNameNode.getString().equals("exports"));
+    checkState(exportsNameNode.getString().equals("exports"));
     String exportedNamespace = currentScript.getExportedNamespace();
     safeSetMaybeQualifiedString(exportsNameNode, exportedNamespace);
 
@@ -1193,6 +1219,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // "new Foo;" to "new module$exports$Foo;"
     boolean nameIsAnAlias = currentScript.namesToInlineByAlias.containsKey(name);
     if (nameIsAnAlias && var.getNode() != nameNode) {
+      maybeAddAliasToSymbolTable(nameNode, currentScript.legacyNamespace);
+
       String namespaceToInline = currentScript.namesToInlineByAlias.get(name);
       if (namespaceToInline.equals(currentScript.getBinaryNamespace())) {
         currentScript.hasCreatedExportObject = true;
@@ -1342,12 +1370,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // Either this module is going to create it's own exports object at some point or else if it's
     // going to be defensively created automatically then that should have occurred at the top of
     // the file and been done by now.
-    Preconditions.checkState(
-        currentScript.willCreateExportsObject || currentScript.hasCreatedExportObject);
+    checkState(currentScript.willCreateExportsObject || currentScript.hasCreatedExportObject);
   }
 
   void updateModuleBody(Node moduleBody) {
-    Preconditions.checkArgument(
+    checkArgument(
         moduleBody.isModuleBody() && moduleBody.getParent().getBooleanProp(Node.GOOG_MODULE),
         moduleBody);
     moduleBody.setToken(Token.BLOCK);
@@ -1363,8 +1390,8 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       safeSetMaybeQualifiedString(
           nameNode, currentScript.getBinaryNamespace() + export.getExportPostfix());
     }
-    Preconditions.checkState(currentScript.isModule, currentScript);
-    Preconditions.checkState(
+    checkState(currentScript.isModule, currentScript);
+    checkState(
         currentScript.declareLegacyNamespace || currentScript.hasCreatedExportObject,
         currentScript);
   }
@@ -1414,7 +1441,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   static void checkAndSetStrictModeDirective(NodeTraversal t, Node n) {
-    Preconditions.checkState(n.isScript(), n);
+    checkState(n.isScript(), n);
 
     Set<String> directives = n.getDirectives();
     if (directives != null && directives.contains("use strict")) {
@@ -1457,9 +1484,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void recordExportToInline(ExportDefinition exportDefinition) {
-    Preconditions.checkState(
-        exportDefinition.hasInlinableName(currentScript.exportsToInline.keySet()));
-    Preconditions.checkState(
+    checkState(
+        exportDefinition.hasInlinableName(currentScript.exportsToInline.keySet()),
+        "exportDefinition: %s\n\nexportsToInline keys: %s",
+        exportDefinition,
+        currentScript.exportsToInline.keySet());
+    checkState(
         null == currentScript.exportsToInline.put(exportDefinition.nameDecl, exportDefinition),
         "Already found a mapping for inlining export: %s", exportDefinition.nameDecl);
     String localName = exportDefinition.getLocalName();
@@ -1469,9 +1499,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void recordNameToInline(String aliasName, String legacyNamespace) {
-    Preconditions.checkNotNull(aliasName);
-    Preconditions.checkNotNull(legacyNamespace);
-    Preconditions.checkState(
+    checkNotNull(aliasName);
+    checkNotNull(legacyNamespace);
+    checkState(
         null == currentScript.namesToInlineByAlias.put(aliasName, legacyNamespace),
         "Already found a mapping for inlining short name: %s", aliasName);
   }
@@ -1548,10 +1578,11 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           Node statementParent = nameParent.getParent();
           Node placeholder = IR.empty();
           statementParent.replaceChild(nameParent, placeholder);
-          Node newStatement =
-              NodeUtil.newQNameDeclaration(compiler, newString, nameParent, jsdoc);
+          Node newStatement = NodeUtil.newQNameDeclaration(compiler, newString, nameParent, jsdoc);
           nameParent.setJSDocInfo(null);
           newStatement.useSourceInfoIfMissingFromForTree(nameParent);
+          replaceStringNodeLocationForExportedTopLevelVariable(
+              newStatement, nameNode.getSourcePosition(), nameNode.getLength());
           statementParent.replaceChild(placeholder, newStatement);
           NodeUtil.removeName(nameParent);
           return;
@@ -1666,6 +1697,29 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   private void maybeAddToSymbolTable(Node n) {
     if (preprocessorSymbolTable != null) {
       preprocessorSymbolTable.addReference(n);
+    }
+  }
+
+  /**
+   * Add alias nodes to the symbol table as they going to be removed by rewriter. Example aliases:
+   *
+   * const Foo = goog.require('my.project.Foo');
+   * const bar = goog.require('my.project.baz');
+   * const {baz} = goog.require('my.project.utils');
+   */
+  private void maybeAddAliasToSymbolTable(Node n, String module) {
+    if (preprocessorSymbolTable != null) {
+      n.putBooleanProp(Node.GOOG_MODULE_ALIAS, true);
+      // Alias can be used in js types. Types have node type STRING and not NAME so we have to
+      // use their name as string.
+      String nodeName =
+          n.getToken() == Token.STRING
+              ? n.getString()
+              : preprocessorSymbolTable.getQualifiedName(n);
+      // We need to include module as part of the name because aliases are local to current module.
+      // Aliases with the same name from different module should be completely different entities.
+      String name = "alias_" + module + "_" + nodeName;
+      preprocessorSymbolTable.addReference(n, name);
     }
   }
 

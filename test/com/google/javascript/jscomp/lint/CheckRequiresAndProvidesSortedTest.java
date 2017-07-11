@@ -202,6 +202,28 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
         REQUIRES_NOT_SORTED);
   }
 
+  public void testGoogModule_forwardDeclares() {
+    testWarning(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const s = goog.require('s');",
+            "const f = goog.forwardDeclare('f');",
+            "const r = goog.require('r');"),
+        REQUIRES_NOT_SORTED);
+  }
+
+  public void testForwardDeclares() {
+    testWarning(
+        LINE_JOINER.join(
+            "goog.provide('x');",
+            "",
+            "goog.require('s');",
+            "goog.forwardDeclare('f');",
+            "goog.require('r');"),
+        REQUIRES_NOT_SORTED);
+  }
+
   public void testDuplicate() {
     testWarning(
         LINE_JOINER.join(

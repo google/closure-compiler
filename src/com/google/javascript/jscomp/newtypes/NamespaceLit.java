@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.rhino.Node;
 
 /**
@@ -44,7 +45,7 @@ public final class NamespaceLit extends Namespace {
 
   @Override
   protected JSType computeJSType() {
-    Preconditions.checkState(this.namespaceType == null);
+    checkState(this.namespaceType == null);
     return JSType.fromObjectType(ObjectType.makeObjectType(
         this.commonTypes,
         this.window == null ? this.commonTypes.getLiteralObjNominalType() : this.window,

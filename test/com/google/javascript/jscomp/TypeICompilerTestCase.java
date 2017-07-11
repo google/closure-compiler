@@ -103,25 +103,6 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
     disableNewTypeInference();
   }
 
-  @Override
-  protected void test(
-      Compiler compiler, Sources inputs,
-      Expected expected, Diagnostic diagnostic) {
-    if (this.mode.runsOTI()) {
-      enableTypeCheck();
-      super.test(compiler, inputs, expected, diagnostic);
-      disableTypeCheck();
-    }
-    if (this.mode.runsNTI()) {
-      enableNewTypeInference();
-      super.test(compiler, inputs, expected, diagnostic);
-      disableNewTypeInference();
-    }
-    if (this.mode.runsNeither()) {
-      super.test(compiler, inputs, expected, diagnostic);
-    }
-  }
-
   void testWarningOtiNti(
       String js, DiagnosticType otiWarning, DiagnosticType ntiWarning) {
     TypeInferenceMode saved = this.mode;

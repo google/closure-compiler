@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
@@ -51,7 +52,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
         continue;
       }
 
-      Preconditions.checkState(child.hasOneChild());
+      checkState(child.hasOneChild());
       Node name = getName(child);
       if (!name.isName()) {
         // The assignment target is not a simple name.

@@ -17,7 +17,7 @@
 /**
  * @fileoverview Tests for export statement with a "from" clause.
  */
-import {alpha, gamma} from './module_test_resources/exportFrom';
+import {alpha, gamma} from './module_test_resources/exportFrom.js';
 
 function testTransitiveImport() {
   assertEquals(3, alpha);

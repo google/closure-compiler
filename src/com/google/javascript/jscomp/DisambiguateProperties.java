@@ -17,8 +17,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
@@ -147,7 +147,7 @@ class DisambiguateProperties implements CompilerPass {
       m = new IdentityHashMap<>();
       gtwpCache.put(field, m);
     }
-    Preconditions.checkState(null == m.put(type, top));
+    checkState(null == m.put(type, top));
   }
 
   private class Property {
@@ -346,8 +346,7 @@ class DisambiguateProperties implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    Preconditions.checkState(
-        compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
+    checkState(compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
     this.ancestorInterfaces = new HashMap<>();
     this.gtwpCache = new HashMap<>();
     // TypeValidator records places where a type A is used in a context that
@@ -781,6 +780,7 @@ class DisambiguateProperties implements CompilerPass {
   }
 
   /** Returns a map from field name to types for which it will be renamed. */
+  @VisibleForTesting
   Multimap<String, Collection<TypeI>> getRenamedTypesForTesting() {
     Multimap<String, Collection<TypeI>> ret = HashMultimap.create();
     for (Map.Entry<String, Property> entry : properties.entrySet()) {
@@ -888,11 +888,10 @@ class DisambiguateProperties implements CompilerPass {
       return type.getUnionMembers();
     } else {
       ObjectTypeI objType = type.toMaybeObjectType();
-      if (objType != null
-          && objType.getConstructor() != null
-          && objType.getConstructor().isInterface()) {
+      FunctionTypeI constructor = objType != null ? objType.getConstructor() : null;
+      if (constructor != null && constructor.isInterface()) {
         List<TypeI> list = new ArrayList<>();
-        for (FunctionTypeI impl : objType.getDirectImplementors()) {
+        for (FunctionTypeI impl : constructor.getSubTypes()) {
           list.add(impl.getInstanceType());
         }
         return list.isEmpty() ? null : list;

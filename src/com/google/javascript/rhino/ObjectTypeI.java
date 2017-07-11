@@ -40,7 +40,6 @@
 package com.google.javascript.rhino;
 
 import com.google.common.collect.ImmutableList;
-import java.util.Collection;
 
 /**
  * @author blickly@google.com (Ben Lickly)
@@ -133,8 +132,6 @@ public interface ObjectTypeI extends TypeI {
    */
   TypeI getLegacyResolvedType();
 
-  Collection<? extends FunctionTypeI> getDirectImplementors();
-
   /**
    * Given an interface and a property, finds a top-most super interface
    * that has the property defined (including this interface).
@@ -157,5 +154,5 @@ public interface ObjectTypeI extends TypeI {
    * If this type is an enum object, returns the declared type of the elements.
    * Otherwise returns null.
    */
-  TypeI getElementsType();
+  TypeI getEnumeratedTypeOfEnumObject();
 }

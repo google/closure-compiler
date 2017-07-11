@@ -595,9 +595,8 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("unusedLocalVariables",
           VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT);
 
-  // These checks are not intended to be enabled as errors. It is
-  // recommended that you think of them as "linter" warnings that
-  // provide optional suggestions.
+  // Warnings reported by the linter. If you enable these as errors in your build targets,
+  // the JS Compiler team will break your build and not rollback.
   public static final DiagnosticGroup LINT_CHECKS =
       DiagnosticGroups.registerGroup(
           "lintChecks", // undocumented
@@ -657,7 +656,8 @@ public class DiagnosticGroups {
           RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
 
   // Similar to the lintChecks group above, but includes things that cannot be done on a single
-  // file at a time, for example because they require typechecking.
+  // file at a time, for example because they require typechecking. If you enable these as errors
+  // in your build targets, the JS Compiler team will break your build and not rollback.
   public static final DiagnosticGroup ANALYZER_CHECKS =
       DiagnosticGroups.registerGroup("analyzerChecks", // undocumented
           ANALYZER_CHECKS_INTERNAL,

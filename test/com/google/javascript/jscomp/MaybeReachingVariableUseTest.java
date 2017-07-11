@@ -141,17 +141,19 @@ public final class MaybeReachingVariableUseTest extends TestCase {
    */
   private void computeUseDef(String src) {
     Compiler compiler = new Compiler();
-    SyntacticScopeCreator scopeCreator = SyntacticScopeCreator.makeUntyped(compiler);
+    Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
     src = "function _FUNCTION(param1, param2){" + src + "}";
     Node script = compiler.parseTestCode(src);
     Node root = script.getFirstChild();
+    Node functionBlock = root.getLastChild();
     assertEquals(0, compiler.getErrorCount());
     Scope globalScope = scopeCreator.createScope(script, null);
-    Scope scope = scopeCreator.createScope(root, globalScope);
+    Scope functionScope = scopeCreator.createScope(root, globalScope);
+    Scope funcBlockScope = scopeCreator.createScope(functionBlock, functionScope);
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
     cfa.process(null, root);
     ControlFlowGraph<Node> cfg = cfa.getCfg();
-    useDef = new MaybeReachingVariableUse(cfg, scope, compiler, scopeCreator);
+    useDef = new MaybeReachingVariableUse(cfg, funcBlockScope, compiler, scopeCreator);
     useDef.analyze();
     def = null;
     uses = new ArrayList<>();

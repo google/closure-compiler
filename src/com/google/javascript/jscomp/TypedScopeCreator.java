@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.TypeCheck.MULTIPLE_VAR_DEF;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_FUNCTION_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
@@ -171,8 +174,8 @@ final class TypedScopeCreator implements ScopeCreator {
     final JSType type;
 
     DeferredSetType(Node node, JSType type) {
-      Preconditions.checkNotNull(node);
-      Preconditions.checkNotNull(type);
+      checkNotNull(node);
+      checkNotNull(type);
       this.node = node;
       this.type = type;
 
@@ -214,7 +217,7 @@ final class TypedScopeCreator implements ScopeCreator {
    */
   @Override
   public TypedScope createScope(Node root, Scope parent) {
-    Preconditions.checkArgument(parent == null || parent instanceof TypedScope);
+    checkArgument(parent == null || parent instanceof TypedScope);
     TypedScope typedParent = (TypedScope) parent;
     // Constructing the global scope is very different than constructing
     // inner scopes, because only global scopes can contain named classes that
@@ -270,12 +273,12 @@ final class TypedScopeCreator implements ScopeCreator {
   void patchGlobalScope(TypedScope globalScope, Node scriptRoot) {
     // Preconditions: This is supposed to be called only on (named) SCRIPT nodes
     // and a global typed scope should have been generated already.
-    Preconditions.checkState(scriptRoot.isScript());
-    Preconditions.checkNotNull(globalScope);
-    Preconditions.checkState(globalScope.isGlobal());
+    checkState(scriptRoot.isScript());
+    checkNotNull(globalScope);
+    checkState(globalScope.isGlobal());
 
     String scriptName = NodeUtil.getSourceName(scriptRoot);
-    Preconditions.checkNotNull(scriptName);
+    checkNotNull(scriptName);
     for (Node node : ImmutableList.copyOf(functionAnalysisResults.keySet())) {
       if (scriptName.equals(NodeUtil.getSourceName(node))) {
         functionAnalysisResults.remove(node);
@@ -493,7 +496,7 @@ final class TypedScopeCreator implements ScopeCreator {
       inputId = t.getInputId();
       if (n.isFunction() ||
           n.isScript()) {
-        Preconditions.checkNotNull(inputId);
+        checkNotNull(inputId);
         sourceName = NodeUtil.getSourceName(n);
       }
 
@@ -763,8 +766,8 @@ final class TypedScopeCreator implements ScopeCreator {
      * The node should have a source name and be of the specified type.
      */
     void assertDefinitionNode(Node n, Token type) {
-      Preconditions.checkState(sourceName != null);
-      Preconditions.checkState(n.getToken() == type, n);
+      checkState(sourceName != null);
+      checkState(n.getToken() == type, n);
     }
 
     /**
@@ -1078,8 +1081,8 @@ final class TypedScopeCreator implements ScopeCreator {
      * @param info The {@link JSDocInfo} attached to the enum definition.
      */
     private EnumType createEnumTypeFromNodes(Node rValue, String name, JSDocInfo info) {
-      Preconditions.checkNotNull(info);
-      Preconditions.checkState(info.hasEnumParameterType());
+      checkNotNull(info);
+      checkState(info.hasEnumParameterType());
 
       EnumType enumType = null;
       if (rValue != null && rValue.isQualifiedName()) {
@@ -1139,21 +1142,15 @@ final class TypedScopeCreator implements ScopeCreator {
      *     {@code inferred} is {@code true}.
      */
     void defineSlot(Node n, Node parent, JSType type, boolean inferred) {
-      Preconditions.checkArgument(inferred || type != null);
+      checkArgument(inferred || type != null);
 
       // Only allow declarations of NAMEs and qualified names.
       // Object literal keys will have to compute their names themselves.
       if (n.isName()) {
-        Preconditions.checkArgument(
-            parent.isFunction() ||
-            parent.isVar() ||
-            parent.isParamList() ||
-            parent.isCatch());
+        checkArgument(
+            parent.isFunction() || parent.isVar() || parent.isParamList() || parent.isCatch());
       } else {
-        Preconditions.checkArgument(
-            n.isGetProp() &&
-            (parent.isAssign() ||
-             parent.isExprResult()));
+        checkArgument(n.isGetProp() && (parent.isAssign() || parent.isExprResult()));
       }
       defineSlot(n, parent, n.getQualifiedName(), type, inferred);
     }
@@ -1171,7 +1168,7 @@ final class TypedScopeCreator implements ScopeCreator {
      */
     void defineSlot(Node n, Node parent, String variableName,
         JSType type, boolean inferred) {
-      Preconditions.checkArgument(!variableName.isEmpty());
+      checkArgument(!variableName.isEmpty());
 
       boolean isGlobalVar = n.isName() && scope.isGlobal();
       boolean shouldDeclareOnGlobalThis =
@@ -1609,7 +1606,7 @@ final class TypedScopeCreator implements ScopeCreator {
       String ownerName = ownerNode.getQualifiedName();
       String qName = n.getQualifiedName();
       String propName = n.getLastChild().getString();
-      Preconditions.checkArgument(qName != null && ownerName != null);
+      checkArgument(qName != null && ownerName != null);
 
       // Precedence of type information on GETPROPs:
       // 1) @type annotation / @enum annotation
@@ -1963,14 +1960,14 @@ final class TypedScopeCreator implements ScopeCreator {
       if (contents != null) {
         for (String varName : contents.getEscapedVarNames()) {
           TypedVar v = scope.getVar(varName);
-          Preconditions.checkState(v.getScope() == scope);
+          checkState(v.getScope() == scope);
           v.markEscaped();
         }
 
         for (Multiset.Entry<String> entry :
                  contents.getAssignedNameCounts().entrySet()) {
           TypedVar v = scope.getVar(entry.getElement());
-          Preconditions.checkState(v.getScope() == scope);
+          checkState(v.getScope() == scope);
           if (entry.getCount() == 1) {
             v.markAssignedExactlyOnce();
           }

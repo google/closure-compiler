@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.VariableVisibilityAnalysis.VariableVisibility;
 import com.google.javascript.rhino.Node;
@@ -110,7 +112,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
       VariableVisibility visibility) {
     Node labeledVariable = searchLabel(label);
 
-    Preconditions.checkState(labeledVariable.isVar());
+    checkState(labeledVariable.isVar());
 
     // VAR
     //   NAME
@@ -156,7 +158,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
    * parameterName.
    */
   private Node searchForParameter(final String parameterName) {
-    Preconditions.checkArgument(parameterName != null);
+    checkArgument(parameterName != null);
 
     final Node[] foundNode = new Node[1];
 
@@ -184,7 +186,7 @@ public final class VariableVisibilityAnalysisTest extends CompilerTestCase {
    * parameterName.
    */
   private Node searchForFunction(final String functionName) {
-    Preconditions.checkArgument(functionName != null);
+    checkArgument(functionName != null);
 
     final Node[] foundNode = new Node[1];
 

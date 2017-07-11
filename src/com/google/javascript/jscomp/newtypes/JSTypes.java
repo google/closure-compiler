@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -62,21 +65,35 @@ public final class JSTypes implements Serializable {
   // The types that are final don't depend on the externs. The types that
   // are non-final, such as numberInstance, are filled in when we traverse
   // the externs during GlobalTypeInfo.
+  @SuppressWarnings("ConstantField")
   public final JSType BOOLEAN;
+  @SuppressWarnings("ConstantField")
   public final JSType BOTTOM;
+  @SuppressWarnings("ConstantField")
   public final JSType FALSE_TYPE;
+  @SuppressWarnings("ConstantField")
   public final JSType FALSY;
+  @SuppressWarnings("ConstantField")
   public final JSType NULL;
+  @SuppressWarnings("ConstantField")
   public final JSType NUMBER;
+  @SuppressWarnings("ConstantField")
   public final JSType STRING;
+  @SuppressWarnings("ConstantField")
   public final JSType TOP;
+  @SuppressWarnings("ConstantField")
   public final JSType TOP_SCALAR;
+  @SuppressWarnings("ConstantField")
   public final JSType TRUE_TYPE;
+  @SuppressWarnings("ConstantField")
   public final JSType TRUTHY;
+  @SuppressWarnings("ConstantField")
   public final JSType UNDEFINED;
+  @SuppressWarnings("ConstantField")
   public final JSType UNKNOWN;
 
   private ObjectType topObjectType;
+  @SuppressWarnings("ConstantField")
   final PersistentMap<String, Property> BOTTOM_PROPERTY_MAP;
   private JSType topObject;
   private ObjectType looseTopObject;
@@ -85,7 +102,9 @@ public final class JSTypes implements Serializable {
   private ObjectType bottomObject;
 
   // Corresponds to Function, which is a subtype and supertype of all functions.
+  @SuppressWarnings("ConstantField")
   final FunctionType QMARK_FUNCTION;
+  @SuppressWarnings("ConstantField")
   final FunctionType BOTTOM_FUNCTION;
   // Theoretically, the top function takes an infinite number of required
   // arguments of type BOTTOM and returns TOP. If this function is ever called,
@@ -96,19 +115,30 @@ public final class JSTypes implements Serializable {
   // We can't represent the theoretical top function, so we special-case
   // TOP_FUNCTION below. However, the outcome is the same; if our top function
   // is ever called, a warning is inevitable.
+  @SuppressWarnings("ConstantField")
   final FunctionType TOP_FUNCTION;
+  @SuppressWarnings("ConstantField")
   final FunctionType LOOSE_TOP_FUNCTION;
 
+  @SuppressWarnings("ConstantField")
   final Map<String, JSType> MAP_TO_UNKNOWN;
 
   // Commonly-used types. We create them once here and reuse them
+  @SuppressWarnings("ConstantField")
   public final JSType NUMBER_OR_STRING;
+  @SuppressWarnings("ConstantField")
   final JSType UNDEFINED_OR_BOOLEAN;
+  @SuppressWarnings("ConstantField")
   final JSType UNDEFINED_OR_NUMBER;
+  @SuppressWarnings("ConstantField")
   final JSType UNDEFINED_OR_STRING;
+  @SuppressWarnings("ConstantField")
   public final JSType NULL_OR_UNDEFINED;
+  @SuppressWarnings("ConstantField")
   final JSType NULL_OR_BOOLEAN;
+  @SuppressWarnings("ConstantField")
   final JSType NULL_OR_NUMBER;
+  @SuppressWarnings("ConstantField")
   final JSType NULL_OR_STRING;
 
   // Instances of Boolean, Number and String; used for auto-boxing scalars.
@@ -133,6 +163,7 @@ public final class JSTypes implements Serializable {
   private RawNominalType arguments;
   private RawNominalType iObject;
   private RawNominalType iArrayLike;
+  private RawNominalType iterable;
 
   final boolean allowMethodsAsFunctions;
   final boolean looseSubtypingForLooseObjects;
@@ -140,34 +171,34 @@ public final class JSTypes implements Serializable {
 
   private JSTypes(boolean inCompatibilityMode) {
     Map<String, JSType> types = JSType.createScalars(this);
-    this.BOOLEAN = Preconditions.checkNotNull(types.get("BOOLEAN"));
-    this.BOTTOM = Preconditions.checkNotNull(types.get("BOTTOM"));
-    this.FALSE_TYPE = Preconditions.checkNotNull(types.get("FALSE_TYPE"));
-    this.FALSY = Preconditions.checkNotNull(types.get("FALSY"));
-    this.NULL = Preconditions.checkNotNull(types.get("NULL"));
-    this.NUMBER = Preconditions.checkNotNull(types.get("NUMBER"));
-    this.STRING = Preconditions.checkNotNull(types.get("STRING"));
-    this.TOP = Preconditions.checkNotNull(types.get("TOP"));
-    this.TOP_SCALAR = Preconditions.checkNotNull(types.get("TOP_SCALAR"));
-    this.TRUE_TYPE = Preconditions.checkNotNull(types.get("TRUE_TYPE"));
-    this.TRUTHY = Preconditions.checkNotNull(types.get("TRUTHY"));
-    this.UNDEFINED = Preconditions.checkNotNull(types.get("UNDEFINED"));
-    this.UNKNOWN = Preconditions.checkNotNull(types.get("UNKNOWN"));
+    this.BOOLEAN = checkNotNull(types.get("BOOLEAN"));
+    this.BOTTOM = checkNotNull(types.get("BOTTOM"));
+    this.FALSE_TYPE = checkNotNull(types.get("FALSE_TYPE"));
+    this.FALSY = checkNotNull(types.get("FALSY"));
+    this.NULL = checkNotNull(types.get("NULL"));
+    this.NUMBER = checkNotNull(types.get("NUMBER"));
+    this.STRING = checkNotNull(types.get("STRING"));
+    this.TOP = checkNotNull(types.get("TOP"));
+    this.TOP_SCALAR = checkNotNull(types.get("TOP_SCALAR"));
+    this.TRUE_TYPE = checkNotNull(types.get("TRUE_TYPE"));
+    this.TRUTHY = checkNotNull(types.get("TRUTHY"));
+    this.UNDEFINED = checkNotNull(types.get("UNDEFINED"));
+    this.UNKNOWN = checkNotNull(types.get("UNKNOWN"));
 
-    this.UNDEFINED_OR_BOOLEAN = Preconditions.checkNotNull(types.get("UNDEFINED_OR_BOOLEAN"));
-    this.UNDEFINED_OR_NUMBER = Preconditions.checkNotNull(types.get("UNDEFINED_OR_NUMBER"));
-    this.UNDEFINED_OR_STRING = Preconditions.checkNotNull(types.get("UNDEFINED_OR_STRING"));
-    this.NULL_OR_BOOLEAN = Preconditions.checkNotNull(types.get("NULL_OR_BOOLEAN"));
-    this.NULL_OR_NUMBER = Preconditions.checkNotNull(types.get("NULL_OR_NUMBER"));
-    this.NULL_OR_STRING = Preconditions.checkNotNull(types.get("NULL_OR_STRING"));
-    this.NULL_OR_UNDEFINED = Preconditions.checkNotNull(types.get("NULL_OR_UNDEFINED"));
-    this.NUMBER_OR_STRING = Preconditions.checkNotNull(types.get("NUMBER_OR_STRING"));
+    this.UNDEFINED_OR_BOOLEAN = checkNotNull(types.get("UNDEFINED_OR_BOOLEAN"));
+    this.UNDEFINED_OR_NUMBER = checkNotNull(types.get("UNDEFINED_OR_NUMBER"));
+    this.UNDEFINED_OR_STRING = checkNotNull(types.get("UNDEFINED_OR_STRING"));
+    this.NULL_OR_BOOLEAN = checkNotNull(types.get("NULL_OR_BOOLEAN"));
+    this.NULL_OR_NUMBER = checkNotNull(types.get("NULL_OR_NUMBER"));
+    this.NULL_OR_STRING = checkNotNull(types.get("NULL_OR_STRING"));
+    this.NULL_OR_UNDEFINED = checkNotNull(types.get("NULL_OR_UNDEFINED"));
+    this.NUMBER_OR_STRING = checkNotNull(types.get("NUMBER_OR_STRING"));
 
     Map<String, FunctionType> functions = FunctionType.createInitialFunctionTypes(this);
-    this.QMARK_FUNCTION = Preconditions.checkNotNull(functions.get("QMARK_FUNCTION"));
-    this.BOTTOM_FUNCTION = Preconditions.checkNotNull(functions.get("BOTTOM_FUNCTION"));
-    this.TOP_FUNCTION = Preconditions.checkNotNull(functions.get("TOP_FUNCTION"));
-    this.LOOSE_TOP_FUNCTION = Preconditions.checkNotNull(functions.get("LOOSE_TOP_FUNCTION"));
+    this.QMARK_FUNCTION = checkNotNull(functions.get("QMARK_FUNCTION"));
+    this.BOTTOM_FUNCTION = checkNotNull(functions.get("BOTTOM_FUNCTION"));
+    this.TOP_FUNCTION = checkNotNull(functions.get("TOP_FUNCTION"));
+    this.LOOSE_TOP_FUNCTION = checkNotNull(functions.get("LOOSE_TOP_FUNCTION"));
     this.BOTTOM_PROPERTY_MAP = PersistentMap.of("_", Property.make(this.BOTTOM, this.BOTTOM));
 
     this.allowMethodsAsFunctions = inCompatibilityMode;
@@ -244,6 +275,11 @@ public final class JSTypes implements Serializable {
       public boolean equals(Object o) {
         return o == this;
       }
+
+      @Override
+      public String toString() {
+        return "MAP_TO_UNKNOWN";
+      }
     }
 
     this.MAP_TO_UNKNOWN = new MapToUnknown();
@@ -282,13 +318,15 @@ public final class JSTypes implements Serializable {
   }
 
   public JSType getIArrayLikeInstance(JSType t) {
-    if (this.iArrayLike == null) {
-      return this.UNKNOWN;
-    }
-    ImmutableList<String> typeParams = iArrayLike.getTypeParameters();
-    Preconditions.checkState(typeParams.size() == 1);
-    String typeParam = Iterables.getOnlyElement(typeParams);
-    return this.iArrayLike.getInstanceAsJSType().substituteGenerics(ImmutableMap.of(typeParam, t));
+    return this.iArrayLike == null
+        ? this.UNKNOWN
+        : this.iArrayLike.getInstanceAsJSType().instantiateGenerics(t);
+  }
+
+  public JSType getIterableInstance(JSType t) {
+    return this.iterable == null
+        ? this.UNKNOWN
+        : this.iterable.getInstanceAsJSType().instantiateGenerics(t);
   }
 
   public NominalType getObjectType() {
@@ -336,13 +374,12 @@ public final class JSTypes implements Serializable {
       return this.UNKNOWN;
     }
     ImmutableList<String> typeParams = arrayType.getTypeParameters();
-    JSType result = arrayType.getInstanceAsJSType();
     // typeParams can be != 1 in old externs files :-S
     if (typeParams.size() == 1) {
-      String typeParam = Iterables.getOnlyElement(typeParams);
-      result = result.substituteGenerics(ImmutableMap.of(typeParam, t));
+      return JSType.fromObjectType(ObjectType.fromNominalType(
+          this.arrayType.getAsNominalType().instantiateGenerics(ImmutableList.of(t))));
     }
-    return result;
+    return arrayType.getInstanceAsJSType();
   }
 
   public JSType getArgumentsArrayType(JSType t) {
@@ -485,6 +522,10 @@ public final class JSTypes implements Serializable {
     this.iArrayLike = iArrayLike;
   }
 
+  public void setIterableType(RawNominalType iterable) {
+    this.iterable = iterable;
+  }
+
   public void setRegexpInstance(JSType regexpInstance) {
     this.regexpInstance = regexpInstance;
   }
@@ -496,8 +537,8 @@ public final class JSTypes implements Serializable {
   }
 
   public void setNumberInstance(JSType t) {
-    Preconditions.checkState(numberInstance == null);
-    Preconditions.checkNotNull(t);
+    checkState(numberInstance == null);
+    checkNotNull(t);
     numberInstance = t;
     numberOrNumber = JSType.join(this.NUMBER, numberInstance);
     numberInstanceObjtype = Iterables.getOnlyElement(t.getObjs());
@@ -507,15 +548,15 @@ public final class JSTypes implements Serializable {
   }
 
   public void setBooleanInstance(JSType t) {
-    Preconditions.checkState(booleanInstance == null);
-    Preconditions.checkNotNull(t);
+    checkState(booleanInstance == null);
+    checkNotNull(t);
     booleanInstance = t;
     booleanInstanceObjtype = Iterables.getOnlyElement(t.getObjs());
   }
 
   public void setStringInstance(JSType t) {
-    Preconditions.checkState(stringInstance == null);
-    Preconditions.checkNotNull(t);
+    checkState(stringInstance == null);
+    checkNotNull(t);
     stringInstance = t;
     stringOrString = JSType.join(this.STRING, stringInstance);
     stringInstanceObjtype = Iterables.getOnlyElement(t.getObjs());

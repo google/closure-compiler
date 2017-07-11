@@ -16,11 +16,11 @@
 
 package com.google.javascript.refactoring;
 
+import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimaps;
@@ -137,7 +137,7 @@ public final class ApplySuggestedFixes {
    * by ORDER_CODE_REPLACEMENTS.
    */
   private static void validateNoOverlaps(List<CodeReplacement> replacements) {
-    Preconditions.checkState(ORDER_CODE_REPLACEMENTS.isOrdered(replacements));
+    checkState(ORDER_CODE_REPLACEMENTS.isOrdered(replacements));
     if (containsOverlaps(replacements)) {
       throw new IllegalArgumentException(
           "Found overlap between code replacements!\n" + Joiner.on("\n\n").join(replacements));
@@ -149,7 +149,7 @@ public final class ApplySuggestedFixes {
    * order sorted by start position, as sorted by ORDER_CODE_REPLACEMENTS.
    */
   private static boolean containsOverlaps(List<CodeReplacement> replacements) {
-    Preconditions.checkState(ORDER_CODE_REPLACEMENTS.isOrdered(replacements));
+    checkState(ORDER_CODE_REPLACEMENTS.isOrdered(replacements));
     int start = -1;
     for (CodeReplacement replacement : replacements) {
       if (replacement.getStartPosition() < start) {

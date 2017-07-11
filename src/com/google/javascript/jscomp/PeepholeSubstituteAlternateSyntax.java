@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.CodingConvention.Bind;
 import com.google.javascript.rhino.IR;
@@ -131,7 +133,7 @@ class PeepholeSubstituteAlternateSyntax
       return node;
     }
 
-    Preconditions.checkArgument(node.isGetProp());
+    checkArgument(node.isGetProp());
 
     if (node.getFirstChild().isName()) {
       Node nameNode = node.getFirstChild();
@@ -162,7 +164,7 @@ class PeepholeSubstituteAlternateSyntax
       return n;
     }
     // All commutative operators are also associative
-    Preconditions.checkArgument(NodeUtil.isAssociative(n.getToken()));
+    checkArgument(NodeUtil.isAssociative(n.getToken()));
     Node rhs = n.getLastChild();
     if (n.getToken() == rhs.getToken()) {
       // Transform a * (b * c) to a * b * c
@@ -195,7 +197,7 @@ class PeepholeSubstituteAlternateSyntax
   }
 
   private Node tryFoldSimpleFunctionCall(Node n) {
-    Preconditions.checkState(n.isCall(), n);
+    checkState(n.isCall(), n);
     Node callTarget = n.getFirstChild();
     if (callTarget == null || !callTarget.isName()) {
       return n;
@@ -253,7 +255,7 @@ class PeepholeSubstituteAlternateSyntax
 
   private Node tryFoldImmediateCallToBoundFunction(Node n) {
     // Rewriting "(fn.bind(a,b))()" to "fn.call(a,b)" makes it inlinable
-    Preconditions.checkState(n.isCall());
+    checkState(n.isCall());
     Node callTarget = n.getFirstChild();
     Bind bind = getCodingConvention()
         .describeFunctionBind(callTarget, false, false);
@@ -383,7 +385,7 @@ class PeepholeSubstituteAlternateSyntax
    * Fold "new Object()" to "Object()".
    */
   private Node tryFoldStandardConstructors(Node n) {
-    Preconditions.checkState(n.isNew());
+    checkState(n.isNew());
 
     if (canFoldStandardConstructors(n)) {
       n.setToken(Token.CALL);
@@ -423,8 +425,7 @@ class PeepholeSubstituteAlternateSyntax
    * call is to a local constructor function with the same name.
    */
   private Node tryFoldLiteralConstructor(Node n) {
-    Preconditions.checkArgument(n.isCall()
-        || n.isNew());
+    checkArgument(n.isCall() || n.isNew());
 
     Node constructorNameNode = n.getFirstChild();
 

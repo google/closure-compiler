@@ -79,11 +79,16 @@ public final class RefasterJsTestUtils {
         ApplySuggestedFixes.applySuggestedFixesToCode(
                 fixes, ImmutableMap.of(originalFilePath, slurpFile(originalFilePath)))
             .get(originalFilePath);
-    assertThat(newCode).isEqualTo(slurpFile(expectedFilePath));
+    assertThat(replaceTrailingWhitespace(newCode))
+        .isEqualTo(replaceTrailingWhitespace(slurpFile(expectedFilePath)));
   }
 
   private static String slurpFile(String originalFile) throws IOException {
     return Files.asCharSource(new File(originalFile), StandardCharsets.UTF_8).read();
+  }
+  
+  private static String replaceTrailingWhitespace(String contents) {
+    return contents.replaceAll("[ \t]*\n", "\n");
   }
 
   private RefasterJsTestUtils() {}

@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Preconditions;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -153,7 +155,7 @@ class ProcessTweaks implements CompilerPass {
     }
 
     boolean isCorrectRegisterFunction(TweakFunction registerFunction) {
-      Preconditions.checkNotNull(registerFunction);
+      checkNotNull(registerFunction);
       return this.registerFunction == registerFunction;
     }
 
@@ -537,7 +539,7 @@ class ProcessTweaks implements CompilerPass {
     }
 
     Node getDefaultValueNode() {
-      Preconditions.checkState(isRegistered());
+      checkState(isRegistered());
       // Use calls to goog.tweak.overrideDefaultValue() first.
       if (defaultValueNode != null) {
         return defaultValueNode;

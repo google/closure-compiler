@@ -18,9 +18,9 @@
  * @fileoverview Tests default imports.
  */
 
-import s from './module_test_resources/exportDefault';
-import ExampleClass from './module_test_resources/exportDefaultClass';
-import ExampleCtor from './module_test_resources/exportDefaultOldStyleClass';
+import s from './module_test_resources/exportDefault.js';
+import ExampleClass from './module_test_resources/exportDefaultClass.js';
+import ExampleCtor from './module_test_resources/exportDefaultOldStyleClass.js';
 
 function testDefault() {
   assertEquals('this is the default export', s);

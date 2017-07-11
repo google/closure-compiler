@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp.graph;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -66,8 +66,7 @@ public abstract class GraphColoring<N, E> {
    * become the super node.
    */
   public N getPartitionSuperNode(N node) {
-    Preconditions.checkNotNull(colorToNodeMap,
-        "No coloring founded. color() should be called first.");
+    checkNotNull(colorToNodeMap, "No coloring founded. color() should be called first.");
     Color color = graph.getNode(node).getAnnotation();
     N headNode = colorToNodeMap[color.value];
     if (headNode == null) {

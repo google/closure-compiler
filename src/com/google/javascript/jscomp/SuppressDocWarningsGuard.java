@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,14 +35,16 @@ import java.util.Map;
 class SuppressDocWarningsGuard extends WarningsGuard {
   private static final long serialVersionUID = 1L;
 
+  private final AbstractCompiler compiler;
+
   /** Warnings guards for each suppressible warnings group, indexed by name. */
   private final Map<String, DiagnosticGroupWarningsGuard> suppressors =
        new HashMap<>();
 
-  /**
-   * The suppressible groups, indexed by name.
-   */
-  SuppressDocWarningsGuard(Map<String, DiagnosticGroup> suppressibleGroups) {
+  /** The suppressible groups, indexed by name. */
+  SuppressDocWarningsGuard(
+      AbstractCompiler compiler, Map<String, DiagnosticGroup> suppressibleGroups) {
+    this.compiler = compiler;
     for (Map.Entry<String, DiagnosticGroup> entry : suppressibleGroups.entrySet()) {
       suppressors.put(
           entry.getKey(),
@@ -64,6 +65,9 @@ class SuppressDocWarningsGuard extends WarningsGuard {
   @Override
   public CheckLevel level(JSError error) {
     Node node = error.node;
+    if (node == null && error.sourceName != null) {
+      node = compiler.getScriptNode(error.sourceName);
+    }
     if (node != null) {
       boolean visitedFunction = false;
       for (Node current = node;

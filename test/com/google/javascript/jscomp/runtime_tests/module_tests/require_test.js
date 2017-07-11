@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import s from './module_test_resources/exportDefault';
+import s from './module_test_resources/exportDefault.js';
 
 const {assertInstanceof} = goog.require('goog.asserts');
 const EventHandler = goog.require('goog.events.EventHandler');

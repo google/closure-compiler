@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -472,7 +475,7 @@ public final class ConformanceRules {
         throw new InvalidRequirementSpec("missing value");
       }
 
-      Preconditions.checkArgument(
+      checkArgument(
           requirement.getType() == Type.BANNED_PROPERTY
               || requirement.getType() == Type.BANNED_PROPERTY_READ
               || requirement.getType() == Type.BANNED_PROPERTY_WRITE
@@ -603,7 +606,7 @@ public final class ConformanceRules {
      */
     private static String getPropertyFromDeclarationName(String specName) {
       String[] parts = specName.split("\\.prototype\\.");
-      Preconditions.checkState(parts.length == 1 || parts.length == 2);
+      checkState(parts.length == 1 || parts.length == 2);
       if (parts.length == 2) {
         return parts[1];
       }
@@ -615,7 +618,7 @@ public final class ConformanceRules {
      */
     private static String getClassFromDeclarationName(String specName) {
       String[] parts = specName.split("\\.prototype\\.");
-      Preconditions.checkState(parts.length == 1 || parts.length == 2);
+      checkState(parts.length == 1 || parts.length == 2);
       if (parts.length == 2) {
         return parts[0];
       }
@@ -652,7 +655,7 @@ public final class ConformanceRules {
         Node callOrNew,
         FunctionTypeI functionType,
         boolean isCallInvocation) {
-      Preconditions.checkState(callOrNew.isCall() || callOrNew.isNew());
+      checkState(callOrNew.isCall() || callOrNew.isNew());
 
       return validateParameterList(compiler, callOrNew, functionType, isCallInvocation)
           && validateThis(callOrNew, functionType, isCallInvocation);
@@ -896,7 +899,7 @@ public final class ConformanceRules {
     private static String getPropertyFromDeclarationName(String specName)
         throws InvalidRequirementSpec {
       String[] parts = removeTypeDecl(specName).split("\\.prototype\\.");
-      Preconditions.checkState(parts.length == 1 || parts.length == 2);
+      checkState(parts.length == 1 || parts.length == 2);
       if (parts.length == 2) {
         return parts[1];
       }
@@ -910,7 +913,7 @@ public final class ConformanceRules {
         throws InvalidRequirementSpec {
       String tmp = removeTypeDecl(specName);
       String[] parts = tmp.split("\\.prototype\\.");
-      Preconditions.checkState(parts.length == 1 || parts.length == 2);
+      checkState(parts.length == 1 || parts.length == 2);
       if (parts.length == 2) {
         return parts[0];
       }

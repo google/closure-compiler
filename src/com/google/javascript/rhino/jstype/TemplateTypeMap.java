@@ -39,11 +39,12 @@
 
 package com.google.javascript.rhino.jstype;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.JSType.EqCache;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
-
 import java.io.Serializable;
 
 /**
@@ -71,9 +72,9 @@ public class TemplateTypeMap implements Serializable {
   TemplateTypeMap(JSTypeRegistry registry,
                   ImmutableList<TemplateType> templateKeys,
                   ImmutableList<JSType> templateValues) {
-    Preconditions.checkNotNull(templateKeys);
-    Preconditions.checkNotNull(templateValues);
-    Preconditions.checkArgument(templateValues.size() <= templateKeys.size());
+    checkNotNull(templateKeys);
+    checkNotNull(templateValues);
+    checkArgument(templateValues.size() <= templateKeys.size());
 
     this.registry = registry;
     this.templateKeys = templateKeys;

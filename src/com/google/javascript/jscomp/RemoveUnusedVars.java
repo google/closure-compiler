@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
@@ -154,7 +156,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
    */
   @Override
   public void process(Node externs, Node root) {
-    Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
+    checkState(compiler.getLifeCycleStage().isNormalized());
     boolean shouldResetModifyCallSites = false;
     if (this.modifyCallSites) {
       // When RemoveUnusedVars is run after OptimizeCalls, this.modifyCallSites
@@ -181,7 +183,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
   public void process(
       Node externs, Node root, DefinitionUseSiteFinder defFinder) {
     if (modifyCallSites) {
-      Preconditions.checkNotNull(defFinder);
+      checkNotNull(defFinder);
       callSiteOptimizer = new CallSiteOptimizer(compiler, defFinder);
     }
     traverseAndRemoveUnusedReferences(root);
@@ -390,12 +392,11 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
    * no need to treat CATCH blocks differently like we do functions.
    */
   private void traverseFunction(Node function, Scope parentScope) {
-    Preconditions.checkState(function.getChildCount() == 3, function);
-    Preconditions.checkState(function.isFunction(), function);
+    checkState(function.getChildCount() == 3, function);
+    checkState(function.isFunction(), function);
 
     final Node body = function.getLastChild();
-    Preconditions.checkState(body.getNext() == null && body.isNormalBlock(), body);
-
+    checkState(body.getNext() == null && body.isNormalBlock(), body);
 
     // Checking the parameters
     Scope fparamScope = scopeCreator.createScope(function, parentScope);
@@ -442,7 +443,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
     }
 
     Node function = fparamScope.getRootNode();
-    Preconditions.checkState(function.isFunction());
+    checkState(function.isFunction());
     if (NodeUtil.isGetOrSetKey(function.getParent())) {
       // The parameters object literal setters can not be removed.
       return;
@@ -483,7 +484,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
 
     public void optimize(Scope fparamScope, Set<Var> referenced) {
       Node function = fparamScope.getRootNode();
-      Preconditions.checkState(function.isFunction());
+      checkState(function.isFunction());
       Node argList = NodeUtil.getFunctionParameters(function);
 
       // In this path we try to modify all the call sites to remove unused
@@ -516,6 +517,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
 
         compiler.reportChangeToEnclosingScope(n);
         n.replaceWith(IR.number(0).srcref(n));
+        NodeUtil.markFunctionsDeleted(n, compiler);
       }
     }
 
@@ -544,7 +546,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
 
         Var var = scope.getVar(param.getString());
         if (!referenced.contains(var)) {
-          Preconditions.checkNotNull(var);
+          checkNotNull(var);
 
           // Remove call parameter if we can generally change the signature
           // or if it is the last parameter in the parameter list.
@@ -702,7 +704,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
       Definition definition = getFunctionDefinition(function);
       CodingConvention convention = compiler.getCodingConvention();
 
-      Preconditions.checkState(!definition.isExtern());
+      checkState(!definition.isExtern());
 
       Collection<UseSite> useSites = defFinder.getUseSites(definition);
       for (UseSite site : useSites) {
@@ -741,8 +743,8 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
         Node nameNode = site.node;
         Collection<Definition> singleSiteDefinitions =
             defFinder.getDefinitionsReferencedAt(nameNode);
-        Preconditions.checkState(singleSiteDefinitions.size() == 1);
-        Preconditions.checkState(singleSiteDefinitions.contains(definition));
+        checkState(singleSiteDefinitions.size() == 1);
+        checkState(singleSiteDefinitions.contains(definition));
       }
 
       return true;
@@ -755,10 +757,10 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
     private Definition getFunctionDefinition(Node function) {
       DefinitionSite definitionSite = defFinder.getDefinitionForFunction(
           function);
-      Preconditions.checkNotNull(definitionSite);
+      checkNotNull(definitionSite);
       Definition definition = definitionSite.definition;
-      Preconditions.checkState(!definitionSite.inExterns);
-      Preconditions.checkState(definition.getRValue() == function);
+      checkState(!definitionSite.inExterns);
+      checkState(definition.getRValue() == function);
       return definition;
     }
   }
@@ -881,7 +883,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
       Node nameNode = var.nameNode;
       Node toRemove = nameNode.getParent();
       Node parent = toRemove.getParent();
-      Preconditions.checkState(
+      checkState(
           NodeUtil.isNameDeclaration(toRemove)
               || toRemove.isFunction()
               || (toRemove.isParamList() && parent.isFunction())
@@ -976,7 +978,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
     final boolean maybeAliased;
 
     Assign(Node assignNode, Node nameNode, boolean isPropertyAssign) {
-      Preconditions.checkState(NodeUtil.isAssignmentOp(assignNode));
+      checkState(NodeUtil.isAssignmentOp(assignNode));
       this.assignNode = assignNode;
       this.nameNode = nameNode;
       this.isPropertyAssign = isPropertyAssign;
@@ -993,7 +995,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
      * Otherwise, return null.
      */
     static Assign maybeCreateAssign(Node assignNode) {
-      Preconditions.checkState(NodeUtil.isAssignmentOp(assignNode));
+      checkState(NodeUtil.isAssignmentOp(assignNode));
 
       // Skip one level of GETPROPs or GETELEMs.
       //

@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp.graph;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
@@ -250,8 +251,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
    * {@link #pushNodeAnnotations()}.
    */
   public final void popNodeAnnotations() {
-    Preconditions.checkNotNull(nodeAnnotationStack,
-        "Popping node annotations without pushing.");
+    checkNotNull(nodeAnnotationStack, "Popping node annotations without pushing.");
     popAnnotations(nodeAnnotationStack);
   }
 
@@ -271,8 +271,7 @@ public abstract class Graph<N, E> implements AdjacencyGraph<N, E> {
    * {@link #pushEdgeAnnotations()}.
    */
   public final void popEdgeAnnotations() {
-    Preconditions.checkNotNull(edgeAnnotationStack,
-        "Popping edge annotations without pushing.");
+    checkNotNull(edgeAnnotationStack, "Popping edge annotations without pushing.");
     popAnnotations(edgeAnnotationStack);
   }
 

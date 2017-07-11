@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
@@ -42,7 +44,7 @@ class TypedCodeGenerator extends CodeGenerator {
   TypedCodeGenerator(
       CodeConsumer consumer, CompilerOptions options, TypeIRegistry registry) {
     super(consumer, options);
-    Preconditions.checkNotNull(registry);
+    checkNotNull(registry);
     this.registry = registry;
     this.jsDocInfoPrinter = new JSDocInfoPrinter(options.getUseOriginalNamesInOutput());
   }
@@ -89,7 +91,7 @@ class TypedCodeGenerator extends CodeGenerator {
       return getFunctionAnnotation(node);
     } else if (type.isEnumObject()) {
       return "/** @enum {"
-          + type.toMaybeObjectType().getElementsType().toNonNullAnnotationString()
+          + type.toMaybeObjectType().getEnumeratedTypeOfEnumObject().toNonNullAnnotationString()
           + "} */\n";
     } else if (!type.isUnknownType()
         && !type.isBottom()
@@ -106,21 +108,17 @@ class TypedCodeGenerator extends CodeGenerator {
    */
   private String getFunctionAnnotation(Node fnNode) {
     TypeI type = fnNode.getTypeI();
-    Preconditions.checkState(fnNode.isFunction() || type.isFunctionType());
+    checkState(fnNode.isFunction() || type.isFunctionType());
 
     if (type == null || type.isUnknownType()) {
       return "";
     }
 
     FunctionTypeI funType = type.toMaybeFunctionType();
-
     if (type.equals(registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE))) {
       return "/** @type {!Function} */\n";
     }
-
     StringBuilder sb = new StringBuilder("/**\n");
-
-
     Node paramNode = null;
     // We need to use the child nodes of the function as the nodes for the
     // parameters of the function type do not have the real parameter names.
@@ -134,12 +132,12 @@ class TypedCodeGenerator extends CodeGenerator {
     }
 
     // Param types
-    int minArgs = funType.getMinArguments();
-    int maxArgs = funType.getMaxArguments();
-    List<TypeI> args = ImmutableList.copyOf(funType.getParameterTypes());
-    for (int i = 0; i < args.size(); i++) {
+    int minArity = funType.getMinArity();
+    int maxArity = funType.getMaxArity();
+    List<TypeI> formals = ImmutableList.copyOf(funType.getParameterTypes());
+    for (int i = 0; i < formals.size(); i++) {
       sb.append(" * ");
-      appendAnnotation(sb, "param", getParameterJSDocType(args, i, minArgs, maxArgs));
+      appendAnnotation(sb, "param", getParameterJSDocType(formals, i, minArity, maxArity));
       sb.append(" ")
           .append(paramNode == null ? "p" + i : paramNode.getString())
           .append("\n");
@@ -153,54 +151,16 @@ class TypedCodeGenerator extends CodeGenerator {
     if (retType != null
         && !retType.isBottom() // There is no annotation for the empty type.
         && !funType.isInterface() // Interfaces never return a value.
-        && !(funType.isConstructor()
-        && retType.isVoidType())) {
+        && !(funType.isConstructor() && retType.isVoidType())) {
       sb.append(" * ");
       appendAnnotation(sb, "return", retType.toNonNullAnnotationString());
       sb.append("\n");
     }
 
-    // Constructor/interface
-    if (funType.isConstructor() || funType.isInterface()) {
-
-      if (funType.isInterface()) {
-        Set<String> interfaces = new TreeSet<>();
-        for (ObjectTypeI interfaceType : funType.getAncestorInterfaces()) {
-          interfaces.add(interfaceType.toAnnotationString());
-        }
-        for (String interfaze : interfaces) {
-          sb.append(" * ");
-          appendAnnotation(sb, "extends", interfaze);
-          sb.append("\n");
-        }
-      }
-
-      if (funType.isConstructor()) {
-        FunctionTypeI superConstructor = funType.getInstanceType().getSuperClassConstructor();
-        if (superConstructor != null) {
-          ObjectTypeI superInstance = superConstructor.getInstanceType();
-          if (!superInstance.toString().equals("Object")) {
-            sb.append(" * ");
-            appendAnnotation(sb, "extends", superInstance.toAnnotationString());
-            sb.append("\n");
-          }
-        }
-        // Avoid duplicates, add implemented type to a set first
-        Set<String> interfaces = new TreeSet<>();
-        for (ObjectTypeI interfaze : funType.getAncestorInterfaces()) {
-          interfaces.add(interfaze.toAnnotationString());
-        }
-        for (String interfaze : interfaces) {
-          sb.append(" * ");
-          appendAnnotation(sb, "implements", interfaze);
-          sb.append("\n");
-        }
-        sb.append(" * @constructor\n");
-      } else if (funType.isStructuralInterface()) {
-        sb.append(" * @record\n");
-      } else if (funType.isInterface()) {
-        sb.append(" * @interface\n");
-      }
+    if (funType.isConstructor()) {
+      appendConstructorAnnotations(sb, funType);
+    } else if (funType.isInterface()) {
+      appendInterfaceAnnotations(sb, funType);
     } else {
       TypeI thisType = funType.getTypeOfThis();
       if (thisType != null && !thisType.isUnknownType() && !thisType.isVoidType()) {
@@ -221,6 +181,48 @@ class TypedCodeGenerator extends CodeGenerator {
 
     sb.append(" */\n");
     return sb.toString();
+  }
+
+  // TODO(dimvar): it's awkward that we print @constructor after the extends/implements;
+  // we should print it first, like users write it. Same for @interface and @record.
+  private void appendConstructorAnnotations(StringBuilder sb, FunctionTypeI funType) {
+    FunctionTypeI superConstructor = funType.getInstanceType().getSuperClassConstructor();
+    if (superConstructor != null) {
+      ObjectTypeI superInstance = superConstructor.getInstanceType();
+      if (!superInstance.toString().equals("Object")) {
+        sb.append(" * ");
+        appendAnnotation(sb, "extends", superInstance.toAnnotationString());
+        sb.append("\n");
+      }
+    }
+    // Avoid duplicates, add implemented type to a set first
+    Set<String> interfaces = new TreeSet<>();
+    for (ObjectTypeI interfaze : funType.getAncestorInterfaces()) {
+      interfaces.add(interfaze.toAnnotationString());
+    }
+    for (String interfaze : interfaces) {
+      sb.append(" * ");
+      appendAnnotation(sb, "implements", interfaze);
+      sb.append("\n");
+    }
+    sb.append(" * @constructor\n");
+  }
+
+  private void appendInterfaceAnnotations(StringBuilder sb, FunctionTypeI funType) {
+    Set<String> interfaces = new TreeSet<>();
+    for (ObjectTypeI interfaceType : funType.getAncestorInterfaces()) {
+      interfaces.add(interfaceType.toAnnotationString());
+    }
+    for (String interfaze : interfaces) {
+      sb.append(" * ");
+      appendAnnotation(sb, "extends", interfaze);
+      sb.append("\n");
+    }
+    if (funType.isStructuralInterface()) {
+      sb.append(" * @record\n");
+    } else {
+      sb.append(" * @interface\n");
+    }
   }
 
   // TODO(sdh): This whole method could be deleted if we don't mind adding
@@ -252,16 +254,17 @@ class TypedCodeGenerator extends CodeGenerator {
     sb.append("@").append(name).append(" {").append(type).append("}");
   }
 
-  /** Creates a JSDoc-suitable String representation the type of a parameter. */
+  /** Creates a JSDoc-suitable String representation of the type of a parameter. */
   private String getParameterJSDocType(List<TypeI> types, int index, int minArgs, int maxArgs) {
     TypeI type = types.get(index);
-    if (index >= minArgs) {
-      if (maxArgs < Integer.MAX_VALUE || index < types.size() - 1) {
-        return restrictByUndefined(type).toNonNullAnnotationString() + "=";
-      }
+    if (index < minArgs) {
+      return type.toNonNullAnnotationString();
+    }
+    boolean isRestArgument = maxArgs == Integer.MAX_VALUE && index == types.size() - 1;
+    if (isRestArgument) {
       return "..." + restrictByUndefined(type).toNonNullAnnotationString();
     }
-    return type.toNonNullAnnotationString();
+    return restrictByUndefined(type).toNonNullAnnotationString() + "=";
   }
 
   /** Removes undefined from a union type. */
@@ -273,10 +276,11 @@ class TypedCodeGenerator extends CodeGenerator {
       return type;
     }
     TypeI restricted = type.restrictByNotNullOrUndefined();
-    if (!type.isNullable()) {
-      return restricted.isBottom() ? type : restricted;
+    if (type.isNullable()) {
+      TypeI nullType = registry.getNativeType(JSTypeNative.NULL_TYPE);
+      return registry.createUnionType(ImmutableList.of(restricted, nullType));
     }
-    TypeI nullType = registry.getNativeType(JSTypeNative.NULL_TYPE);
-    return registry.createUnionType(ImmutableList.of(restricted, nullType));
+    // The bottom type cannot appear in a jsdoc
+    return restricted.isBottom() ? type : restricted;
   }
 }

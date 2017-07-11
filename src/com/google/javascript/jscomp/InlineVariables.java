@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
@@ -192,7 +194,6 @@ class InlineVariables implements CompilerPass {
      * If it looks safe to do so, inline them.
      */
     private void doInlinesForScope(NodeTraversal t, ReferenceMap referenceMap) {
-
       boolean maybeModifiedArguments =
           maybeEscapedOrModifiedArguments(t.getScope(), referenceMap);
       for (Var v : t.getScope().getVarIterable()) {
@@ -255,7 +256,6 @@ class InlineVariables implements CompilerPass {
       Reference declaration = referenceInfo.references.get(0);
       Reference init = referenceInfo.getInitializingReference();
       int firstRefAfterInit = (declaration == init) ? 2 : 3;
-
       if (refCount > 1 &&
           isImmutableAndWellDefinedVariable(v, referenceInfo)) {
         // if the variable is referenced more than once, we can only
@@ -268,7 +268,7 @@ class InlineVariables implements CompilerPass {
           Node srcLocation = declaration.getNode();
           value = NodeUtil.newUndefinedNode(srcLocation);
         }
-        Preconditions.checkNotNull(value);
+        checkNotNull(value);
         inlineWellDefinedVariable(v, value, referenceInfo.references);
         staleVars.add(v);
       } else if (refCount == firstRefAfterInit) {
@@ -285,7 +285,7 @@ class InlineVariables implements CompilerPass {
           // The only reference is the initialization, remove the assignment and
           // the variable declaration.
           Node value = init.getAssignedValue();
-          Preconditions.checkNotNull(value);
+          checkNotNull(value);
           inlineWellDefinedVariable(v, value, referenceInfo.references);
           staleVars.add(v);
         }
@@ -308,7 +308,7 @@ class InlineVariables implements CompilerPass {
               Reference aliasInit;
               aliasInit = candidate.refInfo.getInitializingReference();
               Node value = aliasInit.getAssignedValue();
-              Preconditions.checkNotNull(value);
+              checkNotNull(value);
               inlineWellDefinedVariable(candidate.alias,
                   value,
                   candidate.refInfo.references);
@@ -357,14 +357,14 @@ class InlineVariables implements CompilerPass {
      */
     private void inline(Var v, Reference decl, Reference init, Reference ref) {
       Node value = init.getAssignedValue();
-      Preconditions.checkState(value != null);
+      checkState(value != null);
       // Check for function declarations before the value is moved in the AST.
       boolean isFunctionDeclaration = NodeUtil.isFunctionDeclaration(value);
       compiler.reportChangeToEnclosingScope(ref.getNode());
       inlineValue(v, ref, value.detach());
       if (decl != init) {
         Node expressRoot = init.getGrandparent();
-        Preconditions.checkState(expressRoot.isExprResult());
+        checkState(expressRoot.isExprResult());
         NodeUtil.removeChild(expressRoot.getParent(), expressRoot);
       }
       // Function declarations have already been removed.
@@ -414,7 +414,7 @@ class InlineVariables implements CompilerPass {
      */
     private void removeDeclaration(Reference decl) {
       Node varNode = decl.getParent();
-      Preconditions.checkState(NodeUtil.isNameDeclaration(varNode), varNode);
+      checkState(NodeUtil.isNameDeclaration(varNode), varNode);
       Node grandparent = decl.getGrandparent();
 
       compiler.reportChangeToEnclosingScope(decl.getNode());
@@ -557,7 +557,7 @@ class InlineVariables implements CompilerPass {
       //   f(a)
       // is OK.
       Node value = initialization.getAssignedValue();
-      Preconditions.checkState(value != null);
+      checkState(value != null);
       if (value.isGetProp()
           && reference.getParent().isCall()
           && reference.getParent().getFirstChild() == reference.getNode()) {
@@ -616,8 +616,7 @@ class InlineVariables implements CompilerPass {
                 initialization.getParent(), // VAR/LET/CONST
                 initialization.getGrandparent()); // VAR/LET/CONST container
       } else if (initialization.getParent().isAssign()) {
-        Preconditions.checkState(
-            initialization.getGrandparent().isExprResult());
+        checkState(initialization.getGrandparent().isExprResult());
         it = NodeIterators.LocalVarMotion.forAssign(
             initialization.getNode(),     // NAME
             initialization.getParent(),       // ASSIGN
@@ -662,9 +661,7 @@ class InlineVariables implements CompilerPass {
         }
       } else {
         Node parent = initialization.getParent();
-        Preconditions.checkState(
-            parent.isAssign()
-            && parent.getFirstChild() == initialization.getNode());
+        checkState(parent.isAssign() && parent.getFirstChild() == initialization.getNode());
       }
 
       Node n = initialization.getAssignedValue();
@@ -706,7 +703,7 @@ class InlineVariables implements CompilerPass {
         }
 
         if (refDecl != refInit) {
-          Preconditions.checkState(refInit == refSet.get(1));
+          checkState(refInit == refSet.get(1));
           startingReadRef = 2;
         }
 
@@ -715,7 +712,7 @@ class InlineVariables implements CompilerPass {
         }
 
         Node value = refInit.getAssignedValue();
-        Preconditions.checkNotNull(value);
+        checkNotNull(value);
 
         boolean isImmutableValueWorthInlining =
             NodeUtil.isImmutableValue(value)
@@ -732,7 +729,6 @@ class InlineVariables implements CompilerPass {
           return false;
         }
       }
-
       return true;
     }
   }

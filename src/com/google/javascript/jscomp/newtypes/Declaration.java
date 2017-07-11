@@ -16,8 +16,9 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 
 /**
  * Represents a declaration of a javascript type.
@@ -47,19 +48,18 @@ public class Declaration {
 
   private void checkValid() {
     if (this.simpleType != null) {
-      Preconditions.checkState(this.typedef == null);
+      checkState(this.typedef == null);
     }
     if (this.typedef != null) {
-      Preconditions.checkState(
-          this.simpleType == null && this.ns == null && this.funScope == null);
+      checkState(this.simpleType == null && this.ns == null && this.funScope == null);
     }
     if (this.ns != null) {
       // Note: Non-null nominal with null function is allowed,
       // e.g., /** @constructor */ var Bar = Foo;
-      Preconditions.checkState(this.typedef == null);
+      checkState(this.typedef == null);
     }
     if (this.funScope != null) {
-      Preconditions.checkState(this.typedef == null);
+      checkState(this.typedef == null);
     }
   }
 

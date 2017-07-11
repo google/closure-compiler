@@ -39,8 +39,9 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.annotations.GwtIncompatible;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -170,7 +171,7 @@ public final class TemplatizedType extends ProxyObjectType {
    * @return The greatest subtype.
    */
   JSType getGreatestSubtypeHelper(JSType rawThat) {
-    Preconditions.checkNotNull(rawThat);
+    checkNotNull(rawThat);
 
     if (!wrapsSameRawType(rawThat)) {
       if (!rawThat.isTemplatizedType()) {
@@ -187,7 +188,7 @@ public final class TemplatizedType extends ProxyObjectType {
     }
 
     TemplatizedType that = rawThat.toMaybeTemplatizedType();
-    Preconditions.checkNotNull(that);
+    checkNotNull(that);
 
     if (getTemplateTypeMap().checkEquivalenceHelper(
         that.getTemplateTypeMap(), EquivalenceMethod.INVARIANT, SubtypingMode.NORMAL)) {

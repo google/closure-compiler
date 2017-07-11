@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Base} from './module_test_resources/classProtectedMethod';
+import {Base} from './module_test_resources/classProtectedMethod.js';
 
 /**
  * An example ES6 class whose reference to Base.getBase() should be legal.

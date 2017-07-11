@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -77,7 +78,7 @@ public class JsAst implements SourceAst {
 
   @Override
   public void setSourceFile(SourceFile file) {
-    Preconditions.checkState(fileName.equals(file.getName()));
+    checkState(fileName.equals(file.getName()));
     sourceFile = file;
   }
 
@@ -156,11 +157,13 @@ public class JsAst implements SourceAst {
       if (compiler.getOptions().preservesDetailedSourceInfo()) {
         compiler.addComments(sourceFile.getName(), result.comments);
       }
-      if (result.sourceMap != null) {
-        String sourceMapName = sourceFile.getName() + ".inline.map";
-        SourceMapInput sourceMapInput =
-            new SourceMapInput(SourceFile.fromCode(sourceMapName, result.sourceMap));
-        compiler.addInputSourceMap(sourceFile.getName(), sourceMapInput);
+      if (result.sourceMapURL != null) {
+        boolean parseInline = compiler.getOptions().parseInlineSourceMaps;
+        SourceFile sourceMapSourceFile =
+            SourceMapResolver.extractSourceMap(sourceFile, result.sourceMapURL, parseInline);
+        if (sourceMapSourceFile != null) {
+          compiler.addInputSourceMap(sourceFile.getName(), new SourceMapInput(sourceMapSourceFile));
+        }
       }
     } catch (IOException e) {
       compiler.report(

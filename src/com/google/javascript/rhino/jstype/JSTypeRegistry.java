@@ -39,6 +39,9 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
@@ -53,6 +56,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.ErrorReporter;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
@@ -181,7 +185,7 @@ public class JSTypeRegistry implements TypeIRegistry {
        new HashMap<>();
 
   // A map from interface name to types that implement it.
-  private final Multimap<String, FunctionType> interfaceToImplementors =
+  private final Multimap<String, FunctionTypeI> interfaceToImplementors =
       LinkedHashMultimap.create();
 
   // All the unresolved named types.
@@ -238,7 +242,7 @@ public class JSTypeRegistry implements TypeIRegistry {
    * property key type of the built-in Javascript object.
    */
   public TemplateType getObjectIndexKey() {
-    Preconditions.checkNotNull(iObjectIndexTemplateKey);
+    checkNotNull(iObjectIndexTemplateKey);
     return this.iObjectIndexTemplateKey;
   }
 
@@ -724,8 +728,7 @@ public class JSTypeRegistry implements TypeIRegistry {
   }
 
   private void register(JSType type, String name) {
-    Preconditions.checkArgument(
-        !name.contains("<"), "Type names cannot contain template annotations.");
+    checkArgument(!name.contains("<"), "Type names cannot contain template annotations.");
     namesToTypes.put(name, type);
   }
 
@@ -952,7 +955,7 @@ public class JSTypeRegistry implements TypeIRegistry {
    * be returned.  {@code interfaceInstance} must be an ObjectType for the
    * instance of the interface.
    */
-  public Collection<FunctionType> getDirectImplementors(ObjectType interfaceInstance) {
+  public Collection<FunctionTypeI> getDirectImplementors(ObjectType interfaceInstance) {
     return interfaceToImplementors.get(interfaceInstance.getReferenceName());
   }
 
@@ -977,7 +980,7 @@ public class JSTypeRegistry implements TypeIRegistry {
    * type name hasn't been declared yet.
    */
   public void overwriteDeclaredType(String name, JSType t) {
-    Preconditions.checkState(namesToTypes.containsKey(name));
+    checkState(namesToTypes.containsKey(name));
     register(t, name);
   }
 
@@ -1034,7 +1037,7 @@ public class JSTypeRegistry implements TypeIRegistry {
       if (source == null) {
         return type.toString();
       }
-      Preconditions.checkState(source.isFunction(), source);
+      checkState(source.isFunction(), source);
       String readable = source.getFirstChild().getOriginalName();
       if (readable == null) {
         return type.toString();
@@ -1583,7 +1586,7 @@ public class JSTypeRegistry implements TypeIRegistry {
       JSType returnType,
       ImmutableList<TemplateType> templateKeys,
       boolean isAbstract) {
-    Preconditions.checkArgument(source == null || source.isFunction());
+    checkArgument(source == null || source.isFunction());
     return new FunctionType(
         this,
         name,
@@ -1724,7 +1727,7 @@ public class JSTypeRegistry implements TypeIRegistry {
    * Identifies the name of a typedef or enum before we actually declare it.
    */
   public void identifyNonNullableName(String name) {
-    Preconditions.checkNotNull(name);
+    checkNotNull(name);
     nonNullableTypeNames.add(name);
   }
 
@@ -1802,8 +1805,8 @@ public class JSTypeRegistry implements TypeIRegistry {
         return getNativeType(VOID_TYPE);
 
       case STRING:
-      // TODO(martinprobst): The new type syntax resolution should be separate.
-      // Remove the NAME case then.
+        // TODO(martinprobst): The new type syntax resolution should be separate.
+        // Remove the NAME case then.
       case NAME:
         JSType namedType =
             getType(
@@ -1849,7 +1852,9 @@ public class JSTypeRegistry implements TypeIRegistry {
               if (++templateNodeIndex > nAllowedTypes) {
                 reporter.warning(
                     "Too many template parameters",
-                    sourceName, templateNode.getLineno(), templateNode.getCharno());
+                    sourceName,
+                    templateNode.getLineno(),
+                    templateNode.getCharno());
                 break;
               }
               templateTypes.add(
@@ -1869,7 +1874,7 @@ public class JSTypeRegistry implements TypeIRegistry {
             } else {
               namedType = createTemplatizedType((ObjectType) namedType, templateTypes.build());
             }
-            Preconditions.checkNotNull(namedType);
+            checkNotNull(namedType);
           }
           return createDefaultObjectUnion(namedType);
         } else {
@@ -2014,7 +2019,7 @@ public class JSTypeRegistry implements TypeIRegistry {
    * Sets the template type name.
    */
   public void setTemplateTypeNames(List<TemplateType> keys) {
-    Preconditions.checkNotNull(keys);
+    checkNotNull(keys);
     for (TemplateType key : keys) {
       templateTypes.put(key.getReferenceName(), key);
     }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { record } from './moduleOrderRecorder';
+import { record } from './moduleOrderRecorder.js';
 
 record.push('processed module B');
 

@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
 import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
 
@@ -189,8 +191,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       metadata.insertNodeAndAdvance(definePropsCall);
     }
 
-
-    Preconditions.checkNotNull(constructor);
+    checkNotNull(constructor);
 
     JSDocInfo classJSDoc = NodeUtil.getBestJSDocInfo(classNode);
     JSDocInfoBuilder newInfo = JSDocInfoBuilder.maybeCopyFrom(classJSDoc);
@@ -391,7 +392,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     Map<String, JSDocInfo> membersToDeclare;
     String memberName;
     if (member.isComputedProp()) {
-      Preconditions.checkState(!member.isStaticMember());
+      checkState(!member.isStaticMember());
       membersToDeclare = metadata.prototypeComputedPropsToDeclare;
       memberName = member.getFirstChild().getQualifiedName();
     } else {

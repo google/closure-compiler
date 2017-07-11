@@ -16,11 +16,11 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
@@ -102,7 +102,7 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
       String newSource,
       int newSourceInd,
       boolean flushResults) {
-    Preconditions.checkArgument(newSourceInd < sources.size());
+    checkArgument(newSourceInd < sources.size());
 
     // First do a full compile.
     Compiler compiler =

@@ -16,11 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
+import java.util.Set;
 
 /**
  * <p>The syntactic scope creator scans the parse tree to create a Scope object
@@ -39,7 +40,6 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
   // The arguments variable is special, in that it's declared for every function,
   // but not explicitly declared.
   private static final String ARGUMENTS = "arguments";
-
 
   public static final RedeclarationHandler DEFAULT_REDECLARATION_HANDLER =
       new DefaultRedeclarationHandler();
@@ -88,7 +88,7 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
   @Override
   public Scope createScope(Node n, Scope parent) {
     Scope scope = scopeFactory.create(parent, n);
-    new ScopeScanner(compiler, redeclarationHandler, scope).populate();
+    new ScopeScanner(compiler, redeclarationHandler, scope, null).populate();
     return scope;
   }
 
@@ -97,16 +97,20 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
     private final AbstractCompiler compiler;
     private final RedeclarationHandler redeclarationHandler;
     private InputId inputId;
+    private final Set<Node> changeRootSet;
 
     ScopeScanner(AbstractCompiler compiler, Scope scope) {
-      this(compiler, DEFAULT_REDECLARATION_HANDLER, scope);
+      this(compiler, DEFAULT_REDECLARATION_HANDLER, scope, null);
     }
 
     ScopeScanner(
-        AbstractCompiler compiler, RedeclarationHandler redeclarationHandler, Scope scope) {
+        AbstractCompiler compiler, RedeclarationHandler redeclarationHandler, Scope scope,
+        Set<Node> changeRootSet) {
       this.compiler = compiler;
       this.redeclarationHandler = redeclarationHandler;
       this.scope = scope;
+      this.changeRootSet = changeRootSet;
+      checkState(changeRootSet == null || scope.isGlobal());
     }
 
     void populate() {
@@ -227,8 +231,14 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
           return; // only one child to scan
 
         case SCRIPT:
+          if (changeRootSet != null && !changeRootSet.contains(n)) {
+            // If there is a changeRootSet configured, that means
+            // a partial update is being done and we should skip
+            // any SCRIPT that aren't being asked for.
+            return;
+          }
           inputId = n.getInputId();
-          Preconditions.checkNotNull(inputId);
+          checkNotNull(inputId);
           break;
 
         case MODULE_BODY:

@@ -533,7 +533,35 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             "/** @enum {string} */",
             "var E = {A:1, B:2};",
             ""));
-   }
+  }
+
+  public void testExportWithReferenceToEnum() {
+    compileAndCheck(
+        LINE_JOINER.join(
+            "/**",
+            " * @enum {number}",
+            " * @export",
+            " */",
+            "var E = {A:1, B:2};",
+            "goog.exportSymbol('E', E);",
+            "",
+            "/**",
+            " * @param {!E} e",
+            " * @export",
+            " */",
+            "function f(e) {}",
+            "goog.exportSymbol('f', f);"),
+        LINE_JOINER.join(
+            "/** @enum {number} */",
+            "var E = {A:1, B:2};",
+            "/**",
+            " * @param {number} e",  // TODO(tbreisacher): The param type should be 'E' not 'number'
+            " * @return {undefined}",
+            " */",
+            "var f = function(e) {",
+            "};",
+            ""));
+  }
 
   /** If we export a property with "prototype" as a path component, there
     * is no need to emit the initializer for prototype because every namespace

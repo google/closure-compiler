@@ -355,11 +355,17 @@ public class CommandLineRunner extends
         usage = "Parse inline source maps (//# sourceMappingURL=data:...)")
     private Boolean parseInlineSourceMaps = true;
 
-    @Option(name = "--apply_input_source_maps",
-        handler = BooleanOptionHandler.class,
-        hidden = true,
-        usage = "Whether to apply input source maps to the output source map, "
-        + "i.e. have the result map back to original inputs")
+    @Option(
+      name = "--apply_input_source_maps",
+      handler = BooleanOptionHandler.class,
+      hidden = true,
+      usage =
+          "Apply input source maps to the output source map, i.e. have the result map back to"
+              + "original inputs.  Input sourcemaps can be located in 2 ways:\n 1) by the"
+              + "//# sourceMappingURL=<url>. \n 2) using the--source_map_location_mapping flag.\n"
+              + "sourceMappingURL=<url> can read both paths and inline Base64 encoded sourcemaps. "
+              + "For inline Base64 encoded sourcemaps, see --parse_inline_source_maps."
+    )
     private boolean applyInputSourceMaps = true;
 
     // Used to define the flag, values are stored by the handler.
@@ -757,10 +763,9 @@ public class CommandLineRunner extends
       usage =
           "Specifies how the compiler locates modules. BROWSER requires all module imports "
               + "to begin with a '.' or '/' and have a file extension. NODE uses the node module "
-              + "rules. LEGACY prepends a '/' to any import not already beginning with a "
-              + "'.' or '/'."
+              + "rules."
     )
-    private ModuleLoader.ResolutionMode moduleResolutionMode = ModuleLoader.ResolutionMode.LEGACY;
+    private ModuleLoader.ResolutionMode moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
 
     @Argument
     private List<String> arguments = new ArrayList<>();

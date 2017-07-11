@@ -40,19 +40,21 @@ class ModulesTestUtils {
     test.test(inputs, expecteds);
   }
 
-  static void testModules(
-      CompilerTestCase test, ImmutableList<SourceFile> inputs, String expected) {
-    ImmutableList<SourceFile> expecteds =
-        ImmutableList.of(
-            SourceFile.fromCode("other.js", "goog.provide('module$other');"),
-            SourceFile.fromCode(test.getFilename() + ".js", expected));
-    test.test(inputs, expecteds);
+  static void testSameModules(CompilerTestCase test, String input) {
+    testModules(test, input, input);
   }
 
-  static void testModules(CompilerTestCase test, String input, DiagnosticType error) {
+  static void testModulesError(CompilerTestCase test, String input, DiagnosticType error) {
     String fileName = test.getFilename() + ".js";
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(SourceFile.fromCode("other.js", ""), SourceFile.fromCode(fileName, input));
     test.testError(inputs, error);
+  }
+
+  static void testModulesWarning(CompilerTestCase test, String input, DiagnosticType warning) {
+    String fileName = test.getFilename() + ".js";
+    ImmutableList<SourceFile> inputs =
+        ImmutableList.of(SourceFile.fromCode("other.js", ""), SourceFile.fromCode(fileName, input));
+    test.testWarning(inputs, warning);
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 The Closure Compiler Authors.
+ * Copyright 2017 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Tests that JsDoc in referenceOtherModule.js can
- *     reference a type from a module without importing that module.
- */
+package com.google.javascript.jscomp;
 
-import {Parent} from './module_test_resources/exportClass';
-import f from './module_test_resources/referenceOtherModule';
+/** Builds a datastructure and incrementally updates it when scopes change. */
+interface IndexProvider<T> {
 
-function testRef() {
-  assertEquals('Parent.staticFunction', f(new Parent()));
+  /** Returns an instance of type T. */
+  T get();
+
+  /** Returns a class literal specialized on T. */
+  Class<T> getType();
 }

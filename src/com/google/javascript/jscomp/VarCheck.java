@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.Es6SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -153,7 +154,7 @@ class VarCheck extends AbstractPostOrderCallback implements
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    Preconditions.checkState(scriptRoot.isScript());
+    checkState(scriptRoot.isScript());
     ScopeCreator scopeCreator = createScopeCreator();
     NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
     // Note we use the global scope to prevent wrong "undefined-var errors" on
@@ -170,8 +171,8 @@ class VarCheck extends AbstractPostOrderCallback implements
 
       // Only a function can have an empty name.
       if (varName.isEmpty()) {
-        Preconditions.checkState(parent.isFunction());
-        Preconditions.checkState(NodeUtil.isFunctionExpression(parent));
+        checkState(parent.isFunction());
+        checkState(NodeUtil.isFunctionExpression(parent));
         return;
       }
 
@@ -344,7 +345,7 @@ class VarCheck extends AbstractPostOrderCallback implements
    *     for the given node.
    */
   static boolean hasDuplicateDeclarationSuppression(Node n, Var origVar) {
-    Preconditions.checkState(n.isName() || n.isRest() || n.isStringKey(), n);
+    checkState(n.isName() || n.isRest() || n.isStringKey(), n);
     Node parent = n.getParent();
     Node origParent = origVar.getParentNode();
 

@@ -39,15 +39,17 @@ public final class OptimizeArgumentsArrayTest extends CompilerTestCase {
   }
 
   public void testSimple() {
-    test("function foo()   { alert(arguments[0]); }",
-         "function foo(p0) { alert(p0); }");
+    test(
+      "function foo()   { alert(arguments[0]); }",
+      "function foo(p0) { alert(          p0); }");
   }
 
   public void testNoVarArgs() {
     testSame("function f(a,b,c) { alert(a + b + c) }");
 
-    test("function f(a,b,c) { alert(arguments[0]) }",
-         "function f(a,b,c) { alert(a) }");
+    test(
+        "function f(a,b,c) { alert(arguments[0]) }",
+        "function f(a,b,c) { alert(           a) }");
   }
 
   public void testMissingVarArgs() {
@@ -60,8 +62,9 @@ public final class OptimizeArgumentsArrayTest extends CompilerTestCase {
   }
 
   public void testTwoVarArgs() {
-    test("function foo(a) { alert(arguments[1] + arguments[2]); }",
-         "function foo(a, p0, p1) { alert(p0 + p1); }");
+    test(
+        "function foo(a)         { alert(arguments[1] + arguments[2]); }",
+        "function foo(a, p0, p1) { alert(          p0 +           p1); }");
   }
 
   public void testTwoFourArgsTwoUsed() {
@@ -151,8 +154,72 @@ public final class OptimizeArgumentsArrayTest extends CompilerTestCase {
   public void testNoOptimizationWhenIndexIsNotNumberConstant() {
     testSame("function f() { arguments[0]; arguments['callee'].length}");
     testSame("function f() { arguments[0]; arguments.callee.length}");
-    testSame(
-        "function f() { arguments[0]; var x = 'callee'; arguments[x].length}");
+    testSame("function f() { arguments[0]; var x = 'callee'; arguments[x].length}");
+  }
+
+  public void testDecimalArgumentIndex() {
+    testSame("function f() { arguments[0.5]; }");
+  }
+
+  public void testArrowFunctions() {
+
+    // simple
+    test(
+        "function f()   { ( ) => { alert(arguments[0]); } }",
+        "function f(p0) { ( ) => { alert(          p0); } }");
+
+    // no var args
+    testSame("function f() { (a,b,c) => alert(a + b + c); }");
+
+    test(
+        "function f()   { (a,b,c) => alert(arguments[0]); }",
+        "function f(p0) { (a,b,c) => alert(          p0); }");
+
+    // two var args
+    test(
+        "function f()         { (a) => alert(arguments[1] + arguments[2]); }",
+        "function f(p0,p1,p2) { (a) => alert(          p1 +           p2); }");
+
+    // test with required params
+    test(
+        "function f()       { (req0, var_args) => alert(req0 + arguments[1]); }",
+        "function f(p0, p1) { (req0, var_args) => alert(req0 +           p1); }");
+  }
+
+  public void testArrowFunctionIsInnerFunction() {
+
+    test(
+        "function f()   { ( ) => { arguments[0] } }",
+        "function f(p0) { ( ) => {           p0 } }");
+
+    // Arrow function after argument
+    test(
+        "function f( )  { arguments[0]; ( ) => { arguments[0] } }",
+        "function f(p0) {           p0; ( ) => {           p0 } }");
+  }
+
+  public void testArrowFunctionDeclaration() {
+
+    test(
+        "function f()   { var f = ( ) => { alert(arguments[0]); } }",
+        "function f(p0) { var f = ( ) => { alert(          p0); } }");
+  }
+
+  public void testNestedFunctions() {
+    //Arrow inside arrow inside vanilla function
+
+    test(
+        "function f()   { () => { () => { arguments[0]; } } }",
+        "function f(p0) { () => { () => {           p0; } } }");
+
+    test(
+        "function f()   { () => { alert(arguments[0]); () => { arguments[0]; } } }",
+        "function f(p0) { () => { alert(          p0); () => {           p0; } } }");
+
+    test(
+        "function f()       { () => { alert(arguments[0]); () => { arguments[1]; } } }",
+        "function f(p0, p1) { () => { alert(          p0); () => {           p1; } } }");
+
   }
 
   public void testNoOptimizationWhenArgumentIsUsedAsFunctionCall() {

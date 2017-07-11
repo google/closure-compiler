@@ -15,7 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Predicates;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -149,7 +150,7 @@ public class ChangeVerifier {
   }
 
   private void verifyRoot(Node root) {
-    Preconditions.checkState(root.isRoot());
+    checkState(root.isRoot());
     if (root.getChangeTime() != 0) {
       throw new IllegalStateException("Root nodes should never be marked as changed.");
     }

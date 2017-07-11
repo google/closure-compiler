@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NULL_TYPE;
@@ -28,7 +31,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 import static java.lang.Integer.MAX_VALUE;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
@@ -389,13 +391,12 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    */
   @Override
   public void process(Node externsRoot, Node jsRoot) {
-    Preconditions.checkNotNull(scopeCreator);
-    Preconditions.checkNotNull(topScope);
+    checkNotNull(scopeCreator);
+    checkNotNull(topScope);
 
     Node externsAndJs = jsRoot.getParent();
-    Preconditions.checkState(externsAndJs != null);
-    Preconditions.checkState(
-        externsRoot == null || externsAndJs.hasChild(externsRoot));
+    checkState(externsAndJs != null);
+    checkState(externsRoot == null || externsAndJs.hasChild(externsRoot));
 
     if (externsRoot != null) {
       check(externsRoot, true);
@@ -405,10 +406,10 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
   /** Main entry point of this phase for testing code. */
   public TypedScope processForTesting(Node externsRoot, Node jsRoot) {
-    Preconditions.checkState(scopeCreator == null);
-    Preconditions.checkState(topScope == null);
+    checkState(scopeCreator == null);
+    checkState(topScope == null);
 
-    Preconditions.checkState(jsRoot.getParent() != null);
+    checkState(jsRoot.getParent() != null);
     Node externsAndJsRoot = jsRoot.getParent();
 
     scopeCreator = new MemoizedTypedScopeCreator(new TypedScopeCreator(compiler));
@@ -425,7 +426,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
 
 
   void check(Node node, boolean externs) {
-    Preconditions.checkNotNull(node);
+    checkNotNull(node);
 
     NodeTraversal t = new NodeTraversal(compiler, this, scopeCreator);
     inExterns = externs;
@@ -1206,7 +1207,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
         }
         FunctionType interfaceType =
             implementedInterface.toObjectType().getConstructor();
-        Preconditions.checkNotNull(interfaceType);
+        checkNotNull(interfaceType);
 
         boolean interfaceHasProperty =
             interfaceType.getPrototype().hasProperty(propertyName);
@@ -1309,8 +1310,8 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    * type is a supertype of the current type.
    */
   private static boolean hasUnknownOrEmptySupertype(FunctionType ctor) {
-    Preconditions.checkArgument(ctor.isConstructor() || ctor.isInterface());
-    Preconditions.checkArgument(!ctor.isUnknownType());
+    checkArgument(ctor.isConstructor() || ctor.isInterface());
+    checkArgument(!ctor.isUnknownType());
 
     // The type system should notice inheritance cycles on its own
     // and break the cycle.
@@ -1328,7 +1329,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
       if (ctor == null) {
         return false;
       }
-      Preconditions.checkState(ctor.isConstructor() || ctor.isInterface());
+      checkState(ctor.isConstructor() || ctor.isInterface());
     }
   }
 
@@ -1910,14 +1911,14 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
     }
 
     int numArgs = call.getChildCount() - 1;
-    int minArgs = functionType.getMinArguments();
-    int maxArgs = functionType.getMaxArguments();
-    if (minArgs > numArgs || maxArgs < numArgs) {
+    int minArity = functionType.getMinArity();
+    int maxArity = functionType.getMaxArity();
+    if (minArity > numArgs || maxArity < numArgs) {
       report(t, call, WRONG_ARGUMENT_COUNT,
               typeRegistry.getReadableTypeNameNoDeref(call.getFirstChild()),
-              String.valueOf(numArgs), String.valueOf(minArgs),
-              maxArgs != Integer.MAX_VALUE ?
-              " and no more than " + maxArgs + " argument(s)" : "");
+              String.valueOf(numArgs), String.valueOf(minArity),
+              maxArity == Integer.MAX_VALUE ? ""
+                  : " and no more than " + maxArity + " argument(s)");
     }
   }
 
@@ -2111,9 +2112,7 @@ public final class TypeCheck implements NodeTraversal.Callback, CompilerPass {
    */
   private void ensureTyped(NodeTraversal t, Node n, JSType type) {
     // Make sure FUNCTION nodes always get function type.
-    Preconditions.checkState(!n.isFunction() ||
-            type.isFunctionType() ||
-            type.isUnknownType());
+    checkState(!n.isFunction() || type.isFunctionType() || type.isUnknownType());
     // TODO(johnlenz): this seems like a strange place to check "@implicitCast"
     JSDocInfo info = n.getJSDocInfo();
     if (info != null && (info.isImplicitCast() && !inExterns)) {

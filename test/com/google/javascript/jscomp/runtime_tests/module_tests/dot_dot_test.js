@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import s from '../module_tests/module_test_resources/exportDefault';
+import s from '../module_tests/module_test_resources/exportDefault.js';
 
 function testDefault() {
   assertEquals('this is the default export', s);

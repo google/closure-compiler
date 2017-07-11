@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.ModuleLoader;
@@ -38,9 +39,9 @@ public class LazyParsedDependencyInfo implements DependencyInfo {
   private ImmutableMap<String, String> loadFlags;
 
   public LazyParsedDependencyInfo(DependencyInfo delegate, JsAst ast, AbstractCompiler compiler) {
-    this.delegate = Preconditions.checkNotNull(delegate);
-    this.ast = Preconditions.checkNotNull(ast);
-    this.compiler = Preconditions.checkNotNull(compiler);
+    this.delegate = checkNotNull(delegate);
+    this.ast = checkNotNull(ast);
+    this.compiler = checkNotNull(compiler);
   }
 
   @Override

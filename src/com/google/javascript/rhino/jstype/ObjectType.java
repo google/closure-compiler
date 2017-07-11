@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.javascript.rhino.jstype.TernaryValue.FALSE;
 import static com.google.javascript.rhino.jstype.TernaryValue.UNKNOWN;
 
@@ -52,10 +53,10 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import javax.annotation.Nullable;
 
 /**
  * Object type.
@@ -206,6 +207,7 @@ public abstract class ObjectType
    * @return the object's name or {@code null} if this is an anonymous
    *         object
    */
+  @Nullable
   public abstract String getReferenceName();
 
   /**
@@ -217,6 +219,7 @@ public abstract class ObjectType
    * The normalized reference name does not have these suffixes, and as such,
    * recollapses these implicit types back to their real type.
    */
+  @Nullable
   public String getNormalizedReferenceName() {
     String name = getReferenceName();
     if (name != null) {
@@ -242,7 +245,6 @@ public abstract class ObjectType
   }
 
   /**
-   * Returns true if the object is named.
    * @return true if the object is named, false if it is anonymous
    */
   public boolean hasReferenceName() {
@@ -250,7 +252,7 @@ public abstract class ObjectType
   }
 
   @Override
-  public boolean isUnknownObject() {
+  public final boolean isUnknownObject() {
     return !hasReferenceName();
   }
 
@@ -311,11 +313,6 @@ public abstract class ObjectType
       }
     }
     return foundType;
-  }
-
-  @Override
-  public Collection<FunctionType> getDirectImplementors() {
-    return this.registry.getDirectImplementors(this);
   }
 
   /**
@@ -638,8 +635,8 @@ public abstract class ObjectType
   boolean isStructuralSubtype(ObjectType superType,
       ImplCache implicitImplCache, SubtypingMode subtypingMode) {
     // Union types should be handled by isSubtype already
-    Preconditions.checkArgument(!this.isUnionType());
-    Preconditions.checkArgument(!superType.isUnionType());
+    checkArgument(!this.isUnionType());
+    checkArgument(!superType.isUnionType());
     Preconditions.checkArgument(superType.isStructuralType(),
         "isStructuralSubtype should be called with structural supertype. Found %s", superType);
 
@@ -827,7 +824,7 @@ public abstract class ObjectType
   }
 
   @Override
-  public TypeI getElementsType() {
+  public TypeI getEnumeratedTypeOfEnumObject() {
     return null;
   }
 }

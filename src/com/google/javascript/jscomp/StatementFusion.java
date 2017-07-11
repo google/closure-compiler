@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -184,8 +185,7 @@ class StatementFusion extends AbstractPeepholeOptimization {
 
   private static void fuseExpressionIntoControlFlowStatement(
       Node before, Node control) {
-    Preconditions.checkArgument(before.isExprResult(),
-        "before must be expression result");
+    checkArgument(before.isExprResult(), "before must be expression result");
 
     // Now we are just left with two statements. The comma tree of the first
     // n - 1 statements (which can be used in an expression) and the last

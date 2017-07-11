@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
@@ -91,7 +92,7 @@ final class CheckSuspiciousCode extends AbstractPostOrderCallback {
   }
 
   private static void reportIfWasEmpty(NodeTraversal t, Node block) {
-    Preconditions.checkState(block.isNormalBlock());
+    checkState(block.isNormalBlock());
 
     // A semicolon is distinguished from a block without children by
     // annotating it with EMPTY_BLOCK.  Blocks without children are

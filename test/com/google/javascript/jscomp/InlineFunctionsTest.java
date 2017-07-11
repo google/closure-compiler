@@ -2548,4 +2548,182 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "a.bar;"));
   }
 
+  public void testArrowFunctionRestParam1() {
+    test(
+        LINE_JOINER.join(
+            "function foo() {",
+            "  var f = (...args) => args[0];",
+            "  return f(8);",
+            "}",
+            "foo();"),
+        "[8][0]");
+  }
+
+  public void testArrowFunctionRestParam2() {
+    test(
+        LINE_JOINER.join(
+            "function foo() {",
+            "  var f = (x, ...args) => x + args[0];",
+            "  return f(1, 8);",
+            "}",
+            "foo();"),
+        LINE_JOINER.join(
+            "{",
+            "  var JSCompiler_inline_result$jscomp$inline_0;",
+            "  {",
+            "     var args$jscomp$inline_1 = [8];",
+            "     JSCompiler_inline_result$jscomp$inline_0 = 1 + args$jscomp$inline_1[0];",
+            "  }",
+            "  JSCompiler_inline_result$jscomp$inline_0",
+            "}"));
+  }
+
+  public void testArrowFunctionRestParam3() {
+    test(
+        LINE_JOINER.join(
+            "function foo() {",
+            "  var f = (...args) => args[0].bar;",
+            "  return f({bar: 8});",
+            "}",
+            "foo();"),
+        "[{bar: 8}][0].bar");
+  }
+
+  public void testRestObjectPattern1() {
+    test(
+        LINE_JOINER.join(
+            "function countArgs(...{length}) {",
+            "  return length;",
+            "}",
+            "countArgs(1, 1, 1, 1, 1);"),
+        "[1, 1, 1, 1, 1].length;");
+  }
+
+  public void testRestObjectPattern2() {
+    test(
+        LINE_JOINER.join(
+            "function countArgs(x, ...{length}) {",
+            "  return length;",
+            "}",
+            "countArgs(1, 1, 1, 1, 1);"),
+        "[1, 1, 1, 1].length;");
+  }
+
+  public void testRestObjectPattern3() {
+    test(
+        LINE_JOINER.join(
+            "function countArgs(x, ...{length: length}) {",
+            "  return length;",
+            "}",
+            "countArgs(1, 1, 1, 1, 1);"),
+        "[1, 1, 1, 1].length;");
+  }
+
+  public void testRestObjectPattern4() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(...{3: x}) { ",
+            "  return x; ",
+            "}",
+            "f(null,null,null,3,null);"));
+  }
+
+  public void testRestObjectPattern5() {
+    test(
+        LINE_JOINER.join(
+            "function f(...{x: y}) { ", "  return y; ", "} ", "f(null,null,null,3,null);"),
+        "[null,null,null,3,null].x");
+  }
+
+  public void testDefaultParam1() {
+    test(
+        LINE_JOINER.join(
+            "function foo(a, b = 1) {",
+            "  return a + b;",
+            "}",
+            "foo(1);"),
+        "1+1");
+  }
+
+  public void testDefaultParam2() {
+    test(
+        LINE_JOINER.join(
+            "function foo(a, b = 1) {",
+            "  return a + b;",
+            "}",
+            "foo(1, 2);"),
+        "1+2");
+  }
+
+  public void testDefaultParam3() {
+    test(
+        LINE_JOINER.join(
+            "function foo(a = 1, b = 2) {",
+            "  return a + b;",
+            "}",
+            "foo(3, 4);"),
+        "3+4");
+  }
+
+  public void testDefaultParam4() {
+    test(
+        LINE_JOINER.join(
+            "function foo(a, b = {foo: 5}) {",
+            "  return a + b.foo;",
+            "}",
+            "foo(3, {foo: 9});"),
+        "{ var b$jscomp$inline_1={foo:9}; 3 + b$jscomp$inline_1.foo; }");
+  }
+
+  public void testDefaultParam5() {
+    test(
+        LINE_JOINER.join(
+            "function foo(a, b = {foo: 5, bar: 6}) {",
+            "  return a + b.foo + b.bar;",
+            "}",
+            "foo(3, {foo: 1, bar: 2});"),
+        "{ var b$jscomp$inline_1={foo:1,bar:2};3+b$jscomp$inline_1.foo"
+            + "+b$jscomp$inline_1.bar }");
+  }
+
+  public void testDefaultParam6() {
+    test(
+        LINE_JOINER.join(
+            "function foo(a, b = {foo: 5}) {",
+            "  return a + b.foo;",
+            "}",
+            "foo(3);"),
+        "{ var b$jscomp$inline_1={foo:5};3+b$jscomp$inline_1.foo }");
+  }
+
+  public void testDefaultParam7() {
+    test(
+        LINE_JOINER.join(
+            "function foo(a, b = {foo: 5, bar: 6}) {",
+            "  return a + b.foo + b.bar;",
+            "}",
+            "foo(3, {foo: 1});"),
+        "{ var b$jscomp$inline_1={foo:1};3+b$jscomp$inline_1.foo"
+            + "+b$jscomp$inline_1.bar }");
+  }
+
+  public void testDefaultParam8() {
+    test(
+        LINE_JOINER.join(
+            "function foo(a, b = [1, 2]) {",
+            "  return a + b[1];",
+            "}",
+            "foo(3, [7, 8]);"),
+        "{ var b$jscomp$inline_1=[7,8];3+b$jscomp$inline_1[1] }");
+  }
+
+  public void testDefaultParam9() {
+    test(
+        LINE_JOINER.join(
+            "function foo(a, b = []) {",
+            "  return a + b[1];",
+            "}",
+            "foo(3, [7, 8]);"),
+        "{ var b$jscomp$inline_1=[7,8];3+b$jscomp$inline_1[1] }");
+  }
 }

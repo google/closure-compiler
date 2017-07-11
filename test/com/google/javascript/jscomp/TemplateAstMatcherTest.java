@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
-
 import junit.framework.TestCase;
 
 /**
@@ -187,6 +186,26 @@ public final class TemplateAstMatcherTest extends TestCase {
     pair = compile(externs, template, "7 + 'str'");
     assertNotMatch(pair.templateNode, pair.getTestExprResultRoot());
     assertMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
+
+    template =
+        ""
+            + "/**\n"
+            + " * @param {string} string_literal_foo\n"
+            + " */\n"
+            + "function template(string_literal_foo) {\n"
+            + "  string_literal_foo;\n"
+            + "}\n";
+    pair = compile("", template, "\"foo\"");
+    assertMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
+    pair = compile("", template, "\"foo\" + \"bar\"");
+    assertMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
+    pair = compile("", template, "3");
+    assertNotMatch(pair.templateNode, pair.getTestExprResultRoot().getFirstChild());
+    pair = compile("", template, "var s = \"3\"; s;");
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstChild());
+    assertNotMatch(pair.templateNode, pair.testNode.getFirstFirstChild());
+    assertMatch(pair.templateNode, pair.testNode.getFirstFirstChild().getFirstChild());
+    assertNotMatch(pair.templateNode, pair.testNode.getSecondChild());
   }
 
   public void testMatches_functionCall() {

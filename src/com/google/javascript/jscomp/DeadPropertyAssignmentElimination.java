@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.PeekingIterator;
 import com.google.common.collect.Sets;
@@ -181,7 +183,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     }
 
     void addWrite(Node lhs) {
-      Preconditions.checkArgument(lhs.isQualifiedName());
+      checkArgument(lhs.isQualifiedName());
       writes.addLast(new PropertyWrite(lhs));
     }
   }
@@ -192,7 +194,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     private final String qualifiedName;
 
     PropertyWrite(Node assignedAt) {
-      Preconditions.checkArgument(assignedAt.isQualifiedName());
+      checkArgument(assignedAt.isQualifiedName());
       this.assignedAt = assignedAt;
       this.qualifiedName = assignedAt.getQualifiedName();
     }
@@ -300,7 +302,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     }
 
     private void visitBlock(Node blockNode) {
-      Preconditions.checkArgument(blockNode.isNormalBlock());
+      checkArgument(blockNode.isNormalBlock());
 
       // We don't do flow analysis yet so we're going to assume everything written up to this
       // block is read.
@@ -398,7 +400,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
 
         case THIS:
         case NAME:
-          Property nameProp = Preconditions.checkNotNull(getOrCreateProperty(n));
+          Property nameProp = checkNotNull(getOrCreateProperty(n));
           nameProp.markLastWriteRead();
           if (!parent.isGetProp()) {
             nameProp.markChildrenRead();

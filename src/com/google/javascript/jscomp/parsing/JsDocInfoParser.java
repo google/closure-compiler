@@ -16,10 +16,12 @@
 
 package com.google.javascript.jscomp.parsing;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
@@ -621,8 +623,7 @@ public final class JsDocInfoParser {
           }
 
           if (token == JsDocToken.STRING) {
-            Node typeNode = parseAndRecordTypeNameNode(
-                token, lineno, charno, matchingRc);
+            Node typeNode = parseAndRecordTypeNameNode(token, lineno, charno, matchingRc);
 
             lineno = stream.getLineno();
             charno = stream.getCharno();
@@ -632,11 +633,9 @@ public final class JsDocInfoParser {
 
             if (annotation == Annotation.EXTENDS) {
               // record the extended type, check later
-              extendedTypes.add(new ExtendedTypeInfo(
-                  type, stream.getLineno(), stream.getCharno()));
+              extendedTypes.add(new ExtendedTypeInfo(type, stream.getLineno(), stream.getCharno()));
             } else {
-              Preconditions.checkState(
-                  annotation == Annotation.IMPLEMENTS);
+              checkState(annotation == Annotation.IMPLEMENTS);
               if (!jsdocBuilder.recordImplementedInterface(type)) {
                 addTypeWarning("msg.jsdoc.implements.duplicate", lineno, charno);
               }
@@ -648,8 +647,9 @@ public final class JsDocInfoParser {
               } else {
                 token = next();
               }
-            } else if (token != JsDocToken.EOL &&
-                token != JsDocToken.EOF && token != JsDocToken.EOC) {
+            } else if (token != JsDocToken.EOL
+                && token != JsDocToken.EOF
+                && token != JsDocToken.EOC) {
               addTypeWarning("msg.end.annotation.expected");
             }
           } else {
@@ -1483,7 +1483,7 @@ public final class JsDocInfoParser {
    * @return The type expression found or null if none.
    */
   private Node parseAndRecordParamTypeNode(JsDocToken token) {
-    Preconditions.checkArgument(token == JsDocToken.LEFT_CURLY);
+    checkArgument(token == JsDocToken.LEFT_CURLY);
     int lineno = stream.getLineno();
     int startCharno = stream.getCharno();
 
@@ -1955,7 +1955,7 @@ public final class JsDocInfoParser {
    * ParamTypeExpressionAnnotation := '{' ParamTypeExpression '}'
    */
   private Node parseParamTypeExpressionAnnotation(JsDocToken token) {
-    Preconditions.checkArgument(token == JsDocToken.LEFT_CURLY);
+    checkArgument(token == JsDocToken.LEFT_CURLY);
 
     skipEOLs();
 
@@ -2388,7 +2388,7 @@ public final class JsDocInfoParser {
       if (expr != null) {
         skipEOLs();
         token = next();
-        Preconditions.checkState(token == JsDocToken.PIPE);
+        checkState(token == JsDocToken.PIPE);
 
         skipEOLs();
         token = next();

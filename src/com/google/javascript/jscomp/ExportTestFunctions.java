@@ -15,7 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -47,7 +48,7 @@ public class ExportTestFunctions implements CompilerPass {
   ExportTestFunctions(AbstractCompiler compiler,
       String exportSymbolFunction, String exportPropertyFunction) {
 
-    Preconditions.checkNotNull(compiler);
+    checkNotNull(compiler);
     this.compiler = compiler;
     this.exportSymbolFunction = exportSymbolFunction;
     this.exportPropertyFunction = exportPropertyFunction;

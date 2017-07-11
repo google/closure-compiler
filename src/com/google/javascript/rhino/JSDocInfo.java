@@ -39,9 +39,10 @@
 
 package com.google.javascript.rhino;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -226,8 +227,7 @@ public class JSDocInfo implements Serializable {
     }
 
     private int getMaskForBitIndex(int bitIndex) {
-        Preconditions.checkArgument(bitIndex >= 0,
-            "Bit index should be non-negative integer");
+      checkArgument(bitIndex >= 0, "Bit index should be non-negative integer");
         return 1 << bitIndex;
     }
   }
@@ -275,7 +275,7 @@ public class JSDocInfo implements Serializable {
    */
   static class TrimmedStringPosition extends StringPosition {
     @Override public void setItem(String item) {
-      Preconditions.checkArgument(
+      checkArgument(
           item.charAt(0) != ' ' && item.charAt(item.length() - 1) != ' ',
           "String has leading or trailing whitespace");
       super.setItem(item);

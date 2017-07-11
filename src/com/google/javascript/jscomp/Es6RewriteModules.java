@@ -15,6 +15,10 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature.MODULES;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
@@ -34,13 +38,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Rewrites a ES6 module into a form that can be safely concatenated.
- * Note that we treat a file as an ES6 module if it has at least one import or
- * export statement.
+ * Rewrites a ES6 module into a form that can be safely concatenated. Note that we treat a file as
+ * an ES6 module if it has at least one import or export statement.
  *
  * @author moz@google.com (Michael Zhou)
  */
-public final class Es6RewriteModules extends AbstractPostOrderCallback {
+public final class Es6RewriteModules extends AbstractPostOrderCallback
+    implements HotSwapCompilerPass {
   private static final String DEFAULT_EXPORT_NAME = "$jscompDefaultExport";
 
   static final DiagnosticType LHS_OF_GOOG_REQUIRE_MUST_BE_CONST =
@@ -54,13 +58,13 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
           "Namespace imports ('goog:some.Namespace') cannot use import * as. "
               + "Did you mean to import {0} from ''{1}'';?");
 
-  private final Compiler compiler;
-  private int scriptNodeCount = 0;
+  private final AbstractCompiler compiler;
+  private int scriptNodeCount;
 
   /**
    * Maps exported names to their names in current module.
    */
-  private Map<String, NameNodePair> exportMap = new LinkedHashMap<>();
+  private Map<String, NameNodePair> exportMap;
 
   /**
    * Maps symbol names to a pair of (moduleName, originalName). The original
@@ -69,12 +73,12 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
    * object. Eg: "import {foo as f} from 'm'" maps 'f' to the pair ('m', 'foo').
    * In the entry for "import * as ns", the originalName will be the empty string.
    */
-  private Map<String, ModuleOriginalNamePair> importMap = new HashMap<>();
+  private Map<String, ModuleOriginalNamePair> importMap;
 
-  private Set<String> classes = new HashSet<>();
-  private Set<String> typedefs = new HashSet<>();
+  private Set<String> classes;
+  private Set<String> typedefs;
 
-  private Set<String> alreadyRequired = new HashSet<>();
+  private Set<String> alreadyRequired;
 
   private boolean forceRewrite;
 
@@ -84,7 +88,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
    * Creates a new Es6RewriteModules instance which can be used to rewrite
    * ES6 modules to a concatenable form.
    */
-  public Es6RewriteModules(Compiler compiler) {
+  public Es6RewriteModules(AbstractCompiler compiler) {
     this.compiler = compiler;
   }
 
@@ -92,7 +96,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
    * Return whether or not the given script node represents an ES6 module file.
    */
   public static boolean isEs6ModuleRoot(Node scriptNode) {
-    Preconditions.checkArgument(scriptNode.isScript());
+    checkArgument(scriptNode.isScript());
     if (scriptNode.getBooleanProp(Node.GOOG_MODULE)) {
       return false;
     }
@@ -104,6 +108,8 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
    * "import" or "export" statements. Fails if the file contains a goog.provide or goog.module.
    *
    * @return True, if the file is now an ES6 module. False, if the file must remain a script.
+   * TODO(blickly): Move this logic out of this pass, since it is independent of whether or
+   * not we are actually transpiling modules
    */
   public boolean forceToEs6Module(Node root) {
     if (isEs6ModuleRoot(root)) {
@@ -120,13 +126,40 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
     return true;
   }
 
+  @Override
+  public void process(Node externs, Node root) {
+    checkState(compiler.getOptions().getLanguageIn().toFeatureSet().has(MODULES));
+    for (Node file = root.getFirstChild(); file != null; file = file.getNext()) {
+      hotSwapScript(file, null);
+    }
+    compiler.setFeatureSet(compiler.getFeatureSet().without(MODULES));
+  }
+
+  @Override
+  public void hotSwapScript(Node scriptNode, Node originalRoot) {
+    if (isEs6ModuleRoot(scriptNode)) {
+      processFile(scriptNode);
+    }
+  }
+
   /**
    * Rewrite a single ES6 module file to a global script version.
    */
-  public void processFile(Node root) {
-    Preconditions.checkArgument(isEs6ModuleRoot(root), root);
-    this.forceRewrite = true;
+  private void processFile(Node root) {
+    checkArgument(isEs6ModuleRoot(root), root);
+    clearState();
     NodeTraversal.traverseEs6(compiler, root, this);
+  }
+
+  public void clearState() {
+    this.scriptNodeCount = 0;
+    this.exportMap = new LinkedHashMap<>();
+    this.importMap = new HashMap<>();
+    this.classes = new HashSet<>();
+    this.typedefs = new HashSet<>();
+    this.alreadyRequired = new HashSet<>();
+    this.forceRewrite = true;
+    this.googRequireInsertSpot = null;
   }
 
   /**
@@ -181,7 +214,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
   }
 
   private void visitImport(NodeTraversal t, Node importDecl, Node parent) {
-    Preconditions.checkArgument(parent.isModuleBody(), parent);
+    checkArgument(parent.isModuleBody(), parent);
     String moduleName;
     String importName = importDecl.getLastChild().getString();
     boolean isNamespaceImport = importName.startsWith("goog:");
@@ -258,7 +291,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
   }
 
   private void visitExport(NodeTraversal t, Node export, Node parent) {
-    Preconditions.checkArgument(parent.isModuleBody(), parent);
+    checkArgument(parent.isModuleBody(), parent);
     if (export.getBooleanProp(Node.EXPORT_DEFAULT)) {
       // export default
 
@@ -284,8 +317,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
       }
 
       if (name != null) {
-        Node decl = child.cloneTree();
-        decl.setJSDocInfo(child.getJSDocInfo());
+        Node decl = child.detach();
         parent.replaceChild(export, decl);
         exportMap.put("default", new NameNodePair(name, child));
       } else {
@@ -378,7 +410,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
   }
 
   private void inlineModuleToGlobalScope(Node moduleNode) {
-    Preconditions.checkState(moduleNode.isModuleBody());
+    checkState(moduleNode.isModuleBody());
     Node scriptNode = moduleNode.getParent();
     moduleNode.detach();
     scriptNode.addChildrenToFront(moduleNode.removeChildren());
@@ -390,9 +422,9 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
 
     ClosureRewriteModule.checkAndSetStrictModeDirective(t, script);
 
-    Preconditions.checkArgument(scriptNodeCount == 1,
-        "Es6RewriteModules supports only one invocation per "
-        + "CompilerInput / script node");
+    checkArgument(
+        scriptNodeCount == 1,
+        "Es6RewriteModules supports only one invocation per " + "CompilerInput / script node");
 
     // rewriteRequires is here (rather than being part of the main visit()
     // method, because we only want to rewrite the requires if this is an
@@ -556,6 +588,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
             n.setString(newName);
             n.setOriginalName(name);
           }
+          t.reportCodeChange(n);
         } else if (var == null && importMap.containsKey(name)) {
           // Change to property access on the imported module object.
           if (parent.isCall() && parent.getFirstChild() == n) {
@@ -571,6 +604,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback {
                 IR.getprop(moduleAccess, IR.string(pair.originalName))
                     .useSourceInfoIfMissingFromForTree(n));
           }
+          t.reportCodeChange(moduleAccess);
         }
       }
     }

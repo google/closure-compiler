@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.deps.ModuleLoader;
 
 /**
  * Tests for type-checking across commonjs modules.
@@ -317,6 +318,7 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
     options.setProcessCommonJSModules(true);
     options.setClosurePass(true);
+    options.setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
     return options;
   }
 }

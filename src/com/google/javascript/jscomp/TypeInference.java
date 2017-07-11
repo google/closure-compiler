@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ARRAY_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.BOOLEAN_OBJECT_TYPE;
@@ -27,7 +29,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.STRING_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -138,7 +139,7 @@ class TypeInference
         Node parameterTypeNode = parameterTypes.getFirstChild();
         for (Node astParameter : astParameters.children()) {
           TypedVar var = functionScope.getVar(astParameter.getString());
-          Preconditions.checkNotNull(var);
+          checkNotNull(var);
           if (var.isTypeInferred() &&
               var.getType() == unknownType) {
             JSType newType = null;
@@ -555,7 +556,7 @@ class TypeInference
    */
   private void updateScopeForTypeChange(
       FlowScope scope, Node left, JSType leftType, JSType resultType) {
-    Preconditions.checkNotNull(resultType);
+    checkNotNull(resultType);
     switch (left.getToken()) {
       case NAME:
         String varName = left.getString();
@@ -825,7 +826,7 @@ class TypeInference
 
   private FlowScope traverseObjectLiteral(Node n, FlowScope scope) {
     JSType type = n.getJSType();
-    Preconditions.checkNotNull(type);
+    checkNotNull(type);
 
     for (Node name = n.getFirstChild(); name != null; name = name.getNext()) {
       scope = traverse(name.getFirstChild(), scope);
@@ -1172,7 +1173,7 @@ class TypeInference
       // For now, we just make sure the current type has enough
       // arguments to match the expected type, and return the
       // expected type if it does.
-      if (currentType.getMaxArguments() <= expectedType.getMaxArguments()) {
+      if (currentType.getMaxArity() <= expectedType.getMaxArity()) {
         return expectedType;
       }
     }
@@ -1438,7 +1439,7 @@ class TypeInference
 
     FunctionType replacementFnType = fnType.visit(replacer)
         .toMaybeFunctionType();
-    Preconditions.checkNotNull(replacementFnType);
+    checkNotNull(replacementFnType);
 
     callTarget.setJSType(replacementFnType);
     n.setJSType(replacementFnType.getReturnType());
@@ -1623,7 +1624,7 @@ class TypeInference
 
   private BooleanOutcomePair traverseShortCircuitingBinOp(
       Node n, FlowScope scope) {
-    Preconditions.checkArgument(n.isAnd() || n.isOr());
+    checkArgument(n.isAnd() || n.isOr());
     boolean nIsAnd = n.isAnd();
     Node left = n.getFirstChild();
     Node right = n.getLastChild();
@@ -1780,7 +1781,7 @@ class TypeInference
 
   private void redeclareSimpleVar(
       FlowScope scope, Node nameNode, JSType varType) {
-    Preconditions.checkState(nameNode.isName());
+    checkState(nameNode.isName());
     String varName = nameNode.getString();
     if (varType == null) {
       varType = getNativeType(JSTypeNative.UNKNOWN_TYPE);

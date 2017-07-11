@@ -15,7 +15,9 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -51,14 +53,14 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
 
     this.renameProperties = options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED;
 
-    Preconditions.checkState(
+    checkState(
         options.getLanguageOut().toFeatureSet().contains(FeatureSet.ES5),
         "Dart super accessors pass requires ES5+ output");
 
     // We currently rely on JSCompiler_renameProperty, which is not type-aware.
     // We would need something like goog.reflect.object (with the super class type),
     // but right now this would yield much larger code.
-    Preconditions.checkState(
+    checkState(
         !options.shouldAmbiguateProperties() && !options.shouldDisambiguateProperties(),
         "Dart super accessors pass is not compatible with property (dis)ambiguation yet");
   }
@@ -139,7 +141,7 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
   }
 
   private void visitSuperSet(Node superSet) {
-    Preconditions.checkArgument(superSet.isAssign());
+    checkArgument(superSet.isAssign());
 
     // First, recurse on the assignment's right-hand-side.
     NodeTraversal.traverseEs6(compiler, superSet.getLastChild(), this);
@@ -170,7 +172,7 @@ public final class DartSuperAccessorsPass implements NodeTraversal.Callback,
    * if such a pass is even used (see {@link #renameProperties}).
    */
   private Node renameProperty(Node propertyName) {
-    Preconditions.checkArgument(propertyName.isString());
+    checkArgument(propertyName.isString());
     if (!renameProperties) {
       return propertyName;
     }

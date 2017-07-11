@@ -16,8 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableSet;
@@ -28,6 +30,7 @@ import com.google.javascript.jscomp.graph.GraphColoring;
 import com.google.javascript.jscomp.graph.GraphColoring.GreedyGraphColoring;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.SubGraph;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.jstype.FunctionType;
@@ -131,7 +134,7 @@ class AmbiguateProperties implements CompilerPass {
       AbstractCompiler compiler,
       char[] reservedFirstCharacters,
       char[] reservedNonFirstCharacters) {
-    Preconditions.checkState(compiler.getLifeCycleStage().isNormalized());
+    checkState(compiler.getLifeCycleStage().isNormalized());
     this.compiler = compiler;
     this.reservedFirstCharacters = reservedFirstCharacters;
     this.reservedNonFirstCharacters = reservedNonFirstCharacters;
@@ -190,7 +193,7 @@ class AmbiguateProperties implements CompilerPass {
   }
 
   Map<String, String> getRenamingMap() {
-    Preconditions.checkNotNull(renamingMap);
+    checkNotNull(renamingMap);
     return renamingMap;
   }
 
@@ -258,7 +261,7 @@ class AmbiguateProperties implements CompilerPass {
       String oldName = n.getString();
       Property p = propertyMap.get(oldName);
       if (p != null && p.newName != null) {
-        Preconditions.checkState(oldName.equals(p.oldName));
+        checkState(oldName.equals(p.oldName));
         if (!p.newName.equals(oldName)) {
           n.setString(p.newName);
           compiler.reportChangeToEnclosingScope(n);
@@ -335,16 +338,10 @@ class AmbiguateProperties implements CompilerPass {
 
     // An instance is related to its subclasses.
     FunctionType constructor = type.toObjectType().getConstructor();
-    if (constructor != null && constructor.getSubTypes() != null) {
-      for (FunctionType subType : constructor.getSubTypes()) {
-        addRelatedInstance(subType, related);
+    if (constructor != null) {
+      for (FunctionTypeI subType : constructor.getSubTypes()) {
+        addRelatedInstance((FunctionType) subType, related);
       }
-    }
-
-    // An interface is related to its implementors.
-    for (FunctionType implementor : compiler.getTypeRegistry()
-        .getDirectImplementors(type.toObjectType())) {
-      addRelatedInstance(implementor, related);
     }
   }
 

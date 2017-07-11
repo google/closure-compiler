@@ -39,7 +39,8 @@
 
 package com.google.javascript.rhino;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import java.util.HashSet;
 import java.util.List;
@@ -188,7 +189,7 @@ public final class JSDocInfoBuilder {
    */
   public JSDocInfo build(boolean always) {
     if (populated || always) {
-      Preconditions.checkState(currentInfo != null);
+      checkState(currentInfo != null);
       JSDocInfo built = currentInfo;
       currentInfo = null;
       populateDefaults(built);

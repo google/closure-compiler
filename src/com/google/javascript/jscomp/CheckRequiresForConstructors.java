@@ -16,8 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.base.Splitter;
@@ -87,7 +88,7 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
   @Nullable
   private Node googScopeBlock;
 
-  static final DiagnosticType MISSING_REQUIRE_WARNING =
+  public static final DiagnosticType MISSING_REQUIRE_WARNING =
       DiagnosticType.disabled(
           "JSC_MISSING_REQUIRE_WARNING", "missing require: ''{0}''");
   static final DiagnosticType MISSING_REQUIRE_FOR_GOOG_SCOPE =
@@ -95,7 +96,7 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
           "JSC_MISSING_REQUIRE_FOR_GOOG_SCOPE", "missing require: ''{0}''");
 
   // TODO(tbreisacher): Remove this and just use MISSING_REQUIRE_WARNING.
-  static final DiagnosticType MISSING_REQUIRE_STRICT_WARNING =
+  public static final DiagnosticType MISSING_REQUIRE_STRICT_WARNING =
       DiagnosticType.disabled("JSC_MISSING_REQUIRE_STRICT_WARNING", "missing require: ''{0}''");
 
   public static final DiagnosticType EXTRA_REQUIRE_WARNING = DiagnosticType.disabled(
@@ -529,7 +530,7 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
   }
 
   private void visitQualifiedName(NodeTraversal t, Node n, Node parent) {
-    Preconditions.checkState(n.isName() || n.isGetProp() || n.isStringKey(), n);
+    checkState(n.isName() || n.isGetProp() || n.isStringKey(), n);
     String qualifiedName = n.isStringKey() ? n.getString() : n.getQualifiedName();
     addWeakUsagesOfAllPrefixes(qualifiedName);
     if (mode != Mode.SINGLE_FILE) {  // TODO(tbreisacher): Fix violations and remove this check.
@@ -631,7 +632,7 @@ public class CheckRequiresForConstructors implements HotSwapCompilerPass, NodeTr
    * inside a goog.scope function.
    */
   private void maybeAddGoogScopeUsage(NodeTraversal t, Node n, Node parent) {
-    Preconditions.checkState(NodeUtil.isNameDeclaration(n));
+    checkState(NodeUtil.isNameDeclaration(n));
     if (n.hasOneChild() && parent == googScopeBlock) {
       Node rhs = n.getFirstFirstChild();
       if (rhs != null && rhs.isQualifiedName()) {

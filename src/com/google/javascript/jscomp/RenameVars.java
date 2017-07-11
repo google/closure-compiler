@@ -16,9 +16,10 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.nullToEmpty;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ListMultimap;
@@ -114,7 +115,7 @@ final class RenameVars implements CompilerPass {
      * Assigns the new name.
      */
     void setNewName(String newName) {
-      Preconditions.checkState(this.newName == null);
+      checkState(this.newName == null);
       this.newName = newName;
     }
   }
@@ -444,7 +445,7 @@ final class RenameVars implements CompilerPass {
     // If prevUsedRenameMap had duplicate values then this pass would be
     // non-deterministic.
     // In such a case, the following will throw an IllegalArgumentException.
-    Preconditions.checkNotNull(prevUsedRenameMap.getNewNameToOriginalNameMap());
+    checkNotNull(prevUsedRenameMap.getNewNameToOriginalNameMap());
     for (Assignment a : assignments.values()) {
       String prevNewName = prevUsedRenameMap.lookupNewName(a.oldName);
       if (prevNewName == null || reservedNames.contains(prevNewName)) {

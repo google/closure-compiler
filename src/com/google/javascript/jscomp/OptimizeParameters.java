@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -52,8 +55,7 @@ class OptimizeParameters
   @Override
   @VisibleForTesting
   public void process(Node externs, Node root) {
-    Preconditions.checkState(
-        compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
+    checkState(compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
     DefinitionUseSiteFinder definitionFinder = new DefinitionUseSiteFinder(compiler);
     definitionFinder.process(externs, root);
     process(externs, root, definitionFinder);
@@ -142,8 +144,8 @@ class OptimizeParameters
       if (singleSiteDefinitions.size() > 1) {
         return false;
       }
-      Preconditions.checkState(!singleSiteDefinitions.isEmpty());
-      Preconditions.checkState(singleSiteDefinitions.contains(definition));
+      checkState(!singleSiteDefinitions.isEmpty());
+      checkState(singleSiteDefinitions.contains(definition));
     }
 
     return true;
@@ -161,7 +163,7 @@ class OptimizeParameters
     Definition definition = definitionSite.definition;
     Collection<UseSite> useSites = definitionFinder.getUseSites(definition);
     for (UseSite site : useSites) {
-      Preconditions.checkState(DefinitionUseSiteFinder.isCallOrNewSite(site));
+      checkState(DefinitionUseSiteFinder.isCallOrNewSite(site));
       Node call = site.node.getParent();
 
       int numArgs = call.getChildCount() - 1;
@@ -195,7 +197,7 @@ class OptimizeParameters
     Collection<UseSite> useSites = definitionFinder.getUseSites(definition);
     boolean continueLooking = false;
     for (UseSite site : useSites) {
-      Preconditions.checkState(DefinitionUseSiteFinder.isCallOrNewSite(site));
+      checkState(DefinitionUseSiteFinder.isCallOrNewSite(site));
       Node call = site.node.getParent();
 
       Node cur = call.getFirstChild();
@@ -219,7 +221,7 @@ class OptimizeParameters
 
     // Remove the constant parameters in all the calls
     for (UseSite site : useSites) {
-      Preconditions.checkState(DefinitionUseSiteFinder.isCallOrNewSite(site));
+      checkState(DefinitionUseSiteFinder.isCallOrNewSite(site));
       Node call = site.node.getParent();
 
       optimizeCallSite(definitionFinder, parameters, call);
@@ -474,7 +476,7 @@ class OptimizeParameters
 
     Node block = NodeUtil.getFunctionBody(function);
 
-    Preconditions.checkState(value.getParent() == null);
+    checkState(value.getParent() == null);
     Node stmt;
     if (varName != null) {
       stmt = NodeUtil.newVarNode(varName.getString(), value);
@@ -525,7 +527,7 @@ class OptimizeParameters
    */
   private Node eliminateFunctionParamAt(
       Node function, int argIndex, DefinitionUseSiteFinder definitionFinder) {
-    Preconditions.checkArgument(function.isFunction(), "Node must be a function.");
+    checkArgument(function.isFunction(), "Node must be a function.");
 
     Node formalArgPtr = NodeUtil.getArgumentForFunction(function, argIndex);
 
@@ -547,8 +549,7 @@ class OptimizeParameters
    */
   private Node eliminateCallParamAt(
       DefinitionUseSiteFinder definitionFinder, Parameter p, Node call, int argIndex) {
-    Preconditions.checkArgument(
-        NodeUtil.isCallOrNew(call), "Node must be a call or new.");
+    checkArgument(NodeUtil.isCallOrNew(call), "Node must be a call or new.");
 
     Node formalArgPtr = NodeUtil.getArgumentForCallOrNew(
         call, argIndex);

@@ -16,12 +16,13 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -73,7 +74,7 @@ class CheckGlobalNames implements CompilerPass {
    * can be re-used for multiple check passes. Returns this for easy chaining.
    */
   CheckGlobalNames injectNamespace(GlobalNamespace namespace) {
-    Preconditions.checkArgument(namespace.hasExternsRoot());
+    checkArgument(namespace.hasExternsRoot());
     this.namespace = namespace;
     return this;
   }
@@ -85,7 +86,7 @@ class CheckGlobalNames implements CompilerPass {
     }
 
     // Find prototype properties that will affect our analysis.
-    Preconditions.checkState(namespace.hasExternsRoot());
+    checkState(namespace.hasExternsRoot());
     findPrototypeProps("Object", objectPrototypeProps);
     findPrototypeProps("Function", functionPrototypeProps);
     objectPrototypeProps.addAll(

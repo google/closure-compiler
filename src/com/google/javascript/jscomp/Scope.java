@@ -118,7 +118,7 @@ public class Scope implements StaticScope, Serializable {
    * @param input the input in which this variable is defined.
    */
   Var declare(String name, Node nameNode, CompilerInput input) {
-    checkState(name != null && !name.isEmpty());
+    checkState(name != null && !name.isEmpty(), name);
     // Make sure that it's declared only once
     checkState(vars.get(name) == null);
     Var var = new Var(name, nameNode, this, vars.size(), input);
@@ -133,7 +133,12 @@ public class Scope implements StaticScope, Serializable {
   void undeclare(Var var) {
     checkState(var.scope == this);
     checkState(vars.get(var.name).equals(var));
-    vars.remove(var.name);
+    undeclareInteral(var);
+  }
+
+  /** Without any safety checks */
+  void undeclareInteral(Var var) {
+     vars.remove(var.name);
   }
 
   @Override
@@ -183,6 +188,25 @@ public class Scope implements StaticScope, Serializable {
   }
 
   /**
+   * @deprecated use #isDeclared instead
+   */
+  @Deprecated
+  public boolean isDeclaredSloppy(String name, boolean recurse) {
+    // In ES6, we create a separate "function parameter scope" above the function block scope to
+    // handle default parameters. Since nothing in the function block scope is allowed to shadow
+    // the variables in the function scope, we treat the two scopes as one in this method.
+    checkState(recurse == false);
+    if (!isDeclared(name, false)) {
+      if (parent != null && isFunctionBlockScope()) {
+        return parent.isDeclared(name, false);
+      }
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  /**
    * Returns true if a variable is declared.
    */
   public boolean isDeclared(String name, boolean recurse) {
@@ -192,10 +216,7 @@ public class Scope implements StaticScope, Serializable {
         return true;
       }
 
-      // In ES6, we create a separate "function parameter scope" above the function block scope to
-      // handle default parameters. Since nothing in the function block scope is allowed to shadow
-      // the variables in the function scope, we treat the two scopes as one in this method.
-      if (scope.isFunctionBlockScope() || (scope.parent != null && recurse)) {
+      if (scope.parent != null && recurse) {
         scope = scope.parent;
         continue;
       }

@@ -16,11 +16,12 @@
 
 package com.google.javascript.jscomp.regex;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -248,7 +249,7 @@ public abstract class RegExpTree {
        * {@code (?=...)}.
        */
       private RegExpTree parseParenthetical() {
-        Preconditions.checkState(pattern.charAt(pos) == '(');
+        checkState(pattern.charAt(pos) == '(');
         int start = pos;
         ++pos;
         boolean capturing = true;
@@ -295,7 +296,7 @@ public abstract class RegExpTree {
        * {@link #parseEscape}.
        */
       private RegExpTree parseCharset() {
-        Preconditions.checkState(pattern.charAt(pos) == '[');
+        checkState(pattern.charAt(pos) == '[');
         ++pos;
 
         boolean isCaseInsensitive = flags.indexOf('i') >= 0;
@@ -409,7 +410,7 @@ public abstract class RegExpTree {
        * Parses an escape that appears outside a charset.
        */
       private RegExpTree parseEscape() {
-        Preconditions.checkState(pattern.charAt(pos) == '\\');
+        checkState(pattern.charAt(pos) == '\\');
         ++pos;
         char ch = pattern.charAt(pos);
         if (ch == 'b' || ch == 'B') {
@@ -695,7 +696,7 @@ public abstract class RegExpTree {
     final int groupIndex;
 
     BackReference(int groupIndex) {
-      Preconditions.checkArgument(groupIndex >= 0 && groupIndex <= 99);
+      checkArgument(groupIndex >= 0 && groupIndex <= 99);
       this.groupIndex = groupIndex;
     }
 

@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -96,7 +98,7 @@ class AstChangeProxy {
    * Replaces a node with the provided list.
    */
   final void replaceWith(Node parent, Node node, List<Node> replacements) {
-    Preconditions.checkNotNull(replacements, "\"replacements\" is null.");
+    checkNotNull(replacements, "\"replacements\" is null.");
 
     int size = replacements.size();
 
@@ -107,10 +109,11 @@ class AstChangeProxy {
 
     Token parentType = parent.getToken();
 
-    Preconditions.checkState(size == 1 ||
-        parentType == Token.BLOCK ||
-        parentType == Token.SCRIPT ||
-        parentType == Token.LABEL);
+    checkState(
+        size == 1
+            || parentType == Token.BLOCK
+            || parentType == Token.SCRIPT
+            || parentType == Token.LABEL);
 
     if (parentType == Token.LABEL && size != 1) {
       Node block = IR.block();

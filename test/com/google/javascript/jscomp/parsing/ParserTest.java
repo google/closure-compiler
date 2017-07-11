@@ -25,9 +25,6 @@ import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.debugging.sourcemap.SourceMapConsumerV3;
-import com.google.javascript.jscomp.SourceFile;
-import com.google.javascript.jscomp.SourceMapInput;
 import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -1596,7 +1593,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testObjectNumberKeysSpecial() {
     Node n = parse("var a = {12345678901234567890: 2}");
 
-    Node objectLit = n.getFirstChild().getFirstChild().getFirstChild();
+    Node objectLit = n.getFirstChild().getFirstFirstChild();
     assertThat(objectLit.getToken()).isEqualTo(Token.OBJECTLIT);
 
     Node number = objectLit.getFirstChild();
@@ -3581,10 +3578,51 @@ public final class ParserTest extends BaseJSTypeTestCase {
         + "SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQy"
         + "xDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==";
     ParseResult result = doParse(code);
-    assertThat(result.sourceMap).named("inline source map").isNotNull();
-    SourceMapInput input = new SourceMapInput(SourceFile.fromCode("test.js.map", result.sourceMap));
-    SourceMapConsumerV3 sourceMap = input.getSourceMap();
-    assertThat(sourceMap.getOriginalSources()).containsExactly("foo.ts");
+    assertThat(result.sourceMapURL)
+        .isEqualTo(
+            "data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiZm9vLmpz"
+                + "Iiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiZm9vLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiJBQU"
+                + "FBO0lBR0UsV0FBWSxLQUFhO1FBQ3ZCLElBQUksQ0FBQyxDQUFDLEdBQUcsS0FBSyxDQUFDO0lBQ2pCLENBQUM7"
+                + "SUFDSCxRQUFDO0FBQUQsQ0FBQyxBQU5ELElBTUM7QUFFRCxPQUFPLENBQUMsR0FBRyxDQUFDLElBQUksQ0FBQy"
+                + "xDQUFDLENBQUMsQ0FBQyxDQUFDLENBQUMifQ==");
+  }
+
+  public void testParseSourceMapRelativeURL() {
+    String code =
+        "var X = (function () {\n"
+            + "    function X(input) {\n"
+            + "        this.y = input;\n"
+            + "    }\n"
+            + "    return X;\n"
+            + "}());\n"
+            + "console.log(new X(1));\n"
+            + "//# sourceMappingURL=somefile.js.map";
+    ParseResult result = doParse(code);
+    assertThat(result.sourceMapURL).isEqualTo("somefile.js.map");
+  }
+
+  /**
+   * In the future, we may want absolute URLs to be mapable based on how the server exposes the
+   * sources. See: b/62544959.
+   */
+  public void testParseSourceMapAbsoluteURL() {
+    String code =
+        "console.log('asdf');\n" + "//# sourceMappingURL=/some/absolute/path/to/somefile.js.map";
+    ParseResult result = doParse(code);
+    assertThat(result.sourceMapURL).isEqualTo("/some/absolute/path/to/somefile.js.map");
+  }
+
+  /**
+   * In the future, we may want absolute URLs to me mapable based on how the server exposes the
+   * sources. See: b/62544959.
+   */
+  public void testParseSourceMapAbsoluteURLHTTP() {
+    String code =
+        "console.log('asdf');\n"
+            + "//# sourceMappingURL=http://google.com/some/absolute/path/to/somefile.js.map";
+    ParseResult result = doParse(code);
+    assertThat(result.sourceMapURL)
+        .isEqualTo("http://google.com/some/absolute/path/to/somefile.js.map");
   }
 
   private static String getRequiresEs6Message(Feature feature) {

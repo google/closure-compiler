@@ -16,11 +16,12 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
-
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 
@@ -157,12 +158,12 @@ class FindExportableNodes extends AbstractPostOrderCallback {
 
       if (export != null) {
         if (mode == Mode.EXPORT) {
-          Preconditions.checkNotNull(context);
+          checkNotNull(context);
           exports.put(export, context);
         } else {
-          Preconditions.checkState(context == null);
-          Preconditions.checkState(mode == Mode.EXTERN);
-          Preconditions.checkState(!export.isEmpty());
+          checkState(context == null);
+          checkState(mode == Mode.EXTERN);
+          checkState(!export.isEmpty());
           localExports.add(export);
         }
       } else {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as t from './module_test_resources/typedef';
+import * as t from './module_test_resources/typedef.js';
 
 /** @type {t.StringOrNumber} */
 var x = 1;

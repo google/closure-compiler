@@ -39,6 +39,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.javascript.rhino.jstype.JSTypeNative.ALL_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.CHECKED_UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
@@ -46,7 +47,6 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
 import java.io.Serializable;
@@ -252,8 +252,7 @@ public class UnionTypeBuilder implements Serializable {
                 }
                 // case 6: leave current, add alternate
               } else {
-                Preconditions.checkState(current.isTemplatizedType()
-                    && alternate.isTemplatizedType());
+                checkState(current.isTemplatizedType() && alternate.isTemplatizedType());
                 TemplatizedType templatizedAlternate = alternate.toMaybeTemplatizedType();
                 TemplatizedType templatizedCurrent = current.toMaybeTemplatizedType();
 
@@ -303,7 +302,7 @@ public class UnionTypeBuilder implements Serializable {
 
         if (alternate.isFunctionType()) {
           // See the comments on functionTypePosition above.
-          Preconditions.checkState(functionTypePosition == -1);
+          checkState(functionTypePosition == -1);
           functionTypePosition = alternates.size();
         }
 

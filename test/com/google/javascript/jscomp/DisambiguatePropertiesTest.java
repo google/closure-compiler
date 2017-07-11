@@ -399,13 +399,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         + "B.a = 0;\n"
         + "/** @constructor */ function Baz() {}\n"
         + "Baz.prototype.a = 0;\n";
-
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, "{a=[[Bar.prototype, Foo.prototype], [Baz.prototype]]}");
-
-    // NTI knows that B has type Bar
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testSets(js, "{a=[[Bar.prototype], [Baz.prototype], [Foo.prototype]]}");
   }
 
   public void testUnionType_2() {
@@ -1295,6 +1289,17 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         output,
         "{a=[[Foo.prototype, I.prototype], [Z.prototype]],"
             + " b=[[Foo.prototype, I.prototype], [Z.prototype]]}");
+  }
+
+  public void testInterface_subInterfaceAndDirectImplementors() {
+    String js = LINE_JOINER.join(
+        "/** @interface */ function I() {};",
+        "I.prototype.a;",
+        "/** @constructor @implements {I} */ function Foo() {};",
+        "Foo.prototype.a;",
+        "/** @interface @extends {I} */ function Bar() {};",
+        "Bar.prototype.a;");
+    testSets(js, "{a=[[Bar.prototype, Foo.prototype, I.prototype]]}");
   }
 
   public void testInterfaceOfSuperclass() {

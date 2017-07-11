@@ -45,7 +45,6 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
     assertExternProperties(
         "foo = {bar: null, 'baz': {foobar: null}};",
         "bar", "baz", "foobar");
-
     // Object literal with numeric propertic.
     assertExternProperties(
         "foo = {0: null};",
@@ -206,6 +205,19 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
             "var baz = new Foo();",
             "var bar = baz.bar;"),
         "prototype", "bar");
+  }
+
+  public void testExternAsyncFunction() {
+    disableTypeCheck();
+    assertExternProperties(
+        LINE_JOINER.join(
+            "function *gen() {",
+            " var x = 0;",
+            " yield x;",
+            "}",
+            "var foo = gen();",
+            "gen.next().value;"),
+        "next", "value");
   }
 
   private void assertExternProperties(String externs, String... properties) {

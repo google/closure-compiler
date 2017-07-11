@@ -17,7 +17,9 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedFlowState;
 import com.google.javascript.jscomp.DataFlowAnalysis.BranchedForwardDataFlowAnalysis;
@@ -27,12 +29,16 @@ import com.google.javascript.jscomp.JoinOp.BinaryJoinOp;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.GraphNode;
 import com.google.javascript.jscomp.graph.LatticeElement;
+import com.google.javascript.rhino.InputId;
+import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import junit.framework.TestCase;
 
 /**
@@ -67,7 +73,7 @@ public final class DataFlowAnalysisTest extends TestCase {
   abstract static class Value {
 
     boolean isNumber() {
-      return this instanceof Number;
+      return this instanceof NumberValue;
     }
 
     boolean isVariable() {
@@ -117,7 +123,7 @@ public final class DataFlowAnalysisTest extends TestCase {
   /**
    * A number constant.
    */
-  static class Number extends Value {
+  static class NumberValue extends Value {
     private final int value;
 
     /**
@@ -125,7 +131,7 @@ public final class DataFlowAnalysisTest extends TestCase {
      *
      * @param v Value
      */
-    Number(int v) {
+    NumberValue(int v) {
       value = v;
     }
 
@@ -140,10 +146,10 @@ public final class DataFlowAnalysisTest extends TestCase {
 
     @Override
     public boolean equals(Object other) {
-      if (!(other instanceof Number)) {
+      if (!(other instanceof NumberValue)) {
         return false;
       }
-      return ((Number) other).value == value;
+      return ((NumberValue) other).value == value;
     }
 
     @Override
@@ -200,7 +206,7 @@ public final class DataFlowAnalysisTest extends TestCase {
      * @param op2 Second Operand.
      */
     ArithmeticInstruction(Variable res, int op1, Operation o, int op2) {
-      this(res, new Number(op1), o, new Number(op2));
+      this(res, new NumberValue(op1), o, new NumberValue(op2));
     }
 
     /**
@@ -212,7 +218,7 @@ public final class DataFlowAnalysisTest extends TestCase {
      * @param op2 Second Operand.
      */
     ArithmeticInstruction(Variable res, Value op1, Operation o, int op2) {
-      this(res, op1, o, new Number(op2));
+      this(res, op1, o, new NumberValue(op2));
     }
 
     /**
@@ -224,7 +230,7 @@ public final class DataFlowAnalysisTest extends TestCase {
      * @param op2 Second Operand.
      */
     ArithmeticInstruction(Variable res, int op1, Operation o, Value op2) {
-      this(res, new Number(op1), o, op2);
+      this(res, new NumberValue(op1), o, op2);
     }
 
     /**
@@ -492,7 +498,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     // be a constant coming in.
     Integer leftConst = null;
     if (aInst.operand1.isNumber()) {
-      leftConst = ((Number) aInst.operand1).value;
+      leftConst = ((NumberValue) aInst.operand1).value;
     } else {
       if (input.constMap.containsKey(aInst.operand1)) {
         leftConst = input.constMap.get(aInst.operand1);
@@ -502,7 +508,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     // Do the same thing to the right.
     Integer rightConst = null;
     if (aInst.operand2.isNumber()) {
-      rightConst = ((Number) aInst.operand2).value;
+      rightConst = ((NumberValue) aInst.operand2).value;
     } else {
       if (input.constMap.containsKey(aInst.operand2)) {
         rightConst = input.constMap.get(aInst.operand2);
@@ -655,6 +661,165 @@ public final class DataFlowAnalysisTest extends TestCase {
     assertEquals(1, JoinOp.BinaryJoinOp.computeMidPoint(2));
   }
 
+  // tests for computeEscaped method
+
+  public void testEscaped() {
+    assertThat(
+            computeEscapedLocals(
+                "function f() {",
+                "    var x = 0; ",
+                "    setTimeout(function() { x++; }); ",
+                "    alert(x);",
+                "}"))
+        .hasSize(1);
+    assertThat(computeEscapedLocals("function f() {var _x}")).hasSize(1);
+    assertThat(computeEscapedLocals("function f() {try{} catch(e){}}")).isEmpty();
+    assertThat(computeEscapedLocals("{var x = 0; setTimeout(function() { x++; }); alert(x);}"))
+        .isEmpty();
+  }
+
+  public void testEscapedFunctionLayered() {
+    assertThat(
+            computeEscapedLocals(
+                "function f() {",
+                "    function ff() {",
+                "        var x = 0; ",
+                "        setTimeout(function() { x++; }); ",
+                "        alert(x);",
+                "    }",
+                "}"))
+        .isEmpty();
+  }
+
+  public void testEscapedLetConstSimple() {
+    assertThat(computeEscapedLocals("function f() { let x = 0; x ++; x; }")).isEmpty();
+  }
+
+  public void testEscapedFunctionAssignment() {
+    assertThat(computeEscapedLocals("function f() {var x = function () { return 1; }; }"))
+        .isEmpty();
+    assertThat(computeEscapedLocals("function f() {var x = function (y) { return y; }; }"))
+        .isEmpty();
+    assertThat(computeEscapedLocals("function f() {let x = function () { return 1; }; }"))
+        .isEmpty();
+  }
+
+  public void testEscapedArrowFunction() {
+    // When the body of the arrow fn is analyzed, x is considered an escaped var. When the outer
+    // block containing "const value ..." is analyzed, 'x' is not considered an escaped var
+    assertThat(
+            computeEscapedLocals(
+                "{const value = () => {",
+                "    var x = 0; ",
+                "    setTimeout(function() { x++; }); ",
+                "    alert(x);",
+                " };}"))
+        .isEmpty();
+  }
+
+  // test computeEscaped helper method that returns the liveness analysis performed by the
+  // LiveVariablesAnalysisES6 class
+  public Set<? extends Var> computeEscapedLocals(String... lines) {
+    // Set up compiler
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguage(LanguageMode.ECMASCRIPT_2015);
+    options.setCodingConvention(new GoogleCodingConvention());
+    compiler.initOptions(options);
+
+    String src = LINE_JOINER.join(lines);
+    Node n = compiler.parseTestCode(src).removeFirstChild();
+    Node script = new Node(Token.SCRIPT, n);
+    script.setInputId(new InputId("test"));
+    assertThat(compiler.getErrors()).isEmpty();
+
+    // Create scopes
+    ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+    Scope scope = scopeCreator.createScope(n, Scope.createGlobalScope(script));
+    Scope childScope;
+    if (script.getFirstChild().isFunction()) {
+      childScope = scopeCreator.createScope(NodeUtil.getFunctionBody(n), scope);
+    } else {
+      childScope = null;
+    }
+
+    // Control flow graph
+    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
+    cfa.process(null, script);
+    ControlFlowGraph<Node> cfg = cfa.getCfg();
+
+    // Compute livenss of variables
+    LiveVariablesAnalysisEs6 analysis =
+        new LiveVariablesAnalysisEs6(
+            cfg, scope, childScope, compiler, (Es6SyntacticScopeCreator) scopeCreator);
+    analysis.analyze();
+    return analysis.getEscapedLocals();
+  }
+
+  public void testEscapedES5() {
+    assertThat(
+            computeEscapedLocalsES5(
+                "function f() {",
+                "    var x = 0; ",
+                "    setTimeout(function() { x++; }); ",
+                "    alert(x);",
+                "}"))
+        .hasSize(1);
+    assertThat(computeEscapedLocalsES5("function f() {var _x}")).hasSize(1);
+
+    // Note the result of the following try-catch escaped test differs from the ES6 version because
+    // the scope creators treat catch blocks differently
+    assertThat(computeEscapedLocalsES5("function f() {try{} catch(e){}}")).hasSize(1);
+  }
+
+  public void testEscapedFunctionAssignmentES5() {
+    assertThat(computeEscapedLocalsES5("function f() {var x = function () { return 1; }; }"))
+        .isEmpty();
+    assertThat(computeEscapedLocalsES5("function f() {var x = function (y) { return y; }; }"))
+        .isEmpty();
+  }
+
+  public void testEscapedFunctionLayeredES5() {
+    assertThat(
+            computeEscapedLocalsES5(
+                "function f() {",
+                "    function ff() {",
+                "        var x = 0; ",
+                "        setTimeout(function() { x++; }); ",
+                "        alert(x);",
+                "    }",
+                "}"))
+        .isEmpty();
+  }
+
+  // test computeEscaped helper method for ES5
+  public Set<? extends Var> computeEscapedLocalsES5(String... lines) {
+    // Set up compiler
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setCodingConvention(new GoogleCodingConvention());
+    compiler.initOptions(options);
+
+    String src = LINE_JOINER.join(lines);
+    Node n = compiler.parseTestCode(src).removeFirstChild();
+    Node script = new Node(Token.SCRIPT, n);
+    script.setInputId(new InputId("test"));
+    assertThat(compiler.getErrors()).isEmpty();
+
+    // Create scopes
+    ScopeCreator scopeCreator = SyntacticScopeCreator.makeUntyped(compiler);
+    Scope scope = scopeCreator.createScope(n, Scope.createGlobalScope(script));
+
+    // Control flow graph
+    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
+    cfa.process(null, script);
+    ControlFlowGraph<Node> cfg = cfa.getCfg();
+
+    // Compute livenss of variables
+    LiveVariablesAnalysis analysis = new LiveVariablesAnalysis(cfg, scope, compiler, scopeCreator);
+    analysis.analyze();
+    return analysis.getEscapedLocals();
+  }
 
   /**
    * A simple forward constant propagation.

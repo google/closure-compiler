@@ -16,7 +16,8 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
@@ -74,7 +75,7 @@ class RemoveUnusedClassProperties
           }
         }
       } else {
-        Preconditions.checkState(n.isGetProp(), n);
+        checkState(n.isGetProp(), n);
         String propName = n.getLastChild().getString();
         if (!used.contains(propName)) {
 
@@ -88,9 +89,8 @@ class RemoveUnusedClassProperties
           Boolean replaceParent = true;
           if (NodeUtil.isAssignmentOp(parent)) {
             Node assign = parent;
-            Preconditions.checkState(assign != null
-                && NodeUtil.isAssignmentOp(assign)
-                && assign.getFirstChild() == n);
+            checkState(
+                assign != null && NodeUtil.isAssignmentOp(assign) && assign.getFirstChild() == n);
             compiler.reportChangeToEnclosingScope(assign);
             // 'this.x = y' to 'y'
             replacement = assign.getLastChild().detach();
@@ -203,7 +203,7 @@ class RemoveUnusedClassProperties
   }
 
   private boolean isRemovablePropertyDefinition(Node n) {
-    Preconditions.checkState(n.isGetProp(), n);
+    checkState(n.isGetProp(), n);
     Node target = n.getFirstChild();
     return target.isThis()
         || (this.removeUnusedConstructorProperties && isConstructor(target))

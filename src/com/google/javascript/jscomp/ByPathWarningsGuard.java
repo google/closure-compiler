@@ -16,7 +16,7 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.common.base.Preconditions;
+import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.List;
 
@@ -56,9 +56,8 @@ public final class ByPathWarningsGuard extends WarningsGuard {
    */
   private ByPathWarningsGuard(
       List<String> paths, boolean include, CheckLevel level) {
-    Preconditions.checkArgument(paths != null);
-    Preconditions.checkArgument(
-        level == CheckLevel.OFF || level == CheckLevel.ERROR);
+    checkArgument(paths != null);
+    checkArgument(level == CheckLevel.OFF || level == CheckLevel.ERROR);
     this.paths = paths;
     this.include = include;
     this.level = level;

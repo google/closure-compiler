@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import java.util.List;
 
 /** An optimization pass to re-write J2CL Equality.$same. */
 public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
@@ -30,9 +31,11 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
   }
 
   private final AbstractCompiler compiler;
+  private final List<Node> changedScopeNodes;
 
-  J2clEqualitySameRewriterPass(AbstractCompiler compiler) {
+  J2clEqualitySameRewriterPass(AbstractCompiler compiler, List<Node> changedScopeNodes) {
     this.compiler = compiler;
+    this.changedScopeNodes = changedScopeNodes;
   }
 
   @Override
@@ -41,7 +44,7 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
       return;
     }
 
-    NodeTraversal.traverseEs6(compiler, root, this);
+    NodeTraversal.traverseEs6ScopeRoots(compiler, root, changedScopeNodes, this, false);
   }
 
   @Override
