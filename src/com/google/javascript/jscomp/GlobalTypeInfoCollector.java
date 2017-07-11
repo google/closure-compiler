@@ -1708,6 +1708,9 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       Node ctorNameNode = NodeUtil.getPrototypeClassName(getProp);
       QualifiedName ctorQname = QualifiedName.fromNode(ctorNameNode);
       RawNominalType rawType = currentScope.getNominalType(ctorQname);
+      for (Node objLitChild : protoObjNode.children()) {
+        recordPropertyName(objLitChild);
+      }
       if (rawType == null) {
         for (Node objLitChild : protoObjNode.children()) {
           Node initializer = objLitChild.getLastChild();

@@ -20988,4 +20988,27 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  return x.myprop;",
         "}"));
   }
+
+  public void testRegisterPropertyOfPrototypeLiteral() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "var Foo = function () {};",
+        "Foo.prototype = {",
+        "  bar: function() {},",
+        "  baz: function() {}",
+        "};",
+        "function f(x) {",
+        "  return x.bar();",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "var Foo = function () {};",
+        "Foo.prototype = {",
+        "  bar: function() {},",
+        "  baz: function() {}",
+        "};",
+        "function f(x) {",
+        "  return x.bar();",
+        "}"));
+  }
 }
