@@ -11042,7 +11042,7 @@ chrome.declarativeContent.RequestContentScriptInstanceType;
 
 
 /**
- * @typedef {!{
+ * @typedef {{
  *   pageUrl: (!UrlFilter|undefined),
  *   css: (!Array<string>|undefined),
  *   isBookmarked: (boolean|undefined)
@@ -11060,7 +11060,7 @@ chrome.declarativeContent.ShowPageAction = function() {};
 
 
 /**
- * @typedef {!{
+ * @typedef {{
  *   imageData: (!ImageData|!Object<number, !ImageData>|undefined)
  * }}
  * @see https://developer.chrome.com/extensions/declarativeContent#type-SetIcon
@@ -11069,7 +11069,7 @@ chrome.declarativeContent.SetIcon;
 
 
 /**
- * @typedef {!{
+ * @typedef {{
  *   css: (!Array<string>|undefined),
  *   js: (!Array<string>|undefined),
  *   allFrames: (boolean|undefined),

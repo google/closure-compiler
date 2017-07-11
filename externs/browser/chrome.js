@@ -105,8 +105,8 @@ ChromeEvent.prototype.hasListeners = function() {};
 
 
 /**
- * @param {!Array<Rule>} rules
- * @param {function(!Array<Rule>): void=} callback
+ * @param {!Array<!Rule>} rules
+ * @param {function(!Array<!Rule>): void=} callback
  * @see https://developer.chrome.com/extensions/events#method-Event-addRules
  */
 ChromeEvent.prototype.addRules = function(rules, callback) {};
@@ -114,7 +114,7 @@ ChromeEvent.prototype.addRules = function(rules, callback) {};
 
 /**
  * @param {Array<string>} ruleIdentifiers
- * @param {!function(!Array<Rule>): void} callback
+ * @param {!function(!Array<!Rule>): void} callback
  * @see https://developer.chrome.com/extensions/events#method-Event-getRules
  */
 ChromeEvent.prototype.getRules = function(ruleIdentifiers, callback) {};
@@ -139,7 +139,7 @@ function Rule() {}
 Rule.prototype.id;
 
 
-/** @type {Array<string>|undefined} */
+/** @type {!Array<string>|undefined} */
 Rule.prototype.tags;
 
 
@@ -234,11 +234,11 @@ UrlFilter.prototype.urlPrefix;
 UrlFilter.prototype.urlSuffix;
 
 
-/** @type {Array<string>|undefined} */
+/** @type {!Array<string>|undefined} */
 UrlFilter.prototype.schemes;
 
 
-/** @type {Array<(number|Array<number>)>|undefined} */
+/** @type {!Array<(number|Array<number>)>|undefined} */
 UrlFilter.prototype.ports;
 
 
