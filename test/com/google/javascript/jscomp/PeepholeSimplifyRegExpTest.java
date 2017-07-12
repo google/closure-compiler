@@ -317,8 +317,8 @@ public final class PeepholeSimplifyRegExpTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    final CompilerPass simplifier = new PeepholeOptimizationsPass(
-        compiler, new PeepholeSimplifyRegExp());
+    final CompilerPass simplifier =
+        new PeepholeOptimizationsPass(compiler, getName(), new PeepholeSimplifyRegExp());
     final CompilerPass checker = new CheckRegExp(compiler);
 
     return new CompilerPass() {

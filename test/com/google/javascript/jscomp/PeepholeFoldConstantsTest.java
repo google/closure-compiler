@@ -39,26 +39,29 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
 
   private boolean late;
   private boolean useTypes = true;
+  private int numRepetitions;
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     late = false;
     useTypes = true;
-    this.mode = TypeInferenceMode.NEITHER;
+    // Reduce this to 1 if we get better expression evaluators.
+    numRepetitions = 2;
+    mode = TypeInferenceMode.NEITHER;
   }
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     CompilerPass peepholePass =
-        new PeepholeOptimizationsPass(compiler, new PeepholeFoldConstants(late, useTypes));
+        new PeepholeOptimizationsPass(
+            compiler, getName(), new PeepholeFoldConstants(late, useTypes));
     return peepholePass;
   }
 
   @Override
   protected int getNumRepetitions() {
-    // Reduce this to 1 if we get better expression evaluators.
-    return 2;
+    return numRepetitions;
   }
 
   @Override
@@ -453,6 +456,10 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   }
 
   public void testUnaryOps() {
+    // Running on just changed code results in an exception on only the first invocation. Don't
+    // repeat because it confuses the exception verification.
+    numRepetitions = 1;
+
     // These cases are handled by PeepholeRemoveDeadCode.
     foldSame("!foo()");
     foldSame("~foo()");
@@ -671,6 +678,10 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   }
 
   public void testFoldBitShifts() {
+    // Running on just changed code results in an exception on only the first invocation. Don't
+    // repeat because it confuses the exception verification.
+    numRepetitions = 1;
+
     fold("x = 1 << 0", "x = 1");
     fold("x = -1 << 0", "x = -1");
     fold("x = 1 << 1", "x = 2");
@@ -940,6 +951,10 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   }
 
   public void testFoldGetElem1() {
+    // Running on just changed code results in an exception on only the first invocation. Don't
+    // repeat because it confuses the exception verification.
+    numRepetitions = 1;
+
     fold("x = [,10][0]", "x = void 0");
     fold("x = [10, 20][0]", "x = 10");
     fold("x = [10, 20][1]", "x = 20");
@@ -958,6 +973,10 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
   }
 
   public void testFoldGetElem2() {
+    // Running on just changed code results in an exception on only the first invocation. Don't
+    // repeat because it confuses the exception verification.
+    numRepetitions = 1;
+
     fold("x = 'string'[5]", "x = 'g'");
     fold("x = 'string'[0]", "x = 's'");
     fold("x = 's'[0]", "x = 's'");

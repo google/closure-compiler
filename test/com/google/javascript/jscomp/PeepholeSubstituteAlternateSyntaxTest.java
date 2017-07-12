@@ -52,8 +52,9 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    PeepholeOptimizationsPass peepholePass = new PeepholeOptimizationsPass(
-        compiler, new PeepholeSubstituteAlternateSyntax(late));
+    PeepholeOptimizationsPass peepholePass =
+        new PeepholeOptimizationsPass(
+            compiler, getName(), new PeepholeSubstituteAlternateSyntax(late));
     peepholePass.setRetraverseOnChange(retraverseOnChange);
     return peepholePass;
   }
@@ -357,7 +358,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
 
     fold("(x=2), foo()", "x=2; foo()");
     fold("foo(), boo();", "foo(); boo()");
-    fold("(a(), b()), (c(), d());", "a(); b(); (c(), d());");
+    fold("(a(), b()), (c(), d());", "a(), b(); c(), d()");
     fold("a(); b(); (c(), d());", "a(); b(); c(); d();");
     fold("foo(), true", "foo();true");
     foldSame("foo();true");
@@ -381,7 +382,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
 
   public void testComma3() {
     late = false;
-    test("1, a(), b()", "1; a(); b()");
+    test("1, a(), b()", "1, a(); b()");
     late = true;
     foldSame("1, a(), b()");
   }
@@ -395,7 +396,7 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
 
   public void testComma5() {
     late = false;
-    test("a(), b(), 1", "a();b();1");
+    test("a(), b(), 1", "a(), b(); 1");
     late = true;
     foldSame("a(), b(), 1");
   }

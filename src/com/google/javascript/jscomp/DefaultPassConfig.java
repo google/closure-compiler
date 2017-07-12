@@ -1640,12 +1640,11 @@ public final class DefaultPassConfig extends PassConfig {
 
   private final PassFactory earlyPeepholeOptimizations =
       new PassFactory("earlyPeepholeOptimizations", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new PeepholeOptimizationsPass(compiler,
-          new PeepholeRemoveDeadCode());
-    }
-  };
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new PeepholeOptimizationsPass(compiler, getName(), new PeepholeRemoveDeadCode());
+        }
+      };
 
   private final PassFactory earlyInlineVariables =
       new PassFactory("earlyInlineVariables", true) {
@@ -1669,54 +1668,59 @@ public final class DefaultPassConfig extends PassConfig {
   };
 
   /** Various peephole optimizations. */
-  private static CompilerPass createPeepholeOptimizationsPass(AbstractCompiler compiler) {
+  private static CompilerPass createPeepholeOptimizationsPass(
+      AbstractCompiler compiler, String passName) {
     final boolean late = false;
     final boolean useTypesForOptimization = compiler.getOptions().useTypesForLocalOptimization;
-    return new PeepholeOptimizationsPass(compiler,
-          new MinimizeExitPoints(compiler),
-          new PeepholeMinimizeConditions(late, useTypesForOptimization),
-          new PeepholeSubstituteAlternateSyntax(late),
-          new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
-          new PeepholeRemoveDeadCode(),
-          new PeepholeFoldConstants(late, useTypesForOptimization),
-          new PeepholeCollectPropertyAssignments());
+    return new PeepholeOptimizationsPass(
+        compiler,
+        passName,
+        new MinimizeExitPoints(compiler),
+        new PeepholeMinimizeConditions(late, useTypesForOptimization),
+        new PeepholeSubstituteAlternateSyntax(late),
+        new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
+        new PeepholeRemoveDeadCode(),
+        new PeepholeFoldConstants(late, useTypesForOptimization),
+        new PeepholeCollectPropertyAssignments());
   }
 
   /** Various peephole optimizations. */
   private final PassFactory peepholeOptimizations =
       new PassFactory(Compiler.PEEPHOLE_PASS_NAME, false /* oneTimePass */) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return createPeepholeOptimizationsPass(compiler);
-    }
-  };
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return createPeepholeOptimizationsPass(compiler, getName());
+        }
+      };
 
   /** Various peephole optimizations. */
   private final PassFactory peepholeOptimizationsOnce =
       new PassFactory(Compiler.PEEPHOLE_PASS_NAME, true /* oneTimePass */) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return createPeepholeOptimizationsPass(compiler);
-    }
-  };
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return createPeepholeOptimizationsPass(compiler, getName());
+        }
+      };
 
   /** Same as peepholeOptimizations but aggressively merges code together */
   private final PassFactory latePeepholeOptimizations =
       new PassFactory("latePeepholeOptimizations", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      final boolean late = true;
-      final boolean useTypesForOptimization = options.useTypesForLocalOptimization;
-      return new PeepholeOptimizationsPass(compiler,
-            new StatementFusion(options.aggressiveFusion),
-            new PeepholeRemoveDeadCode(),
-            new PeepholeMinimizeConditions(late, useTypesForOptimization),
-            new PeepholeSubstituteAlternateSyntax(late),
-            new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
-            new PeepholeFoldConstants(late, useTypesForOptimization),
-            new ReorderConstantExpression());
-    }
-  };
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          final boolean late = true;
+          final boolean useTypesForOptimization = options.useTypesForLocalOptimization;
+          return new PeepholeOptimizationsPass(
+              compiler,
+              getName(),
+              new StatementFusion(options.aggressiveFusion),
+              new PeepholeRemoveDeadCode(),
+              new PeepholeMinimizeConditions(late, useTypesForOptimization),
+              new PeepholeSubstituteAlternateSyntax(late),
+              new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
+              new PeepholeFoldConstants(late, useTypesForOptimization),
+              new ReorderConstantExpression());
+        }
+      };
 
   /** Checks that all variables are defined. */
   private final HotSwapPassFactory checkVars =
@@ -2689,17 +2693,14 @@ public final class DefaultPassConfig extends PassConfig {
     }
   };
 
-  /**
-   * Some simple, local collapses (e.g., {@code var x; var y;} becomes
-   * {@code var x,y;}.
-   */
-  private final PassFactory exploitAssign = new PassFactory("exploitAssign", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new PeepholeOptimizationsPass(compiler,
-          new ExploitAssigns());
-    }
-  };
+  /** Some simple, local collapses (e.g., {@code var x; var y;} becomes {@code var x,y;}. */
+  private final PassFactory exploitAssign =
+      new PassFactory("exploitAssign", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new PeepholeOptimizationsPass(compiler, getName(), new ExploitAssigns());
+        }
+      };
 
   /**
    * Some simple, local collapses (e.g., {@code var x; var y;} becomes

@@ -40,14 +40,11 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        DefinitionUseSiteFinder definitionFinder =
-            new DefinitionUseSiteFinder(compiler);
+        DefinitionUseSiteFinder definitionFinder = new DefinitionUseSiteFinder(compiler);
         definitionFinder.process(externs, root);
-        new PureFunctionIdentifier(compiler, definitionFinder)
-            .process(externs, root);
+        new PureFunctionIdentifier(compiler, definitionFinder).process(externs, root);
         PeepholeOptimizationsPass peepholePass =
-            new PeepholeOptimizationsPass(
-                compiler, new PeepholeRemoveDeadCode());
+            new PeepholeOptimizationsPass(compiler, getName(), new PeepholeRemoveDeadCode());
         peepholePass.process(externs, root);
       }
     };

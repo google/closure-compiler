@@ -49,7 +49,8 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new PeepholeOptimizationsPass(compiler, new PeepholeReplaceKnownMethods(late, useTypes));
+    return new PeepholeOptimizationsPass(
+        compiler, getName(), new PeepholeReplaceKnownMethods(late, useTypes));
   }
 
   public void testStringIndexOf() {

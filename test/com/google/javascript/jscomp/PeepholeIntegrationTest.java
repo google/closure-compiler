@@ -34,12 +34,13 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     PeepholeOptimizationsPass peepholePass =
-      new PeepholeOptimizationsPass(compiler,
-        new PeepholeMinimizeConditions(late, false /* useTypes */),
-        new PeepholeSubstituteAlternateSyntax(late),
-        new PeepholeRemoveDeadCode(),
-        new PeepholeFoldConstants(late, false)
-      );
+        new PeepholeOptimizationsPass(
+            compiler,
+            getName(),
+            new PeepholeMinimizeConditions(late, false /* useTypes */),
+            new PeepholeSubstituteAlternateSyntax(late),
+            new PeepholeRemoveDeadCode(),
+            new PeepholeFoldConstants(late, false));
 
     return peepholePass;
   }

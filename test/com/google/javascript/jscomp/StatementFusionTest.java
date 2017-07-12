@@ -34,8 +34,7 @@ public final class StatementFusionTest extends CompilerTestCase  {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     PeepholeOptimizationsPass peepholePass =
-      new PeepholeOptimizationsPass(
-          compiler, new StatementFusion(favorsCommas));
+        new PeepholeOptimizationsPass(compiler, getName(), new StatementFusion(favorsCommas));
 
     return peepholePass;
   }

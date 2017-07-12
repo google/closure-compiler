@@ -40,7 +40,7 @@ class MinimizeExitPoints extends AbstractPeepholeOptimization {
 
   @VisibleForTesting
   final CompilerPass asCompilerPass() {
-    return new PeepholeOptimizationsPass(compiler, this);
+    return new PeepholeOptimizationsPass(compiler, this.getClass().getSimpleName(), this);
   }
 
   @Override

@@ -24,8 +24,7 @@ public final class ReorderConstantExpressionTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new PeepholeOptimizationsPass(compiler,
-        new ReorderConstantExpression());
+    return new PeepholeOptimizationsPass(compiler, getName(), new ReorderConstantExpression());
   }
 
   @Override

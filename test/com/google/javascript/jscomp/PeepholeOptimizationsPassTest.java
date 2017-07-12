@@ -37,7 +37,7 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new PeepholeOptimizationsPass(
-        compiler, currentPeepholePasses.toArray(new AbstractPeepholeOptimization[0]));
+        compiler, getName(), currentPeepholePasses.toArray(new AbstractPeepholeOptimization[0]));
   }
 
   @Override

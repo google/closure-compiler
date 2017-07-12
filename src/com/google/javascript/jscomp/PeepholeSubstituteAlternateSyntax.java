@@ -95,6 +95,7 @@ class PeepholeSubstituteAlternateSyntax
         return tryReduceReturn(node);
 
       case COMMA:
+        // TODO(b/63630312): should flatten an entire comma expression in a single pass.
         return trySplitComma(node);
 
       case NAME:
@@ -313,8 +314,8 @@ class PeepholeSubstituteAlternateSyntax
       Node newStatement = IR.exprResult(right);
       newStatement.useSourceInfoIfMissingFrom(n);
 
-      //This modifies outside the subtree, which is not
-      //desirable in a peephole optimization.
+      // This modifies outside the subtree, which is not
+      // desirable in a peephole optimization.
       parent.getParent().addChildAfter(newStatement, parent);
       reportCodeChange();
       return left;
