@@ -333,6 +333,16 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
         "}"), StrictModeCheck.ARGUMENTS_CALLER_FORBIDDEN);
   }
 
+  public void testComputedPropInClass() {
+    this.mode = TypeInferenceMode.NEITHER;
+    testSame(
+        LINE_JOINER.join(
+            "class Example {",
+            "  [computed()]() {}",
+            "  [computed()]() {}",
+            "}"));
+  }
+
   public void testStaticAndNonstaticMethodWithSameName() {
     this.mode = TypeInferenceMode.NEITHER;
     testSame(

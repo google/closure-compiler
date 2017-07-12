@@ -180,7 +180,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
     for (Node key = n.getFirstChild();
          key != null;
          key = key.getNext()) {
-      if (key.isEmpty()) {
+      if (key.isEmpty() || key.isComputedProp()) {
         continue;
       }
       String keyName = key.getString();
