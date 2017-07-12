@@ -23,7 +23,10 @@
  *
  *    assert.isTrue(thing);
  *
- * TODO(tbreisacher): Expand this to include "expect(thing).to.be.null" etc.
+ * TODO(tbreisacher): Expand this to include "expect(thing).not.to.be.null" etc.
+ * and consider supporting chai-jquery assertions as well:
+ * http://chaijs.com/plugins/chai-jquery/
+ *
  * Then, once it's in a good state, mention it at go/js-practices/testing#chai
  */
 
