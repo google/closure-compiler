@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.newtypes.RawNominalType.PropAccess;
 import com.google.javascript.rhino.Node;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
@@ -397,7 +398,7 @@ public final class NominalType implements Serializable {
     return result;
   }
 
-  Property getProp(String pname) {
+  Property getProp(String pname, PropAccess propAccess) {
     if (this.rawType.isBuiltinWithName("Array")
         && NUMERIC_PATTERN.matcher(pname).matches()) {
       if (typeMap.isEmpty()) {
@@ -407,7 +408,7 @@ public final class NominalType implements Serializable {
       JSType elmType = Iterables.getOnlyElement(typeMap.values());
       return Property.make(elmType, null);
     }
-    Property p = this.rawType.getProp(pname);
+    Property p = this.rawType.getProp(pname, propAccess);
     // TODO(aravindpg): Also look for getters and setters specially (in RawNominalType::protoProps),
     // but avoid putting them in the hot path of getProp.
     return p == null ? null : p.substituteGenerics(typeMap);
@@ -422,12 +423,12 @@ public final class NominalType implements Serializable {
   }
 
   Property getOwnProp(String pname) {
-    Property p = this.rawType.getOwnProp(pname);
+    Property p = this.rawType.getOwnProp(pname, PropAccess.INCLUDE_STRAY_PROPS);
     return p == null ? null : p.substituteGenerics(typeMap);
   }
 
   public boolean hasConstantProp(String pname) {
-    Property p = this.rawType.getProp(pname);
+    Property p = this.rawType.getProp(pname, PropAccess.INCLUDE_STRAY_PROPS);
     return p != null && p.isConstant();
   }
 
@@ -447,8 +448,8 @@ public final class NominalType implements Serializable {
   private boolean isStructuralSubtypeOf(NominalType other, SubtypeCache subSuperMap) {
     checkArgument(other.isStructuralInterface());
     for (String pname : other.getAllPropsOfInterface()) {
-      Property prop2 = other.getProp(pname);
-      Property prop1 = this.getProp(pname);
+      Property prop2 = other.getProp(pname, PropAccess.INCLUDE_STRAY_PROPS);
+      Property prop1 = this.getProp(pname, PropAccess.INCLUDE_STRAY_PROPS);
       if (prop2.isOptional()) {
         if (prop1 != null
             && !prop1.getType().isSubtypeOf(prop2.getType(), subSuperMap)) {

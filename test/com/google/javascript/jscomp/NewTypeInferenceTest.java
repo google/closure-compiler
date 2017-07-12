@@ -21011,4 +21011,49 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  return x.bar();",
         "}"));
   }
+
+  public void testInheritanceAndStrayProperties() {
+    // TODO(dimvar): warn here about GlobalTypeInfoCollector.INTERFACE_METHOD_NOT_IMPLEMENTED
+    typeCheck(LINE_JOINER.join(
+        "/** @record */",
+        "function Foo() {}",
+        "Foo.prototype.myprop;",
+        "/**",
+        " * @constructor",
+        " * @implements {Foo}",
+        " */",
+        "function Bar() {};",
+        "function f(/** !Bar */ x) {",
+        "  x.myprop = 123;",
+        "}",
+        "/**",
+        " * @constructor",
+        " * @extends {Bar}",
+        " */",
+        "function Baz() {}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @record */",
+        "function Polymer_PropertyEffects() {}",
+        "Polymer_PropertyEffects.prototype.myprop;",
+        "/** @constructor */",
+        "function Foo() {}",
+        "function f(/** !Foo */ x) {",
+        "  x.myprop = 123;",
+        "}",
+        "function mix(clazz) {",
+        "  // add Polymer_PropertyEffects properties to clazz",
+        "}",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo}",
+        " * @implements {Polymer_PropertyEffects}",
+        " */",
+        "var Bar = mix(Foo);",
+        "/**",
+        " * @constructor",
+        " * @extends {Bar}",
+        " */",
+        "function Baz() {}"));
+  }
 }

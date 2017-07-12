@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 import com.google.javascript.jscomp.newtypes.JSTypes;
 import com.google.javascript.jscomp.newtypes.RawNominalType;
 import com.google.javascript.jscomp.newtypes.UniqueNameGenerator;
-import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
@@ -208,15 +207,6 @@ public class GlobalTypeInfo implements TypeIRegistry {
     checkState(this.rawNominalTypes == null);
 
     this.rawNominalTypes = new ArrayList<>(rawNominalTypes);
-  }
-
-  static boolean isCtorDefinedByCall(Node qnameNode) {
-    if (!qnameNode.isName() && !qnameNode.isGetProp()) {
-      return false;
-    }
-    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(qnameNode);
-    Node rhs = NodeUtil.getRValueOfLValue(qnameNode);
-    return jsdoc != null && jsdoc.isConstructor() && rhs != null && rhs.isCall();
   }
 
   @Override

@@ -1278,7 +1278,7 @@ final class NewTypeInference implements CompilerPass {
     }
     Node rhs = nameNode.getFirstChild();
     if (NodeUtil.isNamespaceDecl(nameNode)
-        || (GlobalTypeInfo.isCtorDefinedByCall(nameNode)
+        || (GlobalTypeInfoCollector.isCtorDefinedByCall(nameNode)
             && !isFunctionBind(rhs.getFirstChild(), inEnv, true))
         || nameNode.getParent().getBooleanProp(Node.ANALYZED_DURING_GTI)) {
       Preconditions.checkNotNull(declType,
@@ -1836,7 +1836,7 @@ final class NewTypeInference implements CompilerPass {
       lhs.removeProp(Node.ANALYZED_DURING_GTI);
       JSType declType = markAndGetTypeOfPreanalyzedNode(lhs, inEnv, true);
       if (rhs.matchesQualifiedName(ABSTRACT_METHOD_NAME)
-          || (GlobalTypeInfo.isCtorDefinedByCall(lhs)
+          || (GlobalTypeInfoCollector.isCtorDefinedByCall(lhs)
               && !isFunctionBind(rhs.getFirstChild(), inEnv, true))) {
         return new EnvTypePair(inEnv, requiredType);
       }

@@ -538,8 +538,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
               pname, superClass.getName()));
         }
         nonInheritedPropNames.remove(pname);
-        checkSuperProperty(rawType, superClass, pname,
-            propMethodTypesToProcess, propTypesToProcess);
+        checkSuperProperty(
+            rawType, superClass, pname, propMethodTypesToProcess, propTypesToProcess);
       }
     }
 
@@ -672,7 +672,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       inheritedPropDefs = getPropDefsFromInterface(superType, pname);
       // If a class is defined by mixin application, add missing property defs from the
       // super interface, o/w checkSuperProperty will break for its subclasses.
-      if (GlobalTypeInfo.isCtorDefinedByCall(NodeUtil.getBestLValue(current.getDefSite()))) {
+      if (isCtorDefinedByCall(current)) {
         for (PropertyDef inheritedDef : inheritedPropDefs) {
           if (!current.mayHaveProp(pname)) {
             propertyDefs.put(current, pname, inheritedDef);
@@ -680,14 +680,17 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         }
       }
     } else {
-      PropertyDef propdef = checkNotNull(
-          getPropDefFromClass(superType, pname),
-          "getPropDefFromClass(%s, %s) returned null", superType, pname);
+      PropertyDef propdef = getPropDefFromClass(superType, pname);
+      // TODO(dimvar): fix look-ups of stray properties in a follow-up change, and add a
+      // precondition here that propdef should not be null.
+      if (propdef == null) {
+        return;
+      }
       inheritedPropDefs = ImmutableSet.of(propdef);
     }
     if (superType.isInterface()
         && current.isClass()
-        && !GlobalTypeInfo.isCtorDefinedByCall(NodeUtil.getBestLValue(current.getDefSite()))
+        && !isCtorDefinedByCall(current)
         && !current.mayHaveProp(pname)) {
       warnings.add(JSError.make(
           inheritedPropDefs.iterator().next().defSite,
@@ -782,7 +785,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
             visitAliasedNamespace(nameNode);
           } else if (varName.equals(WINDOW_INSTANCE) && nameNode.isFromExterns()) {
             visitWindowVar(nameNode);
-          } else if (GlobalTypeInfo.isCtorDefinedByCall(nameNode)) {
+          } else if (isCtorDefinedByCall(nameNode)) {
             visitNewCtorDefinedByCall(nameNode);
           } else if (isCtorWithoutFunctionLiteral(nameNode)) {
             visitNewCtorWithoutFunctionLiteral(nameNode);
@@ -806,7 +809,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
           switch (expr.getToken()) {
             case ASSIGN:
               Node lhs = expr.getFirstChild();
-              if (GlobalTypeInfo.isCtorDefinedByCall(lhs)) {
+              if (isCtorDefinedByCall(lhs)) {
                 visitNewCtorDefinedByCall(lhs);
                 return;
               }
@@ -1481,7 +1484,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     private void visitVar(Node nameNode, Node parent) {
       String name = nameNode.getString();
       boolean isDefinedLocally = this.currentScope.isDefinedLocally(name, false);
-      if (GlobalTypeInfo.isCtorDefinedByCall(nameNode)) {
+      if (isCtorDefinedByCall(nameNode)) {
         computeFnDeclaredType(NodeUtil.getBestJSDocInfo(nameNode), name,
             nameNode.getFirstChild(), null, this.currentScope);
         return;
@@ -1744,7 +1747,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       boolean isConst = isConst(getProp);
       if (propDeclType != null || isConst) {
         JSType previousPropType = classType.getCtorPropDeclaredType(pname);
-        if (classType.hasCtorProp(pname)
+        if (classType.hasStaticProp(pname)
             && previousPropType != null
             && !suppressDupPropWarning(jsdoc, propDeclType, previousPropType)) {
           warnings.add(JSError.make(
@@ -1773,7 +1776,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     }
 
     private void mayVisitWeirdCtorDefinition(Node getProp) {
-      if (GlobalTypeInfo.isCtorDefinedByCall(getProp)) {
+      if (isCtorDefinedByCall(getProp)) {
         computeFnDeclaredType(
             NodeUtil.getBestJSDocInfo(getProp),
             getProp.getQualifiedName(),
@@ -1834,7 +1837,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       if (propDeclType != null || isConst) {
         JSType previousPropType = ns.getPropDeclaredType(pname);
         if (ns.hasSubnamespace(new QualifiedName(pname))
-            || (ns.hasProp(pname)
+            || (ns.hasStaticProp(pname)
             && previousPropType != null
             && !suppressDupPropWarning(jsdoc, propDeclType, previousPropType))) {
           warnings.add(JSError.make(
@@ -2711,8 +2714,21 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     }
     return false;
   }
-  // Utility class when analyzing property declarations
 
+  private static boolean isCtorDefinedByCall(RawNominalType rawType) {
+    return isCtorDefinedByCall(NodeUtil.getBestLValue(rawType.getDefSite()));
+  }
+
+  static boolean isCtorDefinedByCall(Node qnameNode) {
+    if (!qnameNode.isName() && !qnameNode.isGetProp()) {
+      return false;
+    }
+    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(qnameNode);
+    Node rhs = NodeUtil.getRValueOfLValue(qnameNode);
+    return jsdoc != null && jsdoc.isConstructor() && rhs != null && rhs.isCall();
+  }
+
+  // Utility class when analyzing property declarations
   private static class PropertyType {
   // The declared type of the property, from the jsdoc.
     JSType declType = null;

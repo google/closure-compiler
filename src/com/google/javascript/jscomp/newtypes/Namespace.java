@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.javascript.jscomp.newtypes.RawNominalType.PropAccess;
 import com.google.javascript.rhino.Node;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
@@ -167,7 +168,7 @@ public abstract class Namespace implements Serializable {
 
   // Static properties
 
-  public final boolean hasProp(String pname) {
+  public final boolean hasStaticProp(String pname) {
     Property prop = otherProps.get(pname);
     if (prop == null) {
       return false;
@@ -219,7 +220,7 @@ public abstract class Namespace implements Serializable {
     if (this instanceof NamespaceLit) {
       NominalType maybeWin = ((NamespaceLit) this).getWindowType();
       if (maybeWin != null) {
-        return maybeWin.getProp(pname);
+        return maybeWin.getProp(pname, PropAccess.INCLUDE_STRAY_PROPS);
       }
     }
     return null;

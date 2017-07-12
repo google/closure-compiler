@@ -91,6 +91,11 @@ public final class RawNominalType extends Namespace {
     RECORD
   }
 
+  enum PropAccess {
+    INCLUDE_STRAY_PROPS,
+    EXCLUDE_STRAY_PROPS
+  }
+
   private RawNominalType(
       JSTypes commonTypes, Node defSite, String name,
       ImmutableList<String> typeParameters, Kind kind, ObjectKind objectKind, boolean isAbstract) {
@@ -376,14 +381,13 @@ public final class RawNominalType extends Namespace {
         && this.superclass.isRawSubtypeOf(other.getAsNominalType());
   }
 
-  Property getOwnProp(String pname) {
+  Property getOwnProp(String pname, PropAccess propAccess) {
     Property p = classProps.get(pname);
     if (p != null) {
       return p;
     }
-    p = randomProps.get(pname);
-    if (p != null) {
-      return p;
+    if (propAccess == PropAccess.INCLUDE_STRAY_PROPS && randomProps.containsKey(pname)) {
+      return randomProps.get(pname);
     }
     return protoProps.get(pname);
   }
@@ -407,19 +411,19 @@ public final class RawNominalType extends Namespace {
   }
 
   public boolean hasAbstractMethod(String pname) {
-    Property p = getPropFromClass(pname);
+    Property p = getPropFromClass(pname, PropAccess.INCLUDE_STRAY_PROPS);
     JSType ptype = p == null ? null : p.getType();
     return ptype != null && ptype.isFunctionType() && ptype.getFunType().isAbstract();
   }
 
-  private Property getPropFromClass(String pname) {
+  private Property getPropFromClass(String pname, PropAccess propAccess) {
     checkState(isClass());
-    Property p = getOwnProp(pname);
+    Property p = getOwnProp(pname, propAccess);
     if (p != null) {
       return p;
     }
     if (this.superclass != null) {
-      p = this.superclass.getProp(pname);
+      p = this.superclass.getProp(pname, propAccess);
       if (p != null) {
         return p;
       }
@@ -427,15 +431,15 @@ public final class RawNominalType extends Namespace {
     return null;
   }
 
-  private Property getPropFromInterface(String pname) {
+  private Property getPropFromInterface(String pname, PropAccess propAccess) {
     checkState(isInterface());
-    Property p = getOwnProp(pname);
+    Property p = getOwnProp(pname, propAccess);
     if (p != null) {
       return p;
     }
     if (interfaces != null) {
       for (NominalType interf : interfaces) {
-        p = interf.getProp(pname);
+        p = interf.getProp(pname, propAccess);
         if (p != null) {
           return p;
         }
@@ -444,23 +448,23 @@ public final class RawNominalType extends Namespace {
     return null;
   }
 
-  Property getProp(String pname) {
+  Property getProp(String pname, PropAccess propAccess) {
     if (isInterface()) {
-      return getPropFromInterface(pname);
+      return getPropFromInterface(pname, propAccess);
     }
-    return getPropFromClass(pname);
+    return getPropFromClass(pname, propAccess);
   }
 
   public boolean mayHaveOwnProp(String pname) {
-    return getOwnProp(pname) != null;
+    return getOwnProp(pname, PropAccess.INCLUDE_STRAY_PROPS) != null;
   }
 
   public boolean mayHaveProp(String pname) {
-    return getProp(pname) != null;
+    return getProp(pname, PropAccess.INCLUDE_STRAY_PROPS) != null;
   }
 
   public JSType getInstancePropDeclaredType(String pname) {
-    Property p = getProp(pname);
+    Property p = getProp(pname, PropAccess.INCLUDE_STRAY_PROPS);
     if (p == null) {
       return null;
     } else if (p.getDeclaredType() == null && this.superclass != null) {
@@ -609,10 +613,6 @@ public final class RawNominalType extends Namespace {
   }
 
   //////////// Constructor Properties
-
-  public boolean hasCtorProp(String pname) {
-    return super.hasProp(pname);
-  }
 
   /** Add a new non-optional declared property to this class's constructor */
   public void addCtorProperty(String pname, Node defSite, JSType type, boolean isConstant) {

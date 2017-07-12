@@ -26,6 +26,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
+import com.google.javascript.jscomp.newtypes.RawNominalType.PropAccess;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -462,7 +463,7 @@ final class ObjectType implements TypeWithProperties {
     PersistentMap<String, Property> newProps = props1;
     for (Map.Entry<String, Property> propsEntry : props1.entrySet()) {
       String pname = propsEntry.getKey();
-      Property otherProp = resultNominalType.getProp(pname);
+      Property otherProp = resultNominalType.getProp(pname, PropAccess.INCLUDE_STRAY_PROPS);
       if (otherProp != null) {
         newProps = addOrRemoveProp(
             specializeProps1, newProps, pname, otherProp, propsEntry.getValue());
@@ -486,7 +487,7 @@ final class ObjectType implements TypeWithProperties {
             prop1.specialize(prop2) :
             Property.meet(prop1, prop2);
       }
-      Property otherProp = resultNominalType.getProp(pname);
+      Property otherProp = resultNominalType.getProp(pname, PropAccess.INCLUDE_STRAY_PROPS);
       if (otherProp != null) {
         newProps = addOrRemoveProp(specializeProps1, newProps, pname, otherProp, newProp);
         if (commonTypes.isBottomPropertyMap(newProps)) {
@@ -537,7 +538,7 @@ final class ObjectType implements TypeWithProperties {
     if (props.containsKey(pname)) {
       return props.get(pname);
     } else if (nom != null) {
-      return nom.getProp(pname);
+      return nom.getProp(pname, PropAccess.INCLUDE_STRAY_PROPS);
     }
     return null;
   }
@@ -1316,7 +1317,7 @@ final class ObjectType implements TypeWithProperties {
         return p;
       }
     }
-    return this.nominalType.getProp(pname);
+    return this.nominalType.getProp(pname, PropAccess.INCLUDE_STRAY_PROPS);
   }
 
   /**
