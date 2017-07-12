@@ -724,11 +724,43 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case POLYMER:
+          if (jsdocBuilder.isPolymerRecorded()) {
+            addParserWarning("msg.jsdoc.polymer.extra");
+          } else {
+            jsdocBuilder.recordPolymer();
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case POLYMER_BEHAVIOR:
           if (jsdocBuilder.isPolymerBehaviorRecorded()) {
             addParserWarning("msg.jsdoc.polymerBehavior.extra");
           } else {
             jsdocBuilder.recordPolymerBehavior();
+          }
+          return eatUntilEOLIfNotAnnotation();
+
+        case CUSTOM_ELEMENT:
+          if (jsdocBuilder.isCustomElementRecorded()) {
+            addParserWarning("msg.jsdoc.customElement.extra");
+          } else {
+            jsdocBuilder.recordCustomElement();
+          }
+          return eatUntilEOLIfNotAnnotation();
+
+        case MIXIN_CLASS:
+          if (jsdocBuilder.isMixinClassRecorded()) {
+            addParserWarning("msg.jsdoc.mixinClass.extra");
+          } else {
+            jsdocBuilder.recordMixinClass();
+          }
+          return eatUntilEOLIfNotAnnotation();
+
+        case MIXIN_FUNCTION:
+          if (jsdocBuilder.isMixinFunctionRecorded()) {
+            addParserWarning("msg.jsdoc.mixinFunction.extra");
+          } else {
+            jsdocBuilder.recordMixinFunction();
           }
           return eatUntilEOLIfNotAnnotation();
 

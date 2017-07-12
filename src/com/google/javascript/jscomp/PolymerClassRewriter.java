@@ -16,17 +16,20 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.PolymerBehaviorExtractor.BehaviorDefinition;
 import com.google.javascript.jscomp.PolymerPass.MemberDefinition;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,12 +41,21 @@ import java.util.Map;
 final class PolymerClassRewriter {
 
   private final AbstractCompiler compiler;
+  private final int polymerVersion;
+  private final boolean propertyRenamingEnabled;
+  static final String POLYMER_ELEMENT_PROP_CONFIG = "Polymer.ElementProperties";
 
   private Node polymerElementExterns;
 
-  PolymerClassRewriter(AbstractCompiler compiler, Node polymerElementExterns) {
+  PolymerClassRewriter(
+      AbstractCompiler compiler,
+      Node polymerElementExterns,
+      int polymerVersion,
+      boolean propertyRenamingEnabled) {
     this.compiler = compiler;
     this.polymerElementExterns = polymerElementExterns;
+    this.polymerVersion = polymerVersion;
+    this.propertyRenamingEnabled = propertyRenamingEnabled;
   }
 
   /**
@@ -54,8 +66,9 @@ final class PolymerClassRewriter {
    * @param cls The extracted {@link PolymerClassDefinition} for the Polymer element created by this
    *     call.
    */
-  void rewritePolymerClass(
+  void rewritePolymerCall(
       Node exprRoot, final PolymerClassDefinition cls, boolean isInGlobalScope) {
+    checkState(cls.descriptor != null);
     Node call = exprRoot.getFirstChild();
     if (call.isAssign()) {
       call = call.getSecondChild();
@@ -74,9 +87,9 @@ final class PolymerClassRewriter {
     objLitDoc.recordLends(cls.target.getQualifiedName() + ".prototype");
     objLit.setJSDocInfo(objLitDoc.build());
 
-    addTypesToFunctions(objLit, cls.target.getQualifiedName());
+    addTypesToFunctions(objLit, cls.target.getQualifiedName(), cls.defType);
     PolymerPassStaticUtils.switchDollarSignPropsToBrackets(objLit, compiler);
-    PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(objLit);
+    PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(objLit, compiler);
 
     for (MemberDefinition prop : cls.props) {
       if (prop.value.isObjectLit()) {
@@ -117,22 +130,27 @@ final class PolymerClassRewriter {
     appendPropertiesToBlock(cls, block, cls.target.getQualifiedName() + ".prototype.");
     appendBehaviorMembersToBlock(cls, block);
     ImmutableList<MemberDefinition> readOnlyProps = parseReadOnlyProperties(cls, block);
-    addInterfaceExterns(cls, readOnlyProps);
-    removePropertyDocs(objLit);
+    ImmutableList<MemberDefinition> attributeReflectedProps =
+        parseAttributeReflectedProperties(cls);
+    addInterfaceExterns(cls, readOnlyProps, attributeReflectedProps);
+    removePropertyDocs(objLit, PolymerClassDefinition.DefinitionType.ObjectLiteral);
 
     Node statements = block.removeChildren();
     Node parent = exprRoot.getParent();
 
-    // If the call to Polymer() is not in the global scope and the assignment target is not
+    // For Polymer 1, If the call to Polymer() is not in the global scope and the assignment target is not
     // namespaced (which likely means it's exported to the global scope), put the type declaration
     // into the global scope at the start of the current script.
     //
     // This avoids unknown type warnings which are a result of the compiler's poor understanding of
     // types declared inside IIFEs or any non-global scope. We should revisit this decision after
     // moving to the new type inference system which should be able to infer these types better.
-    if (!isInGlobalScope && !cls.target.isGetProp()) {
+    //
+    // Since Polymer 2 class mixins only function with NTI, we do not force Polymer 2 types to be global.
+    if (this.polymerVersion == 1 && !isInGlobalScope && !cls.target.isGetProp()) {
       Node scriptNode = NodeUtil.getEnclosingScript(parent);
       scriptNode.addChildrenToFront(statements);
+      compiler.reportChangeToEnclosingScope(scriptNode);
     } else {
       Node beforeRoot = exprRoot.getPrevious();
       if (beforeRoot == null) {
@@ -140,6 +158,7 @@ final class PolymerClassRewriter {
       } else {
         parent.addChildrenAfter(statements, beforeRoot);
       }
+      compiler.reportChangeToEnclosingScope(parent);
     }
     compiler.reportChangeToEnclosingScope(statements);
 
@@ -158,12 +177,123 @@ final class PolymerClassRewriter {
       parent.replaceChild(exprRoot, assignExpr);
       compiler.reportChangeToEnclosingScope(assignExpr);
     }
+
+    // If property renaming is enabled, wrap the properties object literal
+    // in a reflection call so that the properties are renamed consistently
+    // with the class members.
+    if (polymerVersion > 1 && propertyRenamingEnabled && cls.descriptor != null) {
+      Node props = NodeUtil.getFirstPropMatchingKey(cls.descriptor, "properties");
+      if (props != null && props.isObjectLit()) {
+        addObjectReflectionCall(cls, props);
+      }
+    }
   }
 
   /**
-   * Adds an @this annotation to all functions in the objLit.
+   * Rewrites a class which extends Polymer.Element to a set of declarations and assignments which
+   * can be understood by the compiler.
+   *
+   * @param clazz The class node
+   * @param cls The extracted {@link PolymerClassDefinition} for the Polymer element created by this
+   *     call.
    */
-  private void addTypesToFunctions(Node objLit, String thisType) {
+  void rewritePolymerClassDeclaration(
+      Node clazz, final PolymerClassDefinition cls, boolean isInGlobalScope) {
+
+    if (cls.descriptor != null) {
+      addTypesToFunctions(cls.descriptor, cls.target.getQualifiedName(), cls.defType);
+    }
+    PolymerPassStaticUtils.switchDollarSignPropsToBrackets(
+        NodeUtil.getClassMembers(clazz), compiler);
+
+    for (MemberDefinition prop : cls.props) {
+      if (prop.value.isObjectLit()) {
+        PolymerPassStaticUtils.switchDollarSignPropsToBrackets(prop.value, compiler);
+      }
+    }
+
+    // For simplicity add everything into a block, before adding it to the AST.
+    Node block = IR.block();
+
+    appendPropertiesToBlock(cls, block, cls.target.getQualifiedName() + ".prototype.");
+    ImmutableList<MemberDefinition> readOnlyProps = parseReadOnlyProperties(cls, block);
+    ImmutableList<MemberDefinition> attributeReflectedProps =
+        parseAttributeReflectedProperties(cls);
+    addInterfaceExterns(cls, readOnlyProps, attributeReflectedProps);
+
+    // If an external interface is required, mark the class as implementing it
+    if (readOnlyProps.size() > 0 || attributeReflectedProps.size() > 0) {
+      JSDocInfoBuilder classInfo = JSDocInfoBuilder.maybeCopyFrom(clazz.getJSDocInfo());
+      String interfaceName = getInterfaceName(cls);
+      JSTypeExpression interfaceType = new JSTypeExpression(
+          new Node(Token.BANG, IR.string(interfaceName)), PolymerPass.VIRTUAL_FILE);
+      classInfo.recordImplementedInterface(interfaceType);
+      clazz.setJSDocInfo(classInfo.build());
+    }
+
+    if (block.hasChildren()) {
+      removePropertyDocs(cls.descriptor, cls.defType);
+      Node stmt = NodeUtil.getEnclosingStatement(clazz);
+      stmt.getParent().addChildrenAfter(block.removeChildren(), stmt);
+      compiler.reportChangeToEnclosingScope(stmt);
+    }
+
+    addReturnTypeIfMissing(cls, "is", new JSTypeExpression(IR.string("string"), ""));
+
+    Node type = new Node(Token.BANG);
+    Node array = IR.string("Array");
+    type.addChildToBack(array);
+    Node arrayTemplateType = new Node(Token.BLOCK, IR.string("string"));
+    array.addChildToBack(arrayTemplateType);
+    addReturnTypeIfMissing(cls, "observers", new JSTypeExpression(type, ""));
+    addReturnTypeIfMissing(
+        cls,
+        "properties",
+        new JSTypeExpression(IR.string(POLYMER_ELEMENT_PROP_CONFIG), ""));
+
+    // If property renaming is enabled, wrap the properties object literal
+    // in a reflection call so that the properties are renamed consistently
+    // with the class members.
+    if (propertyRenamingEnabled && cls.descriptor != null) {
+      addObjectReflectionCall(cls, cls.descriptor);
+    }
+  }
+
+  /** Adds return type information to class getters */
+  private void addReturnTypeIfMissing(
+      PolymerClassDefinition cls, String getterPropName, JSTypeExpression jsType) {
+    Node classMembers = NodeUtil.getClassMembers(cls.definition);
+    Node getter = NodeUtil.getFirstGetterMatchingKey(classMembers, getterPropName);
+    if (getter != null) {
+      JSDocInfo info = NodeUtil.getBestJSDocInfo(getter);
+      if (info == null || !info.hasReturnType()) {
+        JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(info);
+        builder.recordReturnType(jsType);
+        getter.setJSDocInfo(builder.build());
+      }
+    }
+  }
+
+  /** Wrap the properties config object in an objectReflect call */
+  private void addObjectReflectionCall(PolymerClassDefinition cls, Node propertiesLiteral) {
+    checkNotNull(propertiesLiteral);
+    checkState(propertiesLiteral.isObjectLit());
+
+    Node parent = propertiesLiteral.getParent();
+
+    Node objReflectCall =
+        IR.call(
+                NodeUtil.newQName(compiler, "$jscomp.reflectObject"),
+                cls.target.cloneTree(),
+                propertiesLiteral.detach())
+            .useSourceInfoIfMissingFromForTree(propertiesLiteral);
+    parent.addChildToFront(objReflectCall);
+    compiler.reportChangeToEnclosingScope(parent);
+  }
+
+  /** Adds an @this annotation to all functions in the objLit. */
+  private void addTypesToFunctions(
+      Node objLit, String thisType, PolymerClassDefinition.DefinitionType defType) {
     checkState(objLit.isObjectLit());
     for (Node keyNode : objLit.children()) {
       Node value = keyNode.getLastChild();
@@ -176,7 +306,8 @@ final class PolymerClassRewriter {
     }
 
     // Add @this and @return to default property values.
-    for (MemberDefinition property : PolymerPassStaticUtils.extractProperties(objLit, compiler)) {
+    for (MemberDefinition property :
+        PolymerPassStaticUtils.extractProperties(objLit, defType, compiler)) {
       if (!property.value.isObjectLit()) {
         continue;
       }
@@ -225,8 +356,28 @@ final class PolymerClassRewriter {
   }
 
   /**
-   * @return The proper constructor doc for the Polymer call.
+   * Generates the _set* setters for readonly properties and appends them to the given block.
+   *
+   * @return A List of all readonly properties.
    */
+  private ImmutableList<MemberDefinition> parseAttributeReflectedProperties(
+      final PolymerClassDefinition cls) {
+    ImmutableList.Builder<MemberDefinition> attrReflectedProps = ImmutableList.builder();
+
+    for (MemberDefinition prop : cls.props) {
+      // Generate the setter for readOnly properties.
+      if (prop.value.isObjectLit()) {
+        Node reflectedValue = NodeUtil.getFirstPropMatchingKey(prop.value, "reflectToAttribute");
+        if (reflectedValue != null && reflectedValue.isTrue()) {
+          attrReflectedProps.add(prop);
+        }
+      }
+    }
+
+    return attrReflectedProps.build();
+  }
+
+  /** @return The proper constructor doc for the Polymer call. */
   private JSDocInfoBuilder getConstructorDoc(final PolymerClassDefinition cls) {
     JSDocInfoBuilder constructorDoc = JSDocInfoBuilder.maybeCopyFrom(cls.constructor.info);
     constructorDoc.recordConstructor();
@@ -252,6 +403,12 @@ final class PolymerClassRewriter {
     for (MemberDefinition prop : cls.props) {
       Node propertyNode = IR.exprResult(
           NodeUtil.newQName(compiler, basePath + prop.name.getString()));
+
+      // If a property string is quoted, make sure the added prototype properties are also quoted
+      if (prop.name.isQuotedString()) {
+        continue;
+      }
+
       propertyNode.useSourceInfoIfMissingFromForTree(prop.name);
       JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(prop.info);
 
@@ -266,11 +423,11 @@ final class PolymerClassRewriter {
     }
   }
 
-  /**
-   * Remove all JSDocs from properties of a class definition
-   */
-  private void removePropertyDocs(final Node objLit) {
-    for (MemberDefinition prop : PolymerPassStaticUtils.extractProperties(objLit, compiler)) {
+  /** Remove all JSDocs from properties of a class definition */
+  private void removePropertyDocs(
+      final Node objLit, PolymerClassDefinition.DefinitionType defType) {
+    for (MemberDefinition prop :
+        PolymerPassStaticUtils.extractProperties(objLit, defType, compiler)) {
       prop.name.removeProp(Node.JSDOC_INFO_PROP);
     }
   }
@@ -371,10 +528,13 @@ final class PolymerClassRewriter {
   /**
    * Adds an interface for the given ClassDefinition to externs. This allows generated setter
    * functions for read-only properties to avoid renaming altogether.
+   *
    * @see https://www.polymer-project.org/0.8/docs/devguide/properties.html#read-only
    */
   private void addInterfaceExterns(
-      final PolymerClassDefinition cls, List<MemberDefinition> readOnlyProps) {
+      final PolymerClassDefinition cls,
+      List<MemberDefinition> readOnlyProps,
+      List<MemberDefinition> attributeReflectedProps) {
     Node block = IR.block();
 
     String interfaceName = getInterfaceName(cls);
@@ -387,7 +547,35 @@ final class PolymerClassRewriter {
     varNode.setJSDocInfo(info.build());
     block.addChildToBack(varNode);
 
-    appendPropertiesToBlock(cls, block, interfaceName + ".prototype.");
+    if (polymerVersion == 1) {
+      // For Polymer 1, all declared properties are non-renameable
+      appendPropertiesToBlock(cls, block, interfaceName + ".prototype.");
+    } else {
+      List<MemberDefinition> interfaceProperties = new ArrayList<>();
+      interfaceProperties.addAll(readOnlyProps);
+      if (attributeReflectedProps != null) {
+        interfaceProperties.addAll(attributeReflectedProps);
+      }
+
+      // For Polymer 2, only read-only properties and reflectToAttribute properties are non-renameable.
+      // Other properties follow the ALL_UNQUOTED renaming rules.
+      PolymerClassDefinition tmpDef =
+          new PolymerClassDefinition(
+              cls.defType,
+              cls.definition,
+              cls.target,
+              cls.descriptor,
+              null,
+              null,
+              null,
+              interfaceProperties,
+              null,
+              null);
+
+      // disallow renaming of readonly properties
+      appendPropertiesToBlock(tmpDef, block, interfaceName + ".prototype.");
+    }
+
     for (MemberDefinition prop : readOnlyProps) {
       // Add all _set* functions to avoid renaming.
       String propName = prop.name.getString();
@@ -405,9 +593,12 @@ final class PolymerClassRewriter {
 
     block.useSourceInfoIfMissingFromForTree(polymerElementExterns);
 
-    Node parent = polymerElementExterns.getParent();
+    Node scopeRoot = polymerElementExterns;
+    if (!scopeRoot.isScript()) {
+      scopeRoot = scopeRoot.getParent();
+    }
     Node stmts = block.removeChildren();
-    parent.addChildrenToBack(stmts);
+    scopeRoot.addChildrenToBack(stmts);
 
     compiler.reportChangeToEnclosingScope(stmts);
   }
