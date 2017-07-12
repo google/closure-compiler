@@ -301,7 +301,7 @@ public class JSDocInfo implements Serializable {
         return false;
       }
 
-      return (p1.getItem() == null && p2.getItem() == null
+      return ((p1.getItem() == null && p2.getItem() == null)
               || p1.getItem().isEquivalentTo(p2.getItem()))
           && p1.getStartLine() == p2.getStartLine()
           && p1.getPositionOnStartLine() == p2.getPositionOnStartLine()
@@ -340,7 +340,7 @@ public class JSDocInfo implements Serializable {
         return false;
       }
 
-      return (p1.getItem() == null && p2.getItem() == null
+      return ((p1.getItem() == null && p2.getItem() == null)
               || p1.getItem().isEquivalentTo(p2.getItem()))
           && p1.getStartLine() == p2.getStartLine()
           && p1.getPositionOnStartLine() == p2.getPositionOnStartLine()
