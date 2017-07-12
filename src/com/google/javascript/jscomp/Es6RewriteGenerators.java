@@ -50,6 +50,9 @@ public final class Es6RewriteGenerators
   private static final String GENERATOR_YIELD_ALL_ENTRY = "$jscomp$generator$yield$entry";
   private static final String GENERATOR_ARGUMENTS = "$jscomp$generator$arguments";
   private static final String GENERATOR_THIS = "$jscomp$generator$this";
+  private static final String GENERATOR_ACTION_ARG = "$jscomp$generator$action$arg";
+  private static final double GENERATOR_ACTION_NEXT = 0;
+  private static final double GENERATOR_ACTION_THROW = 1;
   private static final String GENERATOR_NEXT_ARG = "$jscomp$generator$next$arg";
   private static final String GENERATOR_THROW_ARG = "$jscomp$generator$throw$arg";
   private static final String GENERATOR_SWITCH_ENTERED = "$jscomp$generator$switch$entered";
@@ -146,7 +149,7 @@ public final class Es6RewriteGenerators
   private void visitYieldThrows(NodeTraversal t, Node n, Node parent) {
     Node ifThrows =
         IR.ifNode(
-            IR.shne(IR.name(GENERATOR_THROW_ARG), IR.name("undefined")),
+            IR.eq(IR.name(GENERATOR_ACTION_ARG), IR.number(GENERATOR_ACTION_THROW)),
             IR.block(IR.throwNode(IR.name(GENERATOR_THROW_ARG))));
     parent.addChildAfter(ifThrows, n);
     t.reportCodeChange();
@@ -221,32 +224,48 @@ public final class Es6RewriteGenerators
   private void visitGenerator(Node n, Node parent) {
     compiler.ensureLibraryInjected("es6/symbol", false);
     hasTranslatedTry = false;
-    Node genBlock = compiler.parseSyntheticCode(Joiner.on('\n').join(
-        "function generatorBody() {",
-        "  var " + GENERATOR_STATE + " = " + generatorCaseCount + ";",
-        "  function $jscomp$generator$impl(" + GENERATOR_NEXT_ARG + ", ",
-        "      " + GENERATOR_THROW_ARG + ") {",
-        "    while (1) switch (" + GENERATOR_STATE + ") {",
-        "      case " + generatorCaseCount + ":",
-        "      default:",
-        "        return {value: undefined, done: true};",
-        "    }",
-        "  }",
-        // TODO(tbreisacher): Remove this cast if we start returning an actual Generator object.
-        "  var iterator = /** @type {!Generator<?>} */ ({",
-        "    next: function(arg) { return $jscomp$generator$impl(arg, undefined); },",
-        "    throw: function(arg) { return $jscomp$generator$impl(undefined, arg); },",
-        // TODO(tbreisacher): Implement Generator.return:
-        // http://www.ecma-international.org/ecma-262/6.0/#sec-generator.prototype.return
-        "    return: function(arg) { throw Error('Not yet implemented'); },",
-        "  });",
-        "  $jscomp.initSymbolIterator();",
-        "  /** @this {!Generator<?>} */",
-        "  iterator[Symbol.iterator] = function() { return this; };",
-        "  return iterator;",
-        "}"))
-    .getFirstChild() // function
-    .getLastChild().detach();
+    Node genBlock =
+        compiler
+            .parseSyntheticCode(
+                Joiner.on('\n')
+                    .join(
+                        "function generatorBody() {",
+                        "  var " + GENERATOR_STATE + " = " + generatorCaseCount + ";",
+                        "  function $jscomp$generator$impl(",
+                        "      " + GENERATOR_ACTION_ARG + ",",
+                        "      " + GENERATOR_NEXT_ARG + ",",
+                        "      " + GENERATOR_THROW_ARG + ") {",
+                        "    while (1) switch (" + GENERATOR_STATE + ") {",
+                        "      case " + generatorCaseCount + ":",
+                        "      default:",
+                        "        return {value: undefined, done: true};",
+                        "    }",
+                        "  }",
+                        // TODO(tbreisacher): Remove this cast if we start returning an actual
+                        // Generator object.
+                        "  var iterator = /** @type {!Generator<?>} */ ({",
+                        "    next: function(arg) {",
+                        "      return $jscomp$generator$impl("
+                            + GENERATOR_ACTION_NEXT
+                            + ", arg, undefined);",
+                        "    },",
+                        "    throw: function(arg) {",
+                        "      return $jscomp$generator$impl("
+                            + GENERATOR_ACTION_THROW
+                            + ", undefined, arg);",
+                        "    },",
+                        // TODO(tbreisacher): Implement Generator.return:
+                        // http://www.ecma-international.org/ecma-262/6.0/#sec-generator.prototype.return
+                        "    return: function(arg) { throw Error('Not yet implemented'); },",
+                        "  });",
+                        "  $jscomp.initSymbolIterator();",
+                        "  /** @this {!Generator<?>} */",
+                        "  iterator[Symbol.iterator] = function() { return this; };",
+                        "  return iterator;",
+                        "}"))
+            .getFirstChild() // function
+            .getLastChild()
+            .detach();
     generatorCaseCount++;
 
     originalGeneratorBody = n.getLastChild();

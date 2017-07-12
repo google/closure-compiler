@@ -205,6 +205,19 @@ testSuite({
       }
       return Promise.all([argCountPromise(1), argCountPromise(1, 2)]);
     }
-    f().then(v => assertObjectEquals([1, 2], v));
+    return f().then(v => assertObjectEquals([1, 2], v));
   },
+
+  testRejectWithUndefined() {
+    async function f() {
+      try {
+        await Promise.reject();
+        fail('reject did not happen');
+      } catch (e) {
+        // TODO(bradfordcsmith): e should be undefined
+      }
+      return 'success';
+    }
+    return f().then(v => assertEquals('success', v));
+  }
 });
