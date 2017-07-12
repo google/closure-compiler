@@ -2052,18 +2052,21 @@ public class Node implements Serializable {
    * Returns whether a node matches a simple or a qualified name, such as <code>x</code> or <code>
    * a.b.c</code> or <code>this.a</code>.
    */
+  @SuppressWarnings("ReferenceEquality")
   public boolean matchesQualifiedName(Node n) {
     if (n == null || n.token != token) {
       return false;
     }
     switch (token) {
       case NAME:
-        return !getString().isEmpty() && getString().equals(n.getString());
+        // ==, rather than equal as it is intern'd in setString
+        return !getString().isEmpty() && getString() == n.getString();
       case THIS:
       case SUPER:
         return true;
       case GETPROP:
-        return getLastChild().getString().equals(n.getLastChild().getString())
+        // ==, rather than equal as it is intern'd in setString
+        return getLastChild().getString() == n.getLastChild().getString()
             && getFirstChild().matchesQualifiedName(n.getFirstChild());
       default:
         return false;
