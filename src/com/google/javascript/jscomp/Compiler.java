@@ -3482,6 +3482,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final IdGenerator crossModuleIdGenerator;
     private final ImmutableMap<String, Node> defaultDefineValues;
     private final Map<String, Object> annotationMap;
+    private final ConcurrentHashMap<String, SourceMapInput> inputSourceMaps;
 
     CompilerState(Compiler compiler) {
       this.externsRoot = checkNotNull(compiler.externsRoot);
@@ -3519,6 +3520,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.crossModuleIdGenerator = compiler.crossModuleIdGenerator;
       this.defaultDefineValues = checkNotNull(compiler.defaultDefineValues);
       this.annotationMap = checkNotNull(compiler.annotationMap);
+      this.inputSourceMaps = compiler.inputSourceMaps;
     }
   }
 
@@ -3598,6 +3600,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     functionNames = compilerState.functioNames;
     defaultDefineValues = checkNotNull(compilerState.defaultDefineValues);
     annotationMap = checkNotNull(compilerState.annotationMap);
+    inputSourceMaps = compilerState.inputSourceMaps;
 
     // Reapply module names to deserialized modules
     renameModules(newModules, modules);
