@@ -344,6 +344,38 @@ public class JSDocInfoTest extends TestCase {
     assertTrue(info.isPolymerBehavior());
   }
 
+  public void testSetPolymer() {
+    JSDocInfo info = new JSDocInfo();
+    assertFalse(info.isPolymer());
+    info.setPolymer(true);
+
+    assertTrue(info.isPolymer());
+  }
+
+  public void testSetCustomElement() {
+    JSDocInfo info = new JSDocInfo();
+    assertFalse(info.isCustomElement());
+    info.setCustomElement(true);
+
+    assertTrue(info.isCustomElement());
+  }
+
+  public void testSetMixinClass() {
+    JSDocInfo info = new JSDocInfo();
+    assertFalse(info.isMixinClass());
+    info.setMixinClass(true);
+
+    assertTrue(info.isMixinClass());
+  }
+
+  public void testSetMixinFunction() {
+    JSDocInfo info = new JSDocInfo();
+    assertFalse(info.isMixinFunction());
+    info.setMixinFunction(true);
+
+    assertTrue(info.isMixinFunction());
+  }
+
   public void testSetNoAlias() {
     JSDocInfo info = new JSDocInfo();
     info.setNoAlias(true);

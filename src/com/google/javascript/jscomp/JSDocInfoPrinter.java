@@ -69,6 +69,9 @@ public final class JSDocInfoPrinter {
     //   implicitCast
     //   suppress
     //   deprecated
+    //   polymer
+    //   polymerBehavior
+    //   mixinFunction
     parts.add("/**");
 
     if (info.isExport()) {
@@ -219,6 +222,27 @@ public final class JSDocInfoPrinter {
     if (info.isDeprecated()) {
       parts.add("@deprecated " + info.getDeprecationReason());
       multiline = true;
+    }
+
+    if (info.isPolymer()) {
+      multiline = true;
+      parts.add("@polymer");
+    }
+    if (info.isPolymerBehavior()) {
+      multiline = true;
+      parts.add("@polymerBehavior");
+    }
+    if (info.isMixinFunction()) {
+      multiline = true;
+      parts.add("@mixinFunction");
+    }
+    if (info.isMixinClass()) {
+      multiline = true;
+      parts.add("@mixinClass");
+    }
+    if (info.isCustomElement()) {
+      multiline = true;
+      parts.add("@customElement");
     }
 
     parts.add("*/");

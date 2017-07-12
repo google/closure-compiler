@@ -4322,6 +4322,38 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     parse("@polymerBehavior \n@polymerBehavior*/", "extra @polymerBehavior tag");
   }
 
+  public void testParsePolymer() {
+    assertThat(parse("@polymer*/").isPolymer()).isTrue();
+  }
+
+  public void testParsePolymerExtra() {
+    parse("@polymer \n@polymer*/", "extra @polymer tag");
+  }
+
+  public void testParseCustomElement() {
+    assertThat(parse("@customElement*/").isCustomElement()).isTrue();
+  }
+
+  public void testParseCustomElementExtra() {
+    parse("@customElement \n@customElement*/", "extra @customElement tag");
+  }
+
+  public void testParseMixinClass() {
+    assertThat(parse("@mixinClass*/").isMixinClass()).isTrue();
+  }
+
+  public void testParseMixinClassExtra() {
+    parse("@mixinClass \n@mixinClass*/", "extra @mixinClass tag");
+  }
+
+  public void testParseMixinFunction() {
+    assertThat(parse("@mixinFunction*/").isMixinFunction()).isTrue();
+  }
+
+  public void testParseMixinFunctionExtra() {
+    parse("@mixinFunction \n@mixinFunction*/", "extra @mixinFunction tag");
+  }
+
   public void testParseWizaction1() {
     assertThat(parse("@wizaction*/").isWizaction()).isTrue();
   }
