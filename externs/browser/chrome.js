@@ -113,7 +113,7 @@ ChromeEvent.prototype.addRules = function(rules, callback) {};
 
 
 /**
- * @param {Array<string>} ruleIdentifiers
+ * @param {!Array<string>|undefined} ruleIdentifiers
  * @param {!function(!Array<!Rule>): void} callback
  * @see https://developer.chrome.com/extensions/events#method-Event-getRules
  */
