@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowStatementCallback;
 import com.google.javascript.rhino.IR;
@@ -52,6 +53,14 @@ class ConvertToTypedInterface implements CompilerPass {
       DiagnosticType.warning(
           "JSC_CONSTANT_WITHOUT_EXPLICIT_TYPE",
           "/** @const */-annotated values in library API should have types explicitly specified.");
+
+  private static final ImmutableSet<String> CALLS_TO_PRESERVE =
+      ImmutableSet.of(
+          "goog.provide",
+          "goog.define",
+          "goog.require",
+          "goog.module",
+          "goog.module.declareLegacyNamespace");
 
   private final AbstractCompiler compiler;
 
@@ -130,10 +139,7 @@ class ConvertToTypedInterface implements CompilerPass {
             case CALL:
               Node callee = expr.getFirstChild();
               checkState(!callee.matchesQualifiedName("goog.scope"));
-              if (!callee.matchesQualifiedName("goog.provide")
-                  && !callee.matchesQualifiedName("goog.define")
-                  && !callee.matchesQualifiedName("goog.require")
-                  && !callee.matchesQualifiedName("goog.module")) {
+              if (!CALLS_TO_PRESERVE.contains(callee.getQualifiedName())) {
                 NodeUtil.deleteNode(n, t.getCompiler());
               }
               return false;
@@ -395,14 +401,13 @@ class ConvertToTypedInterface implements CompilerPass {
           switch (expr.getToken()) {
             case CALL:
               Node callee = expr.getFirstChild();
+              checkState(CALLS_TO_PRESERVE.contains(callee.getQualifiedName()));
               if (callee.matchesQualifiedName("goog.provide")) {
                 currentFile.markProvided(expr.getLastChild().getString());
               } else if (callee.matchesQualifiedName("goog.require")) {
                 currentFile.markImportedName(expr.getLastChild().getString());
               } else if (callee.matchesQualifiedName("goog.define")) {
                 NodeUtil.deleteNode(expr.getLastChild(), compiler);
-              } else {
-                checkState(callee.matchesQualifiedName("goog.module"));
               }
               break;
             case ASSIGN:

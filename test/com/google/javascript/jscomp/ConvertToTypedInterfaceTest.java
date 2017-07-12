@@ -193,6 +193,15 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "/** @const {number} */ Foo.prototype.x;"));
   }
 
+  public void testLegacyGoogModule() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('a.b.c');",
+            "goog.module.declareLegacyNamespace();",
+            "",
+            "exports = class {};"));
+  }
+
   public void testConstructorAlias1() {
     testSame(
         LINE_JOINER.join(
