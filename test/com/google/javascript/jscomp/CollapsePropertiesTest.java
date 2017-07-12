@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CollapseProperties.NAMESPACE_REDEFINED_WARNING;
 import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_NAMESPACE_WARNING;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests {@link CollapseProperties}.
@@ -680,7 +681,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     testSame("var a = {}; /** @constructor @nocollapse */ a.b = function() {}; a = a || {};");
   }
-
 
   public void testNamespaceResetInGlobalScope4() {
     test("var a = {}; /** @constructor */ a.b = function() {}; var a = a || {};",
@@ -1587,5 +1587,238 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     test("var ns$x = {}; ns$x.y = 1; var ns = {}; ns.x$ = {}; ns.x$.y = 2; ns.x = {}; ns.x.y = 3;",
          "var ns$x$y = 1; var ns$x$0$y = 2; var ns$x$1$y = 3;");
+  }
+
+  // New Es6 Feature Tests - Some do not pass yet.
+  public void testArrowFunctionProperties() {
+    // Add property to arrow function in local scope
+    test(
+        "function a() {} () => { a.c = 5; return a.c; }",
+        "function a() {} var a$c; () => { a$c = 5; return a$c; }");
+    ;
+
+    // Reassign function property
+    test(
+        "function a() {}; a.c = 1; () => { a.c = 5; }",
+        "function a() {}; var a$c = 1; () => { a$c = 5; }");
+
+    // Arrow function assignment
+    test(
+        "var a = () => {}; function f() { a.c = 5; }",
+        "var a = () => {}; var a$c; function f() { a$c = 5; }");
+  }
+
+  public void testDestructuredProperiesObjectLit() {
+    // Using destructuring shorthand
+    test(
+        "var { a, b } = { a: {}, b: {} }; a.a = 5; var c = a.a; ",
+        //"var { a, b } = { a: {}, b: {} }; a$a = 5; var c = a$a; ");
+        "var {a:a,b:b}={a:{},b:{}};a.a=5;var c=a.a");
+
+    // Without destructuring shorthand
+    test(
+        "var { a:a, b:b } = { a: {}, b: {} }; a.a = 5; var c = a.a; ",
+        //"var { a:a, b:b } = { a: {}, b: {} }; a$a = 5; var c = a$a; ");
+        "var {a:a,b:b}={a:{},b:{}};a.a=5;var c=a.a");
+
+    // Test with greater depth
+    test(
+        "var { a, b } = { a: {}, b: {} }; a.a.a = 5; var c = a.a; var d = c.a;",
+        //"var { a, b } = { a: {}, b: {} }; a$a$a = 5; var c = a$a; var d = c$a;");
+        "var {a:a,b:b}={a:{},b:{}};a.a.a=5;var c=a.a;var d=c.a");
+  }
+
+  public void testComputedPropertyNames() {
+    // This pass should not flatten property access of the form a[b]
+
+    // Computed property in object literal - currently throws an error that COMPUTED_PROP 2 is not
+    // a string node because this feature is not yet supported by the pass
+    /*testSame(
+        LINE_JOINER.join(
+            "var a = {",
+            "  ['val' + ++i]: i,",
+            "  ['val' + ++i]: i",
+            "};",
+            "a.val1;"));*/
+
+    // Computed property method name in class
+    testSame(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  ['f'+'oo']() {",
+            "    return 1",
+            "  }",
+            "}",
+            "var bar = new Bar()",
+            "bar.foo();"));
+
+    // Computed property method name in class - no concatination
+    testSame(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  ['foo']() {",
+            "    return 1",
+            "  }",
+            "}",
+            "var bar = new Bar()",
+            "bar.foo();"));
+  }
+
+  // What should be the ideal behavior of these? Should a function such as Bar.getB() be renamed to
+  // Bar$getB() and be removed from the class scope?
+  public void testClassProperties() {
+    // Call class method inside class scope
+    testSame(
+        LINE_JOINER.join(
+            "function getA() {};",
+            "class Bar {",
+            "  constructor(){}",
+            "  getA() {",
+            "    return 1;",
+            "  }",
+            "  getB(x) {",
+            "    this.getA();",
+            "  }",
+            "}"));
+
+    // Call class method outside class scope
+    testSame(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  getB(x) {}",
+            "}",
+            "var too;",
+            "var too = new Bar();",
+            "too.getB(too);"));
+
+    // Get and set methods
+    testSame(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(x) {",
+            "    this.x = x;",
+            "  }",
+            "  get foo() {",
+            "    return this.x;",
+            "  }",
+            "  set foo(xIn) {",
+            "    x = xIn;",
+            "  }",
+            "}",
+            "var barObj = new Bar(1);",
+            "bar.foo();",
+            "bar.foo(2);"));
+
+    // Static methods
+    /*testSame(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  static double(n) {",
+            "    return n*2",
+            "  }",
+            "}",
+            "Bar.double(1);"));*/
+    test(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  static double(n) {",
+            "    return n*2",
+            "  }",
+            "}",
+            "Bar.double(1);"),
+        LINE_JOINER.join(
+            "class Bar {",
+            "  static double(n) {",
+            "    return n*2",
+            "  }",
+            "}",
+            "Bar$double(1);"));
+  }
+
+  public void testSuperExtern() {
+    testSame(
+        LINE_JOINER.join(
+            "class Foo {",
+            "  constructor(){",
+            "    this.x = x; ",
+            "  }",
+            "  getX() {",
+            "    return this.x;",
+            "  }",
+            "}",
+            "class Bar extends Foo {",
+            "  constructor(x, y) {",
+            "    super(x);",
+            "    this.y = y;",
+            "  }",
+            "  getX() {",
+            "    return super.getX() + this.y;",
+            "  }",
+            "}",
+            "let too = new Bar();",
+            "too.getX();"));
+
+  }
+
+  // check against existing test cases
+  public void testPropertyMethodAssignment() {
+    // ES5 version - currently throws an error (Not true that aggregate warnings (<[JSC_UNSAFE_THIS.
+    // dangerous use of this in static method foo.myFunc at testcode line 4 : 11]>) is empty)
+    setLanguage(LanguageMode.ECMASCRIPT3, LanguageMode.ECMASCRIPT3);
+    /*test(
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  bar: 1, ",
+            "  myFunc: function myFunc() {",
+            "    return this.bar",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  bar: 1, ",
+            "  foo$myFunc: function myFunc() {",
+            "    return this.bar",
+            "  }",
+            "};",
+            "foo$myFunc();"));*/
+
+    // ES6 version - currently throws an error (Not true that aggregate warnings (<[JSC_UNSAFE_THIS.
+    // dangerous use of this in static method foo.myFunc at testcode line 4 : 11]>) is empty)
+    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT_2015);
+    /*test(
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  bar: 1, ",
+            "  myFunc() {",
+            "    return this.bar",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  bar: 1, ",
+            "  myFunc() {",
+            "    return this.bar",
+            "  }",
+            "};",
+            "foo$myFunc();"));*/
+  }
+
+  public void testLetConstObjectAssignmentProperties() {
+    test(
+        "let a = {}; a.b = {}; a.b.c = {}; let d = 1; d = a.b.c;",
+        //"let a$b$c = {}; let d = 1; d = a$b$c;");
+        "let a={};var a$b$c={};let d=1;d=a$b$c");
+  }
+
+  public void testTemplateStrings() {
+    testSame(
+        LINE_JOINER.join(
+            "const name = 'foo';",
+            "function f() { return `Hi ${name}!`; }"));
   }
 }
