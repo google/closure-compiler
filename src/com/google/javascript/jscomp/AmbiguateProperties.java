@@ -137,6 +137,9 @@ class AmbiguateProperties implements CompilerPass {
     this.reservedNonFirstCharacters = reservedNonFirstCharacters;
 
     this.invalidatingTypes = new InvalidatingTypes.Builder(compiler.getTypeIRegistry())
+        // TODO(sdh): consider allowing ambiguation on properties of global this
+        // (we already reserve extern'd names, so this should be safe).
+        .disallowGlobalThis()
         .addTypesInvalidForPropertyRenaming()
         .addAllTypeMismatches(compiler.getTypeMismatches())
         .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
@@ -313,9 +316,9 @@ class AmbiguateProperties implements CompilerPass {
    * its related types to the given bit set.
    */
   private void addRelatedInstance(FunctionTypeI constructor, JSTypeBitSet related) {
-    // TODO(user): A constructor which doesn't have an instance type
-    // (e.g. it's missing the @constructor annotation) should be an invalidating
-    // type which doesn't reach this code path.
+    // TODO(user): Make a constructor which doesn't have an instance type
+    // (e.g. it's missing the @constructor annotation) an invalidating type which
+    // doesn't reach this code path.
     if (constructor.hasInstanceType()) {
       ObjectTypeI instanceType = constructor.getInstanceType();
       related.set(getIntForType(instanceType.getPrototypeObject()));

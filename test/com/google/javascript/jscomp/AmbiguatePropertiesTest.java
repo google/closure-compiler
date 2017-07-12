@@ -1024,4 +1024,13 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
             "var bar = new Bar();",
             "bar.a();"));
   }
+
+  public void testEnum() {
+    // TODO(sdh): Consider removing this test if we decide that enum objects are
+    // okay to ambiguate (in which case, this would rename to Foo.a).
+    testSame(
+        LINE_JOINER.join(
+            "/** @enum {string} */ var Foo = {X: 'y'};",
+            "var x = Foo.X"));
+  }
 }

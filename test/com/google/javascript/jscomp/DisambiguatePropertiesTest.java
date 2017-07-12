@@ -453,11 +453,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "/** @return {Object} */",
         "var U = function() { return {} };",
         "U().blah();");
-
-    this.mode = TypeInferenceMode.OTI_ONLY;
-    testSets(js, "{blah=[[Foo.prototype]]}");
-
-    this.mode = TypeInferenceMode.NTI_ONLY;
     testSets(js, "{}");
   }
 

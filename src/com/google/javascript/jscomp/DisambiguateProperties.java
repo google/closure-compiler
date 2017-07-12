@@ -81,9 +81,6 @@ import java.util.regex.Pattern;
  *
  */
 class DisambiguateProperties implements CompilerPass {
-  // To prevent the logs from filling up, we cap the number of warnings
-  // that we tell the user to fix per-property.
-  private static final int MAX_INVALIDATION_WARNINGS_PER_PROPERTY = 10;
 
   private static final Logger logger = Logger.getLogger(
       DisambiguateProperties.class.getName());
@@ -107,7 +104,8 @@ class DisambiguateProperties implements CompilerPass {
   }
 
   private final AbstractCompiler compiler;
-  private final Set<TypeI> invalidatingTypes;
+
+  private final InvalidatingTypes invalidatingTypes;
   private final TypeIRegistry registry;
   // Used as a substitute for null in gtwpCache. The method gtwpCacheGet returns
   // null to indicate that an element wasn't present.
@@ -204,7 +202,7 @@ class DisambiguateProperties implements CompilerPass {
     void addType(TypeI type, TypeI relatedType) {
       checkState(!skipRenaming, "Attempt to record skipped property: %s", name);
       TypeI top = getTypeWithProperty(this.name, type);
-      if (isInvalidatingType(top)) {
+      if (invalidatingTypes.isInvalidating(top)) {
         invalidate();
         return;
       }
@@ -309,7 +307,7 @@ class DisambiguateProperties implements CompilerPass {
      */
     boolean scheduleRenaming(Node node, TypeI type) {
       if (!skipRenaming) {
-        if (isInvalidatingType(type)) {
+        if (invalidatingTypes.isInvalidating(type)) {
           invalidate();
           return false;
         }
@@ -327,21 +325,17 @@ class DisambiguateProperties implements CompilerPass {
     this.registry = compiler.getTypeIRegistry();
     this.BOTTOM_OBJECT =
         this.registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE).toMaybeObjectType();
-    this.invalidatingTypes = new HashSet<>(ImmutableSet.of(
-        registry.getNativeType(JSTypeNative.ALL_TYPE),
-        registry.getNativeType(JSTypeNative.NO_OBJECT_TYPE),
-        registry.getNativeType(JSTypeNative.NO_TYPE),
-        registry.getNativeType(JSTypeNative.FUNCTION_PROTOTYPE),
-        registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE),
-        registry.getNativeType(JSTypeNative.OBJECT_PROTOTYPE),
-        registry.getNativeType(JSTypeNative.TOP_LEVEL_PROTOTYPE),
-        registry.getNativeType(JSTypeNative.UNKNOWN_TYPE)));
+
     this.propertiesToErrorFor = propertiesToErrorFor;
-    if (!this.propertiesToErrorFor.isEmpty()) {
-      this.invalidationMap = LinkedHashMultimap.create();
-    } else {
-      this.invalidationMap = null;
-    }
+    this.invalidationMap =
+        propertiesToErrorFor.isEmpty() ? null : LinkedHashMultimap.<TypeI, JSError>create();
+
+    this.invalidatingTypes = new InvalidatingTypes.Builder(registry)
+        .addTypesInvalidForPropertyRenaming()
+        .addAllTypeMismatches(compiler.getTypeMismatches(), this.invalidationMap)
+        .addAllTypeMismatches(compiler.getImplicitInterfaceUses(), this.invalidationMap)
+        .allowEnumsAndScalars()
+        .build();
   }
 
   @Override
@@ -349,18 +343,6 @@ class DisambiguateProperties implements CompilerPass {
     checkState(compiler.getLifeCycleStage() == LifeCycleStage.NORMALIZED);
     this.ancestorInterfaces = new HashMap<>();
     this.gtwpCache = new HashMap<>();
-    // TypeValidator records places where a type A is used in a context that
-    // expects a type B.
-    // For each pair (A, B), here we mark both A and B as types whose properties
-    // cannot be renamed.
-    for (TypeMismatch mis : compiler.getTypeMismatches()) {
-      recordInvalidatingType(mis.typeA, mis);
-      recordInvalidatingType(mis.typeB, mis);
-    }
-    for (TypeMismatch mis : compiler.getImplicitInterfaceUses()) {
-      recordInvalidatingType(mis.typeA, mis);
-      recordInvalidatingType(mis.typeB, mis);
-    }
     // Gather names of properties in externs; these properties can't be renamed.
     NodeTraversal.traverseEs6(compiler, externs, new FindExternProperties());
     // Look at each unquoted property access and decide if that property will
@@ -369,52 +351,6 @@ class DisambiguateProperties implements CompilerPass {
     // Do the actual renaming.
     renameProperties();
   }
-
-  private void recordInvalidationError(TypeI t, TypeMismatch mis) {
-    if (!t.isObjectType()) {
-      return;
-    }
-    if (invalidationMap != null) {
-      Collection<JSError> errors = this.invalidationMap.get(t);
-      if (errors.size() < MAX_INVALIDATION_WARNINGS_PER_PROPERTY) {
-        JSError error = mis.src;
-        if (error.getType().equals(TypeValidator.TYPE_MISMATCH_WARNING)
-            && error.description.isEmpty()) {
-          String msg = "Implicit use of type " + mis.typeA + " as " + mis.typeB;
-          error = JSError.make(error.node, TypeValidator.TYPE_MISMATCH_WARNING, msg);
-        }
-        errors.add(error);
-      }
-    }
-  }
-
-  /**
-   * Invalidates the given type, so that no properties on it will be renamed.
-   */
-  private void recordInvalidatingType(TypeI type, TypeMismatch mis) {
-    type = type.restrictByNotNullOrUndefined();
-    if (type.isUnionType()) {
-      for (TypeI alt : type.getUnionMembers()) {
-        recordInvalidatingType(alt, mis);
-      }
-    } else if (type.isEnumElement()) {
-      recordInvalidatingType(type.getEnumeratedTypeOfEnumElement(), mis);
-    } else {
-      addInvalidatingType(type);
-      recordInvalidationError(type, mis);
-      ObjectTypeI objType = type == null ? null : type.toMaybeObjectType();
-      ObjectTypeI proto = objType == null ? null : objType.getPrototypeObject();
-      if (objType != null && proto != null) {
-        addInvalidatingType(proto);
-        recordInvalidationError(proto, mis);
-      }
-      if (objType != null
-          && objType.isConstructor() && objType.isFunctionType()) {
-        addInvalidatingType(objType.toMaybeFunctionType().getInstanceType());
-      }
-    }
-  }
-
 
   /** Returns the property for the given name, creating it if necessary. */
   protected Property getProperty(String name) {
@@ -438,7 +374,7 @@ class DisambiguateProperties implements CompilerPass {
         Property prop = getProperty(n.getLastChild().getString());
         // TODO(dimvar): invalidating here when isStructuralInterfacePrototype is true is
         // kind of arbitrary. We should only do it when the @record is implicitly implemented.
-        if (isInvalidatingType(recvType) || isStructuralInterfacePrototype(recv)) {
+        if (invalidatingTypes.isInvalidating(recvType) || isStructuralInterfacePrototype(recv)) {
           prop.invalidate();
         } else if (!prop.skipRenaming) {
           prop.addTypeToSkip(recvType);
@@ -664,7 +600,7 @@ class DisambiguateProperties implements CompilerPass {
      */
     private TypeI processProperty(NodeTraversal t, Property prop, TypeI type, TypeI relatedType) {
       type = type.restrictByNotNullOrUndefined();
-      if (prop.skipRenaming || isInvalidatingType(type)) {
+      if (prop.skipRenaming || invalidatingTypes.isInvalidating(type)) {
         return null;
       }
 
@@ -680,7 +616,7 @@ class DisambiguateProperties implements CompilerPass {
         return firstType;
       } else {
         TypeI topType = getTypeWithProperty(prop.name, type);
-        if (isInvalidatingType(topType)) {
+        if (invalidatingTypes.isInvalidating(topType)) {
           return null;
         }
         prop.addType(type, relatedType);
@@ -796,44 +732,11 @@ class DisambiguateProperties implements CompilerPass {
     return ret;
   }
 
-  private void addInvalidatingType(TypeI type) {
-    checkState(!type.isUnionType());
-    invalidatingTypes.add(type);
-  }
-
   private TypeI getType(Node node) {
     if (node == null || node.getTypeI() == null) {
       return registry.getNativeType(JSTypeNative.UNKNOWN_TYPE);
     }
     return node.getTypeI();
-  }
-
-  /**
-   * Returns true if a field reference on this type will invalidate all
-   * references to that field as candidates for renaming. This is true if the
-   * type is unknown or all-inclusive, as variables with such a type could be
-   * references to any object.
-   */
-  private boolean isInvalidatingType(TypeI type) {
-    if (type == null
-        || invalidatingTypes.contains(type)
-        || type.isUnknownType() /* unresolved types */) {
-      return true;
-    }
-    ObjectTypeI objType = type.toMaybeObjectType();
-    if (objType != null) {
-      FunctionTypeI ft = objType.toMaybeFunctionType();
-      // TODO(dimvar): types of most object literals are considered anonymous objects, and as such,
-      // a property of an object literal prevents all properties with the same name from being
-      // disambiguated. In OTI, this might be hard to change, but in NTI, it is easy to change
-      // isUnknownObject to return false for object literals. I deliberately followed the behavior
-      // of OTI to help with the migration, but can revisit in the future to improve
-      // disambiguation.
-      return objType.isAmbiguousObject()
-          // Invalidate constructors of already-invalidated types
-          || (ft != null && ft.isConstructor() && isInvalidatingType(ft.getInstanceType()));
-    }
-    return false;
   }
 
   /**
