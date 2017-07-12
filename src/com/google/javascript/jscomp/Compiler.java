@@ -3531,6 +3531,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       public Void call() throws Exception {
         Tracer tracer = newTracer("serializeCompilerState");
         objectOutputStream.writeObject(new CompilerState(Compiler.this));
+        if (typeRegistry != null) {
+          typeRegistry.saveContents(objectOutputStream);
+        }
         stopTracer(tracer, "serializeCompilerState");
         return null;
       }
@@ -3551,6 +3554,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       public CompilerState call() throws Exception {
         Tracer tracer = newTracer("deserializeCompilerState");
         CompilerState compilerState = (CompilerState) objectInputStream.readObject();
+        if (compilerState.typeRegistry != null) {
+          compilerState.typeRegistry.restoreContents(objectInputStream);
+        }
         stopTracer(tracer, "deserializeCompilerState");
         return compilerState;
       }

@@ -47,6 +47,7 @@ import static com.google.javascript.rhino.jstype.JSTypeNative.NO_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.UNKNOWN_TYPE;
 import static com.google.javascript.rhino.jstype.JSTypeNative.VOID_TYPE;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
@@ -66,6 +67,9 @@ import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.TypeIRegistry;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -175,8 +179,8 @@ public class JSTypeRegistry implements TypeIRegistry {
   // A map of properties to each reference type on which those
   // properties have been declared. Each type has a unique name used
   // for de-duping.
-  private final Map<String, Map<String, ObjectType>>
-      eachRefTypeIndexedByProperty = new LinkedHashMap<>();
+  private transient Map<String, Map<String, ObjectType>> eachRefTypeIndexedByProperty =
+      new LinkedHashMap<>();
 
   // A map of properties to the greatest subtype on which those properties have
   // been declared. This is filled lazily from the types declared in
@@ -185,7 +189,7 @@ public class JSTypeRegistry implements TypeIRegistry {
        new HashMap<>();
 
   // A map from interface name to types that implement it.
-  private final Multimap<String, FunctionTypeI> interfaceToImplementors =
+  private transient Multimap<String, FunctionTypeI> interfaceToImplementors =
       LinkedHashMultimap.create();
 
   // All the unresolved named types.
@@ -2030,5 +2034,31 @@ public class JSTypeRegistry implements TypeIRegistry {
    */
   public void clearTemplateTypeNames() {
     templateTypes.clear();
+  }
+
+  /**
+   * Saves the derived state.
+   *
+   * Note: This should be only used when serializing the compiler state and needs to be done at the
+   * end, after serializing CompilerState.
+   */
+  @SuppressWarnings("unchecked")
+  @GwtIncompatible("ObjectOutputStream")
+  public void saveContents(ObjectOutputStream out) throws IOException {
+    out.writeObject(eachRefTypeIndexedByProperty);
+    out.writeObject(interfaceToImplementors);
+  }
+
+  /**
+   * Restores the derived state.
+   *
+   * Note: This should be only used when deserializing the compiler state and needs to be done at
+   * the end, after deserializing CompilerState.
+   */
+  @SuppressWarnings("unchecked")
+  @GwtIncompatible("ObjectInputStream")
+  public void restoreContents(ObjectInputStream in) throws IOException, ClassNotFoundException {
+    eachRefTypeIndexedByProperty = (Map<String, Map<String, ObjectType>>) in.readObject();
+    interfaceToImplementors = (Multimap<String, FunctionTypeI>) in.readObject();
   }
 }
