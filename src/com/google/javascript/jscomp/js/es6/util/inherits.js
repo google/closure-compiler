@@ -67,7 +67,11 @@ $jscomp.inherits = function(childCtor, parentCtor) {
     if (Object.defineProperties) {
       var descriptor = Object.getOwnPropertyDescriptor(parentCtor, p);
       if (descriptor) {
-        Object.defineProperty(childCtor, p, descriptor);
+        try {
+          Object.defineProperty(childCtor, p, descriptor);
+        } catch (err) {
+          console.error('Property ' + p + ' can\'t be inherited: ' + err);
+        }
       }
     } else {
       // Pre-ES5 browser. Just copy with an assignment.
