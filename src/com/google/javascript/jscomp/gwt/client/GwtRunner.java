@@ -320,7 +320,7 @@ public final class GwtRunner implements EntryPoint {
   private static void applyDefaultOptions(CompilerOptions options) {
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     WarningLevel.DEFAULT.setOptionsForWarningLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
   }
 
