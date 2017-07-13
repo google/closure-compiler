@@ -56,7 +56,7 @@ final class MustBeReachingVariableDef extends
     this.compiler = compiler;
     this.escaped = new HashSet<>();
     this.allVarsInFn = new HashMap<>();
-    computeEscaped(jsScope.getParent(), jsScope, escaped, compiler, scopeCreator);
+    computeEscapedEs6(jsScope.getParent(), escaped, compiler, scopeCreator);
     NodeUtil.getAllVarsDeclaredInFunction(
         allVarsInFn, compiler, scopeCreator, jsScope.getParent());
   }

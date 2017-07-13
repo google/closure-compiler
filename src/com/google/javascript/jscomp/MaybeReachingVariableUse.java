@@ -61,7 +61,7 @@ class MaybeReachingVariableUse extends
 
     // TODO(user): Maybe compute it somewhere else and re-use the escape
     // local set here.
-    computeEscaped(jsScope.getParent(), jsScope, escaped, compiler, scopeCreator);
+    computeEscapedEs6(jsScope.getParent(), escaped, compiler, scopeCreator);
     NodeUtil.getAllVarsDeclaredInFunction(allVarsInFn, compiler, scopeCreator, jsScope.getParent());
   }
 

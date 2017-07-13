@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -593,33 +594,31 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
   }
 
   /**
-   * Alternate implementation of compute escaped that accepts the child scope and the current
-   * jsScope to help us access both the function and function body scopes.
+   * Alternate implementation of compute escaped for ES6.
+   *
+   * It should only be run when the jsScope is a function scope.
    *
    * The definition of escaped are
    *   1. Exported variables as they can be needed after the script terminates.
-   *   2. Names of named functions because in JavaScript, <i>function foo(){}</i> does not kill
-   *       <i>foo</i> in the dataflow.
+   *   2. Names of named functions because in JavaScript, function foo(){} does not kill
+   *       foo in the dataflow.
    *
-   * @param jsScopeChild If jsScope is a function scope, jsScopeChild is the scope for the body of
-   *     that function. If not, jsScopeChild is null.
+   *
    */
-  static void computeEscaped(
+  static void computeEscapedEs6(
       final Scope jsScope,
-      final Scope jsScopeChild,
       final Set<Var> escaped,
       AbstractCompiler compiler,
       Es6SyntacticScopeCreator scopeCreator) {
+
+    checkArgument(jsScope.isFunctionScope());
 
     AbstractPostOrderCallback finder =
         new AbstractPostOrderCallback() {
           @Override
           public void visit(NodeTraversal t, Node n, Node parent) {
 
-            Node enclosingBlock = NodeUtil.getEnclosingScopeRoot(n);
-            if (jsScope.isFunctionScope()) {
-              enclosingBlock = NodeUtil.getEnclosingFunction(n);
-            }
+            Node enclosingBlock = NodeUtil.getEnclosingFunction(n);
             if (jsScope.getRootNode() == enclosingBlock || !n.isName() || parent.isFunction()) {
               return;
             }
@@ -627,10 +626,8 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
             String name = n.getString();
             Var var = t.getScope().getVar(name);
             if (var != null) {
-              Node enclosingScopeNode = NodeUtil.getEnclosingScopeRoot(var.getNode());
-              if (jsScope.isFunctionScope()) {
-                enclosingScopeNode = NodeUtil.getEnclosingFunction(var.getNode());
-              }
+              Node enclosingScopeNode = NodeUtil.getEnclosingFunction(var.getNode());
+
               if (enclosingScopeNode == jsScope.getRootNode()) {
                 escaped.add(var);
               }

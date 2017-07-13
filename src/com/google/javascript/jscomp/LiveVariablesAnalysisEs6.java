@@ -144,7 +144,7 @@ class LiveVariablesAnalysisEs6
     this.escaped = new HashSet<>();
     this.scopeVariables = new HashMap<>();
     this.allVarsInFn = new HashMap<>();
-    computeEscaped(jsScope, jsScopeChild, escaped, compiler, scopeCreator);
+    computeEscapedEs6(jsScope, escaped, compiler, scopeCreator);
     NodeUtil.getAllVarsDeclaredInFunction(allVarsInFn, compiler, scopeCreator, jsScope);
     addScopeVariables();
   }
@@ -329,7 +329,7 @@ class LiveVariablesAnalysisEs6
     // to the function body.
     if (localScope.isFunctionBlockScope()) {
       local = localScope.isDeclaredInFunctionBlockOrParameter(name);
-    } else if (jsScopeChild != null && localScope == jsScope) {
+    } else if (localScope == jsScope) {
       local = jsScopeChild.isDeclaredInFunctionBlockOrParameter(name);
     } else {
       local = localScope.isDeclared(name, false);
@@ -350,27 +350,15 @@ class LiveVariablesAnalysisEs6
    * escaped set.
    */
   void markAllParametersEscaped() {
-    if (jsScope.isFunctionScope()) {
-      Node paramList = NodeUtil.getFunctionParameters(jsScope.getRootNode());
-      for (Node arg = paramList.getFirstChild(); arg != null; arg = arg.getNext()) {
-        escaped.add(jsScope.getVar(arg.getString()));
-      }
-    } else {
-      Node enclosingFunction = NodeUtil.getEnclosingFunction(jsScope.getRootNode());
-      Node paramList = NodeUtil.getFunctionParameters(enclosingFunction);
-      for (Node arg = paramList.getFirstChild(); arg != null; arg = arg.getNext()) {
-        escaped.add(jsScope.getVar(arg.getString()));
-      }
+    Node paramList = NodeUtil.getFunctionParameters(jsScope.getRootNode());
+    for (Node arg = paramList.getFirstChild(); arg != null; arg = arg.getNext()) {
+      escaped.add(jsScope.getVar(arg.getString()));
     }
   }
 
   private boolean isArgumentsName(Node n) {
     boolean childDeclared;
-    if (jsScopeChild != null) {
-      childDeclared = jsScopeChild.isDeclared(ARGUMENT_ARRAY_ALIAS, false);
-    } else {
-      childDeclared = true;
-    }
+    childDeclared = jsScopeChild.isDeclared(ARGUMENT_ARRAY_ALIAS, false);
     return n.isName()
         && n.getString().equals(ARGUMENT_ARRAY_ALIAS)
         && (!jsScope.isDeclared(ARGUMENT_ARRAY_ALIAS, false) || !childDeclared);
