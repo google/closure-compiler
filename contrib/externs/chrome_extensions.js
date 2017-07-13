@@ -11049,7 +11049,15 @@ chrome.declarativeContent.RequestContentScriptInstanceType;
  * }}
  * @see https://developer.chrome.com/extensions/declarativeContent#type-PageStateMatcher
  */
-chrome.declarativeContent.PageStateMatcher;
+chrome.declarativeContent.PageStateMatcherLiteral;
+
+
+/**
+ * @constructor
+ * @param {?chrome.declarativeContent.PageStateMatcherLiteral=} literalValue
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-PageStateMatcher
+ */
+chrome.declarativeContent.PageStateMatcher = function(literalValue) {};
 
 
 /**
