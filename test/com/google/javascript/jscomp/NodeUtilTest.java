@@ -25,6 +25,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
@@ -2491,6 +2492,7 @@ public final class NodeUtilTest extends TestCase {
     Node ast = parse(fnString);
     Node functionNode = getFunctionNode(fnString);
     Compiler compiler = new Compiler();
+    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
     ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
     Scope globalScope = Scope.createGlobalScope(ast);
     Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
@@ -2511,6 +2513,7 @@ public final class NodeUtilTest extends TestCase {
     Node ast = parse(fnString);
     Node functionNode = getFunctionNode(fnString); // Will get the first function
     Compiler compiler = new Compiler();
+    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
     ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
     Scope globalScope = Scope.createGlobalScope(ast);
     Scope functionScope = scopeCreator.createScope(functionNode, globalScope);

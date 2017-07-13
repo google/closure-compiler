@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import junit.framework.TestCase;
@@ -168,6 +169,7 @@ public final class MustBeReachingVariableDefTest extends TestCase {
    */
   private void computeDefUse(String src) {
     Compiler compiler = new Compiler();
+    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
     Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
     src = "function _FUNCTION(param1, param2){" + src + "}";
     Node script = compiler.parseTestCode(src);

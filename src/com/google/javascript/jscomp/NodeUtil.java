@@ -5078,6 +5078,7 @@ public final class NodeUtil {
       final Scope scope){
 
     checkState(scope.isFunctionScope());
+    checkState(compiler.getLifeCycleStage().isNormalized());
 
     ScopedCallback finder = new ScopedCallback() {
       @Override
