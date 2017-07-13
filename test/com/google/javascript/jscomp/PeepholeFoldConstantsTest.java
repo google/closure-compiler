@@ -1374,6 +1374,29 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
     testSame("Object.defineProperties(a, {anything:1})");
   }
 
+  public void testES6Features() {
+    test("var x = {[undefined != true] : 1};", "var x = {[true] : 1};");
+    test("let x = false && y;", "let x = false;");
+    test("const x = null == undefined", "const x = true");
+    test("var [a, , b] = [false+1, true+1, ![]]", "var [a, , b] = [1, 2, false]");
+    test("var x = () =>  true || x;", "var x = () => true;");
+    test(
+        "function foo(x = (1 !== void 0), y) {return x+y;}",
+        "function foo(x = true, y) {return x+y;}");
+    test(
+        LINE_JOINER.join(
+            "class Foo {",
+            "  constructor() {this.x = null <= null;}",
+            "}"),
+        LINE_JOINER.join(
+            "class Foo {",
+            "  constructor() {this.x = true;}",
+            "}"));
+    test(
+        "function foo() {return `${false && y}`}",
+        "function foo() {return `${false}`}");
+  }
+
   private static final ImmutableList<String> LITERAL_OPERANDS =
       ImmutableList.of(
           "null",
