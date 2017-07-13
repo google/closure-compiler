@@ -106,10 +106,13 @@ public final class RefactoringDriver {
     options.setCheckSuspiciousCode(true);
     options.setCheckSymbols(true);
     options.setCheckTypes(true);
-    options.setClosurePass(true);
+    options.setBrokenClosureRequiresLevel(CheckLevel.OFF);
+    // TODO(bangert): Remove this -- we want to rewrite code before closure syntax is removed.
+    // Unfortunately, setClosurePass is required, or code doesn't type check.
+    options.setClosurePass(true); 
     options.setGenerateExports(true);
-    options.setPreserveGoogProvidesAndRequires(true);
-
+    options.setPreserveClosurePrimitives(true);
+    
     options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);

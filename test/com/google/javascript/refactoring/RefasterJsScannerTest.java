@@ -19,6 +19,7 @@ package com.google.javascript.refactoring;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.javascript.jscomp.Compiler;
@@ -31,7 +32,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
-
 
 /**
  * Unit tests for {RefasterJsScanner}.
@@ -727,6 +727,95 @@ public class RefasterJsScannerTest {
     assertChanges(externs, originalCode, null, template);
   }
 
+  @Test
+  public void test_importConstGoogRequire() throws Exception {
+    String externs = "";
+    String originalCode =
+        Joiner.on('\n').join(
+            "goog.module('testcase');",
+            "",
+            "function f() { var loc = 'str'; }");
+    String expectedCode =
+        Joiner.on('\n').join(
+        "goog.module('testcase');",
+            "const foo = goog.require('goog.foo');",
+            "",
+            "function f() { var loc = foo.f(); }");
+    String template =
+        Joiner.on('\n').join(
+            "/**",
+            "* +require {goog.foo}",
+            "*/",
+            "function before_foo() {",
+            "  var a = 'str';",
+            "};",
+            "function after_foo() {",
+            "  var a = goog.foo.f();",
+            "}");
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
+  @Test
+  public void test_importConstGoogRequireMultipleImports() throws Exception {
+    String externs = "";
+    String originalCode =
+        Joiner.on('\n').join(
+        "goog.module('testcase');",
+            "const alpha = goog.require('goog.alpha');",
+            "const omega = goog.require('goog.omega');",
+            "",
+            "function f() { var loc = 'str'; }");
+    String expectedCode =
+        Joiner.on('\n').join(
+        "goog.module('testcase');",
+            "const alpha = goog.require('goog.alpha');",
+            "const foo = goog.require('goog.foo');",
+            "const omega = goog.require('goog.omega');",
+            "",
+            "function f() { var loc = foo.f(); }");
+    String template =
+        Joiner.on('\n').join(
+            "/**",
+            "* +require {goog.foo}",
+            "*/",
+            "function before_foo() {",
+            "  var a = 'str';",
+            "};",
+            "function after_foo() {",
+            "  var a = goog.foo.f();",
+            "}");
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
+  @Test
+  public void test_importConstGoogRequireAlreadyNamed() throws Exception {
+    String externs = "";
+    String originalCode =
+        Joiner.on('\n').join(
+        "goog.module('testcase');",
+            "const bar = goog.require('goog.foo');",
+            "",
+            "var loc = 'str';");
+    String expectedCode =
+        Joiner.on('\n').join(
+        "goog.module('testcase');",
+            "const bar = goog.require('goog.foo');",
+            "",
+            "var loc = bar.f();");
+    String template =
+        Joiner.on('\n').join(
+            "/**",
+            "* +require {goog.foo}",
+            "*/",
+            "function before_foo() {",
+            "  var a = 'str';",
+            "};",
+            "function after_foo() {",
+            "  var a = goog.foo.f();",
+            "}");
+    assertChanges(externs, originalCode, expectedCode, template);
+  }
+
   private static Compiler createCompiler() {
     return new Compiler();
   }
@@ -753,10 +842,21 @@ public class RefasterJsScannerTest {
     RefasterJsScanner scanner = new RefasterJsScanner();
     scanner.loadRefasterJsTemplateFromCode(refasterJsTemplate);
 
-    RefactoringDriver driver = new RefactoringDriver.Builder(scanner)
-        .addExternsFromCode("function Symbol() {};" + externs)
-        .addInputsFromCode(originalCode)
-        .build();
+    RefactoringDriver driver =
+        new RefactoringDriver.Builder(scanner)
+            .addExternsFromCode("function Symbol() {};" + externs)
+            .addInputsFromCode(originalCode)
+            .addInputsFromCode(
+                Joiner.on('\n').join(
+                    "goog.module('goog.foo');",
+                    "/** Trivial function. \n",
+                    " * @return {string}",
+                    " */",
+                    "exports.f = function () { ",
+                    "  return 'str';",
+                    "};"),
+                "foo.js")
+            .build();
     List<SuggestedFix> fixes = driver.drive();
     String newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
         fixes, ImmutableMap.of("input", originalCode)).get("input");

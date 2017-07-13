@@ -755,7 +755,7 @@ public class CompilerOptions implements Serializable {
   public boolean closurePass;
 
   /** Do not strip goog.provide()/goog.require() calls from the code. */
-  private boolean preserveGoogProvidesAndRequires;
+  private boolean preserveClosurePrimitives;
 
   /** Processes AngularJS-specific annotations */
   boolean angularPass;
@@ -1263,7 +1263,7 @@ public class CompilerOptions implements Serializable {
     locale = null;
     markAsCompiled = false;
     closurePass = false;
-    preserveGoogProvidesAndRequires = false;
+    preserveClosurePrimitives = false;
     angularPass = false;
     polymerVersion = null;
     dartPass = false;
@@ -2426,12 +2426,27 @@ public class CompilerOptions implements Serializable {
     this.closurePass = closurePass;
   }
 
+  /** Preserve closure primitives.
+   *
+   * For now, this only preserves goog.provide(), goog.require() and goog.module() calls.
+   */
+  public void setPreserveClosurePrimitives(boolean preserveClosurePrimitives) {
+    this.preserveClosurePrimitives = preserveClosurePrimitives;
+  }
+
+  // TODO(bangert): Delete this alias once it has been deprecated for 3 months.
+  /** Preserve goog.provide(), goog.require() and goog.module() calls. */
+  @Deprecated
   public void setPreserveGoogProvidesAndRequires(boolean preserveGoogProvidesAndRequires) {
-    this.preserveGoogProvidesAndRequires = preserveGoogProvidesAndRequires;
+     setPreserveClosurePrimitives(preserveGoogProvidesAndRequires);
   }
 
   public boolean shouldPreservesGoogProvidesAndRequires() {
-    return this.preserveGoogProvidesAndRequires || this.shouldGenerateTypedExterns();
+    return this.preserveClosurePrimitives || this.shouldGenerateTypedExterns();
+  }
+
+  public boolean shouldPreserveGoogModule() {
+    return this.preserveClosurePrimitives;
   }
 
   public void setPreserveTypeAnnotations(boolean preserveTypeAnnotations) {
@@ -2874,7 +2889,7 @@ public class CompilerOptions implements Serializable {
             .add("preferSingleQuotes", preferSingleQuotes)
             .add("preferStableNames", preferStableNames)
             .add("preserveDetailedSourceInfo", preservesDetailedSourceInfo())
-            .add("preserveGoogProvidesAndRequires", preserveGoogProvidesAndRequires)
+            .add("preserveGoogProvidesAndRequires", preserveClosurePrimitives)
             .add("preserveTypeAnnotations", preserveTypeAnnotations)
             .add("prettyPrint", prettyPrint)
             .add("preventLibraryInjection", preventLibraryInjection)

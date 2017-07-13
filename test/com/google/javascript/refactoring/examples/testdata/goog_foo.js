@@ -14,16 +14,9 @@
  * limitations under the License.
  */
 
-/** @fileoverview Required pieces of Closure's base.js . */
+/** @fileoverview Mock namespace . */
 
-/** @const */
-var goog = goog || {};
+goog.module('goog.foo');
 
-/** @param {string} name */
-goog.provide = function(name) {};
-
-/** @param {string} name */
-goog.require = function(name) {};
-
-/** @param {string} name */
-goog.module = function(name) {};
+/** Does nothing. */
+exports.bar = function() {};

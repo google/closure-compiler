@@ -375,8 +375,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
   private boolean validPrimitiveCall(NodeTraversal t, Node n) {
     if (!n.getParent().isExprResult() || !t.inGlobalHoistScope()) {
-      compiler.report(t.makeError(n, INVALID_CLOSURE_CALL_ERROR));
-      return false;
+      // Ignore invalid primitives if we didn't strip module sugar.
+      if (!compiler.getOptions().shouldPreserveGoogModule()) {
+        compiler.report(t.makeError(n, INVALID_CLOSURE_CALL_ERROR));
+        return false;
+      }
     }
     return true;
   }

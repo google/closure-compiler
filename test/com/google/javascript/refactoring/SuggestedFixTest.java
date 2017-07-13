@@ -786,6 +786,85 @@ public class SuggestedFixTest {
     assertThat(replacementMap).isEmpty();
   }
 
+  @Test
+  public void testAddRequireModule() {
+    String input =
+        Joiner.on('\n').join(
+            "goog.module('js.Foo');",
+            "",
+            "/** @private */",
+            "function foo_() {",
+            "}");
+    String expected =
+        Joiner.on('\n').join(
+            "goog.module('js.Foo');",
+            "const safe = goog.require('goog.safe');",
+            "",
+            "/** @private */",
+            "function foo_() {",
+            "}");
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
+    SuggestedFix fix = new SuggestedFix.Builder().addGoogRequire(match, "goog.safe").build();
+    assertChanges(fix, "", input, expected);
+  }
+
+  @Test
+  public void testAddRequireConst() {
+    String input =
+        Joiner.on('\n').join(
+            "const bar = goog.require('goog.bar');",
+            "",
+            "/** @private */",
+            "function foo_() {};");
+    String expected =
+        Joiner.on('\n').join(
+            "const bar = goog.require('goog.bar');",
+            "const safe = goog.require('goog.safe');",
+            "",
+            "/** @private */",
+            "function foo_() {};");
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
+    SuggestedFix fix = new SuggestedFix.Builder().addGoogRequire(match, "goog.safe").build();
+    assertChanges(fix, "", input, expected);
+  }
+
+  @Test
+  public void testAddRequireModuleUnchanged() {
+    String input =
+        Joiner.on('\n').join(
+            "goog.module('js.Foo');",
+            "const safe = goog.require('goog.safe');",
+            "",
+            "/** @private */",
+            "function foo_() {};");
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
+    SuggestedFix fix = new SuggestedFix.Builder().addGoogRequire(match, "goog.safe").build();
+    assertThat(fix.getReplacements()).isEmpty();
+  }
+
+  @Test
+  public void testAddRequireModuleDifferentNameUnchanged() {
+    String input =
+        Joiner.on('\n').join(
+            "goog.module('js.Foo');",
+            "const googSafe = goog.require('goog.safe');",
+            "",
+            "/** @private */",
+            "function foo_() {};");
+    Compiler compiler = getCompiler(input);
+    Node root = compileToScriptRoot(compiler);
+    Match match = new Match(root.getFirstChild(), new NodeMetadata(compiler));
+    SuggestedFix.Builder fixBuilder = new SuggestedFix.Builder().addGoogRequire(match, "goog.safe");
+    assertThat(fixBuilder.getRequireName(match, "goog.safe")).isEqualTo("googSafe");
+    assertThat(fixBuilder.build().getReplacements()).isEmpty();
+  }
+
   private static void assertAddGoogRequire(String before, String after, String namespace) {
     Compiler compiler = getCompiler(before + after);
     Node root = compileToScriptRoot(compiler);

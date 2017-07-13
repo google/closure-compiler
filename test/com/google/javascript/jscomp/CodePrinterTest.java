@@ -2670,6 +2670,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         + "}\n"
         + "exports.fn = fn;\n";
     String expectedCode = ""
+        + "goog.module('foo.bar');\n"
         + "void 0;\n"
         + "var module$exports$foo$bar = {};\n"
         + "const STR = '3';\n"

@@ -440,7 +440,9 @@ public final class TemplateAstMatcher {
         // subsequent usages of the same named node are equivalent.
         return ast.getString().equals(this.localVarMatches.get(paramIndex));
       } else {
-        this.localVarMatches.set(paramIndex, ast.getString());
+        String originalName = ast.getOriginalName();
+        String name = (originalName != null) ? originalName : ast.getString();
+        this.localVarMatches.set(paramIndex, name);
       }
     } else if (isTemplateParameterStringLiteralNode(template)) {
       int paramIndex = (int) (template.getDouble());
