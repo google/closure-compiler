@@ -37,7 +37,8 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * An optimization pass that finds and removes dead property assignments within functions.
+ * An optimization pass that finds and removes dead property assignments within functions and
+ * classes.
  *
  * <p>This pass does not currently use the control-flow graph. It makes the following assumptions:
  * <ul>
