@@ -40,6 +40,7 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.javascript.rhino.StaticSlot;
+import com.google.javascript.rhino.TypeI;
 
 /**
  * The {@code StaticTypedSlot} interface must be implemented by variables that can
@@ -47,7 +48,7 @@ import com.google.javascript.rhino.StaticSlot;
  *
  * @param <T> The type of information stored about the slot
  */
-public interface StaticTypedSlot<T> extends StaticSlot {
+public interface StaticTypedSlot<T extends TypeI> extends StaticSlot {
   /**
    * Returns the type information, if any, for this slot.
    * @return The type or {@code null} if no type is declared for it.
