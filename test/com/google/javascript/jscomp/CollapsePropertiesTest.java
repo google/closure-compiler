@@ -521,6 +521,25 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         "var a$b = {c: 0, /** @nocollapse */ 'd': 1}; var e = a$b['d'];");
   }
 
+  public void testObjLitWithQuotedKeyThatDoesNotGetReadComputed() {
+    //quoted/computed does not get read
+    test(
+        "var a = {}; a.b = {c: 0, ['d']: 1}; var e = 1; e = a.b.c;",
+        //"var a = {}; a.b = {c: 0, ['d']: 1}; var e = 1; e = a.b.c;"
+        "var a$b$c = 0; var e = 1; e = a$b$c"); //incorrect
+
+    // quoted/computed gets read
+    test(
+        "var a = {}; a.b = {c: 0, ['d']: 1}; var e = a.b['d'];",
+        "var a$b = {c: 0, ['d']: 1}; var e = a$b['d'];");
+
+    // key collision
+    test(
+        "var a = {}; a.b = {c: 0, ['c']: 1}; var e = a.b.c;",
+        //"var a$b = {c: 0, ['c']: 1}; var e = a$b.c;");
+        "var a$b$c = 0; var e = a$b$c;"); //incorrect
+  }
+
   public void testFunctionWithQuotedPropertyThatDoesNotGetRead() {
     test("var a = {}; a.b = function() {}; a.b['d'] = 1;",
          "var a$b = function() {}; a$b['d'] = 1;");
@@ -1629,17 +1648,18 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testComputedPropertyNames() {
-    // This pass should not flatten property access of the form a[b]
-
-    // Computed property in object literal - currently throws an error that COMPUTED_PROP 2 is not
-    // a string node because this feature is not yet supported by the pass
+    // Computed property in object literal
     /*testSame(
-        LINE_JOINER.join(
-            "var a = {",
-            "  ['val' + ++i]: i,",
-            "  ['val' + ++i]: i",
-            "};",
-            "a.val1;"));*/
+    LINE_JOINER.join(
+        "var a = {",
+        "  ['val' + ++i]: i,",
+        "  ['val' + ++i]: i",
+        "};",
+        "a.val1;"));*/
+
+    test(
+        "var a = { ['val']: i, ['val']: i }; a.val;",
+        "var a = { ['val']: i, ['val']: i }; var a$val;");
 
     // Computed property method name in class
     testSame(
@@ -1809,10 +1829,22 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testLetConstObjectAssignmentProperties() {
+    // All qualified names - even for variables that are initially declared as LETS and CONSTS -
+    // are being declared as VAR statements, but this is correct because we are only
+    // collapsing for global names.
+
     test(
         "let a = {}; a.b = {}; a.b.c = {}; let d = 1; d = a.b.c;",
-        //"let a$b$c = {}; let d = 1; d = a$b$c;");
-        "let a={};var a$b$c={};let d=1;d=a$b$c");
+        "var a$b$c = {}; let d = 1; d = a$b$c;");
+
+    test("let a = {}; if(1)  { a.b = 1; }",
+         "if(1) { var a$b = 1; }");
+
+    testSame("if(1) { let a = {}; a.b = 1; }");
+
+    test(
+        "var a = {}; a.b = 1; if(1) { let a = {}; a.b = 2; }",
+        "var a$b = 1; if(1) { let a$jscomp$1 = {}; a$jscomp$1.b = 2; }");
   }
 
   public void testTemplateStrings() {
