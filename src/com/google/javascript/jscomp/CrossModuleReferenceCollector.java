@@ -59,7 +59,6 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
    */
   private final AbstractCompiler compiler;
 
-  private int statementCounter = 0;
   private TopLevelStatementDraft topLevelStatementDraft = null;
 
   /**
@@ -182,8 +181,7 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
   }
 
   private TopLevelStatementDraft initializeDraftStatement(JSModule module, Node statementNode) {
-    TopLevelStatementDraft draft =
-        new TopLevelStatementDraft(statementCounter++, module, statementNode);
+    TopLevelStatementDraft draft = new TopLevelStatementDraft(module, statementNode);
     // Determine whether this statement declares a name or not.
     // If so, save its name node and value node, if any.
     if (statementNode.isVar()) {
@@ -351,9 +349,6 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
   /** Represents a top-level statement and the references to global names it contains. */
   final class TopLevelStatement {
 
-    /** 0-based index indicating original order of this statement in the source. */
-    private final int originalOrder;
-
     private final JSModule module;
     private final Node statementNode;
     private final List<Reference> nonDeclarationReferences;
@@ -361,16 +356,11 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
     private final Node declaredValueNode;
 
     TopLevelStatement(TopLevelStatementDraft draft) {
-      this.originalOrder = draft.originalOrder;
       this.module = draft.module;
       this.statementNode = draft.statementNode;
       this.nonDeclarationReferences = Collections.unmodifiableList(draft.nonDeclarationReferences);
       this.declaredNameReference = draft.declaredNameReference;
       this.declaredValueNode = draft.declaredValueNode;
-    }
-
-    int getOriginalOrder() {
-      return originalOrder;
     }
 
     JSModule getModule() {
@@ -407,9 +397,6 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
   /** Holds statement info temporarily while the statement is being traversed. */
   private static final class TopLevelStatementDraft {
 
-    /** 0-based index indicating original order of this statement in the source. */
-    private final int originalOrder;
-
     final JSModule module;
     final Node statementNode;
     final List<Reference> nonDeclarationReferences = new ArrayList<>();
@@ -417,8 +404,7 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
     Node declaredNameNode = null;
     Reference declaredNameReference = null;
 
-    TopLevelStatementDraft(int originalOrder, JSModule module, Node statementNode) {
-      this.originalOrder = originalOrder;
+    TopLevelStatementDraft(JSModule module, Node statementNode) {
       this.module = module;
       this.statementNode = statementNode;
     }
