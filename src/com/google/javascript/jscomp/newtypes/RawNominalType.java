@@ -46,6 +46,7 @@ public final class RawNominalType extends Namespace {
   // If true, we can't add more properties to this type.
   private boolean isFrozen;
   // Each instance of the class has these properties by default
+  // TODO(dimvar): Rename to instanceProps
   private PersistentMap<String, Property> classProps = PersistentMap.create();
   // The object pointed to by the prototype property of the constructor of
   // this class has these properties

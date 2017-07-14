@@ -2263,6 +2263,12 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return null;
   }
 
+  @Override
+  public Set<String> getPropertyNames() {
+    ObjectType obj = getObjTypeIfSingletonObj();
+    return obj == null ? ImmutableSet.<String>of() : obj.getPropertyNames();
+  }
+
   // Note: concrete subclasses follow below.  The above code in JSType
   // should not depend on any of these specific implementations, other
   // than instantiating them when appropriate (in the makeType methods).

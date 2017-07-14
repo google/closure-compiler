@@ -30,6 +30,7 @@ import com.google.javascript.jscomp.newtypes.RawNominalType.PropAccess;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -1592,6 +1593,13 @@ final class ObjectType implements TypeWithProperties {
         ? fn.getInstanceTypeOfCtor().getObjTypeIfSingletonObj().nominalType
         : this.nominalType;
     return nt.isFunction() || nt.isBuiltinObject() || nt.isLiteralObject();
+  }
+
+  Set<String> getPropertyNames() {
+    Set<String> props = new LinkedHashSet<>();
+    props.addAll(this.props.keySet());
+    props.addAll(this.nominalType.getPropertyNames());
+    return props;
   }
 
   @Override

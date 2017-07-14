@@ -40,6 +40,7 @@
 package com.google.javascript.rhino;
 
 import com.google.common.collect.ImmutableList;
+import java.util.Set;
 
 /**
  * @author blickly@google.com (Ben Lickly)
@@ -161,4 +162,10 @@ public interface ObjectTypeI extends TypeI {
    * Otherwise returns null.
    */
   TypeI getEnumeratedTypeOfEnumObject();
+
+  /**
+   * Returns a set of properties defined or inferred on this type or any of
+   * its supertypes.
+   */
+  Set<String> getPropertyNames();
 }

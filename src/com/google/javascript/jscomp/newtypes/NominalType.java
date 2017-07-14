@@ -52,8 +52,8 @@ public final class NominalType implements Serializable {
   NominalType(ImmutableMap<String, JSType> typeMap, RawNominalType rawType) {
     checkState(
         typeMap.isEmpty()
-            || typeMap.keySet().containsAll(rawType.getTypeParameters())
-                && rawType.getTypeParameters().containsAll(typeMap.keySet()));
+            || (typeMap.keySet().containsAll(rawType.getTypeParameters())
+                && rawType.getTypeParameters().containsAll(typeMap.keySet())));
     this.typeMap = typeMap;
     this.rawType = rawType;
   }
@@ -336,6 +336,15 @@ public final class NominalType implements Serializable {
     return this.rawType.hasAncestorInterface(ancestor);
   }
 
+  ImmutableSet<String> getPropertyNames() {
+    if (isClass()) {
+      return getAllPropsOfClass();
+    } else {
+      return getAllPropsOfInterface();
+    }
+  }
+
+  // TODO(dimvar): consolidate the next two methods into one
   public ImmutableSet<String> getAllPropsOfInterface() {
     return this.rawType.getAllPropsOfInterface();
   }
@@ -442,7 +451,7 @@ public final class NominalType implements Serializable {
 
   boolean isSubtypeOf(NominalType other, SubtypeCache subSuperMap) {
     return isNominalSubtypeOf(other)
-        || other.isStructuralInterface() && isStructuralSubtypeOf(other, subSuperMap);
+        || (other.isStructuralInterface() && isStructuralSubtypeOf(other, subSuperMap));
   }
 
   private boolean isStructuralSubtypeOf(NominalType other, SubtypeCache subSuperMap) {
