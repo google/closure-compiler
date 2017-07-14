@@ -329,9 +329,7 @@ public final class PerformanceTracker {
    * and a log, which contains stats for each individual run.
    */
   public void outputTracerReport() {
-    if (mode.includeJvmStats()) {
-      JvmMetrics.maybeWriteJvmMetrics(this.output, "verbose:pretty:all");
-    }
+    JvmMetrics.maybeWriteJvmMetrics(this.output, "verbose:pretty:all");
     calcTotalStats();
 
     ArrayList<Entry<String, Stats>> statEntries = new ArrayList<>();
