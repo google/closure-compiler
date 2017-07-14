@@ -26,7 +26,6 @@ public class WhitespaceWrapGoogModulesTest extends CompilerTestCase {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     languageOut = LanguageMode.ECMASCRIPT_2015;
-    disableTypeCheck();
 
     disableCompareAsTree();
     // otherwise "use strict" in the expected output moves,

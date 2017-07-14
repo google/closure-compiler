@@ -27,12 +27,6 @@ public final class ReorderConstantExpressionTest extends CompilerTestCase {
     return new PeepholeOptimizationsPass(compiler, getName(), new ReorderConstantExpression());
   }
 
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    disableTypeCheck();
-  }
-
   public void testSymmetricOperations() throws Exception {
     set1Tests("==");
     set2Tests("==");

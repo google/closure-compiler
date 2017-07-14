@@ -40,12 +40,6 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
     return 1;
   }
 
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    disableTypeCheck();
-  }
-
   /**
    * Combine source strings using '\n' as the separator.
    */
