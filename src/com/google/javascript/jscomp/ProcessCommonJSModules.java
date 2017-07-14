@@ -55,11 +55,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
           "Suspicious re-assignment of \"exports\" variable."
               + " Did you actually intend to export something?");
 
-  public static final DiagnosticType UNSUPPORTED_GETTER_SETTER_METHOD =
-      DiagnosticType.warning(
-          "JSC_UNSUPPORTED_GETTER_SETTER_METHOD",
-          "Getter and setter methods are unsupported.");
-
   private final Compiler compiler;
   private final boolean reportDependencies;
 
@@ -875,9 +870,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
         Node lhs;
         if (key.isQuotedString()) {
           lhs = IR.getelem(export.cloneTree(), IR.string(key.getString()));
-        } else if (key.isGetterDef() || key.isSetterDef()) {
-          compiler.report(t.makeError(key, UNSUPPORTED_GETTER_SETTER_METHOD));
-          return;
         } else {
           lhs = IR.getprop(export.cloneTree(), IR.string(key.getString()));
         }
@@ -893,13 +885,20 @@ public final class ProcessCommonJSModules implements CompilerPass {
           value = key.getFirstChild().detach();
         }
 
-        Node expr = IR.exprResult(IR.assign(lhs, value)).useSourceInfoIfMissingFromForTree(key);
-
-        insertionParent.addChildAfter(expr, insertionRef);
-        visitExport(t, lhs.getFirstChild());
+        Node expr = null;
+        if (!key.isGetterDef()) {
+          expr = IR.exprResult(IR.assign(lhs, value)).useSourceInfoIfMissingFromForTree(key);
+          insertionParent.addChildAfter(expr, insertionRef);
+          visitExport(t, lhs.getFirstChild());
+        } else {
+          Node getter = key.detach();
+          String moduleName = t.getInput().getPath().toModuleName();
+          Node moduleObj = t.getScope().getVar(moduleName).getNode().getFirstChild();
+          moduleObj.addChildToBack(getter);
+        }
 
         // Export statements can be removed in visitExport
-        if (expr.getParent() != null) {
+        if (expr != null && expr.getParent() != null) {
           insertionRef = expr;
         }
 
