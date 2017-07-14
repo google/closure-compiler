@@ -24,7 +24,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.PeekingIterator;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
-import com.google.javascript.jscomp.NodeTraversal.FunctionCallback;
+import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.HashMap;
@@ -88,7 +88,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     NodeTraversal.traverseChangedFunctions(compiler, new FunctionVisitor(blacklistedPropNames));
   }
 
-  private static class FunctionVisitor implements FunctionCallback {
+  private static class FunctionVisitor implements ChangeScopeRootCallback {
 
     /**
      * A set of properties names that are potentially unsafe to remove duplicate writes to.
@@ -100,18 +100,18 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
     }
 
     @Override
-    public void enterFunction(AbstractCompiler compiler, Node n) {
-      if (!n.isFunction()) {
+    public void enterChangeScopeRoot(AbstractCompiler compiler, Node root) {
+      if (!root.isFunction()) {
         return;
       }
 
-      Node body = NodeUtil.getFunctionBody(n);
+      Node body = NodeUtil.getFunctionBody(root);
       if (!body.hasChildren() || NodeUtil.containsFunction(body)) {
         return;
       }
 
       FindCandidateAssignmentTraversal traversal =
-          new FindCandidateAssignmentTraversal(blacklistedPropNames, NodeUtil.isConstructor(n));
+          new FindCandidateAssignmentTraversal(blacklistedPropNames, NodeUtil.isConstructor(root));
       NodeTraversal.traverseEs6(compiler, body, traversal);
 
       // Any candidate property assignment can have a write removed if that write is never read

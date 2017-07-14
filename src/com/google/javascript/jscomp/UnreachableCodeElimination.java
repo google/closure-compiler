@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
-import com.google.javascript.jscomp.NodeTraversal.FunctionCallback;
+import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.GraphReachability;
@@ -59,9 +59,9 @@ class UnreachableCodeElimination implements CompilerPass {
 
   @Override
   public void process(Node externs, Node toplevel) {
-    NodeTraversal.traverseChangedFunctions(compiler, new FunctionCallback() {
+    NodeTraversal.traverseChangedFunctions(compiler, new ChangeScopeRootCallback() {
         @Override
-        public void enterFunction(AbstractCompiler compiler, Node root) {
+        public void enterChangeScopeRoot(AbstractCompiler compiler, Node root) {
           // Computes the control flow graph.
           ControlFlowAnalysis cfa =
               new ControlFlowAnalysis(compiler, false, false);

@@ -16,11 +16,14 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.TreeMultiset;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.Set;
@@ -402,6 +405,81 @@ public final class DefinitionUseSiteFinderTest extends CompilerTestCase {
             "USE NAME f_d -> [FUNCTION]"));
   }
 
+  public void testGetChangesAndDeletions_changeDoesntOverrideDelete() {
+    Compiler compiler = new Compiler();
+    DefinitionUseSiteFinder definitionsFinder = new DefinitionUseSiteFinder(compiler);
+    definitionsFinder.process(IR.root(), IR.root());
+
+    Node script =
+        compiler.parseSyntheticCode(
+            LINE_JOINER.join(
+                "function foo() {",
+                "  foo.propOfFoo = 'asdf';",
+                "}",
+                "function bar() {",
+                "  bar.propOfBar = 'asdf';",
+                "}"));
+    Node root = IR.root(script);
+    Node externs = IR.root(IR.script());
+    IR.root(externs, root); // Create global root.
+    Node functionFoo = script.getFirstChild();
+    Node functionBar = script.getSecondChild();
+
+    // Verify original baseline.
+    buildFound(definitionsFinder, found);
+    assertThat(found).isEmpty();
+
+    // Verify the fully processed state.
+    compiler.getChangedScopeNodesForPass("definitionsFinder");
+    compiler.getDeletedScopeNodesForPass("definitionsFinder");
+    definitionsFinder = new DefinitionUseSiteFinder(compiler);
+    definitionsFinder.process(externs, root);
+    buildFound(definitionsFinder, found);
+    assertThat(found)
+        .containsExactly(
+            "DEF NAME foo -> FUNCTION",
+            "DEF GETPROP foo.propOfFoo -> STRING",
+            "USE NAME foo -> [FUNCTION]",
+            "DEF NAME bar -> FUNCTION",
+            "DEF GETPROP bar.propOfBar -> STRING",
+            "USE NAME bar -> [FUNCTION]");
+
+    // Change nothing and re-verify state.
+    definitionsFinder.rebuildScopeRoots(
+        compiler.getChangedScopeNodesForPass("definitionsFinder"),
+        compiler.getDeletedScopeNodesForPass("definitionsFinder"));
+    buildFound(definitionsFinder, found);
+    assertThat(found)
+        .containsExactly(
+            "DEF NAME foo -> FUNCTION",
+            "DEF GETPROP foo.propOfFoo -> STRING",
+            "USE NAME foo -> [FUNCTION]",
+            "DEF NAME bar -> FUNCTION",
+            "DEF GETPROP bar.propOfBar -> STRING",
+            "USE NAME bar -> [FUNCTION]");
+
+    // Verify state after deleting function "foo".
+    compiler.reportFunctionDeleted(functionFoo);
+    definitionsFinder.rebuildScopeRoots(
+        compiler.getChangedScopeNodesForPass("definitionsFinder"),
+        compiler.getDeletedScopeNodesForPass("definitionsFinder"));
+    buildFound(definitionsFinder, found);
+    assertThat(found)
+        .containsExactly(
+            "DEF NAME bar -> FUNCTION",
+            "DEF GETPROP bar.propOfBar -> STRING",
+            "USE NAME bar -> [FUNCTION]");
+
+    // Verify state after changing the contents of function "bar"
+    functionBar.getLastChild().removeFirstChild();
+    compiler.reportChangeToChangeScope(functionBar);
+    definitionsFinder.rebuildScopeRoots(
+        compiler.getChangedScopeNodesForPass("definitionsFinder"),
+        compiler.getDeletedScopeNodesForPass("definitionsFinder"));
+    buildFound(definitionsFinder, found);
+    assertThat(found).containsExactly("DEF NAME bar -> FUNCTION");
+  }
+
   void checkDefinitionsInExterns(String externs, Set<String> expected) {
     checkDefinitions(externs, "", expected);
   }
@@ -422,6 +500,8 @@ public final class DefinitionUseSiteFinderTest extends CompilerTestCase {
   }
 
   private static void buildFound(DefinitionUseSiteFinder definitionFinder, Set<String> found) {
+    found.clear();
+
     for (DefinitionSite defSite : definitionFinder.getDefinitionSites()) {
       Node node = defSite.node;
       Definition definition = defSite.definition;
@@ -446,7 +526,7 @@ public final class DefinitionUseSiteFinderTest extends CompilerTestCase {
       found.add(sb.toString());
     }
 
-    for (UseSite useSite : definitionFinder.getNameUseSiteMultimap().values()) {
+    for (UseSite useSite : definitionFinder.getUseSitesByName().values()) {
       Node node = useSite.node;
       Collection<Definition> defs = definitionFinder.getDefinitionsReferencedAt(node);
 

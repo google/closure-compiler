@@ -20,7 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.google.common.base.Strings;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
-import com.google.javascript.jscomp.NodeTraversal.FunctionCallback;
+import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -76,10 +76,10 @@ public class J2clClinitPrunerPass implements CompilerPass {
   }
 
   /** Removes redundant clinit calls inside method body if it is guaranteed to be called earlier. */
-  private final class RedundantClinitPruner implements Callback, FunctionCallback {
+  private final class RedundantClinitPruner implements Callback, ChangeScopeRootCallback {
 
     @Override
-    public void enterFunction(AbstractCompiler compiler, Node fnRoot) {
+    public void enterChangeScopeRoot(AbstractCompiler compiler, Node root) {
       // Reset the clinit call tracking when starting over on a new scope.
       clinitsCalledAtBranch = new HierarchicalSet<>(null);
       stateStack.clear();

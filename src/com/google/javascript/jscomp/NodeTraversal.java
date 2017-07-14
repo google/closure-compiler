@@ -78,9 +78,9 @@ public class NodeTraversal {
   /** Possible callback for scope entry and exist **/
   private ScopedCallback scopeCallback;
 
-  /** Callback for passes that iterate over a list of functions */
-  public interface FunctionCallback {
-    void enterFunction(AbstractCompiler compiler, Node fnRoot);
+  /** Callback for passes that iterate over a list of change scope roots (FUNCTIONs and SCRIPTs) */
+  public interface ChangeScopeRootCallback {
+    void enterChangeScopeRoot(AbstractCompiler compiler, Node root);
   }
 
   /**
@@ -466,7 +466,7 @@ public class NodeTraversal {
       Node root,
       List<Node> scopeNodes,
       final Callback cb,
-      final FunctionCallback fcb,
+      final ChangeScopeRootCallback changeCallback,
       final boolean traverseNested) {
     if (scopeNodes == null) {
       NodeTraversal.traverseEs6(compiler, root, cb);
@@ -475,8 +475,8 @@ public class NodeTraversal {
           new MemoizedScopeCreator(new Es6SyntacticScopeCreator(compiler));
 
       for (final Node scopeNode : scopeNodes) {
-        if (fcb != null) {
-          fcb.enterFunction(compiler, scopeNode);
+        if (changeCallback != null) {
+          changeCallback.enterChangeScopeRoot(compiler, scopeNode);
         }
 
         Callback scb =
@@ -624,14 +624,14 @@ public class NodeTraversal {
    * Compiler.reportChangeToEnclosingScope(Node n).
    */
   public static void traverseChangedFunctions(
-      final AbstractCompiler compiler, final FunctionCallback callback) {
+      final AbstractCompiler compiler, final ChangeScopeRootCallback callback) {
     final Node jsRoot = compiler.getJsRoot();
     NodeTraversal.traverseEs6(compiler, jsRoot,
         new AbstractPreOrderCallback() {
           @Override
           public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
             if (NodeUtil.isChangeScopeRoot(n) && compiler.hasScopeChanged(n)) {
-              callback.enterFunction(compiler, n);
+              callback.enterChangeScopeRoot(compiler, n);
             }
             return true;
           }
