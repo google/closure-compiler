@@ -22,6 +22,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -144,6 +145,11 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType>, TypeI
       // Executed when the current scope has not been typechecked.
       return null;
     }
+  }
+
+  @Override
+  public final TypeI getTypeIOfThis() {
+    return getTypeOfThis();
   }
 
   @Override

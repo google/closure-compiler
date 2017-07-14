@@ -71,4 +71,9 @@ public abstract class AbstractStaticScope<T extends TypeI> implements StaticType
   public T getTypeOfThis() {
     return null;
   }
+
+  @Override
+  public TypeI getTypeIOfThis() {
+    return null;
+  }
 }
