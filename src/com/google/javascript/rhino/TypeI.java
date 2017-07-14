@@ -72,6 +72,9 @@ public interface TypeI extends Serializable {
 
   boolean isFunctionType();
 
+  /**
+   * @return True for both nominal and structural interfaces
+   */
   boolean isInterface();
 
   boolean isStructuralInterface();

@@ -1033,4 +1033,12 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
             "/** @enum {string} */ var Foo = {X: 'y'};",
             "var x = Foo.X"));
   }
+
+  public void testUnannotatedConstructorsDontCrash() {
+    testSame(LINE_JOINER.join(
+        "function Foo() {}",
+        "Foo.prototype.a;",
+        "function Bar() {}",
+        "Bar.prototype.a;"));
+  }
 }
