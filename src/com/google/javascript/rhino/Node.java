@@ -246,14 +246,6 @@ public class Node implements Serializable {
       super(nodeType, child);
     }
 
-    public TypeDeclarationNode(Token nodeType, Node left, Node right) {
-      super(nodeType, left, right);
-    }
-
-    public TypeDeclarationNode(Token nodeType, Node left, Node mid, Node right) {
-      super(nodeType, left, mid, right);
-    }
-
     /**
      * returns the string content.
      * @return non null.
