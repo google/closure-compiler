@@ -52,6 +52,7 @@ import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -668,10 +669,10 @@ public final class SymbolTable {
 
   private void removeSymbol(Symbol s) {
     SymbolScope scope = getScope(s);
-    if (scope.ownSymbols.remove(s.getName()) != s) {
+    if (!scope.ownSymbols.remove(s.getName()).equals(s)) {
       throw new IllegalStateException("Symbol not found in scope " + s);
     }
-    if (symbols.remove(s.getDeclaration().getNode(), s.getName()) != s) {
+    if (!symbols.remove(s.getDeclaration().getNode(), s.getName()).equals(s)) {
       throw new IllegalStateException("Symbol not found in table " + s);
     }
   }
@@ -734,6 +735,7 @@ public final class SymbolTable {
     }
   }
 
+  @SuppressWarnings("ReferenceEquality")
   void fillPropertyScopes() {
     // Collect all object symbols.
     // All symbols that came from goog.module are collected separately because they will have to
@@ -783,12 +785,50 @@ public final class SymbolTable {
     //
     // If we order them in reverse lexicographical order symbols x.y and x will be processed before
     // foo. This is wrong as foo is in fact property of x.y namespace. So we must process all
-    // module$exports$ symbols first. That's why we collected them in separate list.
+    // module$exports$ symbols first. That's why we collected them in a separate list.
     //
     Collections.sort(types, getNaturalSymbolOrdering().reverse());
     Collections.sort(googModuleExportTypes, getNaturalSymbolOrdering().reverse());
-    for (Symbol s : Iterables.concat(googModuleExportTypes, types)) {
-      createPropertyScopeFor(s);
+    Iterable<Symbol> allTypes = Iterables.concat(googModuleExportTypes, types);
+
+    // If you though we are done with tricky case - you were wrong. There is another one!
+    // The problem with the same property scope appearing several times. For example when using
+    // aliases:
+    //
+    // const OBJ = {one: 1};
+    // function() {
+    //   const alias = OBJ;
+    //   console.log(alias.one);
+    // }
+    //
+    // In this case both 'OBJ' and 'alias' are considered property scopes and are candidates for
+    // processing even though they share the same "type" which is "{one: 1}". As they share the same
+    // type we need to process only one of them. To do that we build a "type => root symbol" map.
+    // In this case the map will be {one: 1} => OBJ. Using this map will skip 'alias' when creating
+    // property scopes.
+    //
+    // NOTE: we are using IdentityHashMap to compare types using == because we need to find symbols
+    // that point to the exact same type instance.
+    Map<JSType, Symbol> symbolThatDeclaresType = new IdentityHashMap<>();
+    for (Symbol s : allTypes) {
+      // Symbols are sorted in reverse order so that those with more outer scope will come later in
+      // the list, and therefore override those set by aliases in more inner scope. The sorting
+      // happens few lines above.
+      symbolThatDeclaresType.put(s.getType(), s);
+    }
+
+    for (Symbol s : allTypes) {
+      // Create property scopes only based on "root" symbols for each type to handle aliases.
+      if (s.getType() == null || symbolThatDeclaresType.get(s.getType()).equals(s)) {
+        createPropertyScopeFor(s);
+      }
+    }
+
+    // Now we need to set the new property scope symbol to all aliases.
+    for (Symbol s : allTypes) {
+      if (s.getType() != null) {
+        s.propertyScope = symbolThatDeclaresType.get(s.getType()).getPropertyScope();
+      }
     }
 
     pruneOrphanedNames();
@@ -957,15 +997,16 @@ public final class SymbolTable {
   }
 
   /**
-   * Build a property scope for the given symbol. Any properties of the symbol
-   * will be added to the property scope.
+   * Build a property scope for the given symbol. Any properties of the symbol will be added to the
+   * property scope.
    *
-   * It is important that property scopes are created in order from the leaves
-   * up to the root, so this should only be called from #fillPropertyScopes.
-   * If you try to create a property scope for a parent before its leaf,
-   * then the leaf will get cut and re-added to the parent property scope,
+   * <p>It is important that property scopes are created in order from the leaves up to the root, so
+   * this should only be called from #fillPropertyScopes. If you try to create a property scope for
+   * a parent before its leaf, then the leaf will get cut and re-added to the parent property scope,
    * and weird things will happen.
    */
+  // This function uses == to compare types to be exact same instances.
+  @SuppressWarnings("ReferenceEquality")
   private void createPropertyScopeFor(Symbol s) {
     // In order to build a property scope for s, we will need to build
     // a property scope for all its implicit prototypes first. This means
@@ -976,6 +1017,7 @@ public final class SymbolTable {
     }
 
     SymbolScope parentPropertyScope = null;
+
     ObjectType type = getType(s) == null ? null : getType(s).toObjectType();
     if (type == null) {
       return;
