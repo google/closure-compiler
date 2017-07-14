@@ -55,13 +55,17 @@ class CompilerExecutor {
    */
   @GwtIncompatible("java.util.concurrent.ExecutorService")
   ExecutorService getExecutorService() {
+    return getDefaultExecutorService();
+  }
+
+  static ExecutorService getDefaultExecutorService() {
     return Executors.newSingleThreadExecutor(new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable r) {
-          Thread t = new Thread(null, r, "jscompiler", COMPILER_STACK_SIZE);
-          t.setDaemon(true);  // Do not prevent the JVM from exiting.
-          return t;
-        }
+      @Override
+      public Thread newThread(Runnable r) {
+        Thread t = new Thread(null, r, "jscompiler", COMPILER_STACK_SIZE);
+        t.setDaemon(true);  // Do not prevent the JVM from exiting.
+        return t;
+      }
     });
   }
 
