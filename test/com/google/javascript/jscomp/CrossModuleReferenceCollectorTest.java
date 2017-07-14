@@ -172,16 +172,22 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
     assertThat(topLevelStatements).hasSize(4);
     // var x = 1;
     TopLevelStatement xEquals1 = topLevelStatements.get(0);
+    assertThat(xEquals1.getOriginalOrder()).isEqualTo(0);
     assertThat(xEquals1.getDeclaredNameReference()).isEqualTo(xReferences.get(0));
     assertThat(xEquals1.getNonDeclarationReferences()).isEmpty();
     // const y = x;
-    assertThat(topLevelStatements.get(1).getNonDeclarationReferences())
+    TopLevelStatement yEqualsX = topLevelStatements.get(1);
+    assertThat(yEqualsX.getOriginalOrder()).isEqualTo(1);
+    assertThat(yEqualsX.getNonDeclarationReferences())
         .containsExactly(yReferences.get(0), xReferences.get(1));
     // let z = x - y;
-    assertThat(topLevelStatements.get(2).getNonDeclarationReferences())
+    TopLevelStatement zEqualsXMinusY = topLevelStatements.get(2);
+    assertThat(zEqualsXMinusY.getOriginalOrder()).isEqualTo(2);
+    assertThat(zEqualsXMinusY.getNonDeclarationReferences())
         .containsExactly(zReferences.get(0), xReferences.get(2), yReferences.get(1));
     // function f(x, y) { return x + y + z; }
     TopLevelStatement functionDeclaration = topLevelStatements.get(3);
+    assertThat(functionDeclaration.getOriginalOrder()).isEqualTo(3);
     assertThat(functionDeclaration.getDeclaredNameReference()).isEqualTo(fReferences.get(0));
     assertThat(functionDeclaration.getNonDeclarationReferences())
         .containsExactly(zReferences.get(1));
