@@ -15812,6 +15812,14 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "  var /** string */ s = x.prop;",
             "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Window */ w) {",
+        "  /** @type {number} */",
+        "  w.myprop = 123;",
+        "}",
+        "var /** string */ s = window.myprop;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testInstantiateToTheSuperType() {
@@ -21012,8 +21020,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"));
   }
 
-  public void testInheritanceAndStrayProperties() {
-    // TODO(dimvar): warn here about GlobalTypeInfoCollector.INTERFACE_METHOD_NOT_IMPLEMENTED
+  public void testStrayProperties() {
     typeCheck(LINE_JOINER.join(
         "/** @record */",
         "function Foo() {}",
@@ -21030,7 +21037,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " * @constructor",
         " * @extends {Bar}",
         " */",
-        "function Baz() {}"));
+        "function Baz() {}"),
+        GlobalTypeInfoCollector.INTERFACE_METHOD_NOT_IMPLEMENTED);
 
     typeCheck(LINE_JOINER.join(
         "/** @record */",
@@ -21055,5 +21063,30 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " * @extends {Bar}",
         " */",
         "function Baz() {}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor @abstract */",
+        "function Foo() {}",
+        "/** @abstract */",
+        "Foo.prototype.mymethod = function() {};",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {}",
+        "function f(/** !Bar */ x) {",
+        "  x.mymethod = function() {};",
+        "}"),
+        GlobalTypeInfoCollector.ABSTRACT_METHOD_NOT_IMPLEMENTED_IN_CONCRETE_CLASS);
+
+    // It would be nice to give a mistyped-assign-rhs here. But the stray property appears on
+    // on all instances of Bar, so we don't catch the issue.
+    typeCheck(LINE_JOINER.join(
+        "/** @record */",
+        "function Foo() {}",
+        "Foo.prototype.a;",
+        "/** @constructor */",
+        "function Bar() {}",
+        "function f(/** !Bar */ x) {",
+        "  x.a = 123;",
+        "}",
+        "var /** !Foo */ x = new Bar;"));
   }
 }

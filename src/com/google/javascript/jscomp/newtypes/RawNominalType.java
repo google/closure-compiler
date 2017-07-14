@@ -411,8 +411,8 @@ public final class RawNominalType extends Namespace {
     return null;
   }
 
-  public boolean hasAbstractMethod(String pname) {
-    Property p = getPropFromClass(pname, PropAccess.INCLUDE_STRAY_PROPS);
+  boolean hasAbstractMethod(String pname) {
+    Property p = getPropFromClass(pname, PropAccess.EXCLUDE_STRAY_PROPS);
     JSType ptype = p == null ? null : p.getType();
     return ptype != null && ptype.isFunctionType() && ptype.getFunType().isAbstract();
   }
@@ -460,8 +460,16 @@ public final class RawNominalType extends Namespace {
     return getOwnProp(pname, PropAccess.INCLUDE_STRAY_PROPS) != null;
   }
 
+  public boolean mayHaveOwnNonStrayProp(String pname) {
+    return getOwnProp(pname, PropAccess.EXCLUDE_STRAY_PROPS) != null;
+  }
+
   public boolean mayHaveProp(String pname) {
     return getProp(pname, PropAccess.INCLUDE_STRAY_PROPS) != null;
+  }
+
+  public boolean mayHaveNonStrayProp(String pname) {
+    return getProp(pname, PropAccess.EXCLUDE_STRAY_PROPS) != null;
   }
 
   public JSType getInstancePropDeclaredType(String pname) {

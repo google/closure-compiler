@@ -437,7 +437,7 @@ public final class NominalType implements Serializable {
   }
 
   public boolean hasConstantProp(String pname) {
-    Property p = this.rawType.getProp(pname, PropAccess.INCLUDE_STRAY_PROPS);
+    Property p = this.rawType.getProp(pname, PropAccess.EXCLUDE_STRAY_PROPS);
     return p != null && p.isConstant();
   }
 
@@ -447,29 +447,6 @@ public final class NominalType implements Serializable {
 
   public boolean hasAbstractMethod(String pname) {
     return this.rawType.hasAbstractMethod(pname);
-  }
-
-  boolean isSubtypeOf(NominalType other, SubtypeCache subSuperMap) {
-    return isNominalSubtypeOf(other)
-        || (other.isStructuralInterface() && isStructuralSubtypeOf(other, subSuperMap));
-  }
-
-  private boolean isStructuralSubtypeOf(NominalType other, SubtypeCache subSuperMap) {
-    checkArgument(other.isStructuralInterface());
-    for (String pname : other.getAllPropsOfInterface()) {
-      Property prop2 = other.getProp(pname, PropAccess.INCLUDE_STRAY_PROPS);
-      Property prop1 = this.getProp(pname, PropAccess.INCLUDE_STRAY_PROPS);
-      if (prop2.isOptional()) {
-        if (prop1 != null
-            && !prop1.getType().isSubtypeOf(prop2.getType(), subSuperMap)) {
-          return false;
-        }
-      } else if (prop1 == null || prop1.isOptional()
-          || !prop1.getType().isSubtypeOf(prop2.getType(), subSuperMap)) {
-        return false;
-      }
-    }
-    return true;
   }
 
   // Checks for subtyping without taking generics into account

@@ -220,7 +220,7 @@ public abstract class Namespace implements Serializable {
     if (this instanceof NamespaceLit) {
       NominalType maybeWin = ((NamespaceLit) this).getWindowType();
       if (maybeWin != null) {
-        return maybeWin.getProp(pname, PropAccess.INCLUDE_STRAY_PROPS);
+        return maybeWin.getProp(pname, PropAccess.EXCLUDE_STRAY_PROPS);
       }
     }
     return null;

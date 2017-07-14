@@ -532,7 +532,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         if (superClass.isAbstractClass()
             && superClass.hasAbstractMethod(pname)
             && !rawType.isAbstractClass()
-            && !rawType.mayHaveOwnProp(pname)) {
+            && !rawType.mayHaveOwnNonStrayProp(pname)) {
           warnings.add(JSError.make(
               rawType.getDefSite(), ABSTRACT_METHOD_NOT_IMPLEMENTED_IN_CONCRETE_CLASS,
               pname, superClass.getName()));
@@ -681,8 +681,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       }
     } else {
       PropertyDef propdef = getPropDefFromClass(superType, pname);
-      // TODO(dimvar): fix look-ups of stray properties in a follow-up change, and add a
-      // precondition here that propdef should not be null.
+      // This can happen if superType is a class created by a mixin application. The class may
+      // have prototype properties but we can't see where these properties are defined.
       if (propdef == null) {
         return;
       }
@@ -691,7 +691,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     if (superType.isInterface()
         && current.isClass()
         && !isCtorDefinedByCall(current)
-        && !current.mayHaveProp(pname)) {
+        && !current.mayHaveNonStrayProp(pname)) {
       warnings.add(JSError.make(
           inheritedPropDefs.iterator().next().defSite,
           INTERFACE_METHOD_NOT_IMPLEMENTED,
