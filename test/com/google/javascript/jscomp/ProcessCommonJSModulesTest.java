@@ -831,10 +831,16 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testIssue2510() {
     setFilename("test");
     testModules(
-        "module.exports = {a: function() {return 1}};",
+        LINE_JOINER.join(
+            "module.exports = {",
+            "  a: 1,",
+            "  get b() { return 2; }",
+            "};"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
-            "/** @const */ var module$test = {};",
-            "module$test.a = function() {return 1};"));
+            "/** @const */ var module$test = {",
+            "  get b() { return 2; }",
+            "}",
+            "module$test.a = 1"));
   }
 }
