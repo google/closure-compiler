@@ -238,7 +238,6 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     if (recursive && parent.isFunction() && n != parent.getFirstChild()) {
       return;
     }
-
     if (NodeUtil.isBlockScopedDeclaration(n)) {
       if (t.getScopeRoot() == NodeUtil.getEnclosingScopeRoot(n)) {
         renamer.addDeclaredName(n.getString(), false);
@@ -253,7 +252,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
       renamer.addDeclaredName(n.getString(), true);
     } else if (NodeUtil.isFunctionDeclaration(n)) {
       Node nameNode = n.getFirstChild();
-      renamer.addDeclaredName(nameNode.getString(), true);
+      renamer.addDeclaredName(nameNode.getString(), false);
     }
 
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {

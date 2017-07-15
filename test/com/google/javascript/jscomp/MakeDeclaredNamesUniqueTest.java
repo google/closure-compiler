@@ -101,7 +101,6 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   }
 
   public void testMakeLocalNamesUniqueWithContext1() {
-    // Set the test type
     this.useDefaultRenamer = true;
 
     invert = true;
@@ -331,7 +330,6 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   }
 
   public void testMakeLocalNamesUniqueWithoutContext() {
-    // Set the test type
     this.useDefaultRenamer = false;
 
     test("var a;",
@@ -629,20 +627,152 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "  }}"));
   }
 
-  // TODO(bellashim): Get the test below passing
-  public void disabled_testBlockScopesWithContextWithInversion2() {
+  public void testBlockScopesWithContextWithInversion2() {
+    this.useDefaultRenamer = true;
     // function declarations are block-scoped
     testWithInversion(
+        LINE_JOINER.join(
+            "function foo() {",
+            "  function bar() {",
+            "    return 1;",
+            "  }",
+            "}",
+            "function boo() {",
+            "  function bar() {",
+            "    return 2;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function foo() {",
+            "  function bar() {",
+            "    return 1;",
+            "  }",
+            "}",
+            "function boo() {",
+            "  function bar$jscomp$1() {",
+            "    return 2;",
+            "  }",
+            "}"));
+  }
+
+  public void testBlockScopesWithContextWithInversion3() {
+    this.useDefaultRenamer = true;
+    test(
+        LINE_JOINER.join(
+            "function foo() {",
+            "  function bar() {",
+            "    return 1;",
+            "  }",
+            "  if (true) {",
+            "    function bar() {",
+            "      return 2;",
+            "    }",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function foo() {",
+            "  function bar() {",
+            "    return 1;",
+            "  }",
+            "  if (true) {",
+            "    function bar$jscomp$1() {",
+            "      return 2;",
+            "    }",
+            "  }",
+            "}"));
+  }
+
+  public void testBlockScopesWithContextWithInversion4() {
+    this.useDefaultRenamer = true;
+    test(
+        LINE_JOINER.join(
+            "var f1=function(){",
+            "  var x",
+            "};",
+            "(function() {",
+            "  function f2() {",
+            "    alert(x)",
+            "  }",
+            "  {",
+            "    var x=0",
+            "  }",
+            "  f2()",
+            "})()"),
+        LINE_JOINER.join(
+            "var f1=function(){",
+            "  var x",
+            "};",
+            "(function() {",
+            "  function f2() {",
+            "    alert(x$jscomp$1)",
+            "  }",
+            "  {",
+            "    var x$jscomp$1=0",
+            "  }",
+            "  f2()",
+            "})()"));
+  }
+
+  public void testBlockScopesWithContextWithInversion5() {
+    this.useDefaultRenamer = true;
+    test(
+        LINE_JOINER.join(
+            "if (true) {",
+            "  function f(){};",
+            "}",
+            "f();"),
+        LINE_JOINER.join(
+            "if (true) {",
+            "  function f$jscomp$1(){};",
+            "}",
+            "f();"
+        ));
+  }
+
+  public void testBlockScopesWithoutContext() {
+    this.useDefaultRenamer = false;
+    test(
         LINE_JOINER.join(
             "{function foo() {return 1;}",
             "  if (true) {",
             "    function foo() {return 2;}",
-            "}}"),
+            "  }",
+            "}"),
         LINE_JOINER.join(
-            "{function foo() {return 1;}",
+            "{function foo$jscomp$unique_1() {return 1;}",
             "  if (true) {",
-            "    function foo$jscomp$1() {return 2;}",
-            "}}"));
+            "    function foo$jscomp$unique_2() {return 2;}",
+            "  }",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "function foo(x) {",
+            "  return foo(x) - 1;",
+            "}"),
+        LINE_JOINER.join(
+            "function foo$jscomp$unique_0(x$jscomp$unique_1) {",
+            "  return foo$jscomp$unique_0(x$jscomp$unique_1) - 1;",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "export function foo(x) {",
+            "  return foo(x) - 1;",
+            "}"),
+        LINE_JOINER.join(
+            "export function foo$jscomp$unique_1(x$jscomp$unique_2) {",
+            "  return foo$jscomp$unique_1(x$jscomp$unique_2) - 1;",
+            "}"));
+  }
+
+  public void testRecursiveFunctionsWithContextWithInversion() {
+    this.useDefaultRenamer = true;
+    testSameWithInversion(
+        LINE_JOINER.join(
+            "function foo(x) {",
+            "  return foo(x) - 1;",
+            "}"));
   }
 
   public void testArrowFunctionWithContextWithInversion() {
