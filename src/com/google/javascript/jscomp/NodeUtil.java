@@ -944,8 +944,8 @@ public final class NodeUtil {
   }
 
   static boolean isEnumDecl(Node n) {
-    if (n.isVar()
-        || (n.isName() && n.getParent().isVar())
+    if (NodeUtil.isNameDeclaration(n)
+        || (n.isName() && NodeUtil.isNameDeclaration(n.getParent()))
         || (n.isGetProp() && n.getParent().isAssign() && n.getGrandparent().isExprResult())
         || (n.isAssign() && n.getParent().isExprResult())) {
       JSDocInfo jsdoc = getBestJSDocInfo(n);
@@ -978,7 +978,7 @@ public final class NodeUtil {
     }
     Node qnameNode;
     Node initializer;
-    if (n.getParent().isVar()) {
+    if (NodeUtil.isNameDeclaration(n.getParent())) {
       qnameNode = n;
       initializer = n.getFirstChild();
     } else if (n.isExprResult()) {
@@ -1084,6 +1084,8 @@ public final class NodeUtil {
         break;
 
       case VAR:    // empty var statement (no declaration)
+      case LET:
+      case CONST:
       case NAME:   // variable by itself
         if (n.getFirstChild() != null) {
           return true;
@@ -2303,7 +2305,9 @@ public final class NodeUtil {
    *
    * @param n The node
    * @return True if {@code n} is NAME and {@code parent} is VAR
+   * @deprecated this checks for vars, but not lets or consts
    */
+  @Deprecated
   static boolean isVarDeclaration(Node n) {
     // There is no need to verify that parent != null because a NAME node
     // always has a parent in a valid parse tree.
@@ -2368,7 +2372,7 @@ public final class NodeUtil {
   public static Node getAssignedValue(Node n) {
     checkState(n.isName(), n);
     Node parent = n.getParent();
-    if (parent.isVar()) {
+    if (NodeUtil.isNameDeclaration(parent)) {
       return n.getFirstChild();
     } else if (parent.isAssign() && parent.getFirstChild() == n) {
       return n.getNext();
@@ -3032,9 +3036,11 @@ public final class NodeUtil {
    * @param n The node
    * @param parent Parent of the node
    * @return True if n is the left hand of an assign
+   * TODO(simranarora): Rename this since it now handles let and const as well as var.
    */
   static boolean isVarOrSimpleAssignLhs(Node n, Node parent) {
-    return (parent.isAssign() && parent.getFirstChild() == n) || parent.isVar();
+    return
+        (parent.isAssign() && parent.getFirstChild() == n) || NodeUtil.isNameDeclaration(parent);
   }
 
   /**
@@ -3923,12 +3929,13 @@ public final class NodeUtil {
 
 
   /**
-   * A predicate for matching var or function declarations.
+   * A predicate for matching var, let, const, or function declarations.
+   * TODO(simranarora): Should this handle class declarations too?
    */
   static class MatchDeclaration implements Predicate<Node> {
     @Override
     public boolean apply(Node n) {
-      return isFunctionDeclaration(n) || n.isVar();
+      return isFunctionDeclaration(n) || NodeUtil.isNameDeclaration(n);
     }
   }
 
