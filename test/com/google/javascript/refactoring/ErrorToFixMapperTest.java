@@ -1229,6 +1229,40 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testBug65602711a() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {X} = goog.require('ns.abc.xyz');",
+            "",
+            "use(ns.abc.xyz.X);"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {X} = goog.require('ns.abc.xyz');",
+            "",
+            "use(X);"));
+  }
+
+  @Test
+  public void testBug65602711b() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {X: X2} = goog.require('ns.abc.xyz');",
+            "",
+            "use(ns.abc.xyz.X);"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {X: X2} = goog.require('ns.abc.xyz');",
+            "",
+            "use(X2);"));
+  }
+
+  @Test
   public void testProvidesSorted1() {
     assertChanges(
         LINE_JOINER.join(

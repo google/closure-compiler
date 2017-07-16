@@ -489,7 +489,16 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "var {doThing} = goog.require('foo.utils');",
             "",
             "exports = function() { return foo.utils.doThing(''); };"),
-        REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME);
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "var {doThing: fooDoThing} = goog.require('foo.utils');",
+            "",
+            "exports = function() { return foo.utils.doThing(''); };"),
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
   }
 
   public void testIllegalImportNoAlias() {
