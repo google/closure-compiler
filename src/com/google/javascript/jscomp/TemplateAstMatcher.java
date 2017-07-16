@@ -335,7 +335,7 @@ public final class TemplateAstMatcher {
     if (isTemplateParameterNode(template)) {
       // Match the entire expression but only if it is an expression.
       return !NodeUtil.isStatement(ast);
-    } else  if (isTemplateLocalNameNode(template)) {
+    } else if (isTemplateLocalNameNode(template)) {
       // Match any name. Maybe match locals here.
       if (!ast.isName()) {
         return false;
