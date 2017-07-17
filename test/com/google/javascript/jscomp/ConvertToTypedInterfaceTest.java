@@ -1033,4 +1033,21 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "};"),
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
   }
+
+  public void testGoogScopeLeftoversAreRemoved() {
+    test(
+        LINE_JOINER.join(
+            "goog.provide('a.b.c.d.e.f.g');",
+            "",
+            "/** @const */ var $jscomp = $jscomp || {};",
+            "/** @const */ $jscomp.scope = {};",
+            "",
+            "$jscomp.scope.strayVariable = function() {};",
+            "",
+            "a.b.c.d.e.f.g.Foo = class {};"),
+        LINE_JOINER.join(
+            "goog.provide('a.b.c.d.e.f.g');",
+            "",
+            "a.b.c.d.e.f.g.Foo = class {};"));
+  }
 }

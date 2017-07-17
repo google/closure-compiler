@@ -527,6 +527,11 @@ class ConvertToTypedInterface implements CompilerPass {
     }
 
     private RemovalType shouldRemove(NodeTraversal t, Node nameNode) {
+      if (NodeUtil.getRootOfQualifiedName(nameNode).matchesQualifiedName("$jscomp")) {
+        // These are created by goog.scope processing, but clash with each other
+        // and should not be depended on.
+        return RemovalType.REMOVE_ALL;
+      }
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       JSDocInfo jsdoc = jsdocNode.getJSDocInfo();
       Node rhs = NodeUtil.getRValueOfLValue(nameNode);
