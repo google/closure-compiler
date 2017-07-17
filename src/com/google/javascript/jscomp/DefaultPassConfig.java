@@ -265,6 +265,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(checkVariableReferences);
+    checks.add(checkStrictMode);
 
     if (options.closurePass) {
       checks.add(closureCheckModule);
@@ -465,8 +466,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.checkGlobalNamesLevel.isOn()) {
       checks.add(checkGlobalNames);
     }
-
-    checks.add(checkStrictMode);
 
     if (!options.getConformanceConfigs().isEmpty()) {
       checks.add(checkConformance);

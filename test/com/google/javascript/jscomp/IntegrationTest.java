@@ -2873,6 +2873,21 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, "", StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN);
   }
 
+  public void testCheckStrictModeGeneratorFunction() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.WARNING);
+
+    externs = ImmutableList.of(
+        SourceFile.fromCode("externs", "var arguments; arguments.callee;"));
+
+    String code = "function *gen() { arguments.callee; }";
+
+    test(options, code, StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN);
+  }
+
   // http://blickly.github.io/closure-compiler-issues/#701
   public void testIssue701() {
     // Check ASCII art in license comments.
@@ -3588,6 +3603,27 @@ public final class IntegrationTest extends IntegrationTestCase {
            "goog.provide('goog.beer');"
          },
          ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
+  }
+
+  public void testGoogModuleDuplicateExport() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.setStrictModeInput(true);
+    options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.ERROR);
+
+    test(
+        options,
+        LINE_JOINER.join(
+            "goog.module('example');",
+            "",
+            "class Foo {}",
+            "exports = {",
+            "  Foo,",
+            "  Foo,",
+            "};"),
+        StrictModeCheck.DUPLICATE_OBJECT_KEY);
   }
 
   public void testGoogModuleOuterLegacyInner() {
