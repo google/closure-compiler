@@ -675,6 +675,19 @@ public final class SymbolTable {
     if (!symbols.remove(s.getDeclaration().getNode(), s.getName()).equals(s)) {
       throw new IllegalStateException("Symbol not found in table " + s);
     }
+    // If s declares a property scope then all child symbols should be removed as well.
+    // For example:
+    // let foo = {a: 1, b: 2};
+    // foo declares property scope with a and b as its children. When removing foo we should also
+    // remove a and b.
+    if (s.propertyScope != null && s.propertyScope.getSymbolForScope().equals(s)) {
+      // Need to iterate over copy of values list because removeSymbol() will change the map
+      // and we'll get ConcurrentModificationException
+      for (Symbol childSymbol : ImmutableList.copyOf(s.propertyScope.ownSymbols.values())) {
+        removeSymbol(childSymbol);
+      }
+      scopes.remove(s.getDeclarationNode());
+    }
   }
 
   /**
@@ -1058,9 +1071,6 @@ public final class SymbolTable {
       // throw out the old symbol and use the type-based symbol.
       Symbol oldProp = symbols.get(newProp.getDeclaration().getNode(),
           s.getName() + "." + propName);
-      if (oldProp != null) {
-        removeSymbol(oldProp);
-      }
 
       // If we've already have an entry in the table for this symbol,
       // then skip it. This should only happen if we screwed up,
@@ -1083,6 +1093,9 @@ public final class SymbolTable {
         for (Reference ref : oldProp.references.values()) {
           newSym.defineReferenceAt(ref.getNode());
         }
+        // All references/scopes from oldProp were updated to use the newProp. Time to remove
+        // oldProp.
+        removeSymbol(oldProp);
       }
     }
   }
@@ -1092,6 +1105,37 @@ public final class SymbolTable {
    */
   void fillThisReferences(Node externs, Node root) {
     (new ThisRefCollector()).process(externs, root);
+  }
+
+  private boolean isSymbolGeneratedAndShouldNotBeIndexed(Symbol symbol) {
+    // Destructuring pass introduces new variables:
+    //
+    // let {a, b} = foo;
+    //
+    // is transpiled to
+    //
+    // let destructuring$var0 = foo;
+    // let a = destructuring$var0.a;
+    // let b = destructuring$var0.b;
+    //
+    // destructuring$var0 should not get into index as it's invisible to a user.
+    return symbol.getName().contains(Es6RewriteDestructuring.DESTRUCTURING_TEMP_VAR);
+  }
+
+  /**
+   * Removes various generated symbols that are invisible to users and pollute or mess up index.
+   * Jscompiler does transpilations that might introduce extra nodes/symbols. Most of
+   * these symbols should not get into final SymbolTable because SymbolTable should contain only
+   * symbols that correspond to a symbol in original source code (before transpilation).
+   */
+  void removeGeneratedSymbols() {
+    // Need to iterate over copy of values list because removeSymbol() will change the map
+    // and we'll get ConcurrentModificationException
+    for (Symbol symbol : ImmutableList.copyOf(symbols.values())) {
+      if (isSymbolGeneratedAndShouldNotBeIndexed(symbol)) {
+        removeSymbol(symbol);
+      }
+    }
   }
 
   /**

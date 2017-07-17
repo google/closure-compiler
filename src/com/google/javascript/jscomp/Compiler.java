@@ -1610,6 +1610,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     symbolTable.fillPropertySymbols(externsRoot, jsRoot);
     symbolTable.fillJSDocInfo(externsRoot, jsRoot);
     symbolTable.fillSymbolVisibility(externsRoot, jsRoot);
+    symbolTable.removeGeneratedSymbols();
 
     return symbolTable;
   }

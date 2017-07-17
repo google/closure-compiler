@@ -32,7 +32,7 @@ import com.google.javascript.rhino.TokenStream;
 public final class Es6RewriteDestructuring implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
 
-  private static final String DESTRUCTURING_TEMP_VAR = "$jscomp$destructuring$var";
+  static final String DESTRUCTURING_TEMP_VAR = "$jscomp$destructuring$var";
 
   private int destructuringVarCounter = 0;
 
