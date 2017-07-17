@@ -128,8 +128,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     liveness.analyze();
 
     UndiGraph<Var, Void> interferenceGraph =
-        computeVariableNamesInterferenceGraph(
-            t, cfg, (Set<Var>) liveness.getEscapedLocals());
+        computeVariableNamesInterferenceGraph(t, cfg, liveness.getEscapedLocals());
 
     GraphColoring<Var, Void> coloring =
         new GreedyGraphColoring<>(interferenceGraph, coloringTieBreaker);
@@ -209,9 +208,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
   }
 
   private UndiGraph<Var, Void> computeVariableNamesInterferenceGraph(
-      NodeTraversal t, ControlFlowGraph<Node> cfg, Set<Var> escaped) {
-    UndiGraph<Var, Void> interferenceGraph =
-        LinkedUndirectedGraph.create();
+      NodeTraversal t, ControlFlowGraph<Node> cfg, Set<? extends Var> escaped) {
+    UndiGraph<Var, Void> interferenceGraph = LinkedUndirectedGraph.create();
     Scope scope = t.getScope();
 
     // First create a node for each non-escaped variable.
