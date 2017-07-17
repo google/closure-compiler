@@ -35,6 +35,7 @@ var ExpectChainTerminal = function() {};
 
 /** @type {!ExpectChain} */ ExpectChain.prototype.to;
 /** @type {!ExpectChain} */ ExpectChain.prototype.be;
+/** @type {!ExpectChain} */ ExpectChain.prototype.not;
 
 /** @type {!ExpectChainTerminal} */ ExpectChain.prototype.true;
 /** @type {!ExpectChainTerminal} */ ExpectChain.prototype.false;

@@ -37,3 +37,12 @@ function nullAndUndefinedTest() {
 function okTest() {
   assert.isOk('a string');
 }
+
+/** The .to.not.be variations. */
+function negativeTest() {
+  assert.isNotTrue(1 > 0);
+  assert.isNotFalse(2 < 0);
+  assert.isNotNull(false || null);
+  assert.isDefined(someVar);
+  assert.isNotOk('a string');
+}
