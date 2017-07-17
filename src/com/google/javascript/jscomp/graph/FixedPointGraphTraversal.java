@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -66,7 +65,7 @@ public final class FixedPointGraphTraversal<N, E> {
    * @param graph The graph to traverse.
    */
   public void computeFixedPoint(DiGraph<N, E> graph) {
-    Set<N> nodes = new HashSet<>();
+    Set<N> nodes = new LinkedHashSet<>();
     for (DiGraphNode<N, E> node : graph.getDirectedGraphNodes()) {
       nodes.add(node.getValue());
     }
@@ -79,7 +78,7 @@ public final class FixedPointGraphTraversal<N, E> {
    * @param entry The node to begin traversing from.
    */
   public void computeFixedPoint(DiGraph<N, E> graph, N entry) {
-    Set<N> entrySet = new HashSet<>();
+    Set<N> entrySet = new LinkedHashSet<>();
     entrySet.add(entry);
     computeFixedPoint(graph, entrySet);
   }
