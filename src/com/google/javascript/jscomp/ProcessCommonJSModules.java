@@ -44,6 +44,9 @@ import java.util.Set;
 public final class ProcessCommonJSModules implements CompilerPass {
   private static final String EXPORTS = "exports";
   private static final String MODULE = "module";
+  private static final String REQUIRE = "require";
+  private static final String WEBPACK_REQUIRE = "__webpack_require__";
+  private static final String WEBPACK_EXPORTS = "__webpack_exports__";
 
   public static final DiagnosticType UNKNOWN_REQUIRE_ENSURE =
       DiagnosticType.warning(
@@ -236,6 +239,58 @@ public final class ProcessCommonJSModules implements CompilerPass {
     return true;
   }
 
+  private boolean isSupportedRequire(Node requireCall) {
+    if (requireCall.isCall() && requireCall.hasTwoChildren()) {
+      if (compiler.getOptions().moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK
+          && requireCall.getFirstChild().matchesQualifiedName(WEBPACK_REQUIRE)
+          && requireCall.getSecondChild().isNumber()) {
+        return true;
+      } else if (requireCall.getFirstChild().matchesQualifiedName(REQUIRE)
+          && requireCall.getSecondChild().isString()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private String getRequiredName(Node requireCall) {
+    if (compiler.getOptions().moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK
+        && requireCall.getSecondChild().isNumber()) {
+      return String.valueOf(Double.valueOf(requireCall.getSecondChild().getDouble()).intValue());
+    }
+
+    return requireCall.getSecondChild().getString();
+  }
+
+  /**
+   * Recognize if a node is a module export. We recognize several forms:
+   *
+   *  - module.exports = something;
+   *  - module.exports.something = something;
+   *  - exports.something = something;
+   *  - __webpack_exports__["something"] = something; // only when the module resolution is WEBPACK
+   *
+   * <p>In addition, we only recognize an export if the base export object is not defined or is
+   * defined in externs.
+   */
+  private boolean isSupportedExport(NodeTraversal t, Node export) {
+    if (export.matchesQualifiedName(MODULE + "." + EXPORTS)) {
+      Var v = t.getScope().getVar(MODULE);
+      if (v == null || v.isExtern()) {
+        return true;
+      }
+    } else if (export.isName()
+        && (EXPORTS.equals(export.getString())
+            || (compiler.getOptions().moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK
+                && WEBPACK_EXPORTS.equals(export.getString())))) {
+      Var v = t.getScope().getVar(export.getString());
+      if (v == null || v.isGlobal()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   /**
    * Traverse the script. Find all references to CommonJS require (import) and module.exports or
    * export statements. Rewrites any require calls to reference the rewritten module name.
@@ -251,6 +306,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
     List<UmdPattern> umdPatterns = new ArrayList<>();
     List<ExportInfo> moduleExports = new ArrayList<>();
     List<ExportInfo> exports = new ArrayList<>();
+    List<ExportInfo> webpackExports = new ArrayList<>();
     Set<String> imports = new HashSet<>();
     List<JSError> errors = new ArrayList<>();
 
@@ -260,6 +316,10 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
     public List<ExportInfo> getExports() {
       return ImmutableList.copyOf(exports);
+    }
+
+    public List<ExportInfo> getWebpackExports() {
+      return ImmutableList.copyOf(webpackExports);
     }
 
     @Override
@@ -294,12 +354,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
         visitRequireEnsureCall(t, n);
       }
 
-      if (n.matchesQualifiedName("module.exports")) {
-        Var v = t.getScope().getVar(MODULE);
-        // only rewrite "module.exports" if "module" is a free variable,
-        // meaning it is not defined in the current scope as a local
-        // variable or function parameter
-        if (v == null) {
+      if (n.matchesQualifiedName(MODULE + "." + EXPORTS)) {
+        if (isSupportedExport(t, n)) {
           moduleExports.add(new ExportInfo(n, t.getScope()));
 
           // If the module.exports statement is nested in the then branch of an if statement,
@@ -323,9 +379,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
         }
       }
 
-      if (n.isName() && EXPORTS.equals(n.getString())) {
-        Var v = t.getScope().getVar(EXPORTS);
-        if (v == null || v.isGlobal()) {
+      // exports =
+      if (n.isName() && isSupportedExport(t, n)) {
+        if (n.isName()) {
           Node qNameRoot = getBaseQualifiedNameNode(n);
           if (qNameRoot != null
               && qNameRoot.matchesQualifiedName(EXPORTS)
@@ -348,17 +404,15 @@ public final class ProcessCommonJSModules implements CompilerPass {
         }
       }
 
-      if (n.isCall()
-          && n.hasTwoChildren()
-          && n.getFirstChild().matchesQualifiedName("require")
-          && n.getSecondChild().isString()) {
+      if (isSupportedRequire(n)) {
         visitRequireCall(t, n, parent);
       }
     }
 
     /** Visit require calls. Emit corresponding goog.require call. */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
-      String requireName = require.getSecondChild().getString();
+      String requireName = getRequiredName(require);
+
       ModulePath modulePath =
           t.getInput()
               .getPath()
@@ -692,9 +746,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           break;
 
         case CALL:
-          if (n.hasTwoChildren()
-              && n.getFirstChild().matchesQualifiedName("require")
-              && n.getSecondChild().isString()) {
+          if (isSupportedRequire(n)) {
             imports.add(n);
           }
           break;
@@ -753,7 +805,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
      * module. By this point all references to the import alias should have already been renamed.
      */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
-      String requireName = require.getSecondChild().getString();
+      String requireName = getRequiredName(require);
+
       ModulePath modulePath =
           t.getInput()
               .getPath()
@@ -963,7 +1016,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
           }
 
           // refs to 'exports' are handled separately.
-          if (EXPORTS.equals(originalName)) {
+          if (EXPORTS.equals(originalName)
+              || (compiler.getOptions().moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK
+                  && WEBPACK_EXPORTS.equals(originalName))) {
             return;
           }
 
@@ -1195,7 +1250,15 @@ public final class ProcessCommonJSModules implements CompilerPass {
           }
         } else {
           if (var.getNameNode() == exportedName) {
-            String exportPrefix = exportBaseQName.startsWith(MODULE) ? "module.exports" : EXPORTS;
+            String exportPrefix;
+            if (exportBaseQName.startsWith(MODULE)) {
+              exportPrefix = MODULE + "." + EXPORTS;
+            } else if (compiler.getOptions().moduleResolutionMode
+                == ModuleLoader.ResolutionMode.WEBPACK) {
+              exportPrefix = WEBPACK_EXPORTS;
+            } else {
+              exportPrefix = EXPORTS;
+            }
 
             if (exportBaseQName.length() == exportPrefix.length()) {
               return moduleName;
@@ -1251,11 +1314,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
       if (rValue.isCall()) {
         // var foo = require('bar');
-        if (rValue.hasTwoChildren()
-            && rValue.getFirstChild().matchesQualifiedName("require")
-            && rValue.getSecondChild().isString()
+        if (isSupportedRequire(rValue)
             && t.getScope().getVar(rValue.getFirstChild().getQualifiedName()) == null) {
-          String requireName = rValue.getSecondChild().getString();
+          String requireName = getRequiredName(rValue);
           ModulePath modulePath =
               t.getInput()
                   .getPath()

@@ -1072,6 +1072,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
       ImmutableMap.Builder<String, SourceMapInput> inputSourceMaps
           = new ImmutableMap.Builder<>();
+      ImmutableMap.Builder<String, String> inputPathByWebpackId = new ImmutableMap.Builder<>();
 
       boolean foundJsonInputSourceMap = false;
       for (JsonFileSpec jsonFile : jsonFiles) {
@@ -1082,12 +1083,20 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
           inputSourceMaps.put(jsonFile.getPath(), new SourceMapInput(sourceMap));
           foundJsonInputSourceMap = true;
         }
+        if (jsonFile.getWebpackId() != null) {
+          inputPathByWebpackId.put(jsonFile.getWebpackId(), jsonFile.getPath());
+        }
       }
 
       if (foundJsonInputSourceMap) {
         inputSourceMaps.putAll(options.inputSourceMaps);
         options.inputSourceMaps = inputSourceMaps.build();
       }
+
+      compiler.initWebpackMap(inputPathByWebpackId.build());
+    } else {
+      ImmutableMap<String, String> emptyMap = ImmutableMap.of();
+      compiler.initWebpackMap(emptyMap);
     }
 
     compiler.initWarningsGuard(options.getWarningsGuard());
@@ -2683,16 +2692,22 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   protected static class JsonFileSpec {
     private final String src;
     private final String path;
+    private final String webpackId;
     private String sourceMap;
 
     public JsonFileSpec(String src, String path) {
-      this(src, path, null);
+      this(src, path, null, null);
     }
 
     public JsonFileSpec(String src, String path, String sourceMap) {
+      this(src, path, sourceMap, null);
+    }
+
+    public JsonFileSpec(String src, String path, String sourceMap, String webpackId) {
       this.src = src;
       this.path = path;
       this.sourceMap = sourceMap;
+      this.webpackId = webpackId;
     }
 
     public String getSrc() {
@@ -2705,6 +2720,10 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     public String getSourceMap() {
       return this.sourceMap;
+    }
+
+    public String getWebpackId() {
+      return this.webpackId;
     }
 
     public void setSourceMap(String map) {

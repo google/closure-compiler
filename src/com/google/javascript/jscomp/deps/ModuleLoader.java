@@ -81,7 +81,7 @@ public final class ModuleLoader {
       Iterable<? extends DependencyInfo> inputs,
       PathResolver pathResolver,
       ResolutionMode resolutionMode,
-      Map<String, String> packageJsonMainEntries) {
+      Map<String, String> lookupMap) {
     checkNotNull(moduleRoots);
     checkNotNull(inputs);
     checkNotNull(pathResolver);
@@ -106,8 +106,12 @@ public final class ModuleLoader {
       case NODE:
         this.moduleResolver =
             new NodeModuleResolver(
-                this.modulePaths, this.moduleRootPaths, packageJsonMainEntries, this.errorHandler);
+                this.modulePaths, this.moduleRootPaths, lookupMap, this.errorHandler);
         break;
+      case WEBPACK:
+        this.moduleResolver =
+            new WebpackModuleResolver(
+                this.modulePaths, this.moduleRootPaths, lookupMap, this.errorHandler);
     }
   }
 
@@ -367,12 +371,16 @@ public final class ModuleLoader {
     /**
      * Uses the node module resolution algorithm.
      *
-     * Modules which do not begin with a "." or "/" character are looked up from the appropriate
-     * node_modules folder.
-     * Includes the ability to require directories and JSON files.
-     * Exact match, then ".js", then ".json" file extensions are searched.
+     * <p>Modules which do not begin with a "." or "/" character are looked up from the appropriate
+     * node_modules folder. Includes the ability to require directories and JSON files. Exact match,
+     * then ".js", then ".json" file extensions are searched.
      */
-    NODE
+    NODE,
+
+    /**
+     * Uses a lookup map provided by webpack to locate modules from a numeric id used during import
+     */
+    WEBPACK
   }
 
   private final class NoopErrorHandler implements ErrorHandler {

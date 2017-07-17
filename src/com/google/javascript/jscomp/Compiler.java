@@ -176,6 +176,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private transient IncrementalScopeCreator scopeCreator = null;
 
+  // Warnings guard for filtering warnings.
+  private ImmutableMap<String, String> inputPathByWebpackId;
+
   /**
    * Subclasses are responsible for loading soures that were not provided as explicit inputs to the
    * compiler. For example, looking up sources referenced within sourcemaps.
@@ -1770,7 +1773,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                 inputs,
                 ModuleLoader.PathResolver.RELATIVE,
                 options.moduleResolutionMode,
-                null);
+                inputPathByWebpackId);
 
         if (options.moduleResolutionMode == ModuleLoader.ResolutionMode.NODE) {
           // processJsonInputs requires a module loader to already be defined
@@ -3441,6 +3444,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       deserializedModule.setName(newModule.getName());
     }
     return;
+  }
+
+  void initWebpackMap(ImmutableMap<String, String> inputPathByWebpackId) {
+    this.inputPathByWebpackId = inputPathByWebpackId;
   }
 
   /**
