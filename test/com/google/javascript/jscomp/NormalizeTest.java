@@ -764,7 +764,7 @@ public final class NormalizeTest extends CompilerTestCase {
             "}"));
   }
 
-  private Set<Node> findNodesWithProperty(Node root, final int prop) {
+  private Set<Node> findNodesWithProperty(Node root, final byte prop) {
     final Set<Node> set = new HashSet<>();
     NodeTraversal.traverseEs6(
         getLastCompiler(), root, new AbstractPostOrderCallback() {

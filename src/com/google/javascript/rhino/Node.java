@@ -67,7 +67,7 @@ public class Node implements Serializable {
 
   private static final long serialVersionUID = 1L;
 
-  public static final int
+  public static final byte
       JSDOC_INFO_PROP   = 29,     // contains a JSDocInfo object
 
       VAR_ARGS_NAME     = 30,     // the name node is a variable length
@@ -160,7 +160,7 @@ public class Node implements Serializable {
                                   // Aliases are desugared and inlined by compiler passes but we
                                   // need to preserve them for building index.
 
-  private static final String propToString(int propType) {
+  private static final String propToString(byte propType) {
       switch (propType) {
         case VAR_ARGS_NAME:      return "var_args_name";
         case JSDOC_INFO_PROP:    return "jsdoc_info";
@@ -380,7 +380,7 @@ public class Node implements Serializable {
 
   // PropListItems must be immutable so that they can be shared.
   private interface PropListItem {
-    int getType();
+    byte getType();
     @Nullable
     PropListItem getNext();
 
@@ -394,15 +394,15 @@ public class Node implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Nullable private final PropListItem next;
-    private final int propType;
+    private final byte propType;
 
-    AbstractPropListItem(int propType, @Nullable PropListItem next) {
+    AbstractPropListItem(byte propType, @Nullable PropListItem next) {
       this.propType = propType;
       this.next = next;
     }
 
     @Override
-    public int getType() {
+    public byte getType() {
       return propType;
     }
 
@@ -423,7 +423,7 @@ public class Node implements Serializable {
 
     private final Object objectValue;
 
-    ObjectPropListItem(int propType, Object objectValue, @Nullable PropListItem next) {
+    ObjectPropListItem(byte propType, Object objectValue, @Nullable PropListItem next) {
       super(propType, next);
       this.objectValue = objectValue;
     }
@@ -455,7 +455,7 @@ public class Node implements Serializable {
 
     final int intValue;
 
-    IntPropListItem(int propType, int intValue, @Nullable PropListItem next) {
+    IntPropListItem(byte propType, int intValue, @Nullable PropListItem next) {
       super(propType, next);
       this.intValue = intValue;
     }
@@ -920,7 +920,7 @@ public class Node implements Serializable {
 
   @VisibleForTesting
   @Nullable
-  PropListItem lookupProperty(int propType) {
+  PropListItem lookupProperty(byte propType) {
     PropListItem x = propListHead;
     while (x != null && propType != x.getType()) {
       x = x.getNext();
@@ -941,7 +941,7 @@ public class Node implements Serializable {
     return this;
   }
 
-  public void removeProp(int propType) {
+  public void removeProp(byte propType) {
     PropListItem result = removeProp(propListHead, propType);
     if (result != propListHead) {
       propListHead = result;
@@ -958,7 +958,7 @@ public class Node implements Serializable {
    * @return The replacement list if the property was removed, or 'item' otherwise.
    */
   @Nullable
-  private PropListItem removeProp(@Nullable PropListItem item, int propType) {
+  private PropListItem removeProp(@Nullable PropListItem item, byte propType) {
     if (item == null) {
       return null;
     } else if (item.getType() == propType) {
@@ -974,7 +974,7 @@ public class Node implements Serializable {
   }
 
   @Nullable
-  public Object getProp(int propType) {
+  public Object getProp(byte propType) {
     PropListItem item = lookupProperty(propType);
     if (item == null) {
       return null;
@@ -982,7 +982,7 @@ public class Node implements Serializable {
     return item.getObjectValue();
   }
 
-  public boolean getBooleanProp(int propType) {
+  public boolean getBooleanProp(byte propType) {
     return getIntProp(propType) != 0;
   }
 
@@ -990,7 +990,7 @@ public class Node implements Serializable {
    * Returns the integer value for the property, or 0 if the property
    * is not defined.
    */
-  public int getIntProp(int propType) {
+  public int getIntProp(byte propType) {
     PropListItem item = lookupProperty(propType);
     if (item == null) {
       return 0;
@@ -998,7 +998,7 @@ public class Node implements Serializable {
     return item.getIntValue();
   }
 
-  public int getExistingIntProp(int propType) {
+  public int getExistingIntProp(byte propType) {
     PropListItem item = lookupProperty(propType);
     if (item == null) {
       throw new IllegalStateException("missing prop: " + propType);
@@ -1006,18 +1006,18 @@ public class Node implements Serializable {
     return item.getIntValue();
   }
 
-  public void putProp(int propType, @Nullable Object value) {
+  public void putProp(byte propType, @Nullable Object value) {
     removeProp(propType);
     if (value != null) {
       propListHead = createProp(propType, value, propListHead);
     }
   }
 
-  public void putBooleanProp(int propType, boolean value) {
+  public void putBooleanProp(byte propType, boolean value) {
     putIntProp(propType, value ? 1 : 0);
   }
 
-  public void putIntProp(int propType, int value) {
+  public void putIntProp(byte propType, int value) {
     removeProp(propType);
     if (value != 0) {
       propListHead = createProp(propType, value, propListHead);
@@ -1041,11 +1041,11 @@ public class Node implements Serializable {
     return (TypeDeclarationNode) getProp(DECLARED_TYPE_EXPR);
   }
 
-  PropListItem createProp(int propType, Object value, @Nullable PropListItem next) {
+  PropListItem createProp(byte propType, Object value, @Nullable PropListItem next) {
     return new ObjectPropListItem(propType, value, next);
   }
 
-  PropListItem createProp(int propType, int value, @Nullable PropListItem next) {
+  PropListItem createProp(byte propType, int value, @Nullable PropListItem next) {
     return new IntPropListItem(propType, value, next);
   }
 
@@ -1064,13 +1064,13 @@ public class Node implements Serializable {
   }
 
   // Gets all the property types, in sorted order.
-  private int[] getSortedPropTypes() {
+  private byte[] getSortedPropTypes() {
     int count = 0;
     for (PropListItem x = propListHead; x != null; x = x.getNext()) {
       count++;
     }
 
-    int[] keys = new int[count];
+    byte[] keys = new byte[count];
     for (PropListItem x = propListHead; x != null; x = x.getNext()) {
       count--;
       keys[count] = x.getType();
@@ -1179,9 +1179,9 @@ public class Node implements Serializable {
     }
 
     if (printAnnotations) {
-      int[] keys = getSortedPropTypes();
+      byte[] keys = getSortedPropTypes();
       for (int i = 0; i < keys.length; i++) {
-        int type = keys[i];
+        byte type = keys[i];
         PropListItem x = lookupProperty(type);
         sb.append(" [");
         sb.append(propToString(type));
