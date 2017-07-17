@@ -431,7 +431,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       return name != null
           && name.isName()
           && var.getName().equals(name.getString())
-          && !NodeUtil.isVarOrSimpleAssignLhs(name, name.getParent());
+          && !NodeUtil.isNameDeclOrSimpleAssignLhs(name, name.getParent());
     }
   }
 }

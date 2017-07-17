@@ -3029,16 +3029,15 @@ public final class NodeUtil {
   }
 
   /**
-   * Determines whether this node is strictly on the left hand side of an assign
-   * or var initialization. Notably, this does not include all L-values, only
-   * statements where the node is used only as an L-value.
+   * Determines whether this node is strictly on the left hand side of an assign or var
+   * initialization. Notably, this does not include all L-values, only statements where the node is
+   * used only as an L-value.
    *
    * @param n The node
    * @param parent Parent of the node
    * @return True if n is the left hand of an assign
-   * TODO(simranarora): Rename this since it now handles let and const as well as var.
    */
-  static boolean isVarOrSimpleAssignLhs(Node n, Node parent) {
+  static boolean isNameDeclOrSimpleAssignLhs(Node n, Node parent) {
     return
         (parent.isAssign() && parent.getFirstChild() == n) || NodeUtil.isNameDeclaration(parent);
   }

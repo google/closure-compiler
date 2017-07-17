@@ -430,7 +430,7 @@ class FunctionInjector {
       // This is a simple call?  Example: "foo();".
       return CallSiteType.SIMPLE_CALL;
     } else if (NodeUtil.isExprAssign(grandParent)
-        && !NodeUtil.isVarOrSimpleAssignLhs(callNode, parent)
+        && !NodeUtil.isNameDeclOrSimpleAssignLhs(callNode, parent)
         && parent.getFirstChild().isName()
         // TODO(nicksantos): Remove this once everyone is using
         // the CONSTANT_VAR annotation. We know how to remove that.

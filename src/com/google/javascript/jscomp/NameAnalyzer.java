@@ -960,7 +960,7 @@ final class NameAnalyzer implements CompilerPass {
 
       // An assignment implies a reference from the enclosing dependency scope.
       // For example, foo references bar in: function foo() {bar=5}.
-      if (NodeUtil.isVarOrSimpleAssignLhs(n, parent)) {
+      if (NodeUtil.isNameDeclOrSimpleAssignLhs(n, parent)) {
         if (referring != null) {
           recordReference(referringName, name, RefType.REGULAR);
         }
@@ -1019,7 +1019,7 @@ final class NameAnalyzer implements CompilerPass {
      */
     private boolean maybeHiddenAlias(Node n) {
       Node parent = n.getParent();
-      if (NodeUtil.isVarOrSimpleAssignLhs(n, parent)) {
+      if (NodeUtil.isNameDeclOrSimpleAssignLhs(n, parent)) {
         Node rhs = (parent.isVar())
             ? n.getFirstChild() : parent.getLastChild();
         return (rhs != null && !NodeUtil.evaluatesToLocalValue(

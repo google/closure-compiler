@@ -423,11 +423,10 @@ class AnalyzePrototypeProperties implements CompilerPass {
       Node firstChild = nameNode.getFirstChild();
       Node parent = nameNode.getParent();
 
-      if (// Check for a named FUNCTION.
-          isGlobalFunctionDeclaration(t, parent) ||
+      if ( // Check for a named FUNCTION.
+        isGlobalFunctionDeclaration(t, parent) ||
           // Check for a VAR declaration.
-          firstChild != null &&
-          isGlobalFunctionDeclaration(t, firstChild)) {
+          (firstChild != null && isGlobalFunctionDeclaration(t, firstChild))) {
         String name = nameNode.getString();
         getNameInfoForName(name, VAR).getDeclarations().add(
             new GlobalFunction(nameNode, v, t.getModule()));
@@ -455,20 +454,18 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
       Node n = ref.getParent();
       switch (n.getToken()) {
-        // Foo.prototype.getBar = function() { ... }
+          // Foo.prototype.getBar = function() { ... }
         case GETPROP:
           Node dest = n.getSecondChild();
           Node parent = n.getParent();
           Node grandParent = parent.getParent();
 
-          if (dest.isString() &&
-              NodeUtil.isExprAssign(grandParent) &&
-              NodeUtil.isVarOrSimpleAssignLhs(n, parent)) {
+          if (dest.isString()
+              && NodeUtil.isExprAssign(grandParent)
+              && NodeUtil.isNameDeclOrSimpleAssignLhs(n, parent)) {
             String name = dest.getString();
-            Property prop = new AssignmentProperty(
-                grandParent,
-                maybeGetVar(t, root),
-                t.getModule());
+            Property prop =
+                new AssignmentProperty(grandParent, maybeGetVar(t, root), t.getModule());
             getNameInfoForName(name, PROPERTY).getDeclarations().add(prop);
             return true;
           }
