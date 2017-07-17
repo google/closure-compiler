@@ -3146,12 +3146,27 @@ public final class NodeUtil {
    * @param key A node
    */
   static String getObjectLitKeyName(Node key) {
+    Node keyNode = getObjectLitKeyNode(key);
+    if (keyNode != null) {
+      return keyNode.getString();
+    }
+    throw new IllegalStateException("Unexpected node type: " + key);
+  }
+
+  /**
+   * Get the Node that defines the name of an object literal key.
+   *
+   * @param key A node
+   */
+  static Node getObjectLitKeyNode(Node key) {
     switch (key.getToken()) {
       case STRING_KEY:
       case GETTER_DEF:
       case SETTER_DEF:
       case MEMBER_FUNCTION_DEF:
-        return key.getString();
+        return key;
+      case COMPUTED_PROP:
+        return key.getFirstChild().isString() ? key.getFirstChild() : null;
       default:
         break;
     }
@@ -4400,8 +4415,7 @@ public final class NodeUtil {
         return true;
       case OBJECTLIT:
         for (Node key : value.children()) {
-          Preconditions.checkState(
-              key.isGetterDef() || key.isSetterDef() || key.isStringKey() || key.isComputedProp(),
+          Preconditions.checkState(isObjLitProperty(key),
               "Unexpected obj literal key:",
               key);
 
@@ -5110,5 +5124,14 @@ public final class NodeUtil {
 
     NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
     t.traverseAtScope(scope);
+  }
+
+  /** Returns true if the node is a property of an object literal. */
+  public static boolean isObjLitProperty(Node node) {
+    return node.isStringKey()
+        || node.isGetterDef()
+        || node.isSetterDef()
+        || node.isMemberFunctionDef()
+        || node.isComputedProp();
   }
 }

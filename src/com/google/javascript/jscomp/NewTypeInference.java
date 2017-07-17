@@ -1532,6 +1532,14 @@ final class NewTypeInference implements CompilerPass {
           resultPair = analyzeNameFwd(expr, inEnv, requiredType, specializedType);
         }
         break;
+      case MEMBER_FUNCTION_DEF:
+        resultPair = analyzeExprFwd(expr.getFirstChild(), inEnv, requiredType, specializedType);
+        break;
+      case COMPUTED_PROP:
+        resultPair = analyzeExprFwd(expr.getFirstChild(), inEnv, requiredType, specializedType);
+        resultPair = analyzeExprFwd(
+            expr.getSecondChild(), resultPair.env, requiredType, specializedType);
+        break;
       default:
         throw new RuntimeException("Unhandled expression type: " + expr.getToken());
     }
@@ -2766,13 +2774,13 @@ final class NewTypeInference implements CompilerPass {
       } else if (isDict && !prop.isQuotedString()) {
         warnings.add(JSError.make(prop, ILLEGAL_OBJLIT_KEY, "dict"));
       }
-      String pname = NodeUtil.getObjectLitKeyName(prop);
       // We can't assign to a getter to change its value.
       // We can't do a prop access on a setter.
       // So, we don't associate pname with a getter/setter.
       // We add a property with a name that's weird enough to hopefully avoid
       // an accidental clash.
       if (prop.isGetterDef() || prop.isSetterDef()) {
+        String pname = NodeUtil.getObjectLitKeyName(prop);
         EnvTypePair pair = analyzeExprFwd(prop.getFirstChild(), env);
         FunctionType funType = pair.type.getFunType();
         checkNotNull(funType);
@@ -2788,7 +2796,14 @@ final class NewTypeInference implements CompilerPass {
         result = result.withProperty(new QualifiedName(specialPropName), propType);
         env = pair.env;
       } else {
-        QualifiedName qname = new QualifiedName(pname);
+        Node pnameNode = NodeUtil.getObjectLitKeyNode(prop);
+        if (pnameNode == null) {
+          // pnameNode is null when prop is a computed prop does not have a String node key.
+          // Just type-check the prop, then move on to the next property.
+          env = analyzeExprFwd(prop, env).env;
+          continue;
+        }
+        QualifiedName qname = new QualifiedName(pnameNode.getString());
         JSType jsdocType = symbolTable.getPropDeclaredType(prop);
         JSType reqPtype;
         JSType specPtype;
@@ -3665,6 +3680,11 @@ final class NewTypeInference implements CompilerPass {
         } else {
           return analyzeNameBwd(expr, outEnv, requiredType);
         }
+      case MEMBER_FUNCTION_DEF:
+        return analyzeExprBwd(expr.getFirstChild(), outEnv, requiredType);
+      case COMPUTED_PROP:
+        TypeEnv env = analyzeExprBwd(expr.getSecondChild(), outEnv).env;
+        return analyzeExprBwd(expr.getFirstChild(), env);
       default:
         throw new RuntimeException(
             "BWD: Unhandled expression type: "
@@ -3992,11 +4012,12 @@ final class NewTypeInference implements CompilerPass {
     for (Node prop = objLit.getLastChild();
          prop != null;
          prop = prop.getPrevious()) {
-      QualifiedName pname =
-          new QualifiedName(NodeUtil.getObjectLitKeyName(prop));
       if (prop.isGetterDef() || prop.isSetterDef()) {
         env = analyzeExprBwd(prop.getFirstChild(), env).env;
+      } else if (prop.isComputedProp() && !prop.getFirstChild().isString()){
+        env = analyzeExprBwd(prop, env).env;
       } else {
+        QualifiedName pname = new QualifiedName(NodeUtil.getObjectLitKeyName(prop));
         JSType jsdocType = symbolTable.getPropDeclaredType(prop);
         JSType reqPtype;
         if (jsdocType != null) {

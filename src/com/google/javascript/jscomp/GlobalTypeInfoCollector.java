@@ -1529,13 +1529,21 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       Node maybeLvalue = parent.isAssign() ? parent.getFirstChild() : parent;
       if (NodeUtil.isNamespaceDecl(maybeLvalue) && currentScope.isNamespace(maybeLvalue)) {
         for (Node prop : objLitNode.children()) {
-          recordPropertyName(prop);
-          visitNamespacePropertyDeclaration(prop, maybeLvalue, prop.getString());
+          Node keyNode = NodeUtil.getObjectLitKeyNode(prop);
+          if (keyNode != null) {
+            recordPropertyName(keyNode);
+          }
+          if (!prop.isComputedProp()) {
+            visitNamespacePropertyDeclaration(prop, maybeLvalue, prop.getString());
+          }
         }
       } else if (!NodeUtil.isEnumDecl(maybeLvalue)
           && !NodeUtil.isPrototypeAssignment(maybeLvalue)) {
         for (Node prop : objLitNode.children()) {
-          recordPropertyName(prop);
+          Node keyNode = NodeUtil.getObjectLitKeyNode(prop);
+          if (keyNode != null) {
+            recordPropertyName(keyNode);
+          }
           JSDocInfo propJsdoc = prop.getJSDocInfo();
           if (propJsdoc != null) {
             getDeclaredObjLitProps().put(prop, getDeclaredTypeOfNode(propJsdoc, currentScope));
@@ -1806,10 +1814,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
 
     private void visitNamespacePropertyDeclaration(Node declNode, Node recv, String pname) {
       checkArgument(
-          declNode.isGetProp()
-          || declNode.isStringKey()
-          || declNode.isGetterDef()
-          || declNode.isSetterDef(),
+          declNode.isGetProp() || NodeUtil.isObjLitProperty(declNode),
           declNode);
       checkArgument(currentScope.isNamespace(recv));
       if (declNode.isGetterDef()) {
@@ -2682,7 +2687,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       return defSite.getLastChild();
     }
     if (defSite.isName() || defSite.isStringKey()
-        || defSite.isGetterDef() || defSite.isSetterDef()) {
+        || defSite.isGetterDef() || defSite.isSetterDef()
+        || defSite.isMemberFunctionDef()) {
       return defSite;
     }
     throw new RuntimeException("Unknown defsite: " + defSite.getToken());

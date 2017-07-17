@@ -2479,6 +2479,71 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
+  public void testComputedProp() {
+    typeCheck(LINE_JOINER.join(
+        "var i = 1;",
+        "var obj = {",
+        "  ['var' + i]: i,",
+        "};"));
+
+    // Computed prop type checks within
+    typeCheck(LINE_JOINER.join(
+        "var i = null;",
+        "var obj = {",
+        "  ['var' + i++]: i",
+        "};"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    // Computed prop does not exist as obj prop
+    typeCheck(LINE_JOINER.join(
+        "var i = 1;",
+        "var obj = {",
+        "  ['var' + i]: i",
+        "};",
+        "var x = obj.var1"),
+        NewTypeInference.INEXISTENT_PROPERTY);
+
+    // But if it is a plain string then safe to add it as a property.
+    typeCheck(LINE_JOINER.join(
+        "var obj = {",
+        "  ['static']: 1",
+        "};",
+        "var /** number */ x = obj.static"));
+
+    // Does not yet have support for qualified names
+    typeCheck(LINE_JOINER.join(
+        "/** @const */ FOO = 'bar';",
+        "var obj = {",
+        "  [FOO]: 1",
+        "};",
+        "var x = obj.bar"),
+        NewTypeInference.INEXISTENT_PROPERTY);
+
+    // Test recordPropertyName calls in GTICollector
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = { ['a']: 123 };",
+        "var obj = { ['b']: 234 };",
+        "function f(x) {",
+        "  return x.a + x.b;",
+        "}"));
+  }
+
+  public void testMemberFunctionDef() {
+    typeCheck(LINE_JOINER.join(
+        "var obj = {",
+        "  method (/** number */ n) {}",
+        "};",
+        "obj.method(1);"));
+
+    typeCheck(LINE_JOINER.join(
+        "var obj = {",
+        "  method (/** string */ n) {}",
+        "};",
+        "obj.method(1);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+  }
+
   public void testDeclaredVersusInferredTypeForVar() {
     typeCheck("var /** ? */ x = 'str'; x - 123;");
 
