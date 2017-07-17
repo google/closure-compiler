@@ -45,7 +45,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     enableGatherExternProperties();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   public void testSimple1() {
@@ -356,18 +356,15 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testEs6GettersWithoutTranspilation() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     test("class C { get value() { return 0; } }", "class C {}");
     testSame("class C { get value() { return 0; } } const x = (new C()).value");
   }
 
   public void testES6ClassComputedProperty() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame("class C { ['test' + 3]() { return 0; } }");
   }
 
   public void testEs6SettersWithoutTranspilation() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     test("class C { set value(val) { this.internalVal = val; } }", "class C {}");
 
     test(
@@ -391,7 +388,6 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   // All object literal fields are not removed, but the following
   // tests assert that the pass does not fail.
   public void testEs6EnhancedObjLiteralsComputedValuesNotRemoved() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(
         LINE_JOINER.join(
             "function getCar(make, model, value) {",
@@ -402,7 +398,6 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testEs6EnhancedObjLiteralsMethodShortHandNotRemoved() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(
         LINE_JOINER.join(
             "function getCar(make, model, value) {",
@@ -415,7 +410,6 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testEs6EnhancedObjLiteralsPropertyShorthand() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame("function getCar(make, model, value) { return {model}; }");
   }
 
@@ -472,5 +466,117 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
             "0;",
             "0;",
             "$jscomp.global.Object.defineProperties(C.prototype, {});"));
+  }
+
+  public void testEs6ArrowFunction() {
+    test("() => this.a = 1", "() => 1");
+    testSame("() => ({a: 2})");
+    testSame("() => {y.a = 2; this.a = 2;}");
+    test(
+        LINE_JOINER.join(
+            "var A = () => {this.foo = 1;}",
+            "A.prototype.foo = 0;",
+            "A.prototype.method = () => {this.foo++};",
+            "new A().method()"),
+        LINE_JOINER.join(
+            "var A = () => {1;}",
+            "0;",
+            "A.prototype.method = () => {0;};",
+            "new A().method()"));
+  }
+
+  public void testEs6ForOf() {
+    test("this.y = 1;for (var a of x) { alert(x[a]) }", "1; for (var a of x) { alert(x[a]) }");
+    testSame("var obj = {}; obj.a = 1; for (var a of obj) { alert(obj[a]) }");
+    testSame("this.y = {};for (var a of this.y) { alert(this.y[a]) }");
+  }
+
+  public void testEs6TemplateLiterals() {
+    test(
+        LINE_JOINER.join(
+            "function tag(strings, x) { this.a = x; }",
+            "tag`tag ${0} function`"),
+        LINE_JOINER.join(
+            "function tag(strings, x) { x; }",
+            "tag`tag ${0} function`"));
+  }
+
+  public void testEs6Generator() {
+    test("function* gen() { yield this.a = 1; }", "function* gen() { yield 1; }");
+    testSame("function* gen() { yield this.a = 1; yield this.a; }");
+  }
+
+  // TODO(yitingwang): Fix destructuring so these tests produce the same result as the comments
+  public void testEs6Destructuring() {
+    testSame("[this.x, this.y] = [1, 2];"); // [] = [1,2]
+    testSame(
+        LINE_JOINER.join(
+            "[this.x, ...this.y] = [1, 2];", // [, ...this.y] = [1, 2];
+            "var p = this.y;")); // var p = this.y;
+    testSame(
+        LINE_JOINER.join(
+            "this.x = 1;",
+            "this.y = 2;",
+            "[...a] = [this.x, this.y];"));
+    testSame("[this.x, this.y, ...z] = [1, 2];"); // [ , , ...z] = [1, 2];
+    testSame("[this.x, this.y, ...this.z] = [1, 2, 3]"); // [ , , , ] = [1, 2, 3]
+    testSame("({a: this.x, b: this.y} = {a: 1, b: 2})"); // ({} = {a: 1, b: 2})
+    test( // testSame
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "     this.a = 1;",
+            "     this.b = 2;",
+            "  }",
+            "}",
+            "({a: x, b: y} = new C());"),
+        LINE_JOINER.join(
+            "class C {}",
+            "({a: x, b: y} = new C);"));
+    test( // testSame
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "     this.a = 1;",
+            "     this.b = 2;",
+            "  }",
+            "}",
+            "let {a: x, b: y} = new C();"),
+        LINE_JOINER.join(
+            "class C {}",
+            "let {a: x, b: y} = new C;"));
+  }
+
+  public void testEs6DefaultParameter() {
+    test("function foo(x, y = this.a = 1) {}", "function foo(x, y = 1) {}");
+    testSame("this.a = 1; function foo(x, y = this.a) {}");
+  }
+
+  public void testEs8AsyncFunction() {
+    test(
+        LINE_JOINER.join(
+            "async function foo(promise) {",
+            "   this.x = 1;",
+            "   return await promise;",
+            "}"),
+        LINE_JOINER.join(
+            "async function foo(promise) {",
+            "   1;",
+            "   return await promise;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "async function foo() {",
+            "   this.x = 1;",
+            "   return await this.x;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "this.x = 1;",
+            "async function foo() {",
+            "   return await this.x;",
+            "}"));
   }
 }
