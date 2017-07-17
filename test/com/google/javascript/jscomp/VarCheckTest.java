@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.VarCheck.VAR_MULTIPLY_DECLARED_ERROR;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -594,18 +595,20 @@ public final class VarCheckTest extends CompilerTestCase {
 
     @Override
     public void process(Node externs, Node root) {
-      NodeTraversal.traverseRootsEs6(compiler,
+      NodeTraversal.traverseRootsEs6(
+          compiler,
           new AbstractPostOrderCallback() {
             @Override
             public void visit(NodeTraversal t, Node n, Node parent) {
-              if (n.isName() && !parent.isFunction()
-                  && !parent.isLabel()) {
-                assertTrue("Variable " + n.getString() + " should have be declared",
-                    t.getScope().isDeclared(n.getString(), true));
+              if (n.isName() && !parent.isFunction() && !parent.isLabel()) {
+                assertWithMessage("Variable %s should have been declared", n)
+                    .that(t.getScope().isDeclared(n.getString(), true))
+                    .isTrue();
               }
             }
           },
-          externs, root);
+          externs,
+          root);
     }
   }
 
