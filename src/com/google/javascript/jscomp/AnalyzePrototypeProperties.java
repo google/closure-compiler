@@ -170,8 +170,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
    * @param type The type of symbol.
    */
   private NameInfo getNameInfoForName(String name, SymbolType type) {
-    Map<String, NameInfo> map = type == PROPERTY ?
-        propertyNameInfo : varNameInfo;
+    Map<String, NameInfo> map =
+        type == PROPERTY ? propertyNameInfo : varNameInfo;
     if (map.containsKey(name)) {
       return map.get(name);
     } else {
@@ -250,81 +250,100 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isGetProp()) {
-        String propName = n.getSecondChild().getString();
+      switch (n.getToken()) {
+        case GETPROP:
+          String propName = n.getSecondChild().getString();
 
-        if (n.isQualifiedName()) {
-          if (propName.equals("prototype")) {
-            if (processPrototypeRef(t, n)) {
-              return;
-            }
-          } else if (compiler.getCodingConvention().isExported(propName)) {
-            addGlobalUseOfSymbol(propName, t.getModule(), PROPERTY);
-            return;
-          } else {
-            // Do not mark prototype prop assigns as a 'use' in the global scope.
-            if (n.getParent().isAssign() && n.getNext() != null) {
-              String rValueName = getPrototypePropertyNameFromRValue(n);
-              if (rValueName != null) {
+          if (n.isQualifiedName()) {
+            if (propName.equals("prototype")) {
+              if (processPrototypeRef(t, n)) {
                 return;
               }
-            }
-          }
-        }
-
-        addSymbolUse(propName, t.getModule(), PROPERTY);
-      } else if (n.isObjectLit()) {
-        // Make sure that we're not handling object literals being
-        // assigned to a prototype, as in:
-        // Foo.prototype = {bar: 3, baz: 5};
-        String lValueName = NodeUtil.getBestLValueName(
-            NodeUtil.getBestLValue(n));
-        if (lValueName != null && lValueName.endsWith(".prototype")) {
-          return;
-        }
-
-        // var x = {a: 1, b: 2}
-        // should count as a use of property a and b.
-        for (Node propNameNode = n.getFirstChild(); propNameNode != null;
-             propNameNode = propNameNode.getNext()) {
-          // May be STRING, GET, or SET, but NUMBER isn't interesting.
-          if (!propNameNode.isQuotedString()) {
-            addSymbolUse(propNameNode.getString(), t.getModule(), PROPERTY);
-          }
-        }
-      } else if (n.isName()) {
-        String name = n.getString();
-
-        Var var = t.getScope().getVar(name);
-        if (var != null) {
-          // Only process global functions.
-          if (var.isGlobal()) {
-            if (var.getInitialValue() != null &&
-                var.getInitialValue().isFunction()) {
-              if (t.inGlobalHoistScope()) {
-                if (!processGlobalFunctionDeclaration(t, n, var)) {
-                  addGlobalUseOfSymbol(name, t.getModule(), VAR);
+            } else if (compiler.getCodingConvention().isExported(propName)) {
+              addGlobalUseOfSymbol(propName, t.getModule(), PROPERTY);
+              return;
+            } else {
+              // Do not mark prototype prop assigns as a 'use' in the global scope.
+              if (n.getParent().isAssign() && n.getNext() != null) {
+                String rValueName = getPrototypePropertyNameFromRValue(n);
+                if (rValueName != null) {
+                  return;
                 }
-              } else {
-                addSymbolUse(name, t.getModule(), VAR);
               }
-            }
-
-          // If it is not a global, it might be accessing a local of the outer
-          // scope. If that's the case the functions between the variable's
-          // declaring scope and the variable reference scope cannot be moved.
-          } else if (var.getScope() != t.getScope()) {
-            for (NameContext context : symbolStack) {
-              if (context.scope == var.getScope()) {
-                break;
-              }
-
-              context.name.readClosureVariables = true;
             }
           }
-        }
-      }
 
+          addSymbolUse(propName, t.getModule(), PROPERTY);
+          break;
+
+        case OBJECTLIT:
+          // Make sure that we're not handling object literals being
+          // assigned to a prototype, as in:
+          // Foo.prototype = {bar: 3, baz: 5};
+          String lValueName = NodeUtil.getBestLValueName(
+              NodeUtil.getBestLValue(n));
+          if (lValueName != null && lValueName.endsWith(".prototype")) {
+            return;
+          }
+
+          // var x = {a: 1, b: 2}
+          // should count as a use of property a and b.
+          for (Node propNameNode = n.getFirstChild(); propNameNode != null;
+              propNameNode = propNameNode.getNext()) {
+            // May be STRING, GET, or SET, but NUMBER isn't interesting.
+            if (!propNameNode.isQuotedString()) {
+              addSymbolUse(propNameNode.getString(), t.getModule(), PROPERTY);
+            }
+          }
+          break;
+
+        case MEMBER_FUNCTION_DEF:
+          processMemberDef(t, n);
+          break;
+
+        case OBJECT_PATTERN:
+          for (Node stringKeyNode = n.getFirstChild(); stringKeyNode != null;
+              stringKeyNode = stringKeyNode.getNext()) {
+            addSymbolUse(stringKeyNode.getString(), t.getModule(), PROPERTY);
+          }
+          break;
+
+        case NAME:
+          String name = n.getString();
+
+          Var var = t.getScope().getVar(name);
+          if (var != null) {
+            // Only process global functions.
+            if (var.isGlobal()) {
+              if (var.getInitialValue() != null &&
+                  var.getInitialValue().isFunction()) {
+                if (t.inGlobalHoistScope()) {
+                  if (!processGlobalFunctionDeclaration(t, n, var)) {
+                    addGlobalUseOfSymbol(name, t.getModule(), VAR);
+                  }
+                } else {
+                  addSymbolUse(name, t.getModule(), VAR);
+                }
+              }
+
+              // If it is not a global, it might be accessing a local of the outer
+              // scope. If that's the case the functions between the variable's
+              // declaring scope and the variable reference scope cannot be moved.
+            } else if (var.getScope() != t.getScope()) {
+              for (NameContext context : symbolStack) {
+                if (context.scope == var.getScope()) {
+                  break;
+                }
+
+                context.name.readClosureVariables = true;
+              }
+            }
+          }
+          break;
+
+        default:
+          break;
+        }
       // Process prototype assignments to non-functions.
       if (processNonFunctionPrototypeAssign(n, parent) != null) {
         symbolStack.pop();
@@ -365,13 +384,13 @@ class AnalyzePrototypeProperties implements CompilerPass {
       // Make sure we're not in a function scope, or if we are then the function we're looking at
       // is defined in the global scope.
       if (!(t.inGlobalHoistScope()
-            || n.isFunction() && t.getScopeRoot() == n
-               && t.getScope().getParent().getClosestHoistScope().isGlobal())) {
+          || (n.isFunction()
+              && t.getScopeRoot() == n
+              && t.getScope().getParent().getClosestHoistScope().isGlobal()))) {
         return false;
       }
 
-      return NodeUtil.isFunctionDeclaration(n)
-          || n.isFunction() && n.getParent().isName();
+      return NodeUtil.isFunctionDeclaration(n) || (n.isFunction() && n.getParent().isName());
     }
 
     /**
@@ -397,7 +416,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
       }
 
       String lValueName =
-          NodeUtil.getBestLValueName(NodeUtil.getBestLValue(rValue));
+          NodeUtil.getBestLValueName(lValue);
+
       if (lValueName == null) {
         return null;
       }
@@ -424,7 +444,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       Node parent = nameNode.getParent();
 
       if ( // Check for a named FUNCTION.
-        isGlobalFunctionDeclaration(t, parent) ||
+          isGlobalFunctionDeclaration(t, parent) ||
           // Check for a VAR declaration.
           (firstChild != null && isGlobalFunctionDeclaration(t, firstChild))) {
         String name = nameNode.getString();
@@ -494,6 +514,21 @@ class AnalyzePrototypeProperties implements CompilerPass {
           break;
       }
       return false;
+    }
+
+    private void processMemberDef(NodeTraversal t, Node n) {
+      checkState(n.isMemberFunctionDef());
+      String name = n.getString();
+      // Don't want to add a declaration for constructors and static members
+      // so they aren't removed
+      if (name.equals("constructor") || n.isStaticMember()) {
+        return;
+      }
+
+      String className = NodeUtil.getName(n.getGrandparent());
+      Var var = t.getScope().getVar(className);
+      getNameInfoForName(name, PROPERTY).getDeclarations()
+          .add(new MemberFunction(n, var, t.getModule()));
     }
 
     private Var maybeGetVar(NodeTraversal t, Node maybeName) {
@@ -602,6 +637,35 @@ class AnalyzePrototypeProperties implements CompilerPass {
       return module;
     }
   }
+
+   static class MemberFunction implements  Symbol {
+     private final Node node;
+     private final Var var;
+     private final JSModule module;
+
+     MemberFunction(Node node, Var var, JSModule module) {
+       checkState(node.isMemberFunctionDef() && node.getParent().isClassMembers());
+       this.node = node;
+       this.var = var;
+       this.module = module;
+     }
+
+     @Override
+     public Var getRootVar() {
+       return var;
+     }
+
+     @Override
+     public void remove(AbstractCompiler compiler) {
+       NodeUtil.deleteNode(node, compiler);
+     }
+
+     @Override
+     public JSModule getModule() {
+       return module;
+     }
+
+   }
 
   /**
    * Since there are two ways of assigning properties to prototypes, we hide

@@ -2730,8 +2730,9 @@ public final class NodeUtil {
       // "synthetic"-ness.
       node.detachChildren();
     } else if (isStatementBlock(parent)
-        || isSwitchCase(node)) {
-      // A statement in a block can simply be removed.
+        || isSwitchCase(node)
+        || node.isMemberFunctionDef()) {
+      // A statement in a block or a member function can simply be removed
       parent.removeChild(node);
     } else if (isNameDeclaration(parent) || parent.isExprResult()) {
       if (parent.hasMoreThanOneChild()) {
@@ -4640,6 +4641,14 @@ public final class NodeUtil {
   static String getBestLValueName(@Nullable Node lValue) {
     if (lValue == null || lValue.getParent() == null) {
       return null;
+    }
+    if (lValue.isMemberFunctionDef() && lValue.getParent().isClassMembers()) {
+      String className = NodeUtil.getName(lValue.getGrandparent());
+      if (className == null) { // Anonymous class
+        return null;
+      }
+      String methodName = lValue.getString();
+      return className + ".prototype." + methodName;
     }
     if (isObjectLitKey(lValue)) {
       Node owner = getBestLValue(lValue.getParent());
