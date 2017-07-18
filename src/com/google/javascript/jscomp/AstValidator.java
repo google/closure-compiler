@@ -226,13 +226,16 @@ public final class AstValidator implements CompilerPass {
       case POS:
       case NEG:
       case NOT:
-      case INC:
-      case DEC:
       case TYPEOF:
       case VOID:
       case BITNOT:
       case CAST:
         validateUnaryOp(n);
+        return;
+
+      case INC:
+      case DEC:
+        validateIncDecOp(n);
         return;
 
       // Assignments
@@ -1301,19 +1304,41 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
+  private void validateIncDecOp(Node n) {
+    validateChildCount(n, 1);
+    validateIncDecTarget(n.getFirstChild());
+  }
+
+  private void validateIncDecTarget(Node n) {
+    switch (n.getToken()) {
+      case NAME:
+      case GETPROP:
+      case GETELEM:
+        validateExpression(n);
+        break;
+      case CAST:
+        validateChildCount(n.getFirstChild(), 1);
+        validateIncDecTarget(n.getFirstChild());
+        break;
+      default:
+        violation("Invalid INC/DEC target " + n.getToken(), n);
+    }
+  }
+
+
   private void validateUnaryOp(Node n) {
-    validateChildCount(n);
+    validateChildCount(n, 1);
     validateExpression(n.getFirstChild());
   }
 
   private void validateBinaryOp(Node n) {
-    validateChildCount(n);
+    validateChildCount(n, 2);
     validateExpression(n.getFirstChild());
     validateExpression(n.getLastChild());
   }
 
   private void validateTrinaryOp(Node n) {
-    validateChildCount(n);
+    validateChildCount(n, 3);
     Node first = n.getFirstChild();
     validateExpression(first);
     validateExpression(first.getNext());
