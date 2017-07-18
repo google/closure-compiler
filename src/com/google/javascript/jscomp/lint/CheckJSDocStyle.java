@@ -277,6 +277,9 @@ public final class CheckJSDocStyle extends AbstractPostOrderCallback implements 
     if (NodeUtil.isNameDeclaration(function.getGrandparent()) || function.getParent().isAssign()) {
       return true;
     }
+    if (function.getParent().isExport()) {
+      return true;
+    }
 
     if (function.getGrandparent().isClassMembers()) {
       Node memberNode = function.getParent();

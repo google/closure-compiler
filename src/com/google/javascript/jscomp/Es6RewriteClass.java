@@ -617,6 +617,9 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
         }
         return new ClassDeclarationMetadata(parent.getParent(), fullClassName, true, classNameNode,
             superClassNameNode);
+      } else if (parent.isExport()) {
+        return new ClassDeclarationMetadata(
+            classNode, classNameNode.getString(), false, classNameNode, superClassNameNode);
       } else if (parent.isName()) {
         // Add members after the 'var' statement.
         // var C = class {}; C.prototype.foo = function() {};

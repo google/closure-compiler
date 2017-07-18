@@ -396,6 +396,25 @@ public final class NodeUtilTest extends TestCase {
                     getNode("foo()")));
   }
 
+  public void testIsFunctionDeclaration() {
+    assertTrue(NodeUtil.isFunctionDeclaration(getFunctionNode("function foo(){}")));
+    assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("export function f() {}")));
+    assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("class C { constructor() {} }")));
+    assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("var x = function(){}")));
+    assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("export default function() {}")));
+    assertFalse(
+        NodeUtil.isFunctionDeclaration(getFunctionNode("export default function foo() {}")));
+    assertFalse(
+        NodeUtil.isFunctionDeclaration(getFunctionNode("export default (foo) => { alert(foo); }")));
+  }
+
+  public void testIsClassDeclaration() {
+    assertTrue(NodeUtil.isClassDeclaration(getClassNode("class Foo {}")));
+    assertFalse(NodeUtil.isClassDeclaration(getClassNode("var Foo = class {}")));
+    assertFalse(NodeUtil.isClassDeclaration(getClassNode("var Foo = class Foo{}")));
+    assertFalse(NodeUtil.isClassDeclaration(getClassNode("export default class Foo {}")));
+  }
+
   private void assertSideEffect(boolean se, String js) {
     Node n = parse(js);
     assertEquals(se, NodeUtil.mayHaveSideEffects(n.getFirstChild()));

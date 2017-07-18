@@ -2643,7 +2643,6 @@ public final class NodeUtil {
   private static boolean isDeclarationParent(Node parent) {
     switch (parent.getToken()) {
       case DECLARE:
-      case EXPORT:
         return true;
       default:
         return isStatementParent(parent);
