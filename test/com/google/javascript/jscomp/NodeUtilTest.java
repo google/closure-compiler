@@ -37,6 +37,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import junit.framework.TestCase;
@@ -629,7 +631,6 @@ public final class NodeUtilTest extends TestCase {
     assertMutableState(true, "new SomeClassINeverHeardOf()");
   }
 
-
   public void testIsFunctionExpression() {
     assertContainsAnonFunc(true, "(function(){})");
     assertContainsAnonFunc(true, "[function a(){}]");
@@ -755,7 +756,6 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isNameReferenced(
         parse("goo.foo"), "foo"));
   }
-
 
   public void testGetNameReferenceCount() {
     assertEquals(0, NodeUtil.getNameReferenceCount(
@@ -2489,17 +2489,33 @@ public final class NodeUtilTest extends TestCase {
 
   public void testGetAllVars1() {
     String fnString = "var h; function g(x, y) {var z; h = 2; {let a; const b = 1} let c}";
-    Node ast = parse(fnString);
-    Node functionNode = getFunctionNode(fnString);
     Compiler compiler = new Compiler();
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
     ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+
+    Node ast = parse(fnString);
+    Node functionNode = getFunctionNode(fnString);
+    Node functionBlockNode = functionNode.getLastChild();
+    Node innerBlockNode = functionBlockNode.getFirstChild().getNext().getNext();
+
     Scope globalScope = Scope.createGlobalScope(ast);
     Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
+    Scope functionBlockScope = scopeCreator.createScope(functionBlockNode, functionScope);
+    Scope innerBlockScope = scopeCreator.createScope(innerBlockNode, functionBlockScope);
+
     Map<String, Var> allVariables = new HashMap<>();
-    NodeUtil.getAllVarsDeclaredInFunction(allVariables, compiler, scopeCreator, functionScope);
+    List<Var> orderedVars = new LinkedList<>();
+    List<Scope> scopeStack = new LinkedList<>();
+    NodeUtil.getAllVarsDeclaredInFunction(
+        allVariables, orderedVars, scopeStack, compiler, scopeCreator, functionScope);
     Set<String> keySet = new HashSet<>(Arrays.asList("a", "b", "c", "z", "x", "y"));
     assertEquals(keySet, allVariables.keySet());
+
+    List<Scope> scopeList = new LinkedList<>();
+    scopeList.add(functionScope);
+    scopeList.add(functionBlockScope);
+    scopeList.add(innerBlockScope);
+    assertThat(scopeStack.toString()).isEqualTo(scopeList.toString());
   }
 
   public void testGetAllVars2() {
@@ -2510,19 +2526,35 @@ public final class NodeUtilTest extends TestCase {
             + "const b = 1} "
         + "let c} "
         + "function u(h) {let e}";
-    Node ast = parse(fnString);
-    Node functionNode = getFunctionNode(fnString); // Will get the first function
+
     Compiler compiler = new Compiler();
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
     ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+
+    Node ast = parse(fnString);
+    Node functionNode = getFunctionNode(fnString);
+    Node functionBlockNode = functionNode.getLastChild();
+    Node innerBlockNode = functionBlockNode.getFirstChild().getNext();
+
     Scope globalScope = Scope.createGlobalScope(ast);
     Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
+    Scope functionBlockScope = scopeCreator.createScope(functionBlockNode, functionScope);
+    Scope innerBlockScope = scopeCreator.createScope(innerBlockNode, functionBlockScope);
+
     Map<String, Var> allVariables = new HashMap<>();
-    NodeUtil.getAllVarsDeclaredInFunction(allVariables, compiler, scopeCreator, functionScope);
+    List<Var> orderedVars = new LinkedList<>();
+    List<Scope> scopeStack = new LinkedList<>();
+    NodeUtil.getAllVarsDeclaredInFunction(
+        allVariables, orderedVars, scopeStack, compiler, scopeCreator, functionScope);
     Set<String> keySet = new HashSet<>(Arrays.asList("x", "y", "z", "a", "b", "c"));
     assertEquals(keySet, allVariables.keySet());
-  }
 
+    List<Scope> scopeList = new LinkedList<>();
+    scopeList.add(functionScope);
+    scopeList.add(functionBlockScope);
+    scopeList.add(innerBlockScope);
+    assertThat(scopeStack.toString()).isEqualTo(scopeList.toString());
+  }
 
   private boolean executedOnceTestCase(String code) {
     Node ast = parse(code);

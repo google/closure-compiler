@@ -204,6 +204,10 @@ class VarCheck extends AbstractPostOrderCallback implements
           }
 
           if (sanityCheck) {
+            // When the code is initially traversed, any undeclared variables are treated as
+            // externs. During this sanity check, we ensure that all variables have either been
+            // declared or marked as an extern. A failure at this point means that we have created
+            // some variable/generated some code with an undefined reference.
             throw new IllegalStateException("Unexpected variable " + varName);
           } else {
             createSynthesizedExternVar(varName);

@@ -5096,40 +5096,53 @@ public final class NodeUtil {
   }
 
   /**
-   * Function that returns a mapping of names to vars of everything reachable in a function.
-   * Should only be called with a function scope. Does not enter new control flow areas aka embedded
-   * functions.
+   * Records a mapping of names to vars of everything reachable in a function. Should only be called
+   * with a function scope. Does not enter new control flow areas aka embedded functions.
+   *
+   * @param nameVarMap an empty map that gets populated with the keys being variable names and
+   *     values being variable objects
+   * @param orderedVars an empty list that gets populated with variable objects in the order that
+   *     they appear in the fn
+   * @param scopeStack an empty list that gets populated with the scope objects within a given
+   *     function
    */
-  static void getAllVarsDeclaredInFunction (
+  static void getAllVarsDeclaredInFunction(
       final Map<String, Var> nameVarMap,
+      final List<Var> orderedVars,
+      final List<Scope> scopeStack,
       AbstractCompiler compiler,
       ScopeCreator scopeCreator,
-      final Scope scope){
+      final Scope scope) {
 
-    checkState(scope.isFunctionScope());
-    checkState(compiler.getLifeCycleStage().isNormalized());
+    checkState(nameVarMap.isEmpty());
+    checkState(orderedVars.isEmpty());
+    checkState(scopeStack.isEmpty());
+    checkState(scope.isFunctionScope(), scope);
 
-    ScopedCallback finder = new ScopedCallback() {
-      @Override
-      public void enterScope(NodeTraversal t) {
-        Scope currentScope = t.getScope();
-        for (Var v : currentScope.getVarIterable()) {
-          nameVarMap.put(v.getName(), v);
-        }
-      }
+    ScopedCallback finder =
+        new ScopedCallback() {
+          @Override
+          public void enterScope(NodeTraversal t) {
+            Scope currentScope = t.getScope();
+            scopeStack.add(currentScope);
+            for (Var v : currentScope.getVarIterable()) {
+              nameVarMap.put(v.getName(), v);
+              orderedVars.add(v);
+            }
+          }
 
-      @Override
-      public void exitScope(NodeTraversal t) {}
+          @Override
+          public void exitScope(NodeTraversal t) {}
 
-      @Override
-      public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-        // Don't enter any new functions
-        return !n.isFunction() || n == scope.getRootNode();
-      }
+          @Override
+          public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+            // Don't enter any new functions
+            return !n.isFunction() || n == scope.getRootNode();
+          }
 
-      @Override
-      public void visit(NodeTraversal t, Node n, Node parent) {}
-    };
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {}
+        };
 
     NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
     t.traverseAtScope(scope);

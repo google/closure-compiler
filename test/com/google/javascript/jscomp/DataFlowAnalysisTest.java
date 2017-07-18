@@ -674,7 +674,7 @@ public final class DataFlowAnalysisTest extends TestCase {
                 "}"))
         .hasSize(1);
     assertThat(computeEscapedLocals("function f() {var _x}")).hasSize(1);
-    assertThat(computeEscapedLocals("function f() {try{} catch(e){}}")).isEmpty();
+    assertThat(computeEscapedLocals("function f() {try{} catch(e){}}")).hasSize(1);
   }
 
   public void testEscapedFunctionLayered() {

@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -636,12 +637,18 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
         };
 
     Map<String, Var> allVarsInFn = new HashMap<>();
-    NodeUtil.getAllVarsDeclaredInFunction(allVarsInFn, compiler, scopeCreator, jsScope);
+    List<Var> orderedVars = new LinkedList<>();
+    List<Scope> scopeStack = new LinkedList<>();
+    NodeUtil.getAllVarsDeclaredInFunction(
+        allVarsInFn, orderedVars, scopeStack, compiler, scopeCreator, jsScope);
     NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
     t.traverseAtScope(jsScope);
 
+    // TODO (simranarora) catch variables should not be considered escaped in ES6. Getting rid of
+    // the catch check is causing breakages however
     for (Var var : allVarsInFn.values()) {
-      if (compiler.getCodingConvention().isExported(var.getName())) {
+      if (var.getParentNode().isCatch()
+          || compiler.getCodingConvention().isExported(var.getName())) {
         escaped.add(var);
       }
     }

@@ -30,6 +30,7 @@ import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,6 +50,8 @@ class MaybeReachingVariableUse extends
   // The scope of the function that we are analyzing.
   private final Set<Var> escaped;
   private final Map<String, Var> allVarsInFn;
+  private final List<Var> orderedVars;
+  private final List<Scope> scopeStack;
 
   MaybeReachingVariableUse(
       ControlFlowGraph<Node> cfg,
@@ -58,11 +61,14 @@ class MaybeReachingVariableUse extends
     super(cfg, new ReachingUsesJoinOp());
     this.escaped = new HashSet<>();
     this.allVarsInFn = new HashMap<>();
+    this.orderedVars = new LinkedList<>();
+    this.scopeStack = new LinkedList<>();
 
     // TODO(user): Maybe compute it somewhere else and re-use the escape
     // local set here.
     computeEscapedEs6(jsScope.getParent(), escaped, compiler, scopeCreator);
-    NodeUtil.getAllVarsDeclaredInFunction(allVarsInFn, compiler, scopeCreator, jsScope.getParent());
+    NodeUtil.getAllVarsDeclaredInFunction(
+        allVarsInFn, orderedVars, scopeStack, compiler, scopeCreator, jsScope.getParent());
   }
 
   /**

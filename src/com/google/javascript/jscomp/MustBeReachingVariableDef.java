@@ -26,6 +26,8 @@ import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -46,6 +48,8 @@ final class MustBeReachingVariableDef extends
   private final AbstractCompiler compiler;
   private final Set<Var> escaped;
   private final Map<String, Var> allVarsInFn;
+  private final List<Var> orderedVars;
+  private final List<Scope> scopeStack;
 
   MustBeReachingVariableDef(
       ControlFlowGraph<Node> cfg,
@@ -56,9 +60,11 @@ final class MustBeReachingVariableDef extends
     this.compiler = compiler;
     this.escaped = new HashSet<>();
     this.allVarsInFn = new HashMap<>();
+    this.orderedVars = new LinkedList<>();
+    this.scopeStack = new LinkedList<>();
     computeEscapedEs6(jsScope.getParent(), escaped, compiler, scopeCreator);
     NodeUtil.getAllVarsDeclaredInFunction(
-        allVarsInFn, compiler, scopeCreator, jsScope.getParent());
+        allVarsInFn, orderedVars, scopeStack, compiler, scopeCreator, jsScope.getParent());
   }
 
   /**

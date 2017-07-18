@@ -284,7 +284,7 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
   // ES6 does not require separate handling for catch because the catch block is already recognized
   // by the scope creator
   public void testNotEscapedWithCatch() {
-    assertNotEscaped("try{} catch(e){}", "e");
+    assertEscaped("try{} catch(e){}", "e");
   }
 
   public void testEscapedLiveness() {

@@ -25,6 +25,7 @@ import com.google.javascript.rhino.Node;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -117,6 +118,12 @@ class LiveVariablesAnalysisEs6
   // represents the equivalent of the variable index property within a scope
   private final Map<String, Integer> scopeVariables;
 
+  // obtain variables in the order in which they appear in the code
+  private final List<Var> orderedVars;
+
+  // The scopes within a given function
+  private final List<Scope> scopeStack;
+
   private final Map<String, Var> allVarsInFn;
   /**
    * ******************************************************* Live Variables Analysis using the ES6
@@ -138,14 +145,18 @@ class LiveVariablesAnalysisEs6
     super(cfg, new LiveVariableJoinOp());
     checkState(jsScope.isFunctionScope(), jsScope);
     checkState(jsScopeChild.isFunctionBlockScope(), jsScopeChild);
-    checkState(compiler.getLifeCycleStage().isNormalized());
+
     this.jsScope = jsScope;
     this.jsScopeChild = jsScopeChild;
     this.escaped = new HashSet<>();
     this.scopeVariables = new HashMap<>();
     this.allVarsInFn = new HashMap<>();
+    this.orderedVars = new LinkedList<>();
+    this.scopeStack = new LinkedList<>();
+
     computeEscapedEs6(jsScope, escaped, compiler, scopeCreator);
-    NodeUtil.getAllVarsDeclaredInFunction(allVarsInFn, compiler, scopeCreator, jsScope);
+    NodeUtil.getAllVarsDeclaredInFunction(
+        allVarsInFn, orderedVars, scopeStack, compiler, scopeCreator, jsScope);
     addScopeVariables();
   }
 
@@ -156,8 +167,8 @@ class LiveVariablesAnalysisEs6
    */
   private void addScopeVariables() {
     int num = 0;
-    for (String name : allVarsInFn.keySet()) {
-      scopeVariables.put(name, num);
+    for (Var v : orderedVars) {
+      scopeVariables.put(v.getName(), num);
       num++;
     }
   }
@@ -168,6 +179,14 @@ class LiveVariablesAnalysisEs6
 
   public Map<String, Var> getAllVariables() {
     return allVarsInFn;
+  }
+
+  public List<Var> getAllVariablesInOrder() {
+    return orderedVars;
+  }
+
+  public List<Scope> getScopeStack() {
+    return scopeStack;
   }
 
   public int getVarIndex(String var) {
@@ -181,12 +200,12 @@ class LiveVariablesAnalysisEs6
 
   @Override
   LiveVariableLattice createEntryLattice() {
-    return new LiveVariableLattice(allVarsInFn.size());
+    return new LiveVariableLattice(orderedVars.size());
   }
 
   @Override
   LiveVariableLattice createInitialEstimateLattice() {
-    return new LiveVariableLattice(allVarsInFn.size());
+    return new LiveVariableLattice(orderedVars.size());
   }
 
   @Override
