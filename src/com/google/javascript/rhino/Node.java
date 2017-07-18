@@ -1231,7 +1231,7 @@ public class Node implements Serializable {
     }
   }
 
-  Token token;           // Type of the token of the node; NAME for example
+  transient Token token;           // Type of the token of the node; NAME for example
   @Nullable transient Node next; // next sibling, a linked list
   @Nullable transient Node previous; // previous sibling, a circular linked list
   @Nullable transient Node first; // first element of a linked list of children
@@ -3239,6 +3239,9 @@ public class Node implements Serializable {
   @GwtIncompatible("ObjectOutputStream")
   private void writeObject(java.io.ObjectOutputStream out) throws Exception {
     out.defaultWriteObject();
+
+    checkState(Token.values().length < Byte.MAX_VALUE - Byte.MIN_VALUE);
+    out.writeByte(token.ordinal());
     // Serialize the embedded children linked list here to limit the depth of recursion (and avoid
     // serializing redundant information like the previous reference)
     Node currentChild = first;
@@ -3255,6 +3258,7 @@ public class Node implements Serializable {
   private void readObject(java.io.ObjectInputStream in) throws Exception {
     in.defaultReadObject();
 
+    token = Token.values()[in.readUnsignedByte()];
     // Deserialize the children list restoring the value of the previous reference.
     first = (Node) in.readObject();
     if (first != null) {
