@@ -3302,7 +3302,7 @@ public class Node implements Serializable {
    * i.e. first byte will be the lower 7 bits with a continuation bit set and second byte will
    * consist of the upper 7 bits with the continuation bit unset.
    *
-   * This encoding aims to reduce the serialized footprint for the most commong values, reducing the
+   * This encoding aims to reduce the serialized footprint for the most common values, reducing the
    * footprint for all positive values that are smaller than 2^21 (~2000000):
    *           0 -       127 are encoded in one byte
    *         128 -     16384 are encoded in two bytes
