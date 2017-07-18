@@ -49,6 +49,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.javascript.rhino.jstype.JSType;
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1274,10 +1276,10 @@ public class Node implements Serializable {
    * number in the rest.  Create some handy constants so we can change this
    * size if we want.
    */
-  private int sourcePosition;
+  private transient int sourcePosition;
 
   /** The length of the code represented by the node. */
-  private int length;
+  private transient int length;
 
   @Nullable private transient TypeI typei;
 
@@ -3242,6 +3244,10 @@ public class Node implements Serializable {
 
     checkState(Token.values().length < Byte.MAX_VALUE - Byte.MIN_VALUE);
     out.writeByte(token.ordinal());
+
+    writeEncodedInt(out, sourcePosition);
+    writeEncodedInt(out, length);
+
     // Serialize the embedded children linked list here to limit the depth of recursion (and avoid
     // serializing redundant information like the previous reference)
     Node currentChild = first;
@@ -3259,6 +3265,9 @@ public class Node implements Serializable {
     in.defaultReadObject();
 
     token = Token.values()[in.readUnsignedByte()];
+    sourcePosition = readEncodedInt(in);
+    length = readEncodedInt(in);
+
     // Deserialize the children list restoring the value of the previous reference.
     first = (Node) in.readObject();
     if (first != null) {
@@ -3283,5 +3292,49 @@ public class Node implements Serializable {
       first.previous = lastChild;
     }
     typei = (TypeI) in.readObject();
+  }
+
+  /**
+   * Encode integers using variable length encoding.
+   *
+   * Encodes an integer as a sequence of 7-bit values with a continuation bit. For example the
+   * number 3912 (0111 0100 1000) is encoded in two bytes as follows 0xC80E (1100 1000 0000 1110),
+   * i.e. first byte will be the lower 7 bits with a continuation bit set and second byte will
+   * consist of the upper 7 bits with the continuation bit unset.
+   *
+   * This encoding aims to reduce the serialized footprint for the most commong values, reducing the
+   * footprint for all positive values that are smaller than 2^21 (~2000000):
+   *           0 -       127 are encoded in one byte
+   *         128 -     16384 are encoded in two bytes
+   *       16385 -   2097152 are encoded in three bytes
+   *     2097153 - 268435456 are encoded in four bytes.
+   *     values greater than 268435456 and negative values are encoded in 5 bytes.
+   *
+   * Most values for the length field will be encoded with one byte and most values for
+   * sourcePosition will be encoded with 2 or 3 bytes. (Value -1, which is used to mark absence will
+   * use 5 bytes, and could be accommodated in the present scheme by an offset of 1 if it leads to
+   * size improvements).
+   */
+  @GwtIncompatible("ObjectOutput")
+  private void writeEncodedInt(ObjectOutput out, int value) throws IOException {
+    while (value > 0X7f || value < 0) {
+      out.writeByte(((value & 0X7f) | 0x80));
+      value >>>= 7;
+    }
+    out.writeByte(value);
+  }
+
+  @GwtIncompatible("ObjectInput")
+  private int readEncodedInt(ObjectInput in) throws IOException {
+    int value = 0;
+    int shift = 0;
+    byte current;
+
+    while ((current = in.readByte()) < 0) {
+      value |= (current & 0x7f) << shift;
+      shift += 7;
+    }
+    value |= current << shift;
+    return value;
   }
 }
