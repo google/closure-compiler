@@ -26,7 +26,7 @@ import com.google.javascript.rhino.Token;
  * compression together than their original counterparts.
  *
  */
-class ReorderConstantExpression extends AbstractPeepholeOptimization {
+class PeepholeReorderConstantExpression extends AbstractPeepholeOptimization {
 
   // TODO(user): Rename this pass to PeepholeReorderConstantExpression
   // to follow our naming convention.
