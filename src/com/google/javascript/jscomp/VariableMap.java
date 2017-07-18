@@ -56,7 +56,7 @@ public final class VariableMap {
   /** Maps between original source name to new name */
   private final ImmutableBiMap<String, String> map;
 
-  VariableMap(Map<String, String> map) {
+  public VariableMap(Map<String, String> map) {
     this.map = ImmutableBiMap.copyOf(map);
   }
 
