@@ -2088,10 +2088,6 @@ public class Node implements Serializable {
 
   public boolean isValidAssignmentTarget() {
     switch (this.getToken()) {
-      // TODO(tbreisacher): Remove CAST from this list, and disallow
-      // the cryptic case from cl/41958159.
-      case CAST:
-      case DEFAULT_VALUE:
       case NAME:
       case GETPROP:
       case GETELEM:

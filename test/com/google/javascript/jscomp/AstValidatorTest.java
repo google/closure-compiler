@@ -164,6 +164,32 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectInvalid(n, Check.EXPRESSION);
   }
 
+  public void testValidDestructuringAssignment() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    valid("var [x, ...y] = obj;");
+    valid("([...this.x] = obj);");
+    valid("var {a:b} = obj;");
+    valid("({a:this.b} = obj);");
+  }
+
+  public void testInvalidDestructuringAssignment() {
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+
+    Node n = IR.assign(
+        new Node(Token.OBJECT_PATTERN, new Node(Token.ARRAY_PATTERN)), IR.objectlit());
+    expectInvalid(n, Check.EXPRESSION);
+
+    n = IR.assign(
+        new Node(Token.ARRAY_PATTERN, IR.computedProp(IR.string("x"), IR.number(1))),
+        IR.objectlit());
+    expectInvalid(n, Check.EXPRESSION);
+
+    Node stringkey = IR.stringKey("x");
+    stringkey.addChildToFront(IR.computedProp(IR.string("x"), IR.number(1)));
+    n = IR.assign(new Node(Token.OBJECT_PATTERN, stringkey), IR.objectlit());
+    expectInvalid(n, Check.EXPRESSION);
+  }
+
   private void valid(String code) {
     testSame(code);
     assertTrue(lastCheckWasValid);
