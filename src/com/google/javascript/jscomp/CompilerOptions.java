@@ -997,6 +997,7 @@ public class CompilerOptions implements Serializable {
     return tracer;
   }
 
+  // NOTE: Timing information will not be printed if compiler.disableThreads() is called!
   public void setTracerMode(TracerMode mode) {
     this.tracer = mode;
   }
