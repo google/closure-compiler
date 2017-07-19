@@ -210,6 +210,22 @@ public final class NodeUtil {
       case STRING_KEY:
         return n.getString();
 
+      case TEMPLATELIT:
+        // If the string literal contains an expression we cannot convert it
+        String string = "";
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+          if (child.isString()) {
+            string = string + child.getString();
+          } else if (child.isTemplateLitSub()) {
+            if (child.getFirstChild().isString()) {
+              string = string + child.getFirstChild().getString();
+            } else {
+              return null;
+            }
+          }
+        }
+        return string;
+
       case NAME:
         String name = n.getString();
         if ("undefined".equals(name)
@@ -350,6 +366,13 @@ public final class NodeUtil {
           return child.toBoolean(true) ? 0.0 : 1.0; // reversed.
         }
         break;
+
+      case TEMPLATELIT:
+        String string = getStringValue(n);
+        if (string == null) {
+          return null;
+        }
+        return getStringNumberValue(string);
 
       case STRING:
         return getStringNumberValue(n.getString());

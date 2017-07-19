@@ -423,6 +423,15 @@ public final class PeepholeSubstituteAlternateSyntaxTest extends CompilerTestCas
     testSame("var x=[',', ' ', ';', '{', '}']");
   }
 
+  public void testTemplateStringToString() {
+    test("`abcde`", "'abcde'");
+    test("`ab cd ef`", "'ab cd ef'");
+    testSame("`hello ${name}`");
+    testSame("tag `hello ${name}`");
+    testSame("tag `hello`");
+    test("`hello ${'foo'}`", "'hello foo'");
+  }
+
   public void testBindToCall1() {
     test("(goog.bind(f))()", "f()");
     test("(goog.bind(f,a))()", "f.call(a)");

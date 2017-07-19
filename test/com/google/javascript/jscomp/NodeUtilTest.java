@@ -287,6 +287,10 @@ public final class NodeUtilTest extends TestCase {
     assertEquals("NaN", NodeUtil.getStringValue(getNode("NaN")));
     assertEquals("Infinity", NodeUtil.getStringValue(getNode("Infinity")));
     assertEquals(null, NodeUtil.getStringValue(getNode("x")));
+
+    assertEquals("Hello", NodeUtil.getStringValue(getNode("`Hello`")));
+    assertEquals("Hello foo", NodeUtil.getStringValue(getNode("`Hello ${'foo'}`")));
+    assertEquals(null, NodeUtil.getStringValue(getNode("`Hello ${name}`")));
   }
 
   public void testGetArrayStringValue() {

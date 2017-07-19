@@ -107,6 +107,9 @@ class PeepholeSubstituteAlternateSyntax
       case GETPROP:
         return tryMinimizeWindowRefs(node);
 
+      case TEMPLATELIT:
+        return tryTurnTemplateStringsToStrings(node);
+
       case MUL:
       case AND:
       case OR:
@@ -659,6 +662,18 @@ class PeepholeSubstituteAlternateSyntax
       return call;
     }
     return n;
+  }
+
+  private Node tryTurnTemplateStringsToStrings(Node n) {
+    checkState(n.isTemplateLit(), n);
+    String string = NodeUtil.getStringValue(n);
+    if (string == null || n.getParent().isTaggedTemplateLit()) {
+      return n;
+    }
+    Node stringNode = IR.string(string).srcref(n);
+    n.replaceWith(stringNode);
+    reportCodeChange();
+    return stringNode;
   }
 
   /**
