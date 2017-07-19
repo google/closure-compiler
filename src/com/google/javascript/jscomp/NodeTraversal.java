@@ -24,6 +24,7 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Set;
@@ -54,7 +55,7 @@ public class NodeTraversal {
    * A stack of scope roots. All scopes that have not been created
    * are represented in this Deque.
    */
-  private final ArrayDeque<Node> scopeRoots = new ArrayDeque<>();
+  private final ArrayList<Node> scopeRoots = new ArrayList<>();
 
   /**
    * Stack containing the control flow graphs (CFG) that have been created. There are fewer CFGs
@@ -837,7 +838,7 @@ public class NodeTraversal {
   private void pushScope(Node node) {
     checkState(curNode != null);
     checkState(node != null);
-    scopeRoots.push(node);
+    scopeRoots.add(node);
     recordScopeRoot(node);
     if (scopeCallback != null) {
       scopeCallback.enterScope(this);
@@ -874,8 +875,11 @@ public class NodeTraversal {
     if (!quietly && scopeCallback != null) {
       scopeCallback.exitScope(this);
     }
-    Node scopeRoot = scopeRoots.pollFirst();
-    if (scopeRoot == null) {
+    Node scopeRoot;
+    int roots = scopeRoots.size();
+    if (roots > 0) {
+      scopeRoot = scopeRoots.remove(roots - 1);
+    } else {
       scopeRoot = scopes.pop().getRootNode();
     }
     if (NodeUtil.isValidCfgRoot(scopeRoot)) {
@@ -887,14 +891,28 @@ public class NodeTraversal {
   public Scope getScope() {
     Scope scope = scopes.peek();
 
-    Node root = null;
-    while ((root = scopeRoots.pollLast()) != null) {
-      scope = scopeCreator.createScope(root, scope);
+    for (int i = 0; i < scopeRoots.size(); i++) {
+      scope = scopeCreator.createScope(scopeRoots.get(i), scope);
       scopes.push(scope);
     }
+    scopeRoots.clear();
 
     // No need to call compiler.setScope; the top scopeRoot is now the top scope
     return scope;
+  }
+
+
+
+  public Node getClosestHoistScopeRoot() {
+    int roots = scopeRoots.size();
+    for (int i = roots; i > 0; i--) {
+      Node rootNode = scopeRoots.get(i - 1);
+      if (Scope.isHoistScopeRootNode(rootNode)) {
+        return rootNode;
+      }
+    }
+
+    return scopes.peek().getClosestHoistScope().getRootNode();
   }
 
   public Scope getClosestHoistScope() {
@@ -929,12 +947,12 @@ public class NodeTraversal {
 
   /** Returns the current scope's root. */
   public Node getScopeRoot() {
-    Node root = scopeRoots.peek();
-    if (root == null) {
+    int roots = scopeRoots.size();
+    if (roots > 0) {
+      return scopeRoots.get(roots - 1);
+    } else {
       Scope s = scopes.peek();
       return s != null ? s.getRootNode() : null;
-    } else {
-      return root;
     }
   }
 

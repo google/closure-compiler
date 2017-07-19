@@ -162,6 +162,37 @@ public final class NodeTraversalTest extends TestCase {
     );
   }
 
+  public void testGetHoistScopeRoot() {
+    Compiler compiler = new Compiler();
+    String code = LINE_JOINER.join(
+        "function foo() {",
+        "  if (true) { var XXX; }",
+        "}");
+    Node tree = parse(compiler, code);
+    NodeTraversal.traverseEs6(compiler, tree,
+        new NodeTraversal.Callback() {
+
+          @Override
+          public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+            return true;
+          }
+
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            if (n.isName() && n.getString().equals("XXX")) {
+              Node root = t.getClosestHoistScopeRoot();
+              assertThat(NodeUtil.isFunctionBlock(root)).isTrue();
+
+              t.getScope();  // force scope creation
+
+              root = t.getClosestHoistScopeRoot();
+              assertThat(NodeUtil.isFunctionBlock(root)).isTrue();
+            }
+          }
+        }
+    );
+  }
+
   private static class NameChangingCallback implements NodeTraversal.Callback {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
