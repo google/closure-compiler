@@ -600,7 +600,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         NodeUtil.deleteChildren(n, compiler);
         result = IR.comma(left, right);
       }
-    } else if (n.getParent().getToken() == type) {
+    } else if (parent.getToken() == type && n == parent.getFirstChild()) {
       TernaryValue rightValue = NodeUtil.getImpureBooleanValue(right);
       if (!mayHaveSideEffects(right)) {
         if ((rightValue == TernaryValue.FALSE && type == Token.OR)
