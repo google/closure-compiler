@@ -17,6 +17,9 @@
 package com.google.javascript.jscomp.parsing.parser;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+
+import java.util.EnumMap;
 import java.util.Map;
 
 /**
@@ -88,13 +91,13 @@ public enum Keywords {
 
   static {
     ImmutableMap.Builder<String, Keywords> keywordsByName = ImmutableMap.builder();
-    ImmutableMap.Builder<TokenType, Keywords> keywordsByType = ImmutableMap.builder();
+    EnumMap<TokenType, Keywords> keywordsByType = new EnumMap<>(TokenType.class);
     for (Keywords kw : Keywords.values()) {
       keywordsByName.put(kw.value, kw);
       keywordsByType.put(kw.type, kw);
     }
     KEYWORDS_BY_NAME = keywordsByName.build();
-    KEYWORDS_BY_TYPE = keywordsByType.build();
+    KEYWORDS_BY_TYPE = Maps.immutableEnumMap(keywordsByType);
   }
 
   public final String value;
