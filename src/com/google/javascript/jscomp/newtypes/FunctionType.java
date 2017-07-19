@@ -1405,6 +1405,24 @@ public final class FunctionType implements Serializable {
         isAbstract);
   }
 
+  /**
+   * Returns a function that is the same as this one, but whose receiver is ?.
+   */
+  FunctionType withUnknownReceiver() {
+    return new FunctionType(
+        this.commonTypes,
+        this.requiredFormals,
+        this.optionalFormals,
+        this.restFormals,
+        this.returnType,
+        this.nominalType,
+        this.commonTypes.UNKNOWN,
+        this.outerVarPreconditions,
+        this.typeParameters,
+        this.isLoose,
+        this.isAbstract);
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (obj == null) {

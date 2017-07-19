@@ -593,6 +593,14 @@ public final class RawNominalType extends Namespace {
     if (type == null && isConstant) {
       type = this.commonTypes.UNKNOWN;
     }
+    // Type the receiver of a method on a @record without an explicit @this as unknown.
+    if (isStructuralInterface() && type != null && type.isFunctionType()) {
+      JSDocInfo jsdoc = defSite == null ? null : NodeUtil.getBestJSDocInfo(defSite);
+      if (jsdoc == null || !jsdoc.hasThisType()) {
+        FunctionType newMethodType = type.getFunTypeIfSingletonObj().withUnknownReceiver();
+        type = this.commonTypes.fromFunctionType(newMethodType);
+      }
+    }
     if (this.classProps.containsKey(pname)
         && this.classProps.get(pname).getDeclaredType() == null) {
       this.classProps = this.classProps.without(pname);

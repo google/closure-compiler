@@ -16733,6 +16733,30 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "Bar.prototype.prop2;",
         "/** @param {!Array<!Foo>|!Array<!Bar>} x */",
         "function f(x) {}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @record */",
+        "var Foo = function() {};",
+        "Foo.prototype.foo = function() {};",
+        "/** @constructor */",
+        "var Bar = function() {};",
+        "Bar.prototype.foo = function() {};",
+        "/** @type {!Foo} */",
+        "var x = new Bar;"));
+
+    // To catch this, we would need an explicit @this on Foo.prototype.a.
+    typeCheck(LINE_JOINER.join(
+        "/** @record */",
+        "function Foo() {}",
+        "Foo.prototype.a = function() {};",
+        "/** @constructor */",
+        "function Bar() {}",
+        "Bar.prototype.a = function() {};",
+        "/** @constructor */",
+        "function Baz() {}",
+        "Baz.prototype.a = function() {};",
+        "var bar = /** @type {!Foo} */ (new Bar);",
+        "bar.a.call(new Baz);"));
   }
 
   public void testGenericStructuralInterfaces() {
