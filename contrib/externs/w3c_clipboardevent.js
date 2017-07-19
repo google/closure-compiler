@@ -22,16 +22,16 @@
  */
 
 
-/**
- * @typedef {{
- *   bubbles: (boolean|undefined),
- *   cancelable: (boolean|undefined),
- *   data: (string|undefined),
- *   dataType: (string|undefined)
- * }}
- */
-var ClipboardEventInit;
 
+/**
+ * @record
+ * @extends {EventInit}
+ * @see https://www.w3.org/TR/clipboard-apis/#dfn-eventinit
+ */
+function ClipboardEventInit() {}
+
+/** @type {?DataTransfer|undefined} */
+ClipboardEventInit.prototype.clipboardData;
 
 
 /**
@@ -43,5 +43,5 @@ var ClipboardEventInit;
 function ClipboardEvent(type, opt_eventInitDict) {}
 
 
-/** @const {!DataTransfer} */
-EventSource.prototype.clipboardData;
+/** @const {?DataTransfer} */
+ClipboardEvent.prototype.clipboardData;
