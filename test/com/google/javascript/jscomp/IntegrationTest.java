@@ -4403,8 +4403,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "var x = foobar;", VarCheck.UNDEFINED_VAR_ERROR);
   }
 
-  // TODO(bellashim): Add a non-transpiling version of this test when InlineFunctions
-  // can run in that mode.
   public void testInlineRestParam() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
@@ -4422,8 +4420,21 @@ public final class IntegrationTest extends IntegrationTestCase {
             + "b[a-0]=arguments[a];return b[0]}(8))");
   }
 
-  // TODO(bellashim): Add a non-transpiling version of this test when InlineFunctions
-  // can run in that mode.
+  public void testInlineRestParamNonTranspiling() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    test(
+        options,
+        LINE_JOINER.join(
+            "function foo() {",
+            "  var f = (...args) => args[0];",
+            "  return f(8);",
+            "}",
+            "alert(foo());"),
+        "alert([8][0])");
+  }
+
   public void testDefaultParameters() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -4440,8 +4451,26 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var a={a:9}; a=void 0===a?{a:5}:a;alert(3+a.a)");
   }
 
-  // TODO(bellashim): Add a non-transpiling version of this test when InlineFunctions
-  // can run in that mode.
+  public void testDefaultParametersNonTranspiling() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+
+    test(
+        options,
+        LINE_JOINER.join(
+            "function foo(a, b = {foo: 5}) {",
+            "  return a + b.foo;",
+            "}",
+            "alert(foo(3, {foo: 9}));"),
+        LINE_JOINER.join(
+            "var JSCompiler_temp_const$jscomp$0=alert;",
+            "var JSCompiler_inline_result$jscomp$1;",
+            "{var b$jscomp$inline_3={foo:9};",
+            "JSCompiler_inline_result$jscomp$1=3+b$jscomp$inline_3.foo}",
+            "JSCompiler_temp_const$jscomp$0(JSCompiler_inline_result$jscomp$1)"));
+  }
+
   public void testRestObjectPatternParameters() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
@@ -4456,11 +4485,33 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  return length;",
             "}",
             "alert(countArgs(1, 1, 1, 1, 1));"),
-        "alert(function (c,d) {"
-            + "  for(var b=[], a=1; a < arguments.length; ++a)"
-            + "    b[a-1] = arguments[a];"
-            + "    return b.length "
-            + "}(1,1,1,1,1))");
+        LINE_JOINER.join(
+            "alert(function (c,d) {",
+            "  for(var b=[], a=1; a < arguments.length; ++a)",
+            "    b[a-1] = arguments[a];",
+            "    return b.length ",
+            "}(1,1,1,1,1))"));
+  }
+
+  public void testRestObjectPatternParametersNonTranspiling() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    externs = DEFAULT_EXTERNS;
+
+    test(
+        options,
+        LINE_JOINER.join(
+            "function countArgs(x, ...{length}) {",
+            "  return length;",
+            "}",
+            "alert(countArgs(1, 1, 1, 1, 1));"),
+        LINE_JOINER.join(
+            "var JSCompiler_temp_const$jscomp$0=alert;",
+            "var JSCompiler_inline_result$jscomp$1;",
+            "{var length$jscomp$inline_3=[1,1,1,1].length;",
+            "JSCompiler_inline_result$jscomp$1=length$jscomp$inline_3}",
+            "JSCompiler_temp_const$jscomp$0(JSCompiler_inline_result$jscomp$1)"));
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */

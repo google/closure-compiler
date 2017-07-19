@@ -2600,6 +2600,11 @@ public final class DefaultPassConfig extends PassConfig {
               options.assumeClosuresOnlyCaptureReferences,
               options.maxFunctionSizeAfterInlining);
         }
+
+        @Override
+        public FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
       };
 
   /** Inlines constant properties. */
