@@ -506,34 +506,27 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
                  "new Foo();"));
   }
 
-  public void testStubMethodMovement1() {
-    test(createModuleChain(
-             // m1
-             "function Foo(){} " +
-             "Foo.prototype.bar = JSCompiler_stubMethod(x);",
-             // m2
-             "new Foo();"),
+  public void testStubMethodMovement() {
+    // The method stub can move, but the unstub definition cannot, because
+    // CrossModuleCodeMotion doesn't know where individual methods are used.
+    // CrossModuleMethodMotion is responsible for putting the unstub definitions
+    // in the right places.
+    test(
+        createModuleChain(
+            // m0
+            "function Foo(){} Foo.prototype.bar = JSCompiler_stubMethod(x);",
+            // m1
+            "Foo.prototype.bar = JSCompiler_unstubMethod(x);",
+            // m2
+            "new Foo();"),
         new String[] {
-          // m1
+          // m0
           "",
-          "function Foo(){} " +
-          "Foo.prototype.bar = JSCompiler_stubMethod(x);" +
-          "new Foo();"
-        });
-  }
-
-  public void testStubMethodMovement2() {
-    test(createModuleChain(
-             // m1
-             "function Foo(){} " +
-             "Foo.prototype.bar = JSCompiler_unstubMethod(x);",
-             // m2
-             "new Foo();"),
-        new String[] {
           // m1
-          "",
-          "function Foo(){} " +
-          "Foo.prototype.bar = JSCompiler_unstubMethod(x);" +
+          LINE_JOINER.join(
+              "function Foo(){} Foo.prototype.bar = JSCompiler_stubMethod(x);",
+              "Foo.prototype.bar = JSCompiler_unstubMethod(x);"),
+          // m2
           "new Foo();"
         });
   }

@@ -291,7 +291,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
         "Foo.prototype.other = other();"));
     List<TopLevelStatement> statements = testedCollector.getTopLevelStatements();
     assertThat(statements.get(1).isMovableDeclaration()).isTrue();
-    assertThat(statements.get(2).isMovableDeclaration()).isTrue();
+    assertThat(statements.get(2).isMovableDeclaration()).isFalse();
     assertThat(statements.get(3).isMovableDeclaration()).isFalse();
   }
 

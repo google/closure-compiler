@@ -318,8 +318,7 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
     } else if (valueNode.isCall()) {
       Node functionName = checkNotNull(valueNode.getFirstChild());
       return functionName.isName()
-          && (functionName.getString().equals(CrossModuleMethodMotion.STUB_METHOD_NAME)
-              || functionName.getString().equals(CrossModuleMethodMotion.UNSTUB_METHOD_NAME));
+          && (functionName.getString().equals(CrossModuleMethodMotion.STUB_METHOD_NAME));
     } else if (valueNode.isArrayLit() || valueNode.isObjectLit()) {
       boolean isObjectLit = valueNode.isObjectLit();
       for (Node child = valueNode.getFirstChild(); child != null; child = child.getNext()) {
