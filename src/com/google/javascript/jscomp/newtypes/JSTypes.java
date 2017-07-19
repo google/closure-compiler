@@ -601,4 +601,12 @@ public final class JSTypes implements Serializable {
   boolean isBottomPropertyMap(PersistentMap<String, Property> map) {
     return map == BOTTOM_PROPERTY_MAP;
   }
+
+  public String createGetterPropName(String originalPropName) {
+    return "%getter_fun" + originalPropName;
+  }
+
+  public String createSetterPropName(String originalPropName) {
+    return "%setter_fun" + originalPropName;
+  }
 }

@@ -2787,10 +2787,10 @@ final class NewTypeInference implements CompilerPass {
         String specialPropName;
         JSType propType;
         if (prop.isGetterDef()) {
-          specialPropName = JSType.createGetterPropName(pname);
+          specialPropName = commonTypes.createGetterPropName(pname);
           propType = funType.getReturnType();
         } else {
-          specialPropName = JSType.createSetterPropName(pname);
+          specialPropName = commonTypes.createSetterPropName(pname);
           propType = pair.type;
         }
         result = result.withProperty(new QualifiedName(specialPropName), propType);
@@ -3345,7 +3345,7 @@ final class NewTypeInference implements CompilerPass {
           propAccessNode.getParent(), CONST_PROPERTY_DELETED, pname));
     }
     // Then, analyze the property access.
-    QualifiedName getterPname = new QualifiedName(JSType.createGetterPropName(pname));
+    QualifiedName getterPname = new QualifiedName(commonTypes.createGetterPropName(pname));
     if (recvType.hasProp(getterPname)) {
       return new EnvTypePair(pair.env, recvType.getProp(getterPname));
     }
@@ -4402,7 +4402,7 @@ final class NewTypeInference implements CompilerPass {
       mayWarnAboutDictPropAccess(obj, recvType);
     }
     QualifiedName setterPname =
-        new QualifiedName(JSType.createSetterPropName(pname.getLeftmostName()));
+        new QualifiedName(commonTypes.createSetterPropName(pname.getLeftmostName()));
     if (recvType.hasProp(setterPname)) {
       FunctionType funType = recvType.getProp(setterPname).getFunType();
       checkNotNull(funType);

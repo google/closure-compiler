@@ -336,21 +336,8 @@ public final class NominalType implements Serializable {
     return this.rawType.hasAncestorInterface(ancestor);
   }
 
-  ImmutableSet<String> getPropertyNames() {
-    if (isClass()) {
-      return getAllPropsOfClass();
-    } else {
-      return getAllPropsOfInterface();
-    }
-  }
-
-  // TODO(dimvar): consolidate the next two methods into one
-  public ImmutableSet<String> getAllPropsOfInterface() {
-    return this.rawType.getAllPropsOfInterface();
-  }
-
-  public ImmutableSet<String> getAllPropsOfClass() {
-    return this.rawType.getAllPropsOfClass();
+  public ImmutableSet<String> getPropertyNames() {
+    return this.rawType.getPropertyNames();
   }
 
   public Set<String> getAllOwnClassProps() {

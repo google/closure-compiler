@@ -69,6 +69,22 @@ public interface TypeIRegistry extends Serializable {
 
   String getReadableTypeName(Node n);
 
+  /**
+   * For NTI, this method returns an obfuscated name that represents the getter.
+   * For OTI, the property name is unchanged.
+   */
+  String createGetterPropName(String originalPropName);
+
+  /**
+   * For NTI, this method returns an obfuscated name that represents the setter.
+   * For OTI, the property name is unchanged.
+   *
+   * This method is a bit of a hack. In the future, NTI can handle getters/setters more
+   * gracefully by having a field in the Property class.
+   * See also: https://github.com/google/closure-compiler/issues/2545.
+   */
+  String createSetterPropName(String originalPropName);
+
   <T extends TypeI> T getType(String typeName);
 
   TypeI createUnionType(List<? extends TypeI> variants);

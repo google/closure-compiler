@@ -1011,6 +1011,16 @@ public class JSTypeRegistry implements TypeIRegistry {
     return getReadableJSTypeName(n, false);
   }
 
+  @Override
+  public String createGetterPropName(String originalPropName) {
+    return originalPropName;
+  }
+
+  @Override
+  public String createSetterPropName(String originalPropName) {
+    return originalPropName;
+  }
+
   /**
    * Given a node, get a human-readable name for the type of that node so
    * that will be easy for the programmer to find the original declaration.

@@ -710,7 +710,7 @@ final class ObjectType implements TypeWithProperties {
     if (checkOnlyLocalProps) {
       otherPropNames = other.props.keySet();
     } else {
-      otherPropNames = otherNt.getAllPropsOfInterface();
+      otherPropNames = otherNt.getPropertyNames();
       if (otherPropNames == null) {
         // Can't check structural interfaces for subtyping during GlobalTypeInfo
         return false;
@@ -1367,10 +1367,10 @@ final class ObjectType implements TypeWithProperties {
     Property p = ownProp ? getLeftmostOwnProp(qname) : getLeftmostProp(qname);
     // Try getters and setters specially.
     if (p == null) {
-      p = getLeftmostProp(new QualifiedName(JSType.createGetterPropName(propertyName)));
+      p = getLeftmostProp(new QualifiedName(this.commonTypes.createGetterPropName(propertyName)));
     }
     if (p == null) {
-      p = getLeftmostProp(new QualifiedName(JSType.createSetterPropName(propertyName)));
+      p = getLeftmostProp(new QualifiedName(this.commonTypes.createSetterPropName(propertyName)));
     }
     return p == null ? null : p.getDefSite();
   }
@@ -1400,10 +1400,10 @@ final class ObjectType implements TypeWithProperties {
     String pname = qname.getLeftmostName();
     // Try getters and setters specially.
     if (p == null) {
-      p = getLeftmostOwnProp(new QualifiedName(JSType.createGetterPropName(pname)));
+      p = getLeftmostOwnProp(new QualifiedName(this.commonTypes.createGetterPropName(pname)));
     }
     if (p == null) {
-      p = getLeftmostProp(new QualifiedName(JSType.createSetterPropName(pname)));
+      p = getLeftmostProp(new QualifiedName(this.commonTypes.createSetterPropName(pname)));
     }
     return p != null;
   }
@@ -1506,7 +1506,7 @@ final class ObjectType implements TypeWithProperties {
       return false;
     }
     Set<String> thisProps = !thisNt.isBuiltinObject() && thisNt.isStructuralInterface()
-        ? thisNt.getAllPropsOfInterface() : this.props.keySet();
+        ? thisNt.getPropertyNames() : this.props.keySet();
     if (thisProps == null) {// Can happen during GTI when types aren't frozen yet.
       return true;
     }

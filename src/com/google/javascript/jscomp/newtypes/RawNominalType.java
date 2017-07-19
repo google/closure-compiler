@@ -493,7 +493,17 @@ public final class RawNominalType extends Namespace {
     return classProps.keySet();
   }
 
-  ImmutableSet<String> getAllPropsOfInterface() {
+  /**
+   * Returns a set of properties defined or inferred on this type or any of its supertypes.
+   */
+  ImmutableSet<String> getPropertyNames() {
+    return isClass() ? getAllPropsOfClass() : getAllPropsOfInterface();
+  }
+
+  /**
+   * Return all property names of this interface, including inherited properties.
+   */
+  private ImmutableSet<String> getAllPropsOfInterface() {
     if (!this.isFrozen) {
       // During GlobalTypeInfo, we sometimes try to check subtyping between
       // structural interfaces, but it's not possible because we may have not
@@ -501,14 +511,14 @@ public final class RawNominalType extends Namespace {
       return null;
     }
     if (isClass()) {
-      checkState(this.name.equals("Object"));
+      checkState(this.name.equals("Object"), this.name);
       return getAllPropsOfClass();
     }
     if (this.allProps == null) {
       ImmutableSet.Builder<String> builder = ImmutableSet.builder();
       if (interfaces != null) {
         for (NominalType interf : interfaces) {
-          builder.addAll(interf.getAllPropsOfInterface());
+          builder.addAll(interf.getPropertyNames());
         }
       }
       this.allProps = builder.addAll(protoProps.keySet()).build();
@@ -516,13 +526,18 @@ public final class RawNominalType extends Namespace {
     return this.allProps;
   }
 
-  ImmutableSet<String> getAllPropsOfClass() {
+  /**
+   * Return all property names of this class, including inherited properties.
+   * We don't look at ancestor interfaces because interface properties also appear as
+   * prototype properties of classes.
+   */
+  private ImmutableSet<String> getAllPropsOfClass() {
     checkState(isClass());
     checkState(this.isFrozen);
     if (this.allProps == null) {
       ImmutableSet.Builder<String> builder = ImmutableSet.builder();
       if (this.superclass != null) {
-        builder.addAll(this.superclass.getAllPropsOfClass());
+        builder.addAll(this.superclass.getPropertyNames());
       }
       this.allProps = builder.addAll(classProps.keySet()).addAll(protoProps.keySet()).build();
     }

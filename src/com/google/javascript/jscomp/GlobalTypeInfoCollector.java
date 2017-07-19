@@ -528,7 +528,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     if (superClass != null) {
       checkState(superClass.isFrozen());
       // TODO(blickly): Can we optimize this to skip unnecessary iterations?
-      for (String pname : superClass.getAllPropsOfClass()) {
+      for (String pname : superClass.getPropertyNames()) {
         if (superClass.isAbstractClass()
             && superClass.hasAbstractMethod(pname)
             && !rawType.isAbstractClass()
@@ -546,7 +546,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     // Collect inherited types for extended/implemented interfaces
     for (NominalType superInterf : rawType.getInterfaces()) {
       checkState(superInterf.isFrozen());
-      for (String pname : superInterf.getAllPropsOfInterface()) {
+      for (String pname : superInterf.getPropertyNames()) {
         nonInheritedPropNames.remove(pname);
         checkSuperProperty(rawType, superInterf, pname,
             propMethodTypesToProcess, propTypesToProcess);
@@ -1818,9 +1818,9 @@ public class GlobalTypeInfoCollector implements CompilerPass {
           declNode);
       checkArgument(currentScope.isNamespace(recv));
       if (declNode.isGetterDef()) {
-        pname = JSType.createGetterPropName(pname);
+        pname = getCommonTypes().createGetterPropName(pname);
       } else if (declNode.isSetterDef()) {
-        pname = JSType.createSetterPropName(pname);
+        pname = getCommonTypes().createSetterPropName(pname);
       }
       // Named types have already been crawled in CollectNamedTypes
       if (declNode.isStringKey() && currentScope.isNamespace(declNode.getFirstChild())) {
@@ -2518,9 +2518,9 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         methodScope = visitFunctionLate(initializer, rawType);
         methodType = methodScope.getDeclaredFunctionType();
         if (defSite.isGetterDef()) {
-          pname = JSType.createGetterPropName(pname);
+          pname = getCommonTypes().createGetterPropName(pname);
         } else if (defSite.isSetterDef()) {
-          pname = JSType.createSetterPropName(pname);
+          pname = getCommonTypes().createSetterPropName(pname);
         }
       } else if (jsdoc != null && jsdoc.containsFunctionDeclaration()
           // This can happen with stray jsdocs in an object literal

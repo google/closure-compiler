@@ -257,6 +257,16 @@ public class GlobalTypeInfo implements TypeIRegistry {
   }
 
   @Override
+  public String createGetterPropName(String originalPropName) {
+    return this.commonTypes.createGetterPropName(originalPropName);
+  }
+
+  @Override
+  public String createSetterPropName(String originalPropName) {
+    return this.commonTypes.createSetterPropName(originalPropName);
+  }
+
+  @Override
   public TypeI createUnionType(List<? extends TypeI> members) {
     checkArgument(!members.isEmpty(), "Cannot create union type with no members");
     JSType result = commonTypes.BOTTOM;

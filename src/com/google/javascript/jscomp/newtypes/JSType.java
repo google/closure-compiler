@@ -1359,14 +1359,6 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
         getObjTypeIfSingletonObj().withFunction(ft, fnNominal));
   }
 
-  public static String createGetterPropName(String originalPropName) {
-    return "%getter_fun" + originalPropName;
-  }
-
-  public static String createSetterPropName(String originalPropName) {
-    return "%setter_fun" + originalPropName;
-  }
-
   public final boolean isSingletonObj() {
     return getMask() == NON_SCALAR_MASK && getObjs().size() == 1;
   }

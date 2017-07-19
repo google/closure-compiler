@@ -164,8 +164,7 @@ public interface ObjectTypeI extends TypeI {
   TypeI getEnumeratedTypeOfEnumObject();
 
   /**
-   * Returns a set of properties defined or inferred on this type or any of
-   * its supertypes.
+   * Returns a set of properties defined or inferred on this type or any of its supertypes.
    */
   Set<String> getPropertyNames();
 }
