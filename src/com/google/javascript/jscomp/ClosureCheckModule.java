@@ -371,6 +371,10 @@ public final class ClosureCheckModule extends AbstractModuleCallback
 
   private void checkRequireCall(NodeTraversal t, Node callNode, Node parent) {
     checkState(callNode.isCall());
+    if (!callNode.getLastChild().isString()) {
+      t.report(callNode, ProcessClosurePrimitives.INVALID_ARGUMENT_ERROR, "goog.require");
+      return;
+    }
     switch (parent.getToken()) {
       case EXPR_RESULT:
         currentModule.importsByLongRequiredName.put(extractFirstArgumentName(callNode), parent);
