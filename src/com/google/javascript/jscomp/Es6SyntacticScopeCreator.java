@@ -122,46 +122,67 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
       // If we are populating the global scope, inputId will be null, and need to be set
       // as we enter each SCRIPT node.
       inputId = NodeUtil.getInputId(n);
-      if (n.isFunction()) {
-        // TODO(johnlenz): inputId maybe null if the FUNCTION node is detached
-        // from the AST.
-        // Is it meaningful to build a scope for detached FUNCTION node?
+      switch (n.getToken()) {
+        case FUNCTION: {
+          // TODO(johnlenz): inputId maybe null if the FUNCTION node is detached
+          // from the AST.
+          // Is it meaningful to build a scope for detached FUNCTION node?
 
-        final Node fnNameNode = n.getFirstChild();
-        final Node args = fnNameNode.getNext();
+          final Node fnNameNode = n.getFirstChild();
+          final Node args = fnNameNode.getNext();
 
-        // Bleed the function name into the scope, if it hasn't
-        // been declared in the outer scope.
-        String fnName = fnNameNode.getString();
-        if (!fnName.isEmpty() && NodeUtil.isFunctionExpression(n)) {
-          declareVar(scope, fnNameNode);
+          // Bleed the function name into the scope, if it hasn't
+          // been declared in the outer scope.
+          String fnName = fnNameNode.getString();
+          if (!fnName.isEmpty() && NodeUtil.isFunctionExpression(n)) {
+            declareVar(scope, fnNameNode);
+          }
+
+          // Args: Declare function variables
+          checkState(args.isParamList());
+          declareLHS(scope, args);
+          // Since we create a separate scope for body, stop scanning here
+          return;
         }
 
-        // Args: Declare function variables
-        checkState(args.isParamList());
-        declareLHS(scope, args);
-        // Since we create a separate scope for body, stop scanning here
-
-      } else if (n.isClass()) {
-        final Node classNameNode = n.getFirstChild();
-        // Bleed the class name into the scope, if it hasn't
-        // been declared in the outer scope.
-        if (!classNameNode.isEmpty() && NodeUtil.isClassExpression(n)) {
-          declareVar(scope, classNameNode);
+        case CLASS: {
+          final Node classNameNode = n.getFirstChild();
+          // Bleed the class name into the scope, if it hasn't
+          // been declared in the outer scope.
+          if (!classNameNode.isEmpty() && NodeUtil.isClassExpression(n)) {
+            declareVar(scope, classNameNode);
+          }
+          return;
         }
-      } else if (n.isRoot()
-          || n.isNormalBlock()
-          || NodeUtil.isAnyFor(n)
-          || n.isSwitch()
-          || n.isModuleBody()) {
-        boolean isHoistScope =
-            n.isRoot() || NodeUtil.isFunctionBlock(n) || n.isModuleBody();
-        Scope hoistScope = isHoistScope ? scope : null;
-        scanVars(n, hoistScope, scope);
-      } else {
-        // n is the global scope
-        checkState(scope.isGlobal(), scope);
-        scanVars(n, scope, scope);
+
+        case ROOT:
+        case SCRIPT:
+          // n is the global scope
+          checkState(scope.isGlobal(), scope);
+          scanVars(n, scope, scope);
+          return;
+
+        case MODULE_BODY:
+          scanVars(n, scope, scope);
+          return;
+
+        case FOR:
+        case FOR_OF:
+        case FOR_IN:
+        case SWITCH:
+          scanVars(n, null, scope);
+          return;
+
+        case BLOCK:
+          if (NodeUtil.isFunctionBlock(n)) {
+            scanVars(n, scope, scope);
+          } else {
+            scanVars(n, null, scope);
+          }
+          return;
+
+        default:
+          throw new RuntimeException("Illegal scope root: " + n);
       }
     }
 
