@@ -110,8 +110,18 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     // We lose some precision here, unless we have "branched-backward-dataflow".
     inFunction("var x = 1, k; x;      ; for (var y in k) { y }");
 
-    inFunction("var x = 1, k; x; y = 1; for (var y in k) { y }",
-               "var x = 1, k; x; x = 1; for (    x in k) { x }");
+    inFunction(
+        "var x = 1, k; x; y = 1; for (var y in k) { y }",
+        "var x = 1, k; x; x = 1; for (    x in k) { x }");
+  }
+
+  public void testForOf() {
+    // We lose some precision here, unless we have "branched-backward-dataflow".
+    inFunction("var x = 1, k; x;      ; for (var y of k) { y }");
+
+    inFunction(
+        "var x = 1, k; x; y = 1; for (var y of k) { y }",
+        "var x = 1, k; x; x = 1; for (    x of k) { x }");
   }
 
   public void testLoopInductionVar() {
@@ -131,19 +141,17 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "for(var x = 0; x < 10; x++){z}" +
         "for(var x = 0, z = 0; x < 10; x++){z}");
 
-    inFunction("var x = 1; x; for (var y; y=1; ) {y}",
-               "var x = 1; x; for (     ; x=1; ) {x}");
+    inFunction("var x = 1; x; for (var y; y=1; ) {y}", "var x = 1; x; for (     ; x=1; ) {x}");
 
-    inFunction("var x = 1; x; y = 1; while(y) var y; y",
-               "var x = 1; x; x = 1; while(x); x");
+    inFunction("var x = 1; x; y = 1; while(y) var y; y", "var x = 1; x; x = 1; while(x); x");
 
-    inFunction("var x = 1; x; f:var y; y=1",
-               "var x = 1; x; x=1");
+    inFunction("var x = 1; x; f:var y; y=1", "var x = 1; x; x=1");
   }
 
   public void testSwitchCase() {
-    inFunction("var x = 1; switch(x) { case 1: var y; case 2: } y = 1; y",
-               "var x = 1; switch(x) { case 1:        case 2: } x = 1; x");
+    inFunction(
+        "var x = 1; switch(x) { case 1: var y; case 2: } y = 1; y",
+        "var x = 1; switch(x) { case 1:        case 2: } x = 1; x");
   }
 
   public void testDuplicatedVar() {
@@ -186,7 +194,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     test(
         "function FUNC(x, y) {var a,b; y; a=0; a; x; b=0; b}",
-        "function FUNC(x, y) {var a; y; a=0; a; x; a=0; a}");
+        "function FUNC(x, y) {var a;   y; a=0; a; x; a=0; a}");
   }
 
   public void testParameter4b() {
@@ -412,18 +420,68 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
                "var x_y = 1; var x_y$ = 0; print(x_y$);     x_y$ = 1;" + "" +
                "print(x_y$); print(x_y);");
 
-    inFunction("var x_y = 1; function f() {" +
-               "var x    = 0; print(x  ); var y = 1; print( y);" +
-               "print(x_y);}",
+    inFunction(
+        LINE_JOINER.join(
+            "var x_y = 1; ",
+            "function f() {",
+            "  var x    = 0;",
+            "  print(x  );",
+            "  var y = 1;",
+            "  print( y);",
+            "  print(x_y);",
+            "}"),
+        LINE_JOINER.join(
+            "var x_y = 1; ",
+            "function f() {",
+            "  var x_y$ = 0;",
+            "  print(x_y$);",
+            "  x_y$ = 1;",
+            "  print(x_y$);",
+            "  print(x_y);",
+            "}"));
 
-               "var x_y = 1; function f() {" +
-               "var x_y$ = 0; print(x_y$); x_y$ = 1; print(x_y$);" +
-               "print(x_y);}");
+    inFunction(
+        LINE_JOINER.join(
+            "var x   = 0;",
+            "print(x  );",
+            "var   y = 1;",
+            "print(  y); ",
+            "var closure_var;",
+            "function bar() {",
+            "  print(closure_var);",
+            "}"),
+        LINE_JOINER.join(
+            "var x_y = 0;",
+            "print(x_y);",
+            "x_y = 1;",
+            "print(x_y); ",
+            "var closure_var;",
+            "function bar() {",
+            "  print(closure_var);",
+            "}"));
+  }
 
-    inFunction("var x   = 0; print(x  ); var   y = 1; print(  y); " +
-               "var closure_var; function bar() { print(closure_var); }",
-               "var x_y = 0; print(x_y);     x_y = 1; print(x_y); " +
-               "var closure_var; function bar() { print(closure_var); }");
+  public void testUsePseudoNamesWithLets() {
+    usePseudoName = true;
+    inFunction(
+        LINE_JOINER.join(
+            "var x_y = 1; ",
+            "function f() {",
+            "  let x    = 0;",
+            "  print(x  );",
+            "  let y = 1;",
+            "  print( y);",
+            "  print(x_y);",
+            "}"),
+        LINE_JOINER.join(
+            "var x_y = 1; ",
+            "function f() {",
+            "  var x_y$ = 0;",
+            "  print(x_y$);",
+            "  x_y$ = 1;",
+            "  print(x_y$);",
+            "  print(x_y);",
+            "}"));
   }
 
   public void testMaxVars() {
@@ -434,32 +492,26 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction(code);
   }
 
-  // Correct outputs are commented out for the following (currently the ES6 Scope Creator is
-  // not in place)
+  // Testing Es6 features
   public void testCoalesceInInnerBlock() {
+    inFunction("{ var x = 1; var y = 2; y }", "{ var x = 1;     x = 2; x }");
 
-    inFunction("{ var x = 1; var y = 2; y }",
-               "{ var x = 1;     x = 2; x }");
-
-    inFunction("var x = 1; var y = 2; y;",
-               "var x = 1;     x = 2; x;");
-
-    inFunction(
-        "var x = 0; if(1) { let x = 2; let y = 4; y; }",
-        // "var x = 0; if (1) { let x = 2;     x = 4; x; }");
-        "var x = 0; if(1) { let x = 2; let y = 4; y; }");
+    inFunction("var x = 1; var y = 2; y;", "var x = 1;     x = 2; x;");
   }
 
   public void testLetSimple() {
-    inFunction(
-        "let x = 0; x; let y = 5; y",
-        // "let x = 0; x;     x = 5; x");
-        "let x = 0; x; let y = 5; y");
+    inFunction("let x = 0; x; let y = 5; y", "var x = 0; x;     x = 5; x");
 
     inFunction(
-        "var x = 1; var y = 2; { let x = 3; y }",
-        // "var x = 1; var y = 2; {     x = 3; y }");
-        "var x = 1; var y = 2; { let x = 3; y }");
+        "var x = 1; var y = 2; { let z = 3; y; }", "var x = 1;     x = 2; { let z = 3; x; }");
+
+    // First let in a block - It is unsafe for { let x = 0; x; } let y = 1; to be coalesced as
+    // { let x = 0; x; } x = 1; because x will be out of scope outside of the inner scope!
+    inFunction("{ let x = 0; x; } let y = 5; y;", "{ var x = 0; x; }     x = 5; x;");
+
+    // The following situation will never happen in practice because at this point, the code has
+    // been normalized so no two variables will have the same name
+    // --> var x = 1; var y = 2; { let x = 3; y }
   }
 
   public void testLetDifferentBlocks() {
@@ -469,66 +521,153 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
     inFunction("var x = 0; if (1) { let x = 1; x } else { let y = 1; y}; x");
 
-    inFunction("if (1) { var x = 0; let y = 1; y + x} else { let z = 1; z}");
+    inFunction(
+        "if (1) { var x = 0; let y = 1; y + x} else { let z = 1; z} y;",
+        "if (1) { var x = 0; let y = 1; y + x} else {     x = 1; x} y;");
 
     inFunction(
         "if(1) { var x = 0; x } else { var y = 0; y }",
         "if(1) { var x = 0; x } else {     x = 0; x }");
 
-    inFunction(LINE_JOINER.join(
-        "if (a) {",
-        "   return a;",
-        " } else {",
-        "   let b = a;",
-        "   let c = 1;",
-        "   return c;",
-        " }",
-        " return a;"),
-        /*"if (a) {"
-        + "    return a;"
-        + "  } else {"
-        + "    let b = a;"
-        + "        b = 1;"
-        + "    return b;"
-        + "  }"
-        + "  return a;");*/
+    inFunction(
         LINE_JOINER.join(
-        "if (a) {",
-        "   return a;",
-        " } else {",
-        "   let b = a;",
-        "   let c = 1;",
-        "   return c;",
-        " }",
-        " return a;"));
+            "if (a) {",
+            "   return a;",
+            " } else {",
+            "   let b = a;",
+            "   let c = 1;",
+            "   return c;",
+            " }",
+            " return a;"),
+        LINE_JOINER.join(
+            "if (a) {",
+            "    return a;",
+            "  } else {",
+            "    var b = a;",
+            "        b = 1;",
+            "    return b;",
+            "  }",
+            "  return a;"));
   }
 
-  public void testLetLoops() {
-    inFunction("let x = 1; while (1) { x = 2; x; let y = 0; y }");
-
+  public void testVariableNameCollisions() {
     inFunction("var x = 1; while (1) { if (1) { let x = 0; x } else { x = 2; let y = 3; y } }");
 
-    inFunction(
-        "var x = 1; if (1) { x = 2; let x = 3; let y = 4; y; }",
-        // "var x = 1; if (1) { x = 2; let x = 3;     x = 4; x; }");
-        "var x = 1; if (1) { x = 2; let x = 3; let y = 4; y; }");
+    inFunction("var x = 1; if (1) { x = 2; let x = 3; x = 4; x; }");
 
     inFunction("var x = 1; var y = 2; for (let x = 0; x < 2; x ++) { y ++; y }");
   }
 
-  public void testArrowFunctions() {
+  public void testLetLoops() {
+    // Simple
+
+    // It violates the temporal deadzone for let x = 1; while (1) { x = 2; x; let x = 0; x } to
+    // be output.
     inFunction(
-        "var x = 1; var y = () => { let x = 0; x }",
-        // "var x = 1;     x = () => { let x = 0; x }");
-        "var x = 1; var y = () => { let x = 0; x }");
+        "let x = 1; while (1) { x = 2; x; let y = 0; y }",
+        "var x = 1; while (1) { x = 2; x;     x = 0; x }");
+
+    inFunction(" let x = 1; while (1) { x; x = 2; let y = 0; y }");
 
     inFunction(
-        "var x = () => { let z = 0; let y = 1; y }",
-        // "var x = () => { let z = 0;     z = 1; z }");
-        "var x = () => { let z = 0; let y = 1; y }");
+        "for (let x = 1; x < 10; x ++) { let y = 2; x + y; } let z = 3;",
+        "for (var x = 1; x < 10; x ++) { let y = 2; x + y; }     x = 3;");
+
+    inFunction(
+        "var w = 0; for (let x = 1; x < 10; x ++) { let y = 2; x + y; } var z = 3;",
+        "var w = 0; for (    w = 1; w < 10; w ++) { let y = 2; w + y; }     w = 3;");
+
+    // Closure capture of the let variable
+    // Here z should not be coalesced because variables used in functions are considered escaped
+    // and this pass does not touch any escaped variables
+    inFunction("let x = 3; for (let z = 1; z < 10; z++) { use(() => {z}); }");
+
+    inFunction("for (let x = 1; x < 10; x++) { use(() => {x}); } let z = 3;");
+
+    // Multiple lets declared in loop head
+    inFunction("for (let x = 1, y = 2, z = 3; (x + z) < 10; x ++) { x + z; }");
+
+    // Here the variable y is redeclared because the variable z in the header of the for-loop has
+    // not been declared before
+    inFunction(
+        "let y = 2; for (let x = 1, z = 3; (x + z) < 10; x ++) { x + z; }",
+        "var y = 2; for (var y = 1, z = 3; (y + z) < 10; y ++) { y + z; }");
+  }
+
+  public void testArrowFunctions() {
+    inFunction(
+        "var x = 1; var y = () => { let x = 0; x }", "var x = 1;     x = () => { let x = 0; x }");
+
+    inFunction(
+        "var x = () => { let z = 0; let y = 1; y }", "var x = () => { var z = 0;     z = 1; z }");
 
     inFunction(
         "var x = 1; var y = 2; var f = () => x + 1", "var x = 1; var y = 2;     y = () => x + 1");
+
+    // Coalesce with arrow function parameters
+    inFunction("(x) => { var y = 1; y; }", "(x) => {     x = 1; x; }");
+
+    inFunction("(x) => { let y = 1; y; }", "(x) => {     x = 1; x; }");
+  }
+
+  public void testCodeWithTwoFunctions() {
+    // We only want to coalesce within a function, not across functions
+    test(
+        LINE_JOINER.join(
+            "function FUNC1() {",
+            "  var x = 1; ",
+            "  var y = 2; ",
+            "          y; ",
+            "}",
+            "function FUNC2() {",
+            "  var z = 3; ",
+            "  var w = 4; ",
+            "          w; ",
+            "}"),
+        LINE_JOINER.join(
+            "function FUNC1() {",
+            "  var x = 1; ",
+            "      x = 2; ",
+            "          x; ",
+            "}",
+            "function FUNC2() {",
+            "  var z = 3; ",
+            "      z = 4; ",
+            "          z; ",
+            "}"));
+
+    // Two arrow functions
+    test(
+        LINE_JOINER.join(
+            "() => { var x = 1; var y = 2; y; };", "() => { var z = 3; var w = 4; w; };"),
+        LINE_JOINER.join(
+            "() => { var x = 1;     x = 2; x; };", "() => { var z = 3;     z = 4; z; };"));
+  }
+
+  public void testNestedFunctionCoalescing() {
+    test(
+        LINE_JOINER.join(
+            "function FUNC1() {",
+            "  var x = 1; ",
+            "  var y = 2; ",
+            "          y; ",
+            "  function FUNC2() {",
+            "    var z = 3; ",
+            "    var w = 4; ",
+            "            w; ",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function FUNC1() {",
+            "  var x = 1; ",
+            "      x = 2; ",
+            "          x; ",
+            "  function FUNC2() {",
+            "      var z = 3 ",
+            "          z = 4; ",
+            "              z; ",
+            "  }",
+            "}"));
   }
 
   private void inFunction(String src) {
