@@ -459,10 +459,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(analyzerChecks);
     }
 
-    if (options.checkEventfulObjectDisposalPolicy != CompilerOptions.DisposalCheckingPolicy.OFF) {
-      checks.add(checkEventfulObjectDisposal);
-    }
-
     if (options.checkGlobalNamesLevel.isOn()) {
       checks.add(checkGlobalNames);
     }
@@ -2205,16 +2201,6 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     public FeatureSet featureSet() {
       return ES5;
-    }
-  };
-
-  /** Check memory bloat patterns */
-  private final PassFactory checkEventfulObjectDisposal =
-      new PassFactory("checkEventfulObjectDisposal", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new CheckEventfulObjectDisposal(compiler,
-          options.checkEventfulObjectDisposalPolicy);
     }
   };
 

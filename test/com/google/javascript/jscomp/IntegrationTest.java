@@ -24,7 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Chars;
-import com.google.javascript.jscomp.CompilerOptions.DisposalCheckingPolicy;
 import com.google.javascript.jscomp.CompilerOptions.J2clPassMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
@@ -491,38 +490,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setCheckMissingGetCssNameLevel(CheckLevel.ERROR);
     options.setCheckMissingGetCssNameBlacklist("foo");
     test(options, "var x = 'foo';", CheckMissingGetCssName.MISSING_GETCSSNAME);
-  }
-
-  public void testCheckEventfulDisposalWarningLevels() {
-    CompilerOptions options = createCompilerOptions();
-    options.setCheckEventfulObjectDisposalPolicy(DisposalCheckingPolicy.ON);
-    String js = "var goog = {};" + "goog.inherits = function(x, y) {};"
-      + "goog.dispose = function(x) {};"
-      + "goog.disposeAll = function(var_args) {};"
-      + "/** @return {*} */ goog.asserts.assert = function(x) { return x; };"
-      + "goog.disposable = {};"
-      + "/** @interface */\n"
-      + "goog.disposable.IDisposable = function() {};"
-      + "goog.disposable.IDisposable.prototype.dispose;"
-      + "/** @implements {goog.disposable.IDisposable}\n * @constructor */\n"
-      + "goog.Disposable = goog.abstractMethod;"
-      + "/** @override */"
-      + "goog.Disposable.prototype.dispose = goog.abstractMethod;"
-      + "/** @param {goog.Disposable} fn */"
-      + "goog.Disposable.prototype.registerDisposable = goog.abstractMethod;"
-      + "goog.events = {};"
-      + "/** @extends {goog.Disposable}\n *  @constructor */"
-      + "goog.events.EventHandler = function() {};"
-      + "/** @extends {goog.Disposable}\n * @constructor */"
-      + "var test = function() { this.eh = new goog.events.EventHandler(); };"
-      + "goog.inherits(test, goog.Disposable);"
-      + "var testObj = new test();";
-
-    test(options, js, CheckEventfulObjectDisposal.EVENTFUL_OBJECT_NOT_DISPOSED);
-
-    options.setWarningLevel(DiagnosticGroups.CHECK_EVENTFUL_OBJECT_DISPOSAL,
-        CheckLevel.OFF);
-    testSame(options, js);
   }
 
   public void testBug2592659() {

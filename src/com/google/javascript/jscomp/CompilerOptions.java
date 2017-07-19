@@ -318,9 +318,8 @@ public class CompilerOptions implements Serializable {
    */
   Set<String> extraAnnotationNames;
 
-  /**
-   * Policies to determine the disposal checking level.
-   */
+  /** @deprecated No longer has any effect. */
+  @Deprecated
   public enum DisposalCheckingPolicy {
     /**
      * Don't check any disposal.
@@ -338,22 +337,14 @@ public class CompilerOptions implements Serializable {
     AGGRESSIVE,
   }
 
-  /**
-   * Check for patterns that are known to cause memory leaks.
-   */
-  DisposalCheckingPolicy checkEventfulObjectDisposalPolicy;
+  /** @deprecated No longer has any effect. */
+  @Deprecated
+  public void setCheckEventfulObjectDisposalPolicy(DisposalCheckingPolicy policy) {}
 
-  public void setCheckEventfulObjectDisposalPolicy(DisposalCheckingPolicy policy) {
-    this.checkEventfulObjectDisposalPolicy = policy;
-
-    // The CheckEventfulObjectDisposal pass requires types so enable inferring types if
-    // this pass is enabled.
-    if (policy != DisposalCheckingPolicy.OFF) {
-      this.inferTypes = true;
-    }
-  }
+  /** @deprecated No longer has any effect. */
+  @Deprecated
   public DisposalCheckingPolicy getCheckEventfulObjectDisposalPolicy() {
-    return checkEventfulObjectDisposalPolicy;
+    return DisposalCheckingPolicy.OFF;
   }
 
   /**
@@ -1203,7 +1194,6 @@ public class CompilerOptions implements Serializable {
     computeFunctionSideEffects = false;
     chainCalls = false;
     extraAnnotationNames = null;
-    checkEventfulObjectDisposalPolicy = DisposalCheckingPolicy.OFF;
 
     // Optimizations
     foldConstants = false;
@@ -2792,7 +2782,6 @@ public class CompilerOptions implements Serializable {
             .add("brokenClosureRequiresLevel", brokenClosureRequiresLevel)
             .add("chainCalls", chainCalls)
             .add("checkDeterminism", getCheckDeterminism())
-            .add("checkEventfulObjectDisposalPolicy", checkEventfulObjectDisposalPolicy)
             .add("checkGlobalNamesLevel", checkGlobalNamesLevel)
             .add("checkGlobalThisLevel", checkGlobalThisLevel)
             .add("checkMissingGetCssNameBlacklist", checkMissingGetCssNameBlacklist)
