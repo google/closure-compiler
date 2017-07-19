@@ -318,10 +318,6 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
     assertNotLiveAfterX("X:a();let a=1;a()", "a");
   }
 
-  public void testLetInnerBlock() {
-    assertNotLiveAfterX("let x; { X:x = 2; let y; }", "x");
-  }
-
   public void testSimpleConst() {
     // a is defined after X and not used
     assertLiveBeforeX("const a = 4; X:a;", "a");
