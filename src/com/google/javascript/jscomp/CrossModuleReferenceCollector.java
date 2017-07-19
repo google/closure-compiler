@@ -152,7 +152,7 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
     // Don't add all ES6 scope roots to blockStack, only those that are also scopes according to
     // the ES5 scoping rules. Other nodes that ought to be considered the root of a BasicBlock
     // are added in shouldTraverse() and removed in visit().
-    if (t.getScope().isHoistScope()) {
+    if (t.isHoistScope()) {
       blockStack.add(new BasicBlock(parent, n));
     }
   }
@@ -162,7 +162,7 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
    */
   @Override
   public void exitScope(NodeTraversal t) {
-    if (t.getScope().isHoistScope()) {
+    if (t.isHoistScope()) {
       pop(blockStack);
     }
   }

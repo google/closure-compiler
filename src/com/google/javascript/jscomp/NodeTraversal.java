@@ -901,7 +901,9 @@ public class NodeTraversal {
     return scope;
   }
 
-
+  public boolean isHoistScope() {
+    return Scope.isHoistScopeRootNode(getScopeRoot());
+  }
 
   public Node getClosestHoistScopeRoot() {
     int roots = scopeRoots.size();
