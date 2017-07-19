@@ -337,6 +337,10 @@ class InlineFunctions implements CompilerPass {
       if (hasComplexDestructuringPattern(NodeUtil.getFunctionParameters(fnNode))) {
         functionState.setInline(false);
       }
+
+      if (fnNode.isGeneratorFunction()) {
+        functionState.setInline(false);
+      }
     }
   }
 
@@ -734,6 +738,7 @@ class InlineFunctions implements CompilerPass {
     return NodeUtil.has(fnNode, hasParamWithNumberObjectLitPredicate,
         Predicates.<Node>alwaysTrue());
   }
+
   /**
    * @return whether the function has a param with complex OBJECT_PATTERNS (e.g. OBJECT_PATTERN
    * with child OBJECT_PATTERN). Prevents such functions from being inlined.

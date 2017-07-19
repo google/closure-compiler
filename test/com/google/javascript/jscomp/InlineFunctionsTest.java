@@ -2981,4 +2981,39 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "}",
             "foo(...[0,1]);"));
   }
+
+  public void testGeneratorFunction1() {
+    testSame(
+        LINE_JOINER.join(
+            "function* foo() {}",
+            "var bar = foo();"));
+  }
+
+  public void testGeneratorFunction2() {
+    testSame(
+        LINE_JOINER.join(
+            "function* foo() {",
+            "  yield 'X';",
+            "  return 'Y';",
+            "}",
+            "var bar = foo();"));
+  }
+
+  public void testGeneratorFunction3() {
+    testSame(
+        LINE_JOINER.join(
+            "function* foo() {",
+            "  yield 'X';",
+            "}",
+            "foo();"));
+  }
+
+  public void testGeneratorFunction4() {
+    testSame(
+        LINE_JOINER.join(
+            "function* foo() {",
+            "  return 1;",
+            "}",
+            "foo();"));
+  }
 }
