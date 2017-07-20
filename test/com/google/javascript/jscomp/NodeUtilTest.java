@@ -2000,6 +2000,8 @@ public final class NodeUtilTest extends TestCase {
         parse("({x} = obj)").getFirstFirstChild().getFirstFirstChild());
     assertLValueNamedX(
         parse("([x] = obj)").getFirstFirstChild().getFirstFirstChild());
+    assertLValueNamedX(
+        parse("function foo (...x) {}").getFirstChild().getSecondChild().getFirstFirstChild());
   }
 
   private void assertNotLValueNamedX(Node n) {
@@ -2343,6 +2345,50 @@ public final class NodeUtilTest extends TestCase {
 
     Node nameNodeA = destructPat.getFirstChild();
     checkState(nameNodeA.getString().equals("a"), nameNodeA);
+
+    assertLhsByDestructuring(nameNodeA);
+  }
+
+  public void testLhsByDestructuring8() {
+    Node root = parse("var [...x] = obj;");
+    Node destructLhs = root.getFirstFirstChild();
+    checkArgument(destructLhs.isDestructuringLhs());
+    Node destructPat = destructLhs.getFirstChild();
+    checkArgument(destructPat.isArrayPattern());
+    Node restNode = destructPat.getFirstChild();
+    checkArgument(restNode.isRest());
+
+    Node nameNodeA = restNode.getFirstChild();
+    checkState(nameNodeA.getString().equals("x"), nameNodeA);
+
+    assertLhsByDestructuring(nameNodeA);
+  }
+
+  public void testLhsByDestructuring8b() {
+    Node root = parse("([...this.x] = obj);");
+    Node assign = root.getFirstFirstChild();
+    checkArgument(assign.isAssign());
+    Node destructPat = assign.getFirstChild();
+    checkArgument(destructPat.isArrayPattern());
+    Node restNode = destructPat.getFirstChild();
+    checkArgument(restNode.isRest());
+    Node getProp = restNode.getFirstChild();
+    checkArgument(getProp.isGetProp());
+
+    assertLhsByDestructuring(getProp);
+  }
+
+  public void testLhsByDestructuring9() {
+    Node root = parse("var {['a']:x} = obj;");
+    Node destructLhs = root.getFirstFirstChild();
+    checkArgument(destructLhs.isDestructuringLhs());
+    Node destructPat = destructLhs.getFirstChild();
+    checkArgument(destructPat.isObjectPattern());
+    Node computedPropNode = destructPat.getFirstChild();
+    checkArgument(computedPropNode.isComputedProp());
+
+    Node nameNodeA = computedPropNode.getLastChild();
+    checkState(nameNodeA.getString().equals("x"), nameNodeA);
 
     assertLhsByDestructuring(nameNodeA);
   }

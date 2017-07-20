@@ -205,6 +205,7 @@ public final class Reference implements StaticRef, Serializable {
       case INC:
       case DEC:
       case CATCH:
+      case REST:
         return true;
       case FOR:
       case FOR_IN:

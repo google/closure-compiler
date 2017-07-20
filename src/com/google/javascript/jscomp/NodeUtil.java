@@ -3135,12 +3135,24 @@ public final class NodeUtil {
     return parent.isImport() || (parent.isImportSpec() && parent.getLastChild() == n);
   }
 
+  /**
+   * Returns true if the node is a lhs value of a destructuring assignment
+   * For example,
+   * x in {@code var [x] = [1];}, {@code var [...x] = [1];}, and {@code var {a: x} = {a: 1}}
+   */
   public static boolean isLhsByDestructuring(Node n) {
+    Node node = n;
     Node parent = n.getParent();
+    if (parent.isRest()) {
+      node = parent;
+      parent = parent.getParent();
+    }
 
     if (parent.isDestructuringPattern()
-        || (parent.isStringKey() && parent.getParent().isObjectPattern())) {
-      if (n.isStringKey() && n.hasChildren()) {
+        || (parent.isStringKey() && parent.getParent().isObjectPattern())
+        || (parent.isComputedProp() && parent.getParent().isObjectPattern()
+            && node == parent.getSecondChild())) {
+      if (node.isStringKey() && node.hasChildren()) {
         return false;
       }
       return true;
