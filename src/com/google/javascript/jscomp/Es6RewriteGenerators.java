@@ -133,8 +133,8 @@ public final class Es6RewriteGenerators
         }
         break;
       case YIELD:
-        if (n.isYieldFor()) {
-          visitYieldFor(t, n, parent);
+        if (n.isYieldAll()) {
+          visitYieldAll(t, n, parent);
         } else if (!parent.isExprResult()) {
           visitYieldExpr(t, n, parent);
         } else {
@@ -176,7 +176,7 @@ public final class Es6RewriteGenerators
    * var i = $jscomp$generator$yield$entry.value;
    * </pre>
    */
-  private void visitYieldFor(NodeTraversal t, Node n, Node parent) {
+  private void visitYieldAll(NodeTraversal t, Node n, Node parent) {
     Node enclosingStatement = NodeUtil.getEnclosingStatement(n);
     Node generator = IR.var(
         IR.name(GENERATOR_YIELD_ALL_NAME),

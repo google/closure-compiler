@@ -3048,18 +3048,18 @@ public class Parser {
   private ParseTree parseYield(Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.YIELD);
-    boolean isYieldFor = false;
+    boolean isYieldAll = false;
     ParseTree expression = null;
     if (!peekImplicitSemiColon()) {
-      isYieldFor = eatOpt(TokenType.STAR) != null;
+      isYieldAll = eatOpt(TokenType.STAR) != null;
       if (peekAssignmentExpression()) {
         expression = parseAssignment(expressionIn);
-      } else if (isYieldFor) {
+      } else if (isYieldAll) {
         reportError("yield* requires an expression");
       }
     }
     return new YieldExpressionTree(
-        getTreeLocation(start), isYieldFor, expression);
+        getTreeLocation(start), isYieldAll, expression);
   }
 
   // 11.12 Conditional Expression

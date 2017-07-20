@@ -872,7 +872,7 @@ public class CodeGenerator {
 
       case YIELD:
         add("yield");
-        if (n.isYieldFor()) {
+        if (n.isYieldAll()) {
           checkNotNull(first);
           add("*");
         }

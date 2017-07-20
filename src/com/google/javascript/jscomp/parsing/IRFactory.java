@@ -2192,7 +2192,7 @@ class IRFactory {
       if (tree.expression != null) {
         yield.addChildToBack(transform(tree.expression));
       }
-      yield.setYieldFor(tree.isYieldFor);
+      yield.setYieldAll(tree.isYieldAll);
       return yield;
     }
 

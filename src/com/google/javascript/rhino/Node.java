@@ -108,7 +108,7 @@ public class Node implements Serializable {
                                   // member method.
       ARROW_FN           = 60,
       ASYNC_FN           = 61, // http://tc39.github.io/ecmascript-asyncawait/
-      YIELD_FOR          = 62, // Set if a yield is a "yield all"
+      YIELD_ALL          = 62, // Set if a yield is a "yield all"
       EXPORT_DEFAULT     = 63, // Set if a export is a "default" export
       EXPORT_ALL_FROM    = 64, // Set if an export is a "*"
       IS_CONSTANT_VAR    = 65, // A lexical variable is inferred const
@@ -191,7 +191,7 @@ public class Node implements Serializable {
         case GENERATOR_FN:       return "generator_fn";
         case ARROW_FN:           return "arrow_fn";
         case ASYNC_FN:           return "async_fn";
-        case YIELD_FOR:          return "yield_for";
+        case YIELD_ALL:          return "yield_all";
         case EXPORT_DEFAULT:     return "export_default";
         case EXPORT_ALL_FROM:    return "export_all_from";
         case IS_CONSTANT_VAR:    return "is_constant_var";
@@ -2607,8 +2607,8 @@ public class Node implements Serializable {
    * method is meaningful only on {@link Token#FUNCTION} or
    * {@link Token#MEMBER_FUNCTION_DEF} nodes.
    */
-  public void setYieldFor(boolean isGenerator) {
-    putBooleanProp(YIELD_FOR, isGenerator);
+  public void setYieldAll(boolean isGenerator) {
+    putBooleanProp(YIELD_ALL, isGenerator);
   }
 
   /**
@@ -2616,8 +2616,8 @@ public class Node implements Serializable {
    * method is meaningful only on {@link Token#FUNCTION} or
    * {@link Token#MEMBER_FUNCTION_DEF} nodes.
    */
-  public boolean isYieldFor() {
-    return getBooleanProp(YIELD_FOR);
+  public boolean isYieldAll() {
+    return getBooleanProp(YIELD_ALL);
   }
 
   // There are four values of interest:
