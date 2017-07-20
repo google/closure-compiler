@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.rhino.jstype.JSTypeNative.NUMBER_STRING_BOOLEAN;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -26,7 +27,8 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.TypeIRegistry;
 import java.text.MessageFormat;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -51,9 +53,6 @@ class ProcessDefines implements CompilerPass {
    * that always set these defines, even when they might not be in the binary.
    */
   private static final ImmutableSet<String> KNOWN_DEFINES = ImmutableSet.of("COMPILED");
-
-  private static final ImmutableSet<String> ALLOWED_DEFINES_TYPES = ImmutableSet.of("number",
-      "boolean", "string");
 
   private final AbstractCompiler compiler;
   private final Map<String, Node> dominantReplacements;
@@ -161,18 +160,10 @@ class ProcessDefines implements CompilerPass {
    * Only defines of literal number, string, or boolean are supported.
    */
   private boolean isValidDefineType(JSTypeExpression expression) {
-    Node root = expression.getRoot();
-
-    if (root.getToken() == Token.PIPE) {
-      for (Node child : root.children()) {
-        if (!ALLOWED_DEFINES_TYPES.contains(child.getString())) {
-          return false;
-        }
-      }
-      return true;
-    } else {
-      return ALLOWED_DEFINES_TYPES.contains(root.getString());
-    }
+    TypeIRegistry registry = compiler.getTypeIRegistry();
+    TypeI type = registry.evaluateTypeExpressionInGlobalScope(expression);
+    return !type.isUnknownType()
+        && type.isSubtypeOf(registry.getNativeType(NUMBER_STRING_BOOLEAN));
   }
 
   /**
@@ -468,10 +459,10 @@ class ProcessDefines implements CompilerPass {
      * the parent would be the NAME node.
      */
     private static Node getValueParent(Ref ref) {
-      // there are two types of declarations: VARs, ASSIGNs and CONSTs
+      // there are two types of declarations: VARs and ASSIGNs
       return ref.node.getParent() != null &&
-          (ref.node.getParent().isVar() || ref.node.getParent().isConst())
-          ? ref.node : ref.node.getParent();
+          ref.node.getParent().isVar() ?
+          ref.node : ref.node.getParent();
     }
 
     /**

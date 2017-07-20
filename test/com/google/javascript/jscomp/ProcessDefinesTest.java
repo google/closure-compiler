@@ -27,7 +27,7 @@ import java.util.Map;
 /**
  * @author nicksantos@google.com (Nick Santos)
  */
-public final class ProcessDefinesTest extends CompilerTestCase {
+public final class ProcessDefinesTest extends TypeICompilerTestCase {
 
   public ProcessDefinesTest() {
     super(DEFAULT_EXTERNS + "var externMethod;");
@@ -389,48 +389,6 @@ public final class ProcessDefinesTest extends CompilerTestCase {
   public void testOverrideAfterAlias() {
     testError("var x; /** @define {boolean} */var DEF=true; x=DEF; DEF=false;",
         ProcessDefines.DEFINE_NOT_ASSIGNABLE_ERROR);
-  }
-
-  public void testBasicConstDeclaration() {
-    test("/** @define {boolean} */ const DEF = true", "/** @define {boolean} */ const DEF=true");
-    test("/** @define {string} */ const DEF = 'a'", "/** @define {string} */ const DEF=\"a\"");
-    test("/** @define {number} */ const DEF = 0", "/** @define {number} */ const DEF=0");
-  }
-
-  public void testConstOverriding1() {
-    overrides.put("DEF_OVERRIDE_TO_TRUE", new Node(Token.TRUE));
-    test(
-        "/** @define {boolean} */ const DEF_OVERRIDE_TO_TRUE = false;",
-        "/** @define {boolean} */ const DEF_OVERRIDE_TO_TRUE = true;");
-  }
-
-  public void testConstOverriding2() {
-    test(
-        "/** @define {string} */ const DEF_OVERRIDE_STRING = 'x';",
-        "/** @define {string} */ const DEF_OVERRIDE_STRING=\"x\"");
-  }
-
-  public void testConstProducesUnknownDefineWarning() {
-    doReplacements = false;
-    overrides.put("a.B", new Node(Token.TRUE));
-    test("const a = {};", "const a = {};", warning(ProcessDefines.UNKNOWN_DEFINE_WARNING));
-  }
-
-  public void testAssignBeforeConstDeclaration() {
-    testError("DEF=false;const b=false,/** @define {boolean} */DEF=true,c=false",
-        ProcessDefines.INVALID_DEFINE_INIT_ERROR);
-  }
-
-  public void testSimpleConstReassign() {
-    test(
-        LINE_JOINER.join(
-            "/** @fileoverview @suppress {newCheckTypes} */",
-            "/** @define {boolean} */ const DEF = false;",
-            "DEF = true;"),
-        LINE_JOINER.join(
-            "/** @fileoverview @suppress {newCheckTypes} */",
-            "/** @define {boolean} */ const DEF=true;",
-            "true"));
   }
 
   private class ProcessDefinesWithInjectedNamespace implements CompilerPass {
