@@ -124,7 +124,7 @@ public enum Token {
     DEFAULT_CASE, // default keyword
     WHILE, // while keyword
     DO, // do keyword
-    FOR, // for(;;) statemet
+    FOR, // for(;;) statement
     FOR_IN, // for-in
     BREAK, // break keyword
     CONTINUE, // continue keyword
