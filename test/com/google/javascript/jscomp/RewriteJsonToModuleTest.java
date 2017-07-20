@@ -49,21 +49,19 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
   }
 
   public void testJsonFile() {
-    setFilename("/test.json");
     test(
-        "{ \"foo\": \"bar\"}",
-        "goog.provide('module$test_json'); var module$test_json = { \"foo\": \"bar\"};");
+        srcs(SourceFile.fromCode("/test.json", "{ \"foo\": \"bar\"}")),
+        expected("goog.provide('module$test_json'); var module$test_json = { \"foo\": \"bar\"};"));
 
     assertEquals(0, getLastCompiler().getModuleLoader().getPackageJsonMainEntries().size());
   }
 
   public void testPackageJsonFile() {
-    setFilename("/package.json");
     test(
-        "{ \"main\": \"foo/bar/baz.js\"}",
-        LINE_JOINER.join(
+        srcs(SourceFile.fromCode("/package.json", "{ \"main\": \"foo/bar/baz.js\"}")),
+        expected(lines(
             "goog.provide('module$package_json')",
-            "var module$package_json = {\"main\": \"foo/bar/baz.js\"};"));
+            "var module$package_json = {\"main\": \"foo/bar/baz.js\"};")));
 
     assertEquals(1, getLastCompiler().getModuleLoader().getPackageJsonMainEntries().size());
     assert (getLastCompiler()
@@ -75,12 +73,11 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
   }
 
   public void testPackageJsonWithoutMain() {
-    setFilename("/package.json");
     test(
-        "{\"other\": { \"main\": \"foo/bar/baz.js\"}}",
-        LINE_JOINER.join(
+        srcs(SourceFile.fromCode("/package.json", "{\"other\": { \"main\": \"foo/bar/baz.js\"}}")),
+        expected(lines(
             "goog.provide('module$package_json')",
-            "var module$package_json = {\"other\": { \"main\": \"foo/bar/baz.js\"}};"));
+            "var module$package_json = {\"other\": { \"main\": \"foo/bar/baz.js\"}};")));
 
     assertEquals(0, getLastCompiler().getModuleLoader().getPackageJsonMainEntries().size());
   }

@@ -179,8 +179,6 @@ public abstract class CompilerTestCase extends TestCase {
    */
   private boolean astValidationEnabled;
 
-  private String filename = "testcode";
-
   private final Set<DiagnosticType> ignoredWarnings = new HashSet<>();
 
   /** Whether {@link #setUp} has run. */
@@ -555,17 +553,6 @@ public abstract class CompilerTestCase extends TestCase {
   protected final void enableRunNTIAfterProcessing() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.runNTIAfterProcessing = true;
-  }
-
-  // TODO(johnlenz): remove "get" and "set" filename.  clients needing this should be
-  // creating "SourceFile" objects directly.
-  protected final void setFilename(String filename) {
-    checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    this.filename = filename;
-  }
-
-  public final String getFilename() {
-    return filename;
   }
 
   /**
@@ -2004,7 +1991,7 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   protected Sources srcs(String srcText) {
-    return new FlatSources(maybeCreateSources(filename,  srcText));
+    return new FlatSources(maybeCreateSources("testcode",  srcText));
   }
 
   protected Sources srcs(String[] srcTexts) {
@@ -2013,6 +2000,10 @@ public abstract class CompilerTestCase extends TestCase {
 
   protected Sources srcs(List<SourceFile> files) {
     return new FlatSources(files);
+  }
+
+  protected Sources srcs(SourceFile... files) {
+    return new FlatSources(Arrays.asList(files));
   }
 
   protected Sources srcs(JSModule[] modules) {
@@ -2029,6 +2020,10 @@ public abstract class CompilerTestCase extends TestCase {
 
   protected Expected expected(List<SourceFile> files) {
     return new Expected(files);
+  }
+
+  protected Expected expected(SourceFile... files) {
+    return new Expected(Arrays.asList(files));
   }
 
   protected Expected expected(JSModule[] modules) {

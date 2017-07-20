@@ -64,6 +64,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   void testModules(String input, String expected) {
     ModulesTestUtils.testModules(
         this,
+        "testcode.js",
         input,
         LINE_JOINER.join(
             "/** @fileoverview",
