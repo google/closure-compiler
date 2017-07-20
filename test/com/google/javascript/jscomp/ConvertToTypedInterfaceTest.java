@@ -1049,5 +1049,21 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "goog.provide('a.b.c.d.e.f.g');",
             "",
             "a.b.c.d.e.f.g.Foo = class {};"));
+
+    test(
+        LINE_JOINER.join(
+            "goog.provide('a.b.c.d.e.f.g');",
+            "",
+            "/** @const */ var $jscomp = $jscomp || {};",
+            "/** @const */ $jscomp.scope = {};",
+            "",
+            "/** @constructor */",
+            "$jscomp.scope.strayCtor = function() { this.x = 5; };",
+            "",
+            "a.b.c.d.e.f.g.Foo = class {};"),
+        LINE_JOINER.join(
+            "goog.provide('a.b.c.d.e.f.g');",
+            "",
+            "a.b.c.d.e.f.g.Foo = class {};"));
   }
 }

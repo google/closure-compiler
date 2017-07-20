@@ -583,13 +583,14 @@ class ConvertToTypedInterface implements CompilerPass {
       checkState(NodeUtil.isStatement(statement), statement);
       if (!nameNode.isQualifiedName()) {
         // We don't track these. We can just remove them.
-        removeNode(statement);
+        NodeUtil.deleteNode(statement, compiler);
         return;
       }
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       switch (shouldRemove(t, nameNode)) {
         case REMOVE_ALL:
-          removeNode(statement);
+          NodeUtil.deleteNode(statement, compiler);
+          statement.removeChildren();
           break;
         case PRESERVE_ALL:
           break;
@@ -598,16 +599,6 @@ class ConvertToTypedInterface implements CompilerPass {
           break;
       }
       currentFile.markNameProcessed(nameNode.getQualifiedName());
-    }
-
-    private void removeNode(Node n) {
-      compiler.reportChangeToEnclosingScope(n);
-      if (NodeUtil.isStatement(n)) {
-        n.detach();
-      } else {
-        n.replaceWith(IR.empty().srcref(n));
-      }
-      NodeUtil.markFunctionsDeleted(n, compiler);
     }
 
     private void maybeRemoveRhs(NodeTraversal t, Node nameNode, Node statement, JSDocInfo jsdoc) {
