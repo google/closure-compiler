@@ -659,7 +659,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           // order after hoisting.
           for (int i = functionsToHoist.size() - 1; i >= 0; i--) {
             Node functionExpr = functionsToHoist.get(i);
-            Node scopeRoot = t.getClosestHoistScope().getRootNode();
+            Node scopeRoot = t.getClosestHoistScopeRoot();
             Node insertionPoint = scopeRoot.getFirstChild();
             if (insertionPoint == null
                 || !(insertionPoint.isVar()

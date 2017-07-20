@@ -29,6 +29,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -238,6 +239,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     // Null if the export is of anything other than a name
     @Nullable Var nameDecl;
 
+    @Override
     public String toString() {
       return MoreObjects.toStringHelper(this)
           .add("exportName", exportName)
@@ -424,7 +426,17 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
-  private class ScriptUpdater implements Callback {
+  private class ScriptUpdater implements ScopedCallback {
+    @Override
+    public void enterScope(NodeTraversal t) {
+      // Capture the scope before doing any rewriting to the scope.
+      t.getScope();
+    }
+
+    @Override
+    public void exitScope(NodeTraversal t) {
+    }
+
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
@@ -1658,7 +1670,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   private boolean isTopLevel(NodeTraversal t, Node n, ScopeType scopeType) {
     if (scopeType == ScopeType.EXEC_CONTEXT) {
-      return t.getClosestHoistScope().getRootNode() == currentScript.rootNode;
+      return t.getClosestHoistScopeRoot() == currentScript.rootNode;
     } else {
       // Must be ScopeType.BLOCK;
       return n.getParent() == currentScript.rootNode;

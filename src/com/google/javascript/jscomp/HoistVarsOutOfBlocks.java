@@ -79,7 +79,7 @@ class HoistVarsOutOfBlocks extends AbstractPostOrderCallback
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isVar() && t.getScope() != t.getClosestHoistScope()) {
+    if (n.isVar() && t.getScopeRoot() != t.getClosestHoistScopeRoot()) {
       hoistVarIfNeeded(t, n, parent);
     }
   }
@@ -114,7 +114,7 @@ class HoistVarsOutOfBlocks extends AbstractPostOrderCallback
       }
 
       Node rhs = lhs.removeFirstChild();
-      Node hoistRoot = t.getClosestHoistScope().getRootNode();
+      Node hoistRoot = t.getClosestHoistScopeRoot();
       if (hoistRoot.isRoot()) {
         hoistRoot = NodeUtil.getEnclosingScript(varNode);
       }
