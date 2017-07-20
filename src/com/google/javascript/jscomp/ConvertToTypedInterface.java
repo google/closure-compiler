@@ -99,10 +99,18 @@ class ConvertToTypedInterface implements CompilerPass {
       unhoistExternsToCode(externs, root);
       return;
     }
-    NodeTraversal.traverseEs6(compiler, root, new RemoveNonDeclarations(compiler));
-    NodeTraversal.traverseEs6(compiler, root, new PropagateConstJsdoc());
-    SimplifyDeclarations simplify = new SimplifyDeclarations(compiler);
-    NodeTraversal.traverseEs6(compiler, root, simplify);
+    for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
+      processFile(script);
+    }
+  }
+
+  public void processFile(Node scriptNode) {
+    checkArgument(scriptNode.isScript());
+    NodeTraversal.traverseEs6(compiler, scriptNode, new RemoveNonDeclarations());
+    NodeTraversal.traverseEs6(compiler, scriptNode, new PropagateConstJsdoc());
+    FileInfo currentFile = new FileInfo();
+    SimplifyDeclarations simplify = new SimplifyDeclarations(compiler, currentFile);
+    NodeTraversal.traverseEs6(compiler, scriptNode, simplify);
   }
 
   private static @Nullable Var findNameDeclaration(NodeTraversal t, Node rhs) {
@@ -114,12 +122,6 @@ class ConvertToTypedInterface implements CompilerPass {
 
   private static class RemoveNonDeclarations implements NodeTraversal.Callback {
 
-    private final AbstractCompiler compiler;
-
-    public RemoveNonDeclarations(AbstractCompiler compiler) {
-      this.compiler = compiler;
-    }
-
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
@@ -129,7 +131,7 @@ class ConvertToTypedInterface implements CompilerPass {
             if (!body.isNormalBlock() || body.hasChildren()) {
               t.reportCodeChange(body);
               body.replaceWith(IR.block().srcref(body));
-              NodeUtil.markFunctionsDeleted(body, compiler);
+              NodeUtil.markFunctionsDeleted(body, t.getCompiler());
             }
           }
           return true;
@@ -163,7 +165,7 @@ class ConvertToTypedInterface implements CompilerPass {
         case DEBUGGER:
         case EMPTY:
           if (NodeUtil.isStatementParent(parent)) {
-            NodeUtil.deleteNode(n, compiler);
+            NodeUtil.deleteNode(n, t.getCompiler());
           }
           return false;
         case LABEL:
@@ -172,19 +174,19 @@ class ConvertToTypedInterface implements CompilerPass {
         case CASE:
         case WHILE:
           // First child can't have declaration. Statement itself will be removed post-order.
-          NodeUtil.deleteNode(n.getFirstChild(), compiler);
+          NodeUtil.deleteNode(n.getFirstChild(), t.getCompiler());
           return true;
         case TRY:
         case DO:
           // Second child can't have declarations. Statement itself will be removed post-order.
-          NodeUtil.deleteNode(n.getSecondChild(), compiler);
+          NodeUtil.deleteNode(n.getSecondChild(), t.getCompiler());
           return true;
         case FOR:
-          NodeUtil.deleteNode(n.getSecondChild(), compiler);
+          NodeUtil.deleteNode(n.getSecondChild(), t.getCompiler());
           // fall-through
         case FOR_OF:
         case FOR_IN:
-          NodeUtil.deleteNode(n.getSecondChild(), compiler);
+          NodeUtil.deleteNode(n.getSecondChild(), t.getCompiler());
           Node initializer = n.removeFirstChild();
           if (initializer.isVar()) {
             n.getLastChild().addChildToFront(initializer);
@@ -268,9 +270,13 @@ class ConvertToTypedInterface implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
         case EXPR_RESULT:
-          if (NodeUtil.isExprAssign(n)) {
-            Node expr = n.getFirstChild();
-            propagateJsdocAtName(t, expr.getFirstChild());
+          Node expr = n.getFirstChild();
+          switch (expr.getToken()) {
+            case ASSIGN:
+              propagateJsdocAtName(t, expr.getFirstChild());
+              break;
+            default:
+              break;
           }
           break;
         case VAR:
@@ -351,21 +357,15 @@ class ConvertToTypedInterface implements CompilerPass {
     void markImportedName(String requiredLocalName) {
       requiredLocalNames.add(requiredLocalName);
     }
-
-    void clear() {
-      providedNamespaces.clear();
-      seenNames.clear();
-      constructorsToProcess.clear();
-    }
-
   }
 
   private static class SimplifyDeclarations implements NodeTraversal.Callback {
     private final AbstractCompiler compiler;
-    private final FileInfo currentFile = new FileInfo();
+    private final FileInfo currentFile;
 
-    SimplifyDeclarations(AbstractCompiler compiler) {
+    SimplifyDeclarations(AbstractCompiler compiler, FileInfo currentFile) {
       this.compiler = compiler;
+      this.currentFile = currentFile;
     }
 
     private void processConstructors(List<Node> constructorNodes) {
@@ -377,9 +377,6 @@ class ConvertToTypedInterface implements CompilerPass {
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
-        case SCRIPT:
-          currentFile.clear();
-          break;
         case CLASS:
           if (NodeUtil.isStatementParent(parent)) {
             currentFile.markNameProcessed(n.getFirstChild().getString());
@@ -407,7 +404,7 @@ class ConvertToTypedInterface implements CompilerPass {
               } else if (callee.matchesQualifiedName("goog.require")) {
                 currentFile.markImportedName(expr.getLastChild().getString());
               } else if (callee.matchesQualifiedName("goog.define")) {
-                NodeUtil.deleteNode(expr.getLastChild(), compiler);
+                NodeUtil.deleteNode(expr.getLastChild(), t.getCompiler());
               }
               break;
             case ASSIGN:
@@ -583,13 +580,13 @@ class ConvertToTypedInterface implements CompilerPass {
       checkState(NodeUtil.isStatement(statement), statement);
       if (!nameNode.isQualifiedName()) {
         // We don't track these. We can just remove them.
-        NodeUtil.deleteNode(statement, compiler);
+        NodeUtil.deleteNode(statement, t.getCompiler());
         return;
       }
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       switch (shouldRemove(t, nameNode)) {
         case REMOVE_ALL:
-          NodeUtil.deleteNode(statement, compiler);
+          NodeUtil.deleteNode(statement, t.getCompiler());
           statement.removeChildren();
           break;
         case PRESERVE_ALL:
@@ -612,7 +609,7 @@ class ConvertToTypedInterface implements CompilerPass {
         return;
       }
       Node newStatement =
-          NodeUtil.newQNameDeclaration(compiler, nameNode.getQualifiedName(), null, jsdoc);
+          NodeUtil.newQNameDeclaration(t.getCompiler(), nameNode.getQualifiedName(), null, jsdoc);
       newStatement.useSourceInfoIfMissingFromForTree(nameNode);
       statement.replaceWith(newStatement);
       t.reportCodeChange();
