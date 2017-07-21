@@ -2326,6 +2326,11 @@ public final class DefaultPassConfig extends PassConfig {
       return new InlineObjectLiterals(
           compiler, compiler.getUniqueNameIdSupplier());
     }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8_MODULES;
+    }
   };
 
   /** Disambiguate property names based on the coding convention. */
