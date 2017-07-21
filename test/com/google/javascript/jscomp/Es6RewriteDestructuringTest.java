@@ -480,11 +480,14 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "};",
             "f(1); f(1,2,3);"));
 
-    test("function f(zero, one = 1, two = 2) {}; f();", LINE_JOINER.join(
-    "function f(zero, one, two) {",
-    "  one = (one === undefined) ? 1 : one;",
-    "  two = (two === undefined) ? 2 : two;",
-    "}; f();"), warning(TypeCheck.WRONG_ARGUMENT_COUNT));
+    test(
+        "function f(zero, one = 1, two = 2) {}; f();",
+        LINE_JOINER.join(
+            "function f(zero, one, two) {",
+            "  one = (one === undefined) ? 1 : one;",
+            "  two = (two === undefined) ? 2 : two;",
+            "}; f();"),
+        warning(TypeCheck.WRONG_ARGUMENT_COUNT));
   }
 
   public void testDefaultAndRestParameters() {

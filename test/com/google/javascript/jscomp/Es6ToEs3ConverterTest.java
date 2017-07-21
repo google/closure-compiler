@@ -1914,34 +1914,40 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
 
     // Using @type instead of @return on a getter.
-    test("class C { /** @type {string} */ get value() { } }", LINE_JOINER.join(
-    "/** @constructor @struct */",
-    "var C = function() {};",
-    "/** @type {?} */",
-    "C.prototype.value;",
-    "$jscomp.global.Object.defineProperties(C.prototype, {",
-    "  value: {",
-    "    configurable: true,",
-    "    enumerable: true,",
-    "    /** @type {string} */",
-    "    get: function() {}",
-    "  }",
-    "});"), warning(TypeValidator.TYPE_MISMATCH_WARNING));
+    test(
+        "class C { /** @type {string} */ get value() { } }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var C = function() {};",
+            "/** @type {?} */",
+            "C.prototype.value;",
+            "$jscomp.global.Object.defineProperties(C.prototype, {",
+            "  value: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @type {string} */",
+            "    get: function() {}",
+            "  }",
+            "});"),
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
 
     // Using @type instead of @param on a setter.
-    test("class C { /** @type {string} */ set value(v) { } }", LINE_JOINER.join(
-    "/** @constructor @struct */",
-    "var C = function() {};",
-    "/** @type {?} */",
-    "C.prototype.value;",
-    "$jscomp.global.Object.defineProperties(C.prototype, {",
-    "  value: {",
-    "    configurable: true,",
-    "    enumerable: true,",
-    "    /** @type {string} */",
-    "    set: function(v) {}",
-    "  }",
-    "});"), warning(TypeValidator.TYPE_MISMATCH_WARNING));
+    test(
+        "class C { /** @type {string} */ set value(v) { } }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "var C = function() {};",
+            "/** @type {?} */",
+            "C.prototype.value;",
+            "$jscomp.global.Object.defineProperties(C.prototype, {",
+            "  value: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @type {string} */",
+            "    set: function(v) {}",
+            "  }",
+            "});"),
+        warning(TypeValidator.TYPE_MISMATCH_WARNING));
   }
 
   /**

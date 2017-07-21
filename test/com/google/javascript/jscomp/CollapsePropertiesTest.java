@@ -405,35 +405,41 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testAliasCreatedForClassDepth2_1() {
-    test(LINE_JOINER.join(
-    "var a = {};",
-    "a.b = {};",
-    "/** @constructor */",
-    "a.b.c = function(){};",
-    "var d = 1;",
-    "d = a.b;",
-    "a.b.c != d.c;"), LINE_JOINER.join(
-    "var a$b = {}; ",
-    "/** @constructor */",
-    "var a$b$c = function(){};",
-    "var d = 1;",
-    "d = a$b;",
-    "a$b$c != d.c;"), warning(UNSAFE_NAMESPACE_WARNING));
+    test(
+        LINE_JOINER.join(
+            "var a = {};",
+            "a.b = {};",
+            "/** @constructor */",
+            "a.b.c = function(){};",
+            "var d = 1;",
+            "d = a.b;",
+            "a.b.c != d.c;"),
+        LINE_JOINER.join(
+            "var a$b = {}; ",
+            "/** @constructor */",
+            "var a$b$c = function(){};",
+            "var d = 1;",
+            "d = a$b;",
+            "a$b$c != d.c;"),
+        warning(UNSAFE_NAMESPACE_WARNING));
 
-    test(LINE_JOINER.join(
-    "var a = {};",
-    "a.b = {};",
-    " /** @constructor @nocollapse */",
-    " a.b.c = function(){}; ",
-    "var d = 1;",
-    " d = a.b; ",
-    "a.b.c == d.c;"), LINE_JOINER.join(
-    "var a$b = {};",
-    "/** @constructor @nocollapse */",
-    "a$b.c = function(){};",
-    "var d = 1; ",
-    "d = a$b;",
-    "a$b.c == d.c;"), warning(UNSAFE_NAMESPACE_WARNING));
+    test(
+        LINE_JOINER.join(
+            "var a = {};",
+            "a.b = {};",
+            " /** @constructor @nocollapse */",
+            " a.b.c = function(){}; ",
+            "var d = 1;",
+            " d = a.b; ",
+            "a.b.c == d.c;"),
+        LINE_JOINER.join(
+            "var a$b = {};",
+            "/** @constructor @nocollapse */",
+            "a$b.c = function(){};",
+            "var d = 1; ",
+            "d = a$b;",
+            "a$b.c == d.c;"),
+        warning(UNSAFE_NAMESPACE_WARNING));
   }
 
   public void testAliasCreatedForClassDepth2_2() {
