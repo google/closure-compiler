@@ -323,9 +323,6 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
             return;
           }
         } else {
-          if ("arguments".equals(n.getString())) {
-            System.out.println("hmm");
-          }
           // If arguments is escaped, we just assume the worst and continue
           // on all the parameters. Ignored if we are in block scope
           if (var != null
