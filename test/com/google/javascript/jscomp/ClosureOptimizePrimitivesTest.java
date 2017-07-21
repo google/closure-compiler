@@ -107,4 +107,80 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
     test("goog.reflect.objectProperty('push', [])", "JSCompiler_renameProperty('push', [])");
     testSame("JSCompiler_renameProperty('push', [])");
   }
+
+  public void testEs6Compatibility() {
+    // Arrow
+    test("var f = () => goog.object.create(1, 2);", "var f = () => ({1: 2});");
+
+    // Class
+    test(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = goog.object.create(1, 2);",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = {1: 2};",
+            "  }",
+            "}"));
+
+    // Shorthand methods
+    test(
+        LINE_JOINER.join(
+            "var obj = {",
+            "  method() {",
+            "    return goog.object.create('a', 2);",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "var obj = {",
+            "  method() {",
+            "    return {'a': 2};",
+            "  }",
+            "}"));
+
+    // Computed Prop
+    test(
+        LINE_JOINER.join(
+            "var obj = {",
+            "  [goog.object.create(1, 2)]: 42",
+            "}"),
+        LINE_JOINER.join(
+            "var obj = {",
+            "  [{1: 2}]: 42",
+            "}"));
+
+    // Template Literals
+    test(
+        LINE_JOINER.join(
+            "function tag(strings) {",
+            "  return goog.object.create('a', 2);",
+            "}",
+            "tag`template`"),
+        LINE_JOINER.join(
+            "function tag(strings) {",
+            "  return {'a': 2};",
+            "}",
+            "tag`template`"));
+
+    // Destructuring
+    test("var {a: x} = goog.object.create('a', 2);", "var {a: x} = {'a': 2};");
+
+    // Async
+    test(
+        LINE_JOINER.join(
+            "async function foo() {",
+            "   return await goog.object.create('a', 2);",
+            "}"),
+        LINE_JOINER.join(
+            "async function foo() {",
+            "   return await {'a': 2};",
+            "}"));
+
+    // TODO(yitingwang): handle optimizations of computed props.
+    testSame("var obj = goog.object.create(a, b);");
+  }
 }
