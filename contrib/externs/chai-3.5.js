@@ -323,6 +323,12 @@ assert.isDefined = function(value, opt_message) {};
 
 /**
  * @param {*} value
+ * @param {string=} message
+ */
+assert.isNotNull = function(value, message) {}
+
+/**
+ * @param {*} value
  * @param {string=} opt_message
  */
 assert.isNull = function(value, opt_message) {};
@@ -340,6 +346,13 @@ assert.instanceOf = function(object, constructor, opt_message) {};
  * @param {string=} opt_message
  */
 assert.include = function(haystack, needle, opt_message) {};
+
+/**
+ * @param {*} collection
+ * @param {number} length
+ * @param {string=} message
+ */
+assert.lengthOf = function(collection, length, message) {};
 
 /**
  * @param {!Array<*>|string} haystack
