@@ -2932,6 +2932,10 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
     }
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8_MODULES;
+    }
   };
 
   private VariableMap runVariableRenaming(

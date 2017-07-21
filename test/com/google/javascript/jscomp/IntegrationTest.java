@@ -4431,11 +4431,11 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}",
             "alert(foo(3, {foo: 9}));"),
         LINE_JOINER.join(
-            "var JSCompiler_temp_const$jscomp$0=alert;",
-            "var JSCompiler_inline_result$jscomp$1;",
-            "{var b$jscomp$inline_3={foo:9};",
-            "JSCompiler_inline_result$jscomp$1=3+b$jscomp$inline_3.foo}",
-            "JSCompiler_temp_const$jscomp$0(JSCompiler_inline_result$jscomp$1)"));
+            "var a=alert;",
+            "var b;",
+            "{var c={foo:9};",
+            "b=3+c.foo}",
+            "a(b)"));
   }
 
   public void testRestObjectPatternParameters() {
@@ -4474,11 +4474,11 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}",
             "alert(countArgs(1, 1, 1, 1, 1));"),
         LINE_JOINER.join(
-            "var JSCompiler_temp_const$jscomp$0=alert;",
-            "var JSCompiler_inline_result$jscomp$1;",
-            "{var length$jscomp$inline_3=[1,1,1,1].length;",
-            "JSCompiler_inline_result$jscomp$1=length$jscomp$inline_3}",
-            "JSCompiler_temp_const$jscomp$0(JSCompiler_inline_result$jscomp$1)"));
+            "var a=alert;",
+            "var b;",
+            "{var c=[1,1,1,1].length;",
+            "b=c}",
+            "a(b)"));
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */
