@@ -156,18 +156,6 @@ function clearTimeout(timeoutID) {}
 function confirm(message) {}
 
 /**
- * @param {!CanvasImageSource|!Blob|!ImageData} image
- * @param {number=} sx
- * @param {number=} sy
- * @param {number=} sw
- * @param {number=} sh
- * @param {!Object=} opt_options
- * @return {!Promise<!ImageBitmap>}
- * @see https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/createImageBitmap
- */
-function createImageBitmap(image, sx, sy, sw, sh, opt_options) {}
-
-/**
  * @see https://developer.mozilla.org/en/DOM/window.dump
  * @param {*} x
  * @return {undefined}

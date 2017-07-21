@@ -94,8 +94,7 @@ HTMLCanvasElement.prototype.getContext = function(contextId, opt_args) {};
 HTMLCanvasElement.prototype.captureStream = function(opt_framerate) {};
 
 /**
- * @typedef {HTMLImageElement|HTMLVideoElement|HTMLCanvasElement|ImageBitmap}
- * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasImageSource
+ * @typedef {HTMLImageElement|HTMLVideoElement|HTMLCanvasElement}
  */
 var CanvasImageSource;
 
