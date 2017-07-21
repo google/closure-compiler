@@ -175,8 +175,9 @@ public class Scope implements StaticScope, Serializable {
    */
   public Var getArgumentsVar() {
     if (isGlobal() || isModuleScope()) {
-      throw new IllegalStateException("No arguments var for scope: " + this);
+      return null;
     }
+
     if (!isFunctionScope() || rootNode.isArrowFunction()) {
       return parent.getArgumentsVar();
     }

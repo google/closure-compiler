@@ -323,13 +323,20 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
             return;
           }
         } else {
-
+          if ("arguments".equals(n.getString())) {
+            System.out.println("hmm");
+          }
           // If arguments is escaped, we just assume the worst and continue
           // on all the parameters. Ignored if we are in block scope
-          if ("arguments".equals(n.getString()) && scope.isFunctionBlockScope()) {
-            Node lp = scope.getParentScope().getRootNode().getSecondChild();
-            for (Node a = lp.getFirstChild(); a != null; a = a.getNext()) {
-              markReferencedVar(scope.getVar(a.getString()));
+          if (var != null
+              && "arguments".equals(n.getString())
+              && var.equals(scope.getArgumentsVar())) {
+            Scope fnScope = var.getScope();
+            Node lp = fnScope.getRootNode().getSecondChild();
+            for (Node p = lp.getFirstChild(); p != null; p = p.getNext()) {
+              Var paramVar = fnScope.getOwnSlot(p.getString());
+              checkNotNull(paramVar);
+              markReferencedVar(paramVar);
             }
           }
 
@@ -349,6 +356,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
           }
         }
         break;
+
       default:
         break;
     }
@@ -363,6 +371,11 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
   }
 
   private boolean isRemovableVar(Var var) {
+    // If this is a functions "arguments" object, it isn't removable
+    if (var.equals(var.getScope().getArgumentsVar())) {
+      return false;
+    }
+
     // Global variables are off-limits if the user might be using them.
     if (!removeGlobals && var.isGlobal()) {
       return false;

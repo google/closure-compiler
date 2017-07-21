@@ -373,9 +373,12 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
         "var a = 3; var i; for (i in {}) {i = a} alert(a);");
   }
 
+  public void testUnusedAssign9a() {
+    testSame("function b(a) { a = 1; arguments; }; b(6)");
+  }
+
   public void testUnusedAssign9() {
-    test("function b(a) { a = 1; arguments=1; }; b(6)",
-        "function b() { arguments=1; }; b(6)");
+    testSame("function b(a) { a = 1; arguments=1; }; b(6)");
   }
 
   public void testUnusedPropAssign1() {
