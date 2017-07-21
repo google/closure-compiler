@@ -99,6 +99,11 @@ public class UnknownType extends ObjectType {
   }
 
   @Override
+  public boolean isVoidable() {
+    return true;
+  }
+
+  @Override
   public boolean isSubtype(JSType that) {
     return isSubtype(that, null, SubtypingMode.NORMAL);
   }

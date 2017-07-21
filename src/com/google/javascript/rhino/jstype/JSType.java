@@ -1042,7 +1042,7 @@ public abstract class JSType implements TypeI {
    */
   @Override
   public boolean isNullable() {
-    return isSubtype(getNativeType(JSTypeNative.NULL_TYPE));
+    return false;
   }
 
   /**
@@ -1050,7 +1050,7 @@ public abstract class JSType implements TypeI {
    */
   @Override
   public boolean isVoidable() {
-    return isSubtype(getNativeType(JSTypeNative.VOID_TYPE));
+    return false;
   }
 
   /**
@@ -1670,6 +1670,7 @@ public abstract class JSType implements TypeI {
   }
 
   // Don't call from this package; use appendAsNonNull instead.
+  @Override
   public final String toNonNullAnnotationString() {
     return appendAsNonNull(new StringBuilder(), true).toString();
   }

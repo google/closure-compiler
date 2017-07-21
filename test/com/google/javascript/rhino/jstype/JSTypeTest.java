@@ -1195,8 +1195,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
 
     // isNullable
-    assertFalse(ALL_TYPE.isNullable());
-    assertFalse(ALL_TYPE.isVoidable());
+    assertTrue(ALL_TYPE.isNullable());
+    assertTrue(ALL_TYPE.isVoidable());
 
     // getLeastSupertype
     assertTypeEquals(ALL_TYPE,

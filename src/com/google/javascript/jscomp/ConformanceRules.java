@@ -1188,7 +1188,8 @@ public final class ConformanceRules {
     // Whether the type is known to be invalid to dereference.
     private boolean invalidDeref(Node n) {
       TypeI type = n.getTypeI();
-      return type.isNullable() || type.isVoidable();
+      // TODO(johnlenz): top type should not be allowed here
+      return !type.isTop() && (type.isNullable() || type.isVoidable());
     }
   }
 

@@ -118,4 +118,14 @@ public final class AllType extends JSType {
   public int hashCode() {
     return System.identityHashCode(this);
   }
+
+  @Override
+  public boolean isNullable() {
+    return true;
+  }
+
+  @Override
+  public boolean isVoidable() {
+    return true;
+  }
 }
