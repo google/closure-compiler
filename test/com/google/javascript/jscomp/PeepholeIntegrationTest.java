@@ -40,7 +40,8 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
             new PeepholeMinimizeConditions(late, false /* useTypes */),
             new PeepholeSubstituteAlternateSyntax(late),
             new PeepholeRemoveDeadCode(),
-            new PeepholeFoldConstants(late, false));
+            new PeepholeFoldConstants(late, false),
+            new PeepholeReplaceKnownMethods(late, false));
 
     return peepholePass;
   }
@@ -362,5 +363,20 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
   public void disable_testFoldHook1() {
     test("function f(a) {return (!a)?a:a;}",
          "function f(a) {return a}");
+  }
+
+  public void testTemplateStringsKnownMethods() {
+    enableNormalize();
+    test("x = `abcdef`.indexOf('b')", "x = 1");
+    test("x = [`a`, `b`, `c`].join(``)", "x='abc'");
+    test("x = `abcdef`.substr(0,2)", "x = 'ab'");
+    test("x = `abcdef`.substring(0,2)", "x = 'ab'");
+    test("x = `abcdef`.slice(0,2)", "x = 'ab'");
+    test("x = `abcdef`.charAt(0)", "x = 'a'");
+    test("x = `abcdef`.charCodeAt(0)", "x = 97");
+    test("x = `abc`.toUpperCase()", "x = 'ABC'");
+    test("x = `ABC`.toLowerCase()", "x = 'abc'");
+    test("x = parseInt(`123`)", "x = 123");
+    test("x = parseFloat(`1.23`)", "x = 1.23");
   }
 }
