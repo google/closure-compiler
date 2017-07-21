@@ -604,7 +604,7 @@ public final class NodeUtil {
       case SHEQ: // exactly equal
       case SHNE: // exactly not equal
       case MUL: // multiply, unlike add it only works on numbers
-                      // or results NaN if any of the operators is not a number
+        // or results NaN if any of the operators is not a number
         return true;
       default:
         break;
@@ -690,8 +690,7 @@ public final class NodeUtil {
         return isLiteralValue(n.getFirstChild(), includeFunctions);
 
       case ARRAYLIT:
-        for (Node child = n.getFirstChild(); child != null;
-             child = child.getNext()) {
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
           if ((!child.isEmpty()) && !isLiteralValue(child, includeFunctions)) {
             return false;
           }
@@ -700,8 +699,7 @@ public final class NodeUtil {
 
       case REGEXP:
         // Return true only if all descendants are const.
-        for (Node child = n.getFirstChild(); child != null;
-             child = child.getNext()) {
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
           if (!isLiteralValue(child, includeFunctions)) {
             return false;
           }
@@ -710,8 +708,7 @@ public final class NodeUtil {
 
       case OBJECTLIT:
         // Return true only if all values are const.
-        for (Node child = n.getFirstChild(); child != null;
-             child = child.getNext()) {
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
           if (!isLiteralValue(child.getFirstChild(), includeFunctions)) {
             return false;
           }
@@ -1316,8 +1313,7 @@ public final class NodeUtil {
       }
     } else if (callee.isGetProp()) {
       if (callNode.hasOneChild()
-          && OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(
-                callee.getLastChild().getString())) {
+          && OBJECT_METHODS_WITHOUT_SIDEEFFECTS.contains(callee.getLastChild().getString())) {
         return false;
       }
 
@@ -1473,8 +1469,7 @@ public final class NodeUtil {
   }
 
   static boolean allArgsUnescapedLocal(Node callOrNew) {
-    for (Node arg = callOrNew.getSecondChild();
-         arg != null; arg = arg.getNext()) {
+    for (Node arg = callOrNew.getSecondChild(); arg != null; arg = arg.getNext()) {
       if (!evaluatesToLocalValue(arg)) {
         return false;
       }
@@ -1608,7 +1603,7 @@ public final class NodeUtil {
       case CALL:
       case GETELEM:
       case GETPROP:
-      // Data values
+        // Data values
       case ARRAYLIT:
       case ARRAY_PATTERN:
       case DEFAULT_VALUE:
@@ -1864,7 +1859,7 @@ public final class NodeUtil {
       // Primitives
       case TRUE:
       case FALSE:
-      // Comparisons
+        // Comparisons
       case EQ:
       case NE:
       case SHEQ:
@@ -1873,12 +1868,12 @@ public final class NodeUtil {
       case GT:
       case LE:
       case GE:
-      // Queries
+        // Queries
       case IN:
       case INSTANCEOF:
-      // Inversion
+        // Inversion
       case NOT:
-      // delete operator returns a boolean.
+        // delete operator returns a boolean.
       case DELPROP:
         return ValueType.BOOLEAN;
 
@@ -3150,7 +3145,8 @@ public final class NodeUtil {
 
     if (parent.isDestructuringPattern()
         || (parent.isStringKey() && parent.getParent().isObjectPattern())
-        || (parent.isComputedProp() && parent.getParent().isObjectPattern()
+        || (parent.isComputedProp()
+            && parent.getParent().isObjectPattern()
             && node == parent.getSecondChild())) {
       if (node.isStringKey() && node.hasChildren()) {
         return false;
@@ -3344,12 +3340,8 @@ public final class NodeUtil {
     return res;
   }
 
-  /**
-   * @return true if n or any of its descendants are of the specified type.
-   */
-  static boolean containsType(Node node,
-                              Token type,
-                              Predicate<Node> traverseChildrenPred) {
+  /** @return true if n or any of its descendants are of the specified type. */
+  static boolean containsType(Node node, Token type, Predicate<Node> traverseChildrenPred) {
     return has(node, new MatchNodeType(type), traverseChildrenPred);
   }
 
@@ -3445,9 +3437,7 @@ public final class NodeUtil {
     do {
       startPos = endPos + 1;
       endPos = name.indexOf('.', startPos);
-      String part = (endPos == -1
-                     ? name.substring(startPos)
-                     : name.substring(startPos, endPos));
+      String part = (endPos == -1 ? name.substring(startPos) : name.substring(startPos, endPos));
       Node propNode = IR.string(part);
       propNode.setLength(part.length());
       if (compiler.getCodingConvention().isConstantKey(part)) {
@@ -3520,8 +3510,7 @@ public final class NodeUtil {
    * Gets the root node of a qualified name. Must be either NAME, THIS or SUPER.
    */
   static Node getRootOfQualifiedName(Node qName) {
-    for (Node current = qName; true;
-         current = current.getFirstChild()) {
+    for (Node current = qName; true; current = current.getFirstChild()) {
       if (current.isName() || current.isThis() || current.isSuper()) {
         return current;
       }
@@ -3530,16 +3519,14 @@ public final class NodeUtil {
   }
 
   /**
-   * Sets the debug information (source file info and original name)
-   * on the given node.
+   * Sets the debug information (source file info and original name) on the given node.
    *
    * @param node The node on which to set the debug information.
    * @param basisNode The basis node from which to copy the source file info.
    * @param originalName The original name of the node.
    */
   @Deprecated
-  static void setDebugInformation(Node node, Node basisNode,
-                                  String originalName) {
+  static void setDebugInformation(Node node, Node basisNode, String originalName) {
     node.useSourceInfoWithoutLengthIfMissingFromForTree(basisNode);
     node.setOriginalName(originalName);
   }
@@ -4045,12 +4032,8 @@ public final class NodeUtil {
     return getCount(node, new MatchNodeType(type), traverseChildrenPred);
   }
 
-  /**
-   * Whether a simple name is referenced within the node tree.
-   */
-  static boolean isNameReferenced(Node node,
-                                  String name,
-                                  Predicate<Node> traverseChildrenPred) {
+  /** Whether a simple name is referenced within the node tree. */
+  static boolean isNameReferenced(Node node, String name, Predicate<Node> traverseChildrenPred) {
     return has(node, new MatchNameNode(name), traverseChildrenPred);
   }
 
@@ -4069,12 +4052,8 @@ public final class NodeUtil {
         node, new MatchNameNode(name), Predicates.<Node>alwaysTrue());
   }
 
-  /**
-   * @return Whether the predicate is true for the node or any of its descendants.
-   */
-  public static boolean has(Node node,
-                     Predicate<Node> pred,
-                     Predicate<Node> traverseChildrenPred) {
+  /** @return Whether the predicate is true for the node or any of its descendants. */
+  public static boolean has(Node node, Predicate<Node> pred, Predicate<Node> traverseChildrenPred) {
     if (pred.apply(node)) {
       return true;
     }
@@ -4126,13 +4105,9 @@ public final class NodeUtil {
     visitPreOrder(node, visitor, Predicates.<Node>alwaysTrue());
   }
 
-  /**
-   * A pre-order traversal, calling Visitor.visit for each child matching
-   * the predicate.
-   */
-  public static void visitPreOrder(Node node,
-                     Visitor visitor,
-                     Predicate<Node> traverseChildrenPred) {
+  /** A pre-order traversal, calling Visitor.visit for each child matching the predicate. */
+  public static void visitPreOrder(
+      Node node, Visitor visitor, Predicate<Node> traverseChildrenPred) {
     visitor.visit(node);
 
     if (traverseChildrenPred.apply(node)) {
@@ -4142,13 +4117,9 @@ public final class NodeUtil {
     }
   }
 
-  /**
-   * A post-order traversal, calling Visitor.visit for each descendant matching
-   * the predicate.
-   */
-  public static void visitPostOrder(Node node,
-                     Visitor visitor,
-                     Predicate<Node> traverseChildrenPred) {
+  /** A post-order traversal, calling Visitor.visit for each descendant matching the predicate. */
+  public static void visitPostOrder(
+      Node node, Visitor visitor, Predicate<Node> traverseChildrenPred) {
     if (traverseChildrenPred.apply(node)) {
       for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
         visitPostOrder(c, visitor, traverseChildrenPred);
@@ -4185,9 +4156,9 @@ public final class NodeUtil {
   }
 
   /**
-    * @param fnNode The function.
-    * @return The Node containing the Function parameters.
-    */
+   * @param fnNode The function.
+   * @return The Node containing the Function parameters.
+   */
   public static Node getFunctionParameters(Node fnNode) {
     checkArgument(fnNode.isFunction());
     return fnNode.getSecondChild();
@@ -4412,17 +4383,16 @@ public final class NodeUtil {
         // same as returning a non-local name, but this doesn't matter if the
         // value is immutable.
         return NodeUtil.isImmutableValue(value.getLastChild())
-            || (locals.apply(value)
-                && evaluatesToLocalValue(value.getLastChild(), locals));
+            || (locals.apply(value) && evaluatesToLocalValue(value.getLastChild(), locals));
       case COMMA:
         return evaluatesToLocalValue(value.getLastChild(), locals);
       case AND:
       case OR:
         return evaluatesToLocalValue(value.getFirstChild(), locals)
-           && evaluatesToLocalValue(value.getLastChild(), locals);
+            && evaluatesToLocalValue(value.getLastChild(), locals);
       case HOOK:
         return evaluatesToLocalValue(value.getSecondChild(), locals)
-           && evaluatesToLocalValue(value.getLastChild(), locals);
+            && evaluatesToLocalValue(value.getLastChild(), locals);
       case INC:
       case DEC:
         return true;
@@ -4439,8 +4409,7 @@ public final class NodeUtil {
             || isToStringMethodCall(value)
             || locals.apply(value);
       case NEW:
-        return newHasLocalResult(value)
-               || locals.apply(value);
+        return newHasLocalResult(value) || locals.apply(value);
       case FUNCTION:
       case REGEXP:
       case EMPTY:
@@ -4518,8 +4487,7 @@ public final class NodeUtil {
    */
   static Node getArgumentForCallOrNew(Node call, int index) {
     checkState(isCallOrNew(call));
-    return getNthSibling(
-      call.getSecondChild(), index);
+    return getNthSibling(call.getSecondChild(), index);
   }
 
   /**
@@ -4597,9 +4565,9 @@ public final class NodeUtil {
       } else if (NodeUtil.isNameDeclaration(parent) && parent.hasOneChild()) {
         return parent;
       } else if ((parent.isHook() && parent.getFirstChild() != n)
-                 || parent.isOr()
-                 || parent.isAnd()
-                 || (parent.isComma() && parent.getFirstChild() != n)) {
+          || parent.isOr()
+          || parent.isAnd()
+          || (parent.isComma() && parent.getFirstChild() != n)) {
         return getBestJSDocInfoNode(parent);
       }
     }
@@ -4893,14 +4861,14 @@ public final class NodeUtil {
   static int toInt32(double d) {
     int id = (int) d;
     if (id == d) {
-        // This covers -0.0 as well
-        return id;
+      // This covers -0.0 as well
+      return id;
     }
 
     if (Double.isNaN(d)
         || d == Double.POSITIVE_INFINITY
         || d == Double.NEGATIVE_INFINITY) {
-        return 0;
+      return 0;
     }
 
     d = (d >= 0) ? Math.floor(d) : Math.ceil(d);
@@ -5141,20 +5109,16 @@ public final class NodeUtil {
    *     values being variable objects
    * @param orderedVars an empty list that gets populated with variable objects in the order that
    *     they appear in the fn
-   * @param scopesInFunction an empty list that gets populated with the scope objects within a given
-   *     function
    */
   static void getAllVarsDeclaredInFunction(
       final Map<String, Var> nameVarMap,
       final List<Var> orderedVars,
-      final List<Scope> scopesInFunction,
       AbstractCompiler compiler,
       ScopeCreator scopeCreator,
       final Scope scope) {
 
     checkState(nameVarMap.isEmpty());
     checkState(orderedVars.isEmpty());
-    checkState(scopesInFunction.isEmpty());
     checkState(scope.isFunctionScope(), scope);
 
     ScopedCallback finder =
@@ -5162,7 +5126,6 @@ public final class NodeUtil {
           @Override
           public void enterScope(NodeTraversal t) {
             Scope currentScope = t.getScope();
-            scopesInFunction.add(currentScope);
             for (Var v : currentScope.getVarIterable()) {
               nameVarMap.put(v.getName(), v);
               orderedVars.add(v);

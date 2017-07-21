@@ -29,6 +29,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Compute the "liveness" of all local variables. A variable is "live" at a point of a program if
@@ -121,30 +122,32 @@ class LiveVariablesAnalysisEs6
   // obtain variables in the order in which they appear in the code
   private final List<Var> orderedVars;
 
-  // The scopes within a given function
-  private final List<Scope> scopesInFunction;
-
   private final Map<String, Var> allVarsInFn;
+
   /**
-   * ******************************************************* Live Variables Analysis using the ES6
-   * scope creator. This analysis should only be done on a function where jsScope is the function
-   * scope and jsScopeChild should be the function body scope.
+   * Live Variables Analysis using the ES6 scope creator. This analysis should only be done on
+   * function where jsScope is the function scope. If we call LiveVariablesAnalysis from the
+   * function scope of our pass, we can pass a null value for the JsScopeChild, but if we call it
+   * from the function block scope, then JsScopeChild will be the function block scope.
+   *
+   * <p>We call from the function scope when the pass requires us to traverse nodes beginning at the
+   * function parameters, and it from the function block scope when we are ignoring function
+   * parameters.
    *
    * @param cfg
-   * @param jsScope
-   * @param jsScopeChild
+   * @param jsScope the function scope
+   * @param jsScopeChild null or function block scope
    * @param compiler
    * @param scopeCreator Es6 Scope creator
    */
   LiveVariablesAnalysisEs6(
       ControlFlowGraph<Node> cfg,
       Scope jsScope,
-      Scope jsScopeChild,
+      @Nullable Scope jsScopeChild,
       AbstractCompiler compiler,
       Es6SyntacticScopeCreator scopeCreator) {
     super(cfg, new LiveVariableJoinOp());
     checkState(jsScope.isFunctionScope(), jsScope);
-    checkState(jsScopeChild.isFunctionBlockScope(), jsScopeChild);
 
     this.jsScope = jsScope;
     this.jsScopeChild = jsScopeChild;
@@ -152,11 +155,11 @@ class LiveVariablesAnalysisEs6
     this.scopeVariables = new HashMap<>();
     this.allVarsInFn = new HashMap<>();
     this.orderedVars = new LinkedList<>();
-    this.scopesInFunction = new LinkedList<>();
 
     computeEscapedEs6(jsScope, escaped, compiler, scopeCreator);
+
     NodeUtil.getAllVarsDeclaredInFunction(
-        allVarsInFn, orderedVars, scopesInFunction, compiler, scopeCreator, jsScope);
+        allVarsInFn, orderedVars, compiler, scopeCreator, jsScope);
     addScopeVariables();
   }
 
@@ -183,10 +186,6 @@ class LiveVariablesAnalysisEs6
 
   public List<Var> getAllVariablesInOrder() {
     return orderedVars;
-  }
-
-  public List<Scope> getAllScopesInFunction() {
-    return scopesInFunction;
   }
 
   public int getVarIndex(String var) {
@@ -348,7 +347,7 @@ class LiveVariablesAnalysisEs6
     // to the function body.
     if (localScope.isFunctionBlockScope()) {
       local = localScope.isDeclaredInFunctionBlockOrParameter(name);
-    } else if (localScope == jsScope) {
+    } else if (localScope == jsScope && jsScopeChild != null) {
       local = jsScopeChild.isDeclaredInFunctionBlockOrParameter(name);
     } else {
       local = localScope.isDeclared(name, false);
@@ -357,7 +356,6 @@ class LiveVariablesAnalysisEs6
     if (!local) {
       return;
     }
-
 
     if (!escaped.contains(var)) {
       set.set(getVarIndex(var.getName()));
@@ -377,7 +375,11 @@ class LiveVariablesAnalysisEs6
 
   private boolean isArgumentsName(Node n) {
     boolean childDeclared;
-    childDeclared = jsScopeChild.isDeclared(ARGUMENT_ARRAY_ALIAS, false);
+    if (jsScopeChild != null) {
+      childDeclared = jsScopeChild.isDeclared(ARGUMENT_ARRAY_ALIAS, false);
+    } else {
+      childDeclared = true;
+    }
     return n.isName()
         && n.getString().equals(ARGUMENT_ARRAY_ALIAS)
         && (!jsScope.isDeclared(ARGUMENT_ARRAY_ALIAS, false) || !childDeclared);

@@ -125,8 +125,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
   DataFlowAnalysis(ControlFlowGraph<N> targetCfg, JoinOp<L> joinOp) {
     this.cfg = targetCfg;
     this.joinOp = joinOp;
-    Comparator<DiGraphNode<N, Branch>> nodeComparator =
-      cfg.getOptionalNodeComparator(isForward());
+    Comparator<DiGraphNode<N, Branch>> nodeComparator = cfg.getOptionalNodeComparator(isForward());
     if (nodeComparator != null) {
       this.orderedWorkSet = new TreeSet<>(nodeComparator);
     } else {
@@ -209,7 +208,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     while (!orderedWorkSet.isEmpty()) {
       if (step > maxSteps) {
         throw new MaxIterationsExceededException(
-          "Analysis did not terminate after " + maxSteps + " iterations");
+            "Analysis did not terminate after " + maxSteps + " iterations");
       }
       DiGraphNode<N, Branch> curNode = orderedWorkSet.iterator().next();
       orderedWorkSet.remove(curNode);
@@ -421,8 +420,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       }
     }
 
-    BranchedForwardDataFlowAnalysis(ControlFlowGraph<N> targetCfg,
-                                    JoinOp<L> joinOp) {
+    BranchedForwardDataFlowAnalysis(ControlFlowGraph<N> targetCfg, JoinOp<L> joinOp) {
       super(targetCfg, joinOp);
     }
 
@@ -603,8 +601,6 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
    *   1. Exported variables as they can be needed after the script terminates.
    *   2. Names of named functions because in JavaScript, function foo(){} does not kill
    *       foo in the dataflow.
-   *
-   *
    */
   static void computeEscapedEs6(
       final Scope jsScope,
@@ -638,9 +634,8 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
 
     Map<String, Var> allVarsInFn = new HashMap<>();
     List<Var> orderedVars = new LinkedList<>();
-    List<Scope> scopesInFunction = new LinkedList<>();
     NodeUtil.getAllVarsDeclaredInFunction(
-        allVarsInFn, orderedVars, scopesInFunction, compiler, scopeCreator, jsScope);
+        allVarsInFn, orderedVars, compiler, scopeCreator, jsScope);
     NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
     t.traverseAtScope(jsScope);
 

@@ -308,22 +308,14 @@ public final class NodeUtilTest extends TestCase {
   }
 
   public void testIsObjectLiteralKey1() throws Exception {
-    assertIsObjectLiteralKey(
-      parseExpr("({})"), false);
-    assertIsObjectLiteralKey(
-      parseExpr("a"), false);
-    assertIsObjectLiteralKey(
-      parseExpr("'a'"), false);
-    assertIsObjectLiteralKey(
-      parseExpr("1"), false);
-    assertIsObjectLiteralKey(
-      parseExpr("({a: 1})").getFirstChild(), true);
-    assertIsObjectLiteralKey(
-      parseExpr("({1: 1})").getFirstChild(), true);
-    assertIsObjectLiteralKey(
-      parseExpr("({get a(){}})").getFirstChild(), true);
-    assertIsObjectLiteralKey(
-      parseExpr("({set a(b){}})").getFirstChild(), true);
+    assertIsObjectLiteralKey(parseExpr("({})"), false);
+    assertIsObjectLiteralKey(parseExpr("a"), false);
+    assertIsObjectLiteralKey(parseExpr("'a'"), false);
+    assertIsObjectLiteralKey(parseExpr("1"), false);
+    assertIsObjectLiteralKey(parseExpr("({a: 1})").getFirstChild(), true);
+    assertIsObjectLiteralKey(parseExpr("({1: 1})").getFirstChild(), true);
+    assertIsObjectLiteralKey(parseExpr("({get a(){}})").getFirstChild(), true);
+    assertIsObjectLiteralKey(parseExpr("({set a(b){}})").getFirstChild(), true);
   }
 
   private Node parseExpr(String js) {
@@ -389,15 +381,11 @@ public final class NodeUtilTest extends TestCase {
   }
 
   public void testContainsFunctionDeclaration() {
-    assertTrue(NodeUtil.containsFunction(
-                   getNode("function foo(){}")));
-    assertTrue(NodeUtil.containsFunction(
-                   getNode("(b?function(){}:null)")));
+    assertTrue(NodeUtil.containsFunction(getNode("function foo(){}")));
+    assertTrue(NodeUtil.containsFunction(getNode("(b?function(){}:null)")));
 
-    assertFalse(NodeUtil.containsFunction(
-                   getNode("(b?foo():null)")));
-    assertFalse(NodeUtil.containsFunction(
-                    getNode("foo()")));
+    assertFalse(NodeUtil.containsFunction(getNode("(b?foo():null)")));
+    assertFalse(NodeUtil.containsFunction(getNode("foo()")));
   }
 
   public void testIsFunctionDeclaration() {
@@ -752,15 +740,18 @@ public final class NodeUtilTest extends TestCase {
   }
 
   public void testGetNodeTypeReferenceCount() {
-    assertEquals(0, NodeUtil.getNodeTypeReferenceCount(
-        parse("function foo(){}"), Token.THIS,
-            Predicates.<Node>alwaysTrue()));
-    assertEquals(1, NodeUtil.getNodeTypeReferenceCount(
-        parse("this"), Token.THIS,
-            Predicates.<Node>alwaysTrue()));
-    assertEquals(2, NodeUtil.getNodeTypeReferenceCount(
-        parse("this;function foo(){}(this)"), Token.THIS,
-            Predicates.<Node>alwaysTrue()));
+    assertEquals(
+        0,
+        NodeUtil.getNodeTypeReferenceCount(
+            parse("function foo(){}"), Token.THIS, Predicates.<Node>alwaysTrue()));
+    assertEquals(
+        1,
+        NodeUtil.getNodeTypeReferenceCount(
+            parse("this"), Token.THIS, Predicates.<Node>alwaysTrue()));
+    assertEquals(
+        2,
+        NodeUtil.getNodeTypeReferenceCount(
+            parse("this;function foo(){}(this)"), Token.THIS, Predicates.<Node>alwaysTrue()));
   }
 
   public void testIsNameReferenceCount() {
@@ -1989,7 +1980,7 @@ public final class NodeUtilTest extends TestCase {
     assertLValueNamedX(parse("var x = y;").getFirstFirstChild());
     assertLValueNamedX(parse("x++;").getFirstFirstChild().getFirstChild());
     assertLValueNamedX(
-       NodeUtil.getFunctionParameters(parse("function f(x) {}").getFirstChild()).getFirstChild());
+        NodeUtil.getFunctionParameters(parse("function f(x) {}").getFirstChild()).getFirstChild());
 
     Node x = NodeUtil.getFunctionParameters(parse("function f(x = 3) {}").getFirstChild())
         .getFirstChild()  // x = 3
@@ -2565,37 +2556,26 @@ public final class NodeUtilTest extends TestCase {
 
     Node ast = parse(fnString);
     Node functionNode = getFunctionNode(fnString);
-    Node functionBlockNode = functionNode.getLastChild();
-    Node innerBlockNode = functionBlockNode.getFirstChild().getNext().getNext();
 
     Scope globalScope = Scope.createGlobalScope(ast);
     Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
-    Scope functionBlockScope = scopeCreator.createScope(functionBlockNode, functionScope);
-    Scope innerBlockScope = scopeCreator.createScope(innerBlockNode, functionBlockScope);
 
     Map<String, Var> allVariables = new HashMap<>();
     List<Var> orderedVars = new LinkedList<>();
-    List<Scope> scopesInFunction = new LinkedList<>();
     NodeUtil.getAllVarsDeclaredInFunction(
-        allVariables, orderedVars, scopesInFunction, compiler, scopeCreator, functionScope);
+        allVariables, orderedVars, compiler, scopeCreator, functionScope);
     Set<String> keySet = new HashSet<>(Arrays.asList("a", "b", "c", "z", "x", "y"));
     assertEquals(keySet, allVariables.keySet());
-
-    List<Scope> scopeList = new LinkedList<>();
-    scopeList.add(functionScope);
-    scopeList.add(functionBlockScope);
-    scopeList.add(innerBlockScope);
-    assertThat(scopesInFunction.toString()).isEqualTo(scopeList.toString());
   }
 
   public void testGetAllVars2() {
     String fnString =
-          "function g(x, y) "
+        "function g(x, y) "
             + "{var z; "
-              + "{let a = (no1, no2, no3) => { let no6, no7; }; "
+            + "{let a = (no1, no2) => { let no6, no7; }; "
             + "const b = 1} "
-        + "let c} "
-        + "function u(h) {let e}";
+            + "let c} "
+            + "function u(h) {let e}";
 
     Compiler compiler = new Compiler();
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
@@ -2603,27 +2583,16 @@ public final class NodeUtilTest extends TestCase {
 
     Node ast = parse(fnString);
     Node functionNode = getFunctionNode(fnString);
-    Node functionBlockNode = functionNode.getLastChild();
-    Node innerBlockNode = functionBlockNode.getFirstChild().getNext();
 
     Scope globalScope = Scope.createGlobalScope(ast);
     Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
-    Scope functionBlockScope = scopeCreator.createScope(functionBlockNode, functionScope);
-    Scope innerBlockScope = scopeCreator.createScope(innerBlockNode, functionBlockScope);
 
     Map<String, Var> allVariables = new HashMap<>();
     List<Var> orderedVars = new LinkedList<>();
-    List<Scope> scopesInFunction = new LinkedList<>();
     NodeUtil.getAllVarsDeclaredInFunction(
-        allVariables, orderedVars, scopesInFunction, compiler, scopeCreator, functionScope);
+        allVariables, orderedVars, compiler, scopeCreator, functionScope);
     Set<String> keySet = new HashSet<>(Arrays.asList("x", "y", "z", "a", "b", "c"));
     assertEquals(keySet, allVariables.keySet());
-
-    List<Scope> scopeList = new LinkedList<>();
-    scopeList.add(functionScope);
-    scopeList.add(functionBlockScope);
-    scopeList.add(innerBlockScope);
-    assertThat(scopesInFunction.toString()).isEqualTo(scopeList.toString());
   }
 
   private boolean executedOnceTestCase(String code) {

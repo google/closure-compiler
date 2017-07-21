@@ -311,13 +311,12 @@ public final class DataFlowAnalysisTest extends TestCase {
     }
   }
 
-  public static ArithmeticInstruction
-      newAssignNumberToVariableInstruction(Variable res, int num) {
+  public static ArithmeticInstruction newAssignNumberToVariableInstruction(Variable res, int num) {
     return new ArithmeticInstruction(res, num, Operation.ADD, 0);
   }
 
-  public static ArithmeticInstruction
-      newAssignVariableToVariableInstruction(Variable lhs, Variable rhs) {
+  public static ArithmeticInstruction newAssignVariableToVariableInstruction(
+      Variable lhs, Variable rhs) {
     return new ArithmeticInstruction(lhs, rhs, Operation.ADD, 0);
   }
 
@@ -546,8 +545,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     Instruction inst2 = newAssignNumberToVariableInstruction(b, 1);
     Instruction inst3 = newAssignNumberToVariableInstruction(b, 1);
     Instruction inst4 = newAssignVariableToVariableInstruction(c, b);
-    ControlFlowGraph<Instruction> cfg =
-      new ControlFlowGraph<>(inst1, true, true);
+    ControlFlowGraph<Instruction> cfg = new ControlFlowGraph<>(inst1, true, true);
     GraphNode<Instruction, Branch> n1 = cfg.createNode(inst1);
     GraphNode<Instruction, Branch> n2 = cfg.createNode(inst2);
     GraphNode<Instruction, Branch> n3 = cfg.createNode(inst3);
@@ -603,8 +601,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     Instruction inst2 = new ArithmeticInstruction(a, a, Operation.ADD, 1);
     Instruction inst3 = new BranchInstruction(b);
     Instruction inst4 = newAssignVariableToVariableInstruction(c, a);
-    ControlFlowGraph<Instruction> cfg =
-      new ControlFlowGraph<>(inst1, true, true);
+    ControlFlowGraph<Instruction> cfg = new ControlFlowGraph<>(inst1, true, true);
     GraphNode<Instruction, Branch> n1 = cfg.createNode(inst1);
     GraphNode<Instruction, Branch> n2 = cfg.createNode(inst2);
     GraphNode<Instruction, Branch> n3 = cfg.createNode(inst3);
@@ -846,8 +843,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     List<ConstPropLatticeElement> branchedFlowThrough(Instruction node,
         ConstPropLatticeElement input) {
       List<ConstPropLatticeElement> result = new ArrayList<>();
-      List<DiGraphEdge<Instruction, Branch>> outEdges =
-        getCfg().getOutEdges(node);
+      List<DiGraphEdge<Instruction, Branch>> outEdges = getCfg().getOutEdges(node);
       if (node.isArithmetic()) {
         assertThat(outEdges.size()).isLessThan(2);
         ConstPropLatticeElement aResult = flowThroughArithmeticInstruction(
@@ -856,8 +852,7 @@ public final class DataFlowAnalysisTest extends TestCase {
       } else {
         BranchInstruction branchInst = (BranchInstruction) node;
         for (DiGraphEdge<Instruction, Branch> branch : outEdges) {
-          ConstPropLatticeElement edgeResult =
-            new ConstPropLatticeElement(input);
+          ConstPropLatticeElement edgeResult = new ConstPropLatticeElement(input);
           if (branch.getValue() == Branch.ON_FALSE &&
               branchInst.getCondition().isVariable()) {
             edgeResult.constMap.put((Variable) branchInst.getCondition(), 0);
@@ -888,8 +883,7 @@ public final class DataFlowAnalysisTest extends TestCase {
     Instruction inst2 = newAssignNumberToVariableInstruction(a, 0);
     Instruction inst3 = newAssignNumberToVariableInstruction(b, 0);
     Instruction inst4 = newAssignVariableToVariableInstruction(c, b);
-    ControlFlowGraph<Instruction> cfg =
-      new ControlFlowGraph<>(inst1, true, true);
+    ControlFlowGraph<Instruction> cfg = new ControlFlowGraph<>(inst1, true, true);
     GraphNode<Instruction, Branch> n1 = cfg.createNode(inst1);
     GraphNode<Instruction, Branch> n2 = cfg.createNode(inst2);
     GraphNode<Instruction, Branch> n3 = cfg.createNode(inst3);
@@ -928,19 +922,19 @@ public final class DataFlowAnalysisTest extends TestCase {
     Variable a = new Variable("a");
     Instruction inst1 = new ArithmeticInstruction(a, a, Operation.ADD, a);
     ControlFlowGraph<Instruction> cfg =
-      new ControlFlowGraph<Instruction>(inst1, true, true) {
-      @Override
-      public Comparator<DiGraphNode<Instruction, Branch>>
-          getOptionalNodeComparator(boolean isForward) {
-        return new Comparator<DiGraphNode<Instruction, Branch>>() {
+        new ControlFlowGraph<Instruction>(inst1, true, true) {
           @Override
-          public int compare(DiGraphNode<Instruction, Branch> o1,
-              DiGraphNode<Instruction, Branch> o2) {
-            return o1.getValue().order - o2.getValue().order;
+          public Comparator<DiGraphNode<Instruction, Branch>> getOptionalNodeComparator(
+              boolean isForward) {
+            return new Comparator<DiGraphNode<Instruction, Branch>>() {
+              @Override
+              public int compare(
+                  DiGraphNode<Instruction, Branch> o1, DiGraphNode<Instruction, Branch> o2) {
+                return o1.getValue().order - o2.getValue().order;
+              }
+            };
           }
         };
-      }
-    };
     cfg.createNode(inst1);
 
     // We have MAX_STEP + 1 nodes, it is impossible to finish the analysis with

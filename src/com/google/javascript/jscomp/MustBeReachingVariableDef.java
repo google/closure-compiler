@@ -49,7 +49,6 @@ final class MustBeReachingVariableDef extends
   private final Set<Var> escaped;
   private final Map<String, Var> allVarsInFn;
   private final List<Var> orderedVars;
-  private final List<Scope> scopesInFunction;
 
   MustBeReachingVariableDef(
       ControlFlowGraph<Node> cfg,
@@ -61,10 +60,9 @@ final class MustBeReachingVariableDef extends
     this.escaped = new HashSet<>();
     this.allVarsInFn = new HashMap<>();
     this.orderedVars = new LinkedList<>();
-    this.scopesInFunction = new LinkedList<>();
     computeEscapedEs6(jsScope.getParent(), escaped, compiler, scopeCreator);
     NodeUtil.getAllVarsDeclaredInFunction(
-        allVarsInFn, orderedVars, scopesInFunction, compiler, scopeCreator, jsScope.getParent());
+        allVarsInFn, orderedVars, compiler, scopeCreator, jsScope.getParent());
   }
 
   /**
@@ -300,8 +298,8 @@ final class MustBeReachingVariableDef extends
           if (n.getFirstChild().isName()) {
             Node name = n.getFirstChild();
             computeMustDef(name.getNext(), cfgNode, output, conditional);
-            addToDefIfLocal(name.getString(), conditional ? null : cfgNode,
-              n.getLastChild(), output);
+            addToDefIfLocal(
+                name.getString(), conditional ? null : cfgNode, n.getLastChild(), output);
             return;
           } else if (NodeUtil.isGet(n.getFirstChild())) {
             // Treat all assignments to arguments as redefining the
@@ -324,8 +322,7 @@ final class MustBeReachingVariableDef extends
         if (n.isDec() || n.isInc()) {
           Node target = n.getFirstChild();
           if (target.isName()) {
-            addToDefIfLocal(target.getString(),
-                conditional ? null : cfgNode, null, output);
+            addToDefIfLocal(target.getString(), conditional ? null : cfgNode, null, output);
             return;
           }
         }
@@ -408,20 +405,22 @@ final class MustBeReachingVariableDef extends
    * in the def's depends set.
    */
   private void computeDependence(final Definition def, Node rValue) {
-    NodeTraversal.traverseEs6(compiler, rValue,
+    NodeTraversal.traverseEs6(
+        compiler,
+        rValue,
         new AbstractCfgNodeTraversalCallback() {
-      @Override
-      public void visit(NodeTraversal t, Node n, Node parent) {
-        if (n.isName()) {
-          Var dep = allVarsInFn.get(n.getString());
-          if (dep == null) {
-            def.unknownDependencies = true;
-          } else {
-            def.depends.add(dep);
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            if (n.isName()) {
+              Var dep = allVarsInFn.get(n.getString());
+              if (dep == null) {
+                def.unknownDependencies = true;
+              } else {
+                def.depends.add(dep);
+              }
+            }
           }
-        }
-      }
-    });
+        });
   }
 
   /**
