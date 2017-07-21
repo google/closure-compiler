@@ -459,10 +459,10 @@ class ProcessDefines implements CompilerPass {
      * the parent would be the NAME node.
      */
     private static Node getValueParent(Ref ref) {
-      // there are two types of declarations: VARs and ASSIGNs
+      // there are two types of declarations: VARs, ASSIGNs, and CONSTs
       return ref.node.getParent() != null &&
-          ref.node.getParent().isVar() ?
-          ref.node : ref.node.getParent();
+          (ref.node.getParent().isVar() || ref.node.getParent().isConst())
+          ? ref.node : ref.node.getParent();
     }
 
     /**
