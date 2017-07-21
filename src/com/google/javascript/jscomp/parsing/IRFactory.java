@@ -1952,7 +1952,8 @@ class IRFactory {
     }
 
     private Node createUpdateNode(Token type, boolean postfix, Node operand) {
-      if (!operand.isValidAssignmentTarget()) {
+      Node assignTarget = operand.isCast() ? operand.getFirstChild() : operand;
+      if (!assignTarget.isValidAssignmentTarget()) {
         errorReporter.error(
             SimpleFormat.format("Invalid %s %s operand.",
                 (postfix ? "postfix" : "prefix"),
