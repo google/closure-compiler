@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -39,7 +40,7 @@ import java.util.PriorityQueue;
  * This is a compiler pass that computes a control flow graph.
  *
  */
-final class ControlFlowAnalysis implements Callback, CompilerPass {
+public final class ControlFlowAnalysis implements Callback, CompilerPass {
 
   /**
    * Based roughly on the first few pages of
@@ -138,6 +139,13 @@ final class ControlFlowAnalysis implements Callback, CompilerPass {
     this.compiler = compiler;
     this.shouldTraverseFunctions = shouldTraverseFunctions;
     this.edgeAnnotations = edgeAnnotations;
+  }
+
+  public static ControlFlowGraph<Node> getCfg(AbstractCompiler compiler, Node cfgRoot) {
+    checkArgument(NodeUtil.isValidCfgRoot(cfgRoot));
+    ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, true);
+    cfa.process(null, cfgRoot);
+    return cfa.getCfg();
   }
 
   ControlFlowGraph<Node> getCfg() {
