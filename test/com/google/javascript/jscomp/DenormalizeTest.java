@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.Normalize.NormalizeStatements;
 import com.google.javascript.rhino.Node;
 
@@ -27,6 +28,12 @@ public final class DenormalizeTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new NormalizeAndDenormalizePass(compiler);
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   @Override
@@ -69,6 +76,52 @@ public final class DenormalizeTest extends CompilerTestCase {
             "}"));
   }
 
+  public void testInlineVarKeywordArrowFunc1() {
+    test(
+        LINE_JOINER.join(
+            "var f = () => {",
+            "  var x;",
+            "  var g = () => { x = 2; }",
+            "  if (y) { x = -1; }",
+            "  alert(x);",
+            "}"),
+        LINE_JOINER.join(
+            "var f = () => {",
+            "  var g = () => { x = 2; }",
+            "  if (y) { var x = -1; }",
+            "  alert(x);",
+            "}"));
+  }
+
+  public void testInlineVarKeywordArrowFunc2() {
+    test(
+        LINE_JOINER.join(
+            "var f = () => {",
+            "  var x;",
+            "  var g = () => { x = 2; }",
+            "  if (y) { x = -1; } else { x = 3; }",
+            "  alert(x);",
+            "}"),
+        LINE_JOINER.join(
+            "var f = () => {",
+            "  var g = () => { x = 2; }",
+            "  if (y) { var x = -1; } else { x = 3; }",
+            "  alert(x);",
+            "}"));
+  }
+
+  public void testNotInlineConstLet() {
+    testSame(
+        LINE_JOINER.join(
+            "let x;",
+            "if (y) { x = -1; }"));
+
+    testSame(
+        LINE_JOINER.join(
+            "const x = 1;",
+            "if (y) { x = -1; }"));
+  }
+
   public void testFor() {
     // Verify assignments are moved into the FOR init node.
     test("a = 0; for(; a < 2 ; a++) foo()",
@@ -80,6 +133,10 @@ public final class DenormalizeTest extends CompilerTestCase {
     // We don't handle labels yet.
     testSame("var a = 0; a:for(; c < b ; c++) foo()");
     testSame("var a = 0; a:b:for(; c < b ; c++) foo()");
+
+    // Do not inline let or const
+    testSame("let a = 0; for(; c < b ; c++) foo()");
+    testSame("const a = 0; for(; c < b ; c++) foo()");
 
     // Verify FOR inside IFs.
     test("if(x){var a = 0; for(; c < b; c++) foo()}",
@@ -113,6 +170,26 @@ public final class DenormalizeTest extends CompilerTestCase {
 
     // Other statements are left as is.
     testSame("function f(){ return; for(a in b) foo() }");
+  }
+
+  public void testForOf() {
+    test("var a; for (a of b) foo()", "for (var a of b) foo()");
+    testSame("a = 0; for (a of b) foo()");
+    testSame("var a = 0; for (a of b) foo()");
+
+    // We don't handle labels yet.
+    testSame("var a; a: for (a of b) foo()");
+    testSame("var a; a: b: for (a of b) foo()");
+
+    // Verify FOR inside IFs.
+    test("if (x) { var a; for (a of b) foo() }",
+         "if (x) { for (var a of b) foo() }");
+
+    // Any other expression.
+    testSame("init(); for (a of b) foo()");
+
+    // Other statements are left as is.
+    testSame("function f() { return; for (a of b) foo() }");
   }
 
   public void testInOperatorNotInsideFor() {
@@ -149,6 +226,74 @@ public final class DenormalizeTest extends CompilerTestCase {
     test("x = x % 1;", "x %= 1;");
 
     test("/** @suppress {const} */ x = x + 1;", "/** @suppress {const} */ x += 1;");
+  }
+
+  public void testNoCrashOnEs6Features() {
+    test(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    var x;",
+            "    if (y) { x = -1; }",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    if (y) { var x = -1; }",
+            "  }",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "var obj = {",
+            "  method() {",
+            "    var c; for (; c < b ; c++) foo()",
+            "  },",
+            "}"),
+        LINE_JOINER.join(
+            "var obj = {",
+            "  method() {",
+            "    for (var c; c < b ; c++) foo()",
+            "  },",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "var obj = {",
+            "  ['computed' + 'prop']: 42",
+            "}"));
+
+    // Denormalize does not revert shorthand object literals that were expanded in Normalize
+    test(
+        LINE_JOINER.join(
+            "var obj = {",
+            "  key",
+            "}"),
+        LINE_JOINER.join(
+            "var obj = {",
+            "  key: key",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "function tag(strings) {",
+            "  var x;",
+            "  if (y) { x = x + 1; }",
+            "}",
+            "tag`template`"),
+        LINE_JOINER.join(
+            "function tag(strings) {",
+            "  var x;",
+            "  if (y) { x += 1; }",
+            "}",
+            "tag`template`"));
+
+    testSame(
+        LINE_JOINER.join(
+            "var x;",
+            "var y;",
+            "if (y) { [x, y] = [1, 2]; }"));
   }
 
   /**

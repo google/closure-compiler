@@ -140,7 +140,7 @@ class Denormalize implements CompilerPass, Callback, Behavior {
     Node nextSibling = n.getNext();
     if (nextSibling == null) {
       return;
-    } else if (nextSibling.isForIn()) {
+    } else if (nextSibling.isForIn() || nextSibling.isForOf()) {
       Node forNode = nextSibling;
       Node forVar = forNode.getFirstChild();
       if (forVar.isName()
