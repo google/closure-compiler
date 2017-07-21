@@ -29,18 +29,15 @@ public class J2clEqualitySameRewriterPassTest extends TypeICompilerTestCase {
   }
 
   @Override
-  protected CompilerPass getProcessor(Compiler compiler) {
-    return new J2clEqualitySameRewriterPass(
-        compiler, compiler.getChangedScopeNodesForPass("J2clEqualitySameRewriterPass"));
+  protected CompilerPass getProcessor(final Compiler compiler) {
+    return new PeepholeOptimizationsPass(compiler, getName(), new J2clEqualitySameRewriterPass());
   }
-
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setJ2clPass(CompilerOptions.J2clPassMode.ON);
     return options;
   }
-
   public void testRewriteEqualitySame() {
     test(
         LINE_JOINER.join(

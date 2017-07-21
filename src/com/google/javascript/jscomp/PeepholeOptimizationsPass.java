@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -31,12 +32,19 @@ class PeepholeOptimizationsPass implements CompilerPass {
 
   private final AbstractCompiler compiler;
   private final String passName;
-  private final AbstractPeepholeOptimization[] peepholeOptimizations;
+  private final List<AbstractPeepholeOptimization> peepholeOptimizations;
   private boolean retraverseOnChange;
 
   /** Creates a peephole optimization pass that runs the given optimizations. */
   PeepholeOptimizationsPass(
       AbstractCompiler compiler, String passName, AbstractPeepholeOptimization... optimizations) {
+    this(compiler, passName, Arrays.asList(optimizations));
+  }
+
+  PeepholeOptimizationsPass(
+      AbstractCompiler compiler,
+      String passName,
+      List<AbstractPeepholeOptimization> optimizations) {
     this.compiler = compiler;
     this.passName = passName;
     this.peepholeOptimizations = optimizations;
