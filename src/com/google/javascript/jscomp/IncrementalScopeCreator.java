@@ -240,7 +240,7 @@ class IncrementalScopeCreator implements ScopeCreator {
     void expandInvalidatedScript(Node script) {
       Collection<Node> pairs = scriptDeclarationsPairs.get(script);
       for (Node n : pairs) {
-        if (!scriptsToUpdate.add(n)) {
+        if (scriptsToUpdate.add(n)) {
           expandInvalidatedScript(script);
         }
       }
