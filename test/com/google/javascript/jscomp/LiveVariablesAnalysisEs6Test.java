@@ -326,6 +326,24 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
     assertNotLiveAfterX("X:const a = 1;", "a");
   }
 
+  public void testDestructuring() {
+    assertLiveBeforeX("var [a, b] = [1, 2]; X:a;", "a");
+    assertNotLiveBeforeX("X: var [...a] = f();", "a");
+    assertNotEscaped("var [a, ...b] = [1, 2];", "b");
+    assertNotEscaped("var [a, ...b] = [1, 2];", "a");
+
+    assertLiveBeforeX("var {a: x, b: y} = g(); X:x", "x");
+    assertNotLiveBeforeX("X: var {a: x, b: y} = g();", "y");
+    assertNotEscaped("var {a: x, b: y} = g()", "x");
+    assertNotEscaped("var {a: x, b: y} = g()", "y");
+  }
+
+  public void testComplicatedDeclaration() {
+    assertNotEscaped("var a = 1, {b: b} = f(), c = g()", "a");
+    assertNotEscaped("var a = 1, {b: b} = f(), c = g()", "b");
+    assertNotEscaped("var a = 1, {b: b} = f(), c = g()", "c");
+  }
+
   private void assertLiveBeforeX(String src, String var) {
     FlowState<LiveVariablesAnalysisEs6.LiveVariableLattice> state = getFlowStateAtX(src);
     assertNotNull(src + " should contain a label 'X:'", state);

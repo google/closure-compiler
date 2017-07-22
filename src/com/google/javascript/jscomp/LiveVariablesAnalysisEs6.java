@@ -279,14 +279,21 @@ class LiveVariablesAnalysisEs6
       case LET:
       case CONST:
       case VAR:
-        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-          if (c.hasChildren()) {
-            computeGenKill(c.getFirstChild(), gen, kill, conditional);
-            if (!conditional) {
-              addToSetIfLocal(c, kill);
-            }
-          }
-        }
+         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+           if (c.isName()) {
+             if (c.hasChildren()) {
+               computeGenKill(c.getFirstChild(), gen, kill, conditional);
+               if (!conditional) {
+                 addToSetIfLocal(c, kill);
+               }
+             }
+           } else {
+             Iterable<Node> allVars = NodeUtil.getLhsNodesOfDeclaration(n);
+             for (Node child : allVars) {
+               addToSetIfLocal(child, kill);
+             }
+           }
+         }
         return;
 
       case AND:
