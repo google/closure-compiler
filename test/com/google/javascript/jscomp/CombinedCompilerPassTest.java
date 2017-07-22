@@ -22,14 +22,12 @@ import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
-
-import junit.framework.TestCase;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import junit.framework.TestCase;
 
 /**
  */
@@ -86,6 +84,7 @@ public final class CombinedCompilerPassTest extends TestCase  {
   public void setUp() throws Exception {
     super.setUp();
     compiler = new Compiler();
+    compiler.initOptions(new CompilerOptions());
   }
 
   /**

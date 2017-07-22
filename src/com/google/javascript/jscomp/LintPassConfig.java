@@ -66,6 +66,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckMissingSemicolon(compiler),
                   new CheckMissingSuper(compiler),
                   new CheckPrimitiveAsObject(compiler),
+                  new ClosureCheckModule(compiler),
                   new CheckRequiresAndProvidesSorted(compiler),
                   new CheckMissingAndExtraRequires(
                       compiler, CheckMissingAndExtraRequires.Mode.SINGLE_FILE),
@@ -73,7 +74,6 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                       compiler, /* report */ true, /* protectSideEffectFreeCode */ false),
                   new CheckUnusedLabels(compiler),
                   new CheckUselessBlocks(compiler),
-                  new ClosureCheckModule(compiler),
                   new Es6SuperCheck(compiler)));
         }
 
