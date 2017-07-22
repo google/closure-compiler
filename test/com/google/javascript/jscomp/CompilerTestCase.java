@@ -512,8 +512,9 @@ public abstract class CompilerTestCase extends TestCase {
     // whether variable warnings are filtered.
     options.setCheckSymbols(true);
 
-    options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.INVALID_CASTS, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.MISPLACED_MSG_ANNOTATION, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.MISSING_PROPERTIES, CheckLevel.WARNING);
     if (!ignoredWarnings.isEmpty()) {
       options.setWarningLevel(
           new DiagnosticGroup(ignoredWarnings.toArray(new DiagnosticType[0])), CheckLevel.OFF);
