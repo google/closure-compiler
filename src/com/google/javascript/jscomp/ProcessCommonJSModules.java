@@ -125,6 +125,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           exports.add(export);
         }
       }
+      finder.processWebpackExports();
       for (ExportInfo export : finder.getExports()) {
         if (NodeUtil.getEnclosingScript(export.node) != null) {
           exports.add(export);
@@ -300,7 +301,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
     private Node script = null;
 
     boolean isCommonJsModule() {
-      return (exports.size() > 0 || moduleExports.size() > 0) && !hasGoogProvideOrModule;
+      return (exports.size() > 0
+              || moduleExports.size() > 0
+              || webpackExports.size() > 0
+              || webpackDefineEsModuleProperty != null)
+          && !hasGoogProvideOrModule;
     }
 
     List<UmdPattern> umdPatterns = new ArrayList<>();
@@ -309,6 +314,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
     List<ExportInfo> webpackExports = new ArrayList<>();
     Set<String> imports = new HashSet<>();
     List<JSError> errors = new ArrayList<>();
+    Node webpackDefineEsModuleProperty = null;
 
     public List<ExportInfo> getModuleExports() {
       return ImmutableList.copyOf(moduleExports);
@@ -379,9 +385,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
         }
       }
 
-      // exports =
-      if (n.isName() && isSupportedExport(t, n)) {
-        if (n.isName()) {
+      if (n.isName() && EXPORTS.equals(n.getString())) {
+        Var v = t.getScope().getVar(EXPORTS);
+        if (v == null || v.isGlobal()) {
           Node qNameRoot = getBaseQualifiedNameNode(n);
           if (qNameRoot != null
               && qNameRoot.matchesQualifiedName(EXPORTS)
@@ -401,6 +407,31 @@ public final class ProcessCommonJSModules implements CompilerPass {
               umdPatterns.add(new UmdPattern(ifAncestor, ifAncestor.getSecondChild()));
             }
           }
+        }
+      }
+
+      if (n.isName()
+          && compiler.getOptions().moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK
+          && WEBPACK_EXPORTS.equals(n.getString())) {
+        if (n.getParent().isGetElem()
+            && n.getNext().isString()
+            && NodeUtil.isValidPropertyName(compiler.getFeatureSet(), n.getNext().getString())) {
+          Var v = t.getScope().getVar(WEBPACK_EXPORTS);
+          if (v == null || v.isGlobal() || v.isExtern()) {
+            webpackExports.add(new ExportInfo(n, t.getScope()));
+          }
+
+          // Webpack defines an "__esModule" property for babel. We can just remove it.
+          // Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+        } else if (n.getParent().isCall()
+            && n.getPrevious() != null
+            && n.getPrevious().isQualifiedName()
+            && "Object.defineProperty".equals(n.getPrevious().getQualifiedName())
+            && n.getNext() != null
+            && n.getNext().isString()
+            && n.getNext().getString().equals("__esModule")
+            && n.getGrandparent().isExprResult()) {
+          webpackDefineEsModuleProperty = n.getGrandparent();
         }
       }
 
@@ -668,6 +699,22 @@ public final class ProcessCommonJSModules implements CompilerPass {
         }
       }
     }
+
+    /** Webpack exports are getelems. Convert them to getprops and add them to the exports list */
+    void processWebpackExports() {
+      if (webpackDefineEsModuleProperty != null) {
+        webpackDefineEsModuleProperty.detachFromParent();
+      }
+
+      for (ExportInfo export : webpackExports) {
+        Node getElem = export.node.getParent();
+        Node propName = export.node.getNext().detach();
+        Node exportName = export.node.detach();
+        Node getProp = IR.getprop(exportName, propName).useSourceInfoFrom(getElem);
+        getElem.replaceWith(getProp);
+        exports.add(export);
+      }
+    }
   }
 
   private static boolean umdPatternsContains(List<UmdPattern> umdPatterns, Node n) {
@@ -763,7 +810,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
                 && nameDeclaration.getNode().getInputId() == n.getInputId()) {
               maybeUpdateName(t, n, nameDeclaration);
             }
-
             break;
           }
 
