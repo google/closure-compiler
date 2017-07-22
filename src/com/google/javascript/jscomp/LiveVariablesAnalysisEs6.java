@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.LatticeElement;
@@ -123,7 +122,6 @@ class LiveVariablesAnalysisEs6
   private final List<Var> orderedVars;
 
   private final Map<String, Var> allVarsInFn;
-
   /**
    * Live Variables Analysis using the ES6 scope creator. This analysis should only be done on
    * function where jsScope is the function scope. If we call LiveVariablesAnalysis from the
