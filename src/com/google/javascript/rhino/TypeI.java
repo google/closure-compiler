@@ -210,4 +210,13 @@ public interface TypeI extends Serializable {
    * non-null modifiers will be added to implicitly nullable types.
    */
   String toNonNullAnnotationString();
+
+  /**
+   * Returns the type inference of this object. Useful for debugging.
+   * Note: this should be deleted when OTI is no longer relevant.
+   */
+  TypeInference typeInference();
+
+  /** Simple enum to easily identify the type of TypeI instance. */
+  enum TypeInference { OTI, NTI };
 }

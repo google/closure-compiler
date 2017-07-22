@@ -1861,4 +1861,9 @@ public abstract class JSType implements TypeI {
       }
     }
   }
+
+  @Override
+  public TypeInference typeInference() {
+    return TypeInference.OTI;
+  }
 }

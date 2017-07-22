@@ -2261,6 +2261,11 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return obj == null ? ImmutableSet.<String>of() : obj.getPropertyNames();
   }
 
+  @Override
+  public TypeInference typeInference() {
+    return TypeInference.NTI;
+  }
+
   // Note: concrete subclasses follow below.  The above code in JSType
   // should not depend on any of these specific implementations, other
   // than instantiating them when appropriate (in the makeType methods).
