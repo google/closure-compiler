@@ -24,6 +24,7 @@ import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.errorprone.annotations.ForOverride;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -107,9 +108,6 @@ public abstract class CompilerTestCase extends TestCase {
 
   /** Whether to test the compiler pass before the type check. */
   private boolean runTypeCheckAfterProcessing;
-
-  /** Whether to test the compiler pass before NTI. */
-  private boolean runNTIAfterProcessing;
 
   /** Whether to scan externs for property names. */
   private boolean gatherExternPropertiesEnabled;
@@ -412,18 +410,6 @@ public abstract class CompilerTestCase extends TestCase {
    * Constructs a test.
    *
    * @param externs Externs JS as a string
-   * @param compareAsTree True to compare output & expected as a node tree.
-   *     99% of the time you want to compare as a tree. There are a few
-   *     special cases where you don't, like if you want to test the code
-   *     printing of "unnatural" syntax trees. For example,
-   *
-   * <pre>
-   * IF
-   *   IF
-   *     STATEMENT
-   * ELSE
-   *   STATEMENT
-   * </pre>
    */
   protected CompilerTestCase(String externs) {
     this.externsInputs = ImmutableList.of(SourceFile.fromCode("externs", externs));
@@ -468,7 +454,6 @@ public abstract class CompilerTestCase extends TestCase {
     this.parseTypeInfo = false;
     this.polymerPass = false;
     this.rewriteClosureCode = false;
-    this.runNTIAfterProcessing = false;
     this.runTypeCheckAfterProcessing = false;
     this.transpileEnabled = false;
     this.typeCheckEnabled = false;
@@ -548,12 +533,6 @@ public abstract class CompilerTestCase extends TestCase {
   protected final void enableRunTypeCheckAfterProcessing() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     this.runTypeCheckAfterProcessing = true;
-  }
-
-  /** Moves NTI type checking to occur after the processor, instead of before. */
-  protected final void enableRunNTIAfterProcessing() {
-    checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    this.runNTIAfterProcessing = true;
   }
 
   /**
@@ -689,9 +668,7 @@ public abstract class CompilerTestCase extends TestCase {
     checkLineNumbers = false;
   }
 
-  /**
-   * @param newVal Whether to validate AST change marking.
-   */
+  /** Disable validating AST change marking. */
   protected final void disableValidateAstChangeMarking() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
     checkAstChangeMarking = false;
@@ -806,7 +783,17 @@ public abstract class CompilerTestCase extends TestCase {
   }
 
   /**
-   * Disable comparing the expected output as a tree or string.
+   * Disable comparing the expected output as a tree or string. 99% of the time you want to compare
+   * as a tree. There are a few special cases where you don't, like if you want to test the code
+   * printing of "unnatural" syntax trees. For example,
+   *
+   * <pre>
+   * IF
+   *   IF
+   *     STATEMENT
+   * ELSE
+   *   STATEMENT
+   * </pre>
    */
   protected final void disableCompareAsTree() {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
@@ -1014,8 +1001,6 @@ public abstract class CompilerTestCase extends TestCase {
 
   /**
    * Verifies that the compiler generates no warnings for the given input.
-   *
-   * @param js Input
    */
   protected void testNoWarning(Sources srcs) {
     test(srcs);
@@ -1023,8 +1008,6 @@ public abstract class CompilerTestCase extends TestCase {
 
   /**
    * Verifies that the compiler generates no warnings for the given input.
-   *
-   * @param js Input
    */
   public void testNoWarning(String externs, String js) {
     test(externs(externs), srcs(js));
@@ -1051,7 +1034,6 @@ public abstract class CompilerTestCase extends TestCase {
    *
    * @param js Input
    * @param expected Expected output, or null if an error is expected
-   * @param error Expected error, or null if no error is expected
    * @param diagnostic Expected warning or error
    */
   protected void test(String js, String expected, Diagnostic diagnostic) {
@@ -1066,7 +1048,6 @@ public abstract class CompilerTestCase extends TestCase {
    * @param externs the externs
    * @param js Input
    * @param expected Expected output, or null if an error is expected
-   * @param error Expected error, or null if no error is expected
    * @param diagnostic Expected warning or error
    */
   protected void test(String externs, String js, String expected, Diagnostic diagnostic) {
@@ -1135,14 +1116,14 @@ public abstract class CompilerTestCase extends TestCase {
     test(srcs(js), expected(expected));
   }
 
-  private List<SourceFile> createSources(String name, String... sources) {
+  private static List<SourceFile> createSources(String name, String... sources) {
     if (sources == null) {
       return null;
     }
     return createSources(name, ImmutableList.copyOf(sources));
   }
 
-  private List<SourceFile> createSources(String name, List<String> sources) {
+  private static List<SourceFile> createSources(String name, List<String> sources) {
     if (sources == null) {
       return null;
     }
@@ -1192,7 +1173,6 @@ public abstract class CompilerTestCase extends TestCase {
    *
    * @param externs Externs input
    * @param js Input and output
-   * @param warning Expected warning, or null if no warning is expected
    */
   protected void testSame(String externs, String js) {
     test(externs(externs), srcs(js), expected(js));
@@ -1407,9 +1387,7 @@ public abstract class CompilerTestCase extends TestCase {
         if (!runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
           TypeCheck check = createTypeCheck(compiler);
           check.processForTesting(externsRoot, mainRoot);
-        } else if (!this.runNTIAfterProcessing
-            && this.newTypeInferenceEnabled
-            && i == 0) {
+        } else if (!this.runTypeCheckAfterProcessing && this.newTypeInferenceEnabled && i == 0) {
           runNewTypeInference(compiler, externsRoot, mainRoot);
         }
 
@@ -1481,9 +1459,7 @@ public abstract class CompilerTestCase extends TestCase {
         if (runTypeCheckAfterProcessing && typeCheckEnabled && i == 0) {
           TypeCheck check = createTypeCheck(compiler);
           check.processForTesting(externsRoot, mainRoot);
-        } else if (this.runNTIAfterProcessing
-            && this.newTypeInferenceEnabled
-            && i == 0) {
+        } else if (this.runTypeCheckAfterProcessing && this.newTypeInferenceEnabled && i == 0) {
           runNewTypeInference(compiler, externsRoot, mainRoot);
         }
 
@@ -1983,23 +1959,23 @@ public abstract class CompilerTestCase extends TestCase {
     }
   }
 
-  protected String lines(String line) {
+  protected static String lines(String line) {
     return line;
   }
 
-  protected String lines(String ...lines) {
+  protected static String lines(String... lines) {
     return LINE_JOINER.join(lines);
   }
 
-  protected Sources srcs(String srcText) {
+  protected static Sources srcs(String srcText) {
     return new FlatSources(maybeCreateSources("testcode",  srcText));
   }
 
-  protected Sources srcs(String[] srcTexts) {
+  protected static Sources srcs(String[] srcTexts) {
     return new FlatSources(createSources("input", srcTexts));
   }
 
-  protected Sources srcs(List<SourceFile> files) {
+  protected static Sources srcs(List<SourceFile> files) {
     return new FlatSources(files);
   }
 
@@ -2007,19 +1983,19 @@ public abstract class CompilerTestCase extends TestCase {
     return new FlatSources(Arrays.asList(files));
   }
 
-  protected Sources srcs(JSModule[] modules) {
+  protected static Sources srcs(JSModule[] modules) {
     return new ModuleSources(modules);
   }
 
-  protected Expected expected(String srcText) {
+  protected static Expected expected(String srcText) {
     return new Expected(maybeCreateSources("expected",  srcText));
   }
 
-  protected Expected expected(String[] srcTexts) {
+  protected static Expected expected(String[] srcTexts) {
     return new Expected(createSources("expected", srcTexts));
   }
 
-  protected Expected expected(List<SourceFile> files) {
+  protected static Expected expected(List<SourceFile> files) {
     return new Expected(files);
   }
 
@@ -2027,7 +2003,7 @@ public abstract class CompilerTestCase extends TestCase {
     return new Expected(Arrays.asList(files));
   }
 
-  protected Expected expected(JSModule[] modules) {
+  protected static Expected expected(JSModule[] modules) {
     // create an expected source output from the list of inputs in the modules in order.
     List<String> expectedSrcs = new ArrayList<>();
     for (JSModule module : modules) {
@@ -2044,67 +2020,45 @@ public abstract class CompilerTestCase extends TestCase {
     return expected(expectedSrcs.toArray(new String[0]));
   }
 
-  protected Externs externs(String externSrc) {
+  protected static Externs externs(String externSrc) {
     return new Externs(maybeCreateSources("externs",  externSrc));
   }
 
-  protected Externs externs(String[] srcTexts) {
+  protected static Externs externs(String[] srcTexts) {
     return new Externs(createSources("externs", srcTexts));
   }
 
-  protected Externs externs(List<SourceFile> files) {
+  protected static Externs externs(List<SourceFile> files) {
     return new Externs(files);
   }
 
-  protected WarningDiagnostic warning(DiagnosticType type) {
+  protected static WarningDiagnostic warning(DiagnosticType type) {
     return warning(type, null);
   }
 
-  protected WarningDiagnostic warning(DiagnosticType type, String match) {
+  protected static WarningDiagnostic warning(DiagnosticType type, String match) {
     // TODO(johnlenz): change this to reject null
     return type != null ? new WarningDiagnostic(type, match) : null;
   }
 
-  protected ErrorDiagnostic error(DiagnosticType type) {
+  protected static ErrorDiagnostic error(DiagnosticType type) {
     return error(type, null);
   }
 
-  protected ErrorDiagnostic error(DiagnosticType type, String match) {
+  protected static ErrorDiagnostic error(DiagnosticType type, String match) {
     // TODO(johnlenz): change this to reject null
     return type != null ? new ErrorDiagnostic(type, match) : null;
   }
 
-  protected void testSame(TestPart ...parts) {
-    Expected expected = null;
-
-    // Pick out the "srcs" and create a coorisponding "expected" to match.
-    int i = 0;
-    TestPart[] finalParts = new TestPart[parts.length + 1];
-    for (TestPart part : parts) {
-      finalParts[i++] = part;
-      if (part instanceof Sources) {
-        checkState(expected == null);
-        expected = fromSources((Sources) part);
-      }
-    }
-    checkState(expected != null);
-    finalParts[i++] = expected;
-
-    test(finalParts);
+  protected void testSame(TestPart... parts) {
+    testInternal(Iterables.concat(Arrays.asList(parts), ImmutableList.of(EXPECTED_SAME)));
   }
 
-  private Expected fromSources(Sources srcs) {
-    if (srcs instanceof FlatSources) {
-      return expected(((FlatSources) srcs).sources);
-    } else if (srcs instanceof ModuleSources) {
-      ModuleSources modules = ((ModuleSources) srcs);
-      return expected(modules.modules.toArray(new JSModule[0]));
-    } else {
-      throw new IllegalStateException("unexpected");
-    }
+  protected void test(TestPart... parts) {
+    testInternal(Arrays.asList(parts));
   }
 
-  protected void test(TestPart ...parts) {
+  private void testInternal(Iterable<TestPart> parts) {
     // TODO(johnlenz): make "ignore" and "nothing" explicit.
     Externs externs = null;
     Sources srcs = null;
@@ -2127,16 +2081,43 @@ public abstract class CompilerTestCase extends TestCase {
         throw new IllegalStateException("unexepected " + part.getClass().getName());
       }
     }
+    if (EXPECTED_SAME.equals(expected)) {
+      expected = fromSources(srcs);
+    }
     if (externs == null) {
       externs = externs(externsInputs);
     }
     testInternal(externs, srcs, expected, diagnostic);
   }
 
-  // TODO(johnlenz): make this a abstract class with a private constructor
-  protected interface TestPart {
-
+  private static Expected fromSources(Sources srcs) {
+    if (srcs instanceof FlatSources) {
+      return expected(((FlatSources) srcs).sources);
+    } else if (srcs instanceof ModuleSources) {
+      ModuleSources modules = ((ModuleSources) srcs);
+      return expected(modules.modules.toArray(new JSModule[0]));
+    } else {
+      throw new IllegalStateException("unexpected");
+    }
   }
+
+  // TODO(johnlenz): make this a abstract class with a private constructor
+  /**
+   * Marker interface for configuration parameters of a test invocation.
+   * This is essentially a closed union type consisting of four subtypes:
+   * (1) Externs, (2) Expected, (3) Sources, and (4) Diagnostic.  Sharing
+   * a common marker interface, allows specifying any combination of these
+   * types to the 'test' method, and makes it very clear what function
+   * each parameter serves (since the first three can all be represented
+   * as simple strings).  Moreover, it reduces the combinatorial explosion
+   * of different ways to express the parts (a single string, a list of
+   * SourceFiles, a list of modules, a DiagnosticType, a DiagnosticType with
+   * an expected message, etc).
+   *
+   * Note that this API is intended to be a medium-term temporary API while
+   * developing and migrating to a more fluent assertion style.
+   */
+  protected interface TestPart {}
 
   protected static final class Expected implements TestPart {
     final List<SourceFile> expected;
@@ -2145,9 +2126,11 @@ public abstract class CompilerTestCase extends TestCase {
       this.expected = files;
     }
   }
+  // TODO(sdh): make a shorter function to get this - e.g. same(), expectSame(), sameOutput() ?
+  // TODO(sdh): also make an ignoreOutput() and noOutput() ?
+  private static final Expected EXPECTED_SAME = new Expected(null);
 
-  protected abstract static class Sources implements TestPart {
-  }
+  protected abstract static class Sources implements TestPart {}
 
   protected static class FlatSources extends Sources {
     final ImmutableList<SourceFile> sources;

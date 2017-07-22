@@ -16,18 +16,16 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.TypeCheck.POSSIBLE_INEXISTENT_PROPERTY;
-import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
-public class Es6RewriteDestructuringTest extends CompilerTestCase {
+public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
-    disableTypeCheck();
+    this.mode = TypeInferenceMode.NEITHER;
     enableRunTypeCheckAfterProcessing();
   }
 
@@ -470,24 +468,25 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   }
 
   public void testDefaultParameters() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     test(
-        "function f(zero, one = 1, two = 2) {}; f(1); f(1,2,3);",
+        "function f(/** ? */ zero, /** ?= */ one = 1, /** ?= */ two = 2) {}; f(1); f(1,2,3);",
         LINE_JOINER.join(
-            "function f(zero, one, two) {",
+            "function f(/** ? */ zero, /** ?= */ one, /** ?= */ two) {",
             "  one = (one === undefined) ? 1 : one;",
             "  two = (two === undefined) ? 2 : two;",
             "};",
             "f(1); f(1,2,3);"));
 
     test(
-        "function f(zero, one = 1, two = 2) {}; f();",
-        LINE_JOINER.join(
-            "function f(zero, one, two) {",
-            "  one = (one === undefined) ? 1 : one;",
-            "  two = (two === undefined) ? 2 : two;",
-            "}; f();"),
-        warning(TypeCheck.WRONG_ARGUMENT_COUNT));
+        srcs("function f(/** ? */ zero, /** ?= */ one = 1, /** ?= */ two = 2) {}; f();"),
+        expected(
+            lines(
+                "function f(/** ? */ zero, /** ?= */ one, /** ?= */ two) {",
+                "  one = (one === undefined) ? 1 : one;",
+                "  two = (two === undefined) ? 2 : two;",
+                "}; f();")),
+        warningOtiNti(TypeCheck.WRONG_ARGUMENT_COUNT, NewTypeInference.WRONG_ARGUMENT_COUNT));
   }
 
   public void testDefaultAndRestParameters() {
@@ -507,7 +506,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   }
 
   public void testDefaultUndefinedParameters() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     test("function f(zero, one=undefined) {}", "function f(zero, one) {}");
 
@@ -537,7 +536,7 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   }
 
   public void testTypeCheck() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     test(
         "/** @param {{x: number}} obj */ function f({x}) {}",
@@ -548,12 +547,9 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "  var x = $jscomp$destructuring$var0.x;",
             "}"));
 
-    testWarning(
-        LINE_JOINER.join(
-            "/** @param {{x: number}} obj */",
-            "function f({x}) {}",
-          "f({ x: 'str'});"),
-        TYPE_MISMATCH_WARNING);
+    test(
+        srcs(lines("/** @param {{x: number}} obj */", "function f({x}) {}", "f({ x: 'str'});")),
+        warningOtiNti(TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.INVALID_ARGUMENT_TYPE));
 
     test(
         LINE_JOINER.join(
@@ -610,21 +606,24 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
   }
 
   public void testDestructuringPatternInExterns() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     allowExternsChanges();
 
     testSame(
-        LINE_JOINER.join(
-            "/** @constructor */",
-            "function Foo() {}",
-            "",
-            "Foo.prototype.bar = function({a}) {};"),
-        "(new Foo).bar({b: 0});",
-        POSSIBLE_INEXISTENT_PROPERTY);
+        externs(
+            lines(
+                MINIMAL_EXTERNS,
+                "/** @constructor */",
+                "function Foo() {}",
+                "",
+                "Foo.prototype.bar = function({a}) {};")),
+        srcs("(new Foo).bar({b: 0});"),
+        warningOtiNti(TypeCheck.POSSIBLE_INEXISTENT_PROPERTY, null));
+    // TODO(sdh): figure out what's going on here
   }
 
   public void testTypeCheck_inlineAnnotations() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     test(
         "function f(/** {x: number} */ {x}) {}",
@@ -634,11 +633,9 @@ public class Es6RewriteDestructuringTest extends CompilerTestCase {
             "  var x = $jscomp$destructuring$var1.x;",
             "}"));
 
-    testWarning(
-        LINE_JOINER.join(
-            "function f(/** {x: number} */ {x}) {}",
-            "f({ x: 'str'});"),
-        TYPE_MISMATCH_WARNING);
+    test(
+        srcs(lines("function f(/** {x: number} */ {x}) {}", "f({ x: 'str'});")),
+        warningOtiNti(TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.INVALID_ARGUMENT_TYPE));
   }
 
   public void testDestructuringArrayNotInExprResult() {

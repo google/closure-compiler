@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import java.io.IOException;
+
 /**
  * CompilerTestCase for passes that run after type checking and use type information.
  * Allows us to test those passes with both type checkers.
@@ -46,7 +48,7 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
   protected TypeInferenceMode mode = TypeInferenceMode.BOTH;
 
   public TypeICompilerTestCase() {
-    super();
+    super(MINIMAL_EXTERNS);
   }
 
   public TypeICompilerTestCase(String defaultExterns) {
@@ -68,38 +70,47 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
 
   @Override
   protected void testInternal(
-      Externs externs,
-      Sources js,
-      Expected expected,
-      Diagnostic diagnotic) {
+      Externs externs, Sources js, Expected expected, Diagnostic diagnostic) {
     if (this.mode.runsOTI()) {
-      testOTI(externs, js, expected, diagnotic);
+      testOTI(externs, js, expected, diagnostic);
     }
     if (this.mode.runsNTI()) {
-      testNTI(externs, js, expected, diagnotic);
+      if (!findMinimalExterns(externs.externs)) {
+        fail("NTI reqires at least the MINIMAL_EXTERNS");
+      }
+      testNTI(externs, js, expected, diagnostic);
     }
     if (this.mode.runsNeither()) {
-      super.testInternal(externs, js, expected, diagnotic);
+      super.testInternal(externs, js, expected, diagnostic);
     }
   }
 
-  private void testOTI(
-      Externs externs,
-      Sources js,
-      Expected expected,
-      Diagnostic diagnotic) {
+  private static boolean findMinimalExterns(Iterable<SourceFile> externs) {
+    try {
+      for (SourceFile extern : externs) {
+        if (extern.getCode().contains(MINIMAL_EXTERNS)) {
+          return true;
+        }
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    return false;
+  }
+
+  private void testOTI(Externs externs, Sources js, Expected expected, Diagnostic diagnostic) {
     enableTypeCheck();
-    super.testInternal(externs, js, expected, diagnotic);
+    Diagnostic oti =
+        diagnostic instanceof OtiNtiDiagnostic ? ((OtiNtiDiagnostic) diagnostic).oti : diagnostic;
+    super.testInternal(externs, js, expected, oti);
     disableTypeCheck();
   }
 
-  private void testNTI(
-      Externs externs,
-      Sources js,
-      Expected expected,
-      Diagnostic diagnotic) {
+  private void testNTI(Externs externs, Sources js, Expected expected, Diagnostic diagnostic) {
     enableNewTypeInference();
-    super.testInternal(externs, js, expected, diagnotic);
+    Diagnostic nti =
+        diagnostic instanceof OtiNtiDiagnostic ? ((OtiNtiDiagnostic) diagnostic).nti : diagnostic;
+    super.testInternal(externs, js, expected, nti);
     disableNewTypeInference();
   }
 
@@ -112,5 +123,26 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
     testWarning(js, ntiWarning);
     this.mode = saved;
   }
-}
 
+  // Helpers to test separate warnings/errors with OTI and NTI.
+
+  protected static OtiNtiDiagnostic warningOtiNti(DiagnosticType oti, DiagnosticType nti) {
+    return new OtiNtiDiagnostic(
+        oti != null ? warning(oti) : null, nti != null ? warning(nti) : null);
+  }
+
+  protected static OtiNtiDiagnostic diagnosticOtiNti(Diagnostic oti, Diagnostic nti) {
+    return new OtiNtiDiagnostic(oti, nti);
+  }
+
+  protected static class OtiNtiDiagnostic extends Diagnostic {
+    private final Diagnostic oti;
+    private final Diagnostic nti;
+
+    private OtiNtiDiagnostic(Diagnostic oti, Diagnostic nti) {
+      super(null, null, null);
+      this.oti = oti;
+      this.nti = nti;
+    }
+  }
+}
