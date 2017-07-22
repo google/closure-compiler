@@ -196,8 +196,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    // TODO(johnlenz): Determine if it is necessary to support ".call" or
-    // ".apply".
+    // TODO(johnlenz): Determine if it is necessary to support ".call" or ".apply".
     switch (n.getToken()) {
       case NEW: // e.g. new Error('msg');
       case CALL: // e.g. Error('msg');
@@ -271,7 +270,7 @@ class ReplaceStrings extends AbstractPostOrderCallback
    */
   private Config findMatchingClass(
       TypeI callClassType, Collection<String> declarationNames) {
-    if (!callClassType.isBottom() && !callClassType.isUnknownType()) {
+    if (!callClassType.isBottom() && !callClassType.isSomeUnknownType()) {
       for (String declarationName : declarationNames) {
         String className = getClassFromDeclarationName(declarationName);
         TypeI methodClassType = registry.getType(className);
