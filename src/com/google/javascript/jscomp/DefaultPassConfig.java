@@ -2293,7 +2293,8 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(final AbstractCompiler compiler) {
           return new ClosureOptimizePrimitives(
               compiler,
-              compiler.getOptions().propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED);
+              compiler.getOptions().propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED,
+              compiler.getOptions().getLanguageOut().toFeatureSet().contains(FeatureSet.ES6));
         }
       };
 
