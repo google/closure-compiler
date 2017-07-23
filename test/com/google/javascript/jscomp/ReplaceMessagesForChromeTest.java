@@ -118,6 +118,43 @@ public final class ReplaceMessagesForChromeTest extends CompilerTestCase {
             "['Salutations', 'Tyler']);"));
   }
 
+  public void testReplaceSinglePlaceholderComputedProp() {
+    testError(
+        LINE_JOINER.join(
+            "/** @desc A message with one placeholder. */\n",
+            "var MSG_H = goog.getMsg('Hello, {$name}', {['name']: 'Tyler'});"),
+        JsMessageVisitor.MESSAGE_TREE_MALFORMED);
+  }
+
+  public void testReplaceSimpleMessageWithLet() {
+    test(
+        LINE_JOINER.join(
+            "/** @desc A simple message. */\n",
+            "let MSG_I = goog.getMsg('Hello world');"),
+        LINE_JOINER.join(
+            "/** @desc A simple message. */\n",
+            "let MSG_I = chrome.i18n.getMessage('987871171253827787');"));
+  }
+
+  public void testReplaceSimpleMessageWithConst() {
+    test(
+        LINE_JOINER.join(
+            "/** @desc A simple message. */\n",
+            "const MSG_J = goog.getMsg('Hello world');"),
+        LINE_JOINER.join(
+            "/** @desc A simple message. */\n",
+            "const MSG_J =chrome.i18n.getMessage('3477894568604521782');"));
+  }
+
+  public void testReplaceTemplatedMessage() {
+    testError(
+        LINE_JOINER.join(
+            "const greeting = '{$greeting}'",
+            "/** @desc A simple message */\n",
+            "var MSG_K = goog.getMsg(`${greeting}, Tyler`, {greeting: 'Hello'});"),
+        JsMessageVisitor.MESSAGE_TREE_MALFORMED);
+  }
+
   public void testReplaceExternalMessage() {
     test(
         LINE_JOINER.join(

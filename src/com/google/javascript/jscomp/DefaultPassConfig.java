@@ -1436,6 +1436,11 @@ public final class DefaultPassConfig extends PassConfig {
               /* allow messages with goog.getMsg */
               JsMessage.Style.CLOSURE);
         }
+
+        @Override
+        public FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
       };
 
   /** Applies aliases and inlines goog.scope. */
