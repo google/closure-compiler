@@ -10853,7 +10853,7 @@ chrome.downloads.DownloadItem.prototype.incognito;
 
 
 /** @type {!chrome.downloads.DangerType|string} */
-chrome.downloads.DownloadItem.prototype.dangerType;
+chrome.downloads.DownloadItem.prototype.danger;
 
 
 /** @type {string} */
