@@ -4184,7 +4184,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
-    test(options, "function f(x) { if (x) var x=5; }", "function f(x) { if (x) x=5; }");
+    test(options, "function f(x) { if (x) var x=5; }", "function f(x) { if (x) var x=5; }");
   }
 
   public void testExternsProvideIsAllowed() {
@@ -4387,20 +4387,21 @@ public final class IntegrationTest extends IntegrationTestCase {
             + "b[a-0]=arguments[a];return b[0]}(8))");
   }
 
-  public void testInlineRestParamNonTranspiling() {
-    CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    test(
-        options,
-        LINE_JOINER.join(
-            "function foo() {",
-            "  var f = (...args) => args[0];",
-            "  return f(8);",
-            "}",
-            "alert(foo());"),
-        "alert([8][0])");
-  }
+  // TODO(bellashim): re-enable when function inlining handles ES6-out
+//  public void testInlineRestParamNonTranspiling() {
+//    CompilerOptions options = createCompilerOptions();
+//    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+//    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+//    test(
+//        options,
+//        LINE_JOINER.join(
+//            "function foo() {",
+//            "  var f = (...args) => args[0];",
+//            "  return f(8);",
+//            "}",
+//            "alert(foo());"),
+//        "alert([8][0])");
+//  }
 
   public void testDefaultParameters() {
     CompilerOptions options = createCompilerOptions();
@@ -4418,22 +4419,23 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var a={a:9}; a=void 0===a?{a:5}:a;alert(3+a.a)");
   }
 
-  public void testDefaultParametersNonTranspiling() {
-    CompilerOptions options = createCompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
-
-    test(
-        options,
-        LINE_JOINER.join(
-            "function foo(a, b = {foo: 5}) {",
-            "  return a + b.foo;",
-            "}",
-            "alert(foo(3, {foo: 9}));"),
-        LINE_JOINER.join(
-            "{}",
-            "alert(3 + {foo:9}.foo);"));
-  }
+  // TODO(bellashim): re-enable when function inlining handles ES6-out
+//  public void testDefaultParametersNonTranspiling() {
+//    CompilerOptions options = createCompilerOptions();
+//    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+//    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+//
+//    test(
+//        options,
+//        LINE_JOINER.join(
+//            "function foo(a, b = {foo: 5}) {",
+//            "  return a + b.foo;",
+//            "}",
+//            "alert(foo(3, {foo: 9}));"),
+//        LINE_JOINER.join(
+//            "{}",
+//            "alert(3 + {foo:9}.foo);"));
+//  }
 
   public void testRestObjectPatternParameters() {
     CompilerOptions options = createCompilerOptions();
@@ -4457,23 +4459,24 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}(1,1,1,1,1))"));
   }
 
-  public void testRestObjectPatternParametersNonTranspiling() {
-    CompilerOptions options = createCompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
-    externs = DEFAULT_EXTERNS;
-
-    test(
-        options,
-        LINE_JOINER.join(
-            "function countArgs(x, ...{length}) {",
-            "  return length;",
-            "}",
-            "alert(countArgs(1, 1, 1, 1, 1));"),
-        LINE_JOINER.join(
-            "{}",
-            "alert([1,1,1,1].length);"));
-  }
+  // TODO(bellashim): re-enable when function inlining handles ES6-out
+//  public void testRestObjectPatternParametersNonTranspiling() {
+//    CompilerOptions options = createCompilerOptions();
+//    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+//    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+//    externs = DEFAULT_EXTERNS;
+//
+//    test(
+//        options,
+//        LINE_JOINER.join(
+//            "function countArgs(x, ...{length}) {",
+//            "  return length;",
+//            "}",
+//            "alert(countArgs(1, 1, 1, 1, 1));"),
+//        LINE_JOINER.join(
+//            "{}",
+//            "alert([1,1,1,1].length);"));
+//  }
 
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override

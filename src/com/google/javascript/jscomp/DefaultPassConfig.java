@@ -1282,26 +1282,26 @@ public final class DefaultPassConfig extends PassConfig {
   /** Raw exports processing pass. */
   private final PassFactory gatherRawExports =
       new PassFactory("gatherRawExports", true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          final GatherRawExports pass = new GatherRawExports(compiler);
+    @Override
+    protected CompilerPass create(final AbstractCompiler compiler) {
+      final GatherRawExports pass = new GatherRawExports(compiler);
 
-          return new CompilerPass() {
-            @Override
-            public void process(Node externs, Node root) {
-              pass.process(externs, root);
-              compiler.addExportedNames(pass.getExportedVariableNames());
-            }
-          };
-        }
-
+      return new CompilerPass() {
         @Override
-        public FeatureSet featureSet() {
-          // Should be FeatureSet.latest() since it's a trivial pass, but must match "normalize"
-          // TODO(johnlenz): Update this and normalize to latest()
-          return ES8_MODULES;
+        public void process(Node externs, Node root) {
+          pass.process(externs, root);
+          compiler.addExportedNames(pass.getExportedVariableNames());
         }
       };
+    }
+
+    @Override
+    public FeatureSet featureSet() {
+      // Should be FeatureSet.latest() since it's a trivial pass, but must match "normalize"
+      // TODO(johnlenz): Update this and normalize to latest()
+      return ES8;
+    }
+  };
 
   /** Closure pre-processing pass. */
   private final HotSwapPassFactory closurePrimitives =
@@ -2592,11 +2592,6 @@ public final class DefaultPassConfig extends PassConfig {
               options.assumeClosuresOnlyCaptureReferences,
               options.maxFunctionSizeAfterInlining);
         }
-
-        @Override
-        public FeatureSet featureSet() {
-          return ES8_MODULES;
-        }
       };
 
   /** Inlines constant properties. */
@@ -2868,7 +2863,7 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected FeatureSet featureSet() {
           // TODO(johnlenz): Update this and "gatherRawExports" to latest()
-          return ES8_MODULES;
+          return ES8;
         }
       };
 

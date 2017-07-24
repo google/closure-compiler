@@ -375,14 +375,6 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
     testWarning("export function f() {};", MISSING_JSDOC);
   }
 
-  public void testMissingJsDoc_ES6Module04() {
-    testWarning("export default function () {}", MISSING_JSDOC);
-  }
-
-  public void testMissingJsDoc_ES6Module05() {
-    testWarning("export default (foo) => { alert(foo); }", MISSING_JSDOC);
-  }
-
   public void testMissingJsDoc_googModule_noWarning() {
     testSame("goog.module('a.b.c'); /** @type {function()} */ function f() {}");
     testSame("goog.module('a.b.c'); /** @type {function()} */ var f = function() {};");
