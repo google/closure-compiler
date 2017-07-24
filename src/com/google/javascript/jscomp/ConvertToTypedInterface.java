@@ -153,6 +153,10 @@ class ConvertToTypedInterface implements CompilerPass {
               }
               return true;
             case GETPROP:
+              if (!expr.isQualifiedName() || expr.getJSDocInfo() == null) {
+                NodeUtil.deleteNode(n, t.getCompiler());
+                return false;
+              }
               return true;
             default:
               NodeUtil.deleteNode(n, t.getCompiler());
@@ -577,12 +581,8 @@ class ConvertToTypedInterface implements CompilerPass {
     }
 
     private void processName(NodeTraversal t, Node nameNode, Node statement) {
-      checkState(NodeUtil.isStatement(statement), statement);
-      if (!nameNode.isQualifiedName()) {
-        // We don't track these. We can just remove them.
-        NodeUtil.deleteNode(statement, t.getCompiler());
-        return;
-      }
+      checkArgument(NodeUtil.isStatement(statement), statement);
+      checkArgument(nameNode.isQualifiedName());
       Node jsdocNode = NodeUtil.getBestJSDocInfoNode(nameNode);
       switch (shouldRemove(t, nameNode)) {
         case REMOVE_ALL:

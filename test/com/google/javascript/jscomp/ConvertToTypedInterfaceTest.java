@@ -96,7 +96,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "/** @constructor */ function Foo() {} \n /** @const {number} */ Foo.prototype.x;");
 
     test(
-        "/** @constructor */ function Foo() { this.x; }",
+        "/** @constructor */ function Foo() { this.x = undefined; }",
         "/** @constructor */ function Foo() {} \n /** @const {*} */ Foo.prototype.x;");
 
     test(
@@ -882,6 +882,10 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
     test(
         "/** @constructor */ function Foo() {} Foo.prototype['fun'] = function(x,y,z) {}",
+        "/** @constructor */ function Foo() {}");
+
+    test(
+        "/** @constructor */ function Foo() {} /** @type {str} */ Foo['prototype'].method;",
         "/** @constructor */ function Foo() {}");
   }
 
