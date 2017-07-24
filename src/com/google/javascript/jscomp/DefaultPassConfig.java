@@ -1897,6 +1897,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(final AbstractCompiler compiler) {
           return new GlobalTypeInfoCollector(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.NTI_SUPPORTED;
+        }
       };
 
   private final PassFactory newTypeInference =
@@ -1904,6 +1909,11 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
           return new NewTypeInference(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.NTI_SUPPORTED;
         }
       };
 

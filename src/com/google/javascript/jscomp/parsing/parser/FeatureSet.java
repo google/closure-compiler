@@ -68,6 +68,17 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet TYPESCRIPT = ES8_MODULES.with(LangVersion.TYPESCRIPT.features());
 
+  public static final FeatureSet NTI_SUPPORTED =
+      ES5.with(
+          ImmutableSet.<Feature>of(
+              Feature.COMPUTED_PROPERTIES,
+              Feature.EXPONENT_OP,
+              Feature.EXTENDED_OBJECT_LITERALS,
+              Feature.FOR_OF,
+              Feature.GENERATORS,
+              Feature.MEMBER_DECLARATIONS,
+              Feature.TEMPLATE_LITERALS));
+
   private enum LangVersion {
     ES3,
     ES5,
