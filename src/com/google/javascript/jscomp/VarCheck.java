@@ -74,7 +74,7 @@ class VarCheck extends AbstractPostOrderCallback implements
   static final DiagnosticType VAR_MULTIPLY_DECLARED_ERROR =
       DiagnosticType.error(
           "JSC_VAR_MULTIPLY_DECLARED_ERROR",
-          "Variable {0} declared more than once. First occurence: {1}");
+          "Variable {0} declared more than once. First occurrence: {1}");
 
   static final DiagnosticType VAR_ARGUMENTS_SHADOWED_ERROR =
     DiagnosticType.error(
