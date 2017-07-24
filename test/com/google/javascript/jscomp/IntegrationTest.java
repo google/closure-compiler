@@ -4431,11 +4431,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}",
             "alert(foo(3, {foo: 9}));"),
         LINE_JOINER.join(
-            "var a=alert;",
-            "var b;",
-            "{var c={foo:9};",
-            "b=3+c.foo}",
-            "a(b)"));
+            "{}",
+            "alert(3 + {foo:9}.foo);"));
   }
 
   public void testRestObjectPatternParameters() {
@@ -4474,11 +4471,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}",
             "alert(countArgs(1, 1, 1, 1, 1));"),
         LINE_JOINER.join(
-            "var a=alert;",
-            "var b;",
-            "{var c=[1,1,1,1].length;",
-            "b=c}",
-            "a(b)"));
+            "{}",
+            "alert([1,1,1,1].length);"));
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */
