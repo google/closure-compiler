@@ -1244,7 +1244,7 @@ public class Node implements Serializable {
    * linked list saves memory and provides fast lookup. If this does not holds, propListHead can be
    * replaced by UintMap.
    */
-  @Nullable private PropListItem propListHead;
+  @Nullable private transient PropListItem propListHead;
 
   /**
    * COLUMN_BITS represents how many of the lower-order bits of
@@ -3236,7 +3236,8 @@ public class Node implements Serializable {
 
   @GwtIncompatible("ObjectOutputStream")
   private void writeObject(java.io.ObjectOutputStream out) throws Exception {
-    out.defaultWriteObject();
+    // Do not call out.defaultWriteObject() as all the fields and transient and this class does not
+    // have a superclass.
 
     checkState(Token.values().length < Byte.MAX_VALUE - Byte.MIN_VALUE);
     out.writeByte(token.ordinal());
@@ -3254,11 +3255,13 @@ public class Node implements Serializable {
     // Null marks the end of the children.
     out.writeObject(null);
     out.writeObject(typei);
+    out.writeObject(propListHead);
   }
 
   @GwtIncompatible("ObjectInputStream")
   private void readObject(java.io.ObjectInputStream in) throws Exception {
-    in.defaultReadObject();
+    // Do not call in.defaultReadObject() as all the fields and transient and this class does not
+    // have a superclass.
 
     token = Token.values()[in.readUnsignedByte()];
     sourcePosition = readEncodedInt(in);
@@ -3288,6 +3291,7 @@ public class Node implements Serializable {
       first.previous = lastChild;
     }
     typei = (TypeI) in.readObject();
+    propListHead = (PropListItem) in.readObject();
   }
 
   /**
