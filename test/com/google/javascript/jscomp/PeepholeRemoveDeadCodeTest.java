@@ -88,6 +88,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
     fold("{'hi'}", "");
     fold("{x==3}", "");
+    fold("{`hello ${foo}`}", "");
     fold("{ (function(){x++}) }", "");
     foldSame("function f(){return;}");
     fold("function f(){return 3;}", "function f(){return 3}");
@@ -99,6 +100,20 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("while(x()){x()}", "while(x())x()");
     fold("for(x=0;x<100;x++){x}", "for(x=0;x<100;x++);");
     fold("for(x in y){x}", "for(x in y);");
+    fold("for (x of y) {x}", "for(x of y);");
+
+    // Block with declarations
+    foldSame("{let x}");
+    foldSame("function f() {let x}");
+    foldSame("{const x = 1}");
+    foldSame("{x = 2; y = 4; let z;}");
+    fold("{'hi'; let x;}", "{let x}");
+    fold("{x = 4; {let y}}", "x = 4; {let y}");
+    foldSame("{function f() {} } {function f() {}}");
+    foldSame("{class C {}} {class C {}}");
+    foldSame("{label: let x}");
+    fold("{label: var x}", "label: var x");
+    foldSame("{label: var x; let y;}");
   }
 
   /** Try to remove spurious blocks with multiple children */
@@ -106,8 +121,10 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("function f() { if (false) {} }", "function f(){}");
     fold("function f() { { if (false) {} if (true) {} {} } }",
          "function f(){}");
-    test("{var x; var y; var z; function f() { { var a; { var b; } } } }",
-         "var x;var y;var z;function f(){var a;var b}");
+    fold("{var x; var y; var z; function f() { { var a; { var b; } } } }",
+         "{var x;var y;var z;function f(){var a;var b} }");
+    fold("{var x; var y; var z; { { var a; { var b; } } } }",
+        "var x;var y;var z; var a;var b");
   }
 
   public void testIf() {
@@ -187,6 +204,13 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     // More var lifting tests in PeepholeIntegrationTests
   }
 
+  public void testLetConstLifting(){
+    fold("if(true) {const x = 1}", "{const x = 1}");
+    fold("if(false) {const x = 1}", "");
+    fold("if(true) {let x}", "{let x}");
+    fold("if(false) {let x}", "");
+  }
+
   public void testFoldUselessWhile() {
     fold("while(false) { foo() }", "");
 
@@ -210,6 +234,8 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("for(;true;) foo() ", "for(;;) foo() ");
     foldSame("for(;;) foo()");
     fold("for(;false;) { var a = 0; }", "var a");
+    fold("for(;false;) { const a = 0; }", "");
+    fold("for(;false;) { let a = 0; }", "");
 
     // Make sure it plays nice with minimizing
     fold("for(;false;) { foo(); continue }", "");
@@ -277,6 +303,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     // Uncalled function expressions are removed
     fold("(function () {});", "");
     fold("(function f() {});", "");
+    fold("(function* f() {})", "");
     // ... including any code they contain.
     fold("(function () {foo();});", "");
 
@@ -537,6 +564,18 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "  case 21: throw 'x';",
             "  default : console.log('good');",
             "}"));
+
+    test(
+        LINE_JOINER.join(
+            "let x = 1;",
+            "switch('x') {",
+            "  case 'x': let x = 2; break;",
+            "}"
+        ),
+        LINE_JOINER.join(
+            "let x = 1;",
+            "{let x = 2}"
+        ));
   }
 
   public void testOptimizeSwitchWithLabelledBreak() {
@@ -574,19 +613,22 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "}"),
         "function f() { return 1; }");
 
-    // TODO(moz): This is to show that the current optimization might break if the input has block
-    // scoped declarations. We will need to fix the logic for removing blocks to account for this.
     test(
         LINE_JOINER.join(
             "function f() {",
             "  let x = 1;",
             "  switch('x') {",
-            "    case 'x': { let x = 2; return 3; }",
+            "    case 'x': { let x = 2; } return 3;",
             "    case 'y': return 4;",
             "  }",
             "}"),
-        "function f() { let x = 1; let x = 2; return 3; }");
+        LINE_JOINER.join(
+            "function f() {",
+            "  let x = 1;",
+            "  { let x = 2; } return 3; ",
+            "}"));
   }
+
 
   public void testOptimizeSwitchWithThrow() {
     test(

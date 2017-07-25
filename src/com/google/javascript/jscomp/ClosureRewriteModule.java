@@ -1398,7 +1398,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         moduleBody.isModuleBody() && moduleBody.getParent().getBooleanProp(Node.GOOG_MODULE),
         moduleBody);
     moduleBody.setToken(Token.BLOCK);
-    NodeUtil.tryMergeBlock(moduleBody);
+    NodeUtil.tryMergeBlock(moduleBody, true);
 
     updateEndModule();
     popScript();

@@ -45,7 +45,7 @@ public final class RenameLabelsTest extends CompilerTestCase {
               "}" +
             "}" +
           "}",
-          "function x(){function goo(){a:{ a(); break a; }}}");
+          "function x(){{function goo(){a:{ a(); break a; }}}}");
 
     test("function x() { " +
           "Foo:{ " +

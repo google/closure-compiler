@@ -249,7 +249,7 @@ final class RenameLabels implements CompilerPass {
         node.removeChild(newChild);
         parent.replaceChild(node, newChild);
         if (newChild.isNormalBlock()) {
-          NodeUtil.tryMergeBlock(newChild);
+          NodeUtil.tryMergeBlock(newChild, false);
         }
         if (markChanges) {
           t.reportCodeChange();

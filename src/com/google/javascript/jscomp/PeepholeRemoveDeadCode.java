@@ -593,7 +593,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     }
 
     // Try to remove the block.
-    if (NodeUtil.tryMergeBlock(n)) {
+    if (NodeUtil.tryMergeBlock(n, false)) {
       reportCodeChange();
       return null;
     }
@@ -602,7 +602,8 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
   }
 
   /**
-   * Some nodes unremovable node don't have side-effects.
+   * Some nodes that are unremovable don't have side effects so they aren't caught by
+   * mayHaveSideEffects
    */
   private static boolean isUnremovableNode(Node n) {
     return (n.isNormalBlock() && n.isSyntheticBlock()) || n.isScript();

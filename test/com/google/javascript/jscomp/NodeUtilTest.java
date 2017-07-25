@@ -1141,30 +1141,30 @@ public final class NodeUtilTest extends TestCase {
     replaceDeclChild("const x =1, y = 2, z = 3, w = 4;", 1, "const x = 1; {} const z = 3, w = 4;");
   }
 
-  public void testMergeBlock1() {
+  public void testTryMergeBlock1() {
     // Test removing the initializer.
     Node actual = parse("{{a();b();}}");
 
     Node parentBlock = actual.getFirstChild();
     Node childBlock = parentBlock.getFirstChild();
 
-    assertTrue(NodeUtil.tryMergeBlock(childBlock));
+    assertTrue(NodeUtil.tryMergeBlock(childBlock, false));
     String expected = "{a();b();}";
     String difference = parse(expected).checkTreeEquals(actual);
     assertNull("Nodes do not match:\n" + difference, difference);
   }
 
-  public void testMergeBlock2() {
+  public void testTryMergeBlock2() {
     // Test removing the initializer.
     Node actual = parse("foo:{a();}");
 
     Node parentLabel = actual.getFirstChild();
     Node childBlock = parentLabel.getLastChild();
 
-    assertFalse(NodeUtil.tryMergeBlock(childBlock));
+    assertFalse(NodeUtil.tryMergeBlock(childBlock, false));
   }
 
-  public void testMergeBlock3() {
+  public void testTryMergeBlock3() {
     // Test removing the initializer.
     String code = "foo:{a();boo()}";
     Node actual = parse("foo:{a();boo()}");
@@ -1172,10 +1172,39 @@ public final class NodeUtilTest extends TestCase {
     Node parentLabel = actual.getFirstChild();
     Node childBlock = parentLabel.getLastChild();
 
-    assertFalse(NodeUtil.tryMergeBlock(childBlock));
+    assertFalse(NodeUtil.tryMergeBlock(childBlock, false));
     String expected = code;
     String difference = parse(expected).checkTreeEquals(actual);
     assertNull("Nodes do not match:\n" + difference, difference);
+  }
+
+  public void testTryMergeBlock4() {
+    Node actual = parse("{const module$exports$Foo=class{}}");
+    String expected = "const module$exports$Foo=class{}";
+
+    Node block = actual.getFirstChild();
+
+    assertTrue(NodeUtil.tryMergeBlock(block, true));
+    String difference = parse(expected).checkTreeEquals(actual);
+    assertNull("Nodes do not match:\n" + difference, difference);
+  }
+
+  public void testCanMergeBlock1() {
+    Node actual = parse("{a(); let x;}");
+
+    Node block = actual.getFirstChild();
+
+    assertFalse(NodeUtil.canMergeBlock(block));
+  }
+
+  public void testCanMergeBlock2() {
+    Node actual = parse("{a(); f(); var x; {const y = 2;}}");
+
+    Node parentBlock = actual.getFirstChild();
+    Node childBlock = parentBlock.getLastChild();
+
+    assertTrue(NodeUtil.canMergeBlock(parentBlock));
+    assertFalse(NodeUtil.canMergeBlock(childBlock));
   }
 
   public void testGetSourceName() {

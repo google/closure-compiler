@@ -191,7 +191,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         expressionWithScopeCall.replaceWith(scopeClosureBlock);
         NodeUtil.markFunctionsDeleted(expressionWithScopeCall, compiler);
         compiler.reportChangeToEnclosingScope(scopeClosureBlock);
-        NodeUtil.tryMergeBlock(scopeClosureBlock);
+        NodeUtil.tryMergeBlock(scopeClosureBlock, false);
       }
     }
   }

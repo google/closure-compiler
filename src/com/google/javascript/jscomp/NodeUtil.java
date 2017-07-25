@@ -2826,12 +2826,13 @@ public final class NodeUtil {
    * Merge a block with its parent block.
    * @return Whether the block was removed.
    */
-  public static boolean tryMergeBlock(Node block) {
+  public static boolean tryMergeBlock(Node block, boolean alwaysMerge) {
     checkState(block.isNormalBlock());
     Node parent = block.getParent();
+    boolean canMerge = alwaysMerge || canMergeBlock(block);
     // Try to remove the block if its parent is a block/script or if its
     // parent is label and it has exactly one child.
-    if (isStatementBlock(parent)) {
+    if (isStatementBlock(parent) && canMerge) {
       Node previous = block;
       while (block.hasChildren()) {
         Node child = block.removeFirstChild();
@@ -2843,6 +2844,34 @@ public final class NodeUtil {
     } else {
       return false;
     }
+  }
+
+  /**
+   * A check inside a block to see if there are const, let, class, or function declarations
+   * to be safe and not hoist them into the upper block.
+   * @return Whether the block can be removed
+   */
+  public static boolean canMergeBlock(Node block) {
+    for (Node c = block.getFirstChild(); c != null; c = c.getNext()) {
+      switch (c.getToken()) {
+        case LABEL:
+          if (canMergeBlock(c)){
+            continue;
+          } else {
+            return false;
+          }
+
+        case CONST:
+        case LET:
+        case CLASS:
+        case FUNCTION:
+          return false;
+
+        default:
+          continue;
+      }
+    }
+    return true;
   }
 
   /**
