@@ -2983,7 +2983,7 @@ public final class NodeUtil {
   static boolean isVarArgsFunction(Node function) {
     // TODO(johnlenz): rename this function
     checkArgument(function.isFunction());
-    return isNameReferenced(
+    return !function.isArrowFunction() && isNameReferenced(
         function.getLastChild(),
         "arguments",
         MATCH_NOT_THIS_BINDING);

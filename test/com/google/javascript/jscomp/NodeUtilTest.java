@@ -2595,6 +2595,11 @@ public final class NodeUtilTest extends TestCase {
     assertEquals(keySet, allVariables.keySet());
   }
 
+  public void testIsVarArgs() {
+    assertTrue(NodeUtil.isVarArgsFunction(getNode("function() {return () => arguments}")));
+    assertFalse(NodeUtil.isVarArgsFunction(getNode("() => arguments")));
+  }
+
   private boolean executedOnceTestCase(String code) {
     Node ast = parse(code);
     Node nameNode = getNameNode(ast, "x");
