@@ -184,7 +184,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Report an internal error.
    */
-  abstract void throwInternalError(String msg, Exception cause);
+  abstract void throwInternalError(String msg, Throwable cause);
 
   /**
    * Gets the current coding convention.
@@ -590,13 +590,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
    /**
     * Stores a map of default @define values.  These values
-    * can be overriden by values specifically set in the CompilerOptions.
+    * can be overridden by values specifically set in the CompilerOptions.
     */
    abstract void setDefaultDefineValues(ImmutableMap<String, Node> values);
 
    /**
     * Gets a map of default @define values.  These values
-    * can be overriden by values specifically set in the CompilerOptions.
+    * can be overridden by values specifically set in the CompilerOptions.
     */
    abstract ImmutableMap<String, Node> getDefaultDefineValues();
 

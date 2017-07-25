@@ -271,7 +271,7 @@ public class NodeTraversal {
     this.useBlockScope = scopeCreator.hasBlockScope();
   }
 
-  private void throwUnexpectedException(Exception unexpectedException) {
+  private void throwUnexpectedException(Throwable unexpectedException) {
     // If there's an unexpected exception, try to get the
     // line number of the code that caused it.
     String message = unexpectedException.getMessage();
@@ -307,7 +307,7 @@ public class NodeTraversal {
       // null parent ensures that the shallow callbacks will traverse root
       traverseBranch(root, null);
       popScope();
-    } catch (Exception unexpectedException) {
+    } catch (Error | Exception unexpectedException) {
       throwUnexpectedException(unexpectedException);
     }
   }
@@ -326,7 +326,7 @@ public class NodeTraversal {
       traverseBranch(root, scopeRoot);
 
       popScope();
-    } catch (Exception unexpectedException) {
+    } catch (Error | Exception unexpectedException) {
       throwUnexpectedException(unexpectedException);
     }
   }
@@ -362,7 +362,7 @@ public class NodeTraversal {
       pushScope(s);
       traverseBranch(root, null);
       popScope();
-    } catch (Exception unexpectedException) {
+    } catch (Error | Exception unexpectedException) {
       throwUnexpectedException(unexpectedException);
     }
   }
@@ -437,7 +437,7 @@ public class NodeTraversal {
       initScopeRoots(scopeRoot.getParent());
       // null parent ensures that the shallow callbacks will traverse root
       traverseBranch(scopeRoot, scopeRoot.getParent());
-    } catch (Exception unexpectedException) {
+    } catch (Error | Exception unexpectedException) {
       throwUnexpectedException(unexpectedException);
     }
   }
