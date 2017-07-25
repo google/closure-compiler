@@ -338,6 +338,12 @@ class InlineFunctions implements CompilerPass {
         functionState.setInline(false);
       }
 
+      //@TODO(bellashim): Inline functions with nested default values (default values with ancestors
+      //  that are default values). This currently is a writing limitation, not an inherent limit
+      if (hasNestedDefaultValue(NodeUtil.getFunctionParameters(fnNode))) {
+        functionState.setInline(false);
+      }
+
       if (fnNode.isGeneratorFunction()) {
         functionState.setInline(false);
       }
@@ -728,7 +734,8 @@ class InlineFunctions implements CompilerPass {
         new Predicate<Node>() {
           @Override
           public boolean apply(Node input) {
-            if (input.isObjectPattern()) {
+            if (input.isObjectPattern()
+                && (input.getFirstChild().isString() || input.getFirstChild().isStringKey())) {
               for (Node prop = input.getFirstChild(); prop != null; prop = prop.getNext()) {
                 char first = prop.getString().charAt(0);
                 if (Character.isDigit(first) || prop.isQuotedString()) {
@@ -776,6 +783,27 @@ class InlineFunctions implements CompilerPass {
         };
 
     return NodeUtil.has(callNode, hasSpreadCallArgumentPredicate,
+        Predicates.<Node>alwaysTrue());
+  }
+
+  /**
+   * @return whether the function has a DEFAULT_VALUE with a DEFAULT_VALUE ancestor.
+   * Prevents such functions from being inlined.
+   */
+  private static boolean hasNestedDefaultValue(Node node) {
+    checkNotNull(node);
+
+    Predicate<Node> hasNestedDefaultValuePredicate =
+        new Predicate<Node>() {
+          @Override
+          public boolean apply(Node input) {
+            checkNotNull(input);
+            return input.isDefaultValue()
+                && (NodeUtil.getEnclosingType(input.getParent(), Token.DEFAULT_VALUE) != null);
+          }
+        };
+
+    return NodeUtil.has(node, hasNestedDefaultValuePredicate,
         Predicates.<Node>alwaysTrue());
   }
 

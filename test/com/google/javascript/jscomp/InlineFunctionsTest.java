@@ -2905,7 +2905,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
     test(
         LINE_JOINER.join(
             "function f({a, b, c} = {a:1, b:2, c:3}) {",
-            " return b+c; ",
+            " return b+c;",
             "}",
             "f();"
         ),
@@ -2921,6 +2921,17 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "function f({p:x, 3:y} = {p:1, 3:2}) {",
             " return x;",
             "}"));
+  }
+
+  //Currently not being inlined because is too complicated to handle. Not an inherent limitation
+  public void testDefaultObjectPatternParam6() {
+    testSame(
+        LINE_JOINER.join(
+            "function foo(a, { b = '', c = '' } = {}) {",
+            "  return a;",
+            "}",
+            "foo();"
+        ));
   }
 
   public void testDefaultParam1() {
