@@ -229,9 +229,27 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     Preconditions.checkNotNull(
         compiler.getErrorManager(), "Expected compiler to call an error manager: %s", this);
 
-    // If the code is NOT a JsAst, then it was not originally JS code.
-    // Look at the Ast for dependency info.
-    if (!(ast instanceof JsAst) || !JsFileParser.isSupported()) {
+    // If the code is a JsAst, then it was originally JS code, and is compatible with the
+    // regex-based parsing of JsFileParser.
+    if (ast instanceof JsAst && JsFileParser.isSupported()) {
+      // Look at the source code.
+      // Note: it's OK to use getName() instead of
+      // getPathRelativeToClosureBase() here because we're not using
+      // this to generate deps files. (We're only using it for
+      // symbol dependencies.)
+      try {
+        DependencyInfo info =
+            (new JsFileParser(compiler.getErrorManager()))
+            .setIncludeGoogBase(true)
+            .parseFile(getName(), getName(), getCode());
+        return new LazyParsedDependencyInfo(info, (JsAst) ast, compiler);
+      } catch (IOException e) {
+        compiler.getErrorManager().report(CheckLevel.ERROR,
+            JSError.make(AbstractCompiler.READ_ERROR, getName()));
+        return SimpleDependencyInfo.EMPTY;
+      }
+    } else {
+      // Otherwise, just look at the AST.
 
       DepsFinder finder = new DepsFinder(compiler.getCodingConvention());
       Node root = getAstRoot(compiler);
@@ -252,23 +270,6 @@ public class CompilerInput implements SourceAst, DependencyInfo {
       // doing weird things like this, and then we should get rid of the
       // multiple-scan strategy.
       return new SimpleDependencyInfo("", "", finder.provides, finder.requires, finder.loadFlags);
-    } else {
-      // Otherwise, look at the source code.
-      // Note: it's OK to use getName() instead of
-      // getPathRelativeToClosureBase() here because we're not using
-      // this to generate deps files. (We're only using it for
-      // symbol dependencies.)
-      try {
-        DependencyInfo info =
-            (new JsFileParser(compiler.getErrorManager()))
-            .setIncludeGoogBase(true)
-            .parseFile(getName(), getName(), getCode());
-        return new LazyParsedDependencyInfo(info, (JsAst) ast, compiler);
-      } catch (IOException e) {
-        compiler.getErrorManager().report(CheckLevel.ERROR,
-            JSError.make(AbstractCompiler.READ_ERROR, getName()));
-        return SimpleDependencyInfo.EMPTY;
-      }
     }
   }
 
