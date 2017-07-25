@@ -98,16 +98,13 @@ public final class ModuleLoader {
         this.moduleResolver =
             new BrowserModuleResolver(this.modulePaths, this.moduleRootPaths, this.errorHandler);
         break;
-      case LEGACY:
-      default:
-        this.moduleResolver =
-            new LegacyModuleResolver(this.modulePaths, this.moduleRootPaths, this.errorHandler);
-        break;
       case NODE:
         this.moduleResolver =
             new NodeModuleResolver(
                 this.modulePaths, this.moduleRootPaths, packageJsonMainEntries, this.errorHandler);
         break;
+      default:
+        throw new RuntimeException("Unexpected resolution mode " + resolutionMode);
     }
   }
 
@@ -356,15 +353,6 @@ public final class ModuleLoader {
     BROWSER,
 
     /**
-     * Keeps the same behavior the compiler has used historically.
-     *
-     * Modules which do not begin with a "." or "/" character are assumed to be relative to the
-     * compilation root.
-     * ".js" file extensions are added if the import omits them.
-     */
-    LEGACY,
-
-    /**
      * Uses the node module resolution algorithm.
      *
      * Modules which do not begin with a "." or "/" character are looked up from the appropriate
@@ -375,7 +363,8 @@ public final class ModuleLoader {
     NODE
   }
 
-  private final class NoopErrorHandler implements ErrorHandler {
+  private static final class NoopErrorHandler implements ErrorHandler {
+    @Override
     public void report(CheckLevel level, JSError error) {}
   }
 }

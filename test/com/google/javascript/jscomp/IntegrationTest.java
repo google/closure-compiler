@@ -27,8 +27,6 @@ import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.CompilerOptions.J2clPassMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
-import com.google.javascript.jscomp.deps.ModuleLoader;
-import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.testing.NodeSubject;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -630,42 +628,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var $goog$testing$testSuite$$ = function($a$$) {};",
             "$goog$testing$testSuite$$({'testMethod':function(){}})"
         });
-  }
-
-  /**
-   * Check that valid ES6 modules compile to valid goog.require()/goog.provide() statements.
-   */
-  public void testES6Modules() {
-    CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.setModuleResolutionMode(ResolutionMode.LEGACY);
-    test(
-        options,
-        new String[] {
-          "import {x} from './i1'; alert(x);", "export var x = 5;",
-        },
-        new String[] {
-          "goog.provide('module$i0'); goog.require('module$i1'); alert(module$i1.x);",
-          "goog.provide('module$i1'); var x$$module$i1 = 5; module$i1.x = x$$module$i1;",
-        });
-  }
-
-  /**
-   * Check that the expected warning is reported when an ES6 module tries to import a nonexistent
-   * module.
-   */
-  public void testES6Modules_missing() {
-    CompilerOptions options = createCompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.setModuleResolutionMode(ResolutionMode.LEGACY);
-    test(
-        options,
-        new String[] {
-          "import {x} from './i2'; alert(x);", "export var x = 5;",
-        },
-        ModuleLoader.LOAD_WARNING);
   }
 
   public void testAngularPassOff() {
