@@ -378,6 +378,13 @@ public class Node implements Serializable {
     public StringNode cloneNode(boolean cloneTypeExprs) {
       return copyNodeFields(new StringNode(token, str), cloneTypeExprs);
     }
+
+    @GwtIncompatible("ObjectInputStream")
+    private void readObject(java.io.ObjectInputStream in) throws Exception {
+      in.defaultReadObject();
+
+      this.str = this.str.intern();
+    }
   }
 
   // PropListItems must be immutable so that they can be shared.
