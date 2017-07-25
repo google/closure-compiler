@@ -2992,12 +2992,18 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   /** Renames labels */
-  private final PassFactory renameLabels = new PassFactory("renameLabels", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new RenameLabels(compiler);
-    }
-  };
+  private final PassFactory renameLabels =
+      new PassFactory("renameLabels", true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new RenameLabels(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
+      };
 
   /** Convert bracket access to dot access */
   private final PassFactory convertToDottedProperties =
