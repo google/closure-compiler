@@ -2272,11 +2272,16 @@ public final class DefaultPassConfig extends PassConfig {
   /** Optimizes the "arguments" array. */
   private final PassFactory optimizeArgumentsArray =
       new PassFactory("optimizeArgumentsArray", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new OptimizeArgumentsArray(compiler);
-    }
-  };
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new OptimizeArgumentsArray(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
+      };
 
   /** Remove variables set to goog.abstractMethod. */
   private final PassFactory closureCodeRemoval =
