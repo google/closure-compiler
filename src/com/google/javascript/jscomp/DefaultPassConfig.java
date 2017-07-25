@@ -2296,6 +2296,11 @@ public final class DefaultPassConfig extends PassConfig {
               compiler.getOptions().propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED,
               compiler.getOptions().getLanguageOut().toFeatureSet().contains(FeatureSet.ES6));
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
       };
 
   /** Puts global symbols into a single object. */
