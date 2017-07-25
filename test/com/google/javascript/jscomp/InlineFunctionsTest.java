@@ -2638,6 +2638,14 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "[null,null,null,3,null].x");
   }
 
+  public void testRestObjectPattern6() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(...{p: x, 3:y}) {",
+            "  return p;",
+            "}"));
+  }
+
   public void testObjectPatternParam1() {
     test(
         LINE_JOINER.join(
@@ -2795,6 +2803,71 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "x.b + x.c");
   }
 
+  public void testObjectPatternParam14() {
+    testSame(
+        LINE_JOINER.join(
+            "function f({3:x}) {",
+            "  return x;",
+            "}",
+            "f({3:1});"));
+  }
+
+  public void testObjectPatternParam15() {
+    testSame(
+        LINE_JOINER.join(
+            "function f({x:{3:y}}) {",
+            "  return y;",
+            "}",
+            "f({x:{3:1}});"));
+  }
+
+  public void testObjectPatternParam16() {
+    testSame(
+      LINE_JOINER.join(
+          "function f({p: x, 3: y}) {",
+          "  return x;",
+          "}"));
+  }
+
+  public void testObjectPatternParam17() {
+    test(
+      LINE_JOINER.join(
+          "function f({prop1, prop2}) {",
+          "  return prop1;",
+          "}",
+          "f({prop1:5, prop2:6});"),
+      LINE_JOINER.join(
+          "{var prop1$jscomp$inline_0={prop1:5,prop2:6}.prop1;",
+          "prop1$jscomp$inline_0}"));
+  }
+
+  public void testObjectPatternParam18() {
+   testSame(
+       LINE_JOINER.join(
+           "function f({'foo bar':x}) {",
+           "  return x;",
+           "}",
+           "f({'foo bar': 1});"));
+  }
+
+  public void testObjectPatternParam19() {
+    testSame(
+        LINE_JOINER.join(
+            "function f({'foo_bar':x}) {",
+            "  return x;",
+            "}",
+            "f({'foo_bar': 1});"));
+  }
+
+  public void testObjectPatternParam20() {
+    testSame(
+        LINE_JOINER.join(
+            "function f({'_foobar':x}) {",
+            "  return x;",
+            "}",
+            "f({'_foobar': 1});"));
+  }
+
   public void testDefaultObjectPatternParam1() {
     test(
         LINE_JOINER.join(
@@ -2840,6 +2913,14 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "{var b$jscomp$inline_1={a:1,b:2,c:3}.b;",
             "var c$jscomp$inline_2={a:1,b:2,c:3}.c;",
             "b$jscomp$inline_1+c$jscomp$inline_2}"));
+  }
+
+  public void testDefaultObjectPatternParam5() {
+    testSame(
+        LINE_JOINER.join(
+            "function f({p:x, 3:y} = {p:1, 3:2}) {",
+            " return x;",
+            "}"));
   }
 
   public void testDefaultParam1() {
