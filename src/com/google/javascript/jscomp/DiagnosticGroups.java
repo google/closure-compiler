@@ -199,9 +199,6 @@ public class DiagnosticGroups {
           NewTypeInference.INVALID_CAST);
 
   @Deprecated
-  public static final DiagnosticGroup INFERRED_CONST_CHECKS =
-      DiagnosticGroups.registerDeprecatedGroup("inferredConstCheck");
-
   public static final DiagnosticGroup FILEOVERVIEW_JSDOC =
       DiagnosticGroups.registerDeprecatedGroup("fileoverviewTags");
 
@@ -725,8 +722,6 @@ public class DiagnosticGroups {
 
     DiagnosticGroups.registerGroup("duplicateZipContents",
         SourceFile.DUPLICATE_ZIP_CONTENTS);
-
-    DiagnosticGroups.registerDeprecatedGroup("unnecessaryCasts");
   }
 
   /**
