@@ -828,11 +828,9 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(aliasStrings);
     }
 
-    // Passes after this point can no longer depend on normalized AST
-    // assumptions.
-    passes.add(markUnnormalized);
-
     if (options.coalesceVariableNames) {
+      // Passes after this point can no longer depend on normalized AST
+      // assumptions because the code is marked as un-normalized
       passes.add(coalesceVariableNames);
 
       // coalesceVariables creates identity assignments and more redundant code
@@ -841,6 +839,10 @@ public final class DefaultPassConfig extends PassConfig {
       if (options.foldConstants) {
         passes.add(peepholeOptimizationsOnce);
       }
+    } else {
+      // Passes after this point can no longer depend on normalized AST
+      // assumptions.
+      passes.add(markUnnormalized);
     }
 
     if (options.collapseVariableDeclarations) {
@@ -2830,25 +2832,24 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  /**
-   * Mark the point at which the normalized AST assumptions no longer hold.
-   */
+  /** Mark the point at which the normalized AST assumptions no longer hold. */
   private final PassFactory markUnnormalized =
       new PassFactory("markUnnormalized", true) {
-    @Override
-    protected CompilerPass create(final AbstractCompiler compiler) {
-      return new CompilerPass() {
-        @Override public void process(Node externs, Node root) {
-          compiler.setLifeCycleStage(LifeCycleStage.RAW);
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new CompilerPass() {
+            @Override
+            public void process(Node externs, Node root) {
+              compiler.setLifeCycleStage(LifeCycleStage.RAW);
+            }
+          };
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.latest();
         }
       };
-    }
-
-    @Override
-    protected FeatureSet featureSet() {
-      return FeatureSet.latest();
-    }
-  };
 
   private final PassFactory hoistVars =
       new PassFactory("hoistVars", true) {

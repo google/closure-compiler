@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Joiner;
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
@@ -82,10 +83,10 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
    * to foo, rename both variable to foo_bar.
    */
   CoalesceVariableNames(AbstractCompiler compiler, boolean usePseudoNames) {
-    // The code is normalized at this point in the compilation process, however as a result of this
-    // pass, the code becomes unnormalized (since we are reusing variable names) and so we want to
-    // unconditionally mark the code as unnormalized. We mark unnormalized right before this pass.
-    checkState(!compiler.getLifeCycleStage().isNormalized());
+    // The code is normalized at this point in the compilation process. This allows us to use the
+    // fact that all variables have been given unique names. We can hoist coalesced variables to
+    // VARS because we know that shadowing can't occur.
+    checkState(compiler.getLifeCycleStage().isNormalized());
 
     this.compiler = compiler;
     colorings = new LinkedList<>();
@@ -98,6 +99,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     checkNotNull(externs);
     checkNotNull(root);
     NodeTraversal.traverseEs6(compiler, root, this);
+    compiler.setLifeCycleStage(LifeCycleStage.RAW);
   }
 
   private static boolean shouldOptimizeScope(NodeTraversal t) {

@@ -907,4 +907,10 @@ public final class NormalizeTest extends CompilerTestCase {
   public void testES6ShorthandPropertySyntax04() {
     test("var foo = {x};", "var foo = {x: x}");
   }
+
+  public void testUnusedLabels() {
+    test("var x = 1; x; f:var y;     y = 1", "var x = 1; x; f:{ var y; } y = 1");
+
+    test("var x = 1; x; f:;     y = 1", "var x = 1; x; f:{ ; } y = 1");
+  }
 }

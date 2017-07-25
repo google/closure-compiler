@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.rhino.Node;
 
 /**
  * Unit tests for {@link CoalesceVariableNames}
@@ -41,7 +42,16 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CoalesceVariableNames(compiler, usePseudoName);
+    return new CompilerPass() {
+      @Override
+      public void process(Node externs, Node root) {
+        // enableNormalize would require output of CoalesceVariableNames to be normalized,
+        // so we just manually normalize the input instead.
+        Normalize normalize = new Normalize(compiler, false);
+        normalize.process(externs, root);
+        new CoalesceVariableNames(compiler, usePseudoName).process(externs, root);
+      }
+    };
   }
 
   public void testSimple() {
@@ -53,7 +63,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "var x,y; x=1; x; y=1; y",
         "var x  ; x=1; x; x=1; x");
 
-    inFunction("var x,y; x=1; y=2; y; x");
+    inFunction("var x; var y; x=1; y=2; y; x");
 
     inFunction(
         "y=0; var x, y; y; x=0; x",
@@ -75,19 +85,16 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "var x=1; var y=x+1; return y",
         "var x=1;     x=x+1; return x");
 
-    inFunction("var x=1; var y=0; x+=1; y");
+    inFunction("var x=1; var y=0; x = x + 1; y");
+
+    inFunction("var x=1; x+=1;     var y=0; y", "var x=1; x = x + 1;     x=0; x");
 
     inFunction(
-        "var x=1; x+=1; var y=0; y",
-        "var x=1; x+=1;     x=0; x");
+        "var x=1; foo(bar(x+=1));     var y=0; y", "var x=1; foo(bar(x = x + 1));    x=0; x");
 
-    inFunction(
-        "var x=1; foo(bar(x+=1)); var y=0; y",
-        "var x=1; foo(bar(x+=1));     x=0; x");
+    inFunction("var y; var x=1; f(x = x + 1, y)");
 
-    inFunction("var y, x=1; f(x+=1, y)");
-
-    inFunction("var x; var y; y += 1, y, x = 1; x");
+    inFunction("var x; var y; y = y + 1, y, x = 1; x");
   }
 
   public void testMergeThreeVarNames() {
@@ -103,15 +110,15 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   public void testLoops() {
-    inFunction("var x; while(1) { x; x = 1; var y = 1; y }");
+    inFunction("var x; for ( ; 1; ) { x; x = 1; var y = 1; y }");
 
     inFunction(
-        "var y = 1; y; while(1) { var x = 1; x }",
-        "var y = 1; y; while(1) {     y = 1; y }");
+        "var y = 1; y; for ( ; 1; ) { var x = 1; x }",
+        "var y = 1; y; for ( ; 1; ) {     y = 1; y }");
   }
 
   public void testEscaped() {
-    inFunction("var x = 1; x; function f() { x };  var y = 0; y; f()");
+    inFunction("function f() { x } var x = 1; x; var y = 0; y; f()");
   }
 
   public void testFor() {
@@ -122,44 +129,39 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
   public void testForIn() {
     // We lose some precision here, unless we have "branched-backward-dataflow".
-    inFunction("var x = 1, k; x;      ; for (var y in k) { y }");
+    inFunction("var x = 1; var k; x; var y; for ( y in k ) y");
 
     inFunction(
-        "var x = 1, k; x; y = 1; for (var y in k) { y }",
-        "var x = 1, k; x; x = 1; for (    x in k) { x }");
+        "var x = 1,     k; x; y = 1; for (var y in k) { y }",
+        "var x = 1; var k; x; x = 1; for (    x in k) { x }");
   }
 
   public void testForOf() {
     // We lose some precision here, unless we have "branched-backward-dataflow".
-    inFunction("var x = 1, k; x;      ; for (var y of k) { y }");
+    inFunction("var x = 1; var k; x; var y; for ( y of k ) y");
 
     inFunction(
-        "var x = 1, k; x; y = 1; for (var y of k) { y }",
-        "var x = 1, k; x; x = 1; for (    x of k) { x }");
+        "var x = 1,     k; x; y = 1; for (var y of k) { y }",
+        "var x = 1; var k; x; x = 1; for (    x of k) { x }");
   }
 
   public void testLoopInductionVar() {
     inFunction(
-        "for(var x = 0; x < 10; x++){}" +
-        "for(var y = 0; y < 10; y++){}" +
-        "for(var z = 0; z < 10; z++){}",
-
-        "for(var x = 0; x < 10; x++){}" +
-        "for(x = 0; x < 10; x++){}" +
-        "for(x = 0; x < 10; x++){}");
+        "for(var x = 0; x < 10; x++){}"
+            + "for(var y = 0; y < 10; y++){}"
+            + "for(var z = 0; z < 10; z++){}",
+        "var x=0;" + "for(;x<10;x++);" + "x=0;" + "for(;x<10;x++);" + "x=0;" + "for(;x<10;x++) {}");
 
     inFunction(
-        "for(var x = 0; x < 10; x++){z}" +
-        "for(var y = 0, z = 0; y < 10; y++){z}",
+        "for(var x = 0; x < 10; x++){z}" + "for(var y = 0, z = 0; y < 10; y++){z}",
+        "var x=0;for(;x<10;x++)z;x=0;var z=0;for(;x<10;x++)z");
 
-        "for(var x = 0; x < 10; x++){z}" +
-        "for(var x = 0, z = 0; x < 10; x++){z}");
+    inFunction("var x = 1; x; for (var y; y=1; ) {y}", "var x = 1; x; for ( ; x=1; ) {x}");
 
-    inFunction("var x = 1; x; for (var y; y=1; ) {y}", "var x = 1; x; for (     ; x=1; ) {x}");
+    inFunction("var x = 1; x; y = 1; while(y) var y; y", "var x = 1; x; x = 1; for (;x;); x");
 
-    inFunction("var x = 1; x; y = 1; while(y) var y; y", "var x = 1; x; x = 1; while(x); x");
-
-    inFunction("var x = 1; x; f:var y; y=1", "var x = 1; x; x=1");
+    // It's not the job of the coalesce variables pass to remove unused labels
+    inFunction("var x = 1; x; f:var y; y=1", "var x = 1; x; f:{} x=1");
   }
 
   public void testSwitchCase() {
@@ -171,8 +173,8 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   public void testDuplicatedVar() {
     // Is there a shorter version without multiple declarations?
     inFunction(
-        "z = 1; var x = 0; x; z; var y = 2, z = 1; y; z;",
-        "z = 1; var x = 0; x; z; var x = 2, z = 1; x; z;");
+        "z = 1; var x = 0; x; z; var y = 2,     z = 1; y; z;",
+        "z = 1; var x = 0; x; z;     x = 2; var z = 1; x; z;");
   }
 
   public void testTryCatch() {
@@ -182,8 +184,8 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
   public void testDeadAssignment() {
     inFunction("var x = 6; var y; y = 4 ; x");
-    inFunction("var y = 3; var y; y += 4; x");
-    inFunction("var y = 3; var y; y ++  ; x");
+    inFunction("var y = 3; y = y + 4; x");
+    inFunction("var y = 3; y = y + 1; x");
     inFunction("y = 3; var x; var y = 1 ; x");
   }
 
@@ -229,14 +231,17 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   }
 
   public void testLiveRangeChangeWithinCfgNode() {
-    inFunction("var x, y; x = 1, y = 2, y, x");
-    inFunction("var x, y; x = 1,x; y");
+    inFunction("var x; var y; x = 1, y = 2, y, x");
+    inFunction("var x; var y; x = 1,x; y");
 
     // We lose some precisions within the node itself.
     inFunction("var x; var y; y = 1, y, x = 1; x");
+
     inFunction("var x; var y; y = 1; y, x = 1; x", "var x; x = 1; x, x = 1; x");
-    inFunction("var x, y; y = 1, x = 1, x, y += 1, y");
-    inFunction("var x, y; y = 1, x = 1, x, y ++, y");
+
+    inFunction("var x; var y; y = 1, x = 1, x, y = y + 1, y");
+
+    inFunction("var x; var y; y = 1, x = 1, x, y = y + 1, y");
   }
 
   public void testLiveRangeChangeWithinCfgNode2() {
@@ -254,34 +259,35 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   public void testFunctionNameReuse() {
     inFunction("function x() {}; x(); var y = 1; y");
 
-    inFunction("x(); var y = 1; y; function x() {}");
+    inFunction("function x() { } x(); var y = 1; y");
 
-    inFunction("x(); var y = 1; function x() {}; y");
+    inFunction("function x() { } x(); var y = 1; y");
 
     // Can't merge because of possible escape.
     inFunction("function x() {return x}; x(); var y = 1; y");
 
-    inFunction("var y = 1; y; x; function x() {}");
+    inFunction("function x() {} var y = 1; y; x");
 
-    inFunction("var y = 1; y; function x() {}; x");
+    inFunction("function x() { } var y = 1; y; x");
 
-    inFunction("var y = 1; y; function x() {}; x = 1; x");
+    inFunction("function x() { } var y = 1; y; x = 1; x");
 
-    inFunction("var y = 1; y; x = 1; function x() {}; x");
+    inFunction("function x() {} var y = 1; y; x = 1; x");
   }
 
   public void testBug1401831() {
     // Verify that we don't wrongly merge "opt_a2" and "i" without considering
     // arguments[0] aliasing it.
-    String src = "function f(opt_a2) {" +
-        "  var buffer;" +
-        "  if (opt_a2) {" +
-        "    for(var i = 0; i < arguments.length; i++) {" +
-        "      buffer += arguments[i];" +
-        "    }" +
-        "  }" +
-        "  return buffer;" +
-        "}";
+    String src =
+        LINE_JOINER.join(
+            "function f(opt_a2){",
+            "  var buffer;",
+            "  if(opt_a2){",
+            "    var i=0;",
+            "    for(;i<arguments.length;i++)buffer=buffer+arguments[i]",
+            "  }",
+            "return buffer",
+            "}");
     testSame(src);
   }
 
@@ -296,51 +302,63 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     //  a = { a, c }
     //  b = { b, d }
     //  e = { e }
-    inFunction("var a,b,c,d,e;" +
-               "  a=1; b=1; a; b;" +
-               "  b=1; c=1; b; c;" +
-               "  c=1; d=1; c; d;" +
-               "  d=1; e=1; d; e;" +
-               "  e=1; a=1; e; a;",
-
-               "var a,b,    e;" +
-               "  a=1; b=1; a; b;" +
-               "  b=1; a=1; b; a;" +
-               "  a=1; b=1; a; b;" +
-               "  b=1; e=1; b; e;" +
-               "  e=1; a=1; e; a;");
+    inFunction(
+        "  var a;"
+            + "  var b;"
+            + "  var c;"
+            + "  var d;"
+            + "  var e;"
+            + "  a=1; b=1; a; b;"
+            + "  b=1; c=1; b; c;"
+            + "  c=1; d=1; c; d;"
+            + "  d=1; e=1; d; e;"
+            + "  e=1; a=1; e; a;",
+        "  var a;"
+            + "  var b;"
+            + "  var e;"
+            + "  a=1; b=1; a; b;"
+            + "  b=1; a=1; b; a;"
+            + "  a=1; b=1; a; b;"
+            + "  b=1; e=1; b; e;"
+            + "  e=1; a=1; e; a;");
 
     // If we favor "d" first by declaring "d" earlier,
     // the coloring partitioning would be:
     //  b = { b, e }
     //  d = { d, a }
     //  c = { c }
-    inFunction("var d,a,b,c,e;" +
-               "  a=1; b=1; a; b;" +
-               "  b=1; c=1; b; c;" +
-               "  c=1; d=1; c; d;" +
-               "  d=1; e=1; d; e;" +
-               "  e=1; a=1; e; a;",
-
-               "var d,  b,c  ;" +
-               "  d=1; b=1; d; b;" +
-               "  b=1; c=1; b; c;" +
-               "  c=1; d=1; c; d;" +
-               "  d=1; b=1; d; b;" +
-               "  b=1; d=1; b; d;");
+    inFunction(
+        "var d,a,b,c,e;"
+            + "  a=1; b=1; a; b;"
+            + "  b=1; c=1; b; c;"
+            + "  c=1; d=1; c; d;"
+            + "  d=1; e=1; d; e;"
+            + "  e=1; a=1; e; a;",
+        "  var d;var b;var c;"
+            + "  d=1;b=1;d;b;"
+            + "  b=1;c=1;b;c;"
+            + "  c=1;d=1;c;d;"
+            + "  d=1;b=1;d;b;"
+            + "  b=1;d=1;b;d");
   }
 
   // Sometimes live range can be cross even within a VAR declaration.
   public void testVarLiveRangeCross() {
-    inFunction("var a={}; var b=a.S(); b",
-               "var a={};     a=a.S(); a");
-    inFunction("var a={}; var b=a.S(), c=b.SS(); b; c",
-               "var a={}; var b=a.S(), a=b.SS(); b; a");
-    inFunction("var a={}; var b=a.S(), c=a.SS(), d=a.SSS(); b; c; d",
-               "var a={}; var b=a.S(), c=a.SS(), a=a.SSS(); b; c; a");
-    inFunction("var a={}; var b=a.S(), c=a.SS(), d=a.SSS(); b; c; d",
-               "var a={}; var b=a.S(), c=a.SS(), a=a.SSS(); b; c; a");
-    inFunction("var a={}; d=1; d; var b=a.S(), c=a.SS(), d=a.SSS(); b; c; d");
+    inFunction("var a={}; var b=a.S(); b", "var a={};     a=a.S(); a");
+
+    inFunction(
+        "var a = {}; var b = a.S(),     c = b.SS(); b; c",
+        "var a = {};     a = a.S(); var c = a.SS(); a; c");
+
+    inFunction(
+        "var a={}; var b=a.S(); var c=a.SS(); var d=a.SSS(); b; c; d",
+        "var a={}; var b=a.S(); var c=a.SS();     a=a.SSS(); b; c; a");
+
+    inFunction(
+        "var a={}; var b=a.S(); var c=a.SS(); var d=a.SSS(); b; c; d",
+        "var a={}; var b=a.S(); var c=a.SS();     a=a.SSS(); b; c; a");
+
+    inFunction("var a={}; d=1; d; var b=a.S(); var c=a.SS(); var d=a.SSS(); b; c; d");
   }
 
   public void testBug1445366() {
@@ -412,13 +430,13 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             + "    alert(k + ':' + v);"
             + "  }"
             + "}",
-        "function f(commands) {"
-            + "  var k,ref;"
-            + "  for (k in ref = commands) {"
-            + "    commands = ref[k];"
-            + "    alert(k + ':' + commands);"
-            + "  }"
-            + "}");
+        "function f(commands){"
+            + "var k;"
+            + "var ref;"
+            + "for(k in ref = commands) {"
+            + "  commands=ref[k];"
+            + "  alert(k+':'+commands)"
+            + "}}");
   }
 
   public void testUsePseudoNames() {
@@ -443,14 +461,14 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "  print(x_y);",
             "}"),
         LINE_JOINER.join(
-            "var x_y = 1; ",
-            "function f() {",
-            "  var x_y$ = 0;",
-            "  print(x_y$);",
-            "  x_y$ = 1;",
-            "  print(x_y$);",
-            "  print(x_y);",
-            "}"));
+            "function f(){",
+            "var x_y$=0;",
+            "print(x_y$);",
+            "x_y$=1;",
+            "print(x_y$);",
+            "print(x_y)",
+            "}",
+            "var x_y=1"));
 
     inFunction(
         LINE_JOINER.join(
@@ -463,14 +481,14 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "  print(closure_var);",
             "}"),
         LINE_JOINER.join(
-            "var x_y = 0;",
+            "function bar(){",
+            "  print(closure_var)",
+            "}",
+            "var x_y=0;",
             "print(x_y);",
-            "x_y = 1;",
-            "print(x_y); ",
-            "var closure_var;",
-            "function bar() {",
-            "  print(closure_var);",
-            "}"));
+            "x_y=1;",
+            "print(x_y);",
+            "var closure_var"));
   }
 
   public void testUsePseudoNamesWithLets() {
@@ -486,14 +504,14 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "  print(x_y);",
             "}"),
         LINE_JOINER.join(
-            "var x_y = 1; ",
-            "function f() {",
-            "  var x_y$ = 0;",
+            "function f(){",
+            "  var x_y$=0;",
             "  print(x_y$);",
             "  x_y$ = 1;",
             "  print(x_y$);",
-            "  print(x_y);",
-            "}"));
+            "  print(x_y)",
+            "}",
+            "var x_y=1"));
   }
 
   public void testMaxVars() {
@@ -577,19 +595,22 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "  return a;"));
   }
 
-  public void testLetLoops() {
+  public void testLetWhileLoops() {
     // Simple
     // It violates the temporal deadzone for let x = 1; while (1) { x = 2; x; let x = 0; x } to
     // be output.
-    inFunction(
-        "let x = 1; while (1) { x; x = 2; let y = 0; y }");
+    inFunction("let x = 1; for(;1;) { x; x = 2; let y = 0; y }");
 
-    inFunction(
-        "let x = 1; while (1) { x = 2; x; let y = 0; y } x;");
+    inFunction("let x = 1; for(;1;) { x = 2; x; let y = 0; y } x;");
+  }
 
+  public void testLetForLoops() {
+    // TODO (simranarora) We should get rid of declaration hoisting from the normalize pass.
+    // Right now, because of declaration hoisting, this following test reads the expected code as:
+    // var x = 1; for ( ; x < 10; x++) { let y = 2; x + y } x = 3
     inFunction(
         "for (let x = 1; x < 10; x ++) { let y = 2; x + y; } let z = 3;",
-        "for (var x = 1; x < 10; x ++) { let y = 2; x + y; }     x = 3;");
+        "for(var x=1;x<10;x++){let y=2;x+y}x=3");
 
     inFunction(
         "var w = 0; for (let x = 1; x < 10; x ++) { let y = 2; x + y; } var z = 3;",
@@ -598,15 +619,12 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     // Closure capture of the let variable
     // Here z should not be coalesced because variables used in functions are considered escaped
     // and this pass does not touch any escaped variables
-    inFunction(
-        "let x = 3; for (let z = 1; z < 10; z++) { use(() => {z}); }");
+    inFunction("let x = 3; for (let z = 1; z < 10; z++) { use(() => {z}); }");
 
-    inFunction(
-        "for (let x = 1; x < 10; x++) { use(() => {x}); } let z = 3;");
+    inFunction("for (let x = 1; x < 10; x++) { use(() => {x}); } let z = 3;");
 
     // Multiple lets declared in loop head
-    inFunction(
-        "for (let x = 1, y = 2, z = 3; (x + z) < 10; x ++) { x + z; }");
+    inFunction("for (let x = 1, y = 2, z = 3; (x + z) < 10; x ++) { x + z; }");
 
     // Here the variable y is redeclared because the variable z in the header of the for-loop has
     // not been declared before
@@ -634,7 +652,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
     inFunction(
         "var x = 1; var y = 2; var f = () => x + 1",
-        "var x = 1; var y = 2;     y = () => x + 1;");
+        "var x = 1; var y = 2;     y = () => { return x + 1; }");
 
     // Coalesce with arrow function parameters
     inFunction(
@@ -697,14 +715,14 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "function FUNC1() {",
-            "  var x = 1; ",
-            "      x = 2; ",
-            "          x; ",
             "  function FUNC2() {",
-            "    var z = 3 ",
-            "        z = 4; ",
-            "            z; ",
+            "    var z = 3;",
+            "        z = 4;",
+            "            z",
             "  }",
+            "  var x = 1;",
+            "  x = 2;",
+            "  x",
             "}"));
   }
 
