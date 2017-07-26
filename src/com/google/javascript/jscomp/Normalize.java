@@ -56,6 +56,8 @@ import java.util.Set;
  *   <li>Finds properties marked @expose, and rewrites them in [] notation.
  *   <li>Rewrite body of arrow function as a block
  *   <li>Removes ES6 shorthand property syntax
+ *   <li>Take var statements out from for-loop initializer.
+ *       This: for(var a = 0;a<0;a++) {} becomes: var a = 0; for(var a;a<0;a++) {}
  * </ol>
  *
  * @author johnlenz@google.com (johnlenz)
@@ -367,7 +369,7 @@ class Normalize implements CompilerPass {
 
         case STRING_KEY:
           if (!n.hasChildren()) {
-            rewriteEs6ObjectLiteralShorthandPropertySyntax(n, compiler);
+            rewriteEs6ObjectLiteralShorthandPropertySyntax(n);
             reportCodeChange(n, "Normalize ES6 shorthand property syntax");
           }
           // fall through
@@ -423,8 +425,7 @@ class Normalize implements CompilerPass {
      *
      * <p>From: obj = {x, y} to: obj = {x:x, y:y}
      */
-    private static void rewriteEs6ObjectLiteralShorthandPropertySyntax(
-        Node n, AbstractCompiler compiler) {
+    private static void rewriteEs6ObjectLiteralShorthandPropertySyntax(Node n) {
       String objLitName = NodeUtil.getObjectLitKeyName(n);
       Node objLitNameNode = Node.newString(Token.NAME, objLitName).useSourceInfoFrom(n);
       n.addChildToBack(objLitNameNode);
@@ -544,6 +545,7 @@ class Normalize implements CompilerPass {
         case BLOCK:
         case FOR:
         case FOR_IN:
+        case FOR_OF:
         case WHILE:
         case DO:
           return;
@@ -580,6 +582,7 @@ class Normalize implements CompilerPass {
             extractForInitializer(c, insertBefore, insertBeforeParent);
             break;
           case FOR_IN:
+          case FOR_OF:
             Node first = c.getFirstChild();
             if (first.isVar()) {
               // Transform:
@@ -804,7 +807,7 @@ class Normalize implements CompilerPass {
         // It is an empty reference remove it.
         if (NodeUtil.isStatementBlock(grandparent)) {
           grandparent.removeChild(parent);
-        } else if (grandparent.isForIn()) {
+        } else if (grandparent.isForIn() || grandparent.isForOf()) {
           // This is the "for (var a in b)..." case.  We don't need to worry
           // about initializers in "for (var a;;)..." as those are moved out
           // as part of the other normalizations.
