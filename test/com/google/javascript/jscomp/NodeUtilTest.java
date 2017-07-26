@@ -2456,6 +2456,14 @@ public final class NodeUtilTest extends TestCase {
     assertTrue(NodeUtil.getBestJSDocInfo(classNode).isExport());
   }
 
+  public void testGetBestJsDocInfoForMethods() {
+    Node function = getFunctionNode("class C { /** @export */ foo() {} }");
+    assertTrue(NodeUtil.getBestJSDocInfo(function).isExport());
+
+    function = getFunctionNode("class C { /** @export */ [computedMethod]() {} }");
+    assertTrue(NodeUtil.getBestJSDocInfo(function).isExport());
+  }
+
   public void testGetBestJsDocInfoExport() {
     Node classNode = getClassNode("/** @constructor */ export class Foo {}");
     assertTrue(NodeUtil.getBestJSDocInfo(classNode).isConstructor());

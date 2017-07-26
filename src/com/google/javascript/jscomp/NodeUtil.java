@@ -4584,7 +4584,7 @@ public final class NodeUtil {
         return getBestJSDocInfoNode(parent);
       } else if (parent.isAssign()) {
         return getBestJSDocInfoNode(parent);
-      } else if (isObjectLitKey(parent)) {
+      } else if (isObjectLitKey(parent) || parent.isComputedProp()) {
         return parent;
       } else if ((parent.isFunction() || parent.isClass()) && n == parent.getFirstChild()) {
         // n is the NAME node of the function/class.

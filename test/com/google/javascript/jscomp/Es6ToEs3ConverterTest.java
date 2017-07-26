@@ -2091,7 +2091,10 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
             "  ($jscomp$compprop0[foo] = {",
             "    configurable:true,",
             "    enumerable:true,",
-            "    /** @this {C} */",
+            "    /**",
+            "     * @this {C}",
+            "     * @return {number}",
+            "     */",
             "    get: function() { return 4; }",
             "  }, $jscomp$compprop0));"));
     assertThat(getLastCompiler().injected).containsExactly("util/global");
@@ -2115,7 +2118,10 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
             "  ($jscomp$compprop0[foo] = {",
             "    configurable:true,",
             "    enumerable:true,",
-            "    /** @this {C} */",
+            "    /**",
+            "     * @this {C}",
+            "     * @param {string} val",
+            "     */",
             "    set: function(val) {}",
             "  }, $jscomp$compprop0));"));
 
@@ -2152,9 +2158,15 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
             "  ($jscomp$compprop0[foo] = {",
             "    configurable:true,",
             "    enumerable:true,",
-            "    /** @this {C} */",
+            "    /**",
+            "     * @this {C}",
+            "     * @return {boolean}",
+            "     */",
             "    get: function() {},",
-            "    /** @this {C} */",
+            "    /**",
+            "     * @this {C}",
+            "     * @param {boolean} val",
+            "     */",
             "    set: function(val) {},",
             "  }, $jscomp$compprop0));"));
 
