@@ -994,7 +994,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "}",
         "var COMPILED = true;\n"
         + "function getCss() {\n"
-        + "  return \"bar\";"
+        + "  return 'bar';"
         + "}");
     assertEquals(
         ImmutableMap.of("foo", 1), lastCompiler.getCssNames());
@@ -1396,9 +1396,9 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "function foo() {"
         + "  var localVar = 2;\n"
         + "  if (G_GEO_UNKNOWN_ADDRESS == localVar) {\n"
-        + "    alert(\"A\"); }}";
+        + "    alert('A'); }}";
     String expectedText = "var G_GEO_UNKNOWN_ADDRESS=1;" +
-        "function foo(){var a=2;if(G_GEO_UNKNOWN_ADDRESS==a){alert(\"A\")}}";
+        "function foo(){var a=2;if(G_GEO_UNKNOWN_ADDRESS==a){alert('A')}}";
 
     test(options, originalText, expectedText);
   }
@@ -1685,8 +1685,8 @@ public final class IntegrationTest extends IntegrationTestCase {
         options,
         "class C { /** @export @return {string} */ get exportedName() {} }; (new C).exportedName;",
         EMPTY_JOINER.join(
-            "function a(){}(\"undefined\"!=typeof window&&",
-            "window===this?this:\"undefined\"!=typeof global&&",
+            "function a(){}('undefined'!=typeof window&&",
+            "window===this?this:'undefined'!=typeof global&&",
             "null!=global?global:this).Object.defineProperties(",
             "a.prototype,{exportedName:{a:!0,b:!0,get:function(){}}});(new a).exportedName"));
   }
@@ -1703,8 +1703,8 @@ public final class IntegrationTest extends IntegrationTestCase {
         options,
         "class C { /** @export @return {string} */ set exportedName(x) {} }; (new C).exportedName;",
         EMPTY_JOINER.join(
-            "function a(){}(\"undefined\"!=typeof window&&",
-            "window===this?this:\"undefined\"!=typeof global&&",
+            "function a(){}('undefined'!=typeof window&&",
+            "window===this?this:'undefined'!=typeof global&&",
             "null!=global?global:this).Object.defineProperties(",
             "a.prototype,{exportedName:{a:!0,b:!0,set:function(){}}});(new a).exportedName"));
   }
@@ -1730,8 +1730,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "alert(C.exportedName);"),
         EMPTY_JOINER.join(
             // TODO(tbreisacher): Find out why C is renamed to a despite the @export annotation.
-            "function a(){}(\"undefined\"!=typeof window&&window===this?",
-            "this:\"undefined\"!=typeof global&&null!=global?",
+            "function a(){}('undefined'!=typeof window&&window===this?",
+            "this:'undefined'!=typeof global&&null!=global?",
             "global:this).Object.defineProperties(a,",
             "{exportedName:{a:!0,b:!0,get:function(){}}});alert(a.exportedName)"));
   }
@@ -1757,8 +1757,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "C.exportedName = 0;"),
         EMPTY_JOINER.join(
             // TODO(tbreisacher): Find out why C is removed despite the @export annotation.
-            "(\"undefined\"!=typeof window&&window===this?",
-            "this:\"undefined\"!=typeof global&&null!=global?global:this)",
+            "('undefined'!=typeof window&&window===this?",
+            "this:'undefined'!=typeof global&&null!=global?global:this)",
             ".Object.defineProperties(function(){},{exportedName:{a:!0,b:!0,set:function(){}}})"));
   }
 
@@ -2493,7 +2493,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setFoldConstants(true);
 
-    String code = "/(a)/.test(\"a\");";
+    String code = "/(a)/.test('a');";
 
     testSame(options, code);
 
@@ -2509,7 +2509,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
     options.setFoldConstants(true);
 
-    String code = "/(a)/.test(\"a\");var a = RegExp.$1";
+    String code = "/(a)/.test('a');var a = RegExp.$1";
 
     testSame(options, code);
 
@@ -2870,7 +2870,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         code,
         "function a(){this.b=0;Object.seal(this)}" +
         "(new function(){this.a=new a}).a.b++;" +
-        "alert(\"hi\")");
+        "alert('hi')");
 
     options.setRemoveUnusedClassProperties(true);
 
@@ -2879,7 +2879,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         code,
         "function a(){this.b=0;Object.seal(this)}" +
         "(new function(){this.a=new a}).a.b++;" +
-        "alert(\"hi\")");
+        "alert('hi')");
   }
 
   public void testAddFunctionProperties1() throws Exception {
@@ -4266,8 +4266,8 @@ public final class IntegrationTest extends IntegrationTestCase {
             "    var x = element['_customData'];",
             "    x[dataName] = dataValue;",
             "}",
-            "SetCustomData1(window, \"foo\", \"bar\");"),
-        "window._customData.foo=\"bar\";");
+            "SetCustomData1(window, 'foo', 'bar');"),
+        "window._customData.foo='bar';");
   }
 
   public void testUnnecessaryBackslashInStringLiteral() {
