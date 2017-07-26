@@ -190,13 +190,12 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "test.js",
         LINE_JOINER.join(
-            "module.exports = {};",
-            "var a = 1, b = 2;",
-            "(function() { var a; b = 4})();"),
+            "module.exports = {};", "var a = 1, b = 2;", "(function() { var a; b = 4})();"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "/** @const */ var module$test={};",
-            "var a$$module$test = 1, b$$module$test = 2;",
+            "var a$$module$test = 1;",
+            "var b$$module$test = 2;",
             "(function() { var a; b$$module$test = 4})();"));
   }
 
@@ -867,5 +866,43 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  get b() { return 2; }",
             "}",
             "module$test.a = 1"));
+  }
+
+  public void testIssue2450() {
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
+            "var BCRYPT_BLOCKS = 8,",
+            "    BCRYPT_HASHSIZE = 32;",
+            "",
+            "module.exports = {",
+            "  BLOCKS: BCRYPT_BLOCKS,",
+            "  HASHSIZE: BCRYPT_HASHSIZE,",
+            "};"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "/** @const */ var module$test={};",
+            "module$test.BLOCKS = 8;",
+            "module$test.HASHSIZE = 32;"));
+  }
+
+  public void testWebpackAmdPattern() {
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
+            "var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;",
+            "!(__WEBPACK_AMD_DEFINE_ARRAY__ = [__webpack_require__(1), __webpack_require__(2)],",
+            "      __WEBPACK_AMD_DEFINE_RESULT__ = function (b, c) {",
+            "          console.log(b, c.exportA, c.exportB);",
+            "      }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),",
+            "    __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {};",
+            "var __WEBPACK_AMD_DEFINE_ARRAY__$$module$test;",
+            "!(__WEBPACK_AMD_DEFINE_ARRAY__$$module$test = [__webpack_require__(1), __webpack_require__(2)],",
+            "    module$test = function(b,c){console.log(b,c.exportA,c.exportB)}",
+            "        .apply(module$test,__WEBPACK_AMD_DEFINE_ARRAY__$$module$test),",
+            "    module$test!==undefined && module$test)"));
   }
 }
