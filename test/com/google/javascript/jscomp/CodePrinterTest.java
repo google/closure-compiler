@@ -1940,7 +1940,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     languageMode = LanguageMode.ECMASCRIPT3;
 
     Node getter = Node.newString(Token.GETTER_DEF, "f");
-    getter.addChildToBack(IR.function(IR.name(""), IR.paramList(), IR.block()));
+    getter.addChildToBack(NodeUtil.emptyFunction());
     assertPrintNode("({get f(){}})",
         IR.exprResult(IR.objectlit(getter)));
   }
@@ -1973,8 +1973,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     languageMode = LanguageMode.ECMASCRIPT3;
 
     Node getter = Node.newString(Token.SETTER_DEF, "f");
-    getter.addChildToBack(IR.function(
-        IR.name(""), IR.paramList(IR.name("a")), IR.block()));
+    getter.addChildToBack(IR.function(IR.name(""), IR.paramList(IR.name("a")), IR.block()));
     assertPrintNode("({set f(a){}})",
         IR.exprResult(IR.objectlit(getter)));
   }

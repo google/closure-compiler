@@ -3962,6 +3962,10 @@ public final class NodeUtil {
     return var;
   }
 
+  public static Node emptyFunction() {
+    return new Node(Token.FUNCTION, IR.name(""), IR.paramList(), IR.block());
+  }
+
   /**
    * A predicate for matching name nodes with the specified node.
    */

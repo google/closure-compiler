@@ -71,7 +71,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
     Node classMembers = classNode.getLastChild();
     Node memberDef;
     if (superClass.isEmpty()) {
-      Node function = IR.function(IR.name(""), IR.paramList(), IR.block());
+      Node function = NodeUtil.emptyFunction();
       compiler.reportChangeToChangeScope(function);
       memberDef = IR.memberFunctionDef("constructor", function);
     } else {

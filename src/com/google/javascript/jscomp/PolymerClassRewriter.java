@@ -539,7 +539,7 @@ final class PolymerClassRewriter {
     Node block = IR.block();
 
     String interfaceName = getInterfaceName(cls);
-    Node fnNode = IR.function(IR.name(""), IR.paramList(), IR.block());
+    Node fnNode = NodeUtil.emptyFunction();
     compiler.reportChangeToChangeScope(fnNode);
     Node varNode = IR.var(NodeUtil.newQName(compiler, interfaceName), fnNode);
 
