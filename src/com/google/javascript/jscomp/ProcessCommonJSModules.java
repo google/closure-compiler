@@ -303,8 +303,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
     boolean isCommonJsModule() {
       return (exports.size() > 0
               || moduleExports.size() > 0
-              || webpackExports.size() > 0
-              || webpackDefineEsModuleProperty != null)
+              || compiler.getOptions().moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK)
           && !hasGoogProvideOrModule;
     }
 
