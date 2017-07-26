@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
@@ -287,8 +288,13 @@ final class MustBeReachingVariableDef extends
         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
           if (c.hasChildren()) {
             computeMustDef(c.getFirstChild(), cfgNode, output, conditional);
-            addToDefIfLocal(c.getString(), conditional ? null : cfgNode,
-                c.getFirstChild(), output);
+            if (c.isName()) {
+              addToDefIfLocal(c.getString(), conditional ? null : cfgNode,
+                  c.getFirstChild(), output);
+            } else {
+              checkState(c.isDestructuringLhs(), c);
+              return;
+            }
           }
         }
         return;
