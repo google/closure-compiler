@@ -209,7 +209,7 @@ class Normalize implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       // Note: Constant properties annotations are not propagated.
-      if (n.isName()) {
+      if ((n.isName() || n.isStringKey())) {
         if (n.getString().isEmpty()) {
           return;
         }
@@ -367,26 +367,23 @@ class Normalize implements CompilerPass {
           }
           break;
 
+        case DEFAULT_VALUE:
         case STRING_KEY:
-          if (!n.hasChildren()) {
-            rewriteEs6ObjectLiteralShorthandPropertySyntax(n);
-            reportCodeChange(n, "Normalize ES6 shorthand property syntax");
-          }
-          // fall through
+          rewriteEs6ObjectLiteralShorthandPropertySyntax(n);
+          break;
 
         case NAME:
         case STRING:
         case GETTER_DEF:
         case SETTER_DEF:
-          if (!compiler.getLifeCycleStage().isNormalizedObfuscated()) {
-            annotateConstantsByConvention(n, parent);
-          }
+          annotateConstantsByConvention(n, parent);
           break;
 
         case CAST:
           compiler.reportChangeToEnclosingScope(n);
           parent.replaceChild(n, n.removeFirstChild());
           break;
+
         default:
           break;
       }
@@ -398,6 +395,12 @@ class Normalize implements CompilerPass {
     private void annotateConstantsByConvention(Node n, Node parent) {
       checkState(
           n.isName() || n.isString() || n.isStringKey() || n.isGetterDef() || n.isSetterDef());
+
+      // Need to check that variables have not been renamed, to determine whether
+      // coding conventions still apply.
+      if (compiler.getLifeCycleStage().isNormalizedObfuscated()) {
+        return;
+      }
 
       // There are only two cases where a string token
       // may be a variable reference: The right side of a GETPROP
@@ -412,8 +415,11 @@ class Normalize implements CompilerPass {
             String name = n.getString();
             throw new IllegalStateException(
                 "Unexpected const change.\n"
-                + "  name: " + name + "\n"
-                + "  parent:" + n.getParent().toStringTree());
+                    + "  name: "
+                    + name
+                    + "\n"
+                    + "  parent:"
+                    + n.getParent().toStringTree());
           }
           n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         }
@@ -424,11 +430,32 @@ class Normalize implements CompilerPass {
      * Expand ES6 object literal shorthand property syntax.
      *
      * <p>From: obj = {x, y} to: obj = {x:x, y:y}
+     *
+     * <p>From: var {x = 5} = obj to: var {x:x = 5} = obj
      */
-    private static void rewriteEs6ObjectLiteralShorthandPropertySyntax(Node n) {
-      String objLitName = NodeUtil.getObjectLitKeyName(n);
-      Node objLitNameNode = Node.newString(Token.NAME, objLitName).useSourceInfoFrom(n);
-      n.addChildToBack(objLitNameNode);
+    private void rewriteEs6ObjectLiteralShorthandPropertySyntax(Node n) {
+      switch (n.getToken()) {
+        case STRING_KEY:
+          if (!n.hasChildren()) {
+            String objLitName = NodeUtil.getObjectLitKeyName(n);
+            Node objLitNameNode = Node.newString(Token.NAME, objLitName).useSourceInfoFrom(n);
+            n.addChildToBack(objLitNameNode);
+            reportCodeChange(n, "Normalize ES6 shorthand property syntax");
+          }
+          break;
+
+        case DEFAULT_VALUE:
+          if (n.getParent().isObjectPattern()) {
+            Node stringKeyNode = IR.stringKey(n.getFirstChild().getString()).srcref(n);
+            n.replaceWith(stringKeyNode);
+            stringKeyNode.addChildToBack(n);
+            reportCodeChange(n, "Normalize ES6 shorthand property syntax");
+          }
+          break;
+
+        default:
+          throw new IllegalStateException();
+      }
     }
 
     /**

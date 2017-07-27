@@ -715,8 +715,32 @@ public final class NormalizeTest extends CompilerTestCase {
     }
   }
 
+  public void testIsConstantByDestructuring() {
+    test(
+        "var {CONST} = {CONST:3}; var b = CONST;",
+        "var {CONST: CONST} = {CONST:3}; var b = CONST;");
+    Node n = getLastCompiler().getRoot();
+
+    Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
+    assertThat(constantNodes).hasSize(4);
+    for (Node hasProp : constantNodes) {
+      assertEquals("CONST", hasProp.getString());
+    }
+  }
+
+  public void testIsConstantByDestructuringWithDefault() {
+    test("var {CONST = 3} = {}; var b = CONST;", "var {CONST: CONST = 3} = {}; var b = CONST;");
+    Node n = getLastCompiler().getRoot();
+
+    Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
+    assertThat(constantNodes).hasSize(3);
+    for (Node hasProp : constantNodes) {
+      assertEquals("CONST", hasProp.getString());
+    }
+  }
+
   public void testPropertyIsConstant1() {
-    testSame("var a = {};a.CONST = 3; var b = a.CONST;");
+    testSame("var a = {}; a.CONST = 3; var b = a.CONST;");
     Node n = getLastCompiler().getRoot();
 
     Set<Node> constantNodes = findNodesWithProperty(n, Node.IS_CONSTANT_NAME);
@@ -786,15 +810,18 @@ public final class NormalizeTest extends CompilerTestCase {
 
   private Set<Node> findNodesWithProperty(Node root, final byte prop) {
     final Set<Node> set = new HashSet<>();
+
     NodeTraversal.traverseEs6(
-        getLastCompiler(), root, new AbstractPostOrderCallback() {
-        @Override
-        public void visit(NodeTraversal t, Node node, Node parent) {
-          if (node.getBooleanProp(prop)) {
-            set.add(node);
+        getLastCompiler(),
+        root,
+        new AbstractPostOrderCallback() {
+          @Override
+          public void visit(NodeTraversal t, Node node, Node parent) {
+            if (node.getBooleanProp(prop)) {
+              set.add(node);
+            }
           }
-        }
-      });
+        });
     return set;
   }
 
@@ -908,9 +935,39 @@ public final class NormalizeTest extends CompilerTestCase {
     test("var foo = {x};", "var foo = {x: x}");
   }
 
-  public void testUnusedLabels() {
-    test("var x = 1; x; f:var y;     y = 1", "var x = 1; x; f:{ var y; } y = 1");
+  public void testES6ShorthandPropertySyntax05() {
+    test("var {a = 5} = obj;", "var {a: a = 5} = obj;");
+  }
 
-    test("var x = 1; x; f:;     y = 1", "var x = 1; x; f:{ ; } y = 1");
+  public void testES6ShorthandPropertySyntax06() {
+    test("var {a = 5, b = 3} = obj;", "var {a: a = 5, b: b = 3} = obj;");
+  }
+
+  public void testES6ShorthandPropertySyntax07() {
+    test("var {a: a = 5, b = 3} = obj;", "var {a: a = 5, b: b = 3} = obj;");
+  }
+
+  public void testES6ShorthandPropertySyntax08() {
+    test("var {a, b} = obj;", "var {a: a, b: b} = obj;");
+  }
+
+  public void testES6ShorthandPropertySyntax09() {
+    test("({a = 5} = obj);", "({a: a = 5} = obj);");
+  }
+
+  public void testES6ShorthandPropertySyntax10() {
+    testSame("function f(a = 5) {}");
+  }
+
+  public void testES6ShorthandPropertySyntax11() {
+    testSame("[a = 5] = obj;");
+  }
+
+  public void testES6ShorthandPropertySyntax12() {
+    testSame("({a: a = 5} = obj)");
+  }
+
+  public void testES6ShorthandPropertySyntax13() {
+    testSame("({['a']: a = 5} = obj);");
   }
 }
