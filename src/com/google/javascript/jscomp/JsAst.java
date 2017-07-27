@@ -50,7 +50,7 @@ public class JsAst implements SourceAst {
 
   @Override
   public Node getAstRoot(AbstractCompiler compiler) {
-    if (!isParsed()) {
+    if (root == null) {
       parse(compiler);
       root.setInputId(inputId);
     }
@@ -137,10 +137,6 @@ public class JsAst implements SourceAst {
       errors.add(new RhinoError(message, sourceName, line, lineOffset));
       delegateReporter.error(message, sourceName, line, lineOffset);
     }
-  }
-
-  boolean isParsed() {
-    return root != null;
   }
 
   private void parse(AbstractCompiler compiler) {

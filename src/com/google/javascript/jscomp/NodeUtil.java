@@ -4161,14 +4161,6 @@ public final class NodeUtil {
   }
 
   /**
-   * @return Whether an EXPORT node has a from clause.
-   */
-  static boolean isExportFrom(Node n) {
-    checkArgument(n.isExport());
-    return n.hasTwoChildren();
-  }
-
-  /**
    * @return Whether a TRY node has a finally block.
    */
   static boolean hasFinally(Node n) {
