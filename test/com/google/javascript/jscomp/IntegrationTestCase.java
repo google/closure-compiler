@@ -85,6 +85,7 @@ abstract class IntegrationTestCase extends TestCase {
                   "/**",
                   " * @constructor",
                   " * @implements {IArrayLike}",
+                  " * @implements {Iterable}",
                   " * @return {!Array}",
                   " * @param {...*} var_args",
                   " */",
