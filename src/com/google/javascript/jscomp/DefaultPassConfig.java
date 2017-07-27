@@ -2695,11 +2695,16 @@ public final class DefaultPassConfig extends PassConfig {
   /** Uses register-allocation algorithms to use fewer variables. */
   private final PassFactory coalesceVariableNames =
       new PassFactory("coalesceVariableNames", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new CoalesceVariableNames(compiler, options.generatePseudoNames);
-    }
-  };
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new CoalesceVariableNames(compiler, options.generatePseudoNames);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
+      };
 
   /** Some simple, local collapses (e.g., {@code var x; var y;} becomes {@code var x,y;}. */
   private final PassFactory exploitAssign =
