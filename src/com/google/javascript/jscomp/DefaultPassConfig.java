@@ -172,6 +172,11 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(setFeatureSet(ES7));
     }
 
+    if (options.needsTranspilationFrom(ES7)) {
+      TranspilationPasses.addEs2016Passes(passes);
+      passes.add(setFeatureSet(ES6));
+    }
+
     // If the user has specified an input language of ES7 and an output language of ES6 or lower,
     // we still need to run these "ES6" passes, because they do the transpilation of the ES7 **
     // operator. If we split that into its own pass then the needsTranspilationFrom(ES7) call here
@@ -356,7 +361,12 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(setFeatureSet(ES7));
     }
 
-    if (options.needsTranspilationFrom(ES6) || options.needsTranspilationFrom(ES7)) {
+    if (options.needsTranspilationFrom(ES7)) {
+      TranspilationPasses.addEs2016Passes(checks);
+      checks.add(setFeatureSet(ES6));
+    }
+
+    if (options.needsTranspilationFrom(ES6)) {
       checks.add(es6ExternsCheck);
       TranspilationPasses.addEs6EarlyPasses(checks);
     }

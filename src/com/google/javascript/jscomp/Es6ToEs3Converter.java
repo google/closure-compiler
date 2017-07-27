@@ -162,12 +162,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
           Es6TemplateLiterals.visitTemplateLiteral(t, n);
         }
         break;
-      case EXPONENT:
-        visitExponentiationExpression(n, parent);
-        break;
-      case ASSIGN_EXPONENT:
-        visitExponentiationAssignmentExpression(n, parent);
-        break;
       default:
         break;
     }
@@ -193,25 +187,6 @@ public final class Es6ToEs3Converter implements NodeTraversal.Callback, HotSwapC
     Node initSymbol = IR.exprResult(IR.call(NodeUtil.newQName(compiler, "$jscomp.initSymbol")));
     statement.getParent().addChildBefore(initSymbol.useSourceInfoFromForTree(statement), statement);
     compiler.reportChangeToEnclosingScope(initSymbol);
-  }
-
-  private void visitExponentiationExpression(Node n, Node parent) {
-    Node left = n.removeFirstChild();
-    Node right = n.removeFirstChild();
-    Node mathDotPowCall =
-        IR.call(NodeUtil.newQName(compiler, "Math.pow"), left, right)
-            .useSourceInfoIfMissingFromForTree(n);
-    parent.replaceChild(n, mathDotPowCall);
-    compiler.reportChangeToEnclosingScope(mathDotPowCall);
-  }
-
-  private void visitExponentiationAssignmentExpression(Node n, Node parent) {
-    Node left = n.removeFirstChild();
-    Node right = n.removeFirstChild();
-    Node mathDotPowCall = IR.call(NodeUtil.newQName(compiler, "Math.pow"), left.cloneTree(), right);
-    Node assign = IR.assign(left, mathDotPowCall).useSourceInfoIfMissingFromForTree(n);
-    parent.replaceChild(n, assign);
-    compiler.reportChangeToEnclosingScope(assign);
   }
 
   // TODO(tbreisacher): Do this for all well-known symbols.

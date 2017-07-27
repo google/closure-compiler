@@ -17987,6 +17987,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
       List<PassFactory> passes = new ArrayList<>();
       TranspilationPasses.addEs6ModulePass(passes);
       TranspilationPasses.addEs2017Passes(passes);
+      TranspilationPasses.addEs2016Passes(passes);
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
       TranspilationPasses.addRewritePolyfillPass(passes);

@@ -38,6 +38,10 @@ public class TranspilationPasses {
     passes.add(rewriteAsyncFunctions);
   }
 
+  public static void addEs2016Passes(List<PassFactory> passes) {
+    passes.add(convertEs7ToEs6);
+  }
+
   /**
    * Adds all the early ES6 transpilation passes, which go before the Dart pass.
    *
@@ -96,6 +100,19 @@ public class TranspilationPasses {
         @Override
         protected CompilerPass create(final AbstractCompiler compiler) {
           return new RewriteAsyncFunctions(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
+      };
+
+  private static final PassFactory convertEs7ToEs6 =
+      new PassFactory("convertEs7ToEs6", true) {
+        @Override
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new Es7ToEs6Converter(compiler);
         }
 
         @Override

@@ -1684,6 +1684,7 @@ public abstract class CompilerTestCase extends TestCase {
     List<PassFactory> factories = new ArrayList<>();
     TranspilationPasses.addEs6ModulePass(factories);
     TranspilationPasses.addEs2017Passes(factories);
+    TranspilationPasses.addEs2016Passes(factories);
     TranspilationPasses.addEs6EarlyPasses(factories);
     TranspilationPasses.addEs6LatePasses(factories);
     TranspilationPasses.addRewritePolyfillPass(factories);

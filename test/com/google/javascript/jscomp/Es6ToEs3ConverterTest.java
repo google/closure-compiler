@@ -262,14 +262,6 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
             "f(testcode$classdecl$var0)"));
   }
 
-  public void testExponentiationOperator() {
-    test("2 ** 2;", "Math.pow(2,2)");
-  }
-
-  public void testExponentiationAssignmentOperator() {
-    test("x **= 2;", "x=Math.pow(x,2)");
-  }
-
   public void testNewTarget() {
     testError("function Foo() { new.target; }", CANNOT_CONVERT_YET);
   }
