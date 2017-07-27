@@ -13816,6 +13816,35 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var /** number */ n = 1 ** NaN;");
   }
 
+  public void testAssignExponent() {
+    typeCheck(LINE_JOINER.join(
+        "function f(/** number */ x) {",
+        "  x **= 1;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** * */ x) {",
+        "  x **= 1;",
+        "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** number */ x) {",
+        "  x **= '';",
+        "}"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** !Number */ x) {",
+        "  x **= 1;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(/** number */ x) {",
+        "  x **= NaN;",
+        "}"));
+  }
+
   public void testUndefinedFunctionCtorNoCrash() {
     typeCheckCustomExterns("", "function f(x) {}",
         GlobalTypeInfoCollector.FUNCTION_CONSTRUCTOR_NOT_DEFINED);

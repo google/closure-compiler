@@ -1428,6 +1428,7 @@ final class NewTypeInference implements CompilerPass {
       case ASSIGN_MUL:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
+      case ASSIGN_EXPONENT:
         resultPair = analyzeAssignNumericOpFwd(expr, inEnv);
         break;
       case SHEQ:
@@ -3614,6 +3615,7 @@ final class NewTypeInference implements CompilerPass {
       case ASSIGN_MUL:
       case ASSIGN_DIV:
       case ASSIGN_MOD:
+      case ASSIGN_EXPONENT:
         return analyzeAssignNumericOpBwd(expr, outEnv);
       case GETPROP:
         {
