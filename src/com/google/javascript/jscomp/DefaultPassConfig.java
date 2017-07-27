@@ -3069,7 +3069,12 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new GatherExternProperties(compiler);
         }
-      };
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
+     };
 
   /**
    * Runs custom passes that are designated to run at a particular time.

@@ -207,6 +207,16 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
         "prototype", "bar");
   }
 
+  public void testExternWithMethod() {
+    disableTypeCheck();
+    assertExternProperties(
+        LINE_JOINER.join(
+            "foo = {",
+            "  method() {}",
+            "}"),
+        "method");
+  }
+
   public void testExternAsyncFunction() {
     disableTypeCheck();
     assertExternProperties(
