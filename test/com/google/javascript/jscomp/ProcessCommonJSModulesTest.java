@@ -895,12 +895,14 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "      __WEBPACK_AMD_DEFINE_RESULT__ = function (b, c) {",
             "          console.log(b, c.exportA, c.exportB);",
             "      }.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),",
-            "    __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));"),
+            "    __WEBPACK_AMD_DEFINE_RESULT__ !== undefined",
+            "    && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "var module$test = {};",
             "var __WEBPACK_AMD_DEFINE_ARRAY__$$module$test;",
-            "!(__WEBPACK_AMD_DEFINE_ARRAY__$$module$test = [__webpack_require__(1), __webpack_require__(2)],",
+            "!(__WEBPACK_AMD_DEFINE_ARRAY__$$module$test = ",
+            "    [__webpack_require__(1), __webpack_require__(2)],",
             "    module$test = function(b,c){console.log(b,c.exportA,c.exportB)}",
             "        .apply(module$test,__WEBPACK_AMD_DEFINE_ARRAY__$$module$test),",
             "    module$test!==undefined && module$test)"));

@@ -838,8 +838,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
           parent.getParent().replaceWith(var);
         } else if (root.getNext() != null && root.getNext().isName() && rValueVar.isGlobal()) {
           // This is a where a module export assignment is used in a complex expression.
+          // Before: `SOME_VALUE !== undefined && module.exports = SOME_VALUE`
+          // After: `SOME_VALUE !== undefined && module$name`
           root.getParent().replaceWith(updatedExport);
         } else {
+          // Other references to "module.exports" are just replaced with the module name.
           export.replaceWith(updatedExport);
         }
       } else {
@@ -1091,6 +1094,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
             }
           } else if (newNameDeclaration != null) {
             // Variable is already defined. Convert this to an assignment.
+            // If the variable declaration has no initialization, we simply
+            // remove the node. This can occur when the variable which is exported
+            // is declared in an outer scope but assigned in an inner one.
             if (!nameRef.hasChildren()) {
               parent.detachFromParent();
               break;
@@ -1404,20 +1410,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
     private void splitMultipleDeclarations(Node var) {
       checkState(var.isVar() || var.isLet() || var.isConst());
       while (var.getSecondChild() != null) {
-        Node newVar;
-        Node nameToSplit = var.removeFirstChild();
-        switch (var.getToken()) {
-          default:
-          case VAR:
-            newVar = IR.var(nameToSplit);
-            break;
-          case LET:
-            newVar = IR.var(nameToSplit);
-            break;
-          case CONST:
-            newVar = IR.var(nameToSplit);
-            break;
-        }
+        Node newVar = new Node(var.getToken(), var.removeFirstChild());
         newVar.useSourceInfoFrom(var);
         var.getParent().addChildBefore(newVar, var);
       }
