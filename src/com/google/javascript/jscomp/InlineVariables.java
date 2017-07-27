@@ -371,6 +371,10 @@ class InlineVariables implements CompilerPass {
       if (!isFunctionDeclaration) {
         compiler.reportChangeToEnclosingScope(decl.getNode());
         removeDeclaration(decl);
+      } else {
+        // In addition to changing the containing scope, inlining function declarations also changes
+        // the function name scope from the containing scope to the inner scope.
+        compiler.reportChangeToChangeScope(value);
       }
     }
 
