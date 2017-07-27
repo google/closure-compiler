@@ -101,6 +101,8 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("for(x=0;x<100;x++){x}", "for(x=0;x<100;x++);");
     fold("for(x in y){x}", "for(x in y);");
     fold("for (x of y) {x}", "for(x of y);");
+    foldSame("for (let x = 1; x <10; x++ ) {}");
+    foldSame("for (var x = 1; x <10; x++ ) {}");
 
     // Block with declarations
     foldSame("{let x}");
@@ -499,6 +501,28 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "case 'foo':\n" +
         "  foo();\n" +
         "}");
+
+    fold(
+        LINE_JOINER.join(
+            "let x;",
+            "switch (use(x)) {",
+            "  default: {let x;}",
+            "}"),
+        LINE_JOINER.join(
+            "let x;",
+            "use(x);",
+            "{let x}"));
+
+    fold(
+        LINE_JOINER.join(
+            "let x;",
+            "switch (use(x)) {",
+            "  default: let x;",
+            "}"),
+        LINE_JOINER.join(
+            "let x;",
+            "use(x);",
+            "{let x}"));
   }
 
   public void testOptimizeSwitchBug11536863() {

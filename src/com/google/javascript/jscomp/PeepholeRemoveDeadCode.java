@@ -328,17 +328,17 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     }
   }
 
-  private Node tryRemoveSwitchWithSingleCase(Node n, boolean shouldIncludeCondition) {
+  private Node tryRemoveSwitchWithSingleCase(Node n, boolean shouldHoistCondition) {
     Node caseBlock = n.getLastChild().getLastChild();
     removeIfUnnamedBreak(caseBlock.getLastChild());
     // Back off if the switch contains statements like "if (a) { break; }"
     if (NodeUtil.has(caseBlock, MATCH_UNNAMED_BREAK, NodeUtil.MATCH_NOT_FUNCTION)) {
       return n;
     }
-    // TODO(moz): This needs to change when we optimize for ES6. The block might need to be
-    // preserved in the presence of block-scoped declarations.
-    if (shouldIncludeCondition) {
-      caseBlock.addChildToFront(IR.exprResult(n.removeFirstChild()).srcref(n));
+    if (shouldHoistCondition) {
+      Node switchBlock = caseBlock.getGrandparent();
+      switchBlock.getParent().addChildAfter(
+          IR.exprResult(n.removeFirstChild()).srcref(n), switchBlock.getPrevious());
     }
     n.replaceWith(caseBlock.detach());
     reportCodeChange();
@@ -354,7 +354,11 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
       reportCodeChange();
       return replacement;
     } else if (n.hasTwoChildren() && n.getLastChild().isDefaultCase()) {
-      return tryRemoveSwitchWithSingleCase(n, true);
+      if (n.getFirstChild().isCall()) {
+        return tryRemoveSwitchWithSingleCase(n, true);
+      } else {
+        return tryRemoveSwitchWithSingleCase(n, false);
+      }
     } else {
       return n;
     }
@@ -666,8 +670,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     if (NodeUtil.isExprAssign(n)
         && n.getFirstFirstChild().isName()) {
       return true;
-    } else if (n.isVar() && n.hasOneChild() &&
-        n.getFirstFirstChild() != null) {
+    } else if (NodeUtil.isNameDeclaration(n) && n.hasOneChild() && n.getFirstFirstChild() != null) {
       return true;
     }
 
@@ -906,7 +909,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
     Node cond = init.getNext();
     Node increment = cond.getNext();
 
-    if (!init.isEmpty() && !init.isVar()) {
+    if (!init.isEmpty() && !NodeUtil.isNameDeclaration(init)) {
       init = trySimplifyUnusedResult(init, false);
     }
 
