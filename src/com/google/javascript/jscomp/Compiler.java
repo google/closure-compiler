@@ -3419,6 +3419,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return moduleLoader;
   }
 
+  @VisibleForTesting
+  void setModuleLoader(ModuleLoader moduleLoader) {
+    this.moduleLoader = moduleLoader;
+  }
+
   private void addFilesToSourceMap(Iterable<? extends SourceFile> files) {
     if (getOptions().sourceMapIncludeSourcesContent && getSourceMap() != null) {
       for (SourceFile file : files) {
