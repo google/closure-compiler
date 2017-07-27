@@ -92,6 +92,7 @@ class IncrementalScopeCreator implements ScopeCreator {
         if (root.isScript()) {
           scripts.add(root);
         } else {
+          checkState(!root.isRoot());
           invalidateRoot(root);
         }
       }
@@ -121,6 +122,9 @@ class IncrementalScopeCreator implements ScopeCreator {
     checkState(parent == null || parent instanceof PersistentScope);
     checkState(parent == null || ((PersistentScope) parent).isValid(), "parent is not valid");
     checkState(frozen, "freeze() must be called before retrieving scopes");
+    checkArgument(parent != null || n == compiler.getRoot(),
+        "the shared persistent scope must always be root at the tip of the AST");
+
     PersistentScope scope = scopesByScopeRoot.get(n);
     if (scope == null) {
       scope = (PersistentScope) delegate.createScope(n, parent);
@@ -194,12 +198,20 @@ class IncrementalScopeCreator implements ScopeCreator {
 
     @Override
     void addChildScope(PersistentLocalScope scope) {
-      validChildren.put(getContainingScript(scope.getRootNode()), scope);
+      // Only track child scopes that should be
+      // invalidated when a "change scope" is changed,
+      // not scopes that are themselves change scope roots.
+      if (!NodeUtil.isChangeScopeRoot(scope.getRootNode())) {
+        Node script = getContainingScript(scope.getRootNode());
+        checkState(script.isScript());
+        validChildren.put(script, scope);
+      }
     }
 
     public void invalidate(List<Node> invalidatedScripts) {
       valid = false;
       for (Node script : invalidatedScripts) {
+        checkState(script.isScript());
         // invalidate any generated child scopes
         for (PersistentLocalScope scope : validChildren.removeAll(script)) {
           scope.invalidate();
@@ -296,7 +308,7 @@ class IncrementalScopeCreator implements ScopeCreator {
 
   /**
    * A subclass of the traditional Scope class that knows about its children,
-   * and has methods for updating the scope heirarchy.
+   * and has methods for updating the scope hierarchy.
    */
   private static class PersistentLocalScope extends PersistentScope {
     // A list of Scope within the "change scope" (those not crossing function boundaries)
@@ -340,29 +352,25 @@ class IncrementalScopeCreator implements ScopeCreator {
 
     @Override
     void refresh(AbstractCompiler compiler, PersistentScope newParent) {
-      checkArgument(newParent == null || newParent.isValid());
-      checkState((parent == null) == (newParent == null));
+      checkArgument(newParent != null && newParent.isValid());
+      checkState(parent != null);
 
       // Even if this scope hasn't been invalidated, its parent scopes may have,
-      // so we update the scope chaining.
-      if (parent != null && (!valid || this.parent != newParent)) {
-        this.parent = newParent;
-        if (!valid) {
-          // TODO(johnlenz): It doesn't really matter which
-          // parent scope in the "change scope" invalidates this scope,
-          // but if we were previously invalidated no parent
-          // has this instance in its list, so add it to the new parent.
-          getParent().addChildScope(this);
-        }
-        // Even if the parent hasn't changed the depth might have, update it now.
-        this.depth = parent.getDepth() + 1;
-      }
+      // so update the scope chaining.
+      parent = newParent;
+
+      // Even if the parent hasn't changed the depth might have, update it now.
+      depth = parent.getDepth() + 1;
 
       // Update the scope if needed.
-      if (!this.valid) {
+      if (!valid) {
         vars.clear();
         new ScopeScanner(compiler, this).populate();
-        this.valid = true;
+        valid = true;
+
+        // NOTE(johnlenz): It doesn't really matter which parent scope in the "change scope"
+        // invalidates this scope so it doesn't need to update when the parent changes.
+        getParent().addChildScope(this);
       }
     }
   }
