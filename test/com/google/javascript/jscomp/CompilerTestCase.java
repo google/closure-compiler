@@ -239,6 +239,8 @@ public abstract class CompilerTestCase extends TestCase {
           "Iterator.prototype.next;",
           "/**",
           " * @interface",
+          " * @extends {Iterator<VALUE>}",
+          " * @extends {Iterable<VALUE>}",
           " * @template VALUE",
           " */",
           "function IteratorIterable() {}",
@@ -404,6 +406,18 @@ public abstract class CompilerTestCase extends TestCase {
           " */",
           "Iterable.prototype[Symbol.iterator] = function() {};",
           "/** @type {number} */ var NaN;",
+          "/**",
+          " * @constructor",
+          " * @implements {IteratorIterable<VALUE>}",
+          " * @template VALUE",
+          " */",
+          "function Generator() {}",
+          "/**",
+          " * @param {?=} opt_value",
+          " * @return {!IIterableResult<VALUE>}",
+          " * @override",
+          " */",
+          "Generator.prototype.next = function(opt_value) {};",
           ACTIVE_X_OBJECT_DEF);
 
   /**

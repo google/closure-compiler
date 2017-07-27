@@ -1248,6 +1248,12 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         case "Iterable":
           getCommonTypes().setIterableType(rawType);
           break;
+        case "Iterator":
+          getCommonTypes().setIteratorType(rawType);
+          break;
+        case "Generator":
+          getCommonTypes().setGeneratorType(rawType);
+          break;
         case "ITemplateArray":
           getCommonTypes().setITemplateArrayType(rawType);
           break;

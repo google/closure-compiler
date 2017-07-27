@@ -21207,4 +21207,166 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}",
         "var /** !Foo */ x = new Bar;"));
   }
+
+  public void testGenerator() {
+    // Normal case
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {!Generator<number>} */",
+            "function* gen() {",
+            "  yield 1;",
+            "}"));
+
+    // Infers Generator<?> if type not specified in JSDoc
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen() {",
+            "  yield 1;",
+            "}",
+            "var g = gen();",
+            "var /** string */ x = g.next().value;",
+            "var /** number */ y = g.next().value;"));
+
+    // If type specified, check type of expression in yield.
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {!Generator<string>} */",
+            "function* gen() {",
+            "  yield 1;",
+            "}"),
+       NewTypeInference.YIELD_NONDECLARED_TYPE);
+
+    // Return type declared then type of value is determined
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {!Generator<string>} */",
+            "function* gen() {",
+            "}",
+            "var g = gen();",
+            "var /** number */ n = g.next().value;"),
+       NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // Type check within yield expression
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {!Generator<number>} */",
+            "function* gen(/** string */ k) {",
+            "  yield (k = 1);",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // Not a constructor
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen() {",
+            "  yield 1;",
+            "}",
+            "var g = new gen;"),
+        NewTypeInference.NOT_A_CONSTRUCTOR);
+
+    // Works fine if yield might not return number.
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {!Generator<number>} */",
+            "function* gen1() {",
+            "  var x = yield 1;",
+            "  yield x + 1;",
+            "}",
+            "var g = gen();",
+            "var /** number */ n = g.next('');",
+            "var /** number */ k = g.next('');"));
+
+    // Yield* has to have Iterable
+    typeCheck(
+        LINE_JOINER.join(
+            "var /** !Iterable<number> */ x;",
+            "/** @return {!Generator<number>} */",
+            "function* gen2() {",
+            "  yield* x;",
+            "}"));
+
+    // String works as iterable
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {!Generator<string>} */",
+            "function* gen2() {",
+            "  yield* '123';",
+            "}"));
+
+    // Invalid type for yield*
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen() {",
+            "  yield* 1;",
+            "}"),
+        NewTypeInference.YIELD_ALL_EXPECTS_ITERABLE);
+
+    // If it's declared to have return type of Unknown then the return type is Unknown
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {?} */",
+            "function* gen() {",
+            "  yield 1;",
+            "}",
+            "var /** string */ g = gen();",
+            "var /** number */ n = gen();"));
+
+    // Return type declared as Array
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {!Array<number>} */",
+            "function* gen() {",
+            "  yield 1;",
+            "}",
+            "var /** Array<number> */ x = gen();"),
+        NewTypeInference.INVALID_DECLARED_RETURN_TYPE_OF_GENERATOR_FUNCTION);
+
+    // Return type declared as Iterable
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {!Iterable<number>} */",
+            "function* gen() {",
+            "  yield 1;",
+            "}",
+            "var /** Iterable<number> */ x = gen();"),
+        NewTypeInference.INVALID_DECLARED_RETURN_TYPE_OF_GENERATOR_FUNCTION);
+
+    // Return type declared as Object
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {!Object} */",
+            "function* gen() {",
+            "  yield 1;",
+            "}",
+            "var /** Object */ x = gen();"),
+        NewTypeInference.INVALID_DECLARED_RETURN_TYPE_OF_GENERATOR_FUNCTION);
+
+    // Test return statement in Generator
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {!Generator<string>} */",
+            "function* gen() {",
+            "  return;",
+            "}",
+            "var /** Generator<string> */ x = gen();"));
+
+    // Test return with children in Generator
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {!Generator<string>} */",
+            "function* gen() {",
+            "  return 1;",
+            "}",
+            "var /** Generator<string> */ x = gen();"));
+
+    // Type check within return
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {!Generator<string>} */",
+            "function* gen() {",
+            "  var /** string */ x;",
+            "  return (x = 1);",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }

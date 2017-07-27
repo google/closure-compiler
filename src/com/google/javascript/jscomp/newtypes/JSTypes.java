@@ -164,7 +164,9 @@ public final class JSTypes implements Serializable {
   private RawNominalType iObject;
   private RawNominalType iArrayLike;
   private RawNominalType iterable;
+  private RawNominalType iterator;
   private RawNominalType iTemplateArray;
+  private RawNominalType generator;
 
   final boolean allowMethodsAsFunctions;
   final boolean looseSubtypingForLooseObjects;
@@ -328,6 +330,18 @@ public final class JSTypes implements Serializable {
     return this.iterable == null
         ? this.UNKNOWN
         : this.iterable.getInstanceAsJSType().instantiateGenerics(t);
+  }
+
+  public JSType getIteratorInstance(JSType t) {
+    return this.iterator == null
+        ? this.UNKNOWN
+        : this.iterator.getInstanceAsJSType().instantiateGenerics(t);
+  }
+
+  public JSType getGeneratorInstance(JSType t) {
+    return this.generator == null
+        ? this.UNKNOWN
+        : this.generator.getInstanceAsJSType().instantiateGenerics(t);
   }
 
   public NominalType getObjectType() {
@@ -531,8 +545,16 @@ public final class JSTypes implements Serializable {
     this.iterable = iterable;
   }
 
+  public void setIteratorType(RawNominalType iterator) {
+    this.iterator = iterator;
+  }
+
   public void setITemplateArrayType(RawNominalType iTemplateArray) {
     this.iTemplateArray = iTemplateArray;
+  }
+
+  public void setGeneratorType(RawNominalType generator) {
+    this.generator = generator;
   }
 
   public void setRegexpInstance(JSType regexpInstance) {

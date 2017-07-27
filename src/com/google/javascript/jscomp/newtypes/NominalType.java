@@ -58,18 +58,13 @@ public final class NominalType implements Serializable {
     this.rawType = rawType;
   }
 
-  // This should only be called during GlobalTypeInfo. All other calling contexts
-  // expect fully-instantiated types for properties defined on types, etc., but by accessing
-  // the raw nominal type directly they will get the uninstantiated generic types instead.
+  /**
+   * Use with caution.
+   * After GlobalTypeInfo, most calling contexts usually want the fully-instantiated types for
+   * properties defined on types, etc., but by accessing the raw nominal type directly they will
+   * get the uninstantiated generic types instead.
+   */
   public RawNominalType getRawNominalType() {
-    // If the raw nominal type is frozen, then we are not in GlobalTypeInfo any more.
-    checkState(!this.rawType.isFrozen());
-    return this.rawType;
-  }
-
-  // This is used for DisambiguateProperties. Do not call during NewTypeInference.
-  // See note for getRawNominalType.
-  public RawNominalType getRawNominalTypeAfterTypeChecking() {
     return this.rawType;
   }
 

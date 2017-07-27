@@ -707,17 +707,40 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   /**
-   * Given a type that is a subtype of Iterable, returns what that Iterable is instantiated with.
-   * Needed for typechecking for/of.
+   * Given an generic supertype of this,
+   * returns the type argument as instantiated by this type.
+   *
+   * Parameter supertype has to be a type with a single type parameter.
+   *
+   * For example,<pre>   {@code
+   *   (Iterable<Foo>).getInstantiatedTypeArgument(Iterable<?>) returns Foo,
+   *   and
+   *   /** {@literal @}template A * /
+   *   class Foo {}
+   *   /**
+   *    * {@literal @}template B
+   *    * {@literal @}extends {Foo<Array<B>>}
+   *    * /
+   *   class Bar {}
+   *   (Bar<string>).getInstantiatedTypeArguments(Bar<?>) returns string
+   *   (Bar<string>).getInstantiatedTypeArguments(Foo<?>) returns Array<string>
+   * }</pre>
+   * This is used, for example, in type-checking for-of and yield.
    */
-  public JSType getInstantiatedTypeOfIterable() {
-    String typeParam = ""; //needs to be unique and should never show up in an error message.
-    JSType newTypeVar = JSType.fromTypeVar(this.commonTypes, typeParam);
-    JSType iterableType = this.commonTypes.getIterableInstance(newTypeVar);
+  public JSType getInstantiatedTypeArgument(JSType supertype) {
+    RawNominalType rawType =
+        supertype.getNominalTypeIfSingletonObj().getRawNominalType();
+    List<String> typeParameters = rawType.getTypeParameters();
+    checkState(typeParameters.size() == 1);
+
+    String param = typeParameters.get(0);
+    Map<String, JSType> typeMap = new LinkedHashMap<>();
+    typeMap.put(param, JSType.fromTypeVar(this.commonTypes, param));
+
+    JSType reinstantiated = rawType.getInstanceAsJSType().substituteGenerics(typeMap);
     Multimap<String, JSType> typeMultimap = LinkedHashMultimap.create();
-    iterableType.unifyWith(this, ImmutableList.of(typeParam), typeMultimap);
-    Collection<JSType> types = typeMultimap.get(typeParam);
-    return joinManyTypes(this.commonTypes, types);
+    reinstantiated.unifyWith(this, typeParameters, typeMultimap);
+    return joinManyTypes(this.commonTypes, typeMultimap.get(param));
   }
 
   private static void updateTypemap(
@@ -2157,7 +2180,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   public final ObjectTypeI getRawType() {
     NominalType nt = getNominalTypeIfSingletonObj();
     return nt.isGeneric()
-        ? nt.getRawNominalTypeAfterTypeChecking().getInstanceAsJSType() : null;
+        ? nt.getRawNominalType().getInstanceAsJSType() : null;
   }
 
   @Override
