@@ -2957,6 +2957,12 @@ public final class DefaultPassConfig extends PassConfig {
             }
           };
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          // This pass requires gatherExternProperties to run before it can run
+          return ES8_MODULES;
+        }
       };
 
   /** Renames variables. */
