@@ -2720,17 +2720,19 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  /**
-   * Some simple, local collapses (e.g., {@code var x; var y;} becomes
-   * {@code var x,y;}.
-   */
+  /** Some simple, local collapses (e.g., {@code var x; var y;} becomes {@code var x,y;}. */
   private final PassFactory collapseVariableDeclarations =
       new PassFactory("collapseVariableDeclarations", true) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new CollapseVariableDeclarations(compiler);
-    }
-  };
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new CollapseVariableDeclarations(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
+      };
 
   /**
    * Extracts common sub-expressions.
