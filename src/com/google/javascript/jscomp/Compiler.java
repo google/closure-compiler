@@ -356,6 +356,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     }
 
+    moduleLoader = ModuleLoader.EMPTY;
+
     reconcileOptionsWithGuards();
 
     // TODO(johnlenz): generally, the compiler should not be changing the options object
