@@ -830,12 +830,21 @@ public final class ProcessCommonJSModules implements CompilerPass {
       if (root.matchesQualifiedName("module.exports")
           && rValue != null
           && t.getScope().getVar("module.exports") == null
-          && root.getParent().isAssign()
-          && root.getParent().getParent().isExprResult()) {
-        // Rewrite "module.exports = foo;" to "var moduleName = foo;"
-        Node parent = root.getParent();
-        Node var = IR.var(updatedExport, rValue.detach()).useSourceInfoFrom(root.getParent());
-        parent.getParent().replaceWith(var);
+          && root.getParent().isAssign()) {
+        if (root.getParent().getParent().isExprResult()) {
+          // Rewrite "module.exports = foo;" to "var moduleName = foo;"
+          Node parent = root.getParent();
+          Node var = IR.var(updatedExport, rValue.detach()).useSourceInfoFrom(root.getParent());
+          parent.getParent().replaceWith(var);
+        } else if (root.getNext() != null && root.getNext().isName() && rValueVar.isGlobal()) {
+          // This is a where a module export assignment is used in a complex expression.
+          // Before: `SOME_VALUE !== undefined && module.exports = SOME_VALUE`
+          // After: `SOME_VALUE !== undefined && module$name`
+          root.getParent().replaceWith(updatedExport);
+        } else {
+          // Other references to "module.exports" are just replaced with the module name.
+          export.replaceWith(updatedExport);
+        }
       } else {
         // Other references to "module.exports" are just replaced with the module name.
         export.replaceWith(updatedExport);
@@ -1062,6 +1071,13 @@ public final class ProcessCommonJSModules implements CompilerPass {
         case VAR:
         case LET:
         case CONST:
+          // Multiple declaration - needs split apart.
+          if (parent.getChildCount() > 1) {
+            splitMultipleDeclarations(parent);
+            parent = nameRef.getParent();
+            newNameDeclaration = t.getScope().getVar(newName);
+          }
+
           if (newNameIsQualified) {
             // Refactor a var declaration to a getprop assignment
             Node getProp = NodeUtil.newQName(compiler, newName, nameRef, originalName);
@@ -1078,6 +1094,14 @@ public final class ProcessCommonJSModules implements CompilerPass {
             }
           } else if (newNameDeclaration != null) {
             // Variable is already defined. Convert this to an assignment.
+            // If the variable declaration has no initialization, we simply
+            // remove the node. This can occur when the variable which is exported
+            // is declared in an outer scope but assigned in an inner one.
+            if (!nameRef.hasChildren()) {
+              parent.detachFromParent();
+              break;
+            }
+
             Node name = NodeUtil.newName(compiler, newName, nameRef, originalName);
             Node assign = IR.assign(name, nameRef.removeFirstChild());
             JSDocInfo info = parent.getJSDocInfo();
@@ -1380,6 +1404,15 @@ public final class ProcessCommonJSModules implements CompilerPass {
       for (Node child = typeNode.getFirstChild(); child != null;
            child = child.getNext()) {
         fixTypeNode(t, child);
+      }
+    }
+
+    private void splitMultipleDeclarations(Node var) {
+      checkState(NodeUtil.isNameDeclaration(var));
+      while (var.getSecondChild() != null) {
+        Node newVar = new Node(var.getToken(), var.removeFirstChild());
+        newVar.useSourceInfoFrom(var);
+        var.getParent().addChildBefore(newVar, var);
       }
     }
   }
