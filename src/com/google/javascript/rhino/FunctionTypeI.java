@@ -86,6 +86,7 @@ public interface FunctionTypeI extends TypeI {
   /** Gets the type of {@code this} in this function. */
   TypeI getTypeOfThis();
 
+  /** Whether this FunctionTypeI is a function with properties. */
   boolean hasProperties();
 
   void setSource(Node n);
@@ -104,7 +105,4 @@ public interface FunctionTypeI extends TypeI {
 
   /** Returns the maximum number of allowed arguments, or Integer.MAX_VALUE if variadic. */
   int getMaxArity();
-
-  /** Returns the names of all type parameters. */
-  Collection<String> getTypeParameters();
 }

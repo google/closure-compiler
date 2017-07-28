@@ -205,6 +205,13 @@ public class CompilerOptions implements Serializable {
   private boolean useNewTypeInference;
 
   /**
+   * Temporary option to help support TTL in NTI. We are adding TTL support gradually, but
+   * that breaks NTI projects. We use this option to only enable TTL in unit tests, until it
+   * is fully supported.
+   */
+  private boolean useTTLinNTI = false;
+
+  /**
    * Relevant only when {@link #useNewTypeInference} is true, where we normally disable OTI errors.
    * If you want both NTI and OTI errors in this case, set to true.
    * E.g. if using using a warnings guard to filter NTI or OTI warnings in new or legacy code,
@@ -1976,6 +1983,14 @@ public class CompilerOptions implements Serializable {
 
   public void setNewTypeInference(boolean enable) {
     this.useNewTypeInference = enable;
+  }
+
+  public boolean getUseTTLinNTI() {
+    return this.useTTLinNTI;
+  }
+
+  public void setUseTTLinNTI(boolean useTTLinNTI) {
+    this.useTTLinNTI = useTTLinNTI;
   }
 
   // Not dead code; used by the open-source users of the compiler.

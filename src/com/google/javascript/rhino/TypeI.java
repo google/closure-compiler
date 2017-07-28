@@ -40,6 +40,7 @@
 package com.google.javascript.rhino;
 
 import java.io.Serializable;
+import java.util.Collection;
 
 /**
  * A common interface for types in the old type system and the new type system,
@@ -192,6 +193,11 @@ public interface TypeI extends Serializable {
    * In NTI, a generic type can only be uninstantiated or fully instantiated.
    */
   boolean hasUninstantiatedTypeVariables();
+
+  /**
+   * If this type is a generic nominal type or function, return the names of all type parameters.
+   */
+  Collection<String> getTypeParameters();
 
   // TODO(sdh): Replace calls of toAnnotationString with toNonNullAnnotationString and
   // then substring off any leading '!' if necessary.  Then delete toAnnotationString

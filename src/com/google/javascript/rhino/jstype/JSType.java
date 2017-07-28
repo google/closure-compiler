@@ -558,6 +558,15 @@ public abstract class JSType implements TypeI {
     return templateTypeMap;
   }
 
+  @Override
+  public final ImmutableSet<String> getTypeParameters() {
+    ImmutableSet.Builder<String> params = ImmutableSet.builder();
+    for (TemplateType type : getTemplateTypeMap().getTemplateKeys()) {
+      params.add(type.toString());
+    }
+    return params.build();
+  }
+
   /**
    * Extends the template type map associated with this type, merging in the
    * keys and values of the specified map.

@@ -76,6 +76,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
           "goog.reflect.object;",
           "Object.prototype.superClass_;");
 
+  @SuppressWarnings("hiding")
   protected static final String DEFAULT_EXTERNS =
       CompilerTypeTestCase.DEFAULT_EXTERNS + LINE_JOINER.join(
           "/** @const {undefined} */",
@@ -175,7 +176,8 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
           " * @return {string}",
           " */",
           "String.raw = function(template, var_args) {};",
-          "");
+          "/** @return {?} */",
+          "function any() {}");
 
   @Override
   protected void setUp() throws Exception {
@@ -188,6 +190,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     CompilerOptions compilerOptions = super.getDefaultOptions();
     compilerOptions.setClosurePass(true);
     compilerOptions.setNewTypeInference(true);
+    compilerOptions.setUseTTLinNTI(true);
     compilerOptions.setWarningLevel(
         DiagnosticGroups.NEW_CHECK_TYPES_ALL_CHECKS, CheckLevel.WARNING);
     compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2017);

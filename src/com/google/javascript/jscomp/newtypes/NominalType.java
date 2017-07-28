@@ -26,7 +26,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
+import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.jscomp.newtypes.RawNominalType.PropAccess;
+import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
@@ -335,6 +337,15 @@ public final class NominalType implements Serializable {
     return this.rawType.getPropertyNames();
   }
 
+  // TODO(dimvar): rename methods in this file and the rest of this package that use the phrase
+  // OwnProp to NonInheritedProp, to avoid ambiguity with the built-in methods such as
+  // hasOwnProperty, which have different semantics. The built-in methods also look at properties
+  // directly on the instance that have been copied from a super type, while we care only about
+  // non-inherited properties.
+  public Set<String> getAllNonInheritedProps() {
+    return this.rawType.getAllNonInheritedProps();
+  }
+
   public Set<String> getAllOwnClassProps() {
     return this.rawType.getAllOwnClassProps();
   }
@@ -403,6 +414,15 @@ public final class NominalType implements Serializable {
     // TODO(aravindpg): Also look for getters and setters specially (in RawNominalType::protoProps),
     // but avoid putting them in the hot path of getProp.
     return p == null ? null : p.substituteGenerics(typeMap);
+  }
+
+  public JSDocInfo getPropertyJsdoc(String pname) {
+    Property p = getProp(pname, PropAccess.EXCLUDE_STRAY_PROPS);
+    if (p == null) {
+      return null;
+    }
+    Node defSite = p.getDefSite();
+    return defSite == null ? null : NodeUtil.getBestJSDocInfo(defSite);
   }
 
   public JSType getPropDeclaredType(String pname) {
@@ -541,8 +561,7 @@ public final class NominalType implements Serializable {
           "Type variable %s not in the domain: %s",
           typeVar, this.typeMap.keySet());
       JSType t = this.typeMap.get(typeVar);
-      if (!t.isUnknown()
-          && !t.equals(JSType.fromTypeVar(getCommonTypes(), typeVar))) {
+      if (!(t.isUnknown() || t.equals(JSType.fromTypeVar(getCommonTypes(), typeVar)))) {
         return false;
       }
     }

@@ -85,6 +85,11 @@ public interface TypeIRegistry extends Serializable {
    */
   String createSetterPropName(String originalPropName);
 
+  /**
+   * Returns the type represented by typeName.
+   * If you pass Foo to this method, you get the Foo instance.
+   * This is in contrast to TypeIEnv#getNamespaceType, where you'd get the Foo constructor.
+   */
   <T extends TypeI> T getType(String typeName);
 
   TypeI createUnionType(List<? extends TypeI> variants);
@@ -94,6 +99,12 @@ public interface TypeIRegistry extends Serializable {
    */
   TypeI createRecordType(Map<String, ? extends TypeI> props);
 
+  /**
+   * Instantiates genericType using typeArgs.
+   * If genericType has fewer type variables than the number of typeArgs, we pad with unknown.
+   * If it has more, we drop the extra typeArgs.
+   * TODO(dimvar): fix the callers to pass the right number of typeArgs and throw here.
+   */
   TypeI instantiateGenericType(ObjectTypeI genericType, ImmutableList<? extends TypeI> typeArgs);
 
   TypeI evaluateTypeExpressionInGlobalScope(JSTypeExpression expr);

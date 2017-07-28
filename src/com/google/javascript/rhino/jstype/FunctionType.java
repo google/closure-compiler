@@ -1410,15 +1410,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   }
 
   @Override
-  public ImmutableSet<String> getTypeParameters() {
-    ImmutableSet.Builder<String> params = ImmutableSet.builder();
-    for (TemplateType type : getTemplateTypeMap().getTemplateKeys()) {
-      params.add(type.toString());
-    }
-    return params.build();
-  }
-
-  @Override
   public TypeI convertMethodToFunction() {
     List<JSType> paramTypes = new ArrayList<>();
     paramTypes.add(getTypeOfThis());

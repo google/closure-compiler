@@ -30,6 +30,7 @@ import com.google.javascript.jscomp.newtypes.RawNominalType.PropAccess;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -1600,6 +1601,38 @@ final class ObjectType implements TypeWithProperties {
     props.addAll(this.props.keySet());
     props.addAll(this.nominalType.getPropertyNames());
     return props;
+  }
+
+  Iterable<String> getNonInheritedPropertyNames() {
+    if (this.nominalType.isBuiltinObject() || this.nominalType.isLiteralObject()) {
+      return this.props.keySet();
+    }
+    return Iterables.concat(this.props.keySet(), this.nominalType.getAllNonInheritedProps());
+  }
+
+  ObjectType toAnonymousRecord() {
+    if (this.nominalType.isBuiltinObject() || this.nominalType.isLiteralObject()) {
+      return this;
+    }
+    Map<String, Property> propMap = new LinkedHashMap<>();
+    for (String pname : getNonInheritedPropertyNames()) {
+      JSType ptype = getProp(new QualifiedName(pname));
+      propMap.put(pname, Property.make(ptype, ptype));
+    }
+    return fromProperties(this.commonTypes, propMap);
+  }
+
+  Node getDefSite() {
+    if (this.ns != null) {
+      return this.ns.getDefSite();
+    }
+    if (this.fn != null && this.fn.isSomeConstructorOrInterface()) {
+      return this.fn.getInstanceTypeOfCtor().getSource();
+    }
+    if (this.nominalType != null) {
+      return this.nominalType.getDefSite();
+    }
+    return null;
   }
 
   @Override

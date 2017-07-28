@@ -261,7 +261,7 @@ public abstract class ObjectType
   @Override
   public ObjectType getRawType() {
     TemplatizedType t = toMaybeTemplatizedType();
-    return t == null ? null : t.getReferencedType();
+    return t == null ? this : t.getReferencedType();
   }
 
   @Override

@@ -324,31 +324,31 @@ public final class JSTypes implements Serializable {
   public JSType getIArrayLikeInstance(JSType t) {
     return this.iArrayLike == null
         ? this.UNKNOWN
-        : this.iArrayLike.getInstanceAsJSType().instantiateGenerics(t);
+        : this.iArrayLike.getInstanceAsJSType().instantiateGenerics(ImmutableList.of(t));
   }
 
   public JSType getIterableInstance(JSType t) {
     return this.iterable == null
         ? this.UNKNOWN
-        : this.iterable.getInstanceAsJSType().instantiateGenerics(t);
+        : this.iterable.getInstanceAsJSType().instantiateGenerics(ImmutableList.of(t));
   }
 
   public JSType getIteratorInstance(JSType t) {
     return this.iterator == null
         ? this.UNKNOWN
-        : this.iterator.getInstanceAsJSType().instantiateGenerics(t);
+        : this.iterator.getInstanceAsJSType().instantiateGenerics(ImmutableList.of(t));
   }
 
   public JSType getIIterableResultInstance(JSType t) {
     return this.iIterableResult == null
         ? this.UNKNOWN
-        : this.iIterableResult.getInstanceAsJSType().instantiateGenerics(t);
+        : this.iIterableResult.getInstanceAsJSType().instantiateGenerics(ImmutableList.of(t));
   }
 
   public JSType getGeneratorInstance(JSType t) {
     return this.generator == null
         ? this.UNKNOWN
-        : this.generator.getInstanceAsJSType().instantiateGenerics(t);
+        : this.generator.getInstanceAsJSType().instantiateGenerics(ImmutableList.of(t));
   }
 
   public NominalType getObjectType() {

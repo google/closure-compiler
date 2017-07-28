@@ -511,7 +511,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       return;
     }
     NominalType superClass = rawType.getSuperClass();
-    Set<String> nonInheritedPropNames = rawType.getAllOwnProps();
+    Set<String> nonInheritedPropNames = rawType.getAllNonInheritedProps();
     if (superClass != null && !superClass.isFrozen()) {
       checkAndFreezeNominalType(superClass.getRawNominalType());
     }
@@ -521,8 +521,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       }
     }
 
-    Multimap<String, DeclaredFunctionType> propMethodTypesToProcess =
-        LinkedHashMultimap.create();
+    Multimap<String, DeclaredFunctionType> propMethodTypesToProcess = LinkedHashMultimap.create();
     Multimap<String, JSType> propTypesToProcess = LinkedHashMultimap.create();
     // Collect inherited types for extended classes
     if (superClass != null) {
@@ -548,8 +547,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       checkState(superInterf.isFrozen());
       for (String pname : superInterf.getPropertyNames()) {
         nonInheritedPropNames.remove(pname);
-        checkSuperProperty(rawType, superInterf, pname,
-            propMethodTypesToProcess, propTypesToProcess);
+        checkSuperProperty(
+            rawType, superInterf, pname, propMethodTypesToProcess, propTypesToProcess);
       }
     }
 
@@ -578,12 +577,12 @@ public class GlobalTypeInfoCollector implements CompilerPass {
             superMethodType.toFunctionType().toString(),
             localMethodType.toFunctionType().toString()));
       }
+      superMethodType = mayInstantiateGenericsWithUnknown(rawType, pname, superMethodType);
       DeclaredFunctionType updatedMethodType =
           localMethodType.withTypeInfoFromSuper(superMethodType, getsTypeFromParent);
       localPropDef.updateMethodType(updatedMethodType);
       propTypesToProcess.put(pname,
-          getCommonTypes().fromFunctionType(
-              updatedMethodType.toFunctionType()));
+          getCommonTypes().fromFunctionType(updatedMethodType.toFunctionType()));
     }
 
     // Check inherited types of all props
@@ -654,6 +653,34 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         literalObj.getRawNominalType().freeze();
       }
     }
+  }
+
+  /**
+   * When a class/interface inherits from an ancestor class/interface with a method that uses TTL,
+   * instantiate the type variables with unknown in the child method.
+   * Don't bother handling multiple ancestor methods with TTL.
+   * TODO(dimvar): delete this when we handle TTL inside newtypes/FunctionType.
+   */
+  private DeclaredFunctionType mayInstantiateGenericsWithUnknown(
+      RawNominalType rawType, String propName, DeclaredFunctionType inheritedPropType) {
+    Set<NominalType> superInterfaces = rawType.getInterfaces();
+
+    NominalType superClass = rawType.getSuperClass();
+    if (superClass != null) {
+      JSDocInfo jsdoc = superClass.getPropertyJsdoc(propName);
+      if (jsdoc != null && !jsdoc.getTypeTransformations().isEmpty()) {
+        return inheritedPropType.instantiateGenericsWithUnknown();
+      }
+    }
+
+    for (NominalType superInterface : superInterfaces) {
+      JSDocInfo jsdoc = superInterface.getPropertyJsdoc(propName);
+      if (jsdoc != null && !jsdoc.getTypeTransformations().isEmpty()) {
+        return inheritedPropType.instantiateGenericsWithUnknown();
+      }
+    }
+
+    return inheritedPropType;
   }
 
   // TODO(dimvar): the finalization method and this one should be cleaned up;

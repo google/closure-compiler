@@ -252,7 +252,7 @@ public class GlobalTypeInfo implements TypeIRegistry {
       case "void":
         return commonTypes.UNDEFINED;
       default:
-        return globalScope.getType(typeName);
+        return this.globalScope.getInstanceType(typeName);
     }
   }
 
@@ -276,9 +276,13 @@ public class GlobalTypeInfo implements TypeIRegistry {
     return result;
   }
 
+  /**
+   * This method is only called by TTL and the typeEnv passed is the global scope.
+   * We ignore the typeEnv here because createTypeFromCommentNode already uses the global scope.
+   */
   @Override
   public TypeI evaluateTypeExpression(JSTypeExpression expr, TypeIEnv<TypeI> typeEnv) {
-    throw new UnsupportedOperationException();
+    return createTypeFromCommentNode(expr.getRoot());
   }
 
   @Override
@@ -286,20 +290,31 @@ public class GlobalTypeInfo implements TypeIRegistry {
     return createTypeFromCommentNode(expr.getRoot());
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public TypeI createRecordType(Map<String, ? extends TypeI> props) {
-    throw new UnsupportedOperationException();
+    return JSType.fromProperties(this.commonTypes, (Map<String, JSType>) props);
   }
 
   @Override
   public TypeI instantiateGenericType(
       ObjectTypeI genericType, ImmutableList<? extends TypeI> typeArgs) {
-    throw new UnsupportedOperationException();
+    JSType t = (JSType) genericType;
+    int numTypeParams = t.getTypeParameters().size();
+    int numTypeArgs = typeArgs.size();
+    if (numTypeArgs == numTypeParams) {
+      return t.instantiateGenerics(typeArgs);
+    }
+    ArrayList<JSType> newTypeArgs = new ArrayList<>(numTypeParams);
+    for (int i = 0; i < numTypeParams; i++) {
+      newTypeArgs.add(i < numTypeArgs ? (JSType) typeArgs.get(i) : this.commonTypes.UNKNOWN);
+    }
+    return t.instantiateGenerics(newTypeArgs);
   }
 
   @Override
   public TypeI buildRecordTypeFromObject(ObjectTypeI obj) {
-    throw new UnsupportedOperationException();
+    return JSType.buildRecordTypeFromObject(this.commonTypes, (JSType) obj);
   }
 
   @GwtIncompatible("ObjectInputStream")

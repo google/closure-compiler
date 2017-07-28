@@ -24,10 +24,8 @@ import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * This class represents the function types for functions that are defined
@@ -65,7 +63,7 @@ public final class DeclaredFunctionType implements Serializable {
       JSType retType,
       JSType nominalType,
       JSType receiverType,
-      ImmutableList<String> typeParameters,                                            
+      ImmutableList<String> typeParameters,
       boolean isAbstract) {
     checkArgument(retType == null || !retType.isBottom());
     checkNotNull(commonTypes);
@@ -299,21 +297,19 @@ public final class DeclaredFunctionType implements Serializable {
     return builder.buildDeclaration();
   }
 
-  public DeclaredFunctionType substituteTTLGenericsWithUnknown(Set<String> ttlVars) {
-    Map<String, JSType> m = new LinkedHashMap<>();
-    for (String ttlVar : ttlVars) {
-      String generatedName = UniqueNameGenerator.findGeneratedName(ttlVar, this.typeParameters);
-      m.put(generatedName, this.commonTypes.UNKNOWN);
-    }
-    return substituteGenerics(m).buildDeclaration();
+  public DeclaredFunctionType instantiateGenericsWithUnknown() {
+    return substituteGenerics(this.commonTypes.MAP_TO_UNKNOWN).buildDeclaration();
   }
 
-  /**
-   * The domain of the typeMap and this.typeParameters overlap, in the case when we are
-   * substituting the TTL type variables with unknown.
-   */
   private FunctionTypeBuilder substituteGenerics(Map<String, JSType> typeMap) {
     checkState(!typeMap.isEmpty());
+    // Before we switched to unique generated names for type variables, a method's type variables
+    // could shadow type variables defined on the class. Check that this no longer happens.
+    if (!this.commonTypes.MAP_TO_UNKNOWN.equals(typeMap)) {
+      for (String typeParam : this.typeParameters) {
+        checkState(!typeMap.containsKey(typeParam));
+      }
+    }
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
     for (JSType reqFormal : requiredFormals) {
       builder.addReqFormal(reqFormal == null ? null : reqFormal.substituteGenerics(typeMap));

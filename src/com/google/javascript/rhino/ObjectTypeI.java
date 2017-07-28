@@ -78,6 +78,10 @@ public interface ObjectTypeI extends TypeI {
   // true for "classy" objects only?
   boolean isInstanceType();
 
+  /**
+   * If this type is not generic, return as is. If it is an instantiated generic type, drop the
+   * type arguments.
+   */
   ObjectTypeI getRawType();
 
   /**
@@ -103,9 +107,8 @@ public interface ObjectTypeI extends TypeI {
   boolean hasOwnProperty(String propertyName);
 
   /**
-   * Returns the names of all properties that exist on all instances of this type.
-   * Does not return any extras that exist only on this instance.
-   * Does not return prototype properties, or properties of ancestor types.
+   * Return the names of all non-inherited properties of this type, including prototype properties.
+   * If this type represents an object literal, do not include Object.prototype properties.
    */
   Iterable<String> getOwnPropertyNames();
 

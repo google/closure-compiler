@@ -356,8 +356,9 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
       return false;
     }
     for (Node child : n.children()) {
-      if (child.isVoid() || child.isString()
-          && (child.getString().equals("void") || child.getString().equals("undefined"))) {
+      if (child.isVoid()
+          || (child.isString()
+              && (child.getString().equals("void") || child.getString().equals("undefined")))) {
         return true;
       }
     }
@@ -823,8 +824,15 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
           typeParamsBuilder.add(this.nameGen.getNextName(typeParam));
         }
       }
-      // We don't properly support the type transformation language; we treat
-      // its type variables as ordinary type variables.
+      // TODO(dimvar): without TTL, we have treated typedefs as macros. We resolve them before
+      // typechecking and a typedef's name means nothing during NTI. However, this is not possible
+      // with TTL. When calling a function that uses TTL, we evaluate jstypeexpressions during NTI,
+      // so we have to deal with type ASTs during NTI. If the TTL AST uses the name of a typedef,
+      // we need to know what type that name refers to. The only logical way to handle this is to
+      // remember the typedef names during NTI. An alternative would be to convert the resolved
+      // typedef to a type AST and substitute it in the jsdoc that contains the TTL during GTI,
+      // but that is both difficult and a terrible hack.
+      // In a follow-up CL, I will keep the typedef names around after GTI.
       for (String typeParam : jsdoc.getTypeTransformations().keySet()) {
         typeParamsBuilder.add(this.nameGen.getNextName(typeParam));
       }

@@ -39,6 +39,7 @@ import com.google.javascript.jscomp.newtypes.RawNominalType;
 import com.google.javascript.jscomp.newtypes.Typedef;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeIEnv;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -51,7 +52,7 @@ import java.util.Set;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-final class NTIScope implements DeclaredTypeRegistry, Serializable {
+final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JSType> {
   private final NTIScope parent;
   private final Node root;
   // Name on the function AST node; null for top scope & anonymous functions
@@ -86,10 +87,12 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
   // For top level, the DeclaredFunctionType just includes a type for THIS.
   // For functions, the DeclaredFunctionType is never null, even those without jsdoc.
   // Any inferred parameters or return will be set to null individually.
-  // If the function uses TTL, we instantiate the TTL variables to ?.
-  // TODO(dimvar): instead, we want to evaluate the TTL variables when the non-TTL variables are
-  // unknown, and use that for the declaredType. Will try in a follow-up CL.
   private DeclaredFunctionType declaredType;
+  // This field is used to typecheck the body of a function that uses TTL.
+  // We instantiate the TTL variables to ?.
+  // If a function does not use TTL, this field has the same value as declaredType.
+  // TODO(dimvar): instead, instantiate the non-TTL generics to ? and evaluate the TTL variables.
+  private DeclaredFunctionType declaredTypeForOwnBody;
 
   NTIScope(Node root, NTIScope parent, List<String> formals, JSTypes commonTypes) {
     checkNotNull(commonTypes);
@@ -137,23 +140,25 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
 
   void setDeclaredType(DeclaredFunctionType declaredType) {
     checkNotNull(declaredType);
-    Map<String, Node> typeTransformations = getTypeTransformations();
-    if (typeTransformations.isEmpty()) {
-      this.declaredType = declaredType;
-    } else {
-      Set<String> ttlVars = typeTransformations.keySet();
-      this.declaredType = declaredType.substituteTTLGenericsWithUnknown(ttlVars);
-    }
+    this.declaredType = this.declaredTypeForOwnBody = declaredType;
     // In NTI, we set the type of a function node after we create the summary.
     // NTI doesn't analyze externs, so we set the type for extern functions here.
     if (this.root.isFromExterns()) {
       this.root.setTypeI(this.commonTypes.fromFunctionType(declaredType.toFunctionType()));
+    }
+    if (!getTypeTransformations().isEmpty()) {
+      Set<String> ttlVars = getTypeTransformations().keySet();
+      this.declaredTypeForOwnBody = declaredType.instantiateGenericsWithUnknown();
     }
   }
 
   @Override
   public DeclaredFunctionType getDeclaredFunctionType() {
     return this.declaredType;
+  }
+
+  public DeclaredFunctionType getDeclaredTypeForOwnBody() {
+    return this.declaredTypeForOwnBody;
   }
 
   boolean isFunction() {
@@ -366,7 +371,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
       if (!hasThis()) {
         return null;
       }
-      return getDeclaredFunctionType().getThisType();
+      return getDeclaredTypeForOwnBody().getThisType();
     }
     Declaration decl = getLocalDeclaration(name, false);
     if (decl != null) {
@@ -586,6 +591,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
     if (!isDefinedLocally(name, includeTypes)) {
       return null;
     }
+    DeclaredFunctionType declaredType = getDeclaredTypeForOwnBody();
     JSType type = null;
     boolean isTypeVar = false;
     if ("this".equals(name)) {
@@ -659,15 +665,35 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable {
     return parent == null ? null : parent.getDeclaration(name, includeTypes);
   }
 
-  public JSType getType(String typeName) {
+  private Namespace getNamespaceAfterFreezing(String typeName) {
     checkNotNull(preservedNamespaces, "Failed to preserve namespaces post-finalization");
     QualifiedName qname = QualifiedName.fromQualifiedString(typeName);
     Namespace ns = preservedNamespaces.get(qname.getLeftmostName());
     if (ns != null && !qname.isIdentifier()) {
       ns = ns.getSubnamespace(qname.getAllButLeftmost());
     }
-    if (ns instanceof RawNominalType) {
-      return ((RawNominalType) ns).getInstanceAsJSType();
+    return ns;
+  }
+
+  public JSType getInstanceType(String typeName) {
+    Namespace ns = getNamespaceAfterFreezing(typeName);
+    return ns instanceof RawNominalType ? ((RawNominalType) ns).getInstanceAsJSType() : null;
+  }
+
+  @Override
+  public JSType getNamespaceType(String typeName) {
+    Namespace ns = getNamespaceAfterFreezing(typeName);
+    return ns == null ? null : ns.toJSType();
+  }
+
+  @Override
+  public JSDocInfo getJsdocOfTypeDeclaration(String typeName) {
+    JSType t = getInstanceType(typeName);
+    if (t != null) {
+      Node defSite = t.getSource();
+      if (defSite != null) {
+        return NodeUtil.getBestJSDocInfo(defSite);
+      }
     }
     return null;
   }

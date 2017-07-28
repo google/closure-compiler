@@ -426,6 +426,7 @@ final class NewTypeInference implements CompilerPass {
   private List<TypeMismatch> implicitInterfaceUses;
   private final AbstractCompiler compiler;
   private final CodingConvention convention;
+  private TypeTransformation ttlObj;
   private final Map<DiGraphEdge<Node, ControlFlowGraph.Branch>, TypeEnv> envs;
   private final Map<NTIScope, JSType> summaries;
   private final Map<Node, DeferredCheck> deferredChecks;
@@ -441,6 +442,7 @@ final class NewTypeInference implements CompilerPass {
   @SuppressWarnings("ConstantField")
   private final String ABSTRACT_METHOD_NAME;
   private final Map<String, AssertionFunctionSpec> assertionFunctionsMap;
+
   // To avoid creating warning objects for disabled warnings
   private final boolean reportUnknownTypes;
   private final boolean reportNullDeref;
@@ -522,7 +524,8 @@ final class NewTypeInference implements CompilerPass {
   public void process(Node externs, Node root) {
     try {
       this.symbolTable = (GlobalTypeInfo) compiler.getGlobalTypeInfo();
-      this.commonTypes = symbolTable.getCommonTypes();
+      this.commonTypes = this.symbolTable.getCommonTypes();
+      this.ttlObj = new TypeTransformation(compiler, this.symbolTable.getGlobalScope());
       this.mismatches = symbolTable.getMismatches();
       this.implicitInterfaceUses = symbolTable.getImplicitInterfaceUses();
 
@@ -720,7 +723,7 @@ final class NewTypeInference implements CompilerPass {
       // In the rare case when there is a local variable named "arguments",
       // this entry will be overwritten in the foreach loop below.
       JSType argumentsType;
-      DeclaredFunctionType dft = this.currentScope.getDeclaredFunctionType();
+      DeclaredFunctionType dft = this.currentScope.getDeclaredTypeForOwnBody();
       if (dft.getOptionalArity() == 0 && dft.hasRestFormals()) {
         argumentsType = dft.getRestFormalsType();
       } else {
@@ -829,7 +832,7 @@ final class NewTypeInference implements CompilerPass {
           if (retExp == null) {
             inEnv = outEnv;
           } else {
-            JSType declRetType = this.currentScope.getDeclaredFunctionType().getReturnType();
+            JSType declRetType = this.currentScope.getDeclaredTypeForOwnBody().getReturnType();
             declRetType = firstNonNull(declRetType, UNKNOWN);
             inEnv = analyzeExprBwd(retExp, outEnv, declRetType).env;
           }
@@ -1026,7 +1029,8 @@ final class NewTypeInference implements CompilerPass {
 
   private TypeEnv processReturn(Node n, TypeEnv inEnv) {
     if (this.currentScope.getRoot().isGeneratorFunction()) {
-      JSType declRetType = getDeclaredReturnTypeOfCurrentScope(this.commonTypes.getGeneratorInstance(UNKNOWN));
+      JSType declRetType =
+          getDeclaredReturnTypeOfCurrentScope(this.commonTypes.getGeneratorInstance(UNKNOWN));
       if (n.hasChildren()) {
         EnvTypePair retPair = analyzeExprFwd(n.getFirstChild(), inEnv, UNKNOWN);
         return envPutType(retPair.env, RETVAL_ID, declRetType);
@@ -1308,7 +1312,7 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private JSType getDeclaredReturnTypeOfCurrentScope(JSType defaultType) {
-    JSType declRetType = this.currentScope.getDeclaredFunctionType().getReturnType();
+    JSType declRetType = this.currentScope.getDeclaredTypeForOwnBody().getReturnType();
     if (declRetType == null) {
       declRetType = defaultType;
     } else if (this.areTypeVariablesUnknown) {
@@ -2000,14 +2004,10 @@ final class NewTypeInference implements CompilerPass {
     Node cond = expr.getFirstChild();
     Node thenBranch = cond.getNext();
     Node elseBranch = thenBranch.getNext();
-    TypeEnv trueEnv =
-        analyzeExprFwd(cond, inEnv, UNKNOWN, TRUTHY).env;
-    TypeEnv falseEnv =
-        analyzeExprFwd(cond, inEnv, UNKNOWN, FALSY).env;
-    EnvTypePair thenPair =
-        analyzeExprFwd(thenBranch, trueEnv, requiredType, specializedType);
-    EnvTypePair elsePair =
-        analyzeExprFwd(elseBranch, falseEnv, requiredType, specializedType);
+    TypeEnv trueEnv = analyzeExprFwd(cond, inEnv, UNKNOWN, TRUTHY).env;
+    TypeEnv falseEnv = analyzeExprFwd(cond, inEnv, UNKNOWN, FALSY).env;
+    EnvTypePair thenPair = analyzeExprFwd(thenBranch, trueEnv, requiredType, specializedType);
+    EnvTypePair elsePair = analyzeExprFwd(elseBranch, falseEnv, requiredType, specializedType);
     return EnvTypePair.join(thenPair, elsePair);
   }
 
@@ -2021,6 +2021,63 @@ final class NewTypeInference implements CompilerPass {
       warnings.add(JSError.make(call, REFLECT_CONSTRUCTOR_EXPECTED));
     }
     return new EnvTypePair(pair.env, TOP_OBJECT);
+  }
+
+  /**
+   * Given the qualified name of a function, find the AST node that defines the function.
+   */
+  private Node getFunctionDeclNodeFromQname(QualifiedName funQname, TypeEnv env) {
+    if (funQname.isIdentifier()) {
+      return this.currentScope.isKnownFunction(funQname)
+          ? this.currentScope.getScope(funQname.getLeftmostName()).getRoot() : null;
+    }
+    JSType recvType = envGetTypeOfQname(env, funQname.getAllButRightmost());
+    return recvType == null ? null : recvType.getPropertyDefSite(funQname.getRightmostName());
+  }
+
+  private ImmutableMap<String, Node> getTypeTransformationsOfCallee(Node callee, TypeEnv env) {
+    if (callee.isQualifiedName()) {
+      QualifiedName qname = QualifiedName.fromNode(callee);
+      Node funDeclNode = getFunctionDeclNodeFromQname(qname, env);
+      if (funDeclNode != null) {
+        JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(funDeclNode);
+        if (jsdoc != null && !jsdoc.getTypeTransformations().isEmpty()) {
+          return jsdoc.getTypeTransformations();
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * When calling a generic function that uses TTL, we need to map the TTL variables to types.
+   * This method finds the TTL expressions, calls TypeTransformation#eval to evaluate them,
+   * and updates the type map at the generic call.
+   *
+   * NOTE(dimvar): we only handle TTL when the callee is a qualified name that is the name of
+   * a TTL function. In other words, we do not treat TTL types as first class; we do not propagate
+   * them through the type system. If the TTL function is assigned to some other variable and
+   * then called with that name, we do not detect that.
+   * We'll handle this in a follow-up CL; it is needed for inheritance (child method w/ @override)
+   * and possibly for module aliases as well.
+   */
+  private ImmutableMap<String, JSType> calcTtlInstantiationFwd(
+      Node callee, FunctionType calleeType, ImmutableMap<String, JSType> typeMap, TypeEnv env) {
+    ImmutableMap<String, Node> typeTransformations = getTypeTransformationsOfCallee(callee, env);
+    if (typeTransformations == null || !this.compiler.getOptions().getUseTTLinNTI()) {
+      return typeMap;
+    }
+    LinkedHashMap<String, JSType> newTypeMap = new LinkedHashMap<>();
+    newTypeMap.putAll(typeMap);
+    List<String> calleeTypeParams = calleeType.getTypeParameters();
+    for (Map.Entry<String, Node> entry : typeTransformations.entrySet()) {
+      String ttlVar = UniqueNameGenerator.findGeneratedName(entry.getKey(), calleeTypeParams);
+      Node transform = entry.getValue();
+      @SuppressWarnings({"unchecked", "rawtypes"})
+      JSType t = (JSType) this.ttlObj.eval(transform, (ImmutableMap) typeMap);
+      newTypeMap.put(ttlVar, t);
+    }
+    return ImmutableMap.copyOf(newTypeMap);
   }
 
   private EnvTypePair analyzeInvocationFwd(
@@ -2089,10 +2146,11 @@ final class NewTypeInference implements CompilerPass {
 
     FunctionType origFunType = funType; // save for later
     if (funType.isGeneric()) {
-      Map<String, JSType> typeMap = calcTypeInstantiationFwd(
-          expr,
-          callee.isGetProp() ? callee.getFirstChild() : null,
-          expr.getSecondChild(), funType, envAfterCallee);
+      Node receiver = callee.isGetProp() ? callee.getFirstChild() : null;
+      Node firstArg = expr.getSecondChild();
+      ImmutableMap<String, JSType> typeMap =
+          calcTypeInstantiationFwd(expr, receiver, firstArg, funType, envAfterCallee);
+      typeMap = calcTtlInstantiationFwd(callee, funType, typeMap, calleePair.env);
       funType = funType.instantiateGenerics(typeMap);
       println("Instantiated function type: ", funType);
     }
@@ -2695,12 +2753,12 @@ final class NewTypeInference implements CompilerPass {
     }
   }
 
-  private Map<String, JSType> calcTypeInstantiationFwd(
+  private ImmutableMap<String, JSType> calcTypeInstantiationFwd(
       Node callNode, Node receiver, Node firstArg, FunctionType funType, TypeEnv typeEnv) {
     return calcTypeInstantiation(callNode, receiver, firstArg, funType, typeEnv, true);
   }
 
-  private Map<String, JSType> calcTypeInstantiationBwd(
+  private ImmutableMap<String, JSType> calcTypeInstantiationBwd(
       Node callNode, FunctionType funType, TypeEnv typeEnv) {
     return calcTypeInstantiation(
         callNode, null, callNode.getSecondChild(), funType, typeEnv, false);
@@ -3983,8 +4041,7 @@ final class NewTypeInference implements CompilerPass {
       }
     }
     if (funType.isGeneric()) {
-      Map<String, JSType> typeMap =
-          calcTypeInstantiationBwd(expr, funType, envAfterCallee);
+      Map<String, JSType> typeMap = calcTypeInstantiationBwd(expr, funType, envAfterCallee);
       funType = funType.instantiateGenerics(typeMap);
     }
     TypeEnv tmpEnv = envAfterCallee;
