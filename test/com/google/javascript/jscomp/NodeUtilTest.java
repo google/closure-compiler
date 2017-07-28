@@ -52,7 +52,7 @@ public final class NodeUtilTest extends TestCase {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
     compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT_2015);
-    compiler.getOptions().setStrictModeInput(false);
+    compiler.getOptions().setStrictModeInput(true);
     Node n = compiler.parseTestCode(js);
     assertThat(compiler.getErrors()).isEmpty();
     return n;
@@ -1461,6 +1461,10 @@ public final class NodeUtilTest extends TestCase {
 
     ImmutableSet<String> defines = ImmutableSet.of();
     return NodeUtil.isValidDefineValue(value, defines);
+  }
+
+  public void testGetOctalNumberValue() {
+    assertEquals(18.0, NodeUtil.getNumberValue(getNode("022")), 0.0);
   }
 
   @SuppressWarnings("JUnit3FloatingPointComparisonWithoutDelta")

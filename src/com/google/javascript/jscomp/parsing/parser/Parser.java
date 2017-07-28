@@ -1155,7 +1155,6 @@ public class Parser {
          || peek(1, TokenType.ENUM)
          || peek(1, TokenType.MODULE)
          || peek(1, TokenType.NAMESPACE));
-
   }
 
   private boolean peekAmbientNamespaceElement() {
