@@ -242,6 +242,12 @@ public final class DefaultPassConfig extends PassConfig {
 
     checks.add(createEmptyPass("beforeStandardChecks"));
 
+    // Note: ChromePass can rewrite invalid @type annotations into valid ones, so should run before
+    // JsDoc checks.
+    if (options.isChromePassEnabled()) {
+      checks.add(chromePass);
+    }
+
     // Verify JsDoc annotations
     checks.add(checkJsDoc);
 
@@ -308,10 +314,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.closurePass) {
       checks.add(closurePrimitives);
-    }
-
-    if (options.isChromePassEnabled()) {
-      checks.add(chromePass);
     }
 
     // It's important that the PolymerPass run *after* the ClosurePrimitives and ChromePass rewrites
@@ -1103,6 +1105,11 @@ public final class DefaultPassConfig extends PassConfig {
    * @param checks The list of check passes
    */
   private void assertValidOrderForChecks(List<PassFactory> checks) {
+    assertPassOrder(
+        checks,
+        chromePass,
+        checkJsDoc,
+        "The ChromePass must run before after JsDoc checking.");
     assertPassOrder(
         checks,
         closureRewriteModule,
