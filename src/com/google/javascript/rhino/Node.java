@@ -387,47 +387,33 @@ public class Node implements Serializable {
     }
   }
 
-  // PropListItems must be immutable so that they can be shared.
-  private interface PropListItem {
-    byte getType();
-    @Nullable
-    PropListItem getNext();
-
-    PropListItem chain(@Nullable PropListItem next);
-    Object getObjectValue();
-    int getIntValue();
-  }
-
-  private abstract static class AbstractPropListItem
-      implements PropListItem, Serializable {
+  private abstract static class PropListItem implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @Nullable private final PropListItem next;
+    private final @Nullable PropListItem next;
     private final byte propType;
 
-    AbstractPropListItem(byte propType, @Nullable PropListItem next) {
+    PropListItem(byte propType, @Nullable PropListItem next) {
       this.propType = propType;
       this.next = next;
     }
 
-    @Override
-    public byte getType() {
+
+    public final byte getType() {
       return propType;
     }
 
-    @Override
-    @Nullable
-    public PropListItem getNext() {
+    public final @Nullable PropListItem getNext() {
       return next;
     }
 
-    @Override
+    public abstract int getIntValue();
+    public abstract Object getObjectValue();
     public abstract PropListItem chain(@Nullable PropListItem next);
   }
 
   // A base class for Object storing props
-  private static class ObjectPropListItem
-      extends AbstractPropListItem {
+  private static class ObjectPropListItem extends PropListItem {
     private static final long serialVersionUID = 1L;
 
     private final Object objectValue;
@@ -459,7 +445,7 @@ public class Node implements Serializable {
   }
 
   // A base class for int storing props
-  private static class IntPropListItem extends AbstractPropListItem {
+  private static class IntPropListItem extends PropListItem {
     private static final long serialVersionUID = 1L;
 
     final int intValue;
