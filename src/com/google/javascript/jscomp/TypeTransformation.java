@@ -428,8 +428,9 @@ class TypeTransformation {
       case ISCTOR:
         return type.isConstructor();
       case ISTEMPLATIZED:
-        return type.isObjectType() && type.toMaybeObjectType().isGenericObjectType()
-            && !type.hasUninstantiatedTypeVariables();
+        // TODO(dimvar): here, we also need !type.hasUninstantiatedTypeVariables()
+        // Fix after debugging breakage.
+        return type.isObjectType() && type.toMaybeObjectType().isGenericObjectType();
       case ISRECORD:
         return type.isRecordType();
       case ISUNKNOWN:
