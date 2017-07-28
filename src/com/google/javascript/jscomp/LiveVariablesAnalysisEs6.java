@@ -374,7 +374,11 @@ class LiveVariablesAnalysisEs6
   void markAllParametersEscaped() {
     Node paramList = NodeUtil.getFunctionParameters(jsScope.getRootNode());
     for (Node arg = paramList.getFirstChild(); arg != null; arg = arg.getNext()) {
-      escaped.add(jsScope.getVar(arg.getString()));
+      if (arg.isRest() || arg.isDefaultValue()) {
+        escaped.add(jsScope.getVar(arg.getFirstChild().getString()));
+      } else {
+        escaped.add(jsScope.getVar(arg.getString()));
+      }
     }
   }
 
