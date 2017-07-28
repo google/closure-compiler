@@ -333,7 +333,7 @@ class Normalize implements CompilerPass {
       this.assertOnChange = assertOnChange;
     }
 
-    private void reportCodeChange(Node n, String changeDescription) {
+    private void reportCodeChange(String changeDescription, Node n) {
       if (assertOnChange) {
         throw new IllegalStateException(
             "Normalize constraints violated:\n" + changeDescription);
@@ -358,12 +358,12 @@ class Normalize implements CompilerPass {
           empty.useSourceInfoIfMissingFrom(n);
           n.addChildBefore(empty, expr);
           n.addChildAfter(empty.cloneNode(), expr);
-          reportCodeChange(n, "WHILE node");
+          reportCodeChange("WHILE node", n);
           break;
 
         case FUNCTION:
           if (visitFunction(n, compiler)) {
-            reportCodeChange(n, "Function declaration");
+            reportCodeChange("Function declaration", n);
           }
           break;
 
@@ -440,7 +440,7 @@ class Normalize implements CompilerPass {
             String objLitName = NodeUtil.getObjectLitKeyName(n);
             Node objLitNameNode = Node.newString(Token.NAME, objLitName).useSourceInfoFrom(n);
             n.addChildToBack(objLitNameNode);
-            reportCodeChange(n, "Normalize ES6 shorthand property syntax");
+            reportCodeChange("Normalize ES6 shorthand property syntax", n);
           }
           break;
 
@@ -449,7 +449,7 @@ class Normalize implements CompilerPass {
             Node stringKeyNode = IR.stringKey(n.getFirstChild().getString()).srcref(n);
             n.replaceWith(stringKeyNode);
             stringKeyNode.addChildToBack(n);
-            reportCodeChange(n, "Normalize ES6 shorthand property syntax");
+            reportCodeChange("Normalize ES6 shorthand property syntax", n);
           }
           break;
 
@@ -581,7 +581,7 @@ class Normalize implements CompilerPass {
           block.useSourceInfoIfMissingFrom(last);
           n.replaceChild(last, block);
           block.addChildToFront(last);
-          reportCodeChange(n, "LABEL normalization");
+          reportCodeChange("LABEL normalization", n);
           return;
       }
     }
@@ -621,7 +621,7 @@ class Normalize implements CompilerPass {
               Node name = newStatement.getFirstChild().cloneNode();
               first.replaceWith(name);
               insertBeforeParent.addChildBefore(newStatement, insertBefore);
-              reportCodeChange(n, "FOR-IN var declaration");
+              reportCodeChange("FOR-IN var declaration", n);
             }
             break;
           case FOR:
@@ -646,7 +646,7 @@ class Normalize implements CompilerPass {
               }
 
               insertBeforeParent.addChildBefore(newStatement, insertBefore);
-              reportCodeChange(n, "FOR initializer");
+              reportCodeChange("FOR initializer", n);
             }
             break;
           default:
@@ -676,7 +676,7 @@ class Normalize implements CompilerPass {
             c.removeChild(name);
             Node newVar = new Node(c.getToken(), name).srcref(n);
             n.addChildBefore(newVar, c);
-            reportCodeChange(n, "VAR with multiple children");
+            reportCodeChange("VAR with multiple children", n);
           }
         }
       }
@@ -708,7 +708,7 @@ class Normalize implements CompilerPass {
           // Read the function at the top of the function body (after any
           // previous declarations).
           insertAfter = addToFront(functionBody, current, insertAfter);
-          reportCodeChange(functionBody, "Move function declaration not at top of function");
+          reportCodeChange("Move function declaration not at top of function", functionBody);
         }
         current = next;
       }
