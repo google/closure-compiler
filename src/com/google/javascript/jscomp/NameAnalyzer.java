@@ -551,7 +551,7 @@ final class NameAnalyzer implements CompilerPass {
         checkNotNull(ns, "createNameInformation returned null for: %s", targetObject);
         recordDepScope(n, ns);
       } else if (n.isDestructuringLhs()) {
-        for (Node child : NodeUtil.getLhsNodesOfDeclaration(n)) {
+        for (Node child : NodeUtil.findLhsNodesInNode(n)) {
           if (!child.getParent().isComputedProp()) {
             checkState(child.isName());
             NameInformation ns = createNameInformation(t, child);
@@ -677,7 +677,7 @@ final class NameAnalyzer implements CompilerPass {
           checkNotNull(ns, "createNameInformation returned null for: %s", n);
           recordSet(ns.name, n);
         } else if (NodeUtil.isNameDeclaration(parent) && n.isDestructuringLhs()){
-          for (Node child : NodeUtil.getLhsNodesOfDeclaration(n)) {
+          for (Node child : NodeUtil.findLhsNodesInNode(n)) {
             if (!child.getParent().isComputedProp()) {
               checkState(child.isName());
               NameInformation ns = createNameInformation(t, child);

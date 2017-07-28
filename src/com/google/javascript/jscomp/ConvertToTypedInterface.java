@@ -335,7 +335,7 @@ class ConvertToTypedInterface implements CompilerPass {
       checkArgument(NodeUtil.isNameDeclaration(decl));
       Node rhs = decl.getFirstChild().getLastChild();
       boolean isImport = isImportRhs(rhs);
-      for (Node name : NodeUtil.getLhsNodesOfDeclaration(decl)) {
+      for (Node name : NodeUtil.findLhsNodesInNode(decl)) {
         if (isImport) {
           currentFile.recordImport(name.getString());
         } else {

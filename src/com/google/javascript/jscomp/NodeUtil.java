@@ -3875,6 +3875,7 @@ public final class NodeUtil {
       case DEFAULT_VALUE:
       case CATCH:
       case REST:
+      case ASSIGN:
         getLhsNodesHelper(n.getFirstChild(), lhsNodes);
         return;
       case IMPORT_SPEC:
@@ -3898,11 +3899,12 @@ public final class NodeUtil {
     }
   }
 
-  /** Retrieves lhs nodes declared in the current declaration. */
-  static List<Node> getLhsNodesOfDeclaration(Node declNode) {
+  /** Retrieves lhs nodes declared in the current declaration or ASSIGN statement. */
+  static List<Node> findLhsNodesInNode(Node declNode) {
     checkArgument(
         isNameDeclaration(declNode)
             || declNode.isParamList()
+            || declNode.isAssign()
             || declNode.isCatch()
             || declNode.isDestructuringLhs()
             || declNode.isDefaultValue()

@@ -1058,7 +1058,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void recordTopLevelVarNames(Node varNode) {
-    for (Node lhs : NodeUtil.getLhsNodesOfDeclaration(varNode)) {
+    for (Node lhs : NodeUtil.findLhsNodesInNode(varNode)) {
       String name = lhs.getString();
       currentScript.topLevelNames.add(name);
     }

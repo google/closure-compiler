@@ -286,7 +286,7 @@ class LiveVariablesAnalysisEs6
                }
              }
            } else {
-             Iterable<Node> allVars = NodeUtil.getLhsNodesOfDeclaration(n);
+             Iterable<Node> allVars = NodeUtil.findLhsNodesInNode(n);
              for (Node child : allVars) {
                addToSetIfLocal(child, kill);
              }

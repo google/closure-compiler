@@ -284,7 +284,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       // incorrect semantics. See test case "testCapture".
       if (v.isLet() || v.isConst()) {
         Node nameDecl = NodeUtil.getEnclosingNode(v.getNode(), NodeUtil.isNameDeclaration);
-        if (NodeUtil.getLhsNodesOfDeclaration(nameDecl).size() > 1) {
+        if (NodeUtil.findLhsNodesInNode(nameDecl).size() > 1) {
           continue;
         }
       }

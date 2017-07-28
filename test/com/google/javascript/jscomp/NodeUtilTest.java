@@ -2802,17 +2802,17 @@ public final class NodeUtilTest extends TestCase {
     assertThat(typeExpr.getRoot().getFirstChild().getString()).isEqualTo("number");
   }
 
-  public void testGetLhsNodesOfDeclaration() {
-    assertThat(getLhsNodesOfDeclaration("var x;")).hasSize(1);
-    assertThat(getLhsNodesOfDeclaration("var x, y;")).hasSize(2);
-    assertThat(getLhsNodesOfDeclaration("var f = function(x, y, z) {};")).hasSize(1);
-    assertThat(getLhsNodesOfDeclaration("var [x=a => a, y = b=>b+1] = arr;")).hasSize(2);
-    assertThat(getLhsNodesOfDeclaration("var [x=a => a, y = b=>b+1, ...z] = arr;")).hasSize(3);
-    assertThat(getLhsNodesOfDeclaration("var [ , , , y = b=>b+1, ...z] = arr;")).hasSize(2);
-    assertThat(getLhsNodesOfDeclaration("var {x = a=>a, y = b=>b+1} = obj;")).hasSize(2);
-    assertThat(getLhsNodesOfDeclaration("var {p1: x = a=>a, p2: y = b=>b+1} = obj;")).hasSize(2);
-    assertThat(getLhsNodesOfDeclaration("var {[pname]: x = a=>a, [p2name]: y} = obj;")).hasSize(2);
-    assertThat(getLhsNodesOfDeclaration("var {lhs1 = a, p2: [lhs2, lhs3 = b] = [notlhs]} = obj;"))
+  public void testFindLhsNodesInNode() {
+    assertThat(findLhsNodesInNode("var x;")).hasSize(1);
+    assertThat(findLhsNodesInNode("var x, y;")).hasSize(2);
+    assertThat(findLhsNodesInNode("var f = function(x, y, z) {};")).hasSize(1);
+    assertThat(findLhsNodesInNode("var [x=a => a, y = b=>b+1] = arr;")).hasSize(2);
+    assertThat(findLhsNodesInNode("var [x=a => a, y = b=>b+1, ...z] = arr;")).hasSize(3);
+    assertThat(findLhsNodesInNode("var [ , , , y = b=>b+1, ...z] = arr;")).hasSize(2);
+    assertThat(findLhsNodesInNode("var {x = a=>a, y = b=>b+1} = obj;")).hasSize(2);
+    assertThat(findLhsNodesInNode("var {p1: x = a=>a, p2: y = b=>b+1} = obj;")).hasSize(2);
+    assertThat(findLhsNodesInNode("var {[pname]: x = a=>a, [p2name]: y} = obj;")).hasSize(2);
+    assertThat(findLhsNodesInNode("var {lhs1 = a, p2: [lhs2, lhs3 = b] = [notlhs]} = obj;"))
         .hasSize(3);
   }
 
@@ -2967,9 +2967,9 @@ public final class NodeUtilTest extends TestCase {
     return getClassNode(root);
   }
 
-  private static Iterable<Node> getLhsNodesOfDeclaration(String js) {
+  private static Iterable<Node> findLhsNodesInNode(String js) {
     Node root = parse(js);
-    return NodeUtil.getLhsNodesOfDeclaration(root.getFirstChild());
+    return NodeUtil.findLhsNodesInNode(root.getFirstChild());
   }
 
   private static Node getClassNode(Node n) {
