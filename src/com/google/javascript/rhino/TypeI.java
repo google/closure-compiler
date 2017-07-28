@@ -186,13 +186,18 @@ public interface TypeI extends Serializable {
   boolean isEnumObject();
 
   /**
-   * Returns true if this type is a generic object (non function) and some (or all) of its type
-   * variables are not instantiated.
-   * Note that in OTI it is possible to instantiate only some of the type variables of a
-   * generic type (bad implementation choice).
-   * In NTI, a generic type can only be uninstantiated or fully instantiated.
+   * Returns true if this type is a generic object (non function) and *all* its type variables
+   * are instantiated.
    */
-  boolean hasUninstantiatedTypeVariables();
+  boolean isFullyInstantiated();
+
+  /**
+   * Returns true if this type is a generic object (non function) and *some* of its type variables
+   * are instantiated.
+   * In NTI, this is the same as isFullyInstantiated.
+   * In OTI, generic types can be partially instantiated (bad implementation choice).
+   */
+  boolean isPartiallyInstantiated();
 
   /**
    * If this type is a generic nominal type or function, return the names of all type parameters.

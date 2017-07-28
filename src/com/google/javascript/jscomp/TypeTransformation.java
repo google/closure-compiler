@@ -344,7 +344,7 @@ class TypeTransformation {
   private TypeI evalTemplatizedType(Node ttlAst, NameResolver nameResolver) {
     ImmutableList<Node> params = getCallParams(ttlAst);
     TypeI firstParam = evalInternal(params.get(0), nameResolver);
-    if (!firstParam.hasUninstantiatedTypeVariables()) {
+    if (firstParam.isFullyInstantiated()) {
       reportWarning(ttlAst, BASETYPE_INVALID, firstParam.toString());
       return getUnknownType();
     }
@@ -428,9 +428,8 @@ class TypeTransformation {
       case ISCTOR:
         return type.isConstructor();
       case ISTEMPLATIZED:
-        // TODO(dimvar): here, we also need !type.hasUninstantiatedTypeVariables()
-        // Fix after debugging breakage.
-        return type.isObjectType() && type.toMaybeObjectType().isGenericObjectType();
+        return type.isObjectType() && type.toMaybeObjectType().isGenericObjectType()
+            && type.isPartiallyInstantiated();
       case ISRECORD:
         return type.isRecordType();
       case ISUNKNOWN:

@@ -706,33 +706,46 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
         TypeTransformation.MAPRECORD_BODY_INVALID);
   }
 
-  // TODO(dimvar): fix issue with evalTypePredicate and uncomment
-//  public void testIsTemplatized() {
-//    typeCheck(LINE_JOINER.join(
-//        "/**",
-//        " * @template T := cond(isTemplatized('Array'), 'number', 'string') =:",
-//        " * @return {T}",
-//        " */",
-//        "function f() { return 'asdf'; }",
-//        "var /** string */ s = f();"));
-//
-//    typeCheck(LINE_JOINER.join(
-//        "/**",
-//        " * @template T := cond(isTemplatized(type('Array', 'number')), 'number', 'string') =:",
-//        " * @return {T}",
-//        " */",
-//        "function f() { return 123; }",
-//        "var /** number */ n = f();"));
-//
-//
-//    typeCheck(LINE_JOINER.join(
-//        "/**",
-//        " * @template T := cond(isTemplatized('number'), 'number', 'string') =:",
-//        " * @return {T}",
-//        " */",
-//        "function f() { return 'asdf'; }",
-//        "var /** string */ s = f();"));
-//  }
+  public void testIsTemplatized() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T := cond(isTemplatized('Array'), 'number', 'string') =:",
+        " * @return {T}",
+        " */",
+        "function f() { return 'asdf'; }",
+        "var /** string */ s = f();"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T := cond(isTemplatized(type('Array', 'number')), 'number', 'string') =:",
+        " * @return {T}",
+        " */",
+        "function f() { return 123; }",
+        "var /** number */ n = f();"));
+
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T := cond(isTemplatized('number'), 'number', 'string') =:",
+        " * @return {T}",
+        " */",
+        "function f() { return 'asdf'; }",
+        "var /** string */ s = f();"));
+
+    // isTemplatized is true for partially instantiated types
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T, U",
+        " */",
+        "function Foo() {}",
+        "/**",
+        " * @template T := cond(isTemplatized(type('Foo', 'number')), 'number', 'string') =:",
+        " * @return {T}",
+        " */",
+        "function f() { return 123; }",
+        "var /** number */ x = f();"));
+  }
 
   public void testIsRecord() {
     typeCheck(LINE_JOINER.join(

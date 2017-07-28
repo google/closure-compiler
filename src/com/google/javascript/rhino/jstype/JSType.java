@@ -292,8 +292,13 @@ public abstract class JSType implements TypeI {
   }
 
   @Override
-  public boolean hasUninstantiatedTypeVariables() {
-    return getTemplateTypeMap().hasUnfilledTemplateKeys();
+  public boolean isFullyInstantiated() {
+    return getTemplateTypeMap().isFull();
+  }
+
+  @Override
+  public boolean isPartiallyInstantiated() {
+    return getTemplateTypeMap().isPartiallyFull();
   }
 
   @Override

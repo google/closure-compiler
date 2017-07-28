@@ -138,8 +138,12 @@ public class TemplateTypeMap implements Serializable {
     return templateKeys.size() - templateValues.size();
   }
 
-  boolean hasUnfilledTemplateKeys() {
-    return numUnfilledTemplateKeys() > 0;
+  boolean isFull() {
+    return numUnfilledTemplateKeys() == 0;
+  }
+
+  boolean isPartiallyFull() {
+    return !this.templateValues.isEmpty();
   }
 
   /**

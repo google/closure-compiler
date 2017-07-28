@@ -2291,9 +2291,14 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public boolean hasUninstantiatedTypeVariables() {
+  public boolean isFullyInstantiated() {
     NominalType nt = getNominalTypeIfSingletonObj();
-    return nt == null ? false : nt.isUninstantiatedGenericType();
+    return nt == null || !nt.isUninstantiatedGenericType();
+  }
+
+  @Override
+  public boolean isPartiallyInstantiated() {
+    return isFullyInstantiated();
   }
 
   @Override
