@@ -3647,8 +3647,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     try {
       parse(code);
       fail();
-    } catch (java.lang.StackOverflowError e) {
+    } catch (RuntimeException e) {
       // expected exception
+      assertThat(e).hasMessageThat().contains("Exception parsing");
     }
   }
 
