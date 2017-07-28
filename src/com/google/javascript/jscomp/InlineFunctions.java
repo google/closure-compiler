@@ -330,10 +330,6 @@ class InlineFunctions implements CompilerPass {
         functionState.setInline(false);
       }
 
-      if (hasParamWithInvalidPropertyNameIdentifier(fnNode)) {
-        functionState.setInline(false);
-      }
-
       if (hasComplexDestructuringPattern(NodeUtil.getFunctionParameters(fnNode))) {
         functionState.setInline(false);
       }
@@ -719,36 +715,6 @@ class InlineFunctions implements CompilerPass {
     for (FunctionState functionState : fns.values()) {
       resolveInlineConflictsForFunction(functionState);
     }
-  }
-
-  /**
-   * @return whether the function has a param with an OBJECT_PATTERN STRING_KEY that is a number,
-   *     which is not a valid JavaScript identifier or if it is a quoted string.
-   *     Prevents such functions from being inlined.
-   *     These cases are currently chosen to not be inlined and is not an inherent limitation.
-   *     TODO(bellashim): For invalid property names, invoke property values using bracket notation
-   *        and inline those functions.
-   */
-  private static boolean hasParamWithInvalidPropertyNameIdentifier(Node fnNode) {
-    Predicate<Node> hasParamWithInvalidPropertyNameIdentifierPredicate =
-        new Predicate<Node>() {
-          @Override
-          public boolean apply(Node input) {
-            if (input.isObjectPattern()
-                && (input.getFirstChild().isString() || input.getFirstChild().isStringKey())) {
-              for (Node prop = input.getFirstChild(); prop != null; prop = prop.getNext()) {
-                char first = prop.getString().charAt(0);
-                if (Character.isDigit(first) || prop.isQuotedString()) {
-                  return true;
-                }
-              }
-            }
-            return false;
-          }
-        };
-
-    return NodeUtil.has(fnNode, hasParamWithInvalidPropertyNameIdentifierPredicate,
-        Predicates.<Node>alwaysTrue());
   }
 
   /**
