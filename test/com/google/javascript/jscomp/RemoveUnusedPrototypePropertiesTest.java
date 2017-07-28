@@ -44,6 +44,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    enableNormalize();
     anchorUnusedVars = false;
     canRemoveExterns = false;
   }
@@ -582,6 +583,36 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "function Foo() {}",
             "Foo.prototype.a = function() {};",
             "function f({a:x}) {}; f(new Foo());"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "var {a : x = 3} = new Foo();"));
+
+    test(
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "Foo.prototype.b = function() {}",
+            "var {a : a = 3} = new Foo();"),
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "var {a : a = 3} = new Foo();"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "let { a : [b, c, d] } = new Foo();"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "const { a : { b : { c : d = '' }}} = new Foo();"));
+
   }
 
   public void testEs6Class() {
@@ -632,6 +663,49 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "  static foo() {}",
             "}"
         ));
+
+    test(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  get foo() {}",
+            "  set foo(val) {}",
+            "}",
+            "var c = new C "
+        ),
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "}",
+            "var c = new C"));
+
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  get foo() {}",
+            "  set foo(val) {}",
+            "}",
+            "var c = new C ",
+            "c.foo = 3;"));
+
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  get foo() {}",
+            "  set foo(val) {}",
+            "}",
+            "var c = new C ",
+            "c.foo;"));
   }
 
   public void testEs6Extends() {

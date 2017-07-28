@@ -140,6 +140,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
   @Override
   public void process(Node externRoot, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized());
     if (!canModifyExterns) {
       NodeTraversal.traverseEs6(compiler, externRoot,
           new ProcessExternProperties());
@@ -291,14 +292,21 @@ class AnalyzePrototypeProperties implements CompilerPass {
           for (Node propNameNode = n.getFirstChild(); propNameNode != null;
               propNameNode = propNameNode.getNext()) {
             // May be STRING, GET, or SET, but NUMBER isn't interesting.
-            if (!propNameNode.isQuotedString()) {
+            // Also ignore computed properties
+            if (!propNameNode.isQuotedString() && !propNameNode.isComputedProp()) {
               addSymbolUse(propNameNode.getString(), t.getModule(), PROPERTY);
             }
           }
           break;
 
-        case MEMBER_FUNCTION_DEF:
-          processMemberDef(t, n);
+        case CLASS:
+          Node classMembers = n.getLastChild();
+          for (Node child = classMembers.getFirstChild(); child != null;
+              child = child.getNext()) {
+            if (child.isMemberFunctionDef() || child.isSetterDef() || child.isGetterDef()) {
+              processMemberDef(t, child);
+            }
+          }
           break;
 
         case OBJECT_PATTERN:
@@ -517,7 +525,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
     }
 
     private void processMemberDef(NodeTraversal t, Node n) {
-      checkState(n.isMemberFunctionDef());
+      checkState(n.isMemberFunctionDef() || n.isGetterDef() || n.isSetterDef());
       String name = n.getString();
       // Don't want to add a declaration for constructors and static members
       // so they aren't removed
@@ -644,7 +652,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
      private final JSModule module;
 
      MemberFunction(Node node, Var var, JSModule module) {
-       checkState(node.isMemberFunctionDef() && node.getParent().isClassMembers());
+       checkState(node.getParent().isClassMembers());
+       checkState(node.isMemberFunctionDef() || node.isSetterDef() || node.isGetterDef());
        this.node = node;
        this.var = var;
        this.module = module;
