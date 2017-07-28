@@ -4385,8 +4385,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
 
-    // For this test, coalesce variables runs followed by rename properties to produce the following
-    // variable/property names.
     test(
         options,
         LINE_JOINER.join(
@@ -4396,7 +4394,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "alert(foo(3, {foo: 9}));"),
         LINE_JOINER.join(
             "{}",
-            "alert(3 + {a:9}.a);"));
+            "alert(3 + {foo:9}.foo);"));
   }
 
   public void testRestObjectPatternParameters() {
