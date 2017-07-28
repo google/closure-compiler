@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Throwables.throwIfUnchecked;
+
 import java.util.concurrent.Callable;
 
 /** GWT compatible replacement for {@code CompilerExecutor} */
@@ -23,7 +25,8 @@ final class CompilerExecutor {
   <T> T runInCompilerThread(Callable<T> callable, boolean dumpTraceReport) {
     try {
       return callable.call();
-    } catch (Exception e) {
+    } catch (Throwable e) {
+      throwIfUnchecked(e);
       throw new RuntimeException(e);
     }
   }

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.TypeValidator.TYPE_MISMATCH_WARNING;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -147,6 +148,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "A$z();"));
   }
 
+  @GwtIncompatible // b/63595345
   public void testBug1949424() {
     CompilerOptions options = createCompilerOptions();
     options.setCollapseProperties(true);
@@ -155,6 +157,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         CLOSURE_COMPILED + "var FOO$bar = 3;");
   }
 
+  @GwtIncompatible // b/63595345
   public void testBug1949424_v2() {
     CompilerOptions options = createCompilerOptions();
     options.setCollapseProperties(true);
@@ -170,6 +173,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "var FOO$BAR = 3;"));
   }
 
+  @GwtIncompatible // b/63595345
   public void testUnresolvedDefine() {
     CompilerOptions options = new CompilerOptions();
     options.setClosurePass(true);
@@ -422,6 +426,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "var x; x && alert(1);", "");
   }
 
+  @GwtIncompatible // b/63595345
   public void testClosurePassOff() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(false);
@@ -432,6 +437,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "goog.getCssName('foo');");
   }
 
+  @GwtIncompatible // b/63595345
   public void testClosurePassOn() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
@@ -482,6 +488,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "});"));
   }
 
+  @GwtIncompatible("CheckMissingGetCssName is incompatible")
   public void testCssNameCheck() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
@@ -509,6 +516,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         TypeValidator.TYPE_MISMATCH_WARNING);
   }
 
+  @GwtIncompatible // b/63595345
   public void testTypedefBeforeOwner1() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
@@ -525,6 +533,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "foo.Bar = function() {};"));
   }
 
+  @GwtIncompatible // b/63595345
   public void testTypedefBeforeOwner2() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
@@ -605,6 +614,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "goog.exportSymbol('testFoo', testFoo);");
   }
 
+  @GwtIncompatible // b/63595345
   public void testExportTestFunctionsOn2() {
     CompilerOptions options = createCompilerOptions();
     options.setExportTestFunctions(true);
@@ -748,6 +758,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "x = 3; var x = 5;", VariableReferenceCheck.EARLY_REFERENCE);
   }
 
+  @GwtIncompatible // b/63595345
   public void testInferTypes() {
     CompilerOptions options = createCompilerOptions();
     options.inferTypes = true;
@@ -1159,6 +1170,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, CLOSURE_COMPILED + " var FLAG = false;");
   }
 
+  @GwtIncompatible // b/63595345
   public void testGoogDefine2() {
     String code = CLOSURE_BOILERPLATE +
         "goog.provide('ns');" +
@@ -1403,6 +1415,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, originalText, expectedText);
   }
 
+  @GwtIncompatible // b/63595345
   public void testClosurePassPreservesJsDoc() {
     CompilerOptions options = createCompilerOptions();
     options.setCheckTypes(true);
@@ -1426,6 +1439,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var COMPILED=true;var goog={};goog.exportSymbol=function(){};var Foo={a:3}");
   }
 
+  @GwtIncompatible // b/63595345
   public void testProvidedNamespaceIsConst() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
@@ -1443,6 +1457,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         ConstCheck.CONST_REASSIGNED_VALUE_ERROR);
   }
 
+  @GwtIncompatible // b/63595345
   public void testProvidedNamespaceIsConst3() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
@@ -1458,6 +1473,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         + "var foo$bar$baz = function(){};");
   }
 
+  @GwtIncompatible // b/63595345
   public void testProvidedNamespaceIsConst4() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
@@ -1470,6 +1486,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var foo = {}; foo = {}; foo.Bar = {};");
   }
 
+  @GwtIncompatible // b/63595345
   public void testProvidedNamespaceIsConst5() {
     CompilerOptions options = createCompilerOptions();
     options.setClosurePass(true);
@@ -1496,6 +1513,7 @@ public final class IntegrationTest extends IntegrationTestCase {
          "var HI = false;");
   }
 
+  @GwtIncompatible("com.google.javascript.jscomp.ReplaceMessages is incompatible")
   public void testReplaceMessages() {
     CompilerOptions options = createCompilerOptions();
     String prefix = "var goog = {}; goog.getMsg = function() {};";
@@ -3430,6 +3448,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, code, "_.f = function() { return 3; }; _.x = _.f;");
   }
 
+
   public void testBrokenNameSpace() {
     CompilerOptions options = createCompilerOptions();
     String code = "var goog; goog.provide('i.am.on.a.Horse');" +
@@ -3655,6 +3674,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     testParseError(options, "var x = [1, 2", "var x = [1, 2]");
   }
 
+  @GwtIncompatible // b/63595345
   public void testProvideRequireSameFile() throws Exception {
     CompilerOptions options = createCompilerOptions();
     options.setDependencyOptions(
@@ -3878,8 +3898,17 @@ public final class IntegrationTest extends IntegrationTestCase {
     assertThat(result).isEqualTo("alert(1)");
   }
 
-  public void testES6UnusedClassesAreRemoved() {
+  // Due to JsFileParse not being supported in the JS version, the dependency parsing delegates to
+  // the {@link CompilerInput$DepsFinder} class which is incompatible with the
+  // DefaultCodingConvention due to it throwing on methods such as extractIsModuleFile which is
+  // needed in {@link CompilerInput$DepsFinder#visitSubtree}. Disable this test in the JsVersion.
+  // TODO(tdeegan): DepsFinder should error out early if run with DefaultCodingConvention.
+  @GwtIncompatible
+  public void testES6UnusedClassesAreRemovedDefaultCodingConvention() {
     testES6UnusedClassesAreRemoved(CodingConventions.getDefault());
+  }
+
+  public void testES6UnusedClassesAreRemoved() {
     testES6UnusedClassesAreRemoved(new ClosureCodingConvention());
     testES6UnusedClassesAreRemoved(new GoogleCodingConvention());
   }

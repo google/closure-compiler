@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -34,8 +35,6 @@ import com.google.javascript.jscomp.type.ReverseAbstractInterpreter;
 import com.google.javascript.jscomp.type.SemanticReverseAbstractInterpreter;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -66,7 +65,7 @@ public abstract class CompilerTestCase extends TestCase {
   private final boolean emitUseStrict = false;
 
   /** Externs for the test */
-  private final List<SourceFile> externsInputs;
+  final List<SourceFile> externsInputs;
 
   /** Whether to compare input and output as trees instead of strings */
   private boolean compareAsTree;
@@ -1412,7 +1411,9 @@ public abstract class CompilerTestCase extends TestCase {
 
           // TODO(rluble): enable multistage compilation when invoking with modules.
           if (inputs != null && compiler.getModuleGraph() == null) {
-            compiler = multistageSerializeAndDeserialize(compiler, inputs, recentChange);
+            compiler =
+                CompilerTestCaseUtils.multistageSerializeAndDeserialize(
+                    this, compiler, inputs, recentChange);
             root = compiler.getRoot();
             externsRoot = compiler.getExternsRoot();
             mainRoot = compiler.getJsRoot();
@@ -1668,30 +1669,6 @@ public abstract class CompilerTestCase extends TestCase {
         assertEquals(warnings, diagnostic.diagnostic, compiler.getWarnings()[0].getType());
       }
     }
-  }
-
-  private Compiler multistageSerializeAndDeserialize(
-      Compiler compiler,
-      List<SourceFile> inputs,
-      CodeChangeHandler changeHandler) {
-    ErrorManager errorManager = compiler.getErrorManager();
-    try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-      compiler.removeChangeHandler(changeHandler);
-      compiler.disableThreads();
-      compiler.saveState(baos);
-
-      try (ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray())) {
-        compiler = createCompiler();
-        compiler.disableThreads();
-        compiler.init(externsInputs, inputs, getOptions());
-        compiler.restoreState(bais);
-        compiler.setErrorManager(errorManager);
-        compiler.addChangeHandler(changeHandler);
-      }
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-    return compiler;
   }
 
   private static void transpileToEs5(AbstractCompiler compiler, Node externsRoot, Node codeRoot) {
@@ -1959,6 +1936,7 @@ public abstract class CompilerTestCase extends TestCase {
     }
 
     @Override
+    @GwtIncompatible
     public void saveState(OutputStream outputStream) throws IOException {
       super.saveState(outputStream);
       ObjectOutputStream out = new ObjectOutputStream(outputStream);
@@ -1966,6 +1944,7 @@ public abstract class CompilerTestCase extends TestCase {
     }
 
     @Override
+    @GwtIncompatible
     public void restoreState(InputStream inputStream) throws IOException, ClassNotFoundException {
       super.restoreState(inputStream);
       ObjectInputStream in = new ObjectInputStream(inputStream);
