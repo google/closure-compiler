@@ -1205,35 +1205,35 @@ public final class FunctionType implements Serializable {
   }
 
   /**
-   * Returns a version of nt with generics substituted from typeMap. This is a more efficient
+   * Returns a version of t with generics substituted from typeMap. This is a more efficient
    * alternative to {@link JSType#substituteGenerics} in the case of singleton objects,
    * since it can avoid creating new types.
    *
    * <p>TODO(sdh): is there a reason not to build this optimization directly
    * into JSType#substituteGenerics?
    */
-  private static JSType substGenericsInNomType(JSType nt, Map<String, JSType> typeMap) {
-    if (nt == null) {
+  private static JSType substGenericsInNomType(JSType t, Map<String, JSType> typeMap) {
+    if (t == null) {
       return null;
     }
-    NominalType tmp = nt.getNominalTypeIfSingletonObj();
-    if (tmp == null) {
-      return nt.substituteGenerics(typeMap);
+    NominalType nt = t.getNominalTypeIfSingletonObj();
+    if (nt == null) {
+      return t.substituteGenerics(typeMap);
     }
-    if (!tmp.isGeneric()) {
-      return tmp.getInstanceAsJSType();
+    if (!nt.isGeneric()) {
+      return nt.getInstanceAsJSType();
     }
     if (typeMap.isEmpty()) {
-      return nt;
+      return t;
     }
-    return JSType.fromObjectType(ObjectType.fromNominalType(tmp.substituteGenerics(typeMap)));
+    return JSType.fromObjectType(ObjectType.fromNominalType(nt.substituteGenerics(typeMap)));
   }
 
   /**
    * Returns a FunctionType with free type variables substituted using typeMap.
    * There must be no overlap between this function's generic type parameters
    * and the types in the map (i.e. this is not instantiating a generic
-   * function: that's done in {@link #substituteParametericGenerics}).
+   * function: that's done in {@link #instantiateGenerics}).
    * @throws IllegalStateException if typeMap's keys overlap with type parameters.
    */
   private FunctionType substituteNominalGenerics(Map<String, JSType> typeMap) {
@@ -1271,55 +1271,6 @@ public final class FunctionType implements Serializable {
     return builder.buildFunction();
   }
 
-  /** @see #instantiateGenerics */
-  private FunctionType substituteParametricGenerics(Map<String, JSType> typeMap) {
-    if (typeMap.isEmpty()) {
-      return this;
-    }
-    FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
-    for (JSType reqFormal : this.requiredFormals) {
-      builder.addReqFormal(reqFormal.substituteGenerics(typeMap));
-    }
-    for (JSType optFormal : this.optionalFormals) {
-      builder.addOptFormal(optFormal.substituteGenerics(typeMap));
-    }
-    if (this.restFormals != null) {
-      builder.addRestFormals(restFormals.substituteGenerics(typeMap));
-    }
-    builder.addRetType(this.returnType.substituteGenerics(typeMap));
-    if (isLoose()) {
-      builder.addLoose();
-    }
-    builder.addNominalType(substGenericsInNomType(this.nominalType, typeMap));
-    if (this.receiverType != null) {
-      // NOTE(dimvar):
-      // We have no way of knowing if receiverType comes from an @this
-      // annotation, or because this type represents a method.
-      // In case 1, we would want to substitute in receiverType, in case 2 we
-      // don't, it's a different scope for the type variables.
-      // To properly track this we would need two separate fields instead of
-      // just receiverType.
-      // Instead, the IF test is a heuristic that works in most cases.
-      // In the else branch, we are substituting incorrectly when receiverType
-      // comes from a method declaration, but I have not been able to find a
-      // test that exposes the bug.
-      NominalType recvType = getNominalTypeIfSingletonObj(this.receiverType);
-      if (recvType != null && recvType.isUninstantiatedGenericType()) {
-        // Receiver came from enclosing class: don't substitute generics.
-        // TODO(sdh): consider eliminating this branch now that generics are uniquified.
-        builder.addReceiverType(this.receiverType);
-      } else {
-        // Receiver was explicitly specified as @this: substitute.
-        builder.addReceiverType(substGenericsInNomType(this.receiverType, typeMap));
-      }
-    }
-    // TODO(blickly): Do we need instatiation here?
-    for (String var : outerVarPreconditions.keySet()) {
-      builder.addOuterVarPrecondition(var, outerVarPreconditions.get(var));
-    }
-    return builder.buildFunction();
-  }
-
   /**
    * FunctionType#substituteGenerics is called while instantiating prototype
    * methods of generic nominal types.
@@ -1345,13 +1296,36 @@ public final class FunctionType implements Serializable {
    */
   public FunctionType instantiateGenerics(Map<String, JSType> typeMap) {
     checkState(isGeneric());
-    return substituteParametricGenerics(typeMap);
+    if (typeMap.isEmpty()) {
+      return this;
+    }
+    FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
+    for (JSType reqFormal : this.requiredFormals) {
+      builder.addReqFormal(reqFormal.substituteGenerics(typeMap));
+    }
+    for (JSType optFormal : this.optionalFormals) {
+      builder.addOptFormal(optFormal.substituteGenerics(typeMap));
+    }
+    if (this.restFormals != null) {
+      builder.addRestFormals(restFormals.substituteGenerics(typeMap));
+    }
+    builder.addRetType(this.returnType.substituteGenerics(typeMap));
+    if (isLoose()) {
+      builder.addLoose();
+    }
+    builder.addNominalType(substGenericsInNomType(this.nominalType, typeMap));
+    builder.addReceiverType(substGenericsInNomType(this.receiverType, typeMap));
+    // TODO(blickly): Do we need instatiation here?
+    for (String var : outerVarPreconditions.keySet()) {
+      builder.addOuterVarPrecondition(var, outerVarPreconditions.get(var));
+    }
+    return builder.buildFunction();
   }
 
   /**
    * Given concrete types for the arguments, unify with the formals to create
    * a type map, and then instantiate this function as usual, by calling
-   * {@link #substituteParametricGenerics}.
+   * {@link #instantiateGenerics}.
    * @throws IllegalStateException if this is not a generic function.
    */
   public FunctionType instantiateGenericsFromArgumentTypes(JSType recvtype, List<JSType> argTypes) {
@@ -1386,7 +1360,7 @@ public final class FunctionType implements Serializable {
         builder.put(typeParam, Iterables.getOnlyElement(types));
       }
     }
-    return substituteParametricGenerics(builder.build());
+    return instantiateGenerics(builder.build());
   }
 
   /** Returns a new FunctionType with the receiverType promoted to the first argument type. */
