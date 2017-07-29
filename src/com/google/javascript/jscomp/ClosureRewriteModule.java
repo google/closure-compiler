@@ -1055,14 +1055,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         // `const {Foo}` case
         maybeWarnForInvalidDestructuring(t, lhs.getParent(), legacyNamespace);
         for (Node importSpec : lhs.getFirstChild().children()) {
-          checkState(importSpec.hasChildren());
           String importedProperty = importSpec.getString();
-          Node aliasNode = importSpec.getFirstChild();
+          Node aliasNode = importSpec.hasChildren() ? importSpec.getFirstChild() : importSpec;
           String aliasName = aliasNode.getString();
           String fullName = exportedNamespace + "." + importedProperty;
           recordNameToInline(aliasName, fullName);
 
-          safeSetString(aliasNode, currentScript.contentsPrefix + aliasName);
           maybeAddAliasToSymbolTable(aliasNode, currentScript.legacyNamespace);
         }
       } else {

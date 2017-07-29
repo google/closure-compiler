@@ -40,8 +40,6 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  */
 public final class ClosureRewriteModuleTest extends CompilerTestCase {
 
-  private boolean preserveClosurePrimitives = false;
-
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
     return new ClosureRewriteModule(compiler, null, null);
@@ -62,7 +60,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
-    options.setPreserveClosurePrimitives(this.preserveClosurePrimitives);
     return options;
   }
 
@@ -1636,22 +1633,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         IMPORT_INLINING_SHADOWS_VAR);
   }
 
-  public void testImportInliningShadowsDestructuredImport() {
-    testError(
-        new String[] {
-            LINE_JOINER.join(
-                "goog.provide('a.b.c');",
-                "a.b.c.d = 5;"),
-            LINE_JOINER.join(
-                "goog.module('a.b.d');",
-                "const {d} = goog.require('a.b.c');",
-                "function foo() {",
-                "  var a = 10;",
-                "  var b = d;",
-                "}")},
-        IMPORT_INLINING_SHADOWS_VAR);
-  }
-
   public void testExportsShadowingAllowed() {
     testNoWarning(
         LINE_JOINER.join(
@@ -2079,52 +2060,6 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
               "/** @const */ var module$exports$base = {};",
               "/** @constructor @const */ module$exports$base.Foo = function() {};"),
             "/** @const */ var module$exports$FooWrapper = module$exports$base.Foo;",
-        });
-  }
-
-  public void testRewriteGoogModuleAliasesWithPreservedPrimitivies() {
-    preserveClosurePrimitives = true;
-    // Need to disable tree comparison because compiler adds MODULE_BODY token when parsing
-    // expected output but it is not present in actual tree.
-    disableCompareAsTree();
-    test(
-        new String[] {
-            LINE_JOINER.join(
-                "goog.module('Foo');",
-                "",
-                "/** @constructor */ exports = function() {};"),
-            LINE_JOINER.join(
-                "goog.module('bar');",
-                "",
-                "exports.doBar = function() {};"),
-            LINE_JOINER.join(
-                "goog.module('baz');",
-                "",
-                "exports.doBaz = function() {};"),
-            LINE_JOINER.join(
-                "goog.module('leaf');",
-                "",
-                "var Foo = goog.require('Foo');",
-                "var {doBar} = goog.require('bar');",
-                "var {doBaz: doooBaz} = goog.require('baz')"),
-        },
-        new String[] {
-            "goog.module(\"Foo\");",
-            "var module$exports$Foo=function(){};",
-
-            "goog.module(\"bar\");",
-            "var module$exports$bar={};",
-            "module$exports$bar.doBar=function(){};",
-
-            "goog.module(\"baz\");",
-            "var module$exports$baz={};",
-            "module$exports$baz.doBaz=function(){};",
-
-            "goog.module(\"leaf\");",
-            "var module$exports$leaf={};",
-            "var module$contents$leaf_Foo=goog.require(\"Foo\");",
-            "var {doBar:module$contents$leaf_doBar}=goog.require(\"bar\");",
-            "var {doBaz:module$contents$leaf_doooBaz}=goog.require(\"baz\")"
         });
   }
 
