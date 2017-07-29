@@ -26,7 +26,6 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
@@ -122,7 +121,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           + "the command line");
 
   // Used in PerformanceTracker
-  static final String READING_PASS_NAME = "readInputs";
   static final String PARSING_PASS_NAME = "parseInputs";
   static final String PEEPHOLE_PASS_NAME = "peepholeOptimizations";
   static final String UNREACHABLE_CODE_ELIM_NAME = "removeUnreachableCode";
@@ -991,9 +989,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private void parseForCompilationInternal() {
     setProgress(0.0, null);
     CompilerOptionsPreprocessor.preprocess(options);
-    readInputs();
-    // Guesstimate.
-    setProgress(0.02, "read");
+    maybeSetTracker();
     parseInputs();
     // Guesstimate.
     setProgress(0.15, "parse");
@@ -1685,38 +1681,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   @Override
   void setDefinitionFinder(DefinitionUseSiteFinder defFinder) {
     this.defFinder = defFinder;
-  }
-
-  //------------------------------------------------------------------------
-  // Reading
-  //------------------------------------------------------------------------
-
-  /**
-   * Performs all externs and main inputs IO.
-   *
-   * <p>Allows for easy measurement of IO cost separately from parse cost.
-   */
-  void readInputs() {
-    checkState(!hasErrors());
-    checkNotNull(externs);
-    checkNotNull(inputs);
-    maybeSetTracker();
-
-    Tracer tracer = newTracer(READING_PASS_NAME);
-    beforePass(READING_PASS_NAME);
-
-    try {
-      for (CompilerInput input : Iterables.concat(externs, inputs)) {
-        try {
-          input.getCode();
-        } catch (IOException e) {
-          report(JSError.make(AbstractCompiler.READ_ERROR, input.getName(), e.getMessage()));
-        }
-      }
-    } finally {
-      afterPass(READING_PASS_NAME);
-      stopTracer(tracer, READING_PASS_NAME);
-    }
   }
 
   public void maybeSetTracker() {
