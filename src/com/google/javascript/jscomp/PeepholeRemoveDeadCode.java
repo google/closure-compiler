@@ -374,7 +374,10 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
 
     // Generally, it is unsafe to remove other cases when the default case is not the last one.
     if (defaultCase == null || n.getLastChild().isDefaultCase()) {
-      Node cond = n.getFirstChild(), prev = null, next = null, cur;
+      Node cond = n.getFirstChild();
+      Node prev = null;
+      Node next = null;
+      Node cur;
 
       for (cur = cond.getNext(); cur != null; cur = next) {
         next = cur.getNext();
@@ -404,18 +407,33 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
             removeCase(n, cur);
           }
         }
-        if (caseMatches != TernaryValue.UNKNOWN) {
-          Node block, lastStm;
+        if (cur != null && caseMatches == TernaryValue.TRUE) {
           // Skip cases until you find one whose last stm is a removable break
+          Node matchingCase = cur;
+          Node matchingCaseBlock = matchingCase.getLastChild();
           while (cur != null) {
-            block = cur.getLastChild();
-            lastStm = block.getLastChild();
-            cur = cur.getNext();
+            Node block = cur.getLastChild();
+            Node lastStm = block.getLastChild();
+            boolean isLastStmRemovableBreak = false;
             if (lastStm != null && isExit(lastStm)) {
               removeIfUnnamedBreak(lastStm);
+              isLastStmRemovableBreak = true;
+            }
+            next = cur.getNext();
+            // Remove the fallthrough case labels
+            if (cur != matchingCase) {
+              while (block.hasChildren()) {
+                matchingCaseBlock.addChildToBack(block.getFirstChild().detach());
+              }
+              cur.detach();
+              reportCodeChange();
+            }
+            cur = next;
+            if (isLastStmRemovableBreak) {
               break;
             }
           }
+
           // Remove any remaining cases
           for (; cur != null; cur = next) {
             next = cur.getNext();

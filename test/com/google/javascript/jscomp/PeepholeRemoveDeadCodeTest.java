@@ -407,22 +407,39 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "  break;\n" +
         "}",
         "");
-    foldSame("switch ('fallThru') {\n" +
-        "case 'fallThru':\n" +
-        "  if (foo(123) > 0) {\n" +
-        "    foobar(1);\n" +
-        "    break;\n" +
-        "  }\n" +
-        "  foobar(2);\n" +
-        "case 'bar':\n" +
-        "  bar();\n" +
-        "}");
-    foldSame("switch ('fallThru') {\n" +
-        "case 'fallThru':\n" +
-        "  foo();\n" +
-        "case 'bar':\n" +
-        "  bar();\n" +
-        "}");
+    fold(
+        LINE_JOINER.join(
+            "switch ('fallThru') {",
+            "case 'fallThru':",
+            "  if (foo(123) > 0) {",
+            "    foobar(1);",
+            "    break;",
+            "  }",
+            "  foobar(2);",
+            "case 'bar':",
+            "  bar();",
+            "}"),
+        LINE_JOINER.join(
+            "switch ('fallThru') {",
+            "case 'fallThru':",
+            "  if (foo(123) > 0) {",
+            "    foobar(1);",
+            "    break;",
+            "  }",
+            "  foobar(2);",
+            "  bar();",
+            "}"));
+    fold(
+        LINE_JOINER.join(
+            "switch ('fallThru') {",
+            "case 'fallThru':",
+            "  foo();",
+            "case 'bar':",
+            "  bar();",
+            "}"),
+        LINE_JOINER.join(
+            "foo();",
+            "bar();"));
     fold(
         LINE_JOINER.join(
             "switch ('hasDefaultCase') {",
@@ -496,11 +513,14 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "case '\\u000B':\n" +
         "  foo();\n" +
         "}");
-    foldSame("switch ('empty') {\n" +
-        "case 'empty':\n" +
-        "case 'foo':\n" +
-        "  foo();\n" +
-        "}");
+    fold(
+        LINE_JOINER.join(
+            "switch ('empty') {",
+            "case 'empty':",
+            "case 'foo':",
+            "  foo();",
+            "}"),
+        "foo()");
 
     fold(
         LINE_JOINER.join(
@@ -545,6 +565,25 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "    break outer;\n" +
         "}",
         "outer: {f(); break outer;}");
+  }
+
+  public void testOptimizeSwitch3() {
+    fold(
+        LINE_JOINER.join(
+            "switch (1) {",
+            "  case 1:",
+            "  case 2:",
+            "  case 3: {",
+            "    break;",
+            "  }",
+            "  case 4:",
+            "  case 5:",
+            "  case 6:",
+            "  default:",
+            "    fail('Should not get here');",
+            "    break;",
+            "}"),
+            "");
   }
 
   public void testOptimizeSwitchWithLabellessBreak() {
