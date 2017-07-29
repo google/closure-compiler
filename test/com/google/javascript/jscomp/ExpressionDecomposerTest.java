@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.rhino.Node;
@@ -23,6 +25,7 @@ import com.google.javascript.rhino.Token;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import junit.framework.TestCase;
 
@@ -418,6 +421,20 @@ public final class ExpressionDecomposerTest extends TestCase {
         "var temp$jscomp$0; if (temp$jscomp$0 = bar()) temp$jscomp$0=foo(); throw temp$jscomp$0;");
   }
 
+  public void testMoveClass1() {
+    helperMoveExpression(
+        "alert(class X {});",
+        ExpressionDecomposerTest::findClass,
+        "var result$jscomp$0 = class X {}; alert(result$jscomp$0);");
+  }
+
+  public void testMoveClass2() {
+    helperMoveExpression(
+        "console.log(1, 2, class X {});",
+        ExpressionDecomposerTest::findClass,
+        "var result$jscomp$0 = class X {}; console.log(1, 2, result$jscomp$0);");
+  }
+
   public void testExposeYieldExpression1() {
     helperMoveExpression(
         "function *f() { return { a: yield 1, c: foo(yield 2, yield 3) }; }",
@@ -556,10 +573,10 @@ public final class ExpressionDecomposerTest extends TestCase {
   }
 
   public void testExposeObjectLit1() {
-    // Validate that getter and setters methods are see as side-effect
+    // Validate that getter and setters methods are seen as side-effect
     // free and that values can move past them.  We don't need to be
     // concerned with exposing the getter or setter here but the
-    // decomposer does not have a method of exposing properties only variables.
+    // decomposer does not have a method of exposing properties, only variables.
     helperMoveExpression(
         "var x = {get a() {}, b: foo()};",
         "foo",
@@ -576,8 +593,7 @@ public final class ExpressionDecomposerTest extends TestCase {
   private void helperCanExposeExpression(
       DecompositionType expectedResult,
       String code,
-      String fnName
-      ) {
+      String fnName) {
     helperCanExposeExpression(expectedResult, code, fnName, null);
   }
 
@@ -600,8 +616,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     assertNotNull("Call " + call + " was not found.", callSite);
 
     compiler.resetUniqueNameId();
-    DecompositionType result = decomposer.canExposeExpression(
-        callSite);
+    DecompositionType result = decomposer.canExposeExpression(callSite);
     assertEquals(expectedResult, result);
   }
 
@@ -609,8 +624,7 @@ public final class ExpressionDecomposerTest extends TestCase {
       DecompositionType expectedResult,
       String code,
       String fnName,
-      Set<String> knownConstants
-      ) {
+      Set<String> knownConstants) {
     Compiler compiler = getCompiler();
     if (knownConstants == null) {
       knownConstants = new HashSet<>();
@@ -638,11 +652,10 @@ public final class ExpressionDecomposerTest extends TestCase {
   private void helperExposeExpression(
       String code,
       String fnName,
-      String expectedResult
-      ) {
-    helperExposeExpression(
-        code, fnName, expectedResult, null);
+      String expectedResult) {
+    helperExposeExpression(code, fnName, expectedResult, null);
   }
+
 
   private void validateSourceInfo(Compiler compiler, Node subtree) {
     (new LineNumberCheck(compiler)).setCheckSubTree(subtree);
@@ -655,13 +668,19 @@ public final class ExpressionDecomposerTest extends TestCase {
       assertEquals(msg, 0, compiler.getErrorCount());
     }
   }
-
   private void helperExposeExpression(
       String code,
       String fnName,
       String expectedResult,
-      Set<String> knownConstants
-      ) {
+      Set<String> knownConstants) {
+    helperExposeExpression(code, (tree) -> findCall(tree, fnName), expectedResult, knownConstants);
+  }
+
+  private void helperExposeExpression(
+      String code,
+      Function<Node, Node> nodeFinder,
+      String expectedResult,
+      Set<String> knownConstants) {
     Compiler compiler = getCompiler();
     if (knownConstants == null) {
       knownConstants = new HashSet<>();
@@ -675,8 +694,8 @@ public final class ExpressionDecomposerTest extends TestCase {
     Node tree = parse(compiler, code);
     assertNotNull(tree);
 
-    Node callSite = findCall(tree, fnName);
-    assertNotNull("Call to " + fnName + " was not found.", callSite);
+    Node callSite = nodeFinder.apply(tree);
+    assertWithMessage("Expected node was not found.").that(callSite).isNotNull();
 
     DecompositionType result = decomposer.canExposeExpression(callSite);
     assertEquals(DecompositionType.DECOMPOSABLE, result);
@@ -693,18 +712,30 @@ public final class ExpressionDecomposerTest extends TestCase {
   private void helperMoveExpression(
       String code,
       String fnName,
-      String expectedResult
-      ) {
-    helperMoveExpression(
-        code, fnName, expectedResult, null);
+      String expectedResult) {
+    helperMoveExpression(code, fnName, expectedResult, null);
+  }
+
+  private void helperMoveExpression(
+      String code,
+      Function<Node, Node> nodeFinder,
+      String expectedResult) {
+    helperMoveExpression(code, nodeFinder, expectedResult, null);
   }
 
   private void helperMoveExpression(
       String code,
       String fnName,
       String expectedResult,
-      Set<String> knownConstants
-      ) {
+      Set<String> knownConstants) {
+    helperMoveExpression(code, (tree) -> findCall(tree, fnName), expectedResult, knownConstants);
+  }
+
+  private void helperMoveExpression(
+      String code,
+      Function<Node, Node> nodeFinder,
+      String expectedResult,
+      Set<String> knownConstants) {
     Compiler compiler = getCompiler();
     if (knownConstants == null) {
       knownConstants = new HashSet<>();
@@ -719,8 +750,8 @@ public final class ExpressionDecomposerTest extends TestCase {
     Node tree = parse(compiler, code);
     assertNotNull(tree);
 
-    Node callSite = findCall(tree, fnName);
-    assertNotNull("Call to " + fnName + " was not found.", callSite);
+    Node callSite = nodeFinder.apply(tree);
+    assertWithMessage("Expected node was not found.").that(callSite).isNotNull();
 
     compiler.resetUniqueNameId();
     decomposer.moveExpression(callSite);
@@ -744,8 +775,22 @@ public final class ExpressionDecomposerTest extends TestCase {
     return findCall(n, name, 1);
   }
 
+  @Nullable
+  private static Node findClass(Node n) {
+    if (n.isClass()) {
+      return n;
+    }
+    for (Node child : n.children()) {
+      Node maybeClass = findClass(child);
+      if (maybeClass != null) {
+        return maybeClass;
+      }
+    }
+    return null;
+  }
+
   /**
-   * @param name The name to look for.
+   * @param name The name to look for. If name is null, look for a yield expression instead.
    * @param call The call to look for.
    * @return The return the Nth instance of the CALL/YIELD node
    * matching name found in a pre-order traversal.
