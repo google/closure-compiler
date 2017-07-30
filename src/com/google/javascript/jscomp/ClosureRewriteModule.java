@@ -1055,13 +1055,18 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         // `const {Foo}` case
         maybeWarnForInvalidDestructuring(t, lhs.getParent(), legacyNamespace);
         for (Node importSpec : lhs.getFirstChild().children()) {
+          checkState(importSpec.hasChildren(), importSpec);
           String importedProperty = importSpec.getString();
-          Node aliasNode = importSpec.hasChildren() ? importSpec.getFirstChild() : importSpec;
+          Node aliasNode = importSpec.getFirstChild();
           String aliasName = aliasNode.getString();
           String fullName = exportedNamespace + "." + importedProperty;
           recordNameToInline(aliasName, fullName);
 
+          // Record alias before we rename node.
           maybeAddAliasToSymbolTable(aliasNode, currentScript.legacyNamespace);
+          // Need to rename node otherwise it will stay global and messes up index if there are
+          // other files that use the same destructuring alias.
+          safeSetString(aliasNode, currentScript.contentsPrefix + aliasName);
         }
       } else {
         throw new RuntimeException("Illegal goog.module import: " + lhs);
