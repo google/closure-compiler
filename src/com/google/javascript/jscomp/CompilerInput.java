@@ -232,7 +232,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
 
     // If the code is a JsAst, then it was originally JS code, and is compatible with the
     // regex-based parsing of JsFileParser.
-    if (ast instanceof JsAst && !((JsAst) ast).isParsed() && JsFileParser.isSupported()) {
+    if (ast instanceof JsAst && JsFileParser.isSupported()) {
       // Look at the source code.
       // Note: it's OK to use getName() instead of
       // getPathRelativeToClosureBase() here because we're not using
