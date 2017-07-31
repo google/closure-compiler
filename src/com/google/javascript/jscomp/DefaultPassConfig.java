@@ -1658,6 +1658,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new PeepholeOptimizationsPass(compiler, getName(), new PeepholeRemoveDeadCode());
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
       };
 
   private final PassFactory earlyInlineVariables =
