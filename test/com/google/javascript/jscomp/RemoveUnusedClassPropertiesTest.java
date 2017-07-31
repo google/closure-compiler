@@ -30,7 +30,9 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
       "EXT.ext;",
       "var Object;",
       "Object.defineProperties;",
-      "var foo");
+      "var foo",
+      "/** @type {Function} */",
+      "Object.prototype.constructor = function() {};");
 
   public RemoveUnusedClassPropertiesTest() {
     super(EXTERNS);
@@ -44,6 +46,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableNormalize();
     enableGatherExternProperties();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
@@ -506,45 +509,121 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
     testSame("function* gen() { yield this.a = 1; yield this.a; }");
   }
 
-  // TODO(yitingwang): Fix destructuring so these tests produce the same result as the comments
   public void testEs6Destructuring() {
-    testSame("[this.x, this.y] = [1, 2];"); // [] = [1,2]
-    testSame(
+    // Test normal destructuring removal
+    test("[this.x, this.y] = [1, 2]", "[, , ] = [1, 2]");
+
+    // Test normal destructuring, assignment prevent removal
+    test(
         LINE_JOINER.join(
-            "[this.x, ...this.y] = [1, 2];", // [, ...this.y] = [1, 2];
-            "var p = this.y;")); // var p = this.y;
+            "[this.x, this.y] = [1, 2]",
+            "var p = this.x;"),
+        LINE_JOINER.join(
+            "[this.x, , ] = [1, 2]",
+            "var p = this.x;"));
+
+    // Test rest destructuring removal
+    test("[this.x, ...this.z] = [1, 2, 3]", "[, , ] = [1, 2, 3]");
+
+    // Test rest destructuring with normal variable
+    test("[this.x, ...z] = [1, 2]", "[, ...z] = [1, 2]");
+
+    // Test rest destructuring, assignment prevent removal
+    test(
+        LINE_JOINER.join(
+            "[this.x, ...this.y] = [1, 2];",
+            "var p = this.y;"),
+        LINE_JOINER.join(
+            "[, ...this.y] = [1, 2];",
+            "var p = this.y;"));
+
+    // Test destructuring rhs prevent removal
     testSame(
         LINE_JOINER.join(
             "this.x = 1;",
             "this.y = 2;",
             "[...a] = [this.x, this.y];"));
-    testSame("[this.x, this.y, ...z] = [1, 2];"); // [ , , ...z] = [1, 2];
-    testSame("[this.x, this.y, ...this.z] = [1, 2, 3]"); // [ , , , ] = [1, 2, 3]
-    testSame("({a: this.x, b: this.y} = {a: 1, b: 2})"); // ({} = {a: 1, b: 2})
-    test( // testSame
+
+    // Test nested destructuring
+    test("[this.x, [this.y, ...z]] = [1, [2]]", "[, [, ...z]] = [1, [2]]");
+
+    // Test normal object destructuring full removal
+    test("({a: this.x, b: this.y} = {a: 1, b: 2})", "({} = {a: 1, b: 2})");
+
+    // Test normal object destructuring partial removal
+    test("({a: this.x, b: y} = {a: 1, b: 2})", "({b: y} = {a: 1, b: 2})");
+
+    // Test obj destructuring prevent removal
+    test(
+        LINE_JOINER.join(
+            "({a: this.x, b: this.y} = {a: 1, b: 2});",
+            "var p = this.x;"),
+        LINE_JOINER.join(
+            "({a: this.x} = {a: 1, b: 2});",
+            "var p = this.x;"));
+
+    // Test obj destructuring with old style class
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */ function C () {",
+            "  this.a = 1;",
+            "}",
+            "({a: x} = new C());"));
+
+    // Test obj destructuring with new style class
+    testSame(
         LINE_JOINER.join(
             "class C {",
             "  constructor() {",
             "     this.a = 1;",
-            "     this.b = 2;",
             "  }",
             "}",
-            "({a: x, b: y} = new C());"),
-        LINE_JOINER.join(
-            "class C {}",
-            "({a: x, b: y} = new C);"));
-    test( // testSame
+            "({a: x} = new C());"));
+
+    // Test let destructuring
+    testSame(
         LINE_JOINER.join(
             "class C {",
             "  constructor() {",
             "     this.a = 1;",
-            "     this.b = 2;",
             "  }",
             "}",
-            "let {a: x, b: y} = new C();"),
+            "let {a: x} = new C();"));
+
+    // Test obj created at a different location and later used in destructuring
+    testSame(
         LINE_JOINER.join(
-            "class C {}",
-            "let {a: x, b: y} = new C;"));
+            "class C {",
+            "  constructor() {",
+            "     this.a = 1;",
+            "  }",
+            "}",
+            "var obj = new C()",
+            "({a: x} = obj);"));
+
+    // Test obj destructuring with default value
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "     this.a = 1;",
+            "  }",
+            "}",
+            "({a = 2} = new C());"));
+
+    // Test obj nested destructuring
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "     this.a = 1;",
+            "  }",
+            "}",
+            "var obj = new C()",
+            "({x: {a}} = {x: obj});"));
+
+    // No support for Computed Properties yet
+    test("({['a']:0}); this.a = 1;", "({['a']:0}); 1;");
   }
 
   public void testEs6DefaultParameter() {
