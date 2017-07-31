@@ -816,4 +816,12 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "})"));
   }
 
+  public void testModules() {
+    testSame("export default function(){}");
+    testSame("export class C {};");
+    testSame("export {Bar}");
+
+    testSame("import { square, diag } from 'lib';");
+    testSame("import * as lib from 'lib';");
+  }
 }

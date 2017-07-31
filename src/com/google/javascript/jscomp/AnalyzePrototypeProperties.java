@@ -227,7 +227,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
       } else {
         // TODO(moz): It's not yet clear if we need another kind of NameContext for block scopes
         // in ES6, use anonymous node for now and investigate later.
-        checkState(NodeUtil.createsBlockScope(root), scope);
+        checkState(NodeUtil.createsBlockScope(root) || root.isModuleBody(), scope);
         symbolStack.push(new NameContext(anonymousNode, scope));
       }
     }
