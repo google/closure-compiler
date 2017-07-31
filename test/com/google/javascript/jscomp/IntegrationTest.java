@@ -3185,8 +3185,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   // http://blickly.github.io/closure-compiler-issues/#1131
   public void testIssue1131() {
     CompilerOptions options = createCompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS
-        .setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(options,
          "function f(k) { return k(k); } alert(f(f));",
          "function a(b) { return b(b); } alert(a(a));");
@@ -3311,7 +3310,7 @@ public final class IntegrationTest extends IntegrationTestCase {
            "function f() { return x + z; }");
       fail("Expected run-time exception");
     } catch (RuntimeException e) {
-      assertThat(e.getMessage()).contains("Unexpected variable x");
+      assertThat(e).hasMessageThat().contains("Unexpected variable x");
     }
   }
 

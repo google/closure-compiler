@@ -224,7 +224,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Logs a message under a central logger.
    */
-  abstract void addToDebugLog(String message);
+  abstract void addToDebugLog(String... message);
 
   /**
    * Sets the CssRenamingMap.

@@ -802,8 +802,7 @@ class FunctionInjector {
 
       // Check if any of the references cross the module boundaries.
       if (checkModules && ref.module != null) {
-        if (ref.module != fnModule &&
-            !moduleGraph.dependsOn(ref.module, fnModule)) {
+        if (ref.module != fnModule && !moduleGraph.dependsOn(ref.module, fnModule)) {
           // Calculate the cost as if the function were non-removable,
           // if it still lowers the cost inline it.
           isRemovable = false;
@@ -812,8 +811,7 @@ class FunctionInjector {
       }
     }
 
-    int referencesUsingDirectInlining = referenceCount -
-        referencesUsingBlockInlining;
+    int referencesUsingDirectInlining = referenceCount - referencesUsingBlockInlining;
 
     // Don't bother calculating the cost of function for simple functions where
     // possible.
@@ -821,8 +819,7 @@ class FunctionInjector {
     // larger than the original function if there are many returns (resulting
     // in additional assignments) or many parameters that need to be aliased
     // so use the cost estimating.
-    if (referenceCount == 1 && isRemovable &&
-        referencesUsingDirectInlining == 1) {
+    if (referenceCount == 1 && isRemovable && referencesUsingDirectInlining == 1) {
       return true;
     }
 
@@ -904,8 +901,8 @@ class FunctionInjector {
     //    "function xx(xx,xx){}" (15 + (param count * 3) -1;
     int paramCount = NodeUtil.getFunctionParameters(fnNode).getChildCount();
     int commaCount = (paramCount > 1) ? paramCount - 1 : 0;
-    int costDeltaFunctionOverhead = 15 + commaCount +
-        (paramCount * InlineCostEstimator.ESTIMATED_IDENTIFIER_COST);
+    int costDeltaFunctionOverhead =
+        15 + commaCount + (paramCount * InlineCostEstimator.ESTIMATED_IDENTIFIER_COST);
 
     Node block = fnNode.getLastChild();
     if (!block.hasChildren()) {

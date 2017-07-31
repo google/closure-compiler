@@ -2809,11 +2809,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   /** Called from the compiler passes, adds debug info */
   @Override
-  void addToDebugLog(String str) {
+  void addToDebugLog(String... strings) {
     if (options.useDebugLog) {
-      debugLog.append(str);
+      String log = Joiner.on("").join(strings);
+      debugLog.append(log);
       debugLog.append('\n');
-      logger.fine(str);
+      logger.fine(log);
     }
   }
 

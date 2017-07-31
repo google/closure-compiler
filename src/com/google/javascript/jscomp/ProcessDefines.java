@@ -129,7 +129,7 @@ class ProcessDefines implements CompilerPass {
         Node finalValue = inputValue != null ?
             inputValue : info.getLastValue();
         if (finalValue != info.initialValue) {
-          compiler.addToDebugLog("Overriding @define variable " + defineName);
+          compiler.addToDebugLog("Overriding @define variable ", defineName);
           boolean changed =
               finalValue.getToken() != info.initialValue.getToken()
               || !finalValue.isEquivalentTo(info.initialValue);

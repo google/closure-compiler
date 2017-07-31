@@ -889,7 +889,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
       // to other unreferenced variables.
       removeAllAssigns(var);
 
-      compiler.addToDebugLog("Unreferenced var: " + var.name);
+      compiler.addToDebugLog("Unreferenced var: ", var.name);
       Node nameNode = var.nameNode;
       Node toRemove = nameNode.getParent();
       Node parent = toRemove.getParent();

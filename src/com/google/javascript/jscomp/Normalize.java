@@ -209,7 +209,7 @@ class Normalize implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       // Note: Constant properties annotations are not propagated.
-      if ((n.isName() || n.isStringKey())) {
+      if (n.isName() || n.isStringKey()) {
         if (n.getString().isEmpty()) {
           return;
         }
