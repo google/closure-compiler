@@ -274,6 +274,13 @@ assert.equal = function(actual, expected, opt_message) {};
  * @param {*} expected
  * @param {string=} opt_message
  */
+assert.strictEqual = function(actual, expected, opt_message) {};
+
+/**
+ * @param {*} actual
+ * @param {*} expected
+ * @param {string=} opt_message
+ */
 assert.notEqual = function(actual, expected, opt_message) {};
 
 /**
