@@ -719,7 +719,12 @@ sinon.match.has = function(property, expect) {};
  */
 sinon.match.hasOwn = function(property, expect) {};
 
+sinon.clock = {};
 
+/**
+ * @param {!number} ticks
+ */
+sinon.clock.tick = function(ticks) {};
 
 sinon.sandbox = {};
 
@@ -742,11 +747,18 @@ SinonSandbox.prototype.restore = function() {};
 SinonSandbox.prototype.server;
 
 /**
+ * @param {*=} obj
+ * @param {string=} method
+ * @param {*=} func
  * @return {!SinonStub}
  */
-SinonSandbox.prototype.stub = function() {};
+SinonSandbox.prototype.stub = function(obj, method, func) {};
 
-
+/**
+ * @param {...?} params
+ * @return {Object}
+ */
+SinonSandbox.prototype.useFakeTimers = function(params) {};
 
 sinon.fakeServer = {};
 
