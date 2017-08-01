@@ -349,7 +349,7 @@ ServiceWorkerGlobalScope.prototype.indexedDB;
 
 /**
  * @see http://www.w3.org/TR/service-workers/#service-worker-client-interface
- * @constructor
+ * @interface
  */
 function ServiceWorkerClient() {}
 
@@ -419,6 +419,12 @@ ServiceWorkerClients.prototype.claim = function() {};
  * @return {!Promise<!ServiceWorkerClient>}
  */
 ServiceWorkerClients.prototype.openWindow = function(url) {};
+
+/**
+ * @param {string} id
+ * @return {!Promise<!ServiceWorkerClient|undefined>}
+ */
+ServiceWorkerClients.prototype.get = function(id) {};
 
 /** @typedef {{includeUncontrolled: (boolean|undefined)}} */
 var ServiceWorkerClientQueryOptions;
