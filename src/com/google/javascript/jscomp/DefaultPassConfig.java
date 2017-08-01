@@ -2231,18 +2231,23 @@ public final class DefaultPassConfig extends PassConfig {
   /** Computes the names of functions for later analysis. */
   private final PassFactory computeFunctionNames =
       new PassFactory("computeFunctionNames", true) {
-    @Override
-    protected CompilerPass create(final AbstractCompiler compiler) {
-      return new CompilerPass() {
         @Override
-        public void process(Node externs, Node root) {
-          CollectFunctionNames pass = new CollectFunctionNames(compiler);
-          pass.process(externs, root);
-          compiler.setFunctionNames(pass.getFunctionNames());
+        protected CompilerPass create(final AbstractCompiler compiler) {
+          return new CompilerPass() {
+            @Override
+            public void process(Node externs, Node root) {
+              CollectFunctionNames pass = new CollectFunctionNames(compiler);
+              pass.process(externs, root);
+              compiler.setFunctionNames(pass.getFunctionNames());
+            }
+          };
+        }
+
+        @Override
+        public FeatureSet featureSet() {
+          return ES8_MODULES;
         }
       };
-    }
-  };
 
   /** Inserts run-time type assertions for debugging. */
   private final PassFactory runtimeTypeCheck =
