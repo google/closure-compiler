@@ -115,8 +115,6 @@ class PhaseOptimizer implements CompilerPass {
   /**
    * @param comp the compiler that owns/creates this.
    * @param tracker an optional performance tracker
-   * @param range the progress range for the process function or null
-   *        if progress should not be reported.
    */
   PhaseOptimizer(AbstractCompiler comp, PerformanceTracker tracker) {
     this.compiler = comp;
