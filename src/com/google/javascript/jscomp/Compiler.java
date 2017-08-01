@@ -444,10 +444,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     } else if (ntiState == DiagnosticGroupState.OFF) {
       options.setNewTypeInference(false);
     }
-    // With NTI, we still need OTI to run because the later passes that use
-    // types only understand OTI types at the moment.
-    // But we do not want to see the warnings from OTI.
-    if (options.getNewTypeInference()) {
+    // When running OTI after NTI, turn off the warnings from OTI.
+    if (options.getNewTypeInference() && options.getRunOTIafterNTI()) {
       options.checkTypes = true;
       // Suppress warnings from the const checks of CheckAccessControls so as to avoid
       // duplication.

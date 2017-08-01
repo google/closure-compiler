@@ -205,6 +205,15 @@ public class CompilerOptions implements Serializable {
   private boolean useNewTypeInference;
 
   /**
+   * Several passes after type checking use type information. Some of these passes do not work
+   * yet with the new type inference. For this reason, we run the old type checker after NTI,
+   * so that the subsequent passes can use the old types.
+   * Turning this option off allows us to debug NTI-only builds; with the goal to eventually
+   * stop running OTI after NTI.
+   */
+  private boolean runOTIafterNTI = true;
+
+  /**
    * Temporary option to help support TTL in NTI. We are adding TTL support gradually, but
    * that breaks NTI projects. We use this option to only enable TTL in unit tests, until it
    * is fully supported.
@@ -1983,6 +1992,14 @@ public class CompilerOptions implements Serializable {
 
   public void setNewTypeInference(boolean enable) {
     this.useNewTypeInference = enable;
+  }
+
+  public boolean getRunOTIafterNTI() {
+    return this.runOTIafterNTI;
+  }
+
+  public void setRunOTIafterNTI(boolean enable) {
+    this.runOTIafterNTI = enable;
   }
 
   public boolean getUseTTLinNTI() {
