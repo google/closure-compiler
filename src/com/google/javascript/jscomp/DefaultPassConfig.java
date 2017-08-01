@@ -2717,6 +2717,11 @@ public final class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(AbstractCompiler compiler) {
       return new FlowSensitiveInlineVariables(compiler);
     }
+
+    @Override
+    public FeatureSet featureSet() {
+      return ES8_MODULES;
+    }
   };
 
   /** Uses register-allocation algorithms to use fewer variables. */
