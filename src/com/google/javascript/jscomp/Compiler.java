@@ -3456,6 +3456,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final ImmutableMap<String, Node> defaultDefineValues;
     private final Map<String, Object> annotationMap;
     private final ConcurrentHashMap<String, SourceMapInput> inputSourceMaps;
+    private final int changeStamp;
 
     CompilerState(Compiler compiler) {
       this.externsRoot = checkNotNull(compiler.externsRoot);
@@ -3494,6 +3495,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.defaultDefineValues = checkNotNull(compiler.defaultDefineValues);
       this.annotationMap = checkNotNull(compiler.annotationMap);
       this.inputSourceMaps = compiler.inputSourceMaps;
+      this.changeStamp = compiler.changeStamp;
     }
   }
 
@@ -3574,6 +3576,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     defaultDefineValues = checkNotNull(compilerState.defaultDefineValues);
     annotationMap = checkNotNull(compilerState.annotationMap);
     inputSourceMaps = compilerState.inputSourceMaps;
+    changeStamp = compilerState.changeStamp;
 
     // Reapply module names to deserialized modules
     renameModules(newModules, modules);
