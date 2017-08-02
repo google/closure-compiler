@@ -420,6 +420,17 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
             "alert(z);"));
   }
 
+  public void testUnusedImport() {
+    enableUnusedLocalAssignmentCheck = true;
+    // TODO(heeba): This test should give an UNUSED_LOCAL_ASSIGNMENT error for x.
+    testSame("import x from 'Foo';");
+  }
+
+  public void testExportedType() {
+    enableUnusedLocalAssignmentCheck = true;
+    testSame(LINE_JOINER.join("export class Foo {}", "export /** @type {Foo} */ var y;"));
+  }
+
   /**
    * Inside a goog.scope, don't warn because the alias might be used in a type annotation.
    */
