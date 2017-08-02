@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Chars;
+import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.J2clPassMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
@@ -460,9 +461,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguage(LanguageMode.ECMASCRIPT_2017);
     test(
         options,
-        "cr.define('my.namespace', function() { class X {} return {X: X}; });",
+        "var cr = {}; cr.define('my.namespace', function() { class X {} return {X: X}; });",
         LINE_JOINER.join(
-            "var my = my || {};",
+            "var cr = {},",
+            "    my = my || {};",
             "my.namespace = my.namespace || {};",
             "cr.define('my.namespace', function() {",
             "  my.namespace.X = class {};",
@@ -2429,6 +2431,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     // Ensure that type-checking doesn't crash, even if the CFG is malformed.
     // This can happen in IDE mode.
     CompilerOptions options = createCompilerOptions();
+    options.setDevMode(DevMode.OFF);
     options.setIdeMode(true);
     options.setCheckTypes(true);
     options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
@@ -3186,6 +3189,10 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testIssue1131() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    // TODO(tbreisacher): Re-enable dev mode and fix test failure.
+    options.setDevMode(DevMode.OFF);
+
     test(options,
          "function f(k) { return k(k); } alert(f(f));",
          "function a(b) { return b(b); } alert(a(a));");
@@ -3291,6 +3298,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testAlwaysRunSafetyCheck() {
     CompilerOptions options = createCompilerOptions();
+    options.setDevMode(DevMode.OFF);
     options.setCheckSymbols(false);
     options.addCustomPass(
         CustomPassExecutionTime.BEFORE_OPTIMIZATIONS,
@@ -3369,7 +3377,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         "/** @const */ var g = {};" +
-        "/** @type {number} */ (g.foo) = 3;",
+        "/** @type {number} */ g.foo = 3;",
         "/** @const */ var g = {};" +
         "g.foo = 3;");
   }
@@ -4469,6 +4477,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Override
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
+    options.setDevMode(DevMode.EVERY_PASS);
     options.setCodingConvention(new GoogleCodingConvention());
     options.setRenamePrefixNamespaceAssumeCrossModuleNames(true);
     options.declaredGlobalExternsOnWindow = false;

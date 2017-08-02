@@ -820,12 +820,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(gatherRawExports);
     }
 
-    // This comes after property renaming because quoted property names must
-    // not be renamed.
-    if (options.convertToDottedProperties) {
-      passes.add(convertToDottedProperties);
-    }
-
     // Property renaming must happen before this pass runs since this
     // pass may convert dotted properties into quoted properties.  It
     // is beneficial to run before alias strings, alias keywords and
@@ -842,7 +836,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.coalesceVariableNames) {
       // Passes after this point can no longer depend on normalized AST
-      // assumptions because the code is marked as un-normalized
+      // assumptions because the code is marked as un-normalized.
       passes.add(coalesceVariableNames);
 
       // coalesceVariables creates identity assignments and more redundant code
@@ -853,8 +847,15 @@ public final class DefaultPassConfig extends PassConfig {
       }
     } else {
       // Passes after this point can no longer depend on normalized AST
-      // assumptions.
+      // assumptions. We don't need this if coalesceVariableNames runs, because
+      // coalesceVariableNames already marks the code as unnormalized.
       passes.add(markUnnormalized);
+    }
+
+    // This comes after property renaming because quoted property names must
+    // not be renamed.
+    if (options.convertToDottedProperties) {
+      passes.add(convertToDottedProperties);
     }
 
     if (options.collapseVariableDeclarations) {

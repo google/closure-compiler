@@ -179,8 +179,10 @@ class Normalize implements CompilerPass {
       } else if (n.isStringKey()) {
         String propName = n.getString();
         if (exposedProperties.contains(propName)) {
-          n.setQuotedString();
-          compiler.reportChangeToEnclosingScope(n);
+          if (!n.isQuotedString()) {
+            compiler.reportChangeToEnclosingScope(n);
+            n.setQuotedString();
+          }
         }
       }
     }
