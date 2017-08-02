@@ -68,9 +68,9 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
   private final Deque<GraphColoring<Var, Void>> colorings;
   private final Deque<LiveVariablesAnalysisEs6> liveAnalyses;
   private final boolean usePseudoNames;
-  private static LiveVariablesAnalysisEs6 liveness;
+  private LiveVariablesAnalysisEs6 liveness;
 
-  private static final Comparator<Var> coloringTieBreaker =
+  private final Comparator<Var> coloringTieBreaker =
       new Comparator<Var>() {
         @Override
         public int compare(Var v1, Var v2) {
