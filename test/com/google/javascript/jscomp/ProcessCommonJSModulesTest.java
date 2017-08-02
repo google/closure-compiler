@@ -643,6 +643,22 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "test.js",
         LINE_JOINER.join(
+            "!function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}}()"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {foo: 'bar'};"));
+
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
             ";;;(function(){",
             "var foobar = {foo: 'bar'};",
             "if (typeof module === 'object' && module.exports) {",

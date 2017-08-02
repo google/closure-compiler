@@ -186,6 +186,13 @@ public final class ProcessCommonJSModules implements CompilerPass {
       return false;
     }
 
+    // Function expression can be forced with !, just skip !
+    // FIXME: Expression could also be forced with: + - ~ void
+    // FIXME: ! ~ void can be repeated any number of times
+    if (n != null && n.getFirstChild() != null && n.getFirstChild().isNot()) {
+      n = n.getFirstChild();
+    }
+
     Node call = n.getFirstChild();
     if (call == null || !call.isCall()) {
       return false;
