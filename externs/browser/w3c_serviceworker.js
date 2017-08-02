@@ -420,6 +420,12 @@ ServiceWorkerClients.prototype.claim = function() {};
  */
 ServiceWorkerClients.prototype.openWindow = function(url) {};
 
+/**
+ * @param {string} id
+ * @return {!Promise<!ServiceWorkerClient|undefined>}
+ */
+ServiceWorkerClients.prototype.get = function(id) {};
+
 /** @typedef {{includeUncontrolled: (boolean|undefined)}} */
 var ServiceWorkerClientQueryOptions;
 
