@@ -907,4 +907,25 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "        .apply(module$test,__WEBPACK_AMD_DEFINE_ARRAY__$$module$test),",
             "    module$test!==undefined && module$test)"));
   }
+
+  public void testIssue2593() {
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
+            "var first = 1,",
+            "    second = 2,",
+            "    third = 3,",
+            "    fourth = 4,",
+            "    fifth = 5;",
+            "",
+            "module.exports = {};"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "/** @const */ var module$test={};",
+            "var first$$module$test=1;",
+            "var second$$module$test=2;",
+            "var third$$module$test=3;",
+            "var fourth$$module$test=4;",
+            "var fifth$$module$test=5;"));
+  }
 }
