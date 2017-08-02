@@ -945,6 +945,19 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "var fifth$$module$test=5;"));
   }
 
+  public void testTernaryUMDWrapper() {
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
+            "var foobar = {foo: 'bar'};",
+            "typeof module === 'object' && module.exports ? module.exports = foobar :",
+            "typeof define === 'function' && define.amd ? define([], function() {return foobar;}) :",
+            "this.foobar = foobar;"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {foo: 'bar'};"));
+  }
+
   public void testLeafletUMDWrapper() {
     testModules(
         "test.js",

@@ -576,7 +576,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
         return null;
       }
 
-      if (parent.isIf() && parent.getFirstChild() == n) {
+      // When walking up ternary operations (hook), don't check if parent is the condition,
+      // because one ternary operation can be then/else branch of another.
+      if ((parent.isIf() && parent.getFirstChild() == n) || parent.isHook()) {
         Node outerIf = getOutermostIfAncestor(parent);
         if (outerIf != null) {
           return outerIf;
