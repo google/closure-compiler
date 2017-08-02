@@ -1108,7 +1108,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     );
   }
 
-  public void testDestructuring() {
+  public void testDestructuringArrayPattern() {
     testSame(
         LINE_JOINER.join(
             "var a; var b",
@@ -1123,8 +1123,45 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
             "[a] = [1]"
         ));
 
-    testSame("var [a, b] = [1, 2]");
-
+    testSame("var [a, b] = [1, 2]; f(a); f(b);");
   }
 
+  public void testDestructuringObjectPattern() {
+    /*testSame(LINE_JOINER.join("var a; var b;", "({a, b} = {a:1, b:2})"));
+
+    test(
+        LINE_JOINER.join("var a; var b;", "({a} = {a:1})"),
+        LINE_JOINER.join("var a; ", "({a} = {a:1})"));
+
+    testSame("var {a, b} = {a:1, b:2}; f(a); f(b);");
+
+    testSame("var {a} = {p:{}, q:{}}; a.q = 4;");*/
+
+    // Nested Destructuring
+    testSame("const someObject = {a:{ b:1 }}; var {a: {b}} = someObject; someObject.a.b;");
+  }
+
+  public void testRemoveUnusedVarsDeclaredInDestructuring() {
+    // Array destructuring
+    test("var [a, b] = [1, 2]; f(a);", "var [a, ,] = [1, 2]; f(a);");
+
+    test("var [a, b] = [1, 2];", "var [,,] = [1, 2];");
+
+    // Object pattern destructuring
+    test("var {a, b} = {a:1, b:2}; f(a);", "var {a,  } = {a:1, b:2}; f(a);");
+
+    test("var {a, b} = {a:1, b:2};", "var { } = {a:1, b:2};");
+
+    // Nested pattern - pass backs off for now
+    // TODO (simranarora) Implement support for nested destructures
+    testSame("var {a, b:{c}} = {a:1, b:{c:5}}; f(a);");
+
+    // Value may have side effects
+    test("var {a, b} = {a:foo(), b:bar()};", "var {    } = {a:foo(), b:bar()};");
+
+    test("var {a, b} = foo();", "var {} = foo();");
+
+    // Same as above case without the destructuring declaration
+    test("var a, b = foo();", "foo();");
+  }
 }

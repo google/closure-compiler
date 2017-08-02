@@ -310,6 +310,39 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
         }
         return;
 
+      case ARRAY_PATTERN:
+        // VAR or LET or CONST
+        //  DESTRUCTURING_LHS
+        //    ARRAY_PATTERN
+        //      NAME
+
+        // back off if there are nested array patterns
+        if (n.getParent().isDestructuringLhs()) {
+          if (NodeUtil.isNestedArrayPattern(n)) {
+            break;
+          } else {
+            return;
+          }
+        }
+        break;
+
+      case OBJECT_PATTERN:
+        // VAR or LET or CONST
+        //  DESTRUCTURING_LHS
+        //    OBJECT_PATTERN
+        //      STRING
+        //        NAME
+
+        // back off if there are nested object patterns
+        if (n.getParent().isDestructuringLhs()) {
+          if (NodeUtil.isNestedObjectPattern(n)) {
+            break;
+          } else {
+            return;
+          }
+        }
+        break;
+
       case NAME:
         var = scope.getVar(n.getString());
         if (NodeUtil.isNameDeclaration(parent)) {
@@ -775,7 +808,6 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
     }
   }
 
-
   /**
    * Look at all the property assigns to all variables.
    * These may or may not count as references. For example,
@@ -893,10 +925,14 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
       Node nameNode = var.nameNode;
       Node toRemove = nameNode.getParent();
       Node parent = toRemove.getParent();
+      Node grandParent = toRemove.getGrandparent();
       checkState(
           NodeUtil.isNameDeclaration(toRemove)
               || toRemove.isFunction()
               || (toRemove.isParamList() && parent.isFunction())
+              || NodeUtil.isDestructuringDeclaration(grandParent) // Array Pattern
+              || (parent.isObjectPattern()
+                  && NodeUtil.isDestructuringDeclaration(grandParent.getParent())) // Object Pattern
               || toRemove.isClass(),
           "We should only declare Vars and functions and function args and classes");
 
@@ -913,6 +949,12 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
         // Don't remove bleeding functions.
       } else if (parent.isForIn()) {
         // foreach iterations have 3 children. Leave them alone.
+      } else if (parent.isDestructuringPattern()) {
+        compiler.reportChangeToEnclosingScope(toRemove);
+        NodeUtil.removeChild(parent, toRemove);
+      } else if (parent.isDestructuringLhs()) {
+        compiler.reportChangeToEnclosingScope(nameNode);
+        NodeUtil.removeChild(toRemove, nameNode);
       } else if (NodeUtil.isNameDeclaration(toRemove)
           && nameNode.hasChildren()
           && NodeUtil.mayHaveSideEffects(nameNode.getFirstChild(), compiler)) {

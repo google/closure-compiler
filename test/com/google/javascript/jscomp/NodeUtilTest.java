@@ -1059,6 +1059,41 @@ public final class NodeUtilTest extends TestCase {
     }
   }
 
+  public void testRemovePatternChild() {
+    // remove variable declaration from object pattern
+    Node actual = parse("var {a, b, c} = {a:1, b:2, c:3}");
+    Node varNode = actual.getFirstChild();
+    Node destructure = varNode.getFirstChild();
+    Node pattern = destructure.getFirstChild();
+    Node a = pattern.getFirstChild();
+    Node b = a.getNext();
+    Node c = b.getNext();
+
+    NodeUtil.removeChild(pattern, a);
+    String expected = "var {b, c} = {a:1, b:2, c:3};";
+    String difference = parse(expected).checkTreeEquals(actual);
+    assertNull("Nodes do not match:\n" + difference, difference);
+
+    // Remove all entries in object pattern
+    NodeUtil.removeChild(pattern, b);
+    NodeUtil.removeChild(pattern, c);
+    expected = "var { } = {a:1, b:2, c:3};";
+    difference = parse(expected).checkTreeEquals(actual);
+    assertNull("Nodes do not match:\n" + difference, difference);
+
+    // remove variable declaration from array pattern
+    actual = parse("var [a, b] = [1, 2]");
+    varNode = actual.getFirstChild();
+    destructure = varNode.getFirstChild();
+    pattern = destructure.getFirstChild();
+    a = pattern.getFirstChild();
+
+    NodeUtil.removeChild(pattern, a);
+    expected = "var [ , b] = [1, 2];";
+    difference = parse(expected).checkTreeEquals(actual);
+    assertNull("Nodes do not match:\n" + difference, difference);
+  }
+
   public void testRemoveForChild() {
     // Test removing the initializer.
     Node actual = parse("for(var a=0;a<0;a++)foo()");
@@ -2052,6 +2087,25 @@ public final class NodeUtilTest extends TestCase {
     assertNotLValueNamedX(x);
   }
 
+  public void testIsNestedObjectPattern() {
+    Node root = parse("var {a, b} = {a:1, b:2}");
+    Node destructuring = root.getFirstFirstChild();
+    Node objPattern = destructuring.getFirstChild();
+    assertFalse(NodeUtil.isNestedObjectPattern(objPattern));
+
+    root = parse("var {a, b:{c}} = {a:{}, b:{c:5}};");
+    destructuring = root.getFirstFirstChild();
+    objPattern = destructuring.getFirstChild();
+    assertTrue(NodeUtil.isNestedObjectPattern(objPattern));
+  }
+
+  public void testIsNestedArrayPattern() {
+    Node root = parse("var [a, b] = [1, 2]");
+    Node destructuring = root.getFirstFirstChild();
+    Node arrayPattern = destructuring.getFirstChild();
+    assertFalse(NodeUtil.isNestedArrayPattern(arrayPattern));
+  }
+
   public void testLhsByDestructuring1() {
     Node root = parse("var [a, b] = obj;");
     Node destructLhs = root.getFirstFirstChild();
@@ -2639,6 +2693,53 @@ public final class NodeUtilTest extends TestCase {
   public void testIsVarArgs() {
     assertTrue(NodeUtil.isVarArgsFunction(getNode("function() {return () => arguments}")));
     assertFalse(NodeUtil.isVarArgsFunction(getNode("() => arguments")));
+  }
+
+  public void testDestructuringMap1() {
+    String code = "var {a, b, c} = {a: 1, b: 2, c: 3};";
+    Node ast = parse(code);
+    Node varNode = ast.getFirstChild();
+    Node destructuringNode = varNode.getFirstChild();
+    Map<String, Node> destructuringMap = NodeUtil.getDestructuringMap(destructuringNode);
+    assertEquals(3, destructuringMap.size());
+  }
+
+  public void testDestructuringMap2() {
+    String code = "var {a} = {a:1, b:2};";
+    Node ast = parse(code);
+    Node varNode = ast.getFirstChild();
+    Node destructuringNode = varNode.getFirstChild();
+    Map<String, Node> destructuringMap = NodeUtil.getDestructuringMap(destructuringNode);
+    assertEquals(2, destructuringMap.size());
+  }
+
+  public void testDestructuringMap3() {
+    String code = "var [a, b] = [1, 2];";
+    Node ast = parse(code);
+    Node varNode = ast.getFirstChild();
+    Node destructuringNode = varNode.getFirstChild();
+    Map<String, Node> destructuringMap = NodeUtil.getDestructuringMap(destructuringNode);
+    assertEquals(2, destructuringMap.size());
+  }
+
+  public void testDestructuringMap4() {
+    // Destructuring pattern and object literal are in different orders
+    String code = "var {a, b} = { b:2, a:1 }";
+    Node ast = parse(code);
+    Node varNode = ast.getFirstChild();
+    Node destructuringNode = varNode.getFirstChild();
+    Map<String, Node> destructuringMap = NodeUtil.getDestructuringMap(destructuringNode);
+    assertEquals(1, (int) destructuringMap.get("a").getDouble());
+  }
+
+  public void testDestructuringMap5() {
+    String code = "var {a, b} = foo();";
+    Node ast = parse(code);
+    Node varNode = ast.getFirstChild();
+    Node destructuringNode = varNode.getFirstChild();
+    Map<String, Node> destructuringMap = NodeUtil.getDestructuringMap(destructuringNode);
+    assertTrue(destructuringMap.get("a").isCall());
+    assertTrue(destructuringMap.get("b").isCall());
   }
 
   private boolean executedOnceTestCase(String code) {
