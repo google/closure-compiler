@@ -694,28 +694,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
           }
           break;
 
-        case VAR:
-        case LET:
-        case CONST:
-          // Multiple declarations need split apart so that they can be refactored into
-          // property assignments or removed altogether.
-          if (n.hasMoreThanOneChild()) {
-            List<Node> vars = splitMultipleDeclarations(n);
-            t.reportCodeChange();
-            for (Node var : vars) {
-              visit(t, var.getFirstChild(), var);
-            }
-          }
-          break;
-
         case NAME:
           {
-            // If this is a name declaration with multiple names, it will be split apart when
-            // the parent is visited and then revisit the children.
-            if (NodeUtil.isNameDeclaration(n.getParent()) && n.getParent().hasMoreThanOneChild()) {
-              break;
-            }
-
             String qName = n.getQualifiedName();
             if (qName == null) {
               break;
@@ -1091,6 +1071,13 @@ public final class ProcessCommonJSModules implements CompilerPass {
         case VAR:
         case LET:
         case CONST:
+          // Multiple declaration - needs split apart.
+          if (parent.getChildCount() > 1) {
+            splitMultipleDeclarations(parent);
+            parent = nameRef.getParent();
+            newNameDeclaration = t.getScope().getVar(newName);
+          }
+
           if (newNameIsQualified) {
             // Refactor a var declaration to a getprop assignment
             Node getProp = NodeUtil.newQName(compiler, newName, nameRef, originalName);
@@ -1420,17 +1407,13 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
     }
 
-    private List<Node> splitMultipleDeclarations(Node var) {
+    private void splitMultipleDeclarations(Node var) {
       checkState(NodeUtil.isNameDeclaration(var));
-      List<Node> vars = new ArrayList<>();
       while (var.getSecondChild() != null) {
         Node newVar = new Node(var.getToken(), var.removeFirstChild());
         newVar.useSourceInfoFrom(var);
         var.getParent().addChildBefore(newVar, var);
-        vars.add(newVar);
       }
-      vars.add(var);
-      return vars;
     }
   }
 }
