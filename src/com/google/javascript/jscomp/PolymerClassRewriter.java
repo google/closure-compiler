@@ -68,15 +68,7 @@ final class PolymerClassRewriter {
    */
   void rewritePolymerCall(
       Node exprRoot, final PolymerClassDefinition cls, boolean isInGlobalScope) {
-    checkNotNull(cls.descriptor);
-    Node call = exprRoot.getFirstChild();
-    if (call.isAssign()) {
-      call = call.getSecondChild();
-    } else if (call.isName()) {
-      call = call.getFirstChild();
-    }
-
-    Node objLit = cls.descriptor;
+    Node objLit = checkNotNull(cls.descriptor);
     if (hasShorthandAssignment(objLit)) {
       compiler.report(JSError.make(objLit, PolymerPassErrors.POLYMER_SHORTHAND_NOT_SUPPORTED));
       return;
