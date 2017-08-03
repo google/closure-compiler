@@ -4947,7 +4947,11 @@ public final class NodeUtil {
   }
 
   static int countAstSize(Node n) {
-    return countAstSizeUpToLimit(n, Integer.MAX_VALUE);
+    int count = 1;
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+      count += countAstSize(c);
+    }
+    return count;
   }
 
 
