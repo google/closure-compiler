@@ -761,6 +761,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertRedeclareError("const x = 0, x = 0;");
   }
 
+  public void testRedeclareInLabel() {
+    assertRedeclareGlobal("a: var x, x;");
+  }
+
   public void testIllegalBlockScopedEarlyReference() {
     assertEarlyReferenceError("let x = x");
     assertEarlyReferenceError("let [x] = x");
