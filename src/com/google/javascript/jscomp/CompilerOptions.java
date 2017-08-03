@@ -1169,6 +1169,15 @@ public class CompilerOptions implements Serializable {
   /** Which algorithm to use for locating ES6 and CommonJS modules */
   ModuleLoader.ResolutionMode moduleResolutionMode;
 
+  /** Which entries to look for in package.json files when processing modules */
+  List<String> packageJsonEntryNames;
+
+  /**
+   * Needed by {@link RewriteJsonToModule}, but defined here because RewriteJsonToModule is not
+   * part of the core build.
+   */
+  public static final String PACKAGE_JSON_MAIN = "main";
+
   /**
    * Should the compiler print its configuration options to stderr when they are initialized?
    *
@@ -1194,6 +1203,7 @@ public class CompilerOptions implements Serializable {
 
     // Modules
     moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
+    packageJsonEntryNames = ImmutableList.of(CompilerOptions.PACKAGE_JSON_MAIN);
 
     // Checks
     skipNonTranspilationPasses = false;
@@ -2779,6 +2789,14 @@ public class CompilerOptions implements Serializable {
 
   public void setModuleResolutionMode(ModuleLoader.ResolutionMode mode) {
     this.moduleResolutionMode = mode;
+  }
+
+  public List<String> getPackageJsonEntryNames() {
+    return this.packageJsonEntryNames;
+  }
+
+  public void setPackageJsonEntryNames(List<String> names) {
+    this.packageJsonEntryNames = names;
   }
 
   /** Serializes compiler options to a stream. */
