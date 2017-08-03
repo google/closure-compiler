@@ -1143,9 +1143,9 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testRemoveUnusedVarsDeclaredInDestructuring() {
     // Array destructuring
-    test("var [a, b] = [1, 2]; f(a);", "var [a, ,] = [1, 2]; f(a);");
+    test("var [a, b] = [1, 2]; f(a);", "var [a] = [1, 2]; f(a);");
 
-    test("var [a, b] = [1, 2];", "var [,,] = [1, 2];");
+    test("var [a, b] = [1, 2];", "var [,] = [1, 2];");
 
     // Object pattern destructuring
     test("var {a, b} = {a:1, b:2}; f(a);", "var {a,  } = {a:1, b:2}; f(a);");

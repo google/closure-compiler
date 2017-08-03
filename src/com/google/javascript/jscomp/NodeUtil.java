@@ -2777,21 +2777,13 @@ public final class NodeUtil {
       parent.replaceChild(node, IR.empty());
     } else if (parent.isObjectPattern()) {
       // Remove the name from the object pattern
-
-      // TODO (simranarora) remove the pattern and declaration when nothing is left and if there is
-      // an object literal on the right hand side, wrap it in an expression result
-      // E.g. var { } = { a:foo(), b:bar()}  --> ({a:foo(),  b:bar()})
-
       parent.removeChild(node);
     } else if (parent.isArrayPattern()) {
-      // Leave an empty slot for the array pattern node that gets removed.
-      // E.g. var [a, b] = [1, 2] becomes var [a, ,] = [1, 2]
-
-      // TODO (simranarora) remove the pattern and declaration when nothing is left and just keep
-      // the initializer expression.
-      // E.g. var [ , ,] = [1, 2];  --> [1, 2];
-
-      parent.replaceChild(node, IR.empty());
+      if (node == parent.getLastChild()) {
+        parent.removeChild(node);
+      } else {
+        parent.replaceChild(node, IR.empty());
+      }
     } else if (parent.isDestructuringLhs()) {
       // Destructuring is empty so we should remove the node
       parent.removeChild(node);

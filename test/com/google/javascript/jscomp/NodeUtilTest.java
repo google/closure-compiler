@@ -1061,7 +1061,7 @@ public final class NodeUtilTest extends TestCase {
 
   public void testRemovePatternChild() {
     // remove variable declaration from object pattern
-    Node actual = parse("var {a, b, c} = {a:1, b:2, c:3}");
+    Node actual = parse("var {a : x, b = 3, c : c = 4} = {a:1, b:2, c:3}");
     Node varNode = actual.getFirstChild();
     Node destructure = varNode.getFirstChild();
     Node pattern = destructure.getFirstChild();
@@ -1070,7 +1070,7 @@ public final class NodeUtilTest extends TestCase {
     Node c = b.getNext();
 
     NodeUtil.removeChild(pattern, a);
-    String expected = "var {b, c} = {a:1, b:2, c:3};";
+    String expected = "var {b = 3, c : c = 4} = {a:1, b:2, c:3};";
     String difference = parse(expected).checkTreeEquals(actual);
     assertNull("Nodes do not match:\n" + difference, difference);
 
@@ -1082,14 +1082,26 @@ public final class NodeUtilTest extends TestCase {
     assertNull("Nodes do not match:\n" + difference, difference);
 
     // remove variable declaration from array pattern
-    actual = parse("var [a, b] = [1, 2]");
+    actual = parse("var [a, b, ...c] = [1, 2, 3, 4]");
     varNode = actual.getFirstChild();
     destructure = varNode.getFirstChild();
     pattern = destructure.getFirstChild();
     a = pattern.getFirstChild();
+    b = a.getNext();
+    c = b.getNext();
 
     NodeUtil.removeChild(pattern, a);
-    expected = "var [ , b] = [1, 2];";
+    expected = "var [ , b, ...c] = [1, 2, 3, 4];";
+    difference = parse(expected).checkTreeEquals(actual);
+    assertNull("Nodes do not match:\n" + difference, difference);
+
+    NodeUtil.removeChild(pattern, c);
+    expected = "var [ , b] = [1, 2, 3, 4];";
+    difference = parse(expected).checkTreeEquals(actual);
+    assertNull("Nodes do not match:\n" + difference, difference);
+    NodeUtil.removeChild(pattern, b);
+
+    expected = "var [ , ] = [1, 2, 3, 4];";
     difference = parse(expected).checkTreeEquals(actual);
     assertNull("Nodes do not match:\n" + difference, difference);
   }
