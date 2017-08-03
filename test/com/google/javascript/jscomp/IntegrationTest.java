@@ -4400,7 +4400,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  return f(8);",
             "}",
             "alert(foo());"),
-        "alert([8][0])");
+        "alert(8)");
   }
 
   public void testDefaultParameters() {
@@ -4431,9 +4431,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  return a + b.foo;",
             "}",
             "alert(foo(3, {foo: 9}));"),
-        LINE_JOINER.join(
-            "{}",
-            "alert(3 + {foo:9}.foo);"));
+        "alert(12);");
   }
 
   public void testRestObjectPatternParameters() {
@@ -4471,9 +4469,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  return length;",
             "}",
             "alert(countArgs(1, 1, 1, 1, 1));"),
-        LINE_JOINER.join(
-            "{}",
-            "alert([1,1,1,1].length);"));
+        "alert(4);");
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */
