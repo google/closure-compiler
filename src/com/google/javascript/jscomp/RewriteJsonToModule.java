@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,6 +36,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
     implements CompilerPass {
   public static final DiagnosticType JSON_UNEXPECTED_TOKEN =
       DiagnosticType.error("JSC_JSON_UNEXPECTED_TOKEN", "Unexpected JSON token");
+  public static final String PACKAGE_JSON_MAIN = "main";
 
   private final Map<String, String> packageJsonMainEntries;
   private final AbstractCompiler compiler;
@@ -136,10 +138,16 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
 
     String inputPath = t.getInput().getSourceFile().getOriginalPath();
     if (inputPath.endsWith("/package.json") && jsonObject.isObjectLit()) {
-      Node main = NodeUtil.getFirstPropMatchingKey(jsonObject, "main");
-      if (main != null && main.isString()) {
-        String dirName = inputPath.substring(0, inputPath.length() - "package.json".length());
-        packageJsonMainEntries.put(inputPath, dirName + main.getString());
+      List<String> possibleMainEntries = compiler.getOptions().getPackageJsonEntryNames();
+
+      for (String entryName : possibleMainEntries) {
+        Node entry = NodeUtil.getFirstPropMatchingKey(jsonObject, entryName);
+
+        if (entry != null && entry.isString()) {
+          String dirName = inputPath.substring(0, inputPath.length() - "package.json".length());
+          packageJsonMainEntries.put(inputPath, dirName + entry.getString());
+          break;
+        }
       }
     }
 

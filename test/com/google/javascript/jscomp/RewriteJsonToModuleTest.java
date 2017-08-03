@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.Node;
 
@@ -40,6 +41,8 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
     // Trigger module processing after parsing.
     options.setProcessCommonJSModules(true);
     options.setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
+    options.setPackageJsonEntryNames(
+        ImmutableList.of("browser", RewriteJsonToModule.PACKAGE_JSON_MAIN));
     return options;
   }
 
@@ -80,5 +83,25 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
             "var module$package_json = {\"other\": { \"main\": \"foo/bar/baz.js\"}};")));
 
     assertEquals(0, getLastCompiler().getModuleLoader().getPackageJsonMainEntries().size());
+  }
+
+  public void testPackageJsonFileBrowserField() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "/package.json",
+                "{ \"main\": \"foo/bar/baz.js\", \"browser\": \"browser/foo.js\" }")),
+        expected(
+            lines(
+                "goog.provide('module$package_json')",
+                "var module$package_json = {\"main\": \"foo/bar/baz.js\", \"browser\": \"browser/foo.js\"};")));
+
+    assertEquals(1, getLastCompiler().getModuleLoader().getPackageJsonMainEntries().size());
+    assert (getLastCompiler()
+        .getModuleLoader()
+        .getPackageJsonMainEntries()
+        .containsKey("/package.json"));
+    assertThat(getLastCompiler().getModuleLoader().getPackageJsonMainEntries())
+        .containsEntry("/package.json", "/browser/foo.js");
   }
 }
