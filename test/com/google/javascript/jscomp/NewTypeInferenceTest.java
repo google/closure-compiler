@@ -21324,12 +21324,39 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     // Return type declared as Iterable
     typeCheck(
         LINE_JOINER.join(
-            "/** @return {!Iterable<number>} */",
+            "/** @return {Iterable<number>} */",
             "function* gen() {",
             "  yield 1;",
             "}",
-            "var /** Iterable<number> */ x = gen();"),
-        NewTypeInference.INVALID_DECLARED_RETURN_TYPE_OF_GENERATOR_FUNCTION);
+            "var /** Iterable<number> */ x = gen();"));
+
+    // Return type declared as Iterator
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {!Iterator<string>} */",
+            "function* gen() {",
+            "  yield 1;",
+            "}",
+            "var /** Iterator<string> */ x = gen();"),
+        NewTypeInference.YIELD_NONDECLARED_TYPE);
+
+    // Return type declared as nullable IteratorIterable
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {?IteratorIterable<number>} */",
+            "function* gen() {",
+            "  yield 1;",
+            "}",
+            "var /** IteratorIterable<number> */ x = gen();"));
+
+    // Return type declared as Iterable
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {Iterable<number>|number} */",
+            "function* gen() {",
+            "  yield 1;",
+            "}",
+            "var /** Iterable<number>|number */ x = gen();"));
 
     // Return type declared as Object
     typeCheck(
@@ -21338,8 +21365,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "function* gen() {",
             "  yield 1;",
             "}",
-            "var /** Object */ x = gen();"),
-        NewTypeInference.INVALID_DECLARED_RETURN_TYPE_OF_GENERATOR_FUNCTION);
+            "var /** Object */ x = gen();"));
 
     // Test return statement in Generator
     typeCheck(

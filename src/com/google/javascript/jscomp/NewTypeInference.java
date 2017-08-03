@@ -97,7 +97,8 @@ final class NewTypeInference implements CompilerPass {
   static final DiagnosticType INVALID_DECLARED_RETURN_TYPE_OF_GENERATOR_FUNCTION =
       DiagnosticType.warning(
           "JSC_NTI_INVALID_DECLARED_RETURN_TYPE_OF_GENERATOR_FUNCTION",
-          "A generator function must return a Generator, found {0}.");
+          "A generator function must return a (supertype of) Generator.\n"
+          + "{0}.");
 
   static final DiagnosticType INVALID_ARGUMENT_TYPE = DiagnosticType.warning(
       "JSC_NTI_INVALID_ARGUMENT_TYPE",
@@ -1177,7 +1178,7 @@ final class NewTypeInference implements CompilerPass {
     if (declRetType != null) {
       if (fnRoot.isGeneratorFunction()) {
         JSType generator = this.commonTypes.getGeneratorInstance(UNKNOWN);
-        if (!declRetType.isSubtypeOf(generator) || !generator.isSubtypeOf(declRetType)) {
+        if (!generator.isSubtypeOf(declRetType)) {
           registerMismatchAndWarn(
               JSError.make(fnRoot, INVALID_DECLARED_RETURN_TYPE_OF_GENERATOR_FUNCTION,
                   errorMsgWithTypeDiff(generator, declRetType)),
@@ -2673,20 +2674,32 @@ final class NewTypeInference implements CompilerPass {
     EnvTypePair resultPair = analyzeExprFwd(expr.getFirstChild(), inEnv);
 
     // Getting the instantiated declared return type
+    JSType iterable = this.commonTypes.getIterableInstance(UNKNOWN);
+    JSType iterator = this.commonTypes.getIteratorInstance(UNKNOWN);
     JSType generator = this.commonTypes.getGeneratorInstance(UNKNOWN);
     JSType declRetType = getDeclaredReturnTypeOfCurrentScope(generator);
-    if (!declRetType.isSubtypeOf(generator) || !generator.isSubtypeOf(declRetType)) {
+    JSType yieldType;
+    if (!generator.isSubtypeOf(declRetType)) {
       // Return early due to unexpected declared return type, but do not warn
       // Warning will be generated in createSummary of the function
       resultPair.type = UNKNOWN;
       return resultPair;
+    } else if (declRetType.isSubtypeOf(iterable)) {
+      // This check and implementation is in lieu of calling a hypothetical unifyWithSupertype()
+      // method on generator.
+      yieldType = declRetType.getInstantiatedTypeArgument(iterable);
+    } else if (declRetType.isSubtypeOf(iterator))  {
+      yieldType = declRetType.getInstantiatedTypeArgument(iterator);
+    } else {
+      // declRetType is neither subtype of iterable nor iterator. This means we do not know
+      // anything about the yield type.
+      yieldType = UNKNOWN;
     }
 
     // Getting the actual ret type
     JSType actualRetType;
     if (expr.isYieldAll()) {
       JSType boxedType = resultPair.type.autobox();
-      JSType iterable = this.commonTypes.getIterableInstance(UNKNOWN);
       if (boxedType.isSubtypeOf(iterable)) {
         actualRetType = boxedType.getInstantiatedTypeArgument(iterable);
       } else {
@@ -2698,7 +2711,6 @@ final class NewTypeInference implements CompilerPass {
       actualRetType = resultPair.type;
     }
 
-    JSType yieldType = declRetType.getInstantiatedTypeArgument(generator);
     if (!yieldType.isBottom() && !actualRetType.isSubtypeOf(yieldType)) {
       // Do not warn if yieldType is bottom because this only happens when unification returns
       // an empty list, which means the declRetType is Generator<?>
