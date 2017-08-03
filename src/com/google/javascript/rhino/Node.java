@@ -1266,6 +1266,25 @@ public class Node implements Serializable {
   //==========================================================================
   // Source position management
 
+  public void setStaticSourceFileFrom(Node other) {
+    // Make sure source file prop nodes are not duplicated.
+    if (other.propListHead != null
+        && (this.propListHead == null
+            || (this.propListHead.propType == STATIC_SOURCE_FILE
+               && this.propListHead.next == null))) {
+      // Either the node has only STATIC_SOURCE_FILE as a property or has not properties.
+      PropListItem tail = other.propListHead;
+      while (tail.next != null) {
+        tail = tail.next;
+      }
+      if (tail.propType == STATIC_SOURCE_FILE) {
+        propListHead = tail;
+        return;
+      }
+    }
+    setStaticSourceFile(other.getStaticSourceFile());
+  }
+
   public void setStaticSourceFile(@Nullable StaticSourceFile file) {
     this.putProp(STATIC_SOURCE_FILE, file);
   }
@@ -2225,13 +2244,13 @@ public class Node implements Serializable {
   // TODO(nicksantos): The semantics of this method are ill-defined. Delete it.
   @Deprecated
   public Node useSourceInfoWithoutLengthIfMissingFrom(Node other) {
-    if (getProp(ORIGINALNAME_PROP) == null) {
-      putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
+    if (getStaticSourceFile() == null) {
+      setStaticSourceFileFrom(other);
+      sourcePosition = other.sourcePosition;
     }
 
-    if (getStaticSourceFile() == null) {
-      setStaticSourceFile(other.getStaticSourceFile());
-      sourcePosition = other.sourcePosition;
+    if (getProp(ORIGINALNAME_PROP) == null) {
+      putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
     }
 
     return this;
@@ -2258,8 +2277,8 @@ public class Node implements Serializable {
    * that of {@code other}.
    */
   public Node useSourceInfoFrom(Node other) {
+    setStaticSourceFileFrom(other);
     putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
-    setStaticSourceFile(other.getStaticSourceFile());
     sourcePosition = other.sourcePosition;
     length = other.length;
     return this;
@@ -2291,14 +2310,14 @@ public class Node implements Serializable {
    * that of {@code other} iff the source info is missing.
    */
   public Node useSourceInfoIfMissingFrom(Node other) {
-    if (getProp(ORIGINALNAME_PROP) == null) {
-      putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
-    }
-
     if (getStaticSourceFile() == null) {
-      setStaticSourceFile(other.getStaticSourceFile());
+      setStaticSourceFileFrom(other);
       sourcePosition = other.sourcePosition;
       length = other.length;
+    }
+
+    if (getProp(ORIGINALNAME_PROP) == null) {
+      putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
     }
 
     return this;
