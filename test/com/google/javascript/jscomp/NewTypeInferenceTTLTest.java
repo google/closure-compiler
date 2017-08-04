@@ -867,9 +867,7 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
         TypeTransformation.VAR_UNDEFINED);
   }
 
-  // A limitation of how we handle TTL; we recognize TTL functions by name, not by their type.
-  // Here, g returns unknown.
-  public void testTtlFunctionTypesDontPropagate() {
+  public void testTtlFunctionTypesPropagate() {
     typeCheck(LINE_JOINER.join(
         "/**",
         " * @template T := 'number' =:",
@@ -877,7 +875,26 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
         " */",
         "function f() { return 123; }",
         "var g = f;",
-        "var /** string */ x = g();"));
+        "var /** string */ x = g();"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "/**",
+        " * @template T := 'string' =:",
+        " * @return {T}",
+        " */",
+        "Foo.prototype.method = function() {};",
+        "/**",
+        " * @constructor",
+        " * @implements {Foo}",
+        " */",
+        "function Bar() {}",
+        "/** @override */",
+        "Bar.prototype.method = function() { return 'asdf' };",
+        "var /** number */ x = (new Bar).method()"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   // When the TTL expression is evaluated we want lexical scope, so the return type of f()

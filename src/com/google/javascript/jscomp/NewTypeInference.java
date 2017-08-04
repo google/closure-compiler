@@ -2025,60 +2025,31 @@ final class NewTypeInference implements CompilerPass {
   }
 
   /**
-   * Given the qualified name of a function, find the AST node that defines the function.
-   */
-  private Node getFunctionDeclNodeFromQname(QualifiedName funQname, TypeEnv env) {
-    if (funQname.isIdentifier()) {
-      return this.currentScope.isKnownFunction(funQname)
-          ? this.currentScope.getScope(funQname.getLeftmostName()).getRoot() : null;
-    }
-    JSType recvType = envGetTypeOfQname(env, funQname.getAllButRightmost());
-    return recvType == null ? null : recvType.getPropertyDefSite(funQname.getRightmostName());
-  }
-
-  private ImmutableMap<String, Node> getTypeTransformationsOfCallee(Node callee, TypeEnv env) {
-    if (callee.isQualifiedName()) {
-      QualifiedName qname = QualifiedName.fromNode(callee);
-      Node funDeclNode = getFunctionDeclNodeFromQname(qname, env);
-      if (funDeclNode != null) {
-        JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(funDeclNode);
-        if (jsdoc != null && !jsdoc.getTypeTransformations().isEmpty()) {
-          return jsdoc.getTypeTransformations();
-        }
-      }
-    }
-    return null;
-  }
-
-  /**
-   * When calling a generic function that uses TTL, we need to map the TTL variables to types.
-   * This method finds the TTL expressions, calls TypeTransformation#eval to evaluate them,
-   * and updates the type map at the generic call.
+   * Instantiate the generic function using the appropriate type map.
    *
-   * NOTE(dimvar): we only handle TTL when the callee is a qualified name that is the name of
-   * a TTL function. In other words, we do not treat TTL types as first class; we do not propagate
-   * them through the type system. If the TTL function is assigned to some other variable and
-   * then called with that name, we do not detect that.
-   * We'll handle this in a follow-up CL; it is needed for inheritance (child method w/ @override)
-   * and possibly for module aliases as well.
+   * If the generic function uses TTL, we need to map the TTL variables to types.
+   * In this method, we find the TTL expressions, call TypeTransformation#eval to evaluate them,
+   * and update the type map.
    */
-  private ImmutableMap<String, JSType> calcTtlInstantiationFwd(
-      Node callee, FunctionType calleeType, ImmutableMap<String, JSType> typeMap, TypeEnv env) {
-    ImmutableMap<String, Node> typeTransformations = getTypeTransformationsOfCallee(callee, env);
-    if (typeTransformations == null || !this.compiler.getOptions().getUseTTLinNTI()) {
-      return typeMap;
+  private FunctionType instantiateCalleeMaybeWithTTL(
+      FunctionType calleeType, ImmutableMap<String, JSType> typeMap) {
+    Map<String, Node> typeTransformations = calleeType.getTypeTransformations();
+    if (typeTransformations.isEmpty()) {
+      return calleeType.instantiateGenerics(typeMap);
+    }
+    if (!this.compiler.getOptions().getUseTTLinNTI()) {
+      return calleeType.instantiateGenericsWithUnknown();
     }
     LinkedHashMap<String, JSType> newTypeMap = new LinkedHashMap<>();
     newTypeMap.putAll(typeMap);
-    List<String> calleeTypeParams = calleeType.getTypeParameters();
     for (Map.Entry<String, Node> entry : typeTransformations.entrySet()) {
-      String ttlVar = UniqueNameGenerator.findGeneratedName(entry.getKey(), calleeTypeParams);
+      String ttlVar = entry.getKey();
       Node transform = entry.getValue();
       @SuppressWarnings({"unchecked", "rawtypes"})
       JSType t = (JSType) this.ttlObj.eval(transform, (ImmutableMap) typeMap);
       newTypeMap.put(ttlVar, t);
     }
-    return ImmutableMap.copyOf(newTypeMap);
+    return calleeType.instantiateGenerics(ImmutableMap.copyOf(newTypeMap));
   }
 
   private EnvTypePair analyzeInvocationFwd(
@@ -2151,8 +2122,7 @@ final class NewTypeInference implements CompilerPass {
       Node firstArg = expr.getSecondChild();
       ImmutableMap<String, JSType> typeMap =
           calcTypeInstantiationFwd(expr, receiver, firstArg, funType, envAfterCallee);
-      typeMap = calcTtlInstantiationFwd(callee, funType, typeMap, calleePair.env);
-      funType = funType.instantiateGenerics(typeMap);
+      funType = instantiateCalleeMaybeWithTTL(funType, typeMap);
       println("Instantiated function type: ", funType);
     }
     // argTypes collects types of actuals for deferred checks.

@@ -10365,7 +10365,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "   * @return {T|number} b",
         "   * @template T",
         "   */",
-        "  get a() {}",
+        "  get a() { return 123; }",
         "};"),
         JSTypeCreatorFromJSDoc.TEMPLATED_GETTER_SETTER);
 

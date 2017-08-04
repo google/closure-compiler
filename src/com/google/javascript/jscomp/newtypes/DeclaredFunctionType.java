@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,8 +48,7 @@ public final class DeclaredFunctionType implements Serializable {
   // If this DeclaredFunctionType is a prototype method, this field stores the
   // type of the instance.
   private final JSType receiverType;
-  // Non-empty iff this function has an @template annotation
-  private final ImmutableList<String> typeParameters;
+  private final TypeParameters typeParameters;
 
   private final JSTypes commonTypes;
   private final boolean isAbstract;
@@ -63,7 +61,7 @@ public final class DeclaredFunctionType implements Serializable {
       JSType retType,
       JSType nominalType,
       JSType receiverType,
-      ImmutableList<String> typeParameters,
+      TypeParameters typeParameters,
       boolean isAbstract) {
     checkArgument(retType == null || !retType.isBottom());
     checkNotNull(commonTypes);
@@ -103,16 +101,13 @@ public final class DeclaredFunctionType implements Serializable {
       JSType retType,
       JSType nominalType,
       JSType receiverType,
-      ImmutableList<String> typeParameters,
+      TypeParameters typeParameters,
       boolean isAbstract) {
     if (requiredFormals == null) {
       requiredFormals = new ArrayList<>();
     }
     if (optionalFormals == null) {
       optionalFormals = new ArrayList<>();
-    }
-    if (typeParameters == null) {
-      typeParameters = ImmutableList.of();
     }
     return new DeclaredFunctionType(
         commonTypes,
@@ -194,8 +189,8 @@ public final class DeclaredFunctionType implements Serializable {
     return !typeParameters.isEmpty();
   }
 
-  public ImmutableList<String> getTypeParameters() {
-    return typeParameters;
+  public TypeParameters getTypeParameters() {
+    return this.typeParameters;
   }
 
   public boolean isAbstract() {
@@ -207,7 +202,7 @@ public final class DeclaredFunctionType implements Serializable {
   }
 
   public String getTypeVariableDefinedLocally(String tvar) {
-    String tmp = UniqueNameGenerator.findGeneratedName(tvar, this.typeParameters);
+    String tmp = UniqueNameGenerator.findGeneratedName(tvar, this.typeParameters.asList());
     if (tmp != null) {
       return tmp;
     }
@@ -306,7 +301,7 @@ public final class DeclaredFunctionType implements Serializable {
     // Before we switched to unique generated names for type variables, a method's type variables
     // could shadow type variables defined on the class. Check that this no longer happens.
     if (!this.commonTypes.MAP_TO_UNKNOWN.equals(typeMap)) {
-      for (String typeParam : this.typeParameters) {
+      for (String typeParam : this.typeParameters.asList()) {
         checkState(!typeMap.containsKey(typeParam));
       }
     }

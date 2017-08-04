@@ -577,7 +577,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
             superMethodType.toFunctionType().toString(),
             localMethodType.toFunctionType().toString()));
       }
-      superMethodType = mayInstantiateGenericsWithUnknown(rawType, pname, superMethodType);
       DeclaredFunctionType updatedMethodType =
           localMethodType.withTypeInfoFromSuper(superMethodType, getsTypeFromParent);
       localPropDef.updateMethodType(updatedMethodType);
@@ -653,34 +652,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         literalObj.getRawNominalType().freeze();
       }
     }
-  }
-
-  /**
-   * When a class/interface inherits from an ancestor class/interface with a method that uses TTL,
-   * instantiate the type variables with unknown in the child method.
-   * Don't bother handling multiple ancestor methods with TTL.
-   * TODO(dimvar): delete this when we handle TTL inside newtypes/FunctionType.
-   */
-  private DeclaredFunctionType mayInstantiateGenericsWithUnknown(
-      RawNominalType rawType, String propName, DeclaredFunctionType inheritedPropType) {
-    Set<NominalType> superInterfaces = rawType.getInterfaces();
-
-    NominalType superClass = rawType.getSuperClass();
-    if (superClass != null) {
-      JSDocInfo jsdoc = superClass.getPropertyJsdoc(propName);
-      if (jsdoc != null && !jsdoc.getTypeTransformations().isEmpty()) {
-        return inheritedPropType.instantiateGenericsWithUnknown();
-      }
-    }
-
-    for (NominalType superInterface : superInterfaces) {
-      JSDocInfo jsdoc = superInterface.getPropertyJsdoc(propName);
-      if (jsdoc != null && !jsdoc.getTypeTransformations().isEmpty()) {
-        return inheritedPropType.instantiateGenericsWithUnknown();
-      }
-    }
-
-    return inheritedPropType;
   }
 
   // TODO(dimvar): the finalization method and this one should be cleaned up;

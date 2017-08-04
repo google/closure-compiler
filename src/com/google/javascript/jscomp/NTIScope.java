@@ -146,8 +146,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     if (this.root.isFromExterns()) {
       this.root.setTypeI(this.commonTypes.fromFunctionType(declaredType.toFunctionType()));
     }
-    if (!getTypeTransformations().isEmpty()) {
-      Set<String> ttlVars = getTypeTransformations().keySet();
+    if (!declaredType.getTypeParameters().getTypeTransformations().isEmpty()) {
       this.declaredTypeForOwnBody = declaredType.instantiateGenericsWithUnknown();
     }
   }
@@ -167,14 +166,6 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
 
   boolean isTopLevel() {
     return parent == null;
-  }
-
-  /**
-   * Returns a non-null map from TTL variables to their transformations in AST form.
-   */
-  private Map<String, Node> getTypeTransformations() {
-    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(this.root);
-    return jsdoc == null ? ImmutableMap.<String, Node>of() : jsdoc.getTypeTransformations();
   }
 
   boolean isConstructor() {
