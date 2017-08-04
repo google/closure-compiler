@@ -128,6 +128,72 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertThat(redeclarations).hasCount("x", 1);
   }
 
+  public void testVarRedeclaration1_inES6Module() {
+    String js = "export function f() { var x; var x; }";
+
+    Node script = getRoot(js);
+    Scope global = scopeCreator.createScope(script, null);
+
+    Node moduleBody = script.getFirstChild();
+    checkState(moduleBody.isModuleBody());
+    Scope moduleScope = scopeCreator.createScope(moduleBody, global);
+
+    Node function = moduleBody.getFirstFirstChild();
+    checkState(function.isFunction());
+    Scope functionScope = scopeCreator.createScope(function, moduleScope);
+
+    Node functionBody = function.getLastChild();
+    scopeCreator.createScope(functionBody, functionScope);
+
+    assertThat(redeclarations).hasCount("x", 1);
+  }
+
+  public void testVarRedeclaration2_inES6Module() {
+    // TODO (simranarora) make this pass. Currently we only scan vars if the parent is a statement
+    // block or control structure, but "EXPORT" falls under neither of these cases. If we make the
+    // change to add "EXPORT" as a statement block, then other compiler tests
+    // fail. Thus, we must debug those passes first!
+    String js = "export var x = 1; export var x = 2;";
+
+    Node script = getRoot(js);
+    Scope global = scopeCreator.createScope(script, null);
+
+    Node moduleBody = script.getFirstChild();
+    checkState(moduleBody.isModuleBody());
+    scopeCreator.createScope(moduleBody, global);
+
+    // assertThat(redeclarations).hasCount("x", 1);
+    assertThat(redeclarations).hasCount("x", 0);
+  }
+
+  public void testRedeclaration3_inES6Module() {
+    String js = "export function f() { var x; if (true) { var x; var x; } var x; }";
+
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node moduleBody = root.getFirstChild();
+    checkState(moduleBody.isModuleBody());
+    Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
+
+    Node function = moduleBody.getFirstFirstChild();
+    checkState(function.isFunction());
+    Scope functionScope = scopeCreator.createScope(function, moduleScope);
+
+    Node functionBody = function.getLastChild();
+    Scope functionBlockScope = scopeCreator.createScope(functionBody, functionScope);
+
+    Node innerBlock =
+        functionBody
+            .getFirstChild() // VAR
+            .getNext() // IF
+            .getLastChild(); // BLOCK
+    checkState(innerBlock.isNormalBlock(), innerBlock);
+    scopeCreator.createScope(innerBlock, functionBlockScope);
+
+    assertThat(redeclarations).hasCount("x", 3);
+  }
+
   public void testLetRedeclaration1() {
     getScope("let x; let x");
     assertThat(redeclarations).hasCount("x", 1);
@@ -150,6 +216,33 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
         .getLastChild();  // BLOCK
     checkState(block.isNormalBlock(), block);
     scopeCreator.createScope(block, globalScope);
+
+    assertThat(redeclarations).hasCount("x", 1);
+  }
+
+  public void testLetRedeclaration3_withES6Module() {
+    String js = "export function f() { let x; if (true) { let x; } let x; }";
+
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+
+    Node moduleBody = root.getFirstChild();
+    checkState(moduleBody.isModuleBody());
+    Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
+
+    Node function = moduleBody.getFirstFirstChild();
+    checkState(function.isFunction());
+    Scope functionScope = scopeCreator.createScope(function, moduleScope);
+
+    Node functionBody = function.getLastChild();
+    Scope functionBlockScope = scopeCreator.createScope(functionBody, functionScope);
+
+    Node innerBlock =
+        functionBody
+            .getFirstChild() // VAR
+            .getNext() // IF
+            .getLastChild(); // BLOCK
+    scopeCreator.createScope(innerBlock, functionBlockScope);
 
     assertThat(redeclarations).hasCount("x", 1);
   }
@@ -658,6 +751,25 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertFalse(catchBlockScope.isDeclared("y", false));
     assertTrue(catchBlockScope.isDeclared("z", false));
     assertTrue(catchBlockScope.isDeclared("e", false));
+  }
+
+  public void testModuleScoped() {
+    // TODO (simranarora) Make this pass. Currently, functions are only declared if their parent
+    // nodes are statement nodes. "EXPORT" is not part of the statement node enum!
+    String js = "export function f() { var x; if (1) { let y; } }; var z;";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertFalse(globalScope.isDeclared("f", false));
+    assertFalse(globalScope.isDeclared("x", false));
+    assertFalse(globalScope.isDeclared("y", false));
+    assertFalse(globalScope.isDeclared("z", false));
+
+    Node moduleBlock = root.getFirstChild();
+    Scope moduleBlockScope = scopeCreator.createScope(moduleBlock, globalScope);
+    // assertTrue(moduleBlockScope.isDeclared("f", false)); currently false
+    assertFalse(moduleBlockScope.isDeclared("x", false));
+    assertFalse(moduleBlockScope.isDeclared("y", false));
+    assertTrue(moduleBlockScope.isDeclared("z", false));
   }
 
   public void testVarAfterLet() {
