@@ -17,7 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.makeIterator;
+import static com.google.javascript.jscomp.Es6ToEs3Util.makeIterator;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
@@ -513,7 +513,7 @@ public final class Es6RewriteGenerators
         compiler.report(
             JSError.make(
                 currentStatement,
-                Es6ToEs3Converter.CANNOT_CONVERT_YET,
+                Es6ToEs3Util.CANNOT_CONVERT_YET,
                 "Breaking to a label that is not a loop"));
         return;
       }
@@ -637,7 +637,7 @@ public final class Es6RewriteGenerators
           compiler.report(
               JSError.make(
                   currentStatement,
-                  Es6ToEs3Converter.CANNOT_CONVERT_YET,
+                  Es6ToEs3Util.CANNOT_CONVERT_YET,
                   "Default case as intermediate case"));
         }
         equivBlock = IR.block(currCase.removeFirstChild());
@@ -1006,7 +1006,7 @@ public final class Es6RewriteGenerators
             compiler.report(
                 JSError.make(
                     n,
-                    Es6ToEs3Converter.CANNOT_CONVERT_YET,
+                    Es6ToEs3Util.CANNOT_CONVERT_YET,
                     "Case statements that contain yields"));
             return false;
           }
@@ -1027,7 +1027,7 @@ public final class Es6RewriteGenerators
         t.reportCodeChange();
       } else {
         compiler.report(
-            JSError.make(n, Es6ToEs3Converter.CANNOT_CONVERT, "Undecomposable expression"));
+            JSError.make(n, Es6ToEs3Util.CANNOT_CONVERT, "Undecomposable expression"));
       }
     }
 
