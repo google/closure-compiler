@@ -249,8 +249,8 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(chromePass);
     }
 
-    // Verify JsDoc annotations
-    checks.add(checkJsDoc);
+    // Verify JsDoc annotations and check ES6 modules
+    checks.add(checkJsDocAndEs6Modules);
 
     if (options.needsTranspilationFrom(TYPESCRIPT)) {
       checks.add(convertEs6TypedToEs6);
@@ -269,8 +269,6 @@ public final class DefaultPassConfig extends PassConfig {
         || options.enables(DiagnosticGroups.EXTRA_REQUIRE)) {
       checks.add(checkRequires);
     }
-
-    checks.add(es6CheckModule);
 
     if (options.needsTranspilationOf(FeatureSet.Feature.MODULES)) {
       TranspilationPasses.addEs6ModulePass(checks);
@@ -1110,8 +1108,8 @@ public final class DefaultPassConfig extends PassConfig {
     assertPassOrder(
         checks,
         chromePass,
-        checkJsDoc,
-        "The ChromePass must run before after JsDoc checking.");
+        checkJsDocAndEs6Modules,
+        "The ChromePass must run before after JsDoc and Es6 module checking.");
     assertPassOrder(
         checks,
         closureRewriteModule,
@@ -1219,12 +1217,16 @@ public final class DefaultPassConfig extends PassConfig {
           "JSC_GENERATE_EXPORTS_ERROR",
           "Exports can only be generated if export symbol/property functions are set.");
 
-  /** Verifies JSDoc annotations are used properly. */
-  private final HotSwapPassFactory checkJsDoc =
-      new HotSwapPassFactory("checkJsDoc", true) {
+  /** Verifies JSDoc annotations are used properly and checks for ES6 modules. */
+  private final HotSwapPassFactory checkJsDocAndEs6Modules =
+      new HotSwapPassFactory("checkJsDocAndEs6Modules", true) {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new CheckJSDoc(compiler);
+          ImmutableList.Builder<Callback> callbacks =
+              ImmutableList.<Callback>builder()
+                  .add(new CheckJSDoc(compiler))
+                  .add(new Es6CheckModule(compiler));
+          return combineChecks(compiler, callbacks.build());
         }
 
         @Override
@@ -1447,19 +1449,6 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected FeatureSet featureSet() {
           return ES8;
-        }
-      };
-
-  private final HotSwapPassFactory es6CheckModule =
-      new HotSwapPassFactory("es6CheckModule", true) {
-        @Override
-        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new Es6CheckModule(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES8_MODULES;
         }
       };
 
