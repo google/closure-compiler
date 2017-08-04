@@ -3127,7 +3127,7 @@ public class CompilerOptions implements Serializable {
   }
 
   /** When to do the extra sanity checks */
-  static enum DevMode {
+  public static enum DevMode {
     /**
      * Don't do any extra sanity checks.
      */
