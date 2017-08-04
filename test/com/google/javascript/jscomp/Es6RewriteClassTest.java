@@ -20,8 +20,8 @@ import static com.google.javascript.jscomp.Es6ConvertSuper.INVALID_SUPER_CALL;
 import static com.google.javascript.jscomp.Es6RewriteClass.CLASS_REASSIGNMENT;
 import static com.google.javascript.jscomp.Es6RewriteClass.CONFLICTING_GETTER_SETTER_TYPE;
 import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
-import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
-import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
+import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
+import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6_MODULES;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;

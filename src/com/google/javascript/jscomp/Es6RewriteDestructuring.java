@@ -17,7 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.Es6ToEs3Util.makeIterator;
+import static com.google.javascript.jscomp.Es6ToEs3Converter.makeIterator;
 
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;

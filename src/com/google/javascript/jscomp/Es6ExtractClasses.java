@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
+import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
 
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.jscomp.deps.ModuleNames;
@@ -42,7 +42,7 @@ import java.util.Set;
  *   foo($jscomp$classdecl$var0);
  * </code>
  * <p>
- * This must be done before {@link Es6RewriteClass}, because that pass only handles classes
+ * This must be done before {@link Es6ToEs3Converter}, because that pass only handles classes
  * that are declarations or simple assignments.
  * @see Es6RewriteClass#visitClass(NodeTraversal, Node, Node)
  */
