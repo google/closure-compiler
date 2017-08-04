@@ -741,6 +741,15 @@ var SinonSandbox = function() {};
 
 SinonSandbox.prototype.restore = function() {};
 
+SinonSandbox.prototype.useFakeServer = function() {};
+
+/**
+ * @param {*=} objectOrFunction
+ * @param {string=} method
+ * @return {!SinonSpy}
+ */
+SinonSandbox.prototype.spy = function(objectOrFunction, method) {};
+
 /**
  * @type {!SinonFakeServer|undefined}
  */
