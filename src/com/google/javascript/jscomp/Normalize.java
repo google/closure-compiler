@@ -767,12 +767,10 @@ class Normalize implements CompilerPass {
     private Set<Var> hasOkDuplicateDeclaration = new HashSet<>();
 
     /**
-     * Remove duplicate VAR declarations encountered discovered during
-     * scope creation.
+     * Remove duplicate VAR declarations discovered during scope creation.
      */
     @Override
-    public void onRedeclaration(
-        Scope s, String name, Node n, CompilerInput input) {
+    public void onRedeclaration(Scope s, String name, Node n, CompilerInput input) {
       checkState(n.isName());
       Node parent = n.getParent();
       Var v = s.getVar(name);
@@ -843,10 +841,9 @@ class Normalize implements CompilerPass {
           parent.removeChild(n);
           grandparent.replaceChild(parent, n);
         } else {
-          checkState(grandparent.isLabel());
           // We should never get here. LABELs with a single VAR statement should
           // already have been normalized to have a BLOCK.
-          throw new IllegalStateException("Unexpected LABEL");
+          checkState(grandparent.isLabel(), grandparent);
         }
         reportCodeChange("Duplicate VAR declaration", grandparent);
       }
