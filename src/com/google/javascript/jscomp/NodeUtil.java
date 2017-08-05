@@ -2777,6 +2777,7 @@ public final class NodeUtil {
       parent.replaceChild(node, IR.empty());
     } else if (parent.isObjectPattern()) {
       // Remove the name from the object pattern
+
       parent.removeChild(node);
     } else if (parent.isArrayPattern()) {
       if (node == parent.getLastChild()) {
@@ -3796,7 +3797,10 @@ public final class NodeUtil {
    */
   static Iterable<Node> getLhsNodesOfDeclaration(Node declNode) {
     checkArgument(
-        isNameDeclaration(declNode) || declNode.isParamList() || declNode.isCatch(), declNode);
+        isNameDeclaration(declNode)
+            || declNode.isParamList()
+            || declNode.isCatch()
+            || declNode.isDestructuringLhs(), declNode);
     ArrayList<Node> lhsNodes = new ArrayList<>();
     getLhsNodesHelper(declNode, lhsNodes);
     return lhsNodes;
@@ -4501,6 +4505,7 @@ public final class NodeUtil {
             || locals.apply(value);
       case NEW:
         return newHasLocalResult(value) || locals.apply(value);
+      case CLASS:
       case FUNCTION:
       case REGEXP:
       case EMPTY:

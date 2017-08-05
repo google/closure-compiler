@@ -1324,7 +1324,7 @@ public final class AstValidator implements CompilerPass {
     if (n.getLastChild().isDefaultValue()) {
       validateDefaultValue(type, n.getLastChild());
     } else {
-      validateExpression(n.getLastChild());
+      validateLHS(n.getLastChild().getToken(), n.getLastChild());
     }
   }
 
