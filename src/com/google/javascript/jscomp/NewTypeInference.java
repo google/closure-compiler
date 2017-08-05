@@ -439,6 +439,8 @@ final class NewTypeInference implements CompilerPass {
   private JSTypes commonTypes;
   // RETVAL_ID is used when we calculate the summary type of a function
   private static final String RETVAL_ID = "%return";
+  // YIELDVAL_ID is used when we calculate the summary type of a generator function
+  private static final String YIELDVAL_ID = "%yield";
   private static final String THIS_ID = "this";
   @SuppressWarnings("ConstantField")
   private final String ABSTRACT_METHOD_NAME;
@@ -1172,6 +1174,23 @@ final class NewTypeInference implements CompilerPass {
     builder.addNominalType(declType.getNominalType());
     builder.addReceiverType(declType.getReceiverType());
     builder.addAbstract(declType.isAbstract());
+    addRetTypeAndWarn(fn, exitEnv, declType, builder);
+
+    JSType summary = commonTypes.fromFunctionType(builder.buildFunction());
+    println("Function summary for ", fn.getReadableName());
+    println("\t", summary);
+    summary = changeTypeIfFunctionNamespace(fn, summary);
+    summaries.put(fn, summary);
+    maybeSetTypeI(fnRoot, summary);
+    Node fnNameNode = NodeUtil.getNameNode(fnRoot);
+    if (fnNameNode != null) {
+      maybeSetTypeI(fnNameNode, summary);
+    }
+  }
+
+  private void addRetTypeAndWarn(
+      NTIScope fn, TypeEnv exitEnv, DeclaredFunctionType declType, FunctionTypeBuilder builder) {
+    Node fnRoot = fn.getRoot();
     JSType declRetType = declType.getReturnType();
     JSType actualRetType = checkNotNull(envGetType(exitEnv, RETVAL_ID));
 
@@ -1197,8 +1216,9 @@ final class NewTypeInference implements CompilerPass {
         }
       }
     } else if (fnRoot.isGeneratorFunction()) {
-      // No declared return type for Generator. Infer to be Generator<?>
-      builder.addRetType(this.commonTypes.getGeneratorInstance(UNKNOWN));
+      // No declared return type for Generator. Use inferred type.
+      JSType yieldType = envGetType(exitEnv, YIELDVAL_ID);
+      builder.addRetType(this.commonTypes.getGeneratorInstance(firstNonNull(yieldType, UNKNOWN)));
     } else if (declType.getNominalType() == null) {
       // If someone uses the result of a function that doesn't return, they get a warning.
       builder.addRetType(firstNonBottom(actualRetType, TOP));
@@ -1206,16 +1226,6 @@ final class NewTypeInference implements CompilerPass {
       // Don't infer a return type for constructors. We want to warn for
       // constructors called without new who don't explicitly declare @return.
       builder.addRetType(UNDEFINED);
-    }
-    JSType summary = commonTypes.fromFunctionType(builder.buildFunction());
-    println("Function summary for ", fn.getReadableName());
-    println("\t", summary);
-    summary = changeTypeIfFunctionNamespace(fn, summary);
-    summaries.put(fn, summary);
-    maybeSetTypeI(fnRoot, summary);
-    Node fnNameNode = NodeUtil.getNameNode(fnRoot);
-    if (fnNameNode != null) {
-      maybeSetTypeI(fnNameNode, summary);
     }
   }
 
@@ -2639,7 +2649,7 @@ final class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeYieldFwd(Node expr, TypeEnv inEnv) {
     if (!expr.hasChildren()) {
-      return new EnvTypePair(inEnv, UNKNOWN);
+      return new EnvTypePair(envPutType(inEnv, YIELDVAL_ID, UNDEFINED), UNKNOWN);
     }
     EnvTypePair resultPair = analyzeExprFwd(expr.getFirstChild(), inEnv);
 
@@ -2688,6 +2698,19 @@ final class NewTypeInference implements CompilerPass {
           JSError.make(
               expr, YIELD_NONDECLARED_TYPE, errorMsgWithTypeDiff(yieldType, actualRetType)),
           actualRetType, yieldType);
+      resultPair.type = UNKNOWN;
+      return resultPair;
+    }
+
+    if (yieldType.isBottom() || yieldType.isUnknown()) {
+      // Infer the instantiated yield type of the function if there is no declared type.
+      JSType oldType = envGetType(resultPair.env, YIELDVAL_ID);
+      if (oldType == null) {
+        resultPair.env = envPutType(resultPair.env, YIELDVAL_ID, actualRetType);
+      } else {
+        resultPair.env = envPutType(
+            resultPair.env, YIELDVAL_ID, JSType.join(oldType, actualRetType));
+      }
     }
     resultPair.type = UNKNOWN;
     return resultPair;

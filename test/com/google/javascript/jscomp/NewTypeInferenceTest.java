@@ -21217,16 +21217,6 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "  yield 1;",
             "}"));
 
-    // Infers Generator<?> if type not specified in JSDoc
-    typeCheck(
-        LINE_JOINER.join(
-            "function* gen() {",
-            "  yield 1;",
-            "}",
-            "var g = gen();",
-            "var /** string */ x = g.next().value;",
-            "var /** number */ y = g.next().value;"));
-
     // If type specified, check type of expression in yield.
     typeCheck(
         LINE_JOINER.join(
@@ -21394,5 +21384,113 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "  return (x = 1);",
             "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+   //Infers type of generator
+   typeCheck(
+       LINE_JOINER.join(
+           "function* gen() {",
+           "  yield 1;",
+           "}",
+           "var /** Array<number> */ g = gen();"),
+       NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+   //Infers type of generator
+   typeCheck(
+       LINE_JOINER.join(
+           "function* gen() {",
+           "  yield 1;",
+           "}",
+           "var /** Generator<string> */ g = gen();"),
+       NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // No warning when type is different
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen(){",
+            "  yield 1;",
+            "  yield '';",
+            "}",
+            "var /** Generator<number|string> */ x = gen();"));
+
+    // No children of yield is just undefined
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen(){",
+            "  yield 1;",
+            "  yield;",
+            "}",
+            "var /** Generator<number> */ x = gen();"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // No children of yield is just undefined
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen(){",
+            "  yield 1;",
+            "  yield;",
+            "}",
+            "var /** Generator<undefined> */ x = gen();"));
+
+    // Works with autoboxing
+    typeCheck(
+        LINE_JOINER.join(
+            "var /** number */ x;",
+            "var /** !Number */ y",
+            "function* gen(){",
+            "  yield x;",
+            "  yield y;",
+            "}",
+            "var g = gen();",
+            "var /** Number|number */ n = g.next().value;"));
+
+    // Works when there might be variables passed into the method next, and infer Generator<?>
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen() {",
+            "  var x = yield 1;",
+            "  yield x;",
+            "}",
+            "var /** !Generator<?> */ g = gen();"));
+
+    // Reassigning yield expression to variable that has a declared type produces Generator<?>
+    typeCheck(
+        LINE_JOINER.join(
+            "var /** number */ x = 1;",
+            "function* gen(){",
+            "  yield x;",
+            "  x = yield 1;",
+            "  yield x;",
+            "}",
+            "var /** !Generator<?> */ g = gen();"));
+
+    // Inferring yield type works on yield* as well
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen() {",
+            "  yield* 'abc';",
+            "}",
+            "var /** !Generator<string> */ g = gen();"));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen() {",
+            "  yield* 'abc';",
+            "  yield 1;",
+            "}",
+            "var /** !Generator<string|number> */ g = gen();"));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen() {",
+            "  yield* [1,2,3];",
+            "  yield* 'abc';",
+            "}",
+            "var /** !Generator<number|string> */ g = gen();"));
+
+    // No function body
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen() {}",
+            "var /** !Generator<?> */ g = gen();"));
   }
 }
