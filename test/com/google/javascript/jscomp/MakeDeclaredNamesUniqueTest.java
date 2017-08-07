@@ -80,14 +80,6 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     invert = false;
   }
 
-  private void testWithInversionEs6(String original, String expected) {
-    invert = false;
-    test(original, expected);
-    invert = true;
-    test(expected, original);
-    invert = false;
-  }
-
   private void testSameWithInversion(String externs, String original) {
     invert = false;
     testSame(externs, original);
@@ -100,23 +92,11 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     testSameWithInversion("", original);
   }
 
-  private void testSameWithInversionEs6(String original) {
-    invert = false;
-    testSame(original);
-    invert = true;
-    testSame(original);
-    invert = false;
-  }
-
   private static String wrapInFunction(String s) {
     return "function f(){" + s + "}";
   }
 
   private void testInFunction(String original, String expected) {
-    test(wrapInFunction(original), wrapInFunction(expected));
-  }
-
-  private void testInFunctionEs6(String original, String expected) {
     test(wrapInFunction(original), wrapInFunction(expected));
   }
 
@@ -149,8 +129,8 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
     // Verify global names are untouched.
     testSameWithInversion("var a;");
-    testSameWithInversionEs6("let a;");
-    testSameWithInversionEs6("const a = 0;");
+    testSameWithInversion("let a;");
+    testSameWithInversion("const a = 0;");
 
     // Verify global names are untouched.
     testSameWithInversion("a;");
@@ -168,13 +148,13 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
         "function foo(a){var b}"
         + "function boo(a$jscomp$1){var b$jscomp$1}");
     //variable b is left untouched because it is only declared once
-    testWithInversionEs6(
+    testWithInversion(
         "let a;function foo(a){let b;a}",
         "let a;function foo(a$jscomp$1){let b;a$jscomp$1}");
-    testWithInversionEs6(
+    testWithInversion(
         "let a;function foo(){let b;a}function boo(){let b;a}",
         "let a;function foo(){let b;a}function boo(){let b$jscomp$1;a}");
-    testWithInversionEs6(
+    testWithInversion(
         "function foo(a){let b}"
         + "function boo(a){let b}",
         "function foo(a){let b}"
@@ -184,7 +164,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     testWithInversion(
         "var a = function foo(){foo()};var b = function foo(){foo()};",
         "var a = function foo(){foo()};var b = function foo$jscomp$1(){foo$jscomp$1()};");
-    testWithInversionEs6(
+    testWithInversion(
         "let a = function foo(){foo()};let b = function foo(){foo()};",
         "let a = function foo(){foo()};let b = function foo$jscomp$1(){foo$jscomp$1()};");
 
@@ -233,16 +213,16 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
     invert = true;
 
-    testInFunctionEs6(
+    testInFunction(
         "var e; try { } catch(e$jscomp$0) {e$jscomp$0;}; try { } catch(e$jscomp$1) {e$jscomp$1;}",
         "var e; try { } catch(e) {e;}; try { } catch(e) {e;}");
-    testInFunctionEs6(
+    testInFunction(
         "var e; try { } catch(e$jscomp$1) {e$jscomp$1; try { } catch(e$jscomp$2) {e$jscomp$2;} };",
         "var e; try { } catch(e$jscomp$0) {e$jscomp$0; try { } catch(e) {e;} };");
-    testInFunctionEs6(
+    testInFunction(
         "try { } catch(e) {e;}; try { } catch(e$jscomp$1) {e$jscomp$1;};var e$jscomp$2;",
         "try { } catch(e) {e;}; try { } catch(e) {e;};var e$jscomp$0;");
-    testInFunctionEs6(
+    testInFunction(
         "try { } catch(e) {e; try { } catch(e$jscomp$1) {e$jscomp$1;} };var e$jscomp$2;",
         "try { } catch(e) {e; try { } catch(e) {e;} };var e$jscomp$0;");
   }
@@ -543,7 +523,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   //TODO(bellashim): Get test below passing
   public void disabled_testRestParamWithContextWithInversion() {
     this.useDefaultRenamer = true;
-    testWithInversionEs6(
+    testWithInversion(
         LINE_JOINER.join(
             "let x = 0;",
             "function foo(...x) {",
@@ -601,7 +581,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   public void testClassesWithContextWithInversion() {
     this.useDefaultRenamer = true;
-    testWithInversionEs6(
+    testWithInversion(
         LINE_JOINER.join(
             "var a;",
             "class Foo {",
@@ -626,7 +606,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "}"));
 
     //class declarations are block-scoped but not hoisted.
-    testSameWithInversionEs6(
+    testSameWithInversion(
         LINE_JOINER.join(
             "{",
             "  let x = new Foo();", //ReferenceError
@@ -636,7 +616,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   public void testBlockScopesWithContextWithInversion1() {
     this.useDefaultRenamer = true;
-    testWithInversionEs6(
+    testWithInversion(
         LINE_JOINER.join(
             "{let a;",
             "  {",
@@ -652,7 +632,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   // TODO(bellashim): Get the test below passing
   public void disabled_testBlockScopesWithContextWithInversion2() {
     // function declarations are block-scoped
-    testWithInversionEs6(
+    testWithInversion(
         LINE_JOINER.join(
             "{function foo() {return 1;}",
             "  if (true) {",
@@ -667,7 +647,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   public void testArrowFunctionWithContextWithInversion() {
     this.useDefaultRenamer = true;
-    testWithInversionEs6(
+    testWithInversion(
         LINE_JOINER.join(
             "function foo() {",
             "  var f = (x) => x;",
@@ -687,7 +667,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "  return f$jscomp$1(2);",
             "}"));
 
-    testWithInversionEs6(
+    testWithInversion(
         LINE_JOINER.join(
             "function foo() {",
             "  var f = (x, ...y) => x + y[0];",
@@ -710,7 +690,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   public void testDefaultParameterWithContextWithInversion1() {
     this.useDefaultRenamer = true;
-    testWithInversionEs6(
+    testWithInversion(
         LINE_JOINER.join(
             "function foo(x = 1) {",
             "  return x;",
@@ -726,7 +706,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "  return x$jscomp$1;",
             "}"));
 
-    testSameWithInversionEs6(
+    testSameWithInversion(
         LINE_JOINER.join(
             "function foo(x = 1, y = x) {",
             "  return x + y;",
@@ -738,7 +718,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     // Parameter default values don't see the scope of the body
     // Methods or functions defined "inside" parameter default values don't see the local variables
     // of the body.
-    testWithInversionEs6(
+    testWithInversion(
         LINE_JOINER.join(
             "let x = 'outer';",
             "function foo(bar = baz => x) {",
@@ -752,7 +732,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "  console.log(bar());",
             "}"));
 
-    testWithInversionEs6(
+    testWithInversion(
         LINE_JOINER.join(
             "const x = 'outer';",
             "function foo(a = x) {",
@@ -766,7 +746,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "  return a;",
             "}"));
 
-    testWithInversionEs6(
+    testWithInversion(
         LINE_JOINER.join(
             "const x = 'outerouter';",
             "{",
@@ -787,7 +767,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "}"
         ));
 
-    testSameWithInversionEs6(
+    testSameWithInversion(
         LINE_JOINER.join(
             "function foo(x, y = x) {",
             "  return x + y;",
@@ -796,7 +776,7 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   public void testObjectLiteralsWithContextWithInversion() {
     this.useDefaultRenamer = true;
-    testWithInversionEs6(
+    testWithInversion(
         LINE_JOINER.join(
             "function foo({x:y}) {",
             "  return y;",
