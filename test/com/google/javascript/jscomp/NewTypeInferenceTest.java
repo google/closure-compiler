@@ -15545,7 +15545,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         GlobalTypeInfoCollector.UNRECOGNIZED_TYPE_NAME,
         JSTypeCreatorFromJSDoc.EXTENDS_NON_OBJECT,
         NewTypeInference.INEXISTENT_PROPERTY,
-        NewTypeInference.INEXISTENT_PROPERTY);
+        NewTypeInference.POSSIBLY_INEXISTENT_PROPERTY);
 
     typeCheck(LINE_JOINER.join(
         "Object.prototype.asdf;",
@@ -17336,6 +17336,16 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     typeCheck("var /** !IObject<?, ?> */ x = { 'abs': '', '%': ''};");
 
     typeCheck("var /** !IObject<string, number> */ x = { a: 1, b: 2, c: undefined };");
+
+    // The Object type is an IObject of whatever, because we check IObject structurally
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!IObject<number, string>} x",
+        " * @param {!Object} y",
+        " */",
+        "function f(x, y) {",
+        "  x = y;",
+        "}"));
   }
 
   public void testIArrayLikeSubtyping() {
@@ -21492,5 +21502,63 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         LINE_JOINER.join(
             "function* gen() {}",
             "var /** !Generator<?> */ g = gen();"));
+  }
+
+  public void testTypedefResolution() {
+    // To avoid keeping typedefs around during NTI, we resolve them and use the resolved type.
+    // We need to resolve FooBar when we analyze f's jsdoc. At that point, we may not know yet
+    // that Bar has a property "a".
+    typeCheck(LINE_JOINER.join(
+        "/** @typedef {{ a: (number|undefined) }} */",
+        "var Foo;",
+        "/** @typedef { !Foo|!Bar } */",
+        "var FooBar;",
+        "/**",
+        " * @param {!FooBar} x",
+        " * @param {!Bar} y",
+        " */",
+        "function f(x, y) { x = y; }",
+        "/** @constructor */",
+        "function Bar() {}",
+        "Bar.prototype.a = function(x) {};"));
+  }
+
+  public void testObjectMergesInJoins() {
+    // Test that the object-literal type (the type of {b: 1}) and the built-in Object type
+    // (the type of obj) are merged in a union.
+    typeCheckMessageContents(
+        LINE_JOINER.join(
+            "function f(pred, /** {a: number} */ obj) {",
+            "  var x = pred ? obj : {b: 1};",
+            "  var /** null */ n = x;",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS,
+        LINE_JOINER.join(
+            "The right side in the assignment is not a subtype of the left side.",
+            "Expected : null",
+            "Found    : {a: number=, b: number=}",
+            ""));
+
+    // Documenting the behavior here. We could potentially change this to not warn, if we
+    // merge the types in the union to !IObject<number|string,?>
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!IObject<number|string, ?>} iobj",
+        " * @param {!Array<?>|!IObject<string,!Object>} union",
+        " */",
+        "function f(iobj, union) {",
+        "  iobj = union;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // y's type is merged to Object, which is a subtype of any IObject
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!IObject<string, ?Object>} x",
+        " * @param {!Array<?>|!Object} y",
+        " */",
+        "function f(x, y) {",
+        "  x = y;",
+        "}"));
   }
 }

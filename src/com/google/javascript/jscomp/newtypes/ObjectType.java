@@ -1157,6 +1157,29 @@ final class ObjectType implements TypeWithProperties {
         ObjectKind.join(obj1.objectKind, obj2.objectKind));
   }
 
+  private static boolean canMergeObjectsInJoin(ObjectType obj1, ObjectType obj2) {
+    if (obj1.isTopObject() || obj2.isTopObject()) {
+      return true;
+    }
+    NominalType nt1 = obj1.nominalType;
+    NominalType nt2 = obj2.nominalType;
+    // In a union, there is at most one object whose nominal type is Object (or literal object).
+    if ((nt1.isBuiltinObject() || nt1.isLiteralObject())
+        && (nt2.isBuiltinObject() || nt2.isLiteralObject())) {
+      return true;
+    }
+    // Merge related classy objects, but don't merge a classy object with a built-in object.
+    // The reason for the latter is that some joins happen during typedef resolution, when we
+    // have not registered all properties on nominal types yet.
+    if (nt1.isBuiltinObject()) {
+      return obj1.isLoose && obj2.isSubtypeOf(obj1, SubtypeCache.create());
+    }
+    if (nt2.isBuiltinObject()) {
+      return obj2.isLoose && obj1.isSubtypeOf(obj2, SubtypeCache.create());
+    }
+    return areRelatedNominalTypes(nt1, nt2) || NominalType.equalRawTypes(nt1, nt2);
+  }
+
   /**
    * Joins two sets of object types.
    * First, we put the types from both sets in a collection.
@@ -1175,18 +1198,9 @@ final class ObjectType implements TypeWithProperties {
     objs.addAll(objs2);
     for (int i = 0; i < objs.size() - 1; i++) {
       ObjectType obj1 = objs.get(i);
-      NominalType nt1 = obj1.nominalType;
       for (int j = i + 1; j < objs.size(); j++) {
         ObjectType obj2 = objs.get(j);
-        NominalType nt2 = obj2.nominalType;
-        if (nt1.isBuiltinObject() && nt2.isBuiltinObject()) {
-          objs.set(i, null);
-          objs.set(j, join(obj1, obj2));
-        } else if ((areRelatedNominalTypes(nt1, nt2) || NominalType.equalRawTypes(nt1, nt2))
-            // In a union, there is at most one object whose nominal type is Object.
-            // We don't merge "classy" objects with it unless they are in the subtype relation.
-            && (!nt1.isBuiltinObject() || obj2.isSubtypeOf(obj1, SubtypeCache.create()))
-            && (!nt2.isBuiltinObject() || obj1.isSubtypeOf(obj2, SubtypeCache.create()))) {
+        if (canMergeObjectsInJoin(obj1, obj2)) {
           // obj1 and obj2 may be in the subtype relation.
           // Even then, we want to join them because we don't want to forget
           // any extra properties present in the subtype object.
