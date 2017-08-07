@@ -84,7 +84,7 @@ public class SourceFile implements StaticSourceFile, Serializable {
   private String originalPath = null;
 
   // Source Line Information
-  private int[] lineOffsets = null;
+  private transient int[] lineOffsets = null;
 
   private String code = null;
 
