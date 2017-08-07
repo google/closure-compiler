@@ -657,8 +657,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
             // Even if we can't change the signature in general we can always
             // remove an unused value off the end of the parameter list.
             if (canModifyAllSites
-                || (arg.getNext() == null
-                    && !NodeUtil.mayHaveSideEffects(arg, compiler))) {
+                || (arg.getNext() == null && !NodeUtil.mayHaveSideEffects(arg, compiler))) {
               toRemove.add(arg);
             } else {
               // replace the node in the arg with 0
@@ -842,7 +841,6 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
           current--;
         } else {
           boolean assignedToUnknownValue = false;
-          boolean hasPropertyAssign = false;
 
           if (NodeUtil.isNameDeclaration(var.getParentNode())
               && !var.getParentNode().getParent().isForIn()) {
@@ -856,6 +854,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
           }
 
           boolean maybeEscaped = false;
+          boolean hasPropertyAssign = false;
           for (Assign assign : assignsByVar.get(var)) {
             if (assign.isPropertyAssign) {
               hasPropertyAssign = true;
@@ -930,16 +929,18 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
           NodeUtil.isNameDeclaration(toRemove)
               || toRemove.isFunction()
               || (toRemove.isParamList() && parent.isFunction())
-              || NodeUtil.isDestructuringDeclaration(grandParent) // Array Pattern
-              || (parent.isObjectPattern()
-                  && NodeUtil.isDestructuringDeclaration(grandParent.getParent())) // Object Pattern
+              || NodeUtil.isDestructuringDeclaration(grandParent)
+              || toRemove.isArrayPattern() // Array Pattern
+              || parent.isObjectPattern() // Object Pattern
               || toRemove.isClass(),
           "We should only declare Vars and functions and function args and classes");
 
-      if (toRemove.isParamList()
-          && parent.isFunction()) {
+      if ((toRemove.isParamList() && parent.isFunction())
+          || (toRemove.isDefaultValue() && NodeUtil.getEnclosingScopeRoot(parent).isFunction())) {
         // Don't remove function arguments here. That's a special case
         // that's taken care of in removeUnreferencedFunctionArgs.
+      } else if (toRemove.isComputedProp()) {
+        // Don't remove a computed property
       } else if (NodeUtil.isFunctionExpression(toRemove)) {
         if (!preserveFunctionExpressionNames) {
           Node fnNameNode = toRemove.getFirstChild();
@@ -997,8 +998,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
       if (NodeUtil.isFunctionDeclaration(node)) {
         traverseFunction(node, scope);
       } else {
-        for (Node child = node.getFirstChild();
-             child != null; child = child.getNext()) {
+        for (Node child = node.getFirstChild(); child != null; child = child.getNext()) {
           traverseNode(child, node, scope);
         }
       }
@@ -1082,8 +1082,8 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
 
         // Aggregate any expressions in GETELEMs.
         for (Node current = assignNode.getFirstChild();
-             !current.isName();
-             current = current.getFirstChild()) {
+            !current.isName();
+            current = current.getFirstChild()) {
           if (current.isGetElem()) {
             replacement = IR.comma(
                 current.getLastChild().detach(), replacement);

@@ -69,14 +69,9 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testRemoveUnusedVarsFn1s() {
     // Test with function expressions in another function call
-    test(LINE_JOINER.join(
-            "function A(){}",
-            "if(0){var B = function(){}}",
-            "A();"),
-        LINE_JOINER.join(
-            "function A(){}",
-            "if(0){}",
-            "A();"));
+    test(
+        LINE_JOINER.join("function A(){}", "if(0){var B = function(){}}", "A();"),
+        LINE_JOINER.join("function A(){}", "if(0){}", "A();"));
   }
 
   public void testRemoveUnusedVars1() {
@@ -211,6 +206,17 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
         "var b=function(c,d){return c+d};b(1,2)");
     test("var b=function(e,c,f,d,g){return c+d};b(1,2)",
         "var b=function(c,d){return c+d};b(2)");
+  }
+
+  public void testComputedPropertyDestructuring() {
+    // Don't remove variables accessed by computed properties
+    testSame("var {['a']:a, ['b']:b} = {a:1, b:2}; a; b;");
+
+    testSame("var {['a']:a, ['b']:b} = {a:1, b:2};");
+
+    testSame("var {[foo()]:a, [bar()]:b} = {a:1, b:2};");
+
+    testSame("var a = {['foo' + 1]:1, ['foo' + 2]:2}; alert(a.foo1);");
   }
 
   public void testFunctionsDeadButEscaped() {
@@ -469,6 +475,10 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   public void testUsedPropAssign9() {
     testSame(
         "var x = {}; x.foo = newNodeInDom(doc); x.foo.innerHTML = 'new test';");
+  }
+
+  public void testUsedPropNotAssign() {
+    testSame("function f(x) { x.a; }; f(y);");
   }
 
   public void testDependencies1() {
@@ -1127,18 +1137,18 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testDestructuringObjectPattern() {
-    /*testSame(LINE_JOINER.join("var a; var b;", "({a, b} = {a:1, b:2})"));
+    testSame("var a; var b; ({a, b} = {a:1, b:2})");
 
-    test(
-        LINE_JOINER.join("var a; var b;", "({a} = {a:1})"),
-        LINE_JOINER.join("var a; ", "({a} = {a:1})"));
+    test("var a; var b; ({a} = {a:1})", "var a; ({a} = {a:1})");
 
     testSame("var {a, b} = {a:1, b:2}; f(a); f(b);");
 
-    testSame("var {a} = {p:{}, q:{}}; a.q = 4;");*/
+    testSame("var {a} = {p:{}, q:{}}; a.q = 4;");
 
     // Nested Destructuring
     testSame("const someObject = {a:{ b:1 }}; var {a: {b}} = someObject; someObject.a.b;");
+
+    testSame("const someObject = {a:{ b:1 }}; var {a: {b}} = someObject; b;");
   }
 
   public void testRemoveUnusedVarsDeclaredInDestructuring() {
@@ -1152,9 +1162,12 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
     test("var {a, b} = {a:1, b:2};", "var { } = {a:1, b:2};");
 
-    // Nested pattern - pass backs off for now
-    // TODO (simranarora) Implement support for nested destructures
+    // Nested pattern
     testSame("var {a, b:{c}} = {a:1, b:{c:5}}; f(a);");
+
+    testSame("var {a, b:{c}} = {a:1, b:{c:5}}; f(a, c);");
+
+    testSame("var {a, b:{c}} = obj;");
 
     // Value may have side effects
     test("var {a, b} = {a:foo(), b:bar()};", "var {    } = {a:foo(), b:bar()};");

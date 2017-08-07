@@ -49,7 +49,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -2793,6 +2792,13 @@ public final class NodeUtil {
         // want to remove it from the AST
         removeChild(parent.getParent(), parent);
       }
+    } else if (parent.isParamList()) {
+      parent.removeChild(node);
+    } else if (parent.isDefaultValue()) {
+      parent.removeChild(node);
+      if (!parent.hasChildren()) {
+        removeChild(parent.getParent(), parent);
+      }
     } else {
       throw new IllegalStateException("Invalid attempt to remove node: " + node + " of " + parent);
     }
@@ -3262,11 +3268,10 @@ public final class NodeUtil {
    */
   static boolean isNestedObjectPattern(Node n) {
     checkState(n.isObjectPattern());
-    Map<String, Node> destructuringMap = NodeUtil.getDestructuringMap(n.getParent());
-    for (Node value : destructuringMap.values()) {
-      if (value.isObjectLit()
-          || value.isArrayLit()
-          || (value.isName() && value.getFirstChild() == null)) {
+    for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
+      Node value = key.getFirstChild();
+      if (value != null
+          && (value.isObjectLit() || value.isArrayLit() || value.isDestructuringPattern())) {
         return true;
       }
     }
@@ -5247,48 +5252,6 @@ public final class NodeUtil {
 
     NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
     t.traverseAtScope(scope);
-  }
-
-  /**
-   * Matches together a destructuring assignment with the value assigned
-   *
-   * @param n a destructuring node where the first child is the pattern array or object and the
-   *     second child is an optional array or object literal
-   * @return map from the variable to value assigned (value assigned can be null!)
-   */
-  static Map<String, Node> getDestructuringMap(Node n) {
-    checkState(n.isDestructuringLhs());
-    Map<String, Node> destructurePairs = new HashMap<>();
-
-    boolean objLitRhs = n.getSecondChild().isObjectLit();
-    boolean arrLitRhs = n.getSecondChild().isArrayLit();
-    if (objLitRhs) {
-      Node literal = n.getSecondChild();
-      for (Node value : literal.children()) {
-        destructurePairs.put(value.getString(), value.getFirstChild());
-      }
-    } else if (arrLitRhs) {
-      Node pattern = n.getFirstChild();
-      Node literal = n.getSecondChild();
-      Node value = literal.getFirstChild();
-      for (Node key : pattern.children()) {
-        destructurePairs.put(key.getString(), value);
-        if (value != null) {
-          value = value.getNext();
-        }
-      }
-    } else if (n.getSecondChild() != null) {
-      Node pattern = n.getFirstChild();
-      for (Node key : pattern.children()) {
-        destructurePairs.put(key.getString(), n.getSecondChild());
-      }
-    } else {
-      Node pattern = n.getFirstChild();
-      for (Node key : pattern.children()) {
-        destructurePairs.put(key.getString(), null);
-      }
-    }
-    return destructurePairs;
   }
 
   /** Returns true if the node is a property of an object literal. */
