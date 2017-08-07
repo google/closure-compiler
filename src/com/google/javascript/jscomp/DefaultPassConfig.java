@@ -2532,6 +2532,11 @@ public final class DefaultPassConfig extends PassConfig {
           compiler, options.removeUnusedPrototypePropertiesInExterns,
           !options.removeUnusedVars);
     }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8_MODULES;
+    }
   };
 
   /**
