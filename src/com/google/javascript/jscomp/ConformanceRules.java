@@ -1645,22 +1645,28 @@ public final class ConformanceRules {
             .build();
 
     private boolean isCreateDomCall(Node n) {
-      if (NodeUtil.isCallTo(n, "goog.dom.createDom")) {
-        return true;
-      }
       if (!n.isCall()) {
         return false;
       }
-      Node function = n.getFirstChild();
-      if (!function.isGetProp()) {
+      Node target = n.getFirstChild();
+      if (!target.isGetProp()) {
         return false;
       }
-      TypeI type = function.getFirstChild().getTypeI();
+      if (!"createDom".equals(target.getLastChild().getString())) {
+        return false;
+      }
+
+      Node srcObj = target.getFirstChild();
+      if (srcObj.matchesQualifiedName("goog.dom")) {
+        return true;
+      }
+      TypeI type = srcObj.getTypeI();
       if (type == null) {
         return false;
       }
-      if ("goog.dom.DomHelper".equals(type.getDisplayName()) && function.getLastChild().isString()
-          && "createDom".equals(function.getLastChild().getString())) {
+      // TODO(johnlenz): This is really slow instead use the type registry to lookup the
+      // type and use isEquivalentTo
+      if ("goog.dom.DomHelper".equals(type.getDisplayName())) {
         return true;
       }
       return false;
