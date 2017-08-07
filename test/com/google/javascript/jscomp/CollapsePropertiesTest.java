@@ -1654,14 +1654,22 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testComputedPropertyNames() {
-    // Computed property in object literal
-    /*testSame(
-    LINE_JOINER.join(
-        "var a = {",
-        "  ['val' + ++i]: i,",
-        "  ['val' + ++i]: i",
-        "};",
-        "a.val1;"));*/
+    // Computed property in object literal. This following test code is bad style - it does not
+    // follow the assumptions of the pass and thus produces the following output.
+
+    test(
+        LINE_JOINER.join(
+            "var a = {",
+            "  ['val' + ++i]: i,",
+            "  ['val' + ++i]: i",
+            "};",
+            "a.val1;"),
+        LINE_JOINER.join(
+            "var a = {",
+            "  ['val' + ++i]: i,",
+            "  ['val' + ++i]: i",
+            "};",
+            "var a$val1;"));
 
     test(
         "var a = { ['val']: i, ['val']: i }; a.val;",
