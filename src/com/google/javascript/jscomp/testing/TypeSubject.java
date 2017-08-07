@@ -95,6 +95,6 @@ public final class TypeSubject extends Subject<TypeSubject, TypeI> {
   }
 
   public void toStringIsEqualTo(String typeString) {
-    assertEquals(actual().toString(), typeString);
+    assertEquals(typeString, actual().toString());
   }
 }
