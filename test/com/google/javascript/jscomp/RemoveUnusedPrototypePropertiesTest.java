@@ -428,6 +428,15 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
         "this.methodA();");
   }
 
+  public void testGlobalFunctionsInGraph8() {
+    test(
+        LINE_JOINER.join(
+            "let x = function() { (new Foo).baz(); };",
+            "const y = function() { x(); };",
+            "function Foo() { Foo.prototype.baz = function() { y(); }; }"),
+    "");
+  }
+
   public void testGetterBaseline() {
     anchorUnusedVars = true;
     test(
