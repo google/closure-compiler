@@ -854,6 +854,8 @@ public final class Es6RewriteGenerators
         enclosingBlock.addChildToBack(IR.exprResult(IR.assign(name, name.removeFirstChild())));
       }
       hoistRoot.getParent().addChildAfter(IR.var(name.cloneTree()), hoistRoot);
+      // name now refers to "generated" assignment which is not visible to end user. Don't index it.
+      name.makeNonIndexable();
       name = currentStatement.removeFirstChild();
     }
   }
