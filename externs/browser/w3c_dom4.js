@@ -46,3 +46,24 @@ Element.prototype.remove = function() {};
  * @see https://www.w3.org/TR/domcore/#dom-childnode-remove
  */
 CharacterData.prototype.remove = function() {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-childnode-replacewith
+ */
+DocumentType.prototype.replaceWith = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-childnode-replacewith
+ */
+Element.prototype.replaceWith = function(nodes) {};
+
+/**
+ * @param {...(!Node|string)} nodes
+ * @return {undefined}
+ * @see https://dom.spec.whatwg.org/#dom-childnode-replacewith
+ */
+CharacterData.prototype.replaceWith = function(nodes) {};
