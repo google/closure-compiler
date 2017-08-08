@@ -120,11 +120,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       "Serialized module definitions are not consistent with the module definitions supplied in "
           + "the command line");
 
-  // Used in PerformanceTracker
-  static final String PARSING_PASS_NAME = "parseInputs";
-  static final String PEEPHOLE_PASS_NAME = "peepholeOptimizations";
-  static final String UNREACHABLE_CODE_ELIM_NAME = "removeUnreachableCode";
-
   private static final String CONFIG_RESOURCE =
       "com.google.javascript.jscomp.parsing.ParserConfig";
 
@@ -1708,8 +1703,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     externsRoot.detachChildren();
     jsRoot.detachChildren();
 
-    Tracer tracer = newTracer(PARSING_PASS_NAME);
-    beforePass(PARSING_PASS_NAME);
+    Tracer tracer = newTracer(PassNames.PARSE_INPUTS);
+    beforePass(PassNames.PARSE_INPUTS);
 
     try {
       // Parse externs sources.
@@ -1838,8 +1833,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
       return externAndJsRoot;
     } finally {
-      afterPass(PARSING_PASS_NAME);
-      stopTracer(tracer, PARSING_PASS_NAME);
+      afterPass(PassNames.PARSE_INPUTS);
+      stopTracer(tracer, PassNames.PARSE_INPUTS);
     }
   }
 

@@ -419,7 +419,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(generateExports);
     }
 
-    checks.add(createEmptyPass("afterStandardChecks"));
+    checks.add(createEmptyPass(PassNames.AFTER_STANDARD_CHECKS));
 
     assertAllOneTimePasses(checks);
     assertValidOrderForChecks(checks);
@@ -1694,7 +1694,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Various peephole optimizations. */
   private final PassFactory peepholeOptimizations =
-      new PassFactory(Compiler.PEEPHOLE_PASS_NAME, false /* oneTimePass */) {
+      new PassFactory(PassNames.PEEPHOLE_OPTIMIZATIONS, false /* oneTimePass */) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return createPeepholeOptimizationsPass(compiler, getName());
@@ -1708,7 +1708,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Various peephole optimizations. */
   private final PassFactory peepholeOptimizationsOnce =
-      new PassFactory(Compiler.PEEPHOLE_PASS_NAME, true /* oneTimePass */) {
+      new PassFactory(PassNames.PEEPHOLE_OPTIMIZATIONS, true /* oneTimePass */) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return createPeepholeOptimizationsPass(compiler, getName());
@@ -1847,7 +1847,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Creates a typed scope and adds types to the type registry. */
   final HotSwapPassFactory resolveTypes =
-      new HotSwapPassFactory("resolveTypes", true) {
+      new HotSwapPassFactory(PassNames.RESOLVE_TYPES, true) {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       return new GlobalTypeResolver(compiler);
@@ -2508,7 +2508,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Use data flow analysis to remove dead branches. */
   private final PassFactory removeUnreachableCode =
-      new PassFactory(Compiler.UNREACHABLE_CODE_ELIM_NAME, false) {
+      new PassFactory(PassNames.REMOVE_UNREACHABLE_CODE, false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new UnreachableCodeElimination(compiler);
