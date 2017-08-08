@@ -649,7 +649,7 @@ final class NameAnalyzer implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.getParent().isVar() && n.isName()) {
+      if (n.isName() && parent.isVar()) {
         NameInformation ns = createNameInformation(t, n);
         checkNotNull(ns, "createNameInformation returned null for: %s", n);
         createName(ns.name);
