@@ -2620,7 +2620,7 @@ public final class NodeUtil {
    * @return Whether the node is used as a statement.
    */
   public static boolean isStatement(Node n) {
-    return isStatementParent(n.getParent());
+    return !n.isModuleBody() && isStatementParent(n.getParent());
   }
 
   private static final Predicate<Node> isStatement = new Predicate<Node>() {

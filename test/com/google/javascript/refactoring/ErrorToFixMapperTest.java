@@ -586,6 +586,32 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testSortRequiresInGoogModule_withOtherStatements() {
+    // The requires after "const {Bar} = bar;" are not sorted.
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const foo = goog.require('foo');",
+            "const bar = goog.require('bar');",
+            "const {Bar} = bar;",
+            "const util = goog.require('util');",
+            "const {doCoolThings} = util;",
+            "",
+            "doCoolThings(foo, Bar);"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const bar = goog.require('bar');",
+            "const foo = goog.require('foo');",
+            "const {Bar} = bar;",
+            "const util = goog.require('util');",
+            "const {doCoolThings} = util;",
+            "",
+            "doCoolThings(foo, Bar);"));
+  }
+
+  @Test
   public void testSortRequiresAndForwardDeclares() {
     assertChanges(
         LINE_JOINER.join(
