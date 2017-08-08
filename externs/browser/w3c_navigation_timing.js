@@ -84,6 +84,7 @@ PerformanceResourceTiming.prototype.encodedBodySize;
 PerformanceResourceTiming.prototype.decodedBodySize;
 /** @type {number|undefined} */
 PerformanceResourceTiming.prototype.workerStart;
+/** @type {string} */ PerformanceResourceTiming.prototype.nextHopProtocol;
 
 /**
  * Possible values are 'navigate', 'reload', 'back_forward', and 'prerender'.
@@ -223,3 +224,9 @@ Window.prototype.performance;
  * @suppress {duplicate}
  */
 var performance;
+
+/**
+ * @constructor
+ * @extends {Performance}
+ */
+function WorkerPerformance() {}

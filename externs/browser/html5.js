@@ -1378,6 +1378,9 @@ WorkerGlobalScope.prototype.onoffline;
  */
 WorkerGlobalScope.prototype.ononline;
 
+/** @type {!WorkerPerformance} */
+WorkerGlobalScope.prototype.performance;
+
 /**
  * @see http://dev.w3.org/html5/workers/
  * @interface
