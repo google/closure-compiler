@@ -2319,19 +2319,6 @@ public final class NodeUtil {
     return n.isGetProp() || n.isGetElem();
   }
 
-  /**
-   * Is this node the name of a variable being declared?
-   *
-   * @param n The node
-   * @return True if {@code n} is NAME and {@code parent} is VAR
-   * @deprecated this checks for vars, but not lets or consts
-   */
-  @Deprecated
-  static boolean isVarDeclaration(Node n) {
-    // There is no need to verify that parent != null because a NAME node
-    // always has a parent in a valid parse tree.
-    return n.isName() && n.getParent().isVar();
-  }
 
   /**
    * Is this node the name of a block-scoped declaration?

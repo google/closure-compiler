@@ -532,8 +532,9 @@ final class NameAnalyzer implements CompilerPass {
         if (!NodeUtil.isImmutableResult(n.getLastChild())) {
           recordConsumers(t, n, n);
         }
-      } else if (NodeUtil.isVarDeclaration(n)
-          || (t.inGlobalScope() && n.isName() && NodeUtil.isNameDeclaration(parent))) {
+      } else if (n.isName()
+          && ((t.inGlobalScope() && NodeUtil.isNameDeclaration(parent))
+          || parent.isVar())) {
         NameInformation ns = createNameInformation(t, n);
         checkNotNull(ns, "createNameInformation returned null for: %s", n);
         recordDepScope(n, ns);
@@ -648,7 +649,7 @@ final class NameAnalyzer implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (NodeUtil.isVarDeclaration(n)) {
+      if (n.getParent().isVar() && n.isName()) {
         NameInformation ns = createNameInformation(t, n);
         checkNotNull(ns, "createNameInformation returned null for: %s", n);
         createName(ns.name);
@@ -676,8 +677,9 @@ final class NameAnalyzer implements CompilerPass {
 
       // Record global variable and function declarations
       if (t.inGlobalHoistScope()) {
-        if (NodeUtil.isVarDeclaration(n)
-            || (t.inGlobalScope() && n.isName() && NodeUtil.isNameDeclaration(parent))) {
+        if (n.isName()
+          && ((t.inGlobalScope() && NodeUtil.isNameDeclaration(parent))
+            || parent.isVar())) {
           NameInformation ns = createNameInformation(t, n);
           checkNotNull(ns, "createNameInformation returned null for: %s", n);
           recordSet(ns.name, n);
