@@ -328,9 +328,10 @@ public final class ConformanceRules {
     }
 
     protected boolean isUsed(Node n) {
-      return (NodeUtil.isAssignmentOp(n.getParent()))
-           ? NodeUtil.isExpressionResultUsed(n.getParent())
-           : NodeUtil.isExpressionResultUsed(n);
+      return !n.getParent().isName()
+          && ((NodeUtil.isAssignmentOp(n.getParent()))
+              ? NodeUtil.isExpressionResultUsed(n.getParent())
+              : NodeUtil.isExpressionResultUsed(n));
     }
   }
 
