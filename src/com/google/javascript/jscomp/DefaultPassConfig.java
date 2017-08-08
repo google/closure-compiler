@@ -2155,6 +2155,11 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
     }
+
+    @Override
+    public FeatureSet featureSet() {
+      return ES8_MODULES;
+    }
   };
 
   /**
