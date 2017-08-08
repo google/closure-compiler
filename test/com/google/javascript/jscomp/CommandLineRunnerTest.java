@@ -1904,6 +1904,38 @@ public final class CommandLineRunnerTest extends TestCase {
         });
   }
 
+  /** override the order of the entries that the module loader should look for */
+  public void testProcessCJSWithPackageJsonBrowserField() {
+    useStringComparison = true;
+    args.add("--process_common_js_modules");
+    args.add("--dependency_mode=STRICT");
+    args.add("--entry_point=app");
+    args.add("--module_resolution=NODE");
+    args.add("--package_json_entry_names=browser,main");
+    setFilename(0, "app.js");
+    setFilename(1, "node_modules/foo/package.json");
+    setFilename(2, "node_modules/foo/browser.js");
+
+    test(
+        new String[] {
+          "var Foo = require('foo');",
+          "{\"browser\":\"browser.js\",\"name\":\"foo\"}",
+          LINE_JOINER.join(
+              "function Foo() {}",
+              "Foo.prototype = {",
+              "  bar: function () {",
+              "    return 4 + 4;",
+              "  }",
+              "};",
+              "module.exports = Foo;")
+        },
+        new String[] {
+          "var module$node_modules$foo$browser=function(){};",
+          "module$node_modules$foo$browser.prototype={bar:function(){return 8}};",
+          "var Foo=module$node_modules$foo$browser;",
+        });
+  }
+
   public void testFormattingSingleQuote() {
     testSame("var x = '';");
     assertThat(lastCompiler.toSource()).isEqualTo("var x=\"\";");

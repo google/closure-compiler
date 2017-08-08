@@ -1173,12 +1173,6 @@ public class CompilerOptions implements Serializable {
   List<String> packageJsonEntryNames;
 
   /**
-   * Needed by {@link RewriteJsonToModule}, but defined here because RewriteJsonToModule is not
-   * part of the core build.
-   */
-  public static final String PACKAGE_JSON_MAIN = "main";
-
-  /**
    * Should the compiler print its configuration options to stderr when they are initialized?
    *
    * <p>Default {@code false}.
@@ -1203,7 +1197,7 @@ public class CompilerOptions implements Serializable {
 
     // Modules
     moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
-    packageJsonEntryNames = ImmutableList.of(CompilerOptions.PACKAGE_JSON_MAIN);
+    packageJsonEntryNames = ImmutableList.of("browser", "module", "main");
 
     // Checks
     skipNonTranspilationPasses = false;
