@@ -1700,8 +1700,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "bar.foo();"));
   }
 
-  // What should be the ideal behavior of these? Should a function such as Bar.getB() be renamed to
-  // Bar$getB() and be removed from the class scope?
   public void testClassProperties() {
     // Call class method inside class scope
     testSame(
@@ -1797,12 +1795,10 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
   }
 
-  // check against existing test cases
-  public void testPropertyMethodAssignment() {
-    // ES5 version - currently throws an error (Not true that aggregate warnings (<[JSC_UNSAFE_THIS.
-    // dangerous use of this in static method foo.myFunc at testcode line 4 : 11]>) is empty)
+  public void testPropertyMethodAssignment_unsafeThis() {
+    // ES5 version
     setLanguage(LanguageMode.ECMASCRIPT3, LanguageMode.ECMASCRIPT3);
-    /*test(
+    test(
         LINE_JOINER.join(
             "var foo = { ",
             "  bar: 1, ",
@@ -1812,34 +1808,69 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "};",
             "foo.myFunc();"),
         LINE_JOINER.join(
-            "var foo = { ",
-            "  bar: 1, ",
-            "  foo$myFunc: function myFunc() {",
-            "    return this.bar",
-            "  }",
+            "var foo$bar = 1;",
+            "var foo$myFunc = function myFunc() {",
+            "  return this.bar",
             "};",
-            "foo$myFunc();"));*/
+            "foo$myFunc();"),
+        warning(CollapseProperties.UNSAFE_THIS));
 
-    // ES6 version - currently throws an error (Not true that aggregate warnings (<[JSC_UNSAFE_THIS.
-    // dangerous use of this in static method foo.myFunc at testcode line 4 : 11]>) is empty)
+    // ES6 version
     setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT_2015);
-    /*test(
+    test(
         LINE_JOINER.join(
             "var foo = { ",
             "  bar: 1, ",
             "  myFunc() {",
-            "    return this.bar",
+            "    return this.bar;",
             "  }",
             "};",
             "foo.myFunc();"),
         LINE_JOINER.join(
+            "var foo$bar = 1;",
+            "var foo$myFunc = function() {",
+            "  return this.bar",
+            "};",
+            "foo$myFunc();"),
+        warning(CollapseProperties.UNSAFE_THIS));
+  }
+
+  public void testPropertyMethodAssignment_noThis() {
+    // ES5 Version
+    setLanguage(LanguageMode.ECMASCRIPT3, LanguageMode.ECMASCRIPT3);
+    test(
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  bar: 1, ",
+            "  myFunc: function myFunc() {",
+            "    return 5",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        LINE_JOINER.join(
+            "var foo$bar = 1;",
+            "var foo$myFunc = function myFunc() {",
+            "    return 5;",
+            "};",
+            "foo$myFunc();"));
+
+    // ES6 version
+    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT_2015);
+    test(
+        LINE_JOINER.join(
             "var foo = { ",
             "  bar: 1, ",
             "  myFunc() {",
-            "    return this.bar",
+            "    return 5;",
             "  }",
             "};",
-            "foo$myFunc();"));*/
+            "foo.myFunc();"),
+        LINE_JOINER.join(
+            "var foo$bar = 1;",
+            "var foo$myFunc = function() {",
+            "    return 5;",
+            "};",
+            "foo$myFunc();"));
   }
 
   public void testLetConstObjectAssignmentProperties() {
