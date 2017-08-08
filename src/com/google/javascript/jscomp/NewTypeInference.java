@@ -956,7 +956,7 @@ final class NewTypeInference implements CompilerPass {
           }
           break;
         case RETURN:
-          outEnv = processReturn(n, inEnv);
+          outEnv = analyzeReturnFwd(n, inEnv);
           break;
         case DO:
         case IF:
@@ -966,10 +966,10 @@ final class NewTypeInference implements CompilerPass {
           analyzeConditionalStmFwd(dn, NodeUtil.getConditionExpression(n), inEnv);
           break;
         case FOR_IN:
-          outEnv = processForIn(n, inEnv);
+          outEnv = analyzeForInFwd(n, inEnv);
           break;
         case FOR_OF:
-          outEnv = processForOf(n, inEnv);
+          outEnv = analyzeForOfFwd(n, inEnv);
           break;
         case CASE: {
           conditional = true;
@@ -983,7 +983,7 @@ final class NewTypeInference implements CompilerPass {
             break;
           }
           for (Node nameNode : n.children()) {
-            outEnv = processVarDeclFwd(nameNode, outEnv);
+            outEnv = analyzeVarDeclFwd(nameNode, outEnv);
           }
           break;
         case SWITCH:
@@ -1030,7 +1030,7 @@ final class NewTypeInference implements CompilerPass {
     }
   }
 
-  private TypeEnv processReturn(Node n, TypeEnv inEnv) {
+  private TypeEnv analyzeReturnFwd(Node n, TypeEnv inEnv) {
     if (this.currentScope.getRoot().isGeneratorFunction()) {
       JSType declRetType =
           getDeclaredReturnTypeOfCurrentScope(this.commonTypes.getGeneratorInstance(UNKNOWN));
@@ -1060,7 +1060,7 @@ final class NewTypeInference implements CompilerPass {
     return outEnv;
   }
 
-  private TypeEnv processForIn(Node n, TypeEnv inEnv) {
+  private TypeEnv analyzeForInFwd(Node n, TypeEnv inEnv) {
     Node obj = n.getSecondChild();
     EnvTypePair pair = analyzeExprFwd(obj, inEnv, pickReqObjType(n));
     pair = mayWarnAboutNullableReferenceAndTighten(n, pair.type, null, inEnv);
@@ -1082,7 +1082,7 @@ final class NewTypeInference implements CompilerPass {
     return outEnv;
   }
 
-  private TypeEnv processForOf(Node n, TypeEnv inEnv) {
+  private TypeEnv analyzeForOfFwd(Node n, TypeEnv inEnv) {
     Node rhs = n.getSecondChild();
     EnvTypePair rhsPair = analyzeExprFwd(rhs, inEnv, pickReqObjType(n));
     rhsPair = mayWarnAboutNullableReferenceAndTighten(n, rhsPair.type, null, inEnv);
@@ -1336,7 +1336,7 @@ final class NewTypeInference implements CompilerPass {
    * This method processes a single variable declaration in a VAR statement, in the forward
    * phase of the analysis.
    */
-  private TypeEnv processVarDeclFwd(Node nameNode, TypeEnv inEnv) {
+  private TypeEnv analyzeVarDeclFwd(Node nameNode, TypeEnv inEnv) {
     String varName = nameNode.getString();
     JSType declType = this.currentScope.getDeclaredTypeOf(varName);
 

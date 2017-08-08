@@ -2004,7 +2004,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   @Override
   public final Node getOwnPropertyDefSite(String propertyName) {
     checkState(this.isSingletonObj());
-    return this.getObjTypeIfSingletonObj().getOwnPropertyDefSite(propertyName);
+    return this.getObjTypeIfSingletonObj().getNonInheritedPropertyDefSite(propertyName);
   }
 
   @Override
@@ -2158,7 +2158,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   @Override
   public final boolean hasOwnProperty(String propertyName) {
     ObjectType obj = getObjTypeIfSingletonObj();
-    return obj != null && obj.hasOwnProperty(new QualifiedName(propertyName));
+    return obj != null && obj.hasNonInheritedProperty(new QualifiedName(propertyName));
   }
 
   @Override

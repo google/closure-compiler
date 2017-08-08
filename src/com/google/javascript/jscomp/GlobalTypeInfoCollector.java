@@ -1915,16 +1915,16 @@ public class GlobalTypeInfoCollector implements CompilerPass {
           propDeclType = mayInferFromRhsIfConst(getProp);
         }
         if (mayAddPropToType(getProp, rawType)) {
-          rawType.addClassProperty(pname, getProp, propDeclType, isConst);
+          rawType.addInstanceProperty(pname, getProp, propDeclType, isConst);
         }
         if (isConst) {
           getProp.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
         }
       } else if (mayAddPropToType(getProp, rawType)) {
         if (propInferredFunType != null) {
-          rawType.addUndeclaredClassProperty(pname, propInferredFunType, getProp);
+          rawType.addUndeclaredInstanceProperty(pname, propInferredFunType, getProp);
         } else {
-          rawType.addUndeclaredClassProperty(pname, getCommonTypes().UNKNOWN, getProp);
+          rawType.addUndeclaredInstanceProperty(pname, getCommonTypes().UNKNOWN, getProp);
         }
       }
       // Only add the definition node if the property is not already defined.
@@ -2310,7 +2310,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         String pname, Node propCreationNode, JSType typeInJsdoc) {
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(propCreationNode);
       JSType previousPropType = classType.getInstancePropDeclaredType(pname);
-      if (classType.mayHaveOwnProp(pname)
+      if (classType.mayHaveNonInheritedProp(pname)
           && previousPropType != null
           && !suppressDupPropWarning(jsdoc, typeInJsdoc, previousPropType)) {
         warnings.add(JSError.make(

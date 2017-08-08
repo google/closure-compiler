@@ -1343,7 +1343,7 @@ final class ObjectType implements TypeWithProperties {
    * TODO(aravindpg): This may be unsuitable from a typing point of view.
    * Revisit if needed.
    */
-  private Property getLeftmostOwnProp(QualifiedName qname) {
+  private Property getLeftmostNonInheritedProp(QualifiedName qname) {
     String pname = qname.getLeftmostName();
     Property p = props.get(pname);
     // Only return the extra/specialized prop p if we know that we don't have this property
@@ -1357,7 +1357,7 @@ final class ObjectType implements TypeWithProperties {
         return p;
       }
     }
-    return this.nominalType.getOwnProp(pname);
+    return this.nominalType.getNonInheritedProp(pname);
   }
 
   /**
@@ -1369,17 +1369,16 @@ final class ObjectType implements TypeWithProperties {
   }
 
   /**
-   * Returns the node that defines the given property on this exact
-   * object, or null if the property does not exist (or only exists
-   * on supertypes).
+   * Returns the node that defines the given property on this exact object, or null if the
+   * property does not exist (or only exists on supertypes).
    */
-  Node getOwnPropertyDefSite(String propertyName) {
+  Node getNonInheritedPropertyDefSite(String propertyName) {
     return getPropertyDefSiteHelper(propertyName, true);
   }
 
-  private Node getPropertyDefSiteHelper(String propertyName, boolean ownProp) {
+  private Node getPropertyDefSiteHelper(String propertyName, boolean nonInheritedProp) {
     QualifiedName qname = new QualifiedName(propertyName);
-    Property p = ownProp ? getLeftmostOwnProp(qname) : getLeftmostProp(qname);
+    Property p = nonInheritedProp ? getLeftmostNonInheritedProp(qname) : getLeftmostProp(qname);
     // Try getters and setters specially.
     if (p == null) {
       p = getLeftmostProp(new QualifiedName(this.commonTypes.createGetterPropName(propertyName)));
@@ -1409,13 +1408,14 @@ final class ObjectType implements TypeWithProperties {
    * Similar to {@link #hasProp}, but disregards properties that are
    * only defined on supertypes.
    */
-  boolean hasOwnProperty(QualifiedName qname) {
+  boolean hasNonInheritedProperty(QualifiedName qname) {
     checkArgument(qname.isIdentifier());
-    Property p = getLeftmostOwnProp(qname);
+    Property p = getLeftmostNonInheritedProp(qname);
     String pname = qname.getLeftmostName();
     // Try getters and setters specially.
     if (p == null) {
-      p = getLeftmostOwnProp(new QualifiedName(this.commonTypes.createGetterPropName(pname)));
+      p = getLeftmostNonInheritedProp(
+          new QualifiedName(this.commonTypes.createGetterPropName(pname)));
     }
     if (p == null) {
       p = getLeftmostProp(new QualifiedName(this.commonTypes.createSetterPropName(pname)));

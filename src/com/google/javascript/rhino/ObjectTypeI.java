@@ -61,9 +61,15 @@ public interface ObjectTypeI extends TypeI {
    */
   ObjectTypeI getPrototypeObject();
 
-  // TODO(aravindpg): might be better to define a PropertyI interface and
-  // then have a more general-purpose getProperty method here.
-
+  /**
+   * TODO(dimvar): rename methods in this file that use the phrase OwnProp to NonInheritedProp,
+   * to avoid ambiguity with the built-in methods such as hasOwnProperty, which have
+   * different semantics. The built-in methods also look at properties directly on the instance
+   * that have been copied from a super type, while we care only about non-inherited properties.
+   *
+   * The methods here have many uses, including in code outside the compiler codebase, which is
+   * why I'm deferring the renaming.
+   */
   JSDocInfo getOwnPropertyJSDocInfo(String propertyName);
 
   JSDocInfo getPropertyJSDocInfo(String propertyName);
