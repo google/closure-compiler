@@ -2633,6 +2633,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new DeadPropertyAssignmentElimination(compiler);
         }
+
+        @Override
+        public FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
       };
 
   /** Inlines function calls. */
