@@ -143,6 +143,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract void setMostRecentTypechecker(MostRecentTypechecker mostRecent);
 
+  /** Gets the type-checking pass that ran most recently. */
+  abstract MostRecentTypechecker getMostRecentTypechecker();
+
   /**
    * Gets a central registry of type information from the compiled JS.
    */

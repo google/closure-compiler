@@ -1540,6 +1540,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
+  MostRecentTypechecker getMostRecentTypechecker() {
+    return this.mostRecentTypechecker;
+  }
+
+  @Override
   // Only used by jsdev
   public MemoizedTypedScopeCreator getTypedScopeCreator() {
     return getPassConfig().getTypedScopeCreator();
