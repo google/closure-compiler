@@ -419,7 +419,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(generateExports);
     }
 
-    checks.add(createEmptyPass(PassNames.AFTER_STANDARD_CHECKS));
+    checks.add(createEmptyPass("afterStandardChecks"));
 
     assertAllOneTimePasses(checks);
     assertValidOrderForChecks(checks);
@@ -1694,7 +1694,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Various peephole optimizations. */
   private final PassFactory peepholeOptimizations =
-      new PassFactory(PassNames.PEEPHOLE_OPTIMIZATIONS, false /* oneTimePass */) {
+      new PassFactory(Compiler.PEEPHOLE_PASS_NAME, false /* oneTimePass */) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return createPeepholeOptimizationsPass(compiler, getName());
@@ -1708,7 +1708,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Various peephole optimizations. */
   private final PassFactory peepholeOptimizationsOnce =
-      new PassFactory(PassNames.PEEPHOLE_OPTIMIZATIONS, true /* oneTimePass */) {
+      new PassFactory(Compiler.PEEPHOLE_PASS_NAME, true /* oneTimePass */) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return createPeepholeOptimizationsPass(compiler, getName());
@@ -1847,7 +1847,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Creates a typed scope and adds types to the type registry. */
   final HotSwapPassFactory resolveTypes =
-      new HotSwapPassFactory(PassNames.RESOLVE_TYPES, true) {
+      new HotSwapPassFactory("resolveTypes", true) {
     @Override
     protected HotSwapCompilerPass create(AbstractCompiler compiler) {
       return new GlobalTypeResolver(compiler);
@@ -2508,7 +2508,7 @@ public final class DefaultPassConfig extends PassConfig {
 
   /** Use data flow analysis to remove dead branches. */
   private final PassFactory removeUnreachableCode =
-      new PassFactory(PassNames.REMOVE_UNREACHABLE_CODE, false) {
+      new PassFactory(Compiler.UNREACHABLE_CODE_ELIM_NAME, false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new UnreachableCodeElimination(compiler);
