@@ -44,7 +44,7 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
     options.setProcessCommonJSModules(true);
     options.setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
     options.setPackageJsonEntryNames(
-        ImmutableList.of("browser", CompilerOptions.PACKAGE_JSON_MAIN));
+        ImmutableList.of("browser", "main"));
     return options;
   }
 
