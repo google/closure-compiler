@@ -591,7 +591,7 @@ function FetchEvent(type, opt_eventInitDict) {}
 FetchEvent.prototype.request;
 
 /**
- * @type {!Promise<!Response|undefined>}
+ * @type {!Promise<Response>}
  */
 FetchEvent.prototype.preloadResponse;
 
@@ -604,17 +604,11 @@ FetchEvent.prototype.client;
 /** @type {?string} */
 FetchEvent.prototype.clientId;
 
-/** @type {?string} */
-FetchEvent.prototype.targetClientId;
-
-/** @type {?string} */
-FetchEvent.prototype.reserveClientId;
-
 /** @type {!boolean} */
 FetchEvent.prototype.isReload;
 
 /**
- * @param {(Response|IThenable<?Response|undefined>)} r
+ * @param {(Response|IThenable<Response>)} r
  * @return {undefined}
  */
 FetchEvent.prototype.respondWith = function(r) {};
@@ -635,7 +629,7 @@ FetchEvent.prototype.default = function() {};
  *   bubbles: (boolean|undefined),
  *   cancelable: (boolean|undefined),
  *   request: (!Request|undefined),
- *   preloadResponse: (!Promise<?Response|undefined>),
+ *   preloadResponse: (!Promise<Response>),
  *   client: (!ServiceWorkerClient|undefined),
  *   isReload: (!boolean|undefined)
  * }}
