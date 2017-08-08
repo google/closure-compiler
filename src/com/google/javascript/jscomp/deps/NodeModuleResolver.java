@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.ErrorHandler;
 import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.deps.NodeModuleResolver;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.SortedSet;
@@ -42,6 +43,7 @@ public class NodeModuleResolver extends ModuleResolver {
     ModuleLoader.MODULE_SLASH + "index.js",
     ModuleLoader.MODULE_SLASH + "index.json"
   };
+  public static final String JSC_BROWSER_BLACKLISTED_MARKER = "$jscomp$browser$blacklisted";
 
   /** Named modules found in node_modules folders */
   private final ImmutableMap<String, String> packageJsonMainEntries;
@@ -165,7 +167,20 @@ public class NodeModuleResolver extends ModuleResolver {
     for (int i = 0; i < FILE_EXTENSIONS_TO_SEARCH.length; i++) {
       String loadAddress = locate(scriptAddress, moduleAddress + FILE_EXTENSIONS_TO_SEARCH[i]);
       if (loadAddress != null) {
-        return loadAddress;
+        // Also look for mappings in packageJsonMainEntries because browser field
+        // advanced usage allows to override / blacklist specific files, including
+        // the main entry.
+        if (packageJsonMainEntries.containsKey(loadAddress)) {
+          String packageJsonEntry = packageJsonMainEntries.get(loadAddress);
+
+          if (packageJsonEntry != JSC_BROWSER_BLACKLISTED_MARKER) {
+            return resolveJsModuleFile(scriptAddress, packageJsonEntry);
+          } else {
+            return null;
+          }
+        } else {
+          return loadAddress;
+        }
       }
     }
 
