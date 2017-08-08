@@ -1135,7 +1135,7 @@ final class NewTypeInference implements CompilerPass {
     // or contains undefined can be marked as optional.
     List<String> formals = fn.getFormals();
     for (int i = reqArity - 1; i >= 0; i--) {
-      JSType formalType = fn.getDeclaredFunctionType().getFormalType(i);
+      JSType formalType = declType.getFormalType(i);
       if (formalType != null) {
         break;
       }
@@ -1149,21 +1149,21 @@ final class NewTypeInference implements CompilerPass {
     }
 
     // Collect types of formals in the builder
-    int formalIndex = 0;
-    for (String formal : formals) {
-      JSType formalType = fn.getDeclaredTypeOf(formal);
+    int i = 0;
+    for (String formalName : formals) {
+      JSType formalType = declType.getFormalType(i);
       if (formalType == null) {
-        formalType = getTypeAfterFwd(formal, entryEnv, exitEnv);
+        formalType = getTypeAfterFwd(formalName, entryEnv, exitEnv);
       }
-      if (formalIndex < reqArity) {
+      if (i < reqArity) {
         builder.addReqFormal(formalType);
-      } else if (formalIndex < optArity) {
+      } else if (i < optArity) {
         builder.addOptFormal(formalType);
       }
-      formalIndex++;
+      i++;
     }
     if (declType.hasRestFormals()) {
-      builder.addRestFormals(declType.getFormalType(formalIndex));
+      builder.addRestFormals(declType.getFormalType(i));
     }
 
     for (String outer : fn.getOuterVars()) {
@@ -2035,6 +2035,27 @@ final class NewTypeInference implements CompilerPass {
   }
 
   /**
+   * TTL ASTs include type variables with their names as they appear in the program source,
+   * not with their NTI-internal names. But type maps use the NTI-internal names.
+   * To evaluate TTL ASTs using the type map, we need to reconcile the two.
+   * The most bulletproof way would be to clone the TTL AST and substitute-in the internal names
+   * in JSTypeCreatorFromJSDoc. Instead, we take a shortcut here and use the original names.
+   * 1) TTL ASTs are currently not scoped; they can only use symbols from the top level, so there
+   *    is no ambiguity when we use the original names.
+   * 2) Cloning the TTL AST can be costly.
+   * If in the future we start evaluating TTL ASTs in non-global scopes, we can revisit this.
+   */
+  private ImmutableMap<String, TypeI> getTypemapWithOriginalNames(
+      ImmutableMap<String, JSType> typeMap) {
+    ImmutableMap.Builder<String, TypeI> builder = ImmutableMap.builder();
+    for (Map.Entry<String, JSType> entry : typeMap.entrySet()) {
+      String originalName = UniqueNameGenerator.getOriginalName(entry.getKey());
+      builder.put(originalName, entry.getValue());
+    }
+    return builder.build();
+  }
+
+  /**
    * Instantiate the generic function using the appropriate type map.
    *
    * If the generic function uses TTL, we need to map the TTL variables to types.
@@ -2050,13 +2071,14 @@ final class NewTypeInference implements CompilerPass {
     if (!this.compiler.getOptions().getUseTTLinNTI()) {
       return calleeType.instantiateGenericsWithUnknown();
     }
+    ImmutableMap<String, TypeI> mapWithOriginalNames = getTypemapWithOriginalNames(typeMap);
     LinkedHashMap<String, JSType> newTypeMap = new LinkedHashMap<>();
     newTypeMap.putAll(typeMap);
     for (Map.Entry<String, Node> entry : typeTransformations.entrySet()) {
       String ttlVar = entry.getKey();
       Node transform = entry.getValue();
       @SuppressWarnings({"unchecked", "rawtypes"})
-      JSType t = (JSType) this.ttlObj.eval(transform, (ImmutableMap) typeMap);
+      JSType t = (JSType) this.ttlObj.eval(transform, mapWithOriginalNames);
       newTypeMap.put(ttlVar, t);
     }
     return calleeType.instantiateGenerics(ImmutableMap.copyOf(newTypeMap));

@@ -964,4 +964,50 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
         "var /** string */ x = f();"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testUsingOrdinaryTypeVariablesInTTL() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {T} x",
+        " * @param {U} y",
+        " * @return {R}",
+        " * @template T, U",
+        " * @template R := cond (eq(T, U), 'string', 'boolean') =:",
+        " */",
+        "function f(x, y) { return any(); }",
+        "var /** string */ s = f({}, []);"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {T} x",
+        " * @param {U} y",
+        " * @return {R}",
+        " * @template T, U",
+        " * @template R := cond (eq(T, U), 'string', 'boolean') =:",
+        " */",
+        "function f(x, y) { return any(); }",
+        "var /** string */ s = f(1, 2);",
+        "var /** boolean */ b = f({}, []);"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {T} x",
+        " * @template T",
+        " * @template R :=",
+        " *   mapunion(",
+        " *     T,",
+        " *     (x) =>",
+        " *     cond(eq(x, 'number'), 'Number',",
+        " *     cond(eq(x, 'string'), 'String',",
+        " *     cond(eq(x, 'boolean'), 'Boolean',",
+        " *     cond(eq(x, 'null'), 'Object',",
+        " *     cond(eq(x, 'undefined'), 'Object', x))))))",
+        " *   =:",
+        " * @return {R}",
+        " */",
+        "function f(x) { return any(); }",
+        "var /** !Number */ x = f(1);",
+        "var /** !String */ y = f('');"));
+  }
 }
