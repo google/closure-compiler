@@ -16,10 +16,11 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.Callback;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 
 /** A simple pass to ensure that all AST nodes that are expressions have types */
-class TypeInfoCheck implements Callback, CompilerPass {
+final class TypeInfoCheck implements Callback, CompilerPass {
   private final AbstractCompiler compiler;
   private boolean requiresTypes = false;
 
@@ -61,7 +62,6 @@ class TypeInfoCheck implements Callback, CompilerPass {
         return;
       }
       if (n.isParamList()) {
-        requiresTypes = true;
         return;
       }
       if (n.isName() && parent.isFunction()) {
@@ -79,31 +79,6 @@ class TypeInfoCheck implements Callback, CompilerPass {
   }
 
   private static boolean shouldHaveTypeInformation(Node node) {
-    switch (node.getToken()) {
-      case EMPTY:
-      case BLOCK:
-      case BREAK:
-      case CLASS:
-      case CONST:
-      case CONTINUE:
-      case DEBUGGER:
-      case DO:
-      case EXPR_RESULT:
-      case FOR:
-      case IF:
-      case LABEL:
-      case LET:
-      case SWITCH:
-      case THROW:
-      case TRY:
-      case VAR:
-      case WHILE:
-      case WITH:
-      case RETURN:
-        return false;
-
-      default:
-        return true;
-    }
+    return node.isFunction() || !IR.mayBeStatement(node);
   }
 }
