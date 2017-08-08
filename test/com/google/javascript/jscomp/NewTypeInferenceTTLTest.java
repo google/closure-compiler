@@ -223,7 +223,6 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
         " */",
         "function f() { return any(); }"));
 
-    // TODO(dimvar): this should have no warnings once typedefs inside TTL expressions are handled.
     typeCheck(LINE_JOINER.join(
         "/** @typedef {!Array<number>} */",
         "var ArrayNumber;",
@@ -232,8 +231,7 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
         " * @return {T}",
         " */",
         "function f() { return []; }",
-        "f();"),
-        TypeTransformation.UNKNOWN_TYPENAME);
+        "f();"));
 
     typeCheck(LINE_JOINER.join(
         "/**",
@@ -914,5 +912,56 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
         "  function Foo() {}",
         "  x = f();",
         "}"));
+  }
+
+  public void testTypedefsWithTTL() {
+    typeCheck(LINE_JOINER.join(
+        "/** @typedef {number} */",
+        "var MyNum;",
+        "/**",
+        " * @template T := 'MyNum' =:",
+        " * @return {T}",
+        " */",
+        "function f() { return 123; }",
+        "var /** number */ x = f();"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @typedef {number} */",
+        "var MyNum;",
+        "/**",
+        " * @template T := 'MyNum' =:",
+        " * @return {T}",
+        " */",
+        "function f() { return 123; }",
+        "var /** string */ x = f();"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @typedef {number} */",
+        "ns.MyNum;",
+        "/**",
+        " * @template T := 'ns.MyNum' =:",
+        " * @return {T}",
+        " */",
+        "function f() { return 123; }",
+        "var /** string */ x = f();"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "function g() {",
+        "  /** @typedef {number} */",
+        "  ns.MyNum;",
+        "}",
+        "/**",
+        " * @template T := 'ns.MyNum' =:",
+        " * @return {T}",
+        " */",
+        "function f() { return 123; }",
+        "var /** string */ x = f();"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 }

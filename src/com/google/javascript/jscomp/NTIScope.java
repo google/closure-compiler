@@ -77,6 +77,8 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
   private final Map<String, NTIScope> localFunDefs = new LinkedHashMap<>();
   private ImmutableSet<String> unknownTypeNames = ImmutableSet.of();
   private Map<String, Typedef> localTypedefs = new LinkedHashMap<>();
+  // Typedefs defined inside this scope, but on a namespace, not as local variables
+  private Set<Typedef> namespaceTypedefs = new LinkedHashSet<>();
   private Map<String, Namespace> localNamespaces = new LinkedHashMap<>();
   // The namespace map that we preserve post-finalization, purely for use
   // in GlobalTypeInfo for symbol table purposes.
@@ -482,8 +484,13 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
   }
 
   Typedef getTypedef(String name) {
-    checkState(!name.contains("."));
-    Declaration decl = getDeclaration(name, false);
+    QualifiedName qname = QualifiedName.fromQualifiedString(name);
+    Declaration decl;
+    if (qname.isIdentifier()) {
+      decl = getDeclaration(qname, true);
+    } else {
+      decl = getNamespace(qname.getLeftmostName()).getDeclaration(qname.getAllButLeftmost());
+    }
     return decl == null ? null : decl.getTypedef();
   }
 
@@ -545,6 +552,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
       QualifiedName qname = QualifiedName.fromNode(qnameNode);
       Namespace ns = getNamespace(qname.getLeftmostName());
       ns.addTypedef(qname.getAllButLeftmost(), td);
+      namespaceTypedefs.add(td);
     }
   }
 
@@ -672,9 +680,13 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
   }
 
   @Override
-  public JSType getNamespaceType(String typeName) {
+  public JSType getNamespaceOrTypedefType(String typeName) {
     Namespace ns = getNamespaceAfterFreezing(typeName);
-    return ns == null ? null : ns.toJSType();
+    if (ns != null) {
+      return ns.toJSType();
+    }
+    Typedef td = getTypedef(typeName);
+    return td == null ? null : td.getType();
   }
 
   @Override
@@ -690,20 +702,20 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
   }
 
   void resolveTypedefs(JSTypeCreatorFromJSDoc typeParser) {
-    for (Typedef td : localTypedefs.values()) {
-      if (!td.isResolved()) {
-        typeParser.resolveTypedef(td, this);
-      }
+    for (Typedef td : this.localTypedefs.values()) {
+      typeParser.resolveTypedef(td, this);
     }
+    for (Typedef td : this.namespaceTypedefs) {
+      typeParser.resolveTypedef(td, this);
+    }
+    this.namespaceTypedefs = null;
   }
 
   void resolveEnums(JSTypeCreatorFromJSDoc typeParser) {
-    for (EnumType e : localEnums) {
-      if (!e.isResolved()) {
-        typeParser.resolveEnum(e, this);
-      }
+    for (EnumType e : this.localEnums) {
+      typeParser.resolveEnum(e, this);
     }
-    localEnums = null;
+    this.localEnums = null;
   }
 
   void freezeScope() {
@@ -738,7 +750,6 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     copyOuterVarsTransitively(this);
     preservedNamespaces = localNamespaces;
     localNamespaces = ImmutableMap.of();
-    localTypedefs = ImmutableMap.of();
     escapedVars = ImmutableSet.of();
     isFrozen = true;
   }

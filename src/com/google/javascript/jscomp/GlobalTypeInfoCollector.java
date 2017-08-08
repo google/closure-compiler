@@ -435,8 +435,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     this.funNameGen = null;
 
     // If a scope s1 contains a scope s2, then s2 must be before s1 in scopes.
-    // The type inference relies on this fact to process deeper scopes
-    // before shallower scopes.
+    // The type inference relies on this fact to process deeper scopes before shallower scopes.
     Collections.reverse(getScopes());
 
     this.compiler.setExternProperties(ImmutableSet.copyOf(getExternPropertyNames()));
@@ -1016,7 +1015,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         return;
       }
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(qnameNode);
-      Typedef td = Typedef.make(jsdoc.getTypedefType());
+      Typedef td = Typedef.make(qnameNode, jsdoc.getTypedefType());
       currentScope.addTypedef(qnameNode, td);
     }
 

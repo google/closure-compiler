@@ -47,11 +47,8 @@ public class Declaration {
   }
 
   private void checkValid() {
-    if (this.simpleType != null) {
-      checkState(this.typedef == null);
-    }
     if (this.typedef != null) {
-      checkState(this.simpleType == null && this.ns == null && this.funScope == null);
+      checkState(this.ns == null && this.funScope == null);
     }
     if (this.ns != null) {
       // Note: Non-null nominal with null function is allowed,

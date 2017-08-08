@@ -512,7 +512,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
 
   public void resolveEnum(EnumType e, DeclaredTypeRegistry registry) {
     checkState(
-        e != null, "getEnum should only be " + "called when we know that the enum is defined");
+        e != null, "getEnum should only be called when we know that the enum is defined");
     if (e.isResolved()) {
       return;
     }

@@ -295,7 +295,7 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType>, TypeI
 
   @SuppressWarnings("unchecked")
   @Override
-  public JSType getNamespaceType(String typeName) {
+  public JSType getNamespaceOrTypedefType(String typeName) {
     StaticTypedSlot<JSType> slot = getSlot(typeName);
     return slot == null ? null : slot.getType();
   }
