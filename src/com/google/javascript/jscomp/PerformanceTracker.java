@@ -137,7 +137,7 @@ public final class PerformanceTracker {
     if (this.codeChange.hasCodeChanged()) {
       logStats.changes = 1;
     }
-    if (passName.equals(Compiler.PARSING_PASS_NAME)) {
+    if (passName.equals(PassNames.PARSE_INPUTS)) {
       recordParsingStop(logStats);
     } else if (this.codeChange.hasCodeChanged() && tracksAstSize()) {
       recordOtherPassStop(logStats);
