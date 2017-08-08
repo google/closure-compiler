@@ -20,7 +20,9 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.deps.NodeModuleResolver;
 import com.google.javascript.rhino.Node;
+import java.util.Map;
 
 /** Unit tests for {@link RewriteJsonToModule} */
 public final class RewriteJsonToModuleTest extends CompilerTestCase {
@@ -102,5 +104,41 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
     assertThat(getLastCompiler().getModuleLoader().getPackageJsonMainEntries()).hasSize(1);
     assertThat(getLastCompiler().getModuleLoader().getPackageJsonMainEntries())
         .containsEntry("/package.json", "/browser/foo.js");
+  }
+
+  public void testPackageJsonFileBrowserFieldAdvancedUsage() {
+    test(
+        srcs(
+            SourceFile.fromCode(
+                "/package.json",
+                lines(
+                    "{ 'main': 'foo/bar/baz.js',",
+                    "  'browser': { 'dont/include.js': false,",
+                    "               'foo/bar/baz.js': 'replaced/main.js',",
+                    "               'override/relative.js': './with/this.js',",
+                    "               'override/explicitly.js': 'with/other.js'} }"))),
+        expected(
+            lines(
+                "goog.provide('module$package_json')",
+                "var module$package_json = {",
+                "  'main': 'foo/bar/baz.js',",
+                "  'browser': {",
+                "    'dont/include.js': false,",
+                "    'foo/bar/baz.js': 'replaced/main.js',",
+                "    'override/relative.js': './with/this.js',",
+                "    'override/explicitly.js': 'with/other.js'",
+                "  }",
+                "};")));
+
+    Map<String, String> packageJsonMainEntries =
+        getLastCompiler().getModuleLoader().getPackageJsonMainEntries();
+    assertThat(packageJsonMainEntries).hasSize(5);
+    assertThat(packageJsonMainEntries).containsEntry("/package.json", "/foo/bar/baz.js");
+    assertThat(packageJsonMainEntries).containsEntry("/foo/bar/baz.js", "/replaced/main.js");
+    // NodeModuleResolver knows how to normalize this entry's value
+    assertThat(packageJsonMainEntries).containsEntry("/override/relative.js", "/./with/this.js");
+    assertThat(packageJsonMainEntries)
+        .containsEntry("/dont/include.js", NodeModuleResolver.JSC_BROWSER_BLACKLISTED_MARKER);
+    assertThat(packageJsonMainEntries).containsEntry("/override/explicitly.js", "/with/other.js");
   }
 }

@@ -289,6 +289,59 @@ public final class ModuleLoaderTest extends TestCase {
     assertUri("/node_modules/B/lib/b.js", loader.resolve("/app.js").resolveJsModule("B"));
   }
 
+  public void testLocateNodeModulesBrowserFieldAdvancedUsage() throws Exception {
+    // case where the package.json looks like the following:
+    //   {"main": "server.js",
+    //    "browser": {"server.js": "client.js",
+    //                "exclude/this.js": false,
+    //                "replace/other.js": "with/alternative.js"}}
+    ImmutableMap<String, String> packageJsonMainEntries =
+        ImmutableMap.of(
+            "/node_modules/mymodule/package.json", "/node_modules/mymodule/server.js",
+            "/node_modules/mymodule/server.js", "/node_modules/mymodule/client.js",
+            "/node_modules/mymodule/override/relative.js", "/node_modules/mymodule/./with/this.js",
+            "/node_modules/mymodule/exclude/this.js",
+                NodeModuleResolver.JSC_BROWSER_BLACKLISTED_MARKER,
+            "/node_modules/mymodule/replace/other.js",
+                "/node_modules/mymodule/with/alternative.js");
+
+    ImmutableList<CompilerInput> compilerInputs =
+        inputs(
+            "node_modules/mymodule/package.json",
+            "node_modules/mymodule/server.js",
+            "node_modules/mymodule/client.js",
+            "node_modules/mymodule/exclude/this.js",
+            "node_modules/mymodule/replace/other.js",
+            "node_modules/mymodule/with/alternative.js",
+            "/node_modules/mymodule/override/relative.js",
+            "/node_modules/mymodule/with/this.js",
+            "/foo.js");
+
+    ModuleLoader loader =
+        new ModuleLoader(
+            null,
+            (new ImmutableList.Builder<String>()).build(),
+            compilerInputs,
+            ModuleLoader.PathResolver.RELATIVE,
+            ModuleLoader.ResolutionMode.NODE,
+            packageJsonMainEntries);
+
+    assertUri(
+        "/node_modules/mymodule/client.js", loader.resolve("/foo.js").resolveJsModule("mymodule"));
+
+    assertUri(
+        "/node_modules/mymodule/with/alternative.js",
+        loader.resolve("/foo.js").resolveJsModule("mymodule/replace/other.js"));
+    assertUri(
+        "/node_modules/mymodule/with/alternative.js",
+        loader.resolve("/node_modules/mymodule/client.js").resolveJsModule("./replace/other.js"));
+    assertUri(
+        "/node_modules/mymodule/with/this.js",
+        loader.resolve("/foo.js").resolveJsModule("mymodule/override/relative.js"));
+    assertNull(
+        loader.resolve("/node_modules/mymodule/client.js").resolveJsModule("./exclude/this.js"));
+  }
+
   CompilerInput input(String name) {
     return new CompilerInput(SourceFile.fromCode(name, ""), false);
   }
