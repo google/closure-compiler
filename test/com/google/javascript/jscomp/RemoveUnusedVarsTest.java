@@ -219,6 +219,99 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     testSame("var a = {['foo' + 1]:1, ['foo' + 2]:2}; alert(a.foo1);");
   }
 
+  public void testFunctionArgRemoval_defaultValue1() {
+    test(
+        "function f(unusedParam = undefined) {}; f();",
+        "function f(                       ) {}; f();");
+  }
+
+  public void testFunctionArgRemoval_defaultValue2() {
+    test("function f(unusedParam = 0) {}; f();", "function f(               ) {}; f();");
+  }
+
+  public void testFunctionArgRemoval_defaultValue3() {
+    // Parameters already encountered can be used by later parameters
+    test("function f(x, y = x + 0) {}; f();", "function f(            ) {}; f();");
+
+    testSame("function f(x, y = x + 0) { y; }; f();");
+  }
+
+  public void testFunctionArgRemoval_defaultValue4() {
+    // Default value inside arrow function param list
+    test("var f = (unusedParam = 0) => {}; f();", "var f = (               ) => {}; f();");
+
+    testSame("var f = (usedParam = 0) => { usedParam; }; f();");
+
+    test("var f = (usedParam = 0) => {usedParam;};", "");
+  }
+
+  public void testDestructuringParams() {
+    // Default value not used
+    test(
+        "function f({a:{b:b}} = {a:{}}) { /** b is unused */ }; f();",
+        "function f({a:{}} = {a:{}}) {/** b is unused */}; f();");
+
+    // Default value with nested value used in default value assignment
+    test(
+        "function f({a:{b:b}} = {a:{b:1}}) { /** b is unused */ }; f();",
+        "function f({a:{}} = {a:{b:1}}) {/** b is unused */}; f();");
+
+    // Default value with nested value used in function body
+    testSame("function f({a:{b:b}} = {a:{b:1}}) { b; }; f();");
+
+    test(
+        "function f({a:{b:b}} = {a:{b:1}}) { a.b; }; f();",
+        "function f({a:{}} = {a:{b:1}}) { a.b; }; f();");
+
+    test("function f({a:{b:b}} = {a:{}}) { a; }; f();", "function f({a:{}} = {a:{}}) { a; }; f();");
+
+    // Destructuring pattern not default and parameter not used
+    test(
+        "function f({a:{b:b}}) { /** b is unused */ }; f({c:{d:d}});",
+        "function f({a:{}}) { /** b is unused */ }; f({c:{d:d}});");
+
+    // Destructuring pattern not default and parameter used
+    testSame("function f({a:{b:b}}) { b; }; f({c:{d:d}});");
+  }
+
+  public void testMixedParamTypes() {
+    // Traditional and destructuring pattern
+    test("function f({a:{b:b}}, c, d) { c; }; f();", "function f({a:{}}, c) { c; }; f();");
+
+    test("function f({a:{b:b = 5}}, c, d) { c; }; f();", "function f({a:{}}, c) { c; }; f()");
+
+    testSame("function f({}, c, {d:{e:e}}) { c; e; }; f();");
+
+    // Parent is the parameter list
+    test("function f({a}, b, {c}) {use(a)}; f({}, {});", "function f({a}) {use(a)}; f({}, {});");
+
+    // Default and traditional
+    testSame("function f(unusedParam = undefined, z) { z; }; f();");
+  }
+
+  public void testDefaultParamsWithSideEffects() {
+    testSame("function f(a = alert('foo')) {}; f();");
+
+    testSame("function f({} = alert('foo')){}; f()");
+
+    test("function f({a:b} = alert('foo')){}; f();", "function f({} = alert('foo')){}; f();");
+
+    testSame("function f({a:b = alert('bar')} = alert('foo')){}; f();");
+  }
+
+  public void testArrayDestructuringParams() {
+    // Default values in array pattern unused
+    test("function f([x,y] = [1,2]) {}; f();", "function f([,] = [1,2]) {}; f();");
+
+    test("function f([x,y] = [1,2], z) { z; }; f();", "function f([,] = [1,2], z) { z; }; f();");
+
+    // Default values in array pattern used
+    test("function f([x,y,z] =[1,2,3]) { y; }; f();", "function f([,y] = [1,2,3]) { y; }; f();");
+
+    // Side effects
+    test("function f([x] = [foo()]) {}; f();", "function f([] = [foo()]) {}; f();");
+  }
+
   public void testFunctionsDeadButEscaped() {
     testSame("function b(a) { a = 1; print(arguments[0]) }; b(6)");
     testSame("function b(a) { var c = 2; a = c; print(arguments[0]) }; b(6)");

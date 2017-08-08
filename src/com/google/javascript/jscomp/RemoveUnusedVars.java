@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.DefinitionsRemover.Definition;
@@ -496,19 +497,91 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
     boolean modifyCallers = modifyCallSites
         && callSiteOptimizer.canModifyCallers(function);
     if (!modifyCallers) {
-      // Strip unreferenced args off the end of the function declaration.
-      Node lastArg;
-      while ((lastArg = argList.getLastChild()) != null) {
-        Var var = fparamScope.getVar(lastArg.getString());
-        if (!referenced.contains(var)) {
-          compiler.reportChangeToEnclosingScope(lastArg);
-          argList.removeChild(lastArg);
+
+      // Remove any unused names from destructuring patterns as long as there are no side effects
+      removeUnusedDestructuringNames(argList, fparamScope);
+
+      // Strip as many unreferenced args off the end of the function declaration as possible.
+      maybeRemoveUnusedTrailingParameters(argList, fparamScope);
+    } else {
+      callSiteOptimizer.optimize(fparamScope, referenced);
+    }
+  }
+
+  /**
+   * Iterate through the parameters of the function and if they are destructuring parameters, remove
+   * any unreferenced variables from inside the destructuring pattern.
+   */
+  private void removeUnusedDestructuringNames(Node argList, Scope fparamScope) {
+    List<Node> destructuringDeclarations = NodeUtil.getLhsNodesOfDeclaration(argList);
+    for (Node patternElt : Lists.reverse(destructuringDeclarations)) {
+      Node toRemove = patternElt;
+      if (patternElt.getParent().isDefaultValue()) {
+        Node defaultValueRhs = patternElt.getNext();
+        if (NodeUtil.mayHaveSideEffects(defaultValueRhs)) {
+          // Protects in the case where function f({a:b = alert('bar')} = alert('foo')){};
+          continue;
+        }
+        toRemove = patternElt.getParent();
+      }
+
+      if (toRemove.getParent().isParamList()) {
+        continue;
+      }
+
+      // Go through all elements of the object pattern and determine whether they should be
+      // removed
+      Var var = fparamScope.getVar(patternElt.getString());
+      if (!referenced.contains(var)) {
+        if (toRemove.getParent().isStringKey()) {
+          toRemove = toRemove.getParent();
+        }
+        NodeUtil.deleteNode(toRemove, compiler);
+      }
+    }
+  }
+
+  /**
+   * Strip as many unreferenced args off the end of the function declaration as possible. We start
+   * from the end of the function declaration because removing parameters from the middle of the
+   * param list could mess up the interpretation of parameters being sent over by any function
+   * calls.
+   *
+   * @param argList list of function's arguments
+   * @param fparamScope
+   */
+  private void maybeRemoveUnusedTrailingParameters(Node argList, Scope fparamScope) {
+    Node lastArg;
+    while ((lastArg = argList.getLastChild()) != null) {
+      Node toRemove = lastArg;
+      if (lastArg.isDefaultValue()) {
+        toRemove = lastArg.getFirstChild();
+        Node defaultValueSecondChild = toRemove.getNext();
+        if (NodeUtil.mayHaveSideEffects(defaultValueSecondChild)) {
+          break;
+        }
+      }
+
+      if (toRemove.isDestructuringPattern()) {
+        if (!toRemove.hasChildren()) {
+          // Remove empty destructuring patterns and their associated object literal assignment
+          // if it exists and if the right hand side does not have side effects. Note, a
+          // destructuring pattern with a "leftover" property key as in {a:{}} is not considered
+          // empty in this case!
+          NodeUtil.deleteNode(lastArg, compiler);
+          continue;
         } else {
           break;
         }
       }
-    } else {
-      callSiteOptimizer.optimize(fparamScope, referenced);
+
+      // Remove unreferenced parameters
+      Var var = fparamScope.getVar(toRemove.getString());
+      if (!referenced.contains(var)) {
+        NodeUtil.deleteNode(lastArg, compiler);
+      } else {
+        break;
+      }
     }
   }
 
@@ -932,7 +1005,11 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
               || NodeUtil.isDestructuringDeclaration(grandParent)
               || toRemove.isArrayPattern() // Array Pattern
               || parent.isObjectPattern() // Object Pattern
-              || toRemove.isClass(),
+              || toRemove.isClass()
+              || ((toRemove.isDefaultValue()
+                      && NodeUtil.getEnclosingScopeRoot(toRemove).isFunction())
+                  || ((parent.isDefaultValue())
+                      && NodeUtil.getEnclosingScopeRoot(parent).isFunction())),
           "We should only declare Vars and functions and function args and classes");
 
       if ((toRemove.isParamList() && parent.isFunction())
@@ -948,6 +1025,9 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
           fnNameNode.setString("");
         }
         // Don't remove bleeding functions.
+      } else if (toRemove.isArrayPattern() && grandParent.isParamList()) {
+        compiler.reportChangeToEnclosingScope(toRemove);
+        NodeUtil.removeChild(toRemove, nameNode);
       } else if (parent.isForIn()) {
         // foreach iterations have 3 children. Leave them alone.
       } else if (parent.isDestructuringPattern()) {

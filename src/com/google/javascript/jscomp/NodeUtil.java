@@ -3784,15 +3784,15 @@ public final class NodeUtil {
     }
   }
 
-  /**
-   * Retrieves lhs nodes declared in the current declaration.
-   */
-  static Iterable<Node> getLhsNodesOfDeclaration(Node declNode) {
+  /** Retrieves lhs nodes declared in the current declaration. */
+  static List<Node> getLhsNodesOfDeclaration(Node declNode) {
     checkArgument(
         isNameDeclaration(declNode)
             || declNode.isParamList()
             || declNode.isCatch()
-            || declNode.isDestructuringLhs(), declNode);
+            || declNode.isDestructuringLhs()
+            || declNode.isDefaultValue(),
+        declNode);
     ArrayList<Node> lhsNodes = new ArrayList<>();
     getLhsNodesHelper(declNode, lhsNodes);
     return lhsNodes;
