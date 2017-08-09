@@ -247,13 +247,7 @@ public final class ReferenceCollectingCallback
     if (t.isHoistScope()) {
       pop(blockStack);
     }
-    if (t.inGlobalScope()) {
-      // Update global scope reference lists when we are done with it.
-      compiler.updateGlobalVarReferences(referenceMap, t.getScopeRoot());
-      behavior.afterExitScope(t, compiler.getGlobalVarReferences());
-    } else {
-      behavior.afterExitScope(t, new ReferenceMapWrapper(referenceMap));
-    }
+    behavior.afterExitScope(t, new ReferenceMapWrapper(referenceMap));
   }
 
   /**
@@ -354,7 +348,7 @@ public final class ReferenceCollectingCallback
     referenceInfo.add(reference);
   }
 
-  private static class ReferenceMapWrapper implements ReferenceMap {
+  static class ReferenceMapWrapper implements ReferenceMap {
     private final Map<Var, ReferenceCollection> referenceMap;
 
     public ReferenceMapWrapper(Map<Var, ReferenceCollection> referenceMap) {
@@ -364,6 +358,10 @@ public final class ReferenceCollectingCallback
     @Override
     public ReferenceCollection getReferences(Var var) {
       return referenceMap.get(var);
+    }
+
+    Map<Var, ReferenceCollection> getRawReferenceMap() {
+      return referenceMap;
     }
   }
 

@@ -3430,7 +3430,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     private final CompilerInput synthesizedExternsInputAtEnd;
     private final Map<String, Node> injectedLibraries;
     private final Node lastInjectedLibrary;
-    private final GlobalVarReferenceMap globalRefMap;
     private final GlobalTypeInfo globalTypeInfo;
     private final boolean hasRegExpGlobalReferences;
     private final LifeCycleStage lifeCycleStage;
@@ -3467,7 +3466,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.synthesizedExternsInput = compiler.synthesizedExternsInput;
       this.synthesizedExternsInputAtEnd = compiler.synthesizedExternsInputAtEnd;
       this.injectedLibraries = compiler.injectedLibraries;
-      this.globalRefMap = compiler.globalRefMap;
       this.lastInjectedLibrary = compiler.lastInjectedLibrary;
       this.globalTypeInfo = compiler.globalTypeInfo;
       this.hasRegExpGlobalReferences = compiler.hasRegExpGlobalReferences;
@@ -3550,7 +3548,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     injectedLibraries.clear();
     injectedLibraries.putAll(compilerState.injectedLibraries);
     lastInjectedLibrary = compilerState.lastInjectedLibrary;
-    globalRefMap = compilerState.globalRefMap;
     globalTypeInfo = compilerState.globalTypeInfo;
     hasRegExpGlobalReferences = compilerState.hasRegExpGlobalReferences;
     typeValidator = compilerState.typeValidator;
