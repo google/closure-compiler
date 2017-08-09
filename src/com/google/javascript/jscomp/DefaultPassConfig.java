@@ -2216,11 +2216,6 @@ public final class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(AbstractCompiler compiler) {
       return new ConstCheck(compiler);
     }
-
-    @Override
-    public FeatureSet featureSet() {
-      return ES8_MODULES;
-    }
   };
 
   /** Checks that the arguments are constants */
