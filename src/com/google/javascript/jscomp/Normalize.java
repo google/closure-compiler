@@ -107,6 +107,7 @@ class Normalize implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    NodeTraversal.traverseEs6(compiler, root, new RemoveEmptyClassMembers(compiler));
     NodeTraversal.traverseRootsEs6(
         compiler, new NormalizeStatements(compiler, assertOnChange), externs, root);
     removeDuplicateDeclarations(externs, root);
@@ -125,6 +126,22 @@ class Normalize implements CompilerPass {
 
     if (!compiler.getLifeCycleStage().isNormalized()) {
       compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
+    }
+  }
+
+  private static class RemoveEmptyClassMembers extends AbstractPostOrderCallback {
+    private final AbstractCompiler compiler;
+
+    RemoveEmptyClassMembers(AbstractCompiler compiler) {
+      this.compiler = compiler;
+    }
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isEmpty() && parent.isClassMembers()) {
+        compiler.reportChangeToEnclosingScope(n);
+        n.detach();
+      }
     }
   }
 

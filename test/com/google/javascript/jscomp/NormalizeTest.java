@@ -175,6 +175,20 @@ public final class NormalizeTest extends CompilerTestCase {
             "alert(a);"));
   }
 
+  public void testRemoveEmptiesFromClass() {
+    test(
+        LINE_JOINER.join(
+            "class Foo {",
+            "  m1() {};",
+            "  m2() {};",
+            "}"),
+        LINE_JOINER.join(
+            "class Foo {",
+            "  m1() {}",
+            "  m2() {}",
+            "}"));
+  }
+
   public void testClassInForLoop() {
     testSame("for (class a {};;) { break; }");
   }
