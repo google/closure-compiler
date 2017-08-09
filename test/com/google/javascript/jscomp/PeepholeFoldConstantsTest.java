@@ -564,6 +564,12 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
     foldSame("foo() && true || bar()");
   }
 
+  public void testFoldLogicalOp2() {
+    fold("x = function(){} && x", "x = x");
+    fold("x = true && function(){}", "x = function(){}");
+    fold("x = [(function(){alert(x)})()] && x", "x = ([(function(){alert(x)})()],x)");
+  }
+
   public void testFoldBitwiseOp() {
     fold("x = 1 & 1", "x = 1");
     fold("x = 1 & 2", "x = 0");
