@@ -1385,6 +1385,11 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.evaluatesToLocalValue(getNode("o.valueOf()")));
 
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("delete a.b")));
+
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("`hello`")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("`hello ${name}`")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("`${'name'}`")));
+
   }
 
   public void testLocalValue2() {

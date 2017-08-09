@@ -2369,4 +2369,24 @@ public final class NameAnalyzerTest extends CompilerTestCase {
 
     testSame("function g() {} {let a = g(); f(a)}");
   }
+
+  public void testTemplateLit() {
+    test("let a = `hello`", "");
+    test("var name = 'foo'; let a = `hello ${name}`", "");
+    test(
+        LINE_JOINER.join(
+            "function Base() {}",
+            "Base.prototype.foo =  `hello`;"
+        ),
+      "");
+
+    test(
+        LINE_JOINER.join(
+            "var bar = 'foo';",
+            "function Base() {}",
+            "Base.prototype.foo =  `foo ${bar}`;"
+        ),
+        "");
+
+  }
 }

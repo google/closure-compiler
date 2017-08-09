@@ -4480,9 +4480,6 @@ public final class NodeUtil {
       case HOOK:
         return evaluatesToLocalValue(value.getSecondChild(), locals)
             && evaluatesToLocalValue(value.getLastChild(), locals);
-      case INC:
-      case DEC:
-        return true;
       case THIS:
         return locals.apply(value);
       case NAME:
@@ -4497,6 +4494,11 @@ public final class NodeUtil {
             || locals.apply(value);
       case NEW:
         return newHasLocalResult(value) || locals.apply(value);
+      case DELPROP:
+      case IN:
+        // TODO(johnlenz): should IN operator be included in #isSimpleOperator?
+      case INC:
+      case DEC:
       case CLASS:
       case FUNCTION:
       case REGEXP:
@@ -4526,9 +4528,14 @@ public final class NodeUtil {
           }
         }
         return true;
-      case DELPROP:
-      case IN:
-        // TODO(johnlenz): should IN operator be included in #isSimpleOperator?
+      case TEMPLATELIT:
+        for (Node child : value.children()) {
+          if (child.isTemplateLitSub()) {
+            if (!evaluatesToLocalValue(child.getFirstChild(), locals)) {
+              return false;
+            }
+          }
+        }
         return true;
       default:
         // Other op force a local value:

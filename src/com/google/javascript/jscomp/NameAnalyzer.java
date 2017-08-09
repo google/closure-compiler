@@ -1628,7 +1628,7 @@ final class NameAnalyzer implements CompilerPass {
     }
 
     // Check whether this is an ES6 class
-    if (parent.isClass()) {
+    if (parent.isClass() && n == parent.getFirstChild()) {
       checkState(n.isName());
       NameInformation nameInfo = new NameInformation(n.getString());
       if (n.getNext().isName()) { // class it extends from
