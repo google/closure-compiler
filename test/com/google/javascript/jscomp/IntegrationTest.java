@@ -4472,6 +4472,27 @@ public final class IntegrationTest extends IntegrationTestCase {
         "alert(4);");
   }
 
+  public void testRUCPEmptyNodesInClass() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    options.setRemoveUnusedClassProperties(true);
+    externs = DEFAULT_EXTERNS;
+    test(
+        options,
+        LINE_JOINER.join(
+            "const MyClass = class {",
+            "  a() {};",
+            "  b() {return this.a();}",
+            "}",
+            "var p = MyClass.a();"),
+        LINE_JOINER.join(
+            "const MyClass = class {",
+            "  a() {}",
+            "}",
+            "var p = MyClass.a();"));
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   protected CompilerOptions createCompilerOptions() {
