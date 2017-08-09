@@ -413,10 +413,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             warningsGuard);
   }
 
-  /**
-   * When the CompilerOptions and its WarningsGuard overlap, reconcile
-   * any discrepencies.
-   */
+  /** When the CompilerOptions and its WarningsGuard overlap, reconcile any discrepancies. */
   protected void reconcileOptionsWithGuards() {
     // DiagnosticGroups override the plain checkTypes option.
     if (options.enables(DiagnosticGroups.CHECK_TYPES)) {
@@ -483,22 +480,22 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  /**
-   * Initializes the instance state needed for a compile job.
-   */
-  public <T1 extends SourceFile, T2 extends SourceFile> void init(
-      List<T1> externs,
-      List<T2> inputs,
-      CompilerOptions options) {
+  /** Initializes the instance state needed for a compile job. */
+  public final <T1 extends SourceFile, T2 extends SourceFile> void init(
+      List<T1> externs, List<T2> sources, CompilerOptions options) {
     JSModule module = new JSModule(SINGLETON_MODULE_NAME);
-    for (SourceFile input : inputs) {
-      module.add(input);
+    for (SourceFile source : sources) {
+      if (this.getPersistentInputStore() != null) {
+        module.add(this.getPersistentInputStore().getCachedCompilerInput(source));
+      } else {
+        module.add(new CompilerInput(source));
+      }
     }
 
     List<JSModule> modules = new ArrayList<>(1);
     modules.add(module);
     initModules(externs, modules, options);
-    addFilesToSourceMap(inputs);
+    addFilesToSourceMap(sources);
   }
 
   /**
@@ -512,7 +509,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     checkFirstModule(modules);
     fillEmptyModules(modules);
 
-    this.externs = makeCompilerInput(externs, true);
+    this.externs = makeExternInputs(externs);
 
     // Generate the module graph, and report any errors in the module
     // specification as errors.
@@ -561,11 +558,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
   }
 
-  private <T extends SourceFile> List<CompilerInput> makeCompilerInput(
-      List<T> files, boolean isExtern) {
-    List<CompilerInput> inputs = new ArrayList<>(files.size());
-    for (T file : files) {
-      inputs.add(new CompilerInput(file, isExtern));
+  private <T extends SourceFile> List<CompilerInput> makeExternInputs(List<T> externSources) {
+    List<CompilerInput> inputs = new ArrayList<>(externSources.size());
+    for (SourceFile file : externSources) {
+      inputs.add(new CompilerInput(file, /* extern= */ true));
     }
     return inputs;
   }
@@ -3590,6 +3586,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (compilerState.warnings != null) {
       for (JSError warning : compilerState.warnings) {
         report(CheckLevel.WARNING, warning);
+      }
+    }
+  }
+
+  public void resetCompilerInput() {
+    for (JSModule module : this.modules) {
+      for (CompilerInput input : module.getInputs()) {
+        input.reset();
       }
     }
   }

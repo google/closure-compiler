@@ -1419,4 +1419,23 @@ public final class CompilerTest extends TestCase {
     in.close();
     return obj;
   }
+
+  public void testCompilerInputFromPersistentStore() {
+    List<SourceFile> sources =
+        ImmutableList.of(
+            SourceFile.fromFile("path/to/file.js"), SourceFile.fromFile("path/to/file2.js"));
+    final CompilerInput input = new CompilerInput(sources.get(0));
+    PersistentInputStore store =
+        new PersistentInputStore() {
+          @Override
+          public CompilerInput getCachedCompilerInput(SourceFile source) {
+            return input;
+          }
+        };
+    CompilerOptions options = new CompilerOptions();
+    Compiler compiler = new Compiler();
+    compiler.setPersistentInputStore(store);
+    compiler.init(ImmutableList.<SourceFile>of(), sources, options);
+    assertThat(compiler.getModules().get(0).getInputs()).contains(input);
+  }
 }

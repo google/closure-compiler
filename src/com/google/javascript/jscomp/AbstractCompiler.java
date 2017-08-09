@@ -631,4 +631,15 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   Object getAnnotation(String key) {
     return annotationMap.get(key);
   }
+
+  private @Nullable PersistentInputStore persistentInputStore;
+
+  void setPersistentInputStore(PersistentInputStore persistentInputStore) {
+    this.persistentInputStore = persistentInputStore;
+  }
+
+  @Nullable
+  PersistentInputStore getPersistentInputStore() {
+    return persistentInputStore;
+  }
 }
