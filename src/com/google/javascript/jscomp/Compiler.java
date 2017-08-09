@@ -3585,6 +3585,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         report(CheckLevel.WARNING, warning);
       }
     }
+    if (tracker != null) {
+      tracker.updateAfterDeserialize(jsRoot);
+    }
   }
 
   public void resetCompilerInput() {
