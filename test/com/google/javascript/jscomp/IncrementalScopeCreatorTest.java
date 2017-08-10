@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Predicate;
@@ -71,9 +72,6 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     Compiler compiler = initCompiler(externs, srcs);
     ScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
 
-
-    checkState(!compiler.hasErrors());
-
     Node root = compiler.getRoot();
     Node fnFoo = findDecl(root, "foo");
     checkState(fnFoo.isFunction());
@@ -126,6 +124,75 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     IncrementalScopeCreator.getInstance(compiler).thaw();
   }
 
+  public void testPartialGlobalScopeRefreshWithMove() throws Exception {
+    // This test verifies that when a variable declarations moves between script, the
+    // original script correctly "forgets" that the moved variables was associated with
+    // it.  If this were not the case, invalidating the original script would
+    // undeclare a variable and readding the variables when rescanning the script would not
+    // readd it.
+
+    List<SourceFile> externs = ImmutableList.of(
+        SourceFile.fromCode("externs.js", "var symbol;"));
+    List<SourceFile> srcs = ImmutableList.of(
+        SourceFile.fromCode("testcode1.js", "var a; var b;"),
+        SourceFile.fromCode("testcode2.js", "var x; var y;"));
+    Compiler compiler = initCompiler(externs, srcs);
+    IncrementalScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
+
+    Node root = compiler.getRoot();
+
+    Scope globalScope = creator.createScope(root, null);
+
+    assertTrue(globalScope.isDeclared("a", false));
+    assertTrue(globalScope.isDeclared("b", false));
+    assertTrue(globalScope.isDeclared("x", false));
+    assertTrue(globalScope.isDeclared("y", false));
+    assertFalse(globalScope.isDeclared("nonexistant", false));
+
+    Node script1 = checkNotNull(NodeUtil.getEnclosingScript(findDecl(root, "a")));
+    Node script2 = checkNotNull(NodeUtil.getEnclosingScript(findDecl(root, "x")));
+
+
+    Node varB = checkNotNull(findDecl(root, "b"));
+
+
+
+    // Move B to from script1 to script2
+    varB.detach();
+    script2.addChildToBack(varB);
+
+    compiler.reportChangeToChangeScope(script1);
+    compiler.reportChangeToChangeScope(script2);
+
+    // Allow the scopes to update by "thaw" and "freeze" again.
+    creator.thaw();
+    creator.freeze();
+
+    globalScope = creator.createScope(root, null);
+
+    assertTrue(globalScope.isDeclared("a", false));
+    assertTrue(globalScope.isDeclared("b", false));
+    assertTrue(globalScope.isDeclared("x", false));
+    assertTrue(globalScope.isDeclared("y", false));
+    assertFalse(globalScope.isDeclared("nonexistant", false));
+
+    compiler.reportChangeToChangeScope(script1); // invalidate the original scope.
+
+    // Allow the scopes to update by "thaw" and "freeze" again.
+    creator.thaw();
+    creator.freeze();
+
+    globalScope = creator.createScope(root, null);
+
+    assertTrue(globalScope.isDeclared("a", false));
+    assertTrue(globalScope.isDeclared("b", false));
+    assertTrue(globalScope.isDeclared("x", false));
+    assertTrue(globalScope.isDeclared("y", false));
+    assertFalse(globalScope.isDeclared("nonexistant", false));
+
+    creator.thaw();
+  }
+
   public void testRefreshedGlobalScopeWithRedeclaration() throws Exception {
 
     List<SourceFile> externs = ImmutableList.of(
@@ -134,9 +201,8 @@ public final class IncrementalScopeCreatorTest extends TestCase {
         SourceFile.fromCode("testcode1.js", "var a; var b;"),
         SourceFile.fromCode("testcode2.js", "var a;"));
     Compiler compiler = initCompiler(externs, srcs);
-    ScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
 
-    checkState(!compiler.hasErrors());
+    ScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
 
     Node root = compiler.getRoot();
 
@@ -172,8 +238,6 @@ public final class IncrementalScopeCreatorTest extends TestCase {
         SourceFile.fromCode("testcode2.js", "var x;"));
     Compiler compiler = initCompiler(externs, srcs);
     ScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
-
-    checkState(!compiler.hasErrors());
 
     Node root = compiler.getRoot();
     Node fnFoo = findDecl(root, "foo");
@@ -249,6 +313,7 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     CompilerOptions options = new CompilerOptions();
     compiler.init(externs, srcs, options);
     compiler.parseInputs();
+    checkState(!compiler.hasErrors());
     return compiler;
   }
 }

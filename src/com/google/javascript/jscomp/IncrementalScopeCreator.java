@@ -267,7 +267,7 @@ class IncrementalScopeCreator implements ScopeCreator {
     /** undeclare all vars in the invalidated scripts */
     void undeclareVarsForInvalidatedScripts() {
       for (Node script : scriptsToUpdate) {
-        for (Var var : scriptToVarMap.get(script)) {
+        for (Var var : scriptToVarMap.removeAll(script)) {
           super.undeclareInteral(var);
         }
       }
