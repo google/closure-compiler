@@ -2631,7 +2631,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
-  void reportChangeToEnclosingScope(Node n) {
+  public void reportChangeToEnclosingScope(Node n) {
     recordChange(getChangeScopeForNode(n));
     notifyChangeHandlers();
   }

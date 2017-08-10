@@ -210,13 +210,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * Passes that make modifications in a scope that is different than the Compiler.currentScope use
    * this (eg, InlineVariables and many others)
    */
-  abstract void reportChangeToEnclosingScope(Node n);
+  public abstract void reportChangeToEnclosingScope(Node n);
 
   /**
    * Mark modifications in a scope that is different than the Compiler.currentScope use this (eg,
    * InlineVariables and many others)
    */
-  abstract void reportChangeToChangeScope(Node changeScopeRoot);
+  public abstract void reportChangeToChangeScope(Node changeScopeRoot);
 
   /**
    * Mark a specific function node as known to be deleted. Is part of having accurate change
