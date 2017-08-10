@@ -312,6 +312,30 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     test("function f([x] = [foo()]) {}; f();", "function f([] = [foo()]) {}; f();");
   }
 
+  public void testRestParams() {
+    test(
+        "function foo(...args) {/**rest param unused*/}; foo();",
+        "function foo(       ) {/**rest param unused*/}; foo();");
+
+    testSame("function foo(a, ...args) { args[0]; }; foo();");
+
+    // Rest param in pattern
+    testSame(
+        LINE_JOINER.join(
+            "function countArgs(x, ...{length}) {",
+            "  return length;",
+            "}",
+          "alert(countArgs(1, 1, 1, 1, 1));"));
+
+    test(
+        " function foo([...rest]) {/**rest unused*/}; foo();",
+        " function foo() {/**rest unused*/}; foo();");
+
+    test(
+        " function foo([x, ...rest]) { x; }; foo();",
+        " function foo([x]) { x; }; foo();");
+  }
+
   public void testFunctionsDeadButEscaped() {
     testSame("function b(a) { a = 1; print(arguments[0]) }; b(6)");
     testSame("function b(a) { var c = 2; a = c; print(arguments[0]) }; b(6)");

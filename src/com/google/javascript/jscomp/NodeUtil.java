@@ -2763,7 +2763,6 @@ public final class NodeUtil {
       parent.replaceChild(node, IR.empty());
     } else if (parent.isObjectPattern()) {
       // Remove the name from the object pattern
-
       parent.removeChild(node);
     } else if (parent.isArrayPattern()) {
       if (node == parent.getLastChild()) {
@@ -2779,6 +2778,9 @@ public final class NodeUtil {
         // want to remove it from the AST
         removeChild(parent.getParent(), parent);
       }
+    } else if (parent.isRest()) {
+      // Rest params can only ever have one child node
+      parent.detach();
     } else if (parent.isParamList()) {
       parent.removeChild(node);
     } else if (parent.isDefaultValue()) {

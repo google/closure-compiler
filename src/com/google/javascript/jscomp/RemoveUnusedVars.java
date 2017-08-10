@@ -536,7 +536,9 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
         if (toRemove.getParent().isStringKey()) {
           toRemove = toRemove.getParent();
         }
-        NodeUtil.deleteNode(toRemove, compiler);
+        NodeUtil.markFunctionsDeleted(toRemove, compiler);
+        compiler.reportChangeToEnclosingScope(toRemove.getParent());
+        NodeUtil.removeChild(toRemove.getParent(), toRemove);
       }
     }
   }
@@ -553,30 +555,33 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
   private void maybeRemoveUnusedTrailingParameters(Node argList, Scope fparamScope) {
     Node lastArg;
     while ((lastArg = argList.getLastChild()) != null) {
-      Node toRemove = lastArg;
+      Node lValue = lastArg;
       if (lastArg.isDefaultValue()) {
-        toRemove = lastArg.getFirstChild();
-        Node defaultValueSecondChild = toRemove.getNext();
+        lValue = lastArg.getFirstChild();
+        Node defaultValueSecondChild = lValue.getNext();
         if (NodeUtil.mayHaveSideEffects(defaultValueSecondChild)) {
           break;
         }
       }
 
-      if (toRemove.isDestructuringPattern()) {
-        if (!toRemove.hasChildren()) {
+      if (lValue.isRest()) {
+          lValue = lValue.getFirstChild();
+      }
+
+      if (lValue.isDestructuringPattern()) {
+        if (lValue.hasChildren()) {
+          break;
+        } else {
           // Remove empty destructuring patterns and their associated object literal assignment
           // if it exists and if the right hand side does not have side effects. Note, a
           // destructuring pattern with a "leftover" property key as in {a:{}} is not considered
           // empty in this case!
           NodeUtil.deleteNode(lastArg, compiler);
           continue;
-        } else {
-          break;
         }
       }
 
-      // Remove unreferenced parameters
-      Var var = fparamScope.getVar(toRemove.getString());
+      Var var = fparamScope.getVar(lValue.getString());
       if (!referenced.contains(var)) {
         NodeUtil.deleteNode(lastArg, compiler);
       } else {
@@ -1006,14 +1011,14 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
               || toRemove.isArrayPattern() // Array Pattern
               || parent.isObjectPattern() // Object Pattern
               || toRemove.isClass()
-              || ((toRemove.isDefaultValue()
+              || (toRemove.isDefaultValue()
                       && NodeUtil.getEnclosingScopeRoot(toRemove).isFunction())
-                  || ((parent.isDefaultValue())
-                      && NodeUtil.getEnclosingScopeRoot(parent).isFunction())),
+              || (toRemove.isRest() && NodeUtil.getEnclosingScopeRoot(toRemove).isFunction()),
           "We should only declare Vars and functions and function args and classes");
 
       if ((toRemove.isParamList() && parent.isFunction())
-          || (toRemove.isDefaultValue() && NodeUtil.getEnclosingScopeRoot(parent).isFunction())) {
+          || (toRemove.isDefaultValue() && NodeUtil.getEnclosingScopeRoot(toRemove).isFunction())
+          || (toRemove.isRest() && NodeUtil.getEnclosingScopeRoot(toRemove).isFunction())) {
         // Don't remove function arguments here. That's a special case
         // that's taken care of in removeUnreferencedFunctionArgs.
       } else if (toRemove.isComputedProp()) {
