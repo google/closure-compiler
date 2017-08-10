@@ -1482,4 +1482,18 @@ public final class InlineVariablesTest extends CompilerTestCase {
             "var [a, b, c] = [1, 2, 3]",
             "a; a;"));
   }
+
+  public void testFunctionInlinedAcrossScript() {
+    String[] srcs = {
+      "function f() {}",
+      "use(f);"
+    };
+
+    String[] expected = {
+      "",
+      "use(function f() {});"
+    };
+
+    test(srcs, expected);
+  }
 }
