@@ -2588,6 +2588,11 @@ public final class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(final AbstractCompiler compiler) {
       return new NameAnalyzer(compiler, true, options.reportPath);
     }
+
+    @Override
+    public FeatureSet featureSet() {
+      return ES8_MODULES;
+    }
   };
 
   private final PassFactory smartNamePass = new PassFactory("smartNamePass", true) {
@@ -2595,12 +2600,22 @@ public final class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(final AbstractCompiler compiler) {
       return new NameAnalyzer(compiler, true, options.reportPath);
     }
+
+    @Override
+    public FeatureSet featureSet() {
+      return ES8_MODULES;
+    }
   };
 
   private final PassFactory smartNamePass2 = new PassFactory("smartNamePass", true) {
     @Override
     protected CompilerPass create(final AbstractCompiler compiler) {
       return new NameAnalyzer(compiler, true, null);
+    }
+
+    @Override
+    public FeatureSet featureSet() {
+      return ES8_MODULES;
     }
   };
 
