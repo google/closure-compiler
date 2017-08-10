@@ -3518,8 +3518,19 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     List<JSModule> newModules = modules;
 
+    class CompilerObjectInputStream extends ObjectInputStream implements HasCompiler {
+      public CompilerObjectInputStream(InputStream in) throws IOException {
+        super(in);
+      }
+
+      @Override
+      public AbstractCompiler getCompiler() {
+        return Compiler.this;
+      }
+    }
+
     // Do not close the input stream, caller is responsible for closing it.
-    final ObjectInputStream objectInputStream = new ObjectInputStream(inputStream);
+    final ObjectInputStream objectInputStream = new CompilerObjectInputStream(inputStream);
     CompilerState compilerState = runInCompilerThread(new Callable<CompilerState>() {
       @Override
       public CompilerState call() throws Exception {

@@ -37,6 +37,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.StringWriter;
@@ -1034,7 +1035,7 @@ public final class CompilerTest extends TestCase {
     CompilerInput input = new CompilerInput(SourceFile.fromCode(
           "tmp", "function foo() {}"));
     Node ast = input.getAstRoot(compiler);
-    CompilerInput newInput = (CompilerInput) deserialize(serialize(input));
+    CompilerInput newInput = (CompilerInput) deserialize(compiler, serialize(input));
     assertTrue(ast.isEquivalentTo(newInput.getAstRoot(compiler)));
   }
 
@@ -1411,10 +1412,21 @@ public final class CompilerTest extends TestCase {
     return baos.toByteArray();
   }
 
-  private static Object deserialize(byte[] bytes)
+  private static Object deserialize(final Compiler compiler, byte[] bytes)
       throws IOException, ClassNotFoundException {
-    ObjectInputStream in =
-        new ObjectInputStream(new ByteArrayInputStream(bytes));
+
+    class CompilerObjectInputStream extends ObjectInputStream implements HasCompiler {
+      public CompilerObjectInputStream(InputStream in) throws IOException {
+        super(in);
+      }
+
+      @Override
+      public AbstractCompiler getCompiler() {
+        return compiler;
+      }
+    }
+
+    ObjectInputStream in = new CompilerObjectInputStream(new ByteArrayInputStream(bytes));
     Object obj = in.readObject();
     in.close();
     return obj;
