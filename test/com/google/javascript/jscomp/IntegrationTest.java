@@ -2459,13 +2459,11 @@ public final class IntegrationTest extends IntegrationTestCase {
             "    var x = 1;",
             "  }",
             "})();"),
-        LINE_JOINER.join(
-            "{",
-            "  var x$jscomp$inline_0;",
-            "  try {",
-            "    x$jscomp$inline_0 = 2;",
-            "  } catch (e) {",
-            "    x$jscomp$inline_0 = 1;",
+      LINE_JOINER.join(
+            "{ try {",
+            "    x$jscomp$inline_0=2",
+            "  } catch(e) {",
+            "    var x$jscomp$inline_0=1",
             "  }",
             "}"));
   }
@@ -2475,7 +2473,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
 
-    test(
+    testSame(
         options,
         LINE_JOINER.join(
             "function foo() {",
@@ -2488,16 +2486,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  catch(err) {",
             "    var msg;",
             "  }",
-            "}"),
-        LINE_JOINER.join(
-            "function foo() {",
-            "  var msg;",
-            "}",
-            "function bar(){",
-            "  var msg;",
-            "  msg;",
-            "  try{}",
-            "  catch(err){}",
             "}"));
   }
 

@@ -537,7 +537,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(stripCode);
     }
 
-    passes.add(hoistVars);
     passes.add(normalize);
 
     // Create extern exports after the normalize because externExports depends on unique names.
@@ -2917,19 +2916,6 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected FeatureSet featureSet() {
           return FeatureSet.latest();
-        }
-      };
-
-  private final PassFactory hoistVars =
-      new PassFactory("hoistVars", true) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new HoistVarsOutOfBlocks(compiler);
-        }
-
-        @Override
-        protected FeatureSet featureSet() {
-          return ES8;
         }
       };
 
