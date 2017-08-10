@@ -2783,11 +2783,6 @@ public final class NodeUtil {
       parent.detach();
     } else if (parent.isParamList()) {
       parent.removeChild(node);
-    } else if (parent.isDefaultValue()) {
-      parent.removeChild(node);
-      if (!parent.hasChildren()) {
-        removeChild(parent.getParent(), parent);
-      }
     } else {
       throw new IllegalStateException("Invalid attempt to remove node: " + node + " of " + parent);
     }
