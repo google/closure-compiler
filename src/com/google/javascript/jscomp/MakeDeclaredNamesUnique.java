@@ -37,6 +37,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  *  Find all Functions, VARs, and Exception names and make them
@@ -97,7 +98,8 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
       checkState(t.inGlobalScope());
       renamer = rootRenamer;
     } else {
-      renamer = nameStack.peek().createForChildScope(!NodeUtil.createsBlockScope(declarationRoot));
+      renamer = nameStack.peek().createForChildScope(
+          t.getScopeRoot(), !NodeUtil.createsBlockScope(declarationRoot));
     }
 
     if (!declarationRoot.isFunction()) {
@@ -124,7 +126,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
       case FUNCTION: {
         // Add recursive function name, if needed.
         // NOTE: "enterScope" is called after we need to pick up this name.
-        Renamer renamer = nameStack.peek().createForChildScope(false);
+        Renamer renamer = nameStack.peek().createForChildScope(n, false);
 
         // If needed, add the function recursive name.
         String name = n.getFirstChild().getString();
@@ -137,7 +139,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
       }
 
       case PARAM_LIST: {
-        Renamer renamer = nameStack.peek().createForChildScope(true);
+        Renamer renamer = nameStack.peek().createForChildScope(n, true);
 
         // Add the function parameters
         for (Node lhs : NodeUtil.getLhsNodesOfDeclaration(n)) {
@@ -281,10 +283,8 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
      */
     boolean stripConstIfReplaced();
 
-    /**
-     * @return A Renamer for a scope within the scope of the current Renamer.
-     */
-    Renamer createForChildScope(boolean hoisted);
+    /** @return A Renamer for a scope within the scope of the current Renamer. */
+    Renamer createForChildScope(Node scopeRoot, boolean hoisted);
 
     /**
      * @return The closest hoisting target for var and function declarations.
@@ -466,6 +466,9 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
    * @see Normalize
    */
   static class ContextualRenamer implements Renamer {
+    @Nullable
+    private final Node scopeRoot;
+
     // This multiset is shared between this ContextualRenamer and its parent (and its parent's
     // parent, etc.) because it tracks counts of variables across the entire JS program.
     private final Multiset<String> nameUsage;
@@ -482,6 +485,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     @Override
     public String toString() {
       return toStringHelper(this)
+          .add("scopeRoot", scopeRoot)
           .add("nameUsage", nameUsage)
           .add("declarations", declarations)
           .add("global", global)
@@ -489,17 +493,17 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     }
 
     ContextualRenamer() {
+      scopeRoot = null;
       global = true;
       nameUsage = HashMultiset.create();
 
       hoistRenamer = this;
     }
 
-    /**
-     * Constructor for child scopes.
-     */
+    /** Constructor for child scopes. */
     private ContextualRenamer(
-        Multiset<String> nameUsage, boolean hoistingTargetScope, Renamer parent) {
+        Node scopeRoot, Multiset<String> nameUsage, boolean hoistingTargetScope, Renamer parent) {
+      this.scopeRoot = scopeRoot;
       this.global = false;
       this.nameUsage = nameUsage;
 
@@ -510,12 +514,10 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
       }
     }
 
-    /**
-     * Create a ContextualRenamer
-     */
+    /** Create a ContextualRenamer */
     @Override
-    public Renamer createForChildScope(boolean hoistingTargetScope) {
-      return new ContextualRenamer(nameUsage, hoistingTargetScope, this);
+    public Renamer createForChildScope(Node scopeRoot, boolean hoistingTargetScope) {
+      return new ContextualRenamer(scopeRoot, nameUsage, hoistingTargetScope, this);
     }
 
     /**
@@ -656,7 +658,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     }
 
     @Override
-    public Renamer createForChildScope(boolean hoistingTargetScope) {
+    public Renamer createForChildScope(Node scopeRoot, boolean hoistingTargetScope) {
       return new InlineRenamer(
           convention, uniqueIdSupplier, idPrefix, removeConstness, hoistingTargetScope, this);
     }
@@ -691,7 +693,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     }
 
     @Override
-    public Renamer createForChildScope(boolean hoisted) {
+    public Renamer createForChildScope(Node scopeRoot, boolean hoisted) {
       return new InlineRenamer(convention, uniqueIdSupplier, idPrefix, false, hoisted, this);
     }
   }
@@ -725,8 +727,9 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     }
 
     @Override
-    public Renamer createForChildScope(boolean hoistingTargetScope) {
-      return new WhitelistedRenamer(delegate.createForChildScope(hoistingTargetScope), whitelist);
+    public Renamer createForChildScope(Node scopeRoot, boolean hoistingTargetScope) {
+      return new WhitelistedRenamer(
+          delegate.createForChildScope(scopeRoot, hoistingTargetScope), whitelist);
     }
 
     @Override
