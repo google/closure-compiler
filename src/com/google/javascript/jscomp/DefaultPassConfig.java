@@ -3078,6 +3078,11 @@ public final class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(AbstractCompiler compiler) {
       return new ConvertToDottedProperties(compiler);
     }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8_MODULES;
+    }
   };
 
   /** Checks that all variables are defined. */
