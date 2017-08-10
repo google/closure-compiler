@@ -485,6 +485,8 @@ public final class JSTypes implements Serializable {
         return getArrayInstance();
       case OBJECT_TYPE:
         return getTopObject();
+      case EMPTY_OBJECT_LITERAL_TYPE:
+        return getEmptyObjectLiteral();
       case OBJECT_FUNCTION_TYPE:
         return fromFunctionType(getObjectType().getConstructorFunction());
       case TRUTHY:
@@ -502,6 +504,10 @@ public final class JSTypes implements Serializable {
         return getTopObject().getNominalTypeIfSingletonObj().getPrototypePropertyOfCtor();
       case GLOBAL_THIS:
         return getGlobalThis();
+      case I_ITERABLE_RESULT_TYPE:
+        return getIIterableResultInstance(UNKNOWN);
+      case ITERATOR_TYPE:
+        return getIteratorInstance(UNKNOWN);
       default:
         throw new RuntimeException("Native type " + typeId.name() + " not found");
     }
