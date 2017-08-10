@@ -422,7 +422,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   public void testUnusedImport() {
     enableUnusedLocalAssignmentCheck = true;
-    // TODO(heeba): This test should give an UNUSED_LOCAL_ASSIGNMENT error for x.
+    // TODO(b/64566470): This test should give an UNUSED_LOCAL_ASSIGNMENT error for x.
     testSame("import x from 'Foo';");
   }
 
