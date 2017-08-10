@@ -2696,7 +2696,13 @@ public final class DefaultPassConfig extends PassConfig {
             preserveAnonymousFunctionNames,
             modifyCallSites);
       }
+
+      @Override
+      public FeatureSet featureSet() {
+        return ES8_MODULES;
+      }
     };
+
   }
 
   /**
