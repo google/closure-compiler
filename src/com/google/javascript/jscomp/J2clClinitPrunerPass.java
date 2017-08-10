@@ -35,7 +35,7 @@ import javax.annotation.Nullable;
 public class J2clClinitPrunerPass implements CompilerPass {
 
   private final AbstractCompiler compiler;
-  private boolean madeChange = false;
+  private boolean newEmptyClinitMethod = false;
   private final List<Node> changedScopeNodes;
 
   J2clClinitPrunerPass(AbstractCompiler compiler, List<Node> changedScopeNodes) {
@@ -62,8 +62,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
     NodeTraversal.traverseEs6ScopeRoots(
         compiler, root, changedScopeNodes, new EmptyClinitPruner(), false);
 
-    if (madeChange) {
-      // This invocation is ~70% of ALL the cost of j2clOptBundlePass :(
+    if (newEmptyClinitMethod) {
       new PureFunctionIdentifier.Driver(compiler, null).process(externs, root);
     }
   }
@@ -137,7 +136,6 @@ public class J2clClinitPrunerPass implements CompilerPass {
       // Replacing with undefined is a simple way of removing without introducing invalid AST.
       parent.replaceChild(node, NodeUtil.newUndefinedNode(node));
       compiler.reportChangeToEnclosingScope(parent);
-      madeChange = true;
     }
 
     private boolean isNewControlBranch(Node n) {
@@ -190,12 +188,11 @@ public class J2clClinitPrunerPass implements CompilerPass {
         return;
       }
 
-      // Check that the clinit is safe to prune.
+      // Check that the clinit call is safe to prune.
       Node staticFnNode = var.getInitialValue();
       if (callsClinit(staticFnNode, clinitName) && hasSafeArguments(t, callOrNewNode)) {
         parent.removeChild(node);
         compiler.reportChangeToEnclosingScope(parent);
-        madeChange = true;
       }
     }
 
@@ -302,7 +299,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
       body.removeChild(firstExpr);
       NodeUtil.markFunctionsDeleted(firstExpr, compiler);
       compiler.reportChangeToEnclosingScope(body);
-      madeChange = true;
+      newEmptyClinitMethod = true;
     }
 
     private boolean isAssignToEmptyFn(Node node, String enclosingFnName) {
