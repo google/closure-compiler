@@ -3028,6 +3028,25 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "{ var b$jscomp$inline_1=[7,8];3+b$jscomp$inline_1[1] }");
   }
 
+  //TODO(bellashim): Get the following tests to pass
+  public void disabled_testNestedDefaultParam() {
+    test(
+        LINE_JOINER.join(
+            "function foo(a = b = 1) {",
+            "  return a;",
+            "}",
+            "foo();"),
+        "1");
+
+    test(
+        LINE_JOINER.join(
+            "function foo(c = {a:(b = 1)}}) {",
+            "  return c;",
+            "}",
+            "foo();"),
+        "{a: 1}");
+  }
+
   public void testSpreadCall() {
     testSame(
         LINE_JOINER.join(
