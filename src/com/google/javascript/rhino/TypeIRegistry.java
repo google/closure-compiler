@@ -86,9 +86,13 @@ public interface TypeIRegistry extends Serializable {
   String createSetterPropName(String originalPropName);
 
   /**
-   * Returns the type represented by typeName.
-   * If you pass Foo to this method, you get the Foo instance.
-   * This is in contrast to TypeIEnv#getNamespaceType, where you'd get the Foo constructor.
+   * Returns the type represented by typeName or null if not found.
+   *
+   * If you pass Foo to this method, and Foo can be an instance or a constructor,
+   * you get the Foo instance, in contrast to TypeIEnv#getNamespaceType,
+   * where you'd get the Foo constructor.
+   *
+   * If Foo is not a nominal type, returns the namespace type.
    */
   <T extends TypeI> T getType(String typeName);
 

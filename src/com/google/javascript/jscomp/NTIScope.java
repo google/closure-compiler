@@ -674,9 +674,18 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     return ns;
   }
 
-  public JSType getInstanceType(String typeName) {
+  /**
+   * Given the name of a namespace that is a nominal type, returns an instance of that type.
+   * Given the name of another namespace, returns the namespace type.
+   */
+  public JSType getType(String typeName) {
     Namespace ns = getNamespaceAfterFreezing(typeName);
-    return ns instanceof RawNominalType ? ((RawNominalType) ns).getInstanceAsJSType() : null;
+    if (ns == null) {
+      return null;
+    }
+    return ns instanceof RawNominalType
+        ? ((RawNominalType) ns).getInstanceAsJSType()
+        : ns.toJSType();
   }
 
   @Override
@@ -691,7 +700,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
 
   @Override
   public JSDocInfo getJsdocOfTypeDeclaration(String typeName) {
-    JSType t = getInstanceType(typeName);
+    JSType t = getType(typeName);
     if (t != null) {
       Node defSite = t.getSource();
       if (defSite != null) {

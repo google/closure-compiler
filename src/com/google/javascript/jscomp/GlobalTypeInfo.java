@@ -252,7 +252,7 @@ public class GlobalTypeInfo implements TypeIRegistry {
       case "void":
         return commonTypes.UNDEFINED;
       default:
-        return this.globalScope.getInstanceType(typeName);
+        return this.globalScope.getType(typeName);
     }
   }
 
