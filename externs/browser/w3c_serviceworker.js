@@ -611,7 +611,7 @@ FetchEvent.prototype.isReload;
 FetchEvent.prototype.targetClientId;
 
 /** @type {?string} */
-FetchEvent.prototype.reserveClientId;
+FetchEvent.prototype.reservedClientId;
 
 /**
  * @param {(Response|IThenable<Response>)} r
