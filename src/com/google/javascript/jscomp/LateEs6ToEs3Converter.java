@@ -122,11 +122,11 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
         visitStringKey(n);
         break;
       case TAGGED_TEMPLATELIT:
-        Es6TemplateLiterals.visitTaggedTemplateLiteral(t, n);
+        Es6TemplateLiterals.visitTaggedTemplateLiteral(t, n, addTypes);
         break;
       case TEMPLATELIT:
         if (!parent.isTaggedTemplateLit()) {
-          Es6TemplateLiterals.visitTemplateLiteral(t, n);
+          Es6TemplateLiterals.visitTemplateLiteral(t, n, addTypes);
         }
         break;
       default:
