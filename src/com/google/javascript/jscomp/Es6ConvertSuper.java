@@ -16,7 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
+import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
@@ -30,7 +30,7 @@ import com.google.javascript.rhino.Token;
 /**
  * Converts {@code super.method()} calls and adds constructors to any classes that lack them.
  *
- * <p>This has to run before the main {@link Es6ToEs3Converter} pass. The super() constructor calls
+ * <p>This has to run before the main {@link Es6RewriteClass} pass. The super() constructor calls
  * are not converted here, but rather in {@link Es6ConvertSuperConstructorCalls}, which runs later.
  */
 public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallback

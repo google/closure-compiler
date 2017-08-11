@@ -59,7 +59,8 @@ public class TranspilationPasses {
   }
 
   /**
-   * Adds all the late ES6 transpilation passes, which go after the Dart pass.
+   * Adds all the late ES6 transpilation passes, which go after the Dart pass
+   * and go before TypeChecking
    *
    * <p>Includes ES6 features that are best handled natively by the compiler.
    * As we convert more passes to handle these features, we will be moving the
@@ -69,9 +70,16 @@ public class TranspilationPasses {
   public static void addEs6LatePasses(List<PassFactory> passes) {
     passes.add(es6ExtractClasses);
     passes.add(es6RewriteClass);
-    passes.add(convertEs6ToEs3);
+    passes.add(earlyConvertEs6ToEs3);
+    passes.add(lateConvertEs6ToEs3);
     passes.add(rewriteBlockScopedDeclaration);
     passes.add(rewriteGenerators);
+  }
+
+  /** Adds all transpilation passes that runs after NTI */
+  public static void addEs6PassesAfterNTI(List<PassFactory> passes) {
+    // TODO(yitingwang): Add lateConvertEs6ToEs3 and rewriteGenerators here after fixing broken
+    // projects.
   }
 
   /**
@@ -252,15 +260,34 @@ public class TranspilationPasses {
   };
 
   /**
-   * Does the main ES6 to ES3 conversion.
+   * Does ES6 to ES3 conversion of Rest, Spread and Symbol.
    * There are a few other passes which run before or after this one,
    * to convert constructs which are not converted by this pass.
    */
-  static final HotSwapPassFactory convertEs6ToEs3 =
-      new HotSwapPassFactory("convertEs6", true) {
+  static final HotSwapPassFactory earlyConvertEs6ToEs3 =
+      new HotSwapPassFactory("earlyConvertEs6", true) {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
-      return new Es6ToEs3Converter(compiler);
+      return new EarlyEs6ToEs3Converter(compiler);
+    }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8;
+    }
+  };
+
+  /**
+   * Does the main ES6 to ES3 conversion.
+   * There are a few other passes which run before this one,
+   * to convert constructs which are not converted by this pass.
+   * This pass can run after NTI
+   */
+  static final HotSwapPassFactory lateConvertEs6ToEs3 =
+      new HotSwapPassFactory("lateConvertEs6", true) {
+    @Override
+    protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
+      return new LateEs6ToEs3Converter(compiler);
     }
 
     @Override
