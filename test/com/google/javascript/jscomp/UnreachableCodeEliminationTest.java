@@ -468,4 +468,63 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
 
     testSame("`hello visitor # ${i++}`");
   }
+
+  // TODO (simranarora) Make the pass handle ES6 Modules correctly.
+  public void disabled_testRemoveFromImportStatement_ES6Modules() {
+    // Error: Invalid attempt to remove: STRING ./foo 1 [length: 7] [source_file: testcode] from
+    // IMPORT 1 [length: 24] [source_file: testcode]
+     testSame("import foo from './foo'; foo('hello');");
+
+    // Error: Invalid attempt to remove: STRING ./foo 1 [length: 7] [source_file: testcode] from
+    // IMPORT 1 [length: 24] [source_file: testcode]
+    test(
+        "import foo from './foo';",
+        "import './foo';");
+
+    // Error: Invalid attempt to remove node: NAME x 1 [length: 1] [source_file: testcode] of
+    // IMPORT_SPEC 1 [length: 1] [source_file: testcode]
+    test(
+        "import {x, y} from './foo'; x('hi');",
+        "import {x} from './foo'; x('hi');");
+  }
+
+  public void disabled_testLetConstBlocks_withES6Modules() {
+    // Currently leaves the following AST for these tests
+    // SCRIPT
+    //  MODULE_BODY
+    test(
+        "export function f() {return 1; let a; } f();",
+        "export function f() {return 1;}");
+
+    test(
+        "export function f() {return 1; const a = 1; }",
+        "export function f() {return 1;}");
+
+    test(
+        "export function f() { x = 1; {let g; return x} let y}",
+        "export function f() { x = 1; {let g; return x;}} ");
+
+    test(
+        "export let x = 2;", "");
+  }
+
+  public void disabled_testRemoveUnreachableCode_withES6Modules() {
+    // Currently leaves the following AST for these tests
+    // SCRIPT
+    //  MODULE_BODY
+
+    // Switch statements
+    test(
+        "export function foo() { switch (foo) { case 1:x = 1; return; break;"
+            + "case 2:{ x = 2; return; break } default:}}",
+        "export function foo() { switch (foo) { case 1:x = 1; return;"
+        + "case 2:{ x = 2 } default:}}");
+
+    // if/else statements with returns
+    test(
+        "export function bar(){if(foo)x=1;else if(bar){return;x=2}"
+        + "else{x=3;return;x=4}return 5;x=5}",
+        "export function bar(){if(foo)x=1;else if(bar){return}"
+        + "else{x=3;return}return 5}");
+  }
 }
