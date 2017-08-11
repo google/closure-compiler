@@ -148,7 +148,7 @@ public final class GwtRunner implements EntryPoint {
     defaultFlags.externs = null;
     defaultFlags.createSourceMap = false;
     defaultFlags.tracerMode = "OFF";
-    defaultFlags.moduleResolutionMode = "LEGACY";
+    defaultFlags.moduleResolutionMode = "BROWSER";
   }
 
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
