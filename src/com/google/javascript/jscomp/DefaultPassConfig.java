@@ -1207,7 +1207,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES8_MODULES;
         }
       };
 
@@ -1447,7 +1447,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES8_MODULES;
         }
       };
 
@@ -1528,7 +1528,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES8_MODULES;
         }
       };
 
@@ -1589,7 +1589,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES8_MODULES;
         }
       };
 
@@ -1765,7 +1765,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES8_MODULES;
         }
       };
 
@@ -1842,7 +1842,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES8_MODULES;
         }
       };
 
@@ -2121,7 +2121,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES8_MODULES;
         }
       };
 
@@ -2490,17 +2490,16 @@ public final class DefaultPassConfig extends PassConfig {
   /** Inlines variables that are marked as constants. */
   private final PassFactory inlineConstants =
       new PassFactory("inlineConstants", false) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new InlineVariables(
-          compiler, InlineVariables.Mode.CONSTANTS_ONLY, true);
-    }
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new InlineVariables(compiler, InlineVariables.Mode.CONSTANTS_ONLY, true);
+        }
 
-    @Override
-    protected FeatureSet featureSet() {
-      return ES8;
-    }
-  };
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
+      };
 
   /** Use data flow analysis to remove dead branches. */
   private final PassFactory removeUnreachableCode =
