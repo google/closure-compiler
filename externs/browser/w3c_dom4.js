@@ -67,9 +67,3 @@ Element.prototype.replaceWith = function(nodes) {};
  * @see https://dom.spec.whatwg.org/#dom-childnode-replacewith
  */
 CharacterData.prototype.replaceWith = function(nodes) {};
-
-/**
- * @return {!Array<string>}
- * @see https://dom.spec.whatwg.org/#dom-element-getattributenames
- */
-Element.prototype.getAttributeNames = function() {};
