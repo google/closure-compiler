@@ -871,7 +871,7 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.variableRenaming != VariableRenamingPolicy.ALL) {
       // If we're leaving some (or all) variables with their old names,
       // then we need to undo any of the markers we added for distinguishing
-      // local variables ("$$1").
+      // local variables ("x" -> "x$jscomp$1").
       passes.add(invertContextualRenaming);
     }
 
