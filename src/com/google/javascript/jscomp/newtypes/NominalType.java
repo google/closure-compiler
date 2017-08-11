@@ -481,11 +481,8 @@ public final class NominalType implements Serializable {
 
   private boolean areTypeMapsCompatible(NominalType other) {
     checkState(this.rawType.equals(other.rawType));
-    if (this.typeMap.isEmpty()) {
-      return other.instantiationIsUnknownOrIdentity();
-    }
-    if (other.typeMap.isEmpty()) {
-      return instantiationIsUnknownOrIdentity();
+    if (this.typeMap.isEmpty() || other.typeMap.isEmpty()) {
+      return true;
     }
     for (String typeVar : this.rawType.getTypeParameters()) {
       Preconditions.checkState(this.typeMap.containsKey(typeVar),
@@ -545,22 +542,6 @@ public final class NominalType implements Serializable {
       }
     }
     return new NominalType(builder.build(), nt1.rawType);
-  }
-
-  private boolean instantiationIsUnknownOrIdentity() {
-    if (this.typeMap.isEmpty()) {
-      return true;
-    }
-    for (String typeVar : this.rawType.getTypeParameters()) {
-      Preconditions.checkState(this.typeMap.containsKey(typeVar),
-          "Type variable %s not in the domain: %s",
-          typeVar, this.typeMap.keySet());
-      JSType t = this.typeMap.get(typeVar);
-      if (!(t.isUnknown() || t.equals(JSType.fromTypeVar(getCommonTypes(), typeVar)))) {
-        return false;
-      }
-    }
-    return true;
   }
 
   private static NominalType joinTypeMaps(NominalType nt1, NominalType nt2) {

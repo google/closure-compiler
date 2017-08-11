@@ -1206,7 +1206,7 @@ public final class TypeInferenceTest extends TestCase {
         + " */\n"
         + "function f(){}\n"
         + "var result = f(10);");
-      verify("result", JSTypeNative.NO_TYPE);
+      verify("result", JSTypeNative.UNKNOWN_TYPE);
   }
 
   public void testTypeTransformationUnionType() {

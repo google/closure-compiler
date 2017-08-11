@@ -705,6 +705,7 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
   }
 
   public void testIsTemplatized() {
+    // 'Array' is raw Array, not Array<?>.
     typeCheck(LINE_JOINER.join(
         "/**",
         " * @template T := cond(isTemplatized('Array'), 'number', 'string') =:",
@@ -712,6 +713,14 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
         " */",
         "function f() { return 'asdf'; }",
         "var /** string */ s = f();"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T := cond(isTemplatized(type('Array', unknown())), 'number', 'string') =:",
+        " * @return {T}",
+        " */",
+        "function f() { return 123; }",
+        "var /** number */ n = f();"));
 
     typeCheck(LINE_JOINER.join(
         "/**",
@@ -1009,5 +1018,65 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
         "function f(x) { return any(); }",
         "var /** !Number */ x = f(1);",
         "var /** !String */ y = f('');"));
+  }
+
+  public void testCreateDomPattern() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "function TagName() {}",
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {!TagName<!Foo>} */",
+        "TagName.FOO;",
+        "/**",
+        " * @template T",
+        " * @param {string|!TagName<T>} x",
+        " * @template R := cond(isUnknown(T), 'Object', T)  =:",
+        " * @return {R}",
+        " */",
+        "function f(x) { return any(); }",
+        "var /** !Foo */ x = f(TagName.FOO);"));
+  }
+
+  public void testPromiseThen() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @interface",
+        " * @template TYPE",
+        " */",
+        "function MyThenable() {};",
+        "/**",
+        " * @param {?(function(this:THIS, TYPE): VALUE)=} opt_onFulfilled",
+        " * @param {?(function(this:THIS, *): *)=} opt_onRejected",
+        " * @param {THIS=} opt_context *",
+        " * @return {RESULT}",
+        " * @template VALUE",
+        " * @template THIS",
+        " *",
+        " * @template RESULT := type('MyPromise',",
+        " *     cond(isUnknown(VALUE), unknown(),",
+        " *       mapunion(VALUE, (V) =>",
+        " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
+        " *           templateTypeOf(V, 0),",
+        " *           cond(sub(V, 'Thenable'),",
+        " *              unknown(),",
+        " *              V)))))",
+        " *  =:",
+        " *",
+        " */",
+        "MyThenable.prototype.then = function(",
+        "    opt_onFulfilled, opt_onRejected, opt_context) {};",
+        "/**",
+        " * @constructor",
+        " * @implements {MyThenable<TYPE>}",
+        " * @template TYPE",
+        " */",
+        "function MyPromise() {}",
+        "/** @override */",
+        "MyPromise.prototype.then = function(x, y, z) { return any(); };",
+        "var x = (new MyPromise).then(null);"));
   }
 }

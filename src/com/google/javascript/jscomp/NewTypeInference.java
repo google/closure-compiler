@@ -435,6 +435,9 @@ final class NewTypeInference implements CompilerPass {
   private NTIScope currentScope;
   // This TypeEnv should be computed once per scope
   private TypeEnv typeEnvFromDeclaredTypes = null;
+  // Throws are not connected to the implicit return of the CFG. Record type environments here
+  // to use when computing the summary of a function.
+  private List<TypeEnv> exitEnvs = null;
   private GlobalTypeInfo symbolTable;
   private JSTypes commonTypes;
   // RETVAL_ID is used when we calculate the summary type of a function
@@ -777,6 +780,7 @@ final class NewTypeInference implements CompilerPass {
   private void analyzeFunction(NTIScope scope) {
     println("=== Analyzing function: ", scope.getReadableName(), " ===");
     currentScope = scope;
+    exitEnvs = new ArrayList<>();
     ControlFlowAnalysis cfa = new ControlFlowAnalysis(compiler, false, false);
     cfa.process(null, scope.getRoot());
     this.cfg = cfa.getCfg();
@@ -987,9 +991,13 @@ final class NewTypeInference implements CompilerPass {
           }
           break;
         case SWITCH:
-        case THROW:
           outEnv = analyzeExprFwd(n.getFirstChild(), inEnv).env;
           break;
+        case THROW: {
+          outEnv = analyzeExprFwd(n.getFirstChild(), inEnv).env;
+          exitEnvs.add(outEnv);
+          break;
+        }
         default:
           if (NodeUtil.isStatement(n)) {
             throw new RuntimeException("Unhandled statement type: " + n.getToken());
@@ -1118,7 +1126,7 @@ final class NewTypeInference implements CompilerPass {
     checkArgument(!fnRoot.isFromExterns());
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
     TypeEnv entryEnv = getEntryTypeEnv();
-    TypeEnv exitEnv = getInEnv(this.cfg.getImplicitReturn());
+    TypeEnv exitEnv = getExitTypeEnv();
     if (exitEnv == null) {
       // This function only exits with THROWs
       exitEnv = envPutType(new TypeEnv(), RETVAL_ID, BOTTOM);
@@ -1412,7 +1420,7 @@ final class NewTypeInference implements CompilerPass {
         String fnName = symbolTable.getFunInternalName(expr);
         JSType fnType = envGetType(inEnv, fnName);
         Preconditions.checkState(fnType != null, "Could not find type for %s", fnName);
-        TypeEnv outEnv = collectTypesForFreeVarsFwd(expr, inEnv);
+        TypeEnv outEnv = collectTypesForEscapedVarsFwd(expr, inEnv);
         resultPair = new EnvTypePair(outEnv, fnType);
         break;
       }
@@ -2170,7 +2178,7 @@ final class NewTypeInference implements CompilerPass {
         // Local function definitions will be type-checked more
         // exactly using their summaries, and don't need deferred checks
         if (this.currentScope.isLocalFunDef(calleeName)) {
-          tmpEnv = collectTypesForFreeVarsFwd(callee, tmpEnv);
+          tmpEnv = collectTypesForEscapedVarsFwd(callee, tmpEnv);
         } else if (!origFunType.isGeneric()) {
           JSType expectedRetType = requiredType;
           println("Updating deferred check with ret: ", expectedRetType,
@@ -3611,13 +3619,17 @@ final class NewTypeInference implements CompilerPass {
     }
   }
 
-  private TypeEnv collectTypesForFreeVarsFwd(Node n, TypeEnv env) {
+  /**
+   * Used when analyzing a scope that defines variables used in inner scopes.
+   * Returns a type environment that combines the types from all uses of a variable.
+   */
+  private TypeEnv collectTypesForEscapedVarsFwd(Node n, TypeEnv env) {
     checkArgument(n.isFunction() || (n.isName() && NodeUtil.isInvocationTarget(n)));
     String fnName = n.isFunction() ? symbolTable.getFunInternalName(n) : n.getString();
     NTIScope innerScope = this.currentScope.getScope(fnName);
+    FunctionType summary = summaries.get(innerScope).getFunType();
     for (String freeVar : innerScope.getOuterVars()) {
       if (innerScope.getDeclaredTypeOf(freeVar) == null) {
-        FunctionType summary = summaries.get(innerScope).getFunType();
         JSType outerType = envGetType(env, freeVar);
         if (outerType == null) {
           outerType = UNKNOWN;
@@ -3634,10 +3646,23 @@ final class NewTypeInference implements CompilerPass {
                   freeVar, outerType.toString(), innerType.toString()));
         }
         // If n is a callee node, we only want to keep the type in the callee.
-        // If n is a function expression, we're not sure if it gets called,
-        // so we join the types.
-        env = envPutType(env, freeVar,
-            n.isFunction() ? JSType.join(innerType, outerType) : innerType);
+        // If n is a function expression, we don't know if it will get called, so we take the
+        // types from both scopes into account.
+        JSType freeVarType;
+        if (n.isFunction()) {
+          // If the type in our current scope is more precise, then trust it. The variable is
+          // defined in this scope, and it's more likely that this type is correct.
+          if (!outerType.isNullOrUndef() // only keep outerType for initialized variables
+              && !outerType.isUnknown() && !innerType.isUnknown()
+              && outerType.isSubtypeOf(innerType)) {
+            freeVarType = outerType;
+          } else {
+            freeVarType = JSType.join(innerType, outerType);
+          }
+        } else {
+          freeVarType = innerType;
+        }
+        env = envPutType(env, freeVar, freeVarType);
       }
     }
     return env;
@@ -3753,8 +3778,7 @@ final class NewTypeInference implements CompilerPass {
         return pair;
       }
       case INSTANCEOF: {
-        TypeEnv env = analyzeExprBwd(
-            expr.getLastChild(), outEnv, commonTypes.topFunction()).env;
+        TypeEnv env = analyzeExprBwd(expr.getLastChild(), outEnv, commonTypes.topFunction()).env;
         EnvTypePair pair = analyzeExprBwd(expr.getFirstChild(), env);
         pair.type = BOOLEAN;
         return pair;
@@ -4761,8 +4785,17 @@ final class NewTypeInference implements CompilerPass {
     return specializedType.isBottom() ? fallback : specializedType;
   }
 
-  TypeEnv getEntryTypeEnv() {
+  private TypeEnv getEntryTypeEnv() {
     return getOutEnv(this.cfg.getEntry());
+  }
+
+  private TypeEnv getExitTypeEnv() {
+    if (!this.cfg.getImplicitReturn().getInEdges().isEmpty()) {
+      exitEnvs.add(getInEnv(this.cfg.getImplicitReturn()));
+    }
+    checkState(!exitEnvs.isEmpty(),
+        "There must be at least one exit env, either from a normal function exit or a throw.");
+    return TypeEnv.join(exitEnvs);
   }
 
   private static JSType firstNonBottom(JSType t1, JSType t2) {

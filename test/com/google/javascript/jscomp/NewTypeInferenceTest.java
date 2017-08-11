@@ -1395,6 +1395,34 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     //     "  obj.initProp();",
     //     "  obj.prop.a = 123;",
     //     "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f() {",
+        "  var x = 1;",
+        "  (function g() {",
+        "     var /** number|string */ y = x;",
+        "  })();",
+        "  return x - 5;",
+        "}"));
+
+    // Trade-off: missed warning to avoid spurious warning in the previous test
+    typeCheck(LINE_JOINER.join(
+        "function f() {",
+        "  var x = 1;",
+        "  (function g(/** number|string */ y) {",
+        "     x = y;",
+        "  })('asdf');",
+        "  return x - 5;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f() {",
+        "  var x;",
+        "  (function g(/** ? */ y) {",
+        "     x = y;",
+        "  })(1);",
+        "  return x - 5;",
+        "}"));
   }
 
   public void testTrickyUnknownBehavior() {
@@ -2210,6 +2238,13 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  var /** !Bar */ z = x;",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  goog.asserts.assertInstanceof(x, Array);",
+        "}",
+        "f({a: 1});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testDontInferBottom() {
@@ -5673,27 +5708,37 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
   public void testFunctionsWithAbnormalExit() {
     typeCheck("function f(x) { x = 1; throw x; }");
 
-    // TODO(dimvar): to fix these, we must collect all THROWs w/out an out-edge
-    // and use the envs from them in the summary calculation. (Rare case.)
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  var y = 1;",
+        "  x < y;",
+        "  throw 123;",
+        "}",
+        "f('asdf');"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    // typeCheck(LINE_JOINER.join(
-    //     "function f(x) {",
-    //     "  var y = 1;",
-    //     "  x < y;",
-    //     "  throw 123;",
-    //     "}",
-    //     "f('asdf');"),
-    //     NewTypeInference.INVALID_ARGUMENT_TYPE);
-    // typeCheck(LINE_JOINER.join(
-    //     "function f(x, cond) {",
-    //     "  if (cond) {",
-    //     "    var y = 1;",
-    //     "    x < y;",
-    //     "    throw 123;",
-    //     "  }",
-    //     "}",
-    //     "f('asdf', 'whatever');"),
-    //     NewTypeInference.INVALID_ARGUMENT_TYPE);
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "function f(x) {",
+        "  if (x instanceof Foo) {",
+        "    return 1;",
+        "  }",
+        "  throw new Error('');",
+        "}",
+        "f([]);"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x, y) {",
+        "  if (x) {",
+        "    var /** number */ n = y.a;",
+        "    return 1;",
+        "  }",
+        "  var /** string */ s = y.b;",
+        "  throw new Error('');",
+        "}",
+        "f(false, {a: 1, b: 2});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testAssignAdd() {
@@ -13602,8 +13647,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " * @param {T} y",
         " */",
         "Foo.prototype.f = function(x, y) {};",
-        "Foo.prototype.f.bind(new Foo('asdf'), 1, 2);"),
-        NewTypeInference.INVALID_THIS_TYPE_IN_BIND);
+        "Foo.prototype.f.bind(new Foo('asdf'), 1, 2);"));
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
@@ -13650,6 +13694,15 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     typeCheck(
         "(function() {}).bind();",
         NewTypeInference.WRONG_ARGUMENT_COUNT);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.p = 123;",
+        "}",
+        "(function(/** number */ x) {",
+        "  return this.p + x;",
+        "}).bind(new Foo);"));
   }
 
   public void testClosureStyleFunctionBind() {

@@ -2360,6 +2360,12 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       RawNominalType ctorType = nominaltypesByNode.get(declNode);
       FunctionAndSlotType result = getTypeParser().getFunctionType(
           fnDoc, functionName, declNode, ctorType, ownerType, parentScope);
+      // If the function does not have a declared THIS type, see if it's used in a bind,
+      // and if so, try to infer a THIS type from the object pass to bind.
+      if (result.functionType.getReceiverType() == null) {
+        JSType bindRecvType = getReceiverTypeOfBind(declNode);
+        result.functionType = result.functionType.withReceiverType(bindRecvType);
+      }
       Node qnameNode;
       if (declNode.isQualifiedName()) {
         qnameNode = declNode;
@@ -2434,21 +2440,13 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     private DeclaredFunctionType getDeclaredFunctionTypeFromContext(
         String functionName, Node declNode, NTIScope parentScope) {
       Node parent = declNode.getParent();
-      Node maybeBind = parent.isCall() ? parent.getFirstChild() : parent;
 
-      // The function literal is used with .bind or goog.bind
-      if (NodeUtil.isFunctionBind(maybeBind) && !NodeUtil.isGoogPartial(maybeBind)) {
-        Node call = maybeBind.getParent();
-        Bind bindComponents = convention.describeFunctionBind(call, true, false);
-        JSType recvType = bindComponents.thisValue == null
-            ? null : simpleInferExprType(bindComponents.thisValue);
-        if (recvType == null) {
-          return null;
-        }
+      JSType bindRecvType = getReceiverTypeOfBind(declNode);
+      if (bindRecvType != null) {
         // Use typeParser for the formals, and only add the receiver type here.
         DeclaredFunctionType allButRecvType = getTypeParser().getFunctionType(
             null, functionName, declNode, null, null, parentScope).functionType;
-        return allButRecvType.withReceiverType(recvType);
+        return allButRecvType.withReceiverType(bindRecvType);
       }
 
       // The function literal is an argument at a call
@@ -2472,6 +2470,23 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         }
       }
 
+      return null;
+    }
+
+    /**
+     * If the argument function is used in a bind in the AST, infer the receiver type.
+     * Return null otherwise.
+     */
+    private JSType getReceiverTypeOfBind(Node funDeclNode) {
+      Node parent = funDeclNode.getParent();
+      Node maybeBind = parent.isCall() ? parent.getFirstChild() : parent;
+      // The function literal is used with .bind or goog.bind
+      if (NodeUtil.isFunctionBind(maybeBind) && !NodeUtil.isGoogPartial(maybeBind)) {
+        Node call = maybeBind.getParent();
+        Bind bindComponents = convention.describeFunctionBind(call, true, false);
+        return bindComponents.thisValue == null
+            ? null : simpleInferExprType(bindComponents.thisValue);
+      }
       return null;
     }
 

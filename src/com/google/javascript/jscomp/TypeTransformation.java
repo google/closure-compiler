@@ -258,9 +258,8 @@ class TypeTransformation {
   @VisibleForTesting
   TypeI eval(Node ttlAst, ImmutableMap<String, TypeI> typeVars,
       ImmutableMap<String, String> nameVars) {
-    return evalInternal(
-        ttlAst,
-        new NameResolver(typeVars, nameVars));
+    TypeI result = evalInternal(ttlAst, new NameResolver(typeVars, nameVars));
+    return result.isBottom() ? getUnknownType() : result;
   }
 
   private TypeI evalInternal(Node ttlAst, NameResolver nameResolver) {
