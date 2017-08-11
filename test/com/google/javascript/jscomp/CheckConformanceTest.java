@@ -1720,7 +1720,18 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateDom Message");
 
-    // TODO(jakubvrana): Add a test for goog.dom.DomHelper.
+    String externs =
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @const */ var goog = {};",
+            "/** @const */ goog.dom = {};",
+            "/** @constructor */ goog.dom.DomHelper = function() {};");
+
+    testWarning(
+        externs,
+        "new goog.dom.DomHelper().createDom('iframe', {'src': src});",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateDom Message");
 
     testWarning(
         "goog.dom.createDom(tag, {'src': src});",
@@ -1792,7 +1803,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
             DEFAULT_EXTERNS,
             "/** @const */ var goog = {};",
             "/** @const */ goog.dom = {};",
-            "/** @constructor @template T */ goog.dom.TagName = function() {}",
+            "/** @constructor @template T */ goog.dom.TagName = function() {};",
             "/** @type {!goog.dom.TagName<!HTMLDivElement>} */",
             "goog.dom.TagName.DIV = new goog.dom.TagName();",
             "/** @constructor */ function HTMLDivElement() {}\n");
