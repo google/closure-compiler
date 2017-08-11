@@ -15,13 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ObjectTypeI;
-import com.google.javascript.rhino.TypeI;
-import com.google.javascript.rhino.TypeIRegistry;
-import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.Locale;
 
 /**
@@ -72,49 +67,11 @@ public final class Es6ToEs3Util {
     return callEs6RuntimeFunction(compiler, iterable, "arrayFromIterable");
   }
 
-  static void preloadEs6RuntimeFunction(AbstractCompiler compiler, String function) {
-    compiler.ensureLibraryInjected("es6/util/" + function.toLowerCase(Locale.US), false);
-  }
-
   static Node callEs6RuntimeFunction(
       AbstractCompiler compiler, Node iterable, String function) {
-    preloadEs6RuntimeFunction(compiler, function);
+    compiler.ensureLibraryInjected("es6/util/" + function.toLowerCase(Locale.US), false);
     return IR.call(
         NodeUtil.newQName(compiler, "$jscomp." + function),
         iterable);
   }
-
-  /** Adds the type t to Node n, and returns n. Does nothing if t is null. */
-  static Node withType(Node n, TypeI t) {
-    if (t != null) {
-      n.setTypeI(t);
-    }
-    return n;
-  }
-
-  /**
-   * Returns the TypeI as specified by the typeName.
-   * Returns null if shouldCreate is false.
-   */
-  static TypeI createType(boolean shouldCreate, TypeIRegistry registry, JSTypeNative typeName) {
-    if (!shouldCreate) {
-      return null;
-    }
-    return registry.getNativeType(typeName);
-  }
-
-  /**
-   * Returns the TypeI as specified by the typeName and instantiated by the typeArg.
-   * Returns null if shouldCreate is false.
-   */
-  static TypeI createGenericType(
-      boolean shouldCreate, TypeIRegistry registry, JSTypeNative typeName, TypeI typeArg) {
-    if (!shouldCreate) {
-      return null;
-    }
-    ObjectTypeI genericType = registry.getNativeType(typeName);
-    ObjectTypeI uninstantiated = genericType.getRawType();
-    return registry.instantiateGenericType(uninstantiated, ImmutableList.of(typeArg));
-  }
 }
-
