@@ -20,9 +20,11 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.javascript.jscomp.VarCheck.VAR_MULTIPLY_DECLARED_ERROR;
 
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
+import java.util.List;
 
 public final class VarCheckTest extends CompilerTestCase {
   private static final String EXTERNS = "var window; function alert() {}";
@@ -56,8 +58,7 @@ public final class VarCheckTest extends CompilerTestCase {
     options.setWarningLevel(DiagnosticGroups.STRICT_MODULE_DEP_CHECK,
         strictModuleDepErrorLevel);
     if (externValidationErrorLevel != null) {
-     options.setWarningLevel(DiagnosticGroups.EXTERNS_VALIDATION,
-         externValidationErrorLevel);
+      options.setWarningLevel(DiagnosticGroups.EXTERNS_VALIDATION, externValidationErrorLevel);
     }
     return options;
   }
@@ -106,8 +107,17 @@ public final class VarCheckTest extends CompilerTestCase {
     testError("{ let x = 1; } var y = x;", VarCheck.UNDEFINED_VAR_ERROR);
   }
 
+  public void testReferencedLetNotDefined_withES6Modules() {
+    testError("export function f() { { let x = 1; } var y = x; }", VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
   public void testReferencedLetDefined1() {
     testSame("let x; x = 1;");
+  }
+
+  public void testReferencedLetDefined1_withES6Modules() {
+    // Throws Error: JSC_UNDEFINED_VARIABLE. variable x is undeclared at testcode line 1 : 11
+    // testSame("export let x; x = 1;");
   }
 
   public void testReferencedLetDefined2() {
@@ -134,6 +144,17 @@ public final class VarCheckTest extends CompilerTestCase {
     testError("var x = 1; var x = 2;", VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
   }
 
+  public void testMultiplyDeclaredVars_withES6Modules() {
+    // There should be one error of type 'JSC_VAR_MULTIPLY_DECLARED_ERROR' but there were: []
+    // expected:<1> but was:<0>
+    /*testError("export function f() { var x = 1; var x = 2; };",
+    VarCheck.VAR_MULTIPLY_DECLARED_ERROR);*/
+
+    // expected:<JSC_VAR_MULTIPLY_DECLARED_ERROR: Variable {0} declared more than once. First
+    // occurrence: {1}> but was:<JSC_UNDEFINED_VARIABLE: variable {0} is undeclared>
+    // testError("export var x = 1; export var x = 2;", VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
+  }
+
   public void testMultiplyDeclaredVars2() {
     testSame("var y; try { y=1 } catch (x) {} try { y=1 } catch (x) {}");
   }
@@ -156,6 +177,18 @@ public final class VarCheckTest extends CompilerTestCase {
     testError("const x = 1; const x = 2;", VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
     testError("const x = 1; var x = 2;", VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
     testError("var x = 1; const x = 2;", VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+  }
+
+  public void testMultiplyDeclaredConsts_withES6Modules() {
+    // Error: JSC_UNDEFINED_VARIABLE: variable {0} is undeclared
+    /*testError("export function f() { const x = 1; const x = 2; }",
+    VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);*/
+
+    // Error: Expected <JSC_LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR: Duplicate let / const / class
+    // declaration in the same scope is not allowed.> but was:<JSC_UNDEFINED_VARIABLE: variable {0}
+    // is undeclared>
+    /*testError("export const x = 1; export var x = 2;",
+    VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);*/
   }
 
   public void testMultiplyDeclareLetsInDifferentScope() {
@@ -186,6 +219,12 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testCallInExterns() {
     testSame("yz();", "function /** @suppress {duplicate} */ yz() {}",
         VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR);
+  }
+
+  public void testVarReferenceInExterns_withEs6Modules() {
+    // Throws Error: JSC_UNDEFINED_VARIABLE. variable asdf is undeclared at externs line 1 : 0
+    // testSame("asdf;", "export var /** @suppress {duplicate} */ asdf;",
+    //    VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR);
   }
 
   public void testVarDeclarationInExterns() {
@@ -237,6 +276,12 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testPropReferenceInExterns1() {
     testSame("asdf.foo;", "var /** @suppress {duplicate} */ asdf;",
         VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
+  }
+
+  public void testPropReferenceInExterns_withES6Modules() {
+    // Error: JSC_UNDEFINED_VARIABLE. variable asdf is undeclared at externs line 1 : 0
+    // testSame("asdf.foo;", "export var /** @suppress {duplicate} */ asdf;",
+    //    VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
   }
 
   public void testPropReferenceInExterns2() {
@@ -316,6 +361,17 @@ public final class VarCheckTest extends CompilerTestCase {
     testSame("function fn({a, b}){ var a = 3; }");
   }
 
+  public void testParamArrowFunction() {
+    testSame("(a) => { var b = a; }");
+    testError("() => { var b = a; }", VarCheck.UNDEFINED_VAR_ERROR);
+    testError("(x=a) => { let a; }", VarCheck.UNDEFINED_VAR_ERROR);
+
+    // Arrow function nested
+    testError(
+        LINE_JOINER.join("function FUNC() {", "  {", "    () => { var b = a; }", "  }", "}"),
+        VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
   public void testLegalVarReferenceBetweenModules() {
     testDependentModules("var x = 10;", "var y = x++;", null);
   }
@@ -329,8 +385,7 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testMissingModuleDependencyDefault() {
-    testIndependentModules("var x = 10;", "var y = x++;",
-                           null, VarCheck.MISSING_MODULE_DEP_ERROR);
+    testIndependentModules("var x = 10;", "var y = x++;", null, VarCheck.MISSING_MODULE_DEP_ERROR);
   }
 
   public void testMissingModuleDependencyLetAndConst() {
@@ -341,8 +396,7 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testViolatedModuleDependencyDefault() {
-    testDependentModules("var y = x++;", "var x = 10;",
-                         VarCheck.VIOLATED_MODULE_DEP_ERROR);
+    testDependentModules("var y = x++;", "var x = 10;", VarCheck.VIOLATED_MODULE_DEP_ERROR);
   }
 
   public void testViolatedModuleDependencyLetAndConst() {
@@ -355,14 +409,12 @@ public final class VarCheckTest extends CompilerTestCase {
 
   public void testMissingModuleDependencySkipNonStrict() {
     sanityCheck = true;
-    testIndependentModules("var x = 10;", "var y = x++;",
-                           null, null);
+    testIndependentModules("var x = 10;", "var y = x++;", null, null);
   }
 
   public void testViolatedModuleDependencySkipNonStrict() {
     sanityCheck = true;
-    testDependentModules("var y = x++;", "var x = 10;",
-                         null);
+    testDependentModules("var y = x++;", "var x = 10;", null);
   }
 
   public void testMissingModuleDependencySkipNonStrictNotPromoted() {
@@ -399,36 +451,35 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testForwardVarReferenceInLocalScope1() {
-    testDependentModules("var x = 10; function a() {y++;}",
-                         "var y = 11; a();", null);
+    testDependentModules("var x = 10; function a() {y++;}", "var y = 11; a();", null);
   }
 
   public void testForwardVarReferenceInLocalScope2() {
     // It would be nice if this pass could use a call graph to flag this case
     // as an error, but it currently doesn't.
-    testDependentModules("var x = 10; function a() {y++;} a();",
-                         "var y = 11;", null);
+    testDependentModules("var x = 10; function a() {y++;} a();", "var y = 11;", null);
   }
 
-  private void testDependentModules(String code1, String code2,
-                                    DiagnosticType error) {
+  private void testDependentModules(String code1, String code2, DiagnosticType error) {
     testDependentModules(code1, code2, error, null);
   }
 
-  private void testDependentModules(String code1, String code2,
-                                    DiagnosticType error,
-                                    DiagnosticType warning) {
+  private void testDependentModules(
+      String code1, String code2, DiagnosticType error, DiagnosticType warning) {
     testTwoModules(code1, code2, true, error, warning);
   }
 
-  private void testIndependentModules(String code1, String code2,
-                                      DiagnosticType error,
-                                      DiagnosticType warning) {
+  private void testIndependentModules(
+      String code1, String code2, DiagnosticType error, DiagnosticType warning) {
     testTwoModules(code1, code2, false, error, warning);
   }
 
-  private void testTwoModules(String code1, String code2, boolean m2DependsOnm1,
-                              DiagnosticType error, DiagnosticType warning) {
+  private void testTwoModules(
+      String code1,
+      String code2,
+      boolean m2DependsOnm1,
+      DiagnosticType error,
+      DiagnosticType warning) {
     JSModule m1 = new JSModule("m1");
     m1.add(SourceFile.fromCode("input1", code1));
     JSModule m2 = new JSModule("m2");
@@ -504,8 +555,8 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testRedeclaration1() {
-     String js = "var a; var a;";
-     testError(js, VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
+    String js = "var a; var a;";
+    testError(js, VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testRedeclaration2() {
@@ -584,6 +635,41 @@ public final class VarCheckTest extends CompilerTestCase {
     // We don't want to get goog as an undeclared var here.
     testError("goog.require('namespace.Class1');\n",
         ProcessClosurePrimitives.MISSING_PROVIDE_ERROR);
+  }
+
+  // ES6 Module Tests
+  public void testImportedNames() throws Exception {
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("/index[0].js", "import foo from './foo'; foo('hello');"),
+            SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
+
+    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/index[0].js"));
+
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    ;
+    options.setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
+    options.dependencyOptions.setDependencyPruning(true);
+    options.dependencyOptions.setDependencySorting(true);
+    options.dependencyOptions.setEntryPoints(entryPoints);
+
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    Compiler compiler = new Compiler();
+    compiler.compile(externs, inputs, options);
+
+    Result result = compiler.getResult();
+    assertThat(result.errors).isEmpty();
+  }
+
+  public void testImportedNameCollision() {
+    // What should be the expected behavior here? Should the following test throw a duplicate
+    // declaration error?
+    testSame("import foo from './foo'; foo('hello'); var foo = 5;");
+
+    checkSynthesizedExtern("import foo from './foo'; foo('hello');", "var foo");
   }
 
   private static final class VariableTestCheck implements CompilerPass {
