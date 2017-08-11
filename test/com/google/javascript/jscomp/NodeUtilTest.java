@@ -921,6 +921,21 @@ public final class NodeUtilTest extends TestCase {
     }
   }
 
+  public void testRemoveFromImport() {
+    // Remove imported function
+    Node actual = parse("import foo from './foo';");
+    Node moduleBody = actual.getFirstChild();
+    Node importNode = moduleBody.getFirstChild();
+    Node functionFoo = importNode.getFirstChild();
+
+    NodeUtil.removeChild(importNode, functionFoo);
+    String expected = "import './foo';";
+    String difference = parse(expected).checkTreeEquals(actual);
+    if (difference != null) {
+      fail("Nodes do not match:\n" + difference);
+    }
+  }
+
   public void testRemoveParamChild1() {
     // Remove traditional parameter
     Node actual = parse("function f(p1) {}");

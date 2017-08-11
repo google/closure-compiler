@@ -2783,6 +2783,13 @@ public final class NodeUtil {
       parent.detach();
     } else if (parent.isParamList()) {
       parent.removeChild(node);
+    } else if (parent.isImport()) {
+      // An import node must always have three child nodes. Only the first can be safely removed.
+      if (node == parent.getFirstChild()) {
+        parent.replaceChild(node, IR.empty());
+      } else {
+        throw new IllegalStateException("Invalid attempt to remove: " + node + " from " + parent);
+      }
     } else {
       throw new IllegalStateException("Invalid attempt to remove node: " + node + " of " + parent);
     }
