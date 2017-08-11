@@ -207,8 +207,8 @@ Performance.prototype.clearMarks = function(opt_markName) {};
  * @param {string=} opt_endMark
  * @return {undefined}
  */
-Performance.prototype.measure =
-    function(measureName, opt_startMark, opt_endMark) {};
+Performance.prototype.measure = function(
+    measureName, opt_startMark, opt_endMark) {};
 
 /**
  * @param {string=} opt_measureName
@@ -230,3 +230,54 @@ var performance;
  * @extends {Performance}
  */
 function WorkerPerformance() {}
+
+/**
+ * @typedef {function(!PerformanceObserverEntryList, !PerformanceObserver): void}
+ */
+var PerformanceObserverCallback;
+
+/**
+ * See:
+ * https://w3c.github.io/performance-timeline/#the-performanceobserver-interface
+ * @constructor
+ * @param {!PerformanceObserverCallback} callback
+ */
+function PerformanceObserver(callback) {}
+
+/**
+ * @param {!PerformanceObserverInit} options
+ */
+PerformanceObserver.prototype.observe = function(options) {};
+
+/** @return {void} */
+PerformanceObserver.prototype.disconnect = function() {};
+
+/**
+ * @record
+ */
+function PerformanceObserverInit() {}
+
+/** @type {undefined|!Array<string>} */
+PerformanceObserverInit.prototype.entryTypes;
+/** @type {undefined|boolean} */
+PerformanceObserverInit.prototype.buffered;
+
+/**
+ * @constructor
+ */
+function PerformanceObserverEntryList() {}
+
+/** @return {!Array<!PerformanceEntry>} */
+PerformanceObserverEntryList.prototype.getEntries = function() {};
+/**
+ * @param {string} type
+ * @return {!Array<!PerformanceEntry>}
+ */
+PerformanceObserverEntryList.prototype.getEntriesByName = function(type) {};
+/**
+ * @param {string} name
+ * @param {string=} opt_type
+ * @return {!Array<!PerformanceEntry>}
+ */
+PerformanceObserverEntryList.prototype.getEntriesByType = function(
+    name, opt_type) {};

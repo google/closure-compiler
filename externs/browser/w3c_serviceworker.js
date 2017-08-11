@@ -607,6 +607,12 @@ FetchEvent.prototype.clientId;
 /** @type {!boolean} */
 FetchEvent.prototype.isReload;
 
+/** @type {?string} */
+FetchEvent.prototype.targetClientId;
+
+/** @type {?string} */
+FetchEvent.prototype.reserveClientId;
+
 /**
  * @param {(Response|IThenable<Response>)} r
  * @return {undefined}
