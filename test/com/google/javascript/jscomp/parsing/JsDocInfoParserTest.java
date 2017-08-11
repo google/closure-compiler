@@ -29,6 +29,7 @@ import com.google.javascript.jscomp.parsing.Config.LanguageMode;
 import com.google.javascript.jscomp.parsing.Config.RunMode;
 import com.google.javascript.jscomp.parsing.Config.StrictMode;
 import com.google.javascript.jscomp.parsing.ParserRunner.ParseResult;
+import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfo.Marker;
 import com.google.javascript.rhino.JSDocInfo.Visibility;
@@ -4770,12 +4771,14 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
             Config.StrictMode.SLOPPY);
 
     StaticSourceFile file = new SimpleSourceFile("testcode", false);
+    Node templateNode = IR.script();
+    templateNode.setStaticSourceFile(file);
 
     JsDocInfoParser jsdocParser = new JsDocInfoParser(
         stream(comment),
         comment,
         0,
-        file,
+        templateNode,
         config,
         errorReporter);
 

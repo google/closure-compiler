@@ -259,7 +259,7 @@ public final class JSDocInfoBuilder {
   /**
    * Adds a name declaration to the current marker.
    */
-  public void markName(String name, StaticSourceFile file,
+  public void markName(String name, Node templateNode,
       int lineno, int charno) {
     if (currentMarker != null) {
       // Record the name as both a SourcePosition<String> and a
@@ -278,7 +278,9 @@ public final class JSDocInfoBuilder {
       JSDocInfo.NamePosition nodePos = new JSDocInfo.NamePosition();
       Node node = Node.newString(Token.NAME, name, lineno, charno);
       node.setLength(name.length());
-      node.setStaticSourceFile(file);
+      if (templateNode != null) {
+        node.setStaticSourceFileFrom(templateNode);
+      }
       nodePos.setItem(node);
       nodePos.setPositionInformation(lineno, charno,
           lineno, charno + name.length());

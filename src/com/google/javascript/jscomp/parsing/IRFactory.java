@@ -292,6 +292,9 @@ class IRFactory {
     this.currentComment = skipNonJsDoc(nextCommentIter);
     this.newlines = new ArrayList<>();
     this.sourceFile = sourceFile;
+    // The template node properties are applied to all nodes in this transform.
+    this.templateNode = createTemplateNode();
+
     this.fileLevelJsDocBuilder =
         new JSDocInfoBuilder(config.parseJsDocDocumentation.shouldParseDescriptions());
 
@@ -310,8 +313,6 @@ class IRFactory {
     this.config = config;
     this.errorReporter = errorReporter;
     this.transformDispatcher = new TransformDispatcher();
-    // The template node properties are applied to all nodes in this transform.
-    this.templateNode = createTemplateNode();
 
     if (config.strictMode == StrictMode.STRICT) {
       reservedKeywords = ES5_STRICT_RESERVED_KEYWORDS;
@@ -903,7 +904,7 @@ class IRFactory {
                                charno + numOpeningChars),
           comment,
           position,
-          sourceFile,
+          templateNode,
           config,
           errorReporter);
     jsdocParser.setFileLevelJsDocBuilder(fileLevelJsDocBuilder);
@@ -934,7 +935,7 @@ class IRFactory {
               charno + numOpeningChars),
           comment,
           node.location.start.offset,
-          sourceFile,
+          templateNode,
           config,
           errorReporter);
     return parser.parseInlineTypeDoc();
