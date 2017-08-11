@@ -1700,7 +1700,27 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "bar.foo();"));
   }
 
-  public void testClassProperties() {
+  public void testClassGetSetMembers() {
+    // Get and set methods
+    testSame(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(x) {",
+            "    this.x = x;",
+            "  }",
+            "  get foo() {",
+            "    return this.x;",
+            "  }",
+            "  set foo(xIn) {",
+            "    x = xIn;",
+            "  }",
+            "}",
+            "var barObj = new Bar(1);",
+            "bar.foo();",
+            "bar.foo(2);"));
+  }
+
+  public void testClassNonStaticMembers() {
     // Call class method inside class scope
     testSame(
         LINE_JOINER.join(
@@ -1726,48 +1746,33 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "var too = new Bar();",
             "too.getB(too);"));
 
-    // Get and set methods
+    // Non-static method
     testSame(
         LINE_JOINER.join(
             "class Bar {",
-            "  constructor(x) {",
+            "  constructor(x){",
             "    this.x = x;",
             "  }",
-            "  get foo() {",
-            "    return this.x;",
-            "  }",
-            "  set foo(xIn) {",
-            "    x = xIn;",
+            "  double() {",
+            "    return x*2;",
             "  }",
             "}",
-            "var barObj = new Bar(1);",
-            "bar.foo();",
-            "bar.foo(2);"));
+            "var too;",
+            "var too = new Bar();",
+            "too.double(1);"));
+  }
 
-    // Static methods
-    /*testSame(
+  public void testClassStaticMembers() {
+    // TODO (simranarora) Make the pass collapse for static methods. Currently we have backed off
+    // because we will need to handle super and this occurrences within the method.
+    testSame(
         LINE_JOINER.join(
             "class Bar {",
             "  static double(n) {",
             "    return n*2",
             "  }",
             "}",
-            "Bar.double(1);"));*/
-    test(
-        LINE_JOINER.join(
-            "class Bar {",
-            "  static double(n) {",
-            "    return n*2",
-            "  }",
-            "}",
-            "Bar.double(1);"),
-        LINE_JOINER.join(
-            "class Bar {",
-            "  static double(n) {",
-            "    return n*2",
-            "  }",
-            "}",
-            "Bar$double(1);"));
+            "Bar.double(1);"));
   }
 
   public void testSuperExtern() {
