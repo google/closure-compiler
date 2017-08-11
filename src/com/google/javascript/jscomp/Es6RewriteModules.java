@@ -324,7 +324,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       }
     } else if (export.getBooleanProp(Node.EXPORT_ALL_FROM)) {
       //   export * from 'moduleIdentifier';
-      compiler.report(JSError.make(export, Es6ToEs3Util.CANNOT_CONVERT_YET,
+      compiler.report(JSError.make(export, Es6ToEs3Converter.CANNOT_CONVERT_YET,
           "Wildcard export"));
     } else if (export.hasTwoChildren()) {
       //   export {x, y as z} from 'moduleIdentifier';

@@ -184,7 +184,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.needsTranspilationFrom(ES6) || options.needsTranspilationFrom(ES7)) {
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
-      TranspilationPasses.addEs6PassesAfterNTI(passes);
       TranspilationPasses.addPostCheckPasses(passes);
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(passes);
@@ -374,7 +373,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.needsTranspilationFrom(ES6)) {
       TranspilationPasses.addEs6LatePasses(checks);
-      TranspilationPasses.addEs6PassesAfterNTI(checks);
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(checks);
       }
@@ -391,7 +389,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(convertStaticInheritance);
     }
 
-    // End of ES6 transpilation passes before NTI.
+    // End of ES6 transpilation passes.
 
     if (!options.skipNonTranspilationPasses) {
       addNonTranspilationCheckPasses(checks);
