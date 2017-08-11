@@ -1127,10 +1127,6 @@ final class NewTypeInference implements CompilerPass {
     FunctionTypeBuilder builder = new FunctionTypeBuilder(this.commonTypes);
     TypeEnv entryEnv = getEntryTypeEnv();
     TypeEnv exitEnv = getExitTypeEnv();
-    if (exitEnv == null) {
-      // This function only exits with THROWs
-      exitEnv = envPutType(new TypeEnv(), RETVAL_ID, BOTTOM);
-    }
 
     DeclaredFunctionType declType = fn.getDeclaredFunctionType();
     int reqArity = declType.getRequiredArity();
@@ -1228,8 +1224,8 @@ final class NewTypeInference implements CompilerPass {
       JSType yieldType = envGetType(exitEnv, YIELDVAL_ID);
       builder.addRetType(this.commonTypes.getGeneratorInstance(firstNonNull(yieldType, UNKNOWN)));
     } else if (declType.getNominalType() == null) {
-      // If someone uses the result of a function that doesn't return, they get a warning.
-      builder.addRetType(firstNonBottom(actualRetType, TOP));
+      // If a function doesn't return, make the return type unknown.
+      builder.addRetType(firstNonBottom(actualRetType, UNKNOWN));
     } else {
       // Don't infer a return type for constructors. We want to warn for
       // constructors called without new who don't explicitly declare @return.
@@ -4787,6 +4783,10 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private TypeEnv getExitTypeEnv() {
+    for (int i = 0; i < exitEnvs.size(); i++) {
+      TypeEnv env = exitEnvs.get(i);
+      exitEnvs.set(i, envPutType(env, RETVAL_ID, BOTTOM));
+    }
     if (!this.cfg.getImplicitReturn().getInEdges().isEmpty()) {
       exitEnvs.add(getInEnv(this.cfg.getImplicitReturn()));
     }

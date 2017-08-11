@@ -2254,14 +2254,6 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
-  public void testDontInferBottomReturn() {
-    typeCheck(
-        // Technically, BOTTOM is correct here, but since using dead code is error prone,
-        // we'd rather infer f to return TOP (and get a warning).
-        "function f() { throw ''; } f() - 5;",
-        NewTypeInference.INVALID_OPERAND_TYPE);
-  }
-
   public void testAssignToInvalidObject() {
     typeCheck(
         "n.foo = 5; var n;",
@@ -5739,6 +5731,21 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}",
         "f(false, {a: 1, b: 2});"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  if (x > 0) throw new Error();",
+        "  return 42;",
+        "}",
+        "f(1) - 5;"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f() { throw new Error(''); }",
+        "var /** function():string */ g = f;"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f() { throw new Error(''); }",
+        "var /** number */ n = f();"));
   }
 
   public void testAssignAdd() {
