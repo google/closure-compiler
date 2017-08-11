@@ -1023,7 +1023,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES8;
         }
       };
 
@@ -1067,7 +1067,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES8;
         }
       };
 
@@ -1207,7 +1207,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES8;
         }
       };
 
@@ -1373,29 +1373,28 @@ public final class DefaultPassConfig extends PassConfig {
   };
 
   /**
-   * The default i18n pass. A lot of the options are not configurable, because ReplaceMessages has a
-   * lot of legacy logic.
+   * The default i18n pass.
+   * A lot of the options are not configurable, because ReplaceMessages
+   * has a lot of legacy logic.
    */
-  private final PassFactory replaceMessages =
-      new PassFactory("replaceMessages", true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          return new ReplaceMessages(
-              compiler,
-              options.messageBundle,
-              /* warn about message dupes */
-              true,
-              /* allow messages with goog.getMsg */
-              JsMessage.Style.CLOSURE,
-              /* if we can't find a translation, don't worry about it. */
-              false);
-        }
+  private final PassFactory replaceMessages = new PassFactory("replaceMessages", true) {
+    @Override
+    protected CompilerPass create(final AbstractCompiler compiler) {
+      return new ReplaceMessages(compiler,
+          options.messageBundle,
+          /* warn about message dupes */
+          true,
+          /* allow messages with goog.getMsg */
+          JsMessage.Style.CLOSURE,
+          /* if we can't find a translation, don't worry about it. */
+          false);
+    }
 
-        @Override
-        public FeatureSet featureSet() {
-          return ES8_MODULES;
-        }
-      };
+    @Override
+    public FeatureSet featureSet() {
+      return ES8;
+    }
+  };
 
   private final PassFactory replaceMessagesForChrome =
       new PassFactory("replaceMessages", true) {
@@ -1515,7 +1514,7 @@ public final class DefaultPassConfig extends PassConfig {
 
       @Override
       public FeatureSet featureSet() {
-        return ES8_MODULES;
+        return ES8;
       }
     };
   }
@@ -1529,7 +1528,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES8;
         }
       };
 
@@ -1658,18 +1657,18 @@ public final class DefaultPassConfig extends PassConfig {
 
   private final PassFactory earlyInlineVariables =
       new PassFactory("earlyInlineVariables", true) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          InlineVariables.Mode mode;
-          if (options.inlineVariables) {
-            mode = InlineVariables.Mode.ALL;
-          } else if (options.inlineLocalVariables) {
-            mode = InlineVariables.Mode.LOCALS_ONLY;
-          } else {
-            throw new IllegalStateException("No variable inlining option set.");
-          }
-          return new InlineVariables(compiler, mode, true);
-        }
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      InlineVariables.Mode mode;
+      if (options.inlineVariables) {
+        mode = InlineVariables.Mode.ALL;
+      } else if (options.inlineLocalVariables) {
+        mode = InlineVariables.Mode.LOCALS_ONLY;
+      } else {
+        throw new IllegalStateException("No variable inlining option set.");
+      }
+      return new InlineVariables(compiler, mode, true);
+    }
 
     @Override
     protected FeatureSet featureSet() {
@@ -1766,31 +1765,30 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES8;
         }
       };
 
   /** Checks for RegExp references. */
-  private final PassFactory checkRegExp =
-      new PassFactory("checkRegExp", true) {
-        @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
-          final CheckRegExp pass = new CheckRegExp(compiler);
+  private final PassFactory checkRegExp = new PassFactory("checkRegExp", true) {
+    @Override
+    protected CompilerPass create(final AbstractCompiler compiler) {
+      final CheckRegExp pass = new CheckRegExp(compiler);
 
-          return new CompilerPass() {
-            @Override
-            public void process(Node externs, Node root) {
-              pass.process(externs, root);
-              compiler.setHasRegExpGlobalReferences(pass.isGlobalRegExpPropertiesUsed());
-            }
-          };
-        }
-
+      return new CompilerPass() {
         @Override
-        protected FeatureSet featureSet() {
-          return ES8_MODULES;
+        public void process(Node externs, Node root) {
+          pass.process(externs, root);
+          compiler.setHasRegExpGlobalReferences(pass.isGlobalRegExpPropertiesUsed());
         }
       };
+    }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8;
+    }
+  };
 
   /** Checks that references to variables look reasonable. */
   private final HotSwapPassFactory checkVariableReferencesForTranspileOnly =
@@ -1802,7 +1800,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES8;
         }
       };
 
@@ -1816,7 +1814,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES8;
         }
       };
 
@@ -1830,7 +1828,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES8;
         }
       };
 
@@ -1844,7 +1842,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES8;
         }
       };
 
@@ -2123,7 +2121,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES8;
         }
       };
 
@@ -2492,16 +2490,17 @@ public final class DefaultPassConfig extends PassConfig {
   /** Inlines variables that are marked as constants. */
   private final PassFactory inlineConstants =
       new PassFactory("inlineConstants", false) {
-        @Override
-        protected CompilerPass create(AbstractCompiler compiler) {
-          return new InlineVariables(compiler, InlineVariables.Mode.CONSTANTS_ONLY, true);
-        }
+    @Override
+    protected CompilerPass create(AbstractCompiler compiler) {
+      return new InlineVariables(
+          compiler, InlineVariables.Mode.CONSTANTS_ONLY, true);
+    }
 
-        @Override
-        protected FeatureSet featureSet() {
-          return ES8_MODULES;
-        }
-      };
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8;
+    }
+  };
 
   /** Use data flow analysis to remove dead branches. */
   private final PassFactory removeUnreachableCode =
@@ -3207,7 +3206,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES8;
         }
       };
 
@@ -3233,7 +3232,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES8;
         }
       };
 
@@ -3272,7 +3271,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES8;
         }
       };
 
@@ -3286,7 +3285,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES8;
         }
       };
 
@@ -3333,7 +3332,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          return ES8;
         }
       };
 
