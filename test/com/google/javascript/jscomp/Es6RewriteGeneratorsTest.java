@@ -20,8 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /** Unit tests for {@link Es6RewriteGenerators}. */
-// TODO(tbreisacher): Rewrite direct calls to test() to use rewriteGeneratorBody
-// or rewriteGeneratorBodyWithVars.
 public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
 
   @Override
@@ -43,11 +41,11 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
     return new Es6RewriteGenerators(compiler);
   }
 
-  public void rewriteGeneratorBody(String beforeBody, String afterBody) {
+  private void rewriteGeneratorBody(String beforeBody, String afterBody) {
     rewriteGeneratorBodyWithVars(beforeBody, "", afterBody);
   }
 
-  public void rewriteGeneratorBodyWithVars(
+  private void rewriteGeneratorBodyWithVars(
       String beforeBody, String varDecls, String afterBody) {
     test(
         "function *f() {" + beforeBody + "}",
@@ -724,34 +722,12 @@ public final class Es6RewriteGeneratorsTest extends CompilerTestCase {
   }
 
   public void testFunctionInGenerator() {
-    test(
-        "function *f() { function g() {} }",
+    rewriteGeneratorBodyWithVars(
+        "function g() {}",
+        "function g() {}",
         LINE_JOINER.join(
-            "/** @suppress {uselessCode} */",
-            "function f() {",
-            "  var $jscomp$generator$state = 0;",
-            "  function g() {}",
-            "  function $jscomp$generator$impl(",
-            "      $jscomp$generator$action$arg,",
-            "      $jscomp$generator$next$arg,",
-            "      $jscomp$generator$throw$arg) {",
-            "    while (1) switch ($jscomp$generator$state) {",
-            "      case 0:",
-            "        $jscomp$generator$state = -1;",
-            "      default:",
-            "        return {value: undefined, done: true}",
-            "    }",
-            "  }",
-            "  var iterator = /** @type {!Generator<?>} */ ({",
-            "    next: function(arg){ return $jscomp$generator$impl(0, arg, undefined); },",
-            "    throw: function(arg){ return $jscomp$generator$impl(1, undefined, arg); },",
-            "    return: function(arg) { throw Error('Not yet implemented'); },",
-            "  });",
-            "  $jscomp.initSymbolIterator();",
-            "  /** @this {!Generator<?>} */",
-            "  iterator[Symbol.iterator] = function() { return this; };",
-            "  return iterator;",
-            "}"));
+            "case 0:",
+            "  $jscomp$generator$state = -1;"));
   }
 
   public void testYieldAll() {
