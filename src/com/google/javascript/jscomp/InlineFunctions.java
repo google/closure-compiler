@@ -164,6 +164,7 @@ class InlineFunctions implements CompilerPass {
     if (isAlwaysInlinable(inlinedFun)) {
       return false;
     }
+
     int inlinedFunSize =
         NodeUtil.countAstSizeUpToLimit(NodeUtil.getFunctionBody(inlinedFun), maxSizeAfterInlining);
     int targetFunSize = NodeUtil.countAstSizeUpToLimit(containingFunction, maxSizeAfterInlining);
@@ -334,7 +335,7 @@ class InlineFunctions implements CompilerPass {
         functionState.setInline(false);
       }
 
-      //@TODO(bellashim): Inline functions with nested default values (default values with ancestors
+      //TODO(b/64614552): Inline functions with nested default values (default values with ancestors
       //  that are default values). This currently is a writing limitation, not an inherent limit
       if (hasNestedDefaultValue(NodeUtil.getFunctionParameters(fnNode))) {
         functionState.setInline(false);

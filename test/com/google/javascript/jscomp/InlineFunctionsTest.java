@@ -3028,7 +3028,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
         "{ var b$jscomp$inline_1=[7,8];3+b$jscomp$inline_1[1] }");
   }
 
-  //TODO(bellashim): Get the following tests to pass
+  //TODO(b/64614552): Get the following tests to pass
   public void disabled_testNestedDefaultParam() {
     test(
         LINE_JOINER.join(
