@@ -80,13 +80,12 @@ public interface FunctionTypeI extends TypeI {
    * This is only valid for constructors and interfaces, and will not be
    * null. This allows a downward traversal of the subtype graph.
    */
-  // TODO(sdh): change the name to getDirectSubTypes()
   Iterable<FunctionTypeI> getDirectSubTypes();
 
   /** Gets the type of {@code this} in this function. */
   TypeI getTypeOfThis();
 
-  /** Whether this FunctionTypeI is a function with properties. */
+  /** Whether this function type has any properties (not counting "prototype"). */
   boolean hasProperties();
 
   void setSource(Node n);

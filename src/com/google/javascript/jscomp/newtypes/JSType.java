@@ -1936,7 +1936,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public final boolean hasProperties() {
-    throw new UnsupportedOperationException("hasProperties not implemented yet");
+    checkState(this.isFunctionType());
+    return getObjTypeIfSingletonObj().isFunctionWithProperties();
   }
 
   @Override

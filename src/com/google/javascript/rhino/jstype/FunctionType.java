@@ -1425,9 +1425,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
 
   @Override
   public boolean hasProperties() {
-    if (prototypeSlot != null) {
-      return true;
-    }
     return !super.getOwnPropertyNames().isEmpty();
   }
 
