@@ -399,6 +399,24 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "module$testcode.UnionType;"));
   }
 
+  public void testNoInnerChange() {
+    testModules(
+        LINE_JOINER.join(
+            "var Foo = (function () {",
+            "    /**  @param bar */",
+            "    function Foo(bar) {}",
+            "    return Foo;",
+            "}());",
+            "export { Foo };"),
+        LINE_JOINER.join(
+            "var Foo$$module$testcode = function() {",
+            "    /**  @param bar */",
+            "    function Foo(bar) {}",
+            "    return Foo;",
+            "}();",
+            "module$testcode.Foo = Foo$$module$testcode;"));
+  }
+
   public void testRenameImportedReference() {
     testModules(
         LINE_JOINER.join(

@@ -633,7 +633,10 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           }
           String globalModuleName = path.toModuleName();
 
-          typeNode.setString(
+          maybeSetNewName(
+              t,
+              typeNode,
+              name,
               localTypeName == null ? globalModuleName : globalModuleName + localTypeName);
         } else {
           List<String> splitted = Splitter.on('.').limit(2).splitToList(name);
@@ -644,13 +647,13 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           }
           Var var = t.getScope().getVar(baseName);
           if (var != null && var.isGlobal()) {
-            typeNode.setString(baseName + "$$" + suffix + rest);
+            maybeSetNewName(t, typeNode, name, baseName + "$$" + suffix + rest);
           } else if (var == null && importMap.containsKey(baseName)) {
             ModuleOriginalNamePair pair = importMap.get(baseName);
             if (pair.originalName.isEmpty()) {
-              typeNode.setString(pair.module + rest);
+              maybeSetNewName(t, typeNode, name, pair.module + rest);
             } else {
-              typeNode.setString(baseName + "$$" + pair.module + rest);
+              maybeSetNewName(t, typeNode, name, baseName + "$$" + pair.module + rest);
             }
           }
           typeNode.setOriginalName(name);
@@ -661,7 +664,14 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
            child = child.getNext()) {
         fixTypeNode(t, child);
       }
-      t.reportCodeChange();
+    }
+
+    private void maybeSetNewName(NodeTraversal t, Node node, String name, String newName) {
+      if (!name.equals(newName)) {
+        node.setString(newName);
+        node.setOriginalName(name);
+        t.reportCodeChange();
+      }
     }
   }
 
