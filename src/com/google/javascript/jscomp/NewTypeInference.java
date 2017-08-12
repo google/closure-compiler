@@ -2072,6 +2072,9 @@ final class NewTypeInference implements CompilerPass {
     if (typeTransformations.isEmpty()) {
       return calleeType.instantiateGenerics(typeMap);
     }
+    if (!this.compiler.getOptions().getUseTTLinNTI()) {
+      return calleeType.instantiateGenericsWithUnknown();
+    }
     ImmutableMap<String, TypeI> mapWithOriginalNames = getTypemapWithOriginalNames(typeMap);
     LinkedHashMap<String, JSType> newTypeMap = new LinkedHashMap<>();
     newTypeMap.putAll(typeMap);

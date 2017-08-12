@@ -190,6 +190,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     CompilerOptions compilerOptions = super.getDefaultOptions();
     compilerOptions.setClosurePass(true);
     compilerOptions.setNewTypeInference(true);
+    compilerOptions.setUseTTLinNTI(true);
     compilerOptions.setWarningLevel(
         DiagnosticGroups.NEW_CHECK_TYPES_ALL_CHECKS, CheckLevel.WARNING);
     compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
