@@ -817,8 +817,21 @@ final class NameAnalyzer implements CompilerPass {
       nodesToKeep = new HashSet<>();
     }
 
+    private boolean isInterestingNode(Node n) {
+      switch (n.getToken()) {
+        case NAME:
+        case GETPROP:
+        case GETELEM:
+          return true;
+        default:
+          return false;
+      }
+    }
+
     private void addAllChildren(Node n) {
-      nodesToKeep.add(n);
+      if (isInterestingNode(n)) {
+        nodesToKeep.add(n);
+      }
       for (Node child = n.getFirstChild();
            child != null;
            child = child.getNext()) {

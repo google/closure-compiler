@@ -27,11 +27,12 @@ import com.google.javascript.rhino.Node;
 public final class NameAnalyzerTest extends CompilerTestCase {
 
   private static String kExterns =
-      "var window, top;" +
-      "var document;" +
-      "var Function;" +
-      "var Array;" +
-      "var externfoo; methods.externfoo;";
+      lines(
+          "var window, top;",
+          "var document;",
+          "var Function;",
+          "var Array;",
+          "var externfoo; methods.externfoo;");
 
   public NameAnalyzerTest() {
     super(kExterns);
