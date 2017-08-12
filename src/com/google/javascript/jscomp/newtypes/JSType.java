@@ -1702,14 +1702,9 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public final String toNonNullAnnotationString() {
-    return appendTo(new StringBuilder(), ToStringContext.FOR_ANNOTATION).toString();
-  }
-
-  @Override
-  public final String toAnnotationString() {
-    String s = toNonNullAnnotationString();
-    return s.startsWith("!") ? s.substring(1) : s;
+  public final String toAnnotationString(Nullability nullability) {
+    String result = appendTo(new StringBuilder(), ToStringContext.FOR_ANNOTATION).toString();
+    return nullability == Nullability.IMPLICIT ? result.replaceAll("^!", "") : result;
   }
 
   @Override

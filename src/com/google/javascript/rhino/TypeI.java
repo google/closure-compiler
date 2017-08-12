@@ -204,23 +204,29 @@ public interface TypeI extends Serializable {
    */
   Collection<String> getTypeParameters();
 
-  // TODO(sdh): Replace calls of toAnnotationString with toNonNullAnnotationString and
-  // then substring off any leading '!' if necessary.  Then delete toAnnotationString
-  // and consider renaming toNonNullAnnotationString as simply toAnnotationString.
   /**
    * Returns a string representation of this type, suitable for printing
-   * in type annotations at code generation time.  In particular, explicit
-   * non-null modifiers will be added to implicitly nullable types (except
-   * the outermost type, which is expected to be a reference type).
+   * in type annotations at code generation time.
    */
-  String toAnnotationString();
+  String toAnnotationString(Nullability nullability);
 
   /**
-   * Returns a string representation of this type, suitable for printing
-   * in type annotations at code generation time.  In particular, explicit
-   * non-null modifiers will be added to implicitly nullable types.
+   * Specifies how to express nullability of reference types in annotation strings and error
+   * messages. Note that this only applies to the outer-most type. Nullability of generic type
+   * arguments is always explicit.
    */
-  String toNonNullAnnotationString();
+  enum Nullability {
+    /**
+     * Include an explicit '!' for non-nullable reference types. This is suitable for use
+     * in most type contexts (particularly 'type', 'param', and 'return' annotations).
+     */
+    EXPLICIT,
+    /**
+     * Omit the explicit '!' from the outermost non-nullable reference type. This is suitable for
+     * use in cases where a single reference type is expected (e.g. 'extends' and 'implements').
+     */
+    IMPLICIT,
+  }
 
   /**
    * Returns the type inference of this object. Useful for debugging.

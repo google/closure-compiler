@@ -26,6 +26,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.TypeI.Nullability;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.Collection;
@@ -91,13 +92,15 @@ class TypedCodeGenerator extends CodeGenerator {
       return getFunctionAnnotation(node);
     } else if (type.isEnumObject()) {
       return "/** @enum {"
-          + type.toMaybeObjectType().getEnumeratedTypeOfEnumObject().toNonNullAnnotationString()
+          + type.toMaybeObjectType()
+              .getEnumeratedTypeOfEnumObject()
+              .toAnnotationString(Nullability.EXPLICIT)
           + "} */\n";
     } else if (!type.isUnknownType()
         && !type.isBottom()
         && !type.isVoidType()
         && !type.isPrototypeObject()) {
-      return "/** @type {" + node.getTypeI().toNonNullAnnotationString() + "} */\n";
+      return "/** @type {" + node.getTypeI().toAnnotationString(Nullability.EXPLICIT) + "} */\n";
     } else {
       return "";
     }
@@ -153,7 +156,7 @@ class TypedCodeGenerator extends CodeGenerator {
         && !funType.isInterface() // Interfaces never return a value.
         && !(funType.isConstructor() && retType.isVoidType())) {
       sb.append(" * ");
-      appendAnnotation(sb, "return", retType.toNonNullAnnotationString());
+      appendAnnotation(sb, "return", retType.toAnnotationString(Nullability.EXPLICIT));
       sb.append("\n");
     }
 
@@ -166,7 +169,7 @@ class TypedCodeGenerator extends CodeGenerator {
       if (thisType != null && !thisType.isUnknownType() && !thisType.isVoidType()) {
         if (fnNode == null || !thisType.equals(findMethodOwner(fnNode))) {
           sb.append(" * ");
-          appendAnnotation(sb, "this", thisType.toNonNullAnnotationString());
+          appendAnnotation(sb, "this", thisType.toAnnotationString(Nullability.EXPLICIT));
           sb.append("\n");
         }
       }
@@ -191,14 +194,14 @@ class TypedCodeGenerator extends CodeGenerator {
       ObjectTypeI superInstance = superConstructor.getInstanceType();
       if (!superInstance.toString().equals("Object")) {
         sb.append(" * ");
-        appendAnnotation(sb, "extends", superInstance.toAnnotationString());
+        appendAnnotation(sb, "extends", superInstance.toAnnotationString(Nullability.IMPLICIT));
         sb.append("\n");
       }
     }
     // Avoid duplicates, add implemented type to a set first
     Set<String> interfaces = new TreeSet<>();
     for (ObjectTypeI interfaze : funType.getAncestorInterfaces()) {
-      interfaces.add(interfaze.toAnnotationString());
+      interfaces.add(interfaze.toAnnotationString(Nullability.IMPLICIT));
     }
     for (String interfaze : interfaces) {
       sb.append(" * ");
@@ -211,7 +214,7 @@ class TypedCodeGenerator extends CodeGenerator {
   private void appendInterfaceAnnotations(StringBuilder sb, FunctionTypeI funType) {
     Set<String> interfaces = new TreeSet<>();
     for (ObjectTypeI interfaceType : funType.getAncestorInterfaces()) {
-      interfaces.add(interfaceType.toAnnotationString());
+      interfaces.add(interfaceType.toAnnotationString(Nullability.IMPLICIT));
     }
     for (String interfaze : interfaces) {
       sb.append(" * ");
@@ -258,13 +261,13 @@ class TypedCodeGenerator extends CodeGenerator {
   private String getParameterJSDocType(List<TypeI> types, int index, int minArgs, int maxArgs) {
     TypeI type = types.get(index);
     if (index < minArgs) {
-      return type.toNonNullAnnotationString();
+      return type.toAnnotationString(Nullability.EXPLICIT);
     }
     boolean isRestArgument = maxArgs == Integer.MAX_VALUE && index == types.size() - 1;
     if (isRestArgument) {
-      return "..." + restrictByUndefined(type).toNonNullAnnotationString();
+      return "..." + restrictByUndefined(type).toAnnotationString(Nullability.EXPLICIT);
     }
-    return restrictByUndefined(type).toNonNullAnnotationString() + "=";
+    return restrictByUndefined(type).toAnnotationString(Nullability.EXPLICIT) + "=";
   }
 
   /** Removes undefined from a union type. */

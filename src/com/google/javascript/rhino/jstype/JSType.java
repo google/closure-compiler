@@ -1672,21 +1672,12 @@ public abstract class JSType implements TypeI {
     return "{" + hashCode() + "}";
   }
 
-  /**
-   * A string representation of this type, suitable for printing
-   * in type annotations at code generation time.
-   *
-   * Don't call from this package; use appendAsNonNull instead.
-   */
-  @Override
-  public final String toAnnotationString() {
-    return appendTo(new StringBuilder(), true).toString();
-  }
-
   // Don't call from this package; use appendAsNonNull instead.
   @Override
-  public final String toNonNullAnnotationString() {
-    return appendAsNonNull(new StringBuilder(), true).toString();
+  public final String toAnnotationString(Nullability nullability) {
+    return nullability == Nullability.EXPLICIT
+        ? appendAsNonNull(new StringBuilder(), true).toString()
+        : appendTo(new StringBuilder(), true).toString();
   }
 
   final StringBuilder appendAsNonNull(StringBuilder sb, boolean forAnnotations) {
