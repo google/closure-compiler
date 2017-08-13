@@ -143,7 +143,7 @@ public class TranspilationPasses {
       };
 
   static final HotSwapPassFactory es6ExtractClasses =
-      new HotSwapPassFactory("Es6ExtractClasses", true) {
+      new HotSwapPassFactory(PassNames.ES6_EXTRACT_CLASSES, true) {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
           return new Es6ExtractClasses(compiler);

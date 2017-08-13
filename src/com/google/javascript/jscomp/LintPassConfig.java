@@ -97,7 +97,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
       };
 
   private final PassFactory closureRewriteClass =
-      new PassFactory("closureRewriteClass", true) {
+      new PassFactory(PassNames.CLOSURE_REWRITE_CLASS, true) {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
           return new ClosureRewriteClass(compiler);

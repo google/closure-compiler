@@ -79,31 +79,30 @@ class PhaseOptimizer implements CompilerPass {
   }
 
   /**
-   * NOTE(dimvar): There used to be some code that tried various orderings of loopable passes
-   * and picked the fastest one. This code became stale gradually and I decided to remove it.
-   * It was also never tried after the new pass scheduler was written.
-   * If we need to revisit this order in the future, we should write new code to do it.
+   * NOTE(dimvar): There used to be some code that tried various orderings of loopable passes and
+   * picked the fastest one. This code became stale gradually and I decided to remove it. It was
+   * also never tried after the new pass scheduler was written. If we need to revisit this order in
+   * the future, we should write new code to do it.
    *
-   * It is important that inlineVariables and peepholeOptimizations run after inlineFunctions,
+   * <p>It is important that inlineVariables and peepholeOptimizations run after inlineFunctions,
    * because inlineFunctions relies on them to clean up patterns it introduces. This affects our
    * size-based loop-termination heuristic.
    */
   @VisibleForTesting
   static final ImmutableList<String> OPTIMAL_ORDER =
       ImmutableList.of(
-          "inlineFunctions",
-          "inlineVariables",
-          "deadAssignmentsElimination",
-          "collapseObjectLiterals",
-          "removeUnusedVars",
-          "removeUnusedPrototypeProperties",
-          "removeUnusedClassProperties",
+          PassNames.INLINE_FUNCTIONS,
+          PassNames.INLINE_VARIABLES,
+          PassNames.DEAD_ASSIGNMENT_ELIMINATION,
+          PassNames.COLLAPSE_OBJECT_LITERALS,
+          PassNames.REMOVE_UNUSED_VARS,
+          PassNames.REMOVE_UNUSED_PROTOTYPE_PROPERTIES,
+          PassNames.REMOVE_UNUSED_CLASS_PROPERTIES,
           PassNames.PEEPHOLE_OPTIMIZATIONS,
-          "minimizeExitPoints",
-          "removeUnreachableCode");
+          PassNames.REMOVE_UNREACHABLE_CODE);
 
-  static final ImmutableList<String> CODE_REMOVING_PASSES = ImmutableList.of(
-      PassNames.PEEPHOLE_OPTIMIZATIONS, PassNames.REMOVE_UNREACHABLE_CODE);
+  static final ImmutableList<String> CODE_REMOVING_PASSES =
+      ImmutableList.of(PassNames.PEEPHOLE_OPTIMIZATIONS, PassNames.REMOVE_UNREACHABLE_CODE);
 
   static final int MAX_LOOPS = 100;
   static final String OPTIMIZE_LOOP_ERROR =

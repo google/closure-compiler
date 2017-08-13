@@ -3531,18 +3531,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     // Do not close the input stream, caller is responsible for closing it.
     final ObjectInputStream objectInputStream = new CompilerObjectInputStream(inputStream);
-    CompilerState compilerState = runInCompilerThread(new Callable<CompilerState>() {
-      @Override
-      public CompilerState call() throws Exception {
-        Tracer tracer = newTracer("deserializeCompilerState");
-        CompilerState compilerState = (CompilerState) objectInputStream.readObject();
-        if (compilerState.typeRegistry != null) {
-          compilerState.typeRegistry.restoreContents(objectInputStream);
-        }
-        stopTracer(tracer, "deserializeCompilerState");
-        return compilerState;
-      }
-    });
+    CompilerState compilerState =
+        runInCompilerThread(
+            new Callable<CompilerState>() {
+              @Override
+              public CompilerState call() throws Exception {
+                Tracer tracer = newTracer(PassNames.DESERIALIZE_COMPILER_STATE);
+                CompilerState compilerState = (CompilerState) objectInputStream.readObject();
+                if (compilerState.typeRegistry != null) {
+                  compilerState.typeRegistry.restoreContents(objectInputStream);
+                }
+                stopTracer(tracer, PassNames.DESERIALIZE_COMPILER_STATE);
+                return compilerState;
+              }
+            });
 
     featureSet = compilerState.featureSet;
     externs = compilerState.externs;
