@@ -60,7 +60,6 @@ import java.util.Objects;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
 import javax.annotation.Nullable;
 
 /**
@@ -648,9 +647,7 @@ public final class SymbolTable {
    * (NULL) with \0 and all '\n' (newline) with \n.
    */
   private static String sanitizeSpecialChars(String s) {
-    return s.replaceAll("\\\\", Matcher.quoteReplacement("\\\\"))
-        .replaceAll("\0", Matcher.quoteReplacement("\\0"))
-        .replaceAll("\n", Matcher.quoteReplacement("\\n"));
+    return s.replace("\\", "\\\\").replace("\0", "\\0").replace("\n", "\\n");
   }
 
   private Symbol addSymbol(
