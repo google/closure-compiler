@@ -108,7 +108,7 @@ function PushManager() {}
 
 /**
  * @param {PushSubscriptionOptions=} opt_options
- * @return {!Promise<PushSubscription>}
+ * @return {!Promise<!PushSubscription>}
  */
 PushManager.prototype.subscribe = function(opt_options) {};
 
