@@ -1286,11 +1286,12 @@ final class NewTypeInference implements CompilerPass {
     if (fn.isFromExterns()) {
       return true;
     }
+    DeclaredFunctionType declFn = methodScope.getDeclaredFunctionType();
+    if (declFn != null && declFn.isAbstract() && declFn.getReceiverType() != null) {
+      return true;
+    }
     if (!NodeUtil.isPrototypeMethod(fn)) {
       return false;
-    }
-    if (methodScope.getDeclaredFunctionType().isAbstract()) {
-      return true;
     }
     JSType maybeInterface;
     Node ntQnameNode = NodeUtil.getPrototypeClassName(fn.getParent().getFirstChild());

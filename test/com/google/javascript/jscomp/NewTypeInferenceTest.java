@@ -19322,6 +19322,19 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function Bar() {}",
         "/** @abstract */",
         "Bar.prototype.prop = function() {};"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @abstract @constructor */",
+        "function Foo() {}",
+        "Object.defineProperties(Foo.prototype, {",
+        "  foo: {",
+        "    /**",
+        "     * @abstract @this {Foo}",
+        "     * @return {number}",
+        "     */",
+        "    get: function() {}",
+        "  }",
+        "});"));
   }
 
   public void testAbstractMethodCalls() {

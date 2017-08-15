@@ -465,6 +465,13 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "    A.prototype.bar();",
             "  }",
             "}"));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @abstract */",
+            "class A {",
+            "  /** @abstract @return {number} */ get foo() {}",
+            "}"));
   }
 
   // super is handled natively in both type checkers, which results in ASTs that
