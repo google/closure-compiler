@@ -254,8 +254,7 @@ public final class ReferenceCollectingCallback
    * Updates block stack.
    */
   @Override
-  public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
-      Node parent) {
+  public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
     // We automatically traverse a hoisted function body when that function
     // is first referenced, so that the reference lists are in the right order.
     //
@@ -362,6 +361,11 @@ public final class ReferenceCollectingCallback
 
     Map<Var, ReferenceCollection> getRawReferenceMap() {
       return referenceMap;
+    }
+
+    @Override
+    public String toString() {
+      return referenceMap.toString();
     }
   }
 
