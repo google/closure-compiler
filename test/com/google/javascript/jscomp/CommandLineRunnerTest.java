@@ -327,7 +327,7 @@ public final class CommandLineRunnerTest extends TestCase {
     test(
         "/** @constructor */\n"
         + "function Foo() {}\n"
-        +"Foo.prototype.handle1 = function(x, y) { alert(y); };\n"
+        + "Foo.prototype.handle1 = function(x, y) { alert(y); };\n"
         + "/** @constructor */\n"
         + "function Bar() {}\n"
         + "Bar.prototype.handle1 = function(x, y) {};\n"
@@ -1043,10 +1043,9 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--source_map_location_mapping=foo/|http://bar");
     testSame("var x = 3;");
 
-    List<LocationMapping> mappings = lastCompiler.getOptions()
-        .sourceMapLocationMappings;
-    assertThat(ImmutableSet.copyOf(mappings).toString())
-        .isEqualTo(ImmutableSet.of(new LocationMapping("foo/", "http://bar")).toString());
+    List<LocationMapping> mappings = lastCompiler.getOptions().sourceMapLocationMappings;
+    assertThat(ImmutableSet.copyOf(mappings))
+        .containsExactly(new LocationMapping("foo/", "http://bar"));
   }
 
   public void testSourceMapLocationsTranslations2() {
