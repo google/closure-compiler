@@ -1910,6 +1910,7 @@ final class NewTypeInference implements CompilerPass {
     if (expr.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
       expr.removeProp(Node.ANALYZED_DURING_GTI);
       markAndGetTypeOfPreanalyzedNode(expr.getFirstChild(), inEnv, true);
+      markAndGetTypeOfPreanalyzedNode(expr.getLastChild(), inEnv, true);
       return new EnvTypePair(inEnv, requiredType);
     }
     mayWarnAboutConst(expr);
@@ -4392,43 +4393,46 @@ final class NewTypeInference implements CompilerPass {
 
   // Some expressions are analyzed during GTI, so they're skipped here.
   // But we must annotate them with a type anyway.
-  private JSType markAndGetTypeOfPreanalyzedNode(Node qnameNode, TypeEnv env, boolean isFwd) {
-    switch (qnameNode.getToken()) {
+  private JSType markAndGetTypeOfPreanalyzedNode(Node n, TypeEnv env, boolean isFwd) {
+    switch (n.getToken()) {
       case NAME:
       case THIS: {
-        JSType result = envGetType(env, qnameNode.isThis() ? THIS_ID : qnameNode.getString());
-        Preconditions.checkNotNull(result, "Null declared type at node: %s", qnameNode);
+        JSType result = envGetType(env, n.isThis() ? THIS_ID : n.getString());
+        Preconditions.checkNotNull(result, "Null declared type at node: %s", n);
         if (isFwd) {
-          maybeSetTypeI(qnameNode, result);
+          maybeSetTypeI(n, result);
         }
         return result;
       }
       case GETPROP: {
-        JSType recvType = markAndGetTypeOfPreanalyzedNode(qnameNode.getFirstChild(), env, isFwd);
-        String pname = qnameNode.getLastChild().getString();
+        JSType recvType = markAndGetTypeOfPreanalyzedNode(n.getFirstChild(), env, isFwd);
+        String pname = n.getLastChild().getString();
         JSType result = null;
         if (recvType.isSubtypeOf(TOP_OBJECT)) {
           result = recvType.getProp(new QualifiedName(pname));
         }
 
         if (result == null) {
-          warnings.add(JSError.make(qnameNode, UNKNOWN_NAMESPACE_PROPERTY,
-                  qnameNode.getQualifiedName()));
+          warnings.add(JSError.make(n, UNKNOWN_NAMESPACE_PROPERTY,
+                  n.getQualifiedName()));
           return UNKNOWN;
         }
 
-        Preconditions.checkNotNull(result, "Null declared type@%s", qnameNode);
+        Preconditions.checkNotNull(result, "Null declared type@%s", n);
         if (isFwd) {
-          maybeSetTypeI(qnameNode, result);
+          maybeSetTypeI(n, result);
         }
         return result;
       }
-      default:
-        throw new RuntimeException(
-            "markAndGetTypeOfPreanalyzedNode: unexpected node "
-                + compiler.toSource(qnameNode)
-                + " with token "
-                + qnameNode.getToken());
+      default: {
+        // For the rhs of an assignment, just mark it with the type of the lhs.
+        Node assign = n.getParent();
+        checkState(assign.isAssign() && assign.getLastChild() == n,
+            "Expected assign but found %s", assign);
+        JSType lhsType = checkNotNull((JSType) assign.getFirstChild().getTypeI());
+        maybeSetTypeI(n, lhsType);
+        return lhsType;
+      }
     }
   }
 
