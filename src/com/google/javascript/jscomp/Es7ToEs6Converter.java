@@ -15,8 +15,16 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
+import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
+
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 
 /**
  * Converts ES7 code to valid ES6 code.
@@ -25,9 +33,12 @@ import com.google.javascript.rhino.Node;
  */
 public final class Es7ToEs6Converter implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
+  private final boolean addTypes;
+  private final Supplier<Node> mathPow = Suppliers.memoize(new MathPowSupplier());
 
   public Es7ToEs6Converter(AbstractCompiler compiler) {
     this.compiler = compiler;
+    this.addTypes = MostRecentTypechecker.NTI.equals(compiler.getMostRecentTypechecker());
   }
 
   @Override
@@ -64,7 +75,7 @@ public final class Es7ToEs6Converter implements NodeTraversal.Callback, HotSwapC
     Node left = n.removeFirstChild();
     Node right = n.removeFirstChild();
     Node mathDotPowCall =
-        IR.call(NodeUtil.newQName(compiler, "Math.pow"), left, right)
+        withType(IR.call(mathPow.get().cloneTree(), left, right), n.getTypeI())
             .useSourceInfoIfMissingFromForTree(n);
     parent.replaceChild(n, mathDotPowCall);
     compiler.reportChangeToEnclosingScope(mathDotPowCall);
@@ -73,9 +84,28 @@ public final class Es7ToEs6Converter implements NodeTraversal.Callback, HotSwapC
   private void visitExponentiationAssignmentExpression(Node n, Node parent) {
     Node left = n.removeFirstChild();
     Node right = n.removeFirstChild();
-    Node mathDotPowCall = IR.call(NodeUtil.newQName(compiler, "Math.pow"), left.cloneTree(), right);
-    Node assign = IR.assign(left, mathDotPowCall).useSourceInfoIfMissingFromForTree(n);
+    Node mathDotPowCall =
+        withType(IR.call(mathPow.get().cloneTree(), left.cloneTree(), right), n.getTypeI());
+    Node assign =
+        withType(IR.assign(left, mathDotPowCall), n.getTypeI())
+            .useSourceInfoIfMissingFromForTree(n);
     parent.replaceChild(n, assign);
     compiler.reportChangeToEnclosingScope(assign);
+  }
+
+  private class MathPowSupplier implements Supplier<Node> {
+    @Override public Node get() {
+      Node n = NodeUtil.newQName(compiler, "Math.pow");
+      if (addTypes) {
+        TypeI mathType = compiler.getTypeIRegistry().getType("Math");
+        TypeI mathPowType = mathType.toMaybeObjectType().getPropertyType("pow");
+        TypeI stringType =
+            createType(addTypes, compiler.getTypeIRegistry(), JSTypeNative.STRING_TYPE);
+        n.setTypeI(mathPowType);
+        n.getFirstChild().setTypeI(mathType);
+        n.getSecondChild().setTypeI(stringType);
+      }
+      return n;
+    }
   }
 }
