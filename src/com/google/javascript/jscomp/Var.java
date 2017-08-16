@@ -214,6 +214,7 @@ public class Var implements StaticSlot, StaticRef {
       Token.FUNCTION,
       Token.CLASS,
       Token.CATCH,
+      Token.IMPORT,
       Token.PARAM_LIST);
 
   protected Token declarationType() {

@@ -162,7 +162,7 @@ public final class ReferenceCollectingCallback
    */
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isName() || (n.isStringKey() && !n.hasChildren())) {
+    if (n.isName() || n.isImportStar() || (n.isStringKey() && !n.hasChildren())) {
       Var v = t.getScope().getVar(n.getString());
 
       if (v != null) {

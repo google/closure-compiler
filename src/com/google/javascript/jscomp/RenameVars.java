@@ -185,7 +185,7 @@ final class RenameVars implements CompilerPass {
    * Iterate through the nodes, collect all the NAME nodes that need to be
    * renamed, and count how many times each variable name is referenced.
    *
-   * Keep track of all name references in globalNameNodes_, and localNameNodes_.
+   * Keep track of all name references in globalNameNodes, and localNameNodes.
    *
    * To get shorter local variable renaming, we rename local variables to a
    * temporary name "LOCAL_VAR_PREFIX + index" where index is the index of the
@@ -224,14 +224,20 @@ final class RenameVars implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (!n.isName()) {
+      if (!(n.isName() || n.isImportStar())) {
         return;
       }
 
       String name = n.getString();
 
-      // Ignore anonymous functions
+      // Ignore anonymous functions and classes.
       if (name.isEmpty()) {
+        return;
+      }
+
+      // "import {x as y} from 'm';"
+      // Skip x because it's not a variable in this scope.
+      if (parent.isImportSpec() && parent.hasTwoChildren() && parent.getFirstChild() == n) {
         return;
       }
 

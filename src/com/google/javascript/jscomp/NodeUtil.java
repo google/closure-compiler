@@ -3753,12 +3753,17 @@ public final class NodeUtil {
 
   private static void getLhsNodesHelper(Node n, List<Node> lhsNodes) {
     switch (n.getToken()) {
+      case IMPORT:
+        getLhsNodesHelper(n.getFirstChild(), lhsNodes);
+        getLhsNodesHelper(n.getSecondChild(), lhsNodes);
+        return;
       case VAR:
       case CONST:
       case LET:
       case OBJECT_PATTERN:
       case ARRAY_PATTERN:
       case PARAM_LIST:
+      case IMPORT_SPECS:
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
           getLhsNodesHelper(child, lhsNodes);
         }
@@ -3769,6 +3774,7 @@ public final class NodeUtil {
       case REST:
         getLhsNodesHelper(n.getFirstChild(), lhsNodes);
         return;
+      case IMPORT_SPEC:
       case COMPUTED_PROP:
         getLhsNodesHelper(n.getLastChild(), lhsNodes);
         return;
@@ -3779,10 +3785,11 @@ public final class NodeUtil {
           checkState(isLValue(n));
           lhsNodes.add(n);
         }
-        break;
+        return;
       case NAME:
+      case IMPORT_STAR:
         lhsNodes.add(n);
-        break;
+        return;
       default:
         Preconditions.checkState(n.isEmpty(), "Invalid node in lhs of declaration: %s", n);
     }
@@ -3795,7 +3802,8 @@ public final class NodeUtil {
             || declNode.isParamList()
             || declNode.isCatch()
             || declNode.isDestructuringLhs()
-            || declNode.isDefaultValue(),
+            || declNode.isDefaultValue()
+            || declNode.isImport(),
         declNode);
     ArrayList<Node> lhsNodes = new ArrayList<>();
     getLhsNodesHelper(declNode, lhsNodes);

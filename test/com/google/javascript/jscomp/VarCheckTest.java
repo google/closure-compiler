@@ -665,11 +665,8 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testImportedNameCollision() {
-    // What should be the expected behavior here? Should the following test throw a duplicate
-    // declaration error?
+    // TODO(tbreisacher): This should throw a duplicate declaration error.
     testSame("import foo from './foo'; foo('hello'); var foo = 5;");
-
-    checkSynthesizedExtern("import foo from './foo'; foo('hello');", "var foo");
   }
 
   private static final class VariableTestCheck implements CompilerPass {

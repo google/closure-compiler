@@ -753,6 +753,53 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertTrue(catchBlockScope.isDeclared("e", false));
   }
 
+  public void testImport() {
+    String js = LINE_JOINER.join(
+        "import * as ns from 'm1';",
+        "import d from 'm2';",
+        "import {foo} from 'm3';",
+        "import {x as y} from 'm4';");
+
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertThat(globalScope.getVarIterable()).isEmpty();
+
+    Node moduleBody = root.getFirstChild();
+    checkState(moduleBody.isModuleBody(), moduleBody);
+    Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
+    assertTrue(moduleScope.isDeclared("ns", false));
+    assertTrue(moduleScope.isDeclared("d", false));
+    assertTrue(moduleScope.isDeclared("foo", false));
+    assertTrue(moduleScope.isDeclared("y", false));
+    assertFalse(moduleScope.isDeclared("x", false));
+  }
+
+  public void testImportAsSelf() {
+    String js = "import {x as x} from 'm';";
+
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertThat(globalScope.getVarIterable()).isEmpty();
+
+    Node moduleBody = root.getFirstChild();
+    checkState(moduleBody.isModuleBody(), moduleBody);
+    Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
+    assertTrue(moduleScope.isDeclared("x", false));
+  }
+
+  public void testImportDefault() {
+    String js = "import x from 'm';";
+
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertThat(globalScope.getVarIterable()).isEmpty();
+
+    Node moduleBody = root.getFirstChild();
+    checkState(moduleBody.isModuleBody(), moduleBody);
+    Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
+    assertTrue(moduleScope.isDeclared("x", false));
+  }
+
   public void testModuleScoped() {
     // TODO (simranarora) Make this pass. Currently, functions are only declared if their parent
     // nodes are statement nodes. "EXPORT" is not part of the statement node enum!
