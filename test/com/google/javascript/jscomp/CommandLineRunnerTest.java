@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -2388,12 +2387,9 @@ public final class CommandLineRunnerTest extends TestCase {
         Suppliers.ofInstance(externs),
         inputsSupplier,
         modulesSupplier,
-        new Function<Integer, Void>() {
-          @Override
-          public Void apply(Integer code) {
-            exitCodes.add(code);
-            return null;
-          }
+        (Integer code) -> {
+          exitCodes.add(code);
+          return null;
         });
     runner.run();
     lastCompiler = runner.getCompiler();

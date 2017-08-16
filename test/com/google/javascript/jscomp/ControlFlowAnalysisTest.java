@@ -90,12 +90,7 @@ public final class ControlFlowAnalysisTest extends TestCase {
       ControlFlowGraph<Node> cfg, Token startToken, Token endToken, Branch type) {
     List<DiGraphEdge<Node, Branch>> edges =
         getAllEdges(cfg, startToken, endToken);
-    Iterator<DiGraphEdge<Node, Branch>> it = edges.iterator();
-    while (it.hasNext()) {
-      if (type != it.next().getValue()) {
-        it.remove();
-      }
-    }
+    edges.removeIf(elem -> type != elem.getValue());
     return edges;
   }
 

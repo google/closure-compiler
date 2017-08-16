@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
+import static java.util.Comparator.comparingInt;
 
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -926,13 +927,7 @@ public final class DataFlowAnalysisTest extends TestCase {
           @Override
           public Comparator<DiGraphNode<Instruction, Branch>> getOptionalNodeComparator(
               boolean isForward) {
-            return new Comparator<DiGraphNode<Instruction, Branch>>() {
-              @Override
-              public int compare(
-                  DiGraphNode<Instruction, Branch> o1, DiGraphNode<Instruction, Branch> o2) {
-                return o1.getValue().order - o2.getValue().order;
-              }
-            };
+            return comparingInt(arg -> arg.getValue().order);
           }
         };
     cfg.createNode(inst1);

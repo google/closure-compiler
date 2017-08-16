@@ -2086,14 +2086,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   private JSType findNameType(final String name, TypedScope scope) {
-    return findTypeOnMatchedNode(
-        new Predicate<Node>() {
-          @Override
-          public boolean apply(Node n) {
-            return n.matchesQualifiedName(name);
-          }
-        },
-        scope);
+    return findTypeOnMatchedNode(n -> n.matchesQualifiedName(name), scope);
   }
 
   private String findNameTypeStr(final String name, TypedScope scope) {
@@ -2101,14 +2094,7 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   private JSType findTokenType(final Token type, TypedScope scope) {
-    return findTypeOnMatchedNode(
-        new Predicate<Node>() {
-          @Override
-          public boolean apply(Node n) {
-            return type == n.getToken();
-          }
-        },
-        scope);
+    return findTypeOnMatchedNode(n -> type == n.getToken(), scope);
   }
 
   private JSType findTypeOnMatchedNode(Predicate<Node> matcher, TypedScope scope) {
