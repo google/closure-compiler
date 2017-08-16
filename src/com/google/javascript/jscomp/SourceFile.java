@@ -616,10 +616,8 @@ public class SourceFile implements StaticSourceFile, Serializable {
       String cachedCode = super.getCode();
 
       if (cachedCode == null) {
-        try {
-          try (Reader r = getCodeReader()) {
-            cachedCode = CharStreams.toString(r);
-          }
+        try (Reader r = getCodeReader()) {
+          cachedCode = CharStreams.toString(r);
         } catch (java.nio.charset.MalformedInputException e) {
           throw new IOException("Failed to read: " + path + ", is this input UTF-8 encoded?", e);
         }

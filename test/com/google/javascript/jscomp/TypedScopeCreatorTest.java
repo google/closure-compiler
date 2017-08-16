@@ -2086,11 +2086,14 @@ public final class TypedScopeCreatorTest extends CompilerTestCase {
   }
 
   private JSType findNameType(final String name, TypedScope scope) {
-    return findTypeOnMatchedNode(new Predicate<Node>() {
-      @Override public boolean apply(Node n) {
-        return name.equals(n.getQualifiedName());
-      }
-    }, scope);
+    return findTypeOnMatchedNode(
+        new Predicate<Node>() {
+          @Override
+          public boolean apply(Node n) {
+            return n.matchesQualifiedName(name);
+          }
+        },
+        scope);
   }
 
   private String findNameTypeStr(final String name, TypedScope scope) {

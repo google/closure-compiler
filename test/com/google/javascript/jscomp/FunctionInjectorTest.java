@@ -39,7 +39,7 @@ public final class FunctionInjectorTest extends TestCase {
   static final InliningMode INLINE_DIRECT = InliningMode.DIRECT;
   static final InliningMode INLINE_BLOCK = InliningMode.BLOCK;
   private boolean assumeStrictThis = false;
-  private boolean assumeMinimumCapture = false;
+  private final boolean assumeMinimumCapture = false;
 
   @Override
   protected void setUp() throws Exception {

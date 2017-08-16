@@ -1458,7 +1458,7 @@ public final class FunctionType implements Serializable {
     }
     if (!this.typeParameters.isEmpty()) {
       builder.append("<");
-      builder.append(Joiner.on(",").join(getPrettyTypeParams(this.typeParameters.asList(), ctx)));
+      Joiner.on(",").appendTo(builder, getPrettyTypeParams(this.typeParameters.asList(), ctx));
       builder.append(">");
     }
     builder.append("function(");

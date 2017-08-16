@@ -33,7 +33,7 @@ public final class ProcessDefinesTest extends CompilerTestCase {
     super(DEFAULT_EXTERNS + "var externMethod;");
   }
 
-  private Map<String, Node> overrides = new HashMap<>();
+  private final Map<String, Node> overrides = new HashMap<>();
   private GlobalNamespace namespace;
   private boolean doReplacements;
 

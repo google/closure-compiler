@@ -50,9 +50,7 @@ public final class TypeParameters implements Serializable {
     for (String typeParam : ordinaryTypeParams) {
       builder.put(typeParam, IR.empty());
     }
-    for (Map.Entry<String, Node> entry : ttlParams.entrySet()) {
-      builder.put(entry);
-    }
+    builder.putAll(ttlParams);
     return new TypeParameters(builder.build());
   }
 

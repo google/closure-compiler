@@ -48,7 +48,7 @@ public final class GlobalVarReferenceMapTest extends TestCase {
   private final Map<Var, ReferenceCollection> globalMap = new HashMap<>();
   private final Node root = new Node(Token.ROOT);
   private final Scope globalScope = Scope.createGlobalScope(root);
-  private Node scriptRoot = new Node(Token.SCRIPT);
+  private final Node scriptRoot = new Node(Token.SCRIPT);
 
   // In the initial setUp we have 3 references to var1 (one in each input) and
   // 2 references to var2 (in first and third inputs), and 2 references to var3

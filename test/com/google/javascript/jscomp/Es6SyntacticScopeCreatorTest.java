@@ -856,7 +856,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertTrue(globalScope.isDeclared("f", false));
     assertFalse(globalScope.isDeclared("foo", false));
 
-    Node fNode = root.getFirstChild().getFirstChild().getFirstChild();
+    Node fNode = root.getFirstChild().getFirstFirstChild();
     Scope fScope = scopeCreator.createScope(fNode, globalScope);
     assertFalse(fScope.isDeclared("f", false));
     assertTrue(fScope.isDeclared("foo", false));
@@ -869,7 +869,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertTrue(globalScope.isDeclared("Clazz", false));
     assertFalse(globalScope.isDeclared("Foo", false));
 
-    Node classNode = root.getFirstChild().getFirstChild().getFirstChild();
+    Node classNode = root.getFirstChild().getFirstFirstChild();
     Scope classScope = scopeCreator.createScope(classNode, globalScope);
     assertFalse(classScope.isDeclared("Clazz", false));
     assertTrue(classScope.isDeclared("Foo", false));

@@ -33,7 +33,7 @@ import java.util.TreeSet;
 
 public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   private DisambiguateProperties lastPass;
-  private static String renameFunctionDefinition =
+  private static final String RENAME_FUNCTION_DEFINITION =
       "/** @const */ var goog = {};\n"
           + "/** @const */ goog.reflect = {};\n"
           + "/** @return {string} */\n"
@@ -84,7 +84,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSets(js, js, "{a=[[Foo.prototype]]}");
 
     js =
-        renameFunctionDefinition
+        RENAME_FUNCTION_DEFINITION
             + "/** @constructor */ function Foo() {}\n"
             + "Foo.prototype.a = 0;\n"
             + "/** @type {Foo} */\n"
@@ -104,7 +104,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSets(js, js, expected);
 
     js =
-        renameFunctionDefinition
+        RENAME_FUNCTION_DEFINITION
             + "/** @constructor */ function Foo() {}\n"
             + "Foo.prototype = {a: 0};\n"
             + "/** @type {Foo} */\n"
@@ -125,7 +125,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSets(js, js, expected);
 
     js =
-        renameFunctionDefinition
+        RENAME_FUNCTION_DEFINITION
             + "/** @constructor */ function Foo() {}\n"
             + "Foo.prototype = { get a() {return  0},"
             + "                  set a(b) {} };\n"

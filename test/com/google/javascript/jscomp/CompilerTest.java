@@ -218,14 +218,14 @@ public final class CompilerTest extends TestCase {
     File tempDir = Files.createTempDir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=foo.js.map";
     File jsFile = new File(tempDir, "foo.js");
-    Files.write(code, jsFile, Charsets.UTF_8);
+    Files.asCharSink(jsFile, Charsets.UTF_8).write(code);
     File sourceMapFile = new File(tempDir, "foo.js.map");
-    Files.write(SOURCE_MAP, sourceMapFile, Charsets.UTF_8);
+    Files.asCharSink(sourceMapFile, Charsets.UTF_8).write(SOURCE_MAP);
 
     CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
     input.getAstRoot(compiler);
     // The source map is still
-    assertThat(compiler.inputSourceMaps.size()).isEqualTo(1);
+    assertThat(compiler.inputSourceMaps).hasSize(1);
 
     for (SourceMapInput inputSourceMap : compiler.inputSourceMaps.values()) {
       SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
@@ -242,14 +242,14 @@ public final class CompilerTest extends TestCase {
     relativedir.mkdir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=relativedir/foo.js.map";
     File jsFile = new File(tempDir, "foo.js");
-    Files.write(code, jsFile, Charsets.UTF_8);
+    Files.asCharSink(jsFile, Charsets.UTF_8).write(code);
     File sourceMapFile = new File(relativedir, "foo.js.map");
-    Files.write(SOURCE_MAP, sourceMapFile, Charsets.UTF_8);
+    Files.asCharSink(sourceMapFile, Charsets.UTF_8).write(SOURCE_MAP);
 
     CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
     input.getAstRoot(compiler);
     // The source map is still
-    assertThat(compiler.inputSourceMaps.size()).isEqualTo(1);
+    assertThat(compiler.inputSourceMaps).hasSize(1);
 
     for (SourceMapInput inputSourceMap : compiler.inputSourceMaps.values()) {
       SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
@@ -263,11 +263,11 @@ public final class CompilerTest extends TestCase {
     File tempDir = Files.createTempDir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=foo-does-not-exist.js.map";
     File jsFile = new File(tempDir, "foo2.js");
-    Files.write(code, jsFile, Charsets.UTF_8);
+    Files.asCharSink(jsFile, Charsets.UTF_8).write(code);
 
     CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
     input.getAstRoot(compiler);
-    assertThat(compiler.inputSourceMaps.size()).isEqualTo(1);
+    assertThat(compiler.inputSourceMaps).hasSize(1);
 
     TestErrorManager errorManager = new TestErrorManager();
     for (SourceMapInput inputSourceMap : compiler.inputSourceMaps.values()) {
@@ -286,12 +286,12 @@ public final class CompilerTest extends TestCase {
     File tempDir = Files.createTempDir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=/some/missing/path/foo.js.map";
     File jsFile = new File(tempDir, "foo.js");
-    Files.write(code, jsFile, Charsets.UTF_8);
+    Files.asCharSink(jsFile, Charsets.UTF_8).write(code);
 
     CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
     input.getAstRoot(compiler);
     // The source map is still
-    assertThat(compiler.inputSourceMaps.size()).isEqualTo(0);
+    assertThat(compiler.inputSourceMaps).isEmpty();
 
     // No warnings for unresolved absolute paths.
     assertEquals(0, errorManager.getWarningCount());

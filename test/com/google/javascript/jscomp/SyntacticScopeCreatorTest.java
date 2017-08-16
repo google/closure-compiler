@@ -101,7 +101,7 @@ public final class SyntacticScopeCreatorTest extends TestCase {
     Scope globalScope = scopeCreator.createScope(root, null);
     assertFalse(globalScope.isDeclared("foo", false));
 
-    Node fNode = root.getFirstChild().getFirstChild();
+    Node fNode = root.getFirstFirstChild();
     Scope fScope = scopeCreator.createScope(fNode, globalScope);
     assertTrue(fScope.isDeclared("foo", false));
   }

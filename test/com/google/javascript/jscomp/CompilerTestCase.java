@@ -562,7 +562,7 @@ public abstract class CompilerTestCase extends TestCase {
   /** Adds the given DiagnosticTypes to the set of warnings to ignore. */
   protected final void ignoreWarnings(DiagnosticType... warnings) {
     checkState(this.setUpRan, "Attempted to configure before running setUp().");
-    ignoredWarnings.addAll(Arrays.asList(warnings));
+    Collections.addAll(ignoredWarnings, warnings);
   }
 
   /** Adds the given DiagnosticGroups to the set of warnings to ignore. */
@@ -1916,7 +1916,7 @@ public abstract class CompilerTestCase extends TestCase {
         new NodeUtil.Visitor() {
           @Override
           public void visit(Node n) {
-            if (name.equals(n.getQualifiedName())) {
+            if (n.matchesQualifiedName(name)) {
               matches.add(n);
             }
           }

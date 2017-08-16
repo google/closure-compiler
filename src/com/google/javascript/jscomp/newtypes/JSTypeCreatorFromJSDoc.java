@@ -610,13 +610,13 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
       Node jsdocNode, RawNominalType ownerType, DeclaredTypeRegistry registry,
       ImmutableList<String> typeParameters, FunctionTypeBuilder builder) {
     Node child = jsdocNode.getFirstChild();
-    if (child.getToken() == Token.THIS) {
+    if (child.isThis()) {
       if (ownerType == null) {
         builder.addReceiverType(
             getThisOrNewType(child.getFirstChild(), registry, typeParameters));
       }
       child = child.getNext();
-    } else if (child.getToken() == Token.NEW) {
+    } else if (child.isNew()) {
       Node newTypeNode = child.getFirstChild();
       JSType t = getThisOrNewType(newTypeNode, registry, typeParameters);
       if (!t.isSubtypeOf(this.commonTypes.getTopObject())
@@ -627,7 +627,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
       builder.addNominalType(t);
       child = child.getNext();
     }
-    if (child.getToken() == Token.PARAM_LIST) {
+    if (child.isParamList()) {
       for (Node arg = child.getFirstChild(); arg != null; arg = arg.getNext()) {
         try {
           switch (arg.getToken()) {
@@ -998,7 +998,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
       Node funNode, JSType extendedType, DeclaredTypeRegistry registry) {
     if (extendedType.isUnknown()
         && docNode.getToken() == Token.BANG
-        && docNode.getFirstChild().getToken() == Token.STRING) {
+        && docNode.getFirstChild().isString()) {
       String varname = docNode.getFirstChild().getString();
       Declaration decl = registry.getDeclaration(QualifiedName.fromQualifiedString(varname), false);
       if (decl != null) {

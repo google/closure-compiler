@@ -151,7 +151,7 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
     @Override
     public Node optimizeSubtree(Node node) {
       if (node.isName() && "x".equals(node.getString())) {
-        node.getParent().removeChild(node);
+        node.detach();
         reportCodeChange();
 
         return null;
@@ -172,7 +172,7 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
       if (node.isName() && "x".equals(node.getString())) {
         Node parent = node.getParent();
         if (parent.isVar()) {
-          parent.getParent().removeChild(parent);
+          parent.detach();
           reportCodeChange();
           return null;
         }

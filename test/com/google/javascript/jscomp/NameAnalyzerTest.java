@@ -26,7 +26,7 @@ import com.google.javascript.rhino.Node;
 
 public final class NameAnalyzerTest extends CompilerTestCase {
 
-  private static String kExterns =
+  private static final String EXTERNS =
       lines(
           "var window, top;",
           "var document;",
@@ -35,7 +35,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
           "var externfoo; methods.externfoo;");
 
   public NameAnalyzerTest() {
-    super(kExterns);
+    super(EXTERNS);
   }
 
   @Override

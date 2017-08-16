@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -57,9 +58,9 @@ public final class IncrementalScopeCreatorTest extends TestCase {
       creator.createScope(root2, null);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertTrue(expected.getMessage().contains(
-          "the shared persistent scope must always "
-          + "be root at the tip of the AST"));
+      assertThat(expected)
+          .hasMessageThat()
+          .contains("the shared persistent scope must always " + "be root at the tip of the AST");
     }
   }
 
