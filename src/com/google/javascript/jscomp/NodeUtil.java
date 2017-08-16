@@ -1079,9 +1079,10 @@ public final class NodeUtil {
     // that we know to be safe
     switch (n.getToken()) {
       // other side-effect free statements and expressions
-      // Throws are by definition side effects, and yields are similar.
+      // Throws are by definition side effects, and yield and export are similar.
       case THROW:
       case YIELD:
+      case EXPORT:
         return true;
 
       case OBJECTLIT:
