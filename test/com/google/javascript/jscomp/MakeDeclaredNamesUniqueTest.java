@@ -227,25 +227,42 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
   }
 
   public void testMakeLocalNamesUniqueWithContext5() {
-    // Set the test type
     this.useDefaultRenamer = true;
-
     testWithInversion(
         "function f(){var f; f = 1}",
         "function f(){var f$jscomp$1; f$jscomp$1 = 1}");
+  }
+
+  public void testMakeLocalNamesUniqueWithContext6() {
+    this.useDefaultRenamer = true;
     testWithInversion(
         "function f(f){f = 1}",
         "function f(f$jscomp$1){f$jscomp$1 = 1}");
+  }
+
+  public void testMakeLocalNamesUniqueWithContext7() {
+    this.useDefaultRenamer = true;
     testWithInversion(
         "function f(f){var f; f = 1}",
         "function f(f$jscomp$1){var f$jscomp$1; f$jscomp$1 = 1}");
+  }
 
+  public void testMakeLocalNamesUniqueWithContext8() {
+    this.useDefaultRenamer = true;
     test(
         "var fn = function f(){var f; f = 1}",
         "var fn = function f(){var f$jscomp$1; f$jscomp$1 = 1}");
+  }
+
+  public void testMakeLocalNamesUniqueWithContext9() {
+    this.useDefaultRenamer = true;
     test(
         "var fn = function f(f){f = 1}",
         "var fn = function f(f$jscomp$1){f$jscomp$1 = 1}");
+  }
+
+  public void testMakeLocalNamesUniqueWithContext10() {
+    this.useDefaultRenamer = true;
     test(
         "var fn = function f(f){var f; f = 1}",
         "var fn = function f(f$jscomp$1){var f$jscomp$1; f$jscomp$1 = 1}");
