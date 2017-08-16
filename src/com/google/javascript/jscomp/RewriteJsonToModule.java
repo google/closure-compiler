@@ -151,7 +151,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
             packageJsonMainEntries.put(inputPath, dirName + entry.getString());
             break;
           } else if (entry.isObjectLit()) {
-            checkState(entryName == "browser");
+            checkState(entryName.equals("browser"), entryName);
 
             // don't break if we're processing a browser field that is an object literal
             // because one of its entries may override the package.json main, which
