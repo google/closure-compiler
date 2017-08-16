@@ -5005,13 +5005,13 @@ public final class NodeUtil {
     Node function = n.getParent();
     if (function == null
         || !function.isFunction()
-        || getFunctionParameters(function).getChildCount() != 1
+        || !getFunctionParameters(function).hasOneChild()
         || !getFunctionParameters(function).getFirstChild().matchesQualifiedName("exports")) {
       return false;
     }
     Node call = function.getParent();
     if (!call.isCall()
-        || call.getChildCount() != 2
+        || !call.hasTwoChildren()
         || !call.getFirstChild().matchesQualifiedName("goog.loadModule")) {
       return false;
     }

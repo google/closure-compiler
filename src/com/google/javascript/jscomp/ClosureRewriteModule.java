@@ -832,7 +832,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   private void recordGoogForwardDeclare(NodeTraversal t, Node call) {
     Node namespaceNode = call.getLastChild();
-    if (call.getChildCount() != 2 || !namespaceNode.isString()) {
+    if (!call.hasTwoChildren() || !namespaceNode.isString()) {
       t.report(namespaceNode, INVALID_FORWARD_DECLARE_NAMESPACE);
       return;
     }
@@ -848,7 +848,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   private void recordGoogModuleGet(NodeTraversal t, Node call) {
     Node legacyNamespaceNode = call.getLastChild();
-    if (call.getChildCount() != 2 || !legacyNamespaceNode.isString()) {
+    if (!call.hasTwoChildren() || !legacyNamespaceNode.isString()) {
       t.report(legacyNamespaceNode, INVALID_GET_NAMESPACE);
       return;
     }
@@ -949,7 +949,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         for (ExportDefinition export : inlinableExports) {
           recordExportToInline(export);
         }
-        NodeUtil.removeChild(n.getParent().getParent(), n.getParent());
+        NodeUtil.removeChild(n.getGrandparent(), n.getParent());
       } else {
         currentScript.willCreateExportsObject = true;
       }
@@ -1489,7 +1489,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void maybeSplitMultiVar(Node rhsNode) {
-    Node statementNode = rhsNode.getParent().getParent();
+    Node statementNode = rhsNode.getGrandparent();
     if (!statementNode.isVar() || !statementNode.hasMoreThanOneChild()) {
       return;
     }

@@ -930,7 +930,7 @@ class PeepholeMinimizeConditions
           n = n.getLastChild();
           continue;
         case BLOCK:
-          if (n.getChildCount() != 1) {
+          if (!n.hasOneChild()) {
             return false;
           }
           // This BLOCK has no curly braces.
