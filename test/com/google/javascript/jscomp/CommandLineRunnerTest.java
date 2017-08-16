@@ -1058,12 +1058,9 @@ public final class CommandLineRunnerTest extends TestCase {
 
     List<LocationMapping> mappings = lastCompiler.getOptions()
         .sourceMapLocationMappings;
-    assertThat(ImmutableSet.copyOf(mappings).toString())
-        .isEqualTo(
-            ImmutableSet.of(
-                    new LocationMapping("foo/", "http://bar"),
-                    new LocationMapping("xxx/", "http://yyy"))
-                .toString());
+    assertThat(ImmutableSet.copyOf(mappings))
+        .containsExactly(
+            new LocationMapping("foo/", "http://bar"), new LocationMapping("xxx/", "http://yyy"));
   }
 
   public void testSourceMapLocationsTranslations3() {
