@@ -2650,7 +2650,7 @@ public class Node implements Serializable {
    */
   public final void setSideEffectFlags(int flags) {
     checkArgument(
-        this.getToken() == Token.CALL || this.getToken() == Token.NEW,
+        this.isCall() || this.isNew(),
         "setIsNoSideEffectsCall only supports CALL and NEW nodes, got %s",
         this.getToken());
 
