@@ -1947,6 +1947,13 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
+  public FunctionTypeI withReturnType(TypeI returnType) {
+    checkState(this.isFunctionType());
+    return this.commonTypes.fromFunctionType(
+        getFunTypeIfSingletonObj().withReturnType((JSType) returnType));
+  }
+
+  @Override
   public final FunctionTypeI getConstructor() {
     checkState(this.isSingletonObj());
     FunctionType ctorType = this.getNominalTypeIfSingletonObj().getConstructorFunction();

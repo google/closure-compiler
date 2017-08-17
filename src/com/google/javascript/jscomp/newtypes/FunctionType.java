@@ -1402,6 +1402,22 @@ public final class FunctionType implements Serializable {
         this.isAbstract);
   }
 
+  /** Returns a function that is the same as this one, but whose return type is returnType. */
+  FunctionType withReturnType(JSType returnType) {
+    return new FunctionType(
+        this.commonTypes,
+        this.requiredFormals,
+        this.optionalFormals,
+        this.restFormals,
+        returnType,
+        this.nominalType,
+        this.receiverType,
+        this.outerVarPreconditions,
+        this.typeParameters,
+        this.isLoose,
+        this.isAbstract);
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (obj == null) {
