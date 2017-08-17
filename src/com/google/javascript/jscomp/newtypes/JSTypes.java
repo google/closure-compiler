@@ -471,6 +471,10 @@ public final class JSTypes implements Serializable {
         return UNDEFINED;
       case NULL_TYPE:
         return NULL;
+      case FALSE_TYPE:
+        return FALSE_TYPE;
+      case TRUE_TYPE:
+        return TRUE_TYPE;
       case BOOLEAN_TYPE:
         return BOOLEAN;
       case STRING_TYPE:
@@ -510,6 +514,8 @@ public final class JSTypes implements Serializable {
         return getITemplateArrayType();
       case ITERATOR_TYPE:
         return getIteratorInstance(UNKNOWN);
+      case GENERATOR_TYPE:
+        return getGeneratorInstance(UNKNOWN);
       default:
         throw new RuntimeException("Native type " + typeId.name() + " not found");
     }
