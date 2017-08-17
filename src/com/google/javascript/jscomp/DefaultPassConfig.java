@@ -2695,8 +2695,7 @@ public final class DefaultPassConfig extends PassConfig {
     return new PassFactory(name, isOneTimePass) {
       @Override
       protected CompilerPass create(AbstractCompiler compiler) {
-        boolean removeOnlyLocals = options.removeUnusedLocalVars
-            && !options.removeUnusedVars;
+        boolean removeOnlyLocals = options.removeUnusedLocalVars && !options.removeUnusedVars;
         boolean preserveAnonymousFunctionNames =
             options.anonymousFunctionNaming != AnonymousFunctionNamingPolicy.OFF;
         return new RemoveUnusedVars(
@@ -2708,7 +2707,7 @@ public final class DefaultPassConfig extends PassConfig {
 
       @Override
       public FeatureSet featureSet() {
-        return ES8_MODULES;
+        return ES5;
       }
     };
 

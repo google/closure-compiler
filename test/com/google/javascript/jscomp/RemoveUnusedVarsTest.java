@@ -289,6 +289,36 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     testSame("function f(unusedParam = undefined, z) { z; }; f();");
   }
 
+  public void testDefaultParams() {
+    test("function f(x = undefined) {}; f();", "function f() {}; f();");
+    test("function f(x = 0) {}; f();", "function f() {}; f();");
+    testSame("function f(x = 0, y = x) { alert(y); }; f();");
+  }
+
+  public void testDefaultParamsInClass() {
+    test(
+        "class Foo { constructor(value = undefined) {} }; new Foo;",
+        "class Foo { constructor() {} }; new Foo;");
+
+    testSame("class Foo { constructor(value = undefined) { value; } }; new Foo;");
+    testSame(
+        "class Foo extends Bar { constructor(value = undefined) { super(); value; } }; new Foo;");
+  }
+
+  // TODO(tbreisacher): Fix and enable.
+  public void disabled_testDefaultParamsInClassThatReferencesArguments() {
+    testSame(
+        LINE_JOINER.join(
+            "class Foo extends Bar {",
+            "  constructor(value = undefined) {",
+            "    super();",
+            "    if (arguments.length)",
+            "      value;",
+            "  }",
+            "};",
+            "new Foo;"));
+  }
+
   public void testDefaultParamsWithSideEffects() {
     testSame("function f(a = alert('foo')) {}; f();");
 
