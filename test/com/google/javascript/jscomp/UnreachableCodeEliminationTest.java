@@ -31,6 +31,12 @@ public final class UnreachableCodeEliminationTest extends CompilerTestCase {
     enableComputeSideEffects();
   }
 
+  public void testDontRemoveExport() {
+    test(
+        "export function foo() { return 1; alert(2); }",
+        "export function foo() { return 1; }");
+  }
+
   public void testRemoveUnreachableCode() {
     // switch statement with stuff after "return"
     test("function foo(){switch(foo){case 1:x=1;return;break;" +

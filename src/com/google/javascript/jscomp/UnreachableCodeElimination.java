@@ -228,6 +228,8 @@ class UnreachableCodeElimination implements CompilerPass {
           Node tryNode = parent.getParent();
           NodeUtil.maybeAddFinally(tryNode);
           break;
+        case EXPORT:
+          return;
         default:
           break;
       }
