@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Converts ES6 generator functions to valid ES3 code. This pass runs after all ES6 features
@@ -40,6 +41,8 @@ import java.util.Set;
  */
 public final class Es6RewriteGenerators
     extends NodeTraversal.AbstractPostOrderCallback implements HotSwapCompilerPass {
+
+  static final String GENERATOR_PRELOAD_FUNCTION_NAME = "$jscomp$generator$function$name";
 
   // Name of the variable that holds the state at which the generator
   // should resume execution after a call to yield or return.
@@ -101,7 +104,10 @@ public final class Es6RewriteGenerators
 
   @Override
   public void process(Node externs, Node root) {
+    // Report change only if the generator function is preloaded. See #cleanUpGeneratorSkeleton.
+    boolean reportChange = getPreloadedGeneratorFunc(compiler.getJsRoot()) != null;
     TranspilationPasses.processTranspile(compiler, root, new DecomposeYields(compiler), this);
+    cleanUpGeneratorSkeleton(reportChange);
   }
 
   @Override
@@ -222,50 +228,9 @@ public final class Es6RewriteGenerators
   }
 
   private void visitGenerator(Node n, Node parent) {
-    compiler.ensureLibraryInjected("es6/symbol", false);
+    Es6ToEs3Util.preloadEs6Symbol(compiler);
     hasTranslatedTry = false;
-    Node genBlock =
-        compiler
-            .parseSyntheticCode(
-                Joiner.on('\n')
-                    .join(
-                        "function generatorBody() {",
-                        "  var " + GENERATOR_STATE + " = " + generatorCaseCount + ";",
-                        "  function $jscomp$generator$impl(",
-                        "      " + GENERATOR_ACTION_ARG + ",",
-                        "      " + GENERATOR_NEXT_ARG + ",",
-                        "      " + GENERATOR_THROW_ARG + ") {",
-                        "    while (1) switch (" + GENERATOR_STATE + ") {",
-                        "      case " + generatorCaseCount + ":",
-                        "      default:",
-                        "        return {value: undefined, done: true};",
-                        "    }",
-                        "  }",
-                        // TODO(tbreisacher): Remove this cast if we start returning an actual
-                        // Generator object.
-                        "  var iterator = /** @type {!Generator<?>} */ ({",
-                        "    next: function(arg) {",
-                        "      return $jscomp$generator$impl("
-                            + GENERATOR_ACTION_NEXT
-                            + ", arg, undefined);",
-                        "    },",
-                        "    throw: function(arg) {",
-                        "      return $jscomp$generator$impl("
-                            + GENERATOR_ACTION_THROW
-                            + ", undefined, arg);",
-                        "    },",
-                        // TODO(tbreisacher): Implement Generator.return:
-                        // http://www.ecma-international.org/ecma-262/6.0/#sec-generator.prototype.return
-                        "    return: function(arg) { throw Error('Not yet implemented'); },",
-                        "  });",
-                        "  $jscomp.initSymbolIterator();",
-                        "  /** @this {!Generator<?>} */",
-                        "  iterator[Symbol.iterator] = function() { return this; };",
-                        "  return iterator;",
-                        "}"))
-            .getFirstChild() // function
-            .getLastChild()
-            .detach();
+    Node genBlock = preloadGeneratorSkeleton(compiler, false).getLastChild().cloneTree();
     generatorCaseCount++;
 
     originalGeneratorBody = n.getLastChild();
@@ -1232,6 +1197,110 @@ public final class Es6RewriteGenerators
     ExceptionContext(int catchStartCase, Node catchBlock) {
       this.catchStartCase = catchStartCase;
       this.catchBlock = catchBlock;
+    }
+  }
+
+  /**
+   * Preloads the skeleton AST function that is needed for generators,
+   * reports change to enclosing scope, and returns it.
+   * If the skeleton is already preloaded, does not do anything, just returns the node.
+   */
+  static Node preloadGeneratorSkeletonAndReportChange(AbstractCompiler compiler) {
+    return preloadGeneratorSkeleton(compiler, true);
+  }
+
+  /**
+   * Preloads the skeleton AST function that is needed for generators and returns it.
+   * If the skeleton is already preloaded, does not do anything, just returns the node.
+   * reportChange tells the function whether to report a code change in the enclosing scope.
+   *
+   * Because sanity checks happen between passes, we need to report the change if the generator
+   * was preloaded in the {@link EarlyEs6ToEs3Converter} class.
+   * However, if the generator was preloaded in this {@link Es6RewriteGenerators} class, we do not
+   * want to report the change since it will be removed by {@link #cleanUpGeneratorSkeleton}
+   */
+  private static Node preloadGeneratorSkeleton(AbstractCompiler compiler, boolean reportChange) {
+    Node root = compiler.getJsRoot();
+    Node generatorFunc = getPreloadedGeneratorFunc(root);
+    if (generatorFunc != null) {
+      return generatorFunc;
+    }
+    Node genFunc = compiler.parseSyntheticCode(Joiner.on('\n').join(
+        "function " + GENERATOR_PRELOAD_FUNCTION_NAME + "() {",
+        "  var " + GENERATOR_STATE + " = 0;",
+        "  function $jscomp$generator$impl(",
+        "      " + GENERATOR_ACTION_ARG + ",",
+        "      " + GENERATOR_NEXT_ARG + ",",
+        "      " + GENERATOR_THROW_ARG + ") {",
+        "    while (1) switch (" + GENERATOR_STATE + ") {",
+        "      case 0:",
+        "      default:",
+        "        return {value: undefined, done: true};",
+        "    }",
+        "  }",
+        // TODO(tbreisacher): Remove this cast if we start returning an actual
+        // Generator object.
+        "  var iterator = /** @type {!Generator<?>} */ ({",
+        "    next: function(arg) {",
+        "      return $jscomp$generator$impl("
+            + GENERATOR_ACTION_NEXT
+            + ", arg, undefined);",
+        "    },",
+        "    throw: function(arg) {",
+        "      return $jscomp$generator$impl("
+            + GENERATOR_ACTION_THROW
+            + ", undefined, arg);",
+        "    },",
+        // TODO(tbreisacher): Implement Generator.return:
+        // http://www.ecma-international.org/ecma-262/6.0/#sec-generator.prototype.return
+        "    return: function(arg) { throw Error('Not yet implemented'); },",
+        "  });",
+        "  $jscomp.initSymbolIterator();",
+        "  /** @this {!Generator<?>} */",
+        "  iterator[Symbol.iterator] = function() { return this; };",
+        "  return iterator;",
+        "}"))
+    .getFirstChild() // function
+    .detach();
+    root.getFirstChild().addChildToFront(genFunc);
+    if (reportChange) {
+      NodeUtil.markNewScopesChanged(genFunc, compiler);
+      compiler.reportChangeToEnclosingScope(genFunc);
+    }
+    return genFunc;
+  }
+
+  /** Returns the generator function that was preloaded, or null if not found. */
+  @Nullable
+  private static Node getPreloadedGeneratorFunc(Node root) {
+    if (root.getFirstChild() == null) {
+      return null;
+    }
+    for (Node c = root.getFirstFirstChild(); c != null; c = c.getNext()) {
+      if (c.isFunction() && GENERATOR_PRELOAD_FUNCTION_NAME.equals(c.getFirstChild().getString())) {
+        return c;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Delete the preloaded generator function, and report code change if reportChange is true.
+   *
+   * We only want to reportChange if the generator function was preloaded in the
+   * {@link EarlyEs6ToEs3Converter} class, since a change was reported there.
+   * If we preload the generator function in this class, it will be an addition and deletion of the
+   * same node, which means we do not have to report code change in either case since the code was
+   * ultimately not changed.
+   */
+  private void cleanUpGeneratorSkeleton(boolean reportChange) {
+    Node genFunc = getPreloadedGeneratorFunc(compiler.getJsRoot());
+    if (genFunc != null) {
+      if (reportChange) {
+        NodeUtil.deleteNode(genFunc, compiler);
+      } else {
+        genFunc.detach();
+      }
     }
   }
 }

@@ -233,6 +233,11 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     // Create common parent of externs and ast; needed by Es6RewriteBlockScopedDeclaration.
     Node block = IR.root(externsRoot, astRoot);
 
+    // TODO(dimvar): clean this up and use parseInputs instead of setting the jsRoot directly.
+    compiler.jsRoot = astRoot;
+    compiler.externsRoot = externsRoot;
+    compiler.externAndJsRoot = block;
+
     // Run ASTValidator
     (new AstValidator(compiler)).validateRoot(block);
 

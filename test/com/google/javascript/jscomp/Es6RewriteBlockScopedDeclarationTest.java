@@ -1379,6 +1379,13 @@ public final class Es6RewriteBlockScopedDeclarationTest extends TypeICompilerTes
         "}"));
   }
 
+  public void testBlockScopedGeneratorFunction() {
+    // Functions defined in a block get translated to a var
+    test(
+        "{ function *f() {yield 1;} }",
+        "{ var f = function*() { yield 1; }; }");
+  }
+
   public void testExterns() {
     testExternChanges("let x;", "", "var x;");
   }

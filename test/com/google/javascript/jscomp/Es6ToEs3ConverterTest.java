@@ -160,16 +160,6 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
     assertThat(getLastCompiler().injected).isEmpty();
   }
 
-  public void testClassGenerator() {
-    test(
-        "class C { *foo() { yield 1; } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "C.prototype.foo = function*() { yield 1;};"));
-    assertThat(getLastCompiler().injected).isEmpty();
-  }
-
   public void testClassStatement() {
     test("class C { }", "/** @constructor @struct */ var C = function() {};");
     test(
@@ -2654,14 +2644,6 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
         LINE_JOINER.join(
             "var $jscomp$compprop0 = {};",
             "var obj = ($jscomp$compprop0[foo] = function(){}, $jscomp$compprop0)"));
-
-    test(
-        "var obj = { *[foo]() {}}",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {};",
-            "var obj = (",
-            "  $jscomp$compprop0[foo] = function*(){},",
-            "  $jscomp$compprop0)"));
   }
 
   public void testComputedPropGetterSetter() {
@@ -2696,29 +2678,6 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
             "/** @constructor @struct */",
             "var C = function() {};",
             "C[foo] = function() { alert(2); };"));
-  }
-
-  public void testComputedPropGeneratorMethods() {
-    test(
-        "class C { *[foo]() { yield 1; } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "C.prototype[foo] = function*() { yield 1; };"));
-
-    test(
-        "class C { static *[foo]() { yield 2; } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "C[foo] = function*() { yield 2; };"));
-  }
-
-  public void testBlockScopedGeneratorFunction() {
-    // Functions defined in a block get translated to a var
-    test(
-        "{ function *f() {yield 1;} }",
-        "{ var f = function*() { yield 1; }; }");
   }
 
   public void testComputedPropCannotConvert() {

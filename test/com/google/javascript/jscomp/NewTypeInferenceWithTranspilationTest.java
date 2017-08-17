@@ -632,11 +632,11 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
     typeCheck(
         LINE_JOINER.join(
-            "function* foo(){",
-            "   yield 1; ",
-            "   yield 2; ",
-            "   yield 3; ",
-            "}; ",
+            "function* foo() {",
+            "  yield 1;",
+            "  yield 2;",
+            "  yield 3;",
+            "}",
             "function f(/** number */ y) {",
             "  for (var x of foo()) { y = x; }",
             "}"));

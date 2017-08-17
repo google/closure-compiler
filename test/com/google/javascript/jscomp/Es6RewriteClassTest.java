@@ -1974,6 +1974,32 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "C[foo] = function() { alert(2); };"));
   }
 
+  public void testComputedPropGeneratorMethods() {
+    test(
+        "class C { *[foo]() { yield 1; } }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let C = function() {};",
+            "C.prototype[foo] = function*() { yield 1; };"));
+
+    test(
+        "class C { static *[foo]() { yield 2; } }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let C = function() {};",
+            "C[foo] = function*() { yield 2; };"));
+  }
+
+  public void testClassGenerator() {
+    test(
+        "class C { *foo() { yield 1; } }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let C = function() {};",
+            "C.prototype.foo = function*() { yield 1;};"));
+    assertThat(getLastCompiler().injected).isEmpty();
+  }
+
   @Override
   protected Compiler createCompiler() {
     return new NoninjectingCompiler();

@@ -17978,6 +17978,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     Node externsNode = compiler.getInput(new InputId("[externs]"))
         .getAstRoot(compiler);
     Node externAndJsRoot = IR.root(externsNode, n);
+    compiler.jsRoot = n;
+    compiler.externsRoot = externsNode;
+    compiler.externAndJsRoot = externAndJsRoot;
 
     assertEquals("parsing error: " +
         Joiner.on(", ").join(compiler.getErrors()),
