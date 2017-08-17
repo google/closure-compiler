@@ -130,10 +130,11 @@ ExpectChain.prototype.below = function(value, opt_message) {};
 ExpectChain.prototype.most = function(value, opt_message) {};
 
 /**
- * @param {number} value
+ * @param {number} start
+ * @param {number} finish
  * @param {string=} opt_message
  */
-ExpectChain.prototype.within = function(value, opt_message) {};
+ExpectChain.prototype.within = function(start, finish, opt_message) {};
 
 /**
  * @param {function(new: Object)} constructor
