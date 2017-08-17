@@ -575,7 +575,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           String newName = name + "$$" + suffix;
           if (isShorthandObjLitKey) {
             // Change {a} to {a: a$$module$foo}
-            n.addChildToBack(IR.name(newName).useSourceInfoIfMissingFrom(n));
+            fixShorthandObjLit(n, IR.name(newName));
           } else {
             n.setString(newName);
             n.setOriginalName(name);
@@ -589,16 +589,34 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
           ModuleOriginalNamePair pair = importMap.get(name);
           Node moduleAccess = NodeUtil.newQName(compiler, pair.module);
-          if (pair.originalName.isEmpty()) {
-            n.replaceWith(moduleAccess.useSourceInfoIfMissingFromForTree(n));
+          boolean isImportStar = pair.originalName.isEmpty();
+          if (isShorthandObjLitKey) {
+            if (isImportStar) {
+              fixShorthandObjLit(n, moduleAccess);
+            } else {
+              fixShorthandObjLit(n, IR.getprop(moduleAccess, IR.string(pair.originalName)));
+            }
+            t.reportCodeChange(n);
           } else {
-            n.replaceWith(
-                IR.getprop(moduleAccess, IR.string(pair.originalName))
-                    .useSourceInfoIfMissingFromForTree(n));
+            if (isImportStar) {
+              n.replaceWith(moduleAccess.useSourceInfoIfMissingFromForTree(n));
+            } else {
+              n.replaceWith(
+                  IR.getprop(moduleAccess, IR.string(pair.originalName))
+                      .useSourceInfoIfMissingFromForTree(n));
+            }
+            t.reportCodeChange(moduleAccess);
           }
-          t.reportCodeChange(moduleAccess);
         }
       }
+    }
+
+    /**
+     * Replace shorthand object literal references to module imports with fully qualified
+     * value names. Eg: {foo} becomes {foo: module$imported.foo}.
+     */
+    private void fixShorthandObjLit(Node n, Node newNode) {
+      n.addChildToBack(newNode.useSourceInfoIfMissingFromForTree(n));
     }
 
     /**
