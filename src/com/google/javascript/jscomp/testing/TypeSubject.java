@@ -61,6 +61,11 @@ public final class TypeSubject extends Subject<TypeSubject, TypeI> {
     assertTrue(message, actual().isBooleanValueType());
   }
 
+  public void isUnknown() {
+    String message = "Type is of type " + actualAsString() + " not unknown.";
+    assertTrue(message, actual().isUnknownType());
+  }
+
   public void isLiteralObject() {
     String message = "Type is of type " + actualAsString() + " not a literal object.";
     assertTrue(message, actual().isLiteralObject());
