@@ -368,7 +368,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(setFeatureSet(ES7));
     }
 
-    if (options.needsTranspilationFrom(ES7)) {
+    if (options.needsTranspilationFrom(ES7) && !options.getTypeCheckEs6Natively()) {
       TranspilationPasses.addEs2016Passes(checks);
       checks.add(setFeatureSet(ES6));
     }
@@ -391,7 +391,7 @@ public final class DefaultPassConfig extends PassConfig {
         checks.add(setFeatureSet(FeatureSet.NTI_SUPPORTED));
       } else {
         // TODO(bradfordcsmith): This marking is really about how variable scoping is handled during
-        //     type checking. It should really be handled in a more direct fashion.
+        // type checking. It should really be handled in a more direct fashion.
         checks.add(setFeatureSet(options.getLanguageOut().toFeatureSet()));
       }
     }
@@ -406,14 +406,21 @@ public final class DefaultPassConfig extends PassConfig {
 
     // End of ES6 transpilation passes before NTI.
 
-    if (!options.skipNonTranspilationPasses && options.getTypeCheckEs6Natively()) {
-      checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
-      addNewTypeCheckerPasses(checks, options);
-    }
+    if (options.getTypeCheckEs6Natively()) {
+      if (!options.skipNonTranspilationPasses) {
+        checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
+        addNewTypeCheckerPasses(checks, options);
+      }
 
-    if (options.needsTranspilationFrom(ES6) && options.getTypeCheckEs6Natively()) {
-      TranspilationPasses.addEs6PassesAfterNTI(checks);
-      checks.add(setFeatureSet(options.getLanguageOut().toFeatureSet()));
+      if (options.needsTranspilationFrom(ES7)) {
+        TranspilationPasses.addEs2016Passes(checks);
+        checks.add(setFeatureSet(ES6));
+      }
+
+      if (options.needsTranspilationFrom(ES6)) {
+        TranspilationPasses.addEs6PassesAfterNTI(checks);
+        checks.add(setFeatureSet(options.getLanguageOut().toFeatureSet()));
+      }
     }
 
     if (!options.skipNonTranspilationPasses) {
