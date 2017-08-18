@@ -184,7 +184,6 @@ public final class DefaultPassConfig extends PassConfig {
     if (options.needsTranspilationFrom(ES6) || options.needsTranspilationFrom(ES7)) {
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
-      TranspilationPasses.addEs6PassesAfterNTI(passes);
       TranspilationPasses.addPostCheckPasses(passes);
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(passes);
@@ -208,6 +207,13 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(whitespaceWrapGoogModules);
     }
     return passes;
+  }
+
+  private void addNewTypeCheckerPasses(List<PassFactory> checks, CompilerOptions options) {
+    if (options.getNewTypeInference()) {
+      checks.add(symbolTableForNewTypeInference);
+      checks.add(newTypeInference);
+    }
   }
 
   private void addOldTypeCheckerPasses(
@@ -373,14 +379,21 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.needsTranspilationFrom(ES6)) {
-      TranspilationPasses.addEs6LatePasses(checks);
-      TranspilationPasses.addEs6PassesAfterNTI(checks);
+      if (options.getTypeCheckEs6Natively()) {
+        TranspilationPasses.addEs6PassesBeforeNTI(checks);
+      } else {
+        TranspilationPasses.addEs6LatePasses(checks);
+      }
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(checks);
       }
-      // TODO(bradfordcsmith): This marking is really about how variable scoping is handled during
-      //     type checking. It should really be handled in a more direct fashion.
-      checks.add(setFeatureSet(options.getLanguageOut().toFeatureSet()));
+      if (options.getTypeCheckEs6Natively()) {
+        checks.add(setFeatureSet(FeatureSet.NTI_SUPPORTED));
+      } else {
+        // TODO(bradfordcsmith): This marking is really about how variable scoping is handled during
+        //     type checking. It should really be handled in a more direct fashion.
+        checks.add(setFeatureSet(options.getLanguageOut().toFeatureSet()));
+      }
     }
 
     if (!options.forceLibraryInjection.isEmpty()) {
@@ -392,6 +405,16 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // End of ES6 transpilation passes before NTI.
+
+    if (!options.skipNonTranspilationPasses && options.getTypeCheckEs6Natively()) {
+      checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
+      addNewTypeCheckerPasses(checks, options);
+    }
+
+    if (options.needsTranspilationFrom(ES6) && options.getTypeCheckEs6Natively()) {
+      TranspilationPasses.addEs6PassesAfterNTI(checks);
+      checks.add(setFeatureSet(options.getLanguageOut().toFeatureSet()));
+    }
 
     if (!options.skipNonTranspilationPasses) {
       addNonTranspilationCheckPasses(checks);
@@ -430,11 +453,9 @@ public final class DefaultPassConfig extends PassConfig {
   }
 
   private void addNonTranspilationCheckPasses(List<PassFactory> checks) {
-    checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
-
-    if (options.getNewTypeInference()) {
-      checks.add(symbolTableForNewTypeInference);
-      checks.add(newTypeInference);
+    if (!options.getTypeCheckEs6Natively()) {
+      checks.add(createEmptyPass(PassNames.BEFORE_TYPE_CHECKING));
+      addNewTypeCheckerPasses(checks, options);
     }
 
     if (options.j2clPassMode.equals(CompilerOptions.J2clPassMode.AUTO)) {

@@ -223,6 +223,15 @@ public class CompilerOptions implements Serializable {
   boolean reportOTIErrorsUnderNTI = false;
 
   /**
+   * Run type checking natively on the subset of ES6 features that we are able to typecheck
+   * natively, and then transpile them after NTI.
+   * Doing this currently causes reordering of {@link LateEs6ToEs3Converter} pass
+   * and {@link Es6RewriteBlockScopedDeclaration} pass, which has the potential to break builds.
+   * This option should eventually be turned on by default and removed.
+   */
+  private boolean typeCheckEs6Natively = false;
+
+  /**
    * Configures the compiler to skip as many passes as possible.
    * If transpilation is requested, it will be run, but all others passes will be skipped.
    */
@@ -2002,6 +2011,14 @@ public class CompilerOptions implements Serializable {
   // Not dead code; used by the open-source users of the compiler.
   public void setReportOTIErrorsUnderNTI(boolean enable) {
     this.reportOTIErrorsUnderNTI = enable;
+  }
+
+  public boolean getTypeCheckEs6Natively() {
+    return this.typeCheckEs6Natively;
+  }
+
+  public void setTypeCheckEs6Natively(boolean enable) {
+    this.typeCheckEs6Natively = enable;
   }
 
 /**
