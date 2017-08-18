@@ -68,6 +68,7 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet TYPESCRIPT = ES8_MODULES.with(LangVersion.TYPESCRIPT.features());
 
+  // TODO(b/64536685): Remove this FeatureSet once NTI supports all of ES6.
   public static final FeatureSet NTI_SUPPORTED =
       ES5.with(
           ImmutableSet.<Feature>of(
@@ -192,6 +193,9 @@ public final class FeatureSet implements Serializable {
     }
     if (ES6_MODULES.contains(this)) {
       return "es6";
+    }
+    if (NTI_SUPPORTED.contains(this)) {
+      return "ntiSupported";
     }
     if (ES7_MODULES.contains(this)) {
       return "es7";
