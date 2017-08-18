@@ -2577,6 +2577,11 @@ public final class DefaultPassConfig extends PassConfig {
           return new RemoveUnusedClassProperties(
               compiler, options.removeUnusedConstructorProperties);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
       };
 
   private final PassFactory initNameAnalyzeReport = new PassFactory("initNameAnalyzeReport", true) {
