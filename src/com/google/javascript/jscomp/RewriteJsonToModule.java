@@ -39,6 +39,7 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
       DiagnosticType.error("JSC_JSON_UNEXPECTED_TOKEN", "Unexpected JSON token");
 
   private final Map<String, String> packageJsonMainEntries;
+  private final Map<String, String> packageJsonAliasedEntries;
   private final AbstractCompiler compiler;
 
   /**
@@ -49,10 +50,15 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
   public RewriteJsonToModule(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.packageJsonMainEntries = new HashMap<>();
+    this.packageJsonAliasedEntries = new HashMap<>();
   }
 
   public ImmutableMap<String, String> getPackageJsonMainEntries() {
     return ImmutableMap.copyOf(packageJsonMainEntries);
+  }
+
+  public ImmutableMap<String, String> getPackageJsonAliasedEntries() {
+    return ImmutableMap.copyOf(packageJsonAliasedEntries);
   }
 
   /**
@@ -114,8 +120,10 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
    * For script nodes of JSON objects, add a module variable assignment so the result is exported.
    *
    * <p>If the file path ends with "/package.json", look for main entries in their specified order
-   * in the object literal and track them as module aliases. Main entries default to "main" and can
-   * be overridden with the `--package_json_entry_names` option.
+   * in the object literal and track them as module aliases. Also look for alias fields and track
+   * their replacement entries. Main entries default to an ordered list of
+   * ["browser", "module", "main"] and can be overridden with the `--package_json_entry_names`
+   * option. Aliased entries default to an ordered list with the single "browser" entry.
    */
   private void visitScript(NodeTraversal t, Node n) {
     if (!n.hasOneChild() || !n.getFirstChild().isExprResult()) {
@@ -139,25 +147,26 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
 
     String inputPath = t.getInput().getSourceFile().getOriginalPath();
     if (inputPath.endsWith("/package.json") && jsonObject.isObjectLit()) {
+      String dirName = inputPath.substring(0, inputPath.length() - "package.json".length());
       List<String> possibleMainEntries = compiler.getOptions().getPackageJsonEntryNames();
 
       for (String entryName : possibleMainEntries) {
         Node entry = NodeUtil.getFirstPropMatchingKey(jsonObject, entryName);
 
-        if (entry != null && (entry.isString() || entry.isObjectLit())) {
-          String dirName = inputPath.substring(0, inputPath.length() - "package.json".length());
+        if (entry != null && entry.isString()) {
+          packageJsonMainEntries.put(inputPath, dirName + entry.getString());
+          break;
+        }
+      }
 
-          if (entry.isString()) {
-            packageJsonMainEntries.put(inputPath, dirName + entry.getString());
-            break;
-          } else if (entry.isObjectLit()) {
-            checkState(entryName.equals("browser"), entryName);
+      List<String> possibleAliasFields = compiler.getOptions().getPackageJsonAliasFields();
 
-            // don't break if we're processing a browser field that is an object literal
-            // because one of its entries may override the package.json main, which
-            // we will get in the next iteration.
-            processBrowserFieldAdvancedUsage(dirName, entry);
-          }
+      for (String fieldName : possibleAliasFields) {
+        Node entry = NodeUtil.getFirstPropMatchingKey(jsonObject, fieldName);
+
+        if (entry != null && entry.isObjectLit()) {
+          processPackageJsonAliasField(dirName, entry);
+          break;
         }
       }
     }
@@ -166,11 +175,11 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
   }
 
   /**
-   * For browser field entries in package.json files that are used in an advanced manner
+   * For alias field entries in package.json files, e.g. "browser"
    * (https://github.com/defunctzombie/package-browser-field-spec/#replace-specific-files---advanced),
    * track the entries in that object literal as module file replacements.
    */
-  private void processBrowserFieldAdvancedUsage(String dirName, Node entry) {
+  private void processPackageJsonAliasField(String dirName, Node entry) {
     for (Node child : entry.children()) {
       Node value = child.getFirstChild();
 
@@ -185,9 +194,9 @@ public class RewriteJsonToModule extends NodeTraversal.AbstractPostOrderCallback
       String replacement =
           value.isString()
               ? dirName + value.getString()
-              : ModuleLoader.JSC_BROWSER_BLACKLISTED_MARKER;
+              : ModuleLoader.JSC_ALIAS_BLACKLISTED_MARKER;
 
-      packageJsonMainEntries.put(dirName + path, replacement);
+      packageJsonAliasedEntries.put(dirName + path, replacement);
     }
   }
 }

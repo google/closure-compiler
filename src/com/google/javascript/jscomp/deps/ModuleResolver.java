@@ -46,6 +46,10 @@ public abstract class ModuleResolver {
     return ImmutableMap.of();
   }
 
+  Map<String, String> getPackageJsonAliasedEntries() {
+    return ImmutableMap.of();
+  }
+
   @Nullable
   public abstract String resolveJsModule(
       String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno);

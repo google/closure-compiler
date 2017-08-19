@@ -1194,6 +1194,9 @@ public class CompilerOptions implements Serializable {
   /** Which entries to look for in package.json files when processing modules */
   List<String> packageJsonEntryNames;
 
+  /** Which alias fields to look for in package.json files when processing modules */
+  List<String> packageJsonAliasFields;
+
   /**
    * Should the compiler print its configuration options to stderr when they are initialized?
    *
@@ -1220,6 +1223,7 @@ public class CompilerOptions implements Serializable {
     // Modules
     moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
     packageJsonEntryNames = ImmutableList.of("browser", "module", "main");
+    packageJsonAliasFields = ImmutableList.of("browser");
 
     // Checks
     skipNonTranspilationPasses = false;
@@ -2814,6 +2818,14 @@ public class CompilerOptions implements Serializable {
 
   public void setPackageJsonEntryNames(List<String> names) {
     this.packageJsonEntryNames = names;
+  }
+
+  public List<String> getPackageJsonAliasFields() {
+    return this.packageJsonAliasFields;
+  }
+
+  public void setPackageJsonAliasFields(List<String> fields) {
+    this.packageJsonAliasFields = fields;
   }
 
   /** Serializes compiler options to a stream. */

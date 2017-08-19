@@ -51,7 +51,7 @@ public final class ModuleLoader {
   /** The default module root, the current directory. */
   public static final String DEFAULT_FILENAME_PREFIX = "." + MODULE_SLASH;
 
-  public static final String JSC_BROWSER_BLACKLISTED_MARKER = "$jscomp$browser$blacklisted";
+  public static final String JSC_ALIAS_BLACKLISTED_MARKER = "$jscomp$browser$blacklisted";
 
   public static final DiagnosticType LOAD_WARNING =
       DiagnosticType.error("JSC_JS_MODULE_LOAD_WARNING", "Failed to load module \"{0}\"");
@@ -83,7 +83,8 @@ public final class ModuleLoader {
       Iterable<? extends DependencyInfo> inputs,
       PathResolver pathResolver,
       ResolutionMode resolutionMode,
-      Map<String, String> packageJsonMainEntries) {
+      Map<String, String> packageJsonMainEntries,
+      Map<String, String> packageJsonAliasedEntries) {
     checkNotNull(moduleRoots);
     checkNotNull(inputs);
     checkNotNull(pathResolver);
@@ -103,7 +104,11 @@ public final class ModuleLoader {
       case NODE:
         this.moduleResolver =
             new NodeModuleResolver(
-                this.modulePaths, this.moduleRootPaths, packageJsonMainEntries, this.errorHandler);
+                this.modulePaths,
+                this.moduleRootPaths,
+                packageJsonMainEntries,
+                packageJsonAliasedEntries,
+                this.errorHandler);
         break;
       default:
         throw new RuntimeException("Unexpected resolution mode " + resolutionMode);
@@ -124,12 +129,17 @@ public final class ModuleLoader {
       Iterable<? extends DependencyInfo> inputs,
       PathResolver pathResolver,
       ResolutionMode resolutionMode) {
-    this(errorHandler, moduleRoots, inputs, pathResolver, resolutionMode, null);
+    this(errorHandler, moduleRoots, inputs, pathResolver, resolutionMode, null, null);
   }
 
   @VisibleForTesting
   public Map<String, String> getPackageJsonMainEntries() {
     return this.moduleResolver.getPackageJsonMainEntries();
+  }
+
+  @VisibleForTesting
+  public Map<String, String> getPackageJsonAliasedEntries() {
+    return this.moduleResolver.getPackageJsonAliasedEntries();
   }
 
   /**

@@ -31,6 +31,7 @@ public final class ModuleLoaderTest extends TestCase {
       ImmutableMap.of(
           "/B/package.json", "/B/lib/b",
           "/node_modules/B/package.json", "/node_modules/B/lib/b.js");
+  private final ImmutableMap<String, String> packageJsonAliasedEntries = ImmutableMap.of();
 
   public void testWindowsAddresses() {
     ModuleLoader loader =
@@ -51,7 +52,8 @@ public final class ModuleLoaderTest extends TestCase {
             inputs("js/a.js", "js/b.js"),
             ModuleLoader.PathResolver.RELATIVE,
             ModuleLoader.ResolutionMode.NODE,
-            packageJsonMainEntries);
+            packageJsonMainEntries,
+            packageJsonAliasedEntries);
     assertUri("js/a.js", loader.resolve("js/a.js"));
     assertUri("js/b.js", loader.resolve("js/a.js").resolveJsModule("./b"));
     assertUri("js/b.js", loader.resolve("js/a.js").resolveJsModule("./b.js"));
@@ -65,7 +67,8 @@ public final class ModuleLoaderTest extends TestCase {
             inputs("A/index.js", "B/index.js", "app.js"),
             ModuleLoader.PathResolver.RELATIVE,
             ModuleLoader.ResolutionMode.NODE,
-            packageJsonMainEntries);
+            packageJsonMainEntries,
+            packageJsonAliasedEntries);
 
     input("A/index.js");
     input("B/index.js");
@@ -100,7 +103,8 @@ public final class ModuleLoaderTest extends TestCase {
             compilerInputs,
             ModuleLoader.PathResolver.RELATIVE,
             ModuleLoader.ResolutionMode.NODE,
-            packageJsonMainEntries);
+            packageJsonMainEntries,
+            packageJsonAliasedEntries);
 
     assertUri("/A/index.js", loader.resolve(" /foo.js").resolveJsModule("/A"));
     assertUri("/A/index.js", loader.resolve("/foo.js").resolveJsModule("/A/index.js"));
@@ -266,7 +270,8 @@ public final class ModuleLoaderTest extends TestCase {
             compilerInputs,
             ModuleLoader.PathResolver.RELATIVE,
             ModuleLoader.ResolutionMode.NODE,
-            packageJsonMainEntries);
+            packageJsonMainEntries,
+            packageJsonAliasedEntries);
 
     assertUri("/A/index.js", loader.resolve(" /foo.js").resolveJsModule("/A"));
     assertUri("/A/index.js", loader.resolve("/foo.js").resolveJsModule("/A/index.js"));
@@ -294,14 +299,17 @@ public final class ModuleLoaderTest extends TestCase {
     //   {"main": "server.js",
     //    "browser": {"server.js": "client.js",
     //                "exclude/this.js": false,
+    //                "override/relative.js", "./with/this.js"
     //                "replace/other.js": "with/alternative.js"}}
     ImmutableMap<String, String> packageJsonMainEntries =
         ImmutableMap.of(
-            "/node_modules/mymodule/package.json", "/node_modules/mymodule/server.js",
+            "/node_modules/mymodule/package.json", "/node_modules/mymodule/server.js");
+    ImmutableMap<String, String> packageJsonAliasedEntries =
+        ImmutableMap.of(
             "/node_modules/mymodule/server.js", "/node_modules/mymodule/client.js",
             "/node_modules/mymodule/override/relative.js", "/node_modules/mymodule/./with/this.js",
             "/node_modules/mymodule/exclude/this.js",
-                ModuleLoader.JSC_BROWSER_BLACKLISTED_MARKER,
+            ModuleLoader.JSC_ALIAS_BLACKLISTED_MARKER,
             "/node_modules/mymodule/replace/other.js",
             "/node_modules/mymodule/with/alternative.js");
 
@@ -320,7 +328,8 @@ public final class ModuleLoaderTest extends TestCase {
             compilerInputs,
             ModuleLoader.PathResolver.RELATIVE,
             ModuleLoader.ResolutionMode.NODE,
-            packageJsonMainEntries);
+            packageJsonMainEntries,
+            packageJsonAliasedEntries);
 
     assertUri(
         "/node_modules/mymodule/client.js", loader.resolve("/foo.js").resolveJsModule("mymodule"));

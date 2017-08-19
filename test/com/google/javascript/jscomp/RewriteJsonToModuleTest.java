@@ -130,14 +130,19 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
 
     Map<String, String> packageJsonMainEntries =
         getLastCompiler().getModuleLoader().getPackageJsonMainEntries();
-    assertThat(packageJsonMainEntries).hasSize(5);
+    assertThat(packageJsonMainEntries).hasSize(1);
     assertThat(packageJsonMainEntries).containsEntry("/package.json", "/foo/bar/baz.js");
-    assertThat(packageJsonMainEntries).containsEntry("/foo/bar/baz.js", "/replaced/main.js");
+
+    Map<String, String> packageJsonAliasedEntries =
+      getLastCompiler().getModuleLoader().getPackageJsonAliasedEntries();
+
+    assertThat(packageJsonAliasedEntries).hasSize(4);
+    assertThat(packageJsonAliasedEntries).containsEntry("/foo/bar/baz.js", "/replaced/main.js");
     // NodeModuleResolver knows how to normalize this entry's value
-    assertThat(packageJsonMainEntries).containsEntry("/override/relative.js", "/./with/this.js");
-    assertThat(packageJsonMainEntries)
-        .containsEntry("/dont/include.js", ModuleLoader.JSC_BROWSER_BLACKLISTED_MARKER);
-    assertThat(packageJsonMainEntries).containsEntry("/override/explicitly.js", "/with/other.js");
+    assertThat(packageJsonAliasedEntries).containsEntry("/override/relative.js", "/./with/this.js");
+    assertThat(packageJsonAliasedEntries)
+        .containsEntry("/dont/include.js", ModuleLoader.JSC_ALIAS_BLACKLISTED_MARKER);
+    assertThat(packageJsonAliasedEntries).containsEntry("/override/explicitly.js", "/with/other.js");
   }
 
   public void testPackageJsonBrowserFieldAdvancedUsageGH2625() {
@@ -163,10 +168,14 @@ public final class RewriteJsonToModuleTest extends CompilerTestCase {
     Map<String, String> packageJsonMainEntries =
         getLastCompiler().getModuleLoader().getPackageJsonMainEntries();
     assertThat(packageJsonMainEntries).containsExactly(
-        "/package.json", "/foo/bar/baz.js",
-    
+        "/package.json", "/foo/bar/baz.js");
+
+    Map<String, String> packageJsonAliasedEntries =
+      getLastCompiler().getModuleLoader().getPackageJsonAliasedEntries();
+    assertThat(packageJsonAliasedEntries).containsExactly(
         // Test that we have normalized the key, value is normalized by NodeModuleResolver
         "/a/b.js", "/./c/d.js",
         "/server.js", "/client.js");
+
   }
 }

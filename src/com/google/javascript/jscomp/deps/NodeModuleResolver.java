@@ -46,6 +46,9 @@ public class NodeModuleResolver extends ModuleResolver {
   /** Named modules found in node_modules folders */
   private final ImmutableMap<String, String> packageJsonMainEntries;
 
+  /** Aliased files found in package.json alias entries */
+  private final ImmutableMap<String, String> packageJsonAliasedEntries;
+
   /** Named modules found in node_modules folders */
   private final ImmutableSortedSet<String> nodeModulesFolders;
 
@@ -107,6 +110,7 @@ public class NodeModuleResolver extends ModuleResolver {
       ImmutableSet<String> modulePaths,
       ImmutableList<String> moduleRootPaths,
       Map<String, String> packageJsonMainEntries,
+      Map<String, String> packageJsonAliasedEntries,
       ErrorHandler errorHandler) {
     super(modulePaths, moduleRootPaths, errorHandler);
     this.nodeModulesFolders = buildNodeModulesFoldersRegistry(modulePaths);
@@ -114,25 +118,32 @@ public class NodeModuleResolver extends ModuleResolver {
     if (packageJsonMainEntries == null) {
       this.packageJsonMainEntries = ImmutableMap.of();
     } else {
-      this.packageJsonMainEntries = buildPackageJsonMainEntries(packageJsonMainEntries);
+      this.packageJsonMainEntries = buildPackageJsonEntries(packageJsonMainEntries);
+    }
+
+    if (packageJsonAliasedEntries == null) {
+      this.packageJsonAliasedEntries = ImmutableMap.of();
+    } else {
+      this.packageJsonAliasedEntries = buildPackageJsonEntries(packageJsonAliasedEntries);
     }
   }
 
   /**
-   * @param packageJsonMainEntries a map with keys that are package.json file paths and values which
-   *     are the "main" entry from the package.json. "main" entries are absolute paths rooted from
+   * @param packageJsonEntries a map with keys that are either package.json file paths or paths
+   *     to alias, and values which are either the main entry from the package.json or the
+   *     replacement path, respectively. Main entries are absolute paths rooted from
    *     the folder containing the package.json file.
    */
-  private ImmutableMap<String, String> buildPackageJsonMainEntries(
-      Map<String, String> packageJsonMainEntries) {
+  private ImmutableMap<String, String> buildPackageJsonEntries(
+      Map<String, String> packageJsonEntries) {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-    for (Map.Entry<String, String> packageJsonMainEntry : packageJsonMainEntries.entrySet()) {
-      String entryKey = packageJsonMainEntry.getKey();
+    for (Map.Entry<String, String> jsonEntry : packageJsonEntries.entrySet()) {
+      String entryKey = jsonEntry.getKey();
       if (ModuleLoader.isAmbiguousIdentifier(entryKey)) {
         entryKey = ModuleLoader.MODULE_SLASH + entryKey;
       }
 
-      builder.put(entryKey, packageJsonMainEntry.getValue());
+      builder.put(entryKey, jsonEntry.getValue());
     }
 
     return builder.build();
@@ -141,6 +152,11 @@ public class NodeModuleResolver extends ModuleResolver {
   @Override
   Map<String, String> getPackageJsonMainEntries() {
     return this.packageJsonMainEntries;
+  }
+
+  @Override
+  Map<String, String> getPackageJsonAliasedEntries() {
+    return this.packageJsonAliasedEntries;
   }
 
   @Override
@@ -168,13 +184,10 @@ public class NodeModuleResolver extends ModuleResolver {
       String moduleAddressCandidate = moduleAddress + extension;
       String canonicalizedCandidatePath = canonicalizePath(scriptAddress, moduleAddressCandidate);
 
-      // Also look for mappings in packageJsonMainEntries because browser field
-      // advanced usage allows to override / blacklist specific files, including
-      // the main entry.
-      if (packageJsonMainEntries.containsKey(canonicalizedCandidatePath)) {
-        moduleAddressCandidate = packageJsonMainEntries.get(canonicalizedCandidatePath);
+      if (packageJsonAliasedEntries.containsKey(canonicalizedCandidatePath)) {
+        moduleAddressCandidate = packageJsonAliasedEntries.get(canonicalizedCandidatePath);
 
-        if (ModuleLoader.JSC_BROWSER_BLACKLISTED_MARKER.equals(moduleAddressCandidate)) {
+        if (ModuleLoader.JSC_ALIAS_BLACKLISTED_MARKER.equals(moduleAddressCandidate)) {
           return null;
         }
       }

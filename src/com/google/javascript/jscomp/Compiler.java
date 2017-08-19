@@ -1741,11 +1741,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                 inputs,
                 ModuleLoader.PathResolver.RELATIVE,
                 options.moduleResolutionMode,
+                null,
                 null);
 
         if (options.moduleResolutionMode == ModuleLoader.ResolutionMode.NODE) {
           // processJsonInputs requires a module loader to already be defined
           // so we redefine it afterwards with the package.json inputs
+          RewriteJsonToModule jsonInputs = processJsonInputs(inputs);
+
           this.moduleLoader =
               new ModuleLoader(
                   null,
@@ -1753,7 +1756,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                   inputs,
                   ModuleLoader.PathResolver.RELATIVE,
                   options.moduleResolutionMode,
-                  processJsonInputs(inputs));
+                  jsonInputs.getPackageJsonMainEntries(),
+                  jsonInputs.getPackageJsonAliasedEntries());
         }
       } else {
         // Use an empty module loader if we're not actually dealing with modules.
@@ -2096,9 +2100,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   /**
    * Transforms JSON files to a module export that closure compiler can process and keeps track of
-   * any "main" entries in package.json files.
+   * any main entries in package.json files as well as paths to be aliased according to any alias
+   * fields.
    */
-  Map<String, String> processJsonInputs(List<CompilerInput> inputsToProcess) {
+  RewriteJsonToModule processJsonInputs(List<CompilerInput> inputsToProcess) {
     RewriteJsonToModule rewriteJson = new RewriteJsonToModule(this);
     for (CompilerInput input : inputsToProcess) {
       if (!input.getSourceFile().getOriginalPath().endsWith(".json")) {
@@ -2120,7 +2125,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       input.setJsModuleType(CompilerInput.ModuleType.JSON);
       rewriteJson.process(null, root);
     }
-    return rewriteJson.getPackageJsonMainEntries();
+    return rewriteJson;
   }
 
 
