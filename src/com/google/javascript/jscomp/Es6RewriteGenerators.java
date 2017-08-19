@@ -17,16 +17,24 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
 import static com.google.javascript.jscomp.Es6ToEs3Util.makeIterator;
+import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.Token;
+import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.TypeIRegistry;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -94,12 +102,34 @@ public final class Es6RewriteGenerators
 
   private boolean hasTranslatedTry;
 
+  // Whether we should preserve type information during transpilation.
+  private final boolean addTypes;
+
+  private final TypeIRegistry registry;
+
+  private final TypeI unknownType;
+  private final TypeI undefinedType;
+  private final TypeI stringType;
+  private final TypeI booleanType;
+  private final TypeI falseType;
+  private final TypeI trueType;
+  private final TypeI numberType;
+
   public Es6RewriteGenerators(AbstractCompiler compiler) {
     checkNotNull(compiler);
     this.compiler = compiler;
     this.currentLoopContext = new ArrayList<>();
     this.currentExceptionContext = new ArrayList<>();
     generatorCounter = compiler.getUniqueNameIdSupplier();
+    this.addTypes = MostRecentTypechecker.NTI.equals(compiler.getMostRecentTypechecker());
+    this.registry = compiler.getTypeIRegistry();
+    this.unknownType = createType(addTypes, registry, JSTypeNative.UNKNOWN_TYPE);
+    this.undefinedType = createType(addTypes, registry, JSTypeNative.VOID_TYPE);
+    this.stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
+    this.booleanType = createType(addTypes, registry, JSTypeNative.BOOLEAN_TYPE);
+    this.falseType = createType(addTypes, registry, JSTypeNative.FALSE_TYPE);
+    this.trueType = createType(addTypes, registry, JSTypeNative.TRUE_TYPE);
+    this.numberType = createType(addTypes, registry, JSTypeNative.NUMBER_TYPE);
   }
 
   @Override
@@ -135,7 +165,7 @@ public final class Es6RewriteGenerators
       case THIS:
         enclosing = NodeUtil.getEnclosingFunction(n);
         if (enclosing != null && enclosing.isGeneratorFunction()) {
-          n.replaceWith(IR.name(GENERATOR_THIS));
+          n.replaceWith(withType(IR.name(GENERATOR_THIS), n.getTypeI()));
         }
         break;
       case YIELD:
@@ -155,8 +185,11 @@ public final class Es6RewriteGenerators
   private void visitYieldThrows(NodeTraversal t, Node n, Node parent) {
     Node ifThrows =
         IR.ifNode(
-            IR.eq(IR.name(GENERATOR_ACTION_ARG), IR.number(GENERATOR_ACTION_THROW)),
-            IR.block(IR.throwNode(IR.name(GENERATOR_THROW_ARG))));
+            withBooleanType(
+                IR.eq(
+                    withNumberType(IR.name(GENERATOR_ACTION_ARG)),
+                    withNumberType(IR.number(GENERATOR_ACTION_THROW)))),
+            IR.block(IR.throwNode(withUnknownType(IR.name(GENERATOR_THROW_ARG)))));
     parent.addChildAfter(ifThrows, n);
     t.reportCodeChange();
   }
@@ -183,20 +216,61 @@ public final class Es6RewriteGenerators
    * </pre>
    */
   private void visitYieldAll(NodeTraversal t, Node n, Node parent) {
+    ObjectTypeI yieldAllType = null;
+    TypeI typeParam = unknownType;
+    if (addTypes) {
+      yieldAllType = n.getFirstChild().getTypeI().autobox().toMaybeObjectType();
+      typeParam = yieldAllType.getTemplateTypes().get(0);
+    }
+    TypeI iteratorType = createGenericType(JSTypeNative.ITERATOR_TYPE, typeParam);
+    TypeI iteratorNextType =
+        addTypes ? iteratorType.toMaybeObjectType().getPropertyType("next") : null;
+    TypeI iIterableResultType = createGenericType(JSTypeNative.I_ITERABLE_RESULT_TYPE, typeParam);
+    TypeI iIterableResultDoneType =
+        addTypes ? iIterableResultType.toMaybeObjectType().getPropertyType("done") : null;
+    TypeI iIterableResultValueType =
+        addTypes ? iIterableResultType.toMaybeObjectType().getPropertyType("value") : null;
+
     Node enclosingStatement = NodeUtil.getEnclosingStatement(n);
-    Node generator = IR.var(
-        IR.name(GENERATOR_YIELD_ALL_NAME),
-        makeIterator(compiler, n.removeFirstChild()));
-    Node entryDecl = IR.var(IR.name(GENERATOR_YIELD_ALL_ENTRY));
+    Node iterator = makeIterator(compiler, n.removeFirstChild());
+    if (addTypes) {
+      TypeI jscompType = t.getScope().getVar("$jscomp").getNode().getTypeI();
+      TypeI makeIteratorType = jscompType.toMaybeObjectType().getPropertyType("makeIterator");
+      iterator.getFirstChild().setTypeI(makeIteratorType);
+      iterator.getFirstFirstChild().setTypeI(jscompType);
+    }
+    Node generator =
+        IR.var(
+            withType(IR.name(GENERATOR_YIELD_ALL_NAME), iteratorType),
+            withType(iterator, iteratorType));
+    Node entryDecl = IR.var(withType(IR.name(GENERATOR_YIELD_ALL_ENTRY), iIterableResultType));
     Node assignIterResult =
-        IR.assign(
-            IR.name(GENERATOR_YIELD_ALL_ENTRY),
-            IR.call(
-                IR.getprop(IR.name(GENERATOR_YIELD_ALL_NAME), IR.string("next")),
-                IR.name(GENERATOR_NEXT_ARG)));
-    Node loopCondition = IR.not(IR.getprop(assignIterResult, IR.string("done")));
-    Node elemValue = IR.getprop(IR.name(GENERATOR_YIELD_ALL_ENTRY), IR.string("value"));
-    Node yieldStatement = IR.exprResult(IR.yield(elemValue.cloneTree()));
+        withType(
+            IR.assign(
+                withType(IR.name(GENERATOR_YIELD_ALL_ENTRY), iIterableResultType),
+                withType(
+                    IR.call(
+                        withType(
+                            IR.getprop(
+                                withType(IR.name(GENERATOR_YIELD_ALL_NAME), iteratorType),
+                                withStringType(IR.string("next"))),
+                            iteratorNextType),
+                        withUnknownType(IR.name(GENERATOR_NEXT_ARG))),
+                    iIterableResultType)),
+            iIterableResultType);
+    Node loopCondition =
+        withBooleanType(
+            IR.not(
+                withType(
+                    IR.getprop(assignIterResult, withStringType(IR.string("done"))),
+                    iIterableResultDoneType)));
+    Node elemValue =
+        withType(
+            IR.getprop(
+                withType(IR.name(GENERATOR_YIELD_ALL_ENTRY), iIterableResultType),
+                withStringType(IR.string("value"))),
+            iIterableResultValueType);
+    Node yieldStatement = IR.exprResult(withUnknownType(IR.yield(elemValue.cloneTree())));
     Node loop = IR.whileNode(loopCondition, IR.block(yieldStatement));
 
     enclosingStatement.getParent().addChildBefore(generator, enclosingStatement);
@@ -215,9 +289,13 @@ public final class Es6RewriteGenerators
   private void visitYieldExpr(NodeTraversal t, Node n, Node parent) {
     Node enclosingStatement = NodeUtil.getEnclosingStatement(n);
     Node yieldStatement =
-        IR.exprResult(n.hasChildren() ? IR.yield(n.removeFirstChild()) : IR.yield());
-    Node yieldResult = IR.name(GENERATOR_NEXT_ARG + generatorCounter.get());
-    Node yieldResultDecl = IR.var(yieldResult.cloneTree(), IR.name(GENERATOR_NEXT_ARG));
+        IR.exprResult(
+            n.hasChildren()
+                ? withType(IR.yield(n.removeFirstChild()), n.getTypeI())
+                : withType(IR.yield(), n.getTypeI()));
+    Node yieldResult = withUnknownType(IR.name(GENERATOR_NEXT_ARG + generatorCounter.get()));
+    Node yieldResultDecl =
+        IR.var(yieldResult.cloneTree(), withUnknownType(IR.name(GENERATOR_NEXT_ARG)));
 
     parent.replaceChild(n, yieldResult);
     enclosingStatement.getParent().addChildBefore(yieldStatement, enclosingStatement);
@@ -238,6 +316,17 @@ public final class Es6RewriteGenerators
     NodeUtil.markNewScopesChanged(genBlock, compiler);
     n.setIsGeneratorFunction(false);
 
+    TypeI generatorFuncType = n.getTypeI();
+    TypeI generatorReturnType =
+        addTypes ? generatorFuncType.toMaybeFunctionType().getReturnType() : null;
+    TypeI yieldType = unknownType;
+    if (addTypes) {
+      if (generatorReturnType.isGenericObjectType()) {
+        yieldType = generatorReturnType.autobox().toMaybeObjectType().getTemplateTypes().get(0);
+      }
+      addTypesToGeneratorSkeleton(genBlock, yieldType);
+    }
+
     // TODO(mattloring): remove this suppression once we can optimize the switch statement to
     // remove unused cases.
     JSDocInfoBuilder builder = JSDocInfoBuilder.maybeCopyFrom(n.getJSDocInfo());
@@ -248,7 +337,10 @@ public final class Es6RewriteGenerators
 
     // Set state to the default after the body of the function has completed.
     originalGeneratorBody.addChildToBack(
-        IR.exprResult(IR.assign(IR.name(GENERATOR_STATE), IR.number(-1))));
+        IR.exprResult(
+            withNumberType(
+                IR.assign(
+                    withNumberType(IR.name(GENERATOR_STATE)), withNumberType(IR.number(-1))))));
 
     enclosingBlock = getUnique(genBlock, Token.CASE).getLastChild();
     hoistRoot = genBlock.getFirstChild();
@@ -256,12 +348,18 @@ public final class Es6RewriteGenerators
     if (NodeUtil.isNameReferenced(originalGeneratorBody, GENERATOR_ARGUMENTS)) {
       hoistRoot
           .getParent()
-          .addChildAfter(IR.var(IR.name(GENERATOR_ARGUMENTS), IR.name("arguments")), hoistRoot);
+          .addChildAfter(
+              IR.var(
+                  withUnknownType(IR.name(GENERATOR_ARGUMENTS)),
+                  withUnknownType(IR.name("arguments"))),
+              hoistRoot);
     }
     if (NodeUtil.isNameReferenced(originalGeneratorBody, GENERATOR_THIS)) {
       hoistRoot
           .getParent()
-          .addChildAfter(IR.var(IR.name(GENERATOR_THIS), IR.thisNode()), hoistRoot);
+          .addChildAfter(
+              IR.var(withUnknownType(IR.name(GENERATOR_THIS)), withUnknownType(IR.thisNode())),
+              hoistRoot);
     }
 
     while (originalGeneratorBody.hasChildren()) {
@@ -277,7 +375,8 @@ public final class Es6RewriteGenerators
           generatorCaseCount++;
         }
         Node oldCase = enclosingBlock.getParent();
-        Node newCase = IR.caseNode(IR.number(caseNumber), IR.block());
+        Node newCase =
+            withBooleanType(IR.caseNode(withNumberType(IR.number(caseNumber)), IR.block()));
         enclosingBlock = newCase.getLastChild();
         if (oldCase.isTry()) {
           oldCase = oldCase.getGrandparent();
@@ -383,7 +482,7 @@ public final class Es6RewriteGenerators
       caughtError = catchBlock.getFirstChild().removeFirstChild();
       catchBody = catchBlock.getFirstChild().removeFirstChild();
     } else {
-      caughtError = IR.name(GENERATOR_ERROR + "temp");
+      caughtError = withUnknownType(IR.name(GENERATOR_ERROR + "temp"));
       catchBody = IR.block(IR.throwNode(caughtError.cloneTree()));
       catchBody.getFirstChild().setGeneratorSafe(true);
     }
@@ -391,12 +490,15 @@ public final class Es6RewriteGenerators
     int catchStartState = generatorCaseCount++;
     Node catchStart = makeGeneratorMarker(catchStartState);
 
-    Node errorNameGenerated = IR.name("$jscomp$generator$" + caughtError.getString());
+    Node errorNameGenerated =
+        withUnknownType(IR.name("$jscomp$generator$" + caughtError.getString()));
 
     originalGeneratorBody.addChildToFront(catchStart);
     originalGeneratorBody.addChildAfter(catchBody, catchStart);
 
-    Node assignError = IR.assign(IR.name(GENERATOR_ERROR), errorNameGenerated.cloneTree());
+    Node assignError =
+        withUnknownType(
+            IR.assign(withUnknownType(IR.name(GENERATOR_ERROR)), errorNameGenerated.cloneTree()));
     Node newCatchBody =
         IR.block(IR.exprResult(assignError), createStateUpdate(catchStartState), createSafeBreak());
     Node newCatch = IR.catchNode(errorNameGenerated, newCatchBody);
@@ -404,7 +506,7 @@ public final class Es6RewriteGenerators
     currentExceptionContext.add(0, new ExceptionContext(catchStartState, newCatch));
 
     if (finallyBody != null) {
-      Node finallyName = IR.name(GENERATOR_FINALLY_JUMP + generatorCounter.get());
+      Node finallyName = withNumberType(IR.name(GENERATOR_FINALLY_JUMP + generatorCounter.get()));
       int finallyStartState = generatorCaseCount++;
       Node finallyStart = makeGeneratorMarker(finallyStartState);
       int finallyEndState = generatorCaseCount++;
@@ -422,14 +524,20 @@ public final class Es6RewriteGenerators
       originalGeneratorBody.addChildToFront(IR.var(finallyName.cloneTree()));
 
       finallyBody.addChildToBack(
-          IR.exprResult(IR.assign(IR.name(GENERATOR_STATE), finallyName.cloneTree())));
+          IR.exprResult(
+              withNumberType(
+                  IR.assign(withNumberType(IR.name(GENERATOR_STATE)), finallyName.cloneTree()))));
       finallyBody.addChildToBack(createSafeBreak());
       tryBody.addChildToBack(
-          IR.exprResult(IR.assign(finallyName.cloneTree(), IR.number(finallyEndState))));
+          IR.exprResult(
+              withNumberType(
+                  IR.assign(finallyName.cloneTree(), withNumberType(IR.number(finallyEndState))))));
       tryBody.addChildToBack(createStateUpdate(finallyStartState));
       tryBody.addChildToBack(createSafeBreak());
       catchBody.addChildToBack(
-          IR.exprResult(IR.assign(finallyName.cloneTree(), IR.number(finallyEndState))));
+          IR.exprResult(
+              withNumberType(
+                  IR.assign(finallyName.cloneTree(), withNumberType(IR.number(finallyEndState))))));
     } else {
       int catchEndState = generatorCaseCount++;
       Node catchEnd = makeGeneratorMarker(catchEndState);
@@ -439,7 +547,7 @@ public final class Es6RewriteGenerators
       originalGeneratorBody.addChildToFront(tryBody.detach());
     }
 
-    catchBody.addChildToFront(IR.var(caughtError, IR.name(GENERATOR_ERROR)));
+    catchBody.addChildToFront(IR.var(caughtError, withUnknownType(IR.name(GENERATOR_ERROR))));
 
     if (enclosingBlock.getParent().isTry()) {
       enclosingBlock = enclosingBlock.getGrandparent();
@@ -449,7 +557,9 @@ public final class Es6RewriteGenerators
     enclosingBlock = enclosingBlock.getLastChild().getFirstChild();
     if (!hasTranslatedTry) {
       hasTranslatedTry = true;
-      hoistRoot.getParent().addChildAfter(IR.var(IR.name(GENERATOR_ERROR)), hoistRoot);
+      hoistRoot
+          .getParent()
+          .addChildAfter(IR.var(withUnknownType(IR.name(GENERATOR_ERROR))), hoistRoot);
     }
   }
 
@@ -530,7 +640,9 @@ public final class Es6RewriteGenerators
     int ifEndState = generatorCaseCount++;
 
     Node invertedConditional =
-        IR.ifNode(IR.not(condition), IR.block(createStateUpdate(ifEndState), createSafeBreak()));
+        IR.ifNode(
+            withBooleanType(IR.not(condition)),
+            IR.block(createStateUpdate(ifEndState), createSafeBreak()));
     invertedConditional.setGeneratorSafe(true);
     Node endIf = makeGeneratorMarker(ifEndState);
 
@@ -583,9 +695,12 @@ public final class Es6RewriteGenerators
    * </pre>
    */
   private void visitSwitch() {
-    Node didEnter = IR.name(GENERATOR_SWITCH_ENTERED + generatorCounter.get());
-    Node didEnterDecl = IR.var(didEnter.cloneTree(), IR.falseNode());
-    Node switchVal = IR.name(GENERATOR_SWITCH_VAL + generatorCounter.get());
+    Node didEnter = withBooleanType(IR.name(GENERATOR_SWITCH_ENTERED + generatorCounter.get()));
+    Node didEnterDecl = IR.var(didEnter.cloneTree(), withFalseType(IR.falseNode()));
+    Node switchVal =
+        withType(
+            IR.name(GENERATOR_SWITCH_VAL + generatorCounter.get()),
+            currentStatement.getFirstChild().getTypeI());
     Node switchValDecl = IR.var(switchVal.cloneTree(), currentStatement.removeFirstChild());
     originalGeneratorBody.addChildToFront(didEnterDecl);
     originalGeneratorBody.addChildAfter(switchValDecl, didEnterDecl);
@@ -596,7 +711,9 @@ public final class Es6RewriteGenerators
       Node equivBlock;
       currCase
           .getLastChild()
-          .addChildToFront(IR.exprResult(IR.assign(didEnter.cloneTree(), IR.trueNode())));
+          .addChildToFront(
+              IR.exprResult(
+                  withBooleanType(IR.assign(didEnter.cloneTree(), withTrueType(IR.trueNode())))));
       if (currCase.isDefaultCase()) {
         if (currentStatement.hasChildren()) {
           compiler.report(
@@ -609,9 +726,11 @@ public final class Es6RewriteGenerators
       } else {
         equivBlock =
             IR.ifNode(
-                IR.or(
-                    didEnter.cloneTree(),
-                    IR.sheq(switchVal.cloneTree(), currCase.removeFirstChild())),
+                withBooleanType(
+                    IR.or(
+                        didEnter.cloneTree(),
+                        withBooleanType(
+                            IR.sheq(switchVal.cloneTree(), currCase.removeFirstChild())))),
                 currCase.removeFirstChild());
       }
       originalGeneratorBody.addChildAfter(equivBlock, insertionPoint);
@@ -676,17 +795,23 @@ public final class Es6RewriteGenerators
     Node iterable = currentStatement.removeFirstChild();
     Node body = currentStatement.removeFirstChild();
 
+    TypeI iterableType = iterable.getTypeI();
+    TypeI typeParam = unknownType;
+    if (addTypes) {
+      typeParam = iterableType.autobox().toMaybeObjectType().getTemplateTypes().get(0);
+    }
+    TypeI arrayType = createGenericType(JSTypeNative.ARRAY_TYPE, typeParam);
     String loopId = generatorCounter.get();
-    Node arrayName = IR.name(GENERATOR_FOR_IN_ARRAY + loopId);
-    Node varName = IR.name(GENERATOR_FOR_IN_VAR + loopId);
-    Node iterableName = IR.name(GENERATOR_FOR_IN_ITER + loopId);
+    Node arrayName = withType(IR.name(GENERATOR_FOR_IN_ARRAY + loopId), arrayType);
+    Node varName = withNumberType(IR.name(GENERATOR_FOR_IN_VAR + loopId));
+    Node iterableName = withType(IR.name(GENERATOR_FOR_IN_ITER + loopId), iterableType);
 
     if (variable.isVar()) {
       variable = variable.removeFirstChild();
     }
     body.addChildToFront(
         IR.ifNode(
-            IR.not(IR.in(variable.cloneTree(), iterableName.cloneTree())),
+            withBooleanType(IR.not(IR.in(variable.cloneTree(), iterableName.cloneTree()))),
             IR.block(IR.continueNode())));
     body.addChildToFront(
         IR.var(variable.cloneTree(), IR.getelem(arrayName.cloneTree(), varName.cloneTree())));
@@ -694,20 +819,28 @@ public final class Es6RewriteGenerators
     hoistRoot.getParent().addChildAfter(IR.var(varName.cloneTree()), hoistRoot);
     hoistRoot.getParent().addChildAfter(IR.var(iterableName.cloneTree()), hoistRoot);
 
-    Node arrayDef = IR.exprResult(IR.assign(arrayName.cloneTree(), IR.arraylit()));
-    Node iterDef = IR.exprResult(IR.assign(iterableName.cloneTree(), iterable));
+    Node arrayDef =
+        IR.exprResult(
+            withType(
+                IR.assign(arrayName.cloneTree(), withType(IR.arraylit(), arrayType)), arrayType));
+    Node iterDef =
+        IR.exprResult(withType(IR.assign(iterableName.cloneTree(), iterable), iterableType));
     Node newForIn =
         IR.forIn(
             variable.cloneTree(),
             iterableName,
             IR.block(
                 IR.exprResult(
-                    IR.call(IR.getprop(arrayName.cloneTree(), IR.string("push")), variable))));
+                    withNumberType(
+                        IR.call(IR.getprop(arrayName.cloneTree(), IR.string("push")), variable)))));
     Node newFor =
         IR.forNode(
-            IR.assign(varName.cloneTree(), IR.number(0)),
-            IR.lt(varName.cloneTree(), IR.getprop(arrayName, IR.string("length"))),
-            IR.inc(varName, true),
+            withNumberType(IR.assign(varName.cloneTree(), withNumberType(IR.number(0)))),
+            withBooleanType(
+                IR.lt(
+                    varName.cloneTree(),
+                    withNumberType(IR.getprop(arrayName, IR.string("length"))))),
+            withNumberType(IR.inc(varName, true)),
             body);
 
     enclosingBlock.addChildToBack(arrayDef);
@@ -762,7 +895,11 @@ public final class Es6RewriteGenerators
     } else {
       checkState(currentStatement.isDo());
       initializer = IR.empty();
-      incr = IR.assign(IR.name(GENERATOR_DO_WHILE_INITIAL), IR.falseNode());
+      incr =
+          withBooleanType(
+              IR.assign(
+                  withBooleanType(IR.name(GENERATOR_DO_WHILE_INITIAL)),
+                  withFalseType(IR.falseNode())));
 
       body = currentStatement.removeFirstChild();
       guard = currentStatement.removeFirstChild();
@@ -791,7 +928,8 @@ public final class Es6RewriteGenerators
     currentLoopContext.add(0, new LoopContext(generatorCaseCount, continueState, label));
 
     Node beginCase = makeGeneratorMarker(loopBeginState);
-    Node conditionalBranch = IR.ifNode(condition.isEmpty() ? IR.trueNode() : condition, body);
+    Node conditionalBranch =
+        IR.ifNode(condition.isEmpty() ? withTrueType(IR.trueNode()) : condition, body);
     Node setStateLoopStart = createStateUpdate(loopBeginState);
     Node breakToStart = createSafeBreak();
 
@@ -816,7 +954,8 @@ public final class Es6RewriteGenerators
     Node name = currentStatement.removeFirstChild();
     while (name != null) {
       if (name.hasChildren()) {
-        enclosingBlock.addChildToBack(IR.exprResult(IR.assign(name, name.removeFirstChild())));
+        enclosingBlock.addChildToBack(
+            IR.exprResult(withType(IR.assign(name, name.removeFirstChild()), name.getTypeI())));
       }
       hoistRoot.getParent().addChildAfter(IR.var(name.cloneTree()), hoistRoot);
       // name now refers to "generated" assignment which is not visible to end user. Don't index it.
@@ -833,7 +972,8 @@ public final class Es6RewriteGenerators
   private void visitYieldExprResult() {
     enclosingBlock.addChildToBack(createStateUpdate());
     Node yield = currentStatement.getFirstChild();
-    Node value = yield.hasChildren() ? yield.removeFirstChild() : IR.name("undefined");
+    Node value =
+        yield.hasChildren() ? yield.removeFirstChild() : withUndefinedType(IR.name("undefined"));
     enclosingBlock.addChildToBack(IR.returnNode(createIteratorResult(value, false)));
   }
 
@@ -848,22 +988,34 @@ public final class Es6RewriteGenerators
             createIteratorResult(
                 currentStatement.hasChildren()
                     ? currentStatement.removeFirstChild()
-                    : IR.name("undefined"),
+                    : withUndefinedType(IR.name("undefined")),
                 true)));
   }
 
-  private static Node createStateUpdate() {
-    return IR.exprResult(IR.assign(IR.name(GENERATOR_STATE), IR.number(generatorCaseCount)));
+  private Node createStateUpdate() {
+    return IR.exprResult(
+        withNumberType(
+            IR.assign(
+                withNumberType(IR.name(GENERATOR_STATE)),
+                withNumberType(IR.number(generatorCaseCount)))));
   }
 
-  private static Node createStateUpdate(int state) {
-    return IR.exprResult(IR.assign(IR.name(GENERATOR_STATE), IR.number(state)));
+  private Node createStateUpdate(int state) {
+    return IR.exprResult(
+        withNumberType(
+            IR.assign(withNumberType(IR.name(GENERATOR_STATE)), withNumberType(IR.number(state)))));
   }
 
-  private static Node createIteratorResult(Node value, boolean done) {
-    return IR.objectlit(
-        IR.propdef(IR.stringKey("value"), value),
-        IR.propdef(IR.stringKey("done"), done ? IR.trueNode() : IR.falseNode()));
+  private Node createIteratorResult(Node value, boolean done) {
+    TypeI iIterableResultType =
+        createGenericType(JSTypeNative.I_ITERABLE_RESULT_TYPE, value.getTypeI());
+    return withType(
+        IR.objectlit(
+            IR.propdef(IR.stringKey("value"), value),
+            IR.propdef(
+                IR.stringKey("done"),
+                done ? withTrueType(IR.trueNode()) : withFalseType(IR.falseNode()))),
+        iIterableResultType);
   }
 
   private static Node createSafeBreak() {
@@ -872,9 +1024,12 @@ public final class Es6RewriteGenerators
     return breakNode;
   }
 
-  private static Node createFinallyJumpBlock(Node finallyName, int finallyStartState) {
+  private Node createFinallyJumpBlock(Node finallyName, int finallyStartState) {
     int jumpPoint = generatorCaseCount++;
-    Node setReturnState = IR.exprResult(IR.assign(finallyName.cloneTree(), IR.number(jumpPoint)));
+    Node setReturnState =
+        IR.exprResult(
+            withNumberType(
+                IR.assign(finallyName.cloneTree(), withNumberType(IR.number(jumpPoint)))));
     Node toFinally = createStateUpdate(finallyStartState);
     Node returnPoint = makeGeneratorMarker(jumpPoint);
     Node returnBlock = IR.block(setReturnState, toFinally, createSafeBreak());
@@ -972,9 +1127,7 @@ public final class Es6RewriteGenerators
           if (controlCanExit(n.getFirstChild())) {
             compiler.report(
                 JSError.make(
-                    n,
-                    Es6ToEs3Util.CANNOT_CONVERT_YET,
-                    "Case statements that contain yields"));
+                    n, Es6ToEs3Util.CANNOT_CONVERT_YET, "Case statements that contain yields"));
             return false;
           }
           break;
@@ -993,8 +1146,7 @@ public final class Es6RewriteGenerators
         decomposer.exposeExpression(n);
         t.reportCodeChange();
       } else {
-        compiler.report(
-            JSError.make(n, Es6ToEs3Util.CANNOT_CONVERT, "Undecomposable expression"));
+        compiler.report(JSError.make(n, Es6ToEs3Util.CANNOT_CONVERT, "Undecomposable expression"));
       }
     }
 
@@ -1019,8 +1171,9 @@ public final class Es6RewriteGenerators
           guard = n.getLastChild();
           if (!guard.isEmpty()) {
             Node firstEntry = IR.name(GENERATOR_DO_WHILE_INITIAL);
-            enclosingBlock.addChildToFront(IR.var(firstEntry.cloneTree(), IR.trueNode()));
-            guard = IR.or(firstEntry, n.getLastChild().detach());
+            enclosingBlock.addChildToFront(
+                IR.var(firstEntry.cloneTree(), withTrueType(IR.trueNode())));
+            guard = withBooleanType(IR.or(firstEntry, n.getLastChild().detach()));
             n.addChildToBack(guard);
           }
           incr = IR.empty();
@@ -1036,7 +1189,10 @@ public final class Es6RewriteGenerators
         Node container = new Node(Token.BLOCK);
         n.replaceChild(guard, container);
         container.addChildToFront(
-            IR.block(IR.exprResult(IR.assign(guardName.cloneTree(), guard.cloneTree()))));
+            IR.block(
+                IR.exprResult(
+                    withType(
+                        IR.assign(guardName.cloneTree(), guard.cloneTree()), guard.getTypeI()))));
         container.addChildToBack(guardName.cloneTree());
       }
       if (!incr.isEmpty()) {
@@ -1047,13 +1203,13 @@ public final class Es6RewriteGenerators
     }
   }
 
-  private static Node makeGeneratorMarker(int i) {
-    Node n = IR.exprResult(IR.number(i));
+  private Node makeGeneratorMarker(int i) {
+    Node n = IR.exprResult(withNumberType(IR.number(i)));
     n.setGeneratorMarker(true);
     return n;
   }
 
-  private static final class ControlExitsCheck implements NodeTraversal.Callback {
+  private final class ControlExitsCheck implements NodeTraversal.Callback {
 
     int continueCatchers;
     int breakCatchers;
@@ -1270,6 +1426,81 @@ public final class Es6RewriteGenerators
     return genFunc;
   }
 
+  /**
+   * Add types to key nodes in the generator AST created by {@link #preloadGeneratorSkeleton} For
+   * example, changes {@code Generator<?>} to {@code Generator<yieldType>}, where yieldType is the
+   * inferred yield type of the original user-defined generator function.
+   */
+  private void addTypesToGeneratorSkeleton(Node genBlock, TypeI yieldType) {
+    TypeI generatorType = createGenericType(JSTypeNative.GENERATOR_TYPE, yieldType);
+    TypeI iIterableResultType = createGenericType(JSTypeNative.I_ITERABLE_RESULT_TYPE, yieldType);
+
+    // Add type to the generator implementation function node.
+    Node impl = genBlock.getSecondChild();
+    checkState(impl.isFunction());
+    FunctionTypeI implFuncType = impl.getTypeI().toMaybeFunctionType();
+    implFuncType = implFuncType.withReturnType(iIterableResultType);
+    impl.setTypeI(implFuncType);
+    impl.getFirstChild().setTypeI(implFuncType);
+
+    Node objectLit =
+        impl.getChildAtIndex(2)
+            .getFirstChild()
+            .getSecondChild()
+            .getFirstChild()
+            .getChildAtIndex(2)
+            .getFirstFirstChild() // RETURN node in default case
+            .getFirstChild();
+    checkState(objectLit.isObjectLit());
+    objectLit.setTypeI(iIterableResultType);
+    objectLit.getFirstChild().setTypeI(iIterableResultType);
+
+    // Add type to the var iterator = {next: function (...) {...}, throw: ..., return: ... } node
+    Node iteratorVar = impl.getNext();
+    checkState(iteratorVar.isVar());
+    iteratorVar.getFirstChild().setTypeI(generatorType);
+    iteratorVar.getFirstFirstChild().setTypeI(generatorType);
+    iteratorVar.getFirstFirstChild().getFirstChild().setTypeI(generatorType);
+
+    Node next = iteratorVar.getFirstFirstChild().getFirstFirstChild(); // String key "next"
+    checkState(next.isStringKey());
+    FunctionTypeI nextFunctionType = next.getTypeI().toMaybeFunctionType();
+    nextFunctionType = nextFunctionType.withReturnType(iIterableResultType);
+    next.setTypeI(nextFunctionType);
+    next.getFirstChild().setTypeI(nextFunctionType);
+
+    // CALL node of function $jscomp$generator$impl within RETURN node in function of "next"
+    Node call = next.getFirstChild().getChildAtIndex(2).getFirstFirstChild();
+    checkState(call.isCall());
+    call.setTypeI(iIterableResultType);
+
+    Node genImplName = call.getFirstChild();
+    checkState(genImplName.isName());
+    FunctionTypeI genImplType = genImplName.getTypeI().toMaybeFunctionType();
+    genImplType = genImplType.withReturnType(iIterableResultType);
+    genImplName.setTypeI(genImplType);
+
+    // Add type to the iterator[Symbol.iterator] = function () { return this; } node
+    Node exprResult = iteratorVar.getNext().getNext();
+    checkState(exprResult.isExprResult());
+    FunctionTypeI funcType = exprResult.getFirstChild().getTypeI().toMaybeFunctionType();
+    // Set function type to be function(this:Generator<?>):Generator<inferred yield type>
+    funcType = funcType.withReturnType(iIterableResultType);
+    exprResult.getFirstChild().setTypeI(funcType);
+    exprResult.getFirstFirstChild().setTypeI(funcType);
+    exprResult.getFirstFirstChild().getFirstChild().setTypeI(generatorType);
+    exprResult.getFirstChild().getSecondChild().setTypeI(funcType); // FUNCTION node
+    exprResult
+        .getFirstChild()
+        .getSecondChild()
+        .getChildAtIndex(2)
+        .getFirstFirstChild() // THIS node
+        .setTypeI(generatorType);
+
+    // Add type to the final return node of genBlock
+    exprResult.getNext().getFirstChild().setTypeI(generatorType);
+  }
+
   /** Returns the generator function that was preloaded, or null if not found. */
   @Nullable
   private static Node getPreloadedGeneratorFunc(Node root) {
@@ -1303,4 +1534,37 @@ public final class Es6RewriteGenerators
       }
     }
   }
+
+  private TypeI createGenericType(JSTypeNative typeName, TypeI typeArg) {
+    return Es6ToEs3Util.createGenericType(addTypes, registry, typeName, typeArg);
+  }
+
+  private Node withStringType(Node n) {
+    return withType(n, stringType);
+  }
+
+  private Node withBooleanType(Node n) {
+    return withType(n, booleanType);
+  }
+
+  private Node withFalseType(Node n) {
+    return withType(n, falseType);
+  }
+
+  private Node withTrueType(Node n) {
+    return withType(n, trueType);
+  }
+
+  private Node withUnknownType(Node n) {
+    return withType(n, unknownType);
+  }
+
+  private Node withNumberType(Node n) {
+    return withType(n, numberType);
+  }
+
+  private Node withUndefinedType(Node n) {
+    return withType(n, undefinedType);
+  }
 }
+

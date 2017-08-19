@@ -43,8 +43,7 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
     return options;
   }
 
-  private Compiler getCompilerForTypeInfoCheck(String original) {
-    CompilerOptions options = createCompilerOptions();
+  private Compiler getCompilerForTypeInfoCheck(CompilerOptions options, String original) {
     Compiler compiler = compile(options, original);
     assertEquals(
         "Expected no warnings or errors\n"
@@ -58,17 +57,42 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
     return compiler;
   }
 
-  private Node typeInfoCheckAndGetRoot(String original) {
-    Compiler compiler = getCompilerForTypeInfoCheck(original);
+  private void checkOriginalMatchExpectedString(
+      AbstractCompiler compiler, CompilerOptions options, Node originalRoot, String expected) {
+    Node expectedRoot =
+        parseExpectedCode(new String[] {expected}, options, normalizeResults).getFirstFirstChild();
+    checkOriginalMatchExpected(compiler, originalRoot, expectedRoot);
+  }
+
+  private void checkOriginalMatchExpected(
+      AbstractCompiler compiler, Node originalRoot, Node expectedRoot) {
+    String explanation = expectedRoot.checkTreeEquals(originalRoot);
+    assertNull(
+        "\nExpected: "
+            + compiler.toSource(expectedRoot)
+            + "\nResult: "
+            + compiler.toSource(originalRoot)
+            + "\n"
+            + explanation,
+        explanation);
+  }
+
+  private Node typeInfoCheckAndGetRoot(String original, String expected) {
+    CompilerOptions options = createCompilerOptions();
+    Compiler compiler = getCompilerForTypeInfoCheck(options, original);
     Node root = compiler.getJsRoot();
     (new TypeInfoCheck(compiler)).process(null, root);
     assertThat(compiler.getErrors()).isEmpty();
+    Node expectedRoot = parseExpectedCode(new String[] {expected}, options, normalizeResults);
+    checkOriginalMatchExpected(compiler, root, expectedRoot);
     return root;
   }
 
   public void testShorthandObjProp() {
-    Node root = typeInfoCheckAndGetRoot("var /** number */ p = 1; var obj = { p };");
-
+    Node root =
+        typeInfoCheckAndGetRoot(
+            "var /** number */ p = 1; var obj = { p };",
+            "var /** number */ p = 1; var obj = { p: p };");
     Node obj = root.getFirstChild().getSecondChild().getFirstChild();
     assertType(obj.getTypeI()).isObjectTypeWithProperty("p").withTypeOfProp("p").isNumber();
     assertType(obj.getFirstChild().getTypeI())
@@ -86,6 +110,14 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
                 "var obj = {",
                 "  /** @param {number} n */",
                 "  method (n) {",
+                "    return 'string';",
+                "  }",
+                "};",
+                "var s = obj.method(1);"),
+            LINE_JOINER.join(
+                "var obj = {",
+                "  /** @param {number} n */",
+                "  method: function (n) {",
                 "    return 'string';",
                 "  }",
                 "};",
@@ -113,7 +145,13 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
             LINE_JOINER.join(
                 "var /** number */ i = 1;",
                 "var /** string */ a = '';",
-                "var obj = {a , [i + 1]: 1};"));
+                "var obj = {a , [i + 1]: 1};"),
+            LINE_JOINER.join(
+                "var /** number */ i = 1;",
+                "var /** string */ a = '';",
+                "var $jscomp$compprop0 = {};",
+                "var obj =",
+                "    ($jscomp$compprop0.a = a, ($jscomp$compprop0[i+1] = 1, $jscomp$compprop0))"));
 
     Node firstVar = root.getFirstChild().getChildAtIndex(2);
     Node compPropName = firstVar.getFirstChild();
@@ -138,7 +176,14 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
   }
 
   public void testComputedProp2() {
-    Node root = typeInfoCheckAndGetRoot("var i = 1; var obj = {'a': i , [i + 1]: 1};");
+    Node root =
+        typeInfoCheckAndGetRoot(
+            "var i = 1; var obj = {'a': i , [i + 1]: 1};",
+            LINE_JOINER.join(
+                "var i = 1;",
+                "var $jscomp$compprop0 = {};",
+                "var obj =",
+                "  ($jscomp$compprop0['a'] = i, ($jscomp$compprop0[i+1] = 1, $jscomp$compprop0))"));
 
     Node firstVar = root.getFirstChild().getSecondChild();
     Node compPropName = firstVar.getFirstChild();
@@ -163,15 +208,30 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
   }
 
   public void testForOf1() {
-    Compiler compiler = getCompilerForTypeInfoCheck("for (var i of [1,2]) {}");
+    CompilerOptions options = createCompilerOptions();
+    Compiler compiler = getCompilerForTypeInfoCheck(options, "for (var i of [1,2]) {}");
     Node root = compiler.getJsRoot();
 
     Node varNode = findDecl(root, "$jscomp$iter$0");
     (new TypeInfoCheck(compiler)).setCheckSubTree(varNode);
     assertThat(compiler.getErrors()).isEmpty();
+    checkOriginalMatchExpectedString(
+        compiler, options, varNode, "var $jscomp$iter$0 = $jscomp.makeIterator([1,2]);");
+
     Node forNode = varNode.getNext();
     (new TypeInfoCheck(compiler)).setCheckSubTree(forNode);
     assertThat(compiler.getErrors()).isEmpty();
+    checkOriginalMatchExpectedString(
+        compiler,
+        options,
+        forNode,
+        LINE_JOINER.join(
+            "for(var $jscomp$key$i=$jscomp$iter$0.next();",
+            "    !$jscomp$key$i.done;",
+            "    $jscomp$key$i=$jscomp$iter$0.next()){",
+            "  var i=$jscomp$key$i.value;",
+            "  {}",
+            "}"));
 
     assertType(varNode.getFirstChild().getTypeI()).toStringIsEqualTo("Iterator<number>");
     assertType(varNode.getFirstFirstChild().getTypeI()).toStringIsEqualTo("Iterator<number>");
@@ -207,8 +267,10 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
   }
 
   public void testForOf2() {
+    CompilerOptions options = createCompilerOptions();
     Compiler compiler =
         getCompilerForTypeInfoCheck(
+            options,
             LINE_JOINER.join(
                 "var /** string */ x = '';",
                 "const /** !Array<string> */ iter = ['a', 'b'];",
@@ -218,9 +280,23 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
     Node varNode = findDecl(root, "$jscomp$iter$0");
     (new TypeInfoCheck(compiler)).setCheckSubTree(varNode);
     assertThat(compiler.getErrors()).isEmpty();
+    checkOriginalMatchExpectedString(
+        compiler, options, varNode, "var $jscomp$iter$0 = $jscomp.makeIterator(iter);");
+
     Node forNode = varNode.getNext();
     (new TypeInfoCheck(compiler)).setCheckSubTree(forNode);
     assertThat(compiler.getErrors()).isEmpty();
+    checkOriginalMatchExpectedString(
+        compiler,
+        options,
+        forNode,
+        LINE_JOINER.join(
+            "for(var $jscomp$key$x=$jscomp$iter$0.next();",
+            "    !$jscomp$key$x.done;",
+            "    $jscomp$key$x=$jscomp$iter$0.next()){",
+            "  x=$jscomp$key$x.value;",
+            "  { var y = x; }",
+            "}"));
 
     assertType(varNode.getFirstChild().getTypeI()).toStringIsEqualTo("Iterator<string>");
 
@@ -241,7 +317,10 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
   }
 
   public void testTemplateString() {
-    Node root = typeInfoCheckAndGetRoot("var /** number */ x = 1; var temp = `template ${x} str`;");
+    Node root =
+        typeInfoCheckAndGetRoot(
+            "var /** number */ x = 1; var temp = `template ${x} str`;",
+            "var /** number */ x = 1; var temp = 'template ' + x + ' str';");
 
     Node template = root.getFirstFirstChild().getNext().getFirstChild();
     assertType(template.getTypeI()).isString();
@@ -258,7 +337,15 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
                 "  return ''",
                 "}",
                 "var n = 1;",
-                "var /** string */ s = tag`template ${n} string`;"));
+                "var /** string */ s = tag`template ${n} string`;"),
+            LINE_JOINER.join(
+                "var $jscomp$templatelit$0 = ['template ', ' string'];",
+                "$jscomp$templatelit$0.raw = ['template ', ' string'];",
+                "function tag(/** !ITemplateArray */ strings, /** number */ a){",
+                "  return ''",
+                "}",
+                "var n = 1;",
+                "var /** string */ s = tag($jscomp$templatelit$0, n);"));
 
     Node templateLit = root.getFirstFirstChild();
     assertType(templateLit.getFirstChild().getTypeI()).toStringIsEqualTo("ITemplateArray");
@@ -291,6 +378,14 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
                 "  return (function () { return 1; });",
                 "}",
                 "var g = tag`template string`;",
+                "var r = g()"),
+            LINE_JOINER.join(
+                "var $jscomp$templatelit$0 = ['template string'];",
+                "$jscomp$templatelit$0.raw = ['template string'];",
+                "function tag(/** !ITemplateArray */ strings){",
+                "  return (function () { return 1; });",
+                "}",
+                "var g = tag($jscomp$templatelit$0);",
                 "var r = g()"));
 
     Node templateLit = root.getFirstFirstChild();
@@ -322,7 +417,7 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
   }
 
   public void testExponent() {
-    Node root = typeInfoCheckAndGetRoot("var x = 2**3;");
+    Node root = typeInfoCheckAndGetRoot("var x = 2**3;", "var x = Math.pow(2,3);");
 
     Node nameX = root.getFirstFirstChild().getFirstChild();
     assertType(nameX.getTypeI()).isNumber();
@@ -334,7 +429,7 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
   }
 
   public void testAssignExponent() {
-    Node root = typeInfoCheckAndGetRoot("var x = 1; x **= 2;");
+    Node root = typeInfoCheckAndGetRoot("var x = 1; x **= 2;", "var x = 1; x = Math.pow(x,2);");
 
     Node assign = root.getFirstFirstChild().getNext().getFirstChild();
     assertType(assign.getTypeI()).isNumber();
@@ -344,6 +439,211 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
         .toStringIsEqualTo("Math.pow<|function(?,?):number|>{prototype: ?}");
     assertType(assign.getSecondChild().getFirstFirstChild().getTypeI()).toStringIsEqualTo("Math");
     assertType(assign.getSecondChild().getSecondChild().getTypeI()).isNumber();
+  }
+
+  public void testGenerator() {
+    CompilerOptions options = createCompilerOptions();
+    Compiler compiler =
+        getCompilerForTypeInfoCheck(
+            options,
+            LINE_JOINER.join(
+                "function* myGenerator () {",
+                "  var x = yield 1;",
+                "}",
+                "var g = myGenerator ();",
+                "var n = g.next();"));
+    Node root = compiler.getJsRoot();
+    Node genFunctionNode = findDecl(root, "myGenerator");
+    (new TypeInfoCheck(compiler)).setCheckSubTree(genFunctionNode);
+    assertThat(compiler.getErrors()).isEmpty();
+
+    checkOriginalMatchExpectedString(
+        compiler,
+        options,
+        genFunctionNode,
+        createTranspiledGeneratorString(
+            LINE_JOINER.join(
+                "case 0:",
+                "  $jscomp$generator$state = 1;",
+                "  return {value:1, done:false};",
+                "case 1:",
+                "  if (!($jscomp$generator$action$arg == 1)) {",
+                "    $jscomp$generator$state = 2;",
+                "    break;",
+                "  }",
+                "  $jscomp$generator$state = -1;",
+                "  throw $jscomp$generator$throw$arg;",
+                "case 2:",
+                "  $jscomp$generator$next$arg0 = $jscomp$generator$next$arg;",
+                "  x = $jscomp$generator$next$arg0;",
+                "  $jscomp$generator$state = -1;",
+                "default:",
+                "  return {value:undefined, done:true};"),
+            LINE_JOINER.join(
+                "var x;",
+                "var $jscomp$generator$next$arg0;")));
+
+    assertType(genFunctionNode.getTypeI()).toStringIsEqualTo("function():Generator<number>");
+    assertType(genFunctionNode.getFirstChild().getTypeI())
+        .toStringIsEqualTo("function():Generator<number>");
+
+    Node genFunctionBlock = genFunctionNode.getChildAtIndex(2);
+    assertType(genFunctionBlock.getFirstChild().getTypeI())
+        .toStringIsEqualTo("function(?=,?=,?=):IIterableResult<number>");
+    assertType(genFunctionBlock.getSecondChild().getFirstChild().getTypeI())
+        .isNumber();
+
+    Node iteratorNode = genFunctionBlock.getChildAtIndex(4).getFirstChild();
+    assertType(iteratorNode.getTypeI()).toStringIsEqualTo("Generator<number>");
+    assertType(iteratorNode.getFirstChild().getTypeI()).toStringIsEqualTo("Generator<number>");
+    assertType(iteratorNode.getFirstFirstChild().getTypeI())
+        .toStringIsEqualTo("function(?=):IIterableResult<number>");
+
+    Node returnNode = genFunctionBlock.getChildAtIndex(7);
+    assertType(returnNode.getFirstChild().getTypeI()).toStringIsEqualTo("Generator<number>");
+  }
+
+  public void testGenerator2() {
+    CompilerOptions options = createCompilerOptions();
+    Compiler compiler =
+        getCompilerForTypeInfoCheck(
+            options,
+            LINE_JOINER.join(
+                "function* myGenerator () {",
+                "  yield* ['a','b'];",
+                "}",
+                "var g = myGenerator();",
+                "var n = g.next();"));
+    Node root = compiler.getJsRoot();
+    Node genFunctionNode = findDecl(root, "myGenerator");
+    (new TypeInfoCheck(compiler)).setCheckSubTree(genFunctionNode);
+    assertThat(compiler.getErrors()).isEmpty();
+
+    checkOriginalMatchExpectedString(
+        compiler,
+        options,
+        genFunctionNode,
+        createTranspiledGeneratorString(
+            LINE_JOINER.join(
+                "case 0:",
+                "  $jscomp$generator$yield$all = $jscomp.makeIterator(['a', 'b']);",
+                "case 1:",
+                "  if (!!($jscomp$generator$yield$entry = ",
+                "       $jscomp$generator$yield$all.next($jscomp$generator$next$arg)).done) {",
+                "    $jscomp$generator$state = 2;",
+                "    break;",
+                "  }",
+                "  $jscomp$generator$state = 3;",
+                "  return {value:$jscomp$generator$yield$entry.value, done:false};",
+                "case 3:",
+                "  if (!($jscomp$generator$action$arg == 1)) {",
+                "    $jscomp$generator$state = 4;",
+                "    break;",
+                "  }",
+                "  $jscomp$generator$state = -1;",
+                "  throw $jscomp$generator$throw$arg;",
+                "case 4:",
+                "  $jscomp$generator$state = 1;",
+                "  break;",
+                "case 2:",
+                "  $jscomp$generator$state = -1;",
+                "default:",
+                "  return {value:undefined, done:true};"),
+            LINE_JOINER.join(
+                "var $jscomp$generator$yield$entry;",
+                "var $jscomp$generator$yield$all;")));
+
+    assertType(genFunctionNode.getTypeI()).toStringIsEqualTo("function():Generator<string>");
+    assertType(genFunctionNode.getFirstChild().getTypeI())
+        .toStringIsEqualTo("function():Generator<string>");
+
+    Node genFunctionBlock = genFunctionNode.getChildAtIndex(2);
+    assertType(genFunctionBlock.getFirstChild().getTypeI())
+        .toStringIsEqualTo("function(?=,?=,?=):IIterableResult<string>");
+    assertType(genFunctionBlock.getSecondChild().getFirstChild().getTypeI())
+        .isNumber();
+
+    Node case0 =
+        genFunctionBlock
+            .getFirstChild()
+            .getChildAtIndex(2)
+            .getFirstChild()
+            .getChildAtIndex(3)
+            .getFirstChild()
+            .getSecondChild();
+    assertType(case0.getSecondChild().getFirstFirstChild().getTypeI())
+        .toStringIsEqualTo("Iterator<string>");
+    assertType(case0.getSecondChild().getFirstFirstChild().getFirstChild().getTypeI())
+        .toStringIsEqualTo("Iterator<string>");
+    assertType(case0.getSecondChild().getFirstFirstChild().getSecondChild().getTypeI())
+        .toStringIsEqualTo("Iterator<string>");
+
+    Node case1 = case0.getNext();
+    Node yieldEntry =
+        case1.getSecondChild().getFirstFirstChild().getFirstFirstChild().getFirstChild();
+    assertType(yieldEntry.getTypeI()).toStringIsEqualTo("IIterableResult<string>");
+
+    assertType(yieldEntry.getFirstChild().getTypeI()).toStringIsEqualTo("IIterableResult<string>");
+
+    assertType(yieldEntry.getSecondChild().getTypeI()).toStringIsEqualTo("IIterableResult<string>");
+  }
+
+  public void testGenerator3() {
+    // Test to show that type of this is type-checked as UNKNOWN.
+    CompilerOptions options = createCompilerOptions();
+    Compiler compiler =
+        getCompilerForTypeInfoCheck(
+            options,
+            LINE_JOINER.join(
+                "function* myGenerator () {",
+                "  yield this;",
+                "}",
+                "var g = myGenerator();",
+                "var n = g.next();"));
+    Node root = compiler.getJsRoot();
+    Node genFunctionNode = findDecl(root, "myGenerator");
+    (new TypeInfoCheck(compiler)).setCheckSubTree(genFunctionNode);
+    assertThat(compiler.getErrors()).isEmpty();
+
+    checkOriginalMatchExpectedString(
+        compiler,
+        options,
+        genFunctionNode,
+        createTranspiledGeneratorString(
+            LINE_JOINER.join(
+                "case 0:",
+                "  $jscomp$generator$state = 1;",
+                "  return {value:$jscomp$generator$this, done:false};",
+                "case 1:",
+                "  if (!($jscomp$generator$action$arg == 1)) {",
+                "    $jscomp$generator$state = 2;",
+                "    break;",
+                "  }",
+                "  $jscomp$generator$state = -1;",
+                "  throw $jscomp$generator$throw$arg;",
+                "case 2:",
+                "  $jscomp$generator$state = -1;",
+                "default:",
+                "  return {value:undefined, done:true};"),
+            "var $jscomp$generator$this = this;"));
+
+    assertType(genFunctionNode.getTypeI()).toStringIsEqualTo("function():Generator<?>");
+    assertType(genFunctionNode.getFirstChild().getTypeI())
+        .toStringIsEqualTo("function():Generator<?>");
+
+    Node case0Return =
+        genFunctionNode
+            .getChildAtIndex(2)
+            .getFirstChild()
+            .getChildAtIndex(2)
+            .getFirstChild()
+            .getChildAtIndex(3)
+            .getFirstChild()
+            .getSecondChild()
+            .getSecondChild()
+            .getSecondChild();
+    assertType(case0Return.getFirstChild().getTypeI()).toStringIsEqualTo("IIterableResult<?>");
+    assertType(case0Return.getFirstFirstChild().getFirstChild().getTypeI()).isUnknown();
   }
 
   private Node findDecl(Node n, String name) {
@@ -369,5 +669,38 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
     }
 
     return null;
+  }
+
+  private String createTranspiledGeneratorString(String body, String beforeIterator) {
+    return LINE_JOINER.join(
+        "function myGenerator() {",
+        "  function $jscomp$generator$impl(",
+        "    $jscomp$generator$action$arg,",
+        "    $jscomp$generator$next$arg,",
+        "    $jscomp$generator$throw$arg) {",
+        "    for (; 1;) {",
+        "      switch($jscomp$generator$state) {",
+        body,
+        "      }",
+        "    }",
+        "  }",
+        "  var $jscomp$generator$state = 0;",
+        beforeIterator,
+        "  var iterator = {next:function(arg) {",
+        "    return $jscomp$generator$impl(0.0, arg, undefined);",
+        "  }, throw:function(arg) {",
+        "    return $jscomp$generator$impl(1.0, undefined, arg);",
+        "  }, return:function(arg) {",
+        "    throw Error('Not yet implemented');",
+        "  }};",
+        "  $jscomp.initSymbolIterator();",
+        "  /**",
+        " @this {!Generator<?>}",
+        " */",
+        "iterator[Symbol.iterator] = function() {",
+        "    return this;",
+        "  };",
+        "  return iterator;",
+        "}");
   }
 }
