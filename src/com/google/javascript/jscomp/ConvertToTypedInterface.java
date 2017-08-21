@@ -405,6 +405,11 @@ class ConvertToTypedInterface implements CompilerPass {
         }
         return;
       }
+      if (NodeUtil.isNamespaceDecl(nameNode)) {
+        rhs.replaceWith(IR.objectlit().srcref(rhs));
+        compiler.reportChangeToEnclosingScope(nameNode);
+        return;
+      }
       if (nameNode.matchesQualifiedName("exports")) {
         // Replace the RHS of a default goog.module export with Unknown
         replaceRhsWithUnknown(rhs);
