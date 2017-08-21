@@ -109,7 +109,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node node, Node parent) {
-      tryRemovingClinit(node, parent);
+      tryRemovingClinit(node);
 
       if (isNewControlBranch(parent)) {
         clinitsCalledAtBranch = clinitsCalledAtBranch.parent;
@@ -122,7 +122,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
       }
     }
 
-    private void tryRemovingClinit(Node node, Node parent) {
+    private void tryRemovingClinit(Node node) {
       String clinitName = node.isCall() ? getClinitMethodName(node.getFirstChild()) : null;
       if (clinitName == null) {
         return;
@@ -133,9 +133,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
         return;
       }
 
-      // Replacing with undefined is a simple way of removing without introducing invalid AST.
-      parent.replaceChild(node, NodeUtil.newUndefinedNode(node));
-      compiler.reportChangeToEnclosingScope(parent);
+      NodeUtil.deleteNodePreservingValidAST(node, compiler);
     }
 
     private boolean isNewControlBranch(Node n) {
@@ -296,9 +294,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
         return;
       }
 
-      body.removeChild(firstExpr);
-      NodeUtil.markFunctionsDeleted(firstExpr, compiler);
-      compiler.reportChangeToEnclosingScope(body);
+      NodeUtil.deleteNodePreservingValidAST(firstExpr, compiler);
       newEmptyClinitMethod = true;
     }
 

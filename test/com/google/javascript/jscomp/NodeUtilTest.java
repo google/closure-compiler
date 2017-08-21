@@ -1146,6 +1146,30 @@ public final class NodeUtilTest extends TestCase {
     assertNull("Nodes do not match:\n" + difference, difference);
   }
 
+  public void testRemoveCommaChild() {
+    Node actual = parse("(a(), b())");
+
+    Node comma = actual.getFirstFirstChild();
+    Node left = comma.getFirstChild();
+
+    NodeUtil.removeChild(comma, left);
+    String expected = "b()";
+    String difference = parse(expected).checkTreeEquals(actual);
+    assertNull("Nodes do not match:\n" + difference, difference);
+  }
+
+  public void testRemoveAndChild() {
+    Node actual = parse("a() && b()");
+
+    Node and = actual.getFirstFirstChild();
+    Node left = and.getFirstChild();
+
+    NodeUtil.removeChild(and, left);
+    String expected = "b()";
+    String difference = parse(expected).checkTreeEquals(actual);
+    assertNull("Nodes do not match:\n" + difference, difference);
+  }
+
   public void testRemoveForChild() {
     // Test removing the initializer.
     Node actual = parse("for(var a=0;a<0;a++)foo()");
