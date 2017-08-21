@@ -199,7 +199,7 @@ CustomEvent.prototype.initCustomEvent = function(
     eventType, bubbles, cancelable, detail) {};
 
 /**
- * @type {*}
+ * @type {?}
  */
 CustomEvent.prototype.detail;
 
