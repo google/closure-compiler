@@ -42,7 +42,6 @@ public class NodeModuleResolver extends ModuleResolver {
     ModuleLoader.MODULE_SLASH + "index.js",
     ModuleLoader.MODULE_SLASH + "index.json"
   };
-  public static final String JSC_BROWSER_BLACKLISTED_MARKER = "$jscomp$browser$blacklisted";
 
   /** Named modules found in node_modules folders */
   private final ImmutableMap<String, String> packageJsonMainEntries;
@@ -164,22 +163,23 @@ public class NodeModuleResolver extends ModuleResolver {
 
   public String resolveJsModuleFile(String scriptAddress, String moduleAddress) {
     for (int i = 0; i < FILE_EXTENSIONS_TO_SEARCH.length; i++) {
-      String loadAddress = locate(scriptAddress, moduleAddress + FILE_EXTENSIONS_TO_SEARCH[i]);
-      if (loadAddress != null) {
-        // Also look for mappings in packageJsonMainEntries because browser field
-        // advanced usage allows to override / blacklist specific files, including
-        // the main entry.
-        if (packageJsonMainEntries.containsKey(loadAddress)) {
-          String packageJsonEntry = packageJsonMainEntries.get(loadAddress);
+      String moduleAddressCandidate = moduleAddress + FILE_EXTENSIONS_TO_SEARCH[i];
+      String canonicalizedCandidatePath = canonicalizePath(scriptAddress, moduleAddressCandidate);
 
-          if (packageJsonEntry != JSC_BROWSER_BLACKLISTED_MARKER) {
-            return resolveJsModuleFile(scriptAddress, packageJsonEntry);
-          } else {
-            return null;
-          }
-        } else {
-          return loadAddress;
+      // Also look for mappings in packageJsonMainEntries because browser field
+      // advanced usage allows to override / blacklist specific files, including
+      // the main entry.
+      if (packageJsonMainEntries.containsKey(canonicalizedCandidatePath)) {
+        moduleAddressCandidate = packageJsonMainEntries.get(canonicalizedCandidatePath);
+
+        if (moduleAddressCandidate == ModuleLoader.JSC_BROWSER_BLACKLISTED_MARKER) {
+          return null;
         }
+      }
+
+      String loadAddress = locate(scriptAddress, moduleAddressCandidate);
+      if (loadAddress != null) {
+        return loadAddress;
       }
     }
 

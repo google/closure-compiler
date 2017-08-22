@@ -301,19 +301,15 @@ public final class ModuleLoaderTest extends TestCase {
             "/node_modules/mymodule/server.js", "/node_modules/mymodule/client.js",
             "/node_modules/mymodule/override/relative.js", "/node_modules/mymodule/./with/this.js",
             "/node_modules/mymodule/exclude/this.js",
-                NodeModuleResolver.JSC_BROWSER_BLACKLISTED_MARKER,
+                ModuleLoader.JSC_BROWSER_BLACKLISTED_MARKER,
             "/node_modules/mymodule/replace/other.js",
-                "/node_modules/mymodule/with/alternative.js");
+            "/node_modules/mymodule/with/alternative.js");
 
     ImmutableList<CompilerInput> compilerInputs =
         inputs(
-            "node_modules/mymodule/package.json",
-            "node_modules/mymodule/server.js",
-            "node_modules/mymodule/client.js",
-            "node_modules/mymodule/exclude/this.js",
-            "node_modules/mymodule/replace/other.js",
-            "node_modules/mymodule/with/alternative.js",
-            "/node_modules/mymodule/override/relative.js",
+            "/node_modules/mymodule/package.json",
+            "/node_modules/mymodule/client.js",
+            "/node_modules/mymodule/with/alternative.js",
             "/node_modules/mymodule/with/this.js",
             "/foo.js");
 
@@ -328,7 +324,6 @@ public final class ModuleLoaderTest extends TestCase {
 
     assertUri(
         "/node_modules/mymodule/client.js", loader.resolve("/foo.js").resolveJsModule("mymodule"));
-
     assertUri(
         "/node_modules/mymodule/with/alternative.js",
         loader.resolve("/foo.js").resolveJsModule("mymodule/replace/other.js"));
@@ -338,6 +333,9 @@ public final class ModuleLoaderTest extends TestCase {
     assertUri(
         "/node_modules/mymodule/with/this.js",
         loader.resolve("/foo.js").resolveJsModule("mymodule/override/relative.js"));
+    assertUri(
+        "/node_modules/mymodule/with/this.js",
+        loader.resolve("/node_modules/mymodule/client.js").resolveJsModule("./override/relative.js"));
     assertNull(
         loader.resolve("/node_modules/mymodule/client.js").resolveJsModule("./exclude/this.js"));
   }
