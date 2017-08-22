@@ -39,7 +39,8 @@ public class J2clAssertRemovalPass extends AbstractPostOrderCallback implements 
   @Override
   public void visit(NodeTraversal t, Node node, Node parent) {
     if (isAssertionCall(node)) {
-      NodeUtil.deleteNodePreservingValidAST(node, compiler);
+      compiler.reportChangeToEnclosingScope(node);
+      parent.replaceChild(node, NodeUtil.newUndefinedNode(node));
     }
   }
 

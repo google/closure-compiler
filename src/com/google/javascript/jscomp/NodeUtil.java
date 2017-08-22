@@ -2694,21 +2694,10 @@ public final class NodeUtil {
    * the related AST changes/deletions to the given compiler.
    */
   public static void deleteNode(Node n, AbstractCompiler compiler) {
-    NodeUtil.markFunctionsDeleted(n, compiler);
     Node parent = n.getParent();
-    parent.removeChild(n);
-    compiler.reportChangeToEnclosingScope(parent);
-  }
-
-  /**
-   * Permanently delete the given node from the AST while maintaining a valid node structure, as
-   * well as report the related AST changes/deletions to the given compiler.
-   * In some cases, this is done by deleting the parent from the AST as well.
-   */
-  public static void deleteNodePreservingValidAST(Node n, AbstractCompiler compiler) {
     NodeUtil.markFunctionsDeleted(n, compiler);
-    Node removedParent = removeChild(n.getParent(), n);
-    compiler.reportChangeToEnclosingScope(removedParent);
+    n.detach();
+    compiler.reportChangeToEnclosingScope(parent);
   }
 
   /**
@@ -2723,110 +2712,88 @@ public final class NodeUtil {
   /**
    * Safely remove children while maintaining a valid node structure.
    * In some cases, this is done by removing the parent from the AST as well.
-   *
-   * @return the parent that is changed with this remove operation
    */
-  public static Node removeChild(Node parent, Node node) {
+  public static void removeChild(Node parent, Node node) {
     if (isTryFinallyNode(parent, node)) {
       if (NodeUtil.hasCatchHandler(getCatchBlock(parent))) {
         // A finally can only be removed if there is a catch.
         parent.removeChild(node);
-        return parent;
       } else {
         // Otherwise, only its children can be removed.
         node.detachChildren();
-        return node;
       }
     } else if (node.isCatch()) {
       // The CATCH can can only be removed if there is a finally clause.
       Node tryNode = node.getGrandparent();
       checkState(NodeUtil.hasFinally(tryNode));
       node.detach();
-      return parent;
     } else if (isTryCatchNodeContainer(node)) {
       // The container node itself can't be removed, but the contained CATCH
       // can if there is a 'finally' clause
       Node tryNode = node.getParent();
       checkState(NodeUtil.hasFinally(tryNode));
       node.detachChildren();
-      return node;
     } else if (node.isNormalBlock()) {
       // Simply empty the block.  This maintains source location and
       // "synthetic"-ness.
       node.detachChildren();
-      return parent;
     } else if (isStatementBlock(parent)
         || isSwitchCase(node)
         || node.isMemberFunctionDef()) {
       // A statement in a block or a member function can simply be removed
       parent.removeChild(node);
-      return parent;
     } else if (isNameDeclaration(parent) || parent.isExprResult()) {
       if (parent.hasMoreThanOneChild()) {
         parent.removeChild(node);
-        return parent;
       } else {
         // Remove the node from the parent, so it can be reused.
         parent.removeChild(node);
         // This would leave an empty VAR, remove the VAR itself.
-        return removeChild(parent.getParent(), parent);
+        removeChild(parent.getParent(), parent);
       }
-    } else if (parent.isComma() || isBinaryOperator(parent)) {
-      // Remove the node from the parent, so it can be reused.
-      parent.removeChild(node);
-      // Replace parent with the remaining node itself to keep AST valid.
-      Node remainingChild = parent.removeFirstChild();
-      parent.replaceWith(remainingChild);
-      return remainingChild.getParent();
     } else if (parent.isLabel()
         && node == parent.getLastChild()) {
       // Remove the node from the parent, so it can be reused.
       parent.removeChild(node);
       // A LABEL without children can not be referred to, remove it.
-      return removeChild(parent.getParent(), parent);
+      removeChild(parent.getParent(), parent);
     } else if (parent.isVanillaFor()) {
       // Only Token.FOR can have an Token.EMPTY other control structure
       // need something for the condition. Others need to be replaced
       // or the structure removed.
       parent.replaceChild(node, IR.empty());
-      return parent;
     } else if (parent.isObjectPattern()) {
       // Remove the name from the object pattern
       parent.removeChild(node);
-      return parent;
     } else if (parent.isArrayPattern()) {
       if (node == parent.getLastChild()) {
         parent.removeChild(node);
       } else {
         parent.replaceChild(node, IR.empty());
       }
-      return parent;
     } else if (parent.isDestructuringLhs()) {
       // Destructuring is empty so we should remove the node
       parent.removeChild(node);
       if (parent.getParent().hasChildren()) {
         // removing the destructuring could leave an empty variable declaration node, so we would
         // want to remove it from the AST
-        return removeChild(parent.getParent(), parent);
+        removeChild(parent.getParent(), parent);
       }
-      return parent;
     } else if (parent.isRest()) {
       // Rest params can only ever have one child node
-      Node grandParent = parent.getParent();
-      grandParent.removeChild(parent);
-      return grandParent;
+      parent.detach();
     } else if (parent.isParamList()) {
       parent.removeChild(node);
-      return parent;
     } else if (parent.isImport()) {
       // An import node must always have three child nodes. Only the first can be safely removed.
       if (node == parent.getFirstChild()) {
         parent.replaceChild(node, IR.empty());
-        return parent;
+      } else {
+        throw new IllegalStateException("Invalid attempt to remove: " + node + " from " + parent);
       }
+    } else {
+      throw new IllegalStateException("Invalid attempt to remove node: " + node + " of " + parent);
     }
-
-    throw new IllegalStateException("Invalid attempt to remove node: " + node + " of " + parent);
   }
 
   /**

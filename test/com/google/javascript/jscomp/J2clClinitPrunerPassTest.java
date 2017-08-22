@@ -46,6 +46,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "someClass.$clinit = function() {}",
             "someClass.someOtherFunction = function() {",
             "  someClass.$clinit();",
+            "  void 0;",
             "};"));
   }
 
@@ -63,7 +64,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "someClass.$clinit = function() {}",
             "someClass.someOtherFunction = function() {",
             "  (someClass.$clinit(), true);",
-            "  true;",
+            "  (void 0, true);",
             "};"));
   }
 
@@ -94,12 +95,18 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "someClass.someOtherFunction = function() {",
             "  someClass.$clinit();",
             "  if (true) {",
-            "    while(true);",
-            "  } else;",
-            "  var a = true ? void 0 : void 0;",
-            "  var b = function() {};",
-            "  var c = function c() {};",
-            "  [].forEach(function() {});",
+            "    void 0;",
+            "    while(true) {",
+            "      void 0;",
+            "    }",
+            "  } else {",
+            "    void 0;",
+            "  }",
+            "  var a = (void 0, true) ? (void 0, void 0) : void 0;",
+            "  var b = function() { void 0; };",
+            "  var c = function c() { void 0; };",
+            "  [].forEach(function() { void 0; });",
+            "  void 0;",
             "};"));
   }
 
@@ -110,14 +117,14 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "someClass.$clinit = function() {",
             "  someClass.$clinit();",
             "};"),
-        LINE_JOINER.join("var someClass = {};", "someClass.$clinit = function() {}"));
+        LINE_JOINER.join("var someClass = {};", "someClass.$clinit = function() {void 0;}"));
 
     test(
         LINE_JOINER.join(
             "function someClass$$0clinit() {",
             "  someClass$$0clinit();",
             "}"),
-        "function someClass$$0clinit() {}");
+        "function someClass$$0clinit() {void 0;}");
   }
 
   public void testRemoveDuplicates_jumpFunctionDeclarations() {
@@ -141,6 +148,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "  someClass.$clinit();",
             "  function myFunc() {",
             "    someClass.$clinit();",
+            "    void 0;",
             "  }",
             "};"));
   }
