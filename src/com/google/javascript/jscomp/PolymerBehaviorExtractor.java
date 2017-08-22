@@ -67,9 +67,6 @@ final class PolymerBehaviorExtractor {
       if (behaviorName.isObjectLit()) {
         PolymerPassStaticUtils.switchDollarSignPropsToBrackets(behaviorName, compiler);
         PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(behaviorName, compiler);
-        if (NodeUtil.getFirstPropMatchingKey(behaviorName, "is") != null) {
-          compiler.report(JSError.make(behaviorName, PolymerPassErrors.POLYMER_INVALID_BEHAVIOR));
-        }
         behaviors.add(
             new BehaviorDefinition(
                 PolymerPassStaticUtils.extractProperties(
@@ -124,9 +121,6 @@ final class PolymerBehaviorExtractor {
       } else if (behaviorValue.isObjectLit()) {
         PolymerPassStaticUtils.switchDollarSignPropsToBrackets(behaviorValue, compiler);
         PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(behaviorValue, compiler);
-        if (NodeUtil.getFirstPropMatchingKey(behaviorValue, "is") != null) {
-          compiler.report(JSError.make(behaviorValue, PolymerPassErrors.POLYMER_INVALID_BEHAVIOR));
-        }
         behaviors.add(
             new BehaviorDefinition(
                 PolymerPassStaticUtils.extractProperties(
