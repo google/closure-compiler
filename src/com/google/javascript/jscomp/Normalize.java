@@ -55,7 +55,7 @@ import java.util.Set;
  *   <li>Marks constants with the IS_CONSTANT_NAME annotation.
  *   <li>Finds properties marked @expose, and rewrites them in [] notation.
  *   <li>Rewrite body of arrow function as a block
- *   <li>Removes ES6 shorthand property syntax and shorthand import syntax.
+ *   <li>Removes ES6 shorthand property syntax and shorthand import/export syntax.
  *   <li>Take var statements out from for-loop initializer.
  *       This: for(var a = 0;a<0;a++) {} becomes: var a = 0; for(var a;a<0;a++) {}
  * </ol>
@@ -389,6 +389,10 @@ class Normalize implements CompilerPass {
           rewriteImportSpecShorthand(n);
           break;
 
+        case EXPORT_SPEC:
+          rewriteExportSpecShorthand(n);
+          break;
+
         case NAME:
         case STRING:
         case GETTER_DEF:
@@ -453,6 +457,22 @@ class Normalize implements CompilerPass {
      *   import {x as x} from 'm';
      */
     private void rewriteImportSpecShorthand(Node n) {
+      if (n.hasOneChild()) {
+        n.addChildToBack(n.getFirstChild().cloneTree());
+        compiler.reportChangeToEnclosingScope(n);
+      }
+    }
+
+    /**
+     * Expands
+     *
+     *   export {x};
+     *
+     * to
+     *
+     *   export {x as x};
+     */
+    private void rewriteExportSpecShorthand(Node n) {
       if (n.hasOneChild()) {
         n.addChildToBack(n.getFirstChild().cloneTree());
         compiler.reportChangeToEnclosingScope(n);

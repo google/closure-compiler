@@ -984,4 +984,12 @@ public final class NormalizeTest extends CompilerTestCase {
   public void testES6ShorthandPropertySyntax13() {
     testSame("({['a']: a = 5} = obj);");
   }
+
+  public void testRewriteExportSpecShorthand1() {
+    test("export {a};", "export {a as a};");
+  }
+
+  public void testRewriteExportSpecShorthand2() {
+    test("export {a, b as c, d};", "export {a as a, b as c, d as d};");
+  }
 }
