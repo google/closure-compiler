@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+'require es6/conformance';
 'require es6/symbol';
 'require es6/util/makeiterator';
 'require util/polyfill';
@@ -45,7 +46,11 @@ $jscomp.polyfill('WeakSet',
       return false;
     }
   }
-  if (isConformant()) return NativeWeakSet;
+  if ($jscomp.USE_PROXY_FOR_ES6_CONFORMANCE_CHECKS) {
+    if (NativeWeakSet && $jscomp.ES6_CONFORMANCE) return NativeWeakSet;
+  } else {
+    if (isConformant()) return NativeWeakSet;
+  }
 
   /**
    * @constructor

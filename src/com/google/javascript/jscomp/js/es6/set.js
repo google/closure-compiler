@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-'require es6/symbol';
+'require es6/conformance';
 'require es6/map';
+'require es6/symbol';
 'require util/defines';
 'require util/polyfill';
 
@@ -27,9 +28,13 @@ $jscomp.polyfill('Set',
      */
     function(NativeSet) {
 
-  // Perform a conformance check to ensure correct native implementation.
-  var isConformant = !$jscomp.ASSUME_NO_NATIVE_SET && (function() {
-    if (!NativeSet ||
+  /**
+   * Checks conformance of the existing Set.
+   * @return {boolean} True if the browser's implementation conforms.
+   */
+  function isConformant() {
+    if ($jscomp.ASSUME_NO_NATIVE_SET ||
+        !NativeSet ||
         !NativeSet.prototype.entries ||
         typeof Object.seal != 'function') {
       return false;
@@ -57,8 +62,13 @@ $jscomp.polyfill('Set',
     } catch (err) { // This should hopefully never happen, but let's be safe.
       return false;
     }
-  })();
-  if (isConformant) return NativeSet;
+  }
+
+  if ($jscomp.USE_PROXY_FOR_ES6_CONFORMANCE_CHECKS) {
+    if (NativeSet && $jscomp.ES6_CONFORMANCE) return NativeSet;
+  } else {
+    if (isConformant()) return NativeSet;
+  }
 
   // We depend on Symbol.iterator, so ensure it's loaded.
   $jscomp.initSymbol();

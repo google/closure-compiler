@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+'require es6/conformance';
 'require es6/symbol';
 'require es6/util/makeiterator';
 'require es6/weakmap';
@@ -49,9 +50,14 @@ $jscomp.polyfill('Map',
      * @suppress {reportUnknownTypes}
      */
     function(NativeMap) {
-  // Perform a conformance check to ensure correct native implementation.
-  var isConformant = !$jscomp.ASSUME_NO_NATIVE_MAP && (function() {
-    if (!NativeMap ||
+
+  /**
+   * Checks conformance of the existing Map.
+   * @return {boolean} True if the browser's implementation conforms.
+   */
+  function isConformant() {
+    if ($jscomp.ASSUME_NO_NATIVE_MAP ||
+        !NativeMap ||
         !NativeMap.prototype.entries ||
         typeof Object.seal != 'function') {
       return false;
@@ -79,8 +85,13 @@ $jscomp.polyfill('Map',
     } catch (err) { // This should hopefully never happen, but let's be safe.
       return false;
     }
-  })();
-  if (isConformant) return NativeMap;
+  }
+
+  if ($jscomp.USE_PROXY_FOR_ES6_CONFORMANCE_CHECKS) {
+    if (NativeMap && $jscomp.ES6_CONFORMANCE) return NativeMap;
+  } else {
+    if (isConformant()) return NativeMap;
+  }
 
   // We depend on Symbol.iterator, so ensure it's loaded.
   $jscomp.initSymbol();

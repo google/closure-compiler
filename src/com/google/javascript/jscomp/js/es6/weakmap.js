@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+'require es6/conformance';
 'require es6/symbol';
 'require es6/util/makeiterator';
 'require util/defineproperty';
@@ -46,9 +47,13 @@ $jscomp.polyfill('WeakMap',
       return false;
     }
   }
-  if (isConformant()) return NativeWeakMap;
+  if ($jscomp.USE_PROXY_FOR_ES6_CONFORMANCE_CHECKS) {
+    if (NativeWeakMap && $jscomp.ES6_CONFORMANCE) return NativeWeakMap;
+  } else {
+    if (isConformant()) return NativeWeakMap;
+  }
 
-  var prop = '$jscomp_hidden_' + Math.random().toString().substring(2);
+  var prop = '$jscomp_hidden_' + Math.random();
 
   /**
    * Inserts the hidden property into the target.
