@@ -577,6 +577,18 @@ public final class NormalizeTest extends CompilerTestCase {
     test("var Arguments = {}; var Arguments = {};", "var Arguments = {}; Arguments = {};");
   }
 
+  public void testRemoveVarDeclarationDuplicatesParam1() {
+    test(
+        "function f(x) { alert(x); var x = 0; alert(x); }",
+        "function f(x) { alert(x);     x = 0; alert(x); }");
+  }
+
+  public void testRemoveVarDeclarationDuplicatesParam2() {
+    test(
+        "function f(x) { alert(x); var x; alert(x); }",
+        "function f(x) { alert(x);        alert(x); }");
+  }
+
   public void testRenamingConstants() {
     testSame("var ACONST = 4; var b = ACONST;");
 
