@@ -862,6 +862,8 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
 
   // TODO(bellashim): Get the test below passing
   public void disabled_testDefaultParameterWithContextWithInversion2() {
+    this.useDefaultRenamer = true;
+
     // Parameter default values don't see the scope of the body
     // Methods or functions defined "inside" parameter default values don't see the local variables
     // of the body.
