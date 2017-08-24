@@ -16,6 +16,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_BEHAVIOR;
+import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -115,6 +117,27 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
     // TODO(jlklein): Actually verify the properties of the BehaviorDefinitions.
   }
 
+  public void testIsPropInBehavior() {
+    parseAndInitializeExtractor(
+        LINE_JOINER.join(
+            "/** @polymerBehavior */",
+            "var FunBehavior = {",
+            "  is: 'fun-behavior',",
+            "",
+            "  properties: {",
+            "    isFun: Boolean",
+            "  },",
+            "};",
+            "var A = Polymer({",
+            "  is: 'x-element',",
+            "  behaviors: [ FunBehavior ],",
+            "});"));
+    extractor.extractBehaviors(behaviorArray);
+
+    assertThat(compiler.getErrors()).hasLength(1);
+    assertError(compiler.getErrors()[0]).hasType(POLYMER_INVALID_BEHAVIOR);
+  }
+
   // TODO(jlklein): Test more use cases: names to avoid copying, global vs. non-global, etc.
 
   private void parseAndInitializeExtractor(String code) {
@@ -122,12 +145,9 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
     GlobalNamespace globalNamespace = new GlobalNamespace(compiler, root);
     extractor = new PolymerBehaviorExtractor(compiler, globalNamespace);
 
-    NodeUtil.visitPostOrder(root, new NodeUtil.Visitor() {
-      @Override
-      public void visit(Node node) {
-        if (isBehaviorArrayDeclaration(node)) {
-          behaviorArray = node;
-        }
+    NodeUtil.visitPostOrder(root, (Node node) -> {
+      if (isBehaviorArrayDeclaration(node)) {
+        behaviorArray = node;
       }
     }, Predicates.<Node>alwaysTrue());
 
