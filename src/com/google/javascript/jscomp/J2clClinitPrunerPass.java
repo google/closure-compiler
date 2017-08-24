@@ -29,9 +29,7 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 
-/**
- * An optimization pass to prune J2CL clinits.
- */
+/** An optimization pass to prune J2CL clinits. */
 public class J2clClinitPrunerPass implements CompilerPass {
 
   private final AbstractCompiler compiler;
@@ -109,7 +107,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node node, Node parent) {
-      tryRemovingClinit(node, parent);
+      tryRemovingClinit(node);
 
       if (isNewControlBranch(parent)) {
         clinitsCalledAtBranch = clinitsCalledAtBranch.parent;
@@ -122,7 +120,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
       }
     }
 
-    private void tryRemovingClinit(Node node, Node parent) {
+    private void tryRemovingClinit(Node node) {
       String clinitName = node.isCall() ? getClinitMethodName(node.getFirstChild()) : null;
       if (clinitName == null) {
         return;
@@ -133,9 +131,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
         return;
       }
 
-      // Replacing with undefined is a simple way of removing without introducing invalid AST.
-      parent.replaceChild(node, NodeUtil.newUndefinedNode(node));
-      compiler.reportChangeToEnclosingScope(parent);
+      NodeUtil.deleteFunctionCall(node, compiler);
     }
 
     private boolean isNewControlBranch(Node n) {
@@ -259,9 +255,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
     }
   }
 
-  /**
-   * A traversal callback that removes the body of empty clinits.
-   */
+  /** A traversal callback that removes the body of empty clinits. */
   private final class EmptyClinitPruner extends AbstractPostOrderCallback {
 
     @Override
@@ -273,9 +267,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
       trySubstituteEmptyFunction(node);
     }
 
-    /**
-     * Clears the body of any functions that are equivalent to empty functions.
-     */
+    /** Clears the body of any functions that are equivalent to empty functions. */
     private void trySubstituteEmptyFunction(Node fnNode) {
       String fnQualifiedName = NodeUtil.getName(fnNode);
 

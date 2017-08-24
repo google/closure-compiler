@@ -2701,6 +2701,29 @@ public final class NodeUtil {
   }
 
   /**
+   * Permanently delete the given call from the AST while maintaining a valid node structure, as
+   * well as report the related AST changes to the given compiler. In some cases, this is done by
+   * deleting the parent from the AST and is come cases expression is replaced by {@code
+   * undefined}.
+   */
+  public static void deleteFunctionCall(Node n, AbstractCompiler compiler) {
+    checkState(n.isCall());
+
+    Node parent = n.getParent();
+    if (parent.isExprResult()) {
+      Node grandParent = parent.getParent();
+      grandParent.removeChild(parent);
+      parent = grandParent;
+    } else {
+      // Seems like part of more complex expression, fallback to replacing with no-op.
+      parent.replaceChild(n, newUndefinedNode(n));
+    }
+
+    NodeUtil.markFunctionsDeleted(n, compiler);
+    compiler.reportChangeToEnclosingScope(parent);
+  }
+
+  /**
    * Permanently delete all the children of the given node, including reporting changes.
    */
   public static void deleteChildren(Node n, AbstractCompiler compiler) {
