@@ -18,11 +18,15 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
@@ -32,8 +36,8 @@ import javax.annotation.Nullable;
 /** An optimization pass to prune J2CL clinits. */
 public class J2clClinitPrunerPass implements CompilerPass {
 
+  private final Set<String> emptiedClinitMethods = new HashSet<>();
   private final AbstractCompiler compiler;
-  private boolean newEmptyClinitMethod = false;
   private final List<Node> changedScopeNodes;
 
   J2clClinitPrunerPass(AbstractCompiler compiler, List<Node> changedScopeNodes) {
@@ -47,25 +51,78 @@ public class J2clClinitPrunerPass implements CompilerPass {
       return;
     }
 
+    removeRedundantClinits(root, changedScopeNodes);
+
+    pruneEmptyClinits(root, changedScopeNodes);
+
+    if (emptiedClinitMethods.isEmpty()) {
+      // Since no clinits are pruned, we don't need look for more opportunities.
+      return;
+    }
+
+    Multimap<String, Node> clinitReferences = collectClinitReferences(root);
+    do {
+      List<Node> newChangedScopes = cleanEmptyClinitReferences(clinitReferences);
+      pruneEmptyClinits(root, newChangedScopes);
+    } while (!emptiedClinitMethods.isEmpty());
+
+    // Update the function side-effect markers on the AST.
+    // Removing a clinit from a function may make it side-effect free.
+    new PureFunctionIdentifier.Driver(compiler, null).process(externs, root);
+  }
+
+  private void removeRedundantClinits(Node root, List<Node> changedScopeNodes) {
     RedundantClinitPruner redundantClinitPruner = new RedundantClinitPruner();
     NodeTraversal.traverseEs6ScopeRoots(
         compiler,
         root,
-        getNonNestedParentScopeNodes(),
+        getNonNestedParentScopeNodes(changedScopeNodes),
         redundantClinitPruner,
         redundantClinitPruner, // FunctionCallback
         true);
+
     NodeTraversal.traverseEs6ScopeRoots(
         compiler, root, changedScopeNodes, new LookAheadRedundantClinitPruner(), false);
-    NodeTraversal.traverseEs6ScopeRoots(
-        compiler, root, changedScopeNodes, new EmptyClinitPruner(), false);
-
-    if (newEmptyClinitMethod) {
-      new PureFunctionIdentifier.Driver(compiler, null).process(externs, root);
-    }
   }
 
-  private List<Node> getNonNestedParentScopeNodes() {
+  private void pruneEmptyClinits(Node root, List<Node> changedScopes) {
+    // Clear emptiedClinitMethods before EmptyClinitPruner to populate only with new ones.
+    emptiedClinitMethods.clear();
+    NodeTraversal.traverseEs6ScopeRoots(
+        compiler, root, changedScopes, new EmptyClinitPruner(), false);
+  }
+
+  private Multimap<String, Node> collectClinitReferences(Node root) {
+    final Multimap<String, Node> clinitReferences = HashMultimap.create();
+    NodeTraversal.traverseEs6(
+        compiler,
+        root,
+        new AbstractPostOrderCallback() {
+          @Override
+          public void visit(NodeTraversal t, Node node, Node parent) {
+            String clinitName = node.isCall() ? getClinitMethodName(node.getFirstChild()) : null;
+            if (clinitName != null) {
+              clinitReferences.put(clinitName, node);
+            }
+          }
+        });
+    return clinitReferences;
+  }
+
+  private List<Node> cleanEmptyClinitReferences(Multimap<String, Node> clinitReferences) {
+    final List<Node> newChangedScopes = new ArrayList<>();
+    for (String clinitName : emptiedClinitMethods) {
+      Collection<Node> references = clinitReferences.removeAll(clinitName);
+      for (Node reference : references) {
+        Node changedScope = NodeUtil.getEnclosingChangeScopeRoot(reference.getParent());
+        NodeUtil.deleteFunctionCall(reference, compiler);
+        newChangedScopes.add(changedScope);
+      }
+    }
+    return newChangedScopes;
+  }
+
+  private static List<Node> getNonNestedParentScopeNodes(List<Node> changedScopeNodes) {
     return changedScopeNodes == null
         ? null
         : NodeUtil.removeNestedChangeScopeNodes(
@@ -291,7 +348,8 @@ public class J2clClinitPrunerPass implements CompilerPass {
       body.removeChild(firstExpr);
       NodeUtil.markFunctionsDeleted(firstExpr, compiler);
       compiler.reportChangeToEnclosingScope(body);
-      newEmptyClinitMethod = true;
+
+      emptiedClinitMethods.add(fnQualifiedName);
     }
 
     private boolean isAssignToEmptyFn(Node node, String enclosingFnName) {
