@@ -2186,6 +2186,22 @@ chrome.enterprise = {};
 
 /**
  * @constructor
+ * deviceAttributes allows for reading device attributes.
+ * @see https://developer.chrome.com/extensions/enterprise_deviceAttributes.
+ */
+chrome.enterprise.deviceAttributes = function() {};
+
+
+/**
+ * @param {function(string): void} callback Called with the device identifier
+ *     of the directory API when received.
+ * @return {undefined}
+ */
+chrome.enterprise.deviceAttributes.getDirectoryDeviceId = function(callback) {};
+
+
+/**
+ * @constructor
  * platformKeys allows for generating hardware-backed keys and the installation
  * of certificates for these keys.
  * @see https://developer.chrome.com/extensions/enterprise_platformKeys.
