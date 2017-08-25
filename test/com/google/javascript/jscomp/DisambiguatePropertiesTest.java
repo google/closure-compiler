@@ -2659,7 +2659,6 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "function Baz() {}",
         "Baz.prototype.firstElementChild;");
 
-    this.mode = TypeInferenceMode.NTI_ONLY;
     testSame(DEFAULT_EXTERNS + externs, js);
   }
 
