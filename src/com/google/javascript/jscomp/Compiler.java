@@ -3076,6 +3076,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return Collections.unmodifiableList(inputs);
   }
 
+  @Override
+  int getNumberOfInputs() {
+    // In some testing cases inputs will be null, but obviously there must be at least one input.
+    // The intended use of this method is to allow passes to estimate how much memory they will
+    // need for data structures, so it's not necessary that the returned value be exactly right
+    // in the corner cases where inputs ends up being null.
+    return (inputs != null) ? inputs.size() : 1;
+  }
+
   /**
    * Returns an unmodifiable view of the compiler inputs indexed by id.
    */

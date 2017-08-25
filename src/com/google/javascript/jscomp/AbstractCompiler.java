@@ -92,6 +92,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract List<CompilerInput> getInputsInOrder();
 
+  /**
+   * Gets the total number of inputs.
+   *
+   * <p>This can be useful as a guide for the initial allocated size for data structures.
+   */
+  abstract int getNumberOfInputs();
+
   //
   // Intermediate state and results produced and needed by particular passes.
   // TODO(rluble): move these into the general structure for keeping state between pass runs.
