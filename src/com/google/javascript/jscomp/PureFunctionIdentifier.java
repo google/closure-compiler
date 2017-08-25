@@ -957,7 +957,6 @@ class PureFunctionIdentifier implements CompilerPass {
   static class Driver implements CompilerPass {
     private final AbstractCompiler compiler;
     private final String reportPath;
-    protected boolean checkJ2cl = true;
 
     Driver(AbstractCompiler compiler, String reportPath) {
       this.compiler = compiler;
@@ -966,12 +965,6 @@ class PureFunctionIdentifier implements CompilerPass {
 
     @Override
     public void process(Node externs, Node root) {
-      // Don't run the independent PureFunctionIdentifier pass if J2CL is enabled, since nested
-      // PureFunctionIdentifier passes will run redundantly inside of J2CL.
-      if (checkJ2cl && J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
-        return;
-      }
-
       NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler, true);
       defFinder.process(externs, root);
 
@@ -986,17 +979,6 @@ class PureFunctionIdentifier implements CompilerPass {
           throw new RuntimeException(e);
         }
       }
-    }
-  }
-
-  /**
-   * A driver that will run even when J2CL is enabled.
-   */
-  static class DriverInJ2cl extends Driver {
-
-    DriverInJ2cl(AbstractCompiler compiler, String reportPath) {
-      super(compiler, reportPath);
-      checkJ2cl = false;
     }
   }
 }
