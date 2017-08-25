@@ -1000,6 +1000,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
+      passes.add(j2clConstantHoisterPass);
       passes.add(j2clOptBundlePass);
     }
 
@@ -3273,17 +3274,23 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
+    /** Rewrites J2CL constructs to be more optimizable. */
+  private final PassFactory j2clConstantHoisterPass =
+      new PassFactory("j2clConstantHoisterPass", false) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new J2clConstantHoisterPass(compiler);
+        }
+      };
+
   /** Rewrites J2CL constructs to be more optimizable. */
   private final PassFactory j2clOptBundlePass =
       new PassFactory("j2clOptBundlePass", false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           List<Node> changedScopeNodes = compiler.getChangedScopeNodesForPass(getName());
-
           final J2clClinitPrunerPass j2clClinitPrunerPass =
               new J2clClinitPrunerPass(compiler, changedScopeNodes);
-          final J2clConstantHoisterPass j2clConstantHoisterPass =
-              new J2clConstantHoisterPass(compiler);
           final J2clEqualitySameRewriterPass j2clEqualitySameRewriterPass =
               new J2clEqualitySameRewriterPass(compiler, changedScopeNodes);
           return new CompilerPass() {
@@ -3291,7 +3298,6 @@ public final class DefaultPassConfig extends PassConfig {
             @Override
             public void process(Node externs, Node root) {
               j2clClinitPrunerPass.process(externs, root);
-              j2clConstantHoisterPass.process(externs, root);
               j2clEqualitySameRewriterPass.process(externs, root);
             }
           };
