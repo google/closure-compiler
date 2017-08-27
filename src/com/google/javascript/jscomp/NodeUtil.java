@@ -1501,6 +1501,7 @@ public final class NodeUtil {
       case INC:
       case YIELD:
       case THROW:
+      case AWAIT:
         return true;
       case CALL:
         return NodeUtil.functionCallHasSideEffects(n, compiler);

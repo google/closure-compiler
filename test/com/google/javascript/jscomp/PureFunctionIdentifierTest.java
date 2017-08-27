@@ -1706,7 +1706,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
             "  }",
             "}",
             "var g = f();");
-    assertPureCallsMarked(source, ImmutableList.of("f"));
+    assertNoPureCalls(source);
   }
 
   public void testCallFunctionFOrG() throws Exception {

@@ -517,9 +517,11 @@ class PureFunctionIdentifier implements CompilerPass {
           sideEffectInfo.setTaintsReturn();
         }
       } else if (node.isYield()) {
-        if (node.hasChildren() && !NodeUtil.evaluatesToLocalValue(node.getFirstChild())) {
-          sideEffectInfo.setTaintsReturn();
-        }
+        // 'yield' throws if the caller calls `.throw` on the generator object.
+        sideEffectInfo.setFunctionThrows();
+      } else if (node.isAwait()) {
+        // 'await' throws if the promise it's waiting on is rejected.
+        sideEffectInfo.setFunctionThrows();
       } else {
         throw new IllegalArgumentException("Unhandled side effect node type " + node.getToken());
       }
