@@ -200,9 +200,10 @@ public interface TypeI extends Serializable {
   boolean isPartiallyInstantiated();
 
   /**
-   * If this type is a generic nominal type or function, return the names of all type parameters.
+   * If this type is a generic nominal type or function, return the type parameters as type
+   * variables.
    */
-  Collection<String> getTypeParameters();
+  Collection<TypeI> getTypeParameters();
 
   /**
    * Returns a string representation of this type, suitable for printing

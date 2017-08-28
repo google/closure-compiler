@@ -21,12 +21,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeUtil;
@@ -1920,13 +1922,24 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public final List<String> getTypeParameters() {
+  public final List<TypeI> getTypeParameters() {
     if (isFunctionType()) {
-      return this.getFunTypeIfSingletonObj().getTypeParameters();
+      return transformTypeParamsToTypeVars(this.getFunTypeIfSingletonObj().getTypeParameters());
     }
     NominalType nt = getNominalTypeIfSingletonObj();
     checkNotNull(nt, this);
-    return nt.getTypeParameters();
+    return transformTypeParamsToTypeVars(nt.getTypeParameters());
+  }
+
+  private List<TypeI> transformTypeParamsToTypeVars(List<String> names) {
+    return Lists.transform(
+        names,
+        new Function<String, TypeI>() {
+          @Override
+          public TypeI apply(String name) {
+            return JSType.fromTypeVar(commonTypes, name);
+          }
+        });
   }
 
   @Override

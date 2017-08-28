@@ -19,8 +19,10 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -175,15 +177,23 @@ class TypedCodeGenerator extends CodeGenerator {
       }
     }
 
-    Collection<String> typeParams = funType.getTypeParameters();
+    Collection<TypeI> typeParams = funType.getTypeParameters();
     if (!typeParams.isEmpty()) {
       sb.append(" * @template ");
-      Joiner.on(",").appendTo(sb, typeParams);
+      Joiner.on(",").appendTo(sb, Iterables.transform(typeParams, new Function<TypeI, String>() {
+        @Override public String apply(TypeI var) {
+          return formatTypeVar(var);
+        }
+      }));
       sb.append("\n");
     }
 
     sb.append(" */\n");
     return sb.toString();
+  }
+
+  private String formatTypeVar(TypeI var) {
+    return var.toAnnotationString(Nullability.IMPLICIT);
   }
 
   // TODO(dimvar): it's awkward that we print @constructor after the extends/implements;
