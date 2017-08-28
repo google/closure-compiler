@@ -46,6 +46,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import junit.framework.TestCase;
 
 /**
@@ -874,16 +875,16 @@ public abstract class CompilerTestCase extends TestCase {
   /**
    * Verifies that the compiler generates the given error and description for the given input.
    */
-  protected void testError(Sources srcs, ErrorDiagnostic error) {
-    assertNotNull(error);
+  protected void testError(Sources srcs, Diagnostic error) {
+    assertThat(error.level).isEqualTo(CheckLevel.ERROR);
     test(srcs, error);
   }
 
   /**
    * Verifies that the compiler generates the given error and description for the given input.
    */
-  protected void testError(Externs externs, Sources srcs, ErrorDiagnostic error) {
-    assertNotNull(error);
+  protected void testError(Externs externs, Sources srcs, Diagnostic error) {
+    assertThat(error.level).isEqualTo(CheckLevel.ERROR);
     test(externs, srcs, error);
   }
 
@@ -901,17 +902,17 @@ public abstract class CompilerTestCase extends TestCase {
   /**
    * Verifies that the compiler generates the given warning for the given input.
    */
-  protected void testError(List<SourceFile> inputs, DiagnosticType warning) {
-    assertNotNull(warning);
-    test(srcs(inputs), error(warning));
+  protected void testError(List<SourceFile> inputs, DiagnosticType error) {
+    assertNotNull(error);
+    test(srcs(inputs), error(error));
   }
 
   /**
    * Verifies that the compiler generates the given warning for the given input.
    */
-  protected void testError(List<SourceFile> inputs, DiagnosticType warning, String description) {
-    assertNotNull(warning);
-    test(srcs(inputs), error(warning, description));
+  protected void testError(List<SourceFile> inputs, DiagnosticType error, String description) {
+    assertNotNull(error);
+    test(srcs(inputs), error(error, description));
   }
 
   /**
@@ -931,8 +932,8 @@ public abstract class CompilerTestCase extends TestCase {
    * @param srcs Inputs
    * @param warning Expected warning
    */
-  protected void testWarning(Sources srcs, WarningDiagnostic warning) {
-    assertNotNull(warning);
+  protected void testWarning(Sources srcs, Diagnostic warning) {
+    assertThat(warning.level).isEqualTo(CheckLevel.WARNING);
     test(srcs, warning);
   }
 
@@ -943,8 +944,8 @@ public abstract class CompilerTestCase extends TestCase {
    * @param srcs The input
    * @param warning Expected warning
    */
-  protected void testWarning(Externs externs, Sources srcs, WarningDiagnostic warning) {
-    assertNotNull(warning);
+  protected void testWarning(Externs externs, Sources srcs, Diagnostic warning) {
+    assertThat(warning.level).isEqualTo(CheckLevel.WARNING);
     test(externs, srcs, warning);
   }
 
@@ -1071,7 +1072,8 @@ public abstract class CompilerTestCase extends TestCase {
       Externs externs,
       Sources inputs,
       Expected expected,
-      Diagnostic diagnostic) {
+      Diagnostic diagnostic,
+      List<Postcondition> postconditions) {
 
     Compiler compiler = createCompiler();
     lastCompiler = compiler;
@@ -1089,7 +1091,7 @@ public abstract class CompilerTestCase extends TestCase {
       BaseJSTypeTestCase.addNativeProperties(compiler.getTypeRegistry());
     }
 
-    testInternal(compiler, inputs, expected, diagnostic);
+    testInternal(compiler, inputs, expected, diagnostic, postconditions);
   }
 
   private static List<SourceFile> maybeCreateSources(String name, String srcText) {
@@ -1300,11 +1302,12 @@ public abstract class CompilerTestCase extends TestCase {
    *  @param expectedObj Expected outputs
    *  @param diagnostic Expected warning/error diagnostic
    */
-  protected void testInternal(
+  private void testInternal(
       Compiler compiler,
       Sources inputsObj,  // TODO remove this parameter
       Expected expectedObj,
-      Diagnostic diagnostic) {
+      Diagnostic diagnostic,
+      List<Postcondition> postconditions) {
     List<SourceFile> inputs =
         (inputsObj instanceof FlatSources)
             ? ((FlatSources) inputsObj).sources
@@ -1331,8 +1334,9 @@ public abstract class CompilerTestCase extends TestCase {
       assertWithMessage("Unexpected parse error(s): " + errorMsg)
           .that(actualError.getType())
           .isEqualTo(diagnostic.diagnostic);
-      if (diagnostic.match != null) {
-        assertThat(actualError.description).isEqualTo(diagnostic.match);
+      diagnostic.verifyMessage(actualError.description);
+      for (Postcondition postcondition : postconditions) {
+        postcondition.verify(compiler);
       }
       return;
     }
@@ -1529,10 +1533,7 @@ public abstract class CompilerTestCase extends TestCase {
           JSError actual = warnings[0];
           assertError(actual).hasType(diagnostic.diagnostic);
           validateSourceLocation(actual);
-
-          if (diagnostic.match != null) {
-            assertThat(actual.description).isEqualTo(diagnostic.match);
-          }
+          diagnostic.verifyMessage(actual.description);
         }
       }
 
@@ -1650,9 +1651,7 @@ public abstract class CompilerTestCase extends TestCase {
       JSError actualError = compiler.getErrors()[0];
       assertEquals(errorMsg, diagnostic.diagnostic, actualError.getType());
       validateSourceLocation(actualError);
-      if (diagnostic.match != null) {
-        assertThat(actualError.description).isEqualTo(diagnostic.match);
-      }
+      diagnostic.verifyMessage(actualError.description);
       assertWithMessage("Some placeholders in the error message were not replaced")
           .that(actualError.description)
           .doesNotContainMatch("\\{\\d\\}");
@@ -1668,6 +1667,9 @@ public abstract class CompilerTestCase extends TestCase {
         assertEquals("There should be one warning. " + warnings, 1, compiler.getWarningCount());
         assertEquals(warnings, diagnostic.diagnostic, compiler.getWarnings()[0].getType());
       }
+    }
+    for (Postcondition postcondition : postconditions) {
+      postcondition.verify(compiler);
     }
   }
 
@@ -2026,22 +2028,30 @@ public abstract class CompilerTestCase extends TestCase {
     return new Externs(files);
   }
 
-  protected static WarningDiagnostic warning(DiagnosticType type) {
-    return warning(type, null);
+  protected static Diagnostic warning(DiagnosticType type) {
+    return new WarningDiagnostic(type);
   }
 
-  protected static WarningDiagnostic warning(DiagnosticType type, String match) {
+  protected static Diagnostic warning(DiagnosticType type, String match) {
     // TODO(johnlenz): change this to reject null
-    return type != null ? new WarningDiagnostic(type, match) : null;
+    if (type == null) {
+      return null;
+    }
+    Diagnostic diagnostic = warning(type);
+    return match != null ? diagnostic.withMessage(match) : diagnostic;
   }
 
-  protected static ErrorDiagnostic error(DiagnosticType type) {
-    return error(type, null);
+  protected static Diagnostic error(DiagnosticType type) {
+    return new ErrorDiagnostic(type);
   }
 
-  protected static ErrorDiagnostic error(DiagnosticType type, String match) {
+  protected static Diagnostic error(DiagnosticType type, String match) {
     // TODO(johnlenz): change this to reject null
-    return type != null ? new ErrorDiagnostic(type, match) : null;
+    if (type == null) {
+      return null;
+    }
+    Diagnostic diagnostic = error(type);
+    return match != null ? diagnostic.withMessage(match) : diagnostic;
   }
 
   protected void testSame(TestPart... parts) {
@@ -2058,6 +2068,7 @@ public abstract class CompilerTestCase extends TestCase {
     Sources srcs = null;
     Expected expected = null;
     Diagnostic diagnostic = null;
+    List<Postcondition> postconditions = new ArrayList<>();
     for (TestPart part : parts) {
       if (part instanceof Externs) {
         checkState(externs == null);
@@ -2071,6 +2082,8 @@ public abstract class CompilerTestCase extends TestCase {
       } else if (part instanceof Diagnostic) {
         checkState(diagnostic == null);
         diagnostic = (Diagnostic) part;
+      } else if (part instanceof Postcondition) {
+        postconditions.add((Postcondition) part);
       } else {
         throw new IllegalStateException("unexepected " + part.getClass().getName());
       }
@@ -2081,7 +2094,7 @@ public abstract class CompilerTestCase extends TestCase {
     if (externs == null) {
       externs = externs(externsInputs);
     }
-    testInternal(externs, srcs, expected, diagnostic);
+    testInternal(externs, srcs, expected, diagnostic, postconditions);
   }
 
   private static Expected fromSources(Sources srcs) {
@@ -2158,24 +2171,52 @@ public abstract class CompilerTestCase extends TestCase {
   protected static class Diagnostic implements TestPart {
     final CheckLevel level;
     final DiagnosticType diagnostic;
-    final String match;
+    final Consumer<String> messagePostcondition;
 
-    Diagnostic(CheckLevel level, DiagnosticType diagnostic, String match) {
+    Diagnostic(CheckLevel level, DiagnosticType diagnostic, Consumer<String> messagePostcondition) {
       this.level = level;
       this.diagnostic = diagnostic;
-      this.match = match;
+      this.messagePostcondition = messagePostcondition;
+    }
+
+    protected void verifyMessage(String message) {
+      if (messagePostcondition != null) {
+        messagePostcondition.accept(message);
+      }
+    }
+
+    protected Diagnostic withMessage(final String expected) {
+      checkState(messagePostcondition == null);
+      return new Diagnostic(level, diagnostic, new Consumer<String>() {
+        @Override public void accept(String message) {
+          assertThat(message).isEqualTo(expected);
+        }
+      });
+    }
+
+    protected Diagnostic withMessageContaining(final String substring) {
+      checkState(messagePostcondition == null);
+      return new Diagnostic(level, diagnostic, new Consumer<String>() {
+        @Override public void accept(String message) {
+          assertThat(message).contains(substring);
+        }
+      });
     }
   }
 
-  protected static class ErrorDiagnostic extends Diagnostic {
-    ErrorDiagnostic(DiagnosticType diagnostic, String match) {
-      super(CheckLevel.ERROR, diagnostic, match);
+  private static class ErrorDiagnostic extends Diagnostic {
+    ErrorDiagnostic(DiagnosticType diagnostic) {
+      super(CheckLevel.ERROR, diagnostic, null);
     }
   }
 
-  protected static class WarningDiagnostic extends Diagnostic {
-    WarningDiagnostic(DiagnosticType diagnostic, String match) {
-      super(CheckLevel.WARNING, diagnostic, match);
+  private static class WarningDiagnostic extends Diagnostic {
+    WarningDiagnostic(DiagnosticType diagnostic) {
+      super(CheckLevel.WARNING, diagnostic, null);
     }
+  }
+
+  protected abstract static class Postcondition implements TestPart {
+    abstract void verify(Compiler compiler);
   }
 }
