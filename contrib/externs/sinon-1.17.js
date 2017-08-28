@@ -719,12 +719,17 @@ sinon.match.has = function(property, expect) {};
  */
 sinon.match.hasOwn = function(property, expect) {};
 
-sinon.clock = {};
+/**
+ * @interface
+ */
+var SinonClock = function() {};
 
 /**
  * @param {!number} ticks
  */
-sinon.clock.tick = function(ticks) {};
+SinonClock.prototype.tick = function(ticks) {};
+
+SinonClock.prototype.restore = function() {};
 
 sinon.sandbox = {};
 
@@ -765,7 +770,7 @@ SinonSandbox.prototype.stub = function(obj, method, func) {};
 
 /**
  * @param {...?} params
- * @return {Object}
+ * @return {SinonClock}
  */
 SinonSandbox.prototype.useFakeTimers = function(params) {};
 
@@ -841,6 +846,6 @@ SinonFakeXmlHttpRequest.prototype.respond = function(status, headers, body) {};
 
 /**
  * @param {...?} params
- * @return {Object}
+ * @return {SinonClock}
  */
 sinon.useFakeTimers = function(params) {};
