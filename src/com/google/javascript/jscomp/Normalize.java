@@ -27,6 +27,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -393,6 +394,10 @@ class Normalize implements CompilerPass {
           rewriteExportSpecShorthand(n);
           break;
 
+        case EXPORT:
+          splitExportDeclaration(n);
+          break;
+
         case NAME:
         case STRING:
         case GETTER_DEF:
@@ -476,6 +481,43 @@ class Normalize implements CompilerPass {
       if (n.hasOneChild()) {
         n.addChildToBack(n.getFirstChild().cloneTree());
         compiler.reportChangeToEnclosingScope(n);
+      }
+    }
+
+    /**
+     * Splits ES6 export combined with a variable or function declaration.
+     *
+     */
+    private void splitExportDeclaration(Node n) {
+      Node c = n.getFirstChild();
+      if (NodeUtil.isNameDeclaration(c) || c.isClass()) {
+        n.removeChild(c);
+
+        Node exportSpecs = new Node(Token.EXPORT_SPECS).srcref(n);
+        n.addChildToFront(exportSpecs);
+        Iterable<Node> names;
+        if (c.isClass()) {
+          names = Collections.singleton(c.getFirstChild());
+          n.getParent().addChildBefore(c, n);
+          n.getParent().addChildBefore(new Node(Token.EMPTY).srcref(n), n);
+        } else {
+          names = NodeUtil.getLhsNodesOfDeclaration(c);
+          // Split up var declarations onto separate lines.
+          for (Node child : c.children()) {
+            c.removeChild(child);
+            Node newDeclaration = new Node(c.getToken(), child).srcref(n);
+            n.getParent().addChildBefore(newDeclaration, n);
+          }
+        }
+
+        for (Node name : names) {
+          Node exportSpec = new Node(Token.EXPORT_SPEC).srcref(name);
+          exportSpec.addChildToFront(name.cloneNode());
+          exportSpec.addChildToFront(name.cloneNode());
+          exportSpecs.addChildToBack(exportSpec);
+        }
+
+        compiler.reportChangeToEnclosingScope(n.getParent());
       }
     }
 

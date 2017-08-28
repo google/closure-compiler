@@ -941,4 +941,14 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "  return y$jscomp$1",
             "}"));
   }
+
+  public void testExportedOrImportedNamesAreUntouched() {
+    // The eventual desired behavior is that none of the 'a's in the following test cases
+    // are renamed to a$jscomp$1. Rewrite this test after that behavior is implemented.
+    this.useDefaultRenamer = true;
+    test("var a; export {a as a};",
+        "var a$jscomp$1; export {a$jscomp$1 as a};");
+    test("var a; import {a as a} from './bar.js'",
+        "var a$jscomp$1; import {a as a$jscomp$1} from './bar.js'");
+  }
 }
