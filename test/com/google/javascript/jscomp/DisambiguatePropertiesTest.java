@@ -1742,6 +1742,17 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSets(js, js, "{}");
   }
 
+  public void testReportImplicitUseOfStructuralInterfaceInvalidingProperty() {
+    test(
+        srcs(lines(
+            "/** @record */ function I() {}",
+            "/** @type {number} */ I.prototype.foobar;",
+            "/** @param {I} arg */ function f(arg) {}",
+            "/** @constructor */ function C() { this.foobar = 42; }",
+            "f(new C());")),
+        error(DisambiguateProperties.Warnings.INVALIDATION).withMessageContaining("foobar"));
+  }
+
   public void testDisambiguatePropertiesClassCastedToUnrelatedInterface() {
     String js = LINE_JOINER.join(
         "/** @interface */",
