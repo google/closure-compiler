@@ -29,7 +29,6 @@ import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_MODULE_N
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_PROVIDE_CALL;
 import static com.google.javascript.jscomp.ClosureRewriteModule.INVALID_REQUIRE_NAMESPACE;
 import static com.google.javascript.jscomp.ClosureRewriteModule.LATE_PROVIDE_ERROR;
-import static com.google.javascript.jscomp.ClosureRewriteModule.QUALIFIED_REFERENCE_TO_GOOG_MODULE;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
@@ -1785,25 +1784,10 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
             "/** @const @public */ a.b.c = 5;"));
   }
 
-  public void testGoogModuleReferencedWithGlobalName() {
-    testError(
-        new String[] {"goog.module('a.b.c');", "goog.require('a.b.c'); use(a.b.c);"},
-        QUALIFIED_REFERENCE_TO_GOOG_MODULE);
-
-    testError(
-        new String[] {"goog.module('a.b.c');", "goog.require('a.b.c'); use(a.b.c.d);"},
-        QUALIFIED_REFERENCE_TO_GOOG_MODULE);
-
-    testError(
-        new String[] {
-          "goog.module('a.b.c');",
-          "goog.module('x.y.z'); var c = goog.require('a.b.c'); use(a.b.c);"
-        },
-        QUALIFIED_REFERENCE_TO_GOOG_MODULE);
-
-    testError(
+  public void testReferenceToNonLegacyGoogModuleName() {
+    test(
         new String[] {"goog.module('a.b.c');", "use(a.b.c);"},
-        QUALIFIED_REFERENCE_TO_GOOG_MODULE);
+        new String[] {"/** @const */ var module$exports$a$b$c={}", "use(a.b.c);"});
   }
 
   public void testGoogModuleValidReferences() {

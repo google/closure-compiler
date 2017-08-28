@@ -162,13 +162,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
           "JSC_IMPORT_INLINING_SHADOWS_VAR",
           "Inlining of reference to import \"{1}\" shadows var \"{0}\".");
 
-  static final DiagnosticType QUALIFIED_REFERENCE_TO_GOOG_MODULE =
-      DiagnosticType.error(
-          "JSC_QUALIFIED_REFERENCE_TO_GOOG_MODULE",
-          "Fully qualified reference to name ''{0}'' provided by a goog.module.\n"
-              + "Either use short import syntax or"
-              + " convert module to use goog.module.declareLegacyNamespace.");
-
   static final DiagnosticType ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT =
       DiagnosticType.error(
           "JSC_ILLEGAL_DESTRUCTURING_DEFAULT_EXPORT",
@@ -469,8 +462,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         case GETPROP:
           if (isExportPropertyAssignment(n)) {
             updateExportsPropertyAssignment(n);
-          } else if (n.isQualifiedName()) {
-            checkQualifiedName(t, n);
           }
           break;
 
@@ -500,16 +491,6 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
         default:
           break;
       }
-    }
-  }
-
-  /**
-   * Checks that imports of goog.module provided files are used correctly.
-   */
-  private void checkQualifiedName(NodeTraversal t, Node qnameNode) {
-    String qname = qnameNode.getQualifiedName();
-    if (rewriteState.containsModule(qname) && !rewriteState.isLegacyModule(qname)) {
-      t.report(qnameNode, QUALIFIED_REFERENCE_TO_GOOG_MODULE, qname);
     }
   }
 

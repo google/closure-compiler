@@ -3602,7 +3602,19 @@ public final class IntegrationTest extends IntegrationTestCase {
               "new foo.Outer.Inner;",
               "});")
         },
-        ClosureRewriteModule.QUALIFIED_REFERENCE_TO_GOOG_MODULE);
+        new String[] {
+          "/** @constructor */ function module$exports$foo$Outer() {}",
+          LINE_JOINER.join(
+              "/** @const */ var foo={};",
+              "/** @const */ foo.Outer={};",
+              "/** @constructor */ function module$contents$foo$Outer$Inner_Inner(){}",
+              "/** @const */ foo.Outer.Inner=module$contents$foo$Outer$Inner_Inner;"),
+          LINE_JOINER.join(
+              "/** @const */ var legacy={};",
+              "/** @const */ legacy.Use={};",
+              "new module$exports$foo$Outer;",
+              "new module$contents$foo$Outer$Inner_Inner")
+        });
   }
 
   public void testLegacyGoogModuleExport() {
