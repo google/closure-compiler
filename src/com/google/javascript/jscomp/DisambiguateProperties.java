@@ -19,9 +19,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
@@ -84,9 +81,6 @@ import java.util.regex.Pattern;
  *
  */
 class DisambiguateProperties implements CompilerPass {
-  // To prevent the logs from filling up, we cap the number of warnings
-  // that we tell the user to fix per-property.
-  private static final int MAX_INVALIDATION_WARNINGS_PER_PROPERTY = 10;
 
   private static final Logger logger = Logger.getLogger(
       DisambiguateProperties.class.getName());
@@ -121,7 +115,7 @@ class DisambiguateProperties implements CompilerPass {
    * Map of a type to all the related errors that invalidated the type
    * for disambiguation.
    */
-  private final Multimap<TypeI, Supplier<JSError>> invalidationMap;
+  private final Multimap<TypeI, JSError> invalidationMap;
 
   /**
    * In practice any large code base will have thousands and thousands of
@@ -334,15 +328,12 @@ class DisambiguateProperties implements CompilerPass {
 
     this.propertiesToErrorFor = propertiesToErrorFor;
     this.invalidationMap =
-        propertiesToErrorFor.isEmpty()
-            ? null
-            : LinkedHashMultimap.<TypeI, Supplier<JSError>>create();
+        propertiesToErrorFor.isEmpty() ? null : LinkedHashMultimap.<TypeI, JSError>create();
 
     this.invalidatingTypes = new InvalidatingTypes.Builder(registry)
-        .recordInvalidations(this.invalidationMap)
         .addTypesInvalidForPropertyRenaming()
-        .addAllTypeMismatches(compiler.getTypeMismatches())
-        .addAllTypeMismatches(compiler.getImplicitInterfaceUses())
+        .addAllTypeMismatches(compiler.getTypeMismatches(), this.invalidationMap)
+        .addAllTypeMismatches(compiler.getImplicitInterfaceUses(), this.invalidationMap)
         .allowEnumsAndScalars()
         .build();
   }
@@ -593,12 +584,10 @@ class DisambiguateProperties implements CompilerPass {
         return;
       }
 
-      Iterable<JSError> invalidations =
-          FluentIterable.from(invalidationMap.get(t))
-              .transform(Suppliers.<JSError>supplierFunction())
-              .limit(MAX_INVALIDATION_WARNINGS_PER_PROPERTY);
-      for (JSError error : invalidations) {
-        errors.add(t + " at " + error.sourceName + ":" + error.lineNumber);
+      for (JSError error : invalidationMap.get(t)) {
+        if (error != null) {
+          errors.add(t + " at " + error.sourceName + ":" + error.lineNumber);
+        }
       }
     }
 

@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
@@ -25,6 +24,7 @@ import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
+import java.util.Collection;
 import javax.annotation.Nullable;
 
 /**
@@ -35,6 +35,11 @@ import javax.annotation.Nullable;
  * other two, as pointed out in implementation comments.
  */
 final class InvalidatingTypes {
+
+  // To prevent the logs from filling up, we cap the number of warnings
+  // that we tell the user to fix per-property.
+  // TODO(sdh): this shouldn't matter once we no longer construct JSErrors
+  private static final int MAX_INVALIDATION_WARNINGS_PER_PROPERTY = 10;
 
   private final ImmutableSet<TypeI> types;
   private final boolean allowEnums;
@@ -80,7 +85,6 @@ final class InvalidatingTypes {
     private final TypeIRegistry registry;
     private boolean allowEnums = false;
     private boolean allowScalars = false;
-    @Nullable private Multimap<TypeI, Supplier<JSError>> invalidationMap;
 
     Builder(TypeIRegistry registry) {
       this.registry = registry;
@@ -93,11 +97,6 @@ final class InvalidatingTypes {
     // TODO(sdh): Investigate whether this can be consolidated between all three passes.
     // In particular, mutation testing suggests allowEnums=true should work everywhere.
     // We should revisit what breaks when we disallow scalars everywhere.
-    Builder recordInvalidations(@Nullable Multimap<TypeI, Supplier<JSError>> invalidationMap) {
-      this.invalidationMap = invalidationMap;
-      return this;
-    }
-
     Builder allowEnumsAndScalars() {
       // Ambiguate and Inline do not allow enums or scalars.
       this.allowEnums = this.allowScalars = true;
@@ -113,9 +112,14 @@ final class InvalidatingTypes {
     }
 
     Builder addAllTypeMismatches(Iterable<TypeMismatch> mismatches) {
+      return addAllTypeMismatches(mismatches, null);
+    }
+
+    Builder addAllTypeMismatches(
+        Iterable<TypeMismatch> mismatches, @Nullable Multimap<TypeI, JSError> invalidationMap) {
       for (TypeMismatch mis : mismatches) {
-        addType(mis.typeA, mis);
-        addType(mis.typeB, mis);
+        addType(mis.typeA, mis, invalidationMap);
+        addType(mis.typeB, mis, invalidationMap);
       }
       return this;
     }
@@ -134,25 +138,26 @@ final class InvalidatingTypes {
     }
 
     /** Invalidates the given type, so that no properties on it will be inlined or renamed. */
-    private Builder addType(TypeI type, TypeMismatch mismatch) {
+    private Builder addType(
+        TypeI type, TypeMismatch mismatch, @Nullable Multimap<TypeI, JSError> invalidationMap) {
       type = type.restrictByNotNullOrUndefined();
       if (type.isUnionType()) {
         for (TypeI alt : type.getUnionMembers()) {
-          addType(alt, mismatch);
+          addType(alt, mismatch, invalidationMap);
         }
       } else if (type.isEnumElement()) { // only in disamb
-        addType(type.getEnumeratedTypeOfEnumElement(), mismatch);
+        addType(type.getEnumeratedTypeOfEnumElement(), mismatch, invalidationMap);
       } else { // amb and inl both do this without the else
         checkState(!type.isUnionType());
         types.add(type);
-        recordInvalidation(type, mismatch);
+        recordInvalidation(type, mismatch, invalidationMap);
 
         ObjectTypeI objType = type.toMaybeObjectType();
         if (objType != null) {
           ObjectTypeI proto = objType.getPrototypeObject();
           if (proto != null) {
             types.add(proto);
-            recordInvalidation(proto, mismatch);
+            recordInvalidation(proto, mismatch, invalidationMap);
           }
           if (objType.isConstructor()) {
             types.add(objType.toMaybeFunctionType().getInstanceType());
@@ -164,12 +169,24 @@ final class InvalidatingTypes {
       return this;
     }
 
-    private void recordInvalidation(TypeI t, TypeMismatch mis) {
+    private void recordInvalidation(
+        TypeI t, TypeMismatch mis, @Nullable Multimap<TypeI, JSError> invalidationMap) {
+      // TODO(sdh): Replace TypeMismatch#src with a (nullable?) Node,
+      //            then generate the relevant errors later.
       if (!t.isObjectType()) {
         return;
       }
       if (invalidationMap != null) {
-        invalidationMap.put(t, mis.error);
+        Collection<JSError> errors = invalidationMap.get(t);
+        if (errors.size() < MAX_INVALIDATION_WARNINGS_PER_PROPERTY) {
+          JSError error = mis.src;
+          if (error.getType().equals(TypeValidator.TYPE_MISMATCH_WARNING)
+              && error.description.isEmpty()) {
+            String msg = "Implicit use of type " + mis.typeA + " as " + mis.typeB;
+            error = JSError.make(error.node, TypeValidator.TYPE_MISMATCH_WARNING, msg);
+          }
+          errors.add(error);
+        }
       }
     }
   }
