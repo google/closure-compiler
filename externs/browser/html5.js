@@ -2220,11 +2220,15 @@ HTMLVideoElement.prototype.getVideoPlaybackQuality = function() {};
 
 /**
  * @constructor
+ * @see https://html.spec.whatwg.org/multipage/media.html#error-codes
  */
 function MediaError() {}
 
 /** @type {number} */
 MediaError.prototype.code;
+
+/** @type {string} */
+MediaError.prototype.message;
 
 /**
  * The fetching process for the media resource was aborted by the user agent at
