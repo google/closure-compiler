@@ -1540,8 +1540,10 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     compiler.setErrorManager(errorManager);
     ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
     builder.addRequirementBuilder().addWhitelist("x").addWhitelist("x");
-    CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
-    assertEquals(1, errorManager.getErrorCount());
+    List<Requirement> requirements =
+        CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
+    assertEquals(1, requirements.get(0).getWhitelistCount());
+    assertEquals(0, errorManager.getErrorCount());
   }
 
   public void testCustomBanNullDeref1() {
