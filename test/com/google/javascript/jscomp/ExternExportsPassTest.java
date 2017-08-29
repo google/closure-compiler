@@ -164,7 +164,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             "goog.exportProperty(a.b, 'c', a.b.c);",
             "goog.exportProperty(a.b.prototype, 'c', a.b.prototype.c);"),
         LINE_JOINER.join(
-            "/** @type {{b: function (?): undefined}} */",
+            "/** @type {{b: function(?): undefined}} */",
             "var hello = {};",
             "hello.b;",
             "/**",
@@ -878,8 +878,8 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             "goog.exportSymbol('x', x);"),
         LINE_JOINER.join(
             "/**",
-            " * @param {function ((Object|null)): ?} takesNullable",
-            " * @param {function (!Object): ?} takesNonNullable",
+            " * @param {function((Object|null)): ?} takesNullable",
+            " * @param {function(!Object): ?} takesNonNullable",
             " * @return {undefined}",
             " */",
             "var x = function(takesNullable, takesNonNullable) {",

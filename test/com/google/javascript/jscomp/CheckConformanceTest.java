@@ -1309,19 +1309,10 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         " /** @param {ObjectWithNoProps} a */",
         "function f(a) { alert(a.foobar); };");
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testWarning(
         js,
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message\nThe property \"foobar\" on type \"(ObjectWithNoProps|null)\"");
-
-    // TODO(aravindpg): Only difference is we don't add parens at the ends of our union type
-    // string reprs in NTI. Fix them to be the same if possible.
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testWarning(
-        js,
-        CheckConformance.CONFORMANCE_VIOLATION,
-        "Violation: My rule message\nThe property \"foobar\" on type \"ObjectWithNoProps|null\"");
   }
 
   public void testCustomBanUnknownProp3() {

@@ -127,16 +127,16 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
     assertType(obj.getTypeI())
         .isObjectTypeWithProperty("method")
         .withTypeOfProp("method")
-        .toStringIsEqualTo("function(number):string");
+        .toStringIsEqualTo("function(number): string");
     assertType(obj.getFirstChild().getTypeI())
         .isObjectTypeWithProperty("method")
         .withTypeOfProp("method")
-        .toStringIsEqualTo("function(number):string");
-    assertType(obj.getFirstFirstChild().getTypeI()).toStringIsEqualTo("function(number):string");
+        .toStringIsEqualTo("function(number): string");
+    assertType(obj.getFirstFirstChild().getTypeI()).toStringIsEqualTo("function(number): string");
 
     Node s = root.getFirstChild().getSecondChild().getFirstChild();
     assertType(s.getTypeI()).isString();
-    assertType(s.getFirstFirstChild().getTypeI()).toStringIsEqualTo("function(number):string");
+    assertType(s.getFirstFirstChild().getTypeI()).toStringIsEqualTo("function(number): string");
   }
 
   public void testComputedProp1() {
@@ -364,7 +364,7 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
     assertType(s.getFirstChild().getTypeI()).isString();
     assertType(s.getFirstFirstChild().getTypeI()).isString();
     assertType(s.getFirstFirstChild().getFirstChild().getTypeI())
-        .toStringIsEqualTo("function(ITemplateArray,number):string");
+        .toStringIsEqualTo("function(ITemplateArray,number): string");
     assertType(s.getFirstFirstChild().getSecondChild().getTypeI())
         .toStringIsEqualTo("ITemplateArray");
     assertType(s.getFirstFirstChild().getChildAtIndex(2).getTypeI()).isNumber();
@@ -402,10 +402,10 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
         .toStringIsEqualTo("Array<string>");
 
     Node g = rawTemplateExpr.getNext().getNext();
-    assertType(g.getFirstChild().getTypeI()).toStringIsEqualTo("function():number");
-    assertType(g.getFirstFirstChild().getTypeI()).toStringIsEqualTo("function():number");
+    assertType(g.getFirstChild().getTypeI()).toStringIsEqualTo("function(): number");
+    assertType(g.getFirstFirstChild().getTypeI()).toStringIsEqualTo("function(): number");
     assertType(g.getFirstFirstChild().getFirstChild().getTypeI())
-        .toStringIsEqualTo("function(ITemplateArray):function():number");
+        .toStringIsEqualTo("function(ITemplateArray): function(): number");
     assertType(g.getFirstFirstChild().getSecondChild().getTypeI())
         .toStringIsEqualTo("ITemplateArray");
 
@@ -413,7 +413,7 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
     assertType(r.getFirstChild().getTypeI()).isNumber();
     assertType(r.getFirstFirstChild().getTypeI()).isNumber();
     assertType(r.getFirstFirstChild().getFirstChild().getTypeI())
-        .toStringIsEqualTo("function():number");
+        .toStringIsEqualTo("function(): number");
   }
 
   public void testExponent() {
@@ -423,7 +423,7 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
     assertType(nameX.getTypeI()).isNumber();
     assertType(nameX.getFirstChild().getTypeI()).isNumber();
     assertType(nameX.getFirstFirstChild().getTypeI())
-        .toStringIsEqualTo("Math.pow<|function(?,?):number|>{prototype: ?}");
+        .toStringIsEqualTo("Math.pow<|function(?,?): number|>{prototype: ?}");
     assertType(nameX.getFirstFirstChild().getFirstChild().getTypeI()).toStringIsEqualTo("Math");
     assertType(nameX.getFirstChild().getSecondChild().getTypeI()).isNumber();
   }
@@ -436,7 +436,7 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
     assertType(assign.getFirstChild().getTypeI()).isNumber();
     assertType(assign.getSecondChild().getTypeI()).isNumber();
     assertType(assign.getSecondChild().getFirstChild().getTypeI())
-        .toStringIsEqualTo("Math.pow<|function(?,?):number|>{prototype: ?}");
+        .toStringIsEqualTo("Math.pow<|function(?,?): number|>{prototype: ?}");
     assertType(assign.getSecondChild().getFirstFirstChild().getTypeI()).toStringIsEqualTo("Math");
     assertType(assign.getSecondChild().getSecondChild().getTypeI()).isNumber();
   }
@@ -483,13 +483,13 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
                 "var x;",
                 "var $jscomp$generator$next$arg0;")));
 
-    assertType(genFunctionNode.getTypeI()).toStringIsEqualTo("function():Generator<number>");
+    assertType(genFunctionNode.getTypeI()).toStringIsEqualTo("function(): Generator<number>");
     assertType(genFunctionNode.getFirstChild().getTypeI())
-        .toStringIsEqualTo("function():Generator<number>");
+        .toStringIsEqualTo("function(): Generator<number>");
 
     Node genFunctionBlock = genFunctionNode.getChildAtIndex(2);
     assertType(genFunctionBlock.getFirstChild().getTypeI())
-        .toStringIsEqualTo("function(?=,?=,?=):IIterableResult<number>");
+        .toStringIsEqualTo("function(?=,?=,?=): IIterableResult<number>");
     assertType(genFunctionBlock.getSecondChild().getFirstChild().getTypeI())
         .isNumber();
 
@@ -497,7 +497,7 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
     assertType(iteratorNode.getTypeI()).toStringIsEqualTo("Generator<number>");
     assertType(iteratorNode.getFirstChild().getTypeI()).toStringIsEqualTo("Generator<number>");
     assertType(iteratorNode.getFirstFirstChild().getTypeI())
-        .toStringIsEqualTo("function(?=):IIterableResult<number>");
+        .toStringIsEqualTo("function(?=): IIterableResult<number>");
 
     Node returnNode = genFunctionBlock.getChildAtIndex(7);
     assertType(returnNode.getFirstChild().getTypeI()).toStringIsEqualTo("Generator<number>");
@@ -553,13 +553,13 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
                 "var $jscomp$generator$yield$entry;",
                 "var $jscomp$generator$yield$all;")));
 
-    assertType(genFunctionNode.getTypeI()).toStringIsEqualTo("function():Generator<string>");
+    assertType(genFunctionNode.getTypeI()).toStringIsEqualTo("function(): Generator<string>");
     assertType(genFunctionNode.getFirstChild().getTypeI())
-        .toStringIsEqualTo("function():Generator<string>");
+        .toStringIsEqualTo("function(): Generator<string>");
 
     Node genFunctionBlock = genFunctionNode.getChildAtIndex(2);
     assertType(genFunctionBlock.getFirstChild().getTypeI())
-        .toStringIsEqualTo("function(?=,?=,?=):IIterableResult<string>");
+        .toStringIsEqualTo("function(?=,?=,?=): IIterableResult<string>");
     assertType(genFunctionBlock.getSecondChild().getFirstChild().getTypeI())
         .isNumber();
 
@@ -627,9 +627,9 @@ public final class TranspileAfterNTITest extends IntegrationTestCase {
                 "  return {value:undefined, done:true};"),
             "var $jscomp$generator$this = this;"));
 
-    assertType(genFunctionNode.getTypeI()).toStringIsEqualTo("function():Generator<?>");
+    assertType(genFunctionNode.getTypeI()).toStringIsEqualTo("function(): Generator<?>");
     assertType(genFunctionNode.getFirstChild().getTypeI())
-        .toStringIsEqualTo("function():Generator<?>");
+        .toStringIsEqualTo("function(): Generator<?>");
 
     Node case0Return =
         genFunctionNode

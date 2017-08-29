@@ -1448,19 +1448,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             " * @param {(Object|null)} p0",
             " * @return {undefined}",
             " */",
-            "goog.removeHashCode = goog.removeUid;\n"),
-        LINE_JOINER.join(
-            "/** @const */ var goog = goog || {};",
-            "/**",
-            " * @param {!Object|null} obj",
-            " * @return {undefined}",
-            " */",
-            "goog.removeUid = function(obj) {",
-            "};",
-            "/**",
-            " * @param {!Object|null} p0",
-            " * @return {undefined}",
-            " */",
             "goog.removeHashCode = goog.removeUid;\n"));
   }
 
