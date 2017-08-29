@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * <p>The syntactic scope creator scans the parse tree to create a Scope object
@@ -121,53 +122,73 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
       // If we are populating the global scope, inputId will be null, and need to be set
       // as we enter each SCRIPT node.
       inputId = NodeUtil.getInputId(n);
-      if (n.isFunction()) {
-        // TODO(johnlenz): inputId maybe null if the FUNCTION node is detached
-        // from the AST.
-        // Is it meaningful to build a scope for detached FUNCTION node?
+      switch (n.getToken()) {
+        case FUNCTION: {
+          // TODO(johnlenz): inputId maybe null if the FUNCTION node is detached
+          // from the AST.
+          // Is it meaningful to build a scope for detached FUNCTION node?
 
-        final Node fnNameNode = n.getFirstChild();
-        final Node args = fnNameNode.getNext();
+          final Node fnNameNode = n.getFirstChild();
+          final Node args = fnNameNode.getNext();
 
-        // Bleed the function name into the scope, if it hasn't
-        // been declared in the outer scope.
-        String fnName = fnNameNode.getString();
-        if (!fnName.isEmpty() && NodeUtil.isFunctionExpression(n)) {
-          declareVar(fnNameNode);
-        }
-
-        // Args: Declare function variables
-        checkState(args.isParamList());
-        declareLHS(args);
-        // Since we create a separate scope for body, stop scanning here
-
-      } else if (n.isClass()) {
-        final Node classNameNode = n.getFirstChild();
-        // Bleed the class name into the scope, if it hasn't
-        // been declared in the outer scope.
-        if (!classNameNode.isEmpty()) {
-          if (NodeUtil.isClassExpression(n)) {
-            declareVar(classNameNode);
+          // Bleed the function name into the scope, if it hasn't
+          // been declared in the outer scope.
+          String fnName = fnNameNode.getString();
+          if (!fnName.isEmpty() && NodeUtil.isFunctionExpression(n)) {
+            declareVar(scope, fnNameNode);
           }
+
+          // Args: Declare function variables
+          checkState(args.isParamList());
+          declareLHS(scope, args);
+          // Since we create a separate scope for body, stop scanning here
+          return;
         }
-      } else if (n.isRoot()
-          || n.isNormalBlock()
-          || NodeUtil.isAnyFor(n)
-          || n.isSwitch()
-          || n.isModuleBody()) {
-        boolean scanInnerBlocks =
-            n.isRoot() || NodeUtil.isFunctionBlock(n) || n.isModuleBody();
-        scanVars(n, scanInnerBlocks, true);
-      } else {
-        // n is the global scope
-        checkState(scope.isGlobal(), scope);
-        scanVars(n, true, true);
+
+        case CLASS: {
+          final Node classNameNode = n.getFirstChild();
+          // Bleed the class name into the scope, if it hasn't
+          // been declared in the outer scope.
+          if (!classNameNode.isEmpty() && NodeUtil.isClassExpression(n)) {
+            declareVar(scope, classNameNode);
+          }
+          return;
+        }
+
+        case ROOT:
+        case SCRIPT:
+          // n is the global scope
+          checkState(scope.isGlobal(), scope);
+          scanVars(n, scope, scope);
+          return;
+
+        case MODULE_BODY:
+          scanVars(n, scope, scope);
+          return;
+
+        case FOR:
+        case FOR_OF:
+        case FOR_IN:
+        case SWITCH:
+          scanVars(n, null, scope);
+          return;
+
+        case BLOCK:
+          if (NodeUtil.isFunctionBlock(n)) {
+            scanVars(n, scope, scope);
+          } else {
+            scanVars(n, null, scope);
+          }
+          return;
+
+        default:
+          throw new RuntimeException("Illegal scope root: " + n);
       }
     }
 
-    private void declareLHS(Node n) {
+    private void declareLHS(Scope s, Node n) {
       for (Node lhs : NodeUtil.getLhsNodesOfDeclaration(n)) {
-        declareVar(lhs);
+        declareVar(s, lhs);
       }
     }
 
@@ -175,28 +196,32 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
      * Scans and gather variables declarations under a Node
      *
      * @param n The node
-     * @param scanInnerBlockScopes Whether the inner block scopes should be scanned for "var"s
-     * @param firstScan Whether it is the first time a scan is performed from the current scope
+     * @param hoistScope The scope that is the hoist target for vars, if we are scanning for vars.
+     * @param blockScope The scope that is the hoist target for block-level declarations, if we are
+     *     scanning for block level declarations.
      */
-    private void scanVars(Node n, boolean scanInnerBlockScopes, boolean firstScan) {
+    private void scanVars(Node n, @Nullable Scope hoistScope, @Nullable Scope blockScope) {
       switch (n.getToken()) {
         case VAR:
-          if (scope.isHoistScope()) {
-            declareLHS(n);
+          if (hoistScope != null) {
+            declareLHS(hoistScope, n);
           }
           return;
 
         case LET:
         case CONST:
           // Only declare when scope is the current lexical scope
-          if (!isNodeAtCurrentLexicalScope(n)) {
-            return;
+          if (blockScope != null) {
+            declareLHS(blockScope, n);
           }
-          declareLHS(n);
+          return;
+
+        case IMPORT:
+          declareLHS(hoistScope, n);
           return;
 
         case FUNCTION:
-          if (NodeUtil.isFunctionExpression(n) || !isNodeAtCurrentLexicalScope(n)) {
+          if (NodeUtil.isFunctionExpression(n) || blockScope == null) {
             return;
           }
 
@@ -205,11 +230,11 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
             // This is invalid, but allow it so the checks can catch it.
             return;
           }
-          declareVar(n.getFirstChild());
+          declareVar(blockScope, n.getFirstChild());
           return;   // should not examine function's children
 
         case CLASS:
-          if (NodeUtil.isClassExpression(n) || !isNodeAtCurrentLexicalScope(n)) {
+          if (NodeUtil.isClassExpression(n) || blockScope == null) {
             return;
           }
           String className = n.getFirstChild().getString();
@@ -217,20 +242,20 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
             // This is invalid, but allow it so the checks can catch it.
             return;
           }
-          declareVar(n.getFirstChild());
+          declareVar(blockScope, n.getFirstChild());
           return;  // should not examine class's children
 
         case CATCH:
           checkState(n.hasTwoChildren(), n);
           // the first child is the catch var and the second child
           // is the code block
-          if (isNodeAtCurrentLexicalScope(n)) {
-            declareLHS(n);
+          if (blockScope != null) {
+            declareLHS(blockScope, n);
           }
           // A new scope is not created for this BLOCK because there is a scope
           // created for the BLOCK above the CATCH
           final Node block = n.getSecondChild();
-          scanVars(block, scanInnerBlockScopes, false);
+          scanVars(block, hoistScope, blockScope);
           return; // only one child to scan
 
         case SCRIPT:
@@ -246,7 +271,7 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
 
         case MODULE_BODY:
           // Module bodies are not part of global scope.
-          if (scope.isGlobal()) {
+          if (hoistScope.isGlobal()) {
             return;
           }
           break;
@@ -255,7 +280,10 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
           break;
       }
 
-      if (!scanInnerBlockScopes && !firstScan && NodeUtil.createsBlockScope(n)) {
+      boolean isBlockStart = blockScope != null && n == blockScope.getRootNode();
+      boolean enteringNewBlock = !isBlockStart && NodeUtil.createsBlockScope(n);
+      if (enteringNewBlock && hoistScope == null) {
+        // We only enter new blocks when scanning for hoisted vars
         return;
       }
 
@@ -264,7 +292,7 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
       if (NodeUtil.isControlStructure(n) || NodeUtil.isStatementBlock(n)) {
         for (Node child = n.getFirstChild(); child != null;) {
           Node next = child.getNext();
-          scanVars(child, scanInnerBlockScopes, false);
+          scanVars(child, hoistScope, enteringNewBlock ? null : blockScope);
           child = next;
         }
       }
@@ -276,8 +304,8 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
      * @param s The scope to declare the variable in.
      * @param n The node corresponding to the variable name.
      */
-    private void declareVar(Node n) {
-      checkState(n.isName() || n.isStringKey(),
+    private void declareVar(Scope s, Node n) {
+      checkState(n.isName() || n.isStringKey() || n.isImportStar(),
           "Invalid node for declareVar: %s", n);
 
       String name = n.getString();
@@ -286,67 +314,30 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
       // TODO(johnlenz): hash lookups are not free and
       // building scopes are already expensive
       // restructure the scope building to avoid this check.
-      Var v = scope.getOwnSlot(name);
+      Var v = s.getOwnSlot(name);
       if (v != null && v.getNode() == n) {
         return;
       }
 
       CompilerInput input = compiler.getInput(inputId);
       if (v != null
-          || isShadowingDisallowed(name)
-          || ((scope.isFunctionScope()
-              || scope.isFunctionBlockScope()) && name.equals(ARGUMENTS))) {
-        redeclarationHandler.onRedeclaration(scope, name, n, input);
+          || isShadowingDisallowed(name, s)
+          || ((s.isFunctionScope()
+              || s.isFunctionBlockScope()) && name.equals(ARGUMENTS))) {
+        redeclarationHandler.onRedeclaration(s, name, n, input);
       } else {
-        scope.declare(name, n, input);
+        s.declare(name, n, input);
       }
     }
 
     // Function body declarations are not allowed to shadow
     // function parameters.
-    private boolean isShadowingDisallowed(String name) {
-      if (scope.isFunctionBlockScope()) {
-        Var maybeParam = scope.getParent().getOwnSlot(name);
+    private static boolean isShadowingDisallowed(String name, Scope s) {
+      if (s.isFunctionBlockScope()) {
+        Var maybeParam = s.getParent().getOwnSlot(name);
         return maybeParam != null && maybeParam.isParam();
       }
       return false;
-    }
-
-    /**
-     * Determines whether the name should be declared at current lexical scope.
-     * Assume the parent node is a BLOCK, FOR, FOR_OF, SCRIPT, MODULE_BODY, or LABEL.
-     *
-     * @param n The declaration node to be checked
-     * @return whether the name should be declared at current lexical scope
-     */
-    private boolean isNodeAtCurrentLexicalScope(Node n) {
-      Node parent = n.getParent();
-      Node grandparent = parent.getParent();
-
-      switch (parent.getToken()) {
-        case SCRIPT:
-          return true;
-        case BLOCK:
-          if (grandparent.isCase() || grandparent.isDefaultCase() || grandparent.isCatch()) {
-            return scope.getRootNode() == grandparent.getParent();
-          }
-          // Fall through
-        case FOR:
-        case FOR_IN:
-        case FOR_OF:
-        case MODULE_BODY:
-          return parent == scope.getRootNode();
-        case LABEL:
-          while (parent.isLabel()) {
-            if (parent.getParent() == scope.getRootNode()) {
-              return true;
-            }
-            parent = parent.getParent();
-          }
-          return false;
-        default:
-          throw new RuntimeException("Unsupported node parent: " + parent);
-      }
     }
   }
 

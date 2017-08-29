@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-
 import static com.google.javascript.jscomp.parsing.Config.JsDocParsing.INCLUDE_DESCRIPTIONS_NO_WHITESPACE;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -27,7 +26,6 @@ import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayDeque;
 import java.util.Deque;
-
 
 /**
  * Tests for {@link InferJSDocInfo}.
@@ -204,8 +202,7 @@ public final class InferJSDocInfoTest extends CompilerTestCase {
     queue.push(root);
     while (!queue.isEmpty()) {
       Node current = queue.pop();
-      if (name.equals(current.getQualifiedName()) &&
-          current.getJSType() != null) {
+      if (current.matchesQualifiedName(name) && current.getJSType() != null) {
         return current.getJSType();
       }
 

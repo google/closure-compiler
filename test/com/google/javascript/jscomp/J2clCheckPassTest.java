@@ -27,7 +27,7 @@ public class J2clCheckPassTest extends TypeICompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
   }
 
   @Override
@@ -43,51 +43,47 @@ public class J2clCheckPassTest extends TypeICompilerTestCase {
   }
 
   public void testReferenceEquality_noWarning_other() {
-    setFilename("java/lang/SomeClass.impl.java.js");
-    testNoWarning(
-        LINE_JOINER.join(
+    test(
+        srcs(SourceFile.fromCode("java/lang/SomeClass.impl.java.js", lines(
             "/** @constructor */",
             "var SomeClass = function() {};",
             "var x = new SomeClass();",
             "var y = new SomeClass();",
-            "var a = x == y;"));
+            "var a = x == y;"))));
   }
 
   public void testReferenceEquality_noWarning_null() {
     for (String value : REFERENCE_EQUALITY_TYPE_PATTERNS.values()) {
-      setFilename(value);
-      testNoWarning(
-          LINE_JOINER.join(
+      test(
+          srcs(SourceFile.fromCode(value, lines(
               "/** @constructor */",
               "var SomeClass = function() {};",
               "var x = new SomeClass();",
-              "var a = x == null;"));
+              "var a = x == null;"))));
     }
   }
 
   public void testReferenceEquality_noWarning_undefined() {
     for (String value : REFERENCE_EQUALITY_TYPE_PATTERNS.values()) {
-      setFilename(value);
-      testNoWarning(
-          LINE_JOINER.join(
+      test(
+          srcs(SourceFile.fromCode(value, lines(
               "/** @constructor */",
               "var SomeClass = function() {};",
               "var x = new SomeClass();",
-              "var a = x == undefined;"));
+              "var a = x == undefined;"))));
     }
   }
 
   public void testReferenceEquality_warning() {
     for (String value : REFERENCE_EQUALITY_TYPE_PATTERNS.values()) {
-      setFilename(value);
-      testWarning(
-          LINE_JOINER.join(
+      test(
+          srcs(SourceFile.fromCode(value, lines(
               "/** @constructor */",
               "var SomeClass = function() {};",
               "var x = new SomeClass();",
               "var y = new SomeClass();",
-              "var a = x == y;"),
-          J2CL_REFERENCE_EQUALITY);
+              "var a = x == y;"))),
+          warning(J2CL_REFERENCE_EQUALITY));
     }
   }
 }

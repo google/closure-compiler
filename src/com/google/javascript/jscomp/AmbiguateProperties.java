@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -298,7 +299,10 @@ class AmbiguateProperties implements CompilerPass {
 
     // A prototype is related to its instance.
     if (type.isPrototypeObject()) {
-      addRelatedInstance(type.toMaybeObjectType().getOwnerFunction(), related);
+      FunctionTypeI maybeCtor = type.toMaybeObjectType().getOwnerFunction();
+      if (maybeCtor.isConstructor() || maybeCtor.isInterface()) {
+        addRelatedInstance(maybeCtor, related);
+      }
       return;
     }
 
@@ -316,15 +320,12 @@ class AmbiguateProperties implements CompilerPass {
    * its related types to the given bit set.
    */
   private void addRelatedInstance(FunctionTypeI constructor, JSTypeBitSet related) {
-    // TODO(user): Make a constructor which doesn't have an instance type
-    // (e.g. it's missing the @constructor annotation) an invalidating type which
-    // doesn't reach this code path.
-    if (constructor.hasInstanceType()) {
-      ObjectTypeI instanceType = constructor.getInstanceType();
-      related.set(getIntForType(instanceType.getPrototypeObject()));
-      computeRelatedTypes(instanceType);
-      related.or(relatedBitsets.get(instanceType));
-    }
+    checkArgument(constructor.hasInstanceType(),
+        "Constructor %s without instance type.", constructor);
+    ObjectTypeI instanceType = constructor.getInstanceType();
+    related.set(getIntForType(instanceType.getPrototypeObject()));
+    computeRelatedTypes(instanceType);
+    related.or(relatedBitsets.get(instanceType));
   }
 
   class PropertyGraph implements AdjacencyGraph<Property, Void> {

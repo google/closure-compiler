@@ -47,23 +47,26 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   }
 
   public void test_b19179602() {
-    test(LINE_JOINER.join(
-    "var a = {};",
-    "/** @constructor */ a.b = function() {};",
-    "a.b.staticProp = 5;",
-    "/** @constructor */",
-    "function f() { ",
-    "  while (true) { ",
-    "    var b = a.b;",
-    "    alert(b.staticProp); } }"), LINE_JOINER.join(
-    "var a = {};",
-    "/** @constructor */ a.b = function() {};",
-    "a.b.staticProp = 5;",
-    "/** @constructor */",
-    "function f() {",
-    "  for(; true; ) {",
-    "    var b = a.b;",
-    "    alert(b.staticProp); } }"), warning(AggressiveInlineAliases.UNSAFE_CTOR_ALIASING));
+    test(
+        LINE_JOINER.join(
+            "var a = {};",
+            "/** @constructor */ a.b = function() {};",
+            "a.b.staticProp = 5;",
+            "/** @constructor */",
+            "function f() { ",
+            "  while (true) { ",
+            "    var b = a.b;",
+            "    alert(b.staticProp); } }"),
+        LINE_JOINER.join(
+            "var a = {};",
+            "/** @constructor */ a.b = function() {};",
+            "a.b.staticProp = 5;",
+            "/** @constructor */",
+            "function f() {",
+            "  for(; true; ) {",
+            "    var b = a.b;",
+            "    alert(b.staticProp); } }"),
+        warning(AggressiveInlineAliases.UNSAFE_CTOR_ALIASING));
   }
 
   public void test_b19179602_declareOutsideLoop() {

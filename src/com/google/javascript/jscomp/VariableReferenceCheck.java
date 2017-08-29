@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -79,7 +80,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
   // These types do not permit a block-scoped declaration inside them without an explicit block.
   // e.g. if (b) let x;
   private static final ImmutableSet<Token> BLOCKLESS_DECLARATION_FORBIDDEN_STATEMENTS =
-      ImmutableSet.of(Token.IF, Token.FOR, Token.FOR_IN, Token.FOR_OF, Token.WHILE);
+      Sets.immutableEnumSet(Token.IF, Token.FOR, Token.FOR_IN, Token.FOR_OF, Token.WHILE);
 
   public VariableReferenceCheck(AbstractCompiler compiler) {
     this(compiler, false);
@@ -139,6 +140,15 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
 
     @Override
     public void afterExitScope(NodeTraversal t, ReferenceMap referenceMap) {
+      // TODO(johnlenz): do this only for ides
+      if (t.inGlobalScope()) {
+        // Update global scope reference lists when we are done with it.
+        compiler.updateGlobalVarReferences(
+            ((ReferenceCollectingCallback.ReferenceMapWrapper) referenceMap).getRawReferenceMap(),
+            t.getScopeRoot());
+        referenceMap = compiler.getGlobalVarReferences();
+      }
+
       // TODO(bashir) In hot-swap version this means that for global scope we
       // only go through all global variables accessed in the modified file not
       // all global variables. This should be fixed.
@@ -443,9 +453,9 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
             && (NodeUtil.isCallTo(rhs, "goog.forwardDeclare")
                 || NodeUtil.isCallTo(rhs, "goog.require")
                 || rhs.isQualifiedName())) {
-          // No warning. goog.{require,forwardDeclare} will be caught by the unused-require check,
-          // and if the right side is a qualified name then this is likely an alias used in type
-          // annotations.
+          // No warning. goog.{require,forwardDeclare} and import will be caught by the
+          // unused-require check, and if the right side is a qualified name then this is
+          // likely an alias used in type annotations.
           return;
         }
       }

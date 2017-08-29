@@ -34,10 +34,6 @@ import java.util.concurrent.TimeUnit;
  * in parallel and already available during the rest of the compilation.
  */
 class PrebuildAst {
-  // We use many recursive algorithms that use O(d) memory in the depth
-  // of the tree.
-  private static final long COMPILER_STACK_SIZE = (1 << 23); // About 8MB
-
   private final AbstractCompiler compiler;
   private final int numParallelThreads;
 
@@ -50,7 +46,8 @@ class PrebuildAst {
     ThreadFactory threadFactory = new ThreadFactory() {
         @Override
         public Thread newThread(Runnable r) {
-          Thread t = new Thread(null, r, "jscompiler-PrebuildAst", COMPILER_STACK_SIZE);
+          Thread t =
+              new Thread(null, r, "jscompiler-PrebuildAst", CompilerExecutor.COMPILER_STACK_SIZE);
           t.setDaemon(true);  // Do not prevent the JVM from exiting.
           return t;
         }

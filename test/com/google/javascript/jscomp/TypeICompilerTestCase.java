@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import java.io.IOException;
+import java.util.List;
+
 /**
  * CompilerTestCase for passes that run after type checking and use type information.
  * Allows us to test those passes with both type checkers.
@@ -46,7 +49,7 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
   protected TypeInferenceMode mode = TypeInferenceMode.BOTH;
 
   public TypeICompilerTestCase() {
-    super();
+    super(MINIMAL_EXTERNS);
   }
 
   public TypeICompilerTestCase(String defaultExterns) {
@@ -71,36 +74,65 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
       Externs externs,
       Sources js,
       Expected expected,
-      Diagnostic diagnotic) {
+      Diagnostic diagnostic,
+      List<Postcondition> postconditions) {
     if (this.mode.runsOTI()) {
-      testOTI(externs, js, expected, diagnotic);
+      testOTI(externs, js, expected, diagnostic, postconditions);
     }
     if (this.mode.runsNTI()) {
-      testNTI(externs, js, expected, diagnotic);
+      if (!findMinimalExterns(externs.externs)) {
+        fail("NTI reqires at least the MINIMAL_EXTERNS");
+      }
+      testNTI(externs, js, expected, diagnostic, postconditions);
     }
     if (this.mode.runsNeither()) {
-      super.testInternal(externs, js, expected, diagnotic);
+      super.testInternal(externs, js, expected, diagnostic, postconditions);
     }
+  }
+
+  private static boolean findMinimalExterns(Iterable<SourceFile> externs) {
+    try {
+      for (SourceFile extern : externs) {
+        if (extern.getCode().contains(MINIMAL_EXTERNS)) {
+          return true;
+        }
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    return false;
   }
 
   private void testOTI(
       Externs externs,
       Sources js,
       Expected expected,
-      Diagnostic diagnotic) {
+      Diagnostic diagnostic,
+      List<Postcondition> postconditions) {
+    TypeInferenceMode saved = this.mode;
+    this.mode = TypeInferenceMode.OTI_ONLY;
     enableTypeCheck();
-    super.testInternal(externs, js, expected, diagnotic);
+    Diagnostic oti =
+        diagnostic instanceof OtiNtiDiagnostic ? ((OtiNtiDiagnostic) diagnostic).oti : diagnostic;
+    super.testInternal(externs, js, expected, oti, postconditions);
     disableTypeCheck();
+    this.mode = saved;
   }
 
   private void testNTI(
       Externs externs,
       Sources js,
       Expected expected,
-      Diagnostic diagnotic) {
+      Diagnostic diagnostic,
+      List<Postcondition> postconditions) {
+    TypeInferenceMode saved = this.mode;
+    this.mode = TypeInferenceMode.NTI_ONLY;
     enableNewTypeInference();
-    super.testInternal(externs, js, expected, diagnotic);
+    Diagnostic nti =
+        diagnostic instanceof OtiNtiDiagnostic ? ((OtiNtiDiagnostic) diagnostic).nti : diagnostic;
+    super.testInternal(externs, js, expected, nti, postconditions);
     disableNewTypeInference();
+    this.mode = saved;
   }
 
   void testWarningOtiNti(
@@ -112,5 +144,36 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
     testWarning(js, ntiWarning);
     this.mode = saved;
   }
-}
 
+  @Override
+  protected Compiler getLastCompiler() {
+    switch (this.mode) {
+      case BOTH:
+        throw new AssertionError("getLastCompiler does not work correctly in BOTH mode.");
+      default:
+        return super.getLastCompiler();
+    }
+  }
+
+  // Helpers to test separate warnings/errors with OTI and NTI.
+
+  protected static OtiNtiDiagnostic warningOtiNti(DiagnosticType oti, DiagnosticType nti) {
+    return new OtiNtiDiagnostic(
+        oti != null ? warning(oti) : null, nti != null ? warning(nti) : null);
+  }
+
+  protected static OtiNtiDiagnostic diagnosticOtiNti(Diagnostic oti, Diagnostic nti) {
+    return new OtiNtiDiagnostic(oti, nti);
+  }
+
+  protected static class OtiNtiDiagnostic extends Diagnostic {
+    private final Diagnostic oti;
+    private final Diagnostic nti;
+
+    private OtiNtiDiagnostic(Diagnostic oti, Diagnostic nti) {
+      super(null, null, null);
+      this.oti = oti;
+      this.nti = nti;
+    }
+  }
+}

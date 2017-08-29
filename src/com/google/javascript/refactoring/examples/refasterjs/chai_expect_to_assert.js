@@ -23,7 +23,9 @@
  *
  *    assert.isTrue(thing);
  *
- * TODO(tbreisacher): Expand this to include "expect(thing).to.be.null" etc.
+ * TODO(tbreisacher): Expand this to include chai-jquery assertions as well:
+ * http://chaijs.com/plugins/chai-jquery/
+ *
  * Then, once it's in a good state, mention it at go/js-practices/testing#chai
  */
 
@@ -44,6 +46,20 @@ function after_true(param) {
 /**
  * @param {?} param
  */
+function before_not_true(param) {
+  expect(param).to.not.be.true;
+}
+
+/**
+ * @param {?} param
+ */
+function after_not_true(param) {
+  assert.isNotTrue(param);
+}
+
+/**
+ * @param {?} param
+ */
 function before_false(param) {
   expect(param).to.be.false;
 }
@@ -53,6 +69,20 @@ function before_false(param) {
  */
 function after_false(param) {
   assert.isFalse(param);
+}
+
+/**
+ * @param {?} param
+ */
+function before_not_false(param) {
+  expect(param).to.not.be.false;
+}
+
+/**
+ * @param {?} param
+ */
+function after_not_false(param) {
+  assert.isNotFalse(param);
 }
 
 /**
@@ -72,6 +102,20 @@ function after_null(param) {
 /**
  * @param {?} param
  */
+function before_not_null(param) {
+  expect(param).to.not.be.null;
+}
+
+/**
+ * @param {?} param
+ */
+function after_not_null(param) {
+  assert.isNotNull(param);
+}
+
+/**
+ * @param {?} param
+ */
 function before_undefined(param) {
   expect(param).to.be.undefined;
 }
@@ -86,6 +130,20 @@ function after_undefined(param) {
 /**
  * @param {?} param
  */
+function before_not_undefined(param) {
+  expect(param).to.not.be.undefined;
+}
+
+/**
+ * @param {?} param
+ */
+function after_not_undefined(param) {
+  assert.isDefined(param);
+}
+
+/**
+ * @param {?} param
+ */
 function before_ok(param) {
   expect(param).to.be.ok;
 }
@@ -95,4 +153,18 @@ function before_ok(param) {
  */
 function after_ok(param) {
   assert.isOk(param);
+}
+
+/**
+ * @param {?} param
+ */
+function before_not_ok(param) {
+  expect(param).to.not.be.ok;
+}
+
+/**
+ * @param {?} param
+ */
+function after_not_ok(param) {
+  assert.isNotOk(param);
 }

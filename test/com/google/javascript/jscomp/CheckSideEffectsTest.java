@@ -78,13 +78,16 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
             "function x(){}",
             "function f(a, b){}",
             "f(1,(x(), 2));"));
-    test(LINE_JOINER.join(
-    "function x(){}",
-    "function f(a, b){}",
-    "f(1,(2, 3));"), LINE_JOINER.join(
-    "function x(){}",
-    "function f(a, b){}",
-    "f(1,(JSCOMPILER_PRESERVE(2), 3));"), warning(e));
+    test(
+        LINE_JOINER.join(
+            "function x(){}",
+            "function f(a, b){}",
+            "f(1,(2, 3));"),
+        LINE_JOINER.join(
+            "function x(){}",
+            "function f(a, b){}",
+            "f(1,(JSCOMPILER_PRESERVE(2), 3));"),
+        warning(e));
 
     test(
         "var x = `TemplateA`\n'TestB'",

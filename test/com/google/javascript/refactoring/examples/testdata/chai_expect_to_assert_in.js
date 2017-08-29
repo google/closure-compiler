@@ -37,3 +37,12 @@ function nullAndUndefinedTest() {
 function okTest() {
   expect('a string').to.be.ok;
 }
+
+/** The .to.not.be variations. */
+function negativeTest() {
+  expect(1 > 0).to.not.be.true;
+  expect(2 < 0).to.not.be.false;
+  expect(false || null).to.not.be.null;
+  expect(someVar).to.not.be.undefined;
+  expect('a string').to.not.be.ok;
+}

@@ -36,7 +36,7 @@ import java.util.Set;
  */
 public abstract class BasicErrorManager implements ErrorManager {
   private final PriorityQueue<ErrorWithLevel> messages =
-      new PriorityQueue<ErrorWithLevel>(1, new LeveledJSErrorComparator());
+      new PriorityQueue<>(1, new LeveledJSErrorComparator());
   private final Set<ErrorWithLevel> alreadyAdded = new HashSet<>();
   private int errorCount = 0;
   private int warningCount = 0;
@@ -45,8 +45,7 @@ public abstract class BasicErrorManager implements ErrorManager {
   @Override
   public void report(CheckLevel level, JSError error) {
     ErrorWithLevel e = new ErrorWithLevel(error, level);
-    if (!alreadyAdded.contains(e)) {
-      alreadyAdded.add(e);
+    if (alreadyAdded.add(e)) {
       messages.add(e);
       if (level == CheckLevel.ERROR) {
         errorCount++;

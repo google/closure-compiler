@@ -31,6 +31,8 @@ import com.google.common.reflect.TypeToken;
 import com.google.javascript.jscomp.CheckConformance.InvalidRequirementSpec;
 import com.google.javascript.jscomp.CheckConformance.Rule;
 import com.google.javascript.jscomp.CodingConvention.AssertionFunctionSpec;
+import com.google.javascript.jscomp.ConformanceRules.AbstractRule;
+import com.google.javascript.jscomp.ConformanceRules.ConformanceResult;
 import com.google.javascript.jscomp.Requirement.Type;
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.FunctionTypeI;
@@ -328,9 +330,10 @@ public final class ConformanceRules {
     }
 
     protected boolean isUsed(Node n) {
-      return (NodeUtil.isAssignmentOp(n.getParent()))
-           ? NodeUtil.isExpressionResultUsed(n.getParent())
-           : NodeUtil.isExpressionResultUsed(n);
+      return !n.getParent().isName()
+          && ((NodeUtil.isAssignmentOp(n.getParent()))
+              ? NodeUtil.isExpressionResultUsed(n.getParent())
+              : NodeUtil.isExpressionResultUsed(n));
     }
   }
 
@@ -1188,7 +1191,8 @@ public final class ConformanceRules {
     // Whether the type is known to be invalid to dereference.
     private boolean invalidDeref(Node n) {
       TypeI type = n.getTypeI();
-      return type.isNullable() || type.isVoidable();
+      // TODO(johnlenz): top type should not be allowed here
+      return !type.isTop() && (type.isNullable() || type.isVoidable());
     }
   }
 
@@ -1644,22 +1648,28 @@ public final class ConformanceRules {
             .build();
 
     private boolean isCreateDomCall(Node n) {
-      if (NodeUtil.isCallTo(n, "goog.dom.createDom")) {
-        return true;
-      }
       if (!n.isCall()) {
         return false;
       }
-      Node function = n.getFirstChild();
-      if (!function.isGetProp()) {
+      Node target = n.getFirstChild();
+      if (!target.isGetProp()) {
         return false;
       }
-      TypeI type = function.getFirstChild().getTypeI();
+      if (!"createDom".equals(target.getLastChild().getString())) {
+        return false;
+      }
+
+      Node srcObj = target.getFirstChild();
+      if (srcObj.matchesQualifiedName("goog.dom")) {
+        return true;
+      }
+      TypeI type = srcObj.getTypeI();
       if (type == null) {
         return false;
       }
-      if ("goog.dom.DomHelper".equals(type.getDisplayName()) && function.getLastChild().isString()
-          && "createDom".equals(function.getLastChild().getString())) {
+      // TODO(johnlenz): This is really slow instead use the type registry to lookup the
+      // type and use isEquivalentTo
+      if ("goog.dom.DomHelper".equals(type.getDisplayName())) {
         return true;
       }
       return false;

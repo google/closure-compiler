@@ -16,13 +16,15 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Joiner;
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
-import com.google.javascript.jscomp.LiveVariablesAnalysis.LiveVariableLattice;
+import com.google.javascript.jscomp.LiveVariablesAnalysisEs6.LiveVariableLattice;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.ScopedCallback;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
@@ -33,9 +35,13 @@ import com.google.javascript.jscomp.graph.LinkedUndirectedGraph;
 import com.google.javascript.jscomp.graph.UndiGraph;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -60,90 +66,112 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
   private final AbstractCompiler compiler;
   private final Deque<GraphColoring<Var, Void>> colorings;
+  private final Deque<LiveVariablesAnalysisEs6> liveAnalyses;
   private final boolean usePseudoNames;
+  private LiveVariablesAnalysisEs6 liveness;
 
-  private static final Comparator<Var> coloringTieBreaker =
+  private final Comparator<Var> coloringTieBreaker =
       new Comparator<Var>() {
-    @Override
-    public int compare(Var v1, Var v2) {
-      return v1.index - v2.index;
-    }
-  };
+        @Override
+        public int compare(Var v1, Var v2) {
+          return liveness.getVarIndex(v1.getName()) - liveness.getVarIndex(v2.getName());
+        }
+      };
 
   /**
    * @param usePseudoNames For debug purposes, when merging variable foo and bar
    * to foo, rename both variable to foo_bar.
    */
   CoalesceVariableNames(AbstractCompiler compiler, boolean usePseudoNames) {
-    // The code is normalized at this point in the compilation process, however as a result of this
-    // pass, the code becomes unnormalized (since we are reusing variable names) and so we want to
-    // unconditionally mark the code as unnormalized. We mark unnormalized right before this pass.
-    checkState(!compiler.getLifeCycleStage().isNormalized());
+    // The code is normalized at this point in the compilation process. This allows us to use the
+    // fact that all variables have been given unique names. We can hoist coalesced variables to
+    // VARS because we know that shadowing can't occur.
+    checkState(compiler.getLifeCycleStage().isNormalized());
 
     this.compiler = compiler;
     colorings = new LinkedList<>();
+    liveAnalyses = new LinkedList<>();
     this.usePseudoNames = usePseudoNames;
   }
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal t =
-        new NodeTraversal(compiler, this, SyntacticScopeCreator.makeUntyped(compiler));
-    t.traverse(root);
+    checkNotNull(externs);
+    checkNotNull(root);
+    NodeTraversal.traverseEs6(compiler, root, this);
+    compiler.setLifeCycleStage(LifeCycleStage.RAW);
   }
 
-  private static boolean shouldOptimizeScope(Scope scope) {
+  private static boolean shouldOptimizeScope(NodeTraversal t) {
     // TODO(user): We CAN do this in the global scope, just need to be
     // careful when something is exported. Liveness uses bit-vector for live
     // sets so I don't see compilation time will be a problem for running this
     // pass in the global scope.
-    if (scope.isGlobal()) {
+
+    if (!t.getScopeRoot().isFunction()) {
       return false;
     }
 
-    return LiveVariablesAnalysis.MAX_VARIABLES_TO_ANALYZE >= scope.getVarCount();
+    Map<String, Var> allVarsInFn = new HashMap<>();
+    List<Var> orderedVars = new LinkedList<>();
+    NodeUtil.getAllVarsDeclaredInFunction(
+        allVarsInFn, orderedVars, t.getCompiler(), t.getScopeCreator(), t.getScope());
+
+    return LiveVariablesAnalysisEs6.MAX_VARIABLES_TO_ANALYZE > orderedVars.size();
   }
 
   @Override
   public void enterScope(NodeTraversal t) {
     Scope scope = t.getScope();
-    if (!shouldOptimizeScope(scope)) {
+    if (!shouldOptimizeScope(t)) {
       return;
     }
 
     checkState(scope.isFunctionScope(), scope);
 
+    // live variables analysis is based off of the control flow graph
     ControlFlowGraph<Node> cfg = t.getControlFlowGraph();
-    LiveVariablesAnalysis liveness =
-        new LiveVariablesAnalysis(cfg, scope, compiler, t.getScopeCreator());
+
+    liveness =
+        new LiveVariablesAnalysisEs6(
+            cfg, scope, null, compiler, new Es6SyntacticScopeCreator(compiler));
+
     if (compiler.getOptions().getLanguageOut() == CompilerOptions.LanguageMode.ECMASCRIPT3) {
       // If the function has exactly 2 params, mark them as escaped. This is a work-around for a
       // bug in IE 8 and below, where it throws an exception if you write to the parameters of the
       // callback in a sort(). See http://blickly.github.io/closure-compiler-issues/#58 and
       // https://www.zachleat.com/web/array-sort/
-      if (NodeUtil.getFunctionParameters(scope.getRootNode()).hasTwoChildren()) {
+      Node enclosingFunction = scope.getRootNode();
+      if (NodeUtil.getFunctionParameters(enclosingFunction).hasTwoChildren()) {
         liveness.markAllParametersEscaped();
       }
     }
+
     liveness.analyze();
+    liveAnalyses.push(liveness);
 
+    // The interference graph has the function's variables as its nodes and any interference
+    // between the variables as the edges. Interference between two variables means that they are
+    // alive at overlapping times, which means that their variable names cannot be coalesced.
     UndiGraph<Var, Void> interferenceGraph =
-        computeVariableNamesInterferenceGraph(
-            t, cfg, (Set<Var>) liveness.getEscapedLocals());
+        computeVariableNamesInterferenceGraph(cfg, liveness.getEscapedLocals());
 
+    // Color any interfering variables with different colors and any variables that can be safely
+    // coalesced wih the same color.
     GraphColoring<Var, Void> coloring =
         new GreedyGraphColoring<>(interferenceGraph, coloringTieBreaker);
-
     coloring.color();
     colorings.push(coloring);
   }
 
   @Override
   public void exitScope(NodeTraversal t) {
-    if (!shouldOptimizeScope(t.getScope())) {
+    if (!shouldOptimizeScope(t)) {
       return;
     }
     colorings.pop();
+    liveAnalyses.pop();
+    liveness = liveAnalyses.peek();
   }
 
   @Override
@@ -152,7 +180,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       // Don't rename named functions.
       return;
     }
-    Var var = t.getScope().getVar(n.getString());
+
+    Var var = liveness.getAllVariables().get(n.getString());
     GraphNode<Var, Void> vNode = colorings.peek().getGraph().getNode(var);
     if (vNode == null) {
       // This is not a local.
@@ -170,7 +199,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       n.setString(coalescedVar.name);
       compiler.reportChangeToEnclosingScope(n);
 
-      if (parent.isVar()) {
+      if (NodeUtil.isNameDeclaration(parent)) {
+        makeDeclarationVar(coalescedVar);
         removeVarDeclaration(n);
       }
     } else {
@@ -179,7 +209,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       // make this fast.
       String pseudoName = null;
       Set<String> allMergedNames = new TreeSet<>();
-      for (Var iVar : t.getScope().getVarIterable()) {
+      for (Var iVar : liveness.getAllVariablesInOrder()) {
         // Look for all the variables that can be merged (in the graph by now)
         // and it is merged with the current coalescedVar.
         if (colorings.peek().getGraph().getNode(iVar) != null
@@ -199,23 +229,40 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
         pseudoName += "$";
       }
 
+      // Rename.
       n.setString(pseudoName);
       compiler.reportChangeToEnclosingScope(n);
 
-      if (!vNode.getValue().equals(coalescedVar) && parent.isVar()) {
+      if (!vNode.getValue().equals(coalescedVar) && NodeUtil.isNameDeclaration(parent)) {
+        makeDeclarationVar(coalescedVar);
         removeVarDeclaration(n);
       }
     }
   }
 
+  /**
+   * In order to determine when it is appropriate to coalesce two variables, we use a live variables
+   * analysis to make sure they are not alive at the same time. We take every pairing of variables
+   * and for every CFG node, determine whether the two variables are alive at the same time. If two
+   * variables are alive at the same time, we create an edge between them in the interference graph.
+   * The interference graph is the input to a graph coloring algorithm that ensures any interfering
+   * variables are marked in different color groups, while variables that can safely be coalesced
+   * are assigned the same color group.
+   *
+   * @param cfg
+   * @param escaped we don't want to coalesce any escaped variables
+   * @return graph with variable nodes and edges representing variable interference
+   */
   private UndiGraph<Var, Void> computeVariableNamesInterferenceGraph(
-      NodeTraversal t, ControlFlowGraph<Node> cfg, Set<Var> escaped) {
-    UndiGraph<Var, Void> interferenceGraph =
-        LinkedUndirectedGraph.create();
-    Scope scope = t.getScope();
+      ControlFlowGraph<Node> cfg, Set<? extends Var> escaped) {
+    UndiGraph<Var, Void> interferenceGraph = LinkedUndirectedGraph.create();
 
-    // First create a node for each non-escaped variable.
-    for (Var v : scope.getVarIterable()) {
+    // First create a node for each non-escaped variable. We add these nodes in the order in which
+    // they appear in the code because we want the names that appear earlier in the code to be used
+    // when coalescing to variables that appear later in the code.
+    List<Var> orderedVariables = liveness.getAllVariablesInOrder();
+
+    for (Var v : orderedVariables) {
       if (!escaped.contains(v)) {
 
         // TODO(user): In theory, we CAN coalesce function names just like
@@ -231,12 +278,19 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     }
 
     // Go through each variable and try to connect them.
-    for (Var v1 : scope.getVarIterable()) {
+    for (Var v1 : orderedVariables) {
 
       NEXT_VAR_PAIR:
-      for (Var v2 : scope.getVarIterable()) {
+      for (Var v2 : orderedVariables) {
         // Skip duplicate pairs.
-        if (v1.index >= v2.index) {
+
+        // We use the liveness analysis to get the variable index rather than v1.index because
+        // v1.index represents the order in which v1 was declared within the scope it was declared
+        // in. For coalescing variables, we care about coalescing across all scopes of a function
+        // so we care about the order in which v1 was declared amongst all the function's inner
+        // scopes
+
+        if (liveness.getVarIndex(v1.getName()) > liveness.getVarIndex(v2.getName())) {
           continue;
         }
 
@@ -261,9 +315,13 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
           }
 
           FlowState<LiveVariableLattice> state = cfgNode.getAnnotation();
+
           // Check the live states and add edge when possible.
-          if ((state.getIn().isLive(v1) && state.getIn().isLive(v2))
-              || (state.getOut().isLive(v1) && state.getOut().isLive(v2))) {
+
+          int v1Index = liveness.getVarIndex(v1.getName());
+          int v2Index = liveness.getVarIndex(v2.getName());
+          if ((state.getIn().isLive(v1Index) && state.getIn().isLive(v2Index))
+              || (state.getOut().isLive(v1Index) && state.getOut().isLive(v2Index))) {
             interferenceGraph.connectIfNotFound(v1, null, v2);
             continue NEXT_VAR_PAIR;
           }
@@ -279,14 +337,15 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
           }
 
           FlowState<LiveVariableLattice> state = cfgNode.getAnnotation();
-          boolean v1OutLive = state.getOut().isLive(v1);
-          boolean v2OutLive = state.getOut().isLive(v2);
+          int v1Index = liveness.getVarIndex(v1.getName());
+          int v2Index = liveness.getVarIndex(v2.getName());
+
+          boolean v1OutLive = state.getOut().isLive(v1Index);
+          boolean v2OutLive = state.getOut().isLive(v2Index);
           CombinedLiveRangeChecker checker = new CombinedLiveRangeChecker(
               new LiveRangeChecker(v1, v2OutLive ? null : v2),
               new LiveRangeChecker(v2, v1OutLive ? null : v1));
-          NodeTraversal newTraversal =
-              new NodeTraversal(compiler, checker, SyntacticScopeCreator.makeUntyped(compiler));
-          newTraversal.traverse(cfgNode.getValue());
+          NodeTraversal.traverseEs6(compiler, cfgNode.getValue(), checker);
           if (checker.connectIfCrossed(interferenceGraph)) {
             continue NEXT_VAR_PAIR;
           }
@@ -334,15 +393,24 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
   }
 
   /**
-   * Tries to remove variable declaration if the variable has been coalesced
-   * with another variable that has already been declared.
+   * Tries to remove variable declaration if the variable has been coalesced with another variable
+   * that has already been declared. Any lets or consts are redeclared as vars because at this point
+   * in the compilation, the code is normalized, so we can safely hoist variables without worrying
+   * about shaddowing.
+   *
+   * @param name name node of the variable being coalesced
    */
   private static void removeVarDeclaration(Node name) {
     Node var = name.getParent();
     Node parent = var.getParent();
 
-    // Special case when we are in FOR-IN loop.
-    if (parent.isForIn()) {
+    if (!var.isVar()) {
+      var.setToken(Token.VAR);
+    }
+    checkState(var.isVar(), var);
+
+    // Special case for enhanced for-loops
+    if (NodeUtil.isEnhancedFor(parent)) {
       var.removeChild(name);
       parent.replaceChild(var, name);
     } else if (var.hasOneChild()) {
@@ -371,6 +439,18 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     }
   }
 
+  /**
+   * Because the code has already been normalized by the time this pass runs, we can safely
+   * redeclare any let and const coalesced variables as vars
+   */
+  public static void makeDeclarationVar(Var coalescedName) {
+    Node coalesceVarParent = coalescedName.getParentNode();
+    if (coalesceVarParent.isLet() || coalesceVarParent.isConst()) {
+      coalesceVarParent.setToken(Token.VAR);
+      checkState(coalesceVarParent.isVar());
+    }
+  }
+
   private static class LiveRangeChecker
       extends AbstractCfgNodeTraversalCallback {
     boolean defFound = false;
@@ -391,8 +471,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
      * @return Whether any LiveRangeChecker would be interested in the node.
      */
     public static boolean shouldVisit(Node n) {
-      return (n.isName()
-        || (n.hasChildren() && n.getFirstChild().isName()));
+      return (n.isName() || (n.hasChildren() && n.getFirstChild().isName()));
     }
 
     @Override
@@ -412,7 +491,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
           if (parent.isParamList()) {
             // In a function declaration, the formal parameters are assigned.
             return true;
-          } else if (parent.isVar()) {
+          } else if (NodeUtil.isNameDeclaration(parent)) {
             // If this is a VAR declaration, if the name node has a child, we are
             // assigning to that name.
             return n.hasChildren();
@@ -431,7 +510,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       return name != null
           && name.isName()
           && var.getName().equals(name.getString())
-          && !NodeUtil.isVarOrSimpleAssignLhs(name, name.getParent());
+          && !NodeUtil.isNameDeclOrSimpleAssignLhs(name, name.getParent());
     }
   }
 }

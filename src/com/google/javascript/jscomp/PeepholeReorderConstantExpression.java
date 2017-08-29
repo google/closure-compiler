@@ -26,10 +26,8 @@ import com.google.javascript.rhino.Token;
  * compression together than their original counterparts.
  *
  */
-class ReorderConstantExpression extends AbstractPeepholeOptimization {
+class PeepholeReorderConstantExpression extends AbstractPeepholeOptimization {
 
-  // TODO(user): Rename this pass to PeepholeReorderConstantExpression
-  // to follow our naming convention.
   @Override
   Node optimizeSubtree(Node subtree) {
     // if the operator is symmetric

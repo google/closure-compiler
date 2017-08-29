@@ -29,7 +29,6 @@ import com.google.javascript.rhino.Node;
  */
 abstract class AbstractPeepholeOptimization {
 
-  private NodeTraversal traversal;
   protected AbstractCompiler compiler;
 
   /**
@@ -60,7 +59,7 @@ abstract class AbstractPeepholeOptimization {
    * Subclasses must call these if they have changed the AST.
    */
   protected void reportCodeChange() {
-    traversal.reportCodeChange();
+    compiler.reportCodeChange();
   }
 
   /**
@@ -85,24 +84,10 @@ abstract class AbstractPeepholeOptimization {
     return compiler.getLifeCycleStage().isNormalized();
   }
 
-  /**
-   * Informs the optimization that a traversal will begin.
-   */
-  void beginTraversal(NodeTraversal traversal) {
-    this.traversal = traversal;
-    this.compiler = traversal.getCompiler();
+  /** Informs the optimization that a traversal will begin. */
+  void beginTraversal(AbstractCompiler compiler) {
+    this.compiler = compiler;
   }
-
-  /**
-   * Informs the optimization that a traversal has completed.
-   */
-  void endTraversal() {
-    this.traversal = null;
-    this.compiler = null;
-  }
-
-  // NodeUtil's mayEffectMutableState and mayHaveSideEffects need access to the
-  // compiler object, route them through here to give them access.
 
   /**
    * @return Whether the node may create new mutable state, or change existing

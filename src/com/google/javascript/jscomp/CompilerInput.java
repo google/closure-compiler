@@ -26,6 +26,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.deps.DependencyInfo;
 import com.google.javascript.jscomp.deps.JsFileParser;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
 import com.google.javascript.jscomp.deps.SimpleDependencyInfo;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -229,11 +230,29 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     Preconditions.checkNotNull(
         compiler.getErrorManager(), "Expected compiler to call an error manager: %s", this);
 
-    // If the code is NOT a JsAst, then it was not originally JS code.
-    // Look at the Ast for dependency info.
-    if (!(ast instanceof JsAst) || !JsFileParser.isSupported()) {
+    // If the code is a JsAst, then it was originally JS code, and is compatible with the
+    // regex-based parsing of JsFileParser.
+    if (ast instanceof JsAst && JsFileParser.isSupported()) {
+      // Look at the source code.
+      // Note: it's OK to use getName() instead of
+      // getPathRelativeToClosureBase() here because we're not using
+      // this to generate deps files. (We're only using it for
+      // symbol dependencies.)
+      try {
+        DependencyInfo info =
+            (new JsFileParser(compiler.getErrorManager()))
+            .setIncludeGoogBase(true)
+            .parseFile(getName(), getName(), getCode());
+        return new LazyParsedDependencyInfo(info, (JsAst) ast, compiler);
+      } catch (IOException e) {
+        compiler.getErrorManager().report(CheckLevel.ERROR,
+            JSError.make(AbstractCompiler.READ_ERROR, getName()));
+        return SimpleDependencyInfo.EMPTY;
+      }
+    } else {
+      // Otherwise, just look at the AST.
 
-      DepsFinder finder = new DepsFinder(compiler.getCodingConvention());
+      DepsFinder finder = new DepsFinder(getPath());
       Node root = getAstRoot(compiler);
       if (root == null) {
         return SimpleDependencyInfo.EMPTY;
@@ -252,23 +271,6 @@ public class CompilerInput implements SourceAst, DependencyInfo {
       // doing weird things like this, and then we should get rid of the
       // multiple-scan strategy.
       return new SimpleDependencyInfo("", "", finder.provides, finder.requires, finder.loadFlags);
-    } else {
-      // Otherwise, look at the source code.
-      // Note: it's OK to use getName() instead of
-      // getPathRelativeToClosureBase() here because we're not using
-      // this to generate deps files. (We're only using it for
-      // symbol dependencies.)
-      try {
-        DependencyInfo info =
-            (new JsFileParser(compiler.getErrorManager()))
-            .setIncludeGoogBase(true)
-            .parseFile(getName(), getName(), getCode());
-        return new LazyParsedDependencyInfo(info, (JsAst) ast, compiler);
-      } catch (IOException e) {
-        compiler.getErrorManager().report(CheckLevel.ERROR,
-            JSError.make(AbstractCompiler.READ_ERROR, getName()));
-        return SimpleDependencyInfo.EMPTY;
-      }
     }
   }
 
@@ -276,10 +278,10 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     private final Map<String, String> loadFlags = new TreeMap<>();
     private final List<String> provides = new ArrayList<>();
     private final List<String> requires = new ArrayList<>();
-    private final CodingConvention codingConvention;
+    private final ModulePath modulePath;
 
-    DepsFinder(CodingConvention codingConvention) {
-      this.codingConvention = codingConvention;
+    DepsFinder(ModulePath modulePath) {
+      this.modulePath = modulePath;
     }
 
     void visitTree(Node n) {
@@ -299,33 +301,108 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     void visitSubtree(Node n, Node parent) {
       switch (n.getToken()) {
         case CALL:
-          boolean isModuleDetected = codingConvention.extractIsModuleFile(n, parent);
+          if (n.hasTwoChildren()
+              && n.getFirstChild().isGetProp()
+              && n.getFirstFirstChild().matchesQualifiedName("goog")) {
 
-          if (isModuleDetected) {
-            loadFlags.put("module", "goog");
-          }
+            if (!requires.contains("goog")) {
+              requires.add("goog");
+            }
 
-          String require = codingConvention.extractClassNameIfRequire(n, parent);
-          if (require != null) {
-            requires.add(require);
-          }
+            Node callee = n.getFirstChild();
+            Node argument = n.getLastChild();
+            switch (callee.getLastChild().getString()) {
 
-          String provide = codingConvention.extractClassNameIfProvide(n, parent);
-          if (provide != null) {
-            provides.add(provide);
-          }
-          return;
-        default:
-          if (parent != null && !parent.isExprResult() && !NodeUtil.isTopLevel(parent)) {
-            return;
+              case "module":
+                loadFlags.put("module", "goog");
+                // Fall-through
+              case "provide":
+                if (!argument.isString()) {
+                  return;
+                }
+                provides.add(argument.getString());
+                return;
+
+              case "require":
+                if (!argument.isString()) {
+                  return;
+                }
+                requires.add(argument.getString());
+                return;
+
+              case "loadModule":
+                // Process the block of the loadModule argument
+                n = argument.getLastChild();
+                break;
+
+              default:
+                return;
+            }
           }
           break;
+
+        case MODULE_BODY:
+          if (!parent.getBooleanProp(Node.GOOG_MODULE)) {
+            provides.add(modulePath.toModuleName());
+            loadFlags.put("module", "es6");
+          }
+          break;
+
+        case IMPORT:
+          visitEs6ModuleName(n.getLastChild(), n);
+          return;
+
+        case EXPORT:
+          if (NodeUtil.isExportFrom(n)) {
+            visitEs6ModuleName(n.getLastChild(), n);
+          }
+          return;
+
+        case VAR:
+          if (n.getFirstChild().matchesQualifiedName("goog")
+              && NodeUtil.isNamespaceDecl(n.getFirstChild())) {
+            provides.add("goog");
+          }
+          break;
+
+        case EXPR_RESULT:
+        case CONST:
+        case BLOCK:
+        case SCRIPT:
+        case NAME:
+        case DESTRUCTURING_LHS:
+          break;
+
+        default:
+          return;
       }
 
       for (Node child = n.getFirstChild();
            child != null; child = child.getNext()) {
         visitSubtree(child, n);
       }
+    }
+
+    void visitEs6ModuleName(Node n, Node parent) {
+      checkArgument(n.isString());
+      checkArgument(parent.isExport() || parent.isImport());
+
+      // TODO(blickly): Move this (and the duplicated logic in JsFileParser/Es6RewriteModules)
+      // into ModuleLoader.
+      String moduleName = n.getString();
+      if (moduleName.startsWith("goog:")) {
+        requires.add(moduleName.substring(5)); // cut off the "goog:" prefix
+        return;
+      }
+      ModulePath importedModule =
+          modulePath.resolveJsModule(
+              moduleName, modulePath.toString(), n.getLineno(), n.getCharno());
+
+      if (importedModule == null) {
+        importedModule = modulePath.resolveModuleAsPath(moduleName);
+      }
+
+      requires.add(importedModule.toModuleName());
     }
   }
 
@@ -394,10 +471,17 @@ public class CompilerInput implements SourceAst, DependencyInfo {
 
   ModulePath getPath() {
     if (modulePath == null) {
-      // Note: this method will not be called until Es6RewriteModules
-      // (and similar), after Compiler.moduleLoader is already set.
-      this.modulePath = compiler.getModuleLoader().resolve(getName());
+      ModuleLoader moduleLoader = compiler.getModuleLoader();
+      this.modulePath = moduleLoader.resolve(getName());
     }
     return modulePath;
+  }
+
+  /**
+   * Resets the compiler input for reuse in another compile. TODO(tdeegan): Consider clearing the
+   * JsAst here in the future.
+   */
+  public void reset() {
+    this.module = null;
   }
 }

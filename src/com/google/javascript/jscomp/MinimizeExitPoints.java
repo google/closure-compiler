@@ -40,7 +40,7 @@ class MinimizeExitPoints extends AbstractPeepholeOptimization {
 
   @VisibleForTesting
   final CompilerPass asCompilerPass() {
-    return new PeepholeOptimizationsPass(compiler, this);
+    return new PeepholeOptimizationsPass(compiler, this.getClass().getSimpleName(), this);
   }
 
   @Override
@@ -53,6 +53,7 @@ class MinimizeExitPoints extends AbstractPeepholeOptimization {
 
       case FOR:
       case FOR_IN:
+      case FOR_OF:
       case WHILE:
         tryMinimizeExits(NodeUtil.getLoopCodeBlock(n), Token.CONTINUE, null);
         break;

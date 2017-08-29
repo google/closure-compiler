@@ -105,7 +105,6 @@ public class DiagnosticGroups {
   static final String DIAGNOSTIC_GROUP_NAMES =
       "accessControls, "
           + "ambiguousFunctionDecl, "
-          + "checkEventfulObjectDisposal, "
           + "checkRegExp, "
           + "checkTypes, "
           + "checkVars, "
@@ -200,9 +199,6 @@ public class DiagnosticGroups {
           NewTypeInference.INVALID_CAST);
 
   @Deprecated
-  public static final DiagnosticGroup INFERRED_CONST_CHECKS =
-      DiagnosticGroups.registerDeprecatedGroup("inferredConstCheck");
-
   public static final DiagnosticGroup FILEOVERVIEW_JSDOC =
       DiagnosticGroups.registerDeprecatedGroup("fileoverviewTags");
 
@@ -389,12 +385,9 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("tooManyTypeParams",
           RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
 
+  @Deprecated
   public static final DiagnosticGroup CHECK_EVENTFUL_OBJECT_DISPOSAL =
-      DiagnosticGroups.registerGroup("checkEventfulObjectDisposal",
-          CheckEventfulObjectDisposal.EVENTFUL_OBJECT_NOT_DISPOSED,
-          CheckEventfulObjectDisposal.EVENTFUL_OBJECT_PURELY_LOCAL,
-          CheckEventfulObjectDisposal.OVERWRITE_PRIVATE_EVENTFUL_OBJECT,
-          CheckEventfulObjectDisposal.UNLISTEN_WITH_ANONBOUND);
+      DiagnosticGroups.registerDeprecatedGroup("checkEventfulObjectDisposal");
 
   public static final DiagnosticGroup OLD_REPORT_UNKNOWN_TYPES =
       DiagnosticGroups.registerGroup("oldReportUnknownTypes", // undocumented
@@ -729,8 +722,6 @@ public class DiagnosticGroups {
 
     DiagnosticGroups.registerGroup("duplicateZipContents",
         SourceFile.DUPLICATE_ZIP_CONTENTS);
-
-    DiagnosticGroups.registerDeprecatedGroup("unnecessaryCasts");
   }
 
   /**

@@ -21,12 +21,12 @@ import com.google.javascript.jscomp.parsing.parser.util.SourceRange;
 public class YieldExpressionTree extends ParseTree {
 
   public final ParseTree expression;
-  public final boolean isYieldFor;
+  public final boolean isYieldAll;
 
   public YieldExpressionTree(
-      SourceRange location, boolean isYieldFor, ParseTree expression) {
+      SourceRange location, boolean isYieldAll, ParseTree expression) {
     super(ParseTreeType.YIELD_EXPRESSION, location);
-    this.isYieldFor = isYieldFor;
+    this.isYieldAll = isYieldAll;
     this.expression = expression;
   }
 }

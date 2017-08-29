@@ -391,7 +391,11 @@ public final class SuggestedFix {
       // Most replacements don't need the semicolon in the new generated code - however, some
       // statements that are blocks or expressions will need the semicolon.
       boolean needsSemicolon =
-          parent != null && (parent.isExprResult() || parent.isNormalBlock() || parent.isScript());
+          parent != null
+              && (parent.isExprResult()
+                  || parent.isNormalBlock()
+                  || parent.isScript()
+                  || parent.isModuleBody());
       if (newCode.endsWith(";") && !needsSemicolon) {
         newCode = newCode.substring(0, newCode.length() - 1);
       }
@@ -603,11 +607,15 @@ public final class SuggestedFix {
 
     public Builder addLhsToGoogRequire(Match m, String namespace) {
       Node existingNode = findGoogRequireNode(m.getNode(), m.getMetadata(), namespace);
+      checkState(existingNode.isExprResult(), existingNode);
+      checkState(existingNode.getFirstChild().isCall(), existingNode.getFirstChild());
+
       String shortName = getShortNameForRequire(namespace);
-      insertBefore(existingNode, "const " + shortName + " = ");
+      Node newNode = IR.constNode(IR.name(shortName), existingNode.getFirstChild().cloneTree());
+      replace(existingNode, newNode, m.getMetadata().getCompiler());
       return this;
     }
-    
+
     /**
      * Adds a goog.require for the given namespace to the file if it does not
      * already exist.

@@ -46,7 +46,7 @@ public final class ChromeCodingConvention extends CodingConventions.Proxy {
   @Override
   public String getSingletonGetterClassName(Node callNode) {
     Node callArg = callNode.getFirstChild();
-    if (!callArg.matchesQualifiedName("cr.addSingletonGetter") || callNode.getChildCount() != 2) {
+    if (!callArg.matchesQualifiedName("cr.addSingletonGetter") || !callNode.hasTwoChildren()) {
       return super.getSingletonGetterClassName(callNode);
     }
     return callArg.getNext().getQualifiedName();

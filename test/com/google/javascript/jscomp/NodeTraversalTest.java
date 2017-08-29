@@ -25,7 +25,7 @@ import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractNodeTypePruningCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.FunctionCallback;
+import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -136,19 +136,41 @@ public final class NodeTraversalTest extends TestCase {
         "  var b",
         "}");
     Node tree = parse(compiler, code);
-    NodeTraversal.traverseEs6(compiler, tree,
+    NodeTraversal.traverseEs6(
+        compiler,
+        tree,
         new NodeTraversal.ScopedCallback() {
 
           @Override
           public void enterScope(NodeTraversal t) {
             Node root1 = t.getScopeRoot();
-            Node root2 = t.getScope().getRootNode();
+            Scope scope2 = t.getScope();
+            Node root2 = scope2.getRootNode();
             assertNode(root2).isEqualTo(root1);
           }
 
           @Override
-          public void exitScope(NodeTraversal t) {
+          public void exitScope(NodeTraversal t) {}
+
+          @Override
+          public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+            return true;
           }
+
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {}
+        });
+  }
+
+  public void testGetHoistScopeRoot() {
+    Compiler compiler = new Compiler();
+    String code = LINE_JOINER.join(
+        "function foo() {",
+        "  if (true) { var XXX; }",
+        "}");
+    Node tree = parse(compiler, code);
+    NodeTraversal.traverseEs6(compiler, tree,
+        new NodeTraversal.Callback() {
 
           @Override
           public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -157,6 +179,15 @@ public final class NodeTraversalTest extends TestCase {
 
           @Override
           public void visit(NodeTraversal t, Node n, Node parent) {
+            if (n.isName() && n.getString().equals("XXX")) {
+              Node root = t.getClosestHoistScopeRoot();
+              assertThat(NodeUtil.isFunctionBlock(root)).isTrue();
+
+              t.getScope();  // force scope creation
+
+              root = t.getClosestHoistScopeRoot();
+              assertThat(NodeUtil.isFunctionBlock(root)).isTrue();
+            }
           }
         }
     );
@@ -623,7 +654,7 @@ public final class NodeTraversalTest extends TestCase {
   }
 
   private static final class EnterFunctionAccumulator extends AbstractPostOrderCallback
-      implements FunctionCallback {
+      implements ChangeScopeRootCallback {
 
     List<Node> enteredFunctions = new ArrayList<>();
 
@@ -631,8 +662,8 @@ public final class NodeTraversalTest extends TestCase {
     public void visit(NodeTraversal t, Node n, Node parent) {}
 
     @Override
-    public void enterFunction(AbstractCompiler compiler, Node fnRoot) {
-      enteredFunctions.add(fnRoot);
+    public void enterChangeScopeRoot(AbstractCompiler compiler, Node root) {
+      enteredFunctions.add(root);
     }
   }
 

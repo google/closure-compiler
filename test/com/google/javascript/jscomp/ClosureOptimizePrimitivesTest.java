@@ -18,6 +18,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.ClosureOptimizePrimitives.DUPLICATE_SET_MEMBER;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+
 /**
  * Tests for {@link ClosureOptimizePrimitives}.
  *
@@ -26,13 +28,16 @@ import static com.google.javascript.jscomp.ClosureOptimizePrimitives.DUPLICATE_S
 public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
 
   private boolean propertyRenamingEnabled = true;
+  private boolean canUseEs6Syntax = true;
 
   @Override protected CompilerPass getProcessor(final Compiler compiler) {
-    return new ClosureOptimizePrimitives(compiler, propertyRenamingEnabled);
+    return new ClosureOptimizePrimitives(compiler, propertyRenamingEnabled, canUseEs6Syntax);
   }
 
-  public void testObjectCreateNonConstKey() {
-    testSame("goog.object.create('a',1,2,3,foo,bar);");
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
   public void testObjectCreateOddParams() {
@@ -61,8 +66,33 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
     test("goog.object.create('a',2).toString()", "({'a':2}).toString()");
   }
 
-  public void testObjectCreateSetNonConstKey() {
-    testSame("goog.object.createSet('a',1,2,3,foo,bar);");
+  public void testObjectCreateNonConstKey1() {
+    test("var a = goog.object.create('a', 1, 2, 3, foo, bar);",
+         "var a = {'a': 1, 2: 3, [foo]: bar};");
+  }
+
+  public void testObjectCreateNonConstKey2() {
+    test("var a = goog.object.create('a' + 'b', 0);", "var a = {['a' + 'b']: 0};");
+  }
+
+  public void testObjectCreateNonConstKey3() {
+    test("var a = goog$object$create(i++,goog$object$create(foo(), 'd'))",
+         "var a = {[i++]: {[foo()]: 'd'}};");
+  }
+
+  public void testObjectCreateNonConstKey4() {
+    test("alert(goog.object.create(a = 1, 2).toString())",
+        "alert({[a = 1]: 2}.toString())");
+  }
+
+  public void testObjectCreateNonConstKey5() {
+    test("goog.object.create(function foo() {}, 2).toString()",
+        "({[function foo() {}]: 2}).toString()");
+  }
+
+  public void testObjectCreateNonConstKeyNotEs6() {
+    canUseEs6Syntax = false;
+    testSame("var a = goog.object.create(foo, bar)");
   }
 
   public void testObjectCreateSet1() {
@@ -88,6 +118,26 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
     testWarning("goog.object.createSet(4, '4')", DUPLICATE_SET_MEMBER);
   }
 
+  public void testObjectCreateSetNonConstKey1() {
+    test("var a = goog.object.createSet(foo, bar);",
+         "var a = {[foo]: true, [bar]: true};");
+  }
+
+  public void testObjectCreateSetNonConstKey2() {
+    test("alert(goog$object$createSet(a = 1, 2).toString())",
+        "alert({[a = 1]: true, 2: true}.toString())");
+  }
+
+  public void testObjectCreateSetNonConstKey3() {
+    test("goog.object.createSet(() => {}).toString()",
+        "({[() => {}]: true}).toString()");
+  }
+
+  public void testObjectCreateSetNonConstKeyNotEs6() {
+    canUseEs6Syntax = false;
+    testSame("var a = goog.object.createSet(foo, bar);");
+  }
+
   public void testDomTagName() {
     testSame("goog.dom.TagName.A = 'A';");
     testSame("goog.dom.TagName.prototype.toString = function() { return 'a'; };");
@@ -106,5 +156,78 @@ public final class ClosureOptimizePrimitivesTest extends CompilerTestCase {
   public void testPropertyReflectionAdvanced() {
     test("goog.reflect.objectProperty('push', [])", "JSCompiler_renameProperty('push', [])");
     testSame("JSCompiler_renameProperty('push', [])");
+  }
+
+  public void testEs6Compatibility() {
+    // Arrow
+    test("var f = () => goog.object.create(1, 2);", "var f = () => ({1: 2});");
+
+    // Class
+    test(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = goog.object.create(1, 2);",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = {1: 2};",
+            "  }",
+            "}"));
+
+    // Shorthand methods
+    test(
+        LINE_JOINER.join(
+            "var obj = {",
+            "  method() {",
+            "    return goog.object.create('a', 2);",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "var obj = {",
+            "  method() {",
+            "    return {'a': 2};",
+            "  }",
+            "}"));
+
+    // Computed Prop
+    test(
+        LINE_JOINER.join(
+            "var obj = {",
+            "  [goog.object.create(1, 2)]: 42",
+            "}"),
+        LINE_JOINER.join(
+            "var obj = {",
+            "  [{1: 2}]: 42",
+            "}"));
+
+    // Template Literals
+    test(
+        LINE_JOINER.join(
+            "function tag(strings) {",
+            "  return goog.object.create('a', 2);",
+            "}",
+            "tag`template`"),
+        LINE_JOINER.join(
+            "function tag(strings) {",
+            "  return {'a': 2};",
+            "}",
+            "tag`template`"));
+
+    // Destructuring
+    test("var {a: x} = goog.object.create('a', 2);", "var {a: x} = {'a': 2};");
+
+    // Async
+    test(
+        LINE_JOINER.join(
+            "async function foo() {",
+            "   return await goog.object.create('a', 2);",
+            "}"),
+        LINE_JOINER.join(
+            "async function foo() {",
+            "   return await {'a': 2};",
+            "}"));
   }
 }

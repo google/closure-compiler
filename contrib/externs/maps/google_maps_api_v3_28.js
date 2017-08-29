@@ -636,7 +636,7 @@ google.maps.Data.LinearRing.prototype.getType = function() {};
 
 /**
  * @extends {google.maps.MouseEvent}
- * @constructor
+ * @record
  */
 google.maps.Data.MouseEvent = function() {};
 
@@ -2206,7 +2206,7 @@ google.maps.Icon.prototype.url;
 
 /**
  * @extends {google.maps.MouseEvent}
- * @constructor
+ * @record
  */
 google.maps.IconMouseEvent = function() {};
 
@@ -2957,7 +2957,7 @@ google.maps.MVCObject.prototype.notify = function(key) {};
 
 /**
  * @param {string} key
- * @param {*} value
+ * @param {?} value
  * @return {undefined}
  */
 google.maps.MVCObject.prototype.set = function(key, value) {};

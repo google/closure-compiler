@@ -127,6 +127,10 @@ public final class StripCodeTest extends CompilerTestCase {
          "a.b.c=function(){}");
   }
 
+  public void testDeletedScopesAreReported() {
+    test("var nodeLogger = function () {};", "");
+  }
+
   public void testLoggerDefinedInObjectLiteral1() {
     test("a.b.c = {" +
          "  x: 0," +

@@ -58,11 +58,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
           "Suspicious re-assignment of \"exports\" variable."
               + " Did you actually intend to export something?");
 
-  public static final DiagnosticType UNSUPPORTED_GETTER_SETTER_METHOD =
-      DiagnosticType.warning(
-          "JSC_UNSUPPORTED_GETTER_SETTER_METHOD",
-          "Getter and setter methods are unsupported.");
-
   private final Compiler compiler;
   private final boolean reportDependencies;
 
@@ -764,7 +759,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           // order after hoisting.
           for (int i = functionsToHoist.size() - 1; i >= 0; i--) {
             Node functionExpr = functionsToHoist.get(i);
-            Node scopeRoot = t.getClosestHoistScope().getRootNode();
+            Node scopeRoot = t.getClosestHoistScopeRoot();
             Node insertionPoint = scopeRoot.getFirstChild();
             if (insertionPoint == null
                 || !(insertionPoint.isVar()
@@ -797,8 +792,28 @@ public final class ProcessCommonJSModules implements CompilerPass {
           }
           break;
 
+        case VAR:
+        case LET:
+        case CONST:
+          // Multiple declarations need split apart so that they can be refactored into
+          // property assignments or removed altogether.
+          if (n.hasMoreThanOneChild() && !NodeUtil.isAnyFor(parent)) {
+            List<Node> vars = splitMultipleDeclarations(n);
+            t.reportCodeChange();
+            for (Node var : vars) {
+              visit(t, var.getFirstChild(), var);
+            }
+          }
+          break;
+
         case NAME:
           {
+            // If this is a name declaration with multiple names, it will be split apart when
+            // the parent is visited and then revisit the children.
+            if (NodeUtil.isNameDeclaration(n.getParent()) && n.getParent().hasMoreThanOneChild()) {
+              break;
+            }
+
             String qName = n.getQualifiedName();
             if (qName == null) {
               break;
@@ -941,8 +956,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
           parent.getParent().replaceWith(var);
         } else if (root.getNext() != null && root.getNext().isName() && rValueVar.isGlobal()) {
           // This is a where a module export assignment is used in a complex expression.
+          // Before: `SOME_VALUE !== undefined && module.exports = SOME_VALUE`
+          // After: `SOME_VALUE !== undefined && module$name`
           root.getParent().replaceWith(updatedExport);
         } else {
+          // Other references to "module.exports" are just replaced with the module name.
           export.replaceWith(updatedExport);
         }
       } else {
@@ -979,9 +997,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
         Node lhs;
         if (key.isQuotedString()) {
           lhs = IR.getelem(export.cloneTree(), IR.string(key.getString()));
-        } else if (key.isGetterDef() || key.isSetterDef()) {
-          compiler.report(t.makeError(key, UNSUPPORTED_GETTER_SETTER_METHOD));
-          return;
         } else {
           lhs = IR.getprop(export.cloneTree(), IR.string(key.getString()));
         }
@@ -997,13 +1012,20 @@ public final class ProcessCommonJSModules implements CompilerPass {
           value = key.getFirstChild().detach();
         }
 
-        Node expr = IR.exprResult(IR.assign(lhs, value)).useSourceInfoIfMissingFromForTree(key);
-
-        insertionParent.addChildAfter(expr, insertionRef);
-        visitExport(t, lhs.getFirstChild());
+        Node expr = null;
+        if (!key.isGetterDef()) {
+          expr = IR.exprResult(IR.assign(lhs, value)).useSourceInfoIfMissingFromForTree(key);
+          insertionParent.addChildAfter(expr, insertionRef);
+          visitExport(t, lhs.getFirstChild());
+        } else {
+          Node getter = key.detach();
+          String moduleName = t.getInput().getPath().toModuleName();
+          Node moduleObj = t.getScope().getVar(moduleName).getNode().getFirstChild();
+          moduleObj.addChildToBack(getter);
+        }
 
         // Export statements can be removed in visitExport
-        if (expr.getParent() != null) {
+        if (expr != null && expr.getParent() != null) {
           insertionRef = expr;
         }
 
@@ -1192,6 +1214,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
             }
           } else if (newNameDeclaration != null) {
             // Variable is already defined. Convert this to an assignment.
+            // If the variable declaration has no initialization, we simply
+            // remove the node. This can occur when the variable which is exported
+            // is declared in an outer scope but assigned in an inner one.
             if (!nameRef.hasChildren()) {
               parent.detachFromParent();
               break;
@@ -1316,8 +1341,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
             String exportPrefix;
             if (exportBaseQName.startsWith(MODULE)) {
               exportPrefix = MODULE + "." + EXPORTS;
-            } else if (compiler.getOptions().moduleResolutionMode
-                == ModuleLoader.ResolutionMode.WEBPACK) {
+            } else if (compiler.getOptions().moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK
+                && exportBaseQName.startsWith(WEBPACK_EXPORTS)) {
               exportPrefix = WEBPACK_EXPORTS;
             } else {
               exportPrefix = EXPORTS;
@@ -1508,26 +1533,17 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
     }
 
-    private void splitMultipleDeclarations(Node var) {
-      checkState(var.isVar() || var.isLet() || var.isConst());
+    private List<Node> splitMultipleDeclarations(Node var) {
+      checkState(NodeUtil.isNameDeclaration(var));
+      List<Node> vars = new ArrayList<>();
       while (var.getSecondChild() != null) {
-        Node newVar;
-        Node nameToSplit = var.removeFirstChild();
-        switch (var.getToken()) {
-          default:
-          case VAR:
-            newVar = IR.var(nameToSplit);
-            break;
-          case LET:
-            newVar = IR.var(nameToSplit);
-            break;
-          case CONST:
-            newVar = IR.var(nameToSplit);
-            break;
-        }
+        Node newVar = new Node(var.getToken(), var.removeFirstChild());
         newVar.useSourceInfoFrom(var);
         var.getParent().addChildBefore(newVar, var);
+        vars.add(newVar);
       }
+      vars.add(var);
+      return vars;
     }
   }
 }

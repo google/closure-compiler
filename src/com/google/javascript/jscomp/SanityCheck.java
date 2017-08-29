@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
 
 import com.google.javascript.rhino.Node;
-
 import java.util.Set;
 
 /**
@@ -42,8 +40,9 @@ class SanityCheck implements CompilerPass {
       "Actual:\n{1}");
 
   static final DiagnosticType EXTERN_PROPERTIES_CHANGED =
-      DiagnosticType.error("JSC_EXTERN_PROPERTIES_CHANGED",
-          "Internal compiler error. Extern properties modified.");
+      DiagnosticType.error(
+          "JSC_EXTERN_PROPERTIES_CHANGED",
+          "Internal compiler error. Extern properties modified from:\n{0}\nto:\n{1}");
 
   private final AbstractCompiler compiler;
   private final AstValidator astValidator;
@@ -131,8 +130,7 @@ class SanityCheck implements CompilerPass {
 
       if (compiler.getLifeCycleStage().isNormalizedUnobfuscated()) {
         boolean checkUserDeclarations = true;
-        CompilerPass pass = new Normalize.VerifyConstants(
-            compiler, checkUserDeclarations);
+        CompilerPass pass = new Normalize.VerifyConstants(compiler, checkUserDeclarations);
         pass.process(externs, root);
       }
     }
@@ -148,10 +146,18 @@ class SanityCheck implements CompilerPass {
     }
     (new GatherExternProperties(compiler)).process(externs, null);
     if (!compiler.getExternProperties().equals(externProperties)) {
-      compiler.report(JSError.make(EXTERN_PROPERTIES_CHANGED));
+      compiler.report(
+          JSError.make(
+              EXTERN_PROPERTIES_CHANGED,
+              externProperties.toString(),
+              compiler.getExternProperties().toString()));
       // Throw an exception, so that the infrastructure will tell us
       // which pass violated the sanity check.
-      throw new IllegalStateException("Sanity Check failed");
+      throw new IllegalStateException(
+          "Sanity Check failed: Extern properties changed from:\n"
+              + externProperties
+              + "\nto:\n"
+              + compiler.getExternProperties());
     }
   }
 }

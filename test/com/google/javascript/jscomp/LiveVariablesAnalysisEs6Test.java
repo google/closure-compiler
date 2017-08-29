@@ -223,14 +223,20 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
     // escaped set.
     assertEscaped("arguments[0]", "param1");
     assertEscaped("arguments[0]", "param2");
+    assertEscaped("arguments[0]", "param3");
     assertEscaped("var args = arguments", "param1");
     assertEscaped("var args = arguments", "param2");
+    assertEscaped("var args = arguments", "param3");
     assertNotEscaped("arguments = []", "param1");
     assertNotEscaped("arguments = []", "param2");
+    assertNotEscaped("arguments = []", "param3");
     assertEscaped("arguments[0] = 1", "param1");
     assertEscaped("arguments[0] = 1", "param2");
+    assertEscaped("arguments[0] = 1", "param3");
     assertEscaped("arguments[arguments[0]] = 1", "param1");
     assertEscaped("arguments[arguments[0]] = 1", "param2");
+    assertEscaped("arguments[arguments[0]] = 1", "param3");
+
   }
 
   public void testTryCatchFinally() {
@@ -284,7 +290,7 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
   // ES6 does not require separate handling for catch because the catch block is already recognized
   // by the scope creator
   public void testNotEscapedWithCatch() {
-    assertNotEscaped("try{} catch(e){}", "e");
+    assertEscaped("try{} catch(e){}", "e");
   }
 
   public void testEscapedLiveness() {
@@ -318,12 +324,38 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
     assertNotLiveAfterX("X:a();let a=1;a()", "a");
   }
 
+  public void testLetInnerBlock() {
+    assertNotLiveAfterX("let x; { X:x = 2; let y; }", "x");
+  }
+
   public void testSimpleConst() {
     // a is defined after X and not used
     assertLiveBeforeX("const a = 4; X:a;", "a");
     assertNotLiveBeforeX("X:let a = 1;", "a");
     assertNotLiveBeforeX("X:const a = 1;", "a");
     assertNotLiveAfterX("X:const a = 1;", "a");
+  }
+
+  public void testDestructuring() {
+    assertLiveBeforeX("var [a, b] = [1, 2]; X:a;", "a");
+    assertNotLiveBeforeX("X: var [...a] = f();", "a");
+    assertNotEscaped("var [a, ...b] = [1, 2];", "b");
+    assertNotEscaped("var [a, ...b] = [1, 2];", "a");
+    assertNotEscaped("var [a, ,b] = [1, 2, 3];", "a");
+    assertNotEscaped("var [a, ,b] = [1, 2, 3];", "b");
+
+
+    assertLiveBeforeX("var {a: x, b: y} = g(); X:x", "x");
+    assertNotLiveBeforeX("X: var {a: x, b: y} = g();", "y");
+    assertNotEscaped("var {a: x, b: y} = g()", "x");
+    assertNotEscaped("var {a: x, b: y} = g()", "y");
+    assertNotEscaped("var {a: x = 3, b: y} = g();", "x");
+  }
+
+  public void testComplicatedDeclaration() {
+    assertNotEscaped("var a = 1, {b: b} = f(), c = g()", "a");
+    assertNotEscaped("var a = 1, {b: b} = f(), c = g()", "b");
+    assertNotEscaped("var a = 1, {b: b} = f(), c = g()", "c");
   }
 
   private void assertLiveBeforeX(String src, String var) {
@@ -404,7 +436,7 @@ public final class LiveVariablesAnalysisEs6Test extends TestCase {
     compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
 
     // Set up test case
-    src = "function _FUNCTION(param1, param2){" + src + "}";
+    src = "function _FUNCTION(param1, param2 = 1, ...param3){" + src + "}";
     Node n = compiler.parseTestCode(src).removeFirstChild();
     checkState(n.isFunction(), n);
     Node script = new Node(Token.SCRIPT, n);

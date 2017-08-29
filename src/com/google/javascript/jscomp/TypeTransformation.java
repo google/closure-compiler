@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -58,10 +61,11 @@ class TypeTransformation {
           "Expected templatized type in {0} found {1}");
   static final DiagnosticType INDEX_OUTOFBOUNDS =
       DiagnosticType.warning("INDEX_OUTOFBOUNDS",
-      "Index out of bounds in templateTypeOf: {0} >= {1}");
+      "Index out of bounds in templateTypeOf: expected a number less than {0}, found {1}");
   static final DiagnosticType DUPLICATE_VARIABLE =
       DiagnosticType.warning("DUPLICATE_VARIABLE",
           "The variable {0} is already defined");
+  // This warning is never exercised.
   static final DiagnosticType UNKNOWN_NAMEVAR =
       DiagnosticType.warning("UNKNOWN_NAMEVAR",
           "Reference to an unknown name variable {0}");
@@ -107,7 +111,7 @@ class TypeTransformation {
   @SuppressWarnings("unchecked")
   TypeTransformation(AbstractCompiler compiler, TypeIEnv<? extends TypeI> typeEnv) {
     this.compiler = compiler;
-    this.registry = compiler.getTypeRegistry();
+    this.registry = compiler.getTypeIRegistry();
     this.typeEnv = (TypeIEnv<TypeI>) typeEnv;
   }
 
@@ -128,23 +132,26 @@ class TypeTransformation {
   }
 
   private TypeI getType(String typeName) {
-    // Resolve the name and get the corresponding type
-    TypeI type = typeEnv.getType(typeName);
-    JSDocInfo jsdoc = typeEnv.getJsdocOfTypeDeclaration(typeName);
+    TypeI type = registry.getType(typeName);
     if (type != null) {
-      // Case constructor, get the instance type
+      return type;
+    }
+    type = typeEnv.getNamespaceOrTypedefType(typeName);
+    if (type != null) {
       if (type.isConstructor() || type.isInterface()) {
-        return type.toMaybeFunctionType().getInstanceType();
+        return type.toMaybeFunctionType().getInstanceType().getRawType();
       }
-      // Case enum
       if (type.isEnumElement()) {
         return type.getEnumeratedTypeOfEnumElement();
       }
-    } else if (jsdoc != null && jsdoc.hasTypedefType()) {
+      return type;
+    }
+    JSDocInfo jsdoc = typeEnv.getJsdocOfTypeDeclaration(typeName);
+    if (jsdoc != null && jsdoc.hasTypedefType()) {
+      // This branch is only live when we are running the old type checker
       return this.registry.evaluateTypeExpression(jsdoc.getTypedefType(), typeEnv);
     }
-    // Otherwise handle native types
-    return registry.getType(typeName);
+    return null;
   }
 
   private TypeI getUnknownType() {
@@ -192,11 +199,6 @@ class TypeTransformation {
     return n.getSecondChild().getChildAtIndex(i).getString();
   }
 
-  private Node getFunctionBody(Node n) {
-    Preconditions.checkArgument(n.isFunction(), "Expected a function node, found %s", n);
-    return n.getChildAtIndex(2);
-  }
-
   private String getCallName(Node n) {
     Preconditions.checkArgument(n.isCall(), "Expected a call node, found %s", n);
     return n.getFirstChild().getString();
@@ -212,6 +214,8 @@ class TypeTransformation {
     return n.getChildCount() - 1;
   }
 
+  // TODO(dimvar): rewrite the uses of this method to use siblings() and delete it.
+  // Copying is unnecessarily inefficient.
   private ImmutableList<Node> getCallParams(Node n) {
     Preconditions.checkArgument(n.isCall(), "Expected a call node, found %s", n);
     ImmutableList.Builder<Node> builder = new ImmutableList.Builder<>();
@@ -233,36 +237,29 @@ class TypeTransformation {
     return n.getFirstChild().getString();
   }
 
-  /** Evaluates the type transformation expression and returns the resulting
-   * type.
+  /** Evaluates the type transformation expression and returns the resulting type.
    *
-   * @param ttlAst The node representing the type transformation
-   * expression
-   * @param typeVars The environment containing the information about
-   * the type variables
+   * @param ttlAst The node representing the type transformation expression
+   * @param typeVars The environment containing the information about the type variables
    * @return TypeI The resulting type after the transformation
    */
   TypeI eval(Node ttlAst, ImmutableMap<String, TypeI> typeVars) {
     return eval(ttlAst, typeVars, ImmutableMap.<String, String>of());
   }
 
-  /** Evaluates the type transformation expression and returns the resulting
-   * type.
+  /** Evaluates the type transformation expression and returns the resulting type.
    *
-   * @param ttlAst The node representing the type transformation
-   * expression
-   * @param typeVars The environment containing the information about
-   * the type variables
-   * @param nameVars The environment containing the information about
-   * the name variables
+   * @param ttlAst The node representing the type transformation expression
+   * @param typeVars The environment containing the information about the type variables
+   * @param nameVars The environment containing the information about the name variables
    * @return TypeI The resulting type after the transformation
    */
   @SuppressWarnings("unchecked")
+  @VisibleForTesting
   TypeI eval(Node ttlAst, ImmutableMap<String, TypeI> typeVars,
       ImmutableMap<String, String> nameVars) {
-    return evalInternal(
-        ttlAst,
-        new NameResolver(typeVars, nameVars));
+    TypeI result = evalInternal(ttlAst, new NameResolver(typeVars, nameVars));
+    return result.isBottom() ? getUnknownType() : result;
   }
 
   private TypeI evalInternal(Node ttlAst, NameResolver nameResolver) {
@@ -349,7 +346,7 @@ class TypeTransformation {
   private TypeI evalTemplatizedType(Node ttlAst, NameResolver nameResolver) {
     ImmutableList<Node> params = getCallParams(ttlAst);
     TypeI firstParam = evalInternal(params.get(0), nameResolver);
-    if (!firstParam.hasUninstantiatedTypeVariables()) {
+    if (firstParam.isFullyInstantiated()) {
       reportWarning(ttlAst, BASETYPE_INVALID, firstParam.toString());
       return getUnknownType();
     }
@@ -433,7 +430,8 @@ class TypeTransformation {
       case ISCTOR:
         return type.isConstructor();
       case ISTEMPLATIZED:
-        return type.isObjectType() && type.toMaybeObjectType().isGenericObjectType();
+        return type.isObjectType() && type.toMaybeObjectType().isGenericObjectType()
+            && type.isPartiallyInstantiated();
       case ISRECORD:
         return type.isRecordType();
       case ISUNKNOWN:
@@ -532,7 +530,7 @@ class TypeTransformation {
       return getUnknownType();
     }
 
-    Node mapFunctionBody = getFunctionBody(mapFunction);
+    Node mapFunctionBody = NodeUtil.getFunctionBody(mapFunction);
     TypeI unionType = evalInternal(unionParam, nameResolver);
     // If the first parameter does not correspond to a union type then
     // consider it as a union with a single type and evaluate
@@ -582,7 +580,7 @@ class TypeTransformation {
     ImmutableList<? extends TypeI> templateTypes = type.toMaybeObjectType().getTemplateTypes();
     if (index >= templateTypes.size()) {
       reportWarning(ttlAst, INDEX_OUTOFBOUNDS,
-          Integer.toString(index), Integer.toString(templateTypes.size()));
+          Integer.toString(templateTypes.size()), Integer.toString(index));
       return getUnknownType();
     }
     return templateTypes.get(index);
@@ -686,8 +684,9 @@ class TypeTransformation {
   }
 
   private TypeI evalMaprecord(Node ttlAst, NameResolver nameResolver) {
-    ImmutableList<Node> params = getCallParams(ttlAst);
-    TypeI type = evalInternal(params.get(0), nameResolver);
+    Node recordNode = ttlAst.getSecondChild();
+    Node mapFunction = ttlAst.getChildAtIndex(2);
+    TypeI type = evalInternal(recordNode, nameResolver);
 
     // If it is an empty record type (Object) then return
     if (type.isEquivalentTo(getObjectType())) {
@@ -697,13 +696,12 @@ class TypeTransformation {
     // The parameter must be a valid record type
     if (!type.isRecordType()) {
       // TODO(lpino): Decide how to handle non-record types
-      reportWarning(params.get(0), RECTYPE_INVALID, type.toString());
+      reportWarning(recordNode, RECTYPE_INVALID, type.toString());
       return getUnknownType();
     }
 
     ObjectTypeI objtype = type.toMaybeObjectType();
     // Fetch the information of the map function
-    Node mapFunction = params.get(1);
     String paramKey = getFunctionParameter(mapFunction, 0);
     String paramValue = getFunctionParameter(mapFunction, 1);
 
@@ -718,7 +716,7 @@ class TypeTransformation {
     }
 
     // Compute the new properties using the map function
-    Node mapFnBody = getFunctionBody(mapFunction);
+    Node mapFnBody = NodeUtil.getFunctionBody(mapFunction);
     Map<String, TypeI> newProps = new LinkedHashMap<>();
     for (String propName : objtype.getOwnPropertyNames()) {
       // The value of the current property
@@ -752,8 +750,7 @@ class TypeTransformation {
       ObjectTypeI bodyAsObj = body.toMaybeObjectType();
       for (String newPropName : bodyAsObj.getOwnPropertyNames()) {
         TypeI newPropValue = bodyAsObj.getPropertyType(newPropName);
-        // If the key already exists then we have to mix it with the current
-        // property value
+        // If the key already exists then we have to mix it with the current property value
         putNewPropInPropertyMap(newProps, newPropName, newPropValue);
       }
     }
@@ -762,7 +759,7 @@ class TypeTransformation {
 
   private TypeI evalTypeOfVar(Node ttlAst) {
     String name = getCallArgument(ttlAst, 0).getString();
-    TypeI type = typeEnv.getType(name);
+    TypeI type = typeEnv.getNamespaceOrTypedefType(name);
     if (type == null) {
       reportWarning(ttlAst, VAR_UNDEFINED, name);
       return getUnknownType();
@@ -781,7 +778,7 @@ class TypeTransformation {
 
   private TypeI evalNativeTypeExpr(Node ttlAst) {
     JSTypeExpression expr = new JSTypeExpression(getCallArgument(ttlAst, 0), "");
-    return this.registry.evaluateTypeExpression(expr, typeEnv);
+    return this.registry.evaluateTypeExpression(expr, this.typeEnv);
   }
 
   private TypeI evalPrintType(Node ttlAst, NameResolver nameResolver) {
@@ -798,7 +795,8 @@ class TypeTransformation {
       reportWarning(ttlAst, PROPTYPE_INVALID, type.toString());
       return getUnknownType();
     }
-    return objType.getPropertyType(getCallArgument(ttlAst, 0).getString());
+    TypeI propType = objType.getPropertyType(getCallArgument(ttlAst, 0).getString());
+    return firstNonNull(propType, getUnknownType());
   }
 
 }

@@ -84,17 +84,6 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     noInline("var x = 1; x--;");
   }
 
-  public void testDoNotInlineAssignmentOp() {
-    disableNormalize();
-    noInline("var x = 1; x += 1;");
-    noInline("var x = 1; x -= 1;");
-  }
-
-  public void testDoNotInlineIntoLhsOfAssign() {
-    disableNormalize();
-    noInline("var x = 1; x += 3;");
-  }
-
   public void testMultiUse() {
     noInline("var x; x = 1; print(x); print (x);");
   }

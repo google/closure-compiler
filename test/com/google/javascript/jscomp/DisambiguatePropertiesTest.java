@@ -15,8 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import com.google.common.collect.Multimap;
 import com.google.javascript.rhino.Node;
 import java.util.Collection;
@@ -33,7 +31,7 @@ import java.util.TreeSet;
 
 public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   private DisambiguateProperties lastPass;
-  private static String renameFunctionDefinition =
+  private static final String RENAME_FUNCTION_DEFINITION =
       "/** @const */ var goog = {};\n"
           + "/** @const */ goog.reflect = {};\n"
           + "/** @return {string} */\n"
@@ -84,7 +82,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSets(js, js, "{a=[[Foo.prototype]]}");
 
     js =
-        renameFunctionDefinition
+        RENAME_FUNCTION_DEFINITION
             + "/** @constructor */ function Foo() {}\n"
             + "Foo.prototype.a = 0;\n"
             + "/** @type {Foo} */\n"
@@ -104,7 +102,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSets(js, js, expected);
 
     js =
-        renameFunctionDefinition
+        RENAME_FUNCTION_DEFINITION
             + "/** @constructor */ function Foo() {}\n"
             + "Foo.prototype = {a: 0};\n"
             + "/** @type {Foo} */\n"
@@ -125,7 +123,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSets(js, js, expected);
 
     js =
-        renameFunctionDefinition
+        RENAME_FUNCTION_DEFINITION
             + "/** @constructor */ function Foo() {}\n"
             + "Foo.prototype = { get a() {return  0},"
             + "                  set a(b) {} };\n"
@@ -2275,42 +2273,44 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testErrorOnProtectedProperty() {
-    testError("function addSingletonGetter(foo) { foo.foobar = 'a'; };",
-         DisambiguateProperties.Warnings.INVALIDATION);
-    assertThat(getLastCompiler().getErrors()[0].toString()).contains("foobar");
+    test(
+        srcs("function addSingletonGetter(foo) { foo.foobar = 'a'; };"),
+        error(DisambiguateProperties.Warnings.INVALIDATION).withMessageContaining("foobar"));
   }
 
   public void testMismatchForbiddenInvalidation() {
-    testError(
-        "/** @constructor */ function F() {}"
-        + "/** @type {number} */ F.prototype.foobar = 3;"
-        + "/** @return {number} */ function g() { return new F(); }",
-        DisambiguateProperties.Warnings.INVALIDATION);
-    assertThat(getLastCompiler().getErrors()[0].toString()).contains("Consider fixing errors");
+    test(
+        srcs(lines(
+            "/** @constructor */ function F() {}",
+            "/** @type {number} */ F.prototype.foobar = 3;",
+            "/** @return {number} */ function g() { return new F(); }")),
+        error(DisambiguateProperties.Warnings.INVALIDATION)
+            .withMessageContaining("Consider fixing errors"));
   }
 
   public void testUnionTypeInvalidationError() {
-    String externs = ""
-        + "/** @constructor */ function Baz() {}"
-        + "Baz.prototype.foobar";
-    String js = ""
-        + "/** @constructor */ function Ind() {this.foobar=0}\n"
-        + "/** @constructor */ function Foo() {}\n"
-        + "Foo.prototype.foobar = 0;\n"
-        + "/** @constructor */ function Bar() {}\n"
-        + "Bar.prototype.foobar = 0;\n"
-        + "/** @type {Foo|Bar} */\n"
-        + "var F = new Foo;\n"
-        + "F.foobar = 1\n;"
-        + "F = new Bar;\n"
-        + "/** @type {Baz} */\n"
-        + "var Z = new Baz;\n"
-        + "Z.foobar = 1\n;";
+    String externs = lines(
+        "/** @constructor */ function Baz() {}",
+        "Baz.prototype.foobar");
+    String js = lines(
+        "/** @constructor */ function Ind() {this.foobar=0}",
+        "/** @constructor */ function Foo() {}",
+        "Foo.prototype.foobar = 0;",
+        "/** @constructor */ function Bar() {}",
+        "Bar.prototype.foobar = 0;",
+        "/** @type {Foo|Bar} */",
+        "var F = new Foo;",
+        "F.foobar = 1;",
+        "F = new Bar;",
+        "/** @type {Baz} */",
+        "var Z = new Baz;",
+        "Z.foobar = 1;\n");
 
-    testError(
-        DEFAULT_EXTERNS + externs, js,
-        DisambiguateProperties.Warnings.INVALIDATION_ON_TYPE);
-    assertThat(getLastCompiler().getErrors()[0].toString()).contains("foobar");
+    test(
+        externs(DEFAULT_EXTERNS + externs),
+        srcs(js),
+        error(DisambiguateProperties.Warnings.INVALIDATION_ON_TYPE)
+            .withMessageContaining("foobar"));
   }
 
   public void testDontCrashOnNonConstructorsWithPrototype() {
@@ -2321,20 +2321,34 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     test(DEFAULT_EXTERNS + externs, "" , "");
   }
 
-  private void testSets(String js, String expected, String fieldTypes) {
-    test(js, expected);
-    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+  private void testSets(String js, String expected, final String fieldTypes) {
+    test(srcs(js), expected(expected), new Postcondition() {
+      @Override public void verify(Compiler unused) {
+        assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+      }
+    });
   }
 
-  private void testSets(String externs, String js, String expected, String fieldTypes) {
-    test(DEFAULT_EXTERNS + externs, js, expected);
-    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+  private void testSets(String externs, String js, String expected, final String fieldTypes) {
+    test(externs(DEFAULT_EXTERNS + externs), srcs(js), expected(expected), new Postcondition() {
+      @Override public void verify(Compiler unused) {
+        assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+      }
+    });
   }
 
   private void testSets(String externs, String js, String expected,
-       String fieldTypes, DiagnosticType warning, String description) {
-    test(DEFAULT_EXTERNS + externs, js, expected, warning(warning, description));
-    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+       final String fieldTypes, DiagnosticType warning, String description) {
+    test(
+        externs(DEFAULT_EXTERNS + externs),
+        srcs(js),
+        expected(expected),
+        warning(warning, description),
+        new Postcondition() {
+          @Override public void verify(Compiler unused) {
+            assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+          }
+        });
   }
 
   /**
@@ -2344,9 +2358,12 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
    * <p>The format for the set of types for fields is:
    * {field=[[Type1, Type2]]}
    */
-  private void testSets(String js, String fieldTypes) {
-    testNoWarning(js);
-    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+  private void testSets(String js, final String fieldTypes) {
+    test(srcs(js), new Postcondition() {
+      @Override public void verify(Compiler unused) {
+        assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+      }
+    });
   }
 
   /**
@@ -2356,9 +2373,12 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
    * <p>The format for the set of types for fields is:
    * {field=[[Type1, Type2]]}
    */
-  private void testSets(String js, String fieldTypes, DiagnosticType warning) {
-    testWarning(js, warning);
-    assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+  private void testSets(String js, final String fieldTypes, DiagnosticType warning) {
+    test(srcs(js), warning(warning), new Postcondition() {
+      @Override public void verify(Compiler unused) {
+        assertEquals(fieldTypes, mapToString(lastPass.getRenamedTypesForTesting()));
+      }
+    });
   }
 
   /** Sorts the map and converts to a string for comparison purposes. */

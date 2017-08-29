@@ -214,7 +214,7 @@ public final class JsFileParserTest extends TestCase {
             null,
             ImmutableList.of("/foo"),
             ImmutableList.<DependencyInfo>of(),
-            ModuleLoader.ResolutionMode.LEGACY);
+            ModuleLoader.ResolutionMode.BROWSER);
 
     String contents = ""
         + "import './a';\n"

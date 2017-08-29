@@ -17,7 +17,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.makeIterator;
+import static com.google.javascript.jscomp.Es6ToEs3Util.makeIterator;
 
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
@@ -32,7 +32,7 @@ import com.google.javascript.rhino.TokenStream;
 public final class Es6RewriteDestructuring implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
 
-  private static final String DESTRUCTURING_TEMP_VAR = "$jscomp$destructuring$var";
+  static final String DESTRUCTURING_TEMP_VAR = "$jscomp$destructuring$var";
 
   private int destructuringVarCounter = 0;
 

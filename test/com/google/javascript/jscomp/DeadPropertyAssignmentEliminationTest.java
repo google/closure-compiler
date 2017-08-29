@@ -18,8 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.DeadPropertyAssignmentElimination.ASSUME_CONSTRUCTORS_HAVENT_ESCAPED;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
 public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
 
   @Override
@@ -665,8 +663,6 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
   }
 
   public void testEs6Constrcutor() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
-
     testSame(
         LINE_JOINER.join(
             "class Foo {",
@@ -712,8 +708,24 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
               "  }",
               "}"));
     }
+  }
 
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+  public void testES6ClassExtends() {
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 20;",
+            "  }",
+            "}",
+            "class D extends C {",
+            "  constructor() {",
+            "    super();",
+            "    this.x = 40;",
+            "  }",
+            "}"
+        )
+    );
   }
 
   public void testGetter() {

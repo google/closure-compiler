@@ -420,6 +420,17 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
             "alert(z);"));
   }
 
+  public void testUnusedImport() {
+    enableUnusedLocalAssignmentCheck = true;
+    // TODO(b/64566470): This test should give an UNUSED_LOCAL_ASSIGNMENT error for x.
+    testSame("import x from 'Foo';");
+  }
+
+  public void testExportedType() {
+    enableUnusedLocalAssignmentCheck = true;
+    testSame(LINE_JOINER.join("export class Foo {}", "export /** @type {Foo} */ var y;"));
+  }
+
   /**
    * Inside a goog.scope, don't warn because the alias might be used in a type annotation.
    */
@@ -750,6 +761,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertRedeclareError("const x = 0, x = 0;");
   }
 
+  public void testRedeclareInLabel() {
+    assertRedeclareGlobal("a: var x, x;");
+  }
+
   public void testIllegalBlockScopedEarlyReference() {
     assertEarlyReferenceError("let x = x");
     assertEarlyReferenceError("let [x] = x");
@@ -876,7 +891,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
       "var x;",
       "function x() {}",
     };
-    String message = "Variable x declared more than once. First occurence: input0";
+    String message = "Variable x declared more than once. First occurrence: input0";
     testError(srcs(js), error(VarCheck.VAR_MULTIPLY_DECLARED_ERROR, message));
   }
 
@@ -885,7 +900,7 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
       "function x() {}",
       "var x;",
     };
-    String message = "Variable x declared more than once. First occurence: input0";
+    String message = "Variable x declared more than once. First occurrence: input0";
     testError(srcs(js), error(VarCheck.VAR_MULTIPLY_DECLARED_ERROR, message));
   }
 

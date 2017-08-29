@@ -465,6 +465,13 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "    A.prototype.bar();",
             "  }",
             "}"));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @abstract */",
+            "class A {",
+            "  /** @abstract @return {number} */ get foo() {}",
+            "}"));
   }
 
   // super is handled natively in both type checkers, which results in ASTs that
@@ -625,11 +632,11 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
 
     typeCheck(
         LINE_JOINER.join(
-            "function* foo(){",
-            "   yield 1; ",
-            "   yield 2; ",
-            "   yield 3; ",
-            "}; ",
+            "function* foo() {",
+            "  yield 1;",
+            "  yield 2;",
+            "  yield 3;",
+            "}",
             "function f(/** number */ y) {",
             "  for (var x of foo()) { y = x; }",
             "}"));

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
@@ -26,6 +27,8 @@ import com.google.javascript.rhino.Node;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -46,6 +49,7 @@ final class MustBeReachingVariableDef extends
   private final AbstractCompiler compiler;
   private final Set<Var> escaped;
   private final Map<String, Var> allVarsInFn;
+  private final List<Var> orderedVars;
 
   MustBeReachingVariableDef(
       ControlFlowGraph<Node> cfg,
@@ -56,9 +60,10 @@ final class MustBeReachingVariableDef extends
     this.compiler = compiler;
     this.escaped = new HashSet<>();
     this.allVarsInFn = new HashMap<>();
-    computeEscaped(jsScope.getParent(), jsScope, escaped, compiler, scopeCreator);
+    this.orderedVars = new LinkedList<>();
+    computeEscapedEs6(jsScope.getParent(), escaped, compiler, scopeCreator);
     NodeUtil.getAllVarsDeclaredInFunction(
-        allVarsInFn, compiler, scopeCreator, jsScope.getParent());
+        allVarsInFn, orderedVars, compiler, scopeCreator, jsScope.getParent());
   }
 
   /**
@@ -283,8 +288,13 @@ final class MustBeReachingVariableDef extends
         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
           if (c.hasChildren()) {
             computeMustDef(c.getFirstChild(), cfgNode, output, conditional);
-            addToDefIfLocal(c.getString(), conditional ? null : cfgNode,
-                c.getFirstChild(), output);
+            if (c.isName()) {
+              addToDefIfLocal(c.getString(), conditional ? null : cfgNode,
+                  c.getFirstChild(), output);
+            } else {
+              checkState(c.isDestructuringLhs(), c);
+              return;
+            }
           }
         }
         return;
@@ -294,8 +304,8 @@ final class MustBeReachingVariableDef extends
           if (n.getFirstChild().isName()) {
             Node name = n.getFirstChild();
             computeMustDef(name.getNext(), cfgNode, output, conditional);
-            addToDefIfLocal(name.getString(), conditional ? null : cfgNode,
-              n.getLastChild(), output);
+            addToDefIfLocal(
+                name.getString(), conditional ? null : cfgNode, n.getLastChild(), output);
             return;
           } else if (NodeUtil.isGet(n.getFirstChild())) {
             // Treat all assignments to arguments as redefining the
@@ -318,8 +328,7 @@ final class MustBeReachingVariableDef extends
         if (n.isDec() || n.isInc()) {
           Node target = n.getFirstChild();
           if (target.isName()) {
-            addToDefIfLocal(target.getString(),
-                conditional ? null : cfgNode, null, output);
+            addToDefIfLocal(target.getString(), conditional ? null : cfgNode, null, output);
             return;
           }
         }
@@ -402,20 +411,22 @@ final class MustBeReachingVariableDef extends
    * in the def's depends set.
    */
   private void computeDependence(final Definition def, Node rValue) {
-    NodeTraversal.traverseEs6(compiler, rValue,
+    NodeTraversal.traverseEs6(
+        compiler,
+        rValue,
         new AbstractCfgNodeTraversalCallback() {
-      @Override
-      public void visit(NodeTraversal t, Node n, Node parent) {
-        if (n.isName()) {
-          Var dep = allVarsInFn.get(n.getString());
-          if (dep == null) {
-            def.unknownDependencies = true;
-          } else {
-            def.depends.add(dep);
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {
+            if (n.isName()) {
+              Var dep = allVarsInFn.get(n.getString());
+              if (dep == null) {
+                def.unknownDependencies = true;
+              } else {
+                def.depends.add(dep);
+              }
+            }
           }
-        }
-      }
-    });
+        });
   }
 
   /**

@@ -16,7 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
@@ -32,30 +34,44 @@ import junit.framework.TestCase;
 public final class IncrementalScopeCreatorTest extends TestCase {
 
   public void testMemoization() throws Exception {
-    Node root1 = IR.root();
-    Node root2 = IR.root();
-    Compiler compiler = new Compiler();
-    compiler.initOptions(new CompilerOptions());
-    ScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
-    Scope scopeA = creator.createScope(root1, null);
-    assertSame(scopeA, creator.createScope(root1, null));
-    assertNotSame(scopeA, creator.createScope(root2, null));
-  }
 
-  public void testParialGlobalScopeRefresh() throws Exception {
-
-    Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
     List<SourceFile> externs = ImmutableList.of(
         SourceFile.fromCode("externs.js", "var symbol;var ext"));
     List<SourceFile> srcs = ImmutableList.of(
-        SourceFile.fromCode("testcode1.js", "var a; var b; function foo() {}"),
+        SourceFile.fromCode("testcode1.js", "var a; var b; function foo() { var inside = 1; }"),
         SourceFile.fromCode("testcode2.js", "var x;"));
+    Compiler compiler = initCompiler(externs, srcs);
     ScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
-    compiler.init(externs, srcs, options);
-    compiler.parseInputs();
+    Node root1 = compiler.getRoot();
 
-    checkState(!compiler.hasErrors());
+    Scope scopeA = creator.createScope(root1, null);
+    assertSame(scopeA, creator.createScope(root1, null));
+
+    IncrementalScopeCreator.getInstance(compiler).thaw();
+
+    IncrementalScopeCreator.getInstance(compiler).freeze();
+
+    assertSame(scopeA, creator.createScope(root1, null));
+
+    try {
+      Node root2 = IR.root();
+      creator.createScope(root2, null);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected)
+          .hasMessageThat()
+          .contains("the shared persistent scope must always " + "be root at the tip of the AST");
+    }
+  }
+
+  public void testParialGlobalScopeRefresh() throws Exception {
+    List<SourceFile> externs = ImmutableList.of(
+        SourceFile.fromCode("externs.js", "var symbol;var ext"));
+    List<SourceFile> srcs = ImmutableList.of(
+        SourceFile.fromCode("testcode1.js", "var a; var b; function foo() { var inside = 1; }"),
+        SourceFile.fromCode("testcode2.js", "var x;"));
+    Compiler compiler = initCompiler(externs, srcs);
+    ScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
 
     Node root = compiler.getRoot();
     Node fnFoo = findDecl(root, "foo");
@@ -63,6 +79,9 @@ public final class IncrementalScopeCreatorTest extends TestCase {
 
     Scope globalScope = creator.createScope(root, null);
     Scope globalFunction = creator.createScope(fnFoo, globalScope);
+    // When refreshing a local scope, the Scope object is preserved but the Var objects are
+    // recreated, so we need to inspect a Var in the scope to see if it has been freshed or not.
+    Var inside = globalFunction.getVar("inside");
 
     assertTrue(globalScope.isDeclared("a", true));
     assertTrue(globalScope.isDeclared("b", true));
@@ -77,6 +96,7 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     assertSame(globalScope, globalScope2);
     // unchanged local scopes should be preserved
     assertSame(globalFunction, creator.createScope(fnFoo, globalScope));
+    assertSame(inside, globalFunction.getVar("inside"));
 
     assertTrue(globalScope2.isDeclared("a", true)); // still declared, scope creator is frozen
     assertTrue(globalScope2.isDeclared("b", true));
@@ -94,6 +114,7 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     assertSame(globalScope, globalScope3);
     // unchanged local scopes should be preserved
     assertSame(globalFunction, creator.createScope(fnFoo, globalScope));
+    assertSame(inside, globalFunction.getVar("inside"));
 
     assertFalse(globalScope3.isDeclared("a", true)); // no declared, scope creator has refreshed
     assertTrue(globalScope3.isDeclared("b", true));
@@ -104,20 +125,85 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     IncrementalScopeCreator.getInstance(compiler).thaw();
   }
 
+  public void testPartialGlobalScopeRefreshWithMove() throws Exception {
+    // This test verifies that when a variable declarations moves between script, the
+    // original script correctly "forgets" that the moved variables was associated with
+    // it.  If this were not the case, invalidating the original script would
+    // undeclare a variable and readding the variables when rescanning the script would not
+    // readd it.
+
+    List<SourceFile> externs = ImmutableList.of(
+        SourceFile.fromCode("externs.js", "var symbol;"));
+    List<SourceFile> srcs = ImmutableList.of(
+        SourceFile.fromCode("testcode1.js", "var a; var b;"),
+        SourceFile.fromCode("testcode2.js", "var x; var y;"));
+    Compiler compiler = initCompiler(externs, srcs);
+    IncrementalScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
+
+    Node root = compiler.getRoot();
+
+    Scope globalScope = creator.createScope(root, null);
+
+    assertTrue(globalScope.isDeclared("a", false));
+    assertTrue(globalScope.isDeclared("b", false));
+    assertTrue(globalScope.isDeclared("x", false));
+    assertTrue(globalScope.isDeclared("y", false));
+    assertFalse(globalScope.isDeclared("nonexistant", false));
+
+    Node script1 = checkNotNull(NodeUtil.getEnclosingScript(findDecl(root, "a")));
+    Node script2 = checkNotNull(NodeUtil.getEnclosingScript(findDecl(root, "x")));
+
+
+    Node varB = checkNotNull(findDecl(root, "b"));
+
+
+
+    // Move B to from script1 to script2
+    varB.detach();
+    script2.addChildToBack(varB);
+
+    compiler.reportChangeToChangeScope(script1);
+    compiler.reportChangeToChangeScope(script2);
+
+    // Allow the scopes to update by "thaw" and "freeze" again.
+    creator.thaw();
+    creator.freeze();
+
+    globalScope = creator.createScope(root, null);
+
+    assertTrue(globalScope.isDeclared("a", false));
+    assertTrue(globalScope.isDeclared("b", false));
+    assertTrue(globalScope.isDeclared("x", false));
+    assertTrue(globalScope.isDeclared("y", false));
+    assertFalse(globalScope.isDeclared("nonexistant", false));
+
+    compiler.reportChangeToChangeScope(script1); // invalidate the original scope.
+
+    // Allow the scopes to update by "thaw" and "freeze" again.
+    creator.thaw();
+    creator.freeze();
+
+    globalScope = creator.createScope(root, null);
+
+    assertTrue(globalScope.isDeclared("a", false));
+    assertTrue(globalScope.isDeclared("b", false));
+    assertTrue(globalScope.isDeclared("x", false));
+    assertTrue(globalScope.isDeclared("y", false));
+    assertFalse(globalScope.isDeclared("nonexistant", false));
+
+    creator.thaw();
+  }
+
   public void testRefreshedGlobalScopeWithRedeclaration() throws Exception {
 
-    Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
     List<SourceFile> externs = ImmutableList.of(
         SourceFile.fromCode("externs.js", ""));
     List<SourceFile> srcs = ImmutableList.of(
         SourceFile.fromCode("testcode1.js", "var a; var b;"),
         SourceFile.fromCode("testcode2.js", "var a;"));
-    ScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
-    compiler.init(externs, srcs, options);
-    compiler.parseInputs();
+    Compiler compiler = initCompiler(externs, srcs);
 
-    checkState(!compiler.hasErrors());
+    ScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
 
     Node root = compiler.getRoot();
 
@@ -144,18 +230,48 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     IncrementalScopeCreator.getInstance(compiler).thaw();
   }
 
-  public void testPreconditionCheck() throws Exception {
-    Compiler compiler = new Compiler();
-    compiler.initOptions(new CompilerOptions());
-    Node root = IR.root();
+  public void testValidScopeReparenting() throws Exception {
+    List<SourceFile> externs = ImmutableList.of(
+        SourceFile.fromCode("externs.js", "var symbol;var ext"));
+    List<SourceFile> srcs = ImmutableList.of(
+        SourceFile.fromCode("testcode1.js", "var a; var b; "
+            + " { function foo() { var inside = 1; } }"),
+        SourceFile.fromCode("testcode2.js", "var x;"));
+    Compiler compiler = initCompiler(externs, srcs);
     ScopeCreator creator = IncrementalScopeCreator.getInstance(compiler).freeze();
-    Scope scopeA = creator.createScope(root, null);
 
-    try {
-      creator.createScope(root, scopeA);
-      fail();
-    } catch (IllegalArgumentException expected) {
-    }
+    Node root = compiler.getRoot();
+    Node fnFoo = findDecl(root, "foo");
+    checkState(fnFoo.isFunction());
+
+    Node block = fnFoo.getParent();
+    checkState(block.isNormalBlock());
+
+    Scope globalScope1 = creator.createScope(root, null);
+    Scope blockScope1 = creator.createScope(block, globalScope1);
+    Scope fnScope1 = creator.createScope(fnFoo, blockScope1);
+    assertSame(blockScope1.getDepth() + 1, fnScope1.getDepth());
+    assertSame(blockScope1, fnScope1.getParent());
+
+    // When refreshing a local scope, the Scope object is preserved but the Var objects are
+    // recreated, so we need to inspect a Var in the scope to see if it has been freshed or not.
+    Var inside1 = fnScope1.getVar("inside");
+
+    compiler.reportChangeToEnclosingScope(block);
+    block.replaceWith(fnFoo.detach());
+
+    IncrementalScopeCreator.getInstance(compiler).thaw();
+
+    IncrementalScopeCreator.getInstance(compiler).freeze();
+
+    Scope globalScope2 = creator.createScope(root, null);
+    Scope fnScope2 = creator.createScope(fnFoo, globalScope2);
+    assertSame(fnScope1, fnScope2);
+    assertSame(globalScope2, fnScope2.getParent());
+    assertSame(globalScope2.getDepth() + 1, fnScope2.getDepth());
+    assertSame(inside1, fnScope2.getVar("inside"));
+
+    IncrementalScopeCreator.getInstance(compiler).thaw();
   }
 
   private void removeFirstDecl(Compiler compiler, Node n, String name) {
@@ -191,5 +307,14 @@ public final class IncrementalScopeCreatorTest extends TestCase {
     }
 
     return null;
+  }
+
+  Compiler initCompiler(List<SourceFile> externs, List<SourceFile> srcs) {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    compiler.init(externs, srcs, options);
+    compiler.parseInputs();
+    checkState(!compiler.hasErrors());
+    return compiler;
   }
 }

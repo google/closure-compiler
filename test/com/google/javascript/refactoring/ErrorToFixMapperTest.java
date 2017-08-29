@@ -586,6 +586,32 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testSortRequiresInGoogModule_withOtherStatements() {
+    // The requires after "const {Bar} = bar;" are not sorted.
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const foo = goog.require('foo');",
+            "const bar = goog.require('bar');",
+            "const {Bar} = bar;",
+            "const util = goog.require('util');",
+            "const {doCoolThings} = util;",
+            "",
+            "doCoolThings(foo, Bar);"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const bar = goog.require('bar');",
+            "const foo = goog.require('foo');",
+            "const {Bar} = bar;",
+            "const util = goog.require('util');",
+            "const {doCoolThings} = util;",
+            "",
+            "doCoolThings(foo, Bar);"));
+  }
+
+  @Test
   public void testSortRequiresAndForwardDeclares() {
     assertChanges(
         LINE_JOINER.join(
@@ -1077,6 +1103,27 @@ public class ErrorToFixMapperTest {
             "var C = goog.require('c.C');",
             "",
             "alert(new A(new B(new C())));"));
+  }
+
+  @Test
+  public void testUnsortedAndMissingLhs() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('foo');",
+            "",
+            "goog.require('example.controller');",
+            "const Bar = goog.require('example.Bar');",
+            "",
+            "alert(example.controller.SOME_CONSTANT);",
+            "alert(Bar.doThings);"),
+        LINE_JOINER.join(
+            "goog.module('foo');",
+            "",
+            "const Bar = goog.require('example.Bar');",
+            "goog.require('example.controller');",
+            "",
+            "alert(example.controller.SOME_CONSTANT);",
+            "alert(Bar.doThings);"));
   }
 
   @Test

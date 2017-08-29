@@ -16,12 +16,18 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.jscomp.Es6ToEs3Util.createGenericType;
+import static com.google.javascript.jscomp.Es6ToEs3Util.createType;
+import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 
 import com.google.javascript.jscomp.parsing.JsDocInfoParser;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.TypeIRegistry;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 
 /**
  * Helper class for transpiling ES6 template literals.
@@ -36,10 +42,12 @@ class Es6TemplateLiterals {
    *
    * @param n A TEMPLATELIT node that is not prefixed with a tag
    */
-  static void visitTemplateLiteral(NodeTraversal t, Node n) {
+  static void visitTemplateLiteral(NodeTraversal t, Node n, boolean addTypes) {
+    TypeIRegistry registry = t.getCompiler().getTypeIRegistry();
+    TypeI stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
     int length = n.getChildCount();
     if (length == 0) {
-      n.replaceWith(IR.string("\"\""));
+      n.replaceWith(withType(IR.string("\"\""), stringType));
     } else {
       Node first = n.removeFirstChild();
       checkState(first.isString());
@@ -47,7 +55,7 @@ class Es6TemplateLiterals {
         n.replaceWith(first);
       } else {
         // Add the first string with the first substitution expression
-        Node add = IR.add(first, n.removeFirstChild().removeFirstChild());
+        Node add = withType(IR.add(first, n.removeFirstChild().removeFirstChild()), n.getTypeI());
         // Process the rest of the template literal
         for (int i = 2; i < length; i++) {
           Node child = n.removeFirstChild();
@@ -60,7 +68,9 @@ class Es6TemplateLiterals {
               add = add.getSecondChild().detach();
             }
           }
-          add = IR.add(add, child.isString() ? child : child.removeFirstChild());
+          add =
+              withType(
+                  IR.add(add, child.isString() ? child : child.removeFirstChild()), n.getTypeI());
         }
         n.replaceWith(add.useSourceInfoIfMissingFromForTree(n));
       }
@@ -81,35 +91,51 @@ class Es6TemplateLiterals {
    *
    * @param n A TAGGED_TEMPLATELIT node
    */
-  static void visitTaggedTemplateLiteral(NodeTraversal t, Node n) {
+  static void visitTaggedTemplateLiteral(NodeTraversal t, Node n, boolean addTypes) {
+    TypeIRegistry registry = t.getCompiler().getTypeIRegistry();
+    TypeI stringType = createType(addTypes, registry, JSTypeNative.STRING_TYPE);
+    TypeI arrayType = createGenericType(addTypes, registry, JSTypeNative.ARRAY_TYPE, stringType);
+    TypeI templateArrayType =
+        createType(addTypes, registry, JSTypeNative.I_TEMPLATE_ARRAY_TYPE);
+
     Node templateLit = n.getLastChild();
     // Prepare the raw and cooked string arrays.
-    Node raw = createRawStringArray(templateLit);
-    Node cooked = createCookedStringArray(templateLit);
+    Node raw = createRawStringArray(templateLit, arrayType, stringType);
+    Node cooked = createCookedStringArray(templateLit, templateArrayType, stringType);
 
     // Specify the type of the first argument to be ITemplateArray.
     JSTypeExpression nonNullSiteObject = new JSTypeExpression(
         JsDocInfoParser.parseTypeString("!ITemplateArray"), "<Es6TemplateLiterals.java>");
     JSDocInfoBuilder info = new JSDocInfoBuilder(false);
     info.recordType(nonNullSiteObject);
-    Node siteObject = IR.cast(cooked, info.build());
+    Node siteObject = withType(IR.cast(cooked, info.build()), templateArrayType);
 
     // Create a variable representing the template literal.
-    Node callsiteId = IR.name(
-        TEMPLATELIT_VAR + t.getCompiler().getUniqueNameIdSupplier().get());
+    Node callsiteId =
+        withType(
+            IR.name(TEMPLATELIT_VAR + t.getCompiler().getUniqueNameIdSupplier().get()),
+            templateArrayType);
     Node var = IR.var(callsiteId, siteObject).useSourceInfoIfMissingFromForTree(n);
     Node script = NodeUtil.getEnclosingScript(n);
     script.addChildToFront(var);
     t.reportCodeChange(var);
 
     // Define the "raw" property on the introduced variable.
-    Node defineRaw = IR.exprResult(IR.assign(IR.getprop(
-        callsiteId.cloneNode(), IR.string("raw")), raw))
+    Node defineRaw =
+        IR.exprResult(
+                withType(
+                    IR.assign(
+                        withType(
+                            IR.getprop(
+                                callsiteId.cloneNode(), withType(IR.string("raw"), stringType)),
+                            arrayType),
+                        raw),
+                    arrayType))
             .useSourceInfoIfMissingFromForTree(n);
     script.addChildAfter(defineRaw, var);
 
     // Generate the call expression.
-    Node call = IR.call(n.removeFirstChild(), callsiteId.cloneNode());
+    Node call = withType(IR.call(n.removeFirstChild(), callsiteId.cloneNode()), n.getTypeI());
     for (Node child = templateLit.getFirstChild(); child != null; child = child.getNext()) {
       if (!child.isString()) {
         call.addChildToBack(child.removeFirstChild());
@@ -121,21 +147,24 @@ class Es6TemplateLiterals {
     t.reportCodeChange();
   }
 
-  private static Node createRawStringArray(Node n) {
-    Node array = IR.arraylit();
+  private static Node createRawStringArray(Node n, TypeI arrayType, TypeI stringType) {
+    Node array = withType(IR.arraylit(), arrayType);
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isString()) {
-        array.addChildToBack(IR.string((String) child.getProp(Node.RAW_STRING_VALUE)));
+        array.addChildToBack(
+            withType(IR.string((String) child.getProp(Node.RAW_STRING_VALUE)), stringType));
       }
     }
     return array;
   }
 
-  private static Node createCookedStringArray(Node n) {
-    Node array = IR.arraylit();
+  private static Node createCookedStringArray(Node n, TypeI templateArrayType, TypeI stringType) {
+    Node array = withType(IR.arraylit(), templateArrayType);
     for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
       if (child.isString()) {
-        Node string = IR.string(cookString((String) child.getProp(Node.RAW_STRING_VALUE)));
+        Node string =
+            withType(
+                IR.string(cookString((String) child.getProp(Node.RAW_STRING_VALUE))), stringType);
         array.addChildToBack(string);
       }
     }

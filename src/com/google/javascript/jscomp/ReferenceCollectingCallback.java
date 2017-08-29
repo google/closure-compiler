@@ -162,7 +162,7 @@ public final class ReferenceCollectingCallback
    */
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isName() || (n.isStringKey() && !n.hasChildren())) {
+    if (n.isName() || n.isImportStar() || (n.isStringKey() && !n.hasChildren())) {
       Var v = t.getScope().getVar(n.getString());
 
       if (v != null) {
@@ -234,7 +234,7 @@ public final class ReferenceCollectingCallback
     // Don't add all ES6 scope roots to blockStack, only those that are also scopes according to
     // the ES5 scoping rules. Other nodes that ought to be considered the root of a BasicBlock
     // are added in shouldTraverse() and removed in visit().
-    if (t.getScope().isHoistScope()) {
+    if (t.isHoistScope()) {
       blockStack.add(new BasicBlock(parent, n));
     }
   }
@@ -244,24 +244,17 @@ public final class ReferenceCollectingCallback
    */
   @Override
   public void exitScope(NodeTraversal t) {
-    if (t.getScope().isHoistScope()) {
+    if (t.isHoistScope()) {
       pop(blockStack);
     }
-    if (t.inGlobalScope()) {
-      // Update global scope reference lists when we are done with it.
-      compiler.updateGlobalVarReferences(referenceMap, t.getScopeRoot());
-      behavior.afterExitScope(t, compiler.getGlobalVarReferences());
-    } else {
-      behavior.afterExitScope(t, new ReferenceMapWrapper(referenceMap));
-    }
+    behavior.afterExitScope(t, new ReferenceMapWrapper(referenceMap));
   }
 
   /**
    * Updates block stack.
    */
   @Override
-  public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
-      Node parent) {
+  public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
     // We automatically traverse a hoisted function body when that function
     // is first referenced, so that the reference lists are in the right order.
     //
@@ -354,7 +347,7 @@ public final class ReferenceCollectingCallback
     referenceInfo.add(reference);
   }
 
-  private static class ReferenceMapWrapper implements ReferenceMap {
+  static class ReferenceMapWrapper implements ReferenceMap {
     private final Map<Var, ReferenceCollection> referenceMap;
 
     public ReferenceMapWrapper(Map<Var, ReferenceCollection> referenceMap) {
@@ -364,6 +357,15 @@ public final class ReferenceCollectingCallback
     @Override
     public ReferenceCollection getReferences(Var var) {
       return referenceMap.get(var);
+    }
+
+    Map<Var, ReferenceCollection> getRawReferenceMap() {
+      return referenceMap;
+    }
+
+    @Override
+    public String toString() {
+      return referenceMap.toString();
     }
   }
 

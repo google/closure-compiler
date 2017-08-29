@@ -16,10 +16,12 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerOptions.LanguageMode.ECMASCRIPT_NEXT;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
+import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
 import com.google.javascript.rhino.Token;
 
@@ -59,6 +61,70 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
   private void testBehavior(String js, Behavior behavior) {
     this.behavior = behavior;
     testSame(js);
+  }
+
+  public void testImport1() {
+    es6ScopeCreator = true;
+    testBehavior(
+        "import x from 'm';",
+        (NodeTraversal t, ReferenceMap rm) -> {
+          if (t.getScope().isModuleScope()) {
+            ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
+
+            assertThat(x.isAssignedOnceInLifetime()).isTrue();
+            assertThat(x.isWellDefined()).isTrue();
+            assertThat(Iterables.getOnlyElement(x).isDeclaration()).isTrue();
+          }
+        });
+  }
+
+  public void testImport2() {
+    es6ScopeCreator = true;
+    testBehavior(
+        "import {x} from 'm';",
+        (NodeTraversal t, ReferenceMap rm) -> {
+          if (t.getScope().isModuleScope()) {
+            ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
+
+            assertThat(x.isAssignedOnceInLifetime()).isTrue();
+            assertThat(x.isWellDefined()).isTrue();
+            assertThat(Iterables.getOnlyElement(x).isDeclaration()).isTrue();
+          }
+        });
+  }
+
+  public void testImport3() {
+    es6ScopeCreator = true;
+    testBehavior(
+        "import {y as x} from 'm';",
+        (NodeTraversal t, ReferenceMap rm) -> {
+          if (t.getScope().isModuleScope()) {
+            assertThat(t.getScope().getVar("y")).isNull();
+            ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
+
+            assertThat(x.isAssignedOnceInLifetime()).isTrue();
+            assertThat(x.isWellDefined()).isTrue();
+            assertThat(Iterables.getOnlyElement(x).isDeclaration()).isTrue();
+          }
+        });
+  }
+
+  public void testImport4() {
+    es6ScopeCreator = true;
+    testBehavior(
+        "import * as x from 'm';",
+        (NodeTraversal t, ReferenceMap rm) -> {
+          if (t.getScope().isModuleScope()) {
+            Var var = t.getScope().getVar("x");
+            checkNotNull(var);
+            ReferenceCollection x = rm.getReferences(t.getScope().getVar("x"));
+            checkNotNull(x);
+
+            assertThat(x.isAssignedOnceInLifetime()).isTrue();
+            assertThat(x.isWellDefined()).isTrue();
+            assertThat(Iterables.getOnlyElement(x).isDeclaration()).isTrue();
+          }
+        });
   }
 
   public void testVarInBlock_oldScopeCreator() {

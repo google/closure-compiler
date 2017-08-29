@@ -25,6 +25,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
@@ -36,6 +37,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import junit.framework.TestCase;
@@ -49,7 +52,7 @@ public final class NodeUtilTest extends TestCase {
     Compiler compiler = new Compiler();
     compiler.initCompilerOptionsIfTesting();
     compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT_2015);
-    compiler.getOptions().setStrictModeInput(false);
+    compiler.getOptions().setStrictModeInput(true);
     Node n = compiler.parseTestCode(js);
     assertThat(compiler.getErrors()).isEmpty();
     return n;
@@ -284,6 +287,10 @@ public final class NodeUtilTest extends TestCase {
     assertEquals("NaN", NodeUtil.getStringValue(getNode("NaN")));
     assertEquals("Infinity", NodeUtil.getStringValue(getNode("Infinity")));
     assertEquals(null, NodeUtil.getStringValue(getNode("x")));
+
+    assertEquals("Hello", NodeUtil.getStringValue(getNode("`Hello`")));
+    assertEquals("Hello foo", NodeUtil.getStringValue(getNode("`Hello ${'foo'}`")));
+    assertEquals(null, NodeUtil.getStringValue(getNode("`Hello ${name}`")));
   }
 
   public void testGetArrayStringValue() {
@@ -301,22 +308,14 @@ public final class NodeUtilTest extends TestCase {
   }
 
   public void testIsObjectLiteralKey1() throws Exception {
-    assertIsObjectLiteralKey(
-      parseExpr("({})"), false);
-    assertIsObjectLiteralKey(
-      parseExpr("a"), false);
-    assertIsObjectLiteralKey(
-      parseExpr("'a'"), false);
-    assertIsObjectLiteralKey(
-      parseExpr("1"), false);
-    assertIsObjectLiteralKey(
-      parseExpr("({a: 1})").getFirstChild(), true);
-    assertIsObjectLiteralKey(
-      parseExpr("({1: 1})").getFirstChild(), true);
-    assertIsObjectLiteralKey(
-      parseExpr("({get a(){}})").getFirstChild(), true);
-    assertIsObjectLiteralKey(
-      parseExpr("({set a(b){}})").getFirstChild(), true);
+    assertIsObjectLiteralKey(parseExpr("({})"), false);
+    assertIsObjectLiteralKey(parseExpr("a"), false);
+    assertIsObjectLiteralKey(parseExpr("'a'"), false);
+    assertIsObjectLiteralKey(parseExpr("1"), false);
+    assertIsObjectLiteralKey(parseExpr("({a: 1})").getFirstChild(), true);
+    assertIsObjectLiteralKey(parseExpr("({1: 1})").getFirstChild(), true);
+    assertIsObjectLiteralKey(parseExpr("({get a(){}})").getFirstChild(), true);
+    assertIsObjectLiteralKey(parseExpr("({set a(b){}})").getFirstChild(), true);
   }
 
   private Node parseExpr(String js) {
@@ -382,15 +381,31 @@ public final class NodeUtilTest extends TestCase {
   }
 
   public void testContainsFunctionDeclaration() {
-    assertTrue(NodeUtil.containsFunction(
-                   getNode("function foo(){}")));
-    assertTrue(NodeUtil.containsFunction(
-                   getNode("(b?function(){}:null)")));
+    assertTrue(NodeUtil.containsFunction(getNode("function foo(){}")));
+    assertTrue(NodeUtil.containsFunction(getNode("(b?function(){}:null)")));
 
-    assertFalse(NodeUtil.containsFunction(
-                   getNode("(b?foo():null)")));
-    assertFalse(NodeUtil.containsFunction(
-                    getNode("foo()")));
+    assertFalse(NodeUtil.containsFunction(getNode("(b?foo():null)")));
+    assertFalse(NodeUtil.containsFunction(getNode("foo()")));
+  }
+
+  public void testIsFunctionDeclaration() {
+    assertTrue(NodeUtil.isFunctionDeclaration(getFunctionNode("function foo(){}")));
+    assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("class C { constructor() {} }")));
+    assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("var x = function(){}")));
+    assertTrue(NodeUtil.isFunctionDeclaration(getFunctionNode("export function f() {}")));
+    assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("export default function() {}")));
+    assertFalse(
+        NodeUtil.isFunctionDeclaration(getFunctionNode("export default function foo() {}")));
+    assertFalse(
+        NodeUtil.isFunctionDeclaration(getFunctionNode("export default (foo) => { alert(foo); }")));
+  }
+
+  public void testIsClassDeclaration() {
+    assertTrue(NodeUtil.isClassDeclaration(getClassNode("class Foo {}")));
+    assertFalse(NodeUtil.isClassDeclaration(getClassNode("var Foo = class {}")));
+    assertFalse(NodeUtil.isClassDeclaration(getClassNode("var Foo = class Foo{}")));
+    assertFalse(NodeUtil.isClassDeclaration(getClassNode("export default class Foo {}")));
+    assertTrue(NodeUtil.isClassDeclaration(getClassNode("export class Foo {}")));
   }
 
   private void assertSideEffect(boolean se, String js) {
@@ -504,6 +519,13 @@ public final class NodeUtilTest extends TestCase {
     assertSideEffect(false, "Math.random();");
     assertSideEffect(true, "Math.random(seed);");
     assertSideEffect(false, "[1, 1].foo;");
+
+    assertSideEffect(true, "export var x = 0;");
+    assertSideEffect(true, "export let x = 0;");
+    assertSideEffect(true, "export const x = 0;");
+    assertSideEffect(true, "export class X {};");
+    assertSideEffect(true, "export function x() {};");
+    assertSideEffect(true, "export {x};");
   }
 
   public void testObjectMethodSideEffects() {
@@ -628,7 +650,6 @@ public final class NodeUtilTest extends TestCase {
     assertMutableState(true, "new SomeClassINeverHeardOf()");
   }
 
-
   public void testIsFunctionExpression() {
     assertContainsAnonFunc(true, "(function(){})");
     assertContainsAnonFunc(true, "[function a(){}]");
@@ -726,15 +747,18 @@ public final class NodeUtilTest extends TestCase {
   }
 
   public void testGetNodeTypeReferenceCount() {
-    assertEquals(0, NodeUtil.getNodeTypeReferenceCount(
-        parse("function foo(){}"), Token.THIS,
-            Predicates.<Node>alwaysTrue()));
-    assertEquals(1, NodeUtil.getNodeTypeReferenceCount(
-        parse("this"), Token.THIS,
-            Predicates.<Node>alwaysTrue()));
-    assertEquals(2, NodeUtil.getNodeTypeReferenceCount(
-        parse("this;function foo(){}(this)"), Token.THIS,
-            Predicates.<Node>alwaysTrue()));
+    assertEquals(
+        0,
+        NodeUtil.getNodeTypeReferenceCount(
+            parse("function foo(){}"), Token.THIS, Predicates.<Node>alwaysTrue()));
+    assertEquals(
+        1,
+        NodeUtil.getNodeTypeReferenceCount(
+            parse("this"), Token.THIS, Predicates.<Node>alwaysTrue()));
+    assertEquals(
+        2,
+        NodeUtil.getNodeTypeReferenceCount(
+            parse("this;function foo(){}(this)"), Token.THIS, Predicates.<Node>alwaysTrue()));
   }
 
   public void testIsNameReferenceCount() {
@@ -754,7 +778,6 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isNameReferenced(
         parse("goo.foo"), "foo"));
   }
-
 
   public void testGetNameReferenceCount() {
     assertEquals(0, NodeUtil.getNameReferenceCount(
@@ -905,6 +928,51 @@ public final class NodeUtilTest extends TestCase {
     }
   }
 
+  public void testRemoveFromImport() {
+    // Remove imported function
+    Node actual = parse("import foo from './foo';");
+    Node moduleBody = actual.getFirstChild();
+    Node importNode = moduleBody.getFirstChild();
+    Node functionFoo = importNode.getFirstChild();
+
+    NodeUtil.removeChild(importNode, functionFoo);
+    String expected = "import './foo';";
+    String difference = parse(expected).checkTreeEquals(actual);
+    if (difference != null) {
+      fail("Nodes do not match:\n" + difference);
+    }
+  }
+
+  public void testRemoveParamChild1() {
+    // Remove traditional parameter
+    Node actual = parse("function f(p1) {}");
+    Node functionNode = actual.getFirstChild();
+    Node paramList = functionNode.getFirstChild().getNext();
+    Node p1 = paramList.getFirstChild();
+
+    NodeUtil.removeChild(paramList, p1);
+    String expected = "function f() {}";
+    String difference = parse(expected).checkTreeEquals(actual);
+    if (difference != null) {
+      fail("Nodes do not match:\n" + difference);
+    }
+  }
+
+  public void testRemoveParamChild2() {
+    // Remove default parameter
+    Node actual = parse("function f(p1 = 0, p2) {}");
+    Node functionNode = actual.getFirstChild();
+    Node paramList = functionNode.getFirstChild().getNext();
+    Node p1 = paramList.getFirstChild();
+
+    NodeUtil.removeChild(paramList, p1);
+    String expected = "function f(p2) {}";
+    String difference = parse(expected).checkTreeEquals(actual);
+    if (difference != null) {
+      fail("Nodes do not match:\n" + difference);
+    }
+  }
+
   public void testRemoveVarChild() {
     // Test removing the first child.
     Node actual = parse("var foo, goo, hoo");
@@ -1043,6 +1111,41 @@ public final class NodeUtilTest extends TestCase {
     }
   }
 
+  public void testRemovePatternChild() {
+    // remove variable declaration from object pattern
+    Node actual = parse("var {a, b, c} = {a:1, b:2, c:3}");
+    Node varNode = actual.getFirstChild();
+    Node destructure = varNode.getFirstChild();
+    Node pattern = destructure.getFirstChild();
+    Node a = pattern.getFirstChild();
+    Node b = a.getNext();
+    Node c = b.getNext();
+
+    NodeUtil.removeChild(pattern, a);
+    String expected = "var {b, c} = {a:1, b:2, c:3};";
+    String difference = parse(expected).checkTreeEquals(actual);
+    assertNull("Nodes do not match:\n" + difference, difference);
+
+    // Remove all entries in object pattern
+    NodeUtil.removeChild(pattern, b);
+    NodeUtil.removeChild(pattern, c);
+    expected = "var { } = {a:1, b:2, c:3};";
+    difference = parse(expected).checkTreeEquals(actual);
+    assertNull("Nodes do not match:\n" + difference, difference);
+
+    // remove variable declaration from array pattern
+    actual = parse("var [a, b] = [1, 2]");
+    varNode = actual.getFirstChild();
+    destructure = varNode.getFirstChild();
+    pattern = destructure.getFirstChild();
+    a = pattern.getFirstChild();
+
+    NodeUtil.removeChild(pattern, a);
+    expected = "var [ , b] = [1, 2];";
+    difference = parse(expected).checkTreeEquals(actual);
+    assertNull("Nodes do not match:\n" + difference, difference);
+  }
+
   public void testRemoveForChild() {
     // Test removing the initializer.
     Node actual = parse("for(var a=0;a<0;a++)foo()");
@@ -1125,30 +1228,30 @@ public final class NodeUtilTest extends TestCase {
     replaceDeclChild("const x =1, y = 2, z = 3, w = 4;", 1, "const x = 1; {} const z = 3, w = 4;");
   }
 
-  public void testMergeBlock1() {
+  public void testTryMergeBlock1() {
     // Test removing the initializer.
     Node actual = parse("{{a();b();}}");
 
     Node parentBlock = actual.getFirstChild();
     Node childBlock = parentBlock.getFirstChild();
 
-    assertTrue(NodeUtil.tryMergeBlock(childBlock));
+    assertTrue(NodeUtil.tryMergeBlock(childBlock, false));
     String expected = "{a();b();}";
     String difference = parse(expected).checkTreeEquals(actual);
     assertNull("Nodes do not match:\n" + difference, difference);
   }
 
-  public void testMergeBlock2() {
+  public void testTryMergeBlock2() {
     // Test removing the initializer.
     Node actual = parse("foo:{a();}");
 
     Node parentLabel = actual.getFirstChild();
     Node childBlock = parentLabel.getLastChild();
 
-    assertFalse(NodeUtil.tryMergeBlock(childBlock));
+    assertFalse(NodeUtil.tryMergeBlock(childBlock, false));
   }
 
-  public void testMergeBlock3() {
+  public void testTryMergeBlock3() {
     // Test removing the initializer.
     String code = "foo:{a();boo()}";
     Node actual = parse("foo:{a();boo()}");
@@ -1156,10 +1259,39 @@ public final class NodeUtilTest extends TestCase {
     Node parentLabel = actual.getFirstChild();
     Node childBlock = parentLabel.getLastChild();
 
-    assertFalse(NodeUtil.tryMergeBlock(childBlock));
+    assertFalse(NodeUtil.tryMergeBlock(childBlock, false));
     String expected = code;
     String difference = parse(expected).checkTreeEquals(actual);
     assertNull("Nodes do not match:\n" + difference, difference);
+  }
+
+  public void testTryMergeBlock4() {
+    Node actual = parse("{const module$exports$Foo=class{}}");
+    String expected = "const module$exports$Foo=class{}";
+
+    Node block = actual.getFirstChild();
+
+    assertTrue(NodeUtil.tryMergeBlock(block, true));
+    String difference = parse(expected).checkTreeEquals(actual);
+    assertNull("Nodes do not match:\n" + difference, difference);
+  }
+
+  public void testCanMergeBlock1() {
+    Node actual = parse("{a(); let x;}");
+
+    Node block = actual.getFirstChild();
+
+    assertFalse(NodeUtil.canMergeBlock(block));
+  }
+
+  public void testCanMergeBlock2() {
+    Node actual = parse("{a(); f(); var x; {const y = 2;}}");
+
+    Node parentBlock = actual.getFirstChild();
+    Node childBlock = parentBlock.getLastChild();
+
+    assertTrue(NodeUtil.canMergeBlock(parentBlock));
+    assertFalse(NodeUtil.canMergeBlock(childBlock));
   }
 
   public void testGetSourceName() {
@@ -1275,6 +1407,11 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.evaluatesToLocalValue(getNode("o.valueOf()")));
 
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("delete a.b")));
+
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("`hello`")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("`hello ${name}`")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("`${'name'}`")));
+
   }
 
   public void testLocalValue2() {
@@ -1416,6 +1553,10 @@ public final class NodeUtilTest extends TestCase {
 
     ImmutableSet<String> defines = ImmutableSet.of();
     return NodeUtil.isValidDefineValue(value, defines);
+  }
+
+  public void testGetOctalNumberValue() {
+    assertEquals(18.0, NodeUtil.getNumberValue(getNode("022")), 0.0);
   }
 
   @SuppressWarnings("JUnit3FloatingPointComparisonWithoutDelta")
@@ -1964,7 +2105,7 @@ public final class NodeUtilTest extends TestCase {
     assertLValueNamedX(parse("var x = y;").getFirstFirstChild());
     assertLValueNamedX(parse("x++;").getFirstFirstChild().getFirstChild());
     assertLValueNamedX(
-       NodeUtil.getFunctionParameters(parse("function f(x) {}").getFirstChild()).getFirstChild());
+        NodeUtil.getFunctionParameters(parse("function f(x) {}").getFirstChild()).getFirstChild());
 
     Node x = NodeUtil.getFunctionParameters(parse("function f(x = 3) {}").getFirstChild())
         .getFirstChild()  // x = 3
@@ -1975,6 +2116,8 @@ public final class NodeUtilTest extends TestCase {
         parse("({x} = obj)").getFirstFirstChild().getFirstFirstChild());
     assertLValueNamedX(
         parse("([x] = obj)").getFirstFirstChild().getFirstFirstChild());
+    assertLValueNamedX(
+        parse("function foo (...x) {}").getFirstChild().getSecondChild().getFirstFirstChild());
   }
 
   private void assertNotLValueNamedX(Node n) {
@@ -1999,6 +2142,25 @@ public final class NodeUtilTest extends TestCase {
         .getFirstChild()  // spread
         .getFirstChild();  // x
     assertNotLValueNamedX(x);
+  }
+
+  public void testIsNestedObjectPattern() {
+    Node root = parse("var {a, b} = {a:1, b:2}");
+    Node destructuring = root.getFirstFirstChild();
+    Node objPattern = destructuring.getFirstChild();
+    assertFalse(NodeUtil.isNestedObjectPattern(objPattern));
+
+    root = parse("var {a, b:{c}} = {a:{}, b:{c:5}};");
+    destructuring = root.getFirstFirstChild();
+    objPattern = destructuring.getFirstChild();
+    assertTrue(NodeUtil.isNestedObjectPattern(objPattern));
+  }
+
+  public void testIsNestedArrayPattern() {
+    Node root = parse("var [a, b] = [1, 2]");
+    Node destructuring = root.getFirstFirstChild();
+    Node arrayPattern = destructuring.getFirstChild();
+    assertFalse(NodeUtil.isNestedArrayPattern(arrayPattern));
   }
 
   public void testLhsByDestructuring1() {
@@ -2322,6 +2484,50 @@ public final class NodeUtilTest extends TestCase {
     assertLhsByDestructuring(nameNodeA);
   }
 
+  public void testLhsByDestructuring8() {
+    Node root = parse("var [...x] = obj;");
+    Node destructLhs = root.getFirstFirstChild();
+    checkArgument(destructLhs.isDestructuringLhs());
+    Node destructPat = destructLhs.getFirstChild();
+    checkArgument(destructPat.isArrayPattern());
+    Node restNode = destructPat.getFirstChild();
+    checkArgument(restNode.isRest());
+
+    Node nameNodeA = restNode.getFirstChild();
+    checkState(nameNodeA.getString().equals("x"), nameNodeA);
+
+    assertLhsByDestructuring(nameNodeA);
+  }
+
+  public void testLhsByDestructuring8b() {
+    Node root = parse("([...this.x] = obj);");
+    Node assign = root.getFirstFirstChild();
+    checkArgument(assign.isAssign());
+    Node destructPat = assign.getFirstChild();
+    checkArgument(destructPat.isArrayPattern());
+    Node restNode = destructPat.getFirstChild();
+    checkArgument(restNode.isRest());
+    Node getProp = restNode.getFirstChild();
+    checkArgument(getProp.isGetProp());
+
+    assertLhsByDestructuring(getProp);
+  }
+
+  public void testLhsByDestructuring9() {
+    Node root = parse("var {['a']:x} = obj;");
+    Node destructLhs = root.getFirstFirstChild();
+    checkArgument(destructLhs.isDestructuringLhs());
+    Node destructPat = destructLhs.getFirstChild();
+    checkArgument(destructPat.isObjectPattern());
+    Node computedPropNode = destructPat.getFirstChild();
+    checkArgument(computedPropNode.isComputedProp());
+
+    Node nameNodeA = computedPropNode.getLastChild();
+    checkState(nameNodeA.getString().equals("x"), nameNodeA);
+
+    assertLhsByDestructuring(nameNodeA);
+  }
+
   private static void assertLhsByDestructuring(Node n) {
     assertTrue(NodeUtil.isLhsByDestructuring(n));
   }
@@ -2363,6 +2569,14 @@ public final class NodeUtilTest extends TestCase {
 
     classNode = getClassNode("/** @export */ var Foo = class Bar {}");
     assertTrue(NodeUtil.getBestJSDocInfo(classNode).isExport());
+  }
+
+  public void testGetBestJsDocInfoForMethods() {
+    Node function = getFunctionNode("class C { /** @export */ foo() {} }");
+    assertTrue(NodeUtil.getBestJSDocInfo(function).isExport());
+
+    function = getFunctionNode("class C { /** @export */ [computedMethod]() {} }");
+    assertTrue(NodeUtil.getBestJSDocInfo(function).isExport());
   }
 
   public void testGetBestJsDocInfoExport() {
@@ -2488,38 +2702,55 @@ public final class NodeUtilTest extends TestCase {
 
   public void testGetAllVars1() {
     String fnString = "var h; function g(x, y) {var z; h = 2; {let a; const b = 1} let c}";
+    Compiler compiler = new Compiler();
+    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
+    ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+
     Node ast = parse(fnString);
     Node functionNode = getFunctionNode(fnString);
-    Compiler compiler = new Compiler();
-    ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+
     Scope globalScope = Scope.createGlobalScope(ast);
     Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
+
     Map<String, Var> allVariables = new HashMap<>();
-    NodeUtil.getAllVarsDeclaredInFunction(allVariables, compiler, scopeCreator, functionScope);
+    List<Var> orderedVars = new LinkedList<>();
+    NodeUtil.getAllVarsDeclaredInFunction(
+        allVariables, orderedVars, compiler, scopeCreator, functionScope);
     Set<String> keySet = new HashSet<>(Arrays.asList("a", "b", "c", "z", "x", "y"));
     assertEquals(keySet, allVariables.keySet());
   }
 
   public void testGetAllVars2() {
     String fnString =
-          "function g(x, y) "
+        "function g(x, y) "
             + "{var z; "
-              + "{let a = (no1, no2, no3) => { let no6, no7; }; "
+            + "{let a = (no1, no2) => { let no6, no7; }; "
             + "const b = 1} "
-        + "let c} "
-        + "function u(h) {let e}";
-    Node ast = parse(fnString);
-    Node functionNode = getFunctionNode(fnString); // Will get the first function
+            + "let c} "
+            + "function u(h) {let e}";
+
     Compiler compiler = new Compiler();
+    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
     ScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
+
+    Node ast = parse(fnString);
+    Node functionNode = getFunctionNode(fnString);
+
     Scope globalScope = Scope.createGlobalScope(ast);
     Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
+
     Map<String, Var> allVariables = new HashMap<>();
-    NodeUtil.getAllVarsDeclaredInFunction(allVariables, compiler, scopeCreator, functionScope);
+    List<Var> orderedVars = new LinkedList<>();
+    NodeUtil.getAllVarsDeclaredInFunction(
+        allVariables, orderedVars, compiler, scopeCreator, functionScope);
     Set<String> keySet = new HashSet<>(Arrays.asList("x", "y", "z", "a", "b", "c"));
     assertEquals(keySet, allVariables.keySet());
   }
 
+  public void testIsVarArgs() {
+    assertTrue(NodeUtil.isVarArgsFunction(getNode("function() {return () => arguments}")));
+    assertFalse(NodeUtil.isVarArgsFunction(getNode("() => arguments")));
+  }
 
   private boolean executedOnceTestCase(String code) {
     Node ast = parse(code);

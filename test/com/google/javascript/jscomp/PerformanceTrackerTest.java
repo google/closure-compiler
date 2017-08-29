@@ -35,8 +35,8 @@ import junit.framework.TestCase;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 public final class PerformanceTrackerTest extends TestCase {
-  private Node emptyExternRoot = new Node(Token.BLOCK);
-  private Node emptyJsRoot = new Node(Token.BLOCK);
+  private final Node emptyExternRoot = new Node(Token.BLOCK);
+  private final Node emptyJsRoot = new Node(Token.BLOCK);
 
   public void testStatsCalculation() {
     PerformanceTracker tracker =
@@ -104,11 +104,11 @@ public final class PerformanceTrackerTest extends TestCase {
 
   public void testOutputFormat() {
     ByteArrayOutputStream output = new ByteArrayOutputStream();
-    PrintStream outstream = new PrintStream(output);
-    PerformanceTracker tracker =
-        new PerformanceTracker(emptyExternRoot, emptyJsRoot, TracerMode.ALL, outstream);
-    tracker.outputTracerReport();
-    outstream.close();
+    try (PrintStream outstream = new PrintStream(output)) {
+      PerformanceTracker tracker =
+          new PerformanceTracker(emptyExternRoot, emptyJsRoot, TracerMode.ALL, outstream);
+      tracker.outputTracerReport();
+    }
     Pattern p = Pattern.compile(Joiner.on("\n").join(
         ".*TOTAL:",
         "Start time\\(ms\\): [0-9]+",

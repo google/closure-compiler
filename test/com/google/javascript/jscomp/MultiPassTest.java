@@ -359,7 +359,9 @@ public final class MultiPassTest extends CompilerTestCase {
           @Override
           protected CompilerPass create(AbstractCompiler compiler) {
             final boolean late = false;
-            return new PeepholeOptimizationsPass(compiler,
+            return new PeepholeOptimizationsPass(
+                compiler,
+                getName(),
                 new PeepholeMinimizeConditions(late, false /* useTypes */),
                 new PeepholeSubstituteAlternateSyntax(late),
                 new PeepholeReplaceKnownMethods(late, false),

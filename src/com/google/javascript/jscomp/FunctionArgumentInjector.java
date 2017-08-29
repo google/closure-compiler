@@ -142,19 +142,36 @@ class FunctionArgumentInjector {
             cArg = cArg.getNext();
           }
           if (fnParam.getFirstChild().isObjectPattern()) {
-            Node prop = IR.string(fnParam.getFirstFirstChild().getString());
-            Node getProp = IR.getprop(array, prop);
-            getProp.useSourceInfoIfMissingFromForTree(array);
-            argMap.put(fnParam.getFirstFirstChild().getFirstChild().getString(), getProp);
+            for (Node stringKey = fnParam.getFirstFirstChild();
+                stringKey != null; stringKey = stringKey.getNext()) {
+              Node prop = IR.string(stringKey.getString());
+              char first = prop.getString().charAt(0);
+              if (Character.isDigit(first) || stringKey.isQuotedString()) {
+                Node getElem = IR.getelem(array.cloneTree(), prop);
+                getElem.useSourceInfoIfMissingFromForTree(array);
+                argMap.put(stringKey.getFirstChild().getString(), getElem);
+              } else {
+                Node getProp = IR.getprop(array.cloneTree(), prop);
+                getProp.useSourceInfoIfMissingFromForTree(array);
+                argMap.put(stringKey.getFirstChild().getString(), getProp);
+              }
+            }
           } else {
             argMap.put(fnParam.getFirstChild().getString(), array);
           }
           return argMap;
         } else if (fnParam.isObjectPattern()) {
           for (Node n = fnParam.getFirstChild(); n != null; n = n.getNext()) {
-            Node getProp = IR.getprop(cArg.cloneTree(), n.getString());
-            getProp.useSourceInfoIfMissingFromForTree(cArg);
-            argMap.put(n.getFirstChild().getString(), getProp);
+            char first = n.getString().charAt(0);
+            if (Character.isDigit(first) || n.isQuotedString()) {
+              Node getElem = IR.getelem(cArg.cloneTree(), IR.string(n.getString()));
+              getElem.useSourceInfoIfMissingFromForTree(cArg);
+              argMap.put(n.getFirstChild().getString(), getElem);
+            } else {
+              Node getProp = IR.getprop(cArg.cloneTree(), n.getString());
+              getProp.useSourceInfoIfMissingFromForTree(cArg);
+              argMap.put(n.getFirstChild().getString(), getProp);
+            }
           }
         } else if (fnParam.isDefaultValue()) {
           argMap.put(fnParam.getFirstChild().getString(), cArg);
@@ -172,9 +189,17 @@ class FunctionArgumentInjector {
             Node defaultValue = fnParam.getSecondChild();
             for (Node stringKey = fnParam.getFirstFirstChild();
                 stringKey != null; stringKey = stringKey.getNext()) {
-              Node getProp = IR.getprop(defaultValue.cloneTree(), stringKey.getString());
-              getProp.useSourceInfoIfMissingFromForTree(defaultValue);
-              argMap.put(stringKey.getFirstChild().getString(), getProp);
+              char first = stringKey.getString().charAt(0);
+              if (Character.isDigit(first) || stringKey.isQuotedString()) {
+                Node getElem = IR.getelem(defaultValue.cloneTree(),
+                    IR.string(stringKey.getString()));
+                getElem.useSourceInfoIfMissingFromForTree(defaultValue);
+                argMap.put(stringKey.getFirstChild().getString(), getElem);
+              } else {
+                Node getProp = IR.getprop(defaultValue.cloneTree(), stringKey.getString());
+                getProp.useSourceInfoIfMissingFromForTree(defaultValue);
+                argMap.put(stringKey.getFirstChild().getString(), getProp);
+              }
             }
           } else {
             Node defaultValue = fnParam.getSecondChild().cloneTree();

@@ -351,4 +351,11 @@ public final class GenerateExportsTest extends CompilerTestCase {
     testSame(code);
     testExternChanges(code, "Object.prototype.foo;");
   }
+
+  public void testExportExprResultProperty() {
+    allowNonGlobalExports = false;
+    testSame(lines(
+        "/** @record */ function Foo() {}",
+        "/** @export {number} */ Foo.prototype.myprop;"));
+  }
 }

@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.javascript.jscomp.graph.DiGraph;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal;
 import com.google.javascript.jscomp.graph.FixedPointGraphTraversal.EdgeCallback;
@@ -48,7 +50,7 @@ public final class FixedPointGraphTraversalTest extends TestCase {
   private DiGraph<Counter, String> graph;
 
   private Counter A, B, C, D, E;
-  private CounterIncrementer callback = new CounterIncrementer();
+  private final CounterIncrementer callback = new CounterIncrementer();
   private FixedPointGraphTraversal<Counter, String> traversal =
       new FixedPointGraphTraversal<>(callback);
 
@@ -169,7 +171,7 @@ public final class FixedPointGraphTraversalTest extends TestCase {
       fail("Expecting Error: " +
           FixedPointGraphTraversal.NON_HALTING_ERROR_MSG);
     } catch (IllegalStateException e) {
-      assertEquals(FixedPointGraphTraversal.NON_HALTING_ERROR_MSG, e.getMessage());
+      assertThat(e).hasMessageThat().isEqualTo(FixedPointGraphTraversal.NON_HALTING_ERROR_MSG);
     }
   }
 

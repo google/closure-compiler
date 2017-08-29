@@ -20,8 +20,8 @@ import static com.google.javascript.jscomp.Es6ConvertSuper.INVALID_SUPER_CALL;
 import static com.google.javascript.jscomp.Es6RewriteClass.CLASS_REASSIGNMENT;
 import static com.google.javascript.jscomp.Es6RewriteClass.CONFLICTING_GETTER_SETTER_TYPE;
 import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
+import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
+import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6_MODULES;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -1933,9 +1933,15 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "    [foo]: {",
             "      configurable:true,",
             "      enumerable:true,",
-            "      /** @this {C} */",
+            "      /**",
+            "       * @this {C}",
+            "       * @return {boolean}",
+            "       */",
             "      get: function() {},",
-            "      /** @this {C} */",
+            "      /**",
+            "       * @this {C}",
+            "       * @param {boolean} val",
+            "       */",
             "      set: function(val) {},",
             "    },",
             "  });"));
@@ -1966,6 +1972,32 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "/** @constructor @struct */",
             "let C = function() {};",
             "C[foo] = function() { alert(2); };"));
+  }
+
+  public void testComputedPropGeneratorMethods() {
+    test(
+        "class C { *[foo]() { yield 1; } }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let C = function() {};",
+            "C.prototype[foo] = function*() { yield 1; };"));
+
+    test(
+        "class C { static *[foo]() { yield 2; } }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let C = function() {};",
+            "C[foo] = function*() { yield 2; };"));
+  }
+
+  public void testClassGenerator() {
+    test(
+        "class C { *foo() { yield 1; } }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let C = function() {};",
+            "C.prototype.foo = function*() { yield 1;};"));
+    assertThat(getLastCompiler().injected).isEmpty();
   }
 
   @Override

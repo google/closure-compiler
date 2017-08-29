@@ -169,6 +169,11 @@ public class ProxyObjectType extends ObjectType {
   }
 
   @Override
+  public boolean isVoidable() {
+    return referencedType.isVoidable();
+  }
+
+  @Override
   public EnumType toMaybeEnumType() {
     return referencedType.toMaybeEnumType();
   }

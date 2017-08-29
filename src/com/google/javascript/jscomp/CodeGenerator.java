@@ -872,7 +872,7 @@ public class CodeGenerator {
 
       case YIELD:
         add("yield");
-        if (n.isYieldFor()) {
+        if (n.isYieldAll()) {
           checkNotNull(first);
           add("*");
         }
@@ -983,12 +983,7 @@ public class CodeGenerator {
               cc.listSeparator();
             }
 
-            checkState(
-                c.isComputedProp()
-                    || c.isGetterDef()
-                    || c.isSetterDef()
-                    || c.isStringKey()
-                    || c.isMemberFunctionDef());
+            checkState(NodeUtil.isObjLitProperty(c));
             add(c);
           }
           add("}");

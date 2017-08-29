@@ -127,7 +127,8 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       DiagnosticType.disabled(
           "JSC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME",
           "Reference to fully qualified import name ''{0}''."
-              + " Imports in goog.module should use the return value of goog.require instead.");
+              + " Imports in goog.module should use the return value of"
+              + " goog.require / goog.forwardDeclare instead.");
 
   public static final DiagnosticType REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME =
       DiagnosticType.disabled(
@@ -139,7 +140,8 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       DiagnosticType.disabled(
           "JSC_JSDOC_REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME",
           "Reference to fully qualified import name ''{0}'' in JSDoc."
-              + " Imports in goog.module should use the return value of goog.require instead.");
+              + " Imports in goog.module should use the return value of"
+              + " goog.require / goog.forwardDeclare instead.");
 
   public static final DiagnosticType
       JSDOC_REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME =
@@ -371,6 +373,10 @@ public final class ClosureCheckModule extends AbstractModuleCallback
 
   private void checkRequireCall(NodeTraversal t, Node callNode, Node parent) {
     checkState(callNode.isCall());
+    if (!callNode.getLastChild().isString()) {
+      t.report(callNode, ProcessClosurePrimitives.INVALID_ARGUMENT_ERROR, "goog.require");
+      return;
+    }
     switch (parent.getToken()) {
       case EXPR_RESULT:
         currentModule.importsByLongRequiredName.put(extractFirstArgumentName(callNode), parent);

@@ -191,7 +191,7 @@ class ScopedAliases implements HotSwapCompilerPass {
         expressionWithScopeCall.replaceWith(scopeClosureBlock);
         NodeUtil.markFunctionsDeleted(expressionWithScopeCall, compiler);
         compiler.reportChangeToEnclosingScope(scopeClosureBlock);
-        NodeUtil.tryMergeBlock(scopeClosureBlock);
+        NodeUtil.tryMergeBlock(scopeClosureBlock, false);
       }
     }
   }
@@ -599,7 +599,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       renamer.addDeclaredName(fnName.getString(), false);
 
       MakeDeclaredNamesUnique uniquifier = new MakeDeclaredNamesUnique(renamer);
-      NodeTraversal.traverseEs6(compiler, fnName.getParent().getParent(), uniquifier);
+      NodeTraversal.traverseEs6(compiler, fnName.getGrandparent(), uniquifier);
     }
 
     private void validateScopeCall(NodeTraversal t, Node n, Node parent) {
@@ -612,7 +612,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       if (t.getEnclosingFunction() != null) {
         report(t, n, GOOG_SCOPE_MUST_BE_IN_GLOBAL_SCOPE);
       }
-      if (n.getChildCount() != 2) {
+      if (!n.hasTwoChildren()) {
         // The goog.scope call should have exactly 1 parameter.  The first
         // child is the "goog.scope" and the second should be the parameter.
         report(t, n, GOOG_SCOPE_HAS_BAD_PARAMETERS);

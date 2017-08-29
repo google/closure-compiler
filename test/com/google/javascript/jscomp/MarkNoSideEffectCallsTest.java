@@ -30,21 +30,21 @@ import java.util.List;
 public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
   List<String> noSideEffectCalls = new ArrayList<>();
 
-  private static String kExterns =
-      "function externSef1(){}" +
-      "/**@nosideeffects*/function externNsef1(){}" +
-      "var externSef2 = function(){};" +
-      "/**@nosideeffects*/var externNsef2 = function(){};" +
-      "var externNsef3 = /**@nosideeffects*/function(){};" +
-      "var externObj;" +
-      "externObj.sef1 = function(){};" +
-      "/**@nosideeffects*/externObj.nsef1 = function(){};" +
-      "externObj.nsef2 = /**@nosideeffects*/function(){};" +
-      "externObj.sef2;" +
-      "/**@nosideeffects*/externObj.nsef3;";
+  private static final String EXTERNS =
+      "function externSef1(){}"
+          + "/**@nosideeffects*/function externNsef1(){}"
+          + "var externSef2 = function(){};"
+          + "/**@nosideeffects*/var externNsef2 = function(){};"
+          + "var externNsef3 = /**@nosideeffects*/function(){};"
+          + "var externObj;"
+          + "externObj.sef1 = function(){};"
+          + "/**@nosideeffects*/externObj.nsef1 = function(){};"
+          + "externObj.nsef2 = /**@nosideeffects*/function(){};"
+          + "externObj.sef2;"
+          + "/**@nosideeffects*/externObj.nsef3;";
 
   public MarkNoSideEffectCallsTest() {
-    super(kExterns);
+    super(EXTERNS);
   }
 
   @Override
@@ -234,7 +234,7 @@ public final class MarkNoSideEffectCallsTest extends CompilerTestCase {
 
   void testMarkCalls(
       String extraExterns, String source, List<String> expected) {
-    testSame(kExterns + extraExterns, source);
+    testSame(EXTERNS + extraExterns, source);
     assertEquals(expected, noSideEffectCalls);
     noSideEffectCalls.clear();
   }

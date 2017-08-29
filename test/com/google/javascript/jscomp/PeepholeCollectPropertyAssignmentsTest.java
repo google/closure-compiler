@@ -21,7 +21,7 @@ public final class PeepholeCollectPropertyAssignmentsTest extends CompilerTestCa
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new PeepholeOptimizationsPass(
-        compiler, new PeepholeCollectPropertyAssignments());
+        compiler, getName(), new PeepholeCollectPropertyAssignments());
   }
 
   public void test36122565a() {

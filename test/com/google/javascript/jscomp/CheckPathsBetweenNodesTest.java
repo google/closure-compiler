@@ -308,14 +308,8 @@ public final class CheckPathsBetweenNodesTest extends TestCase {
         nodePredicate, edgePredicate, false);
   }
 
-  private static Predicate<DiGraphEdge<String, String>>
-      edgeIs(final Object val) {
-    return new Predicate<DiGraphEdge<String, String>>() {
-      @Override
-      public boolean apply(DiGraphEdge<String, String> input) {
-        return input.getValue().equals(val);
-      }
-    };
+  private static Predicate<DiGraphEdge<String, String>> edgeIs(final Object val) {
+    return input -> input.getValue().equals(val);
   }
 
   private static class CountingPredicate<T> implements Predicate<T> {

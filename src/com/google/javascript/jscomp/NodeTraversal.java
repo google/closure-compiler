@@ -24,6 +24,7 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Set;
@@ -54,7 +55,7 @@ public class NodeTraversal {
    * A stack of scope roots. All scopes that have not been created
    * are represented in this Deque.
    */
-  private final ArrayDeque<Node> scopeRoots = new ArrayDeque<>();
+  private final ArrayList<Node> scopeRoots = new ArrayList<>();
 
   /**
    * Stack containing the control flow graphs (CFG) that have been created. There are fewer CFGs
@@ -78,9 +79,9 @@ public class NodeTraversal {
   /** Possible callback for scope entry and exist **/
   private ScopedCallback scopeCallback;
 
-  /** Callback for passes that iterate over a list of functions */
-  public interface FunctionCallback {
-    void enterFunction(AbstractCompiler compiler, Node fnRoot);
+  /** Callback for passes that iterate over a list of change scope roots (FUNCTIONs and SCRIPTs) */
+  public interface ChangeScopeRootCallback {
+    void enterChangeScopeRoot(AbstractCompiler compiler, Node root);
   }
 
   /**
@@ -270,7 +271,7 @@ public class NodeTraversal {
     this.useBlockScope = scopeCreator.hasBlockScope();
   }
 
-  private void throwUnexpectedException(Exception unexpectedException) {
+  private void throwUnexpectedException(Throwable unexpectedException) {
     // If there's an unexpected exception, try to get the
     // line number of the code that caused it.
     String message = unexpectedException.getMessage();
@@ -306,7 +307,7 @@ public class NodeTraversal {
       // null parent ensures that the shallow callbacks will traverse root
       traverseBranch(root, null);
       popScope();
-    } catch (Exception unexpectedException) {
+    } catch (Error | Exception unexpectedException) {
       throwUnexpectedException(unexpectedException);
     }
   }
@@ -325,7 +326,7 @@ public class NodeTraversal {
       traverseBranch(root, scopeRoot);
 
       popScope();
-    } catch (Exception unexpectedException) {
+    } catch (Error | Exception unexpectedException) {
       throwUnexpectedException(unexpectedException);
     }
   }
@@ -361,7 +362,7 @@ public class NodeTraversal {
       pushScope(s);
       traverseBranch(root, null);
       popScope();
-    } catch (Exception unexpectedException) {
+    } catch (Error | Exception unexpectedException) {
       throwUnexpectedException(unexpectedException);
     }
   }
@@ -436,7 +437,7 @@ public class NodeTraversal {
       initScopeRoots(scopeRoot.getParent());
       // null parent ensures that the shallow callbacks will traverse root
       traverseBranch(scopeRoot, scopeRoot.getParent());
-    } catch (Exception unexpectedException) {
+    } catch (Error | Exception unexpectedException) {
       throwUnexpectedException(unexpectedException);
     }
   }
@@ -466,7 +467,7 @@ public class NodeTraversal {
       Node root,
       List<Node> scopeNodes,
       final Callback cb,
-      final FunctionCallback fcb,
+      final ChangeScopeRootCallback changeCallback,
       final boolean traverseNested) {
     if (scopeNodes == null) {
       NodeTraversal.traverseEs6(compiler, root, cb);
@@ -475,8 +476,8 @@ public class NodeTraversal {
           new MemoizedScopeCreator(new Es6SyntacticScopeCreator(compiler));
 
       for (final Node scopeNode : scopeNodes) {
-        if (fcb != null) {
-          fcb.enterFunction(compiler, scopeNode);
+        if (changeCallback != null) {
+          changeCallback.enterChangeScopeRoot(compiler, scopeNode);
         }
 
         Callback scb =
@@ -624,14 +625,14 @@ public class NodeTraversal {
    * Compiler.reportChangeToEnclosingScope(Node n).
    */
   public static void traverseChangedFunctions(
-      final AbstractCompiler compiler, final FunctionCallback callback) {
+      final AbstractCompiler compiler, final ChangeScopeRootCallback callback) {
     final Node jsRoot = compiler.getJsRoot();
     NodeTraversal.traverseEs6(compiler, jsRoot,
         new AbstractPreOrderCallback() {
           @Override
           public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
             if (NodeUtil.isChangeScopeRoot(n) && compiler.hasScopeChanged(n)) {
-              callback.enterFunction(compiler, n);
+              callback.enterChangeScopeRoot(compiler, n);
             }
             return true;
           }
@@ -837,7 +838,7 @@ public class NodeTraversal {
   private void pushScope(Node node) {
     checkState(curNode != null);
     checkState(node != null);
-    scopeRoots.push(node);
+    scopeRoots.add(node);
     recordScopeRoot(node);
     if (scopeCallback != null) {
       scopeCallback.enterScope(this);
@@ -874,8 +875,11 @@ public class NodeTraversal {
     if (!quietly && scopeCallback != null) {
       scopeCallback.exitScope(this);
     }
-    Node scopeRoot = scopeRoots.pollFirst();
-    if (scopeRoot == null) {
+    Node scopeRoot;
+    int roots = scopeRoots.size();
+    if (roots > 0) {
+      scopeRoot = scopeRoots.remove(roots - 1);
+    } else {
       scopeRoot = scopes.pop().getRootNode();
     }
     if (NodeUtil.isValidCfgRoot(scopeRoot)) {
@@ -887,14 +891,30 @@ public class NodeTraversal {
   public Scope getScope() {
     Scope scope = scopes.peek();
 
-    Node root = null;
-    while ((root = scopeRoots.pollLast()) != null) {
-      scope = scopeCreator.createScope(root, scope);
+    for (int i = 0; i < scopeRoots.size(); i++) {
+      scope = scopeCreator.createScope(scopeRoots.get(i), scope);
       scopes.push(scope);
     }
+    scopeRoots.clear();
 
     // No need to call compiler.setScope; the top scopeRoot is now the top scope
     return scope;
+  }
+
+  public boolean isHoistScope() {
+    return Scope.isHoistScopeRootNode(getScopeRoot());
+  }
+
+  public Node getClosestHoistScopeRoot() {
+    int roots = scopeRoots.size();
+    for (int i = roots; i > 0; i--) {
+      Node rootNode = scopeRoots.get(i - 1);
+      if (Scope.isHoistScopeRootNode(rootNode)) {
+        return rootNode;
+      }
+    }
+
+    return scopes.peek().getClosestHoistScope().getRootNode();
   }
 
   public Scope getClosestHoistScope() {
@@ -929,12 +949,12 @@ public class NodeTraversal {
 
   /** Returns the current scope's root. */
   public Node getScopeRoot() {
-    Node root = scopeRoots.peek();
-    if (root == null) {
+    int roots = scopeRoots.size();
+    if (roots > 0) {
+      return scopeRoots.get(roots - 1);
+    } else {
       Scope s = scopes.peek();
       return s != null ? s.getRootNode() : null;
-    } else {
-      return root;
     }
   }
 

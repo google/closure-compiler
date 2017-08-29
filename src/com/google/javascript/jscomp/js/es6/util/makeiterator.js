@@ -23,7 +23,7 @@
 /**
  * Creates an iterator for the given iterable.
  *
- * @param {string|!Array<T>|!Iterable<T>|!Iterator<T>|!Arguments<T>} iterable
+ * @param {string|!Iterable<T>|!Iterator<T>|!Arguments<T>} iterable
  * @return {!Iterator<T>}
  * @template T
  * @suppress {reportUnknownTypes}

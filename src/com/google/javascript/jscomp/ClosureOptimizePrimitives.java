@@ -48,6 +48,9 @@ final class ClosureOptimizePrimitives implements CompilerPass {
   /** Whether property renaming is enabled */
   private final boolean propertyRenamingEnabled;
 
+  /** Whether we can use Es6 syntax */
+  private final boolean canUseEs6Syntax;
+
   /**
    * Identifies all calls to closure primitive functions
    */
@@ -74,9 +77,11 @@ final class ClosureOptimizePrimitives implements CompilerPass {
   }
 
   /** @param compiler The AbstractCompiler */
-  ClosureOptimizePrimitives(AbstractCompiler compiler, boolean propertyRenamingEnabled) {
+  ClosureOptimizePrimitives(
+      AbstractCompiler compiler, boolean propertyRenamingEnabled, boolean canUseEs6Syntax) {
     this.compiler = compiler;
     this.propertyRenamingEnabled = propertyRenamingEnabled;
+    this.canUseEs6Syntax = canUseEs6Syntax;
   }
 
   @Override
@@ -101,13 +106,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
         callNode.removeChild(keyNode);
         callNode.removeChild(valueNode);
 
-        if (!keyNode.isString()) {
-          keyNode = IR.string(NodeUtil.getStringValue(keyNode))
-              .srcref(keyNode);
-        }
-        keyNode.setToken(Token.STRING_KEY);
-        keyNode.setQuotedString();
-        objNode.addChildToBack(IR.propdef(keyNode, valueNode));
+        addKeyValueToObjLit(objNode, keyNode, valueNode);
       }
       callNode.replaceWith(objNode);
       compiler.reportChangeToEnclosingScope(objNode);
@@ -148,11 +147,10 @@ final class ClosureOptimizePrimitives implements CompilerPass {
    * Returns whether the given call to goog.object.create can be converted to an
    * object literal.
    */
-  private static boolean canOptimizeObjectCreate(Node firstParam) {
+  private boolean canOptimizeObjectCreate(Node firstParam) {
     Node curParam = firstParam;
     while (curParam != null) {
-      // All keys must be strings or numbers.
-      if (!curParam.isString() && !curParam.isNumber()) {
+      if (!isOptimizableKey(curParam)) {
         return false;
       }
       curParam = curParam.getNext();
@@ -181,13 +179,7 @@ final class ClosureOptimizePrimitives implements CompilerPass {
         curParam = curParam.getNext();
         callNode.removeChild(keyNode);
 
-        if (!keyNode.isString()) {
-          keyNode = IR.string(NodeUtil.getStringValue(keyNode))
-              .srcref(keyNode);
-        }
-        keyNode.setToken(Token.STRING_KEY);
-        keyNode.setQuotedString();
-        objNode.addChildToBack(IR.propdef(keyNode, valueNode));
+        addKeyValueToObjLit(objNode, keyNode, valueNode);
       }
       callNode.replaceWith(objNode);
       compiler.reportChangeToEnclosingScope(objNode);
@@ -202,18 +194,43 @@ final class ClosureOptimizePrimitives implements CompilerPass {
     Set<String> keys = new HashSet<>();
     while (curParam != null) {
       // All keys must be strings or numbers, otherwise we can't optimize the call.
-      if (!curParam.isString() && !curParam.isNumber()) {
+      if (!isOptimizableKey(curParam)) {
         return false;
       }
-      String key =
-          curParam.isString() ? curParam.getString() : numberToString(curParam.getDouble());
-      if (!keys.add(key)) {
-        compiler.report(JSError.make(firstParam.getPrevious(), DUPLICATE_SET_MEMBER, key));
-        return false;
+      if (curParam.isString() || curParam.isNumber()) {
+        String key =
+            curParam.isString() ? curParam.getString() : numberToString(curParam.getDouble());
+        if (!keys.add(key)) {
+          compiler.report(JSError.make(firstParam.getPrevious(), DUPLICATE_SET_MEMBER, key));
+          return false;
+        }
       }
       curParam = curParam.getNext();
     }
     return true;
+  }
+
+  private void addKeyValueToObjLit(Node objNode, Node keyNode, Node valueNode) {
+    if (keyNode.isNumber() || keyNode.isString()) {
+      if (keyNode.isNumber()) {
+        keyNode = IR.string(numberToString(keyNode.getDouble()))
+            .srcref(keyNode);
+      }
+      keyNode.setToken(Token.STRING_KEY);
+      keyNode.setQuotedString();
+      objNode.addChildToBack(IR.propdef(keyNode, valueNode));
+    } else {
+      objNode.addChildToBack(IR.computedProp(keyNode, valueNode).srcref(keyNode));
+    }
+  }
+
+  private boolean isOptimizableKey(Node curParam) {
+    if (this.canUseEs6Syntax) {
+      return !NodeUtil.isStatement(curParam);
+    } else {
+      // Not ES6, all keys must be strings or numbers.
+      return curParam.isString() || curParam.isNumber();
+    }
   }
 
   /**

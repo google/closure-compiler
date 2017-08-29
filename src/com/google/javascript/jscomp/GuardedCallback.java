@@ -22,6 +22,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -375,6 +376,6 @@ abstract class GuardedCallback<T> implements Callback {
 
   // Tokens that are allowed to have guards on them (no point doing a hash lookup on
   // any other type of node).
-  private static final ImmutableSet<Token> CAN_HAVE_GUARDS =
-      ImmutableSet.of(Token.AND, Token.OR, Token.HOOK, Token.IF, Token.BLOCK, Token.SCRIPT);
+  private static final ImmutableSet<Token> CAN_HAVE_GUARDS = Sets.immutableEnumSet(
+      Token.AND, Token.OR, Token.HOOK, Token.IF, Token.BLOCK, Token.SCRIPT);
 }

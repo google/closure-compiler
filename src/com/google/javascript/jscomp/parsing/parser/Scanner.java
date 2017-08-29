@@ -723,8 +723,9 @@ public class Scanner {
       return createToken(TokenType.ERROR, beginToken);
     }
 
-    if (Keywords.isKeyword(value)) {
-      return new Token(Keywords.getTokenType(value), getTokenRange(beginToken));
+    Keywords k = Keywords.get(value);
+    if (k != null) {
+      return new Token(k.type, getTokenRange(beginToken));
     }
 
     // Intern the value to avoid creating lots of copies of the same string.

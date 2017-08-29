@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.gson.JsonArray;
@@ -50,13 +49,13 @@ public final class JSModuleGraphTest extends TestCase {
   @Override
   public void setUp() throws Exception {
     super.setUp();
-    B.addDependency(A);  //     __A__
-    C.addDependency(A);  //    /  |  \
-    D.addDependency(B);  //   B   C  |
-    E.addDependency(B);  //  / \ /|  |
-    E.addDependency(C);  // D   E | /
-    F.addDependency(A);  //      \|/
-    F.addDependency(C);  //       F
+    B.addDependency(A); //     __A__
+    C.addDependency(A); //    /  |  \
+    D.addDependency(B); //   B   C  |
+    E.addDependency(B); //  / \ /|  |
+    E.addDependency(C); // D   E | /
+    F.addDependency(A); //      \|/
+    F.addDependency(C); //       F
     F.addDependency(E);
     graph = new JSModuleGraph(new JSModule[] {A, B, C, D, E, F});
     compiler = new Compiler();
@@ -95,7 +94,9 @@ public final class JSModuleGraphTest extends TestCase {
     h.addDependency(d);
     JSModuleGraph graph = new JSModuleGraph(new JSModule[] {a, b, c, d, e, f, g, h});
     // d is deeper, but it also has an extra dependent node, so b is the better choice.
-    assertSmallestCoveringDependency(b, graph, e, f, g);
+    assertSmallestCoveringSubtree(b, graph, a, e, f, g);
+    // However, if the parent tree we're looking at is c, then b isn't an option
+    assertSmallestCoveringSubtree(d, graph, c, e, f, g);
   }
 
   public void testModuleDepth() {
@@ -155,28 +156,28 @@ public final class JSModuleGraphTest extends TestCase {
     assertDeepestCommonDepInclusive(F, F, F);
   }
 
-  public void testSmallestCoveringDependency() {
-    assertSmallestCoveringDependency(A, A, A);
-    assertSmallestCoveringDependency(A, A, B);
-    assertSmallestCoveringDependency(A, A, C);
-    assertSmallestCoveringDependency(A, A, D);
-    assertSmallestCoveringDependency(A, A, E);
-    assertSmallestCoveringDependency(A, A, F);
-    assertSmallestCoveringDependency(B, B, B);
-    assertSmallestCoveringDependency(A, B, C);
-    assertSmallestCoveringDependency(B, B, D);
-    assertSmallestCoveringDependency(B, B, E);
-    assertSmallestCoveringDependency(B, B, F);
-    assertSmallestCoveringDependency(C, C, C);
-    assertSmallestCoveringDependency(A, C, D);
-    assertSmallestCoveringDependency(C, C, E);
-    assertSmallestCoveringDependency(C, C, F);
-    assertSmallestCoveringDependency(D, D, D);
-    assertSmallestCoveringDependency(B, D, E);
-    assertSmallestCoveringDependency(B, D, F);
-    assertSmallestCoveringDependency(E, E, E);
-    assertSmallestCoveringDependency(E, E, F);
-    assertSmallestCoveringDependency(F, F, F);
+  public void testSmallestCoveringSubtree() {
+    assertSmallestCoveringSubtree(A, A, A, A);
+    assertSmallestCoveringSubtree(A, A, A, B);
+    assertSmallestCoveringSubtree(A, A, A, C);
+    assertSmallestCoveringSubtree(A, A, A, D);
+    assertSmallestCoveringSubtree(A, A, A, E);
+    assertSmallestCoveringSubtree(A, A, A, F);
+    assertSmallestCoveringSubtree(B, A, B, B);
+    assertSmallestCoveringSubtree(A, A, B, C);
+    assertSmallestCoveringSubtree(B, A, B, D);
+    assertSmallestCoveringSubtree(B, A, B, E);
+    assertSmallestCoveringSubtree(B, A, B, F);
+    assertSmallestCoveringSubtree(C, A, C, C);
+    assertSmallestCoveringSubtree(A, A, C, D);
+    assertSmallestCoveringSubtree(C, A, C, E);
+    assertSmallestCoveringSubtree(C, A, C, F);
+    assertSmallestCoveringSubtree(D, A, D, D);
+    assertSmallestCoveringSubtree(B, A, D, E);
+    assertSmallestCoveringSubtree(B, A, D, F);
+    assertSmallestCoveringSubtree(E, A, E, E);
+    assertSmallestCoveringSubtree(E, A, E, F);
+    assertSmallestCoveringSubtree(F, A, F, F);
   }
 
   public void testGetTransitiveDepsDeepestFirst() {
@@ -201,9 +202,7 @@ public final class JSModuleGraphTest extends TestCase {
     assertInputs(C); // no inputs
     assertInputs(E, "c1", "e1", "e2");
 
-    assertEquals(
-        ImmutableList.of("a1", "a3", "a2", "b2", "c1", "e1", "e2"),
-        sourceNames(results));
+    assertEquals(ImmutableList.of("a1", "a3", "a2", "b2", "c1", "e1", "e2"), sourceNames(results));
   }
 
   public void testManageDependencies2() throws Exception {
@@ -211,8 +210,7 @@ public final class JSModuleGraphTest extends TestCase {
     DependencyOptions depOptions = new DependencyOptions();
     depOptions.setDependencySorting(true);
     depOptions.setDependencyPruning(true);
-    depOptions.setEntryPoints(
-        ImmutableList.of(ModuleIdentifier.forClosure("c2")));
+    depOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("c2")));
     List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
 
     assertInputs(A, "a1", "a3");
@@ -221,8 +219,7 @@ public final class JSModuleGraphTest extends TestCase {
     assertInputs(E, "e1", "e2");
 
     assertEquals(
-        ImmutableList.of("a1", "a3", "a2", "b2", "c1", "c2", "e1", "e2"),
-        sourceNames(results));
+        ImmutableList.of("a1", "a3", "a2", "b2", "c1", "c2", "e1", "e2"), sourceNames(results));
   }
 
   public void testManageDependencies3Impl() throws Exception {
@@ -231,8 +228,7 @@ public final class JSModuleGraphTest extends TestCase {
     depOptions.setDependencySorting(true);
     depOptions.setDependencyPruning(true);
     depOptions.setMoocherDropping(true);
-    depOptions.setEntryPoints(
-        ImmutableList.of(ModuleIdentifier.forClosure("c2")));
+    depOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forClosure("c2")));
     List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
 
     // Everything gets pushed up into module c, because that's
@@ -266,15 +262,13 @@ public final class JSModuleGraphTest extends TestCase {
     assertInputs(E, "e1", "e2");
 
     assertEquals(
-        ImmutableList.of(
-            "a1", "a2", "a3", "b1", "b2", "c1", "c2", "e1", "e2"),
+        ImmutableList.of("a1", "a2", "a3", "b1", "b2", "c1", "c2", "e1", "e2"),
         sourceNames(results));
   }
 
-  private static final String BASEJS = Joiner.on("\n").join(
-      "/** @provideGoog */",
-      "var COMPILED = false;",
-      "var goog = goog || {}");
+  // NOTE: The newline between the @provideGoog comment and the var statement is required.
+  private static final String BASEJS =
+      "/** @provideGoog */\nvar COMPILED = false; var goog = goog || {}";
 
   public void testManageDependencies5Impl() throws Exception {
     A.add(code("a2", provides("a2"), requires("a1")));
@@ -290,8 +284,7 @@ public final class JSModuleGraphTest extends TestCase {
 
     List<CompilerInput> inputs = new ArrayList<>();
     inputs.addAll(A.getInputs());
-    List<CompilerInput> results = graph.manageDependencies(
-        depOptions, inputs);
+    List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
 
     assertInputs(A, "base.js", "a1", "a2");
 
@@ -303,8 +296,7 @@ public final class JSModuleGraphTest extends TestCase {
     depOptions.setDependencySorting(true);
 
     List<CompilerInput> inputs = new ArrayList<>();
-    List<CompilerInput> results = graph.manageDependencies(
-        depOptions, inputs);
+    List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
     assertThat(results).isEmpty();
   }
 
@@ -321,8 +313,7 @@ public final class JSModuleGraphTest extends TestCase {
     JsonObject m = modules.get(3).getAsJsonObject();
     assertEquals("D", m.get("name").getAsString());
     assertEquals("[\"B\"]", m.get("dependencies").getAsJsonArray().toString());
-    assertEquals(2,
-        m.get("transitive-dependencies").getAsJsonArray().size());
+    assertEquals(2, m.get("transitive-dependencies").getAsJsonArray().size());
     assertEquals("[]", m.get("inputs").getAsJsonArray().toString());
   }
 
@@ -353,10 +344,8 @@ public final class JSModuleGraphTest extends TestCase {
     return inputs;
   }
 
-  private void assertInputs(JSModule module, String ... sourceNames) {
-    assertEquals(
-        ImmutableList.copyOf(sourceNames),
-        sourceNames(module.getInputs()));
+  private void assertInputs(JSModule module, String... sourceNames) {
+    assertEquals(ImmutableList.copyOf(sourceNames), sourceNames(module.getInputs()));
   }
 
   private List<String> sourceNames(List<CompilerInput> inputs) {
@@ -367,14 +356,12 @@ public final class JSModuleGraphTest extends TestCase {
     return inputNames;
   }
 
-  private SourceFile code(
-      String sourceName, List<String> provides, List<String> requires) {
+  private SourceFile code(String sourceName, List<String> provides, List<String> requires) {
     return code(sourceName, "", provides, requires);
   }
 
   private SourceFile code(
-      String sourceName, String source,
-      List<String> provides, List<String> requires) {
+      String sourceName, String source, List<String> provides, List<String> requires) {
     String text = "";
     for (String p : provides) {
       text += "goog.provide('" + p + "');\n";
@@ -385,44 +372,44 @@ public final class JSModuleGraphTest extends TestCase {
     return SourceFile.fromCode(sourceName, text + source);
   }
 
-  private List<String> provides(String ... strings) {
+  private List<String> provides(String... strings) {
     return ImmutableList.copyOf(strings);
   }
 
-  private List<String> requires(String ... strings) {
+  private List<String> requires(String... strings) {
     return ImmutableList.copyOf(strings);
   }
 
-  private void assertSmallestCoveringDependency(JSModule expected, JSModule... modules) {
-    assertSmallestCoveringDependency(expected, graph, modules);
+  private void assertSmallestCoveringSubtree(
+      JSModule expected, JSModule parentTree, JSModule... modules) {
+    assertSmallestCoveringSubtree(expected, graph, parentTree, modules);
   }
 
-  private void assertSmallestCoveringDependency(
-      JSModule expected, JSModuleGraph graph, JSModule... modules) {
+  private void assertSmallestCoveringSubtree(
+      JSModule expected, JSModuleGraph graph, JSModule parentTree, JSModule... modules) {
     BitSet modulesBitSet = new BitSet();
     for (JSModule m : modules) {
       modulesBitSet.set(m.getIndex());
     }
-    assertSmallestCoveringDependency(expected, graph, modulesBitSet);
+    assertSmallestCoveringSubtree(expected, graph, parentTree, modulesBitSet);
   }
 
-  private void assertSmallestCoveringDependency(
-      JSModule expected, JSModuleGraph graph, BitSet modules) {
-    JSModule actual = graph.getSmallestCoveringDependency(modules);
+  private void assertSmallestCoveringSubtree(
+      JSModule expected, JSModuleGraph graph, JSModule parentTree, BitSet modules) {
+    JSModule actual = graph.getSmallestCoveringSubtree(parentTree, modules);
     assertWithMessage(
-            "Smallest covering dep of %s should be %s but was %s", modules, expected, actual)
+            "Smallest covering subtree of %s in %s should be %s but was %s",
+            parentTree, modules, expected, actual)
         .that(actual)
         .isEqualTo(expected);
   }
 
-  private void assertDeepestCommonDepInclusive(
-      JSModule expected, JSModule m1, JSModule m2) {
+  private void assertDeepestCommonDepInclusive(JSModule expected, JSModule m1, JSModule m2) {
     assertDeepestCommonDepOneWay(expected, m1, m2, true);
     assertDeepestCommonDepOneWay(expected, m2, m1, true);
   }
 
-  private void assertDeepestCommonDep(
-      JSModule expected, JSModule m1, JSModule m2) {
+  private void assertDeepestCommonDep(JSModule expected, JSModule m1, JSModule m2) {
     assertDeepestCommonDepOneWay(expected, m1, m2, false);
     assertDeepestCommonDepOneWay(expected, m2, m1, false);
   }
@@ -434,17 +421,18 @@ public final class JSModuleGraphTest extends TestCase {
             ? graph.getDeepestCommonDependencyInclusive(m1, m2)
             : graph.getDeepestCommonDependency(m1, m2);
     if (actual != expected) {
-      fail(String.format(
-          "Deepest common dep of %s and %s should be %s but was %s",
-          m1.getName(), m2.getName(),
-          expected == null ? "null" : expected.getName(),
-          actual ==  null ? "null" : actual.getName()));
+      fail(
+          String.format(
+              "Deepest common dep of %s and %s should be %s but was %s",
+              m1.getName(),
+              m2.getName(),
+              expected == null ? "null" : expected.getName(),
+              actual == null ? "null" : actual.getName()));
     }
   }
 
   private void assertTransitiveDepsDeepestFirst(JSModule m, JSModule... deps) {
     Iterable<JSModule> actual = graph.getTransitiveDepsDeepestFirst(m);
-    assertEquals(Arrays.toString(deps),
-                 Arrays.toString(Iterables.toArray(actual, JSModule.class)));
+    assertEquals(Arrays.toString(deps), Arrays.toString(Iterables.toArray(actual, JSModule.class)));
   }
 }

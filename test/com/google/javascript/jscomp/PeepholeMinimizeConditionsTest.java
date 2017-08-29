@@ -42,8 +42,9 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    PeepholeOptimizationsPass peepholePass = new PeepholeOptimizationsPass(
-        compiler, new PeepholeMinimizeConditions(late, useTypes));
+    PeepholeOptimizationsPass peepholePass =
+        new PeepholeOptimizationsPass(
+            compiler, getName(), new PeepholeMinimizeConditions(late, useTypes));
     peepholePass.setRetraverseOnChange(false);
     return peepholePass;
   }
@@ -380,8 +381,9 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
 
   public void testMinimizeExprResult() {
     fold("!x||!y", "x&&y");
-    fold("if(!(x&&!y)) foo()", "x&&!y||!foo()");
-    fold("if(!x||y) foo()", "x&&!y||!foo()");
+    fold("if(!(x&&!y)) foo()", "(!x||y)&&foo()");
+    fold("if(!x||y) foo()", "(!x||y)&&foo()");
+    fold("(!x||y)&&foo()", "x&&!y||!foo()");
   }
 
   public void testMinimizeDemorgan21() {
@@ -410,6 +412,11 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
     foldSame("for(a in {}) foo()");
     foldSame("for(a in []) foo()");
     fold("for(a in !!true) foo()", "for(a in !0) foo()");
+
+    foldSame("for(a of b) foo()");
+    foldSame("for(a of {}) foo()");
+    foldSame("for(a of []) foo()");
+    fold("for(a of !!true) foo()", "for(a of !0) foo()");
   }
 
   public void testMinimizeCondition_example1() {

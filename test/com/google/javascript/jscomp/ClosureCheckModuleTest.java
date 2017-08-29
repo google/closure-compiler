@@ -400,6 +400,20 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "var {foo, bar} = goog.require('abc');",
             "var foo = goog.require('def.foo');"),
         DUPLICATE_NAME_SHORT_REQUIRE);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "const localName = goog.require(namespace.without.the.quotes);"),
+        ProcessClosurePrimitives.INVALID_ARGUMENT_ERROR);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "goog.require(namespace.without.the.quotes);"),
+        ProcessClosurePrimitives.INVALID_ARGUMENT_ERROR);
   }
 
   public void testIllegalShortImportReferencedByLongName() {

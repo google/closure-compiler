@@ -27,6 +27,7 @@ import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -55,7 +56,9 @@ import java.util.Set;
  *   <li>Marks constants with the IS_CONSTANT_NAME annotation.
  *   <li>Finds properties marked @expose, and rewrites them in [] notation.
  *   <li>Rewrite body of arrow function as a block
- *   <li>Removes ES6 shorthand property syntax
+ *   <li>Removes ES6 shorthand property syntax and shorthand import/export syntax.
+ *   <li>Take var statements out from for-loop initializer.
+ *       This: for(var a = 0;a<0;a++) {} becomes: var a = 0; for(var a;a<0;a++) {}
  * </ol>
  *
  * @author johnlenz@google.com (johnlenz)
@@ -105,6 +108,7 @@ class Normalize implements CompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
+    NodeTraversal.traverseEs6(compiler, root, new RemoveEmptyClassMembers());
     NodeTraversal.traverseRootsEs6(
         compiler, new NormalizeStatements(compiler, assertOnChange), externs, root);
     removeDuplicateDeclarations(externs, root);
@@ -123,6 +127,16 @@ class Normalize implements CompilerPass {
 
     if (!compiler.getLifeCycleStage().isNormalized()) {
       compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
+    }
+  }
+
+  private class RemoveEmptyClassMembers extends AbstractPostOrderCallback {
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      if (n.isEmpty() && parent.isClassMembers()) {
+        reportCodeChange("empty member in class", n);
+        n.detach();
+      }
     }
   }
 
@@ -177,8 +191,10 @@ class Normalize implements CompilerPass {
       } else if (n.isStringKey()) {
         String propName = n.getString();
         if (exposedProperties.contains(propName)) {
-          n.setQuotedString();
-          compiler.reportChangeToEnclosingScope(n);
+          if (!n.isQuotedString()) {
+            compiler.reportChangeToEnclosingScope(n);
+            n.setQuotedString();
+          }
         }
       }
     }
@@ -207,7 +223,7 @@ class Normalize implements CompilerPass {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       // Note: Constant properties annotations are not propagated.
-      if (n.isName()) {
+      if (n.isName() || n.isStringKey()) {
         if (n.getString().isEmpty()) {
           return;
         }
@@ -331,7 +347,7 @@ class Normalize implements CompilerPass {
       this.assertOnChange = assertOnChange;
     }
 
-    private void reportCodeChange(Node n, String changeDescription) {
+    private void reportCodeChange(String changeDescription, Node n) {
       if (assertOnChange) {
         throw new IllegalStateException(
             "Normalize constraints violated:\n" + changeDescription);
@@ -356,35 +372,44 @@ class Normalize implements CompilerPass {
           empty.useSourceInfoIfMissingFrom(n);
           n.addChildBefore(empty, expr);
           n.addChildAfter(empty.cloneNode(), expr);
-          reportCodeChange(n, "WHILE node");
+          reportCodeChange("WHILE node", n);
           break;
 
         case FUNCTION:
           if (visitFunction(n, compiler)) {
-            reportCodeChange(n, "Function declaration");
+            reportCodeChange("Function declaration", n);
           }
           break;
 
+        case DEFAULT_VALUE:
         case STRING_KEY:
-          if (!n.hasChildren()) {
-            rewriteEs6ObjectLiteralShorthandPropertySyntax(n, compiler);
-            reportCodeChange(n, "Normalize ES6 shorthand property syntax");
-          }
-          // fall through
+          rewriteEs6ObjectLiteralShorthandPropertySyntax(n);
+          break;
+
+        case IMPORT_SPEC:
+          rewriteImportSpecShorthand(n);
+          break;
+
+        case EXPORT_SPEC:
+          rewriteExportSpecShorthand(n);
+          break;
+
+        case EXPORT:
+          splitExportDeclaration(n);
+          break;
 
         case NAME:
         case STRING:
         case GETTER_DEF:
         case SETTER_DEF:
-          if (!compiler.getLifeCycleStage().isNormalizedObfuscated()) {
-            annotateConstantsByConvention(n, parent);
-          }
+          annotateConstantsByConvention(n, parent);
           break;
 
         case CAST:
           compiler.reportChangeToEnclosingScope(n);
           parent.replaceChild(n, n.removeFirstChild());
           break;
+
         default:
           break;
       }
@@ -396,6 +421,12 @@ class Normalize implements CompilerPass {
     private void annotateConstantsByConvention(Node n, Node parent) {
       checkState(
           n.isName() || n.isString() || n.isStringKey() || n.isGetterDef() || n.isSetterDef());
+
+      // Need to check that variables have not been renamed, to determine whether
+      // coding conventions still apply.
+      if (compiler.getLifeCycleStage().isNormalizedObfuscated()) {
+        return;
+      }
 
       // There are only two cases where a string token
       // may be a variable reference: The right side of a GETPROP
@@ -410,8 +441,11 @@ class Normalize implements CompilerPass {
             String name = n.getString();
             throw new IllegalStateException(
                 "Unexpected const change.\n"
-                + "  name: " + name + "\n"
-                + "  parent:" + n.getParent().toStringTree());
+                    + "  name: "
+                    + name
+                    + "\n"
+                    + "  parent:"
+                    + n.getParent().toStringTree());
           }
           n.putBooleanProp(Node.IS_CONSTANT_NAME, true);
         }
@@ -419,15 +453,104 @@ class Normalize implements CompilerPass {
     }
 
     /**
+     * Expands
+     *
+     *   import {x} from 'm';
+     *
+     * to
+     *
+     *   import {x as x} from 'm';
+     */
+    private void rewriteImportSpecShorthand(Node n) {
+      if (n.hasOneChild()) {
+        n.addChildToBack(n.getFirstChild().cloneTree());
+        compiler.reportChangeToEnclosingScope(n);
+      }
+    }
+
+    /**
+     * Expands
+     *
+     *   export {x};
+     *
+     * to
+     *
+     *   export {x as x};
+     */
+    private void rewriteExportSpecShorthand(Node n) {
+      if (n.hasOneChild()) {
+        n.addChildToBack(n.getFirstChild().cloneTree());
+        compiler.reportChangeToEnclosingScope(n);
+      }
+    }
+
+    /**
+     * Splits ES6 export combined with a variable or function declaration.
+     *
+     */
+    private void splitExportDeclaration(Node n) {
+      Node c = n.getFirstChild();
+      if (NodeUtil.isNameDeclaration(c) || c.isClass()) {
+        n.removeChild(c);
+
+        Node exportSpecs = new Node(Token.EXPORT_SPECS).srcref(n);
+        n.addChildToFront(exportSpecs);
+        Iterable<Node> names;
+        if (c.isClass()) {
+          names = Collections.singleton(c.getFirstChild());
+          n.getParent().addChildBefore(c, n);
+          n.getParent().addChildBefore(new Node(Token.EMPTY).srcref(n), n);
+        } else {
+          names = NodeUtil.getLhsNodesOfDeclaration(c);
+          // Split up var declarations onto separate lines.
+          for (Node child : c.children()) {
+            c.removeChild(child);
+            Node newDeclaration = new Node(c.getToken(), child).srcref(n);
+            n.getParent().addChildBefore(newDeclaration, n);
+          }
+        }
+
+        for (Node name : names) {
+          Node exportSpec = new Node(Token.EXPORT_SPEC).srcref(name);
+          exportSpec.addChildToFront(name.cloneNode());
+          exportSpec.addChildToFront(name.cloneNode());
+          exportSpecs.addChildToBack(exportSpec);
+        }
+
+        compiler.reportChangeToEnclosingScope(n.getParent());
+      }
+    }
+
+    /**
      * Expand ES6 object literal shorthand property syntax.
      *
      * <p>From: obj = {x, y} to: obj = {x:x, y:y}
+     *
+     * <p>From: var {x = 5} = obj to: var {x:x = 5} = obj
      */
-    private static void rewriteEs6ObjectLiteralShorthandPropertySyntax(
-        Node n, AbstractCompiler compiler) {
-      String objLitName = NodeUtil.getObjectLitKeyName(n);
-      Node objLitNameNode = Node.newString(Token.NAME, objLitName).useSourceInfoFrom(n);
-      n.addChildToBack(objLitNameNode);
+    private void rewriteEs6ObjectLiteralShorthandPropertySyntax(Node n) {
+      switch (n.getToken()) {
+        case STRING_KEY:
+          if (!n.hasChildren()) {
+            String objLitName = NodeUtil.getObjectLitKeyName(n);
+            Node objLitNameNode = Node.newString(Token.NAME, objLitName).useSourceInfoFrom(n);
+            n.addChildToBack(objLitNameNode);
+            reportCodeChange("Normalize ES6 shorthand property syntax", n);
+          }
+          break;
+
+        case DEFAULT_VALUE:
+          if (n.getParent().isObjectPattern()) {
+            Node stringKeyNode = IR.stringKey(n.getFirstChild().getString()).srcref(n);
+            n.replaceWith(stringKeyNode);
+            stringKeyNode.addChildToBack(n);
+            reportCodeChange("Normalize ES6 shorthand property syntax", n);
+          }
+          break;
+
+        default:
+          throw new IllegalStateException();
+      }
     }
 
     /**
@@ -544,6 +667,7 @@ class Normalize implements CompilerPass {
         case BLOCK:
         case FOR:
         case FOR_IN:
+        case FOR_OF:
         case WHILE:
         case DO:
           return;
@@ -552,7 +676,7 @@ class Normalize implements CompilerPass {
           block.useSourceInfoIfMissingFrom(last);
           n.replaceChild(last, block);
           block.addChildToFront(last);
-          reportCodeChange(n, "LABEL normalization");
+          reportCodeChange("LABEL normalization", n);
           return;
       }
     }
@@ -580,6 +704,7 @@ class Normalize implements CompilerPass {
             extractForInitializer(c, insertBefore, insertBeforeParent);
             break;
           case FOR_IN:
+          case FOR_OF:
             Node first = c.getFirstChild();
             if (first.isVar()) {
               // Transform:
@@ -591,7 +716,7 @@ class Normalize implements CompilerPass {
               Node name = newStatement.getFirstChild().cloneNode();
               first.replaceWith(name);
               insertBeforeParent.addChildBefore(newStatement, insertBefore);
-              reportCodeChange(n, "FOR-IN var declaration");
+              reportCodeChange("FOR-IN var declaration", n);
             }
             break;
           case FOR:
@@ -616,7 +741,7 @@ class Normalize implements CompilerPass {
               }
 
               insertBeforeParent.addChildBefore(newStatement, insertBefore);
-              reportCodeChange(n, "FOR initializer");
+              reportCodeChange("FOR initializer", n);
             }
             break;
           default:
@@ -646,7 +771,7 @@ class Normalize implements CompilerPass {
             c.removeChild(name);
             Node newVar = new Node(c.getToken(), name).srcref(n);
             n.addChildBefore(newVar, c);
-            reportCodeChange(n, "VAR with multiple children");
+            reportCodeChange("VAR with multiple children", n);
           }
         }
       }
@@ -678,7 +803,7 @@ class Normalize implements CompilerPass {
           // Read the function at the top of the function body (after any
           // previous declarations).
           insertAfter = addToFront(functionBody, current, insertAfter);
-          reportCodeChange(functionBody, "Move function declaration not at top of function");
+          reportCodeChange("Move function declaration not at top of function", functionBody);
         }
         current = next;
       }
@@ -735,12 +860,10 @@ class Normalize implements CompilerPass {
     private Set<Var> hasOkDuplicateDeclaration = new HashSet<>();
 
     /**
-     * Remove duplicate VAR declarations encountered discovered during
-     * scope creation.
+     * Remove duplicate VAR declarations discovered during scope creation.
      */
     @Override
-    public void onRedeclaration(
-        Scope s, String name, Node n, CompilerInput input) {
+    public void onRedeclaration(Scope s, String name, Node n, CompilerInput input) {
       checkState(n.isName());
       Node parent = n.getParent();
       Var v = s.getVar(name);
@@ -804,17 +927,16 @@ class Normalize implements CompilerPass {
         // It is an empty reference remove it.
         if (NodeUtil.isStatementBlock(grandparent)) {
           grandparent.removeChild(parent);
-        } else if (grandparent.isForIn()) {
+        } else if (grandparent.isForIn() || grandparent.isForOf()) {
           // This is the "for (var a in b)..." case.  We don't need to worry
           // about initializers in "for (var a;;)..." as those are moved out
           // as part of the other normalizations.
           parent.removeChild(n);
           grandparent.replaceChild(parent, n);
         } else {
-          checkState(grandparent.isLabel());
           // We should never get here. LABELs with a single VAR statement should
           // already have been normalized to have a BLOCK.
-          throw new IllegalStateException("Unexpected LABEL");
+          checkState(grandparent.isLabel(), grandparent);
         }
         reportCodeChange("Duplicate VAR declaration", grandparent);
       }

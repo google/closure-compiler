@@ -17,8 +17,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
+import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
+import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
@@ -617,6 +617,9 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
         }
         return new ClassDeclarationMetadata(parent.getParent(), fullClassName, true, classNameNode,
             superClassNameNode);
+      } else if (parent.isExport()) {
+        return new ClassDeclarationMetadata(
+            classNode, classNameNode.getString(), false, classNameNode, superClassNameNode);
       } else if (parent.isName()) {
         // Add members after the 'var' statement.
         // var C = class {}; C.prototype.foo = function() {};

@@ -48,7 +48,6 @@ public final class PerformanceTracker {
 
   private final PrintStream output;
 
-  private final Node jsRoot;
   private final Node externsRoot;
 
   private final TracerMode mode;
@@ -56,6 +55,8 @@ public final class PerformanceTracker {
   // Keeps track of AST changes and computes code size estimation
   // if there is any.
   private final RecentChange codeChange = new RecentChange();
+
+  private Node jsRoot;
 
   private int initAstSize = DEFAULT_WHEN_SIZE_UNTRACKED;
   private int initCodeSize = DEFAULT_WHEN_SIZE_UNTRACKED;
@@ -118,6 +119,28 @@ public final class PerformanceTracker {
   }
 
   /**
+   * Updates the saved jsRoot and resets the size tracking fields accordingly.
+   * @param jsRoot
+   */
+  void updateAfterDeserialize(Node jsRoot) {
+    // TODO(bradfordcsmith): Restore line counts for inputs and externs.
+    this.jsRoot = jsRoot;
+    if (!tracksAstSize()) {
+      return;
+    }
+    this.initAstSize = this.astSize = NodeUtil.countAstSize(this.jsRoot);
+    if (!tracksSize()) {
+      return;
+    }
+    PerformanceTrackerCodeSizeEstimator estimator =
+        PerformanceTrackerCodeSizeEstimator.estimate(this.jsRoot, tracksGzSize());
+    this.initCodeSize = this.codeSize = estimator.getCodeSize();
+    if (tracksGzSize()) {
+      this.initGzCodeSize = this.gzCodeSize = estimator.getZippedCodeSize();
+    }
+  }
+
+  /**
    * Collects information about a pass P after P finishes running, eg, how much
    * time P took and what was its impact on code size.
    *
@@ -137,7 +160,7 @@ public final class PerformanceTracker {
     if (this.codeChange.hasCodeChanged()) {
       logStats.changes = 1;
     }
-    if (passName.equals(Compiler.PARSING_PASS_NAME)) {
+    if (passName.equals(PassNames.PARSE_INPUTS)) {
       recordParsingStop(logStats);
     } else if (this.codeChange.hasCodeChanged() && tracksAstSize()) {
       recordOtherPassStop(logStats);

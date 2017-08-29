@@ -34,3 +34,11 @@ function testWithMethod() {
   };
   assertEquals(3, obj['f1'] + obj.m());
 }
+
+function testWithGenerator() {
+  var obj = {
+    *["foo" + "bar"]() { yield 1; }
+  };
+  var gen = obj["foobar"]();
+  assertEquals(1, gen.next().value);
+}

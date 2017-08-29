@@ -110,7 +110,7 @@ URL.prototype.search;
 
 /**
  * @const
- * @type {URLSearchParams}
+ * @type {!URLSearchParams}
  */
 URL.prototype.searchParams;
 

@@ -14300,6 +14300,48 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "var k;");
   }
 
+  public void testBadSuperclassInheritance1() throws Exception {
+    testTypes(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {number} */",
+        "Foo.prototype.myprop = 2;",
+        "",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {}",
+        "/** @type {number} */",
+        "Bar.prototype.myprop = 1;"),
+        TypeCheck.HIDDEN_SUPERCLASS_PROPERTY);
+  }
+
+  public void testBadSuperclassInheritance2() throws Exception {
+    testTypes(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {number} */",
+        "Foo.prototype.myprop = 2;",
+        "",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {}",
+        "/** @override @type {string} */",
+        "Bar.prototype.myprop = 'qwer';"),
+        TypeCheck.HIDDEN_SUPERCLASS_PROPERTY_MISMATCH);
+  }
+
+  // If the property has no initializer, the HIDDEN_SUPERCLASS_PROPERTY_MISMATCH warning is missed.
+  public void testBadSuperclassInheritance3() throws Exception {
+    testTypes(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {number} */",
+        "Foo.prototype.myprop = 2;",
+        "",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {}",
+        "/** @override @type {string} */",
+        "Bar.prototype.myprop;"));
+  }
+
   public void testCheckObjectKeysWithNamedType() throws Exception {
     testTypes(
         "/** @type {!Object<!PseudoId, number>} */\n" +
@@ -17936,6 +17978,9 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     Node externsNode = compiler.getInput(new InputId("[externs]"))
         .getAstRoot(compiler);
     Node externAndJsRoot = IR.root(externsNode, n);
+    compiler.jsRoot = n;
+    compiler.externsRoot = externsNode;
+    compiler.externAndJsRoot = externAndJsRoot;
 
     assertEquals("parsing error: " +
         Joiner.on(", ").join(compiler.getErrors()),
@@ -17945,6 +17990,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
       List<PassFactory> passes = new ArrayList<>();
       TranspilationPasses.addEs6ModulePass(passes);
       TranspilationPasses.addEs2017Passes(passes);
+      TranspilationPasses.addEs2016Passes(passes);
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
       TranspilationPasses.addRewritePolyfillPass(passes);

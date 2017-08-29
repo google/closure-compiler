@@ -20,18 +20,12 @@ package com.google.javascript.jscomp;
  * Unit test for {@link ReorderConstantExpression}
  *
  */
-public final class ReorderConstantExpressionTest extends CompilerTestCase {
+public final class PeepholeReorderConstantExpressionTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new PeepholeOptimizationsPass(compiler,
-        new ReorderConstantExpression());
-  }
-
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    disableTypeCheck();
+    return new PeepholeOptimizationsPass(
+        compiler, getName(), new PeepholeReorderConstantExpression());
   }
 
   public void testSymmetricOperations() throws Exception {

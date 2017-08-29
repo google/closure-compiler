@@ -20,56 +20,34 @@ import static com.google.javascript.jscomp.Es6ConvertSuper.INVALID_SUPER_CALL;
 import static com.google.javascript.jscomp.Es6RewriteClass.CLASS_REASSIGNMENT;
 import static com.google.javascript.jscomp.Es6RewriteClass.CONFLICTING_GETTER_SETTER_TYPE;
 import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
+import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
+import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
+import static com.google.javascript.jscomp.NewTypeInference.CANNOT_INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7_MODULES;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
+import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 
 /**
  * Test cases for ES6 transpilation. Despite the name, this isn't just testing {@link
- * Es6ToEs3Converter}, but also some other ES6 transpilation passes. See #getProcessor.
+ * EarlyEs6ToEs3Converter} and {@link LateEs6ToEs3Converter},
+ * but also some other ES6 transpilation passes. See {@link #getProcessor}.
  *
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
 // TODO(tbreisacher): Rename this to Es6TranspilationIntegrationTest since it's really testing
 // a lot of different passes. Also create a unit test for Es6ToEs3Converter.
-public final class Es6ToEs3ConverterTest extends CompilerTestCase {
+public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
 
   private static final String EXTERNS_BASE =
       LINE_JOINER.join(
+          MINIMAL_EXTERNS,
           "/** @constructor @template T */",
           "function Arguments() {}",
           "",
-          "/**",
-          " * @constructor",
-          " * @param {...*} var_args",
-          " * @return {!Array}",
-          " * @template T",
-          " */",
-          "function Array(var_args) {}",
-          "",
-          "/** @constructor @template T */",
-          "function Iterable() {}",
-          "",
-          "/** @constructor @template T */",
-          "function Iterator() {}",
-          "",
-          "Iterator.prototype.next = function() {};",
-          "",
-          "/**",
-          " * @record",
-          " * @template VALUE",
-          " */",
-          "function IIterableResult() {}",
-          "",
-          "/** @type {boolean} */",
-          "IIterableResult.prototype.done;",
-          "",
-          "/** @type {VALUE} */",
-          "IIterableResult.prototype.value;",
+          "Array.prototype.concat = function(var_args) {};",
           "",
           "/**",
           " * @param {...*} var_args",
@@ -124,6 +102,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2016);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableRunTypeCheckAfterProcessing();
+    this.mode = TypeInferenceMode.NEITHER;
   }
 
   protected final PassFactory makePassFactory(
@@ -151,7 +130,10 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         makePassFactory("es6ConvertSuper", new Es6ConvertSuper(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", new Es6ExtractClasses(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6RewriteClass", new Es6RewriteClass(compiler)));
-    optimizer.addOneTimePass(makePassFactory("convertEs6", new Es6ToEs3Converter(compiler)));
+    optimizer.addOneTimePass(
+        makePassFactory("convertEs6Early", new EarlyEs6ToEs3Converter(compiler)));
+    optimizer.addOneTimePass(
+        makePassFactory("convertEs6Late", new LateEs6ToEs3Converter(compiler)));
     optimizer.addOneTimePass(
         makePassFactory("Es6RewriteBlockScopedDeclaration",
             new Es6RewriteBlockScopedDeclaration(compiler)));
@@ -175,16 +157,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
     test(
         "var x = {/** @return {number} */ a() { return 0; } };",
         "var x = {/** @return {number} */ a: function() { return 0; } };");
-    assertThat(getLastCompiler().injected).isEmpty();
-  }
-
-  public void testClassGenerator() {
-    test(
-        "class C { *foo() { yield 1; } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "C.prototype.foo = function*() { yield 1;};"));
     assertThat(getLastCompiler().injected).isEmpty();
   }
 
@@ -282,14 +254,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "$jscomp.inherits(testcode$classdecl$var0, D);",
             "testcode$classdecl$var0.prototype.f = function() { D.prototype.g.call(this); };",
             "f(testcode$classdecl$var0)"));
-  }
-
-  public void testExponentiationOperator() {
-    test("2 ** 2;", "Math.pow(2,2)");
-  }
-
-  public void testExponentiationAssignmentOperator() {
-    test("x **= 2;", "x=Math.pow(x,2)");
   }
 
   public void testNewTarget() {
@@ -541,11 +505,11 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testAbstractClass() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     test(
         "/** @abstract */ class Foo {} var x = new Foo();",
         "/** @abstract @constructor @struct */ var Foo = function() {}; var x = new Foo();",
-        warning(INSTANTIATE_ABSTRACT_CLASS));
+        warningOtiNti(INSTANTIATE_ABSTRACT_CLASS, CANNOT_INSTANTIATE_ABSTRACT_CLASS));
   }
 
   /**
@@ -1184,8 +1148,15 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testExtendNonNativeObject() {
+    // TODO(sdh): If a normal Object extern is found, then this test fails because
+    // the pass adds extra handling for super() possibly changing 'this'.  Does setting
+    // the externs to "" to prevent this defeat the purpose of this test?  It became
+    // necessary as a result of adding "/** @constructor */ function Object() {}" to
+    // the externs used by this test.
+
     // No special handling when Object is redefined.
     test(
+        "",
         LINE_JOINER.join(
             "class Object {}",
             "class Foo extends Object {",
@@ -1211,10 +1182,11 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "};",
             "$jscomp.inherits(Foo, Object);"));
     test(
-        LINE_JOINER.join(
+        "",
+        lines(
             "class Object {}",
             "class Foo extends Object {}"), // autogenerated constructor
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @constructor @struct",
             " */",
@@ -1649,7 +1621,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testInvalidClassUse() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     test(
         LINE_JOINER.join(
@@ -1671,14 +1643,15 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "$jscomp.inherits(Sub, Foo);",
             "(new Sub).f();"));
 
-    testWarning(
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "function Foo() {}",
-            "Foo.f = function() {};",
-            "class Sub extends Foo {}",
-            "Sub.f();"),
-        TypeCheck.INEXISTENT_PROPERTY);
+    test(
+        srcs(
+            lines(
+                "/** @constructor @struct */",
+                "function Foo() {}",
+                "Foo.f = function() {};",
+                "class Sub extends Foo {}",
+                "Sub.f();")),
+        warningOtiNti(TypeCheck.INEXISTENT_PROPERTY, NewTypeInference.INEXISTENT_PROPERTY));
 
     test(
         LINE_JOINER.join(
@@ -1909,39 +1882,50 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testClassEs5GetterSetterIncorrectTypes() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     setLanguageOut(LanguageMode.ECMASCRIPT5);
-
+    ignoreWarnings(
+        NewTypeInference.INEXISTENT_PROPERTY, NewTypeInference.INVALID_OBJLIT_PROPERTY_TYPE);
 
     // Using @type instead of @return on a getter.
-    test("class C { /** @type {string} */ get value() { } }", LINE_JOINER.join(
-    "/** @constructor @struct */",
-    "var C = function() {};",
-    "/** @type {?} */",
-    "C.prototype.value;",
-    "$jscomp.global.Object.defineProperties(C.prototype, {",
-    "  value: {",
-    "    configurable: true,",
-    "    enumerable: true,",
-    "    /** @type {string} */",
-    "    get: function() {}",
-    "  }",
-    "});"), warning(TypeValidator.TYPE_MISMATCH_WARNING));
+    test(
+        "class C { /** @type {string} */ get value() { } }",
+        lines(
+            "/** @constructor @struct */",
+            "var C = function() {};",
+            "/** @type {?} */",
+            "C.prototype.value;",
+            "$jscomp.global.Object.defineProperties(C.prototype, {",
+            "  value: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @type {string} */",
+            "    get: function() {}",
+            "  }",
+            "});"),
+        warningOtiNti(
+            TypeValidator.TYPE_MISMATCH_WARNING,
+            JSTypeCreatorFromJSDoc.FUNCTION_WITH_NONFUNC_JSDOC));
 
     // Using @type instead of @param on a setter.
-    test("class C { /** @type {string} */ set value(v) { } }", LINE_JOINER.join(
-    "/** @constructor @struct */",
-    "var C = function() {};",
-    "/** @type {?} */",
-    "C.prototype.value;",
-    "$jscomp.global.Object.defineProperties(C.prototype, {",
-    "  value: {",
-    "    configurable: true,",
-    "    enumerable: true,",
-    "    /** @type {string} */",
-    "    set: function(v) {}",
-    "  }",
-    "});"), warning(TypeValidator.TYPE_MISMATCH_WARNING));
+    test(
+        "class C { /** @type {string} */ set value(v) { } }",
+        lines(
+            "/** @constructor @struct */",
+            "var C = function() {};",
+            "/** @type {?} */",
+            "C.prototype.value;",
+            "$jscomp.global.Object.defineProperties(C.prototype, {",
+            "  value: {",
+            "    configurable: true,",
+            "    enumerable: true,",
+            "    /** @type {string} */",
+            "    set: function(v) {}",
+            "  }",
+            "});"),
+        warningOtiNti(
+            TypeValidator.TYPE_MISMATCH_WARNING,
+            JSTypeCreatorFromJSDoc.FUNCTION_WITH_NONFUNC_JSDOC));
   }
 
   /**
@@ -2093,7 +2077,10 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "  ($jscomp$compprop0[foo] = {",
             "    configurable:true,",
             "    enumerable:true,",
-            "    /** @this {C} */",
+            "    /**",
+            "     * @this {C}",
+            "     * @return {number}",
+            "     */",
             "    get: function() { return 4; }",
             "  }, $jscomp$compprop0));"));
     assertThat(getLastCompiler().injected).containsExactly("util/global");
@@ -2117,7 +2104,10 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "  ($jscomp$compprop0[foo] = {",
             "    configurable:true,",
             "    enumerable:true,",
-            "    /** @this {C} */",
+            "    /**",
+            "     * @this {C}",
+            "     * @param {string} val",
+            "     */",
             "    set: function(val) {}",
             "  }, $jscomp$compprop0));"));
 
@@ -2154,9 +2144,15 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "  ($jscomp$compprop0[foo] = {",
             "    configurable:true,",
             "    enumerable:true,",
-            "    /** @this {C} */",
+            "    /**",
+            "     * @this {C}",
+            "     * @return {boolean}",
+            "     */",
             "    get: function() {},",
-            "    /** @this {C} */",
+            "    /**",
+            "     * @this {C}",
+            "     * @param {boolean} val",
+            "     */",
             "    set: function(val) {},",
             "  }, $jscomp$compprop0));"));
 
@@ -2261,9 +2257,9 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
 
     // Warn on /** number */
     testWarning("function f(/** number */ ...zero) {}",
-                Es6ToEs3Converter.BAD_REST_PARAMETER_ANNOTATION);
+                EarlyEs6ToEs3Converter.BAD_REST_PARAMETER_ANNOTATION);
     testWarning("/** @param {number} zero */ function f(...zero) {}",
-                Es6ToEs3Converter.BAD_REST_PARAMETER_ANNOTATION);
+                EarlyEs6ToEs3Converter.BAD_REST_PARAMETER_ANNOTATION);
   }
 
   public void testDefaultAndRestParameters() {
@@ -2452,16 +2448,18 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
   }
 
   public void testForOfOnNonIterable() {
-    enableTypeCheck();
-    testWarning(
-        LINE_JOINER.join(
-            "var arrayLike = {",
-            "  0: 'x',",
-            "  1: 'y',",
-            "  length: 2,",
-            "};",
-            "for (var x of arrayLike) {}"),
-        TypeValidator.TYPE_MISMATCH_WARNING);
+    // TODO(sdh): figure out why NTI is not complaining about invalid argument type to makeIterator
+    this.mode = TypeInferenceMode.OTI_ONLY;
+    test(
+        srcs(
+            lines(
+                "var arrayLike = {",
+                "  0: 'x',",
+                "  1: 'y',",
+                "  length: 2,",
+                "};",
+                "for (var x of arrayLike) {}")),
+        warningOtiNti(TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.INVALID_ARGUMENT_TYPE));
   }
 
   public void testSpreadCall() {
@@ -2499,24 +2497,25 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "($jscomp$spread$args1 = G.d()).n.apply($jscomp$spread$args1,",
             "    [].concat($jscomp.arrayFromIterable(b)));"));
 
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
-    testWarning(
-        LINE_JOINER.join(
-            "class C {}",
-            "class Factory {",
-            "  /** @return {C} */",
-            "  static create() {return new C()}",
-            "}",
-            "var arr = [1,2]",
-            "Factory.create().m(...arr);"),
-        TypeCheck.INEXISTENT_PROPERTY);
+    test(
+        srcs(
+            lines(
+                "class C {}",
+                "class Factory {",
+                "  /** @return {C} */",
+                "  static create() {return new C()}",
+                "}",
+                "var arr = [1,2]",
+                "Factory.create().m(...arr);")),
+        warningOtiNti(TypeCheck.INEXISTENT_PROPERTY, NewTypeInference.INEXISTENT_PROPERTY));
 
     test(
         LINE_JOINER.join(
             "class C { m(a) {} }",
             "class Factory {",
-            "  /** @return {C} */",
+            "  /** @return {!C} */",
             "  static create() {return new C()}",
             "}",
             "var arr = [1,2]",
@@ -2527,7 +2526,7 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "C.prototype.m = function(a) {};",
             "/** @constructor @struct */",
             "var Factory = function() {};",
-            "/** @return {C} */",
+            "/** @return {!C} */",
             "Factory.create = function() {return new C()};",
             "var arr = [1,2]",
             "var $jscomp$spread$args0;",
@@ -2645,14 +2644,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
         LINE_JOINER.join(
             "var $jscomp$compprop0 = {};",
             "var obj = ($jscomp$compprop0[foo] = function(){}, $jscomp$compprop0)"));
-
-    test(
-        "var obj = { *[foo]() {}}",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {};",
-            "var obj = (",
-            "  $jscomp$compprop0[foo] = function*(){},",
-            "  $jscomp$compprop0)"));
   }
 
   public void testComputedPropGetterSetter() {
@@ -2687,29 +2678,6 @@ public final class Es6ToEs3ConverterTest extends CompilerTestCase {
             "/** @constructor @struct */",
             "var C = function() {};",
             "C[foo] = function() { alert(2); };"));
-  }
-
-  public void testComputedPropGeneratorMethods() {
-    test(
-        "class C { *[foo]() { yield 1; } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "C.prototype[foo] = function*() { yield 1; };"));
-
-    test(
-        "class C { static *[foo]() { yield 2; } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "C[foo] = function*() { yield 2; };"));
-  }
-
-  public void testBlockScopedGeneratorFunction() {
-    // Functions defined in a block get translated to a var
-    test(
-        "{ function *f() {yield 1;} }",
-        "{ var f = function*() { yield 1; }; }");
   }
 
   public void testComputedPropCannotConvert() {

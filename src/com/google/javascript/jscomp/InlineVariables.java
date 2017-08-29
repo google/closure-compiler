@@ -360,7 +360,12 @@ class InlineVariables implements CompilerPass {
       checkState(value != null);
       // Check for function declarations before the value is moved in the AST.
       boolean isFunctionDeclaration = NodeUtil.isFunctionDeclaration(value);
-      compiler.reportChangeToEnclosingScope(ref.getNode());
+      if (isFunctionDeclaration) {
+        // In addition to changing the containing scope, inlining function declarations also changes
+        // the function name scope from the containing scope to the inner scope.
+        compiler.reportChangeToChangeScope(value);
+        compiler.reportChangeToEnclosingScope(value.getParent());
+      }
       inlineValue(v, ref, value.detach());
       if (decl != init) {
         Node expressRoot = init.getGrandparent();
@@ -369,7 +374,6 @@ class InlineVariables implements CompilerPass {
       }
       // Function declarations have already been removed.
       if (!isFunctionDeclaration) {
-        compiler.reportChangeToEnclosingScope(decl.getNode());
         removeDeclaration(decl);
       }
     }

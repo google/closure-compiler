@@ -175,8 +175,9 @@ public class Scope implements StaticScope, Serializable {
    */
   public Var getArgumentsVar() {
     if (isGlobal() || isModuleScope()) {
-      throw new IllegalStateException("No arguments var for scope: " + this);
+      return null;
     }
+
     if (!isFunctionScope() || rootNode.isArrowFunction()) {
       return parent.getArgumentsVar();
     }
@@ -309,6 +310,18 @@ public class Scope implements StaticScope, Serializable {
    */
   boolean isHoistScope() {
     return isFunctionScope() || isFunctionBlockScope() || isGlobal() || isModuleScope();
+  }
+
+  public static boolean isHoistScopeRootNode(Node n) {
+    switch (n.getToken()) {
+      case FUNCTION:
+      case MODULE_BODY:
+      case ROOT:
+      case SCRIPT:
+        return true;
+      default:
+        return NodeUtil.isFunctionBlock(n);
+    }
   }
 
   /**

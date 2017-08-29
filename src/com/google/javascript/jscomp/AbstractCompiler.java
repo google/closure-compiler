@@ -92,6 +92,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract List<CompilerInput> getInputsInOrder();
 
+  /**
+   * Gets the total number of inputs.
+   *
+   * <p>This can be useful as a guide for the initial allocated size for data structures.
+   */
+  abstract int getNumberOfInputs();
+
   //
   // Intermediate state and results produced and needed by particular passes.
   // TODO(rluble): move these into the general structure for keeping state between pass runs.
@@ -143,6 +150,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract void setMostRecentTypechecker(MostRecentTypechecker mostRecent);
 
+  /** Gets the type-checking pass that ran most recently. */
+  abstract MostRecentTypechecker getMostRecentTypechecker();
+
   /**
    * Gets a central registry of type information from the compiled JS.
    */
@@ -184,7 +194,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Report an internal error.
    */
-  abstract void throwInternalError(String msg, Exception cause);
+  abstract void throwInternalError(String msg, Throwable cause);
 
   /**
    * Gets the current coding convention.
@@ -207,13 +217,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * Passes that make modifications in a scope that is different than the Compiler.currentScope use
    * this (eg, InlineVariables and many others)
    */
-  abstract void reportChangeToEnclosingScope(Node n);
+  public abstract void reportChangeToEnclosingScope(Node n);
 
   /**
    * Mark modifications in a scope that is different than the Compiler.currentScope use this (eg,
    * InlineVariables and many others)
    */
-  abstract void reportChangeToChangeScope(Node changeScopeRoot);
+  public abstract void reportChangeToChangeScope(Node changeScopeRoot);
 
   /**
    * Mark a specific function node as known to be deleted. Is part of having accurate change
@@ -224,7 +234,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Logs a message under a central logger.
    */
-  abstract void addToDebugLog(String message);
+  abstract void addToDebugLog(String... message);
 
   /**
    * Sets the CssRenamingMap.
@@ -590,13 +600,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
    /**
     * Stores a map of default @define values.  These values
-    * can be overriden by values specifically set in the CompilerOptions.
+    * can be overridden by values specifically set in the CompilerOptions.
     */
    abstract void setDefaultDefineValues(ImmutableMap<String, Node> values);
 
    /**
     * Gets a map of default @define values.  These values
-    * can be overriden by values specifically set in the CompilerOptions.
+    * can be overridden by values specifically set in the CompilerOptions.
     */
    abstract ImmutableMap<String, Node> getDefaultDefineValues();
 
@@ -627,5 +637,16 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   @Nullable
   Object getAnnotation(String key) {
     return annotationMap.get(key);
+  }
+
+  private @Nullable PersistentInputStore persistentInputStore;
+
+  void setPersistentInputStore(PersistentInputStore persistentInputStore) {
+    this.persistentInputStore = persistentInputStore;
+  }
+
+  @Nullable
+  PersistentInputStore getPersistentInputStore() {
+    return persistentInputStore;
   }
 }

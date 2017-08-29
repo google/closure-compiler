@@ -17,7 +17,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.LatticeElement;
@@ -25,9 +24,11 @@ import com.google.javascript.rhino.Node;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Compute the "liveness" of all local variables. A variable is "live" at a point of a program if
@@ -117,35 +118,46 @@ class LiveVariablesAnalysisEs6
   // represents the equivalent of the variable index property within a scope
   private final Map<String, Integer> scopeVariables;
 
+  // obtain variables in the order in which they appear in the code
+  private final List<Var> orderedVars;
+
   private final Map<String, Var> allVarsInFn;
   /**
-   * ******************************************************* Live Variables Analysis using the ES6
-   * scope creator. This analysis should only be done on a function where jsScope is the function
-   * scope and jsScopeChild should be the function body scope.
+   * Live Variables Analysis using the ES6 scope creator. This analysis should only be done on
+   * function where jsScope is the function scope. If we call LiveVariablesAnalysis from the
+   * function scope of our pass, we can pass a null value for the JsScopeChild, but if we call it
+   * from the function block scope, then JsScopeChild will be the function block scope.
+   *
+   * <p>We call from the function scope when the pass requires us to traverse nodes beginning at the
+   * function parameters, and it from the function block scope when we are ignoring function
+   * parameters.
    *
    * @param cfg
-   * @param jsScope
-   * @param jsScopeChild
+   * @param jsScope the function scope
+   * @param jsScopeChild null or function block scope
    * @param compiler
    * @param scopeCreator Es6 Scope creator
    */
   LiveVariablesAnalysisEs6(
       ControlFlowGraph<Node> cfg,
       Scope jsScope,
-      Scope jsScopeChild,
+      @Nullable Scope jsScopeChild,
       AbstractCompiler compiler,
       Es6SyntacticScopeCreator scopeCreator) {
     super(cfg, new LiveVariableJoinOp());
     checkState(jsScope.isFunctionScope(), jsScope);
-    checkState(jsScopeChild.isFunctionBlockScope(), jsScopeChild);
-    checkState(compiler.getLifeCycleStage().isNormalized());
+
     this.jsScope = jsScope;
     this.jsScopeChild = jsScopeChild;
     this.escaped = new HashSet<>();
     this.scopeVariables = new HashMap<>();
     this.allVarsInFn = new HashMap<>();
-    computeEscaped(jsScope, jsScopeChild, escaped, compiler, scopeCreator);
-    NodeUtil.getAllVarsDeclaredInFunction(allVarsInFn, compiler, scopeCreator, jsScope);
+    this.orderedVars = new LinkedList<>();
+
+    computeEscapedEs6(jsScope, escaped, compiler, scopeCreator);
+
+    NodeUtil.getAllVarsDeclaredInFunction(
+        allVarsInFn, orderedVars, compiler, scopeCreator, jsScope);
     addScopeVariables();
   }
 
@@ -156,8 +168,8 @@ class LiveVariablesAnalysisEs6
    */
   private void addScopeVariables() {
     int num = 0;
-    for (String name : allVarsInFn.keySet()) {
-      scopeVariables.put(name, num);
+    for (Var v : orderedVars) {
+      scopeVariables.put(v.getName(), num);
       num++;
     }
   }
@@ -168,6 +180,10 @@ class LiveVariablesAnalysisEs6
 
   public Map<String, Var> getAllVariables() {
     return allVarsInFn;
+  }
+
+  public List<Var> getAllVariablesInOrder() {
+    return orderedVars;
   }
 
   public int getVarIndex(String var) {
@@ -181,12 +197,12 @@ class LiveVariablesAnalysisEs6
 
   @Override
   LiveVariableLattice createEntryLattice() {
-    return new LiveVariableLattice(allVarsInFn.size());
+    return new LiveVariableLattice(orderedVars.size());
   }
 
   @Override
   LiveVariableLattice createInitialEstimateLattice() {
-    return new LiveVariableLattice(allVarsInFn.size());
+    return new LiveVariableLattice(orderedVars.size());
   }
 
   @Override
@@ -261,14 +277,21 @@ class LiveVariablesAnalysisEs6
       case LET:
       case CONST:
       case VAR:
-        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-          if (c.hasChildren()) {
-            computeGenKill(c.getFirstChild(), gen, kill, conditional);
-            if (!conditional) {
-              addToSetIfLocal(c, kill);
-            }
-          }
-        }
+         for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+           if (c.isName()) {
+             if (c.hasChildren()) {
+               computeGenKill(c.getFirstChild(), gen, kill, conditional);
+               if (!conditional) {
+                 addToSetIfLocal(c, kill);
+               }
+             }
+           } else {
+             Iterable<Node> allVars = NodeUtil.getLhsNodesOfDeclaration(n);
+             for (Node child : allVars) {
+               addToSetIfLocal(child, kill);
+             }
+           }
+         }
         return;
 
       case AND:
@@ -329,7 +352,7 @@ class LiveVariablesAnalysisEs6
     // to the function body.
     if (localScope.isFunctionBlockScope()) {
       local = localScope.isDeclaredInFunctionBlockOrParameter(name);
-    } else if (jsScopeChild != null && localScope == jsScope) {
+    } else if (localScope == jsScope && jsScopeChild != null) {
       local = jsScopeChild.isDeclaredInFunctionBlockOrParameter(name);
     } else {
       local = localScope.isDeclared(name, false);
@@ -338,7 +361,6 @@ class LiveVariablesAnalysisEs6
     if (!local) {
       return;
     }
-
 
     if (!escaped.contains(var)) {
       set.set(getVarIndex(var.getName()));
@@ -350,15 +372,11 @@ class LiveVariablesAnalysisEs6
    * escaped set.
    */
   void markAllParametersEscaped() {
-    if (jsScope.isFunctionScope()) {
-      Node paramList = NodeUtil.getFunctionParameters(jsScope.getRootNode());
-      for (Node arg = paramList.getFirstChild(); arg != null; arg = arg.getNext()) {
-        escaped.add(jsScope.getVar(arg.getString()));
-      }
-    } else {
-      Node enclosingFunction = NodeUtil.getEnclosingFunction(jsScope.getRootNode());
-      Node paramList = NodeUtil.getFunctionParameters(enclosingFunction);
-      for (Node arg = paramList.getFirstChild(); arg != null; arg = arg.getNext()) {
+    Node paramList = NodeUtil.getFunctionParameters(jsScope.getRootNode());
+    for (Node arg = paramList.getFirstChild(); arg != null; arg = arg.getNext()) {
+      if (arg.isRest() || arg.isDefaultValue()) {
+        escaped.add(jsScope.getVar(arg.getFirstChild().getString()));
+      } else {
         escaped.add(jsScope.getVar(arg.getString()));
       }
     }

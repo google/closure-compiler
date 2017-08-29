@@ -292,6 +292,9 @@ class IRFactory {
     this.currentComment = skipNonJsDoc(nextCommentIter);
     this.newlines = new ArrayList<>();
     this.sourceFile = sourceFile;
+    // The template node properties are applied to all nodes in this transform.
+    this.templateNode = createTemplateNode();
+
     this.fileLevelJsDocBuilder =
         new JSDocInfoBuilder(config.parseJsDocDocumentation.shouldParseDescriptions());
 
@@ -310,8 +313,6 @@ class IRFactory {
     this.config = config;
     this.errorReporter = errorReporter;
     this.transformDispatcher = new TransformDispatcher();
-    // The template node properties are applied to all nodes in this transform.
-    this.templateNode = createTemplateNode();
 
     if (config.strictMode == StrictMode.STRICT) {
       reservedKeywords = ES5_STRICT_RESERVED_KEYWORDS;
@@ -903,7 +904,7 @@ class IRFactory {
                                charno + numOpeningChars),
           comment,
           position,
-          sourceFile,
+          templateNode,
           config,
           errorReporter);
     jsdocParser.setFileLevelJsDocBuilder(fileLevelJsDocBuilder);
@@ -934,7 +935,7 @@ class IRFactory {
               charno + numOpeningChars),
           comment,
           node.location.start.offset,
-          sourceFile,
+          templateNode,
           config,
           errorReporter);
     return parser.parseInlineTypeDoc();
@@ -1952,7 +1953,8 @@ class IRFactory {
     }
 
     private Node createUpdateNode(Token type, boolean postfix, Node operand) {
-      if (!operand.isValidAssignmentTarget()) {
+      Node assignTarget = operand.isCast() ? operand.getFirstChild() : operand;
+      if (!assignTarget.isValidAssignmentTarget()) {
         errorReporter.error(
             SimpleFormat.format("Invalid %s %s operand.",
                 (postfix ? "postfix" : "prefix"),
@@ -2192,7 +2194,7 @@ class IRFactory {
       if (tree.expression != null) {
         yield.addChildToBack(transform(tree.expression));
       }
-      yield.setYieldFor(tree.isYieldFor);
+      yield.setYieldAll(tree.isYieldAll);
       return yield;
     }
 
@@ -3063,11 +3065,6 @@ class IRFactory {
         }
         case '0': case '1': case '2': case '3':
         case '4': case '5': case '6': case '7':
-          if (inStrictContext()) {
-            errorReporter.error(INVALID_ES5_STRICT_OCTAL, sourceName,
-                lineno(location.start), charno(location.start));
-            return 0;
-          }
           double v = 0;
           int c = 0;
           while (++c < length) {
@@ -3075,13 +3072,23 @@ class IRFactory {
             if (isOctalDigit(digit)) {
               v = (v * 8) + octaldigit(digit);
             } else {
-              errorReporter.error(INVALID_OCTAL_DIGIT, sourceName,
-                  lineno(location.start), charno(location.start));
+              if (inStrictContext()) {
+                errorReporter.error(INVALID_ES5_STRICT_OCTAL, sourceName,
+                    lineno(location.start), charno(location.start));
+              } else {
+                errorReporter.error(INVALID_OCTAL_DIGIT, sourceName,
+                    lineno(location.start), charno(location.start));
+              }
               return 0;
             }
           }
-          errorReporter.warning(INVALID_ES5_STRICT_OCTAL, sourceName,
-              lineno(location.start), charno(location.start));
+          if (inStrictContext()) {
+            errorReporter.error(INVALID_ES5_STRICT_OCTAL, sourceName,
+                lineno(location.start), charno(location.start));
+          } else {
+            errorReporter.warning(INVALID_ES5_STRICT_OCTAL, sourceName,
+                lineno(location.start), charno(location.start));
+          }
           return v;
         case '8': case '9':
           errorReporter.error(INVALID_OCTAL_DIGIT, sourceName,

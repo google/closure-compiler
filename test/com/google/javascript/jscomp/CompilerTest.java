@@ -37,6 +37,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.StringWriter;
@@ -217,14 +218,14 @@ public final class CompilerTest extends TestCase {
     File tempDir = Files.createTempDir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=foo.js.map";
     File jsFile = new File(tempDir, "foo.js");
-    Files.write(code, jsFile, Charsets.UTF_8);
+    Files.asCharSink(jsFile, Charsets.UTF_8).write(code);
     File sourceMapFile = new File(tempDir, "foo.js.map");
-    Files.write(SOURCE_MAP, sourceMapFile, Charsets.UTF_8);
+    Files.asCharSink(sourceMapFile, Charsets.UTF_8).write(SOURCE_MAP);
 
     CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
     input.getAstRoot(compiler);
     // The source map is still
-    assertThat(compiler.inputSourceMaps.size()).isEqualTo(1);
+    assertThat(compiler.inputSourceMaps).hasSize(1);
 
     for (SourceMapInput inputSourceMap : compiler.inputSourceMaps.values()) {
       SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
@@ -241,14 +242,14 @@ public final class CompilerTest extends TestCase {
     relativedir.mkdir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=relativedir/foo.js.map";
     File jsFile = new File(tempDir, "foo.js");
-    Files.write(code, jsFile, Charsets.UTF_8);
+    Files.asCharSink(jsFile, Charsets.UTF_8).write(code);
     File sourceMapFile = new File(relativedir, "foo.js.map");
-    Files.write(SOURCE_MAP, sourceMapFile, Charsets.UTF_8);
+    Files.asCharSink(sourceMapFile, Charsets.UTF_8).write(SOURCE_MAP);
 
     CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
     input.getAstRoot(compiler);
     // The source map is still
-    assertThat(compiler.inputSourceMaps.size()).isEqualTo(1);
+    assertThat(compiler.inputSourceMaps).hasSize(1);
 
     for (SourceMapInput inputSourceMap : compiler.inputSourceMaps.values()) {
       SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
@@ -262,11 +263,11 @@ public final class CompilerTest extends TestCase {
     File tempDir = Files.createTempDir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=foo-does-not-exist.js.map";
     File jsFile = new File(tempDir, "foo2.js");
-    Files.write(code, jsFile, Charsets.UTF_8);
+    Files.asCharSink(jsFile, Charsets.UTF_8).write(code);
 
     CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
     input.getAstRoot(compiler);
-    assertThat(compiler.inputSourceMaps.size()).isEqualTo(1);
+    assertThat(compiler.inputSourceMaps).hasSize(1);
 
     TestErrorManager errorManager = new TestErrorManager();
     for (SourceMapInput inputSourceMap : compiler.inputSourceMaps.values()) {
@@ -285,12 +286,12 @@ public final class CompilerTest extends TestCase {
     File tempDir = Files.createTempDir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=/some/missing/path/foo.js.map";
     File jsFile = new File(tempDir, "foo.js");
-    Files.write(code, jsFile, Charsets.UTF_8);
+    Files.asCharSink(jsFile, Charsets.UTF_8).write(code);
 
     CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
     input.getAstRoot(compiler);
     // The source map is still
-    assertThat(compiler.inputSourceMaps.size()).isEqualTo(0);
+    assertThat(compiler.inputSourceMaps).isEmpty();
 
     // No warnings for unresolved absolute paths.
     assertEquals(0, errorManager.getWarningCount());
@@ -1034,7 +1035,7 @@ public final class CompilerTest extends TestCase {
     CompilerInput input = new CompilerInput(SourceFile.fromCode(
           "tmp", "function foo() {}"));
     Node ast = input.getAstRoot(compiler);
-    CompilerInput newInput = (CompilerInput) deserialize(serialize(input));
+    CompilerInput newInput = (CompilerInput) deserialize(compiler, serialize(input));
     assertTrue(ast.isEquivalentTo(newInput.getAstRoot(compiler)));
   }
 
@@ -1411,12 +1412,42 @@ public final class CompilerTest extends TestCase {
     return baos.toByteArray();
   }
 
-  private static Object deserialize(byte[] bytes)
+  private static Object deserialize(final Compiler compiler, byte[] bytes)
       throws IOException, ClassNotFoundException {
-    ObjectInputStream in =
-        new ObjectInputStream(new ByteArrayInputStream(bytes));
+
+    class CompilerObjectInputStream extends ObjectInputStream implements HasCompiler {
+      public CompilerObjectInputStream(InputStream in) throws IOException {
+        super(in);
+      }
+
+      @Override
+      public AbstractCompiler getCompiler() {
+        return compiler;
+      }
+    }
+
+    ObjectInputStream in = new CompilerObjectInputStream(new ByteArrayInputStream(bytes));
     Object obj = in.readObject();
     in.close();
     return obj;
+  }
+
+  public void testCompilerInputFromPersistentStore() {
+    List<SourceFile> sources =
+        ImmutableList.of(
+            SourceFile.fromFile("path/to/file.js"), SourceFile.fromFile("path/to/file2.js"));
+    final CompilerInput input = new CompilerInput(sources.get(0));
+    PersistentInputStore store =
+        new PersistentInputStore() {
+          @Override
+          public CompilerInput getCachedCompilerInput(SourceFile source) {
+            return input;
+          }
+        };
+    CompilerOptions options = new CompilerOptions();
+    Compiler compiler = new Compiler();
+    compiler.setPersistentInputStore(store);
+    compiler.init(ImmutableList.<SourceFile>of(), sources, options);
+    assertThat(compiler.getModules().get(0).getInputs()).contains(input);
   }
 }

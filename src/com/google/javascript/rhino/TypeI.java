@@ -40,6 +40,7 @@
 package com.google.javascript.rhino;
 
 import java.io.Serializable;
+import java.util.Collection;
 
 /**
  * A common interface for types in the old type system and the new type system,
@@ -72,6 +73,9 @@ public interface TypeI extends Serializable {
 
   boolean isFunctionType();
 
+  /**
+   * @return True for both nominal and structural interfaces
+   */
   boolean isInterface();
 
   boolean isStructuralInterface();
@@ -182,29 +186,55 @@ public interface TypeI extends Serializable {
   boolean isEnumObject();
 
   /**
-   * Returns true if this type is a generic object (non function) and some (or all) of its type
-   * variables are not instantiated.
-   * Note that in OTI it is possible to instantiate only some of the type variables of a
-   * generic type (bad implementation choice).
-   * In NTI, a generic type can only be uninstantiated or fully instantiated.
+   * Returns true if this type is a generic object (non function) and *all* its type variables
+   * are instantiated.
    */
-  boolean hasUninstantiatedTypeVariables();
-
-  // TODO(sdh): Replace calls of toAnnotationString with toNonNullAnnotationString and
-  // then substring off any leading '!' if necessary.  Then delete toAnnotationString
-  // and consider renaming toNonNullAnnotationString as simply toAnnotationString.
-  /**
-   * Returns a string representation of this type, suitable for printing
-   * in type annotations at code generation time.  In particular, explicit
-   * non-null modifiers will be added to implicitly nullable types (except
-   * the outermost type, which is expected to be a reference type).
-   */
-  String toAnnotationString();
+  boolean isFullyInstantiated();
 
   /**
-   * Returns a string representation of this type, suitable for printing
-   * in type annotations at code generation time.  In particular, explicit
-   * non-null modifiers will be added to implicitly nullable types.
+   * Returns true if this type is a generic object (non function) and *some* of its type variables
+   * are instantiated.
+   * In NTI, this is the same as isFullyInstantiated.
+   * In OTI, generic types can be partially instantiated (bad implementation choice).
    */
-  String toNonNullAnnotationString();
+  boolean isPartiallyInstantiated();
+
+  /**
+   * If this type is a generic nominal type or function, return the type parameters as type
+   * variables.
+   */
+  Collection<TypeI> getTypeParameters();
+
+  /**
+   * Returns a string representation of this type, suitable for printing
+   * in type annotations at code generation time.
+   */
+  String toAnnotationString(Nullability nullability);
+
+  /**
+   * Specifies how to express nullability of reference types in annotation strings and error
+   * messages. Note that this only applies to the outer-most type. Nullability of generic type
+   * arguments is always explicit.
+   */
+  enum Nullability {
+    /**
+     * Include an explicit '!' for non-nullable reference types. This is suitable for use
+     * in most type contexts (particularly 'type', 'param', and 'return' annotations).
+     */
+    EXPLICIT,
+    /**
+     * Omit the explicit '!' from the outermost non-nullable reference type. This is suitable for
+     * use in cases where a single reference type is expected (e.g. 'extends' and 'implements').
+     */
+    IMPLICIT,
+  }
+
+  /**
+   * Returns the type inference of this object. Useful for debugging.
+   * Note: this should be deleted when OTI is no longer relevant.
+   */
+  TypeInference typeInference();
+
+  /** Simple enum to easily identify the type of TypeI instance. */
+  enum TypeInference { OTI, NTI };
 }

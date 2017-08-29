@@ -74,7 +74,7 @@ class VarCheck extends AbstractPostOrderCallback implements
   static final DiagnosticType VAR_MULTIPLY_DECLARED_ERROR =
       DiagnosticType.error(
           "JSC_VAR_MULTIPLY_DECLARED_ERROR",
-          "Variable {0} declared more than once. First occurence: {1}");
+          "Variable {0} declared more than once. First occurrence: {1}");
 
   static final DiagnosticType VAR_ARGUMENTS_SHADOWED_ERROR =
     DiagnosticType.error(
@@ -204,6 +204,10 @@ class VarCheck extends AbstractPostOrderCallback implements
           }
 
           if (sanityCheck) {
+            // When the code is initially traversed, any undeclared variables are treated as
+            // externs. During this sanity check, we ensure that all variables have either been
+            // declared or marked as an extern. A failure at this point means that we have created
+            // some variable/generated some code with an undefined reference.
             throw new IllegalStateException("Unexpected variable " + varName);
           } else {
             createSynthesizedExternVar(varName);
@@ -409,7 +413,8 @@ class VarCheck extends AbstractPostOrderCallback implements
                             ? origVar.input.getName()
                             : "??")));
         }
-      } else if (name.equals(ARGUMENTS) && !NodeUtil.isVarDeclaration(n)) {
+      } else if (name.equals(ARGUMENTS)
+          && !(NodeUtil.isNameDeclaration(n.getParent()) && n.isName())) {
         // Disallow shadowing "arguments" as we can't handle with our current
         // scope modeling.
         compiler.report(

@@ -44,6 +44,7 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    enableNormalize();
     anchorUnusedVars = false;
     canRemoveExterns = false;
   }
@@ -79,6 +80,13 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
     testSame("function e(){}"
         + "e.prototype = {a: function(){}, bExtern: function(){}};"
         + "var x = new e; x.a()");
+
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {}",
+            "  bExtern() {}",
+            "}"));
   }
 
   public void testAliasing1() {
@@ -420,6 +428,15 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
         "this.methodA();");
   }
 
+  public void testGlobalFunctionsInGraph8() {
+    test(
+        LINE_JOINER.join(
+            "let x = function() { (new Foo).baz(); };",
+            "const y = function() { x(); };",
+            "function Foo() { Foo.prototype.baz = function() { y(); }; }"),
+    "");
+  }
+
   public void testGetterBaseline() {
     anchorUnusedVars = true;
     test(
@@ -519,5 +536,301 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
         "}"));
 
     testSame("if (true) { let foo = function() {} }");
+  }
+
+  public void testDestructuringProperty() {
+    testSame(
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "var {a:x} = new Foo();"));
+
+    test(
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "Foo.prototype.b = function() {}",
+            "var {a} = new Foo();"),
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "var {a} = new Foo();"));
+
+    test(
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "Foo.prototype.b = function() {}",
+            "var {a:x} = new Foo();"),
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "var {a:x} = new Foo();"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "Foo.prototype.b = function() {}",
+            "var {a, b} = new Foo();"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "Foo.prototype.b = function() {}",
+            "var {a:x, b:y} = new Foo();"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "({a:x} = new Foo());"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "function f({a:x}) {}; f(new Foo());"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "var {a : x = 3} = new Foo();"));
+
+    test(
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "Foo.prototype.b = function() {}",
+            "var {a : a = 3} = new Foo();"),
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "var {a : a = 3} = new Foo();"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "let { a : [b, c, d] } = new Foo();"));
+
+    testSame(
+        LINE_JOINER.join(
+            "function Foo() {}",
+            "Foo.prototype.a = function() {};",
+            "const { a : { b : { c : d = '' }}} = new Foo();"));
+
+  }
+
+  public void testEs6Class() {
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  foo() {}",
+            "}",
+            "var c = new C "
+        ),
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "}",
+            "var c = new C"));
+
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  foo() {}",
+            "}",
+            "var c = new C ",
+            "c.foo()"
+        ));
+
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  static foo() {}",
+            "}"
+        ));
+
+    test(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  get foo() {}",
+            "  set foo(val) {}",
+            "}",
+            "var c = new C "
+        ),
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "}",
+            "var c = new C"));
+
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  get foo() {}",
+            "  set foo(val) {}",
+            "}",
+            "var c = new C ",
+            "c.foo = 3;"));
+
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  get foo() {}",
+            "  set foo(val) {}",
+            "}",
+            "var c = new C ",
+            "c.foo;"));
+  }
+
+  public void testEs6Extends() {
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "}",
+            "class D extends C {",
+            "  constructor() {}",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  foo() {}",
+            "}",
+            "class D extends C {",
+            "  constructor() {}",
+            "  foo() {",
+            "     return super.foo()",
+            "  }",
+            "}",
+            "var d = new D",
+            "d.foo()"));
+
+    test(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  foo() {}",
+            "}",
+            "class D extends C {",
+            "  constructor() {}",
+            "  foo() {",
+            "     return super.foo()",
+            "  }",
+            "}",
+            "var d = new D"),
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "}",
+            "class D extends C {",
+            "  constructor() {}",
+            "}",
+            "var d = new D"));
+  }
+
+  public void testAnonClasses() {
+    test(
+        LINE_JOINER.join(
+            "var C = class {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  foo() {}",
+            "}"),
+        LINE_JOINER.join(
+            "var C = class {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "var C = class {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  foo() {}",
+            "}",
+            "var c = new C()",
+            "c.foo()"));
+
+    test(
+        LINE_JOINER.join(
+            "var C = class {}",
+            "C.D = class {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  foo() {}",
+            "}"),
+        LINE_JOINER.join(
+            "var C = class {}",
+            "C.D = class{",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "foo(class {",
+            "  constructor() { }",
+            "  bar() { }",
+            "})"));
+  }
+
+  public void testModules() {
+    testSame("export default function(){}");
+    testSame("export class C {};");
+    testSame("export {Bar}");
+
+    testSame("import { square, diag } from 'lib';");
+    testSame("import * as lib from 'lib';");
   }
 }

@@ -1434,26 +1434,15 @@ chrome.bluetoothLowEnergy = {};
 
 
 /**
- * @constructor
+ * @typedef {?{
+ *   uuid: string,
+ *   isPrimary: boolean,
+ *   instanceId: (string|undefined),
+ *   deviceAddress: (string|undefined)
+ * }}
  * @see https://developer.chrome.com/apps/bluetoothLowEnergy#type-Service
  */
-chrome.bluetoothLowEnergy.Service = function() {};
-
-
-/** @type {string} */
-chrome.bluetoothLowEnergy.Service.prototype.uuid;
-
-
-/** @type {boolean} */
-chrome.bluetoothLowEnergy.Service.prototype.isPrimary;
-
-
-/** @type {string|undefined} */
-chrome.bluetoothLowEnergy.Service.prototype.instanceId;
-
-
-/** @type {string|undefined} */
-chrome.bluetoothLowEnergy.Service.prototype.deviceAddress;
+chrome.bluetoothLowEnergy.Service;
 
 
 /**
@@ -1476,56 +1465,29 @@ chrome.bluetoothLowEnergy.Request.prototype.value;
 
 
 /**
- * @constructor
+ * @typedef {?{
+ *   uuid: string,
+ *   service: (!chrome.bluetoothLowEnergy.Service|undefined),
+ *   properties: !Array<string>,
+ *   instanceId: (string|undefined),
+ *   value: (!ArrayBuffer|undefined)
+ * }}
  * @see https://developer.chrome.com/apps/bluetoothLowEnergy#type-Characteristic
  */
-chrome.bluetoothLowEnergy.Characteristic = function() {};
-
-
-/** @type {string} */
-chrome.bluetoothLowEnergy.Characteristic.prototype.uuid;
-
-
-/** @type {!chrome.bluetoothLowEnergy.Service} */
-chrome.bluetoothLowEnergy.Characteristic.prototype.service;
-
-
-/** @type {!Array<string>} */
-chrome.bluetoothLowEnergy.Characteristic.prototype.properties;
-
-
-/** @type {string|undefined} */
-chrome.bluetoothLowEnergy.Characteristic.prototype.instanceId;
-
-
-/** @type {!ArrayBuffer|undefined} */
-chrome.bluetoothLowEnergy.Characteristic.prototype.value;
+chrome.bluetoothLowEnergy.Characteristic;
 
 
 /**
- * @constructor
+ * @typedef {?{
+ *   uuid: string,
+ *   characteristic: (!chrome.bluetoothLowEnergy.Characteristic|undefined),
+ *   permissions: !Array<string>,
+ *   instanceId: (string|undefined),
+ *   value: (!ArrayBuffer|undefined)
+ * }}
  * @see https://developer.chrome.com/apps/bluetoothLowEnergy#type-Descriptor
  */
-chrome.bluetoothLowEnergy.Descriptor = function() {};
-
-/** @type {string} */
-chrome.bluetoothLowEnergy.Descriptor.prototype.uuid;
-
-
-/** @type {!chrome.bluetoothLowEnergy.Characteristic} */
-chrome.bluetoothLowEnergy.Descriptor.prototype.characteristic;
-
-
-/** @type {!Array<string>} */
-chrome.bluetoothLowEnergy.Descriptor.prototype.permissions;
-
-
-/** @type {string|undefined} */
-chrome.bluetoothLowEnergy.Descriptor.prototype.instanceId;
-
-
-/** @type {!ArrayBuffer|undefined} */
-chrome.bluetoothLowEnergy.Descriptor.prototype.value;
+chrome.bluetoothLowEnergy.Descriptor;
 
 
 /**
@@ -1706,7 +1668,7 @@ chrome.bluetoothLowEnergy.stopCharacteristicNotifications =
 
 
 /**
- * @typedef{?{
+ * @typedef {?{
  *   value: !ArrayBuffer,
  *   shouldIndicate: (boolean|undefined)
  * }}
@@ -2220,6 +2182,22 @@ chrome.copresence.onStatusUpdated;
  * @const
  */
 chrome.enterprise = {};
+
+
+/**
+ * @constructor
+ * deviceAttributes allows for reading device attributes.
+ * @see https://developer.chrome.com/extensions/enterprise_deviceAttributes.
+ */
+chrome.enterprise.deviceAttributes = function() {};
+
+
+/**
+ * @param {function(string): void} callback Called with the device identifier
+ *     of the directory API when received.
+ * @return {undefined}
+ */
+chrome.enterprise.deviceAttributes.getDirectoryDeviceId = function(callback) {};
 
 
 /**

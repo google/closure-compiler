@@ -80,12 +80,12 @@ public interface FunctionTypeI extends TypeI {
    * This is only valid for constructors and interfaces, and will not be
    * null. This allows a downward traversal of the subtype graph.
    */
-  // TODO(sdh): change the name to getDirectSubTypes()
   Iterable<FunctionTypeI> getDirectSubTypes();
 
   /** Gets the type of {@code this} in this function. */
   TypeI getTypeOfThis();
 
+  /** Whether this function type has any properties (not counting "prototype"). */
   boolean hasProperties();
 
   void setSource(Node n);
@@ -105,6 +105,12 @@ public interface FunctionTypeI extends TypeI {
   /** Returns the maximum number of allowed arguments, or Integer.MAX_VALUE if variadic. */
   int getMaxArity();
 
-  /** Returns the names of all type parameters. */
-  Collection<String> getTypeParameters();
+  /**
+   * Returns a function type that is the same as functionType except for the return type, which is
+   * set to be returnType. This method is a bit of a hack to support preserving types during
+   * Generator transpilation, and is only implemented in NTI.
+   */
+  FunctionTypeI withReturnType(TypeI yieldType); // TODO(sdh): We might want to find a cleaner way
+                                                 // to create a new function type from another
+                                                 // function type with some parts of it mutated.
 }

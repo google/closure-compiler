@@ -474,8 +474,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     // Tries to convert x = x + y -> x += y;
-    if (!right.hasChildren() ||
-        right.getSecondChild() != right.getLastChild()) {
+    if (!right.hasChildren() || right.getSecondChild() != right.getLastChild()) {
       // RHS must have two children.
       return n;
     }
@@ -547,8 +546,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       return n;
     }
 
-    if (!n.hasChildren() ||
-        n.getSecondChild() != n.getLastChild()) {
+    if (!n.hasChildren() || n.getSecondChild() != n.getLastChild()) {
       return n;
     }
 
@@ -574,6 +572,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node parent = n.getParent();
 
     Node result = null;
+    Node dropped = null;
 
     Token type = n.getToken();
 
@@ -586,26 +585,29 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // (FALSE && x) => FALSE
       if ((lval && type == Token.OR) || (!lval && type == Token.AND)) {
         result = left;
-
+        dropped = right;
       } else if (!mayHaveSideEffects(left)) {
         // (FALSE || x) => x
         // (TRUE && x) => x
         result = right;
+        dropped = left;
       } else {
         // Left side may have side effects, but we know its boolean value.
         // e.g. true_with_sideeffects || foo() => true_with_sideeffects, foo()
         // or: false_with_sideeffects && foo() => false_with_sideeffects, foo()
         // This, combined with PeepholeRemoveDeadCode, helps reduce expressions
         // like "x() || false || z()".
-        NodeUtil.deleteChildren(n, compiler);
+        n.detachChildren();
         result = IR.comma(left, right);
+        dropped = null;
       }
-    } else if (n.getParent().getToken() == type) {
+    } else if (parent.getToken() == type && n == parent.getFirstChild()) {
       TernaryValue rightValue = NodeUtil.getImpureBooleanValue(right);
       if (!mayHaveSideEffects(right)) {
         if ((rightValue == TernaryValue.FALSE && type == Token.OR)
             || (rightValue == TernaryValue.TRUE && type == Token.AND)) {
           result = left;
+          dropped = right;
         }
       }
     }
@@ -615,8 +617,11 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     if (result != null) {
       // Fold it!
-      NodeUtil.deleteChildren(n, compiler);
+      n.detachChildren();
       parent.replaceChild(n, result);
+      if (dropped != null) {
+        NodeUtil.markFunctionsDeleted(dropped, compiler);
+      }
       reportCodeChange();
 
       return result;

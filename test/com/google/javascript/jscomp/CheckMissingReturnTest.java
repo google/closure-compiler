@@ -27,7 +27,7 @@ public final class CheckMissingReturnTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    enableTypeCheck();
+    enableTypeCheck(); // NOTE: CheckMissingReturn is an OTI-only pass.
   }
 
   @Override

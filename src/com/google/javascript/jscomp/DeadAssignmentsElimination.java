@@ -31,7 +31,6 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Map;
 
-
 /**
  * Removes local variable assignments that are useless based on information from {@link
  * LiveVariablesAnalysisEs6}. If there is an assignment to variable {@code x} and {@code x} is dead
@@ -409,7 +408,7 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
     }
 
     if (n.isName() && variable.equals(n.getString())) {
-      if (NodeUtil.isVarOrSimpleAssignLhs(n, n.getParent())) {
+      if (NodeUtil.isNameDeclOrSimpleAssignLhs(n, n.getParent())) {
         checkState(n.getParent().isAssign(), n.getParent());
         // The expression to which the assignment is made is evaluated before
         // the RHS is evaluated (normal left to right evaluation) but the KILL

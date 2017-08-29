@@ -292,8 +292,13 @@ public abstract class JSType implements TypeI {
   }
 
   @Override
-  public boolean hasUninstantiatedTypeVariables() {
-    return getTemplateTypeMap().hasUnfilledTemplateKeys();
+  public boolean isFullyInstantiated() {
+    return getTemplateTypeMap().isFull();
+  }
+
+  @Override
+  public boolean isPartiallyInstantiated() {
+    return getTemplateTypeMap().isPartiallyFull();
   }
 
   @Override
@@ -556,6 +561,15 @@ public abstract class JSType implements TypeI {
    */
   public TemplateTypeMap getTemplateTypeMap() {
     return templateTypeMap;
+  }
+
+  @Override
+  public final ImmutableSet<TypeI> getTypeParameters() {
+    ImmutableSet.Builder<TypeI> params = ImmutableSet.builder();
+    for (TemplateType type : getTemplateTypeMap().getTemplateKeys()) {
+      params.add(type);
+    }
+    return params.build();
   }
 
   /**
@@ -1042,7 +1056,7 @@ public abstract class JSType implements TypeI {
    */
   @Override
   public boolean isNullable() {
-    return isSubtype(getNativeType(JSTypeNative.NULL_TYPE));
+    return false;
   }
 
   /**
@@ -1050,7 +1064,7 @@ public abstract class JSType implements TypeI {
    */
   @Override
   public boolean isVoidable() {
-    return isSubtype(getNativeType(JSTypeNative.VOID_TYPE));
+    return false;
   }
 
   /**
@@ -1658,20 +1672,12 @@ public abstract class JSType implements TypeI {
     return "{" + hashCode() + "}";
   }
 
-  /**
-   * A string representation of this type, suitable for printing
-   * in type annotations at code generation time.
-   *
-   * Don't call from this package; use appendAsNonNull instead.
-   */
-  @Override
-  public final String toAnnotationString() {
-    return appendTo(new StringBuilder(), true).toString();
-  }
-
   // Don't call from this package; use appendAsNonNull instead.
-  public final String toNonNullAnnotationString() {
-    return appendAsNonNull(new StringBuilder(), true).toString();
+  @Override
+  public final String toAnnotationString(Nullability nullability) {
+    return nullability == Nullability.EXPLICIT
+        ? appendAsNonNull(new StringBuilder(), true).toString()
+        : appendTo(new StringBuilder(), true).toString();
   }
 
   final StringBuilder appendAsNonNull(StringBuilder sb, boolean forAnnotations) {
@@ -1859,5 +1865,10 @@ public abstract class JSType implements TypeI {
         return null;
       }
     }
+  }
+
+  @Override
+  public TypeInference typeInference() {
+    return TypeInference.OTI;
   }
 }

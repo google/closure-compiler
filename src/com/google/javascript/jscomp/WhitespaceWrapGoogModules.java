@@ -48,7 +48,7 @@ public class WhitespaceWrapGoogModules implements HotSwapCompilerPass {
     }
     Node moduleBody = scriptRoot.getFirstChild();
     moduleBody.setToken(Token.BLOCK);
-    NodeUtil.tryMergeBlock(moduleBody);
+    NodeUtil.tryMergeBlock(moduleBody, true);
     compiler.reportChangeToEnclosingScope(scriptRoot);
 
     // As per ClosureBundler:

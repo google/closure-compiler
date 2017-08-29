@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
@@ -141,6 +142,7 @@ public final class MaybeReachingVariableUseTest extends TestCase {
    */
   private void computeUseDef(String src) {
     Compiler compiler = new Compiler();
+    compiler.setLifeCycleStage(LifeCycleStage.NORMALIZED);
     Es6SyntacticScopeCreator scopeCreator = new Es6SyntacticScopeCreator(compiler);
     src = "function _FUNCTION(param1, param2){" + src + "}";
     Node script = compiler.parseTestCode(src);

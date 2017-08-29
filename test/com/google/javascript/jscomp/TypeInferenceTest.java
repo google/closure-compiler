@@ -46,11 +46,9 @@ import com.google.javascript.rhino.jstype.JSTypeRegistry;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.testing.Asserts;
-
-import junit.framework.TestCase;
-
 import java.util.HashMap;
 import java.util.Map;
+import junit.framework.TestCase;
 
 /**
  * Tests {@link TypeInference}.
@@ -1208,7 +1206,7 @@ public final class TypeInferenceTest extends TestCase {
         + " */\n"
         + "function f(){}\n"
         + "var result = f(10);");
-      verify("result", JSTypeNative.NO_TYPE);
+      verify("result", JSTypeNative.UNKNOWN_TYPE);
   }
 
   public void testTypeTransformationUnionType() {
@@ -1494,6 +1492,23 @@ public final class TypeInferenceTest extends TestCase {
         + "var r = f({foo:something});");
     assertTrue(getType("r").isRecordType());
     verify("r", getType("e"));
+  }
+
+  public void testTypeTransformationIsTemplatizedPartially() {
+    inFunction(
+        Joiner.on('\n').join(
+            "/**",
+            " * @constructor",
+            " * @template T, U",
+            " */",
+            "function Foo() {}",
+            "/**",
+            " * @template T := cond(isTemplatized(type('Foo', 'number')), 'number', 'string') =:",
+            " * @return {T}",
+            " */",
+            "function f() { return 123; }",
+            "var x = f();"));
+    assertTrue(getType("x").isNumber());
   }
 
   public void testAssertTypeofProp() {

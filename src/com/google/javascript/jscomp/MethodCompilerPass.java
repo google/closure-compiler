@@ -204,12 +204,15 @@ abstract class MethodCompilerPass implements CompilerPass {
         case OBJECTLIT:
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
             switch (key.getToken()) {
+              case MEMBER_FUNCTION_DEF:
               case STRING_KEY:
                 addPossibleSignature(key.getString(), key.getFirstChild(), t);
                 break;
               case SETTER_DEF:
               case GETTER_DEF:
                 nonMethodProperties.add(key.getString());
+                break;
+              case COMPUTED_PROP: // complicated
                 break;
               default:
                 throw new IllegalStateException(

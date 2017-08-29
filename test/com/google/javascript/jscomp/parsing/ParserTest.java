@@ -1052,6 +1052,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parse("a++");
     parse("a.b--");
     parse("a[0]++");
+    parse("/** @type {number} */ (a)++;");
 
     parseError("a()++", "Invalid postfix increment operand.");
     parseError("(new C)--", "Invalid postfix decrement operand.");
@@ -1060,6 +1061,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
     parseError("(+a)++", "Invalid postfix increment operand.");
     parseError("[1,2]++", "Invalid postfix increment operand.");
     parseError("'literal'++", "Invalid postfix increment operand.");
+    parseError("/** @type {number} */ (a())++;", "Invalid postfix increment operand.");
   }
 
   public void testUnaryExpression() {
@@ -3645,8 +3647,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     try {
       parse(code);
       fail();
-    } catch (java.lang.StackOverflowError e) {
+    } catch (RuntimeException e) {
       // expected exception
+      assertThat(e).hasMessageThat().contains("Exception parsing");
     }
   }
 

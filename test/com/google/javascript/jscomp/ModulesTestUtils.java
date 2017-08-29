@@ -24,9 +24,8 @@ import com.google.common.collect.ImmutableList;
  */
 class ModulesTestUtils {
 
-  static void testModules(CompilerTestCase test, String input, String expected) {
+  static void testModules(CompilerTestCase test, String fileName, String input, String expected) {
     // Shared with ProcessCommonJSModulesTest.
-    String fileName = test.getFilename() + ".js";
     ImmutableList<SourceFile> inputs =
         ImmutableList.of(
             SourceFile.fromCode("other.js", "goog.provide('module$other');"),
@@ -41,20 +40,22 @@ class ModulesTestUtils {
   }
 
   static void testSameModules(CompilerTestCase test, String input) {
-    testModules(test, input, input);
+    testModules(test, "testcode.js", input, input);
   }
 
-  static void testModulesError(CompilerTestCase test, String input, DiagnosticType error) {
-    String fileName = test.getFilename() + ".js";
+  static void testModulesError(
+      CompilerTestCase test, String input, DiagnosticType error) {
     ImmutableList<SourceFile> inputs =
-        ImmutableList.of(SourceFile.fromCode("other.js", ""), SourceFile.fromCode(fileName, input));
+        ImmutableList.of(
+            SourceFile.fromCode("other.js", ""), SourceFile.fromCode("testcode.js", input));
     test.testError(inputs, error);
   }
 
-  static void testModulesWarning(CompilerTestCase test, String input, DiagnosticType warning) {
-    String fileName = test.getFilename() + ".js";
+  static void testModulesWarning(
+      CompilerTestCase test, String input, DiagnosticType warning) {
     ImmutableList<SourceFile> inputs =
-        ImmutableList.of(SourceFile.fromCode("other.js", ""), SourceFile.fromCode(fileName, input));
+        ImmutableList.of(
+            SourceFile.fromCode("other.js", ""), SourceFile.fromCode("testcode.js", input));
     test.testWarning(inputs, warning);
   }
 }

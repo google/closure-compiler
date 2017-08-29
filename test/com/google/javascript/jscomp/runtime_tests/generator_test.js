@@ -986,6 +986,40 @@ function testGeneratorThrow() {
   assertTrue(iter.next().done);
 }
 
+function testGeneratorThrowUndefined() {
+  function* simple() {
+    yield 1;
+  }
+
+  function* tryCatch() {
+    try {
+      yield 1;
+    } catch (e) {
+      yield e;
+    }
+  }
+
+  var iter = simple();
+  var first = iter.next();
+  assertEquals(1, first.value);
+  assertFalse(first.done);
+  try {
+    iter.throw(undefined);
+    fail('Expected an exception to be thrown, but none reached');
+  } catch (e) {
+    assertEquals(undefined, e);
+  }
+
+  iter = tryCatch();
+  first = iter.next();
+  assertEquals(1, first.value);
+  assertFalse(first.done);
+  var second = iter.throw(undefined);
+  assertEquals(undefined, second.value);
+  assertFalse(second.done);
+  assertTrue(iter.next().done);
+}
+
 function testForInDeleteOrUndef() {
   function *undef() {
     var o = {i:undefined, j:2};

@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticRef;
@@ -206,15 +207,15 @@ public class Var implements StaticSlot, StaticRef {
     return false;
   }
 
-  private static final ImmutableSet<Token> DECLARATION_TYPES =
-      ImmutableSet.of(
-          Token.VAR,
-          Token.LET,
-          Token.CONST,
-          Token.FUNCTION,
-          Token.CLASS,
-          Token.CATCH,
-          Token.PARAM_LIST);
+  private static final ImmutableSet<Token> DECLARATION_TYPES = Sets.immutableEnumSet(
+      Token.VAR,
+      Token.LET,
+      Token.CONST,
+      Token.FUNCTION,
+      Token.CLASS,
+      Token.CATCH,
+      Token.IMPORT,
+      Token.PARAM_LIST);
 
   protected Token declarationType() {
     for (Node current = nameNode; current != null;

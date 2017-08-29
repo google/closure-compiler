@@ -28,7 +28,6 @@ import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 import com.google.javascript.jscomp.newtypes.JSTypes;
 import com.google.javascript.jscomp.newtypes.RawNominalType;
 import com.google.javascript.jscomp.newtypes.UniqueNameGenerator;
-import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
@@ -210,15 +209,6 @@ public class GlobalTypeInfo implements TypeIRegistry {
     this.rawNominalTypes = new ArrayList<>(rawNominalTypes);
   }
 
-  static boolean isCtorDefinedByCall(Node qnameNode) {
-    if (!qnameNode.isName() && !qnameNode.isGetProp()) {
-      return false;
-    }
-    JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(qnameNode);
-    Node rhs = NodeUtil.getRValueOfLValue(qnameNode);
-    return jsdoc != null && jsdoc.isConstructor() && rhs != null && rhs.isCall();
-  }
-
   @Override
   public TypeI createTypeFromCommentNode(Node n) {
     return typeParser.getTypeOfCommentNode(n, null, globalScope);
@@ -262,8 +252,18 @@ public class GlobalTypeInfo implements TypeIRegistry {
       case "void":
         return commonTypes.UNDEFINED;
       default:
-        return globalScope.getType(typeName);
+        return this.globalScope.getType(typeName);
     }
+  }
+
+  @Override
+  public String createGetterPropName(String originalPropName) {
+    return this.commonTypes.createGetterPropName(originalPropName);
+  }
+
+  @Override
+  public String createSetterPropName(String originalPropName) {
+    return this.commonTypes.createSetterPropName(originalPropName);
   }
 
   @Override
@@ -276,9 +276,13 @@ public class GlobalTypeInfo implements TypeIRegistry {
     return result;
   }
 
+  /**
+   * This method is only called by TTL and the typeEnv passed is the global scope.
+   * We ignore the typeEnv here because createTypeFromCommentNode already uses the global scope.
+   */
   @Override
   public TypeI evaluateTypeExpression(JSTypeExpression expr, TypeIEnv<TypeI> typeEnv) {
-    throw new UnsupportedOperationException();
+    return createTypeFromCommentNode(expr.getRoot());
   }
 
   @Override
@@ -286,20 +290,31 @@ public class GlobalTypeInfo implements TypeIRegistry {
     return createTypeFromCommentNode(expr.getRoot());
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public TypeI createRecordType(Map<String, ? extends TypeI> props) {
-    throw new UnsupportedOperationException();
+    return JSType.fromProperties(this.commonTypes, (Map<String, JSType>) props);
   }
 
   @Override
   public TypeI instantiateGenericType(
       ObjectTypeI genericType, ImmutableList<? extends TypeI> typeArgs) {
-    throw new UnsupportedOperationException();
+    JSType t = (JSType) genericType;
+    int numTypeParams = t.getTypeParameters().size();
+    int numTypeArgs = typeArgs.size();
+    if (numTypeArgs == numTypeParams) {
+      return t.instantiateGenerics(typeArgs);
+    }
+    ArrayList<JSType> newTypeArgs = new ArrayList<>(numTypeParams);
+    for (int i = 0; i < numTypeParams; i++) {
+      newTypeArgs.add(i < numTypeArgs ? (JSType) typeArgs.get(i) : this.commonTypes.UNKNOWN);
+    }
+    return t.instantiateGenerics(newTypeArgs);
   }
 
   @Override
   public TypeI buildRecordTypeFromObject(ObjectTypeI obj) {
-    throw new UnsupportedOperationException();
+    return JSType.buildRecordTypeFromObject(this.commonTypes, (JSType) obj);
   }
 
   @GwtIncompatible("ObjectInputStream")

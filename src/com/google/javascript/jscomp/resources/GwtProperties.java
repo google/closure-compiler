@@ -56,7 +56,7 @@ public class GwtProperties {
   private static int findDelimiter(String line) {
     if (line.contains(":") || line.contains("=")) {
       if (line.indexOf(':') == -1) {
-        return line.indexOf("=");
+        return line.indexOf('=');
       }
       if (line.indexOf('=') == -1) {
         return line.indexOf(':');

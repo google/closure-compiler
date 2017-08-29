@@ -161,6 +161,10 @@ final class CombinedCompilerPass implements HotSwapCompilerPass,
 
   @Override
   public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    if (compiler.hasHaltingErrors()) {
+      return false;
+    }
+
     for (CallbackWrapper callback : callbacks) {
       callback.shouldTraverseIfActive(t, n, parent);
     }
@@ -174,6 +178,10 @@ final class CombinedCompilerPass implements HotSwapCompilerPass,
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
+    if (compiler.hasHaltingErrors()) {
+      return;
+    }
+
     for (CallbackWrapper callback : callbacks) {
       callback.visitOrMaybeActivate(t, n, parent);
     }

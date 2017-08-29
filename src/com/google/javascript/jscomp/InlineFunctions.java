@@ -164,6 +164,7 @@ class InlineFunctions implements CompilerPass {
     if (isAlwaysInlinable(inlinedFun)) {
       return false;
     }
+
     int inlinedFunSize =
         NodeUtil.countAstSizeUpToLimit(NodeUtil.getFunctionBody(inlinedFun), maxSizeAfterInlining);
     int targetFunSize = NodeUtil.countAstSizeUpToLimit(containingFunction, maxSizeAfterInlining);
@@ -330,11 +331,17 @@ class InlineFunctions implements CompilerPass {
         functionState.setInline(false);
       }
 
-      if (hasParamWithNumberObjectLit(fnNode)) {
+      if (hasComplexDestructuringPattern(NodeUtil.getFunctionParameters(fnNode))) {
         functionState.setInline(false);
       }
 
-      if (hasComplexDestructuringPattern(NodeUtil.getFunctionParameters(fnNode))) {
+      //TODO(b/64614552): Inline functions with nested default values (default values with ancestors
+      //  that are default values). This currently is a writing limitation, not an inherent limit
+      if (hasNestedDefaultValue(NodeUtil.getFunctionParameters(fnNode))) {
+        functionState.setInline(false);
+      }
+
+      if (fnNode.isGeneratorFunction()) {
         functionState.setInline(false);
       }
     }
@@ -624,7 +631,7 @@ class InlineFunctions implements CompilerPass {
       if (!newExpr.isEquivalentTo(ref.callNode)) {
         t.getCompiler().reportChangeToEnclosingScope(newExpr);
       }
-      t.getCompiler().addToDebugLog("Inlined function: " + fn.getName());
+      t.getCompiler().addToDebugLog("Inlined function: ", fn.getName());
     }
   }
 
@@ -712,29 +719,6 @@ class InlineFunctions implements CompilerPass {
   }
 
   /**
-   * @return whether the function has a param with an OBJECT_PATTERN STRING_KEY that is a number.
-   *     Prevents such functions from being inlined.
-   */
-  private static boolean hasParamWithNumberObjectLit(Node fnNode) {
-    Predicate<Node> hasParamWithNumberObjectLitPredicate =
-        new Predicate<Node>() {
-          @Override
-          public boolean apply(Node input) {
-            if (input.isObjectPattern()) {
-              for (char c : input.getFirstChild().getString().toCharArray()) {
-                if (Character.isDigit(c)) {
-                  return true;
-                }
-              }
-            }
-            return false;
-          }
-        };
-
-    return NodeUtil.has(fnNode, hasParamWithNumberObjectLitPredicate,
-        Predicates.<Node>alwaysTrue());
-  }
-  /**
    * @return whether the function has a param with complex OBJECT_PATTERNS (e.g. OBJECT_PATTERN
    * with child OBJECT_PATTERN). Prevents such functions from being inlined.
    */
@@ -766,6 +750,27 @@ class InlineFunctions implements CompilerPass {
         };
 
     return NodeUtil.has(callNode, hasSpreadCallArgumentPredicate,
+        Predicates.<Node>alwaysTrue());
+  }
+
+  /**
+   * @return whether the function has a DEFAULT_VALUE with a DEFAULT_VALUE ancestor.
+   * Prevents such functions from being inlined.
+   */
+  private static boolean hasNestedDefaultValue(Node node) {
+    checkNotNull(node);
+
+    Predicate<Node> hasNestedDefaultValuePredicate =
+        new Predicate<Node>() {
+          @Override
+          public boolean apply(Node input) {
+            checkNotNull(input);
+            return input.isDefaultValue()
+                && (NodeUtil.getEnclosingType(input.getParent(), Token.DEFAULT_VALUE) != null);
+          }
+        };
+
+    return NodeUtil.has(node, hasNestedDefaultValuePredicate,
         Predicates.<Node>alwaysTrue());
   }
 

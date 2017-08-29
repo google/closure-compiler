@@ -34,6 +34,7 @@ import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeI.Nullability;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
@@ -836,8 +837,8 @@ class TypeValidator implements Serializable {
     String foundStr = found.toString();
     String requiredStr = required.toString();
     if (foundStr.equals(requiredStr)) {
-      foundStr = found.toAnnotationString();
-      requiredStr = required.toAnnotationString();
+      foundStr = found.toAnnotationString(Nullability.IMPLICIT);
+      requiredStr = required.toAnnotationString(Nullability.IMPLICIT);
     }
     String missingStr = "";
     String mismatchStr = "";

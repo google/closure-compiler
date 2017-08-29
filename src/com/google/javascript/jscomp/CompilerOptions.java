@@ -205,6 +205,15 @@ public class CompilerOptions implements Serializable {
   private boolean useNewTypeInference;
 
   /**
+   * Several passes after type checking use type information. Some of these passes do not work
+   * yet with the new type inference. For this reason, we run the old type checker after NTI,
+   * so that the subsequent passes can use the old types.
+   * Turning this option off allows us to debug NTI-only builds; with the goal to eventually
+   * stop running OTI after NTI.
+   */
+  private boolean runOTIafterNTI = true;
+
+  /**
    * Relevant only when {@link #useNewTypeInference} is true, where we normally disable OTI errors.
    * If you want both NTI and OTI errors in this case, set to true.
    * E.g. if using using a warnings guard to filter NTI or OTI warnings in new or legacy code,
@@ -212,6 +221,15 @@ public class CompilerOptions implements Serializable {
    * This will be removed when NTI entirely replaces OTI.
    */
   boolean reportOTIErrorsUnderNTI = false;
+
+  /**
+   * Run type checking natively on the subset of ES6 features that we are able to typecheck
+   * natively, and then transpile them after NTI.
+   * Doing this currently causes reordering of {@link LateEs6ToEs3Converter} pass
+   * and {@link Es6RewriteBlockScopedDeclaration} pass, which has the potential to break builds.
+   * This option should eventually be turned on by default and removed.
+   */
+  private boolean typeCheckEs6Natively = false;
 
   /**
    * Configures the compiler to skip as many passes as possible.
@@ -318,9 +336,8 @@ public class CompilerOptions implements Serializable {
    */
   Set<String> extraAnnotationNames;
 
-  /**
-   * Policies to determine the disposal checking level.
-   */
+  /** @deprecated No longer has any effect. */
+  @Deprecated
   public enum DisposalCheckingPolicy {
     /**
      * Don't check any disposal.
@@ -338,22 +355,14 @@ public class CompilerOptions implements Serializable {
     AGGRESSIVE,
   }
 
-  /**
-   * Check for patterns that are known to cause memory leaks.
-   */
-  DisposalCheckingPolicy checkEventfulObjectDisposalPolicy;
+  /** @deprecated No longer has any effect. */
+  @Deprecated
+  public void setCheckEventfulObjectDisposalPolicy(DisposalCheckingPolicy policy) {}
 
-  public void setCheckEventfulObjectDisposalPolicy(DisposalCheckingPolicy policy) {
-    this.checkEventfulObjectDisposalPolicy = policy;
-
-    // The CheckEventfulObjectDisposal pass requires types so enable inferring types if
-    // this pass is enabled.
-    if (policy != DisposalCheckingPolicy.OFF) {
-      this.inferTypes = true;
-    }
-  }
+  /** @deprecated No longer has any effect. */
+  @Deprecated
   public DisposalCheckingPolicy getCheckEventfulObjectDisposalPolicy() {
-    return checkEventfulObjectDisposalPolicy;
+    return DisposalCheckingPolicy.OFF;
   }
 
   /**
@@ -997,6 +1006,7 @@ public class CompilerOptions implements Serializable {
     return tracer;
   }
 
+  // NOTE: Timing information will not be printed if compiler.disableThreads() is called!
   public void setTracerMode(TracerMode mode) {
     this.tracer = mode;
   }
@@ -1161,6 +1171,9 @@ public class CompilerOptions implements Serializable {
   /** Which algorithm to use for locating ES6 and CommonJS modules */
   ModuleLoader.ResolutionMode moduleResolutionMode;
 
+  /** Which entries to look for in package.json files when processing modules */
+  List<String> packageJsonEntryNames;
+
   /**
    * Should the compiler print its configuration options to stderr when they are initialized?
    *
@@ -1186,6 +1199,7 @@ public class CompilerOptions implements Serializable {
 
     // Modules
     moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
+    packageJsonEntryNames = ImmutableList.of("browser", "module", "main");
 
     // Checks
     skipNonTranspilationPasses = false;
@@ -1202,7 +1216,6 @@ public class CompilerOptions implements Serializable {
     computeFunctionSideEffects = false;
     chainCalls = false;
     extraAnnotationNames = null;
-    checkEventfulObjectDisposalPolicy = DisposalCheckingPolicy.OFF;
 
     // Optimizations
     foldConstants = false;
@@ -1987,9 +2000,25 @@ public class CompilerOptions implements Serializable {
     this.useNewTypeInference = enable;
   }
 
+  public boolean getRunOTIafterNTI() {
+    return this.runOTIafterNTI;
+  }
+
+  public void setRunOTIafterNTI(boolean enable) {
+    this.runOTIafterNTI = enable;
+  }
+
   // Not dead code; used by the open-source users of the compiler.
   public void setReportOTIErrorsUnderNTI(boolean enable) {
     this.reportOTIErrorsUnderNTI = enable;
+  }
+
+  public boolean getTypeCheckEs6Natively() {
+    return this.typeCheckEs6Natively;
+  }
+
+  public void setTypeCheckEs6Natively(boolean enable) {
+    this.typeCheckEs6Natively = enable;
   }
 
 /**
@@ -2758,6 +2787,14 @@ public class CompilerOptions implements Serializable {
     this.moduleResolutionMode = mode;
   }
 
+  public List<String> getPackageJsonEntryNames() {
+    return this.packageJsonEntryNames;
+  }
+
+  public void setPackageJsonEntryNames(List<String> names) {
+    this.packageJsonEntryNames = names;
+  }
+
   /** Serializes compiler options to a stream. */
   @GwtIncompatible("ObjectOutputStream")
   public void serialize(OutputStream objectOutputStream) throws IOException {
@@ -2791,7 +2828,6 @@ public class CompilerOptions implements Serializable {
             .add("brokenClosureRequiresLevel", brokenClosureRequiresLevel)
             .add("chainCalls", chainCalls)
             .add("checkDeterminism", getCheckDeterminism())
-            .add("checkEventfulObjectDisposalPolicy", checkEventfulObjectDisposalPolicy)
             .add("checkGlobalNamesLevel", checkGlobalNamesLevel)
             .add("checkGlobalThisLevel", checkGlobalThisLevel)
             .add("checkMissingGetCssNameBlacklist", checkMissingGetCssNameBlacklist)
@@ -3015,7 +3051,7 @@ public class CompilerOptions implements Serializable {
      */
     ECMASCRIPT_2016,
 
-    /** ECMAScript standard approved in 2017. Adds async/await. */
+    /** ECMAScript standard approved in 2017. Adds async/await and other syntax */
     ECMASCRIPT_2017,
 
     /** ECMAScript latest draft standard. */
@@ -3087,7 +3123,7 @@ public class CompilerOptions implements Serializable {
   }
 
   /** When to do the extra sanity checks */
-  static enum DevMode {
+  public static enum DevMode {
     /**
      * Don't do any extra sanity checks.
      */

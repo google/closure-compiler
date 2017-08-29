@@ -705,10 +705,10 @@ class ExpressionDecomposer {
    * 1) There must be a location to inject a statement for the expression.  For
    * example, this condition can not be met if the expression is a loop
    * condition or CASE condition.
-   * 2) If the expression can be affect by side-effects, there can not be a
+   * 2) If the expression can be affected by side-effects, there can not be a
    * side-effect between original location and the expression root.
    * 3) If the expression has side-effects, there can not be any other
-   * expression that can be effected between the original location and the
+   * expression that can be affected between the original location and the
    * expression root.
    *
    * An expression is DECOMPOSABLE if it can be rewritten so that an

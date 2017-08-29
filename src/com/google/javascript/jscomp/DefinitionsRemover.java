@@ -45,7 +45,7 @@ class DefinitionsRemover {
       return null;
     }
 
-    if (NodeUtil.isVarDeclaration(n) && (isExtern || n.hasChildren())) {
+    if (NodeUtil.isNameDeclaration(parent) && n.isName() && (isExtern || n.hasChildren())) {
       return new VarDefinition(n, isExtern);
     } else if (parent.isFunction() && parent.getFirstChild() == n) {
       if (!NodeUtil.isFunctionExpression(parent)) {
@@ -91,7 +91,8 @@ class DefinitionsRemover {
       return false;
     }
 
-    if (NodeUtil.isVarDeclaration(n) && (n.isFromExterns() || n.hasChildren())) {
+    if (NodeUtil.isNameDeclaration(parent) && n.isName()
+        && (n.isFromExterns() || n.hasChildren())) {
       return true;
     } else if (parent.isFunction() && parent.getFirstChild() == n) {
       if (!NodeUtil.isFunctionExpression(parent)) {
@@ -130,9 +131,11 @@ class DefinitionsRemover {
   abstract static class Definition {
 
     private final boolean isExtern;
+    private final String simplifiedName;
 
-    Definition(boolean isExtern) {
+    Definition(boolean isExtern, String simplifiedName) {
       this.isExtern = isExtern;
+      this.simplifiedName = simplifiedName;
     }
 
     /**
@@ -153,6 +156,10 @@ class DefinitionsRemover {
      * Subclasses should override to remove the definition from the AST.
      */
     protected abstract void performRemove(AbstractCompiler compiler);
+
+    public String getSimplifiedName() {
+      return simplifiedName;
+    }
 
     /**
      * Variable or property name represented by this definition.
@@ -194,7 +201,7 @@ class DefinitionsRemover {
     private final Node lValue;
 
     IncompleteDefinition(Node lValue, boolean inExterns) {
-      super(inExterns);
+      super(inExterns, NameBasedDefinitionProvider.getSimplifiedName(lValue));
       checkNotNull(lValue);
 
       Preconditions.checkArgument(
@@ -273,7 +280,7 @@ class DefinitionsRemover {
     protected final Node function;
 
     FunctionDefinition(Node node, boolean inExterns) {
-      super(inExterns);
+      super(inExterns, NameBasedDefinitionProvider.getSimplifiedName(node.getFirstChild()));
       checkArgument(node.isFunction());
       function = node;
     }
@@ -357,7 +364,7 @@ class DefinitionsRemover {
     protected final Node c;
 
     ClassDefinition(Node node, boolean inExterns) {
-      super(inExterns);
+      super(inExterns, NameBasedDefinitionProvider.getSimplifiedName(node.getFirstChild()));
       Preconditions.checkArgument(node.isClass());
       c = node;
     }
@@ -414,7 +421,7 @@ class DefinitionsRemover {
     private final Node assignment;
 
     AssignmentDefinition(Node node, boolean inExterns) {
-      super(inExterns);
+      super(inExterns, NameBasedDefinitionProvider.getSimplifiedName(node.getFirstChild()));
       checkArgument(node.isAssign());
       assignment = node;
     }
@@ -470,7 +477,7 @@ class DefinitionsRemover {
 
     ObjectLiteralPropertyDefinition(Node lit, Node name, Node value,
           boolean isExtern) {
-      super(isExtern);
+      super(isExtern, NameBasedDefinitionProvider.getSimplifiedName(getLValue(name)));
 
       this.literal = lit;
       this.name = name;
@@ -485,6 +492,10 @@ class DefinitionsRemover {
 
     @Override
     public Node getLValue() {
+      return getLValue(name);
+    }
+
+    private static Node getLValue(Node name) {
       // TODO(user) revisit: object literal definitions are an example
       // of definitions whose LHS doesn't correspond to a node that
       // exists in the AST.  We will have to change the return type of
@@ -516,8 +527,8 @@ class DefinitionsRemover {
   static final class VarDefinition extends Definition {
     private final Node name;
     VarDefinition(Node node, boolean inExterns) {
-      super(inExterns);
-      checkArgument(NodeUtil.isVarDeclaration(node));
+      super(inExterns, NameBasedDefinitionProvider.getSimplifiedName(node));
+      checkArgument(NodeUtil.isNameDeclaration(node.getParent()) && node.isName());
       Preconditions.checkArgument(inExterns || node.hasChildren(),
           "VAR Declaration of %s must be assigned a value.", node.getString());
       name = node;

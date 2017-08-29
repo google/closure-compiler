@@ -89,7 +89,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
 
   static final DiagnosticType DUPLICATE_CLASS_METHODS = DiagnosticType.error(
       "JSC_DUPLICATE_CLASS_METHODS",
-      "Class contain duplicate method name \"{0}\"");
+      "Class contains duplicate method name \"{0}\"");
 
   private final AbstractCompiler compiler;
 

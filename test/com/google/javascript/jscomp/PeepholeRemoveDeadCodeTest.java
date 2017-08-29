@@ -40,14 +40,11 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        DefinitionUseSiteFinder definitionFinder =
-            new DefinitionUseSiteFinder(compiler);
+        DefinitionUseSiteFinder definitionFinder = new DefinitionUseSiteFinder(compiler);
         definitionFinder.process(externs, root);
-        new PureFunctionIdentifier(compiler, definitionFinder)
-            .process(externs, root);
+        new PureFunctionIdentifier(compiler, definitionFinder).process(externs, root);
         PeepholeOptimizationsPass peepholePass =
-            new PeepholeOptimizationsPass(
-                compiler, new PeepholeRemoveDeadCode());
+            new PeepholeOptimizationsPass(compiler, getName(), new PeepholeRemoveDeadCode());
         peepholePass.process(externs, root);
       }
     };
@@ -91,6 +88,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
     fold("{'hi'}", "");
     fold("{x==3}", "");
+    fold("{`hello ${foo}`}", "");
     fold("{ (function(){x++}) }", "");
     foldSame("function f(){return;}");
     fold("function f(){return 3;}", "function f(){return 3}");
@@ -102,6 +100,22 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("while(x()){x()}", "while(x())x()");
     fold("for(x=0;x<100;x++){x}", "for(x=0;x<100;x++);");
     fold("for(x in y){x}", "for(x in y);");
+    fold("for (x of y) {x}", "for(x of y);");
+    foldSame("for (let x = 1; x <10; x++ ) {}");
+    foldSame("for (var x = 1; x <10; x++ ) {}");
+
+    // Block with declarations
+    foldSame("{let x}");
+    foldSame("function f() {let x}");
+    foldSame("{const x = 1}");
+    foldSame("{x = 2; y = 4; let z;}");
+    fold("{'hi'; let x;}", "{let x}");
+    fold("{x = 4; {let y}}", "x = 4; {let y}");
+    foldSame("{function f() {} } {function f() {}}");
+    foldSame("{class C {}} {class C {}}");
+    foldSame("{label: let x}");
+    fold("{label: var x}", "label: var x");
+    foldSame("{label: var x; let y;}");
   }
 
   /** Try to remove spurious blocks with multiple children */
@@ -109,8 +123,10 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("function f() { if (false) {} }", "function f(){}");
     fold("function f() { { if (false) {} if (true) {} {} } }",
          "function f(){}");
-    test("{var x; var y; var z; function f() { { var a; { var b; } } } }",
-         "var x;var y;var z;function f(){var a;var b}");
+    fold("{var x; var y; var z; function f() { { var a; { var b; } } } }",
+         "{var x;var y;var z;function f(){var a;var b} }");
+    fold("{var x; var y; var z; { { var a; { var b; } } } }",
+        "var x;var y;var z; var a;var b");
   }
 
   public void testIf() {
@@ -190,6 +206,13 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     // More var lifting tests in PeepholeIntegrationTests
   }
 
+  public void testLetConstLifting(){
+    fold("if(true) {const x = 1}", "{const x = 1}");
+    fold("if(false) {const x = 1}", "");
+    fold("if(true) {let x}", "{let x}");
+    fold("if(false) {let x}", "");
+  }
+
   public void testFoldUselessWhile() {
     fold("while(false) { foo() }", "");
 
@@ -213,6 +236,8 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     fold("for(;true;) foo() ", "for(;;) foo() ");
     foldSame("for(;;) foo()");
     fold("for(;false;) { var a = 0; }", "var a");
+    fold("for(;false;) { const a = 0; }", "");
+    fold("for(;false;) { let a = 0; }", "");
 
     // Make sure it plays nice with minimizing
     fold("for(;false;) { foo(); continue }", "");
@@ -280,6 +305,7 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     // Uncalled function expressions are removed
     fold("(function () {});", "");
     fold("(function f() {});", "");
+    fold("(function* f() {})", "");
     // ... including any code they contain.
     fold("(function () {foo();});", "");
 
@@ -381,22 +407,39 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "  break;\n" +
         "}",
         "");
-    foldSame("switch ('fallThru') {\n" +
-        "case 'fallThru':\n" +
-        "  if (foo(123) > 0) {\n" +
-        "    foobar(1);\n" +
-        "    break;\n" +
-        "  }\n" +
-        "  foobar(2);\n" +
-        "case 'bar':\n" +
-        "  bar();\n" +
-        "}");
-    foldSame("switch ('fallThru') {\n" +
-        "case 'fallThru':\n" +
-        "  foo();\n" +
-        "case 'bar':\n" +
-        "  bar();\n" +
-        "}");
+    fold(
+        LINE_JOINER.join(
+            "switch ('fallThru') {",
+            "case 'fallThru':",
+            "  if (foo(123) > 0) {",
+            "    foobar(1);",
+            "    break;",
+            "  }",
+            "  foobar(2);",
+            "case 'bar':",
+            "  bar();",
+            "}"),
+        LINE_JOINER.join(
+            "switch ('fallThru') {",
+            "case 'fallThru':",
+            "  if (foo(123) > 0) {",
+            "    foobar(1);",
+            "    break;",
+            "  }",
+            "  foobar(2);",
+            "  bar();",
+            "}"));
+    fold(
+        LINE_JOINER.join(
+            "switch ('fallThru') {",
+            "case 'fallThru':",
+            "  foo();",
+            "case 'bar':",
+            "  bar();",
+            "}"),
+        LINE_JOINER.join(
+            "foo();",
+            "bar();"));
     fold(
         LINE_JOINER.join(
             "switch ('hasDefaultCase') {",
@@ -470,11 +513,36 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "case '\\u000B':\n" +
         "  foo();\n" +
         "}");
-    foldSame("switch ('empty') {\n" +
-        "case 'empty':\n" +
-        "case 'foo':\n" +
-        "  foo();\n" +
-        "}");
+    fold(
+        LINE_JOINER.join(
+            "switch ('empty') {",
+            "case 'empty':",
+            "case 'foo':",
+            "  foo();",
+            "}"),
+        "foo()");
+
+    fold(
+        LINE_JOINER.join(
+            "let x;",
+            "switch (use(x)) {",
+            "  default: {let x;}",
+            "}"),
+        LINE_JOINER.join(
+            "let x;",
+            "use(x);",
+            "{let x}"));
+
+    fold(
+        LINE_JOINER.join(
+            "let x;",
+            "switch (use(x)) {",
+            "  default: let x;",
+            "}"),
+        LINE_JOINER.join(
+            "let x;",
+            "use(x);",
+            "{let x}"));
   }
 
   public void testOptimizeSwitchBug11536863() {
@@ -497,6 +565,25 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
         "    break outer;\n" +
         "}",
         "outer: {f(); break outer;}");
+  }
+
+  public void testOptimizeSwitch3() {
+    fold(
+        LINE_JOINER.join(
+            "switch (1) {",
+            "  case 1:",
+            "  case 2:",
+            "  case 3: {",
+            "    break;",
+            "  }",
+            "  case 4:",
+            "  case 5:",
+            "  case 6:",
+            "  default:",
+            "    fail('Should not get here');",
+            "    break;",
+            "}"),
+            "");
   }
 
   public void testOptimizeSwitchWithLabellessBreak() {
@@ -540,6 +627,18 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "  case 21: throw 'x';",
             "  default : console.log('good');",
             "}"));
+
+    test(
+        LINE_JOINER.join(
+            "let x = 1;",
+            "switch('x') {",
+            "  case 'x': let x = 2; break;",
+            "}"
+        ),
+        LINE_JOINER.join(
+            "let x = 1;",
+            "{let x = 2}"
+        ));
   }
 
   public void testOptimizeSwitchWithLabelledBreak() {
@@ -577,19 +676,22 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
             "}"),
         "function f() { return 1; }");
 
-    // TODO(moz): This is to show that the current optimization might break if the input has block
-    // scoped declarations. We will need to fix the logic for removing blocks to account for this.
     test(
         LINE_JOINER.join(
             "function f() {",
             "  let x = 1;",
             "  switch('x') {",
-            "    case 'x': { let x = 2; return 3; }",
+            "    case 'x': { let x = 2; } return 3;",
             "    case 'y': return 4;",
             "  }",
             "}"),
-        "function f() { let x = 1; let x = 2; return 3; }");
+        LINE_JOINER.join(
+            "function f() {",
+            "  let x = 1;",
+            "  { let x = 2; } return 3; ",
+            "}"));
   }
+
 
   public void testOptimizeSwitchWithThrow() {
     test(
@@ -868,6 +970,16 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
 
   public void testHook8() {
     testSame("a() ? b() : c()");
+  }
+
+  public void testHook9() {
+    fold("true ? a() : (function f() {})()", "a()");
+    fold("false ? a() : (function f() {alert(x)})()", "(function f() {alert(x)})()");
+  }
+
+  public void testHook10() {
+    fold("((function () {}), true) ? a() : b()", "a()");
+    fold("((function () {alert(x)})(), true) ? a() : b()", "(function(){alert(x)})(),a()");
   }
 
   public void testShortCircuit1() {
