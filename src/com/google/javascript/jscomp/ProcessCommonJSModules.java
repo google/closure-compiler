@@ -798,7 +798,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         case CONST:
           // Multiple declarations need split apart so that they can be refactored into
           // property assignments or removed altogether.
-          if (n.hasMoreThanOneChild()) {
+          if (n.hasMoreThanOneChild() && !NodeUtil.isAnyFor(parent)) {
             List<Node> vars = splitMultipleDeclarations(n);
             t.reportCodeChange();
             for (Node var : vars) {

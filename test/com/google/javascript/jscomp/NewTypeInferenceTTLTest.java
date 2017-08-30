@@ -223,7 +223,6 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
         " */",
         "function f() { return any(); }"));
 
-    // TODO(dimvar): this should have no warnings once typedefs inside TTL expressions are handled.
     typeCheck(LINE_JOINER.join(
         "/** @typedef {!Array<number>} */",
         "var ArrayNumber;",
@@ -232,8 +231,7 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
         " * @return {T}",
         " */",
         "function f() { return []; }",
-        "f();"),
-        TypeTransformation.UNKNOWN_TYPENAME);
+        "f();"));
 
     typeCheck(LINE_JOINER.join(
         "/**",
@@ -707,6 +705,7 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
   }
 
   public void testIsTemplatized() {
+    // 'Array' is raw Array, not Array<?>.
     typeCheck(LINE_JOINER.join(
         "/**",
         " * @template T := cond(isTemplatized('Array'), 'number', 'string') =:",
@@ -714,6 +713,14 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
         " */",
         "function f() { return 'asdf'; }",
         "var /** string */ s = f();"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @template T := cond(isTemplatized(type('Array', unknown())), 'number', 'string') =:",
+        " * @return {T}",
+        " */",
+        "function f() { return 123; }",
+        "var /** number */ n = f();"));
 
     typeCheck(LINE_JOINER.join(
         "/**",
@@ -867,9 +874,7 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
         TypeTransformation.VAR_UNDEFINED);
   }
 
-  // A limitation of how we handle TTL; we recognize TTL functions by name, not by their type.
-  // Here, g returns unknown.
-  public void testTtlFunctionTypesDontPropagate() {
+  public void testTtlFunctionTypesPropagate() {
     typeCheck(LINE_JOINER.join(
         "/**",
         " * @template T := 'number' =:",
@@ -877,7 +882,26 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
         " */",
         "function f() { return 123; }",
         "var g = f;",
-        "var /** string */ x = g();"));
+        "var /** string */ x = g();"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @interface */",
+        "function Foo() {}",
+        "/**",
+        " * @template T := 'string' =:",
+        " * @return {T}",
+        " */",
+        "Foo.prototype.method = function() {};",
+        "/**",
+        " * @constructor",
+        " * @implements {Foo}",
+        " */",
+        "function Bar() {}",
+        "/** @override */",
+        "Bar.prototype.method = function() { return 'asdf' };",
+        "var /** number */ x = (new Bar).method()"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   // When the TTL expression is evaluated we want lexical scope, so the return type of f()
@@ -897,5 +921,162 @@ public final class NewTypeInferenceTTLTest extends NewTypeInferenceTestBase {
         "  function Foo() {}",
         "  x = f();",
         "}"));
+  }
+
+  public void testTypedefsWithTTL() {
+    typeCheck(LINE_JOINER.join(
+        "/** @typedef {number} */",
+        "var MyNum;",
+        "/**",
+        " * @template T := 'MyNum' =:",
+        " * @return {T}",
+        " */",
+        "function f() { return 123; }",
+        "var /** number */ x = f();"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @typedef {number} */",
+        "var MyNum;",
+        "/**",
+        " * @template T := 'MyNum' =:",
+        " * @return {T}",
+        " */",
+        "function f() { return 123; }",
+        "var /** string */ x = f();"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @typedef {number} */",
+        "ns.MyNum;",
+        "/**",
+        " * @template T := 'ns.MyNum' =:",
+        " * @return {T}",
+        " */",
+        "function f() { return 123; }",
+        "var /** string */ x = f();"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "function g() {",
+        "  /** @typedef {number} */",
+        "  ns.MyNum;",
+        "}",
+        "/**",
+        " * @template T := 'ns.MyNum' =:",
+        " * @return {T}",
+        " */",
+        "function f() { return 123; }",
+        "var /** string */ x = f();"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
+
+  public void testUsingOrdinaryTypeVariablesInTTL() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {T} x",
+        " * @param {U} y",
+        " * @return {R}",
+        " * @template T, U",
+        " * @template R := cond (eq(T, U), 'string', 'boolean') =:",
+        " */",
+        "function f(x, y) { return any(); }",
+        "var /** string */ s = f({}, []);"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {T} x",
+        " * @param {U} y",
+        " * @return {R}",
+        " * @template T, U",
+        " * @template R := cond (eq(T, U), 'string', 'boolean') =:",
+        " */",
+        "function f(x, y) { return any(); }",
+        "var /** string */ s = f(1, 2);",
+        "var /** boolean */ b = f({}, []);"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {T} x",
+        " * @template T",
+        " * @template R :=",
+        " *   mapunion(",
+        " *     T,",
+        " *     (x) =>",
+        " *     cond(eq(x, 'number'), 'Number',",
+        " *     cond(eq(x, 'string'), 'String',",
+        " *     cond(eq(x, 'boolean'), 'Boolean',",
+        " *     cond(eq(x, 'null'), 'Object',",
+        " *     cond(eq(x, 'undefined'), 'Object', x))))))",
+        " *   =:",
+        " * @return {R}",
+        " */",
+        "function f(x) { return any(); }",
+        "var /** !Number */ x = f(1);",
+        "var /** !String */ y = f('');"));
+  }
+
+  public void testCreateDomPattern() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "function TagName() {}",
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {!TagName<!Foo>} */",
+        "TagName.FOO;",
+        "/**",
+        " * @template T",
+        " * @param {string|!TagName<T>} x",
+        " * @template R := cond(isUnknown(T), 'Object', T)  =:",
+        " * @return {R}",
+        " */",
+        "function f(x) { return any(); }",
+        "var /** !Foo */ x = f(TagName.FOO);"));
+  }
+
+  public void testPromiseThen() {
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @interface",
+        " * @template TYPE",
+        " */",
+        "function MyThenable() {};",
+        "/**",
+        " * @param {?(function(this:THIS, TYPE): VALUE)=} opt_onFulfilled",
+        " * @param {?(function(this:THIS, *): *)=} opt_onRejected",
+        " * @param {THIS=} opt_context *",
+        " * @return {RESULT}",
+        " * @template VALUE",
+        " * @template THIS",
+        " *",
+        " * @template RESULT := type('MyPromise',",
+        " *     cond(isUnknown(VALUE), unknown(),",
+        " *       mapunion(VALUE, (V) =>",
+        " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
+        " *           templateTypeOf(V, 0),",
+        " *           cond(sub(V, 'Thenable'),",
+        " *              unknown(),",
+        " *              V)))))",
+        " *  =:",
+        " *",
+        " */",
+        "MyThenable.prototype.then = function(",
+        "    opt_onFulfilled, opt_onRejected, opt_context) {};",
+        "/**",
+        " * @constructor",
+        " * @implements {MyThenable<TYPE>}",
+        " * @template TYPE",
+        " */",
+        "function MyPromise() {}",
+        "/** @override */",
+        "MyPromise.prototype.then = function(x, y, z) { return any(); };",
+        "var x = (new MyPromise).then(null);"));
   }
 }

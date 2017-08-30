@@ -20,8 +20,8 @@ import static com.google.javascript.jscomp.Es6ConvertSuper.INVALID_SUPER_CALL;
 import static com.google.javascript.jscomp.Es6RewriteClass.CLASS_REASSIGNMENT;
 import static com.google.javascript.jscomp.Es6RewriteClass.CONFLICTING_GETTER_SETTER_TYPE;
 import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
+import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
+import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.NewTypeInference.CANNOT_INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.TypeCheck.INSTANTIATE_ABSTRACT_CLASS;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES7_MODULES;
@@ -32,7 +32,8 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 
 /**
  * Test cases for ES6 transpilation. Despite the name, this isn't just testing {@link
- * Es6ToEs3Converter}, but also some other ES6 transpilation passes. See #getProcessor.
+ * EarlyEs6ToEs3Converter} and {@link LateEs6ToEs3Converter},
+ * but also some other ES6 transpilation passes. See {@link #getProcessor}.
  *
  * @author tbreisacher@google.com (Tyler Breisacher)
  */
@@ -129,7 +130,10 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
         makePassFactory("es6ConvertSuper", new Es6ConvertSuper(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", new Es6ExtractClasses(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6RewriteClass", new Es6RewriteClass(compiler)));
-    optimizer.addOneTimePass(makePassFactory("convertEs6", new Es6ToEs3Converter(compiler)));
+    optimizer.addOneTimePass(
+        makePassFactory("convertEs6Early", new EarlyEs6ToEs3Converter(compiler)));
+    optimizer.addOneTimePass(
+        makePassFactory("convertEs6Late", new LateEs6ToEs3Converter(compiler)));
     optimizer.addOneTimePass(
         makePassFactory("Es6RewriteBlockScopedDeclaration",
             new Es6RewriteBlockScopedDeclaration(compiler)));
@@ -153,16 +157,6 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
     test(
         "var x = {/** @return {number} */ a() { return 0; } };",
         "var x = {/** @return {number} */ a: function() { return 0; } };");
-    assertThat(getLastCompiler().injected).isEmpty();
-  }
-
-  public void testClassGenerator() {
-    test(
-        "class C { *foo() { yield 1; } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "C.prototype.foo = function*() { yield 1;};"));
     assertThat(getLastCompiler().injected).isEmpty();
   }
 
@@ -2263,9 +2257,9 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
 
     // Warn on /** number */
     testWarning("function f(/** number */ ...zero) {}",
-                Es6ToEs3Converter.BAD_REST_PARAMETER_ANNOTATION);
+                EarlyEs6ToEs3Converter.BAD_REST_PARAMETER_ANNOTATION);
     testWarning("/** @param {number} zero */ function f(...zero) {}",
-                Es6ToEs3Converter.BAD_REST_PARAMETER_ANNOTATION);
+                EarlyEs6ToEs3Converter.BAD_REST_PARAMETER_ANNOTATION);
   }
 
   public void testDefaultAndRestParameters() {
@@ -2650,14 +2644,6 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
         LINE_JOINER.join(
             "var $jscomp$compprop0 = {};",
             "var obj = ($jscomp$compprop0[foo] = function(){}, $jscomp$compprop0)"));
-
-    test(
-        "var obj = { *[foo]() {}}",
-        LINE_JOINER.join(
-            "var $jscomp$compprop0 = {};",
-            "var obj = (",
-            "  $jscomp$compprop0[foo] = function*(){},",
-            "  $jscomp$compprop0)"));
   }
 
   public void testComputedPropGetterSetter() {
@@ -2692,29 +2678,6 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
             "/** @constructor @struct */",
             "var C = function() {};",
             "C[foo] = function() { alert(2); };"));
-  }
-
-  public void testComputedPropGeneratorMethods() {
-    test(
-        "class C { *[foo]() { yield 1; } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "C.prototype[foo] = function*() { yield 1; };"));
-
-    test(
-        "class C { static *[foo]() { yield 2; } }",
-        LINE_JOINER.join(
-            "/** @constructor @struct */",
-            "var C = function() {};",
-            "C[foo] = function*() { yield 2; };"));
-  }
-
-  public void testBlockScopedGeneratorFunction() {
-    // Functions defined in a block get translated to a var
-    test(
-        "{ function *f() {yield 1;} }",
-        "{ var f = function*() { yield 1; }; }");
   }
 
   public void testComputedPropCannotConvert() {

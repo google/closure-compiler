@@ -21,12 +21,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.GwtIncompatible;
+import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.javascript.jscomp.NodeUtil;
@@ -1702,14 +1704,9 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public final String toNonNullAnnotationString() {
-    return appendTo(new StringBuilder(), ToStringContext.FOR_ANNOTATION).toString();
-  }
-
-  @Override
-  public final String toAnnotationString() {
-    String s = toNonNullAnnotationString();
-    return s.startsWith("!") ? s.substring(1) : s;
+  public final String toAnnotationString(Nullability nullability) {
+    String result = appendTo(new StringBuilder(), ToStringContext.FOR_ANNOTATION).toString();
+    return nullability == Nullability.IMPLICIT ? result.replaceAll("^!", "") : result;
   }
 
   @Override
@@ -1925,18 +1922,30 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public final List<String> getTypeParameters() {
+  public final List<TypeI> getTypeParameters() {
     if (isFunctionType()) {
-      return this.getFunTypeIfSingletonObj().getTypeParameters();
+      return transformTypeParamsToTypeVars(this.getFunTypeIfSingletonObj().getTypeParameters());
     }
     NominalType nt = getNominalTypeIfSingletonObj();
     checkNotNull(nt, this);
-    return nt.getTypeParameters();
+    return transformTypeParamsToTypeVars(nt.getTypeParameters());
+  }
+
+  private List<TypeI> transformTypeParamsToTypeVars(List<String> names) {
+    return Lists.transform(
+        names,
+        new Function<String, TypeI>() {
+          @Override
+          public TypeI apply(String name) {
+            return JSType.fromTypeVar(commonTypes, name);
+          }
+        });
   }
 
   @Override
   public final boolean hasProperties() {
-    throw new UnsupportedOperationException("hasProperties not implemented yet");
+    checkState(this.isFunctionType());
+    return getObjTypeIfSingletonObj().isFunctionWithProperties();
   }
 
   @Override
@@ -1948,6 +1957,13 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   public final TypeI getReturnType() {
     checkState(this.isFunctionType());
     return getFunTypeIfSingletonObj().getReturnType();
+  }
+
+  @Override
+  public FunctionTypeI withReturnType(TypeI returnType) {
+    checkState(this.isFunctionType());
+    return this.commonTypes.fromFunctionType(
+        getFunTypeIfSingletonObj().withReturnType((JSType) returnType));
   }
 
   @Override
@@ -2004,7 +2020,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   @Override
   public final Node getOwnPropertyDefSite(String propertyName) {
     checkState(this.isSingletonObj());
-    return this.getObjTypeIfSingletonObj().getOwnPropertyDefSite(propertyName);
+    return this.getObjTypeIfSingletonObj().getNonInheritedPropertyDefSite(propertyName);
   }
 
   @Override
@@ -2158,7 +2174,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   @Override
   public final boolean hasOwnProperty(String propertyName) {
     ObjectType obj = getObjTypeIfSingletonObj();
-    return obj != null && obj.hasOwnProperty(new QualifiedName(propertyName));
+    return obj != null && obj.hasNonInheritedProperty(new QualifiedName(propertyName));
   }
 
   @Override

@@ -50,7 +50,7 @@ public interface TypeIEnv<T extends TypeI> {
    * For example, if you pass Foo to this method, you get the Foo constructor.
    * This is in contrast to TypeIRegistry#getType, where you would get the Foo instance.
    */
-  T getNamespaceType(String typeName);
+  T getNamespaceOrTypedefType(String typeName);
 
   /**
    * Returns the jsdoc at the definition site of the type represented by typeName.

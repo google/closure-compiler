@@ -38,6 +38,7 @@
 
 package com.google.javascript.rhino.jstype;
 
+import com.google.javascript.rhino.TypeI.Nullability;
 import com.google.javascript.rhino.testing.Asserts;
 import com.google.javascript.rhino.testing.BaseJSTypeTestCase;
 
@@ -57,7 +58,7 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
     assertEquals("{\n  loop: {...},\n  number: number,\n  string: string\n}",
         record.toString());
     assertEquals("{loop: ?, number: number, string: string}",
-        record.toAnnotationString());
+        record.toAnnotationString(Nullability.EXPLICIT));
 
     Asserts.assertEquivalenceOperations(record, loop);
   }
@@ -94,7 +95,7 @@ public class RecordTypeTest extends BaseJSTypeTestCase {
     assertEquals(
         "{a01: number, a02: number, a03: number, a04: number, a05: number, a06: number," +
         " a07: number, a08: number, a09: number, a10: number, a11: number}",
-        record.toAnnotationString());
+        record.toAnnotationString(Nullability.EXPLICIT));
   }
 
   public void testSupAndInf() {

@@ -93,9 +93,9 @@ public final class CombinedCompilerPassTest extends TestCase  {
    * rooted with specified strings.
    */
   private static class ConcatTraversal implements Callback {
-    private StringBuilder visited = new StringBuilder();
-    private StringBuilder shouldTraversed = new StringBuilder();
-    private Set<String> ignoring = new HashSet<>();
+    private final StringBuilder visited = new StringBuilder();
+    private final StringBuilder shouldTraversed = new StringBuilder();
+    private final Set<String> ignoring = new HashSet<>();
 
     ConcatTraversal ignore(String s) {
       ignoring.add(s);
@@ -135,9 +135,9 @@ public final class CombinedCompilerPassTest extends TestCase  {
    * and the expected pre- and post-order traversal results.
    */
   private static class TestHelper {
-    private ConcatTraversal traversal;
-    private String expectedVisited;
-    private String shouldTraverseExpected;
+    private final ConcatTraversal traversal;
+    private final String expectedVisited;
+    private final String shouldTraverseExpected;
 
     TestHelper(ConcatTraversal traversal, String expectedVisited,
          String shouldTraverseExpected) {

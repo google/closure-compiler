@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.parsing.ParserRunner;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
@@ -190,5 +191,16 @@ public class JsAst implements SourceAst {
     // Set the source name so that the compiler passes can track
     // the source file and module.
     root.setStaticSourceFile(sourceFile);
+  }
+
+  @GwtIncompatible("ObjectinputStream")
+  private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+    AbstractCompiler compiler = ((HasCompiler) in).getCompiler();
+    in.defaultReadObject();
+    // Retrieve the code from the compiler object.
+    CompilerInput input = compiler.getInput(inputId);
+    if (input != null) {
+      sourceFile.restoreFrom(input.getSourceFile());
+    }
   }
 }

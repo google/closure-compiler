@@ -1395,6 +1395,34 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     //     "  obj.initProp();",
     //     "  obj.prop.a = 123;",
     //     "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f() {",
+        "  var x = 1;",
+        "  (function g() {",
+        "     var /** number|string */ y = x;",
+        "  })();",
+        "  return x - 5;",
+        "}"));
+
+    // Trade-off: missed warning to avoid spurious warning in the previous test
+    typeCheck(LINE_JOINER.join(
+        "function f() {",
+        "  var x = 1;",
+        "  (function g(/** number|string */ y) {",
+        "     x = y;",
+        "  })('asdf');",
+        "  return x - 5;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f() {",
+        "  var x;",
+        "  (function g(/** ? */ y) {",
+        "     x = y;",
+        "  })(1);",
+        "  return x - 5;",
+        "}"));
   }
 
   public void testTrickyUnknownBehavior() {
@@ -2210,6 +2238,13 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  var /** !Bar */ z = x;",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  goog.asserts.assertInstanceof(x, Array);",
+        "}",
+        "f({a: 1});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testDontInferBottom() {
@@ -2217,14 +2252,6 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         // Ensure we don't infer bottom for x here
         "function f(x) { var /** string */ s; (s = x) - 5; } f(9);",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
-  }
-
-  public void testDontInferBottomReturn() {
-    typeCheck(
-        // Technically, BOTTOM is correct here, but since using dead code is error prone,
-        // we'd rather infer f to return TOP (and get a warning).
-        "function f() { throw ''; } f() - 5;",
-        NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
   public void testAssignToInvalidObject() {
@@ -5673,27 +5700,52 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
   public void testFunctionsWithAbnormalExit() {
     typeCheck("function f(x) { x = 1; throw x; }");
 
-    // TODO(dimvar): to fix these, we must collect all THROWs w/out an out-edge
-    // and use the envs from them in the summary calculation. (Rare case.)
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  var y = 1;",
+        "  x < y;",
+        "  throw 123;",
+        "}",
+        "f('asdf');"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    // typeCheck(LINE_JOINER.join(
-    //     "function f(x) {",
-    //     "  var y = 1;",
-    //     "  x < y;",
-    //     "  throw 123;",
-    //     "}",
-    //     "f('asdf');"),
-    //     NewTypeInference.INVALID_ARGUMENT_TYPE);
-    // typeCheck(LINE_JOINER.join(
-    //     "function f(x, cond) {",
-    //     "  if (cond) {",
-    //     "    var y = 1;",
-    //     "    x < y;",
-    //     "    throw 123;",
-    //     "  }",
-    //     "}",
-    //     "f('asdf', 'whatever');"),
-    //     NewTypeInference.INVALID_ARGUMENT_TYPE);
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "function f(x) {",
+        "  if (x instanceof Foo) {",
+        "    return 1;",
+        "  }",
+        "  throw new Error('');",
+        "}",
+        "f([]);"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x, y) {",
+        "  if (x) {",
+        "    var /** number */ n = y.a;",
+        "    return 1;",
+        "  }",
+        "  var /** string */ s = y.b;",
+        "  throw new Error('');",
+        "}",
+        "f(false, {a: 1, b: 2});"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  if (x > 0) throw new Error();",
+        "  return 42;",
+        "}",
+        "f(1) - 5;"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f() { throw new Error(''); }",
+        "var /** function():string */ g = f;"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f() { throw new Error(''); }",
+        "var /** number */ n = f();"));
   }
 
   public void testAssignAdd() {
@@ -10365,7 +10417,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "   * @return {T|number} b",
         "   * @template T",
         "   */",
-        "  get a() {}",
+        "  get a() { return 123; }",
         "};"),
         JSTypeCreatorFromJSDoc.TEMPLATED_GETTER_SETTER);
 
@@ -13602,8 +13654,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         " * @param {T} y",
         " */",
         "Foo.prototype.f = function(x, y) {};",
-        "Foo.prototype.f.bind(new Foo('asdf'), 1, 2);"),
-        NewTypeInference.INVALID_THIS_TYPE_IN_BIND);
+        "Foo.prototype.f.bind(new Foo('asdf'), 1, 2);"));
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
@@ -13650,6 +13701,15 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     typeCheck(
         "(function() {}).bind();",
         NewTypeInference.WRONG_ARGUMENT_COUNT);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.p = 123;",
+        "}",
+        "(function(/** number */ x) {",
+        "  return this.p + x;",
+        "}).bind(new Foo);"));
   }
 
   public void testClosureStyleFunctionBind() {
@@ -15545,7 +15605,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         GlobalTypeInfoCollector.UNRECOGNIZED_TYPE_NAME,
         JSTypeCreatorFromJSDoc.EXTENDS_NON_OBJECT,
         NewTypeInference.INEXISTENT_PROPERTY,
-        NewTypeInference.INEXISTENT_PROPERTY);
+        NewTypeInference.POSSIBLY_INEXISTENT_PROPERTY);
 
     typeCheck(LINE_JOINER.join(
         "Object.prototype.asdf;",
@@ -17336,6 +17396,16 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     typeCheck("var /** !IObject<?, ?> */ x = { 'abs': '', '%': ''};");
 
     typeCheck("var /** !IObject<string, number> */ x = { a: 1, b: 2, c: undefined };");
+
+    // The Object type is an IObject of whatever, because we check IObject structurally
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!IObject<number, string>} x",
+        " * @param {!Object} y",
+        " */",
+        "function f(x, y) {",
+        "  x = y;",
+        "}"));
   }
 
   public void testIArrayLikeSubtyping() {
@@ -19252,6 +19322,19 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function Bar() {}",
         "/** @abstract */",
         "Bar.prototype.prop = function() {};"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @abstract @constructor */",
+        "function Foo() {}",
+        "Object.defineProperties(Foo.prototype, {",
+        "  foo: {",
+        "    /**",
+        "     * @abstract @this {Foo}",
+        "     * @return {number}",
+        "     */",
+        "    get: function() {}",
+        "  }",
+        "});"));
   }
 
   public void testAbstractMethodCalls() {
@@ -21217,16 +21300,6 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "  yield 1;",
             "}"));
 
-    // Infers Generator<?> if type not specified in JSDoc
-    typeCheck(
-        LINE_JOINER.join(
-            "function* gen() {",
-            "  yield 1;",
-            "}",
-            "var g = gen();",
-            "var /** string */ x = g.next().value;",
-            "var /** number */ y = g.next().value;"));
-
     // If type specified, check type of expression in yield.
     typeCheck(
         LINE_JOINER.join(
@@ -21324,12 +21397,39 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     // Return type declared as Iterable
     typeCheck(
         LINE_JOINER.join(
-            "/** @return {!Iterable<number>} */",
+            "/** @return {Iterable<number>} */",
             "function* gen() {",
             "  yield 1;",
             "}",
-            "var /** Iterable<number> */ x = gen();"),
-        NewTypeInference.INVALID_DECLARED_RETURN_TYPE_OF_GENERATOR_FUNCTION);
+            "var /** Iterable<number> */ x = gen();"));
+
+    // Return type declared as Iterator
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {!Iterator<string>} */",
+            "function* gen() {",
+            "  yield 1;",
+            "}",
+            "var /** Iterator<string> */ x = gen();"),
+        NewTypeInference.YIELD_NONDECLARED_TYPE);
+
+    // Return type declared as nullable IteratorIterable
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {?IteratorIterable<number>} */",
+            "function* gen() {",
+            "  yield 1;",
+            "}",
+            "var /** IteratorIterable<number> */ x = gen();"));
+
+    // Return type declared as Iterable
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @return {Iterable<number>|number} */",
+            "function* gen() {",
+            "  yield 1;",
+            "}",
+            "var /** Iterable<number>|number */ x = gen();"));
 
     // Return type declared as Object
     typeCheck(
@@ -21338,8 +21438,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "function* gen() {",
             "  yield 1;",
             "}",
-            "var /** Object */ x = gen();"),
-        NewTypeInference.INVALID_DECLARED_RETURN_TYPE_OF_GENERATOR_FUNCTION);
+            "var /** Object */ x = gen();"));
 
     // Test return statement in Generator
     typeCheck(
@@ -21368,5 +21467,171 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "  return (x = 1);",
             "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+   //Infers type of generator
+   typeCheck(
+       LINE_JOINER.join(
+           "function* gen() {",
+           "  yield 1;",
+           "}",
+           "var /** Array<number> */ g = gen();"),
+       NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+   //Infers type of generator
+   typeCheck(
+       LINE_JOINER.join(
+           "function* gen() {",
+           "  yield 1;",
+           "}",
+           "var /** Generator<string> */ g = gen();"),
+       NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // No warning when type is different
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen(){",
+            "  yield 1;",
+            "  yield '';",
+            "}",
+            "var /** Generator<number|string> */ x = gen();"));
+
+    // No children of yield is just undefined
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen(){",
+            "  yield 1;",
+            "  yield;",
+            "}",
+            "var /** Generator<number> */ x = gen();"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // No children of yield is just undefined
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen(){",
+            "  yield 1;",
+            "  yield;",
+            "}",
+            "var /** Generator<undefined> */ x = gen();"));
+
+    // Works with autoboxing
+    typeCheck(
+        LINE_JOINER.join(
+            "var /** number */ x;",
+            "var /** !Number */ y",
+            "function* gen(){",
+            "  yield x;",
+            "  yield y;",
+            "}",
+            "var g = gen();",
+            "var /** Number|number */ n = g.next().value;"));
+
+    // Works when there might be variables passed into the method next, and infer Generator<?>
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen() {",
+            "  var x = yield 1;",
+            "  yield x;",
+            "}",
+            "var /** !Generator<?> */ g = gen();"));
+
+    // Reassigning yield expression to variable that has a declared type produces Generator<?>
+    typeCheck(
+        LINE_JOINER.join(
+            "var /** number */ x = 1;",
+            "function* gen(){",
+            "  yield x;",
+            "  x = yield 1;",
+            "  yield x;",
+            "}",
+            "var /** !Generator<?> */ g = gen();"));
+
+    // Inferring yield type works on yield* as well
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen() {",
+            "  yield* 'abc';",
+            "}",
+            "var /** !Generator<string> */ g = gen();"));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen() {",
+            "  yield* 'abc';",
+            "  yield 1;",
+            "}",
+            "var /** !Generator<string|number> */ g = gen();"));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen() {",
+            "  yield* [1,2,3];",
+            "  yield* 'abc';",
+            "}",
+            "var /** !Generator<number|string> */ g = gen();"));
+
+    // No function body
+    typeCheck(
+        LINE_JOINER.join(
+            "function* gen() {}",
+            "var /** !Generator<?> */ g = gen();"));
+  }
+
+  public void testTypedefResolution() {
+    // To avoid keeping typedefs around during NTI, we resolve them and use the resolved type.
+    // We need to resolve FooBar when we analyze f's jsdoc. At that point, we may not know yet
+    // that Bar has a property "a".
+    typeCheck(LINE_JOINER.join(
+        "/** @typedef {{ a: (number|undefined) }} */",
+        "var Foo;",
+        "/** @typedef { !Foo|!Bar } */",
+        "var FooBar;",
+        "/**",
+        " * @param {!FooBar} x",
+        " * @param {!Bar} y",
+        " */",
+        "function f(x, y) { x = y; }",
+        "/** @constructor */",
+        "function Bar() {}",
+        "Bar.prototype.a = function(x) {};"));
+  }
+
+  public void testObjectMergesInJoins() {
+    // Test that the object-literal type (the type of {b: 1}) and the built-in Object type
+    // (the type of obj) are merged in a union.
+    typeCheckMessageContents(
+        LINE_JOINER.join(
+            "function f(pred, /** {a: number} */ obj) {",
+            "  var x = pred ? obj : {b: 1};",
+            "  var /** null */ n = x;",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS,
+        LINE_JOINER.join(
+            "The right side in the assignment is not a subtype of the left side.",
+            "Expected : null",
+            "Found    : {a: number=, b: number=}",
+            ""));
+
+    // Documenting the behavior here. We could potentially change this to not warn, if we
+    // merge the types in the union to !IObject<number|string,?>
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!IObject<number|string, ?>} iobj",
+        " * @param {!Array<?>|!IObject<string,!Object>} union",
+        " */",
+        "function f(iobj, union) {",
+        "  iobj = union;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // y's type is merged to Object, which is a subtype of any IObject
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!IObject<string, ?Object>} x",
+        " * @param {!Array<?>|!Object} y",
+        " */",
+        "function f(x, y) {",
+        "  x = y;",
+        "}"));
   }
 }

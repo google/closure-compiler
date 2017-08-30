@@ -972,6 +972,16 @@ public final class PeepholeRemoveDeadCodeTest extends CompilerTestCase {
     testSame("a() ? b() : c()");
   }
 
+  public void testHook9() {
+    fold("true ? a() : (function f() {})()", "a()");
+    fold("false ? a() : (function f() {alert(x)})()", "(function f() {alert(x)})()");
+  }
+
+  public void testHook10() {
+    fold("((function () {}), true) ? a() : b()", "a()");
+    fold("((function () {alert(x)})(), true) ? a() : b()", "(function(){alert(x)})(),a()");
+  }
+
   public void testShortCircuit1() {
     testSame("1 && a()");
   }

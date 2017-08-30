@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -327,7 +326,7 @@ public final class CommandLineRunnerTest extends TestCase {
     test(
         "/** @constructor */\n"
         + "function Foo() {}\n"
-        +"Foo.prototype.handle1 = function(x, y) { alert(y); };\n"
+        + "Foo.prototype.handle1 = function(x, y) { alert(y); };\n"
         + "/** @constructor */\n"
         + "function Bar() {}\n"
         + "Bar.prototype.handle1 = function(x, y) {};\n"
@@ -1043,10 +1042,9 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--source_map_location_mapping=foo/|http://bar");
     testSame("var x = 3;");
 
-    List<LocationMapping> mappings = lastCompiler.getOptions()
-        .sourceMapLocationMappings;
-    assertThat(ImmutableSet.copyOf(mappings).toString())
-        .isEqualTo(ImmutableSet.of(new LocationMapping("foo/", "http://bar")).toString());
+    List<LocationMapping> mappings = lastCompiler.getOptions().sourceMapLocationMappings;
+    assertThat(ImmutableSet.copyOf(mappings))
+        .containsExactly(new LocationMapping("foo/", "http://bar"));
   }
 
   public void testSourceMapLocationsTranslations2() {
@@ -1059,12 +1057,9 @@ public final class CommandLineRunnerTest extends TestCase {
 
     List<LocationMapping> mappings = lastCompiler.getOptions()
         .sourceMapLocationMappings;
-    assertThat(ImmutableSet.copyOf(mappings).toString())
-        .isEqualTo(
-            ImmutableSet.of(
-                    new LocationMapping("foo/", "http://bar"),
-                    new LocationMapping("xxx/", "http://yyy"))
-                .toString());
+    assertThat(ImmutableSet.copyOf(mappings))
+        .containsExactly(
+            new LocationMapping("foo/", "http://bar"), new LocationMapping("xxx/", "http://yyy"));
   }
 
   public void testSourceMapLocationsTranslations3() {
@@ -1904,6 +1899,38 @@ public final class CommandLineRunnerTest extends TestCase {
         });
   }
 
+  /** override the order of the entries that the module loader should look for */
+  public void testProcessCJSWithPackageJsonBrowserField() {
+    useStringComparison = true;
+    args.add("--process_common_js_modules");
+    args.add("--dependency_mode=STRICT");
+    args.add("--entry_point=app");
+    args.add("--module_resolution=NODE");
+    args.add("--package_json_entry_names=browser,main");
+    setFilename(0, "app.js");
+    setFilename(1, "node_modules/foo/package.json");
+    setFilename(2, "node_modules/foo/browser.js");
+
+    test(
+        new String[] {
+          "var Foo = require('foo');",
+          "{\"browser\":\"browser.js\",\"name\":\"foo\"}",
+          LINE_JOINER.join(
+              "function Foo() {}",
+              "Foo.prototype = {",
+              "  bar: function () {",
+              "    return 4 + 4;",
+              "  }",
+              "};",
+              "module.exports = Foo;")
+        },
+        new String[] {
+          "var module$node_modules$foo$browser=function(){};",
+          "module$node_modules$foo$browser.prototype={bar:function(){return 8}};",
+          "var Foo=module$node_modules$foo$browser;",
+        });
+  }
+
   public void testFormattingSingleQuote() {
     testSame("var x = '';");
     assertThat(lastCompiler.toSource()).isEqualTo("var x=\"\";");
@@ -2360,12 +2387,9 @@ public final class CommandLineRunnerTest extends TestCase {
         Suppliers.ofInstance(externs),
         inputsSupplier,
         modulesSupplier,
-        new Function<Integer, Void>() {
-          @Override
-          public Void apply(Integer code) {
-            exitCodes.add(code);
-            return null;
-          }
+        (Integer code) -> {
+          exitCodes.add(code);
+          return null;
         });
     runner.run();
     lastCompiler = runner.getCompiler();

@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Chars;
+import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.J2clPassMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
@@ -460,9 +461,10 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setLanguage(LanguageMode.ECMASCRIPT_2017);
     test(
         options,
-        "cr.define('my.namespace', function() { class X {} return {X: X}; });",
+        "var cr = {}; cr.define('my.namespace', function() { class X {} return {X: X}; });",
         LINE_JOINER.join(
-            "var my = my || {};",
+            "var cr = {},",
+            "    my = my || {};",
             "my.namespace = my.namespace || {};",
             "cr.define('my.namespace', function() {",
             "  my.namespace.X = class {};",
@@ -694,8 +696,11 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testExpose() {
     CompilerOptions options = createCompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS
-        .setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    // TODO(tbreisacher): Re-enable dev mode and fix test failure.
+    options.setDevMode(DevMode.OFF);
+
     test(options,
         new String[] {"var x = {eeny: 1, /** @expose */ meeny: 2};" +
             "/** @constructor */ var Foo = function() {};" +
@@ -2429,6 +2434,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     // Ensure that type-checking doesn't crash, even if the CFG is malformed.
     // This can happen in IDE mode.
     CompilerOptions options = createCompilerOptions();
+    options.setDevMode(DevMode.OFF);
     options.setIdeMode(true);
     options.setCheckTypes(true);
     options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
@@ -2453,13 +2459,11 @@ public final class IntegrationTest extends IntegrationTestCase {
             "    var x = 1;",
             "  }",
             "})();"),
-        LINE_JOINER.join(
-            "{",
-            "  var x$jscomp$inline_0;",
-            "  try {",
-            "    x$jscomp$inline_0 = 2;",
-            "  } catch (e) {",
-            "    x$jscomp$inline_0 = 1;",
+      LINE_JOINER.join(
+            "{ try {",
+            "    x$jscomp$inline_0=2",
+            "  } catch(e) {",
+            "    var x$jscomp$inline_0=1",
             "  }",
             "}"));
   }
@@ -2469,7 +2473,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     options.setWarningLevel(DiagnosticGroups.CHECK_USELESS_CODE, CheckLevel.OFF);
 
-    test(
+    testSame(
         options,
         LINE_JOINER.join(
             "function foo() {",
@@ -2482,16 +2486,6 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  catch(err) {",
             "    var msg;",
             "  }",
-            "}"),
-        LINE_JOINER.join(
-            "function foo() {",
-            "  var msg;",
-            "}",
-            "function bar(){",
-            "  var msg;",
-            "  msg;",
-            "  try{}",
-            "  catch(err){}",
             "}"));
   }
 
@@ -3186,6 +3180,10 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testIssue1131() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+
+    // TODO(tbreisacher): Re-enable dev mode and fix test failure.
+    options.setDevMode(DevMode.OFF);
+
     test(options,
          "function f(k) { return k(k); } alert(f(f));",
          "function a(b) { return b(b); } alert(a(a));");
@@ -3291,6 +3289,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testAlwaysRunSafetyCheck() {
     CompilerOptions options = createCompilerOptions();
+    options.setDevMode(DevMode.OFF);
     options.setCheckSymbols(false);
     options.addCustomPass(
         CustomPassExecutionTime.BEFORE_OPTIMIZATIONS,
@@ -3369,7 +3368,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(
         options,
         "/** @const */ var g = {};" +
-        "/** @type {number} */ (g.foo) = 3;",
+        "/** @type {number} */ g.foo = 3;",
         "/** @const */ var g = {};" +
         "g.foo = 3;");
   }
@@ -3603,7 +3602,19 @@ public final class IntegrationTest extends IntegrationTestCase {
               "new foo.Outer.Inner;",
               "});")
         },
-        ClosureRewriteModule.QUALIFIED_REFERENCE_TO_GOOG_MODULE);
+        new String[] {
+          "/** @constructor */ function module$exports$foo$Outer() {}",
+          LINE_JOINER.join(
+              "/** @const */ var foo={};",
+              "/** @const */ foo.Outer={};",
+              "/** @constructor */ function module$contents$foo$Outer$Inner_Inner(){}",
+              "/** @const */ foo.Outer.Inner=module$contents$foo$Outer$Inner_Inner;"),
+          LINE_JOINER.join(
+              "/** @const */ var legacy={};",
+              "/** @const */ legacy.Use={};",
+              "new module$exports$foo$Outer;",
+              "new module$contents$foo$Outer$Inner_Inner")
+        });
   }
 
   public void testLegacyGoogModuleExport() {
@@ -4389,7 +4400,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  return f(8);",
             "}",
             "alert(foo());"),
-        "alert([8][0])");
+        "alert(8)");
   }
 
   public void testDefaultParameters() {
@@ -4420,9 +4431,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  return a + b.foo;",
             "}",
             "alert(foo(3, {foo: 9}));"),
-        LINE_JOINER.join(
-            "{}",
-            "alert(3 + {foo:9}.foo);"));
+        "alert(12);");
   }
 
   public void testRestObjectPatternParameters() {
@@ -4460,15 +4469,14 @@ public final class IntegrationTest extends IntegrationTestCase {
             "  return length;",
             "}",
             "alert(countArgs(1, 1, 1, 1, 1));"),
-        LINE_JOINER.join(
-            "{}",
-            "alert([1,1,1,1].length);"));
+        "alert(4);");
   }
 
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
+    options.setDevMode(DevMode.EVERY_PASS);
     options.setCodingConvention(new GoogleCodingConvention());
     options.setRenamePrefixNamespaceAssumeCrossModuleNames(true);
     options.declaredGlobalExternsOnWindow = false;

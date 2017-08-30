@@ -26,15 +26,16 @@ import com.google.javascript.rhino.Node;
 
 public final class NameAnalyzerTest extends CompilerTestCase {
 
-  private static String kExterns =
-      "var window, top;" +
-      "var document;" +
-      "var Function;" +
-      "var Array;" +
-      "var externfoo; methods.externfoo;";
+  private static final String EXTERNS =
+      lines(
+          "var window, top;",
+          "var document;",
+          "var Function;",
+          "var Array;",
+          "var externfoo; methods.externfoo;");
 
   public NameAnalyzerTest() {
-    super(kExterns);
+    super(EXTERNS);
   }
 
   @Override
@@ -67,7 +68,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
-    super.enableNormalize();
+    enableNormalize();
   }
 
   public void testRemoveVarDeclaration1() {
@@ -323,6 +324,12 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   public void testNoSideEffectAnnotation1() {
     test("function f(){} var a = f();",
          "function f(){} f()");
+
+    test("function f(){} let a = f();",
+        "function f(){} f()");
+
+    test("function f(){} const a = f();",
+        "function f(){} f()");
   }
 
   public void testNoSideEffectAnnotation2() {
@@ -480,6 +487,48 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   public void testNamespacedClass5() {
     testSame("function f(){} var a = {}; a.b = function() {};" +
              "a.b.prototype = {x: function() { f(); }}; new a.b().x();");
+  }
+
+  public void testEs6Class() {
+    test("class C {}", "");
+
+    test("class C {constructor() {} }", "");
+
+    testSame("class C {} var c = new C(); g(c);");
+
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "    this.x = 1;",
+            "  }",
+            "  add() {",
+            "    this.x++",
+            "  }",
+            "}",
+            "var c = new C;",
+            "c.add();"));
+
+    test("class C{} class D{} var d = new D;", "class D{} new D;");
+
+    testSame("{class C{} }"); // global classes only
+    testSame("{class C{} var c = new C; f(c)}");
+
+    testSame("function f() { return class C {} } f();");
+    testSame("export class C {}");
+
+    // class expressions
+
+    test("var c = class{}", "");
+    testSame("var c = class{}; g(c);");
+
+    test("var c = class C {}", "");
+    testSame("var c = class C{}; g(c);");
+  }
+
+  public void testEs6ClassExtends() {
+    testSame("class D {} class C extends D {} var c = new C; c.g();");
+    test("class D {} class C extends D {}" , "");
   }
 
   public void testAssignmentToThisPrototype() {
@@ -2227,5 +2276,118 @@ public final class NameAnalyzerTest extends CompilerTestCase {
             "}",
             "new Base();",
             "x.foo()"));
+  }
+
+  public void testGenerators() {
+    test("function* g() {yield 1}", "");
+
+    testSame("function* g() {yield 1} var g = g(); g.next().value()");
+  }
+
+  public void testObjectDestructuring() {
+    test(
+        "var {a: a, x: y} = {a:1, x:2} ",
+        "({a:1,x:2})");
+
+    test(
+        "var {a: a, x: y} = {a:1, x:2}; f(a);",
+        "var {a: a} = {a:1, x:2}; f(a);");
+
+    test(
+        "var {a: a, x: y} = {a:1, x:2}; f(y);",
+        "var {x:y} = {a:1, x:2}; f(y);");
+
+    test(
+        "var {a: a, x: y = 3} = {a:1, x:2}; f(y);",
+        "var {x:y = 3} = {a:1, x:2}; f(y);");
+
+    test(
+        "var {a: a, x: y = 3} = {a:1}; f(y);",
+        "var {x:y = 3} = {a:1}; f(y);");
+
+    test(
+        "function f() {} var {a: a, x: y} = f()",
+        "function f() {} f();");
+
+    test(
+        "function f() {} var {a: a, x: y} = f(); g(a)",
+        "function f() {} var {a: a} = f(); g(a)");
+
+    test(
+        "function f() {} var {a: a, x: y} = f(); g(y)",
+        "function f() {} var {x: y} = f(); g(y)");
+
+    // complicated destructuring cases
+    // TODO (blickley): Look into adding a pass to completely remove empty destructuring patterns
+    test(
+        "var {a: a, b: [{c: d}]} = o;",
+        "var {b: [{}]} = o; ");
+
+    test(
+        "var {a: a, b: {c: d}} = o; f(d)",
+        "var {b: {c: d}} = o; f(d)");
+
+    test(
+        "var {a: a, b: [key]} = o;",
+        "var {b: [key]} = o; ");
+
+    test(
+        "var {a: a, [key]: foo} = o;",
+        "var {[key]: foo} = o; ");
+
+    test(
+        "var { a: a, b: { c: { d: y}}} = o",
+        "var {b: { c: {}}} = o");
+
+    test(
+        "var {[foo()] : { p : x } } = o;",
+        "var {[foo()] : {} } = o;");
+
+    testSame(
+        "var {x = foo()} = o;");
+
+    testSame("var {p : x = foo()} = o;");
+  }
+
+  public void testArrayDestructuring() {
+    testSame("var [a, b = 3, ...c] = [1, 2, 3]");
+
+    testSame("var [a, b = 3, ...c] = [1, 2, 3]; f(b);");
+
+    testSame("var [a, b = 3, ...c] = [1, 2, 3]; f(c);");
+
+    testSame("var a, b, c; [a, b, ...c] = [1, 2, 3]");
+
+    testSame("var [a, [b, [c, d]]] = [1, [2, [[[3, 4], 5], 6]]];");
+  }
+
+  public void testBlock() {
+    // Currently after normalization this becomes {var f = function f() {}}
+    // Will no longer be able to be removed after that normalize change
+    test("{function g() {}}", "{}");
+
+    testSame("{function g() {} g()}");
+
+    testSame("function g() {} {let a = g(); f(a)}");
+  }
+
+  public void testTemplateLit() {
+    test("let a = `hello`", "");
+    test("var name = 'foo'; let a = `hello ${name}`", "");
+    test(
+        LINE_JOINER.join(
+            "function Base() {}",
+            "Base.prototype.foo =  `hello`;"
+        ),
+      "");
+
+    test(
+        LINE_JOINER.join(
+            "var bar = 'foo';",
+            "function Base() {}",
+            "Base.prototype.foo =  `foo ${bar}`;"
+        ),
+        "");
+
   }
 }

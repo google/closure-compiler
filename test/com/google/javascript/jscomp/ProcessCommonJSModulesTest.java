@@ -945,6 +945,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "var fifth$$module$test=5;"));
   }
 
+<<<<<<< HEAD
   public void testTernaryUMDWrapper() {
     testModules(
         "test.js",
@@ -990,5 +991,12 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "goog.provide('module$test');",
             "/** @const */ var module$test={};",
             "module$test.foo = 'bar';"));
+  }
+
+  public void testDontSplitVarsInFor() {
+    testModules(
+        "test.js",
+        "for (var a, b, c; ;) {}",
+        "for (var a, b, c; ;) {}");
   }
 }

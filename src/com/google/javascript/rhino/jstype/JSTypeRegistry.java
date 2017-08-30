@@ -1902,26 +1902,24 @@ public class JSTypeRegistry implements TypeIRegistry {
         if (current.isThis() || current.isNew()) {
           Node contextNode = current.getFirstChild();
 
-          JSType candidateThisType = createFromTypeNodesInternal(
-              contextNode, sourceName, scope, recordUnresolvedTypes);
+          JSType candidateThisType =
+              createFromTypeNodesInternal(contextNode, sourceName, scope, recordUnresolvedTypes);
 
           // Allow null/undefined 'this' types to indicate that
           // the function is not called in a deliberate context,
           // and 'this' access should raise warnings.
-          if (candidateThisType.isNullType() ||
-              candidateThisType.isVoidType()) {
+          if (candidateThisType.isNullType() || candidateThisType.isVoidType()) {
             thisType = candidateThisType;
           } else if (current.isThis()) {
             thisType = candidateThisType.restrictByNotNullOrUndefined();
           } else if (current.isNew()) {
-            thisType = ObjectType.cast(
-                candidateThisType.restrictByNotNullOrUndefined());
+            thisType = ObjectType.cast(candidateThisType.restrictByNotNullOrUndefined());
             if (thisType == null) {
               reporter.warning(
-                  SimpleErrorReporter.getMessage0(
-                      "msg.jsdoc.function.newnotobject"),
+                  SimpleErrorReporter.getMessage0("msg.jsdoc.function.newnotobject"),
                   sourceName,
-                  contextNode.getLineno(), contextNode.getCharno());
+                  contextNode.getLineno(),
+                  contextNode.getCharno());
             }
           }
 
@@ -1932,10 +1930,9 @@ public class JSTypeRegistry implements TypeIRegistry {
         FunctionParamBuilder paramBuilder = new FunctionParamBuilder(this);
 
         if (current.getToken() == Token.PARAM_LIST) {
-          for (Node arg = current.getFirstChild(); arg != null;
-               arg = arg.getNext()) {
+          for (Node arg = current.getFirstChild(); arg != null; arg = arg.getNext()) {
             if (arg.getToken() == Token.ELLIPSIS) {
-              if (arg.getChildCount() == 0) {
+              if (!arg.hasChildren()) {
                 paramBuilder.addVarArgs(getNativeType(UNKNOWN_TYPE));
               } else {
                 paramBuilder.addVarArgs(
@@ -1943,15 +1940,16 @@ public class JSTypeRegistry implements TypeIRegistry {
                         arg.getFirstChild(), sourceName, scope, recordUnresolvedTypes));
               }
             } else {
-              JSType type = createFromTypeNodesInternal(
-                  arg, sourceName, scope, recordUnresolvedTypes);
+              JSType type =
+                  createFromTypeNodesInternal(arg, sourceName, scope, recordUnresolvedTypes);
               if (arg.getToken() == Token.EQUALS) {
                 boolean addSuccess = paramBuilder.addOptionalParams(type);
                 if (!addSuccess) {
                   reporter.warning(
-                      SimpleErrorReporter.getMessage0(
-                          "msg.jsdoc.function.varargs"),
-                      sourceName, arg.getLineno(), arg.getCharno());
+                      SimpleErrorReporter.getMessage0("msg.jsdoc.function.varargs"),
+                      sourceName,
+                      arg.getLineno(),
+                      arg.getCharno());
                 }
               } else {
                 paramBuilder.addRequiredParams(type);

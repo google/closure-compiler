@@ -136,19 +136,21 @@ public final class NodeTraversalTest extends TestCase {
         "  var b",
         "}");
     Node tree = parse(compiler, code);
-    NodeTraversal.traverseEs6(compiler, tree,
+    NodeTraversal.traverseEs6(
+        compiler,
+        tree,
         new NodeTraversal.ScopedCallback() {
 
           @Override
           public void enterScope(NodeTraversal t) {
             Node root1 = t.getScopeRoot();
-            Node root2 = t.getScope().getRootNode();
+            Scope scope2 = t.getScope();
+            Node root2 = scope2.getRootNode();
             assertNode(root2).isEqualTo(root1);
           }
 
           @Override
-          public void exitScope(NodeTraversal t) {
-          }
+          public void exitScope(NodeTraversal t) {}
 
           @Override
           public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -156,10 +158,8 @@ public final class NodeTraversalTest extends TestCase {
           }
 
           @Override
-          public void visit(NodeTraversal t, Node n, Node parent) {
-          }
-        }
-    );
+          public void visit(NodeTraversal t, Node n, Node parent) {}
+        });
   }
 
   public void testGetHoistScopeRoot() {

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Extracts messages and message comments from JS code.
@@ -122,12 +123,19 @@ public final class JsMessageExtractor {
    *     JS messages, or if two messages have the same key
    */
   public <T extends SourceFile> Collection<JsMessage> extractMessages(Iterable<T> inputs) {
-    Compiler compiler = new Compiler();
+    final Compiler compiler = new Compiler();
     compiler.init(
         ImmutableList.<SourceFile>of(),
         ImmutableList.copyOf(inputs),
         options);
-    compiler.parseInputs();
+    compiler.runInCompilerThread(
+        new Callable<Void>() {
+          @Override
+          public Void call() throws Exception {
+            compiler.parseInputs();
+            return null;
+          }
+        });
 
     ExtractMessagesVisitor extractCompilerPass =
         new ExtractMessagesVisitor(compiler);

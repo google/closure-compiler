@@ -607,7 +607,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
   }
 
   /**
-   * A function initialized as a VAR statement or a function declaration.
+   * A function initialized as a VAR statement or LET AND CONST and global
+   * or a function declaration.
    */
   static class GlobalFunction implements Symbol {
     private final Node nameNode;
@@ -616,7 +617,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     GlobalFunction(Node nameNode, Var var, JSModule module) {
       Node parent = nameNode.getParent();
-      checkState(parent.isVar() || NodeUtil.isFunctionDeclaration(parent));
+      checkState((NodeUtil.isNameDeclaration(parent) && var.scope.isGlobal())
+          || NodeUtil.isFunctionDeclaration(parent));
       this.nameNode = nameNode;
       this.var = var;
       this.module = module;

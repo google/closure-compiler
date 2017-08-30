@@ -132,23 +132,26 @@ class TypeTransformation {
   }
 
   private TypeI getType(String typeName) {
-    // Resolve the name and get the corresponding type
-    TypeI type = typeEnv.getNamespaceType(typeName);
-    JSDocInfo jsdoc = typeEnv.getJsdocOfTypeDeclaration(typeName);
+    TypeI type = registry.getType(typeName);
     if (type != null) {
-      // Case constructor, get the instance type
+      return type;
+    }
+    type = typeEnv.getNamespaceOrTypedefType(typeName);
+    if (type != null) {
       if (type.isConstructor() || type.isInterface()) {
         return type.toMaybeFunctionType().getInstanceType().getRawType();
       }
-      // Case enum
       if (type.isEnumElement()) {
         return type.getEnumeratedTypeOfEnumElement();
       }
-    } else if (jsdoc != null && jsdoc.hasTypedefType()) {
+      return type;
+    }
+    JSDocInfo jsdoc = typeEnv.getJsdocOfTypeDeclaration(typeName);
+    if (jsdoc != null && jsdoc.hasTypedefType()) {
+      // This branch is only live when we are running the old type checker
       return this.registry.evaluateTypeExpression(jsdoc.getTypedefType(), typeEnv);
     }
-    // Otherwise handle native types
-    return registry.getType(typeName);
+    return null;
   }
 
   private TypeI getUnknownType() {
@@ -255,9 +258,8 @@ class TypeTransformation {
   @VisibleForTesting
   TypeI eval(Node ttlAst, ImmutableMap<String, TypeI> typeVars,
       ImmutableMap<String, String> nameVars) {
-    return evalInternal(
-        ttlAst,
-        new NameResolver(typeVars, nameVars));
+    TypeI result = evalInternal(ttlAst, new NameResolver(typeVars, nameVars));
+    return result.isBottom() ? getUnknownType() : result;
   }
 
   private TypeI evalInternal(Node ttlAst, NameResolver nameResolver) {
@@ -757,7 +759,7 @@ class TypeTransformation {
 
   private TypeI evalTypeOfVar(Node ttlAst) {
     String name = getCallArgument(ttlAst, 0).getString();
-    TypeI type = typeEnv.getNamespaceType(name);
+    TypeI type = typeEnv.getNamespaceOrTypedefType(name);
     if (type == null) {
       reportWarning(ttlAst, VAR_UNDEFINED, name);
       return getUnknownType();

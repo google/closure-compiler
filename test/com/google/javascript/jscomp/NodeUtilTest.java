@@ -519,6 +519,13 @@ public final class NodeUtilTest extends TestCase {
     assertSideEffect(false, "Math.random();");
     assertSideEffect(true, "Math.random(seed);");
     assertSideEffect(false, "[1, 1].foo;");
+
+    assertSideEffect(true, "export var x = 0;");
+    assertSideEffect(true, "export let x = 0;");
+    assertSideEffect(true, "export const x = 0;");
+    assertSideEffect(true, "export class X {};");
+    assertSideEffect(true, "export function x() {};");
+    assertSideEffect(true, "export {x};");
   }
 
   public void testObjectMethodSideEffects() {
@@ -921,6 +928,51 @@ public final class NodeUtilTest extends TestCase {
     }
   }
 
+  public void testRemoveFromImport() {
+    // Remove imported function
+    Node actual = parse("import foo from './foo';");
+    Node moduleBody = actual.getFirstChild();
+    Node importNode = moduleBody.getFirstChild();
+    Node functionFoo = importNode.getFirstChild();
+
+    NodeUtil.removeChild(importNode, functionFoo);
+    String expected = "import './foo';";
+    String difference = parse(expected).checkTreeEquals(actual);
+    if (difference != null) {
+      fail("Nodes do not match:\n" + difference);
+    }
+  }
+
+  public void testRemoveParamChild1() {
+    // Remove traditional parameter
+    Node actual = parse("function f(p1) {}");
+    Node functionNode = actual.getFirstChild();
+    Node paramList = functionNode.getFirstChild().getNext();
+    Node p1 = paramList.getFirstChild();
+
+    NodeUtil.removeChild(paramList, p1);
+    String expected = "function f() {}";
+    String difference = parse(expected).checkTreeEquals(actual);
+    if (difference != null) {
+      fail("Nodes do not match:\n" + difference);
+    }
+  }
+
+  public void testRemoveParamChild2() {
+    // Remove default parameter
+    Node actual = parse("function f(p1 = 0, p2) {}");
+    Node functionNode = actual.getFirstChild();
+    Node paramList = functionNode.getFirstChild().getNext();
+    Node p1 = paramList.getFirstChild();
+
+    NodeUtil.removeChild(paramList, p1);
+    String expected = "function f(p2) {}";
+    String difference = parse(expected).checkTreeEquals(actual);
+    if (difference != null) {
+      fail("Nodes do not match:\n" + difference);
+    }
+  }
+
   public void testRemoveVarChild() {
     // Test removing the first child.
     Node actual = parse("var foo, goo, hoo");
@@ -1057,6 +1109,41 @@ public final class NodeUtilTest extends TestCase {
     if (difference != null) {
       fail("Nodes do not match:\n" + difference);
     }
+  }
+
+  public void testRemovePatternChild() {
+    // remove variable declaration from object pattern
+    Node actual = parse("var {a, b, c} = {a:1, b:2, c:3}");
+    Node varNode = actual.getFirstChild();
+    Node destructure = varNode.getFirstChild();
+    Node pattern = destructure.getFirstChild();
+    Node a = pattern.getFirstChild();
+    Node b = a.getNext();
+    Node c = b.getNext();
+
+    NodeUtil.removeChild(pattern, a);
+    String expected = "var {b, c} = {a:1, b:2, c:3};";
+    String difference = parse(expected).checkTreeEquals(actual);
+    assertNull("Nodes do not match:\n" + difference, difference);
+
+    // Remove all entries in object pattern
+    NodeUtil.removeChild(pattern, b);
+    NodeUtil.removeChild(pattern, c);
+    expected = "var { } = {a:1, b:2, c:3};";
+    difference = parse(expected).checkTreeEquals(actual);
+    assertNull("Nodes do not match:\n" + difference, difference);
+
+    // remove variable declaration from array pattern
+    actual = parse("var [a, b] = [1, 2]");
+    varNode = actual.getFirstChild();
+    destructure = varNode.getFirstChild();
+    pattern = destructure.getFirstChild();
+    a = pattern.getFirstChild();
+
+    NodeUtil.removeChild(pattern, a);
+    expected = "var [ , b] = [1, 2];";
+    difference = parse(expected).checkTreeEquals(actual);
+    assertNull("Nodes do not match:\n" + difference, difference);
   }
 
   public void testRemoveForChild() {
@@ -1320,6 +1407,11 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.evaluatesToLocalValue(getNode("o.valueOf()")));
 
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("delete a.b")));
+
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("`hello`")));
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("`hello ${name}`")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("`${'name'}`")));
+
   }
 
   public void testLocalValue2() {
@@ -2050,6 +2142,25 @@ public final class NodeUtilTest extends TestCase {
         .getFirstChild()  // spread
         .getFirstChild();  // x
     assertNotLValueNamedX(x);
+  }
+
+  public void testIsNestedObjectPattern() {
+    Node root = parse("var {a, b} = {a:1, b:2}");
+    Node destructuring = root.getFirstFirstChild();
+    Node objPattern = destructuring.getFirstChild();
+    assertFalse(NodeUtil.isNestedObjectPattern(objPattern));
+
+    root = parse("var {a, b:{c}} = {a:{}, b:{c:5}};");
+    destructuring = root.getFirstFirstChild();
+    objPattern = destructuring.getFirstChild();
+    assertTrue(NodeUtil.isNestedObjectPattern(objPattern));
+  }
+
+  public void testIsNestedArrayPattern() {
+    Node root = parse("var [a, b] = [1, 2]");
+    Node destructuring = root.getFirstFirstChild();
+    Node arrayPattern = destructuring.getFirstChild();
+    assertFalse(NodeUtil.isNestedArrayPattern(arrayPattern));
   }
 
   public void testLhsByDestructuring1() {

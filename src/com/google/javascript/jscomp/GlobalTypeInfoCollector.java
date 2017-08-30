@@ -435,8 +435,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     this.funNameGen = null;
 
     // If a scope s1 contains a scope s2, then s2 must be before s1 in scopes.
-    // The type inference relies on this fact to process deeper scopes
-    // before shallower scopes.
+    // The type inference relies on this fact to process deeper scopes before shallower scopes.
     Collections.reverse(getScopes());
 
     this.compiler.setExternProperties(ImmutableSet.copyOf(getExternPropertyNames()));
@@ -577,7 +576,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
             superMethodType.toFunctionType().toString(),
             localMethodType.toFunctionType().toString()));
       }
-      superMethodType = mayInstantiateGenericsWithUnknown(rawType, pname, superMethodType);
       DeclaredFunctionType updatedMethodType =
           localMethodType.withTypeInfoFromSuper(superMethodType, getsTypeFromParent);
       localPropDef.updateMethodType(updatedMethodType);
@@ -653,34 +651,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         literalObj.getRawNominalType().freeze();
       }
     }
-  }
-
-  /**
-   * When a class/interface inherits from an ancestor class/interface with a method that uses TTL,
-   * instantiate the type variables with unknown in the child method.
-   * Don't bother handling multiple ancestor methods with TTL.
-   * TODO(dimvar): delete this when we handle TTL inside newtypes/FunctionType.
-   */
-  private DeclaredFunctionType mayInstantiateGenericsWithUnknown(
-      RawNominalType rawType, String propName, DeclaredFunctionType inheritedPropType) {
-    Set<NominalType> superInterfaces = rawType.getInterfaces();
-
-    NominalType superClass = rawType.getSuperClass();
-    if (superClass != null) {
-      JSDocInfo jsdoc = superClass.getPropertyJsdoc(propName);
-      if (jsdoc != null && !jsdoc.getTypeTransformations().isEmpty()) {
-        return inheritedPropType.instantiateGenericsWithUnknown();
-      }
-    }
-
-    for (NominalType superInterface : superInterfaces) {
-      JSDocInfo jsdoc = superInterface.getPropertyJsdoc(propName);
-      if (jsdoc != null && !jsdoc.getTypeTransformations().isEmpty()) {
-        return inheritedPropType.instantiateGenericsWithUnknown();
-      }
-    }
-
-    return inheritedPropType;
   }
 
   // TODO(dimvar): the finalization method and this one should be cleaned up;
@@ -1045,7 +1015,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         return;
       }
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(qnameNode);
-      Typedef td = Typedef.make(jsdoc.getTypedefType());
+      Typedef td = Typedef.make(qnameNode, jsdoc.getTypedefType());
       currentScope.addTypedef(qnameNode, td);
     }
 
@@ -1945,16 +1915,16 @@ public class GlobalTypeInfoCollector implements CompilerPass {
           propDeclType = mayInferFromRhsIfConst(getProp);
         }
         if (mayAddPropToType(getProp, rawType)) {
-          rawType.addClassProperty(pname, getProp, propDeclType, isConst);
+          rawType.addInstanceProperty(pname, getProp, propDeclType, isConst);
         }
         if (isConst) {
           getProp.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
         }
       } else if (mayAddPropToType(getProp, rawType)) {
         if (propInferredFunType != null) {
-          rawType.addUndeclaredClassProperty(pname, propInferredFunType, getProp);
+          rawType.addUndeclaredInstanceProperty(pname, propInferredFunType, getProp);
         } else {
-          rawType.addUndeclaredClassProperty(pname, getCommonTypes().UNKNOWN, getProp);
+          rawType.addUndeclaredInstanceProperty(pname, getCommonTypes().UNKNOWN, getProp);
         }
       }
       // Only add the definition node if the property is not already defined.
@@ -2340,7 +2310,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         String pname, Node propCreationNode, JSType typeInJsdoc) {
       JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(propCreationNode);
       JSType previousPropType = classType.getInstancePropDeclaredType(pname);
-      if (classType.mayHaveOwnProp(pname)
+      if (classType.mayHaveNonInheritedProp(pname)
           && previousPropType != null
           && !suppressDupPropWarning(jsdoc, typeInJsdoc, previousPropType)) {
         warnings.add(JSError.make(
@@ -2390,6 +2360,12 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       RawNominalType ctorType = nominaltypesByNode.get(declNode);
       FunctionAndSlotType result = getTypeParser().getFunctionType(
           fnDoc, functionName, declNode, ctorType, ownerType, parentScope);
+      // If the function does not have a declared THIS type, see if it's used in a bind,
+      // and if so, try to infer a THIS type from the object pass to bind.
+      if (result.functionType.getReceiverType() == null) {
+        JSType bindRecvType = getReceiverTypeOfBind(declNode);
+        result.functionType = result.functionType.withReceiverType(bindRecvType);
+      }
       Node qnameNode;
       if (declNode.isQualifiedName()) {
         qnameNode = declNode;
@@ -2464,21 +2440,13 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     private DeclaredFunctionType getDeclaredFunctionTypeFromContext(
         String functionName, Node declNode, NTIScope parentScope) {
       Node parent = declNode.getParent();
-      Node maybeBind = parent.isCall() ? parent.getFirstChild() : parent;
 
-      // The function literal is used with .bind or goog.bind
-      if (NodeUtil.isFunctionBind(maybeBind) && !NodeUtil.isGoogPartial(maybeBind)) {
-        Node call = maybeBind.getParent();
-        Bind bindComponents = convention.describeFunctionBind(call, true, false);
-        JSType recvType = bindComponents.thisValue == null
-            ? null : simpleInferExprType(bindComponents.thisValue);
-        if (recvType == null) {
-          return null;
-        }
+      JSType bindRecvType = getReceiverTypeOfBind(declNode);
+      if (bindRecvType != null) {
         // Use typeParser for the formals, and only add the receiver type here.
         DeclaredFunctionType allButRecvType = getTypeParser().getFunctionType(
             null, functionName, declNode, null, null, parentScope).functionType;
-        return allButRecvType.withReceiverType(recvType);
+        return allButRecvType.withReceiverType(bindRecvType);
       }
 
       // The function literal is an argument at a call
@@ -2502,6 +2470,23 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         }
       }
 
+      return null;
+    }
+
+    /**
+     * If the argument function is used in a bind in the AST, infer the receiver type.
+     * Return null otherwise.
+     */
+    private JSType getReceiverTypeOfBind(Node funDeclNode) {
+      Node parent = funDeclNode.getParent();
+      Node maybeBind = parent.isCall() ? parent.getFirstChild() : parent;
+      // The function literal is used with .bind or goog.bind
+      if (NodeUtil.isFunctionBind(maybeBind) && !NodeUtil.isGoogPartial(maybeBind)) {
+        Node call = maybeBind.getParent();
+        Bind bindComponents = convention.describeFunctionBind(call, true, false);
+        return bindComponents.thisValue == null
+            ? null : simpleInferExprType(bindComponents.thisValue);
+      }
       return null;
     }
 

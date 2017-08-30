@@ -847,18 +847,23 @@ public final class RenameVarsTest extends CompilerTestCase {
             "b.x();"));
   }
 
-  public void testImports() {
-    testSameModules("import name from './other.js'; use(name);");
+  public void testImport1() {
+    test("import name from './other.js'; use(name);", "import a from './other.js'; use(a);");
 
-    testSameModules("import * as name from './other.js'; use(name);");
+    test(
+        "import * as name from './other.js'; use(name);",
+        "import * as a from './other.js'; use(a);");
 
-    testSameModules("import {default as name} from './other.js'; use(name);");
-
-    testSameModules("import {name} from './other.js'; use(name);");
+    test(
+        "import {default as name} from './other.js'; use(name);",
+        "import {default as a} from './other.js'; use(a);");
   }
 
-  private void testSameModules(String input) {
-    ModulesTestUtils.testSameModules(this, input);
+  public void testImport2() {
+    withNormalize = true;
+    test(
+        "import {name} from './other.js'; use(name);",
+        "import {name as a} from './other.js'; use(a);");
   }
 
   private void testRenameMapUsingOldMap(String input, String expected,

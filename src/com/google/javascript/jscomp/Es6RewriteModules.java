@@ -324,7 +324,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       }
     } else if (export.getBooleanProp(Node.EXPORT_ALL_FROM)) {
       //   export * from 'moduleIdentifier';
-      compiler.report(JSError.make(export, Es6ToEs3Converter.CANNOT_CONVERT_YET,
+      compiler.report(JSError.make(export, Es6ToEs3Util.CANNOT_CONVERT_YET,
           "Wildcard export"));
     } else if (export.hasTwoChildren()) {
       //   export {x, y as z} from 'moduleIdentifier';
@@ -575,7 +575,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           String newName = name + "$$" + suffix;
           if (isShorthandObjLitKey) {
             // Change {a} to {a: a$$module$foo}
-            n.addChildToBack(IR.name(newName).useSourceInfoIfMissingFrom(n));
+            fixShorthandObjLit(n, IR.name(newName));
           } else {
             n.setString(newName);
             n.setOriginalName(name);
@@ -589,16 +589,34 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
           ModuleOriginalNamePair pair = importMap.get(name);
           Node moduleAccess = NodeUtil.newQName(compiler, pair.module);
-          if (pair.originalName.isEmpty()) {
-            n.replaceWith(moduleAccess.useSourceInfoIfMissingFromForTree(n));
+          boolean isImportStar = pair.originalName.isEmpty();
+          if (isShorthandObjLitKey) {
+            if (isImportStar) {
+              fixShorthandObjLit(n, moduleAccess);
+            } else {
+              fixShorthandObjLit(n, IR.getprop(moduleAccess, IR.string(pair.originalName)));
+            }
+            t.reportCodeChange(n);
           } else {
-            n.replaceWith(
-                IR.getprop(moduleAccess, IR.string(pair.originalName))
-                    .useSourceInfoIfMissingFromForTree(n));
+            if (isImportStar) {
+              n.replaceWith(moduleAccess.useSourceInfoIfMissingFromForTree(n));
+            } else {
+              n.replaceWith(
+                  IR.getprop(moduleAccess, IR.string(pair.originalName))
+                      .useSourceInfoIfMissingFromForTree(n));
+            }
+            t.reportCodeChange(moduleAccess);
           }
-          t.reportCodeChange(moduleAccess);
         }
       }
+    }
+
+    /**
+     * Replace shorthand object literal references to module imports with fully qualified
+     * value names. Eg: {foo} becomes {foo: module$imported.foo}.
+     */
+    private void fixShorthandObjLit(Node n, Node newNode) {
+      n.addChildToBack(newNode.useSourceInfoIfMissingFromForTree(n));
     }
 
     /**
@@ -633,7 +651,10 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           }
           String globalModuleName = path.toModuleName();
 
-          typeNode.setString(
+          maybeSetNewName(
+              t,
+              typeNode,
+              name,
               localTypeName == null ? globalModuleName : globalModuleName + localTypeName);
         } else {
           List<String> splitted = Splitter.on('.').limit(2).splitToList(name);
@@ -644,13 +665,13 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
           }
           Var var = t.getScope().getVar(baseName);
           if (var != null && var.isGlobal()) {
-            typeNode.setString(baseName + "$$" + suffix + rest);
+            maybeSetNewName(t, typeNode, name, baseName + "$$" + suffix + rest);
           } else if (var == null && importMap.containsKey(baseName)) {
             ModuleOriginalNamePair pair = importMap.get(baseName);
             if (pair.originalName.isEmpty()) {
-              typeNode.setString(pair.module + rest);
+              maybeSetNewName(t, typeNode, name, pair.module + rest);
             } else {
-              typeNode.setString(baseName + "$$" + pair.module + rest);
+              maybeSetNewName(t, typeNode, name, baseName + "$$" + pair.module + rest);
             }
           }
           typeNode.setOriginalName(name);
@@ -661,7 +682,14 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
            child = child.getNext()) {
         fixTypeNode(t, child);
       }
-      t.reportCodeChange();
+    }
+
+    private void maybeSetNewName(NodeTraversal t, Node node, String name, String newName) {
+      if (!name.equals(newName)) {
+        node.setString(newName);
+        node.setOriginalName(name);
+        t.reportCodeChange();
+      }
     }
   }
 

@@ -214,13 +214,6 @@ public class CompilerOptions implements Serializable {
   private boolean runOTIafterNTI = true;
 
   /**
-   * Temporary option to help support TTL in NTI. We are adding TTL support gradually, but
-   * that breaks NTI projects. We use this option to only enable TTL in unit tests, until it
-   * is fully supported.
-   */
-  private boolean useTTLinNTI = false;
-
-  /**
    * Relevant only when {@link #useNewTypeInference} is true, where we normally disable OTI errors.
    * If you want both NTI and OTI errors in this case, set to true.
    * E.g. if using using a warnings guard to filter NTI or OTI warnings in new or legacy code,
@@ -228,6 +221,15 @@ public class CompilerOptions implements Serializable {
    * This will be removed when NTI entirely replaces OTI.
    */
   boolean reportOTIErrorsUnderNTI = false;
+
+  /**
+   * Run type checking natively on the subset of ES6 features that we are able to typecheck
+   * natively, and then transpile them after NTI.
+   * Doing this currently causes reordering of {@link LateEs6ToEs3Converter} pass
+   * and {@link Es6RewriteBlockScopedDeclaration} pass, which has the potential to break builds.
+   * This option should eventually be turned on by default and removed.
+   */
+  private boolean typeCheckEs6Natively = false;
 
   /**
    * Configures the compiler to skip as many passes as possible.
@@ -1169,6 +1171,9 @@ public class CompilerOptions implements Serializable {
   /** Which algorithm to use for locating ES6 and CommonJS modules */
   ModuleLoader.ResolutionMode moduleResolutionMode;
 
+  /** Which entries to look for in package.json files when processing modules */
+  List<String> packageJsonEntryNames;
+
   /**
    * Should the compiler print its configuration options to stderr when they are initialized?
    *
@@ -1194,6 +1199,7 @@ public class CompilerOptions implements Serializable {
 
     // Modules
     moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
+    packageJsonEntryNames = ImmutableList.of("browser", "module", "main");
 
     // Checks
     skipNonTranspilationPasses = false;
@@ -2002,17 +2008,17 @@ public class CompilerOptions implements Serializable {
     this.runOTIafterNTI = enable;
   }
 
-  public boolean getUseTTLinNTI() {
-    return this.useTTLinNTI;
-  }
-
-  public void setUseTTLinNTI(boolean useTTLinNTI) {
-    this.useTTLinNTI = useTTLinNTI;
-  }
-
   // Not dead code; used by the open-source users of the compiler.
   public void setReportOTIErrorsUnderNTI(boolean enable) {
     this.reportOTIErrorsUnderNTI = enable;
+  }
+
+  public boolean getTypeCheckEs6Natively() {
+    return this.typeCheckEs6Natively;
+  }
+
+  public void setTypeCheckEs6Natively(boolean enable) {
+    this.typeCheckEs6Natively = enable;
   }
 
 /**
@@ -2781,6 +2787,14 @@ public class CompilerOptions implements Serializable {
     this.moduleResolutionMode = mode;
   }
 
+  public List<String> getPackageJsonEntryNames() {
+    return this.packageJsonEntryNames;
+  }
+
+  public void setPackageJsonEntryNames(List<String> names) {
+    this.packageJsonEntryNames = names;
+  }
+
   /** Serializes compiler options to a stream. */
   @GwtIncompatible("ObjectOutputStream")
   public void serialize(OutputStream objectOutputStream) throws IOException {
@@ -3109,7 +3123,7 @@ public class CompilerOptions implements Serializable {
   }
 
   /** When to do the extra sanity checks */
-  static enum DevMode {
+  public static enum DevMode {
     /**
      * Don't do any extra sanity checks.
      */

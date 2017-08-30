@@ -873,6 +873,10 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     testSame("/** @const */ var ns = {}; /** @return {number} */ ns.fun = function(x,y,z) {}");
 
     testSame("/** @const */ var ns = {}; ns.fun = function(x,y,z) {}");
+
+    test(
+        "/** @const */ var ns = ns || {}; ns.fun = function(x,y,z) {}",
+        "/** @const */ var ns = {}; ns.fun = function(x,y,z) {}");
   }
 
   public void testRemoveIgnoredProperties() {

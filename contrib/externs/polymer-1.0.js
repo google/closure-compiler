@@ -565,6 +565,13 @@ Polymer.Base.get = function(path, root) {};
 Polymer.Base.fire = function(type, detail, options) {};
 
 /**
+ * For Polymer internal use only, except for
+ * github.com/Polymer/polymer/issues/4138
+ * @type {!function (!Node, ?string, *, ?Object)}
+ */
+Polymer.Base._computeFinalAnnotationValue;
+
+/**
  * @param {...*} var_args
  * For Polymer-internal use only.
  */

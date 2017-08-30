@@ -29,10 +29,13 @@ final class PolymerPassErrors {
   // Disallow 'const Foo = Polymer(...)' because the code the PolymerPass outputs will reassign
   // Foo which is not allowed for 'const' variables.
   static final DiagnosticType POLYMER_INVALID_DECLARATION = DiagnosticType.error(
-      "JSC_POLYMER_INVALID_DECLARATION", "A Polymer() declaration cannot use 'const'.");
+      "JSC_POLYMER_INVALID_DECLARATION", "A Polymer() declaration cannot use ''const''.");
+
+  static final DiagnosticType POLYMER_INVALID_BEHAVIOR = DiagnosticType.error(
+      "JSC_POLYMER_INVALID_BEHAVIOR", "A Polymer behavior may not include an ''is'' property.");
 
   static final DiagnosticType POLYMER_MISSING_IS = DiagnosticType.error("JSC_POLYMER_MISSING_IS",
-      "The class descriptor must include an 'is' property.");
+      "The class descriptor must include an ''is'' property.");
 
   static final DiagnosticType POLYMER_UNEXPECTED_PARAMS = DiagnosticType.error(
       "JSC_POLYMER_UNEXPECTED_PARAMS", "The class definition has too many arguments.");

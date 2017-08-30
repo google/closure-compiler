@@ -108,7 +108,7 @@ function PushManager() {}
 
 /**
  * @param {PushSubscriptionOptions=} opt_options
- * @return {!Promise<PushSubscription>}
+ * @return {!Promise<!PushSubscription>}
  */
 PushManager.prototype.subscribe = function(opt_options) {};
 
@@ -606,6 +606,12 @@ FetchEvent.prototype.clientId;
 
 /** @type {!boolean} */
 FetchEvent.prototype.isReload;
+
+/** @type {?string} */
+FetchEvent.prototype.targetClientId;
+
+/** @type {?string} */
+FetchEvent.prototype.reservedClientId;
 
 /**
  * @param {(Response|IThenable<Response>)} r

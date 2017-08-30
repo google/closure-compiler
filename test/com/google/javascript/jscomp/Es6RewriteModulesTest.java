@@ -399,6 +399,24 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "module$testcode.UnionType;"));
   }
 
+  public void testNoInnerChange() {
+    testModules(
+        LINE_JOINER.join(
+            "var Foo = (function () {",
+            "    /**  @param bar */",
+            "    function Foo(bar) {}",
+            "    return Foo;",
+            "}());",
+            "export { Foo };"),
+        LINE_JOINER.join(
+            "var Foo$$module$testcode = function() {",
+            "    /**  @param bar */",
+            "    function Foo(bar) {}",
+            "    return Foo;",
+            "}();",
+            "module$testcode.Foo = Foo$$module$testcode;"));
+  }
+
   public void testRenameImportedReference() {
     testModules(
         LINE_JOINER.join(
@@ -615,5 +633,31 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             SourceFile.fromCode(
                 Compiler.joinPathParts("base", "test", "sub.js"),
                 "goog.provide('module$test$sub'); goog.require('module$mod$name');")));
+  }
+
+  public void testUseImportInEs6ObjectLiteralShorthand() {
+    testModules(
+        "import {f} from './other.js';\nvar bar = {a: 1, f};",
+        LINE_JOINER.join(
+            "goog.require('module$other');",
+            "var bar$$module$testcode={a: 1, f: module$other.f};"));
+
+    testModules(
+        "import {f as foo} from './other.js';\nvar bar = {a: 1, foo};",
+        LINE_JOINER.join(
+            "goog.require('module$other');",
+            "var bar$$module$testcode={a: 1, foo: module$other.f};"));
+
+    testModules(
+        "import f from './other.js';\nvar bar = {a: 1, f};",
+        LINE_JOINER.join(
+            "goog.require('module$other');",
+            "var bar$$module$testcode={a: 1, f: module$other.default};"));
+
+    testModules(
+        "import * as f from './other.js';\nvar bar = {a: 1, f};",
+        LINE_JOINER.join(
+            "goog.require('module$other');",
+            "var bar$$module$testcode={a: 1, f: module$other};"));
   }
 }

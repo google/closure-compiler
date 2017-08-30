@@ -413,7 +413,8 @@ class VarCheck extends AbstractPostOrderCallback implements
                             ? origVar.input.getName()
                             : "??")));
         }
-      } else if (name.equals(ARGUMENTS) && !NodeUtil.isVarDeclaration(n)) {
+      } else if (name.equals(ARGUMENTS)
+          && !(NodeUtil.isNameDeclaration(n.getParent()) && n.isName())) {
         // Disallow shadowing "arguments" as we can't handle with our current
         // scope modeling.
         compiler.report(

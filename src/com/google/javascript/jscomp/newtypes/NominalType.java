@@ -337,17 +337,12 @@ public final class NominalType implements Serializable {
     return this.rawType.getPropertyNames();
   }
 
-  // TODO(dimvar): rename methods in this file and the rest of this package that use the phrase
-  // OwnProp to NonInheritedProp, to avoid ambiguity with the built-in methods such as
-  // hasOwnProperty, which have different semantics. The built-in methods also look at properties
-  // directly on the instance that have been copied from a super type, while we care only about
-  // non-inherited properties.
   public Set<String> getAllNonInheritedProps() {
     return this.rawType.getAllNonInheritedProps();
   }
 
-  public Set<String> getAllOwnClassProps() {
-    return this.rawType.getAllOwnClassProps();
+  public Set<String> getAllNonInheritedInstanceProps() {
+    return this.rawType.getAllNonInheritedInstanceProps();
   }
 
   public NominalType getInstantiatedSuperclass() {
@@ -389,11 +384,11 @@ public final class NominalType implements Serializable {
   NominalType getTopDefiningInterface(String pname) {
     Preconditions.checkState(isInterface(), "Expected interface, found: %s", this);
     NominalType result = null;
-    if (getOwnProp(pname) != null) {
+    if (getNonInheritedProp(pname) != null) {
       result = this;
     }
     for (NominalType nt : this.getInstantiatedInterfaces()) {
-      if (nt.getOwnProp(pname) != null) {
+      if (nt.getNonInheritedProp(pname) != null) {
         result = nt.getTopDefiningInterface(pname);
       }
     }
@@ -433,8 +428,8 @@ public final class NominalType implements Serializable {
     return type.substituteGenerics(typeMap);
   }
 
-  Property getOwnProp(String pname) {
-    Property p = this.rawType.getOwnProp(pname, PropAccess.INCLUDE_STRAY_PROPS);
+  Property getNonInheritedProp(String pname) {
+    Property p = this.rawType.getNonInheritedProp(pname, PropAccess.INCLUDE_STRAY_PROPS);
     return p == null ? null : p.substituteGenerics(typeMap);
   }
 
@@ -486,11 +481,8 @@ public final class NominalType implements Serializable {
 
   private boolean areTypeMapsCompatible(NominalType other) {
     checkState(this.rawType.equals(other.rawType));
-    if (this.typeMap.isEmpty()) {
-      return other.instantiationIsUnknownOrIdentity();
-    }
-    if (other.typeMap.isEmpty()) {
-      return instantiationIsUnknownOrIdentity();
+    if (this.typeMap.isEmpty() || other.typeMap.isEmpty()) {
+      return true;
     }
     for (String typeVar : this.rawType.getTypeParameters()) {
       Preconditions.checkState(this.typeMap.containsKey(typeVar),
@@ -550,22 +542,6 @@ public final class NominalType implements Serializable {
       }
     }
     return new NominalType(builder.build(), nt1.rawType);
-  }
-
-  private boolean instantiationIsUnknownOrIdentity() {
-    if (this.typeMap.isEmpty()) {
-      return true;
-    }
-    for (String typeVar : this.rawType.getTypeParameters()) {
-      Preconditions.checkState(this.typeMap.containsKey(typeVar),
-          "Type variable %s not in the domain: %s",
-          typeVar, this.typeMap.keySet());
-      JSType t = this.typeMap.get(typeVar);
-      if (!(t.isUnknown() || t.equals(JSType.fromTypeVar(getCommonTypes(), typeVar)))) {
-        return false;
-      }
-    }
-    return true;
   }
 
   private static NominalType joinTypeMaps(NominalType nt1, NominalType nt2) {

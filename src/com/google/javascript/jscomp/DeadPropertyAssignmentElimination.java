@@ -524,7 +524,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
             unknownGetterSetterPresent = true;
           }
         } else if (grandparent.isStringKey()
-            && NodeUtil.isObjectDefinePropertiesDefinition(grandparent.getParent().getParent())) {
+            && NodeUtil.isObjectDefinePropertiesDefinition(grandparent.getGrandparent())) {
           // Handle Object.defineProperties(obj, {propName: { ... }}).
           propNames.add(grandparent.getString());
         }

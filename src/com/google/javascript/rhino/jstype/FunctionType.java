@@ -1425,9 +1425,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
 
   @Override
   public boolean hasProperties() {
-    if (prototypeSlot != null) {
-      return true;
-    }
     return !super.getOwnPropertyNames().isEmpty();
   }
 
@@ -1557,5 +1554,10 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
 
     int numArgs = argumentTypes.size();
     return this.getMinArity() <= numArgs && numArgs <= this.getMaxArity();
+  }
+
+  @Override
+  public FunctionTypeI withReturnType(TypeI returnType) {
+    throw new UnsupportedOperationException("withReturnType not supported in OTI.");
   }
 }

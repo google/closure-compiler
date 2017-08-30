@@ -23,7 +23,7 @@ package com.google.javascript.jscomp;
  */
 public final class ClosureCodeRemovalTest extends CompilerTestCase {
 
-  private static String EXTERNS = "var window;";
+  private static final String EXTERNS = "var window;";
 
   public ClosureCodeRemovalTest() {
     super(EXTERNS);

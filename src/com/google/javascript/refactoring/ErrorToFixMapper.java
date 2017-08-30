@@ -380,13 +380,18 @@ public final class ErrorToFixMapper {
     return fix.replaceRange(first, last, newContent).build();
   }
 
-  private static class RequireProvideSorter extends NodeTraversal.AbstractShallowCallback
-      implements Comparator<Node> {
+  private static class RequireProvideSorter implements NodeTraversal.Callback, Comparator<Node> {
     private final ImmutableSet<String> closureFunctions;
     private final List<Node> calls = new ArrayList<>();
+    private boolean finished = false;
 
     RequireProvideSorter(String... closureFunctions) {
       this.closureFunctions = ImmutableSet.copyOf(closureFunctions);
+    }
+
+    @Override
+    public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+      return !finished;
     }
 
     @Override
@@ -401,6 +406,9 @@ public final class ErrorToFixMapper {
           && matchName(n.getLastChild().getFirstChild())) {
         checkState(n.isName() || n.isDestructuringLhs(), n);
         calls.add(parent);
+      } else if (!calls.isEmpty() && parent != null && NodeUtil.isStatement(parent)) {
+        // Reached a non-goog.(require|provide|forwardDeclare) statement, so stop.
+        finished = true;
       }
     }
 

@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
+import com.google.javascript.jscomp.Normalize.PropagateConstantAnnotationsOverVars;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
@@ -111,6 +112,10 @@ class CollapseProperties implements CompilerPass {
     for (Name name : globalNames) {
       collapseDeclarationOfNameAndDescendants(name, name.getBaseName());
     }
+
+    // This shouldn't be necessary, this pass should already be setting new constants as constant.
+    // TODO(b/64256754): Investigate.
+    (new PropagateConstantAnnotationsOverVars(compiler, false)).process(externs, root);
   }
 
   /**

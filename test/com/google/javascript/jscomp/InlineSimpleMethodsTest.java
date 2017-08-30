@@ -255,6 +255,17 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
              "(new Foo).bar()");
   }
 
+  public void testObjectLit3() {
+    testSame("var blah={bar(){}};"
+        + "(new Foo).bar()");
+  }
+
+  public void testObjectLit4() {
+    testSame("var key=\"bar\";"
+        + "var blah={[key]:a};"
+        + "(new Foo).bar");
+  }
+
   public void testObjectLitExtern() {
     String externs = "window.bridge={_sip:function(){}};";
     testSame(externs, "window.bridge._sip()");

@@ -1502,16 +1502,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       return decl;
     }
 
-    /**
-     * There are some special cases where clients of the compiler
-     * do not run TypedScopeCreator after running this pass.
-     * So always give the namespace literal a type.
-     */
     private Node createNamespaceLiteral() {
-      Node objlit = IR.objectlit();
-      objlit.setJSType(
-          compiler.getTypeRegistry().createAnonymousObjectType(null));
-      return objlit;
+      return IR.objectlit();
     }
 
     /**

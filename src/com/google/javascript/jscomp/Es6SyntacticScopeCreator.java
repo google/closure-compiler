@@ -216,6 +216,10 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
           }
           return;
 
+        case IMPORT:
+          declareLHS(hoistScope, n);
+          return;
+
         case FUNCTION:
           if (NodeUtil.isFunctionExpression(n) || blockScope == null) {
             return;
@@ -301,7 +305,7 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
      * @param n The node corresponding to the variable name.
      */
     private void declareVar(Scope s, Node n) {
-      checkState(n.isName() || n.isStringKey(),
+      checkState(n.isName() || n.isStringKey() || n.isImportStar(),
           "Invalid node for declareVar: %s", n);
 
       String name = n.getString();

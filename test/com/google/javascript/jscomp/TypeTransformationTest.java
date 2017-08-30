@@ -265,12 +265,16 @@ public final class TypeTransformationTest extends CompilerTypeTestCase {
         + "x ))))))");
   }
 
+  // none() is evaluated to bottom in TTL expressions, but if the overall expression evaluates
+  // to bottom, we return unknown to the context.
   public void testTransformatioWithNoneType() {
-    testTTL(NO_TYPE, "none()");
+    testTTL(UNKNOWN_TYPE, "none()");
   }
 
+  // The conditional is true, so we follow the THEN branch, and the bottom result is returned
+  // to the context as unknown.
   public void testTransformatioWithNoneTypeInConditional() {
-    testTTL(NO_TYPE, "cond(eq(BOT, none()), none(), N)");
+    testTTL(UNKNOWN_TYPE, "cond(eq(BOT, none()), none(), N)");
   }
 
   public void testTransformatioWithNoneTypeInMapunionFilterString() {

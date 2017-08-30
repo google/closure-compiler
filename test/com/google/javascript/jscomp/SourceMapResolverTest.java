@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNull;
 
 import com.google.common.io.BaseEncoding;
 import junit.framework.TestCase;
@@ -37,7 +38,7 @@ public final class SourceMapResolverTest extends TestCase {
     SourceFile noInline =
         SourceMapResolver.extractSourceMap(
             SourceFile.fromCode("somePath/hello.js", code), url, false);
-    assertEquals(null, noInline);
+    assertNull(noInline);
   }
 
   public void testAbsolute() {

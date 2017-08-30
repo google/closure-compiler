@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp.newtypes;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -29,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -60,10 +62,10 @@ public final class FunctionType implements Serializable {
   // If this FunctionType is a prototype method, this field stores the
   // type of the instance.
   private final JSType receiverType;
-  // Non-empty iff this function has an @template annotation. Note that a function type can have
-  // type variables as formal parameters and still have empty typeParameters, eg, a method without
-  // @template defined on a generic class.
-  private final ImmutableList<String> typeParameters;
+  // Set to TypeParameters.EMPTY for a function without a @template annotation.
+  // Note that a function type can have type variables as formal parameters and still have empty
+  // typeParameters, e.g., a method without @template defined on a generic class.
+  private final TypeParameters typeParameters;
   private static final boolean DEBUGGING = false;
 
   private FunctionType(
@@ -75,7 +77,7 @@ public final class FunctionType implements Serializable {
       JSType nominalType,
       JSType receiverType,
       ImmutableMap<String, JSType> outerVars,
-      ImmutableList<String> typeParameters,
+      TypeParameters typeParameters,
       boolean isLoose,
       boolean isAbstract) {
     checkNotNull(commonTypes);
@@ -109,7 +111,7 @@ public final class FunctionType implements Serializable {
     this.nominalType = null;
     this.receiverType = null;
     this.outerVarPreconditions = null;
-    this.typeParameters = ImmutableList.of();
+    this.typeParameters = TypeParameters.EMPTY;
     this.isLoose = isLoose;
     this.isAbstract = false;
   }
@@ -141,6 +143,7 @@ public final class FunctionType implements Serializable {
     }
     checkState(restFormals == null || !restFormals.isBottom());
     checkNotNull(returnType);
+    checkNotNull(typeParameters);
   }
 
   /** Returns the JSTypes instance stored by this object. */
@@ -199,7 +202,7 @@ public final class FunctionType implements Serializable {
       JSType nominalType,
       JSType receiverType,
       Map<String, JSType> outerVars,
-      ImmutableList<String> typeParameters,
+      TypeParameters typeParameters,
       boolean isLoose,
       boolean isAbstract) {
     if (requiredFormals == null) {
@@ -210,9 +213,6 @@ public final class FunctionType implements Serializable {
     }
     if (outerVars == null) {
       outerVars = ImmutableMap.of();
-    }
-    if (typeParameters == null) {
-      typeParameters = ImmutableList.of();
     }
     if (restFormals != null) {
       // Remove trailing optional params w/ type equal to restFormals
@@ -230,7 +230,7 @@ public final class FunctionType implements Serializable {
         ImmutableList.copyOf(optionalFormals),
         restFormals, retType, nominalType, receiverType,
         ImmutableMap.copyOf(outerVars),
-        typeParameters,
+        firstNonNull(typeParameters, TypeParameters.EMPTY),
         isLoose,
         isAbstract);
   }
@@ -467,7 +467,7 @@ public final class FunctionType implements Serializable {
     }
     NominalType nt = this.receiverType.getNominalTypeIfSingletonObj();
     if (nt != null && nt.isUninstantiatedGenericType()) {
-      builder.addTypeParameters(nt.getTypeParameters());
+      builder.addTypeParameters(TypeParameters.make(nt.getTypeParameters()));
       NominalType ntWithIdentity = nt.instantiateGenericsWithIdentity();
       builder.addReqFormal(JSType.fromObjectType(ObjectType.fromNominalType(ntWithIdentity)));
     } else {
@@ -1010,7 +1010,12 @@ public final class FunctionType implements Serializable {
    * instantiated, the type parameters have already been substituted away.)
    */
   public List<String> getTypeParameters() {
-    return typeParameters;
+    return this.typeParameters.asList();
+  }
+
+  /** Always returns a non-null map. */
+  public Map<String, Node> getTypeTransformations() {
+    return this.typeParameters.getTypeTransformations();
   }
 
   /**
@@ -1114,7 +1119,7 @@ public final class FunctionType implements Serializable {
         other.returnType, typeParameters, typeMultimap, subSuperMap);
   }
 
-  private FunctionType instantiateGenericsWithUnknown() {
+  public FunctionType instantiateGenericsWithUnknown() {
     if (!isGeneric()) {
       return this;
     }
@@ -1243,7 +1248,7 @@ public final class FunctionType implements Serializable {
     if (!this.commonTypes.MAP_TO_UNKNOWN.equals(typeMap)) {
       // Before we switched to unique generated names for type variables, a method's type variables
       // could shadow type variables defined on the class. Check that this no longer happens.
-      for (String typeParam : this.typeParameters) {
+      for (String typeParam : this.typeParameters.asList()) {
         checkState(!typeMap.containsKey(typeParam));
       }
     }
@@ -1335,8 +1340,8 @@ public final class FunctionType implements Serializable {
     }
     Multimap<String, JSType> typeMultimap = LinkedHashMultimap.create();
     if (recvtype != null
-        && !getThisType()
-            .unifyWithSubtype(recvtype, typeParameters, typeMultimap, SubtypeCache.create())) {
+        && !getThisType().unifyWithSubtype(
+            recvtype, typeParameters.asList(), typeMultimap, SubtypeCache.create())) {
       return null;
     }
     for (int i = 0, size = argTypes.size(); i < size; i++) {
@@ -1345,12 +1350,12 @@ public final class FunctionType implements Serializable {
         continue;
       }
       if (!this.getFormalType(i).unifyWithSubtype(
-          argType, typeParameters, typeMultimap, SubtypeCache.create())) {
+          argType, typeParameters.asList(), typeMultimap, SubtypeCache.create())) {
         return null;
       }
     }
     ImmutableMap.Builder<String, JSType> builder = ImmutableMap.builder();
-    for (String typeParam : typeParameters) {
+    for (String typeParam : typeParameters.asList()) {
       Collection<JSType> types = typeMultimap.get(typeParam);
       if (types.size() > 1) {
         return null;
@@ -1391,6 +1396,22 @@ public final class FunctionType implements Serializable {
         this.returnType,
         this.nominalType,
         this.commonTypes.UNKNOWN,
+        this.outerVarPreconditions,
+        this.typeParameters,
+        this.isLoose,
+        this.isAbstract);
+  }
+
+  /** Returns a function that is the same as this one, but whose return type is returnType. */
+  FunctionType withReturnType(JSType returnType) {
+    return new FunctionType(
+        this.commonTypes,
+        this.requiredFormals,
+        this.optionalFormals,
+        this.restFormals,
+        returnType,
+        this.nominalType,
+        this.receiverType,
         this.outerVarPreconditions,
         this.typeParameters,
         this.isLoose,
@@ -1453,7 +1474,7 @@ public final class FunctionType implements Serializable {
     }
     if (!this.typeParameters.isEmpty()) {
       builder.append("<");
-      builder.append(Joiner.on(",").join(getPrettyTypeParams(this.typeParameters, ctx)));
+      Joiner.on(",").appendTo(builder, getPrettyTypeParams(this.typeParameters.asList(), ctx));
       builder.append(">");
     }
     builder.append("function(");

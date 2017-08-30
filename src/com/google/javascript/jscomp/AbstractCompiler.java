@@ -92,6 +92,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract List<CompilerInput> getInputsInOrder();
 
+  /**
+   * Gets the total number of inputs.
+   *
+   * <p>This can be useful as a guide for the initial allocated size for data structures.
+   */
+  abstract int getNumberOfInputs();
+
   //
   // Intermediate state and results produced and needed by particular passes.
   // TODO(rluble): move these into the general structure for keeping state between pass runs.
@@ -142,6 +149,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * Sets the type-checking pass that ran most recently.
    */
   abstract void setMostRecentTypechecker(MostRecentTypechecker mostRecent);
+
+  /** Gets the type-checking pass that ran most recently. */
+  abstract MostRecentTypechecker getMostRecentTypechecker();
 
   /**
    * Gets a central registry of type information from the compiled JS.
@@ -207,13 +217,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * Passes that make modifications in a scope that is different than the Compiler.currentScope use
    * this (eg, InlineVariables and many others)
    */
-  abstract void reportChangeToEnclosingScope(Node n);
+  public abstract void reportChangeToEnclosingScope(Node n);
 
   /**
    * Mark modifications in a scope that is different than the Compiler.currentScope use this (eg,
    * InlineVariables and many others)
    */
-  abstract void reportChangeToChangeScope(Node changeScopeRoot);
+  public abstract void reportChangeToChangeScope(Node changeScopeRoot);
 
   /**
    * Mark a specific function node as known to be deleted. Is part of having accurate change
@@ -627,5 +637,16 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   @Nullable
   Object getAnnotation(String key) {
     return annotationMap.get(key);
+  }
+
+  private @Nullable PersistentInputStore persistentInputStore;
+
+  void setPersistentInputStore(PersistentInputStore persistentInputStore) {
+    this.persistentInputStore = persistentInputStore;
+  }
+
+  @Nullable
+  PersistentInputStore getPersistentInputStore() {
+    return persistentInputStore;
   }
 }

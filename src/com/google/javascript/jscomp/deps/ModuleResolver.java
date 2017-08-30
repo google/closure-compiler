@@ -47,10 +47,8 @@ public abstract class ModuleResolver {
   }
 
   @Nullable
-  public String resolveJsModule(
-      String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno) {
-    return null;
-  }
+  public abstract String resolveJsModule(
+      String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno);
 
   /**
    * Locates the module with the given name, but returns null if there is no JS file in the expected

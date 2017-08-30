@@ -2483,7 +2483,7 @@ WebGLRenderingContext.prototype.linkProgram = function(program) {};
 
 /**
  * @param {number} pname
- * @param {number} param
+ * @param {number|boolean} param
  * @return {undefined}
  */
 WebGLRenderingContext.prototype.pixelStorei = function(pname, param) {};

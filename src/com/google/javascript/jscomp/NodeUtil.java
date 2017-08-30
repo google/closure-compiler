@@ -1079,9 +1079,10 @@ public final class NodeUtil {
     // that we know to be safe
     switch (n.getToken()) {
       // other side-effect free statements and expressions
-      // Throws are by definition side effects, and yields are similar.
+      // Throws are by definition side effects, and yield and export are similar.
       case THROW:
       case YIELD:
+      case EXPORT:
         return true;
 
       case OBJECTLIT:
@@ -2319,19 +2320,6 @@ public final class NodeUtil {
     return n.isGetProp() || n.isGetElem();
   }
 
-  /**
-   * Is this node the name of a variable being declared?
-   *
-   * @param n The node
-   * @return True if {@code n} is NAME and {@code parent} is VAR
-   * @deprecated this checks for vars, but not lets or consts
-   */
-  @Deprecated
-  static boolean isVarDeclaration(Node n) {
-    // There is no need to verify that parent != null because a NAME node
-    // always has a parent in a valid parse tree.
-    return n.isName() && n.getParent().isVar();
-  }
 
   /**
    * Is this node the name of a block-scoped declaration?
@@ -2633,7 +2621,7 @@ public final class NodeUtil {
    * @return Whether the node is used as a statement.
    */
   public static boolean isStatement(Node n) {
-    return isStatementParent(n.getParent());
+    return !n.isModuleBody() && isStatementParent(n.getParent());
   }
 
   private static final Predicate<Node> isStatement = new Predicate<Node>() {
@@ -2685,7 +2673,7 @@ public final class NodeUtil {
 
   /** Whether the child node is the FINALLY block of a try. */
   static boolean isTryFinallyNode(Node parent, Node child) {
-    return parent.isTry() && parent.getChildCount() == 3
+    return parent.isTry() && parent.hasXChildren(3)
         && child == parent.getLastChild();
   }
 
@@ -2709,6 +2697,29 @@ public final class NodeUtil {
     Node parent = n.getParent();
     NodeUtil.markFunctionsDeleted(n, compiler);
     n.detach();
+    compiler.reportChangeToEnclosingScope(parent);
+  }
+
+  /**
+   * Permanently delete the given call from the AST while maintaining a valid node structure, as
+   * well as report the related AST changes to the given compiler. In some cases, this is done by
+   * deleting the parent from the AST and is come cases expression is replaced by {@code
+   * undefined}.
+   */
+  public static void deleteFunctionCall(Node n, AbstractCompiler compiler) {
+    checkState(n.isCall());
+
+    Node parent = n.getParent();
+    if (parent.isExprResult()) {
+      Node grandParent = parent.getParent();
+      grandParent.removeChild(parent);
+      parent = grandParent;
+    } else {
+      // Seems like part of more complex expression, fallback to replacing with no-op.
+      parent.replaceChild(n, newUndefinedNode(n));
+    }
+
+    NodeUtil.markFunctionsDeleted(n, compiler);
     compiler.reportChangeToEnclosingScope(parent);
   }
 
@@ -2774,6 +2785,35 @@ public final class NodeUtil {
       // need something for the condition. Others need to be replaced
       // or the structure removed.
       parent.replaceChild(node, IR.empty());
+    } else if (parent.isObjectPattern()) {
+      // Remove the name from the object pattern
+      parent.removeChild(node);
+    } else if (parent.isArrayPattern()) {
+      if (node == parent.getLastChild()) {
+        parent.removeChild(node);
+      } else {
+        parent.replaceChild(node, IR.empty());
+      }
+    } else if (parent.isDestructuringLhs()) {
+      // Destructuring is empty so we should remove the node
+      parent.removeChild(node);
+      if (parent.getParent().hasChildren()) {
+        // removing the destructuring could leave an empty variable declaration node, so we would
+        // want to remove it from the AST
+        removeChild(parent.getParent(), parent);
+      }
+    } else if (parent.isRest()) {
+      // Rest params can only ever have one child node
+      parent.detach();
+    } else if (parent.isParamList()) {
+      parent.removeChild(node);
+    } else if (parent.isImport()) {
+      // An import node must always have three child nodes. Only the first can be safely removed.
+      if (node == parent.getFirstChild()) {
+        parent.replaceChild(node, IR.empty());
+      } else {
+        throw new IllegalStateException("Invalid attempt to remove: " + node + " from " + parent);
+      }
     } else {
       throw new IllegalStateException("Invalid attempt to remove node: " + node + " of " + parent);
     }
@@ -3234,6 +3274,38 @@ public final class NodeUtil {
         break;
     }
     throw new IllegalStateException("Unexpected node type: " + key);
+  }
+
+  /**
+   * Determine whether the destructuring object pattern is nested
+   *
+   * @param n object pattern node
+   */
+  static boolean isNestedObjectPattern(Node n) {
+    checkState(n.isObjectPattern());
+    for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
+      Node value = key.getFirstChild();
+      if (value != null
+          && (value.isObjectLit() || value.isArrayLit() || value.isDestructuringPattern())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Determine whether the destructuring array pattern is nested
+   *
+   * @param n array pattern node
+   */
+  static boolean isNestedArrayPattern(Node n) {
+    checkState(n.isArrayPattern());
+    for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
+      if (key.hasChildren()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -3705,12 +3777,17 @@ public final class NodeUtil {
 
   private static void getLhsNodesHelper(Node n, List<Node> lhsNodes) {
     switch (n.getToken()) {
+      case IMPORT:
+        getLhsNodesHelper(n.getFirstChild(), lhsNodes);
+        getLhsNodesHelper(n.getSecondChild(), lhsNodes);
+        return;
       case VAR:
       case CONST:
       case LET:
       case OBJECT_PATTERN:
       case ARRAY_PATTERN:
       case PARAM_LIST:
+      case IMPORT_SPECS:
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
           getLhsNodesHelper(child, lhsNodes);
         }
@@ -3721,6 +3798,7 @@ public final class NodeUtil {
       case REST:
         getLhsNodesHelper(n.getFirstChild(), lhsNodes);
         return;
+      case IMPORT_SPEC:
       case COMPUTED_PROP:
         getLhsNodesHelper(n.getLastChild(), lhsNodes);
         return;
@@ -3731,21 +3809,26 @@ public final class NodeUtil {
           checkState(isLValue(n));
           lhsNodes.add(n);
         }
-        break;
+        return;
       case NAME:
+      case IMPORT_STAR:
         lhsNodes.add(n);
-        break;
+        return;
       default:
         Preconditions.checkState(n.isEmpty(), "Invalid node in lhs of declaration: %s", n);
     }
   }
 
-  /**
-   * Retrieves lhs nodes declared in the current declaration.
-   */
-  static Iterable<Node> getLhsNodesOfDeclaration(Node declNode) {
+  /** Retrieves lhs nodes declared in the current declaration. */
+  static List<Node> getLhsNodesOfDeclaration(Node declNode) {
     checkArgument(
-        isNameDeclaration(declNode) || declNode.isParamList() || declNode.isCatch(), declNode);
+        isNameDeclaration(declNode)
+            || declNode.isParamList()
+            || declNode.isCatch()
+            || declNode.isDestructuringLhs()
+            || declNode.isDefaultValue()
+            || declNode.isImport(),
+        declNode);
     ArrayList<Node> lhsNodes = new ArrayList<>();
     getLhsNodesHelper(declNode, lhsNodes);
     return lhsNodes;
@@ -3784,7 +3867,7 @@ public final class NodeUtil {
    */
   static boolean isObjectDefinePropertyDefinition(Node n) {
     return n.isCall()
-        && n.getChildCount() == 4
+        && n.hasXChildren(4)
         && n.getFirstChild().matchesQualifiedName("Object.defineProperty");
   }
 
@@ -4174,7 +4257,7 @@ public final class NodeUtil {
    */
   static boolean hasFinally(Node n) {
     checkArgument(n.isTry());
-    return n.getChildCount() == 3;
+    return n.hasXChildren(3);
   }
 
   /**
@@ -4433,9 +4516,6 @@ public final class NodeUtil {
       case HOOK:
         return evaluatesToLocalValue(value.getSecondChild(), locals)
             && evaluatesToLocalValue(value.getLastChild(), locals);
-      case INC:
-      case DEC:
-        return true;
       case THIS:
         return locals.apply(value);
       case NAME:
@@ -4450,6 +4530,12 @@ public final class NodeUtil {
             || locals.apply(value);
       case NEW:
         return newHasLocalResult(value) || locals.apply(value);
+      case DELPROP:
+      case IN:
+        // TODO(johnlenz): should IN operator be included in #isSimpleOperator?
+      case INC:
+      case DEC:
+      case CLASS:
       case FUNCTION:
       case REGEXP:
       case EMPTY:
@@ -4478,9 +4564,14 @@ public final class NodeUtil {
           }
         }
         return true;
-      case DELPROP:
-      case IN:
-        // TODO(johnlenz): should IN operator be included in #isSimpleOperator?
+      case TEMPLATELIT:
+        for (Node child : value.children()) {
+          if (child.isTemplateLitSub()) {
+            if (!evaluatesToLocalValue(child.getFirstChild(), locals)) {
+              return false;
+            }
+          }
+        }
         return true;
       default:
         // Other op force a local value:
@@ -4888,7 +4979,11 @@ public final class NodeUtil {
   }
 
   static int countAstSize(Node n) {
-    return countAstSizeUpToLimit(n, Integer.MAX_VALUE);
+    int count = 1;
+    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+      count += countAstSize(c);
+    }
+    return count;
   }
 
 
@@ -4942,13 +5037,13 @@ public final class NodeUtil {
     Node function = n.getParent();
     if (function == null
         || !function.isFunction()
-        || getFunctionParameters(function).getChildCount() != 1
+        || !getFunctionParameters(function).hasOneChild()
         || !getFunctionParameters(function).getFirstChild().matchesQualifiedName("exports")) {
       return false;
     }
     Node call = function.getParent();
     if (!call.isCall()
-        || call.getChildCount() != 2
+        || !call.hasTwoChildren()
         || !call.getFirstChild().matchesQualifiedName("goog.loadModule")) {
       return false;
     }
