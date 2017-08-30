@@ -884,34 +884,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module$test.a = 1"));
   }
 
-  public void testIssue2593() {
-    testModules(
-        "test.js",
-        LINE_JOINER.join(
-            "var first = 1,",
-            "    second = 2,",
-            "    third = 3,",
-            "    fourth = 4,",
-            "    fifth = 5;",
-            "",
-            "module.exports = {};"),
-        LINE_JOINER.join(
-            "goog.provide('module$test');",
-            "/** @const */ var module$test={};",
-            "var first$$module$test=1;",
-            "var second$$module$test=2;",
-            "var third$$module$test=3;",
-            "var fourth$$module$test=4;",
-            "var fifth$$module$test=5;"));
-  }
-
-  public void testDontSplitVarsInFor() {
-    testModules(
-        "test.js",
-        "for (var a, b, c; ;) {}",
-        "for (var a, b, c; ;) {}");
-  }
-
   public void testIssue2450() {
     testModules(
         "test.js",
@@ -950,6 +922,27 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "    module$test!==undefined && module$test)"));
   }
 
+  public void testIssue2593() {
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
+            "var first = 1,",
+            "    second = 2,",
+            "    third = 3,",
+            "    fourth = 4,",
+            "    fifth = 5;",
+            "",
+            "module.exports = {};"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "/** @const */ var module$test={};",
+            "var first$$module$test=1;",
+            "var second$$module$test=2;",
+            "var third$$module$test=3;",
+            "var fourth$$module$test=4;",
+            "var fifth$$module$test=5;"));
+  }
+
   public void testTernaryUMDWrapper() {
     testModules(
         "test.js",
@@ -970,13 +963,49 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "(function (global, factory) {",
             "  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :",
             "  typeof define === 'function' && define.amd ? define(['exports'], factory) :",
-            "  (factory((global.foobar = global.foobar || {})));",
+            "  (factory((global.L = {})));",
             "}(this, (function (exports) {",
-            "  exports.foo = 'bar';",
+            "  'use strict';",
+            "  var webkit = userAgentContains('webkit');",
+            "  function userAgentContains(str) {",
+            "    return navigator.userAgent.toLowerCase().indexOf(str) >= 0;",
+            "  }",
+            "  exports.webkit = webkit",
             "})));"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "/** @const */ var module$test={};",
-            "{module$test.foo = 'bar';}"));
+            "{",
+            "  var exports$jscomp$inline_3$$module$test=module$test;",
+            "  var userAgentContains$jscomp$inline_5$$module$test=function(str$jscomp$inline_6){",
+            "    return navigator.userAgent.toLowerCase().indexOf(str$jscomp$inline_6)>=0;",
+            "  };",
+            "  var webkit$jscomp$inline_4$$module$test=userAgentContains$jscomp$inline_5$$module$test('webkit');",
+            "  exports$jscomp$inline_3$$module$test.webkit=webkit$jscomp$inline_4$$module$test;",
+            "}"));
+  }
+
+  public void testBowserUMDWrapper() {
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
+            "!function (root, name, definition) {",
+            "  if (typeof module != 'undefined' && module.exports) module.exports = definition()",
+            "  else if (typeof define == 'function' && define.amd) define(name, definition)",
+            "  else root[name] = definition()",
+            "}(this, 'foobar', function () {",
+            "  return {foo: 'bar'};",
+            "});"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "/** @const */ var module$test={};",
+            "module$test.foo = 'bar';"));
+  }
+
+  public void testDontSplitVarsInFor() {
+    testModules(
+        "test.js",
+        "for (var a, b, c; ;) {}",
+        "for (var a, b, c; ;) {}");
   }
 }
