@@ -17957,11 +17957,11 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.INVALID_ARGUMENT_TYPE,
         LINE_JOINER.join(
             "Invalid type for parameter 1 of function f.",
-            "Expected : {a: number, b: string|undefined=}",
+            "Expected : {a: number, b: (string|undefined)=}",
             "Found    : {a: number, b: number}",
             "More details:",
             "Incompatible types for property b.",
-            "Expected : string|undefined",
+            "Expected : (string|undefined)",
             "Found    : number"));
 
     typeCheckMessageContents(LINE_JOINER.join(
@@ -17982,7 +17982,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         LINE_JOINER.join(
             "Invalid type for parameter 1 of function f.",
             "Expected : {a: number, b: string}",
-            "Found    : {a: number, b: string|undefined=}",
+            "Found    : {a: number, b: (string|undefined)=}",
             "More details:",
             "In found type, property b is optional but should be required."));
 
@@ -17993,12 +17993,12 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.INVALID_ARGUMENT_TYPE,
         LINE_JOINER.join(
             "Invalid type for parameter 1 of function f.",
-            "Expected : function(number|string):?",
-            "Found    : function(number):undefined",
+            "Expected : function((number|string)): ?",
+            "Found    : function(number): undefined",
             "More details:",
             "The expected and found types are functions which have incompatible"
             + " types for argument 1.",
-            "Expected a supertype of : number|string",
+            "Expected a supertype of : (number|string)",
             "but found               : number"));
 
     typeCheckMessageContents(LINE_JOINER.join(
@@ -18008,8 +18008,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.INVALID_ARGUMENT_TYPE,
         LINE_JOINER.join(
             "Invalid type for parameter 1 of function f.",
-            "Expected : function():number",
-            "Found    : function():string",
+            "Expected : function(): number",
+            "Found    : function(): string",
             "More details:",
             "The expected and found types are functions which have incompatible"
             + " return types.",
@@ -18027,7 +18027,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         LINE_JOINER.join(
             "Invalid type for parameter 1 of function f.",
             "Expected : Foo",
-            "Found    : Bar|Foo",
+            "Found    : (Bar|Foo)",
             "More details:",
             "The found type is a union that includes an unexpected type: Bar"));
 
@@ -18042,7 +18042,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         LINE_JOINER.join(
             "Invalid type for parameter 1 of function f.",
             "Expected : Foo",
-            "Found    : Bar|null",
+            "Found    : (Bar|null)",
             "More details:",
             "The found type is a union that "
             + "includes an unexpected type: null"));
@@ -18056,7 +18056,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         LINE_JOINER.join(
             "Invalid type for parameter 1 of function f.",
             "Expected : number",
-            "Found    : number|string",
+            "Found    : (number|string)",
             "More details:",
             "The found type is a union that "
             + "includes an unexpected type: string"));
@@ -21113,7 +21113,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         LINE_JOINER.join(
             "Invalid type(s) for operator SUB.",
             "Expected : number",
-            "Found    : number|string",
+            "Found    : (number|string)",
             "More details:",
             "The found type is a union that includes an unexpected type: string"));
   }
@@ -21156,8 +21156,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.MISTYPED_ASSIGN_RHS,
         LINE_JOINER.join(
             "The right side in the assignment is not a subtype of the left side.",
-            "Expected : function(this:?,T#1,W):?",
-            "Found    : function(this:Foo,T#2,?):?",
+            "Expected : function(this:?,T#1,W): ?",
+            "Found    : function(this:Foo,T#2,?): ?",
             "More details:",
             "The expected and found types are functions which have incompatible types"
                 + " for argument 1.",

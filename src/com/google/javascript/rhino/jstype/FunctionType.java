@@ -1031,7 +1031,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
 
     setPrettyPrint(false);
 
-    sb.append("function (");
+    sb.append("function(");
     int paramNum = call.parameters.getChildCount();
     boolean hasKnownTypeOfThis = !(typeOfThis instanceof UnknownType);
     if (hasKnownTypeOfThis) {

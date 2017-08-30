@@ -1172,17 +1172,21 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   final String getCurrentJsSource() {
-    List<String> filenames = options.filesToPrintAfterEachPass;
-    if (filenames.isEmpty()) {
+    List<String> fileNameRegexList = options.filesToPrintAfterEachPassRegexList;
+    if (fileNameRegexList.isEmpty()) {
       return toSource();
     } else {
       StringBuilder builder = new StringBuilder();
-      for (String filename : filenames) {
-        Node script = getScriptNode(filename);
-        String source = script != null
-            ? "// " + script.getSourceFileName() + "\n" + toSource(script)
-            : "File '" + filename + "' not found";
-        builder.append(source);
+      checkNotNull(jsRoot);
+      for (Node fileNode : jsRoot.children()) {
+        String fileName = fileNode.getSourceFileName();
+        for (String regex : fileNameRegexList) {
+          if (fileName.matches(regex)) {
+            String source = "// " + fileName + "\n" + toSource(fileNode);
+            builder.append(source);
+            break;
+          }
+        }
       }
       return builder.toString();
     }

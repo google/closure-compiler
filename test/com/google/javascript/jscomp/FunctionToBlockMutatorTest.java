@@ -169,6 +169,16 @@ public final class FunctionToBlockMutatorTest extends TestCase {
         "foo", null);
   }
 
+  public void testMutateFunctionDefinitionHoisting() {
+    // function declarations are rewritten as function
+    // expressions
+    helperMutate(
+        "function foo(a){var a = g(); function g(){} function h(){} function i(){}}; foo(1);",
+        "{var a$jscomp$inline_0=1; var g$jscomp$inline_1=function(){}; var h$jscomp$inline_1=function(){};" +
+        "var i$jscomp$inline_1=function(){};a$jscomp$inline_0 = g$jscomp$inline_1();}",
+        "foo", null);
+  }
+
   public void helperMutate(
       String code, final String expectedResult, final String fnName) {
     helperMutate(code, expectedResult, fnName, false, false);

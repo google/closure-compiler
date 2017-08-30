@@ -1612,7 +1612,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
    * code generation.
    */
   StringBuilder appendTo(StringBuilder builder, ToStringContext ctx) {
-    // TODO(sdh): checkState(!forAnnotations) all
+    // TODO(sdh): checkState(!forAnnotations) all cases that don't work for annotations.
+    boolean isUnion = isUnion();
     switch (getMask()) {
       case BOTTOM_MASK:
         return builder.append("bottom");
@@ -1621,6 +1622,9 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
       case UNKNOWN_MASK:
         return builder.append("?");
       default:
+        if (isUnion) {
+          builder.append("(");
+        }
         int tags = getMask();
         boolean firstIteration = true;
         for (int tag = 1; tag != END_MASK; tag <<= 1) {
@@ -1661,12 +1665,17 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
                 tags &= ~TYPEVAR_MASK;
                 continue;
               case NON_SCALAR_MASK: {
-                if (getObjs().size() == 1) {
+                boolean isNullable = isNullable();
+                if (getObjs().size() == 1 && !isNullable) {
                   Iterables.getOnlyElement(getObjs()).appendTo(builder, ctx);
                 } else {
                   Set<String> strReps = new TreeSet<>();
                   for (ObjectType obj : getObjs()) {
-                    strReps.add(obj.toString(ctx));
+                    String rep = obj.toString(ctx);
+                    if (isNullable && rep.charAt(0) == '!') {
+                      rep = rep.substring(1);
+                    }
+                    strReps.add(rep);
                   }
                   PIPE_JOINER.appendTo(builder, strReps);
                 }
@@ -1692,14 +1701,18 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
           }
         }
         if (tags == 0) { // Found all types in the union
-          return builder;
+          // nothing else to do
         } else if (tags == TRUTHY_MASK) {
-          return builder.append("truthy");
+          builder.append("truthy");
         } else if (tags == FALSY_MASK) {
-          return builder.append("falsy");
+          builder.append("falsy");
         } else {
-          return builder.append("Unrecognized type: ").append(tags);
+          builder.append("Unrecognized type: ").append(tags);
         }
+        if (isUnion) {
+          builder.append(")");
+        }
+        return builder;
     }
   }
 
