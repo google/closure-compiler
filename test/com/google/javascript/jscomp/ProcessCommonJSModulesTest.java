@@ -945,7 +945,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "var fifth$$module$test=5;"));
   }
 
-<<<<<<< HEAD
   public void testTernaryUMDWrapper() {
     testModules(
         "test.js",
@@ -966,9 +965,13 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "(function (global, factory) {",
             "  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :",
             "  typeof define === 'function' && define.amd ? define(['exports'], factory) :",
-            "  (factory((global.foobar = global.foobar || {})));",
+            "  (factory((global.L = {})));",
             "}(this, (function (exports) {",
-            "  exports.foo = 'bar';",
+            "  'use strict';",
+            "  var webkit = userAgentContains('webkit');",
+            "  function userAgentContains(str) {",
+            "    return navigator.userAgent.toLowerCase().indexOf(str) >= 0;",
+            "  }",
             "})));"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
