@@ -962,31 +962,33 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "test.js",
         LINE_JOINER.join(
-          "(function (global, factory) {",
-          "  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :",
-          "  typeof define === 'function' && define.amd ? define(['exports'], factory) :",
-          "  (factory((global.foobar = global.foobar || {})));",
-          "}(this, (function (exports) {",
-          "  exports.foo = 'bar';",
-          "})));"),
+            "(function (global, factory) {",
+            "  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :",
+            "  typeof define === 'function' && define.amd ? define(['exports'], factory) :",
+            "  (factory((global.foobar = global.foobar || {})));",
+            "}(this, (function (exports) {",
+            "  exports.foo = 'bar';",
+            "})));"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
-            "var module$test = {foo: 'bar'};"));
+            "/** @const */ var module$test={};",
+            "{module$test.foo = 'bar';}"));
   }
 
   public void testBowserUMDWrapper() {
     testModules(
         "test.js",
         LINE_JOINER.join(
-          "!function (root, name, definition) {",
-          "  if (typeof module != 'undefined' && module.exports) module.exports = definition()",
-          "  else if (typeof define == 'function' && define.amd) define(name, definition)",
-          "  else root[name] = definition()",
-          "}(this, 'foobar', function () {",
-          "  return {foo: 'bar'};",
-          "});"),
+            "!function (root, name, definition) {",
+            "  if (typeof module != 'undefined' && module.exports) module.exports = definition()",
+            "  else if (typeof define == 'function' && define.amd) define(name, definition)",
+            "  else root[name] = definition()",
+            "}(this, 'foobar', function () {",
+            "  return {foo: 'bar'};",
+            "});"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
-            "var module$test = {foo: 'bar'};"));
+            "/** @const */ var module$test={};",
+            "module$test.foo = 'bar';"));
   }
 }

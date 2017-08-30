@@ -101,11 +101,15 @@ public final class ProcessCommonJSModules implements CompilerPass {
       finder.reportModuleErrors();
 
       if (!finder.umdPatterns.isEmpty()) {
-        finder.replaceUmdPatterns();
+        boolean needsRetraverse = finder.replaceUmdPatterns();
 
-        // Removing the IIFE rewrites vars. We need to re-traverse
+        if (!needsRetraverse) {
+          needsRetraverse = removeIIFEWrapper(root);
+        }
+
+        // Inlining functions rewrites vars. We need to re-traverse
         // to get the new references.
-        if (removeIIFEWrapper(root)) {
+        if (needsRetraverse) {
           finder = new FindImportsAndExports();
           NodeTraversal.traverseEs6(compiler, root, finder);
         }
@@ -591,7 +595,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
     }
 
     /** Remove a Universal Module Definition and leave just the commonjs export statement */
-    void replaceUmdPatterns() {
+    boolean replaceUmdPatterns() {
+      boolean needsRetraverse = false;
+      Node changeScope;
       for (UmdPattern umdPattern : umdPatterns) {
         Node parent = umdPattern.ifRoot.getParent();
         Node newNode = umdPattern.activeBranch;
@@ -599,7 +605,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         if (newNode == null) {
           parent.removeChild(umdPattern.ifRoot);
           compiler.reportChangeToEnclosingScope(parent);
-          return;
+          continue;
         }
 
         // Remove redundant block node. Not strictly necessary, but makes tests more legible.
@@ -611,12 +617,103 @@ public final class ProcessCommonJSModules implements CompilerPass {
           umdPattern.ifRoot.detachChildren();
         }
         parent.replaceChild(umdPattern.ifRoot, newNode);
-        // TODO(johnlenz): don't work on detached nodes
-        Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(parent);
+        changeScope = NodeUtil.getEnclosingChangeScopeRoot(newNode);
         if (changeScope != null) {
-          compiler.reportChangeToEnclosingScope(parent);
+          compiler.reportChangeToEnclosingScope(newNode);
+        }
+
+        Node block = parent;
+        if (block.isExprResult()) {
+          block = block.getParent();
+        }
+
+        // Detect UMD Factory Patterns and inline the functions
+        if (block.isNormalBlock() && block.getParent().isFunction()
+            && block.getGrandparent().isCall()
+            && parent.hasOneChild()) {
+          Node enclosingFnCall = block.getGrandparent();
+          Node fn = block.getParent();
+
+          String returnAssignName = null;
+          if (newNode.isExprResult() && newNode.getFirstChild().isAssign()) {
+            if (newNode.getFirstFirstChild().isQualifiedName()) {
+              returnAssignName = newNode.getFirstFirstChild().getQualifiedName();
+            } else {
+              continue;
+            }
+          }
+
+          Node enclosingScript = NodeUtil.getEnclosingScript(enclosingFnCall);
+          if (enclosingScript == null) {
+            continue;
+          }
+          CompilerInput ci = compiler.getInput(NodeUtil.getEnclosingScript(enclosingFnCall).getInputId());
+          ModulePath modulePath = ci.getPath();
+          if (modulePath == null) {
+            continue;
+          }
+          needsRetraverse = true;
+          String factoryLabel = modulePath.toModuleName() + "_factory";
+
+          FunctionToBlockMutator mutator =
+              new FunctionToBlockMutator(compiler, compiler.getUniqueNameIdSupplier());
+          Node newStatements = mutator.mutate(factoryLabel, fn, enclosingFnCall, null, false, false);
+
+          // Check to see if the returned block is of the form:
+          // {
+          //   var jscomp$inline = function() {};
+          //   jscomp$inline();
+          // }
+          //
+          // If so, inline again
+          if (newStatements.isNormalBlock()
+              && newStatements.hasTwoChildren()
+              && newStatements.getFirstChild().isVar()
+              && newStatements.getFirstFirstChild().hasOneChild()
+              && newStatements.getFirstFirstChild().getFirstChild().isFunction()
+              && newStatements.getSecondChild().isExprResult()) {
+            Node inlinedFn = newStatements.getFirstFirstChild().getFirstChild();
+            String fnName = newStatements.getFirstFirstChild().getString();
+            Node expr = newStatements.getSecondChild().getFirstChild();
+            Node call = null;
+            if (expr.isAssign() && expr.getSecondChild().isCall()) {
+              call = expr.getSecondChild();
+            } else if (expr.isCall()) {
+              call = expr;
+            }
+
+            if (call != null) {
+              newStatements = mutator.mutate(factoryLabel, inlinedFn, call, null, false, false);
+              if (expr.isAssign() && newStatements.hasOneChild() && newStatements.getFirstChild().isExprResult()) {
+                expr.replaceChild(expr.getSecondChild(), newStatements.getFirstFirstChild().detach());
+                newStatements = expr.getParent().detach();
+              }
+            }
+          }
+
+          Node callRoot = enclosingFnCall.getParent();
+          if (callRoot.isNot()) {
+            callRoot = callRoot.getParent();
+          }
+          if (callRoot.isExprResult()) {
+            callRoot = callRoot.getParent();
+
+            callRoot.detachChildren();
+            callRoot.addChildToFront(newStatements);
+            changeScope = NodeUtil.getEnclosingChangeScopeRoot(callRoot);
+            if (changeScope != null) {
+              compiler.reportChangeToEnclosingScope(callRoot);
+            }
+          } else {
+            parent.replaceChild(umdPattern.ifRoot, newNode);
+            changeScope = NodeUtil.getEnclosingChangeScopeRoot(newNode);
+            if (changeScope != null) {
+              compiler.reportChangeToEnclosingScope(newNode);
+            }
+          }
         }
       }
+      return needsRetraverse;
     }
   }
 
