@@ -1659,15 +1659,33 @@ final class ObjectType implements TypeWithProperties {
   }
 
   StringBuilder appendTo(StringBuilder builder, ToStringContext ctx) {
+    // "Foo.prototype" is a valid type when appropriate.
     if (isPrototypeObject()) {
       return builder.append(getOwnerFunction().getThisType()).append(".prototype");
     }
+    // Annotations need simpler output that can be re-parsed.
+    if (ctx.forAnnotation()) {
+      if (fn != null) {
+        fn.appendTo(builder, ctx);
+      } else if (!props.isEmpty()) {
+        appendPropsTo(builder, ctx);
+      } else if (nominalType.isLiteralObject()) {
+        // Note: if nominalType.isLiteralObject (e.g. from a non-const namespace)
+        // then it will append as "Object{}", which is not a valid annotation.
+        builder.append("!Object");
+      } else {
+        nominalType.appendTo(builder, ctx);
+      }
+      return builder;
+    }
+    // If it's just a simple function or class with no stray fields, return that.
     if (!hasNonPrototypeProperties()) {
       if (fn != null) {
         return fn.appendTo(builder, ctx);
       }
       return this.nominalType.appendTo(builder, ctx);
     }
+    // More thorough stringification when annotation support is not needed.
     if (!nominalType.isFunction()
         && !nominalType.isBuiltinObject()
         && !nominalType.isLiteralObject()) {
@@ -1685,24 +1703,28 @@ final class ObjectType implements TypeWithProperties {
       builder.append("|>");
     }
     if (ns == null || !props.isEmpty()) {
-      builder.append('{');
-      boolean firstIteration = true;
-      for (String pname : new TreeSet<>(props.keySet())) {
-        if (firstIteration) {
-          firstIteration = false;
-        } else {
-          builder.append(", ");
-        }
-        builder.append(pname);
-        builder.append(": ");
-        props.get(pname).appendTo(builder, ctx);
-      }
-      builder.append('}');
+      appendPropsTo(builder, ctx);
     }
     if (isLoose) {
       builder.append(" (loose)");
     }
     return builder;
+  }
+
+  private void appendPropsTo(StringBuilder builder, ToStringContext ctx) {
+    builder.append('{');
+    boolean firstIteration = true;
+    for (String pname : new TreeSet<>(props.keySet())) {
+      if (firstIteration) {
+        firstIteration = false;
+      } else {
+        builder.append(", ");
+      }
+      builder.append(pname);
+      builder.append(": ");
+      props.get(pname).appendTo(builder, ctx);
+    }
+    builder.append('}');
   }
 
   @Override

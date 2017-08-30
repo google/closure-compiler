@@ -17,17 +17,19 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import java.util.function.Consumer;
+
 /**
  * Tests for {@link ExternExportsPass}.
  *
  */
-public final class ExternExportsPassTest extends CompilerTestCase {
+public final class ExternExportsPassTest extends TypeICompilerTestCase {
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     enableNormalize();
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
   }
 
   @Override
@@ -46,7 +48,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   public void testExportSymbol() throws Exception {
     compileAndCheck(
         LINE_JOINER.join(
-            "var a = {}; a.b = {}; a.b.c = function(d, e, f) {};",
+            "/** @const */ var a = {}; /** @const */ a.b = {}; a.b.c = function(d, e, f) {};",
             "goog.exportSymbol('foobar', a.b.c)"),
         LINE_JOINER.join(
             "/**",
@@ -102,7 +104,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   public void testExportProperty() throws Exception {
     compileAndCheck(
         LINE_JOINER.join(
-            "var a = {}; a.b = {}; a.b.c = function(d, e, f) {};",
+            "/** @const */ var a = {}; /** @const */ a.b = {}; a.b.c = function(d, e, f) {};",
             "goog.exportProperty(a.b, 'cprop', a.b.c)"),
         LINE_JOINER.join(
             "var a;",
@@ -121,7 +123,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   public void testExportMultiple() throws Exception {
     compileAndCheck(
         LINE_JOINER.join(
-            "var a = {}; a.b = function(p1) {};",
+            "/** @const */ var a = {}; a.b = function(p1) {};",
             "a.b.c = function(d, e, f) {};",
             "a.b.prototype.c = function(g, h, i) {};",
             "goog.exportSymbol('a.b', a.b);",
@@ -155,9 +157,12 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   }
 
   public void testExportMultiple2() throws Exception {
+    // TODO(sdh): NTI leaves out the annotation for hello for some reason.
+    this.mode = TypeInferenceMode.OTI_ONLY;
     compileAndCheck(
         LINE_JOINER.join(
-            "var a = {}; a.b = function(p1) {}; ",
+            "/** @const */ var a = {};",
+            "a.b = function(p1) {};",
             "a.b.c = function(d, e, f) {};",
             "a.b.prototype.c = function(g, h, i) {};",
             "goog.exportSymbol('hello', a);",
@@ -189,7 +194,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   public void testExportMultiple3() throws Exception {
     compileAndCheck(
         LINE_JOINER.join(
-            "var a = {}; a.b = function(p1) {};",
+            "/** @const */ var a = {}; a.b = function(p1) {};",
             "a.b.c = function(d, e, f) {};",
             "a.b.prototype.c = function(g, h, i) {};",
             "goog.exportSymbol('prefix', a.b);",
@@ -214,25 +219,39 @@ public final class ExternExportsPassTest extends CompilerTestCase {
 
   public void testExportNonStaticSymbol() throws Exception {
     compileAndCheck(
-        "var a = {}; a.b = {}; var d = {}; a.b.c = d; goog.exportSymbol('foobar', a.b.c)",
+        lines(
+            "/** @const */ var a = {};",
+            "/** @const */ a.b = {};",
+            "/** @const */ var d = {};",
+            "a.b.c = d;",
+            "goog.exportSymbol('foobar', a.b.c)"),
         "var foobar;\n");
   }
 
   public void testExportNonStaticSymbol2() throws Exception {
     compileAndCheck(
-        "var a = {}; a.b = {}; var d = null; a.b.c = d; goog.exportSymbol('foobar', a.b.c())",
+        lines(
+            "/** @const */ var a = {};",
+            "/** @const */ a.b = {};",
+            "var d = function() {};",
+            "a.b.c = d;",
+            "goog.exportSymbol('foobar', a.b.c())"),
         "var foobar;\n");
   }
 
   public void testExportNonexistentProperty() throws Exception {
     compileAndCheck(
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {missingProperties} */",
-            "var a = {};",
-            "a.b = {};",
+            "/** @const */ var a = {};",
+            "/** @const */ a.b = {};",
             "a.b.c = function(d, e, f) {};",
             "goog.exportProperty(a.b, 'none', a.b.none)"),
-        "var a;\na.b;\na.b.none;\n");
+        lines(
+            "var a;",
+            "a.b;",
+            "a.b.none;",
+            ""));
   }
 
   public void testExportSymbolWithTypeAnnotation() {
@@ -297,7 +316,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             " * @template K,V",
             " */",
             "internalName = function(param1) {",
-            "  return param1;",
+            "  return /** @type {?} */ (param1);",
             "};",
             "goog.exportSymbol('externalName', internalName);"),
         LINE_JOINER.join(
@@ -314,7 +333,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   public void testExportSymbolWithoutTypeCheck() {
     // ExternExportsPass should not emit annotations
     // if there is no type information available.
-    disableTypeCheck();
+    this.mode = TypeInferenceMode.NEITHER;
 
     compileAndCheck(
         LINE_JOINER.join(
@@ -391,7 +410,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
     // to JSTypes and not Nodes (and no JSTypes are created when checkTypes
     // is false), we don't really have a choice.
 
-    disableTypeCheck();
+    this.mode = TypeInferenceMode.NEITHER;
 
     compileAndCheck(
         LINE_JOINER.join(
@@ -457,7 +476,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             " * @param {number=} a",
             " */",
             "internalName = function(a) {",
-            "  return 6;",
+            "  return /** @type {?} */ (6);",
             "};",
             "goog.exportSymbol('externalName', internalName)"),
         LINE_JOINER.join(
@@ -479,7 +498,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             " * @param {number=} a",
             " */",
             "internalName = function(a) {",
-            "  return a;",
+            "  return /** @type {?} */ (a);",
             "};",
             "goog.exportSymbol('externalName', internalName)"),
         LINE_JOINER.join(
@@ -536,31 +555,36 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   }
 
   public void testExportWithReferenceToEnum() {
-    compileAndCheck(
-        LINE_JOINER.join(
-            "/**",
-            " * @enum {number}",
-            " * @export",
-            " */",
-            "var E = {A:1, B:2};",
-            "goog.exportSymbol('E', E);",
-            "",
-            "/**",
-            " * @param {!E} e",
-            " * @export",
-            " */",
-            "function f(e) {}",
-            "goog.exportSymbol('f', f);"),
-        LINE_JOINER.join(
-            "/** @enum {number} */",
-            "var E = {A:1, B:2};",
-            "/**",
-            " * @param {number} e",  // TODO(tbreisacher): The param type should be 'E' not 'number'
-            " * @return {undefined}",
-            " */",
-            "var f = function(e) {",
-            "};",
-            ""));
+    String js = lines(
+        "/**",
+        " * @enum {number}",
+        " * @export",
+        " */",
+        "var E = {A:1, B:2};",
+        "goog.exportSymbol('E', E);",
+        "",
+        "/**",
+        " * @param {!E} e",
+        " * @export",
+        " */",
+        "function f(e) {}",
+        "goog.exportSymbol('f', f);");
+    String expected = lines(
+        "/** @enum {number} */",
+        "var E = {A:1, B:2};",
+        "/**",
+        " * @param {E} e",
+        " * @return {undefined}",
+        " */",
+        "var f = function(e) {",
+        "};",
+        "");
+
+    this.mode = TypeInferenceMode.OTI_ONLY;
+    // NOTE: OTI should print {E} for the @param, but does not.
+    compileAndCheck(js, expected.replace("{E}", "{number}"));
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    compileAndCheck(js, expected);
   }
 
   /** If we export a property with "prototype" as a path component, there
@@ -621,9 +645,11 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             " */",
             "var bar = function(x) {};");
 
-    String generatedExterns = compileAndExportExterns(librarySource);
-
-    compileAndExportExterns(clientSource, generatedExterns);
+    compileAndExportExterns(librarySource, MINIMAL_EXTERNS, new Consumer<String>() {
+      @Override public void accept(String generatedExterns) {
+        compileAndExportExterns(clientSource, MINIMAL_EXTERNS + generatedExterns);
+      }
+    });
   }
 
   public void testDontWarnOnExportFunctionWithUnknownReturnType() {
@@ -711,6 +737,9 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   }
 
   public void testExportLocalPropertyInConstructor2() throws Exception {
+    // TODO(sdh): NTI gives a (technically correct) INEXISTENT_PROPERTY warning on F.prototype.x,
+    // but we may want to loosen it in this situation? (alternatively, just use ignoreWarnings).
+    this.mode = TypeInferenceMode.OTI_ONLY;
     compileAndCheck(
         LINE_JOINER.join(
             "/** @constructor */function F() { /** @export */ this.x = 5;}",
@@ -762,7 +791,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
 
   public void testExportLocalPropertyNotInConstructor() throws Exception {
     compileAndCheck(
-        "function f() { /** @export */ this.x = 5;} goog.exportSymbol('f', f);",
+        "/** @this {?} */ function f() { /** @export */ this.x = 5;} goog.exportSymbol('f', f);",
         LINE_JOINER.join(
             "/**",
             " * @return {undefined}",
@@ -775,7 +804,7 @@ public final class ExternExportsPassTest extends CompilerTestCase {
   public void testExportParamWithSymbolDefinedInFunction() throws Exception {
     compileAndCheck(
         LINE_JOINER.join(
-            "var id = function() {return 'id'};",
+            "var id = function() {return /** @type {?} */ ('id')};",
             "var ft = function() {",
             "  var id;",
             "  return 1;",
@@ -905,17 +934,22 @@ public final class ExternExportsPassTest extends CompilerTestCase {
             ""));
   }
 
-  private void compileAndCheck(String js, String expected) {
-    String generatedExterns = compileAndExportExterns(js);
+  private void compileAndCheck(String js, final String expected) {
+    compileAndExportExterns(js, MINIMAL_EXTERNS, new Consumer<String>() {
+      @Override public void accept(String generatedExterns) {
+        String fileoverview = LINE_JOINER.join(
+            "/**",
+            " * @fileoverview Generated externs.",
+            " * @externs",
+            " */",
+            "");
+        // NOTE(sdh): NTI produces {?=} for many params, while OTI just produces {?}.
+        // For now we will not worry about this distinction and just normalize it.
+        generatedExterns = generatedExterns.replace("?=", "?");
 
-    String fileoverview = LINE_JOINER.join(
-        "/**",
-        " * @fileoverview Generated externs.",
-        " * @externs",
-        " */",
-        "");
-
-    assertThat(generatedExterns).isEqualTo(fileoverview + expected);
+        assertThat(generatedExterns).isEqualTo(fileoverview + expected);
+      }
+    });
   }
 
   public void testDontWarnOnExportFunctionWithUnknownParameterTypes() {
@@ -937,10 +971,9 @@ public final class ExternExportsPassTest extends CompilerTestCase {
    * Compiles the passed in JavaScript and returns the new externs exported by the this pass.
    *
    * @param js the source to be compiled
-   * @return the externs generated from {@code js}
    */
-  private String compileAndExportExterns(String js) {
-    return compileAndExportExterns(js, "");
+  private void compileAndExportExterns(String js) {
+    compileAndExportExterns(js, MINIMAL_EXTERNS);
   }
 
   /**
@@ -949,17 +982,32 @@ public final class ExternExportsPassTest extends CompilerTestCase {
    *
    * @param js the source to be compiled
    * @param externs the externs the {@code js} source needs
-   * @return the externs generated from {@code js}
    */
-  private String compileAndExportExterns(String js, String externs) {
+  private void compileAndExportExterns(String js, String externs) {
+    compileAndExportExterns(js, externs, null);
+  }
+
+  /**
+   * Compiles the passed in JavaScript with the passed in externs and returns
+   * the new externs exported by the this pass.
+   *
+   * @param js the source to be compiled
+   * @param externs the externs the {@code js} source needs
+   * @param consumer consumer for the externs generated from {@code js}
+   */
+  private void compileAndExportExterns(String js, String externs, final Consumer<String> consumer) {
     js = LINE_JOINER.join(
-        "var goog = {};",
+        "/** @const */ var goog = {};",
         "goog.exportSymbol = function(a, b) {};",
         "goog.exportProperty = function(a, b, c) {};",
         js);
 
-    testSame(externs, js);
-
-    return getLastCompiler().getResult().externExport;
+    testSame(externs(externs), srcs(js), new Postcondition() {
+      @Override public void verify(Compiler compiler) {
+        if (consumer != null) {
+          consumer.accept(compiler.getResult().externExport);
+        }
+      }
+    });
   }
 }
