@@ -972,11 +972,19 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  function userAgentContains(str) {",
             "    return navigator.userAgent.toLowerCase().indexOf(str) >= 0;",
             "  }",
+            "  exports.webkit = webkit",
             "})));"),
         LINE_JOINER.join(
             "goog.provide('module$test');",
             "/** @const */ var module$test={};",
-            "{module$test.foo = 'bar';}"));
+            "{",
+            "  var exports$jscomp$inline_3$$module$test=module$test;",
+            "  var userAgentContains$jscomp$inline_5$$module$test=function(str$jscomp$inline_6){",
+            "    return navigator.userAgent.toLowerCase().indexOf(str$jscomp$inline_6)>=0;",
+            "  };",
+            "  var webkit$jscomp$inline_4$$module$test=userAgentContains$jscomp$inline_5$$module$test('webkit');",
+            "  exports$jscomp$inline_3$$module$test.webkit=webkit$jscomp$inline_4$$module$test;",
+            "}"));
   }
 
   public void testBowserUMDWrapper() {
