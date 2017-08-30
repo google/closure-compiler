@@ -497,8 +497,10 @@ public final class ProcessCommonJSModules implements CompilerPass {
           Node rValue = NodeUtil.getRValueOfLValue(export.node);
           if (rValue == null || !rValue.isObjectLit()) {
             directAssignments++;
-            if (export.node.getParent().getParent().isExprResult()
-                && NodeUtil.isTopLevel(export.node.getParent().getParent().getParent())) {
+            Node expr = export.node.getParent().getParent();
+            if (expr.isExprResult()
+                && (NodeUtil.isTopLevel(expr.getParent())
+                || (expr.getParent().isNormalBlock() && NodeUtil.isTopLevel(expr.getGrandparent())))) {
               directAssignmentsAtTopLevel++;
             }
           }
@@ -633,15 +635,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
             && parent.hasOneChild()) {
           Node enclosingFnCall = block.getGrandparent();
           Node fn = block.getParent();
-
-          String returnAssignName = null;
-          if (newNode.isExprResult() && newNode.getFirstChild().isAssign()) {
-            if (newNode.getFirstFirstChild().isQualifiedName()) {
-              returnAssignName = newNode.getFirstFirstChild().getQualifiedName();
-            } else {
-              continue;
-            }
-          }
 
           Node enclosingScript = NodeUtil.getEnclosingScript(enclosingFnCall);
           if (enclosingScript == null) {
@@ -962,7 +955,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
           Node parent = root.getParent();
           Node var = IR.var(updatedExport, rValue.detach()).useSourceInfoFrom(root.getParent());
           parent.getParent().replaceWith(var);
-        } else if (root.getNext() != null && root.getNext().isName() && rValueVar.isGlobal()) {
+        } else if (root.getNext() != null && root.getNext().isName()
+            && rValueVar != null && rValueVar.isGlobal()) {
           // This is a where a module export assignment is used in a complex expression.
           // Before: `SOME_VALUE !== undefined && module.exports = SOME_VALUE`
           // After: `SOME_VALUE !== undefined && module$name`
