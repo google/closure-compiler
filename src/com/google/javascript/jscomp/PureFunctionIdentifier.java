@@ -72,6 +72,11 @@ class PureFunctionIdentifier implements CompilerPass {
   private final AbstractCompiler compiler;
   private final DefinitionProvider definitionProvider;
 
+  /**
+   * A constant key for checking/marking whether this pass has run yet in a given compiler instance.
+   */
+  private static final String HAS_RUN_PURE_FUNCTION_IDENTIFIER = "hasRunPureFunctionIdentifier";
+
   /** Map of function names to side effect gathering representative nodes */
   private final Map<String, FunctionInformation> functionInfoByName = new HashMap<>();
 
@@ -950,6 +955,11 @@ class PureFunctionIdentifier implements CompilerPass {
     return subtype.isBottom();
   }
 
+  /** Returns whether this pass has run yet in a given compiler instance. */
+  static boolean hasRunPureFunctionIdentifier(AbstractCompiler compiler) {
+    return Boolean.TRUE.equals(compiler.getAnnotation(HAS_RUN_PURE_FUNCTION_IDENTIFIER));
+  }
+
   /**
    * A compiler pass that constructs a reference graph and drives the PureFunctionIdentifier across
    * it.
@@ -957,6 +967,7 @@ class PureFunctionIdentifier implements CompilerPass {
   static class Driver implements CompilerPass {
     private final AbstractCompiler compiler;
     private final String reportPath;
+    protected boolean checkJ2cl = true;
 
     Driver(AbstractCompiler compiler, String reportPath) {
       this.compiler = compiler;
@@ -965,6 +976,16 @@ class PureFunctionIdentifier implements CompilerPass {
 
     @Override
     public void process(Node externs, Node root) {
+      // Don't run the independent PureFunctionIdentifier pass if J2CL is enabled, since nested
+      // PureFunctionIdentifier passes will run redundantly inside of J2CL.
+      if (checkJ2cl && J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
+        return;
+      }
+
+      if (!hasRunPureFunctionIdentifier(compiler)) {
+        compiler.setAnnotation(HAS_RUN_PURE_FUNCTION_IDENTIFIER, Boolean.TRUE);
+      }
+
       NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler, true);
       defFinder.process(externs, root);
 
@@ -979,6 +1000,15 @@ class PureFunctionIdentifier implements CompilerPass {
           throw new RuntimeException(e);
         }
       }
+    }
+  }
+
+  /** A driver that will run even when J2CL is enabled. */
+  static class DriverInJ2cl extends Driver {
+
+    DriverInJ2cl(AbstractCompiler compiler, String reportPath) {
+      super(compiler, reportPath);
+      checkJ2cl = false;
     }
   }
 }
