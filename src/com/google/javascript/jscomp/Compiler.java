@@ -1785,6 +1785,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         if (!inputsToRewrite.isEmpty()) {
           forceToEs6Modules(inputsToRewrite.values());
         }
+
+        if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)) {		
+          processEs6Modules(parsePotentialModules(inputs));		
+        }
+
       } else {
         // Use an empty module loader if we're not actually dealing with modules.
         this.moduleLoader = ModuleLoader.EMPTY;
@@ -2029,6 +2034,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       Es6RewriteModules moduleRewriter = new Es6RewriteModules(this);
       moduleRewriter.forceToEs6Module(root);
     }
+  }
+
+  void processEs6Modules(List<CompilerInput> inputsToProcess) {		
+    for (CompilerInput input : inputsToProcess) {		
+      input.setCompiler(this);		
+      Node root = input.getAstRoot(this);		
+      if (root == null) {		
+        continue;		
+      }		
+      if (Es6RewriteModules.isEs6ModuleRoot(root)) {		
+        new Es6RewriteModules(this).processFile(root);		
+      }		
+    }		
+    setFeatureSet(featureSet.without(Feature.MODULES));		
   }
 
   private List<CompilerInput> parsePotentialModules(List<CompilerInput> inputsToProcess) {
