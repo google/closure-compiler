@@ -118,6 +118,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
         }
       }
 
+      finder.initializeModule();
+
       //UMD pattern replacement can leave detached export references - don't include those
       for (ExportInfo export : finder.getModuleExports()) {
         if (NodeUtil.getEnclosingScript(export.node) != null) {
@@ -130,8 +132,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
           exports.add(export);
         }
       }
-
-      finder.initializeModule();
     }
 
     NodeTraversal.traverseEs6(
@@ -397,7 +397,17 @@ public final class ProcessCommonJSModules implements CompilerPass {
           if (qNameRoot != null
               && qNameRoot.matchesQualifiedName(EXPORTS)
               && NodeUtil.isLValue(qNameRoot)) {
-            if (!this.hasGoogProvideOrModule) {
+            // Match the special assignment
+            // exports = module.exports
+            if (n.getGrandparent().isExprResult()
+                && n.getNext() != null
+                && ((n.getNext().isGetProp()
+                        && n.getNext().matchesQualifiedName(MODULE + "." + EXPORTS))
+                    || (n.getNext().isAssign()
+                        && n.getNext().getFirstChild().matchesQualifiedName(MODULE + "." + EXPORTS))))
+            {
+              exports.add(new ExportInfo(n, t.getScope()));
+            } else if (!this.hasGoogProvideOrModule) {
               errors.add(t.makeError(qNameRoot, SUSPICIOUS_EXPORTS_ASSIGNMENT));
             }
           } else {
@@ -561,6 +571,48 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
 
       String moduleName = modulePath.toModuleName();
+
+      List<ExportInfo> exportsToRemove = new ArrayList<>();
+      for (ExportInfo export : exports) {
+        if (NodeUtil.getEnclosingScript(export.node) == null) {
+          continue;
+        }
+        Node qNameBase = getBaseQualifiedNameNode(export.node);
+        if (export.node == qNameBase
+            && export.node.getParent().isAssign()
+            && export.node.getGrandparent().isExprResult()
+            && export.node.getPrevious() == null
+            && export.node.getNext() != null) {
+
+          // Find any identity assignments and just remove them
+          // exports = module.exports;
+          if (export.node.getNext().isGetProp()
+              && export.node.getNext().matchesQualifiedName(MODULE + "." + EXPORTS)) {
+            for (ExportInfo moduleExport : moduleExports) {
+              if (moduleExport.node == export.node.getNext()) {
+                moduleExports.remove(moduleExport);
+                break;
+              }
+            }
+
+            Node changeRoot = export.node.getGrandparent().getParent();
+            export.node.getGrandparent().detach();
+            exportsToRemove.add(export);
+            compiler.reportChangeToEnclosingScope(changeRoot);
+
+          // Find compound identity assignments and remove the exports = portion
+          // exports = module.exports = foo;
+          } else if (export.node.getNext().isAssign()
+              && export.node.getNext().getFirstChild().matchesQualifiedName(MODULE + "." + EXPORTS)) {
+            Node assign = export.node.getNext();
+            export.node.getParent().replaceWith(assign.detach());
+            exportsToRemove.add(export);
+            compiler.reportChangeToEnclosingScope(assign);
+          }
+        }
+      }
+
+      exports.removeAll(exportsToRemove);
 
       // The default declaration for the goog.provide is a constant so
       // we need to declare the variable if we have more than one

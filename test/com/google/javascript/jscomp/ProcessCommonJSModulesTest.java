@@ -1008,4 +1008,13 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "for (var a, b, c; ;) {}",
         "for (var a, b, c; ;) {}");
   }
+
+  public void testExportsDirectAssignment() {
+    testModules(
+        "test.js",
+        "exports = module.exports = {};",
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "/** @const */ var module$test = {};"));
+  }
 }
