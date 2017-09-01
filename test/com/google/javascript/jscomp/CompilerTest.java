@@ -110,6 +110,17 @@ public final class CompilerTest extends TestCase {
     assertEquals(3, jsRoot.getChildCount());
   }
 
+  public void testPrintExterns() {
+    List<SourceFile> externs =
+        ImmutableList.of(SourceFile.fromCode("extern", "function alert(x) {}"));
+    CompilerOptions options = new CompilerOptions();
+    options.setPrintExterns(true);
+    Compiler compiler = new Compiler();
+    compiler.init(externs, ImmutableList.<SourceFile>of(), options);
+    compiler.parseInputs();
+    assertThat(compiler.toSource()).isEqualTo("/** @externs */\nfunction alert(x){};");
+  }
+
   public void testLocalUndefined() throws Exception {
     // Some JavaScript libraries like to create a local instance of "undefined",
     // to ensure that other libraries don't try to overwrite it.

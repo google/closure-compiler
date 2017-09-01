@@ -2006,6 +2006,20 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertEquals("/** @externs */\nvar x", result);
   }
 
+  public void testIjs() {
+    String result =
+        defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY))
+            .setTagAsTypeSummary(true)
+            .build();
+    assertEquals("/** @externs */\nvar x", result);
+
+    result =
+        defaultBuilder(parse("var x", TypeInferenceMode.NTI_ONLY))
+            .setTagAsTypeSummary(true)
+            .build();
+    assertEquals("/** @externs */\nvar x", result);
+  }
+
   public void testArrayLiteral() {
     assertPrint("var x = [,];", "var x=[,]");
     assertPrint("var x = [,,];", "var x=[,,]");
