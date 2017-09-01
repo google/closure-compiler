@@ -160,6 +160,21 @@ PolymerElement.prototype.hostAttributes;
 PolymerElement.prototype.listeners;
 
 /**
+ * Force this element to distribute its children to its local dom.
+ * A user should call `distributeContent` if distribution has been
+ * invalidated due to changes to selectors on child elements that
+ * effect distribution that were not made via `Polymer.dom`.
+ * For example, if an element contains an insertion point with
+ * `<content select=".foo">` and a `foo` class is added to a child,
+ * then `distributeContent` must be called to update
+ * local dom distribution.
+ * @param {boolean} updateInsertionPoints Shady DOM does not detect
+ *   <content> insertion that is nested in a sub-tree being appended.
+ *   Set to true to distribute to newly added nested <content>'s.
+ */
+PolymerElement.prototype.distributeContent = function(updateInsertionPoints) {};
+
+/**
  * Return the element whose local dom within which this element is contained.
  * @type {?Element}
  */
