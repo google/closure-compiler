@@ -142,7 +142,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   /**
    * Rewrite a single ES6 module file to a global script version.
    */
-  private void processFile(Node root) {
+  public void processFile(Node root) {
     checkArgument(isEs6ModuleRoot(root), root);
     clearState();
     NodeTraversal.traverseEs6(compiler, root, this);
