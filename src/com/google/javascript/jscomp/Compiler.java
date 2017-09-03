@@ -2061,6 +2061,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * on the way.
    */
   void processAMDAndCommonJSModules() {
+    ProcessCommonJSModules cjs = new ProcessCommonJSModules(this, true);
     for (CompilerInput input : inputs) {
       input.setCompiler(this);
       Node root = input.getAstRoot(this);
@@ -2071,8 +2072,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         new TransformAMDToCJSModule(this).process(null, root);
       }
       if (options.processCommonJSModules) {
-        ProcessCommonJSModules cjs = new ProcessCommonJSModules(this, true);
-        cjs.process(null, root);
+        boolean forceModule = false;
+        if (options.moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK) {
+          forceModule = this.inputPathByWebpackId.containsValue(input.getPath().toString());
+        }
+        cjs.process(null, root, forceModule);
       }
     }
   }

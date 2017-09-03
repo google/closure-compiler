@@ -95,12 +95,16 @@ public final class ProcessCommonJSModules implements CompilerPass {
    */
   @Override
   public void process(Node externs, Node root) {
+    process(externs, root, false);
+  }
+
+  public void process(Node externs, Node root, boolean forceModuleDetection) {
     checkState(root.isScript());
     FindImportsAndExports finder = new FindImportsAndExports();
     NodeTraversal.traverseEs6(compiler, root, finder);
 
     ImmutableList.Builder<ExportInfo> exports = ImmutableList.builder();
-    if (finder.isCommonJsModule()) {
+    if (finder.isCommonJsModule() || forceModuleDetection) {
       finder.reportModuleErrors();
 
       if (!finder.umdPatterns.isEmpty()) {
@@ -135,9 +139,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
     }
 
     NodeTraversal.traverseEs6(
-        compiler, root, new RewriteModule(finder.isCommonJsModule(), exports.build()));
+        compiler, root, new RewriteModule(finder.isCommonJsModule() || forceModuleDetection, exports.build()));
 
-    finder.addGoogProvideAndRequires();
+    finder.addGoogProvideAndRequires(forceModuleDetection);
   }
 
   /**
@@ -307,10 +311,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
     private Node script = null;
 
     boolean isCommonJsModule() {
-      return (exports.size() > 0
-              || moduleExports.size() > 0
-              || compiler.getOptions().moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK)
-          && !hasGoogProvideOrModule;
+      return (exports.size() > 0 || moduleExports.size() > 0) && !hasGoogProvideOrModule;
     }
 
     List<UmdPattern> umdPatterns = new ArrayList<>();
@@ -670,7 +671,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
      * Add goog.require statements for any require statements and a goog.provide statement for the
      * module
      */
-    void addGoogProvideAndRequires() {
+    void addGoogProvideAndRequires(boolean forceModule) {
       CompilerInput ci = compiler.getInput(this.script.getInputId());
       ModulePath modulePath = ci.getPath();
       if (modulePath == null) {
@@ -692,7 +693,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
                 .useSourceInfoIfMissingFromForTree(this.script));
       }
 
-      if (isCommonJsModule()) {
+      if (isCommonJsModule() || forceModule) {
         // Add goog.provide calls.
         if (reportDependencies) {
           ci.addProvide(moduleName);
