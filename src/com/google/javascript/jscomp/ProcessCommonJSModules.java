@@ -28,9 +28,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Rewrites a CommonJS module http://wiki.commonjs.org/wiki/Modules/1.1.1
@@ -92,12 +90,16 @@ public final class ProcessCommonJSModules implements CompilerPass {
    */
   @Override
   public void process(Node externs, Node root) {
+    process(externs, root, false);
+  }
+
+  public void process(Node externs, Node root, boolean forceModuleDetection) {
     checkState(root.isScript());
     FindImportsAndExports finder = new FindImportsAndExports();
     NodeTraversal.traverseEs6(compiler, root, finder);
 
     ImmutableList.Builder<ExportInfo> exports = ImmutableList.builder();
-    if (finder.isCommonJsModule()) {
+    if (finder.isCommonJsModule() || forceModuleDetection) {
       finder.reportModuleErrors();
 
       if (!finder.umdPatterns.isEmpty()) {
@@ -127,9 +129,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
     }
 
     NodeTraversal.traverseEs6(
-        compiler, root, new RewriteModule(finder.isCommonJsModule(), exports.build()));
-
-    finder.addGoogProvideAndRequires();
+        compiler,
+        root,
+        new RewriteModule(finder.isCommonJsModule() || forceModuleDetection, exports.build()));
   }
 
   /**
@@ -246,7 +248,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
     List<UmdPattern> umdPatterns = new ArrayList<>();
     List<ExportInfo> moduleExports = new ArrayList<>();
     List<ExportInfo> exports = new ArrayList<>();
-    Set<String> imports = new HashSet<>();
     List<JSError> errors = new ArrayList<>();
 
     public List<ExportInfo> getModuleExports() {
@@ -367,9 +368,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
         return;
       }
 
-
-      String moduleName = modulePath.toModuleName();
-
       // When require("name") is used as a standalone statement (the result isn't used)
       // it indicates that a module is being loaded for the side effects it produces.
       // In this case the require statement should just be removed as the goog.require
@@ -379,8 +377,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
           && NodeUtil.isStatementBlock(parent.getParent())) {
         parent.detach();
       }
-
-      imports.add(moduleName);
     }
 
     /**
@@ -513,48 +509,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
         initModule.useSourceInfoIfMissingFromForTree(this.script);
 
         this.script.addChildToFront(initModule);
-        compiler.reportChangeToEnclosingScope(this.script);
-      }
-    }
-
-    /**
-     * Add goog.require statements for any require statements and a goog.provide statement for the
-     * module
-     */
-    void addGoogProvideAndRequires() {
-      CompilerInput ci = compiler.getInput(this.script.getInputId());
-      ModulePath modulePath = ci.getPath();
-      if (modulePath == null) {
-        return;
-      }
-
-      String moduleName = modulePath.toModuleName();
-
-      for (String importName : imports) {
-        // Add goog.provide calls.
-        if (reportDependencies) {
-          ci.addRequire(importName);
-        }
-
-        this.script.addChildToFront(
-            IR.exprResult(
-                    IR.call(
-                        IR.getprop(IR.name("goog"), IR.string("require")), IR.string(importName)))
-                .useSourceInfoIfMissingFromForTree(this.script));
-      }
-
-      if (isCommonJsModule()) {
-        // Add goog.provide calls.
-        if (reportDependencies) {
-          ci.addProvide(moduleName);
-        }
-        this.script.addChildToFront(
-            IR.exprResult(
-                    IR.call(
-                        IR.getprop(IR.name("goog"), IR.string("provide")), IR.string(moduleName)))
-                .useSourceInfoIfMissingFromForTree(this.script));
-        compiler.reportChangeToEnclosingScope(this.script);
-      } else if (imports.size() > 0) {
         compiler.reportChangeToEnclosingScope(this.script);
       }
     }
