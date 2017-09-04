@@ -64,7 +64,6 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.AbstractSet;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1749,7 +1748,19 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                   options.moduleResolutionMode,
                   processJsonInputs(inputs));
         }
+      } else {
+        // Use an empty module loader if we're not actually dealing with modules.
+        this.moduleLoader = ModuleLoader.EMPTY;
+      }
 
+      if (options.getDependencyOptions().needsManagement()) {
+        findDependenciesFromEntryPoints(
+            options.getLanguageIn().toFeatureSet().has(Feature.MODULES),
+            options.processCommonJSModules,
+            options.transformAMDToCJSModules);
+      } else if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)
+          || options.transformAMDToCJSModules
+          || options.processCommonJSModules) {
         if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)) {
           parsePotentialModules(inputs);
         }
@@ -1782,12 +1793,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           }
         }
 
-        if (!inputsToRewrite.isEmpty()) {
-          forceToEs6Modules(inputsToRewrite.values());
+        for (CompilerInput input : inputsToRewrite.values()) {
+          forceInputToPathBasedModule(
+              input,
+              options.getLanguageIn().toFeatureSet().has(Feature.MODULES),
+              options.processCommonJSModules);
         }
-      } else {
-        // Use an empty module loader if we're not actually dealing with modules.
-        this.moduleLoader = ModuleLoader.EMPTY;
       }
 
       orderInputs();
@@ -1891,6 +1902,141 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     if (staleInputs) {
       repartitionInputs();
+    }
+  }
+
+  /**
+   * Find dependencies by recursively traversing each dependency of an input starting with the entry
+   * points. Causes a full parse of each file, but since the file is reachable by walking the graph,
+   * this would be required in later compilation passes regardless.
+   *
+   * <p>Inputs which are not reachable during graph traversal will be dropped.
+   *
+   * <p>If the dependency mode is set to LOOSE, inputs for which the deps package did not find a
+   * provide statement or detect as a module will be treated as entry points.
+   */
+  void findDependenciesFromEntryPoints(
+      boolean supportEs6Modules, boolean supportCommonJSModules, boolean supportAmdModules) {
+    hoistUnorderedExterns();
+    List<CompilerInput> entryPoints = new ArrayList<>();
+    Map<String, CompilerInput> inputsByProvide = new HashMap<>();
+    Map<String, CompilerInput> inputsByIdentifier = new HashMap<>();
+    for (CompilerInput input : inputs) {
+      if (!options.getDependencyOptions().shouldDropMoochers() && input.getProvides().isEmpty()) {
+        entryPoints.add(input);
+      }
+      inputsByIdentifier.put(
+          ModuleIdentifier.forFile(input.getPath().toString()).toString(), input);
+      for (String provide : input.getProvides()) {
+        if (!provide.startsWith("module$")) {
+          inputsByProvide.put(provide, input);
+        }
+      }
+    }
+    for (ModuleIdentifier moduleIdentifier : options.getDependencyOptions().getEntryPoints()) {
+      CompilerInput input = inputsByIdentifier.get(moduleIdentifier.toString());
+      if (input != null) {
+        entryPoints.add(input);
+      }
+    }
+
+    Set<CompilerInput> workingInputSet = new HashSet<>(inputs);
+    List<CompilerInput> orderedInputs = new ArrayList<>();
+    for (CompilerInput entryPoint : entryPoints) {
+      orderedInputs.addAll(
+          depthFirstDependenciesFromInput(
+              entryPoint,
+              false,
+              workingInputSet,
+              inputsByIdentifier,
+              inputsByProvide,
+              supportEs6Modules,
+              supportCommonJSModules,
+              supportAmdModules));
+    }
+
+    // TODO(ChadKillingsworth) Move this into the standard compilation passes
+    if (supportCommonJSModules) {
+      for (CompilerInput input : orderedInputs) {
+        new ProcessCommonJSModules(this).process(null, input.getAstRoot(this), false);
+      }
+    }
+  }
+
+  /** For a given input, order it's dependencies in a depth first traversal */
+  List<CompilerInput> depthFirstDependenciesFromInput(
+      CompilerInput input,
+      boolean wasImportedByModule,
+      Set<CompilerInput> inputs,
+      Map<String, CompilerInput> inputsByIdentifier,
+      Map<String, CompilerInput> inputsByProvide,
+      boolean supportEs6Modules,
+      boolean supportCommonJSModules,
+      boolean supportAmdModules) {
+    List<CompilerInput> orderedInputs = new ArrayList<>();
+    if (!inputs.remove(input)) {
+      // It's possible for a module to be included as both a script
+      // and a module in the same compilation. In these cases, it should
+      // be forced to be a module.
+      if (wasImportedByModule && input.getJsModuleType() == CompilerInput.ModuleType.NONE) {
+        forceInputToPathBasedModule(input, supportEs6Modules, supportCommonJSModules);
+      }
+
+      return orderedInputs;
+    }
+
+    if (supportAmdModules) {
+      new TransformAMDToCJSModule(this).process(null, input.getAstRoot(this));
+    }
+
+    FindModuleDependencies findDeps =
+        new FindModuleDependencies(this, supportEs6Modules, supportCommonJSModules);
+    findDeps.process(input.getAstRoot(this));
+
+    // If this input was imported by another module, it is itself a module
+    // so we force it to be detected as such.
+    if (wasImportedByModule && input.getJsModuleType() == CompilerInput.ModuleType.NONE) {
+      forceInputToPathBasedModule(input, supportEs6Modules, supportCommonJSModules);
+    }
+
+    for (String requiredNamespace : input.getRequires()) {
+      CompilerInput requiredInput = null;
+      boolean requiredByModuleImport = false;
+      if (inputsByProvide.containsKey(requiredNamespace)) {
+        requiredInput = inputsByProvide.get(requiredNamespace);
+      } else if (inputsByIdentifier.containsKey(requiredNamespace)) {
+        requiredByModuleImport = true;
+        requiredInput = inputsByIdentifier.get(requiredNamespace);
+      }
+
+      if (requiredInput != null) {
+        orderedInputs.addAll(
+            depthFirstDependenciesFromInput(
+                requiredInput,
+                requiredByModuleImport,
+                inputs,
+                inputsByIdentifier,
+                inputsByProvide,
+                supportEs6Modules,
+                supportCommonJSModules,
+                supportAmdModules));
+      }
+    }
+    orderedInputs.add(input);
+    return orderedInputs;
+  }
+
+  private void forceInputToPathBasedModule(
+      CompilerInput input, boolean supportEs6Modules, boolean supportCommonJSModules) {
+
+    if (supportEs6Modules) {
+      FindModuleDependencies findDeps =
+          new FindModuleDependencies(this, supportEs6Modules, supportCommonJSModules);
+      findDeps.convertToEs6Module(input.getAstRoot(this));
+      input.setJsModuleType(CompilerInput.ModuleType.ES6);
+    } else if (supportCommonJSModules) {
+      new ProcessCommonJSModules(this).process(null, input.getAstRoot(this), true);
+      input.setJsModuleType(CompilerInput.ModuleType.COMMONJS);
     }
   }
 
@@ -2018,18 +2164,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return rewriteJson.getPackageJsonMainEntries();
   }
 
-  void forceToEs6Modules(Collection<CompilerInput> inputsToProcess) {
-    for (CompilerInput input : inputsToProcess) {
-      input.setCompiler(this);
-      input.addProvide(input.getPath().toModuleName());
-      Node root = input.getAstRoot(this);
-      if (root == null) {
-        continue;
-      }
-      Es6RewriteModules moduleRewriter = new Es6RewriteModules(this);
-      moduleRewriter.forceToEs6Module(root);
-    }
-  }
 
   private List<CompilerInput> parsePotentialModules(List<CompilerInput> inputsToProcess) {
     List<CompilerInput> filteredInputs = new ArrayList<>();
@@ -2068,7 +2202,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         new TransformAMDToCJSModule(this).process(null, root);
       }
       if (options.processCommonJSModules) {
-        ProcessCommonJSModules cjs = new ProcessCommonJSModules(this, true);
+        ProcessCommonJSModules cjs = new ProcessCommonJSModules(this);
         cjs.process(null, root);
       }
     }

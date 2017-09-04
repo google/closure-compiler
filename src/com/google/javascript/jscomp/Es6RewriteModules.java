@@ -21,7 +21,6 @@ import static com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature.MOD
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableSet;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.IR;
@@ -80,8 +79,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
 
   private Set<String> alreadyRequired;
 
-  private Node googRequireInsertSpot;
-
   /**
    * Creates a new Es6RewriteModules instance which can be used to rewrite
    * ES6 modules to a concatenable form.
@@ -99,29 +96,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       return false;
     }
     return scriptNode.hasChildren() && scriptNode.getFirstChild().isModuleBody();
-  }
-
-  /**
-   * Force rewriting of a file into an ES6 module, such as for imported files that contain no
-   * "import" or "export" statements. Fails if the file contains a goog.provide or goog.module.
-   *
-   * @return True, if the file is now an ES6 module. False, if the file must remain a script.
-   * TODO(blickly): Move this logic out of this pass, since it is independent of whether or
-   * not we are actually transpiling modules
-   */
-  public boolean forceToEs6Module(Node root) {
-    if (isEs6ModuleRoot(root)) {
-      return true;
-    }
-    FindGoogProvideOrGoogModule finder = new FindGoogProvideOrGoogModule();
-    NodeTraversal.traverseEs6(compiler, root, finder);
-    if (finder.isFound()) {
-      return false;
-    }
-    Node moduleNode = new Node(Token.MODULE_BODY).srcref(root);
-    moduleNode.addChildrenToBack(root.removeChildren());
-    root.addChildToBack(moduleNode);
-    return true;
   }
 
   @Override
@@ -155,7 +129,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     this.classes = new HashSet<>();
     this.typedefs = new HashSet<>();
     this.alreadyRequired = new HashSet<>();
-    this.googRequireInsertSpot = null;
   }
 
   /**
@@ -270,16 +243,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
       }
     }
 
-    // Emit goog.require call for the module.
-    if (alreadyRequired.add(moduleName)) {
-      Node require = IR.exprResult(
-          IR.call(NodeUtil.newQName(compiler, "goog.require"), IR.string(moduleName)));
-      require.useSourceInfoIfMissingFromForTree(importDecl);
-      parent.addChildAfter(require, googRequireInsertSpot);
-      googRequireInsertSpot = require;
-      t.getInput().addRequire(moduleName);
-    }
-
+    alreadyRequired.add(moduleName);
     parent.removeChild(importDecl);
     t.reportCodeChange();
   }
@@ -466,22 +430,13 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     // Rename vars to not conflict in global scope.
     NodeTraversal.traverseEs6(compiler, script, new RenameGlobalVars(moduleName));
 
-    // Add goog.provide call.
-    Node googProvide = IR.exprResult(
-        IR.call(NodeUtil.newQName(compiler, "goog.provide"),
-            IR.string(moduleName)));
-    script.addChildToFront(googProvide.useSourceInfoIfMissingFromForTree(script));
-    t.getInput().addProvide(moduleName);
-
-    JSDocInfoBuilder jsDocInfo = script.getJSDocInfo() == null
-        ? new JSDocInfoBuilder(false)
-        : JSDocInfoBuilder.copyFrom(script.getJSDocInfo());
-    if (!jsDocInfo.isPopulatedWithFileOverview()) {
-      jsDocInfo.recordFileOverview("");
+    if (!exportMap.isEmpty()) {
+      Node moduleVar = IR.var(IR.name(moduleName), IR.objectlit());
+      JSDocInfoBuilder infoBuilder = new JSDocInfoBuilder(false);
+      infoBuilder.recordConstancy();
+      moduleVar.setJSDocInfo(infoBuilder.build());
+      script.addChildToFront(moduleVar.useSourceInfoIfMissingFromForTree(script));
     }
-    // Don't check provides and requires, since most of them are auto-generated.
-    jsDocInfo.recordSuppressions(ImmutableSet.of("missingProvide", "missingRequire"));
-    script.setJSDocInfo(jsDocInfo.build());
 
     exportMap.clear();
     t.reportCodeChange();
