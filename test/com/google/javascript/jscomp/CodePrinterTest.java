@@ -1448,19 +1448,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             " * @param {(Object|null)} p0",
             " * @return {undefined}",
             " */",
-            "goog.removeHashCode = goog.removeUid;\n"),
-        LINE_JOINER.join(
-            "/** @const */ var goog = goog || {};",
-            "/**",
-            " * @param {!Object|null} obj",
-            " * @return {undefined}",
-            " */",
-            "goog.removeUid = function(obj) {",
-            "};",
-            "/**",
-            " * @param {!Object|null} p0",
-            " * @return {undefined}",
-            " */",
             "goog.removeHashCode = goog.removeUid;\n"));
   }
 
@@ -2016,6 +2003,20 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
     result =
         defaultBuilder(parse("var x", TypeInferenceMode.NTI_ONLY)).setTagAsExterns(true).build();
+    assertEquals("/** @externs */\nvar x", result);
+  }
+
+  public void testIjs() {
+    String result =
+        defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY))
+            .setTagAsTypeSummary(true)
+            .build();
+    assertEquals("/** @externs */\nvar x", result);
+
+    result =
+        defaultBuilder(parse("var x", TypeInferenceMode.NTI_ONLY))
+            .setTagAsTypeSummary(true)
+            .build();
     assertEquals("/** @externs */\nvar x", result);
   }
 

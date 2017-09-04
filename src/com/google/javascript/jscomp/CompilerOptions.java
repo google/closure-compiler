@@ -197,6 +197,16 @@ public class CompilerOptions implements Serializable {
 
   private Config.JsDocParsing parseJsDocDocumentation = Config.JsDocParsing.TYPES_ONLY;
 
+  private boolean printExterns;
+
+  void setPrintExterns(boolean printExterns) {
+    this.printExterns = printExterns;
+  }
+
+  boolean shouldPrintExterns() {
+    return this.printExterns;
+  }
+
   /**
    * Even if checkTypes is disabled, clients such as IDEs might want to still infer types.
    */
@@ -983,14 +993,14 @@ public class CompilerOptions implements Serializable {
   boolean printSourceAfterEachPass;
   // Used to narrow down the printed source when overall input size is large. If this is empty,
   // the entire source is printed.
-  List<String> filesToPrintAfterEachPass = ImmutableList.of();
+  List<String> filesToPrintAfterEachPassRegexList = ImmutableList.of();
 
   public void setPrintSourceAfterEachPass(boolean printSource) {
     this.printSourceAfterEachPass = printSource;
   }
 
-  public void setFilesToPrintAfterEachPass(List<String> filenames) {
-    this.filesToPrintAfterEachPass = filenames;
+  public void setFilesToPrintAfterEachPassRegexList(List<String> filePathRegexList) {
+    this.filesToPrintAfterEachPassRegexList = filePathRegexList;
   }
 
   String reportPath;

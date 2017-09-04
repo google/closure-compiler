@@ -477,88 +477,88 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
   }
 
   public void testParseFunctionalType1() {
-    testParseType("function (): number");
+    testParseType("function(): number");
   }
 
   public void testParseFunctionalType2() {
-    testParseType("function (number, string): boolean");
+    testParseType("function(number, string): boolean");
   }
 
   public void testParseFunctionalType3() {
     testParseType(
-        "function(this:Array)", "function (this:Array): ?");
+        "function(this:Array)", "function(this:Array): ?");
   }
 
   public void testParseFunctionalType4() {
-    testParseType("function (...number): boolean");
+    testParseType("function(...number): boolean");
   }
 
   public void testParseFunctionalType5() {
-    testParseType("function (number, ...string): boolean");
+    testParseType("function(number, ...string): boolean");
   }
 
   public void testParseFunctionalType6() {
     testParseType(
-        "function (this:Date, number): (boolean|number|string)");
+        "function(this:Date, number): (boolean|number|string)");
   }
 
   public void testParseFunctionalType7() {
-    testParseType("function()", "function (): ?");
+    testParseType("function()", "function(): ?");
   }
 
   public void testParseFunctionalType9() {
     testParseType(
         "function(this:Array,!Date,...(boolean?))",
-        "function (this:Array, Date, ...(boolean|null)): ?");
+        "function(this:Array, Date, ...(boolean|null)): ?");
   }
 
   public void testParseFunctionalType10() {
     testParseType(
         "function(...(Object?)):boolean?",
-        "function (...(Object|null)): (boolean|null)");
+        "function(...(Object|null)): (boolean|null)");
   }
 
   public void testParseFunctionalType12() {
     testParseType(
         "function(...)",
-        "function (...?): ?");
+        "function(...?): ?");
   }
 
   public void testParseFunctionalType13() {
     testParseType(
         "function(...): void",
-        "function (...?): undefined");
+        "function(...?): undefined");
   }
 
   public void testParseFunctionalType14() {
-    testParseType("function (*, string, number): boolean");
+    testParseType("function(*, string, number): boolean");
   }
 
   public void testParseFunctionalType15() {
-    testParseType("function (?, string): boolean");
+    testParseType("function(?, string): boolean");
   }
 
   public void testParseFunctionalType16() {
-    testParseType("function (string, ?): ?");
+    testParseType("function(string, ?): ?");
   }
 
   public void testParseFunctionalType17() {
-    testParseType("(function (?): ?|number)");
+    testParseType("(function(?): ?|number)");
   }
 
   public void testParseFunctionalType18() {
-    testParseType("function (?): (?|number)", "function (?): ?");
+    testParseType("function (?): (?|number)", "function(?): ?");
   }
 
   public void testParseFunctionalType19() {
     testParseType(
         "function(...?): void",
-        "function (...?): undefined");
+        "function(...?): undefined");
   }
 
   public void testStructuralConstructor() {
     JSType type = testParseType(
-        "function (new:Object)", "function (new:Object): ?");
+        "function (new:Object)", "function(new:Object): ?");
     assertThat(type.isConstructor()).isTrue();
     assertThat(type.isNominalConstructor()).isFalse();
   }
@@ -567,7 +567,7 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     JSType type = testParseType(
         "function (new:?)",
         // toString skips unknowns, but isConstructor reveals the truth.
-        "function (): ?");
+        "function(): ?");
     assertThat(type.isConstructor()).isTrue();
     assertThat(type.isNominalConstructor()).isFalse();
   }

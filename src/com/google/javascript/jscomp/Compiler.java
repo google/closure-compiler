@@ -1169,17 +1169,21 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   final String getCurrentJsSource() {
-    List<String> filenames = options.filesToPrintAfterEachPass;
-    if (filenames.isEmpty()) {
+    List<String> fileNameRegexList = options.filesToPrintAfterEachPassRegexList;
+    if (fileNameRegexList.isEmpty()) {
       return toSource();
     } else {
       StringBuilder builder = new StringBuilder();
-      for (String filename : filenames) {
-        Node script = getScriptNode(filename);
-        String source = script != null
-            ? "// " + script.getSourceFileName() + "\n" + toSource(script)
-            : "File '" + filename + "' not found";
-        builder.append(source);
+      checkNotNull(jsRoot);
+      for (Node fileNode : jsRoot.children()) {
+        String fileName = fileNode.getSourceFileName();
+        for (String regex : fileNameRegexList) {
+          if (fileName.matches(regex)) {
+            String source = "// " + fileName + "\n" + toSource(fileNode);
+            builder.append(source);
+            break;
+          }
+        }
       }
       return builder.toString();
     }
@@ -2136,26 +2140,34 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   @Override
   public String toSource() {
-    return runInCompilerThread(new Callable<String>() {
-      @Override
-      public String call() throws Exception {
-        Tracer tracer = newTracer("toSource");
-        try {
-          CodeBuilder cb = new CodeBuilder();
-          if (jsRoot != null) {
-            int i = 0;
-            for (Node scriptNode = jsRoot.getFirstChild();
-                 scriptNode != null;
-                 scriptNode = scriptNode.getNext()) {
-              toSource(cb, i++, scriptNode);
+    return runInCompilerThread(
+        new Callable<String>() {
+          @Override
+          public String call() throws Exception {
+            Tracer tracer = newTracer("toSource");
+            try {
+              CodeBuilder cb = new CodeBuilder();
+              if (jsRoot != null) {
+                int i = 0;
+                if (options.shouldPrintExterns()) {
+                  for (Node scriptNode = externsRoot.getFirstChild();
+                      scriptNode != null;
+                      scriptNode = scriptNode.getNext()) {
+                    toSource(cb, i++, scriptNode);
+                  }
+                }
+                for (Node scriptNode = jsRoot.getFirstChild();
+                    scriptNode != null;
+                    scriptNode = scriptNode.getNext()) {
+                  toSource(cb, i++, scriptNode);
+                }
+              }
+              return cb.toString();
+            } finally {
+              stopTracer(tracer, "toSource");
             }
           }
-          return cb.toString();
-        } finally {
-          stopTracer(tracer, "toSource");
-        }
-      }
-    });
+        });
   }
 
   /**
@@ -2330,7 +2342,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     builder.setTypeRegistry(getTypeIRegistry());
     builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);
-    builder.setTagAsExterns(firstOutput && options.shouldGenerateTypedExterns());
+    builder.setTagAsExterns(n.isFromExterns());
+    builder.setTagAsTypeSummary(options.shouldGenerateTypedExterns());
     builder.setTagAsStrict(firstOutput && options.shouldEmitUseStrict());
     return builder.build();
   }

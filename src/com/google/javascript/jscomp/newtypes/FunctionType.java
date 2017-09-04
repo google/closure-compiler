@@ -1505,7 +1505,7 @@ public final class FunctionType implements Serializable {
     }
     builder.append(')');
     if (returnType != null) {
-      builder.append(':');
+      builder.append(": ");
       returnType.appendTo(builder, ctx);
     }
     if (isLoose()) {

@@ -857,9 +857,9 @@ public final class SymbolTableTest extends TestCase {
     assertNotNull(abc);
     assertThat(table.getReferenceList(abc)).hasSize(1);
 
-    assertEquals("{b: {c: function (): undefined}}", a.getType().toString());
-    assertEquals("{c: function (): undefined}", ab.getType().toString());
-    assertEquals("function (): undefined", abc.getType().toString());
+    assertEquals("{b: {c: function(): undefined}}", a.getType().toString());
+    assertEquals("{c: function(): undefined}", ab.getType().toString());
+    assertEquals("function(): undefined", abc.getType().toString());
   }
 
   public void testMethodInAnonObject2() throws Exception {
@@ -872,9 +872,9 @@ public final class SymbolTableTest extends TestCase {
     assertNotNull(abc);
     assertThat(table.getReferenceList(abc)).hasSize(1);
 
-    assertEquals("{b: {c: function (): undefined}}", a.getType().toString());
-    assertEquals("{c: function (): undefined}", ab.getType().toString());
-    assertEquals("function (): undefined", abc.getType().toString());
+    assertEquals("{b: {c: function(): undefined}}", a.getType().toString());
+    assertEquals("{c: function(): undefined}", ab.getType().toString());
+    assertEquals("function(): undefined", abc.getType().toString());
   }
 
   public void testJSDocOnlySymbol() throws Exception {

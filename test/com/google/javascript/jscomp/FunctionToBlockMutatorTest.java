@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
@@ -30,6 +31,7 @@ import junit.framework.TestCase;
  * @author johnlenz@google.com (John Lenz)
  */
 public final class FunctionToBlockMutatorTest extends TestCase {
+  protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
   public void testMutateNoReturnWithoutResultAssignment() {
     helperMutate(
@@ -166,6 +168,28 @@ public final class FunctionToBlockMutatorTest extends TestCase {
      helperMutate(
         "function foo(a){function g(){}}; foo(1);",
         "{var g$jscomp$inline_1=function(){};}",
+        "foo", null);
+  }
+
+  public void testMutateFunctionDefinitionHoisting() {
+    helperMutate(
+        LINE_JOINER.join(
+            "function foo(a){",
+            "  var b = g(a);",
+            "  function g(c){ return c; }",
+            "  var c = i();",
+            "  function h(){}",
+            "  function i(){}",
+            "}",
+            "foo(1);"),
+        LINE_JOINER.join(
+            "{",
+            "  var g$jscomp$inline_2=function(c$jscomp$inline_6) {return c$jscomp$inline_6};",
+            "  var h$jscomp$inline_4=function(){};",
+            "  var i$jscomp$inline_5=function(){};",
+            "  var b$jscomp$inline_1=g$jscomp$inline_2(1);",
+            "  var c$jscomp$inline_3=i$jscomp$inline_5();",
+            "}"),
         "foo", null);
   }
 

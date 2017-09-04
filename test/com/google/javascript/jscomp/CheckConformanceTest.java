@@ -1309,19 +1309,10 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         " /** @param {ObjectWithNoProps} a */",
         "function f(a) { alert(a.foobar); };");
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testWarning(
         js,
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message\nThe property \"foobar\" on type \"(ObjectWithNoProps|null)\"");
-
-    // TODO(aravindpg): Only difference is we don't add parens at the ends of our union type
-    // string reprs in NTI. Fix them to be the same if possible.
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testWarning(
-        js,
-        CheckConformance.CONFORMANCE_VIOLATION,
-        "Violation: My rule message\nThe property \"foobar\" on type \"ObjectWithNoProps|null\"");
   }
 
   public void testCustomBanUnknownProp3() {
@@ -1549,8 +1540,10 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     compiler.setErrorManager(errorManager);
     ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
     builder.addRequirementBuilder().addWhitelist("x").addWhitelist("x");
-    CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
-    assertEquals(1, errorManager.getErrorCount());
+    List<Requirement> requirements =
+        CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
+    assertEquals(1, requirements.get(0).getWhitelistCount());
+    assertEquals(0, errorManager.getErrorCount());
   }
 
   public void testCustomBanNullDeref1() {

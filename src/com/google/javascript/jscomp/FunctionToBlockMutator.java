@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -166,7 +167,7 @@ class FunctionToBlockMutator {
   /**
    * @param n The node to inspect
    */
-  private static void rewriteFunctionDeclarations(Node n) {
+  private static Node rewriteFunctionDeclarations(Node n) {
     if (n.isFunction()) {
       if (NodeUtil.isFunctionDeclaration(n)) {
         // Rewrite: function f() {} ==> var f = function() {}
@@ -180,14 +181,31 @@ class FunctionToBlockMutator {
         n.replaceWith(var);
         // readd the function as a function expression
         name.addChildToFront(n);
+
+        return var;
       }
-      return;
+      return null;
     }
 
+    // Keep track of any rewritten functions and hoist them to the top
+    // of the block they are defined in. This isn't fully compliant hoisting
+    // but it does address a large set of use cases.
+    List<Node> functionsToHoist = new ArrayList<>();
     for (Node c = n.getFirstChild(), next; c != null; c = next) {
       next = c.getNext(); // We may rewrite "c"
-      rewriteFunctionDeclarations(c);
+      Node fnVar = rewriteFunctionDeclarations(c);
+      if (fnVar != null) {
+        functionsToHoist.add(0, fnVar);
+      }
     }
+
+    for (Node fnVar : functionsToHoist) {
+      if (n.getFirstChild() != fnVar) {
+        n.addChildToFront(fnVar.detach());
+      }
+    }
+
+    return null;
   }
 
   /**

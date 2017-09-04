@@ -441,7 +441,7 @@ public final class DefaultPassConfig extends PassConfig {
     // In addition, I will probably have a local edit of the repo that retains both
     // types on Nodes, so I can test full builds on my machine. We can't check in such
     // a change because it would greatly increase memory usage.
-    if (options.getNewTypeInference() && options.getRunOTIafterNTI() && !options.checksOnly) {
+    if (options.getNewTypeInference() && options.getRunOTIafterNTI()) {
       addOldTypeCheckerPasses(checks, options);
     }
 

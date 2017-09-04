@@ -15,6 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
+import com.google.auto.value.AutoValue;
+import com.google.common.base.Splitter;
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
@@ -34,17 +40,17 @@ import java.util.Objects;
 class TypeMismatch implements Serializable {
   final TypeI typeA;
   final TypeI typeB;
-  final JSError src;
+  final Supplier<JSError> error;
 
   /**
    * It's the responsibility of the class that creates the
    * {@code TypeMismatch} to ensure that {@code a} and {@code b} are
    * non-matching types.
    */
-  TypeMismatch(TypeI a, TypeI b, JSError src) {
+  TypeMismatch(TypeI a, TypeI b, Supplier<JSError> error) {
     this.typeA = a;
     this.typeB = b;
-    this.src = src;
+    this.error = error;
   }
 
   static void registerIfMismatch(
@@ -67,12 +73,12 @@ class TypeMismatch implements Serializable {
           !found.isSubtypeWithoutStructuralTyping(required)
           && !required.isSubtypeWithoutStructuralTyping(found);
       if (strictMismatch) {
-        implicitInterfaceUses.add(new TypeMismatch(found, required, error));
+        implicitInterfaceUses.add(new TypeMismatch(found, required, Suppliers.ofInstance(error)));
       }
       return;
     }
 
-    mismatches.add(new TypeMismatch(found, required, error));
+    mismatches.add(new TypeMismatch(found, required, Suppliers.ofInstance(error)));
 
     if (found.isFunctionType() && required.isFunctionType()) {
       FunctionTypeI fnTypeA = found.toMaybeFunctionType();
@@ -90,21 +96,22 @@ class TypeMismatch implements Serializable {
   }
 
   static void recordImplicitUseOfNativeObject(
-      List<TypeMismatch> mismatches, Node src, TypeI sourceType, TypeI targetType) {
+      List<TypeMismatch> mismatches, Node node, TypeI sourceType, TypeI targetType) {
     sourceType = sourceType.restrictByNotNullOrUndefined();
     targetType = targetType.restrictByNotNullOrUndefined();
     if (sourceType.isInstanceofObject()
         && !targetType.isInstanceofObject() && !targetType.isUnknownType()) {
       // We don't report a type error, but we still need to construct a JSError,
       // for people who enable the invalidation diagnostics in DisambiguateProperties.
-      String msg = "Implicit use of Object type: " + sourceType + " as type: " + targetType;
-      JSError err = JSError.make(src, TypeValidator.TYPE_MISMATCH_WARNING, msg);
+      LazyError err =
+          LazyError.of(
+              "Implicit use of Object type: %s as type: %s", node, sourceType, targetType);
       mismatches.add(new TypeMismatch(sourceType, targetType, err));
     }
   }
 
   static void recordImplicitInterfaceUses(
-      List<TypeMismatch> implicitInterfaceUses, Node src, TypeI sourceType, TypeI targetType) {
+      List<TypeMismatch> implicitInterfaceUses, Node node, TypeI sourceType, TypeI targetType) {
     sourceType = removeNullUndefinedAndTemplates(sourceType);
     targetType = removeNullUndefinedAndTemplates(targetType);
     if (targetType.isUnknownType()) {
@@ -117,9 +124,7 @@ class TypeMismatch implements Serializable {
     if (strictMismatch || mismatch) {
       // We don't report a type error, but we still need to construct a JSError,
       // for people who enable the invalidation diagnostics in DisambiguateProperties.
-      // Use the empty string as the error string. Creating an actual error message can be slow
-      // for large types; we create an error string lazily in DisambiguateProperties.
-      JSError err = JSError.make(src, TypeValidator.TYPE_MISMATCH_WARNING, "");
+      LazyError err = LazyError.of("Implicit use of type %s as %s", node, sourceType, targetType);
       implicitInterfaceUses.add(new TypeMismatch(sourceType, targetType, err));
     }
   }
@@ -148,5 +153,28 @@ class TypeMismatch implements Serializable {
 
   @Override public String toString() {
     return "(" + typeA + ", " + typeB + ")";
+  }
+
+  @AutoValue
+  abstract static class LazyError implements Supplier<JSError>, Serializable {
+    abstract String message();
+    abstract Node node();
+    abstract TypeI sourceType();
+    abstract TypeI targetType();
+
+    private static LazyError of(String message, Node node, TypeI sourceType, TypeI targetType) {
+      return new AutoValue_TypeMismatch_LazyError(message, node, sourceType, targetType);
+    }
+
+    @Override
+    public JSError get() {
+      // NOTE: GWT does not support String.format, so we work around it with a quick hack.
+      List<String> parts = Splitter.on("%s").splitToList(message());
+      checkState(parts.size() == 3);
+      return JSError.make(
+          node(),
+          TypeValidator.TYPE_MISMATCH_WARNING,
+          parts.get(0) + sourceType() + parts.get(1) + targetType() + parts.get(2));
+    }
   }
 }

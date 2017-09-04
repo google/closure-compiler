@@ -80,9 +80,12 @@ public class CodeGenerator {
     this.jsDocInfoPrinter = new JSDocInfoPrinter(useOriginalName);
   }
 
-  /**
-   * Insert a top-level @externs comment.
-   */
+  /** Insert a top-level identifying file as .i.js generated typing file. */
+  void tagAsTypeSummary() {
+    tagAsExterns();
+  }
+
+  /** Insert a top-level @externs comment. */
   public void tagAsExterns() {
     add("/** @externs */\n");
   }

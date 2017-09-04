@@ -552,21 +552,21 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     output = ""
         + "/** @constructor */ function Foo(){}"
         + "/** @constructor */ function Bar(){}"
-        + "Foo.function__new_Foo___undefined$a = 0;"
-        + "Bar.function__new_Bar___undefined$a = 0;";
+        + "Foo.function_new_Foo___undefined$a = 0;"
+        + "Bar.function_new_Bar___undefined$a = 0;";
 
-    testSets(js, output, "{a=[[function (new:Bar): undefined]," +
-    " [function (new:Foo): undefined]]}");
+    testSets(js, output, "{a=[[function(new:Bar): undefined]," +
+    " [function(new:Foo): undefined]]}");
 
     this.mode = TypeInferenceMode.NTI_ONLY;
     output = ""
         + "/** @constructor */ function Foo(){}"
         + "/** @constructor */ function Bar(){}"
-        + "Foo.Foo__function_new_Foo__undefined__$a = 0;"
-        + "Bar.Bar__function_new_Bar__undefined__$a = 0;";
+        + "Foo.Foo__function_new_Foo___undefined__$a = 0;"
+        + "Bar.Bar__function_new_Bar___undefined__$a = 0;";
 
     testSets(js, output,
-        "{a=[[Bar<|function(new:Bar):undefined|>], [Foo<|function(new:Foo):undefined|>]]}");
+        "{a=[[Bar<|function(new:Bar): undefined|>], [Foo<|function(new:Foo): undefined|>]]}");
   }
 
   public void testSupertypeWithSameField() {
@@ -686,7 +686,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         LINE_JOINER.join(
         "The right side in the assignment is not a subtype of the left side.",
         "Expected : Foo",
-        "Found    : Bar|Foo",
+        "Found    : (Bar|Foo)",
         "More details:",
         "The found type is a union that includes an unexpected type: Bar"));
   }
@@ -1545,15 +1545,15 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
 
     this.mode = TypeInferenceMode.OTI_ONLY;
     testSets("", js, js, "{}", TypeValidator.TYPE_MISMATCH_WARNING, "assignment\n"
-            + "found   : function (new:Foo): undefined\n"
-            + "required: function (new:Bar): undefined");
+            + "found   : function(new:Foo): undefined\n"
+            + "required: function(new:Bar): undefined");
     this.mode = TypeInferenceMode.NTI_ONLY;
     testSets("", js, js, "{}",
         NewTypeInference.MISTYPED_ASSIGN_RHS,
         LINE_JOINER.join(
             "The right side in the assignment is not a subtype of the left side.",
-            "Expected : Bar<|function(new:Bar):?|>",
-            "Found    : Foo<|function(new:Foo):undefined|>",
+            "Expected : Bar<|function(new:Bar): ?|>",
+            "Found    : Foo<|function(new:Foo): undefined|>",
             "More details:",
             "Incompatible types for property prototype.",
             "Expected : Bar.prototype",
@@ -1740,6 +1740,17 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "x = new C()");
 
     testSets(js, js, "{}");
+  }
+
+  public void testReportImplicitUseOfStructuralInterfaceInvalidingProperty() {
+    test(
+        srcs(lines(
+            "/** @record */ function I() {}",
+            "/** @type {number} */ I.prototype.foobar;",
+            "/** @param {I} arg */ function f(arg) {}",
+            "/** @constructor */ function C() { this.foobar = 42; }",
+            "f(new C());")),
+        error(DisambiguateProperties.Warnings.INVALIDATION).withMessageContaining("foobar"));
   }
 
   public void testDisambiguatePropertiesClassCastedToUnrelatedInterface() {
@@ -1968,7 +1979,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSets("", js, js, "{}", NewTypeInference.MISTYPED_ASSIGN_RHS,
         LINE_JOINER.join(
             "The right side in the assignment is not a subtype of the left side.",
-            "Expected : Foo|null",
+            "Expected : (Foo|null)",
             "Found    : Bar\n"));
   }
 
@@ -2228,8 +2239,8 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         NewTypeInference.INVALID_ARGUMENT_TYPE,
         LINE_JOINER.join(
             "Invalid type for parameter 1 of function myArrayPrototypeMap.",
-            "Expected : function(this:Bar|Foo):?",
-            "Found    : function(this:Foo):?\n"));
+            "Expected : function(this:(Bar|Foo)): ?",
+            "Found    : function(this:Foo): ?\n"));
 
     js = LINE_JOINER.join(
         "/** @constructor */",
@@ -2268,8 +2279,8 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         NewTypeInference.INVALID_ARGUMENT_TYPE,
         LINE_JOINER.join(
             "Invalid type for parameter 1 of function f.",
-            "Expected : function(this:Bar|Foo):?",
-            "Found    : function(this:Foo):?\n"));
+            "Expected : function(this:(Bar|Foo)): ?",
+            "Found    : function(this:Foo): ?\n"));
   }
 
   public void testErrorOnProtectedProperty() {
