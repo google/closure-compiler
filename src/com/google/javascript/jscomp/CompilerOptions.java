@@ -197,6 +197,16 @@ public class CompilerOptions implements Serializable {
 
   private Config.JsDocParsing parseJsDocDocumentation = Config.JsDocParsing.TYPES_ONLY;
 
+  private boolean printExterns;
+
+  void setPrintExterns(boolean printExterns) {
+    this.printExterns = printExterns;
+  }
+
+  boolean shouldPrintExterns() {
+    return this.printExterns;
+  }
+
   /**
    * Even if checkTypes is disabled, clients such as IDEs might want to still infer types.
    */

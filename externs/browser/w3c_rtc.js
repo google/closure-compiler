@@ -587,136 +587,239 @@ RTCRtpTransceiver.prototype.sender;
 RTCRtpTransceiver.prototype.receiver;
 
 /**
- * This interface defines the available constraint attributes.  These are the
- * attributes defined in
- * {@see http://tools.ietf.org/html/draft-alvestrand-constraints-resolution-01}.
- * Note that although that draft refers to "Media Constraints", the W3C uses
- * the terms "Media[Stream|Track]Constraints" for this type, and
- * defines a different type (for RTCPeerConnection) called "MediaConstraints".
- *
- * This interface type is not part of any standard, so it is marked as private.
- * It is defined here in order to reserve the property names, which would
- * otherwise be rewritten when the compiler processes an object literal.
- * Several subsequent interfaces are defined in the same pattern.
- *
- * Note that although this list includes all the properties supported by
- * libjingle (and hence by Chromium), browsers are permitted to offer other
- * properties as well ({
- * @see http://tools.ietf.org/html/draft-burnett-rtcweb-constraints-registry-02
- * }), and browsers are expected to silently ignore unknown properties.  This
- * creates the potential for a very confusing situation in which properties
- * not listed here are renamed by the compiler and then ignored by the browser.
- *
- * @interface
+ * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-longrange
+ * @record
+ */
+function LongRange() {}
+
+/**
+ * @type {number|undefined}
+ */
+LongRange.prototype.max;
+
+/**
+ * @type {number|undefined}
+ */
+LongRange.prototype.min;
+
+/**
+ * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-doublerange
+ * @record
+ */
+function DoubleRange() {}
+
+/**
+ * @type {number|undefined}
+ */
+DoubleRange.prototype.max;
+
+/**
+ * @type {number|undefined}
+ */
+DoubleRange.prototype.min;
+
+
+/**
+ * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-constrainbooleanparameters
+ * @record
+ */
+function ConstrainBooleanParameters() {}
+
+/**
+ * @type {boolean|undefined}
+ */
+ConstrainBooleanParameters.prototype.exact;
+
+/**
+ * @type {boolean|undefined}
+ */
+ConstrainBooleanParameters.prototype.ideal;
+
+/**
+ * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-constraindomstringparameters
+ * @record
+ */
+function ConstrainDOMStringParameters() {}
+
+/**
+ * @type {string|Array<string>|undefined}
+ */
+ConstrainDOMStringParameters.prototype.exact;
+
+/**
+ * @type {string|Array<string>|undefined}
+ */
+ConstrainDOMStringParameters.prototype.ideal;
+
+/**
+ * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-constraindoublerange
+ * @record
+ * @extends {DoubleRange}
+ */
+function ConstrainDoubleRange() {}
+
+/**
+ * @type {number|undefined}
+ */
+ConstrainDoubleRange.prototype.exact;
+
+/**
+ * @type {number|undefined}
+ */
+ConstrainDoubleRange.prototype.ideal;
+
+
+/**
+ * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-constrainlongrange
+ * @record
+ * @extends {LongRange}
+ */
+function ConstrainLongRange() {}
+
+/**
+ * @type {number|undefined}
+ */
+ConstrainLongRange.prototype.exact;
+
+/**
+ * @type {number|undefined}
+ */
+ConstrainLongRange.prototype.ideal;
+
+/**
+ * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-constrainboolean
+ * @typedef {boolean|ConstrainBooleanParameters}
+ */
+var ConstrainBoolean;
+
+/**
+ * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-constraindomString
+ * @typedef {string|Array<string>|ConstrainDOMStringParameters}
+ */
+var ConstrainDOMString;
+
+/**
+ * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-constraindouble
+ * @typedef {number|ConstrainDoubleRange}
+ */
+var ConstrainDouble;
+
+/**
+ * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-constrainlong
+ * @typedef {number|ConstrainLongRange}
+ */
+var ConstrainLong;
+
+
+/**
+ * @see https://w3c.github.io/mediacapture-main/getusermedia.html#dom-mediatrackconstraintset
+ * @record
  * @private
  */
-function MediaTrackConstraintSetInterface_() {}
+function MediaTrackConstraintSet() {}
 
 /**
- * @type {?string}
+ * @type {ConstrainBoolean|undefined}
  */
-MediaTrackConstraintSetInterface_.prototype.chromeMediaSource;
+MediaTrackConstraintSet.prototype.autoGainControl;
 
 /**
- * @type {?boolean}
+ * @type {ConstrainDouble|undefined}
  */
-MediaTrackConstraintSetInterface_.prototype.echoCancellation;
+MediaTrackConstraintSet.prototype.aspectRatio;
 
 /**
- * @type {?number}
+ * @type {ConstrainLong|undefined}
  */
-MediaTrackConstraintSetInterface_.prototype.minWidth;
+MediaTrackConstraintSet.prototype.channelCount;
 
 /**
- * @type {?number}
+ * @type {ConstrainDOMString|undefined}
  */
-MediaTrackConstraintSetInterface_.prototype.maxWidth;
+MediaTrackConstraintSet.prototype.deviceId;
 
 /**
- * @type {?number}
+ * @type {ConstrainBoolean|undefined}
  */
-MediaTrackConstraintSetInterface_.prototype.minHeight;
+MediaTrackConstraintSet.prototype.echoCancellation;
 
 /**
- * @type {?number}
+ * @type {ConstrainDOMString|undefined}
  */
-MediaTrackConstraintSetInterface_.prototype.maxHeight;
+MediaTrackConstraintSet.prototype.facingMode;
 
 /**
- * @type {?number}
+ * @type {ConstrainDouble|undefined}
  */
-MediaTrackConstraintSetInterface_.prototype.minAspectRatio;
+MediaTrackConstraintSet.prototype.frameRate;
 
 /**
- * @type {?number}
+ * @type {ConstrainDOMString|undefined}
  */
-MediaTrackConstraintSetInterface_.prototype.maxAspectRatio;
+MediaTrackConstraintSet.prototype.groupId;
 
 /**
- * Due to a typo, this is called "minFramerate" in the -01 draft.
- * @type {?number}
+ * @type {ConstrainLong|undefined}
  */
-MediaTrackConstraintSetInterface_.prototype.minFrameRate;
+MediaTrackConstraintSet.prototype.height;
 
 /**
- * @type {?number}
+ * @type {ConstrainDouble|undefined}
  */
-MediaTrackConstraintSetInterface_.prototype.maxFrameRate;
+MediaTrackConstraintSet.prototype.latency;
 
 /**
- * @type {?string}
+ * @type {ConstrainBoolean|undefined}
  */
-MediaTrackConstraintSetInterface_.prototype.sourceId;
+MediaTrackConstraintSet.prototype.noiseSuppression;
 
 /**
- * This type and two more below are defined as unions with Object because they
- * are normally used as record types by constructing an Object literal, but all
- * of their properties are optional.
- * @typedef {Object|MediaTrackConstraintSetInterface_}
+ * @type {ConstrainLong|undefined}
  */
-var MediaTrackConstraintSet;
+MediaTrackConstraintSet.prototype.sampleRate;
 
 /**
- * @interface
- * @private
+ * @type {ConstrainLong|undefined}
  */
-function MediaTrackConstraintsInterface_() {}
+MediaTrackConstraintSet.prototype.sampleSize;
 
 /**
- * @type {?MediaTrackConstraintSet}
+ * @type {ConstrainDouble|undefined}
  */
-MediaTrackConstraintsInterface_.prototype.mandatory;
+MediaTrackConstraintSet.prototype.volume;
 
 /**
- * @type {?Array<!MediaTrackConstraintSet>}
+ * @type {ConstrainLong|undefined}
  */
-MediaTrackConstraintsInterface_.prototype.optional;
+MediaTrackConstraintSet.prototype.width;
+
 
 /**
- * @typedef {Object|MediaTrackConstraintsInterface_}
+ * @record
+ * @extends {MediaTrackConstraintSet}
  */
-var MediaTrackConstraints;
+function MediaTrackConstraints() {}
 
 /**
- * @interface
- * @private
+ * @type {Array<!MediaTrackConstraintSet>|undefined}
  */
-function MediaStreamConstraintsInterface_() {}
+MediaTrackConstraints.prototype.advanced;
 
 /**
- * @type {boolean|MediaTrackConstraints}
+ * @see https://w3c.github.io/mediacapture-main/getusermedia.html#media-track-constraints
+ * @record
  */
-MediaStreamConstraintsInterface_.prototype.audio;
+function MediaStreamConstraints() {}
 
 /**
- * @type {boolean|MediaTrackConstraints}
+ * @type {boolean|MediaTrackConstraints|undefined}
  */
-MediaStreamConstraintsInterface_.prototype.video;
+MediaStreamConstraints.prototype.audio;
 
 /**
- * @typedef {Object|MediaStreamConstraintsInterface_}
+ * @type {boolean|MediaTrackConstraints|undefined}
  */
-var MediaStreamConstraints;
+MediaStreamConstraints.prototype.video;
 
 /**
  * @see {http://dev.w3.org/2011/webrtc/editor/getusermedia.html#

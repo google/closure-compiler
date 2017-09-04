@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -466,10 +467,24 @@ public final class JSModuleGraph implements Serializable {
     // Figure out which sources *must* be in each module, or in one
     // of that module's dependencies.
     for (JSModule module : entryPointInputsPerModule.keySet()) {
-      List<CompilerInput> transitiveClosure =
-          sorter.getDependenciesOf(
-              entryPointInputsPerModule.get(module),
-              depOptions.shouldSortDependencies());
+      List<CompilerInput> transitiveClosure;
+      // Prefer a depth first ordering of dependencies from entry points.
+      // Always orders in a deterministic fashion regardless of the order of provided inputs
+      // given the same entry points in the same order.
+      if (depOptions.shouldSortDependencies() && depOptions.shouldPruneDependencies()) {
+        Set<CompilerInput> workingInputSet = new HashSet<>(inputs);
+        transitiveClosure = new ArrayList<>();
+        for (CompilerInput entryPoint : entryPointInputsPerModule.get(module)) {
+          transitiveClosure.addAll(getDepthFirstDependenciesOf(entryPoint, workingInputSet));
+        }
+
+        // Simply order inputs so that any required namespace comes before it's usage.
+        // Ordered result varies based on the original order of inputs.
+      } else {
+        transitiveClosure =
+            sorter.getDependenciesOf(
+                entryPointInputsPerModule.get(module), depOptions.shouldSortDependencies());
+      }
       for (CompilerInput input : transitiveClosure) {
         JSModule oldModule = input.getModule();
         if (oldModule == null) {
@@ -498,6 +513,42 @@ public final class JSModuleGraph implements Serializable {
     }
 
     return result.build();
+  }
+
+  /**
+   * Given an input and set of unprocessed inputs, return the input and it's dependencies by
+   * performing a recursive, depth-first traversal.
+   */
+  private List<CompilerInput> getDepthFirstDependenciesOf(
+      CompilerInput rootInput, Set<CompilerInput> workingInputSet) {
+    List<CompilerInput> orderedInputs = new ArrayList<>();
+    if (!workingInputSet.remove(rootInput)) {
+      return orderedInputs;
+    }
+
+    for (String importedNamespace : rootInput.getRequires()) {
+      CompilerInput dependency =
+          JSModuleGraph.findInputProviding(importedNamespace, workingInputSet);
+      if (dependency != null) {
+        orderedInputs.addAll(getDepthFirstDependenciesOf(dependency, workingInputSet));
+      }
+    }
+
+    orderedInputs.add(rootInput);
+    return orderedInputs;
+  }
+
+  private static CompilerInput findInputProviding(String namespace, Set<CompilerInput> inputs) {
+    for (CompilerInput input : inputs) {
+      if (namespace.startsWith("module$")) {
+        if (input.getPath().toModuleName().equals(namespace)) {
+          return input;
+        }
+      } else if (input.getProvides().contains(namespace)) {
+        return input;
+      }
+    }
+    return null;
   }
 
   private Collection<CompilerInput> createEntryPointInputs(

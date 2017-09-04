@@ -80,9 +80,7 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
       testOTI(externs, js, expected, diagnostic, postconditions);
     }
     if (this.mode.runsNTI()) {
-      if (!findMinimalExterns(externs.externs)) {
-        fail("NTI reqires at least the MINIMAL_EXTERNS");
-      }
+      checkMinimalExterns(externs.externs);
       testNTI(externs, js, expected, diagnostic, postconditions);
     }
     if (this.mode.runsNeither()) {
@@ -90,17 +88,18 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
     }
   }
 
-  private static boolean findMinimalExterns(Iterable<SourceFile> externs) {
+  // Note: may be overridden to allow different externs if necessary.
+  void checkMinimalExterns(Iterable<SourceFile> externs) {
     try {
       for (SourceFile extern : externs) {
         if (extern.getCode().contains(MINIMAL_EXTERNS)) {
-          return true;
+          return;
         }
       }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-    return false;
+    fail("NTI reqires at least the MINIMAL_EXTERNS");
   }
 
   private void testOTI(

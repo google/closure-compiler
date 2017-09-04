@@ -194,15 +194,15 @@ class FunctionToBlockMutator {
     List<Node> functionsToHoist = new ArrayList<>();
     for (Node c = n.getFirstChild(), next; c != null; c = next) {
       next = c.getNext(); // We may rewrite "c"
-      Node fnExpr = rewriteFunctionDeclarations(c);
-      if (fnExpr != null) {
-        functionsToHoist.add(0, fnExpr);
+      Node fnVar = rewriteFunctionDeclarations(c);
+      if (fnVar != null) {
+        functionsToHoist.add(0, fnVar);
       }
     }
 
-    for (Node fnExpr : functionsToHoist) {
-      if (n.getFirstChild() != fnExpr) {
-        n.addChildToFront(fnExpr.detach());
+    for (Node fnVar : functionsToHoist) {
+      if (n.getFirstChild() != fnVar) {
+        n.addChildToFront(fnVar.detach());
       }
     }
 

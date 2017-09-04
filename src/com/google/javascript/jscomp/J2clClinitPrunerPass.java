@@ -56,6 +56,9 @@ public class J2clClinitPrunerPass implements CompilerPass {
     pruneEmptyClinits(root, changedScopeNodes);
 
     if (emptiedClinitMethods.isEmpty()) {
+      if (!PureFunctionIdentifier.hasRunPureFunctionIdentifier(compiler)) {
+        new PureFunctionIdentifier.DriverInJ2cl(compiler, null).process(externs, root);
+      }
       // Since no clinits are pruned, we don't need look for more opportunities.
       return;
     }
@@ -68,7 +71,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
 
     // Update the function side-effect markers on the AST.
     // Removing a clinit from a function may make it side-effect free.
-    new PureFunctionIdentifier.Driver(compiler, null).process(externs, root);
+    new PureFunctionIdentifier.DriverInJ2cl(compiler, null).process(externs, root);
   }
 
   private void removeRedundantClinits(Node root, List<Node> changedScopeNodes) {
