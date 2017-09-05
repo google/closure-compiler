@@ -143,6 +143,64 @@ public final class ProcessCommonJSModules implements CompilerPass {
   }
 
   /**
+   * Recognize if a node is a module import. We recognize two forms:
+   *
+   *  - require("something");
+   *  - __webpack_require__(4); // only when the module resolution is WEBPACK
+   */
+  public static boolean isCommonJsImport(Node requireCall, ModuleLoader.ResolutionMode resolutionMode) {
+    if (requireCall.isCall() && requireCall.hasTwoChildren()) {
+      if (resolutionMode == ModuleLoader.ResolutionMode.WEBPACK
+          && requireCall.getFirstChild().matchesQualifiedName(WEBPACK_REQUIRE)
+          && requireCall.getSecondChild().isNumber()) {
+        return true;
+      } else if (requireCall.getFirstChild().matchesQualifiedName(REQUIRE)
+          && requireCall.getSecondChild().isString()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static String getCommonJsImportPath(Node requireCall, ModuleLoader.ResolutionMode resolutionMode) {
+    if (resolutionMode == ModuleLoader.ResolutionMode.WEBPACK
+        && requireCall.getSecondChild().isNumber()) {
+      return String.valueOf(Double.valueOf(requireCall.getSecondChild().getDouble()).intValue());
+    }
+
+    return requireCall.getSecondChild().getString();
+  }
+
+  /**
+   * Recognize if a node is a module export. We recognize several forms:
+   *
+   *  - module.exports = something;
+   *  - module.exports.something = something;
+   *  - exports.something = something;
+   *  - __webpack_exports__["something"] = something; // only when the module resolution is WEBPACK
+   *
+   * <p>In addition, we only recognize an export if the base export object is not defined or is
+   * defined in externs.
+   */
+  public static boolean isCommonJsExport(NodeTraversal t, Node export, ModuleLoader.ResolutionMode resolutionMode) {
+    if (export.matchesQualifiedName(MODULE + "." + EXPORTS)) {
+      Var v = t.getScope().getVar(MODULE);
+      if (v == null || v.isExtern()) {
+        return true;
+      }
+    } else if (export.isName()
+        && (EXPORTS.equals(export.getString())
+        || (resolutionMode == ModuleLoader.ResolutionMode.WEBPACK
+        && WEBPACK_EXPORTS.equals(export.getString())))) {
+      Var v = t.getScope().getVar(export.getString());
+      if (v == null || v.isGlobal()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Information on a Universal Module Definition A UMD is an IF statement and a reference to which
    * branch contains the commonjs export
    */
@@ -248,58 +306,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
     return true;
   }
 
-  private boolean isSupportedRequire(Node requireCall) {
-    if (requireCall.isCall() && requireCall.hasTwoChildren()) {
-      if (compiler.getOptions().moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK
-          && requireCall.getFirstChild().matchesQualifiedName(WEBPACK_REQUIRE)
-          && requireCall.getSecondChild().isNumber()) {
-        return true;
-      } else if (requireCall.getFirstChild().matchesQualifiedName(REQUIRE)
-          && requireCall.getSecondChild().isString()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private String getRequiredName(Node requireCall) {
-    if (compiler.getOptions().moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK
-        && requireCall.getSecondChild().isNumber()) {
-      return String.valueOf(Double.valueOf(requireCall.getSecondChild().getDouble()).intValue());
-    }
-
-    return requireCall.getSecondChild().getString();
-  }
-
-  /**
-   * Recognize if a node is a module export. We recognize several forms:
-   *
-   *  - module.exports = something;
-   *  - module.exports.something = something;
-   *  - exports.something = something;
-   *  - __webpack_exports__["something"] = something; // only when the module resolution is WEBPACK
-   *
-   * <p>In addition, we only recognize an export if the base export object is not defined or is
-   * defined in externs.
-   */
-  private boolean isSupportedExport(NodeTraversal t, Node export) {
-    if (export.matchesQualifiedName(MODULE + "." + EXPORTS)) {
-      Var v = t.getScope().getVar(MODULE);
-      if (v == null || v.isExtern()) {
-        return true;
-      }
-    } else if (export.isName()
-        && (EXPORTS.equals(export.getString())
-            || (compiler.getOptions().moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK
-                && WEBPACK_EXPORTS.equals(export.getString())))) {
-      Var v = t.getScope().getVar(export.getString());
-      if (v == null || v.isGlobal()) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   /**
    * Traverse the script. Find all references to CommonJS require (import) and module.exports or
    * export statements. Rewrites any require calls to reference the rewritten module name.
@@ -309,7 +315,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
     private Node script = null;
 
     boolean isCommonJsModule() {
-      return (exports.size() > 0 || moduleExports.size() > 0) && !hasGoogProvideOrModule;
+      return (exports.size() > 0 || moduleExports.size() > 0 || webpackExports.size() > 0)
+          && !hasGoogProvideOrModule;
     }
 
     List<UmdPattern> umdPatterns = new ArrayList<>();
@@ -364,7 +371,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
 
       if (n.matchesQualifiedName(MODULE + "." + EXPORTS)) {
-        if (isSupportedExport(t, n)) {
+        if (ProcessCommonJSModules.isCommonJsExport(t, n, compiler.getOptions().moduleResolutionMode)) {
           moduleExports.add(new ExportInfo(n, t.getScope()));
 
           // If the module.exports statement is nested in the then branch of an if statement,
@@ -448,14 +455,14 @@ public final class ProcessCommonJSModules implements CompilerPass {
         }
       }
 
-      if (isSupportedRequire(n)) {
+      if (ProcessCommonJSModules.isCommonJsImport(n, compiler.getOptions().moduleResolutionMode)) {
         visitRequireCall(t, n, parent);
       }
     }
 
     /** Visit require calls. Emit corresponding goog.require call. */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
-      String requireName = getRequiredName(require);
+      String requireName = ProcessCommonJSModules.getCommonJsImportPath(require, compiler.getOptions().moduleResolutionMode);
 
       ModulePath modulePath =
           t.getInput()
@@ -639,7 +646,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       if (directAssignmentsAtTopLevel > 1
           || (directAssignmentsAtTopLevel == 0 && directAssignments > 0)
           || directAssignments == 0) {
-        int totalExportStatements = this.moduleExports.size() + this.exports.size();
+        int totalExportStatements = this.moduleExports.size() + this.exports.size() + this.webpackExports.size();
         Node initModule = IR.var(IR.name(moduleName));
         if (directAssignments < totalExportStatements) {
           initModule.getFirstChild().addChildToFront(IR.objectlit());
@@ -889,7 +896,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           break;
 
         case CALL:
-          if (isSupportedRequire(n)) {
+          if (ProcessCommonJSModules.isCommonJsImport(n, compiler.getOptions().moduleResolutionMode)) {
             imports.add(n);
           }
           break;
@@ -967,7 +974,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
      * module. By this point all references to the import alias should have already been renamed.
      */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
-      String requireName = getRequiredName(require);
+      String requireName = ProcessCommonJSModules.getCommonJsImportPath(require, compiler.getOptions().moduleResolutionMode);
 
       ModulePath modulePath =
           t.getInput()
@@ -1505,9 +1512,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
       if (rValue.isCall()) {
         // var foo = require('bar');
-        if (isSupportedRequire(rValue)
+        if (ProcessCommonJSModules.isCommonJsImport(rValue, compiler.getOptions().moduleResolutionMode)
             && t.getScope().getVar(rValue.getFirstChild().getQualifiedName()) == null) {
-          String requireName = getRequiredName(rValue);
+          String requireName = ProcessCommonJSModules.getCommonJsImportPath(rValue, compiler.getOptions().moduleResolutionMode);
           ModulePath modulePath =
               t.getInput()
                   .getPath()

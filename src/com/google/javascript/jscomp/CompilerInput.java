@@ -63,7 +63,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   private final List<String> extraProvides = new ArrayList<>();
   private final List<String> orderedRequires = new ArrayList<>();
   private boolean hasFullParseDependencyInfo = false;
-  private boolean jsModule = false;
+  private ModuleType jsModuleType = ModuleType.NONE;
 
   // An AbstractCompiler for doing parsing.
   // We do not want to persist this across serialized state.
@@ -210,12 +210,12 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     this.hasFullParseDependencyInfo = hasFullParseDependencyInfo;
   }
 
-  public boolean isJsModule() {
-    return jsModule;
+  public ModuleType getJsModuleType() {
+    return jsModuleType;
   }
 
-  public void markAsModule(boolean isModule) {
-    jsModule = isModule;
+  public void setJsModuleType(ModuleType moduleType) {
+    jsModuleType = moduleType;
   }
 
   /** Registers a type that this input depends on. */
@@ -507,5 +507,12 @@ public class CompilerInput implements SourceAst, DependencyInfo {
    */
   public void reset() {
     this.module = null;
+  }
+
+  public enum ModuleType {
+    NONE,
+    GOOG_MODULE,
+    ES6,
+    COMMONJS
   }
 }

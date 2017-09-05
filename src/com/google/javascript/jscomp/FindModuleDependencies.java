@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import com.google.javascript.jscomp.Es6RewriteModules.FindGoogProvideOrGoogModule;
 import com.google.javascript.jscomp.deps.ModuleLoader;
+import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
@@ -61,9 +62,7 @@ public class FindModuleDependencies implements NodeTraversal.Callback {
     }
     CompilerInput input = compiler.getInput(root.getInputId());
     input.addProvide(input.getPath().toModuleName());
-    if (moduleType != ModuleType.NONE) {
-      input.markAsModule(true);
-    }
+    input.setJsModuleType(moduleType);
     input.setHasFullParseDependencyInfo(true);
   }
 
@@ -74,6 +73,7 @@ public class FindModuleDependencies implements NodeTraversal.Callback {
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
+    ModuleLoader.ResolutionMode resolutionMode = compiler.getOptions().moduleResolutionMode;
     if (supportsEs6Modules && n.isExport()) {
       moduleType = ModuleType.ES6;
 
@@ -101,27 +101,15 @@ public class FindModuleDependencies implements NodeTraversal.Callback {
       }
       t.getInput().addOrderedRequire(moduleName);
     } else if (supportsCommonJsModules) {
-      if (n.matchesQualifiedName("module.exports")) {
-        Var v = t.getScope().getVar("module");
-        if (v == null) {
-          moduleType = ModuleType.COMMONJS;
-        }
-      } else if (n.isName() && "exports".equals(n.getString())) {
-        Var v = t.getScope().getVar("exports");
-        if (v == null) {
-          moduleType = ModuleType.COMMONJS;
-        }
-      }
+      if (ProcessCommonJSModules.isCommonJsExport(t, n, resolutionMode)) {
+        moduleType = ModuleType.COMMONJS;
+      } else if (ProcessCommonJSModules.isCommonJsImport(n, resolutionMode)) {
+        String path = ProcessCommonJSModules.getCommonJsImportPath(n, resolutionMode);
 
-      if (n.isCall()
-          && n.hasTwoChildren()
-          && n.getFirstChild().matchesQualifiedName("require")
-          && n.getSecondChild().isString()) {
-        String requireName = n.getSecondChild().getString();
         ModuleLoader.ModulePath modulePath =
             t.getInput()
                 .getPath()
-                .resolveJsModule(requireName, n.getSourceFileName(), n.getLineno(), n.getCharno());
+                .resolveJsModule(path, n.getSourceFileName(), n.getLineno(), n.getCharno());
 
         if (modulePath != null) {
           t.getInput().addOrderedRequire(modulePath.toModuleName());
@@ -177,12 +165,5 @@ public class FindModuleDependencies implements NodeTraversal.Callback {
     moduleNode.addChildrenToBack(root.removeChildren());
     root.addChildToBack(moduleNode);
     return true;
-  }
-
-  enum ModuleType {
-    NONE,
-    GOOG_MODULE,
-    ES6,
-    COMMONJS
   }
 }

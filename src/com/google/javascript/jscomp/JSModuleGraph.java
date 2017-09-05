@@ -466,40 +466,44 @@ public final class JSModuleGraph implements Serializable {
 
     // Figure out which sources *must* be in each module, or in one
     // of that module's dependencies.
-    for (JSModule module : entryPointInputsPerModule.keySet()) {
-      List<CompilerInput> transitiveClosure;
-      // Prefer a depth first ordering of dependencies from entry points.
-      // Always orders in a deterministic fashion regardless of the order of provided inputs
-      // given the same entry points in the same order.
-      if (depOptions.shouldSortDependencies() && depOptions.shouldPruneDependencies()) {
-        Set<CompilerInput> workingInputSet = new HashSet<>(inputs);
-        transitiveClosure = new ArrayList<>();
-        for (CompilerInput entryPoint : entryPointInputsPerModule.get(module)) {
-          transitiveClosure.addAll(getDepthFirstDependenciesOf(entryPoint, workingInputSet));
-        }
+    List<CompilerInput> transitiveClosure;
+    if (entryPointInputsPerModule.isEmpty()) {
+      transitiveClosure = new ArrayList<>(absoluteOrder);
+    } else {
+      transitiveClosure = new ArrayList<>();
+      for (JSModule module : entryPointInputsPerModule.keySet()) {
+        // Prefer a depth first ordering of dependencies from entry points.
+        // Always orders in a deterministic fashion regardless of the order of provided inputs
+        // given the same entry points in the same order.
+        if (depOptions.shouldSortDependencies() && depOptions.shouldPruneDependencies()) {
+          Set<CompilerInput> workingInputSet = new HashSet<>(inputs);
+          for (CompilerInput entryPoint : entryPointInputsPerModule.get(module)) {
+            transitiveClosure.addAll(getDepthFirstDependenciesOf(entryPoint, workingInputSet));
+          }
 
-        // Simply order inputs so that any required namespace comes before it's usage.
-        // Ordered result varies based on the original order of inputs.
-      } else {
-        transitiveClosure =
-            sorter.getDependenciesOf(
-                entryPointInputsPerModule.get(module), depOptions.shouldSortDependencies());
-      }
-      for (CompilerInput input : transitiveClosure) {
-        JSModule oldModule = input.getModule();
-        if (oldModule == null) {
-          input.setModule(module);
+          // Simply order inputs so that any required namespace comes before it's usage.
+          // Ordered result varies based on the original order of inputs.
         } else {
-          input.setModule(null);
-          input.setModule(
-              getDeepestCommonDependencyInclusive(oldModule, module));
+          transitiveClosure =
+              sorter.getDependenciesOf(
+                  entryPointInputsPerModule.get(module), depOptions.shouldSortDependencies());
+        }
+        for (CompilerInput input : transitiveClosure) {
+          JSModule oldModule = input.getModule();
+          if (oldModule == null) {
+            input.setModule(module);
+          } else {
+            input.setModule(null);
+            input.setModule(
+                getDeepestCommonDependencyInclusive(oldModule, module));
+          }
         }
       }
     }
 
     // All the inputs are pointing to the modules that own them. Yeah!
     // Update the modules to reflect this.
-    for (CompilerInput input : absoluteOrder) {
+    for (CompilerInput input : transitiveClosure) {
       JSModule module = input.getModule();
       if (module != null) {
         module.add(input);

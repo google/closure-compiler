@@ -1961,7 +1961,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // TODO(ChadKillingsworth) Move this into the standard compilation passes
     if (supportCommonJSModules) {
       for (CompilerInput input : orderedInputs) {
-        new ProcessCommonJSModules(this).process(null, input.getAstRoot(this), false);
+        new ProcessCommonJSModules(this).process(
+            null,
+            input.getAstRoot(this),
+            input.getJsModuleType() == CompilerInput.ModuleType.NONE
+                && options.moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK
+                && inputPathByWebpackId.containsValue(input.getPath()));
       }
     }
   }
@@ -1981,7 +1986,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       // It's possible for a module to be included as both a script
       // and a module in the same compilation. In these cases, it should
       // be forced to be a module.
-      if (wasImportedByModule && !input.isJsModule()) {
+      if (wasImportedByModule && input.getJsModuleType() == CompilerInput.ModuleType.NONE) {
         forceInputToPathBasedModule(input, supportEs6Modules, supportCommonJSModules);
       }
 
@@ -1998,7 +2003,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
     // If this input was imported by another module, it is itself a module
     // so we force it to be detected as such.
-    if (wasImportedByModule && !input.isJsModule()) {
+    if (wasImportedByModule && input.getJsModuleType() == CompilerInput.ModuleType.NONE) {
       forceInputToPathBasedModule(input, supportEs6Modules, supportCommonJSModules);
     }
 
@@ -2036,10 +2041,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       FindModuleDependencies findDeps =
           new FindModuleDependencies(this, supportEs6Modules, supportCommonJSModules);
       findDeps.convertToEs6Module(input.getAstRoot(this));
-      input.markAsModule(true);
+      input.setJsModuleType(CompilerInput.ModuleType.ES6);
     } else if (supportCommonJSModules) {
       new ProcessCommonJSModules(this).process(null, input.getAstRoot(this), true);
-      input.markAsModule(true);
+      input.setJsModuleType(CompilerInput.ModuleType.COMMONJS);
     }
   }
 
