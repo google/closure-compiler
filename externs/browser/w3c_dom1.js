@@ -723,9 +723,10 @@ Element.prototype.setAttributeNode = function(newAttr) {};
 /**
  * @constructor
  * @extends {CharacterData}
+ * @param {string=} contents Optional textual content.
  * @see http://www.w3.org/TR/1998/REC-DOM-Level-1-19981001/level-one-core.html#ID-1312295772
  */
-function Text() {}
+function Text(contents) {}
 
 /**
  * @param {number} offset
