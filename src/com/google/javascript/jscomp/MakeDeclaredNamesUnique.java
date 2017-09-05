@@ -100,11 +100,12 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
       renamer = renamerStack.peek().createForChildScope(t.getScopeRoot(), hoist);
     }
 
+    renamerStack.push(renamer);
+
     if (!declarationRoot.isFunction()) {
       // Add the block declarations
-      findDeclaredNames(t, declarationRoot, renamer, false);
+      findDeclaredNames(t, declarationRoot);
     }
-    renamerStack.push(renamer);
   }
 
   @Override
@@ -145,9 +146,9 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         }
 
         Node functionBody = n.getNext();
-        findDeclaredNames(t, functionBody, renamer, false);
-
         renamerStack.push(renamer);
+
+        findDeclaredNames(t, functionBody);
         break;
       }
 
@@ -232,11 +233,15 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
   }
 
   /**
-   * Traverses the current scope and collects declared names.
-   *
-   * @param recursive Whether this is being called recursively.
+   * Traverses the current scope and collects declared names by calling {@code addDeclaredName} on
+   * the {@code Renamer} that is at the top of the {@code renamerStack}.
    */
-  private void findDeclaredNames(NodeTraversal t, Node n, Renamer renamer, boolean recursive) {
+  private void findDeclaredNames(NodeTraversal t, Node n) {
+    findDeclaredNamesHelper(t, n, false);
+  }
+
+  private void findDeclaredNamesHelper(NodeTraversal t, Node n, boolean recursive) {
+    Renamer renamer = renamerStack.peek();
     Node parent = n.getParent();
 
     // Do a shallow traversal: Don't traverse into the function param list or body; just its name.
@@ -261,7 +266,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     }
 
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      findDeclaredNames(t, c, renamer, true);
+      findDeclaredNamesHelper(t, c, true);
     }
   }
 
@@ -303,8 +308,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
   /**
    * Inverts the transformation by {@link ContextualRenamer}, when possible.
    */
-  static class ContextualRenameInverter
-      implements ScopedCallback, CompilerPass {
+  static class ContextualRenameInverter implements ScopedCallback, CompilerPass {
     private final AbstractCompiler compiler;
 
     // The set of names referenced in the current scope.
@@ -388,7 +392,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
      * values.
      */
     void handleScopeVar(Var v) {
-      String name  = v.getName();
+      String name = v.getName();
       if (containsSeparator(name) && !getOriginalName(name).isEmpty()) {
         String newName = findReplacementName(name);
         referencedNames.remove(name);
