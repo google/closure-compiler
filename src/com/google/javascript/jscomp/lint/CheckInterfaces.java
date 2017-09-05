@@ -30,6 +30,11 @@ import com.google.javascript.rhino.Node;
  */
 public final class CheckInterfaces extends AbstractPostOrderCallback
     implements HotSwapCompilerPass {
+  public static final DiagnosticType NON_DECLARATION_STATEMENT_IN_RECORD =
+      DiagnosticType.disabled(
+          "JSC_NON_DECLARATION_STATEMENT_IN_RECORD",
+          "@record functions should not contain statements other than field declarations");
+
   public static final DiagnosticType INTERFACE_FUNCTION_NOT_EMPTY =
       DiagnosticType.disabled(
           "JSC_INTERFACE_FUNCTION_NOT_EMPTY",
@@ -80,7 +85,21 @@ public final class CheckInterfaces extends AbstractPostOrderCallback
 
     Node block = n.getLastChild();
     if (block.hasChildren()) {
-      t.report(block.getFirstChild(), INTERFACE_FUNCTION_NOT_EMPTY);
+      if (NodeUtil.getBestJSDocInfo(n).usesImplicitMatch()) {
+        for (Node stmt : block.children()) {
+          if (stmt.isExprResult()
+              && stmt.getFirstChild().isGetProp()
+              && stmt.getFirstFirstChild().isThis()
+              && stmt.getFirstChild().getJSDocInfo() != null) {
+            // Field declarations are expected.
+          } else {
+            t.report(stmt, NON_DECLARATION_STATEMENT_IN_RECORD);
+            return;
+          }
+        }
+      } else {
+        t.report(block.getFirstChild(), INTERFACE_FUNCTION_NOT_EMPTY);
+      }
     }
   }
 }

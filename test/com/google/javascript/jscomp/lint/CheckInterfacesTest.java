@@ -23,9 +23,7 @@ import com.google.javascript.jscomp.CompilerPass;
 import com.google.javascript.jscomp.CompilerTestCase;
 import com.google.javascript.jscomp.DiagnosticGroups;
 
-/**
- * Test case for {@link CheckInterfaces}.
- */
+/** Test case for {@link CheckInterfaces}. */
 public final class CheckInterfacesTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -71,5 +69,28 @@ public final class CheckInterfacesTest extends CompilerTestCase {
     testSame(
         "export /** @interface */ function A() { this.foo; }",
         CheckInterfaces.INTERFACE_FUNCTION_NOT_EMPTY);
+  }
+
+  public void testRecordWithFieldDeclarations() {
+    testSame(
+        LINE_JOINER.join(
+            "/** @record */",
+            "function R() {",
+            "  /** @type {string} */",
+            "  this.foo;",
+            "",
+            "  /** @type {number} */",
+            "  this.bar;",
+            "}"));
+  }
+
+  public void testRecordWithOtherContents() {
+    testSame(
+        LINE_JOINER.join(
+            "/** @record */",
+            "function R() {",
+            "  /** @type {string} */",
+            "  this.foo = '';",
+            "}"));
   }
 }
