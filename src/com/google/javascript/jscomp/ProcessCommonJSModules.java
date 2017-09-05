@@ -57,7 +57,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
               + " Did you actually intend to export something?");
 
   private final Compiler compiler;
-  private final boolean reportDependencies;
 
   /**
    * Creates a new ProcessCommonJSModules instance which can be used to
@@ -66,23 +65,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
    * @param compiler The compiler
    */
   public ProcessCommonJSModules(Compiler compiler) {
-    this(compiler, true);
-  }
-
-  /**
-   * Creates a new ProcessCommonJSModules instance which can be used to
-   * rewrite CommonJS modules to a concatenable form.
-   *
-   * @param compiler The compiler
-   * @param reportDependencies Whether the rewriter should report dependency
-   *     information to the Closure dependency manager. This needs to be true
-   *     if we want to sort CommonJS module inputs correctly. Note that goog.provide
-   *     and goog.require calls will still be generated if this argument is
-   *     false.
-   */
-  public ProcessCommonJSModules(Compiler compiler, boolean reportDependencies) {
     this.compiler = compiler;
-    this.reportDependencies = reportDependencies;
   }
 
 
@@ -93,10 +76,10 @@ public final class ProcessCommonJSModules implements CompilerPass {
    */
   @Override
   public void process(Node externs, Node root) {
-    process(externs, root, false);
+    process(root, false);
   }
 
-  public void process(Node externs, Node root, boolean forceModuleDetection) {
+  public void process(Node root, boolean forceModuleDetection) {
     checkState(root.isScript());
     FindImportsAndExports finder = new FindImportsAndExports();
     NodeTraversal.traverseEs6(compiler, root, finder);
@@ -460,10 +443,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
     }
 
-    /** Visit require calls. Emit corresponding goog.require call. */
+    /** Visit require calls.  */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
       String requireName = ProcessCommonJSModules.getCommonJsImportPath(require, compiler.getOptions().moduleResolutionMode);
-
       ModulePath modulePath =
           t.getInput()
               .getPath()
@@ -479,8 +461,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
       // When require("name") is used as a standalone statement (the result isn't used)
       // it indicates that a module is being loaded for the side effects it produces.
-      // In this case the require statement should just be removed as the goog.require
-      // call inserted will import the module.
+      // In this case the require statement should just be removed as the dependency
+      // sorting will insert the file for us.
       if (!NodeUtil.isExpressionResultUsed(require)
           && parent.isExprResult()
           && NodeUtil.isStatementBlock(parent.getParent())) {
@@ -614,13 +596,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
       exports.removeAll(exportsToRemove);
 
-      // The default declaration for the goog.provide is a constant so
-      // we need to declare the variable if we have more than one
-      // assignment to module.exports or those assignments are not
-      // at the top level.
-      //
-      // If we assign to the variable more than once or all the assignments
-      // are properties, initialize the variable as well.
       int directAssignmentsAtTopLevel = 0;
       int directAssignments = 0;
       for (ExportInfo export : moduleExports) {

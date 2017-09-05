@@ -99,6 +99,9 @@ public class FindModuleDependencies implements NodeTraversal.Callback {
         }
         moduleName = modulePath.toModuleName();
       }
+      if (moduleName.startsWith("goog.")) {
+        t.getInput().addOrderedRequire("goog");
+      }
       t.getInput().addOrderedRequire(moduleName);
     } else if (supportsCommonJsModules) {
       if (ProcessCommonJSModules.isCommonJsExport(t, n, resolutionMode)) {
@@ -126,6 +129,9 @@ public class FindModuleDependencies implements NodeTraversal.Callback {
         && n.getSecondChild() != null
         && n.getSecondChild().isString()) {
       String namespace = n.getSecondChild().getString();
+      if (namespace.startsWith("goog.")) {
+        t.getInput().addOrderedRequire("goog");
+      }
       t.getInput().addOrderedRequire(namespace);
     }
   }

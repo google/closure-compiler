@@ -820,17 +820,13 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testSourcePruningOn4() {
     args.add("--entry_point=goog:scotch");
     args.add("--entry_point=goog:beer");
-    // The goog:scotch entry point requires the goog:beer input
-    // so the input providing "beer" should come before the input
-    // providing "scotch" even though the entry points were provided
-    // in reverse order.
     test(
         new String[] {
           "goog.provide('guinness');\ngoog.require('beer');",
           "goog.provide('beer');",
           "goog.provide('scotch'); var x = 3;"
         },
-        new String[] {"var beer = {};", "var scotch = {}, x = 3;"});
+        new String[] {"var scotch = {}, x = 3;", "var beer = {};"});
   }
 
   public void testSourcePruningOn5() {

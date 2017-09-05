@@ -1962,7 +1962,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (supportCommonJSModules) {
       for (CompilerInput input : orderedInputs) {
         new ProcessCommonJSModules(this).process(
-            null,
             input.getAstRoot(this),
             input.getJsModuleType() == CompilerInput.ModuleType.NONE
                 && options.moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK
@@ -2043,7 +2042,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       findDeps.convertToEs6Module(input.getAstRoot(this));
       input.setJsModuleType(CompilerInput.ModuleType.ES6);
     } else if (supportCommonJSModules) {
-      new ProcessCommonJSModules(this).process(null, input.getAstRoot(this), true);
+      new ProcessCommonJSModules(this).process(input.getAstRoot(this), true);
       input.setJsModuleType(CompilerInput.ModuleType.COMMONJS);
     }
   }
@@ -2200,7 +2199,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * on the way.
    */
   void processAMDAndCommonJSModules() {
-    ProcessCommonJSModules cjs = new ProcessCommonJSModules(this, true);
+    ProcessCommonJSModules cjs = new ProcessCommonJSModules(this);
     for (CompilerInput input : inputs) {
       input.setCompiler(this);
       Node root = input.getAstRoot(this);
@@ -2215,7 +2214,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         if (options.moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK) {
           forceModule = this.inputPathByWebpackId.containsValue(input.getPath().toString());
         }
-        cjs.process(null, root, forceModule);
+        cjs.process(root, forceModule);
       }
     }
   }

@@ -57,13 +57,13 @@ import java.util.Set;
 public final class JSModuleGraph implements Serializable {
 
   private final JSModule[] modules;
-  
+
   /**
    * selfPlusTransitiveDeps[i] = indices of all modules that modules[i] depends on, including
    * itself.
    */
   private final BitSet[] selfPlusTransitiveDeps;
-  
+
   /**
    * subtreeSize[i] = Number of modules that transitively depend on modules[i], including itself.
    */
@@ -167,8 +167,8 @@ public final class JSModuleGraph implements Serializable {
       // Iterating backward through the bitset is slightly more efficient, since it avoids
       // considering later modules, which this one cannot depend on.
       for (int requiredIndex = dependentIndex;
-          requiredIndex >= 0;
-          requiredIndex = dependencies.previousSetBit(requiredIndex - 1)) {
+           requiredIndex >= 0;
+           requiredIndex = dependencies.previousSetBit(requiredIndex - 1)) {
         subtreeSize[requiredIndex] += 1; // Count dependent in required module's subtree.
       }
     }
@@ -232,24 +232,24 @@ public final class JSModuleGraph implements Serializable {
     JsonArray modules = new JsonArray();
     for (JSModule module : getAllModules()) {
       JsonObject node = new JsonObject();
-        node.add("name", new JsonPrimitive(module.getName()));
-        JsonArray deps = new JsonArray();
-        node.add("dependencies", deps);
-        for (JSModule m : module.getDependencies()) {
-          deps.add(new JsonPrimitive(m.getName()));
-        }
-        JsonArray transitiveDeps = new JsonArray();
-        node.add("transitive-dependencies", transitiveDeps);
-        for (JSModule m : getTransitiveDepsDeepestFirst(module)) {
-          transitiveDeps.add(new JsonPrimitive(m.getName()));
-        }
-        JsonArray inputs = new JsonArray();
-        node.add("inputs", inputs);
-        for (CompilerInput input : module.getInputs()) {
-          inputs.add(new JsonPrimitive(
-              input.getSourceFile().getOriginalPath()));
-        }
-        modules.add(node);
+      node.add("name", new JsonPrimitive(module.getName()));
+      JsonArray deps = new JsonArray();
+      node.add("dependencies", deps);
+      for (JSModule m : module.getDependencies()) {
+        deps.add(new JsonPrimitive(m.getName()));
+      }
+      JsonArray transitiveDeps = new JsonArray();
+      node.add("transitive-dependencies", transitiveDeps);
+      for (JSModule m : getTransitiveDepsDeepestFirst(module)) {
+        transitiveDeps.add(new JsonPrimitive(m.getName()));
+      }
+      JsonArray inputs = new JsonArray();
+      node.add("inputs", inputs);
+      for (CompilerInput input : module.getInputs()) {
+        inputs.add(new JsonPrimitive(
+            input.getSourceFile().getOriginalPath()));
+      }
+      modules.add(node);
     }
     return modules;
   }
@@ -285,8 +285,8 @@ public final class JSModuleGraph implements Serializable {
     final BitSet candidates = new BitSet(modules.length);
     candidates.set(0, modules.length, true);
     for (int dependentIndex = dependentModules.nextSetBit(0);
-        dependentIndex >= 0;
-        dependentIndex = dependentModules.nextSetBit(dependentIndex + 1)) {
+         dependentIndex >= 0;
+         dependentIndex = dependentModules.nextSetBit(dependentIndex + 1)) {
       minDependentModuleIndex = Math.min(minDependentModuleIndex, dependentIndex);
       candidates.and(selfPlusTransitiveDeps[dependentIndex]);
     }
@@ -301,8 +301,8 @@ public final class JSModuleGraph implements Serializable {
     // default to parent tree if we don't find anything better
     int bestCandidateIndex = parentTreeIndex;
     for (int candidateIndex = candidates.previousSetBit(minDependentModuleIndex);
-        candidateIndex >= 0;
-        candidateIndex = candidates.previousSetBit(candidateIndex - 1)) {
+         candidateIndex >= 0;
+         candidateIndex = candidates.previousSetBit(candidateIndex - 1)) {
 
       BitSet candidatePlusTransitiveDeps = selfPlusTransitiveDeps[candidateIndex];
       if (candidatePlusTransitiveDeps.get(parentTreeIndex)) {
@@ -466,44 +466,52 @@ public final class JSModuleGraph implements Serializable {
 
     // Figure out which sources *must* be in each module, or in one
     // of that module's dependencies.
-    List<CompilerInput> transitiveClosure;
-    if (entryPointInputsPerModule.isEmpty()) {
-      transitiveClosure = new ArrayList<>(absoluteOrder);
-    } else {
-      transitiveClosure = new ArrayList<>();
-      for (JSModule module : entryPointInputsPerModule.keySet()) {
-        // Prefer a depth first ordering of dependencies from entry points.
-        // Always orders in a deterministic fashion regardless of the order of provided inputs
-        // given the same entry points in the same order.
-        if (depOptions.shouldSortDependencies() && depOptions.shouldPruneDependencies()) {
-          Set<CompilerInput> workingInputSet = new HashSet<>(inputs);
-          for (CompilerInput entryPoint : entryPointInputsPerModule.get(module)) {
-            transitiveClosure.addAll(getDepthFirstDependenciesOf(entryPoint, workingInputSet));
-          }
-
-          // Simply order inputs so that any required namespace comes before it's usage.
-          // Ordered result varies based on the original order of inputs.
-        } else {
-          transitiveClosure =
-              sorter.getDependenciesOf(
-                  entryPointInputsPerModule.get(module), depOptions.shouldSortDependencies());
+    List<CompilerInput> orderedInputs = new ArrayList<>();
+    Set<CompilerInput> reachedInputs = new HashSet<>();
+    for (JSModule module : entryPointInputsPerModule.keySet()) {
+      List<CompilerInput> transitiveClosure;
+      // Prefer a depth first ordering of dependencies from entry points.
+      // Always orders in a deterministic fashion regardless of the order of provided inputs
+      // given the same entry points in the same order.
+      if (depOptions.shouldSortDependencies() && depOptions.shouldPruneDependencies()) {
+        transitiveClosure = new ArrayList<>();
+        // We need the ful set of dependencies for each module, so start with the full input set
+        Set<CompilerInput> inputsNotYetReached = new HashSet<>(inputs);
+        for (CompilerInput entryPoint : entryPointInputsPerModule.get(module)) {
+          transitiveClosure.addAll(getDepthFirstDependenciesOf(entryPoint, inputsNotYetReached));
         }
-        for (CompilerInput input : transitiveClosure) {
-          JSModule oldModule = input.getModule();
-          if (oldModule == null) {
-            input.setModule(module);
-          } else {
-            input.setModule(null);
-            input.setModule(
-                getDeepestCommonDependencyInclusive(oldModule, module));
+        // For any input we have not yet reached, add them to the ordered list
+        for (CompilerInput orderedInput : transitiveClosure) {
+          if (reachedInputs.add(orderedInput)) {
+            orderedInputs.add(orderedInput);
           }
+        }
+      } else {
+        // Simply order inputs so that any required namespace comes before it's usage.
+        // Ordered result varies based on the original order of inputs.
+        transitiveClosure =
+            sorter.getDependenciesOf(
+                entryPointInputsPerModule.get(module), depOptions.shouldSortDependencies());
+      }
+      for (CompilerInput input : transitiveClosure) {
+        JSModule oldModule = input.getModule();
+        if (oldModule == null) {
+          input.setModule(module);
+        } else {
+          input.setModule(null);
+          input.setModule(
+              getDeepestCommonDependencyInclusive(oldModule, module));
         }
       }
+    }
+    if (!(depOptions.shouldSortDependencies() && depOptions.shouldPruneDependencies())
+        || entryPointInputsPerModule.isEmpty()) {
+      orderedInputs = absoluteOrder;
     }
 
     // All the inputs are pointing to the modules that own them. Yeah!
     // Update the modules to reflect this.
-    for (CompilerInput input : transitiveClosure) {
+    for (CompilerInput input : orderedInputs) {
       JSModule module = input.getModule();
       if (module != null) {
         module.add(input);
@@ -524,17 +532,17 @@ public final class JSModuleGraph implements Serializable {
    * performing a recursive, depth-first traversal.
    */
   private List<CompilerInput> getDepthFirstDependenciesOf(
-      CompilerInput rootInput, Set<CompilerInput> workingInputSet) {
+      CompilerInput rootInput, Set<CompilerInput> unreachedInputs) {
     List<CompilerInput> orderedInputs = new ArrayList<>();
-    if (!workingInputSet.remove(rootInput)) {
+    if (!unreachedInputs.remove(rootInput)) {
       return orderedInputs;
     }
 
     for (String importedNamespace : rootInput.getRequires()) {
       CompilerInput dependency =
-          JSModuleGraph.findInputProviding(importedNamespace, workingInputSet);
+          JSModuleGraph.findInputProviding(importedNamespace, unreachedInputs);
       if (dependency != null) {
-        orderedInputs.addAll(getDepthFirstDependenciesOf(dependency, workingInputSet));
+        orderedInputs.addAll(getDepthFirstDependenciesOf(dependency, unreachedInputs));
       }
     }
 
@@ -652,7 +660,7 @@ public final class JSModuleGraph implements Serializable {
     private final JSModule dependentModule;
 
     protected ModuleDependenceException(String message,
-        JSModule module, JSModule dependentModule) {
+                                        JSModule module, JSModule dependentModule) {
       super(message);
       this.module = module;
       this.dependentModule = dependentModule;

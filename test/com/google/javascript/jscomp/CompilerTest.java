@@ -1461,4 +1461,64 @@ public final class CompilerTest extends TestCase {
     compiler.init(ImmutableList.<SourceFile>of(), sources, options);
     assertThat(compiler.getModules().get(0).getInputs()).contains(input);
   }
+
+  public void testProperEs6ModuleOrdering() throws Exception {
+    List<SourceFile> sources = new ArrayList<>();
+    sources.add(SourceFile.fromCode(
+        "/entry.js",
+        CompilerTestCase.LINE_JOINER.join(
+          "import './b/b.js';",
+          "import './b/a.js';",
+          "import './important.js';",
+          "import './a/b.js';",
+          "import './a/a.js';")));
+    sources.add(SourceFile.fromCode("/a/a.js", "window['D'] = true;"));
+    sources.add(SourceFile.fromCode("/a/b.js", "window['C'] = true;"));
+    sources.add(SourceFile.fromCode("/b/a.js", "window['B'] = true;"));
+    sources.add(SourceFile.fromCode(
+        "/b/b.js",
+        CompilerTestCase.LINE_JOINER.join(
+            "import foo from './c.js';",
+            "if (foo.settings.inUse) {",
+            "  window['E'] = true;",
+            "}",
+            "window['A'] = true;")));
+    sources.add(SourceFile.fromCode(
+        "/b/c.js",
+        CompilerTestCase.LINE_JOINER.join(
+            "window['BEFOREA'] = true;",
+            "",
+            "export default {",
+            "  settings: {",
+            "    inUse: Boolean(document.documentElement['attachShadow'])",
+            "  }",
+            "};")));
+    sources.add(SourceFile.fromCode("/important.js", "window['E'] = false;"));
+
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.dependencyOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forFile("/entry.js")));
+    options.dependencyOptions.setDependencySorting(true);
+    options.dependencyOptions.setDependencyPruning(true);
+    options.dependencyOptions.setMoocherDropping(true);
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+    Compiler compiler = new Compiler();
+    Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
+    assertTrue(Joiner.on(",").join(result.errors), result.success);
+    String outputSource = compiler.toSource();
+    assertThat(outputSource).isEqualTo(Joiner.on("").join(
+        "var module$b$c={};",
+        "window[\"BEFOREA\"]=true;",
+        "var $jscompDefaultExport$$module$b$c={",
+        "settings:{inUse:Boolean(document.documentElement[\"attachShadow\"])}};",
+        "module$b$c.default=$jscompDefaultExport$$module$b$c;",
+        "if(module$b$c.default.settings.inUse)window[\"E\"]=true;",
+        "window[\"A\"]=true;",
+        "window[\"B\"]=true;",
+        "window[\"E\"]=false;",
+        "window[\"C\"]=true;",
+        "window[\"D\"]=true;"));
+  }
 }
