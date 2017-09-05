@@ -1014,6 +1014,17 @@ public final class ProcessCommonJSModules implements CompilerPass {
           if (rValueVar != null && rValueVar.getNode() == root) {
             rValueVar = null;
           }
+
+        // Also check for exports.foo = foo; type expressions that have been renamed;
+        } else if (rValueVar == null
+            && export.getQualifiedName().equals(EXPORTS)
+            && export.getParent().getNext() != null
+            && export.getParent().getNext().isName()
+            && export.getGrandparent().isAssign()
+            && export.getGrandparent().getParent().isExprResult()) {
+          export.getGrandparent().getParent().detach();
+          t.reportCodeChange();
+          return;
         }
       }
 

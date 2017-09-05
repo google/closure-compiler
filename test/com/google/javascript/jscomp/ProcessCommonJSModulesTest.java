@@ -578,9 +578,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "} else {",
             "  this.foobar = foobar;",
             "}}()"),
-        LINE_JOINER.join(
-            "goog.provide('module$test');",
-            "var module$test = {foo: 'bar'};"));
+        "var module$test = {foo: 'bar'};");
 
     testModules(
         "test.js",
@@ -852,9 +850,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "typeof module === 'object' && module.exports ? module.exports = foobar :",
             "typeof define === 'function' && define.amd ? define([], function() {return foobar;}) :",
             "this.foobar = foobar;"),
-        LINE_JOINER.join(
-            "goog.provide('module$test');",
-            "var module$test = {foo: 'bar'};"));
+        "var module$test = {foo: 'bar'};");
   }
 
   public void testLeafletUMDWrapper() {
@@ -874,7 +870,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  exports.webkit = webkit",
             "})));"),
         LINE_JOINER.join(
-            "goog.provide('module$test');",
             "/** @const */ var module$test={};",
             "{",
             "  var exports$jscomp$inline_3$$module$test=module$test;",
@@ -898,7 +893,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  return {foo: 'bar'};",
             "});"),
         LINE_JOINER.join(
-            "goog.provide('module$test');",
             "/** @const */ var module$test={};",
             "module$test.foo = 'bar';"));
   }
@@ -914,8 +908,19 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "test.js",
         "exports = module.exports = {};",
+        "/** @const */ var module$test = {};");
+  }
+
+  public void testExportsPropertyHoisting() {
+    testModules(
+        "test.js",
         LINE_JOINER.join(
-            "goog.provide('module$test');",
-            "/** @const */ var module$test = {};"));
+            "exports.Buffer = Buffer;",
+            "Buffer.TYPED_ARRAY_SUPPORT = {};",
+            "function Buffer() {}"),
+        LINE_JOINER.join(
+            "/** @const */ var module$test = {};",
+            "module$test.Buffer = function() {};",
+            "module$test.Buffer.TYPED_ARRAY_SUPPORT = {};"));
   }
 }
