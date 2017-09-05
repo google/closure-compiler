@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -1994,6 +1996,22 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     result =
         defaultBuilder(parse("var x", TypeInferenceMode.NTI_ONLY)).setTagAsStrict(true).build();
     assertEquals("'use strict';var x", result);
+  }
+
+  public void testStrictPretty() {
+    String result =
+        defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY))
+            .setTagAsStrict(true)
+            .setPrettyPrint(true)
+            .build();
+    assertThat(result).isEqualTo("'use strict';\nvar x;\n");
+
+    result =
+        defaultBuilder(parse("var x", TypeInferenceMode.NTI_ONLY))
+            .setTagAsStrict(true)
+            .setPrettyPrint(true)
+            .build();
+    assertThat(result).isEqualTo("'use strict';\nvar x;\n");
   }
 
   public void testExterns() {
