@@ -229,27 +229,33 @@ public final class RenameVarsTest extends CompilerTestCase {
   }
 
   public void testBleedingRecursiveFunctions2() {
-    test("function f() {" +
-         "  var x = function a(x) { return x ? 1 : a(1); };" +
-         "  var y = function b(x) { return x ? 2 : b(2); };" +
-         "}",
-         "function d() {" +
-         "  var e = function b(a) { return a ? 1 : b(1); };" +
-         "  var f = function a(c) { return c ? 2 : a(2); };" +
-         "}");
+    test(
+        LINE_JOINER.join(
+            "function f() {",
+            "  var x = function a(x) { return x ? 1 : a(1); };",
+            "  var y = function b(x) { return x ? 2 : b(2); };",
+            "}"),
+        LINE_JOINER.join(
+            "function d() {",
+            "  var e = function b(a) { return a ? 1 : b(1); };",
+            "  var f = function a(c) { return c ? 2 : a(2); };",
+            "}"));
   }
 
   public void testBleedingRecursiveFunctions3() {
-    test("function f() {" +
-         "  var x = function a(x) { return x ? 1 : a(1); };" +
-         "  var y = function b(x) { return x ? 2 : b(2); };" +
-         "  var z = function c(x) { return x ? y : c(2); };" +
-         "}",
-         "function f() {" +
-         "  var g = function c(a) { return a ? 1 : c(1); };" +
-         "  var d = function a(b) { return b ? 2 : a(2); };" +
-         "  var h = function b(e) { return e ? d : b(2); };" +
-         "}");
+    test(
+        LINE_JOINER.join(
+            "function f() {",
+            "  var x = function a(x) { return x ? 1 : a(1); };",
+            "  var y = function b(x) { return x ? 2 : b(2); };",
+            "  var z = function c(x) { return x ? y : c(2); };",
+            "}"),
+        LINE_JOINER.join(
+            "function f() {",
+            "  var g = function c(a) { return a ? 1 : c(1); };",
+            "  var d = function a(b) { return b ? 2 : a(2); };",
+            "  var h = function b(e) { return e ? d : b(2); };",
+            "}"));
   }
 
   public void testBleedingFunctionInBlocks() {

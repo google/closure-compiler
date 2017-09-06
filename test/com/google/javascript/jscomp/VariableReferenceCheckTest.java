@@ -264,6 +264,16 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertNoWarning("export var x = function y() { return y(); }");
   }
 
+  public void testVarShadowsFunctionName() {
+    assertNoWarning("var x = function y() { var y; }");
+    assertNoWarning("var x = function y() { let y; }");
+  }
+
+  public void testVarShadowsFunctionName_withES6Modules() {
+    assertNoWarning("export var x = function y() { var y; }");
+    assertNoWarning("export var x = function y() { let y; }");
+  }
+
   public void testDoubleDeclaration() {
     assertRedeclare("function x(y) { if (true) { var y; } }");
   }
