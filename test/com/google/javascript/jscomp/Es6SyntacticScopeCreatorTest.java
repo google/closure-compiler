@@ -209,9 +209,8 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertThat(Iterables.transform(functionScope.getVarIterable(), Var::getName))
         .containsExactly("g");
 
-    // TODO(tbreisacher): "var g" doesn't declare a new var, so the body scope should have no
-    // variables in it.
-    assertThat(Iterables.transform(bodyScope.getVarIterable(), Var::getName)).containsExactly("g");
+    // "var g" doesn't declare a new var, so there is no 'g' variable in the function body scope.
+    assertThat(bodyScope.getVarIterable()).isEmpty();
   }
 
   public void testVarRedeclaration1_inES6Module() {
@@ -1007,9 +1006,9 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertFalse(fScope.isDeclared("f", false));
     assertTrue(fScope.isDeclared("foo", false));
 
-    // The Es6SyntacticScopeCreator considers the function name to be the declaration of 'foo',
-    // even though a reference to 'foo' inside the function would refer to the parameter foo.
-    assertNode(fScope.getVar("foo").getNode().getParent()).hasType(Token.FUNCTION);
+    // The parameter 'foo', not the function name, is the declaration of the variable 'foo' in this
+    // scope.
+    assertNode(fScope.getVar("foo").getNode().getParent()).hasType(Token.PARAM_LIST);
   }
 
   public void testFunctionNameMatchesParamName2() {
@@ -1024,9 +1023,9 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertFalse(fScope.isDeclared("f", false));
     assertTrue(fScope.isDeclared("foo", false));
 
-    // The Es6SyntacticScopeCreator considers the function name to be the declaration of 'foo',
-    // even though a reference to 'foo' inside the function would refer to the parameter foo.
-    assertNode(fScope.getVar("foo").getNode().getParent()).hasType(Token.FUNCTION);
+    // The parameter 'foo', not the function name, is the declaration of the variable 'foo' in this
+    // scope.
+    assertNode(fScope.getVar("foo").getNode().getParent()).hasType(Token.PARAM_LIST);
   }
 
   public void testClassName() {

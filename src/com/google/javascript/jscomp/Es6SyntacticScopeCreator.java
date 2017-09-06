@@ -131,16 +131,17 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
           final Node fnNameNode = n.getFirstChild();
           final Node args = fnNameNode.getNext();
 
-          // Bleed the function name into the scope, if it hasn't
-          // been declared in the outer scope.
+          // Args: Declare function variables
+          checkState(args.isParamList());
+          declareLHS(scope, args);
+
+          // Bleed the function name into the scope, if it hasn't been declared in the outer scope
+          // and the name isn't already in the scope via the param list.
           String fnName = fnNameNode.getString();
           if (!fnName.isEmpty() && NodeUtil.isFunctionExpression(n)) {
             declareVar(scope, fnNameNode);
           }
 
-          // Args: Declare function variables
-          checkState(args.isParamList());
-          declareLHS(scope, args);
           // Since we create a separate scope for body, stop scanning here
           return;
         }
@@ -321,7 +322,7 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
 
       CompilerInput input = compiler.getInput(inputId);
       if (v != null
-          || isShadowingDisallowed(name, s)
+          || !isShadowingAllowed(name, s)
           || ((s.isFunctionScope()
               || s.isFunctionBlockScope()) && name.equals(ARGUMENTS))) {
         redeclarationHandler.onRedeclaration(s, name, n, input);
@@ -332,12 +333,12 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
 
     // Function body declarations are not allowed to shadow
     // function parameters.
-    private static boolean isShadowingDisallowed(String name, Scope s) {
+    private static boolean isShadowingAllowed(String name, Scope s) {
       if (s.isFunctionBlockScope()) {
         Var maybeParam = s.getParent().getOwnSlot(name);
-        return maybeParam != null && maybeParam.isParam();
+        return maybeParam == null || !maybeParam.isParam();
       }
-      return false;
+      return true;
     }
   }
 

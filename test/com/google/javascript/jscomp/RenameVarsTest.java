@@ -237,8 +237,8 @@ public final class RenameVarsTest extends CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "function d() {",
-            "  var e = function b(a) { return a ? 1 : b(1); };",
-            "  var f = function a(c) { return c ? 2 : a(2); };",
+            "  var e = function a(b) { return b ? 1 : a(1); };",
+            "  var f = function c(a) { return a ? 2 : c(2); };",
             "}"));
   }
 
@@ -252,9 +252,9 @@ public final class RenameVarsTest extends CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "function f() {",
-            "  var g = function c(a) { return a ? 1 : c(1); };",
-            "  var d = function a(b) { return b ? 2 : a(2); };",
-            "  var h = function b(e) { return e ? d : b(2); };",
+            "  var g = function a(c) { return c ? 1 : a(1); };",
+            "  var d = function b(a) { return a ? 2 : b(2); };",
+            "  var h = function e(b) { return b ? d : e(2); };",
             "}"));
   }
 
