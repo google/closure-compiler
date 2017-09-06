@@ -861,7 +861,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           }
 
           for (ExportInfo export : exports) {
-            visitExport(t, export.node);
+            visitExport(t, export);
           }
 
           for (Node require : imports) {
@@ -971,11 +971,15 @@ public final class ProcessCommonJSModules implements CompilerPass {
       t.reportCodeChange();
     }
 
+    private void visitExport(NodeTraversal t, ExportInfo exportInfo) {
+      visitExport(t, exportInfo.node, exportInfo);
+    }
+
     /**
      * Visit export statements. Export statements can be either a direct assignment: module.exports
      * = foo or a property assignment: module.exports.foo = foo; exports.foo = foo;
      */
-    private void visitExport(NodeTraversal t, Node export) {
+    private void visitExport(NodeTraversal t, Node export, ExportInfo exportInfo) {
       Node root = getBaseQualifiedNameNode(export);
       Node rValue = NodeUtil.getRValueOfLValue(root);
 
@@ -993,45 +997,37 @@ public final class ProcessCommonJSModules implements CompilerPass {
             && rValue.isObjectLit()
             && root.getParent().isAssign()
             && root.getParent().getParent().isExprResult()) {
-          expandObjectLitAssignment(t, root);
+          expandObjectLitAssignment(t, root, exportInfo);
           return;
         }
       }
 
       ModulePath modulePath = t.getInput().getPath();
       String moduleName = modulePath.toModuleName();
+      Var moduleInitialization = t.getScope().getVar(moduleName);
 
       // If this is an assignment to module.exports or exports, renaming
       // has already handled this case. Remove the export.
       Var rValueVar = null;
       if (rValue != null && rValue.isQualifiedName()) {
-        rValueVar = t.getScope().getVar(rValue.getQualifiedName());
+        rValueVar = exportInfo.scope.getVar(rValue.getQualifiedName());
 
         // If the exported name is not found and this is a direct assignment
         // to modules.exports, look to see if the module name has a var definition
         if (rValueVar == null && root == export) {
-          rValueVar = t.getScope().getVar(moduleName);
-          if (rValueVar != null && rValueVar.getNode() == root) {
+          rValueVar = exportInfo.scope.getVar(moduleName);
+          if (moduleInitialization != null && moduleInitialization.getNode() == root) {
             rValueVar = null;
           }
-
-        // Also check for exports.foo = foo; type expressions that have been renamed;
-        } else if (rValueVar == null
-            && export.getQualifiedName().equals(EXPORTS)
-            && export.getParent().getNext() != null
-            && export.getParent().getNext().isName()
-            && export.getGrandparent().isAssign()
-            && export.getGrandparent().getParent().isExprResult()) {
-          export.getGrandparent().getParent().detach();
-          t.reportCodeChange();
-          return;
         }
       }
 
       if (root.getParent().isAssign()
           && (root.getNext() != null && (root.getNext().isName() || root.getNext().isGetProp()))
           && root.getParent().getParent().isExprResult()
-          && rValueVar != null) {
+          && rValueVar != null
+          && (NodeUtil.getEnclosingScript(rValueVar.nameNode) == null
+              || (rValueVar.nameNode.getParent() != null && !rValueVar.isParam()))) {
         root.getParent().getParent().detach();
         t.reportCodeChange();
         return;
@@ -1042,9 +1038,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
       if (root.matchesQualifiedName("module.exports")
           && rValue != null
-          && t.getScope().getVar("module.exports") == null
+          && exportInfo.scope.getVar("module.exports") == null
           && root.getParent().isAssign()) {
-        if (root.getParent().getParent().isExprResult()) {
+        if (root.getParent().getParent().isExprResult() && moduleInitialization == null) {
           // Rewrite "module.exports = foo;" to "var moduleName = foo;"
           Node parent = root.getParent();
           Node var = IR.var(updatedExport, rValue.detach()).useSourceInfoFrom(root.getParent());
@@ -1079,7 +1075,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
      *
      * <p>module.exports.foo = bar; // removed later module.exports.baz = function() {};
      */
-    private void expandObjectLitAssignment(NodeTraversal t, Node export) {
+    private void expandObjectLitAssignment(NodeTraversal t, Node export, ExportInfo exportInfo) {
       checkState(export.getParent().isAssign());
       Node insertionRef = export.getParent().getParent();
       checkState(insertionRef.isExprResult());
@@ -1112,7 +1108,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         if (!key.isGetterDef()) {
           expr = IR.exprResult(IR.assign(lhs, value)).useSourceInfoIfMissingFromForTree(key);
           insertionParent.addChildAfter(expr, insertionRef);
-          visitExport(t, lhs.getFirstChild());
+          visitExport(t, lhs.getFirstChild(), exportInfo);
         } else {
           Node getter = key.detach();
           String moduleName = t.getInput().getPath().toModuleName();
@@ -1172,7 +1168,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
         // Check if the name is used as an export
         if (importedModuleName == null
             && exportedName != null
-            && !exportedName.equals(originalName)) {
+            && !exportedName.equals(originalName)
+            && !var.isParam()) {
           updateNameReference(t, n, originalName, exportedName, true);
 
           // If it's a global name, rename it to prevent conflicts with other scripts

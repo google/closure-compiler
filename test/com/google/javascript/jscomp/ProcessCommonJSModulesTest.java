@@ -923,4 +923,18 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module$test.Buffer = function() {};",
             "module$test.Buffer.TYPED_ARRAY_SUPPORT = {};"));
   }
+
+  public void testExportNameInParamList() {
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
+            "var tinymce = { foo: 'bar' };",
+            "function register(cb) { cb(tinymce); }",
+            "register(function(tinymce) { module.exports = tinymce; });"),
+        LINE_JOINER.join(
+            "var module$test;",
+            "var tinymce$$module$test = { foo: 'bar' };",
+            "function register$$module$test(cb) { cb(tinymce$$module$test); }",
+            "register$$module$test(function(tinymce) { module$test = tinymce; });"));
+  }
 }
