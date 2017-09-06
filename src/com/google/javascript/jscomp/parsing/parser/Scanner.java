@@ -945,8 +945,9 @@ public class Scanner {
 
     if (next == '/') {
       // Don't warn for '\/' (for now) since it's common in "<\/script>"
-    } else if (templateLiteral && next == '$') {
-      // Don't warn for '\$' in template literal.
+    } else if (templateLiteral) {
+      // Don't warn in template literals since tagged template literals
+      // can access the raw string value.
     } else {
       reportWarning("Unnecessary escape: '\\%s' is equivalent to just '%s'", next, next);
     }

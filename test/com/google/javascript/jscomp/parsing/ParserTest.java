@@ -2652,19 +2652,19 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     expectFeatures(Feature.TEMPLATE_LITERALS);
 
-    parseWarning("var str = `\\a`", "Unnecessary escape: '\\a' is equivalent to just 'a'");
+    // Don't warn for unnecessary escapes in template literals since tagged template literals
+    // can access the raw string value
+    parse("var str = `\\a`");
     parse("var str = `\\b`");
-    parseWarning("var str = `\\c`", "Unnecessary escape: '\\c' is equivalent to just 'c'");
-    parseWarning("var str = `\\d`", "Unnecessary escape: '\\d' is equivalent to just 'd'");
-    parseWarning("var str = `\\e`", "Unnecessary escape: '\\e' is equivalent to just 'e'");
+    parse("var str = `\\c`");
+    parse("var str = `\\d`");
+    parse("var str = `\\e`");
     parse("var str = `\\f`");
     parse("var str = `\\/`");
     parse("var str = `\\0`");
-    parseWarning("var str = `\\8`", "Unnecessary escape: '\\8' is equivalent to just '8'");
-    parseWarning("var str = `\\9`", "Unnecessary escape: '\\9' is equivalent to just '9'");
-    parseWarning("var str = `\\%`", "Unnecessary escape: '\\%' is equivalent to just '%'");
-
-    // $ needs to be escaped to distinguish it from use of ${}
+    parse("var str = `\\8`");
+    parse("var str = `\\9`");
+    parse("var str = `\\%`");
     parse("var str = `\\$`");
   }
 
