@@ -20,12 +20,14 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
+import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.Es6SyntacticScopeCreator.RedeclarationHandler;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import junit.framework.TestCase;
 
 /**
@@ -907,6 +909,40 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     Scope fScope = scopeCreator.createScope(fNode, globalScope);
     assertFalse(fScope.isDeclared("f", false));
     assertTrue(fScope.isDeclared("foo", false));
+  }
+
+  public void testFunctionNameMatchesParamName1() {
+    String js = "var f = function foo(foo) {}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertTrue(globalScope.isDeclared("f", false));
+    assertFalse(globalScope.isDeclared("foo", false));
+
+    Node fNode = root.getFirstChild().getFirstFirstChild();
+    Scope fScope = scopeCreator.createScope(fNode, globalScope);
+    assertFalse(fScope.isDeclared("f", false));
+    assertTrue(fScope.isDeclared("foo", false));
+
+    // The Es6SyntacticScopeCreator considers the function name to be the declaration of 'foo',
+    // even though a reference to 'foo' inside the function would refer to the parameter foo.
+    assertNode(fScope.getVar("foo").getNode().getParent()).hasType(Token.FUNCTION);
+  }
+
+  public void testFunctionNameMatchesParamName2() {
+    String js = "var f = function foo(x = foo, foo) {}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertTrue(globalScope.isDeclared("f", false));
+    assertFalse(globalScope.isDeclared("foo", false));
+
+    Node fNode = root.getFirstChild().getFirstFirstChild();
+    Scope fScope = scopeCreator.createScope(fNode, globalScope);
+    assertFalse(fScope.isDeclared("f", false));
+    assertTrue(fScope.isDeclared("foo", false));
+
+    // The Es6SyntacticScopeCreator considers the function name to be the declaration of 'foo',
+    // even though a reference to 'foo' inside the function would refer to the parameter foo.
+    assertNode(fScope.getVar("foo").getNode().getParent()).hasType(Token.FUNCTION);
   }
 
   public void testClassName() {
