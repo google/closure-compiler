@@ -30,8 +30,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -76,19 +76,19 @@ class RenameProperties implements CompilerPass {
   private final List<Node> toRemove = new ArrayList<>();
   private final List<Node> stringNodesToRename = new ArrayList<>();
   private final Map<Node, Node> callNodeToParentMap =
-      new HashMap<>();
+      new LinkedHashMap<>();
   private final char[] reservedFirstCharacters;
   private final char[] reservedNonFirstCharacters;
 
   // Map from property name to Property object
-  private final Map<String, Property> propertyMap = new HashMap<>();
+  private final Map<String, Property> propertyMap = new LinkedHashMap<>();
 
   // Property names that don't get renamed
-  private final Set<String> externedNames = new HashSet<>(
+  private final Set<String> externedNames = new LinkedHashSet<>(
       Arrays.asList("prototype"));
 
   // Names to which properties shouldn't be renamed, to avoid name conflicts
-  private final Set<String> quotedNames = new HashSet<>();
+  private final Set<String> quotedNames = new LinkedHashSet<>();
 
   // Shared name generator
   private final NameGenerator nameGenerator;
