@@ -34,7 +34,7 @@ import java.util.Set;
  * Tests for {@link ReplaceStrings}.
  *
  */
-public final class ReplaceStringsTest extends CompilerTestCase {
+public final class ReplaceStringsTest extends TypeICompilerTestCase {
   private ReplaceStrings pass;
   private Set<String> reserved;
   private VariableMap previous;
@@ -55,25 +55,25 @@ public final class ReplaceStringsTest extends CompilerTestCase {
 
   private ImmutableList<String> functionsToInspect;
 
-  private static final String EXTERNS =
-    "var goog = {};\n" +
-    "goog.debug = {};\n" +
-    "/** @constructor */\n" +
-    "goog.debug.Trace = function() {};\n" +
-    "goog.debug.Trace.startTracer = function (var_args) {};\n" +
-    "/** @constructor */\n" +
-    "goog.debug.Logger = function() {};\n" +
-    "goog.debug.Logger.prototype.info = function(msg, opt_ex) {};\n" +
-    "/**\n" +
-    " * @param {string} name\n" +
-    " * @return {!goog.debug.Logger}\n" +
-    " */\n" +
-    "goog.debug.Logger.getLogger = function(name){};\n" +
-    "goog.log = {}\n" +
-    "goog.log.getLogger = function(name){};\n" +
-    "goog.log.info = function(logger, msg, opt_ex) {};\n" +
-    "goog.log.multiString = function(logger, replace1, replace2, keep) {};\n"
-    ;
+  private static final String EXTERNS = lines(
+      MINIMAL_EXTERNS,
+      "var goog = {};",
+      "goog.debug = {};",
+      "/** @constructor */",
+      "goog.debug.Trace = function() {};",
+      "goog.debug.Trace.startTracer = function (var_args) {};",
+      "/** @constructor */",
+      "goog.debug.Logger = function() {};",
+      "goog.debug.Logger.prototype.info = function(msg, opt_ex) {};",
+      "/**",
+      " * @param {string} name",
+      " * @return {!goog.debug.Logger}",
+      " */",
+      "goog.debug.Logger.getLogger = function(name){};",
+      "goog.log = {}",
+      "goog.log.getLogger = function(name){};",
+      "goog.log.info = function(logger, msg, opt_ex) {};",
+      "goog.log.multiString = function(logger, replace1, replace2, keep) {};");
 
   public ReplaceStringsTest() {
     super(EXTERNS);
@@ -90,7 +90,7 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     enableNormalize();
     enableParseTypeInfo();
     functionsToInspect = defaultFunctionsToInspect;
@@ -357,6 +357,11 @@ public final class ReplaceStringsTest extends CompilerTestCase {
 
   // Non-matching "info" prototype property.
   public void testLoggerOnObject3b() {
+    // TODO(sdh): Figure out how to make this test work in NTI.  First, we get a
+    // warning about global this, but it also incorrectly replaces the message.
+    // These are probably related (i.e. NTI likely is replacing with ? which then
+    // has the possibility to match Logger).
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(
       "/** @constructor */\n" +
       "var x = function() {};\n" +
@@ -386,6 +391,11 @@ public final class ReplaceStringsTest extends CompilerTestCase {
   }
 
   public void testLoggerOnThis() {
+    // TODO(sdh): Figure out how to make this test work in NTI.  First, we get a
+    // warning about global this, but it also incorrectly doesn't replace the message.
+    // These are probably related (i.e. NTI likely is replacing with ? which then
+    // has the possibility to match Logger).
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testDebugStrings(
         "function f() {" +
         "  this.logger_ = goog.debug.Logger.getLogger('foo');" +
