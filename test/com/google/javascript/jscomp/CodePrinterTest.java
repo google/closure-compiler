@@ -2029,13 +2029,13 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY))
             .setTagAsTypeSummary(true)
             .build();
-    assertEquals("/** @externs */\nvar x", result);
+    assertEquals("/** @fileoverview @typeSummary */\nvar x", result);
 
     result =
         defaultBuilder(parse("var x", TypeInferenceMode.NTI_ONLY))
             .setTagAsTypeSummary(true)
             .build();
-    assertEquals("/** @externs */\nvar x", result);
+    assertEquals("/** @fileoverview @typeSummary */\nvar x", result);
   }
 
   public void testArrayLiteral() {

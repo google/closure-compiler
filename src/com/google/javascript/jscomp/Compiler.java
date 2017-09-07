@@ -1859,7 +1859,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   void orderInputs() {
-    hoistUnorderedExterns();
+    hoistExterns();
     // Check if the sources need to be re-ordered.
     boolean staleInputs = false;
     if (options.dependencyOptions.needsManagement()) {
@@ -1883,8 +1883,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     }
 
-    if (options.dependencyOptions.needsManagement() && options.allowGoogProvideInExterns()) {
-      hoistAllExterns();
+    if (options.allowIjsInputs()) {
+      hoistIjsFiles();
     }
 
     hoistNoCompileFiles();
@@ -1895,11 +1895,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /**
-   * Hoists inputs with the @externs annotation and no provides or requires into the externs list.
+   * Hoists inputs with the @externs annotation into the externs list.
    */
-  void hoistUnorderedExterns() {
+  void hoistExterns() {
     boolean staleInputs = false;
     for (CompilerInput input : inputs) {
+      // TODO(b/65450037): Remove this if. All @externs annotated files should be hoisted.
       if (options.dependencyOptions.needsManagement()) {
         // If we're doing scanning dependency info anyway, use that
         // information to skip sources that obviously aren't externs.
@@ -1912,19 +1913,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         staleInputs = true;
       }
     }
-
     if (staleInputs) {
       repartitionInputs();
     }
   }
 
   /**
-   * Hoists inputs with the @externs annotation into the externs list.
+   * Hoists inputs with the @typeSummary annotation into the externs list.
    */
-  void hoistAllExterns() {
+  void hoistIjsFiles() {
     boolean staleInputs = false;
     for (CompilerInput input : inputs) {
-      if (hoistIfExtern(input)) {
+      if (hoistIfTypeSummary(input)) {
         staleInputs = true;
       }
     }
@@ -1949,6 +1949,29 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (info != null && info.isExterns()) {
       // If the input file is explicitly marked as an externs file, then move it out of the main
       // JS root and put it with the other externs.
+      externsRoot.addChildToBack(n);
+      input.setIsExtern(true);
+
+      input.getModule().remove(input);
+
+      externs.add(input);
+      return true;
+    }
+    return false;
+  }
+
+  private boolean hoistIfTypeSummary(CompilerInput input) {
+    Node n = input.getAstRoot(this);
+
+    // Inputs can have a null AST on a parse error.
+    if (n == null) {
+      return false;
+    }
+
+    JSDocInfo info = n.getJSDocInfo();
+    if (info != null && info.isTypeSummary()) {
+      // If the input file is explicitly marked as a @typeSummary, then it should be treated as
+      // an extern file.
       externsRoot.addChildToBack(n);
       input.setIsExtern(true);
 
@@ -2342,8 +2365,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     builder.setTypeRegistry(getTypeIRegistry());
     builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);
-    builder.setTagAsExterns(n.isFromExterns());
-    builder.setTagAsTypeSummary(options.shouldGenerateTypedExterns());
+    builder.setTagAsExterns(firstOutput && n.isFromExterns());
+    builder.setTagAsTypeSummary(firstOutput && !n.isFromExterns() && options.shouldGenerateTypedExterns());
     builder.setTagAsStrict(firstOutput && options.shouldEmitUseStrict());
     return builder.build();
   }

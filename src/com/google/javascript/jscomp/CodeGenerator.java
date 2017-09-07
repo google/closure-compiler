@@ -82,7 +82,7 @@ public class CodeGenerator {
 
   /** Insert a top-level identifying file as .i.js generated typing file. */
   void tagAsTypeSummary() {
-    tagAsExterns();
+    add("/** @fileoverview @typeSummary */\n");
   }
 
   /** Insert a top-level @externs comment. */

@@ -1051,10 +1051,13 @@ public final class CompilerTest extends TestCase {
   }
 
   public void testExternsDependencySorting() {
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("leaf", "/** @externs */ goog.require('beer');"),
-        SourceFile.fromCode("beer", "/** @externs */ goog.provide('beer');\ngoog.require('hops');"),
-        SourceFile.fromCode("hops", "/** @externs */ goog.provide('hops');"));
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("leaf", "/** @fileoverview @typeSummary */ goog.require('beer');"),
+            SourceFile.fromCode(
+                "beer",
+                "/** @fileoverview @typeSummary */ goog.provide('beer');\ngoog.require('hops');"),
+            SourceFile.fromCode("hops", "/** @fileoverview @typeSummary */ goog.provide('hops');"));
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.CHECK_IJS);
@@ -1121,10 +1124,14 @@ public final class CompilerTest extends TestCase {
   }
 
   public void testExternsDependencyPruning() {
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("unused", "/** @externs */ goog.provide('unused');"),
-        SourceFile.fromCode("moocher", "/** @externs */ goog.require('something');"),
-        SourceFile.fromCode("something", "/** @externs */ goog.provide('something');"));
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "unused", "/** @fileoverview @typeSummary */ goog.provide('unused');"),
+            SourceFile.fromCode(
+                "moocher", "/** @fileoverview @typeSummary */ goog.require('something');"),
+            SourceFile.fromCode(
+                "something", "/** @fileoverview @typeSummary */ goog.provide('something');"));
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.dependencyOptions.setDependencyPruning(true);

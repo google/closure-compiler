@@ -137,7 +137,7 @@ public final class JSDocInfoBuilder {
   public boolean isPopulatedWithFileOverview() {
     return isPopulated() &&
         (currentInfo.hasFileOverview() || currentInfo.isExterns() ||
-         currentInfo.isNoCompile());
+         currentInfo.isNoCompile() || currentInfo.isTypeSummary());
   }
 
   /**
@@ -1146,8 +1146,22 @@ public final class JSDocInfoBuilder {
    * {@link JSDocInfo#isExterns()} flag set to {@code true}.
    */
   public boolean recordExterns() {
-    if (!currentInfo.isExterns()) {
+    if (!currentInfo.isExterns() && !currentInfo.isTypeSummary()) {
       currentInfo.setExterns(true);
+      populated = true;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Records that the {@link JSDocInfo} being built should have its
+   * {@link JSDocInfo#isTypeSummary()} flag set to {@code true}.
+   */
+  public boolean recordTypeSummary() {
+    if (!currentInfo.isTypeSummary() && !currentInfo.isExterns()) {
+      currentInfo.setTypeSummary(true);
       populated = true;
       return true;
     } else {

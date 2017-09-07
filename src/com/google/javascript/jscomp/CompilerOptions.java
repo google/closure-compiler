@@ -204,7 +204,7 @@ public class CompilerOptions implements Serializable {
   }
 
   boolean shouldPrintExterns() {
-    return this.printExterns;
+    return this.printExterns || incrementalCheckMode == IncrementalCheckMode.GENERATE_IJS;
   }
 
   /**

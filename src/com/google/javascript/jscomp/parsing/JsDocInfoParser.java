@@ -611,6 +611,12 @@ public final class JsDocInfoParser {
           }
           return eatUntilEOLIfNotAnnotation();
 
+        case TYPE_SUMMARY:
+          if (!jsdocBuilder.recordTypeSummary()) {
+            addParserWarning("msg.jsdoc.typesummary");
+          }
+          return eatUntilEOLIfNotAnnotation();
+
         case EXTENDS:
         case IMPLEMENTS:
           skipEOLs();
