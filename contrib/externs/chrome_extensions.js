@@ -6606,12 +6606,9 @@ WebRequestOptionallySynchronousEvent.prototype.hasListener = function(
 
 
 /**
- * @param {function(!Object): (undefined|!BlockingResponse)} listener Listener
- *     function.
- * @return {undefined}
+ * @return {boolean}
  */
-WebRequestOptionallySynchronousEvent.prototype.hasListeners = function(
-    listener) {};
+WebRequestOptionallySynchronousEvent.prototype.hasListeners = function() {};
 
 
 /**
