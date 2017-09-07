@@ -6697,10 +6697,56 @@ WebRequestOnErrorOccurredEvent.prototype.hasListeners = function(listener) {};
 
 
 /**
- * @const
+ * WebRequestEventInterface specifies the interface shared between
+ * chrome.webrequest (defined below) and HTMLWebviewElement.request defined
+ * in the cros_apps.js externs.
+ * @interface
  * @see https://developer.chrome.com/extensions/webRequest
  */
-chrome.webRequest = {};
+function WebRequestEventInterface() {};
+
+
+/** @type {!WebRequestOnAuthRequiredEvent} */
+WebRequestEventInterface.prototype.onAuthRequired;
+
+
+/** @type {!WebRequestEvent} */
+WebRequestEventInterface.prototype.onBeforeRedirect;
+
+
+/** @type {!WebRequestOptionallySynchronousEvent} */
+WebRequestEventInterface.prototype.onBeforeRequest;
+
+
+/** @type {!WebRequestOptionallySynchronousEvent} */
+WebRequestEventInterface.prototype.onBeforeSendHeaders;
+
+
+/** @type {!WebRequestEvent} */
+WebRequestEventInterface.prototype.onCompleted;
+
+
+/** @type {!WebRequestOnErrorOccurredEvent} */
+WebRequestEventInterface.prototype.onErrorOccurred;
+
+
+/** @type {!WebRequestOptionallySynchronousEvent} */
+WebRequestEventInterface.prototype.onHeadersReceived;
+
+
+/** @type {!WebRequestEvent} */
+WebRequestEventInterface.prototype.onResponseStarted;
+
+
+/** @type {!WebRequestEvent} */
+WebRequestEventInterface.prototype.onSendHeaders;
+
+
+/**
+ * @type {!WebRequestEventInterface}
+ * @see https://developer.chrome.com/extensions/webRequest
+ */
+chrome.webRequest;
 
 
 /**
@@ -6708,42 +6754,6 @@ chrome.webRequest = {};
  * @return {undefined}
  */
 chrome.webRequest.handlerBehaviorChanged = function(opt_callback) {};
-
-
-/** @type {!WebRequestOnAuthRequiredEvent} */
-chrome.webRequest.onAuthRequired;
-
-
-/** @type {!WebRequestEvent} */
-chrome.webRequest.onBeforeRedirect;
-
-
-/** @type {!WebRequestOptionallySynchronousEvent} */
-chrome.webRequest.onBeforeRequest;
-
-
-/** @type {!WebRequestOptionallySynchronousEvent} */
-chrome.webRequest.onBeforeSendHeaders;
-
-
-/** @type {!WebRequestEvent} */
-chrome.webRequest.onCompleted;
-
-
-/** @type {!WebRequestOnErrorOccurredEvent} */
-chrome.webRequest.onErrorOccurred;
-
-
-/** @type {!WebRequestOptionallySynchronousEvent} */
-chrome.webRequest.onHeadersReceived;
-
-
-/** @type {!WebRequestEvent} */
-chrome.webRequest.onResponseStarted;
-
-
-/** @type {!WebRequestEvent} */
-chrome.webRequest.onSendHeaders;
 
 
 // Classes
