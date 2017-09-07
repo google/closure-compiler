@@ -970,7 +970,8 @@ public final class ScopedAliasesTest extends CompilerTestCase {
          "$jscomp.scope.x = null;");
   }
 
-  public void testIssue2210() {
+  // https://github.com/google/closure-compiler/issues/2211
+  public void testIssue2211() {
     test(
         LINE_JOINER.join(
             "var ns = {};",
@@ -988,17 +989,18 @@ public final class ScopedAliasesTest extends CompilerTestCase {
             "};"));
   }
 
-  public void testIssue2210b() {
+  // https://github.com/google/closure-compiler/issues/2211
+  public void testIssue2211b() {
     test(
         LINE_JOINER.join(
             "var ns = {};",
-             "var y = 1;",
-             "goog.scope(function () {",
-             "  function x(y) {}",
-             "  ns.fact = function y(n) {",
-             "    return n == 1 ? 1 : n * y(n - 1);",
-             "  };",
-             "});"),
+            "var y = 1;",
+            "goog.scope(function () {",
+            "  function x(y) {}",
+            "  ns.fact = function y(n) {",
+            "    return n == 1 ? 1 : n * y(n - 1);",
+            "  };",
+            "});"),
         LINE_JOINER.join(
             SCOPE_NAMESPACE,
             "var ns = {};",
@@ -1009,12 +1011,14 @@ public final class ScopedAliasesTest extends CompilerTestCase {
             "};"));
   }
 
-  public void testIssue2210c() {
+  // https://github.com/google/closure-compiler/issues/2211
+  public void testIssue2211c() {
     testScoped(
         LINE_JOINER.join(
             "foo(() => {",
             "  const y = function y() {",
-            "    use(y);", "  };",
+            "    use(y);",
+            "  };",
             "});"),
         LINE_JOINER.join(
             "foo(() => {",
