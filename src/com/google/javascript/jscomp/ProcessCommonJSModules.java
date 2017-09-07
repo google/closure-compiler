@@ -23,10 +23,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
-import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.JSDocInfo;
-import com.google.javascript.rhino.JSDocInfoBuilder;
-import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -123,6 +121,51 @@ public final class ProcessCommonJSModules implements CompilerPass {
         compiler,
         root,
         new RewriteModule(finder.isCommonJsModule() || forceModuleDetection, exports.build()));
+
+    // Define a default prop for es6 import interop
+    if (finder.isCommonJsModule() || forceModuleDetection) {
+      CompilerInput ci = compiler.getInput(root.getInputId());
+      ModulePath modulePath = ci.getPath();
+      if (modulePath == null) {
+        return;
+      }
+      String moduleName = modulePath.toModuleName();
+      Node assignDefaultProp = IR.exprResult(
+          IR.assign(
+              IR.getprop(IR.name(moduleName), "default"),
+              IR.name(moduleName)));
+
+      Node defaultPropUndefined = IR.sheq(
+          IR.typeof(IR.getprop(IR.name(moduleName), "default")),
+          IR.string("undefined"));
+
+      Node moduleExportsIsObject = IR.or(
+          IR.sheq(
+              IR.typeof(IR.typeof(IR.getprop(IR.name(moduleName), "default"))),
+              IR.string("object")),
+          IR.sheq(
+              IR.typeof(IR.typeof(IR.getprop(IR.name(moduleName), "default"))),
+              IR.string("function")));
+
+      Node moduleExportsNotNull = IR.shne(
+          IR.name(moduleName),
+          IR.nullNode());
+
+      Node moduleExportsDefined = IR.shne(
+          IR.typeof(IR.name(moduleName)),
+          IR.string("undefined"));
+
+      root.addChildToBack(
+          IR.ifNode(
+            IR.and(
+                moduleExportsDefined,
+                IR.and(
+                    moduleExportsNotNull,
+                    IR.and(
+                        moduleExportsIsObject,
+                        defaultPropUndefined))),
+            IR.block(assignDefaultProp)));
+    }
   }
 
   /**
@@ -307,7 +350,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
     List<ExportInfo> exports = new ArrayList<>();
     List<ExportInfo> webpackExports = new ArrayList<>();
     List<JSError> errors = new ArrayList<>();
-    Node webpackDefineEsModuleProperty = null;
 
     public List<ExportInfo> getModuleExports() {
       return ImmutableList.copyOf(moduleExports);
@@ -315,10 +357,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
     public List<ExportInfo> getExports() {
       return ImmutableList.copyOf(exports);
-    }
-
-    public List<ExportInfo> getWebpackExports() {
-      return ImmutableList.copyOf(webpackExports);
     }
 
     @Override
@@ -416,25 +454,15 @@ public final class ProcessCommonJSModules implements CompilerPass {
       if (n.isName()
           && compiler.getOptions().moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK
           && WEBPACK_EXPORTS.equals(n.getString())) {
-        if (n.getParent().isGetElem()
-            && n.getNext().isString()
-            && NodeUtil.isValidPropertyName(compiler.getFeatureSet(), n.getNext().getString())) {
-          Var v = t.getScope().getVar(WEBPACK_EXPORTS);
-          if (v == null || v.isGlobal() || v.isExtern()) {
+        Var v = t.getScope().getVar(WEBPACK_EXPORTS);
+        if (v == null || v.isGlobal() || v.isExtern()) {
+          if (n.getParent().isGetElem()
+              && n.getNext().isString()
+              && NodeUtil.isValidPropertyName(compiler.getFeatureSet(), n.getNext().getString())) {
             webpackExports.add(new ExportInfo(n, t.getScope()));
+          } else {
+            exports.add(new ExportInfo(n, t.getScope()));
           }
-
-          // Webpack defines an "__esModule" property for babel. We can just remove it.
-          // Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-        } else if (n.getParent().isCall()
-            && n.getPrevious() != null
-            && n.getPrevious().isQualifiedName()
-            && "Object.defineProperty".equals(n.getPrevious().getQualifiedName())
-            && n.getNext() != null
-            && n.getNext().isString()
-            && n.getNext().getString().equals("__esModule")
-            && n.getGrandparent().isExprResult()) {
-          webpackDefineEsModuleProperty = n.getGrandparent();
         }
       }
 
@@ -780,10 +808,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
     /** Webpack exports are getelems. Convert them to getprops and add them to the exports list */
     void processWebpackExports() {
-      if (webpackDefineEsModuleProperty != null) {
-        webpackDefineEsModuleProperty.detachFromParent();
-      }
-
       for (ExportInfo export : webpackExports) {
         Node getElem = export.node.getParent();
         Node propName = export.node.getNext().detach();
