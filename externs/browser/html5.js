@@ -3204,6 +3204,14 @@ DOMTokenList.prototype.toggle = function(token, opt_force) {};
 DOMTokenList.prototype.toString = function() {};
 
 /**
+ * @return {!IteratorIterable<string>} An iterator to go through all values of
+ *     the key/value pairs contained in this object.
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/values
+ */
+DOMTokenList.prototype.values = function() {};
+
+/**
  * A better interface to CSS classes than className.
  * @type {!DOMTokenList}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/classList
