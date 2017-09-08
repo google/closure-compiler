@@ -15,7 +15,7 @@
  */
 package com.google.javascript.jscomp.testing;
 
-import static com.google.common.truth.Truth.THROW_ASSERTION_ERROR;
+import static com.google.common.truth.Truth.assertAbout;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
+import com.google.common.truth.SubjectFactory;
 import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.TypeI;
 import javax.annotation.CheckReturnValue;
@@ -39,7 +40,16 @@ import javax.annotation.CheckReturnValue;
 public final class TypeSubject extends Subject<TypeSubject, TypeI> {
   @CheckReturnValue
   public static TypeSubject assertType(TypeI type) {
-    return new TypeSubject(THROW_ASSERTION_ERROR, type);
+    return assertAbout(types()).that(type);
+  }
+
+  public static SubjectFactory<TypeSubject, TypeI> types() {
+    return new SubjectFactory<TypeSubject, TypeI>() {
+      @Override
+      public TypeSubject getSubject(FailureStrategy failureStrategy, TypeI actual) {
+        return new TypeSubject(failureStrategy, actual);
+      }
+    };
   }
 
   public TypeSubject(FailureStrategy fs, TypeI type) {
@@ -88,7 +98,7 @@ public final class TypeSubject extends Subject<TypeSubject, TypeI> {
    */
   public TypeSubject withTypeOfProp(String propName) {
     TypeI actualPropType = actual().toMaybeObjectType().getPropertyType(propName);
-    return new TypeSubject(THROW_ASSERTION_ERROR, actualPropType);
+    return check().about(types()).that(actualPropType);
   }
 
   public void isObjectTypeWithoutProperty(String propName) {
