@@ -4584,7 +4584,7 @@ public final class NodeUtil {
         }
 
         throw new IllegalStateException(
-            "Unexpected expression node" + value + "\n parent:" + value.getParent());
+            "Unexpected expression node: " + value + "\n parent:" + value.getParent());
     }
   }
 
