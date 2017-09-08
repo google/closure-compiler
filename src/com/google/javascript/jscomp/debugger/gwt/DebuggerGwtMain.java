@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.javascript.jscomp.debugger;
+package com.google.javascript.jscomp.debugger.gwt;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
@@ -37,6 +37,7 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
+import com.google.javascript.jscomp.debugger.common.CompilationParam;
 import java.util.Arrays;
 import java.util.List;
 
@@ -89,21 +90,23 @@ public class DebuggerGwtMain implements EntryPoint {
     externs.setCharacterWidth(80);
     externs.setVisibleLines(5);
     externs.setText("function Symbol() {}\n");
-    externs.addKeyUpHandler(new KeyUpHandler() {
-      @Override
-      public void onKeyUp(KeyUpEvent event) {
-        doCompile();
-      }
-    });
+    externs.addKeyUpHandler(
+        new KeyUpHandler() {
+          @Override
+          public void onKeyUp(KeyUpEvent event) {
+            doCompile();
+          }
+        });
 
     input0.setCharacterWidth(80);
     input0.setVisibleLines(25);
-    input0.addKeyUpHandler(new KeyUpHandler() {
-      @Override
-      public void onKeyUp(KeyUpEvent event) {
-        doCompile();
-      }
-    });
+    input0.addKeyUpHandler(
+        new KeyUpHandler() {
+          @Override
+          public void onKeyUp(KeyUpEvent event) {
+            doCompile();
+          }
+        });
 
     HorizontalPanel panel = new HorizontalPanel();
     VerticalPanel leftPane = new VerticalPanel();
