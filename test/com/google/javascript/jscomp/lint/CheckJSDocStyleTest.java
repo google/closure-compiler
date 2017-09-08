@@ -191,12 +191,17 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
 
   public void testInvalidExtraneousClassAnnotations_withES6Modules() {
     testWarning(
-        LINE_JOINER.join("export", "/**", " * @constructor", " */", "var X = class {};"),
+        LINE_JOINER.join(
+            "export",
+            "/**",
+            " * @constructor",
+            " */",
+            "var X = class {};"),
         CLASS_DISALLOWED_JSDOC);
   }
 
   public void testValidExtraneousClassAnnotations_withES6Modules() {
-    testSame(LINE_JOINER.join("export", "/**", " * @extends {Y}", " */", "class X extends Y {};"));
+    testSame("export /** @extends {Y} */ class X extends Y {};");
   }
 
   public void testNestedArrowFunctions() {
@@ -508,7 +513,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
 
   public void testMissingParam_withES6Modules02() {
     testWarning(
-        LINE_JOINER.join("export", "/**", " * @param {string} x", " */", "function f(x = 1) {}"),
+        "export /** @param {string} x */ function f(x = 1) {}",
         OPTIONAL_PARAM_NOT_MARKED_OPTIONAL);
   }
 
@@ -803,8 +808,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
 
   public void testMissingPrivate_class_withES6Modules01() {
     testWarning(
-        LINE_JOINER.join(
-            "export class Example {", "  /** @return {number} */", "  foo_() { return 0; }", "}"),
+        "export class Example { /** @return {number} */ foo_() { return 0; } }",
         MUST_BE_PRIVATE);
   }
 
@@ -831,9 +835,7 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   }
 
   public void testMissingPrivate_dontWarnOnObjectLiteral_withES6Modules() {
-    testSame(
-        LINE_JOINER.join(
-            "export var obj = {", "  /** @return {number} */", "  foo_() { return 0; }", "}"));
+    testSame("export var obj = { /** @return {number} */ foo_() { return 0; } }");
   }
 
   public void testOptionalArgs() {
@@ -860,13 +862,12 @@ public final class CheckJSDocStyleTest extends CompilerTestCase {
   }
 
   public void testValidOptionalArgs_withES6Modules() {
-    testSame(LINE_JOINER.join("export", "/**", " * @param {number=} n", " */", "function f(n) {}"));
+    testSame("export /** @param {number=} n */ function f(n) {}");
   }
 
   public void testInvalidOptionalArgs_withES6Modules() {
     testSame(
-        LINE_JOINER.join(
-            "export", "/**", " * @param {number} opt_n", " */", "function f(opt_n) {}"),
+        "export /** @param {number} opt_n */ function f(opt_n) {}",
         OPTIONAL_PARAM_NOT_MARKED_OPTIONAL);
   }
 
