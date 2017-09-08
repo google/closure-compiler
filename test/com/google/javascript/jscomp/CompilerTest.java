@@ -1468,4 +1468,107 @@ public final class CompilerTest extends TestCase {
     compiler.init(ImmutableList.<SourceFile>of(), sources, options);
     assertThat(compiler.getModules().get(0).getInputs()).contains(input);
   }
+
+  public void testProperEs6ModuleOrdering() throws Exception {
+    List<SourceFile> sources = new ArrayList<>();
+    sources.add(SourceFile.fromCode(
+        "/entry.js",
+        CompilerTestCase.LINE_JOINER.join(
+          "import './b/b.js';",
+          "import './b/a.js';",
+          "import './important.js';",
+          "import './a/b.js';",
+          "import './a/a.js';")));
+    sources.add(SourceFile.fromCode("/a/a.js", "window['D'] = true;"));
+    sources.add(SourceFile.fromCode("/a/b.js", "window['C'] = true;"));
+    sources.add(SourceFile.fromCode("/b/a.js", "window['B'] = true;"));
+    sources.add(SourceFile.fromCode(
+        "/b/b.js",
+        CompilerTestCase.LINE_JOINER.join(
+            "import foo from './c.js';",
+            "if (foo.settings.inUse) {",
+            "  window['E'] = true;",
+            "}",
+            "window['A'] = true;")));
+    sources.add(SourceFile.fromCode(
+        "/b/c.js",
+        CompilerTestCase.LINE_JOINER.join(
+            "window['BEFOREA'] = true;",
+            "",
+            "export default {",
+            "  settings: {",
+            "    inUse: Boolean(document.documentElement['attachShadow'])",
+            "  }",
+            "};")));
+    sources.add(SourceFile.fromCode("/important.js", "window['E'] = false;"));
+
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.dependencyOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forFile("/entry.js")));
+    options.dependencyOptions.setDependencySorting(true);
+    options.dependencyOptions.setDependencyPruning(true);
+    options.dependencyOptions.setMoocherDropping(true);
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+    Compiler compiler = new Compiler();
+    Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
+    assertTrue(result.success);
+
+    List<String> orderedInputs = new ArrayList<>();
+    for (CompilerInput input : compiler.getInputsInOrder()) {
+      orderedInputs.add(input.getName());
+    }
+
+    assertThat(orderedInputs)
+        .containsExactly("/b/c.js", "/b/b.js", "/b/a.js", "/important.js", "/a/b.js", "/a/a.js", "/entry.js")
+        .inOrder();
+  }
+
+  public void testProperGoogBaseOrdering() throws Exception {
+    List<SourceFile> sources = new ArrayList<>();
+    sources.add(SourceFile.fromCode("test.js", "goog.setTestOnly()"));
+    sources.add(SourceFile.fromCode("d.js", "goog.provide('d');"));
+    sources.add(SourceFile.fromCode("c.js", "goog.provide('c');"));
+    sources.add(SourceFile.fromCode("b.js", "goog.provide('b');"));
+    sources.add(SourceFile.fromCode("a.js", "goog.provide('a');"));
+    sources.add(SourceFile.fromCode("base.js",
+        CompilerTestCase.LINE_JOINER.join(
+            "/** @provideGoog */",
+            "/** @const */ var goog = goog || {};",
+            "var COMPILED = false;")));
+    sources.add(SourceFile.fromCode("entry.js",
+        CompilerTestCase.LINE_JOINER.join(
+            "goog.require('a');",
+            "goog.require('b');",
+            "goog.require('c');",
+            "goog.require('d');")));
+
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.dependencyOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forFile("entry.js")));
+    options.dependencyOptions.setDependencySorting(true);
+    options.dependencyOptions.setDependencyPruning(true);
+    options.dependencyOptions.setMoocherDropping(false);
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    for (int iterationCount = 0; iterationCount < 10; iterationCount++) {
+      java.util.Collections.shuffle(sources);
+      Compiler compiler = new Compiler();
+      Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
+      assertTrue(result.success);
+
+      List<String> orderedInputs = new ArrayList<>();
+      for (CompilerInput input : compiler.getInputsInOrder()) {
+        orderedInputs.add(input.getName());
+      }
+
+      assertThat(orderedInputs)
+          .containsExactly("base.js", "test.js", "a.js", "b.js", "c.js", "d.js", "entry.js");
+      assertThat(orderedInputs.indexOf("base.js")).isLessThan(orderedInputs.indexOf("entry.js"));
+      assertThat(orderedInputs.indexOf("base.js")).isLessThan(orderedInputs.indexOf("test.js"));
+    }
+  }
 }
