@@ -1610,7 +1610,28 @@ function RTCDataChannelInitInterface_() {}
 RTCDataChannelInitInterface_.prototype.reliable;
 
 /**
- * @typedef {RTCDataChannelInitInterface_|RTCDataChannelInitRecord_}
+ * @typedef {Object}
+ * @property {boolean=} [ordered=true]
+ * @property {number=} maxPacketLifeTime
+ * @property {number=} maxRetransmits
+ * @property {string=} [protocol=""]
+ * @property {boolean=} [negotiated=false]
+ * @property {number=} id
+ * @property {string=} [priority='low']
+ * see https://www.w3.org/TR/webrtc/#dom-rtcdatachannelinit for documentation
+ * Type inconsistencies due to Closure limitations:
+ * maxPacketLifeTime should be UnsignedShort
+ * maxRetransmits should be UnsignedShort
+ * protocol should be USVString
+ * id should be UnsignedShort
+ * In WebIDL priority is an enum with values 'very-low', 'low',
+ * 'medium' and 'high', but there is no mechanism in Closure for describing
+ * a specialization of the string type.
+ */
+var RTCDataChannelInitDictionary_;
+
+/**
+ * @typedef {RTCDataChannelInitInterface_|RTCDataChannelInitRecord_|RTCDataChannelInitDictionary_}
  */
 var RTCDataChannelInit;
 
