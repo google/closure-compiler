@@ -561,7 +561,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private <T extends SourceFile> List<CompilerInput> makeExternInputs(List<T> externSources) {
     List<CompilerInput> inputs = new ArrayList<>(externSources.size());
     for (SourceFile file : externSources) {
-      inputs.add(new CompilerInput(file, /* extern= */ true));
+      inputs.add(new CompilerInput(file, /* isExtern= */ true));
     }
     return inputs;
   }
