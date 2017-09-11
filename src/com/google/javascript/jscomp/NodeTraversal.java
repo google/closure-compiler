@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * NodeTraversal allows an iteration through the nodes in the parse tree,
@@ -132,8 +133,7 @@ public class NodeTraversal {
    */
   public abstract static class AbstractPostOrderCallback implements Callback {
     @Override
-    public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
-        Node parent) {
+    public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
       return true;
     }
   }
@@ -243,15 +243,13 @@ public class NodeTraversal {
      * @param nodeTypes the nodes to include/exclude in the traversal
      * @param include whether to include or exclude the nodes in the traversal
      */
-    public AbstractNodeTypePruningCallback(Set<Token> nodeTypes,
-          boolean include) {
+    public AbstractNodeTypePruningCallback(Set<Token> nodeTypes, boolean include) {
       this.nodeTypes = nodeTypes;
       this.include = include;
     }
 
     @Override
-    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
-        Node parent) {
+    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
       return include == nodeTypes.contains(n.getToken());
     }
   }
@@ -260,8 +258,7 @@ public class NodeTraversal {
    * Creates a node traversal using the specified callback interface
    * and the scope creator.
    */
-  public NodeTraversal(AbstractCompiler compiler, Callback cb,
-      ScopeCreator scopeCreator) {
+  public NodeTraversal(AbstractCompiler compiler, Callback cb, ScopeCreator scopeCreator) {
     this.callback = cb;
     if (cb instanceof ScopedCallback) {
       this.scopeCallback = (ScopedCallback) cb;
@@ -355,7 +352,7 @@ public class NodeTraversal {
    * {@link #traverseAtScope}.
    */
   void traverseWithScope(Node root, Scope s) {
-    checkState(s.isGlobal() || s.isModuleScope());
+    checkState(s.isGlobal() || s.isModuleScope(), s);
     try {
       initTraversal(root);
       curNode = root;
@@ -446,11 +443,13 @@ public class NodeTraversal {
    * Traverses *just* the contents of provided scope nodes (and optionally scopes nested within
    * them) but will fall back on traversing the entire AST from root if a null scope nodes list is
    * provided.
+   * @param root If scopeNodes is null, this method will just traverse 'root' instead. If scopeNodes
+   *     is not null, this parameter is ignored.
    */
   public static void traverseEs6ScopeRoots(
       AbstractCompiler compiler,
-      Node root,
-      List<Node> scopeNodes,
+      @Nullable Node root,
+      @Nullable List<Node> scopeNodes,
       final Callback cb,
       final boolean traverseNested) {
     traverseEs6ScopeRoots(compiler, root, scopeNodes, cb, null, traverseNested);
@@ -461,13 +460,15 @@ public class NodeTraversal {
    * them) but will fall back on traversing the entire AST from root if a null scope nodes list is
    * provided. Also allows for a callback to notify when starting on one of the provided scope
    * nodes.
+   * @param root If scopeNodes is null, this method will just traverse 'root' instead. If scopeNodes
+   *     is not null, this parameter is ignored.
    */
   public static void traverseEs6ScopeRoots(
       AbstractCompiler compiler,
-      Node root,
-      List<Node> scopeNodes,
+      @Nullable Node root,
+      @Nullable List<Node> scopeNodes,
       final Callback cb,
-      final ChangeScopeRootCallback changeCallback,
+      @Nullable final ChangeScopeRootCallback changeCallback,
       final boolean traverseNested) {
     if (scopeNodes == null) {
       NodeTraversal.traverseEs6(compiler, root, cb);
@@ -734,8 +735,7 @@ public class NodeTraversal {
   /** Traverses a function. */
   private void traverseFunction(Node n, Node parent) {
     final Node fnName = n.getFirstChild();
-    boolean isFunctionExpression = (parent != null)
-        && NodeUtil.isFunctionExpression(n);
+    boolean isFunctionExpression = parent != null && NodeUtil.isFunctionExpression(n);
 
     if (!isFunctionExpression) {
       // Function declarations are in the scope containing the declaration.
@@ -836,8 +836,8 @@ public class NodeTraversal {
 
   /** Creates a new scope (e.g. when entering a function). */
   private void pushScope(Node node) {
-    checkState(curNode != null);
-    checkState(node != null);
+    checkNotNull(curNode);
+    checkNotNull(node);
     scopeRoots.add(node);
     recordScopeRoot(node);
     if (scopeCallback != null) {
@@ -855,7 +855,7 @@ public class NodeTraversal {
    * @param quietly Don't fire an enterScope callback.
    */
   private void pushScope(Scope s, boolean quietly) {
-    checkState(curNode != null);
+    checkNotNull(curNode);
     scopes.push(s);
     recordScopeRoot(s.getRootNode());
     if (!quietly && scopeCallback != null) {
