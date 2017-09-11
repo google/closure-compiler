@@ -1458,6 +1458,11 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
   }
 
+  public void testLocalValue3() {
+    Node newExpr = getNode("[...x]");
+    assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
+  }
+
   public void testCallSideEffects() {
     Node callExpr = getNode("new x().method()");
     assertTrue(NodeUtil.functionCallHasSideEffects(callExpr));

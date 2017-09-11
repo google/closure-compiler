@@ -4535,8 +4535,6 @@ public final class NodeUtil {
    */
   static boolean evaluatesToLocalValue(Node value, Predicate<Node> locals) {
     switch (value.getToken()) {
-      case CAST:
-        return evaluatesToLocalValue(value.getFirstChild(), locals);
       case ASSIGN:
         // A result that is aliased by a non-local name, is the effectively the
         // same as returning a non-local name, but this doesn't matter if the
@@ -4609,6 +4607,9 @@ public final class NodeUtil {
           }
         }
         return true;
+      case CAST:
+      case SPREAD:
+        return evaluatesToLocalValue(value.getFirstChild(), locals);
       default:
         // Other op force a local value:
         //  x = '' + g (x is now an local string)
