@@ -28,6 +28,7 @@ public final class PassNames {
   public static final String ANALYZER_CHECKS_INTERNAL = "analyzerChecksInternal";
   public static final String ANGULAR_PASS = "angularPass";
   public static final String BEFORE_STANDARD_OPTIMIZATIONS = "beforeStandardOptimizations";
+  public static final String BEFORE_MAIN_OPTIMIZATIONS = "beforeMainOptimizations";
   public static final String BEFORE_TYPE_CHECKING = "beforeTypeChecking";
   public static final String CHAIN_CALLS = "chainCalls";
   public static final String CHECK_CONST_PARAMS = "checkConstParams";

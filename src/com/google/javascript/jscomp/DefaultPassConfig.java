@@ -763,7 +763,7 @@ public final class DefaultPassConfig extends PassConfig {
           CustomPassExecutionTime.BEFORE_OPTIMIZATION_LOOP));
     }
 
-    passes.add(createEmptyPass("beforeMainOptimizations"));
+    passes.add(createEmptyPass(PassNames.BEFORE_MAIN_OPTIMIZATIONS));
 
     // Because FlowSensitiveInlineVariables does not operate on the global scope due to compilation
     // time, we need to run it once before InlineFunctions so that we don't miss inlining
