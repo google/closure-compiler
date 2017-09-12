@@ -502,9 +502,6 @@ class Normalize implements CompilerPass {
         if (c.isClass() || c.isFunction()) {
           names = Collections.singleton(c.getFirstChild());
           n.getParent().addChildBefore(c, n);
-          if (c.isClass()) {
-            n.getParent().addChildBefore(new Node(Token.EMPTY).srcref(n), n);
-          }
         } else {
           names = NodeUtil.getLhsNodesOfDeclaration(c);
           // Split up var declarations onto separate lines.

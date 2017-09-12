@@ -1051,12 +1051,14 @@ public final class NormalizeTest extends CompilerTestCase {
 
     // Don't need to split declarations in default exports since they are either unnamed, or the
     // name is declared in the module scope only.
-    testSame("export default function() {}");
-    test("export default function foo() {}", "export default function foo$jscomp$1() {}");
+    testSame("export default function() {};");
+    test("export default function foo() {};", "export default function foo$jscomp$1() {};");
   }
 
   public void testSplitExportDeclarationOfClass() {
-    test("export class Foo {};", "class Foo {}; export {Foo as Foo};");
+    test("export class Foo {};",
+        LINE_JOINER.join("class Foo {}",
+          "export {Foo as Foo};"));
     testSame("export default class Bar {}");
     testSame("export default class {}");
   }
