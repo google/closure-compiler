@@ -413,6 +413,12 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "class Foo { method(/** string */ s) {} }");
   }
 
+  public void testRemoveEmptyMembers() {
+    test(
+        "class Foo { ;; method(/** string */ s) {};; }",
+        "class Foo { method(/** string */ s) {} }");
+  }
+
   public void testEs6Modules() {
     testSame("export default class {}");
 

@@ -515,6 +515,10 @@ class ConvertToTypedInterface implements CompilerPass {
     private void processClass(Node n) {
       checkArgument(isClass(n));
       for (Node member : n.getLastChild().children()) {
+        if (member.isEmpty()) {
+          NodeUtil.deleteNode(member, compiler);
+          continue;
+        }
         processFunction(member.getLastChild());
       }
     }
