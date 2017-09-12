@@ -716,9 +716,7 @@ public class NodeTraversal {
       return;
     }
 
-    if (type == Token.FUNCTION) {
-      traverseFunction(n, parent);
-    } else if (type == Token.CLASS) {
+    if (type == Token.CLASS) {
       traverseClass(n);
     } else if (type == Token.MODULE_BODY) {
       traverseModule(n);
