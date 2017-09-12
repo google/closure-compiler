@@ -1418,6 +1418,22 @@ public final class FunctionType implements Serializable {
         this.isAbstract);
   }
 
+  /** Returns a function that is the same as this one, but with no parameters. */
+  FunctionType withNoParameters() {
+    return new FunctionType(
+        this.commonTypes,
+        ImmutableList.<JSType>of(),
+        ImmutableList.<JSType>of(),
+        null,
+        this.returnType,
+        this.nominalType,
+        this.receiverType,
+        this.outerVarPreconditions,
+        this.typeParameters,
+        this.isLoose,
+        this.isAbstract);
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (obj == null) {

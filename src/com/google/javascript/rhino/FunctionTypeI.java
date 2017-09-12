@@ -105,12 +105,21 @@ public interface FunctionTypeI extends TypeI {
   /** Returns the maximum number of allowed arguments, or Integer.MAX_VALUE if variadic. */
   int getMaxArity();
 
-  /**
-   * Returns a function type that is the same as functionType except for the return type, which is
-   * set to be returnType. This method is a bit of a hack to support preserving types during
-   * Generator transpilation, and is only implemented in NTI.
-   */
-  FunctionTypeI withReturnType(TypeI yieldType); // TODO(sdh): We might want to find a cleaner way
-                                                 // to create a new function type from another
-                                                 // function type with some parts of it mutated.
+  /** Returns a Builder instance initialized to this function. */
+  Builder toBuilder();
+
+  /** Interface for building FunctionTypeI instances. */
+  interface Builder {
+    /** Returns a builder with unknown return type. */
+    Builder withUnknownReturnType();
+
+    /** Returns a builder with the given return type. */
+    Builder withReturnType(TypeI returnType);
+
+    /** Returns a builder with an empty parameter list. */
+    Builder withNoParameters();
+
+    /** Builds a new FunctionTypeI. */
+    FunctionTypeI build();
+  }
 }

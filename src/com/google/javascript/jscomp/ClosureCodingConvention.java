@@ -86,7 +86,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
           // to be covariant on F.prototype.constructor.
           // To get around this, we just turn off type-checking on arguments
           // and return types of G.prototype.constructor.
-          childCtor.forgetParameterAndReturnTypes(),
+          (FunctionType) childCtor.toBuilder().withUnknownReturnType().withNoParameters().build(),
           childCtor.getSource());
     }
   }
