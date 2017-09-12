@@ -32,9 +32,7 @@ public class InlineFunctionsTest extends CompilerTestCase {
   boolean assumeMinimumCapture;
   int maxSizeAfterInlining;
 
-  final static String EXTERNS =
-      "/** @nosideeffects */ function nochg(){}\n" +
-      "function chg(){}\n";
+  static final String EXTERNS = "/** @nosideeffects */ function nochg(){}\nfunction chg(){}\n";
 
   public InlineFunctionsTest() {
     super(EXTERNS);
@@ -120,7 +118,6 @@ public class InlineFunctionsTest extends CompilerTestCase {
   }
 
   public void testInlineEmptyFunction6() {
-    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     test("if (window) { f(); function f() {} }",
         "if (window) { void 0; }");
   }

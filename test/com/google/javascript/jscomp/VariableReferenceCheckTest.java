@@ -24,8 +24,6 @@ import static com.google.javascript.jscomp.VariableReferenceCheck.REDECLARED_VAR
 import static com.google.javascript.jscomp.VariableReferenceCheck.REDECLARED_VARIABLE_ERROR;
 import static com.google.javascript.jscomp.VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
 /**
  * Test that warnings are generated in appropriate cases and appropriate
  * cases only by VariableReferenceCheck
@@ -59,7 +57,6 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     enableUnusedLocalAssignmentCheck = false;
   }
 

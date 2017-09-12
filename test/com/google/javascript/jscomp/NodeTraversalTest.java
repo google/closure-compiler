@@ -581,14 +581,14 @@ public final class NodeTraversalTest extends TestCase {
 
     // Traverse without entering nested scopes.
     NodeTraversal.traverseEs6ScopeRoots(
-        compiler, fooFunction, Lists.newArrayList(fooFunction), callback, false);
+        compiler, null, Lists.newArrayList(fooFunction), callback, false);
     assertThat(callback.strings).containsExactly("string in foo");
 
     callback.strings.clear();
 
     // Traverse *with* entering nested scopes, now also sees "string nested in baz".
     NodeTraversal.traverseEs6ScopeRoots(
-        compiler, fooFunction, Lists.newArrayList(fooFunction), callback, true);
+        compiler, null, Lists.newArrayList(fooFunction), callback, true);
     assertThat(callback.strings).containsExactly("string in foo", "string nested in baz");
   }
 
@@ -615,7 +615,7 @@ public final class NodeTraversalTest extends TestCase {
 
     // Traverse without entering nested scopes.
     NodeTraversal.traverseEs6ScopeRoots(
-        compiler, fooFunction, Lists.newArrayList(fooFunction), callback, false);
+        compiler, null, Lists.newArrayList(fooFunction), callback, false);
     assertThat(callback.varNames)
         .containsExactly("varDefinedInScript", "foo", "bar", "varDefinedInFoo", "baz");
 
@@ -623,7 +623,7 @@ public final class NodeTraversalTest extends TestCase {
 
     // Traverse *with* entering nested scopes, now also sees "varDefinedInBaz".
     NodeTraversal.traverseEs6ScopeRoots(
-        compiler, fooFunction, Lists.newArrayList(fooFunction), callback, true);
+        compiler, null, Lists.newArrayList(fooFunction), callback, true);
     assertThat(callback.varNames)
         .containsExactly(
             "varDefinedInScript", "foo", "bar", "varDefinedInFoo", "baz", "varDefinedInBaz");
@@ -645,7 +645,7 @@ public final class NodeTraversalTest extends TestCase {
 
     NodeTraversal.traverseEs6ScopeRoots(
         compiler,
-        fooFunction,
+        null,
         Lists.newArrayList(fooFunction, barFunction, bazFunction),
         callback,
         callback, // FunctionCallback
