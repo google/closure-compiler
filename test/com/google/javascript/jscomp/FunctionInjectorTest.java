@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
@@ -933,12 +934,21 @@ public final class FunctionInjectorTest extends TestCase {
   public void testInline18() {
     // This doesn't bring names into the global name space.
     helperInlineReferenceToFunction(
-        "function foo(a){var b;return a;}; " +
-            "function x() { foo(goo()); }",
-            "function foo(a){var b;return a;}; " +
-            "function x() {{var a$jscomp$inline_0=goo();" +
-                "var b$jscomp$inline_1;a$jscomp$inline_0}}",
-        "foo", INLINE_BLOCK);
+        "function foo(a){var b;return a;} function x() { foo(goo()); }",
+        LINE_JOINER.join(
+            "function foo(a) {",
+            "  var b;",
+            "  return a;",
+            "}",
+            "function x() {",
+            "  {",
+            "    var a$jscomp$inline_0 = goo();",
+            "    var b$jscomp$inline_1;",
+            "    a$jscomp$inline_0;",
+            "  }",
+            "}"),
+        "foo",
+        INLINE_BLOCK);
   }
 
   public void testInline19() {
@@ -990,12 +1000,10 @@ public final class FunctionInjectorTest extends TestCase {
 
   public void testInlineIntoLoop() {
     helperInlineReferenceToFunction(
-        "function foo(a){var b;return a;}; " +
-        "for(;1;){ foo(1); }",
-        "function foo(a){var b;return a;}; " +
-        "for(;1;){ {" +
-            "var b$jscomp$inline_1=void 0;1}}",
-        "foo", INLINE_BLOCK);
+        "function foo(a){var b;return a;}; for(;1;){ foo(1); }",
+        "function foo(a){var b;return a;}; for(;1;){ { var b$jscomp$inline_1=void 0;1} }",
+        "foo",
+        INLINE_BLOCK);
 
     helperInlineReferenceToFunction(
         "function foo(a){var b;return a;}; " +
@@ -1047,18 +1055,28 @@ public final class FunctionInjectorTest extends TestCase {
     // Call with inner function expression.
     helperInlineReferenceToFunction(
         "function foo(){return function() {var a; return true;}}; foo();",
-        "function foo(){return function() {var a; return true;}};" +
-            "{(function() {var a$jscomp$inline_0; return true;});}",
+        LINE_JOINER.join(
+            "function foo(){return function() {var a; return true;}};",
+            "{(function() {var a$jscomp$inline_0; return true;});}"),
         "foo", INLINE_BLOCK);
   }
 
   public void testInlineFunctionWithInnerFunction5() {
     // Call with inner function statement.
     helperInlineReferenceToFunction(
-        "function foo(){function x() {var a; return true;} return x}; foo();",
-        "function foo(){function x(){var a;return true}return x};" +
-            "{var x$jscomp$inline_0 = function(){" +
-            "var a$jscomp$inline_1;return true};x$jscomp$inline_0}",
+        "function foo(){function x() {var a; return true;} return x} foo();",
+        LINE_JOINER.join(
+            "function foo() {",
+            "  function x() { var a; return true; }",
+            "  return x;",
+            "}",
+            "{",
+            "  var x$jscomp$inline_0 = function(){",
+            "    var a$jscomp$inline_1;",
+            "    return true;",
+            "  };",
+            "  x$jscomp$inline_0;",
+            "}"),
         "foo", INLINE_BLOCK);
   }
 
