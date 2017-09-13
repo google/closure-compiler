@@ -432,7 +432,6 @@ public class NodeTraversal {
       initTraversal(scopeRoot);
       curNode = scopeRoot;
       initScopeRoots(scopeRoot.getParent());
-      // null parent ensures that the shallow callbacks will traverse root
       traverseBranch(scopeRoot, scopeRoot.getParent());
     } catch (Error | Exception unexpectedException) {
       throwUnexpectedException(unexpectedException);
@@ -477,27 +476,59 @@ public class NodeTraversal {
           new MemoizedScopeCreator(new Es6SyntacticScopeCreator(compiler));
 
       for (final Node scopeNode : scopeNodes) {
-        if (changeCallback != null) {
-          changeCallback.enterChangeScopeRoot(compiler, scopeNode);
-        }
-
-        Callback scb =
-            new Callback() {
-              @Override
-              public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-                return (traverseNested || scopeNode == n || !NodeUtil.isChangeScopeRoot(n))
-                    && cb.shouldTraverse(t, n, parent);
-              }
-
-              @Override
-              public void visit(NodeTraversal t, Node n, Node parent) {
-                cb.visit(t, n, parent);
-              }
-            };
-
-        NodeTraversal.traverseEs6ScopeRoot(compiler, scopeNode, scb, scopeCreator);
+        traverseSingleEs6ScopeRoot(
+            compiler, cb, changeCallback, traverseNested, scopeCreator, scopeNode);
       }
     }
+  }
+
+  private static void traverseSingleEs6ScopeRoot(
+      AbstractCompiler compiler,
+      final Callback cb,
+      @Nullable ChangeScopeRootCallback changeCallback,
+      final boolean traverseNested,
+      MemoizedScopeCreator scopeCreator,
+      final Node scopeNode) {
+    if (changeCallback != null) {
+      changeCallback.enterChangeScopeRoot(compiler, scopeNode);
+    }
+
+    ScopedCallback scb = new ScopedCallback() {
+      boolean insideScopeNode = false;
+
+      @Override
+      public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+        if (scopeNode == n) {
+          insideScopeNode = true;
+        }
+        return (traverseNested || scopeNode == n || !NodeUtil.isChangeScopeRoot(n))
+            && cb.shouldTraverse(t, n, parent);
+      }
+
+      @Override
+      public void visit(NodeTraversal t, Node n, Node parent) {
+        if (scopeNode == n) {
+          insideScopeNode = false;
+        }
+        cb.visit(t, n, parent);
+      }
+
+      @Override
+      public void enterScope(NodeTraversal t) {
+        if (insideScopeNode && cb instanceof ScopedCallback) {
+          ((ScopedCallback) cb).enterScope(t);
+        }
+      }
+
+      @Override
+      public void exitScope(NodeTraversal t) {
+        if (insideScopeNode && cb instanceof ScopedCallback) {
+          ((ScopedCallback) cb).exitScope(t);
+        }
+      }
+    };
+
+    NodeTraversal.traverseEs6ScopeRoot(compiler, scopeNode, scb, scopeCreator);
   }
 
   /**
