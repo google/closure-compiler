@@ -1153,10 +1153,8 @@ public final class CompilerTest extends TestCase {
 
   public void testEs6ModuleEntryPoint() throws Exception {
     List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode(
-            "/index.js", "import foo from './foo'; foo('hello');"),
-        SourceFile.fromCode("/foo.js",
-            "export default (foo) => { alert(foo); }"));
+        SourceFile.fromCode("/index.js", "import foo from './foo.js'; foo('hello');"),
+        SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
 
     List<ModuleIdentifier> entryPoints = ImmutableList.of(
         ModuleIdentifier.forFile("/index"));
@@ -1175,6 +1173,7 @@ public final class CompilerTest extends TestCase {
     compiler.compile(externs, inputs, options);
 
     Result result = compiler.getResult();
+    assertThat(result.warnings).isEmpty();
     assertThat(result.errors).isEmpty();
   }
 
