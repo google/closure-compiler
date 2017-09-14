@@ -200,10 +200,12 @@ public final class CodingConventions {
     }
 
     @Override
-    public void applySubclassRelationship(FunctionType parentCtor,
-        FunctionType childCtor, SubclassType type) {
-      nextConvention.applySubclassRelationship(
-          parentCtor, childCtor, type);
+    public void applySubclassRelationship(
+        PropertyDeclarer declarer,
+        FunctionTypeI parentCtor,
+        FunctionTypeI childCtor,
+        SubclassType type) {
+      nextConvention.applySubclassRelationship(declarer, parentCtor, childCtor, type);
     }
 
     @Override
@@ -458,8 +460,11 @@ public final class CodingConventions {
     }
 
     @Override
-    public void applySubclassRelationship(FunctionType parentCtor,
-        FunctionType childCtor, SubclassType type) {
+    public void applySubclassRelationship(
+        PropertyDeclarer declarer,
+        FunctionTypeI parentCtor,
+        FunctionTypeI childCtor,
+        SubclassType type) {
       // do nothing
     }
 

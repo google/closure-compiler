@@ -1502,7 +1502,7 @@ final class TypedScopeCreator implements ScopeCreator {
           FunctionType subCtor = subClass.getConstructor();
           if (superCtor != null && subCtor != null) {
             codingConvention.applySubclassRelationship(
-                superCtor, subCtor, relationship.type);
+                PROPERTY_DECLARER, superCtor, subCtor, relationship.type);
           }
         }
       }

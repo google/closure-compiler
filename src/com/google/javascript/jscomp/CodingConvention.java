@@ -214,8 +214,11 @@ public interface CodingConvention extends Serializable {
    * In many JS libraries, the function that produces inheritance also
    * adds properties to the superclass and/or subclass.
    */
-  public void applySubclassRelationship(FunctionType parentCtor,
-      FunctionType childCtor, SubclassType type);
+  public void applySubclassRelationship(
+      PropertyDeclarer declarer,
+      FunctionTypeI parentCtor,
+      FunctionTypeI childCtor,
+      SubclassType type);
 
   /**
    * Function name for abstract methods. An abstract method can be assigned to

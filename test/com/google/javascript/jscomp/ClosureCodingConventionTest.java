@@ -22,6 +22,7 @@ import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.PropertyDeclarer;
 import junit.framework.TestCase;
 
 /**
@@ -215,6 +216,7 @@ public final class ClosureCodingConventionTest extends TestCase {
 
   public void testApplySubclassRelationship() {
     JSTypeRegistry registry = new JSTypeRegistry(null);
+    PropertyDeclarer declarer = new PropertyDeclarer();
 
     Node nodeA = new Node(Token.FUNCTION);
     FunctionType ctorA =
@@ -224,7 +226,7 @@ public final class ClosureCodingConventionTest extends TestCase {
     FunctionType ctorB =
         registry.createConstructorType("B", nodeB, new Node(Token.PARAM_LIST), null, null, false);
 
-    conv.applySubclassRelationship(ctorA, ctorB, SubclassType.INHERITS);
+    conv.applySubclassRelationship(declarer, ctorA, ctorB, SubclassType.INHERITS);
 
     assertTrue(ctorB.getPrototype().hasOwnProperty("constructor"));
     assertEquals(nodeB, ctorB.getPrototype().getPropertyNode("constructor"));

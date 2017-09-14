@@ -73,13 +73,16 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
    * subclass, and a {@code constructor} property.
    */
   @Override
-  public void applySubclassRelationship(FunctionType parentCtor,
-      FunctionType childCtor, SubclassType type) {
-    super.applySubclassRelationship(parentCtor, childCtor, type);
+  public void applySubclassRelationship(
+      PropertyDeclarer declarer,
+      FunctionTypeI parentCtor,
+      FunctionTypeI childCtor,
+      SubclassType type) {
+    super.applySubclassRelationship(declarer, parentCtor, childCtor, type);
     if (type == SubclassType.INHERITS) {
-      childCtor.defineDeclaredProperty("superClass_",
-          parentCtor.getPrototype(), childCtor.getSource());
-      childCtor.getPrototype().defineDeclaredProperty("constructor",
+      declarer.declareProperty(childCtor, "superClass_",
+          parentCtor.getPrototypeProperty(), childCtor.getSource());
+      declarer.declareProperty(childCtor.getPrototypeProperty(), "constructor",
           // Notice that constructor functions do not need to be covariant
           // on the superclass.
           // So if G extends F, new G() and new F() can accept completely
@@ -87,7 +90,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
           // to be covariant on F.prototype.constructor.
           // To get around this, we just turn off type-checking on arguments
           // and return types of G.prototype.constructor.
-          (FunctionType) childCtor.toBuilder().withUnknownReturnType().withNoParameters().build(),
+          childCtor.toBuilder().withUnknownReturnType().withNoParameters().build(),
           childCtor.getSource());
     }
   }
