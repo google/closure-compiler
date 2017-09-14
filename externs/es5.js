@@ -66,13 +66,12 @@ String.prototype.trimRight = function() {};
  * A object property descriptor used by Object.create, Object.defineProperty,
  * Object.defineProperties, Object.getOwnPropertyDescriptor.
  *
- * Note: not a real constructor.
- * @constructor
+ * @record
  * @template THIS
  */
 function ObjectPropertyDescriptor() {}
 
-/** @type {*} */
+/** @type {(*|undefined)} */
 ObjectPropertyDescriptor.prototype.value;
 
 /** @type {(function(this: THIS):?)|undefined} */

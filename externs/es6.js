@@ -1468,7 +1468,7 @@ Reflect.construct = function(target, argList, opt_newTarget) {};
 /**
  * @param {!Object} target
  * @param {string} propertyKey
- * @param {!Object} attributes
+ * @param {!ObjectPropertyDescriptor} attributes
  * @return {boolean}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/defineProperty
  */
