@@ -3722,9 +3722,7 @@ Document.prototype.msHidden;
  * @see http://w3c.github.io/webcomponents/spec/custom/#extensions-to-document-interface-to-register
  * @param {string} type
  * @param {{extends: (string|undefined), prototype: (Object|undefined)}=} options
- * @return {!Function} a constructor for the new tag. A generic function is the best we
- *     can do here as it allows the return value to be annotated properly
- *     at the call site.
+ * @return {!function(new:Element, ...*)} a constructor for the new tag.
  */
 Document.prototype.registerElement = function(type, options) {};
 
