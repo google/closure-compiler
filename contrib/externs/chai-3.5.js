@@ -251,6 +251,20 @@ var assert = {};
  */
 assert.fail = function(actual, expected, opt_message, opt_operator) {};
 
+
+/**
+ * @param {Object|Array|string|Map|Set} object
+ * @param {string=} opt_message
+ */
+assert.isEmpty = function(object, opt_message) {};
+
+/**
+ * @param {Object|Array|string|Map|Set} object
+ * @param {string=} opt_message
+ */
+assert.isNotEmpty = function(object, opt_message) {};
+
+
 /**
  * @param {*} object
  * @param {string=} opt_message
