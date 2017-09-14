@@ -46,7 +46,7 @@ import java.util.List;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public interface FunctionTypeI extends TypeI {
+public interface FunctionTypeI extends ObjectTypeI {
   /**
    * Creates a new function type B based on the original function type A.
    * Takes the receiver type (this type) of A and makes it the first

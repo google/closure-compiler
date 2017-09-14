@@ -19,9 +19,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.ClosureCodingConvention.AssertInstanceofSpec;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.ObjectType;
+import com.google.javascript.rhino.ObjectTypeI;
 import java.util.Collection;
 
 /**
@@ -53,13 +53,11 @@ public final class ChromeCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
-  public void applySingletonGetterOld(FunctionType functionType,
-      FunctionType getterType, ObjectType objectType) {
-    super.applySingletonGetterOld(functionType, getterType, objectType);
-    functionType.defineDeclaredProperty("getInstance", getterType,
-        functionType.getSource());
-    functionType.defineDeclaredProperty("instance_", objectType,
-        functionType.getSource());
+  public void applySingletonGetter(ObjectTypeI.PropertyDeclarer declarer,
+      FunctionTypeI functionType, FunctionTypeI getterType, ObjectTypeI objectType) {
+    super.applySingletonGetter(declarer, functionType, getterType, objectType);
+    declarer.declareProperty(functionType, "getInstance", getterType, functionType.getSource());
+    declarer.declareProperty(functionType, "instance_", objectType, functionType.getSource());
   }
 
   @Override

@@ -43,6 +43,7 @@ import com.google.javascript.jscomp.newtypes.JSTypes;
 import com.google.javascript.jscomp.newtypes.Namespace;
 import com.google.javascript.jscomp.newtypes.NominalType;
 import com.google.javascript.jscomp.newtypes.ObjectKind;
+import com.google.javascript.jscomp.newtypes.PropertyDeclarer;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
 import com.google.javascript.jscomp.newtypes.RawNominalType;
 import com.google.javascript.jscomp.newtypes.Typedef;
@@ -285,6 +286,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       new QualifiedName("jscomp$infer$const$property");
   private static final String WINDOW_INSTANCE = "window";
   private static final String WINDOW_CLASS = "Window";
+
+  private static final PropertyDeclarer PROPERTY_DECLARER = new PropertyDeclarer();
 
   private DefaultNameGenerator funNameGen;
   // Only for original definitions, not for aliased constructors
@@ -1562,10 +1565,14 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     }
 
     private void visitCall(Node call) {
+      // Check various coding conventions to see if any additional handling is needed.
       String className = convention.getSingletonGetterClassName(call);
-      if (className == null) {
-        return;
+      if (className != null) {
+        applySingletonGetter(className);
       }
+    }
+
+    private void applySingletonGetter(String className) {
       QualifiedName qname = QualifiedName.fromQualifiedString(className);
       RawNominalType rawType = currentScope.getNominalType(qname);
       if (rawType != null) {
@@ -1573,7 +1580,11 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         FunctionType getInstanceFunType =
             new FunctionTypeBuilder(getCommonTypes()).addRetType(instanceType).buildFunction();
         JSType getInstanceType = getCommonTypes().fromFunctionType(getInstanceFunType);
-        convention.applySingletonGetterNew(rawType, getInstanceType, instanceType);
+        convention.applySingletonGetter(
+            PROPERTY_DECLARER,
+            getCommonTypes().fromFunctionType(rawType.getConstructorFunction()),
+            getInstanceType,
+            instanceType);
       }
     }
 
