@@ -97,7 +97,7 @@ class DeclaredGlobalExternsOnWindow
           Node rhs = NodeUtil.getRValueOfLValue(node);
           // Type-aliasing definition
           if (oldJSDocInfo.hasConstAnnotation() && rhs != null && rhs.isQualifiedName()) {
-            newNode = IR.assign(getprop, rhs.cloneNode());
+            newNode = IR.assign(getprop, rhs.cloneTree());
           }
         }
         builder = JSDocInfoBuilder.copyFrom(oldJSDocInfo);
