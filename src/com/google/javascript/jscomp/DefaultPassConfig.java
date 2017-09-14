@@ -878,11 +878,10 @@ public final class DefaultPassConfig extends PassConfig {
       if (options.foldConstants) {
         passes.add(peepholeOptimizationsOnce);
       }
-    } else {
-      // Passes after this point can no longer depend on normalized AST
-      // assumptions.
-      passes.add(markUnnormalized);
     }
+
+    // Passes after this point can no longer depend on normalized AST assumptions.
+    passes.add(markUnnormalized);
 
     if (options.collapseVariableDeclarations) {
       passes.add(exploitAssign);
@@ -2815,7 +2814,8 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          // TODO(b/65688660): Switch to ES8_MODULES when b/65688660 is fixed.
+          return ES5;
         }
       };
 
