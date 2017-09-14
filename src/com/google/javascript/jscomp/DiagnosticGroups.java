@@ -101,7 +101,7 @@ public class DiagnosticGroups {
   // be listed on the command-line as an available option.
   //
   // If a group is suppressible on a per-file basis, it should be added
-  // to parser/ParserConfig.properties
+  // to parsing/ParserConfig.properties
   static final String DIAGNOSTIC_GROUP_NAMES =
       "accessControls, "
           + "ambiguousFunctionDecl, "
