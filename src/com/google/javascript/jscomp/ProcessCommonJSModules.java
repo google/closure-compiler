@@ -1063,6 +1063,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
         case FUNCTION:
           if (newNameIsQualified || requireFunctionExpressions) {
             // Refactor a named function to a function expression
+            if (NodeUtil.isFunctionExpression(parent)) {
+              // Don't refactor if the parent is a named function expression.
+              // e.g. var foo = function foo() {};
+              break;
+            }
             Node newNameRef = NodeUtil.newQName(compiler, newName, nameRef, originalName);
             Node grandparent = parent.getParent();
             nameRef.setString("");

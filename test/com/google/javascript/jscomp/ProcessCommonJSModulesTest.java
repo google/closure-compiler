@@ -935,4 +935,22 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "for (var a, b, c; ;) {}",
         "for (var a, b, c; ;) {}");
   }
+
+  public void testIssue2616() {
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
+            "var foo = function foo() {",
+            "  return 1;",
+            "};",
+            "module.exports = {",
+            "  foo: foo,",
+            "};"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "/** @const */ var module$test={};",
+            "module$test.foo = function foo() {",
+            "  return 1;",
+            "};"));
+  }
 }
