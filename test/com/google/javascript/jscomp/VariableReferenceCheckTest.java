@@ -605,6 +605,14 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   public void testChainedAssign() {
     enableUnusedLocalAssignmentCheck = true;
     assertNoWarning("var a, b = 0, c; a = b = c; alert(a);");
+    assertUnused(
+        LINE_JOINER.join(
+            "function foo() {",
+            "  var a, b = 0, c;",
+            "  a = b = c;",
+            "  alert(a); ",
+            "}",
+            "foo();"));
   }
 
   public void testChainedAssign_withES6Modules() {
