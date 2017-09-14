@@ -945,8 +945,8 @@ public final class ScopedAliasesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "var ns = {};",
             "var y = 1;",
-            "ns.fact = function y$jscomp$1(n) {",
-            "  return n == 1 ? 1 : n * y$jscomp$1(n - 1);",
+            "ns.fact = function y$jscomp$scopedAliases$0(n) {",
+            "  return n == 1 ? 1 : n * y$jscomp$scopedAliases$0(n - 1);",
             "};"));
   }
 
@@ -967,8 +967,8 @@ public final class ScopedAliasesTest extends CompilerTestCase {
             "var ns = {};",
             "var y = 1;",
             "$jscomp.scope.x = function (y) {};",
-            "ns.fact = function y$jscomp$1(n) {",
-            "  return n == 1 ? 1 : n * y$jscomp$1(n - 1);",
+            "ns.fact = function y$jscomp$scopedAliases$0(n) {",
+            "  return n == 1 ? 1 : n * y$jscomp$scopedAliases$0(n - 1);",
             "};"));
   }
 
@@ -983,8 +983,8 @@ public final class ScopedAliasesTest extends CompilerTestCase {
             "});"),
         LINE_JOINER.join(
             "foo(() => {",
-            "  const y = function y$jscomp$1() {",
-            "    use(y$jscomp$1);",
+            "  const y = function y$jscomp$scopedAliases$0() {",
+            "    use(y$jscomp$scopedAliases$0);",
             "  };",
             "});"));
   }

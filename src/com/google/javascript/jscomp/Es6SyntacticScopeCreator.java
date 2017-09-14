@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.rhino.InputId;
@@ -100,6 +99,9 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
     private final Scope scope;
     private final AbstractCompiler compiler;
     private final RedeclarationHandler redeclarationHandler;
+
+    // Will be null, when a detached node is traversed.
+    @Nullable
     private InputId inputId;
     private final Set<Node> changeRootSet;
 
@@ -124,10 +126,6 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
       inputId = NodeUtil.getInputId(n);
       switch (n.getToken()) {
         case FUNCTION: {
-          // TODO(johnlenz): inputId maybe null if the FUNCTION node is detached
-          // from the AST.
-          // Is it meaningful to build a scope for detached FUNCTION node?
-
           final Node fnNameNode = n.getFirstChild();
           final Node args = fnNameNode.getNext();
 
@@ -267,7 +265,6 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
             return;
           }
           inputId = n.getInputId();
-          checkNotNull(inputId);
           break;
 
         case MODULE_BODY:
@@ -312,9 +309,8 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
       String name = n.getString();
       // Because of how we scan the variables, it is possible to encounter
       // the same var declared name node twice. Bail out in this case.
-      // TODO(johnlenz): hash lookups are not free and
-      // building scopes are already expensive
-      // restructure the scope building to avoid this check.
+      // TODO(johnlenz): Hash lookups are not free and building scopes are already expensive.
+      // Restructure the scope building to avoid this check.
       Var v = s.getOwnSlot(name);
       if (v != null && v.getNode() == n) {
         return;

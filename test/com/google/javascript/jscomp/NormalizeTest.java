@@ -998,7 +998,7 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   public void testRewriteExportSpecShorthand1() {
-    test("var a; export {a};", "var a$jscomp$1; export {a$jscomp$1 as a};");
+    test("var a; export {a};", "var a; export {a as a};");
   }
 
   public void testRewriteExportSpecShorthand2() {
@@ -1006,21 +1006,19 @@ public final class NormalizeTest extends CompilerTestCase {
   }
 
   public void testSplitExportDeclarationWithVar() {
-    test("export var a;",
-        "var a$jscomp$1; export {a$jscomp$1 as a};");
-    test("export var a = 4;",
-        "var a$jscomp$1 = 4; export {a$jscomp$1 as a};");
-    test("export var a, b;",
+    test("export var a;", "var a; export {a as a};");
+    test("export var a = 4;", "var a = 4; export {a as a};");
+    test(
+        "export var a, b;",
         LINE_JOINER.join(
-            "var a$jscomp$1;",
-            "var b$jscomp$1;",
-            "export {a$jscomp$1 as a, b$jscomp$1 as b};"));
+            "var a;",
+            "var b;",
+            "export {a as a, b as b};"));
 
   }
 
   public void testSplitExportDeclarationWithShorthandProperty() {
-    test("export var a = {b};",
-            "var a$jscomp$1 = {b: b}; export {a$jscomp$1 as a};");
+    test("export var a = {b};", "var a = {b: b}; export {a as a};");
   }
 
   public void testSplitExportDeclarationWithDestructuring() {
@@ -1045,14 +1043,14 @@ public final class NormalizeTest extends CompilerTestCase {
   public void testSplitExportDeclarationOfFunction() {
     test("export function bar() {};",
         LINE_JOINER.join(
-            "function bar$jscomp$1() {}",
-            "export {bar$jscomp$1 as bar};"
+            "function bar() {}",
+            "export {bar as bar};"
         ));
 
     // Don't need to split declarations in default exports since they are either unnamed, or the
     // name is declared in the module scope only.
     testSame("export default function() {};");
-    test("export default function foo() {};", "export default function foo$jscomp$1() {};");
+    testSame("export default function foo() {};");
   }
 
   public void testSplitExportDeclarationOfClass() {

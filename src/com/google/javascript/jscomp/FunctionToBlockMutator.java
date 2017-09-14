@@ -22,6 +22,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.javascript.jscomp.FunctionArgumentInjector.THIS_MARKER;
 
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -110,6 +111,8 @@ class FunctionToBlockMutator {
       boolean isCallInLoop,
       boolean renameLocals) {
     Node newFnNode = fnNode.cloneTree();
+    // Wrap the clone in a script, in a root, so that makeLocalNamesUnique sees a coherent tree.
+    IR.root(IR.script(newFnNode));
 
     if (renameLocals) {
       // Now that parameter names have been replaced, make sure all the local
@@ -243,13 +246,15 @@ class FunctionToBlockMutator {
   private void makeLocalNamesUnique(Node fnNode, boolean isCallInLoop) {
     Supplier<String> idSupplier = compiler.getUniqueNameIdSupplier();
     // Make variable names unique to this instance.
-    NodeTraversal.traverseEs6(
+    NodeTraversal.traverseEs6ScopeRoots(
         compiler,
-        fnNode,
+        null,
+        ImmutableList.of(fnNode),
         new MakeDeclaredNamesUnique(
             new InlineRenamer(
                 compiler.getCodingConvention(), idSupplier, "inline_", isCallInLoop, true, null),
-            false));
+            false),
+        true);
     // Make label names unique to this instance.
     new RenameLabels(compiler, new LabelNameSupplier(idSupplier), false, false)
         .process(null, fnNode);

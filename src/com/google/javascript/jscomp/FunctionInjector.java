@@ -199,8 +199,7 @@ class FunctionInjector {
     // last until explicitly cleared.
     if (containsFunctions) {
       if (!assumeMinimumCapture && !ref.scope.isGlobal()) {
-        // TODO(johnlenz): Allow inlining into any scope without local names or
-        // inner functions.
+        // TODO(johnlenz): Allow inlining into any scope without local names or inner functions.
         return CanInlineResult.NO;
       } else if (NodeUtil.isWithinLoop(callNode)) {
         // An inner closure maybe relying on a local value holding a value for a
@@ -486,8 +485,7 @@ class FunctionInjector {
    * canInlineReferenceAsStatementBlock into the call site, replacing the
    * parent expression.
    */
-  private Node inlineFunction(
-      Reference ref, Node fnNode, String fnName) {
+  private Node inlineFunction(Reference ref, Node fnNode, String fnName) {
     Node callNode = ref.callNode;
     Node parent = callNode.getParent();
     Node grandParent = parent.getParent();
@@ -530,8 +528,7 @@ class FunctionInjector {
         throw new IllegalStateException("Unexpected call site type.");
     }
 
-    FunctionToBlockMutator mutator = new FunctionToBlockMutator(
-        compiler, this.safeNameIdSupplier);
+    FunctionToBlockMutator mutator = new FunctionToBlockMutator(compiler, this.safeNameIdSupplier);
 
     boolean isCallInLoop = NodeUtil.isWithinLoop(callNode);
     Node newBlock = mutator.mutate(
@@ -931,9 +928,8 @@ class FunctionInjector {
       final int perReturnResultOverhead = 3; // "XX="
       final int perAliasOverhead = 3; // "XX="
 
-      // TODO(johnlenz): Counting the number of returns is relatively expensive
-      //   this information should be determined during the traversal and
-      //   cached.
+      // TODO(johnlenz): Counting the number of returns is relatively expensive.
+      //   This information should be determined during the traversal and cached.
       int returnCount = NodeUtil.getNodeTypeReferenceCount(
           block, Token.RETURN, new NodeUtil.MatchShallowStatement());
       int resultCount = (returnCount > 0) ? returnCount - 1 : 0;

@@ -43,10 +43,8 @@ import javax.annotation.Nullable;
  *  Find all Functions, VARs, and Exception names and make them
  *  unique.  Specifically, it will not modify object properties.
  *  @author johnlenz@google.com (John Lenz)
- *  TODO(johnlenz): Try to merge this with the ScopeCreator.
- *  TODO(moz): Handle more ES6 features, such as default parameters.
  */
-class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
+class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
 
   // Arguments is special cased to handle cases where a local name shadows
   // the arguments declaration.
@@ -55,8 +53,6 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
   // There is one renamer on the stack for each scope. This was added before any support for ES6 was
   // in place, so it was necessary to maintain this separate stack, rather than just using the
   // NodeTraversal's stack of scopes, in order to handle catch blocks and function names correctly.
-  // TODO(tbreisacher): Now that this class always uses the Es6SyntacticScopeCreator it may be
-  // possible to greatly simplify the way the renamerStack field is used.
   private final Deque<Renamer> renamerStack = new ArrayDeque<>();
   private final Renamer rootRenamer;
   private final boolean markChanges;
@@ -85,17 +81,12 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         "MakeDeclaredNamesUnique requires an ES6-compatible scope creator. %s is not compatible.",
         t.getScopeCreator());
     Node declarationRoot = t.getScopeRoot();
-    // Function bodies are handled along with PARAM_LIST
-    if (NodeUtil.isFunctionBlock(declarationRoot)) {
-      return;
-    }
 
     Renamer renamer;
     if (renamerStack.isEmpty()) {
       // If the contextual renamer is being used, the starting context can not
       // be a function.
       checkState(!declarationRoot.isFunction() || !(rootRenamer instanceof ContextualRenamer));
-      checkState(t.inGlobalScope());
       renamer = rootRenamer;
     } else {
       boolean hoist = !declarationRoot.isFunction() && !NodeUtil.createsBlockScope(declarationRoot);
@@ -104,61 +95,14 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
 
     renamerStack.push(renamer);
 
-    if (!declarationRoot.isFunction()) {
-      // Add the block declarations
-      findDeclaredNames(t, declarationRoot);
-    }
+    findDeclaredNames(t, declarationRoot);
   }
 
   @Override
   public void exitScope(NodeTraversal t) {
-    // ES6 function blocks are handled along with PARAM_LIST
-    if (NodeUtil.isFunctionBlock(t.getScopeRoot())) {
-      return;
-    }
     if (!t.inGlobalScope()) {
       renamerStack.pop();
     }
-  }
-
-  @Override
-  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    switch (n.getToken()) {
-      case FUNCTION: {
-        // Add recursive function name, if needed.
-        // NOTE: "enterScope" is called after we need to pick up this name.
-        Renamer renamer = renamerStack.peek().createForChildScope(n, false);
-
-        // If needed, add the function recursive name.
-        String name = n.getFirstChild().getString();
-        if (!name.isEmpty() && parent != null && !NodeUtil.isFunctionDeclaration(n)) {
-          renamer.addDeclaredName(name, false);
-        }
-
-        renamerStack.push(renamer);
-        break;
-      }
-
-      case PARAM_LIST: {
-        Renamer renamer = renamerStack.peek().createForChildScope(n, true);
-
-        // Add the function parameters
-        for (Node lhs : NodeUtil.getLhsNodesOfDeclaration(n)) {
-          renamer.addDeclaredName(lhs.getString(), true);
-        }
-
-        Node functionBody = n.getNext();
-        renamerStack.push(renamer);
-
-        findDeclaredNames(t, functionBody);
-        break;
-      }
-
-      default:
-        break;
-    }
-
-    return true;
   }
 
   @Override
@@ -177,19 +121,6 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         }
         break;
       }
-
-      case FUNCTION:
-        // Remove the function body scope
-        renamerStack.pop();
-        // Remove function recursive name (if any).
-        renamerStack.pop();
-        break;
-
-      case PARAM_LIST:
-        // Note: The parameters and function body variables live in the
-        // same scope, we introduce the scope when in the "shouldTraverse"
-        // visit of PARAM_LIST, but remove it when when we exit the function above.
-        break;
 
       default:
         break;
@@ -220,6 +151,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
       }
     }
   }
+
   /**
    * Walks the stack of name maps and finds the replacement name for the
    * current scope.
@@ -239,36 +171,10 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
    * the {@code Renamer} that is at the top of the {@code renamerStack}.
    */
   private void findDeclaredNames(NodeTraversal t, Node n) {
-    findDeclaredNamesHelper(t, n, false);
-  }
+    checkState(NodeUtil.createsScope(n) || n.isScript(), n);
 
-  private void findDeclaredNamesHelper(NodeTraversal t, Node n, boolean recursive) {
-    Renamer renamer = renamerStack.peek();
-    Node parent = n.getParent();
-
-    // Do a shallow traversal: Don't traverse into the function param list or body; just its name.
-    if (recursive && parent.isFunction() && n != parent.getFirstChild()) {
-      return;
-    }
-    if (NodeUtil.isBlockScopedDeclaration(n)) {
-      if (t.getScopeRoot() == NodeUtil.getEnclosingScopeRoot(n)) {
-        renamer.addDeclaredName(n.getString(), false);
-        // For functions, findDeclaredNames is called from enterScope when entering the function
-        // scope, rather than when entering the function body scope, so we need to check for that
-        // case as well.
-      } else if (t.getScopeRoot().isFunction()
-          && NodeUtil.getEnclosingScopeRoot(n) == NodeUtil.getFunctionBody(t.getScopeRoot())) {
-        renamer.addDeclaredName(n.getString(), false);
-      }
-    } else if (n.isName() && n.getParent().isVar()) {
-      renamer.addDeclaredName(n.getString(), true);
-    } else if (NodeUtil.isFunctionDeclaration(n)) {
-      Node nameNode = n.getFirstChild();
-      renamer.addDeclaredName(nameNode.getString(), false);
-    }
-
-    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      findDeclaredNamesHelper(t, c, true);
+    for (Var v : t.getScope().getVarIterable()) {
+      renamerStack.peek().addDeclaredName(v.getName(), false);
     }
   }
 
@@ -517,10 +423,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     /** Constructor for child scopes. */
     private ContextualRenamer(
         Node scopeRoot, Multiset<String> nameUsage, boolean hoistingTargetScope, Renamer parent) {
-      // Currently we are passing the PARAM_LIST node as the "root" of the function body scope.
-      // TODO(tbreisacher): Pass the function body itself, so that "scopeRoot" will always be an
-      // actual scope root.
-      checkState(NodeUtil.createsScope(scopeRoot) || scopeRoot.isParamList(), scopeRoot);
+      checkState(NodeUtil.createsScope(scopeRoot), scopeRoot);
 
       if (scopeRoot.isFunction()) {
         checkState(!hoistingTargetScope, scopeRoot);
@@ -673,8 +576,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
 
       // By using the same separator the id will be stripped if it isn't
       // needed when variable renaming is turned off.
-      return name + ContextualRenamer.UNIQUE_ID_SEPARATOR
-          + idPrefix + uniqueIdSupplier.get();
+      return name + ContextualRenamer.UNIQUE_ID_SEPARATOR + idPrefix + uniqueIdSupplier.get();
     }
 
     @Override

@@ -21,10 +21,13 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultiset;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multiset;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformation;
 import com.google.javascript.jscomp.CompilerOptions.AliasTransformationHandler;
+import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -259,8 +262,7 @@ class ScopedAliases implements HotSwapCompilerPass {
     }
   }
 
-
-  private class Traversal extends NodeTraversal.AbstractPostOrderCallback
+  private class Traversal extends AbstractPostOrderCallback
       implements NodeTraversal.ScopedCallback {
     // The job of this class is to collect these three data sets.
 
@@ -576,6 +578,8 @@ class ScopedAliases implements HotSwapCompilerPass {
      * if we know that we need it.
      */
     private void renameNamespaceShadows(NodeTraversal t) {
+      checkState(NodeUtil.isFunctionBlock(t.getScopeRoot()), t.getScopeRoot());
+
       if (hasNamespaceShadows) {
         MakeDeclaredNamesUnique.Renamer renamer =
             new MakeDeclaredNamesUnique.WhitelistedRenamer(
@@ -584,22 +588,29 @@ class ScopedAliases implements HotSwapCompilerPass {
         for (String s : forbiddenLocals) {
           renamer.addDeclaredName(s, false);
         }
-        MakeDeclaredNamesUnique uniquifier =
-            new MakeDeclaredNamesUnique(renamer);
-        Node parent = t.getScopeRoot().getParent();
-        NodeTraversal.traverseEs6(compiler, parent, uniquifier);
+        MakeDeclaredNamesUnique uniquifier = new MakeDeclaredNamesUnique(renamer);
+        NodeTraversal.traverseEs6ScopeRoots(
+            compiler, null, ImmutableList.of(t.getScopeRoot()), uniquifier, true);
       }
     }
 
-    private void renameBleedingFunctionName(Node fnName) {
-      MakeDeclaredNamesUnique.Renamer renamer =
-          new MakeDeclaredNamesUnique.WhitelistedRenamer(
-              new MakeDeclaredNamesUnique.ContextualRenamer(),
-              ImmutableSet.of(fnName.getString()));
-      renamer.addDeclaredName(fnName.getString(), false);
-
-      MakeDeclaredNamesUnique uniquifier = new MakeDeclaredNamesUnique(renamer);
-      NodeTraversal.traverseEs6(compiler, fnName.getGrandparent(), uniquifier);
+    private void renameBleedingFunctionName(NodeTraversal t, final Node fnName) {
+      final String name = fnName.getString();
+      final String suffix = compiler.getUniqueNameIdSupplier().get();
+      Callback cb =
+          new AbstractPostOrderCallback() {
+            @Override
+            public void visit(NodeTraversal t, Node n, Node parent) {
+              if (n.isName()
+                  && n.getString().equals(name)
+                  && t.getScope().getVar(name).getNode() == fnName) {
+                n.setString(name + "$jscomp$scopedAliases$" + suffix);
+                compiler.reportChangeToEnclosingScope(n);
+              }
+            }
+          };
+      (new NodeTraversal(compiler, cb, t.getScopeCreator())).traverseAtScope(t.getScope());
+      fnName.setString(name + "$jscomp$scopedAliases$" + suffix);
     }
 
     private void validateScopeCall(NodeTraversal t, Node n, Node parent) {
@@ -684,7 +695,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       //
       // TODO(moz): Remove this once we stop supporting IE8.
       if (NodeUtil.isBleedingFunctionName(n)) {
-        renameBleedingFunctionName(n);
+        renameBleedingFunctionName(t, n);
       }
 
       // Check if this name points to an alias.
