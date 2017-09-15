@@ -1043,6 +1043,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     Tracer t = newTracer("runTranspileOnlyPasses");
     try {
       for (PassFactory pf : getPassConfig().getTranspileOnlyPasses()) {
+        if (hasErrors()) {
+          return;
+        }
         pf.create(this).process(externsRoot, jsRoot);
       }
     } finally {
