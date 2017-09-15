@@ -219,6 +219,12 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
           declareLHS(hoistScope, n);
           return;
 
+        case EXPORT:
+          // The first child of an EXPORT can be a declaration, in the case of
+          // export var/let/const/function/class name ...
+          scanVars(n.getFirstChild(), hoistScope, blockScope);
+          return;
+
         case FUNCTION:
           if (NodeUtil.isFunctionExpression(n) || blockScope == null) {
             return;

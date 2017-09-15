@@ -3015,13 +3015,14 @@ public final class NodeUtil {
    * function f() {}
    * if (x); else function f() {}
    * for (;;) { function f() {} }
+   * export default function f() {}
    * </pre>
    *
    * @param n A node
    * @return Whether n is a function used within an expression.
    */
   static boolean isFunctionExpression(Node n) {
-    return n.isFunction() && !isStatement(n);
+    return n.isFunction() && (!isNamedFunction(n) || !isDeclarationParent(n.getParent()));
   }
 
   /**

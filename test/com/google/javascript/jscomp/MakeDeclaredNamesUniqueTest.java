@@ -769,8 +769,8 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
             "  return foo(x) - 1;",
             "}"),
         LINE_JOINER.join(
-            "export function foo$jscomp$unique_1(x$jscomp$unique_0) {",
-            "  return foo$jscomp$unique_1(x$jscomp$unique_0) - 1;",
+            "export function foo$jscomp$unique_0(x$jscomp$unique_1) {",
+            "  return foo$jscomp$unique_0(x$jscomp$unique_1) - 1;",
             "}"));
   }
 

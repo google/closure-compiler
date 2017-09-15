@@ -381,10 +381,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
             break;
           }
           String name = maybeName.getString();
-          Var v = t.getScope().getVar(name);
-          if (v == null || v.isGlobal()) {
-            exportMap.put(name, new NameNodePair(name, maybeName));
-          }
+          exportMap.put(name, new NameNodePair(name, maybeName));
 
           // If the declaration declares a new type, create annotations for
           // the type checker.

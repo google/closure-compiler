@@ -234,10 +234,6 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testVarRedeclaration2_inES6Module() {
-    // TODO (simranarora) make this pass. Currently we only scan vars if the parent is a statement
-    // block or control structure, but "EXPORT" falls under neither of these cases. If we make the
-    // change to add "EXPORT" as a statement block, then other compiler tests
-    // fail. Thus, we must debug those passes first!
     String js = "export var x = 1; export var x = 2;";
 
     Node script = getRoot(js);
@@ -247,8 +243,7 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     checkState(moduleBody.isModuleBody());
     scopeCreator.createScope(moduleBody, global);
 
-    // assertThat(redeclarations).hasCount("x", 1);
-    assertThat(redeclarations).hasCount("x", 0);
+    assertThat(redeclarations).hasCount("x", 1);
   }
 
   public void testRedeclaration3_inES6Module() {
@@ -886,8 +881,6 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
   }
 
   public void testModuleScoped() {
-    // TODO (simranarora) Make this pass. Currently, functions are only declared if their parent
-    // nodes are statement nodes. "EXPORT" is not part of the statement node enum!
     String js = "export function f() { var x; if (1) { let y; } }; var z;";
     Node root = getRoot(js);
     Scope globalScope = scopeCreator.createScope(root, null);
@@ -898,10 +891,32 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
 
     Node moduleBlock = root.getFirstChild();
     Scope moduleBlockScope = scopeCreator.createScope(moduleBlock, globalScope);
-    // assertTrue(moduleBlockScope.isDeclared("f", false)); currently false
+    assertTrue(moduleBlockScope.isDeclared("f", false));
     assertFalse(moduleBlockScope.isDeclared("x", false));
     assertFalse(moduleBlockScope.isDeclared("y", false));
     assertTrue(moduleBlockScope.isDeclared("z", false));
+  }
+
+  public void testExportDefault() {
+    String js = "export default function f() {};";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertFalse(globalScope.isDeclared("f", false));
+
+    Node moduleBlock = root.getFirstChild();
+    Scope moduleBlockScope = scopeCreator.createScope(moduleBlock, globalScope);
+    assertTrue(moduleBlockScope.isDeclared("f", false));
+  }
+
+  public void testExportFrom() {
+    String js = "export {PI} from './n.js';";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertFalse(globalScope.isDeclared("PI", false));
+
+    Node moduleBlock = root.getFirstChild();
+    Scope moduleBlockScope = scopeCreator.createScope(moduleBlock, globalScope);
+    assertFalse(moduleBlockScope.isDeclared("PI", false));
   }
 
   public void testVarAfterLet() {

@@ -675,6 +675,9 @@ public final class NodeUtilTest extends TestCase {
     assertContainsAnonFunc(false, "for (;;) function a(){}");
     assertContainsAnonFunc(false, "for (p in o) function a(){};");
     assertContainsAnonFunc(false, "with (x) function a(){}");
+    assertContainsAnonFunc(true, "export default function() {};");
+    assertContainsAnonFunc(false, "export default function a() {};");
+    assertContainsAnonFunc(false, "export function a() {};");
   }
 
   private void assertContainsAnonFunc(boolean expected, String js) {
