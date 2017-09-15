@@ -1223,12 +1223,23 @@ IceCandidate.prototype.toSdp = function() {};
  */
 IceCandidate.prototype.label;
 
+/** @record */
+function RTCIceCandidateInit() {};
+
+/** @type {?string|undefined} */
+RTCIceCandidateInit.prototype.candidate;
+
+/** @type {(?string|undefined)} */
+RTCIceCandidateInit.prototype.sdpMid;
+
+/** @type {(?number|undefined)} */
+RTCIceCandidateInit.prototype.sdpMLineIndex;
+
+/** @type {(string|undefined)} */
+RTCIceCandidateInit.prototype.usernameFragment;
+
 /**
- * @param {!Object=} candidateInitDict  The RTCIceCandidateInit dictionary.
- * This optional argument may have type
- * {candidate: string, sdpMid: string, sdpMLineIndex:number}, but none of
- * these keys are required to be present, and other keys are ignored, so the
- * closest Closure type is Object.
+ * @param {!RTCIceCandidateInit=} candidateInitDict  The RTCIceCandidateInit dictionary.
  * @constructor
  * @see https://www.w3.org/TR/webrtc/#rtcicecandidate-interface
  */
