@@ -167,19 +167,17 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testIssue166a() {
-    testError(
-        "try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
-        REDECLARED_VARIABLE_ERROR);
+    assertRedeclareError(
+        "try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }");
   }
 
   public void testIssue166b() {
-    testError(
-        "function a() { try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 } };",
-        REDECLARED_VARIABLE_ERROR);
+    assertRedeclareError(
+        "function a() { try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 } };");
   }
 
   public void testIssue166b_withES6Modules() {
-    testError(
+    assertRedeclareError(
         LINE_JOINER.join(
             "export function a() {",
             "  try {",
@@ -188,25 +186,22 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
             "      /** @suppress {duplicate} */",
             "      var e = 2",
             "  }",
-            "};"),
-        REDECLARED_VARIABLE_ERROR);
+            "};"));
   }
 
   public void testIssue166c() {
-    testError(
-        "var e = 0; try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
-        REDECLARED_VARIABLE_ERROR);
+    assertRedeclareError(
+        "var e = 0; try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }");
   }
 
   public void testIssue166d() {
-    testError(
+    assertRedeclareError(
         LINE_JOINER.join(
             "function a() {",
             "  var e = 0; try { throw 1 } catch(e) {",
             "    /** @suppress {duplicate} */ var e = 2;",
             "  }",
-            "};"),
-        REDECLARED_VARIABLE_ERROR);
+            "};"));
   }
 
   public void testIssue166e() {
