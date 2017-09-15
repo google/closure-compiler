@@ -1030,6 +1030,13 @@ public final class NodeUtil {
         && initializer.getLastChild().isObjectLit();
   }
 
+  /** Determine if the given SCRIPT is a @typeSummary file, like an i.js file */
+  static boolean isFromTypeSummary(Node n) {
+    checkArgument(n.isScript());
+    JSDocInfo info = n.getJSDocInfo();
+    return info != null && info.isTypeSummary();
+  }
+
   /**
    * Creates an EXPR_RESULT.
    *

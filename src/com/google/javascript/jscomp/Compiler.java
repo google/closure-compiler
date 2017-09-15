@@ -1833,7 +1833,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           NodeTraversal.traverseEs6(this, n, sia);
         }
 
-        jsRoot.addChildToBack(n);
+        if (NodeUtil.isFromTypeSummary(n)) {
+          input.setIsExtern(true);
+          externsRoot.addChildToBack(n);
+        } else {
+          jsRoot.addChildToBack(n);
+        }
       }
 
       if (hasErrors()) {
@@ -1886,10 +1891,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     }
 
-    if (options.allowIjsInputs()) {
-      hoistIjsFiles();
-    }
-
     hoistNoCompileFiles();
 
     if (staleInputs) {
@@ -1922,21 +1923,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /**
-   * Hoists inputs with the @typeSummary annotation into the externs list.
-   */
-  void hoistIjsFiles() {
-    boolean staleInputs = false;
-    for (CompilerInput input : inputs) {
-      if (hoistIfTypeSummary(input)) {
-        staleInputs = true;
-      }
-    }
-    if (staleInputs) {
-      repartitionInputs();
-    }
-  }
-
-  /**
    * Hoists a compiler input to externs if it contains the @externs annotation.
    * Return whether or not the given input was hoisted.
    */
@@ -1952,29 +1938,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     if (info != null && info.isExterns()) {
       // If the input file is explicitly marked as an externs file, then move it out of the main
       // JS root and put it with the other externs.
-      externsRoot.addChildToBack(n);
-      input.setIsExtern(true);
-
-      input.getModule().remove(input);
-
-      externs.add(input);
-      return true;
-    }
-    return false;
-  }
-
-  private boolean hoistIfTypeSummary(CompilerInput input) {
-    Node n = input.getAstRoot(this);
-
-    // Inputs can have a null AST on a parse error.
-    if (n == null) {
-      return false;
-    }
-
-    JSDocInfo info = n.getJSDocInfo();
-    if (info != null && info.isTypeSummary()) {
-      // If the input file is explicitly marked as a @typeSummary, then it should be treated as
-      // an extern file.
       externsRoot.addChildToBack(n);
       input.setIsExtern(true);
 

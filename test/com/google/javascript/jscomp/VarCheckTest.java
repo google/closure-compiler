@@ -216,6 +216,10 @@ public final class VarCheckTest extends CompilerTestCase {
         VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR);
   }
 
+  public void testNamespaceDeclarationInExterns() {
+    testSame("/** @const */ var $jscomp = $jscomp || {};", "");
+  }
+
   public void testCallInExterns() {
     testSame("yz();", "function /** @suppress {duplicate} */ yz() {}",
         VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR);

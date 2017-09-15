@@ -4200,6 +4200,56 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, "", "");
   }
 
+  public void testIjsProvideIsAllowed1() {
+    CompilerOptions options = createCompilerOptions();
+    options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.CHECK_IJS);
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+
+    test(
+        options,
+        new String[] {
+          "/** @typeSummary */ goog.provide('foo.bar'); /** @type {!Array<number>} */ foo.bar;",
+          LINE_JOINER.join(
+              "goog.provide('foo.baz');",
+              "",
+              "/** @return {number} */",
+              "foo.baz = function() { return foo.bar[0]; }"),
+        },
+        new String[] {
+            "/** @return {number} */ foo.baz = function() { return foo.bar[0]; }",
+        });
+  }
+
+  public void testIjsWithGoogScopeWorks() {
+    CompilerOptions options = createCompilerOptions();
+    options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.CHECK_IJS);
+    options.setClosurePass(true);
+    options.setCheckTypes(true);
+
+    test(
+        options,
+        new String[] {
+            "/** @typeSummary */ /** @const */ var goog = {};",
+            LINE_JOINER.join(
+                "goog.provide('foo.baz');",
+                "",
+                "goog.scope(function() {",
+                "",
+                "var RESULT = 5;",
+                "/** @return {number} */",
+                "foo.baz = function() { return RESULT; }",
+                "",
+                "}); // goog.scope"),
+        },
+        new String[] {
+            LINE_JOINER.join(
+                "var foo = {};",
+                "/** @const */ $jscomp.scope.RESULT = 5;",
+                "/** @return {number} */ foo.baz = function() { return $jscomp.scope.RESULT; }"),
+        });
+  }
+
   // GitHub issue #250: https://github.com/google/closure-compiler/issues/250
   public void testInlineStringConcat() {
     CompilerOptions options = createCompilerOptions();
