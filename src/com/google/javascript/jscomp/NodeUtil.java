@@ -2423,11 +2423,11 @@ public final class NodeUtil {
     return n.isFunction() && !n.isArrowFunction();
   }
 
-  static boolean isEnhancedFor(Node n) {
+  public static boolean isEnhancedFor(Node n) {
     return n.isForOf() || n.isForIn();
   }
 
-  static boolean isAnyFor(Node n) {
+  public static boolean isAnyFor(Node n) {
     return n.isVanillaFor() || n.isForIn() || n.isForOf();
   }
 
