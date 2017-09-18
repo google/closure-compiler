@@ -986,6 +986,50 @@ function testGeneratorThrow() {
   assertTrue(iter.next().done);
 }
 
+/**
+ * Make sure thrown exception is correctly rethrown after finally block.
+ *
+ * TODO(bradfordcsmith): fix this
+ * https://github.com/google/closure-compiler/issues/2504
+ */
+function disabled_testGeneratorThrowWithYieldInFinallyBlock() {
+  const expectedError = new Error('error');
+
+  function *f() {
+    try {
+      yield 1;
+    } finally {
+      yield 2;
+    }
+  }
+
+  const /** !Generator<number> */ iter = f();
+  assertObjectEquals({done: false, value: 1}, iter.next());
+  assertObjectEquals({done: false, value: 2}, iter.throw(expectedError));
+  const actualError = assertThrows(() => iter.next());
+  assertEquals(expectedError, actualError);
+}
+
+/**
+ * Make sure returned value is correctly saved and returned after finally block.
+ */
+function testGeneratorReturnWithYieldInFinallyBlock() {
+  function *f() {
+    try {
+      yield 1;
+      return 'a';
+    } finally {
+      yield 2;
+    }
+  }
+
+  const /** !Generator<number> */ iter = f();
+  assertObjectEquals({done: false, value: 1}, iter.next());
+  assertObjectEquals({done: false, value: 2}, iter.next());
+  assertObjectEquals({done: true, value: 'a'}, iter.next());
+  assertObjectEquals({done: true, value: undefined}, iter.next());
+}
+
 function testGeneratorThrowUndefined() {
   function* simple() {
     yield 1;
