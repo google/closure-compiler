@@ -400,6 +400,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     testSame("import 'm'; /** @typedef {string} */ var x;");
   }
 
+  public void testImportStar() {
+    testSame("import * as ns from './foo.js'");
+  }
+
   public void testAliasInModule() {
     enableUnusedLocalAssignmentCheck = true;
     testSame(

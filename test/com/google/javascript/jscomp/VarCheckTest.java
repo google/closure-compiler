@@ -673,6 +673,10 @@ public final class VarCheckTest extends CompilerTestCase {
     testSame("import foo from './foo'; foo('hello'); var foo = 5;");
   }
 
+  public void testImportStar() {
+    testSame("import * as foo from './foo.js';");
+  }
+
   private static final class VariableTestCheck implements CompilerPass {
 
     final AbstractCompiler compiler;

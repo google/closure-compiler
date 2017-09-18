@@ -352,7 +352,7 @@ class VarCheck extends AbstractPostOrderCallback implements
    *     for the given node.
    */
   static boolean hasDuplicateDeclarationSuppression(Node n, Var origVar) {
-    checkState(n.isName() || n.isRest() || n.isStringKey(), n);
+    checkState(n.isName() || n.isRest() || n.isStringKey() || n.isImportStar(), n);
     Node parent = n.getParent();
     Node origParent = origVar.getParentNode();
 
