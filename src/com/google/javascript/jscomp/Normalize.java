@@ -572,10 +572,7 @@ class Normalize implements CompilerPass {
      */
     static boolean visitFunction(Node n, AbstractCompiler compiler) {
       checkState(n.isFunction(), n);
-      // TODO(lharker): function declarations within exports are hoisted - after fixing
-      // NodeUtil.isHoistedFunctionDeclaration we shouldn't need the special case for export below
-      if (NodeUtil.isFunctionDeclaration(n) && !NodeUtil.isHoistedFunctionDeclaration(n)
-          && !n.getParent().isExport()) {
+      if (NodeUtil.isFunctionDeclaration(n) && !NodeUtil.isHoistedFunctionDeclaration(n)) {
         rewriteFunctionDeclaration(n, compiler);
         return true;
       } else if (n.isFunction() && !NodeUtil.getFunctionBody(n).isNormalBlock()) {

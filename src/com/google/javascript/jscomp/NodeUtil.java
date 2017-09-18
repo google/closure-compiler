@@ -2970,9 +2970,10 @@ public final class NodeUtil {
   public static boolean isHoistedFunctionDeclaration(Node n) {
     if (isFunctionDeclaration(n)) {
       Node parent = n.getParent();
-      // TODO(lharker): should return true if parent is an export. Doing so breaks other tests, so
-      // I'm moving it into future CLs.
-      return parent.isScript() || parent.isModuleBody() || parent.getParent().isFunction();
+      return parent.isScript()
+          || parent.isModuleBody()
+          || parent.getParent().isFunction()
+          || parent.isExport();
     }
     return false;
   }
