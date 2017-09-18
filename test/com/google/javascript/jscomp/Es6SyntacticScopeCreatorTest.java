@@ -1084,6 +1084,18 @@ public final class Es6SyntacticScopeCreatorTest extends TestCase {
     assertTrue(classScope.isDeclared("Clazz", false));
   }
 
+  public void testClassDeclarationInExportDefault() {
+    String js = "export default class Clazz {}";
+    Node root = getRoot(js);
+    Scope globalScope = scopeCreator.createScope(root, null);
+    assertFalse(globalScope.isDeclared("Clazz", false));
+
+    Node moduleBody = root.getFirstChild();
+    checkState(moduleBody.isModuleBody(), moduleBody);
+    Scope moduleScope = scopeCreator.createScope(moduleBody, globalScope);
+    assertTrue(moduleScope.isDeclared("Clazz", false));
+  }
+
   public void testVarsInModulesNotGlobal() {
     Node root = getRoot("goog.module('example'); var x;");
     Scope globalScope = scopeCreator.createScope(root, null);

@@ -3040,7 +3040,7 @@ public final class NodeUtil {
    * @return Whether n is a class used within an expression.
    */
   static boolean isClassExpression(Node n) {
-    return n.isClass() && !isStatement(n);
+    return n.isClass() && (!isNamedClass(n) || !isDeclarationParent(n.getParent()));
   }
 
   /**
