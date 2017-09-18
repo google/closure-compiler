@@ -2363,6 +2363,13 @@ public final class NodeUtil {
     return n != null && (n.isVar() || n.isLet() || n.isConst());
   }
 
+  static final Predicate<Node> isNameDeclaration = new Predicate<Node>() {
+    @Override
+    public boolean apply(Node n) {
+      return isNameDeclaration(n);
+    }
+  };
+
   /**
    * @param n The node
    * @return True if {@code n} is a VAR, LET or CONST that contains a

@@ -275,6 +275,36 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction("function x() {} var y = 1; y; x = 1; x");
   }
 
+  public void testBug65688660() {
+    test(
+        LINE_JOINER.join(
+            "function f(param) {",
+            "  if (true) {",
+            "    const b1 = [];",
+            "    for (const [key, value] of []) {}",
+            "  }",
+            "  if (true) {",
+            "    const b2 = [];",
+            "    for (const kv of []) {",
+            "      const key2 = kv.key;",
+            "    }",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(param) {",
+            "  if (true) {",
+            "    param = [];",
+            "    for (var [key, value] of []) {}",
+            "  }",
+            "  if (true) {",
+            "    key = [];",
+            "    for (const kv of []) {",
+            "      key = kv.key;",
+            "    }",
+            "  }",
+            "}"));
+  }
+
   public void testBug1401831() {
     // Verify that we don't wrongly merge "opt_a2" and "i" without considering
     // arguments[0] aliasing it.

@@ -199,7 +199,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       n.setString(coalescedVar.name);
       compiler.reportChangeToEnclosingScope(n);
 
-      if (NodeUtil.isNameDeclaration(parent)) {
+      if (NodeUtil.isNameDeclaration(parent)
+          || NodeUtil.getEnclosingType(n, Token.DESTRUCTURING_LHS) != null) {
         makeDeclarationVar(coalescedVar);
         removeVarDeclaration(n);
       }
@@ -233,7 +234,9 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       n.setString(pseudoName);
       compiler.reportChangeToEnclosingScope(n);
 
-      if (!vNode.getValue().equals(coalescedVar) && NodeUtil.isNameDeclaration(parent)) {
+      if (!vNode.getValue().equals(coalescedVar)
+          && (NodeUtil.isNameDeclaration(parent)
+              || NodeUtil.getEnclosingType(n, Token.DESTRUCTURING_LHS) != null)) {
         makeDeclarationVar(coalescedVar);
         removeVarDeclaration(n);
       }
@@ -396,12 +399,12 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
    * Tries to remove variable declaration if the variable has been coalesced with another variable
    * that has already been declared. Any lets or consts are redeclared as vars because at this point
    * in the compilation, the code is normalized, so we can safely hoist variables without worrying
-   * about shaddowing.
+   * about shadowing.
    *
    * @param name name node of the variable being coalesced
    */
   private static void removeVarDeclaration(Node name) {
-    Node var = name.getParent();
+    Node var = NodeUtil.getEnclosingNode(name, NodeUtil.isNameDeclaration);
     Node parent = var.getParent();
 
     if (!var.isVar()) {
@@ -443,11 +446,11 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
    * Because the code has already been normalized by the time this pass runs, we can safely
    * redeclare any let and const coalesced variables as vars
    */
-  public static void makeDeclarationVar(Var coalescedName) {
-    Node coalesceVarParent = coalescedName.getParentNode();
-    if (coalesceVarParent.isLet() || coalesceVarParent.isConst()) {
-      coalesceVarParent.setToken(Token.VAR);
-      checkState(coalesceVarParent.isVar());
+  private static void makeDeclarationVar(Var coalescedName) {
+    if (coalescedName.isLet() || coalescedName.isConst()) {
+      Node declNode =
+          NodeUtil.getEnclosingNode(coalescedName.getParentNode(), NodeUtil.isNameDeclaration);
+      declNode.setToken(Token.VAR);
     }
   }
 
