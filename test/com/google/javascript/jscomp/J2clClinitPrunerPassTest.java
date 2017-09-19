@@ -422,6 +422,37 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "someChildClass.someFunction = function() {};"));
   }
 
+  public void testFoldClinit_classHierarchyNonEmpty() {
+    test(
+        LINE_JOINER.join(
+            "var someClass = {};",
+            "someClass.$clinit = function() {",
+            "  someClass.$clinit = function() {};",
+            "  somefn();",
+            "};",
+            "var someChildClass = {};",
+            "someChildClass.$clinit = function() {",
+            "  someChildClass.$clinit = function() {};",
+            "  someClass.$clinit();",
+            "};",
+            "someChildClass.someFunction = function() {",
+            "  someChildClass.$clinit();",
+            "};"),
+        LINE_JOINER.join(
+            "var someClass = {};",
+            "someClass.$clinit = function() {",
+            "  someClass.$clinit = function() {};",
+            "  somefn();",
+            "};",
+            "var someChildClass = {};",
+            "someChildClass.$clinit = function() {",
+            "  someClass.$clinit();",
+            "};",
+            "someChildClass.someFunction = function() {",
+            "  someClass.$clinit();",
+            "};"));
+  }
+
   public void testFoldClinit_invalidCandidates() {
     testSame(
         LINE_JOINER.join(
