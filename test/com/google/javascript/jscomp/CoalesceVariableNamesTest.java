@@ -321,6 +321,13 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     testSame(src);
   }
 
+  // Code inside a class is automatically in strict mode, so duplicated parameter names are not
+  // allowed.
+  // TODO(b/64898400): Fix and enable this test.
+  public void disabled_testBug64898400() {
+    testSame("class C { f(a, b=0, c=0) {} }");
+  }
+
   public void testDeterministic() {
     // Make the variable interference graph a pentagon.
     //         a - b
