@@ -116,8 +116,7 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testReferencedLetDefined1_withES6Modules() {
-    // Throws Error: JSC_UNDEFINED_VARIABLE. variable x is undeclared at testcode line 1 : 11
-    // testSame("export let x; x = 1;");
+    testSame("export let x; x = 1;");
   }
 
   public void testReferencedLetDefined2() {
@@ -142,17 +141,6 @@ public final class VarCheckTest extends CompilerTestCase {
 
   public void testMultiplyDeclaredVars1() {
     testError("var x = 1; var x = 2;", VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
-  }
-
-  public void testMultiplyDeclaredVars_withES6Modules() {
-    // There should be one error of type 'JSC_VAR_MULTIPLY_DECLARED_ERROR' but there were: []
-    // expected:<1> but was:<0>
-    /*testError("export function f() { var x = 1; var x = 2; };",
-    VarCheck.VAR_MULTIPLY_DECLARED_ERROR);*/
-
-    // expected:<JSC_VAR_MULTIPLY_DECLARED_ERROR: Variable {0} declared more than once. First
-    // occurrence: {1}> but was:<JSC_UNDEFINED_VARIABLE: variable {0} is undeclared>
-    // testError("export var x = 1; export var x = 2;", VarCheck.VAR_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testMultiplyDeclaredVars2() {
@@ -180,15 +168,14 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testMultiplyDeclaredConsts_withES6Modules() {
-    // Error: JSC_UNDEFINED_VARIABLE: variable {0} is undeclared
-    /*testError("export function f() { const x = 1; const x = 2; }",
-    VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);*/
+    testError("export function f() { const x = 1; const x = 2; }",
+        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
 
-    // Error: Expected <JSC_LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR: Duplicate let / const / class
-    // declaration in the same scope is not allowed.> but was:<JSC_UNDEFINED_VARIABLE: variable {0}
-    // is undeclared>
-    /*testError("export const x = 1; export var x = 2;",
-    VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);*/
+    testError("export const x = 1; export var x = 2;",
+        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+
+    testError("export const a = 1, a = 2;",
+        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testMultiplyDeclareLetsInDifferentScope() {
@@ -201,6 +188,8 @@ public final class VarCheckTest extends CompilerTestCase {
     testError("let x; class x{ }", VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
     testError("const x = 1; class x{ }", VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
     testError("class x{ } let x;", VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+    testError("export default class x{ } let x;",
+        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
   }
 
   public void testNamedClass() {
@@ -226,9 +215,8 @@ public final class VarCheckTest extends CompilerTestCase {
   }
 
   public void testVarReferenceInExterns_withEs6Modules() {
-    // Throws Error: JSC_UNDEFINED_VARIABLE. variable asdf is undeclared at externs line 1 : 0
-    // testSame("asdf;", "export var /** @suppress {duplicate} */ asdf;",
-    //    VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR);
+    // vars in ES6 modules are not in global scope, so foo is undefined.
+    testError("foo;", "export var foo;", VarCheck.UNDEFINED_VAR_ERROR);
   }
 
   public void testVarDeclarationInExterns() {
@@ -280,12 +268,6 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testPropReferenceInExterns1() {
     testSame("asdf.foo;", "var /** @suppress {duplicate} */ asdf;",
         VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
-  }
-
-  public void testPropReferenceInExterns_withES6Modules() {
-    // Error: JSC_UNDEFINED_VARIABLE. variable asdf is undeclared at externs line 1 : 0
-    // testSame("asdf.foo;", "export var /** @suppress {duplicate} */ asdf;",
-    //    VarCheck.UNDEFINED_EXTERN_VAR_ERROR);
   }
 
   public void testPropReferenceInExterns2() {
@@ -619,6 +601,19 @@ public final class VarCheckTest extends CompilerTestCase {
             "      break;",
             "  }",
             "}"),
+        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+  }
+
+  public void testLetConstRedeclareWithFunctions_withEs6Modules() {
+    testError("function f() {} let f = 1; export {f};",
+        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+    testError("let f = 1; function f() {}  export {f};",
+        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+    testError("const f = 1; function f() {} export {f};",
+        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+    testError("function f() {} const f = 1;  export {f};",
+        VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
+    testError("export default function f() {}; let f = 5;",
         VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
   }
 
