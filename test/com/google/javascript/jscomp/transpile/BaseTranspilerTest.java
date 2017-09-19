@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Answers.RETURNS_SMART_NULLS;
 import static org.mockito.Mockito.when;
 
-import com.google.javascript.jscomp.JSError;
+import com.google.javascript.jscomp.bundle.TranspilationException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import junit.framework.TestCase;
@@ -37,7 +37,6 @@ public final class BaseTranspilerTest extends TestCase {
 
   private static final Path FOO_JS = Paths.get("foo.js");
   private static final Path SOURCE_JS = Paths.get("source.js");
-  private static final JSError[] NO_ERRORS = new JSError[] {};
 
   @Override
   public void setUp() {
@@ -50,14 +49,14 @@ public final class BaseTranspilerTest extends TestCase {
 
   public void testTranspiler_transpile() {
     when(mockCompiler.compile(FOO_JS, "bar"))
-        .thenReturn(new BaseTranspiler.CompileResult("result", NO_ERRORS, true, "srcmap"));
+        .thenReturn(new BaseTranspiler.CompileResult("result", true, "srcmap"));
     assertThat(transpiler.transpile(FOO_JS, "bar"))
         .isEqualTo(new TranspileResult(FOO_JS, "bar", "result", "srcmap"));
   }
 
   public void testTranspiler_noTranspilation() {
     when(mockCompiler.compile(FOO_JS, "bar"))
-        .thenReturn(new BaseTranspiler.CompileResult("result", NO_ERRORS, false, "srcmap"));
+        .thenReturn(new BaseTranspiler.CompileResult("result", false, "srcmap"));
     assertThat(transpiler.transpile(FOO_JS, "bar"))
         .isEqualTo(new TranspileResult(FOO_JS, "bar", "bar", ""));
   }
@@ -72,7 +71,6 @@ public final class BaseTranspilerTest extends TestCase {
   public void testCompilerSupplier_compileChanged() {
     BaseTranspiler.CompileResult result = compiler.compile(SOURCE_JS, "const x = () => 42;");
     assertThat(result.source).isEqualTo("var x = function() {\n  return 42;\n};\n");
-    assertThat(result.errors).isEmpty();
     assertThat(result.transpiled).isTrue();
     assertThat(result.sourceMap)
         .contains("\"mappings\":\"AAAA,IAAMA,IAAIA,QAAA,EAAM;AAAA,SAAA,EAAA;AAAA,CAAhB;;\"");
@@ -81,9 +79,15 @@ public final class BaseTranspilerTest extends TestCase {
   public void testCompilerSupplier_compileNoChange() {
     BaseTranspiler.CompileResult result = compiler.compile(SOURCE_JS, "var x = 42;");
     assertThat(result.source).isEqualTo("var x = 42;\n");
-    assertThat(result.errors).isEmpty();
     assertThat(result.transpiled).isFalse();
     assertThat(result.sourceMap).isEmpty();
+  }
+
+  public void testCompilerSupplier_error() {
+    try {
+      compiler.compile(SOURCE_JS, "cons x = () => 42;");
+      fail("Expected an exception.");
+    } catch (TranspilationException expected) {}
   }
 
   public void testCompilerSupplier_runtime() {
