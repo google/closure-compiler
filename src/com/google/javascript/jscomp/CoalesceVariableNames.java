@@ -303,7 +303,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
           continue NEXT_VAR_PAIR;
         }
 
-        if (v1.getParentNode().isParamList() && v2.getParentNode().isParamList()) {
+        if (v1.isParam() && v2.isParam()) {
           interferenceGraph.connectIfNotFound(v1, null, v2);
           continue NEXT_VAR_PAIR;
         }

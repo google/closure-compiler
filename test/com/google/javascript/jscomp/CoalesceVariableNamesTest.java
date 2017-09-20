@@ -323,8 +323,8 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
   // Code inside a class is automatically in strict mode, so duplicated parameter names are not
   // allowed.
-  // TODO(b/64898400): Fix and enable this test.
-  public void disabled_testBug64898400() {
+  public void testBug64898400() {
+    testSame("class C { f(a, b, c) {} }");
     testSame("class C { f(a, b=0, c=0) {} }");
   }
 
