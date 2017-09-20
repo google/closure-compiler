@@ -2814,8 +2814,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          // TODO(b/65688660): Switch to ES8_MODULES when b/65688660 is fixed.
-          return ES5;
+          return ES8_MODULES;
         }
       };
 

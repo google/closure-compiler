@@ -294,12 +294,12 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "function f(param) {",
             "  if (true) {",
             "    param = [];",
-            "    for (var [key, value] of []) {}",
+            "    for (const [key, value] of []) {}",
             "  }",
             "  if (true) {",
-            "    key = [];",
+            "    param = [];",
             "    for (const kv of []) {",
-            "      key = kv.key;",
+            "      param = kv.key;",
             "    }",
             "  }",
             "}"));
@@ -326,6 +326,84 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   public void testBug64898400() {
     testSame("class C { f(a, b, c) {} }");
     testSame("class C { f(a, b=0, c=0) {} }");
+  }
+
+  public void testObjDestructuringConst1() {
+    test(
+        LINE_JOINER.join(
+            "function f(obj) {",
+            "  {",
+            "    const {foo: foo} = obj;",
+            "    alert(foo);",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(obj) {",
+            "  {",
+            "    var {foo: obj} = obj;",
+            "    alert(obj);",
+            "  }",
+            "}"));
+  }
+
+  public void testObjDestructuringConst2() {
+    test(
+        LINE_JOINER.join(
+            "function f(obj) {",
+            "  {",
+            "    const {foo: foo} = obj;",
+            "    alert(foo);",
+            "  }",
+            "  {",
+            "    const {bar: bar} = obj;",
+            "    alert(bar);",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(obj) {",
+            "  {",
+            "    var {foo: obj} = obj;",
+            "    alert(obj);",
+            "  }",
+            "  {",
+            "    var {bar: obj} = obj;",
+            "    alert(obj);",
+            "  }",
+            "}"));
+  }
+
+  public void testObjDestructuringConst3() {
+    testSame(
+        LINE_JOINER.join(
+            "function f() {",
+            "  const obj = {};",
+            "  const {prop1: foo, prop2: bar} = obj;",
+            "  alert(foo);",
+            "}"));
+  }
+
+  // We would normally coalesce 'key' with 'collidesWithKey', but in doing so we'd change the 'let'
+  // on line 2 to a 'var' which would cause the inner function to capture the wrong value of 'val'.
+  public void testCapture() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(param) {",
+            "  for (let [key, val] of foo()) {",
+            "    param = (x) => { return val(x); };",
+            "  }",
+            "  let collideswithKey = 5;",
+            "  return param(collidesWithKey);",
+            "}"));
+  }
+
+  public void testDestructuring() {
+    testSame(
+        LINE_JOINER.join(
+            "function f() {",
+            "  const [x, y] = foo(5);",
+            "  let z = foo(x);",
+            "  return x;",
+            "}"));
   }
 
   public void testDeterministic() {
@@ -665,9 +743,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
     // Here the variable y is redeclared because the variable z in the header of the for-loop has
     // not been declared before
-    inFunction(
-        "let y = 2; for (let x = 1, z = 3; (x + z) < 10; x ++) { x + z; }",
-        "var y = 2; for (var y = 1, z = 3; (y + z) < 10; y ++) { y + z; }");
+    inFunction("let y = 2; for (let x = 1, z = 3; (x + z) < 10; x ++) { x + z; }");
   }
 
   public void testArrowFunctions() {

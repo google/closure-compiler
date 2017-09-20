@@ -266,18 +266,30 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     List<Var> orderedVariables = liveness.getAllVariablesInOrder();
 
     for (Var v : orderedVariables) {
-      if (!escaped.contains(v)) {
+      if (escaped.contains(v)) {
+        continue;
+      }
 
-        // TODO(user): In theory, we CAN coalesce function names just like
-        // any variables. Our Liveness analysis captures this just like it as
-        // described in the specification. However, we saw some zipped and
-        // and unzipped size increase after this. We are not totally sure why
-        // that is but, for now, we will respect the dead functions and not play
-        // around with it.
-        if (!v.getParentNode().isFunction()) {
-          interferenceGraph.createNode(v);
+      // TODO(user): In theory, we CAN coalesce function names just like
+      // any variables. Our Liveness analysis captures this just like it as
+      // described in the specification. However, we saw some zipped and
+      // and unzipped size increase after this. We are not totally sure why
+      // that is but, for now, we will respect the dead functions and not play
+      // around with it.
+      if (v.getParentNode().isFunction()) {
+        continue;
+      }
+
+      // Skip lets and consts that have multiple variables declared in them, otherwise this produces
+      // incorrect semantics. See test case "testCapture".
+      if (v.isLet() || v.isConst()) {
+        Node nameDecl = NodeUtil.getEnclosingNode(v.getNode(), NodeUtil.isNameDeclaration);
+        if (NodeUtil.getLhsNodesOfDeclaration(nameDecl).size() > 1) {
+          continue;
         }
       }
+
+      interferenceGraph.createNode(v);
     }
 
     // Go through each variable and try to connect them.
@@ -416,7 +428,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     if (NodeUtil.isEnhancedFor(parent)) {
       var.removeChild(name);
       parent.replaceChild(var, name);
-    } else if (var.hasOneChild()) {
+    } else if (var.hasOneChild() && var.getFirstChild() == name) {
       // The removal is easy when there is only one variable in the VAR node.
       if (name.hasChildren()) {
         Node value = name.removeFirstChild();
@@ -435,8 +447,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
         NodeUtil.removeChild(parent, var);
       }
     } else {
-      if (!name.hasChildren()) {
-        var.removeChild(name);
+      if (var.getFirstChild() == name && !name.hasChildren()) {
+        name.detach();
       }
       // We are going to leave duplicated declaration otherwise.
     }
