@@ -49,7 +49,7 @@ public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
     if (replacement != node) {
       replacement = replacement.useSourceInfoIfMissingFrom(node);
       node.replaceWith(replacement);
-      reportCodeChange();
+      compiler.reportChangeToEnclosingScope(replacement);
     }
     return replacement;
   }

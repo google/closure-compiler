@@ -76,7 +76,7 @@ final class PeepholeCollectPropertyAssignments extends AbstractPeepholeOptimizat
     }
 
     if (codeChanged) {
-      reportCodeChange();
+      compiler.reportChangeToEnclosingScope(subtree);
     }
     return subtree;
   }

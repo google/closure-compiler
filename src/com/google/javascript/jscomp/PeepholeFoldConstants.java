@@ -183,7 +183,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node child = n.getFirstChild();
     if ((!child.isNumber() || child.getDouble() != 0.0) && !mayHaveSideEffects(n)) {
       n.replaceChild(child, IR.number(0));
-      reportCodeChange();
+      compiler.reportChangeToEnclosingScope(n);
     }
     return n;
   }
@@ -275,7 +275,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     n.replaceWith(replacement);
-    reportCodeChange();
+    compiler.reportChangeToEnclosingScope(replacement);
   }
 
   /**
@@ -328,9 +328,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     if (typeNameString != null) {
       Node newNode = IR.string(typeNameString);
+      compiler.reportChangeToEnclosingScope(originalTypeofNode);
       originalTypeofNode.replaceWith(newNode);
       NodeUtil.markFunctionsDeleted(originalTypeofNode, compiler);
-      reportCodeChange();
 
       return newNode;
     }
@@ -364,13 +364,13 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         }
         Node replacementNode = NodeUtil.booleanNode(!leftVal.toBoolean(true));
         parent.replaceChild(n, replacementNode);
-        reportCodeChange();
+        compiler.reportChangeToEnclosingScope(parent);
         return replacementNode;
       case POS:
         if (NodeUtil.isNumericResult(left)) {
           // POS does nothing to numeric values.
           parent.replaceChild(n, left.detach());
-          reportCodeChange();
+          compiler.reportChangeToEnclosingScope(parent);
           return left;
         }
         return n;
@@ -383,7 +383,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             // "-NaN" is "NaN".
             n.removeChild(left);
             parent.replaceChild(n, left);
-            reportCodeChange();
+            compiler.reportChangeToEnclosingScope(parent);
             return left;
           }
         }
@@ -393,7 +393,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
           Node negNumNode = IR.number(negNum);
           parent.replaceChild(n, negNumNode);
-          reportCodeChange();
+          compiler.reportChangeToEnclosingScope(parent);
           return negNumNode;
         } else {
           // left is not a number node, so do not replace, but warn the
@@ -408,7 +408,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
             int intVal = jsConvertDoubleToBits(val);
             Node notIntValNode = IR.number(~intVal);
             parent.replaceChild(n, notIntValNode);
-            reportCodeChange();
+            compiler.reportChangeToEnclosingScope(parent);
             return notIntValNode;
           } else {
             report(FRACTIONAL_BITWISE_OPERAND, left);
@@ -457,8 +457,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
       if (replacementNode != null) {
         n.replaceWith(replacementNode);
+        compiler.reportChangeToEnclosingScope(replacementNode);
         NodeUtil.markFunctionsDeleted(n, compiler);
-        reportCodeChange();
         return replacementNode;
       }
     }
@@ -536,7 +536,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         left.detach(), newRight.detach());
     n.replaceWith(newNode);
 
-    reportCodeChange();
+    compiler.reportChangeToEnclosingScope(newNode);
 
     return newNode;
   }
@@ -560,8 +560,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         new Node(op, left.cloneTree(), right.detach())
             .srcref(n));
     n.replaceWith(replacement);
-    reportCodeChange();
-
+    compiler.reportChangeToEnclosingScope(replacement);
     return replacement;
   }
 
@@ -619,11 +618,10 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       // Fold it!
       n.detachChildren();
       parent.replaceChild(n, result);
+      compiler.reportChangeToEnclosingScope(result);
       if (dropped != null) {
         NodeUtil.markFunctionsDeleted(dropped, compiler);
       }
-      reportCodeChange();
-
       return result;
     } else {
       return n;
@@ -658,7 +656,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           String result = leftString + rightString;
           n.replaceChild(left, ll);
           n.replaceChild(right, IR.string(result));
-          reportCodeChange();
+          compiler.reportChangeToEnclosingScope(n);
           return n;
         }
       }
@@ -681,7 +679,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
           String result = leftString + rightString;
           n.replaceChild(right, rr);
           n.replaceChild(left, IR.string(result));
-          reportCodeChange();
+          compiler.reportChangeToEnclosingScope(n);
           return n;
         }
       }
@@ -702,7 +700,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       if (leftString != null && rightString != null) {
         Node newStringNode = IR.string(leftString + rightString);
         n.replaceWith(newStringNode);
-        reportCodeChange();
+        compiler.reportChangeToEnclosingScope(newStringNode);
         return newStringNode;
       }
     }
@@ -717,8 +715,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     Node result = performArithmeticOp(n.getToken(), left, right);
     if (result != null) {
       result.useSourceInfoIfMissingFromForTree(n);
+      compiler.reportChangeToEnclosingScope(n);
       n.replaceWith(result);
-      reportCodeChange();
       return result;
     }
     return n;
@@ -843,7 +841,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         // added.
         replacement.useSourceInfoIfMissingFromForTree(right);
         n.replaceChild(right, replacement);
-        reportCodeChange();
+        compiler.reportChangeToEnclosingScope(n);
       }
     }
 
@@ -919,8 +917,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
       }
 
       Node newNumber = IR.number(result);
+      compiler.reportChangeToEnclosingScope(n);
       n.replaceWith(newNumber);
-      reportCodeChange();
 
       return newNumber;
     }
@@ -938,9 +936,9 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     Node newNode = NodeUtil.booleanNode(result.toBoolean(true));
+    compiler.reportChangeToEnclosingScope(n);
     n.replaceWith(newNode);
     NodeUtil.markFunctionsDeleted(n, compiler);
-    reportCodeChange();
 
     return newNode;
   }
@@ -1156,7 +1154,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
         Node parent = n.getParent();
         Node destObj = n.getSecondChild().detach();
         parent.replaceChild(n, destObj);
-        reportCodeChange();
+        compiler.reportChangeToEnclosingScope(parent);
       }
     }
     return n;
@@ -1204,7 +1202,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
       parent.replaceChild(n, newString);
       newString.useSourceInfoIfMissingFrom(parent);
-      reportCodeChange();
+      compiler.reportChangeToEnclosingScope(parent);
 
       return newString;
     }
@@ -1262,8 +1260,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
       checkState(knownLength != -1);
       Node lengthNode = IR.number(knownLength);
+      compiler.reportChangeToEnclosingScope(n);
       n.replaceWith(lengthNode);
-      reportCodeChange();
 
       return lengthNode;
     }
@@ -1324,7 +1322,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // Replace the entire GETELEM with the value
     n.replaceWith(elem);
-    reportCodeChange();
+    compiler.reportChangeToEnclosingScope(elem);
     return elem;
   }
 
@@ -1375,7 +1373,7 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
 
     // Replace the entire GETELEM with the value
     n.replaceWith(elem);
-    reportCodeChange();
+    compiler.reportChangeToEnclosingScope(elem);
     return elem;
   }
 
@@ -1438,8 +1436,8 @@ class PeepholeFoldConstants extends AbstractPeepholeOptimization {
     }
 
     n.replaceWith(replacement);
+    compiler.reportChangeToEnclosingScope(replacement);
     NodeUtil.markFunctionsDeleted(n, compiler);
-    reportCodeChange();
     return n;
   }
 }

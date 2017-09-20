@@ -365,7 +365,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract <T> T getIndex(Class<T> type);
 
-  /** Let the PhaseOptimizer know which scope a pass is currently analyzing */
+  @Deprecated
   abstract void setChangeScope(Node n);
 
   /** A monotonically increasing value to identify a change */

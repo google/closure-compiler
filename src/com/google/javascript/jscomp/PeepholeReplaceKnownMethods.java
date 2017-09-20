@@ -186,7 +186,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     String lowered = stringNode.getString().toLowerCase(Locale.ROOT);
     Node replacement = IR.string(lowered);
     subtree.replaceWith(replacement);
-    reportCodeChange();
+    compiler.reportChangeToEnclosingScope(replacement);
     return replacement;
   }
 
@@ -198,7 +198,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     String upped = stringNode.getString().toUpperCase(Locale.ROOT);
     Node replacement = IR.string(upped);
     subtree.replaceWith(replacement);
-    reportCodeChange();
+    compiler.reportChangeToEnclosingScope(replacement);
     return replacement;
   }
 
@@ -291,7 +291,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
           numericNode = IR.number(checkVal);
         }
         n.replaceWith(numericNode);
-        reportCodeChange();
+        compiler.reportChangeToEnclosingScope(numericNode);
         return numericNode;
       }
     } else {
@@ -362,8 +362,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     }
 
     n.replaceWith(newNode);
-
-    reportCodeChange();
+    compiler.reportChangeToEnclosingScope(newNode);
 
     return newNode;
   }
@@ -399,8 +398,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
                              : lstring.lastIndexOf(searchValue, fromIndex);
     Node newNode = IR.number(indexVal);
     n.replaceWith(newNode);
-
-    reportCodeChange();
+    compiler.reportChangeToEnclosingScope(newNode);
 
     return newNode;
   }
@@ -434,7 +432,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         && ",".equals(right.getString())) {
       // "," is the default, it doesn't need to be explicit
       n.removeChild(right);
-      reportCodeChange();
+      compiler.reportChangeToEnclosingScope(n);
     }
 
     String joinString = (right == null) ? "," : NodeUtil.getStringValue(right);
@@ -483,7 +481,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
       case 0:
         Node emptyStringNode = IR.string("");
         n.getParent().replaceChild(n, emptyStringNode);
-        reportCodeChange();
+        compiler.reportChangeToEnclosingScope(emptyStringNode);
         return emptyStringNode;
       case 1:
         Node foldedStringNode = arrayFoldedChildren.remove(0);
@@ -500,7 +498,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
           foldedStringNode = replacement;
         }
         n.getParent().replaceChild(n, foldedStringNode);
-        reportCodeChange();
+        compiler.reportChangeToEnclosingScope(foldedStringNode);
         return foldedStringNode;
       default:
         // No folding could actually be performed.
@@ -517,7 +515,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         for (Node node : arrayFoldedChildren) {
           arrayNode.addChildToBack(node);
         }
-        reportCodeChange();
+        compiler.reportChangeToEnclosingScope(arrayNode);
         break;
     }
 
@@ -576,7 +574,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     Node parent = n.getParent();
     parent.replaceChild(n, resultNode);
-    reportCodeChange();
+    compiler.reportChangeToEnclosingScope(parent);
     return resultNode;
   }
 
@@ -632,7 +630,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     Node parent = n.getParent();
     parent.replaceChild(n, resultNode);
-    reportCodeChange();
+    compiler.reportChangeToEnclosingScope(parent);
     return resultNode;
   }
 
@@ -640,7 +638,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     // TODO(moz): Maybe correct the arity of the function type here.
     callTarget.getLastChild().setString("charAt");
     firstArg.getNext().detach();
-    reportCodeChange();
+    compiler.reportChangeToEnclosingScope(firstArg);
     return n;
   }
 
@@ -671,7 +669,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         stringAsString.substring(index, index + 1));
     Node parent = n.getParent();
     parent.replaceChild(n, resultNode);
-    reportCodeChange();
+    compiler.reportChangeToEnclosingScope(parent);
     return resultNode;
   }
 
@@ -701,7 +699,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     Node resultNode = IR.number(stringAsString.charAt(index));
     Node parent = n.getParent();
     parent.replaceChild(n, resultNode);
-    reportCodeChange();
+    compiler.reportChangeToEnclosingScope(parent);
     return resultNode;
   }
 
@@ -820,7 +818,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     Node parent = n.getParent();
     parent.replaceChild(n, arrayOfStrings);
-    reportCodeChange();
+    compiler.reportChangeToEnclosingScope(parent);
     return arrayOfStrings;
   }
 }
