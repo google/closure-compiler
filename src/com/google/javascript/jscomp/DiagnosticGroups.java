@@ -721,8 +721,7 @@ public class DiagnosticGroups {
     DiagnosticGroups.registerGroup("es6Typed",
         RhinoErrorReporter.MISPLACED_TYPE_SYNTAX);
 
-    DiagnosticGroups.registerGroup("duplicateZipContents",
-        SourceFile.DUPLICATE_ZIP_CONTENTS);
+    DiagnosticGroups.registerDeprecatedGroup("duplicateZipContents");
   }
 
   /**

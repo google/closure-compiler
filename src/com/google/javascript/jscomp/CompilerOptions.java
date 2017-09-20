@@ -1792,9 +1792,6 @@ public class CompilerOptions implements Serializable {
 
   public void setJ2clPass(J2clPassMode j2clPassMode) {
     this.j2clPassMode = j2clPassMode;
-    if (j2clPassMode.isExplicitlyOn()) {
-      setWarningLevel(DiagnosticGroup.forType(SourceFile.DUPLICATE_ZIP_CONTENTS), CheckLevel.OFF);
-    }
   }
 
   public void setCodingConvention(CodingConvention codingConvention) {

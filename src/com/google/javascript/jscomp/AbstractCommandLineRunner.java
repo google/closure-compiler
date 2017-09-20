@@ -612,8 +612,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       } else {
         SourceFile firstSourceFile = sourceFilesByName.get(relativePath);
         if (firstSourceFile.getCode().equals(sourceFile.getCode())) {
-          errors.add(JSError.make(
-              SourceFile.DUPLICATE_ZIP_CONTENTS, firstSourceFile.getName(), sourceFile.getName()));
           fileIterator.remove();
           if (currentModule != null) {
             currentModule.numJsFiles--;
