@@ -58,6 +58,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
               + "Did you mean to import {0} from ''{1}'';?");
 
   private final AbstractCompiler compiler;
+  private final boolean addCommonJsAlias;
   private int scriptNodeCount;
 
   /**
@@ -84,7 +85,16 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
    * ES6 modules to a concatenable form.
    */
   public Es6RewriteModules(AbstractCompiler compiler) {
+    this(compiler, false);
+  }
+
+  /**
+   * Creates a new Es6RewriteModules instance which can be used to rewrite
+   * ES6 modules to a concatenable form.
+   */
+  public Es6RewriteModules(AbstractCompiler compiler, boolean addCommonJsAlias) {
     this.compiler = compiler;
+    this.addCommonJsAlias = addCommonJsAlias;
   }
 
   /**
@@ -436,6 +446,17 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     }
 
     exportMap.clear();
+
+    if (addCommonJsAlias) {
+      Node commonJsAlias = IR.var(
+          IR.name(ProcessCommonJSModules.getModuleName(t.getInput())),
+          IR.name(t.getInput().getPath().toModuleName()));
+      JSDocInfoBuilder info = new JSDocInfoBuilder(false);
+      info.recordConstancy();
+      commonJsAlias.setJSDocInfo(info.build());
+      script.addChildToBack(commonJsAlias.useSourceInfoFromForTree(script));
+    }
+
     t.reportCodeChange();
   }
 

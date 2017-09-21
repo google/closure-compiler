@@ -1635,7 +1635,8 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--process_common_js_modules");
     args.add("--entry_point=foo/bar");
     setFilename(0, "foo/bar.js");
-    String expected = "var module$foo$bar={test:1};";
+    String expected = "var cjs_module$foo$bar={test:1},"
+        + "module$foo$bar={default:cjs_module$foo$bar};";
     test("exports.test = 1", expected);
     assertThat(outReader.toString()).isEqualTo(expected + "\n");
   }
@@ -1646,7 +1647,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--module=auto");
     setFilename(0, "foo/bar.js");
     test("exports.test = 1",
-        "var module$foo$bar={test:1};");
+        "var cjs_module$foo$bar={test:1},module$foo$bar={default:cjs_module$foo$bar}");
     // With modules=auto no direct output is created.
     assertThat(outReader.toString()).isEmpty();
   }
@@ -1698,14 +1699,15 @@ public final class CommandLineRunnerTest extends TestCase {
               "goog.provide=function(a){};goog.require=function(a){};"),
           "goog.array={};",
           LINE_JOINER.join(
-              "var module$Baz = function (){};",
-              "module$Baz.prototype={",
+              "var cjs_module$Baz = function (){};",
+              "cjs_module$Baz.prototype={",
               "  baz:function(){return goog.array.last(['asdf','asd','baz'])},",
               "  bar:function(){return 8}",
-              "};"),
+              "};",
+              "/** @const */ var module$Baz = { /** @const */ default: cjs_module$Baz};"),
           LINE_JOINER.join(
-              "var Baz = module$Baz,",
-              "    baz = new module$Baz();",
+              "var Baz = cjs_module$Baz,",
+              "    baz = new cjs_module$Baz();",
               "console.log(baz.baz());",
               "console.log(baz.bar());")
         });
@@ -1759,14 +1761,15 @@ public final class CommandLineRunnerTest extends TestCase {
               "goog.provide=function(a){};goog.require=function(a){};"),
           "goog.array={};",
           LINE_JOINER.join(
-              "var module$Baz = function (){};",
-              "module$Baz.prototype={",
+              "var cjs_module$Baz = function (){};",
+              "cjs_module$Baz.prototype={",
               "  baz:function(){return goog.array.last([\"asdf\",\"asd\",\"baz\"])},",
               "  bar:function(){return 8}",
-              "};"),
+              "};",
+              "/** @const */ var module$Baz = { /** @const */ default: cjs_module$Baz};"),
           LINE_JOINER.join(
-              "var Baz = module$Baz,",
-              "    baz = new module$Baz();",
+              "var Baz = cjs_module$Baz,",
+              "    baz = new cjs_module$Baz();",
               "console.log(baz.baz());",
               "console.log(baz.bar());")
         });
@@ -1793,7 +1796,8 @@ public final class CommandLineRunnerTest extends TestCase {
               "var module$foo={},",
               "Foo$$module$foo=function(){};",
               "Foo$$module$foo.prototype.bar=function(){console.log(\"bar\")};",
-              "module$foo.default=Foo$$module$foo;"),
+              "module$foo.default=Foo$$module$foo;",
+              "/** @const */ var cjs_module$foo = module$foo;"),
           LINE_JOINER.join(
               "var FooBar = module$foo,",
               "    baz = new module$foo.default();",
@@ -1822,10 +1826,13 @@ public final class CommandLineRunnerTest extends TestCase {
         },
         new String[] {
           LINE_JOINER.join(
-              "/** @constructor */ var module$foo = function(){};",
-              "module$foo.prototype.bar=function(){console.log(\"bar\")};"),
+              "/** @constructor */ var cjs_module$foo = function(){};",
+              "cjs_module$foo.prototype.bar=function(){console.log(\"bar\")};",
+              "/** @const */ var module$foo = { /** @const */ default: cjs_module$foo};"),
           LINE_JOINER.join(
-              "var baz$$module$app = new module$foo();", "console.log(baz$$module$app.bar());")
+              "var baz$$module$app = new module$foo();",
+              "console.log(baz$$module$app.bar());",
+              "/** @const */ var cjs_module$app=module$app")
         });
   }
 
@@ -1887,7 +1894,8 @@ public final class CommandLineRunnerTest extends TestCase {
         new String[] {
           CompilerTestCase.LINE_JOINER.join(
               "function foo$$module$foo(){ alert('foo'); }",
-              "foo$$module$foo();"),
+              "foo$$module$foo();",
+              "/** @const */ var cjs_module$foo=module$foo"),
           CompilerTestCase.LINE_JOINER.join("'use strict';", "")
         });
   }
@@ -1918,9 +1926,10 @@ public final class CommandLineRunnerTest extends TestCase {
               "module.exports = Foo;")
         },
         new String[] {
-          "var module$node_modules$foo$browser=function(){};",
-          "module$node_modules$foo$browser.prototype={bar:function(){return 8}};",
-          "var Foo=module$node_modules$foo$browser;",
+          "var cjs_module$node_modules$foo$browser=function(){};",
+          "cjs_module$node_modules$foo$browser.prototype={bar:function(){return 8}};",
+          "var module$node_modules$foo$browser={default:cjs_module$node_modules$foo$browser};",
+          "var Foo=cjs_module$node_modules$foo$browser;",
         });
   }
 
@@ -1939,7 +1948,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--entry_point=foo/bar");
     setFilename(0, "foo/bar.js");
     test("define({foo: 1})",
-        "var module$foo$bar={foo:1};");
+        "var cjs_module$foo$bar={foo:1},module$foo$bar={default:cjs_module$foo$bar}");
   }
 
   public void testModuleJSON() {
@@ -1949,7 +1958,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--output_module_dependencies=test.json");
     setFilename(0, "foo/bar.js");
     test("define({foo: 1})",
-        "var module$foo$bar={foo:1};");
+        "var cjs_module$foo$bar={foo:1}, module$foo$bar={default:cjs_module$foo$bar};");
   }
 
   public void testOutputSameAsInput() {

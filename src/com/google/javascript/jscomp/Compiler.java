@@ -1962,7 +1962,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // TODO(ChadKillingsworth) Move this into the standard compilation passes
     if (supportCommonJSModules) {
       for (CompilerInput input : orderedInputs) {
-        new ProcessCommonJSModules(this).process(null, input.getAstRoot(this), false);
+        new ProcessCommonJSModules(this,
+            this.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6_MODULES))
+            .process(null, input.getAstRoot(this), false);
       }
     }
   }
@@ -2039,7 +2041,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       findDeps.convertToEs6Module(input.getAstRoot(this));
       input.setJsModuleType(CompilerInput.ModuleType.ES6);
     } else if (supportCommonJSModules) {
-      new ProcessCommonJSModules(this).process(null, input.getAstRoot(this), true);
+      new ProcessCommonJSModules(this, supportEs6Modules).process(null, input.getAstRoot(this), true);
       input.setJsModuleType(CompilerInput.ModuleType.COMMONJS);
     }
   }
@@ -2191,7 +2193,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         new TransformAMDToCJSModule(this).process(null, root);
       }
       if (options.processCommonJSModules) {
-        ProcessCommonJSModules cjs = new ProcessCommonJSModules(this);
+        ProcessCommonJSModules cjs = new ProcessCommonJSModules(this,
+            this.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6_MODULES));
         cjs.process(null, root);
       }
     }
