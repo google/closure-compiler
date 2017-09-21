@@ -54,6 +54,30 @@ public final class InlineVariablesTest extends CompilerTestCase {
     inlineLocalsOnly = false;
   }
 
+  // TODO(tbreisacher): Fix this and re-enable InlineVariables in ES6-out mode.
+  public void testPassProducesInvalidCode() {
+    test(
+        LINE_JOINER.join(
+            "function f(x = void 0) {",
+            "  var z;",
+            "  {",
+            "    const y = {};",
+            "    x && (y['x'] = x);",
+            "    z = y;",
+            "  }",
+            "  return z;",
+            "}"),
+        LINE_JOINER.join(
+            "function f(x = void 0) {",
+            "  {",
+            "    const y = {};",
+            "    x && (y['x'] = x);",
+            "  }",
+            "  // NOTE! Invalid code: y is no longer in scope here.",
+            "  return y;",
+            "}"));
+  }
+
   // Test respect for scopes and blocks
 
   public void testInlineGlobal() {
