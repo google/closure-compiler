@@ -26,11 +26,12 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
   }
 
   @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    options.setJ2clPass(CompilerOptions.J2clPassMode.ON);
-    return options;
+  protected Compiler createCompiler() {
+    Compiler compiler = super.createCompiler();
+    J2clSourceFileChecker.markToRunJ2clPasses(compiler);
+    return compiler;
   }
+
   @Override
   protected int getNumRepetitions() {
     // A single run should be sufficient.

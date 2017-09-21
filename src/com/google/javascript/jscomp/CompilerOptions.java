@@ -1296,7 +1296,7 @@ public class CompilerOptions implements Serializable {
     angularPass = false;
     polymerVersion = null;
     dartPass = false;
-    j2clPassMode = J2clPassMode.OFF;
+    j2clPassMode = J2clPassMode.AUTO;
     removeAbstractMethods = false;
     removeSuperMethods = false;
     removeClosureAsserts = false;
@@ -3353,10 +3353,6 @@ public class CompilerOptions implements Serializable {
 
     boolean shouldAddJ2clPasses() {
       return this == TRUE || this == ON || this == AUTO;
-    }
-
-    boolean isExplicitlyOn() {
-      return this == TRUE || this == ON;
     }
   }
 

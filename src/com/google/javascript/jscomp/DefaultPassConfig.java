@@ -465,7 +465,7 @@ public final class DefaultPassConfig extends PassConfig {
       addNewTypeCheckerPasses(checks, options);
     }
 
-    if (options.j2clPassMode.equals(CompilerOptions.J2clPassMode.AUTO)) {
+    if (options.j2clPassMode.shouldAddJ2clPasses()) {
       checks.add(j2clSourceFileChecker);
     }
 

@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
-import com.google.javascript.jscomp.CompilerOptions.J2clPassMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.testing.NodeSubject;
@@ -2073,7 +2072,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var x = /** @type {!Foo} */ (Arrays.$create()).myprop;");
 
     options.setCheckTypes(true);
-    options.setJ2clPass(J2clPassMode.TRUE);
     options.setDisambiguateProperties(true);
 
     test(options, code,

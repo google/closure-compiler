@@ -32,12 +32,14 @@ public class J2clEqualitySameRewriterPassTest extends TypeICompilerTestCase {
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new PeepholeOptimizationsPass(compiler, getName(), new J2clEqualitySameRewriterPass());
   }
+
   @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    options.setJ2clPass(CompilerOptions.J2clPassMode.ON);
-    return options;
+  protected Compiler createCompiler() {
+    Compiler compiler = super.createCompiler();
+    J2clSourceFileChecker.markToRunJ2clPasses(compiler);
+    return compiler;
   }
+
   public void testRewriteEqualitySame() {
     test(
         LINE_JOINER.join(
