@@ -812,7 +812,7 @@ public class Node implements Serializable {
 
   /** Detach a child from its parent and siblings. */
   public final void removeChild(Node child) {
-    checkState(child.parent == this);
+    checkState(child.parent == this, "%s is not the parent of %s", this, child);
     checkNotNull(child.previous);
 
     Node last = first.previous;
@@ -849,7 +849,7 @@ public class Node implements Serializable {
     checkArgument(newChild.next == null, "The new child node has next siblings.");
     checkArgument(newChild.previous == null, "The new child node has previous siblings.");
     checkArgument(newChild.parent == null, "The new child node already has a parent.");
-    checkState(child.parent == this, "", child, parent);
+    checkState(child.parent == this, "%s is not the parent of %s", this, child);
 
     // Copy over important information.
     newChild.useSourceInfoIfMissingFrom(child);
