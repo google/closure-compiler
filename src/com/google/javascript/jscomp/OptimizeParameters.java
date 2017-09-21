@@ -391,8 +391,7 @@ class OptimizeParameters
     for (int index = parameters.size() - 1; index >= 0; index--) {
       if (parameters.get(index).shouldRemove()) {
         Node paramName = eliminateFunctionParamAt(function, index, definitionFinder);
-        addVariableToFunction(function, paramName,
-            parameters.get(index).getArg());
+        addVariableToFunction(function, paramName, parameters.get(index).getArg());
       }
     }
   }
@@ -491,7 +490,7 @@ class OptimizeParameters
    * Removes all formal parameters starting at argIndex.
    * @return true if a parameter has been removed.
    */
-  private boolean eliminateParamsAfter(
+  private void eliminateParamsAfter(
       Node function, int argIndex, DefinitionUseSiteFinder definitionFinder) {
     Node formalArgPtr = function.getSecondChild().getFirstChild();
     while (argIndex != 0 && formalArgPtr != null) {
@@ -499,10 +498,10 @@ class OptimizeParameters
       argIndex--;
     }
 
-    return eliminateParamsAfter(function, formalArgPtr, definitionFinder);
+    eliminateParamsAfter(function, formalArgPtr, definitionFinder);
   }
 
-  private boolean eliminateParamsAfter(
+  private void eliminateParamsAfter(
       Node fnNode, Node argNode, DefinitionUseSiteFinder definitionFinder) {
     if (argNode != null) {
       // Keep the args in the same order, do the last first.
@@ -512,9 +511,7 @@ class OptimizeParameters
       Node var = IR.var(argNode).useSourceInfoIfMissingFrom(argNode);
       fnNode.getLastChild().addChildToFront(var);
       compiler.reportChangeToEnclosingScope(var);
-      return true;
     }
-    return false;
   }
 
   /**
@@ -545,9 +542,8 @@ class OptimizeParameters
    * @param p
    * @param call The function call node
    * @param argIndex The index of the the argument to remove.
-   * @return The Node of the argument removed.
    */
-  private Node eliminateCallParamAt(
+  private void eliminateCallParamAt(
       DefinitionUseSiteFinder definitionFinder, Parameter p, Node call, int argIndex) {
     checkArgument(NodeUtil.isCallOrNew(call), "Node must be a call or new.");
 
@@ -564,6 +560,5 @@ class OptimizeParameters
       }
       call.removeChild(formalArgPtr);
     }
-    return formalArgPtr;
   }
 }
