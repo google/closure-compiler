@@ -19,23 +19,8 @@ package com.google.javascript.jscomp.bundle;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.common.annotations.GwtIncompatible;
-import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.Immutable;
-import com.google.javascript.jscomp.CheckLevel;
-import com.google.javascript.jscomp.Compiler;
-import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.DiagnosticGroup;
-import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.ErrorFormat;
-import com.google.javascript.jscomp.JSError;
-import com.google.javascript.jscomp.MessageFormatter;
-import com.google.javascript.jscomp.PropertyRenamingPolicy;
-import com.google.javascript.jscomp.Result;
-import com.google.javascript.jscomp.SourceFile;
-import com.google.javascript.jscomp.VariableRenamingPolicy;
-import java.io.IOException;
-import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * A source transformer for lowering JS language versions. May also include a runtime that needs to
@@ -43,133 +28,33 @@ import java.nio.file.Path;
  */
 @GwtIncompatible
 @Immutable
-public class Transpiler implements Source.Transformer {
+public class Transpiler extends CompilerBasedTransformer {
 
-  private final CompilerSupplier compilerSupplier;
   private final String runtimeLibraryName;
 
-  public Transpiler(CompilerSupplier compilerSupplier, String runtimeLibraryName) {
-    this.compilerSupplier = checkNotNull(compilerSupplier);
+  public Transpiler(CompilerBasedTransformer.CompilerSupplier compilerSupplier,
+      String runtimeLibraryName) {
+    super(compilerSupplier);
     this.runtimeLibraryName = checkNotNull(runtimeLibraryName);
   }
 
+  public static CompilerBasedTransformer.CompilerSupplier compilerSupplier() {
+    return new CompilerBasedTransformer.CompilerSupplier();
+  }
+
   @Override
-  public Source transform(Source input) {
-    CompileResult result = compilerSupplier.compile(input.path(), input.code());
-    if (result.errors.length > 0) {
-      // TODO(sdh): how to handle this?  Currently we throw an ISE with the message,
-      // but this may not be the most appropriate option.  It might make sense to
-      // add console.log() statements to any JS that comes out, particularly for
-      // warnings.
-      MessageFormatter formatter = ErrorFormat.SOURCELESS.toFormatter(null, false);
-      StringBuilder message = new StringBuilder().append("Transpilation failed.\n");
-      for (JSError error : result.errors) {
-        message.append(formatter.formatError(error));
-      }
-      throw new IllegalStateException(message.toString());
-    }
-    if (!result.transpiled) {
-      return input;
-    }
-    return input
-        .toBuilder()
-        .setCode(result.source)
-        .setSourceMap(result.sourceMap)
-        .addRuntime(compilerSupplier.runtime(runtimeLibraryName))
-        .build();
+  public Optional<String> getRuntime() {
+    return Optional.of(runtimeLibraryName);
+  }
+
+  @Override
+  public String getTranformationName() {
+    return "Transpilation";
   }
 
   public static final Transpiler ES5_TRANSPILER =
-      new Transpiler(new CompilerSupplier(), "es6_runtime");
+      new Transpiler(new CompilerBasedTransformer.CompilerSupplier(), "es6_runtime");
 
-  /**
-   * Wraps the Compiler into a more relevant interface, making it easy to test the Transpiler
-   * without depending on implementation details of the Compiler itself. Also works around the fact
-   * that the Compiler is not thread-safe (since we may do multiple transpiles concurrently), so we
-   * supply a fresh instance each time when we're in single-file mode.
-   */
-  @Immutable
-  public static class CompilerSupplier {
-    public CompileResult compile(Path path, String code) {
-      Compiler compiler = compiler();
-      Result result =
-          compiler.compile(EXTERNS, SourceFile.fromCode(path.toString(), code), options());
-      String source = compiler.toSource();
-      StringBuilder sourceMap = new StringBuilder();
-      if (result.sourceMap != null) {
-        try {
-          result.sourceMap.appendTo(sourceMap, path.toString());
-        } catch (IOException e) {
-          // impossible, and not a big deal even if it did happen.
-        }
-      }
-      boolean transpiled = !result.transpiledFiles.isEmpty();
-      return new CompileResult(
-          source, result.errors, transpiled, transpiled ? sourceMap.toString() : "");
-    }
-
-    public String runtime(String library) {
-      Compiler compiler = compiler();
-      CompilerOptions options = options();
-      options.setForceLibraryInjection(ImmutableList.of(library));
-      compiler.compile(EXTERNS, EMPTY, options);
-      return compiler.toSource();
-    }
-
-    protected Compiler compiler() {
-      return new Compiler();
-    }
-
-    protected CompilerOptions options() {
-      CompilerOptions options = new CompilerOptions();
-      setOptions(options);
-      return options;
-    }
-
-    protected void setOptions(CompilerOptions options) {
-      options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
-      // TODO(sdh): It would be nice to allow people to output code in
-      // strict mode.  But currently we swallow all the input language
-      // strictness checks, and there are various tests that are never
-      // compiled and so are broken when we output 'use strict'.  We
-      // could consider adding some sort of logging/warning/error in
-      // cases where the input was not strict, though there could still
-      // be semantic differences even if syntax is strict.  Possibly
-      // the first step would be to allow the option of outputting strict
-      // and then change the default and see what breaks.  b/33005948
-      options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-      options.setQuoteKeywordProperties(true);
-      options.setSkipNonTranspilationPasses(true);
-      options.setVariableRenaming(VariableRenamingPolicy.OFF);
-      options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
-      options.setWrapGoogModulesForWhitespaceOnly(false);
-      options.setPrettyPrint(true);
-      options.setSourceMapOutputPath("/dev/null");
-      options.setSourceMapIncludeSourcesContent(true);
-      options.setWarningLevel(ES5_WARNINGS, CheckLevel.OFF);
-    }
-
-    protected static final SourceFile EXTERNS =
-        SourceFile.fromCode("externs.js", "function Symbol() {}");
-    protected static final SourceFile EMPTY = SourceFile.fromCode("empty.js", "");
-    protected static final DiagnosticGroup ES5_WARNINGS =
-        new DiagnosticGroup(DiagnosticType.error("JSC_CANNOT_CONVERT", ""));
-  }
-
-  /** The source together with the additional compilation results. */
-  public static class CompileResult {
-    public final String source;
-    public final JSError[] errors;
-    public final boolean transpiled;
-    public final String sourceMap;
-
-    public CompileResult(String source, JSError[] errors, boolean transpiled, String sourceMap) {
-      this.source = checkNotNull(source);
-      this.errors = checkNotNull(errors);
-      this.transpiled = transpiled;
-      this.sourceMap = checkNotNull(sourceMap);
-    }
-  }
 
   /** Recommended transpiler. */
   public static Transpiler toEs5() {
@@ -177,5 +62,5 @@ public class Transpiler implements Source.Transformer {
   }
 
   private static final Transpiler TO_ES5 =
-      new Transpiler(new Transpiler.CompilerSupplier(), "es6_runtime");
+      new Transpiler(new CompilerBasedTransformer.CompilerSupplier(), "es6_runtime");
 }

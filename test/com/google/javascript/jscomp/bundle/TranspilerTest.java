@@ -47,7 +47,7 @@ public final class TranspilerTest extends TestCase {
   public void setUp() {
     MockitoAnnotations.initMocks(this);
     transpiler = new Transpiler(mockCompiler, "es6_runtime");
-    compiler = new Transpiler.CompilerSupplier();
+    compiler = Transpiler.compilerSupplier();
   }
 
   // Tests for Transpiler
@@ -83,7 +83,7 @@ public final class TranspilerTest extends TestCase {
     Transpiler.CompileResult result = compiler.compile(SOURCE_JS, "const x = () => 42;");
     assertThat(result.source).isEqualTo("var x = function() {\n  return 42;\n};\n");
     assertThat(result.errors).isEmpty();
-    assertThat(result.transpiled).isTrue();
+    assertThat(result.transformed).isTrue();
     assertThat(result.sourceMap)
         .contains("\"mappings\":\"AAAA,IAAMA,IAAIA,QAAA,EAAM;AAAA,SAAA,EAAA;AAAA,CAAhB;;\"");
   }
@@ -92,7 +92,7 @@ public final class TranspilerTest extends TestCase {
     Transpiler.CompileResult result = compiler.compile(SOURCE_JS, "var x = 42;");
     assertThat(result.source).isEqualTo("var x = 42;\n");
     assertThat(result.errors).isEmpty();
-    assertThat(result.transpiled).isFalse();
+    assertThat(result.transformed).isFalse();
     assertThat(result.sourceMap).isEmpty();
   }
 
