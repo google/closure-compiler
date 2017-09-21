@@ -25,13 +25,14 @@ import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
-import com.google.javascript.jscomp.newtypes.RawNominalType;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.ObjectTypeI;
+import com.google.javascript.rhino.ObjectTypeI.PropertyDeclarer;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.ObjectType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -72,13 +73,16 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
    * subclass, and a {@code constructor} property.
    */
   @Override
-  public void applySubclassRelationship(FunctionType parentCtor,
-      FunctionType childCtor, SubclassType type) {
-    super.applySubclassRelationship(parentCtor, childCtor, type);
+  public void applySubclassRelationship(
+      PropertyDeclarer declarer,
+      FunctionTypeI parentCtor,
+      FunctionTypeI childCtor,
+      SubclassType type) {
+    super.applySubclassRelationship(declarer, parentCtor, childCtor, type);
     if (type == SubclassType.INHERITS) {
-      childCtor.defineDeclaredProperty("superClass_",
-          parentCtor.getPrototype(), childCtor.getSource());
-      childCtor.getPrototype().defineDeclaredProperty("constructor",
+      declarer.declareProperty(childCtor, "superClass_",
+          parentCtor.getPrototypeProperty(), childCtor.getSource());
+      declarer.declareProperty(childCtor.getPrototypeProperty(), "constructor",
           // Notice that constructor functions do not need to be covariant
           // on the superclass.
           // So if G extends F, new G() and new F() can accept completely
@@ -86,7 +90,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
           // to be covariant on F.prototype.constructor.
           // To get around this, we just turn off type-checking on arguments
           // and return types of G.prototype.constructor.
-          childCtor.forgetParameterAndReturnTypes(),
+          childCtor.toBuilder().withUnknownReturnType().withNoParameters().build(),
           childCtor.getSource());
     }
   }
@@ -323,19 +327,10 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
-  public void applySingletonGetterOld(FunctionType functionType,
-      FunctionType getterType, ObjectType objectType) {
-    functionType.defineDeclaredProperty("getInstance", getterType,
-        functionType.getSource());
-    functionType.defineDeclaredProperty("instance_", objectType,
-        functionType.getSource());
-  }
-
-  @Override
-  public void applySingletonGetterNew(
-      RawNominalType rawType, JSType getInstanceType, JSType instanceType) {
-    rawType.addCtorProperty("getInstance", null, getInstanceType, true);
-    rawType.addCtorProperty("instance_", null, instanceType, true);
+  public void applySingletonGetter(PropertyDeclarer declarer,
+      FunctionTypeI functionType, FunctionTypeI getterType, ObjectTypeI objectType) {
+    declarer.declareProperty(functionType, "getInstance", getterType, functionType.getSource());
+    declarer.declareProperty(functionType, "instance_", objectType, functionType.getSource());
   }
 
   @Override

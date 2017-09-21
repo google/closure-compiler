@@ -58,6 +58,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
               + "Did you mean to import {0} from ''{1}'';?");
 
   private final AbstractCompiler compiler;
+  private final boolean addCommonJsAlias;
   private int scriptNodeCount;
 
   /**
@@ -84,7 +85,16 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
    * ES6 modules to a concatenable form.
    */
   public Es6RewriteModules(AbstractCompiler compiler) {
+    this(compiler, false);
+  }
+
+  /**
+   * Creates a new Es6RewriteModules instance which can be used to rewrite
+   * ES6 modules to a concatenable form.
+   */
+  public Es6RewriteModules(AbstractCompiler compiler, boolean addCommonJsAlias) {
     this.compiler = compiler;
+    this.addCommonJsAlias = addCommonJsAlias;
   }
 
   /**
@@ -110,6 +120,16 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   public void hotSwapScript(Node scriptNode, Node originalRoot) {
     if (isEs6ModuleRoot(scriptNode)) {
       processFile(scriptNode);
+      if (addCommonJsAlias) {
+        CompilerInput ci = compiler.getInput(scriptNode.getInputId());
+        Node commonJsAlias = IR.var(
+            IR.name(ProcessCommonJSModules.getModuleName(ci)),
+            IR.name(ci.getPath().toModuleName()));
+        JSDocInfoBuilder info = new JSDocInfoBuilder(false);
+        info.recordConstancy();
+        commonJsAlias.setJSDocInfo(info.build());
+        scriptNode.addChildToBack(commonJsAlias.useSourceInfoFromForTree(scriptNode));
+      }
     }
   }
 
@@ -345,10 +365,7 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
             break;
           }
           String name = maybeName.getString();
-          Var v = t.getScope().getVar(name);
-          if (v == null || v.isGlobal()) {
-            exportMap.put(name, new NameNodePair(name, maybeName));
-          }
+          exportMap.put(name, new NameNodePair(name, maybeName));
 
           // If the declaration declares a new type, create annotations for
           // the type checker.

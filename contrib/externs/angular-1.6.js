@@ -2299,7 +2299,7 @@ angular.$routeProvider.Params.prototype.controller;
 /** @type {string|undefined} */
 angular.$routeProvider.Params.prototype.controllerAs;
 
-/** @type {string|undefined} */
+/** @type {string|function(!Object<string, string>): string|undefined} */
 angular.$routeProvider.Params.prototype.template;
 
 /** @type {string|!Object|function(!Object<string,string>=)} */

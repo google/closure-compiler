@@ -231,7 +231,7 @@ system have been added.</td>
 <table>
   <tr>
     <td>URL</td>
-    <td>https://args4j.dev.java.net/</td>
+    <td>http://args4j.kohsuke.org/</td>
   </tr>
 
   <tr>
@@ -319,7 +319,7 @@ options/arguments in your CUI application.</td>
 <table>
   <tr>
     <td>URL</td>
-    <td>https://sourceforge.net/projects/junit/</td>
+    <td>http://junit.org/junit4/</td>
   </tr>
 
   <tr>

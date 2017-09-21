@@ -78,18 +78,23 @@ public final class FunctionToBlockMutatorTest extends TestCase {
 
   public void testMutateWithMultipleReturns() {
     helperMutate(
-        "function foo(){ if (0) {return 0} else {return 1} };" +
-          "var result=foo();",
-        "{" +
-          "JSCompiler_inline_label_foo_0:{" +
-            "if(0) {" +
-              "result=0; break JSCompiler_inline_label_foo_0" +
-            "} else {" +
-              "result=1; break JSCompiler_inline_label_foo_0" +
-            "} result=void 0" +
-          "}" +
-        "}",
-        "foo", true, false);
+        "function foo(){ if (0) {return 0} else {return 1} }; var result=foo();",
+        LINE_JOINER.join(
+            "{",
+            "  JSCompiler_inline_label_foo_0: {",
+            "    if (0) {",
+            "      result = 0;",
+            "      break JSCompiler_inline_label_foo_0",
+            "    } else {",
+            "      result = 1;",
+            "      break JSCompiler_inline_label_foo_0",
+            "    }",
+            "    result=void 0",
+            "  }",
+            "}"),
+        "foo",
+        true,
+        false);
   }
 
   public void testMutateWithParameters1() {
@@ -111,8 +116,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
   public void testMutateWithParameters3() {
     // Parameter has side-effects.
     helperMutate(
-        "function foo(a){return a;}; " +
-        "function x() { foo(x++); }",
+        "function foo(a){return a;}; function x() { foo(x++); }",
         "{x++;}",
         "foo", null);
   }
@@ -121,29 +125,35 @@ public final class FunctionToBlockMutatorTest extends TestCase {
     // Parameter has side-effects.
     helperMutate(
         "function foo(a){return a+a;}; foo(x++);",
-        "{var a$jscomp$inline_0 = x++;" +
-            "a$jscomp$inline_0 + a$jscomp$inline_0;}",
+        "{var a$jscomp$inline_0 = x++; a$jscomp$inline_0 + a$jscomp$inline_0;}",
         "foo", null);
   }
 
   public void testMutateInitializeUninitializedVars1() {
     helperMutate(
         "function foo(a){var b;return a;}; foo(1);",
-        "{var b$jscomp$inline_1=void 0;1}",
-        "foo", null, false, true);
+        "{var b$jscomp$inline_1 = void 0; 1;}",
+        "foo",
+        null,
+        false,
+        true);
   }
 
   public void testMutateInitializeUninitializedVars2() {
     helperMutate(
-        "function foo(a){for(var b in c)return a;}; foo(1);",
-        "{JSCompiler_inline_label_foo_2:" +
-          "{" +
-            "for(var b$jscomp$inline_1 in c){" +
-                "1;break JSCompiler_inline_label_foo_2" +
-             "}" +
-          "}" +
-        "}",
-        "foo", null);
+        "function foo(a) {for(var b in c)return a;}; foo(1);",
+        LINE_JOINER.join(
+            "{",
+            "  JSCompiler_inline_label_foo_2:",
+            "  {",
+            "    for (var b$jscomp$inline_1 in c) {",
+            "      1;",
+            "      break JSCompiler_inline_label_foo_2;",
+            "    }",
+            "  }",
+            "}"),
+        "foo",
+        null);
   }
 
   public void testMutateCallInLoopVars1() {
@@ -151,24 +161,30 @@ public final class FunctionToBlockMutatorTest extends TestCase {
     boolean callInLoop = false;
     helperMutate(
         "function foo(a){var B = bar(); a;}; foo(1);",
-        "{var B$jscomp$inline_1=bar(); 1;}",
-        "foo", null, false, callInLoop);
+        "{var B$jscomp$inline_1 = bar(); 1;}",
+        "foo",
+        null,
+        false,
+        callInLoop);
     // ... in a loop, the constant-ness is removed.
     // TODO(johnlenz): update this test to look for the const annotation.
     callInLoop = true;
     helperMutate(
         "function foo(a){var B = bar(); a;}; foo(1);",
         "{var B$jscomp$inline_1 = bar(); 1;}",
-        "foo", null, false, callInLoop);
+        "foo",
+        null,
+        false,
+        callInLoop);
   }
 
   public void testMutateFunctionDefinition() {
-     // function declarations are rewritten as function
-     // expressions
-     helperMutate(
+    // Function declarations are rewritten as function expressions.
+    helperMutate(
         "function foo(a){function g(){}}; foo(1);",
-        "{var g$jscomp$inline_1=function(){};}",
-        "foo", null);
+        "{var g$jscomp$inline_1 = function() {};}",
+        "foo",
+        null);
   }
 
   public void testMutateFunctionDefinitionHoisting() {
@@ -184,13 +200,14 @@ public final class FunctionToBlockMutatorTest extends TestCase {
             "foo(1);"),
         LINE_JOINER.join(
             "{",
-            "  var g$jscomp$inline_2=function(c$jscomp$inline_6) {return c$jscomp$inline_6};",
-            "  var h$jscomp$inline_4=function(){};",
-            "  var i$jscomp$inline_5=function(){};",
-            "  var b$jscomp$inline_1=g$jscomp$inline_2(1);",
-            "  var c$jscomp$inline_3=i$jscomp$inline_5();",
+            "  var g$jscomp$inline_2 = function(c$jscomp$inline_6) {return c$jscomp$inline_6};",
+            "  var h$jscomp$inline_4 = function(){};",
+            "  var i$jscomp$inline_5 = function(){};",
+            "  var b$jscomp$inline_1 = g$jscomp$inline_2(1);",
+            "  var c$jscomp$inline_3 = i$jscomp$inline_5();",
             "}"),
-        "foo", null);
+        "foo",
+        null);
   }
 
   public void helperMutate(
@@ -259,9 +276,9 @@ public final class FunctionToBlockMutatorTest extends TestCase {
             needsDefaultResult, isCallInLoop);
         validateSourceInfo(compiler, result);
         String explanation = expected.checkTreeEquals(result);
-        assertNull("\nExpected: " + compiler.toSource(expected) +
-            "\nResult: " + compiler.toSource(result) +
-            "\n" + explanation, explanation);
+        assertNull("\nExpected: " + compiler.toSource(expected)
+            + "\nResult:   " + compiler.toSource(result)
+            + "\n" + explanation, explanation);
         return true;
       }
     };
@@ -296,8 +313,7 @@ public final class FunctionToBlockMutatorTest extends TestCase {
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isCall()) {
         Node first = n.getFirstChild();
-        if (first.isName() &&
-            first.getString().equals(callname)) {
+        if (first.isName() && first.getString().equals(callname)) {
           complete = method.call(t, n, parent);
         }
       }

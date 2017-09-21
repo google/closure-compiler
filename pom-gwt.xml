@@ -245,6 +245,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <excludes>
+            <exclude>**/bundle/**</exclude>
             <exclude>**/debugger/**</exclude>
             <exclude>**/gwt/client/**</exclude>
             <exclude>**/gwt/public/**</exclude>
@@ -256,6 +257,7 @@
             <exclude>**/webservice/**</exclude>
           </excludes>
           <testExcludes>
+            <testExclude>**/bundle/**</testExclude>
             <testExclude>**/transpile/**</testExclude>
           </testExcludes>
         </configuration>

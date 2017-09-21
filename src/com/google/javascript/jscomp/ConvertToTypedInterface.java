@@ -68,37 +68,18 @@ class ConvertToTypedInterface implements CompilerPass {
     this.compiler = compiler;
   }
 
-  private void unhoistExternsToCode(Node externs, Node root) {
-    // Clear out the contents of existing scripts.
-    for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
-      if (script.hasChildren()) {
-        NodeUtil.deleteChildren(script, compiler);
-      }
-    }
-
-    Node firstScript = root.getFirstChild();
-    boolean firstTime = true;
-
-    // Move the contents of externs into the first script.
-    while (externs.hasChildren()) {
-      Node externScript = externs.removeFirstChild();
-      if (externScript.hasChildren()) {
-        firstScript.addChildrenToBack(externScript.removeChildren());
-        compiler.reportChangeToChangeScope(externScript);
-        if (firstTime) {
-          compiler.reportChangeToChangeScope(firstScript);
-          firstTime = false;
-        }
+  private void removeUselessFiles(Node externs, Node root) {
+    for (Node script : Iterables.concat(externs.children(), root.children())) {
+      if (!script.hasChildren()) {
+        script.detach();
+        compiler.reportChangeToChangeScope(script);
       }
     }
   }
 
   @Override
   public void process(Node externs, Node root) {
-    if (!root.hasChildren() || (root.hasOneChild() && !root.getFirstChild().hasChildren())) {
-      unhoistExternsToCode(externs, root);
-      return;
-    }
+    removeUselessFiles(externs, root);
     for (Node script = root.getFirstChild(); script != null; script = script.getNext()) {
       processFile(script);
     }
@@ -534,6 +515,10 @@ class ConvertToTypedInterface implements CompilerPass {
     private void processClass(Node n) {
       checkArgument(isClass(n));
       for (Node member : n.getLastChild().children()) {
+        if (member.isEmpty()) {
+          NodeUtil.deleteNode(member, compiler);
+          continue;
+        }
         processFunction(member.getLastChild());
       }
     }

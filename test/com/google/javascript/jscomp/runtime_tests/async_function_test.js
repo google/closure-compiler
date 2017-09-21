@@ -219,5 +219,30 @@ testSuite({
       return 'success';
     }
     return f().then(v => assertEquals('success', v));
-  }
+  },
+
+  /**
+   * Confirm that the rejection reason is correctly saved and reported even
+   * when more awaiting is done in a finally block.
+   *
+   * TODO(bradfordcsmith): fix this
+   * https://github.com/google/closure-compiler/issues/2504
+   *
+   * @return {!Promise<?>}
+   */
+  disabledTestRejectWithFinally() {
+    const error = new Error('expected');
+    async function fn1() {
+      try {
+        await Promise.reject(error);
+        return 5;
+      } finally {
+        await Promise.resolve();
+      }
+    }
+
+    return fn1().then(
+        v => fail(`resolved to ${v} when error was expected`),
+        e => assertEquals(error, e));
+  },
 });

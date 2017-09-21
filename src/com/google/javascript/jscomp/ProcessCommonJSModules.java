@@ -74,10 +74,10 @@ public final class ProcessCommonJSModules implements CompilerPass {
    */
   @Override
   public void process(Node externs, Node root) {
-    process(root, false);
+    process(externs, root, false);
   }
 
-  public void process(Node root, boolean forceModuleDetection) {
+  public void process(Node externs, Node root, boolean forceModuleDetection) {
     checkState(root.isScript());
     FindImportsAndExports finder = new FindImportsAndExports();
     NodeTraversal.traverseEs6(compiler, root, finder);
@@ -122,49 +122,21 @@ public final class ProcessCommonJSModules implements CompilerPass {
         root,
         new RewriteModule(finder.isCommonJsModule() || forceModuleDetection, exports.build()));
 
-    // Define a default prop for es6 import interop
-    if (finder.isCommonJsModule() || forceModuleDetection) {
+    if (finder.isCommonJsModule()) {
       CompilerInput ci = compiler.getInput(root.getInputId());
-      ModulePath modulePath = ci.getPath();
-      if (modulePath == null) {
-        return;
-      }
-      String moduleName = modulePath.toModuleName();
-      Node assignDefaultProp = IR.exprResult(
-          IR.assign(
-              IR.getprop(IR.name(moduleName), "default"),
-              IR.name(moduleName)));
+      String es6ModuleName = ci.getPath().toModuleName();
+      Node defaultProp = IR.stringKey("default", IR.name(getModuleName(ci)));
+      JSDocInfoBuilder info = new JSDocInfoBuilder(false);
+      info.recordConstancy();
+      defaultProp.setJSDocInfo(info.build());
 
-      Node defaultPropUndefined = IR.sheq(
-          IR.typeof(IR.getprop(IR.name(moduleName), "default")),
-          IR.string("undefined"));
-
-      Node moduleExportsIsObject = IR.or(
-          IR.sheq(
-              IR.typeof(IR.typeof(IR.getprop(IR.name(moduleName), "default"))),
-              IR.string("object")),
-          IR.sheq(
-              IR.typeof(IR.typeof(IR.getprop(IR.name(moduleName), "default"))),
-              IR.string("function")));
-
-      Node moduleExportsNotNull = IR.shne(
-          IR.name(moduleName),
-          IR.nullNode());
-
-      Node moduleExportsDefined = IR.shne(
-          IR.typeof(IR.name(moduleName)),
-          IR.string("undefined"));
-
-      root.addChildToBack(
-          IR.ifNode(
-            IR.and(
-                moduleExportsDefined,
-                IR.and(
-                    moduleExportsNotNull,
-                    IR.and(
-                        moduleExportsIsObject,
-                        defaultPropUndefined))),
-            IR.block(assignDefaultProp)));
+      Node es6Alias = IR.var(
+          IR.name(es6ModuleName),
+          IR.objectlit(defaultProp));
+      info = new JSDocInfoBuilder(false);
+      info.recordConstancy();
+      es6Alias.setJSDocInfo(info.build());
+      root.addChildToBack(es6Alias.useSourceInfoFromForTree(root));
     }
   }
 
@@ -194,6 +166,39 @@ public final class ProcessCommonJSModules implements CompilerPass {
       return String.valueOf(Double.valueOf(requireCall.getSecondChild().getDouble()).intValue());
     }
 
+    return requireCall.getSecondChild().getString();
+  }
+
+  public static String getModuleName(CompilerInput input) {
+    ModulePath modulePath = input.getPath();
+    if (modulePath == null) {
+      return null;
+    }
+
+    return getModuleName(modulePath);
+  }
+
+  public static String getModuleName(ModulePath input) {
+    return "cjs_" + input.toModuleName();
+  }
+
+  /**
+   * Recognize if a node is a module import. We recognize two forms:
+   *
+   *  - require("something");
+   *  - __webpack_require__(4); // only when the module resolution is WEBPACK
+   */
+  public static boolean isCommonJsImport(Node requireCall) {
+    if (requireCall.isCall() && requireCall.hasTwoChildren()) {
+      if (requireCall.getFirstChild().matchesQualifiedName(REQUIRE)
+          && requireCall.getSecondChild().isString()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static String getCommonJsImportPath(Node requireCall) {
     return requireCall.getSecondChild().getString();
   }
 
@@ -320,7 +325,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
       return false;
     }
 
-    String iifeLabel = modulePath.toModuleName() + "_iifeWrapper";
+    String iifeLabel = getModuleName(modulePath) + "_iifeWrapper";
 
     FunctionToBlockMutator mutator =
         new FunctionToBlockMutator(compiler, compiler.getUniqueNameIdSupplier());
@@ -580,7 +585,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         return;
       }
 
-      String moduleName = modulePath.toModuleName();
+      String moduleName = getModuleName(modulePath);
 
       List<ExportInfo> exportsToRemove = new ArrayList<>();
       for (ExportInfo export : exports) {
@@ -860,8 +865,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           }
 
           CompilerInput ci = compiler.getInput(n.getInputId());
-          ModulePath modulePath = ci.getPath();
-          String moduleName = modulePath.toModuleName();
+          String moduleName = getModuleName(ci);
 
           // Hoist functions in reverse order so that they maintain the same relative
           // order after hoisting.
@@ -988,7 +992,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         return;
       }
 
-      String moduleName = modulePath.toModuleName();
+      String moduleName = getModuleName(modulePath);
       Node moduleRef = IR.name(moduleName).srcref(require);
       parent.replaceChild(require, moduleRef);
 
@@ -1026,8 +1030,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         }
       }
 
-      ModulePath modulePath = t.getInput().getPath();
-      String moduleName = modulePath.toModuleName();
+      String moduleName = getModuleName(t.getInput());
       Var moduleInitialization = t.getScope().getVar(moduleName);
 
       // If this is an assignment to module.exports or exports, renaming
@@ -1135,7 +1138,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           visitExport(t, lhs.getFirstChild(), exportInfo);
         } else {
           Node getter = key.detach();
-          String moduleName = t.getInput().getPath().toModuleName();
+          String moduleName = getModuleName(t.getInput());
           Node moduleObj = t.getScope().getVar(moduleName).getNode().getFirstChild();
           moduleObj.addChildToBack(getter);
         }
@@ -1198,8 +1201,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
           // If it's a global name, rename it to prevent conflicts with other scripts
         } else if (var.isGlobal()) {
-          ModulePath modulePath = t.getInput().getPath();
-          String currentModuleName = modulePath.toModuleName();
+          String currentModuleName = getModuleName(t.getInput());
 
           if (currentModuleName.equals(originalName)) {
             return;
@@ -1280,6 +1282,11 @@ public final class ProcessCommonJSModules implements CompilerPass {
         case FUNCTION:
           if (newNameIsQualified || requireFunctionExpressions) {
             // Refactor a named function to a function expression
+            if (NodeUtil.isFunctionExpression(parent)) {
+              // Don't refactor if the parent is a named function expression.
+              // e.g. var foo = function foo() {};
+              break;
+            }
             Node newNameRef = NodeUtil.newQName(compiler, newName, nameRef, originalName);
             Node grandparent = parent.getParent();
             nameRef.setString("");
@@ -1389,7 +1396,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         return n.getQualifiedName();
       }
 
-      String moduleName = t.getInput().getPath().toModuleName();
+      String moduleName = getModuleName(t.getInput());
 
       for (ExportInfo export : this.exports) {
         Node exportBase = getBaseQualifiedNameNode(export.node);
@@ -1530,7 +1537,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           if (modulePath == null) {
             return null;
           }
-          return modulePath.toModuleName() + propSuffix;
+          return getModuleName(modulePath) + propSuffix;
         }
         return null;
 
@@ -1576,7 +1583,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
             return;
           }
 
-          String globalModuleName = modulePath.toModuleName();
+          String globalModuleName = getModuleName(modulePath);
           typeNode.setString(
               localTypeName == null ? globalModuleName : globalModuleName + localTypeName);
 
@@ -1631,7 +1638,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
             String baseName = name.substring(0, endIndex);
             Var typeDeclaration = t.getScope().getVar(baseName);
             if (typeDeclaration != null && typeDeclaration.isGlobal()) {
-              String moduleName = t.getInput().getPath().toModuleName();
+              String moduleName = getModuleName(t.getInput());
               String newName = baseName + "$$" + moduleName;
               if (endIndex < name.length()) {
                 newName += name.substring(endIndex);

@@ -1807,6 +1807,18 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
     assertThat(parse("@externs*/")).isNull();
   }
 
+  public void testParseTypeSummary1() {
+    assertThat(parseFileOverview("@typeSummary*/").isTypeSummary()).isTrue();
+  }
+
+  public void testParseTypeSummary2() {
+    parseFileOverview("@typeSummary\n@typeSummary*/", "extra @typeSummary tag");
+  }
+
+  public void testParseTypeSummary3() {
+    assertThat(parse("@typeSummary*/")).isNull();
+  }
+
   public void testParseNoCompile1() {
     assertThat(parseFileOverview("@nocompile*/").isNoCompile()).isTrue();
   }

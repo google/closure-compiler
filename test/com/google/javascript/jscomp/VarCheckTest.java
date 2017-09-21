@@ -216,6 +216,10 @@ public final class VarCheckTest extends CompilerTestCase {
         VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR);
   }
 
+  public void testNamespaceDeclarationInExterns() {
+    testSame("/** @const */ var $jscomp = $jscomp || {};", "");
+  }
+
   public void testCallInExterns() {
     testSame("yz();", "function /** @suppress {duplicate} */ yz() {}",
         VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR);
@@ -667,6 +671,10 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testImportedNameCollision() {
     // TODO(tbreisacher): This should throw a duplicate declaration error.
     testSame("import foo from './foo'; foo('hello'); var foo = 5;");
+  }
+
+  public void testImportStar() {
+    testSame("import * as foo from './foo.js';");
   }
 
   private static final class VariableTestCheck implements CompilerPass {

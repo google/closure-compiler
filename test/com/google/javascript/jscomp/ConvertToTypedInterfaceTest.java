@@ -23,6 +23,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    allowExternsChanges();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
@@ -42,11 +43,6 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     test(
         "/** @constructor */ function Foo() { /** @const */ this.x = 5; }",
         "/** @constructor */ function Foo() {} \n /** @const {number} */ Foo.prototype.x;");
-  }
-
-  public void testAllExternsLibraryPrinted() {
-    allowExternsChanges();
-    test("/** @type {number} */ var x;", "", "/** @type {number} */ var x;");
   }
 
   public void testExternsDefinitionsRespected() {
@@ -414,6 +410,12 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
     test(
         "class Foo { method(/** string */ s) { return s.split(','); } }",
+        "class Foo { method(/** string */ s) {} }");
+  }
+
+  public void testRemoveEmptyMembers() {
+    test(
+        "class Foo { ;; method(/** string */ s) {};; }",
         "class Foo { method(/** string */ s) {} }");
   }
 

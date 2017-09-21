@@ -389,6 +389,12 @@ ServiceWorkerClient.prototype.postMessage = function(message, opt_transfer) {};
 ServiceWorkerClient.prototype.focus = function() {};
 
 /**
+ * @param {string} url
+ * @return {!Promise<!ServiceWorkerClient>}
+ */
+ServiceWorkerClient.prototype.navigate = function(url) {};
+
+/**
  * @see http://www.w3.org/TR/service-workers/#service-worker-clients-interface
  * @interface
  */

@@ -448,12 +448,4 @@ webCrypto.Crypto.prototype.subtle;
  * @see https://developer.mozilla.org/en/DOM/window.crypto
  * @type {!webCrypto.Crypto|undefined}
  */
-Window.prototype.crypto;
-
-/**
- * @see https://developer.mozilla.org/en/DOM/window.crypto
- * @type {!webCrypto.Crypto|undefined}
- */
-WorkerGlobalScope.prototype.crypto;
-
-
+var crypto;

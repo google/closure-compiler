@@ -2284,6 +2284,21 @@ public final class NameAnalyzerTest extends CompilerTestCase {
     testSame("function* g() {yield 1} var g = g(); g.next().value()");
   }
 
+  /**
+   * Just check that we don't crash in this case.
+   * @bug 65489464
+   */
+  public void testSpread() {
+    test(
+        LINE_JOINER.join(
+            "const ns = {};",
+            "",
+            "const X = [];",
+            "",
+            "ns.Y = [{}, ...X];"),
+        "");
+  }
+
   public void testObjectDestructuring() {
     test(
         "var {a: a, x: y} = {a:1, x:2} ",

@@ -207,10 +207,13 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
             metadata.superClassNameNode.getSourceFileName()));
       } else {
         if (!classNode.isFromExterns()) {
+          Node classNameNode = NodeUtil.newQName(compiler, metadata.fullClassName)
+             .useSourceInfoIfMissingFrom(metadata.classNameNode);
+          Node superClassNameNode = NodeUtil.newQName(compiler, superClassString)
+              .useSourceInfoIfMissingFrom(metadata.superClassNameNode);
+
           Node inherits = IR.call(
-              NodeUtil.newQName(compiler, INHERITS),
-              NodeUtil.newQName(compiler, metadata.fullClassName),
-              NodeUtil.newQName(compiler, superClassString));
+              NodeUtil.newQName(compiler, INHERITS), classNameNode, superClassNameNode);
           Node inheritsCall = IR.exprResult(inherits);
           compiler.ensureLibraryInjected("es6/util/inherits", false);
 

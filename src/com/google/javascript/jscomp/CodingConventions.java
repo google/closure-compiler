@@ -20,9 +20,10 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.Immutable;
-import com.google.javascript.jscomp.newtypes.JSType;
-import com.google.javascript.jscomp.newtypes.RawNominalType;
+import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.ObjectTypeI;
+import com.google.javascript.rhino.ObjectTypeI.PropertyDeclarer;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -199,10 +200,12 @@ public final class CodingConventions {
     }
 
     @Override
-    public void applySubclassRelationship(FunctionType parentCtor,
-        FunctionType childCtor, SubclassType type) {
-      nextConvention.applySubclassRelationship(
-          parentCtor, childCtor, type);
+    public void applySubclassRelationship(
+        PropertyDeclarer declarer,
+        FunctionTypeI parentCtor,
+        FunctionTypeI childCtor,
+        SubclassType type) {
+      nextConvention.applySubclassRelationship(declarer, parentCtor, childCtor, type);
     }
 
     @Override
@@ -216,16 +219,9 @@ public final class CodingConventions {
     }
 
     @Override
-    public void applySingletonGetterOld(FunctionType functionType,
-        FunctionType getterType, ObjectType objectType) {
-      nextConvention.applySingletonGetterOld(
-          functionType, getterType, objectType);
-    }
-
-    @Override
-    public void applySingletonGetterNew(
-        RawNominalType rawType, JSType getInstanceType, JSType instanceType) {
-      nextConvention.applySingletonGetterNew(rawType, getInstanceType, instanceType);
+    public void applySingletonGetter(PropertyDeclarer declarer,
+        FunctionTypeI functionType, FunctionTypeI getterType, ObjectTypeI objectType) {
+      nextConvention.applySingletonGetter(declarer, functionType, getterType, objectType);
     }
 
     @Override
@@ -464,8 +460,11 @@ public final class CodingConventions {
     }
 
     @Override
-    public void applySubclassRelationship(FunctionType parentCtor,
-        FunctionType childCtor, SubclassType type) {
+    public void applySubclassRelationship(
+        PropertyDeclarer declarer,
+        FunctionTypeI parentCtor,
+        FunctionTypeI childCtor,
+        SubclassType type) {
       // do nothing
     }
 
@@ -480,14 +479,9 @@ public final class CodingConventions {
     }
 
     @Override
-    public void applySingletonGetterOld(FunctionType functionType,
-        FunctionType getterType, ObjectType objectType) {
-      // do nothing.
-    }
-
-    @Override
-    public void applySingletonGetterNew(
-        RawNominalType rawType, JSType getInstanceType, JSType instanceType) {
+    public void applySingletonGetter(
+        PropertyDeclarer declarer, FunctionTypeI functionType,
+        FunctionTypeI getterType, ObjectTypeI objectType) {
       // do nothing.
     }
 

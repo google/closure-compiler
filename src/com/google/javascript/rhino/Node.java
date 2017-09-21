@@ -706,7 +706,7 @@ public class Node implements Serializable {
     checkArgument(
         child.parent == null,
         "Cannot add already-owned child node.\nChild: %s\nExisting parent: %s\nNew parent: %s",
-        child, parent, this);
+        child, child.parent, this);
     checkArgument(child.next == null);
     checkArgument(child.previous == null);
 
@@ -2179,6 +2179,7 @@ public class Node implements Serializable {
   /**
    * @return A detached clone of the Node, specifically excluding its children.
    */
+  @CheckReturnValue
   public final Node cloneNode() {
     return cloneNode(false);
   }
@@ -2186,6 +2187,7 @@ public class Node implements Serializable {
   /**
    * @return A detached clone of the Node, specifically excluding its children.
    */
+  @CheckReturnValue
   protected Node cloneNode(boolean cloneTypeExprs) {
     return copyNodeFields(new Node(token), cloneTypeExprs);
   }
@@ -2209,10 +2211,12 @@ public class Node implements Serializable {
   /**
    * @return A detached clone of the Node and all its children.
    */
+  @CheckReturnValue
   public final Node cloneTree() {
     return cloneTree(false);
   }
 
+  @CheckReturnValue
   public final Node cloneTree(boolean cloneTypeExprs) {
     Node result = cloneNode(cloneTypeExprs);
     Node firstChild = null;

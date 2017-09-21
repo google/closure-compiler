@@ -323,10 +323,13 @@ class VarCheck extends AbstractPostOrderCallback implements
             }
             // fall through
           default:
-            // Don't warn for simple var assignments "/** @const */ var foo = bar;"
-            // They are used to infer the types of namespace aliases.
-            if (!parent.isName()
-                || !NodeUtil.isNameDeclaration(parent.getParent())) {
+            if ((parent.isName() && NodeUtil.isNameDeclaration(parent.getParent()))
+                || (parent.isOr() && NodeUtil.isNamespaceDecl(parent.getParent()))) {
+              // Don't warn for:
+              // 1. Simple var assignments "/** @const */ var foo = bar;"
+              //    They are used to infer the types of namespace aliases.
+              // 2. Namespace declarations: "/** @const */ var ns = ns || {};"
+            } else {
               t.report(n, NAME_REFERENCE_IN_EXTERNS_ERROR, n.getString());
             }
 
@@ -349,7 +352,7 @@ class VarCheck extends AbstractPostOrderCallback implements
    *     for the given node.
    */
   static boolean hasDuplicateDeclarationSuppression(Node n, Var origVar) {
-    checkState(n.isName() || n.isRest() || n.isStringKey(), n);
+    checkState(n.isName() || n.isRest() || n.isStringKey() || n.isImportStar(), n);
     Node parent = n.getParent();
     Node origParent = origVar.getParentNode();
 

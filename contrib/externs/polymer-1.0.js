@@ -1172,7 +1172,7 @@ Polymer.Collection.applySplices = function(userArray, splices) {};
 
 /**
  * Settings pulled from
- * https://github.com/Polymer/polymer/blob/master/src/lib/settings.html
+ * https://github.com/Polymer/polymer/blob/master/lib/utils/settings.html
  * @const
  */
 Polymer.Settings = {};
@@ -1200,6 +1200,9 @@ Polymer.Settings.useNativeImports;
 
 /** @type {boolean} */
 Polymer.Settings.useNativeCustomElements;
+
+/** @type {boolean} */
+Polymer.Settings.useNativeCSSProperties;
 
 
 /**

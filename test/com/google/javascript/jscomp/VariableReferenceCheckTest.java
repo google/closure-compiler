@@ -24,8 +24,6 @@ import static com.google.javascript.jscomp.VariableReferenceCheck.REDECLARED_VAR
 import static com.google.javascript.jscomp.VariableReferenceCheck.REDECLARED_VARIABLE_ERROR;
 import static com.google.javascript.jscomp.VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
 /**
  * Test that warnings are generated in appropriate cases and appropriate
  * cases only by VariableReferenceCheck
@@ -59,7 +57,6 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     enableUnusedLocalAssignmentCheck = false;
   }
 
@@ -170,19 +167,17 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   }
 
   public void testIssue166a() {
-    testError(
-        "try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
-        REDECLARED_VARIABLE_ERROR);
+    assertRedeclareError(
+        "try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }");
   }
 
   public void testIssue166b() {
-    testError(
-        "function a() { try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 } };",
-        REDECLARED_VARIABLE_ERROR);
+    assertRedeclareError(
+        "function a() { try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 } };");
   }
 
   public void testIssue166b_withES6Modules() {
-    testError(
+    assertRedeclareError(
         LINE_JOINER.join(
             "export function a() {",
             "  try {",
@@ -191,25 +186,22 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
             "      /** @suppress {duplicate} */",
             "      var e = 2",
             "  }",
-            "};"),
-        REDECLARED_VARIABLE_ERROR);
+            "};"));
   }
 
   public void testIssue166c() {
-    testError(
-        "var e = 0; try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }",
-        REDECLARED_VARIABLE_ERROR);
+    assertRedeclareError(
+        "var e = 0; try { throw 1 } catch(e) { /** @suppress {duplicate} */ var e=2 }");
   }
 
   public void testIssue166d() {
-    testError(
+    assertRedeclareError(
         LINE_JOINER.join(
             "function a() {",
             "  var e = 0; try { throw 1 } catch(e) {",
             "    /** @suppress {duplicate} */ var e = 2;",
             "  }",
-            "};"),
-        REDECLARED_VARIABLE_ERROR);
+            "};"));
   }
 
   public void testIssue166e() {
@@ -262,6 +254,16 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
 
   public void testReferencedBleedingFunction_withES6Modules() {
     assertNoWarning("export var x = function y() { return y(); }");
+  }
+
+  public void testVarShadowsFunctionName() {
+    assertNoWarning("var x = function y() { var y; }");
+    assertNoWarning("var x = function y() { let y; }");
+  }
+
+  public void testVarShadowsFunctionName_withES6Modules() {
+    assertNoWarning("export var x = function y() { var y; }");
+    assertNoWarning("export var x = function y() { let y; }");
   }
 
   public void testDoubleDeclaration() {
@@ -396,6 +398,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertUnused("import 'm'; let x;");
 
     testSame("import 'm'; /** @typedef {string} */ var x;");
+  }
+
+  public void testImportStar() {
+    testSame("import * as ns from './foo.js'");
   }
 
   public void testAliasInModule() {
@@ -598,6 +604,14 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   public void testChainedAssign() {
     enableUnusedLocalAssignmentCheck = true;
     assertNoWarning("var a, b = 0, c; a = b = c; alert(a);");
+    assertUnused(
+        LINE_JOINER.join(
+            "function foo() {",
+            "  var a, b = 0, c;",
+            "  a = b = c;",
+            "  alert(a); ",
+            "}",
+            "foo();"));
   }
 
   public void testChainedAssign_withES6Modules() {

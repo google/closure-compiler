@@ -1385,23 +1385,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
   }
 
-  /** Create a new constructor with the parameters and return type stripped. */
-  public FunctionType forgetParameterAndReturnTypes() {
-    FunctionType result =
-        new FunctionType(
-            registry,
-            getReferenceName(),
-            source,
-            registry.createArrowType(null, null),
-            getInstanceType(),
-            null,
-            true,
-            false,
-            false);
-    result.setPrototypeBasedOn(getInstanceType());
-    return result;
-  }
-
   @Override
   public boolean hasAnyTemplateTypesInternal() {
     return getTemplateTypeMap().numUnfilledTemplateKeys() > 0
@@ -1557,7 +1540,48 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   }
 
   @Override
-  public FunctionTypeI withReturnType(TypeI returnType) {
-    throw new UnsupportedOperationException("withReturnType not supported in OTI.");
+  public Builder toBuilder() {
+    return new FunctionBuilderImpl();
+  }
+
+  /** Private implementation used by toBuilder. */
+  private class FunctionBuilderImpl implements Builder {
+    ArrowType arrow = FunctionType.this.call;
+
+    @Override
+    public Builder withUnknownReturnType() {
+      arrow = new ArrowType(registry, arrow.parameters, null);
+      return this;
+    }
+
+    @Override
+    public Builder withReturnType(TypeI type) {
+      checkArgument(type instanceof JSType);
+      arrow = new ArrowType(registry, arrow.parameters, (JSType) type);
+      return this;
+    }
+
+    @Override
+    public Builder withNoParameters() {
+      arrow = new ArrowType(registry, null, arrow.returnType, arrow.returnTypeInferred);
+      return this;
+    }
+
+    @Override
+    public FunctionTypeI build() {
+      FunctionType result =
+          new FunctionType(
+              registry,
+              getReferenceName(),
+              source,
+              arrow,
+              getInstanceType(),
+              null,
+              true,
+              false,
+              false);
+      result.setPrototypeBasedOn(getInstanceType());
+      return result;
+    }
   }
 }

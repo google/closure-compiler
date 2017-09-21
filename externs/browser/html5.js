@@ -3204,6 +3204,14 @@ DOMTokenList.prototype.toggle = function(token, opt_force) {};
 DOMTokenList.prototype.toString = function() {};
 
 /**
+ * @return {!IteratorIterable<string>} An iterator to go through all values of
+ *     the key/value pairs contained in this object.
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/values
+ */
+DOMTokenList.prototype.values = function() {};
+
+/**
  * A better interface to CSS classes than className.
  * @type {!DOMTokenList}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/classList
@@ -3714,9 +3722,7 @@ Document.prototype.msHidden;
  * @see http://w3c.github.io/webcomponents/spec/custom/#extensions-to-document-interface-to-register
  * @param {string} type
  * @param {{extends: (string|undefined), prototype: (Object|undefined)}=} options
- * @return {!Function} a constructor for the new tag. A generic function is the best we
- *     can do here as it allows the return value to be annotated properly
- *     at the call site.
+ * @return {!function(new:Element, ...*)} a constructor for the new tag.
  */
 Document.prototype.registerElement = function(type, options) {};
 

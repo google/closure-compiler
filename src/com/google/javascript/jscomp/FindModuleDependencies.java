@@ -54,13 +54,22 @@ public class FindModuleDependencies implements NodeTraversal.Callback {
     if (FindModuleDependencies.isEs6ModuleRoot(root)) {
       moduleType = ModuleType.ES6;
     }
+    CompilerInput input = compiler.getInput(root.getInputId());
+
+    // The "goog" namespace isn't always specifically required.
+    // The deps parser will pick up any access to a `goog.foo()` call
+    // and add "goog" as a dependency. If "goog" is a dependency of the
+    // file we add it here to the ordered requires so that it's always
+    // first.
+    if (input.getRequires().contains("goog")) {
+      input.addOrderedRequire("goog");
+    }
 
     NodeTraversal.traverseEs6(compiler, root, this);
 
     if (moduleType == ModuleType.ES6) {
       convertToEs6Module(root, true);
     }
-    CompilerInput input = compiler.getInput(root.getInputId());
     input.addProvide(input.getPath().toModuleName());
     input.setJsModuleType(moduleType);
     input.setHasFullParseDependencyInfo(true);

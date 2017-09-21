@@ -101,7 +101,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
             "/** @suppress {const,duplicate} @const */ window.ns = ns;"));
   }
 
-  public void testNamespaceAliasing() {
+  public void testNameAliasing() {
     testExternChanges(
         LINE_JOINER.join(
             "var window;",
@@ -120,6 +120,31 @@ public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCa
             "window.ns = ns;",
             "/** @suppress {const,duplicate} @const */",
             "window.ns2 = ns;"));
+  }
+
+  public void testQualifiedNameAliasing() {
+    testExternChanges(
+        LINE_JOINER.join(
+            "var window;",
+            "/** @const */",
+            "var ns = {};",
+            "/** @type {number} A very important constant */",
+            "ns.THE_NUMBER;",
+            "/** @const */",
+            "var num = ns.THE_NUMBER;"),
+        "",
+        LINE_JOINER.join(
+            "var window;",
+            "/** @const */",
+            "var ns = {};",
+            "/** @type {number} A very important constant */",
+            "ns.THE_NUMBER;",
+            "/** @const */",
+            "var num = ns.THE_NUMBER;",
+            "/** @suppress {const,duplicate} @const */",
+            "window.ns=ns;",
+            "/** @suppress {const,duplicate} @const */",
+            "window.num = ns.THE_NUMBER;"));
   }
 
   public void testWindowProperty8() {

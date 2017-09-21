@@ -937,4 +937,22 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "function register$$module$test(cb) { cb(tinymce$$module$test); }",
             "register$$module$test(function(tinymce) { module$test = tinymce; });"));
   }
+
+  public void testIssue2616() {
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
+            "var foo = function foo() {",
+            "  return 1;",
+            "};",
+            "module.exports = {",
+            "  foo: foo,",
+            "};"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "/** @const */ var module$test={};",
+            "module$test.foo = function foo() {",
+            "  return 1;",
+            "};"));
+  }
 }

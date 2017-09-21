@@ -276,11 +276,48 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           t.report(n, REFERENCE_TO_MODULE_GLOBAL_NAME);
         } else if (currentModule.importsByLongRequiredName.containsKey(n.getQualifiedName())) {
           Node importLhs = currentModule.importsByLongRequiredName.get(n.getQualifiedName());
-          if (importLhs == null || !importLhs.isName()) {
+          if (importLhs == null) {
+            t.report(n, REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME, n.getQualifiedName());
+          } else if (importLhs.isName()) {
+            t.report(
+                n,
+                REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
+                n.getQualifiedName(),
+                importLhs.getString());
+          } else if (importLhs.isDestructuringLhs()) {
+            if (parent.isGetProp()) {
+              String shortName =
+                  parent.getQualifiedName().substring(
+                      parent.getQualifiedName().lastIndexOf(".") + 1);
+              Node objPattern = importLhs.getFirstChild();
+              checkState(objPattern.isObjectPattern(), objPattern);
+              for (Node strKey : objPattern.children()) {
+                // const {foo} = goog.require('ns.bar');
+                // Should use the short name "foo" instead of "ns.bar.foo".
+                if (!strKey.hasChildren() && strKey.getString().equals(shortName)) {
+                  t.report(
+                      parent,
+                      REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
+                      parent.getQualifiedName(),
+                      shortName);
+                  return;
+                }
+                // const {foo: barFoo} = goog.require('ns.bar');
+                // Should use the short name "barFoo" instead of "ns.bar.foo".
+                if (strKey.hasOneChild() && strKey.getString().equals(shortName)) {
+                  t.report(
+                      parent,
+                      REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
+                      parent.getQualifiedName(),
+                      strKey.getFirstChild().getString());
+                  return;
+                }
+              }
+            }
             t.report(n, REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME, n.getQualifiedName());
           } else {
-            t.report(n, REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
-                n.getQualifiedName(), importLhs.getQualifiedName());
+            checkState(importLhs.isExprResult(), importLhs);
+            t.report(n, REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME, n.getQualifiedName());
           }
         }
         break;

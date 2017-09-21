@@ -563,7 +563,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private <T extends SourceFile> List<CompilerInput> makeExternInputs(List<T> externSources) {
     List<CompilerInput> inputs = new ArrayList<>(externSources.size());
     for (SourceFile file : externSources) {
-      inputs.add(new CompilerInput(file, /* extern= */ true));
+      inputs.add(new CompilerInput(file, /* isExtern= */ true));
     }
     return inputs;
   }
@@ -1045,6 +1045,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     Tracer t = newTracer("runTranspileOnlyPasses");
     try {
       for (PassFactory pf : getPassConfig().getTranspileOnlyPasses()) {
+        if (hasErrors()) {
+          return;
+        }
         pf.create(this).process(externsRoot, jsRoot);
       }
     } finally {
@@ -1844,7 +1847,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           NodeTraversal.traverseEs6(this, n, sia);
         }
 
-        jsRoot.addChildToBack(n);
+        if (NodeUtil.isFromTypeSummary(n)) {
+          input.setIsExtern(true);
+          externsRoot.addChildToBack(n);
+        } else {
+          jsRoot.addChildToBack(n);
+        }
       }
 
       if (hasErrors()) {
@@ -1873,7 +1881,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   void orderInputs() {
-    hoistUnorderedExterns();
+    hoistExterns();
     // Check if the sources need to be re-ordered.
     boolean staleInputs = false;
     if (options.dependencyOptions.needsManagement()) {
@@ -1897,10 +1905,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       }
     }
 
-    if (options.dependencyOptions.needsManagement() && options.allowGoogProvideInExterns()) {
-      hoistAllExterns();
-    }
-
     hoistNoCompileFiles();
 
     if (staleInputs) {
@@ -1920,10 +1924,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    */
   void findDependenciesFromEntryPoints(
       boolean supportEs6Modules, boolean supportCommonJSModules, boolean supportAmdModules) {
-    hoistUnorderedExterns();
+    hoistExterns();
     List<CompilerInput> entryPoints = new ArrayList<>();
     Map<String, CompilerInput> inputsByProvide = new HashMap<>();
     Map<String, CompilerInput> inputsByIdentifier = new HashMap<>();
+
     for (CompilerInput input : inputs) {
       if (!options.getDependencyOptions().shouldDropMoochers() && input.getProvides().isEmpty()) {
         entryPoints.add(input);
@@ -1961,11 +1966,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // TODO(ChadKillingsworth) Move this into the standard compilation passes
     if (supportCommonJSModules) {
       for (CompilerInput input : orderedInputs) {
-        new ProcessCommonJSModules(this).process(
-            input.getAstRoot(this),
-            input.getJsModuleType() == CompilerInput.ModuleType.NONE
-                && options.moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK
-                && inputPathByWebpackId.containsValue(input.getPath()));
+        new ProcessCommonJSModules(this).process(null, input.getAstRoot(this), false);
       }
     }
   }
@@ -2042,17 +2043,18 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       findDeps.convertToEs6Module(input.getAstRoot(this));
       input.setJsModuleType(CompilerInput.ModuleType.ES6);
     } else if (supportCommonJSModules) {
-      new ProcessCommonJSModules(this).process(input.getAstRoot(this), true);
+      new ProcessCommonJSModules(this).process(null, input.getAstRoot(this), true);
       input.setJsModuleType(CompilerInput.ModuleType.COMMONJS);
     }
   }
 
   /**
-   * Hoists inputs with the @externs annotation and no provides or requires into the externs list.
+   * Hoists inputs with the @externs annotation into the externs list.
    */
-  void hoistUnorderedExterns() {
+  void hoistExterns() {
     boolean staleInputs = false;
     for (CompilerInput input : inputs) {
+      // TODO(b/65450037): Remove this if. All @externs annotated files should be hoisted.
       if (options.dependencyOptions.needsManagement()) {
         // If we're doing scanning dependency info anyway, use that
         // information to skip sources that obviously aren't externs.
@@ -2061,22 +2063,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         }
       }
 
-      if (hoistIfExtern(input)) {
-        staleInputs = true;
-      }
-    }
-
-    if (staleInputs) {
-      repartitionInputs();
-    }
-  }
-
-  /**
-   * Hoists inputs with the @externs annotation into the externs list.
-   */
-  void hoistAllExterns() {
-    boolean staleInputs = false;
-    for (CompilerInput input : inputs) {
       if (hoistIfExtern(input)) {
         staleInputs = true;
       }
@@ -2199,7 +2185,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * on the way.
    */
   void processAMDAndCommonJSModules() {
-    ProcessCommonJSModules cjs = new ProcessCommonJSModules(this);
     for (CompilerInput input : inputs) {
       input.setCompiler(this);
       Node root = input.getAstRoot(this);
@@ -2210,11 +2195,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         new TransformAMDToCJSModule(this).process(null, root);
       }
       if (options.processCommonJSModules) {
-        boolean forceModule = false;
-        if (options.moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK) {
-          forceModule = this.inputPathByWebpackId.containsValue(input.getPath().toString());
-        }
-        cjs.process(root, forceModule);
+        ProcessCommonJSModules cjs = new ProcessCommonJSModules(this);
+        cjs.process(null, root);
       }
     }
   }
@@ -2487,8 +2469,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     builder.setTypeRegistry(getTypeIRegistry());
     builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);
-    builder.setTagAsExterns(n.isFromExterns());
-    builder.setTagAsTypeSummary(options.shouldGenerateTypedExterns());
+    builder.setTagAsExterns(firstOutput && n.isFromExterns());
+    builder.setTagAsTypeSummary(firstOutput && !n.isFromExterns() && options.shouldGenerateTypedExterns());
     builder.setTagAsStrict(firstOutput && options.shouldEmitUseStrict());
     return builder.build();
   }

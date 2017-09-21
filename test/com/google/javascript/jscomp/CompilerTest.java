@@ -1051,10 +1051,13 @@ public final class CompilerTest extends TestCase {
   }
 
   public void testExternsDependencySorting() {
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("leaf", "/** @externs */ goog.require('beer');"),
-        SourceFile.fromCode("beer", "/** @externs */ goog.provide('beer');\ngoog.require('hops');"),
-        SourceFile.fromCode("hops", "/** @externs */ goog.provide('hops');"));
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("leaf", "/** @fileoverview @typeSummary */ goog.require('beer');"),
+            SourceFile.fromCode(
+                "beer",
+                "/** @fileoverview @typeSummary */ goog.provide('beer');\ngoog.require('hops');"),
+            SourceFile.fromCode("hops", "/** @fileoverview @typeSummary */ goog.provide('hops');"));
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.CHECK_IJS);
@@ -1121,10 +1124,14 @@ public final class CompilerTest extends TestCase {
   }
 
   public void testExternsDependencyPruning() {
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("unused", "/** @externs */ goog.provide('unused');"),
-        SourceFile.fromCode("moocher", "/** @externs */ goog.require('something');"),
-        SourceFile.fromCode("something", "/** @externs */ goog.provide('something');"));
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "unused", "/** @fileoverview @typeSummary */ goog.provide('unused');"),
+            SourceFile.fromCode(
+                "moocher", "/** @fileoverview @typeSummary */ goog.require('something');"),
+            SourceFile.fromCode(
+                "something", "/** @fileoverview @typeSummary */ goog.provide('something');"));
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.dependencyOptions.setDependencyPruning(true);
@@ -1146,10 +1153,8 @@ public final class CompilerTest extends TestCase {
 
   public void testEs6ModuleEntryPoint() throws Exception {
     List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode(
-            "/index.js", "import foo from './foo'; foo('hello');"),
-        SourceFile.fromCode("/foo.js",
-            "export default (foo) => { alert(foo); }"));
+        SourceFile.fromCode("/index.js", "import foo from './foo.js'; foo('hello');"),
+        SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
 
     List<ModuleIdentifier> entryPoints = ImmutableList.of(
         ModuleIdentifier.forFile("/index"));
@@ -1168,6 +1173,7 @@ public final class CompilerTest extends TestCase {
     compiler.compile(externs, inputs, options);
 
     Result result = compiler.getResult();
+    assertThat(result.warnings).isEmpty();
     assertThat(result.errors).isEmpty();
   }
 
@@ -1506,19 +1512,62 @@ public final class CompilerTest extends TestCase {
         AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
     Compiler compiler = new Compiler();
     Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
-    assertTrue(Joiner.on(",").join(result.errors), result.success);
-    String outputSource = compiler.toSource();
-    assertThat(outputSource).isEqualTo(Joiner.on("").join(
-        "var module$b$c={};",
-        "window[\"BEFOREA\"]=true;",
-        "var $jscompDefaultExport$$module$b$c={",
-        "settings:{inUse:Boolean(document.documentElement[\"attachShadow\"])}};",
-        "module$b$c.default=$jscompDefaultExport$$module$b$c;",
-        "if(module$b$c.default.settings.inUse)window[\"E\"]=true;",
-        "window[\"A\"]=true;",
-        "window[\"B\"]=true;",
-        "window[\"E\"]=false;",
-        "window[\"C\"]=true;",
-        "window[\"D\"]=true;"));
+    assertTrue(result.success);
+
+    List<String> orderedInputs = new ArrayList<>();
+    for (CompilerInput input : compiler.getInputsInOrder()) {
+      orderedInputs.add(input.getName());
+    }
+
+    assertThat(orderedInputs)
+        .containsExactly("/b/c.js", "/b/b.js", "/b/a.js", "/important.js", "/a/b.js", "/a/a.js", "/entry.js")
+        .inOrder();
+  }
+
+  public void testProperGoogBaseOrdering() throws Exception {
+    List<SourceFile> sources = new ArrayList<>();
+    sources.add(SourceFile.fromCode("test.js", "goog.setTestOnly()"));
+    sources.add(SourceFile.fromCode("d.js", "goog.provide('d');"));
+    sources.add(SourceFile.fromCode("c.js", "goog.provide('c');"));
+    sources.add(SourceFile.fromCode("b.js", "goog.provide('b');"));
+    sources.add(SourceFile.fromCode("a.js", "goog.provide('a');"));
+    sources.add(SourceFile.fromCode("base.js",
+        CompilerTestCase.LINE_JOINER.join(
+            "/** @provideGoog */",
+            "/** @const */ var goog = goog || {};",
+            "var COMPILED = false;")));
+    sources.add(SourceFile.fromCode("entry.js",
+        CompilerTestCase.LINE_JOINER.join(
+            "goog.require('a');",
+            "goog.require('b');",
+            "goog.require('c');",
+            "goog.require('d');")));
+
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT5);
+    options.dependencyOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forFile("entry.js")));
+    options.dependencyOptions.setDependencySorting(true);
+    options.dependencyOptions.setDependencyPruning(true);
+    options.dependencyOptions.setMoocherDropping(false);
+    List<SourceFile> externs =
+        AbstractCommandLineRunner.getBuiltinExterns(options.getEnvironment());
+
+    for (int iterationCount = 0; iterationCount < 10; iterationCount++) {
+      java.util.Collections.shuffle(sources);
+      Compiler compiler = new Compiler();
+      Result result = compiler.compile(externs, ImmutableList.copyOf(sources), options);
+      assertTrue(result.success);
+
+      List<String> orderedInputs = new ArrayList<>();
+      for (CompilerInput input : compiler.getInputsInOrder()) {
+        orderedInputs.add(input.getName());
+      }
+
+      assertThat(orderedInputs)
+          .containsExactly("base.js", "test.js", "a.js", "b.js", "c.js", "d.js", "entry.js");
+      assertThat(orderedInputs.indexOf("base.js")).isLessThan(orderedInputs.indexOf("entry.js"));
+      assertThat(orderedInputs.indexOf("base.js")).isLessThan(orderedInputs.indexOf("test.js"));
+    }
   }
 }

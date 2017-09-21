@@ -21,11 +21,17 @@
  * @externs
  */
 
+/** @record */
+function EventSourceInit() {};
+
+/** @type {(boolean|undefined)} */
+EventSourceInit.prototype.withCredentials;
+
 /**
  * @constructor
  * @implements {EventTarget}
  * @param {string} url
- * @param {Object=} opt_eventSourceInitDict
+ * @param {EventSourceInit=} opt_eventSourceInitDict
  */
 function EventSource(url, opt_eventSourceInitDict) {}
 

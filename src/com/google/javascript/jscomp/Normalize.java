@@ -489,17 +489,19 @@ class Normalize implements CompilerPass {
      *
      */
     private void splitExportDeclaration(Node n) {
+      if (n.getBooleanProp(Node.EXPORT_DEFAULT)) {
+        return;
+      }
       Node c = n.getFirstChild();
-      if (NodeUtil.isNameDeclaration(c) || c.isClass()) {
+      if (NodeUtil.isDeclaration(c)) {
         n.removeChild(c);
 
         Node exportSpecs = new Node(Token.EXPORT_SPECS).srcref(n);
         n.addChildToFront(exportSpecs);
         Iterable<Node> names;
-        if (c.isClass()) {
+        if (c.isClass() || c.isFunction()) {
           names = Collections.singleton(c.getFirstChild());
           n.getParent().addChildBefore(c, n);
-          n.getParent().addChildBefore(new Node(Token.EMPTY).srcref(n), n);
         } else {
           names = NodeUtil.getLhsNodesOfDeclaration(c);
           // Split up var declarations onto separate lines.

@@ -736,6 +736,7 @@ public final class CommandLineRunnerTest extends TestCase {
     test(new String[] {
           "goog.provide('a');",
           "goog.require('a');\n" +
+          "/** This is base.js */\n" +
           "var COMPILED = false;",
          },
          new String[] {
@@ -749,9 +750,10 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--language_in=ECMASCRIPT5");
     test(
         new String[] {
-          "goog.addDependency('sym', [], []);\nvar x = 3;", "var COMPILED = false;",
+          "goog.addDependency('sym', [], []);\nvar x = 3;",
+          "/** This is base.js */\nvar COMPILED = false;",
         },
-        new String[] {"var x = 3;", "var COMPILED = !1;"});
+        new String[] {"var COMPILED = !1;", "var x = 3;"});
   }
 
   public void testSourceSortingCircularDeps1() {
@@ -849,18 +851,20 @@ public final class CommandLineRunnerTest extends TestCase {
          new String[] {
            "var beer = {};",
            "",
-           "var scotch = {}, x = 3;",
+           "var scotch = {}, x = 3;"
          });
+    assertTrue(lastCompiler.getOptions().getDependencyOptions().shouldSortDependencies());
+    assertTrue(lastCompiler.getOptions().getDependencyOptions().shouldPruneDependencies());
   }
 
   public void testSourcePruningOn7() {
     args.add("--dependency_mode=LOOSE");
     test(new String[] {
-          "var COMPILED = false;",
-         },
-         new String[] {
+          "/** This is base.js */\nvar COMPILED = false;",
+        },
+        new String[] {
           "var COMPILED = !1;",
-         });
+        });
   }
 
   public void testSourcePruningOn8() {

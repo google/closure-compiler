@@ -16,7 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.rhino.InputId;
@@ -100,6 +99,9 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
     private final Scope scope;
     private final AbstractCompiler compiler;
     private final RedeclarationHandler redeclarationHandler;
+
+    // Will be null, when a detached node is traversed.
+    @Nullable
     private InputId inputId;
     private final Set<Node> changeRootSet;
 
@@ -124,23 +126,20 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
       inputId = NodeUtil.getInputId(n);
       switch (n.getToken()) {
         case FUNCTION: {
-          // TODO(johnlenz): inputId maybe null if the FUNCTION node is detached
-          // from the AST.
-          // Is it meaningful to build a scope for detached FUNCTION node?
-
           final Node fnNameNode = n.getFirstChild();
           final Node args = fnNameNode.getNext();
 
-          // Bleed the function name into the scope, if it hasn't
-          // been declared in the outer scope.
+          // Args: Declare function variables
+          checkState(args.isParamList());
+          declareLHS(scope, args);
+
+          // Bleed the function name into the scope, if it hasn't been declared in the outer scope
+          // and the name isn't already in the scope via the param list.
           String fnName = fnNameNode.getString();
           if (!fnName.isEmpty() && NodeUtil.isFunctionExpression(n)) {
             declareVar(scope, fnNameNode);
           }
 
-          // Args: Declare function variables
-          checkState(args.isParamList());
-          declareLHS(scope, args);
           // Since we create a separate scope for body, stop scanning here
           return;
         }
@@ -220,6 +219,12 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
           declareLHS(hoistScope, n);
           return;
 
+        case EXPORT:
+          // The first child of an EXPORT can be a declaration, in the case of
+          // export var/let/const/function/class name ...
+          scanVars(n.getFirstChild(), hoistScope, blockScope);
+          return;
+
         case FUNCTION:
           if (NodeUtil.isFunctionExpression(n) || blockScope == null) {
             return;
@@ -266,7 +271,6 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
             return;
           }
           inputId = n.getInputId();
-          checkNotNull(inputId);
           break;
 
         case MODULE_BODY:
@@ -311,9 +315,8 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
       String name = n.getString();
       // Because of how we scan the variables, it is possible to encounter
       // the same var declared name node twice. Bail out in this case.
-      // TODO(johnlenz): hash lookups are not free and
-      // building scopes are already expensive
-      // restructure the scope building to avoid this check.
+      // TODO(johnlenz): Hash lookups are not free and building scopes are already expensive.
+      // Restructure the scope building to avoid this check.
       Var v = s.getOwnSlot(name);
       if (v != null && v.getNode() == n) {
         return;
@@ -321,7 +324,7 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
 
       CompilerInput input = compiler.getInput(inputId);
       if (v != null
-          || isShadowingDisallowed(name, s)
+          || !isShadowingAllowed(name, s)
           || ((s.isFunctionScope()
               || s.isFunctionBlockScope()) && name.equals(ARGUMENTS))) {
         redeclarationHandler.onRedeclaration(s, name, n, input);
@@ -332,12 +335,12 @@ public class Es6SyntacticScopeCreator implements ScopeCreator {
 
     // Function body declarations are not allowed to shadow
     // function parameters.
-    private static boolean isShadowingDisallowed(String name, Scope s) {
+    private static boolean isShadowingAllowed(String name, Scope s) {
       if (s.isFunctionBlockScope()) {
         Var maybeParam = s.getParent().getOwnSlot(name);
-        return maybeParam != null && maybeParam.isParam();
+        return maybeParam == null || !maybeParam.isParam();
       }
-      return false;
+      return true;
     }
   }
 

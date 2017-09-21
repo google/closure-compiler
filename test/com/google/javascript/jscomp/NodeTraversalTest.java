@@ -20,8 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractNodeTypePruningCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
@@ -581,14 +581,14 @@ public final class NodeTraversalTest extends TestCase {
 
     // Traverse without entering nested scopes.
     NodeTraversal.traverseEs6ScopeRoots(
-        compiler, fooFunction, Lists.newArrayList(fooFunction), callback, false);
+        compiler, null, ImmutableList.of(fooFunction), callback, false);
     assertThat(callback.strings).containsExactly("string in foo");
 
     callback.strings.clear();
 
     // Traverse *with* entering nested scopes, now also sees "string nested in baz".
     NodeTraversal.traverseEs6ScopeRoots(
-        compiler, fooFunction, Lists.newArrayList(fooFunction), callback, true);
+        compiler, null, ImmutableList.of(fooFunction), callback, true);
     assertThat(callback.strings).containsExactly("string in foo", "string nested in baz");
   }
 
@@ -610,12 +610,11 @@ public final class NodeTraversalTest extends TestCase {
             "}");
 
     Node tree = parse(compiler, code);
-    IR.root(tree);
     Node fooFunction = tree.getSecondChild().getFirstFirstChild();
 
     // Traverse without entering nested scopes.
     NodeTraversal.traverseEs6ScopeRoots(
-        compiler, fooFunction, Lists.newArrayList(fooFunction), callback, false);
+        compiler, null, ImmutableList.of(fooFunction), callback, false);
     assertThat(callback.varNames)
         .containsExactly("varDefinedInScript", "foo", "bar", "varDefinedInFoo", "baz");
 
@@ -623,7 +622,7 @@ public final class NodeTraversalTest extends TestCase {
 
     // Traverse *with* entering nested scopes, now also sees "varDefinedInBaz".
     NodeTraversal.traverseEs6ScopeRoots(
-        compiler, fooFunction, Lists.newArrayList(fooFunction), callback, true);
+        compiler, null, ImmutableList.of(fooFunction), callback, true);
     assertThat(callback.varNames)
         .containsExactly(
             "varDefinedInScript", "foo", "bar", "varDefinedInFoo", "baz", "varDefinedInBaz");
@@ -645,12 +644,50 @@ public final class NodeTraversalTest extends TestCase {
 
     NodeTraversal.traverseEs6ScopeRoots(
         compiler,
-        fooFunction,
-        Lists.newArrayList(fooFunction, barFunction, bazFunction),
+        null,
+        ImmutableList.of(fooFunction, barFunction, bazFunction),
         callback,
         callback, // FunctionCallback
         false);
     assertThat(callback.enteredFunctions).containsExactly(fooFunction, barFunction, bazFunction);
+  }
+
+  public void testTraverseEs6ScopeRoots_callsEnterScope() {
+    Compiler compiler = new Compiler();
+
+    List<Node> scopesEntered = new ArrayList<>();
+
+    NodeTraversal.Callback callback = new NodeTraversal.ScopedCallback() {
+      @Override
+      public void visit(NodeTraversal t, Node n, Node parent) {}
+
+      @Override
+      public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+        return true;
+      }
+
+      @Override
+      public void enterScope(NodeTraversal t) {
+        scopesEntered.add(t.getScopeRoot());
+      }
+
+      @Override
+      public void exitScope(NodeTraversal t) {}
+
+    };
+
+    String code = "function foo() { {} }";
+
+    Node tree = parse(compiler, code);
+    Node fooFunction = tree.getFirstChild();
+
+    NodeTraversal.traverseEs6ScopeRoots(
+        compiler,
+        null,
+        ImmutableList.of(fooFunction),
+        callback,
+        true);
+    assertThat(scopesEntered).hasSize(3);  // Function, function's body, and the block inside it.
   }
 
   private static final class EnterFunctionAccumulator extends AbstractPostOrderCallback
@@ -766,12 +803,13 @@ public final class NodeTraversalTest extends TestCase {
   private static Node parse(Compiler compiler, String js) {
     Node n = compiler.parseTestCode(js);
     assertThat(compiler.getErrors()).isEmpty();
+    IR.root(n);
     return n;
   }
 
   private static Node parseRoots(Compiler compiler, String externs, String js) {
-    Node extern = parse(compiler, externs);
-    Node main = parse(compiler, js);
+    Node extern = parse(compiler, externs).detach();
+    Node main = parse(compiler, js).detach();
 
     return IR.root(IR.root(extern), IR.root(main));
   }

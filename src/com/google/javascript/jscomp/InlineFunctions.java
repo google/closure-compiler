@@ -349,7 +349,7 @@ class InlineFunctions implements CompilerPass {
 
   /**
    * @param fnNode The function to inspect.
-   * @return Whether the function has parameters, var, or function declarations.
+   * @return Whether the function has parameters, var/const/let, class, or function declarations.
    */
   private static boolean hasLocalNames(Node fnNode) {
     Node block = NodeUtil.getFunctionBody(fnNode);

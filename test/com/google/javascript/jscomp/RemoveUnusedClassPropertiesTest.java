@@ -21,22 +21,58 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
+public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase {
 
   private static final String EXTERNS = LINE_JOINER.join(
+      "/**",
+      " * @constructor",
+      " * @param {*=} opt_value",
+      " * @return {!Object}",
+      " */",
+      "function Object(opt_value) {}",
+      "/**",
+      " * @constructor",
+      " * @param {...*} var_args",
+      " */",
+      "function Function(var_args) {}",
+      "/**",
+      " * @constructor",
+      " * @param {*=} arg",
+      " * @return {string}",
+      " */",
+      "function String(arg) {}",
+      "/**",
+      " * @record",
+      " * @template VALUE",
+      " */",
+      "/**",
+      " * @template T",
+      " * @constructor ",
+      " * @param {...*} var_args",
+      " * @return {!Array<?>}",
+      " */",
+      "function Array(var_args) {}",
       "var window;",
       "function alert(a) {}",
       "var EXT = {};",
       "EXT.ext;",
-      "var Object;",
-      "Object.defineProperties;",
       "var foo",
       "/** @type {Function} */",
-      "Object.prototype.constructor = function() {};");
+      "Object.defineProperties = function() {};",
+      "/** @type {Function} */",
+      "Object.prototype.constructor = function() {};",
+      // NOTE: The following are needed to prevent NTI inexistent property warnings.
+      "var $jscomp = {};",
+      "$jscomp.global = {}",
+      "/** @type {?} */",
+      "$jscomp.global.Object");
+
 
   public RemoveUnusedClassPropertiesTest() {
     super(EXTERNS);
   }
+
+  @Override void checkMinimalExterns(Iterable<SourceFile> externs) {}
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -49,6 +85,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
     enableNormalize();
     enableGatherExternProperties();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+    this.mode = TypeInferenceMode.NEITHER;
   }
 
   public void testSimple1() {
@@ -235,7 +272,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testConstructorProperty1() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     test(
         "/** @constructor */ function C() {} C.prop = 1;",
@@ -243,7 +280,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testConstructorProperty2() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     testSame(
         "/** @constructor */ function C() {} "
@@ -253,7 +290,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testObjectDefineProperties1() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     testSame(
         LINE_JOINER.join(
@@ -264,7 +301,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testObjectDefineProperties2() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     test(
         LINE_JOINER.join(
@@ -276,7 +313,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testObjectDefineProperties3() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     test(
         LINE_JOINER.join(
@@ -293,7 +330,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
 
   // side-effect in definition retains property
   public void testObjectDefineProperties4() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     testSame(
         LINE_JOINER.join(
@@ -303,7 +340,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
 
   // quoted properties retains property
   public void testObjectDefineProperties5() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     testSame(
         LINE_JOINER.join(
@@ -312,7 +349,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testObjectDefineProperties6() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     // an unknown destination object doesn't prevent removal.
     test(
@@ -321,7 +358,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testObjectDefineProperties7() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     test(
         LINE_JOINER.join(
@@ -333,7 +370,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testObjectDefineProperties8() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     test(
         LINE_JOINER.join(
@@ -346,7 +383,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
 
   public void testObjectDefineProperties_used_setter_removed() {
     // TODO: Either remove, fix this, or document it as a limitation of advanced mode optimizations.
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     test(
         LINE_JOINER.join(
@@ -417,7 +454,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testEs6GettersRemoval() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     test(
         // This is the output of ES6->ES5 class getter converter.
         // See Es6ToEs3ConverterTest.testEs5GettersAndSettersClasses test method.
@@ -443,7 +480,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testEs6SettersRemoval() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     test(
         // This is the output of ES6->ES5 class setter converter.
         // See Es6ToEs3ConverterTest.testEs5GettersAndSettersClasses test method.

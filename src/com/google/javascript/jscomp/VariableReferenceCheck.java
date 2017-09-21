@@ -249,6 +249,10 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           // Add the current basic block after checking redeclarations
           blocksWithDeclarations.add(basicBlock);
           checkBlocklessDeclaration(v, reference, referenceNode);
+
+          if (reference.getGrandparent().isExport()) {
+            isRead = true;
+          }
         } else {
           // Checks for references
           if (!hasSeenDeclaration) {

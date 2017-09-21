@@ -82,7 +82,7 @@ public class CodeGenerator {
 
   /** Insert a top-level identifying file as .i.js generated typing file. */
   void tagAsTypeSummary() {
-    tagAsExterns();
+    add("/** @fileoverview @typeSummary */\n");
   }
 
   /** Insert a top-level @externs comment. */
@@ -95,6 +95,7 @@ public class CodeGenerator {
    */
   public void tagAsStrict() {
     add("'use strict';");
+    cc.endLine();
   }
 
   protected void add(String str) {
@@ -1456,8 +1457,7 @@ public class CodeGenerator {
    * @return Whether the name is an indirect eval.
    */
   private static boolean isIndirectEval(Node n) {
-    return n.isName() && "eval".equals(n.getString()) &&
-        !n.getBooleanProp(Node.DIRECT_EVAL);
+    return n.isName() && "eval".equals(n.getString()) && !n.getBooleanProp(Node.DIRECT_EVAL);
   }
 
   /**
@@ -1714,8 +1714,7 @@ public class CodeGenerator {
     String doublequote;
     String singlequote;
     char quote;
-    if (preferSingleQuotes ?
-        (singleq <= doubleq) : (singleq < doubleq)) {
+    if (preferSingleQuotes ? (singleq <= doubleq) : (singleq < doubleq)) {
       // more double quotes so enclose in single quotes.
       quote = '\'';
       doublequote = "\"";
@@ -1799,9 +1798,9 @@ public class CodeGenerator {
           // This is just to prevent developers from shooting themselves in the
           // foot, and does not provide the level of security that you get
           // with trustedString == false.
-          if (i >= 2 &&
-              ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-') ||
-               (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
+          if (i >= 2
+              && ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-')
+                  || (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
             sb.append(GT_ESCAPED);
           } else {
             sb.append(c);
@@ -1921,8 +1920,9 @@ public class CodeGenerator {
   }
 
   private static Context getContextForNonEmptyExpression(Context currentContext) {
-    return currentContext == Context.BEFORE_DANGLING_ELSE ?
-        Context.BEFORE_DANGLING_ELSE : Context.OTHER;
+    return currentContext == Context.BEFORE_DANGLING_ELSE
+        ? Context.BEFORE_DANGLING_ELSE
+        : Context.OTHER;
   }
 
   /**

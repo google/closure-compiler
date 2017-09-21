@@ -2465,9 +2465,16 @@ chrome.runtime.openOptionsPage = function(opt_callback) {};
 
 /**
  * Manifest information returned from chrome.runtime.getManifest. See
- * http://developer.chrome.com/extensions/manifest.html. Note that there are
- * several other fields not included here. They should be added to these externs
- * as needed.
+ * https://developer.chrome.com/extensions/manifest.html and
+ * https://developer.chrome.com/apps/manifest.html
+ *
+ * Note that:
+ * 1) There are several other fields not included here. They should be
+ *    added to these externs as needed.
+ * 2) There are some distinct fields for app vs extension manifests. The
+ *    below manifest definition contains the union of all fields; unique
+ *    fields should be annotated as such (see e.g. kiosk_only property
+ *    below).
  * @constructor
  */
 chrome.runtime.Manifest = function() {};
@@ -2497,6 +2504,14 @@ chrome.runtime.Manifest.prototype.oauth2;
 chrome.runtime.Manifest.prototype.permissions;
 
 
+/**
+ * App-only manifest field.
+ * @see https://developer.chrome.com/apps/manifest
+ * @type {boolean|undefined}
+ */
+chrome.runtime.Manifest.prototype.kiosk_only;
+
+
 
 /**
  * Oauth2 info in the manifest.
@@ -2515,7 +2530,8 @@ chrome.runtime.Manifest.Oauth2.prototype.scopes;
 
 
 /**
- * http://developer.chrome.com/extensions/runtime.html#method-getManifest
+ * https://developer.chrome.com/extensions/runtime.html#method-getManifest
+ * https://developer.chrome.com/apps/runtime#method-getManifest
  * @return {!chrome.runtime.Manifest} The full manifest file of the app or
  *     extension.
  */
@@ -6590,12 +6606,9 @@ WebRequestOptionallySynchronousEvent.prototype.hasListener = function(
 
 
 /**
- * @param {function(!Object): (undefined|!BlockingResponse)} listener Listener
- *     function.
- * @return {undefined}
+ * @return {boolean}
  */
-WebRequestOptionallySynchronousEvent.prototype.hasListeners = function(
-    listener) {};
+WebRequestOptionallySynchronousEvent.prototype.hasListeners = function() {};
 
 
 /**

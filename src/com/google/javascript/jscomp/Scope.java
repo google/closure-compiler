@@ -46,7 +46,7 @@ public class Scope implements StaticScope, Serializable {
    * Creates a Scope given the parent Scope and the root node of the current scope.
    *
    * @param parent The parent Scope. Cannot be null.
-   * @param rootNode The root node of the curent scope. Cannot be null.
+   * @param rootNode The root node of the current scope. Cannot be null.
    */
   Scope(Scope parent, Node rootNode) {
     checkNotNull(parent);

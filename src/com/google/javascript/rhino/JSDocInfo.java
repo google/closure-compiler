@@ -496,8 +496,7 @@ public class JSDocInfo implements Serializable {
   private static final int MASK_CONSTRUCTOR   = 0x00000002; // @constructor
   private static final int MASK_DEFINE        = 0x00000004; // @define
   private static final int MASK_HIDDEN        = 0x00000008; // @hidden
-  @SuppressWarnings("unused")
-  private static final int MASK_UNUSED_1      = 0x00000010; //
+  private static final int MASK_TYPE_SUMMARY  = 0x00000010; // @typeSummary
   private static final int MASK_FINAL         = 0x00000020; // @final
   private static final int MASK_OVERRIDE      = 0x00000040; // @override
   private static final int MASK_NOALIAS       = 0x00000080; // @noalias
@@ -721,6 +720,10 @@ public class JSDocInfo implements Serializable {
     setFlag(value, MASK_EXTERNS);
   }
 
+  void setTypeSummary(boolean value) {
+    setFlag(value, MASK_TYPE_SUMMARY);
+  }
+
   void setNoCompile(boolean value) {
     setFlag(value, MASK_NOCOMPILE);
   }
@@ -935,6 +938,14 @@ public class JSDocInfo implements Serializable {
    */
   public boolean isExterns() {
     return getFlag(MASK_EXTERNS);
+  }
+
+  /**
+   * Returns whether the {@code @typeSummary} annotation is present on this
+   * {@link JSDocInfo}.
+   */
+  public boolean isTypeSummary() {
+    return getFlag(MASK_TYPE_SUMMARY);
   }
 
   /**

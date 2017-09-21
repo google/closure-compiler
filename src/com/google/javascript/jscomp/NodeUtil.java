@@ -1030,6 +1030,13 @@ public final class NodeUtil {
         && initializer.getLastChild().isObjectLit();
   }
 
+  /** Determine if the given SCRIPT is a @typeSummary file, like an i.js file */
+  static boolean isFromTypeSummary(Node n) {
+    checkArgument(n.isScript());
+    JSDocInfo info = n.getJSDocInfo();
+    return info != null && info.isTypeSummary();
+  }
+
   /**
    * Creates an EXPR_RESULT.
    *
@@ -2416,11 +2423,11 @@ public final class NodeUtil {
     return n.isFunction() && !n.isArrowFunction();
   }
 
-  static boolean isEnhancedFor(Node n) {
+  public static boolean isEnhancedFor(Node n) {
     return n.isForOf() || n.isForIn();
   }
 
-  static boolean isAnyFor(Node n) {
+  public static boolean isAnyFor(Node n) {
     return n.isVanillaFor() || n.isForIn() || n.isForOf();
   }
 
@@ -2650,9 +2657,8 @@ public final class NodeUtil {
   private static boolean isDeclarationParent(Node parent) {
     switch (parent.getToken()) {
       case DECLARE:
-        return true;
       case EXPORT:
-        return !parent.getBooleanProp(Node.EXPORT_DEFAULT);
+        return true;
       default:
         return isStatementParent(parent);
     }
@@ -2931,20 +2937,29 @@ public final class NodeUtil {
     return fn.getLastChild();
   }
 
+
+  /**
+   * Is the node a var, const, let, function, or class declaration?
+   * See {@link #isFunctionDeclaration}, {@link #isClassDeclaration}, and {@link #isNameDeclaration}
+   */
+  static boolean isDeclaration(Node n) {
+    return isNameDeclaration(n) || isFunctionDeclaration(n) || isClassDeclaration(n);
+  }
+
   /**
    * Is this node a function declaration? A function declaration is a function
    * that has a name that is added to the current scope (i.e. a function that
    * is not part of a expression; see {@link #isFunctionExpression}).
    */
   public static boolean isFunctionDeclaration(Node n) {
-    return n.isFunction() && isDeclarationParent(n.getParent());
+    return n.isFunction() && isDeclarationParent(n.getParent()) && isNamedFunction(n);
   }
 
   /**
    * see {@link #isClassDeclaration}
    */
   public static boolean isClassDeclaration(Node n) {
-    return n.isClass() && isDeclarationParent(n.getParent());
+    return n.isClass() && isDeclarationParent(n.getParent()) && isNamedClass(n);
   }
 
   /**
@@ -2955,7 +2970,10 @@ public final class NodeUtil {
   public static boolean isHoistedFunctionDeclaration(Node n) {
     if (isFunctionDeclaration(n)) {
       Node parent = n.getParent();
-      return parent.isScript() || parent.isModuleBody() || parent.getParent().isFunction();
+      return parent.isScript()
+          || parent.isModuleBody()
+          || parent.getParent().isFunction()
+          || parent.isExport();
     }
     return false;
   }
@@ -3005,13 +3023,14 @@ public final class NodeUtil {
    * function f() {}
    * if (x); else function f() {}
    * for (;;) { function f() {} }
+   * export default function f() {}
    * </pre>
    *
    * @param n A node
    * @return Whether n is a function used within an expression.
    */
   static boolean isFunctionExpression(Node n) {
-    return n.isFunction() && !isStatement(n);
+    return n.isFunction() && (!isNamedFunction(n) || !isDeclarationParent(n.getParent()));
   }
 
   /**
@@ -3021,7 +3040,34 @@ public final class NodeUtil {
    * @return Whether n is a class used within an expression.
    */
   static boolean isClassExpression(Node n) {
-    return n.isClass() && !isStatement(n);
+    return n.isClass() && (!isNamedClass(n) || !isDeclarationParent(n.getParent()));
+  }
+
+  /**
+   * Returns whether n is a function with a nonempty name.
+   * Differs from {@link #isFunctionDeclaration} because the name might in a function expression
+   * and not be added to the current scope.
+   *
+   * Some named functions include
+   * <pre>
+   *   (function f() {})();
+   *   export default function f() {};
+   *   function f() {};
+   *   var f = function f() {};
+   * </pre>
+   */
+  static boolean isNamedFunction(Node n) {
+    return n.isFunction() && isReferenceName(n.getFirstChild());
+  }
+
+  /**
+   * see {@link #isNamedFunction}
+   *
+   * @param n A node
+   * @return Whether n is a named class
+   */
+  static boolean isNamedClass(Node n) {
+    return n.isClass() && isReferenceName(n.getFirstChild());
   }
 
   /**
@@ -4084,13 +4130,12 @@ public final class NodeUtil {
 
 
   /**
-   * A predicate for matching var, let, const, or function declarations.
-   * TODO(simranarora): Should this handle class declarations too?
+   * A predicate for matching var, let, const, class or function declarations.
    */
   static class MatchDeclaration implements Predicate<Node> {
     @Override
     public boolean apply(Node n) {
-      return isFunctionDeclaration(n) || NodeUtil.isNameDeclaration(n);
+      return isDeclaration(n);
     }
   }
 
@@ -4499,8 +4544,6 @@ public final class NodeUtil {
    */
   static boolean evaluatesToLocalValue(Node value, Predicate<Node> locals) {
     switch (value.getToken()) {
-      case CAST:
-        return evaluatesToLocalValue(value.getFirstChild(), locals);
       case ASSIGN:
         // A result that is aliased by a non-local name, is the effectively the
         // same as returning a non-local name, but this doesn't matter if the
@@ -4573,6 +4616,9 @@ public final class NodeUtil {
           }
         }
         return true;
+      case CAST:
+      case SPREAD:
+        return evaluatesToLocalValue(value.getFirstChild(), locals);
       default:
         // Other op force a local value:
         //  x = '' + g (x is now an local string)
@@ -4584,7 +4630,7 @@ public final class NodeUtil {
         }
 
         throw new IllegalStateException(
-            "Unexpected expression node" + value + "\n parent:" + value.getParent());
+            "Unexpected expression node: " + value + "\n parent:" + value.getParent());
     }
   }
 

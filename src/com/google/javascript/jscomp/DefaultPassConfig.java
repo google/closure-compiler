@@ -763,7 +763,7 @@ public final class DefaultPassConfig extends PassConfig {
           CustomPassExecutionTime.BEFORE_OPTIMIZATION_LOOP));
     }
 
-    passes.add(createEmptyPass("beforeMainOptimizations"));
+    passes.add(createEmptyPass(PassNames.BEFORE_MAIN_OPTIMIZATIONS));
 
     // Because FlowSensitiveInlineVariables does not operate on the global scope due to compilation
     // time, we need to run it once before InlineFunctions so that we don't miss inlining
@@ -878,11 +878,10 @@ public final class DefaultPassConfig extends PassConfig {
       if (options.foldConstants) {
         passes.add(peepholeOptimizationsOnce);
       }
-    } else {
-      // Passes after this point can no longer depend on normalized AST
-      // assumptions.
-      passes.add(markUnnormalized);
     }
+
+    // Passes after this point can no longer depend on normalized AST assumptions.
+    passes.add(markUnnormalized);
 
     if (options.collapseVariableDeclarations) {
       passes.add(exploitAssign);
@@ -1001,7 +1000,7 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       passes.add(j2clConstantHoisterPass);
-      passes.add(j2clOptBundlePass);
+      passes.add(j2clClinitPass);
     }
 
     assertAllLoopablePasses(passes);
@@ -1674,7 +1673,12 @@ public final class DefaultPassConfig extends PassConfig {
       new PassFactory("earlyPeepholeOptimizations", true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
-          return new PeepholeOptimizationsPass(compiler, getName(), new PeepholeRemoveDeadCode());
+          List<AbstractPeepholeOptimization> peepholeOptimizations = new ArrayList<>();
+          peepholeOptimizations.add(new PeepholeRemoveDeadCode());
+          if (compiler.getOptions().j2clPassMode.shouldAddJ2clPasses()) {
+            peepholeOptimizations.add(new J2clEqualitySameRewriterPass());
+          }
+          return new PeepholeOptimizationsPass(compiler, getName(), peepholeOptimizations);
         }
 
         @Override
@@ -1709,16 +1713,18 @@ public final class DefaultPassConfig extends PassConfig {
       AbstractCompiler compiler, String passName) {
     final boolean late = false;
     final boolean useTypesForOptimization = compiler.getOptions().useTypesForLocalOptimization;
-    return new PeepholeOptimizationsPass(
-        compiler,
-        passName,
-        new MinimizeExitPoints(compiler),
-        new PeepholeMinimizeConditions(late, useTypesForOptimization),
-        new PeepholeSubstituteAlternateSyntax(late),
-        new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
-        new PeepholeRemoveDeadCode(),
-        new PeepholeFoldConstants(late, useTypesForOptimization),
-        new PeepholeCollectPropertyAssignments());
+    List<AbstractPeepholeOptimization> optimizations = new ArrayList<>();
+    optimizations.add(new MinimizeExitPoints(compiler));
+    optimizations.add(new PeepholeMinimizeConditions(late, useTypesForOptimization));
+    optimizations.add(new PeepholeSubstituteAlternateSyntax(late));
+    optimizations.add(new PeepholeReplaceKnownMethods(late, useTypesForOptimization));
+    optimizations.add(new PeepholeRemoveDeadCode());
+    if (compiler.getOptions().j2clPassMode.shouldAddJ2clPasses()) {
+      optimizations.add(new J2clEqualitySameRewriterPass());
+    }
+    optimizations.add(new PeepholeFoldConstants(late, useTypesForOptimization));
+    optimizations.add(new PeepholeCollectPropertyAssignments());
+    return new PeepholeOptimizationsPass(compiler, passName, optimizations);
   }
 
   /** Various peephole optimizations. */
@@ -1779,7 +1785,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES8_MODULES;
         }
       };
 
@@ -2808,7 +2814,8 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          // TODO(b/65688660): Switch to ES8_MODULES when b/65688660 is fixed.
+          return ES5;
         }
       };
 
@@ -3146,7 +3153,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES8_MODULES;
         }
       };
 
@@ -3283,24 +3290,13 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  /** Rewrites J2CL constructs to be more optimizable. */
-  private final PassFactory j2clOptBundlePass =
-      new PassFactory("j2clOptBundlePass", false) {
+  /** Optimizes J2CL clinit methods. */
+  private final PassFactory j2clClinitPass =
+      new PassFactory("j2clClinitPass", false) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           List<Node> changedScopeNodes = compiler.getChangedScopeNodesForPass(getName());
-          final J2clClinitPrunerPass j2clClinitPrunerPass =
-              new J2clClinitPrunerPass(compiler, changedScopeNodes);
-          final J2clEqualitySameRewriterPass j2clEqualitySameRewriterPass =
-              new J2clEqualitySameRewriterPass(compiler, changedScopeNodes);
-          return new CompilerPass() {
-
-            @Override
-            public void process(Node externs, Node root) {
-              j2clClinitPrunerPass.process(externs, root);
-              j2clEqualitySameRewriterPass.process(externs, root);
-            }
-          };
+          return new J2clClinitPrunerPass(compiler, changedScopeNodes);
         }
       };
 

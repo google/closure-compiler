@@ -1973,10 +1973,38 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public FunctionTypeI withReturnType(TypeI returnType) {
+  public Builder toBuilder() {
     checkState(this.isFunctionType());
-    return this.commonTypes.fromFunctionType(
-        getFunTypeIfSingletonObj().withReturnType((JSType) returnType));
+    return new FunctionBuilderImpl();
+  }
+
+  /** Private implementation used by toBuilder. */
+  private class FunctionBuilderImpl implements Builder {
+    FunctionType function = getFunTypeIfSingletonObj();
+
+    @Override
+    public Builder withUnknownReturnType() {
+      function = function.withReturnType(commonTypes.UNKNOWN);
+      return this;
+    }
+
+    @Override
+    public Builder withReturnType(TypeI type) {
+      checkArgument(type instanceof JSType);
+      function = function.withReturnType((JSType) type);
+      return this;
+    }
+
+    @Override
+    public Builder withNoParameters() {
+      function = function.withNoParameters();
+      return this;
+    }
+
+    @Override
+      public FunctionTypeI build() {
+      return commonTypes.fromFunctionType(function);
+    }
   }
 
   @Override

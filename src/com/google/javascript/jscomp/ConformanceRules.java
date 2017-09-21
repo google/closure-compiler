@@ -1392,7 +1392,7 @@ public final class ConformanceRules {
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       if (t.inGlobalScope()
-          && isDeclaration(n)
+          && NodeUtil.isDeclaration(n)
           && !n.getBooleanProp(Node.IS_NAMESPACE)
           && !isWhitelisted(n)) {
         Node enclosingScript = NodeUtil.getEnclosingScript(n);
@@ -1402,12 +1402,6 @@ public final class ConformanceRules {
         return ConformanceResult.VIOLATION;
       }
       return ConformanceResult.CONFORMANCE;
-    }
-
-    private boolean isDeclaration(Node n) {
-      return NodeUtil.isNameDeclaration(n)
-          || NodeUtil.isFunctionDeclaration(n)
-          || NodeUtil.isClassDeclaration(n);
     }
 
     private boolean isWhitelisted(Node n) {

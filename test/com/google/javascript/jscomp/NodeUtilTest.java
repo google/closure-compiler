@@ -394,7 +394,7 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("var x = function(){}")));
     assertTrue(NodeUtil.isFunctionDeclaration(getFunctionNode("export function f() {}")));
     assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("export default function() {}")));
-    assertFalse(
+    assertTrue(
         NodeUtil.isFunctionDeclaration(getFunctionNode("export default function foo() {}")));
     assertFalse(
         NodeUtil.isFunctionDeclaration(getFunctionNode("export default (foo) => { alert(foo); }")));
@@ -404,8 +404,9 @@ public final class NodeUtilTest extends TestCase {
     assertTrue(NodeUtil.isClassDeclaration(getClassNode("class Foo {}")));
     assertFalse(NodeUtil.isClassDeclaration(getClassNode("var Foo = class {}")));
     assertFalse(NodeUtil.isClassDeclaration(getClassNode("var Foo = class Foo{}")));
-    assertFalse(NodeUtil.isClassDeclaration(getClassNode("export default class Foo {}")));
+    assertTrue(NodeUtil.isClassDeclaration(getClassNode("export default class Foo {}")));
     assertTrue(NodeUtil.isClassDeclaration(getClassNode("export class Foo {}")));
+    assertFalse(NodeUtil.isClassDeclaration(getClassNode("export default class {}")));
   }
 
   private void assertSideEffect(boolean se, String js) {
@@ -653,7 +654,8 @@ public final class NodeUtilTest extends TestCase {
   public void testIsFunctionExpression() {
     assertContainsAnonFunc(true, "(function(){})");
     assertContainsAnonFunc(true, "[function a(){}]");
-    assertContainsAnonFunc(false, "{x: function a(){}}");
+    assertContainsAnonFunc(false, "{label: function a(){}}");
+    assertContainsAnonFunc(true, "({x: function a(){}})");
     assertContainsAnonFunc(true, "(function a(){})()");
     assertContainsAnonFunc(true, "x = function a(){};");
     assertContainsAnonFunc(true, "var x = function a(){};");
@@ -674,21 +676,61 @@ public final class NodeUtilTest extends TestCase {
     assertContainsAnonFunc(false, "for (;;) function a(){}");
     assertContainsAnonFunc(false, "for (p in o) function a(){};");
     assertContainsAnonFunc(false, "with (x) function a(){}");
+    assertContainsAnonFunc(true, "export default function() {};");
+    assertContainsAnonFunc(false, "export default function a() {};");
+    assertContainsAnonFunc(false, "export function a() {};");
   }
 
   private void assertContainsAnonFunc(boolean expected, String js) {
-    Node funcParent = findParentOfFuncDescendant(parse(js));
+    Node funcParent = findParentOfFuncOrClassDescendant(parse(js), Token.FUNCTION);
     assertNotNull("Expected function node in parse tree of: " + js, funcParent);
-    Node funcNode = getFuncChild(funcParent);
+    Node funcNode = getFuncOrClassChild(funcParent, Token.FUNCTION);
     assertEquals(expected, NodeUtil.isFunctionExpression(funcNode));
   }
 
-  private Node findParentOfFuncDescendant(Node n) {
+  public void testIsClassExpression() {
+    assertContainsAnonClass(true, "(class {})");
+    assertContainsAnonClass(true, "[class Clazz {}]");
+    assertContainsAnonClass(false, "{label: class Clazz {}}");
+    assertContainsAnonClass(true, "({x: class Clazz {}})");
+    assertContainsAnonClass(true, "x = class Clazz {};");
+    assertContainsAnonClass(true, "var x = class Clazz {};");
+    assertContainsAnonClass(true, "if (class Clazz {});");
+    assertContainsAnonClass(true, "while (class Clazz {});");
+    assertContainsAnonClass(true, "do; while (class Clazz {});");
+    assertContainsAnonClass(true, "for (class Clazz {};;);");
+    assertContainsAnonClass(true, "for (;class Clazz {};);");
+    assertContainsAnonClass(true, "for (;;class Clazz {});");
+    assertContainsAnonClass(true, "for (p in class Clazz {});");
+    assertContainsAnonClass(true, "with (class Clazz {}) {}");
+    assertContainsAnonClass(false, "class Clazz {}");
+    assertContainsAnonClass(false, "if (x) class Clazz {};");
+    assertContainsAnonClass(false, "if (x) { class Clazz {} }");
+    assertContainsAnonClass(false, "if (x); else class Clazz {};");
+    assertContainsAnonClass(false, "while (x) class Clazz {};");
+    assertContainsAnonClass(false, "do class Clazz {} while (0);");
+    assertContainsAnonClass(false, "for (;;) class Clazz {}");
+    assertContainsAnonClass(false, "for (p in o) class Clazz {};");
+    assertContainsAnonClass(false, "with (x) class Clazz {}");
+    assertContainsAnonClass(true, "export default class {};");
+    assertContainsAnonClass(false, "export default class Clazz {};");
+    assertContainsAnonClass(false, "export class Clazz {};");
+  }
+
+  private void assertContainsAnonClass(boolean expected, String js) {
+    Node classParent = findParentOfFuncOrClassDescendant(parse(js), Token.CLASS);
+    assertNotNull("Expected class node in parse tree of: " + js, classParent);
+    Node classNode = getFuncOrClassChild(classParent, Token.CLASS);
+    assertEquals(expected, NodeUtil.isClassExpression(classNode));
+  }
+
+  private Node findParentOfFuncOrClassDescendant(Node n, Token token) {
+    checkArgument(token.equals(Token.CLASS) || token.equals(Token.FUNCTION));
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      if (c.isFunction()) {
+      if (c.getToken().equals(token)) {
         return n;
       }
-      Node result = findParentOfFuncDescendant(c);
+      Node result = findParentOfFuncOrClassDescendant(c, token);
       if (result != null) {
         return result;
       }
@@ -696,9 +738,10 @@ public final class NodeUtilTest extends TestCase {
     return null;
   }
 
-  private Node getFuncChild(Node n) {
+  private Node getFuncOrClassChild(Node n, Token token) {
+    checkArgument(token.equals(Token.CLASS) || token.equals(Token.FUNCTION));
     for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      if (c.isFunction()) {
+      if (c.getToken().equals(token)) {
         return c;
       }
     }
@@ -1454,6 +1497,11 @@ public final class NodeUtilTest extends TestCase {
     flags.setMutatesGlobalState();
     newExpr.setSideEffectFlags(flags.valueOf());
 
+    assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
+  }
+
+  public void testLocalValue3() {
+    Node newExpr = getNode("[...x]");
     assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
   }
 
