@@ -263,6 +263,10 @@ chrome.app.runtime.LaunchItem.prototype.type;
 
 
 /** @type {!ChromeObjectEvent} */
+chrome.app.runtime.onEmbedRequested;
+
+
+/** @type {!ChromeObjectEvent} */
 chrome.app.runtime.onLaunched;
 
 
