@@ -250,9 +250,9 @@ public final class CodingConventions {
     }
 
     @Override
-    public void checkForCallingConventionDefiningCalls(
+    public void checkForCallingConventionDefinitions(
         Node n, Map<String, String> delegateCallingConventions) {
-      nextConvention.checkForCallingConventionDefiningCalls(
+      nextConvention.checkForCallingConventionDefinitions(
           n, delegateCallingConventions);
     }
 
@@ -510,7 +510,7 @@ public final class CodingConventions {
     }
 
     @Override
-    public void checkForCallingConventionDefiningCalls(Node n,
+    public void checkForCallingConventionDefinitions(Node n,
         Map<String, String> delegateCallingConventions) {
       // do nothing.
     }
