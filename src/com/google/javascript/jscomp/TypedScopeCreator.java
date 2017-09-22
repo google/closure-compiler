@@ -533,7 +533,6 @@ final class TypedScopeCreator implements ScopeCreator {
       switch (n.getToken()) {
         case CALL:
           checkForClassDefiningCalls(n);
-          checkForCallingConventionDefiningCalls(n, delegateCallingConventions);
           break;
 
         case FUNCTION:
@@ -566,6 +565,7 @@ final class TypedScopeCreator implements ScopeCreator {
           break;
 
         case GETPROP:
+          checkForCallingConventionDefinitions(n);
           // Handle stubbed properties.
           if (parent.isExprResult() &&
               n.isQualifiedName()) {
@@ -1473,12 +1473,10 @@ final class TypedScopeCreator implements ScopeCreator {
     }
 
     /**
-     * Look for calls that set a delegate method's calling convention.
+     * Look for expressions that set a delegate method's calling convention.
      */
-    private void checkForCallingConventionDefiningCalls(
-        Node n, Map<String, String> delegateCallingConventions) {
-      codingConvention.checkForCallingConventionDefiningCalls(n,
-          delegateCallingConventions);
+    private void checkForCallingConventionDefinitions(Node n) {
+      codingConvention.checkForCallingConventionDefinitions(n, delegateCallingConventions);
     }
 
     /**
@@ -1578,12 +1576,12 @@ final class TypedScopeCreator implements ScopeCreator {
 
           FunctionType delegateProxy =
               typeRegistry.createConstructorType(
-                  delegateBaseObject.getReferenceName() + DELEGATE_PROXY_SUFFIX,
-                  null,
-                  null,
-                  null,
-                  null,
-                  false);
+                  delegateBaseObject.getReferenceName() + DELEGATE_PROXY_SUFFIX /* name */,
+                  null /* source */,
+                  null /* parameters */,
+                  null /* returnType */,
+                  null /* templateKeys */,
+                  false /* isAbstract */);
           delegateProxy.setPrototypeBasedOn(delegateBaseObject);
 
           codingConvention.applyDelegateRelationship(
@@ -1695,20 +1693,6 @@ final class TypedScopeCreator implements ScopeCreator {
         // If the property is already declared, the error will be
         // caught when we try to declare it in the current scope.
         defineSlot(n, parent, valueType, inferred);
-      } else if (rhsValue != null && rhsValue.isTrue()) {
-        // We declare these for delegate proxy method properties.
-        ObjectType ownerType = getObjectSlot(ownerName);
-        FunctionType ownerFnType = JSType.toMaybeFunctionType(ownerType);
-        if (ownerFnType != null) {
-          JSType ownerTypeOfThis = ownerFnType.getTypeOfThis();
-          String delegateName = codingConvention.getDelegateSuperclassName();
-          JSType delegateType = delegateName == null ?
-              null : typeRegistry.getType(delegateName);
-          if (delegateType != null &&
-              ownerTypeOfThis.isSubtype(delegateType)) {
-            defineSlot(n, parent, getNativeType(BOOLEAN_TYPE), true);
-          }
-        }
       }
     }
 
