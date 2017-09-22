@@ -59,9 +59,6 @@ public class J2clClinitPrunerPass implements CompilerPass {
     pruneEmptyClinits(root, changedScopeNodes);
 
     if (emptiedClinitMethods.isEmpty()) {
-      if (!PureFunctionIdentifier.hasRunPureFunctionIdentifier(compiler)) {
-        new PureFunctionIdentifier.DriverInJ2cl(compiler, null).process(externs, root);
-      }
       // Since no clinits are pruned, we don't need look for more opportunities.
       return;
     }
