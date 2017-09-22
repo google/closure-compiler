@@ -17,8 +17,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -147,9 +147,9 @@ public final class CompilerTest extends TestCase {
         inputs, ImmutableList.of(ModuleIdentifier.forFile("/gin")));
 
     ErrorManager manager = compiler.getErrorManager();
-    JSError[] warnings = manager.getWarnings();
-    assertThat(warnings).hasLength(1);
-    String error = warnings[0].toString();
+    JSError[] errors = manager.getErrors();
+    assertThat(errors).hasLength(1);
+    String error = errors[0].toString();
     assertThat(error).contains("Failed to load module \"missing\" at /gin.js");
   }
 
@@ -229,9 +229,9 @@ public final class CompilerTest extends TestCase {
     File tempDir = Files.createTempDir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=foo.js.map";
     File jsFile = new File(tempDir, "foo.js");
-    Files.asCharSink(jsFile, Charsets.UTF_8).write(code);
+    Files.asCharSink(jsFile, UTF_8).write(code);
     File sourceMapFile = new File(tempDir, "foo.js.map");
-    Files.asCharSink(sourceMapFile, Charsets.UTF_8).write(SOURCE_MAP);
+    Files.asCharSink(sourceMapFile, UTF_8).write(SOURCE_MAP);
 
     CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
     input.getAstRoot(compiler);
@@ -253,9 +253,9 @@ public final class CompilerTest extends TestCase {
     relativedir.mkdir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=relativedir/foo.js.map";
     File jsFile = new File(tempDir, "foo.js");
-    Files.asCharSink(jsFile, Charsets.UTF_8).write(code);
+    Files.asCharSink(jsFile, UTF_8).write(code);
     File sourceMapFile = new File(relativedir, "foo.js.map");
-    Files.asCharSink(sourceMapFile, Charsets.UTF_8).write(SOURCE_MAP);
+    Files.asCharSink(sourceMapFile, UTF_8).write(SOURCE_MAP);
 
     CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
     input.getAstRoot(compiler);
@@ -274,7 +274,7 @@ public final class CompilerTest extends TestCase {
     File tempDir = Files.createTempDir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=foo-does-not-exist.js.map";
     File jsFile = new File(tempDir, "foo2.js");
-    Files.asCharSink(jsFile, Charsets.UTF_8).write(code);
+    Files.asCharSink(jsFile, UTF_8).write(code);
 
     CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
     input.getAstRoot(compiler);
@@ -297,7 +297,7 @@ public final class CompilerTest extends TestCase {
     File tempDir = Files.createTempDir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=/some/missing/path/foo.js.map";
     File jsFile = new File(tempDir, "foo.js");
-    Files.asCharSink(jsFile, Charsets.UTF_8).write(code);
+    Files.asCharSink(jsFile, UTF_8).write(code);
 
     CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
     input.getAstRoot(compiler);
