@@ -52,7 +52,7 @@ public final class ModuleLoader {
   public static final String DEFAULT_FILENAME_PREFIX = "." + MODULE_SLASH;
 
   public static final DiagnosticType LOAD_WARNING =
-      DiagnosticType.warning("JSC_JS_MODULE_LOAD_WARNING", "Failed to load module \"{0}\"");
+      DiagnosticType.error("JSC_JS_MODULE_LOAD_WARNING", "Failed to load module \"{0}\"");
 
   public static final DiagnosticType INVALID_MODULE_PATH =
       DiagnosticType.error(
