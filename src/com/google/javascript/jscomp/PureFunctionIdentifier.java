@@ -72,11 +72,6 @@ class PureFunctionIdentifier implements CompilerPass {
   private final AbstractCompiler compiler;
   private final DefinitionProvider definitionProvider;
 
-  /**
-   * A constant key for checking/marking whether this pass has run yet in a given compiler instance.
-   */
-  private static final String HAS_RUN_PURE_FUNCTION_IDENTIFIER = "hasRunPureFunctionIdentifier";
-
   /** Map of function names to side effect gathering representative nodes */
   private final Map<String, FunctionInformation> functionInfoByName = new HashMap<>();
 
@@ -955,10 +950,6 @@ class PureFunctionIdentifier implements CompilerPass {
     return subtype.isBottom();
   }
 
-  /** Returns whether this pass has run yet in a given compiler instance. */
-  static boolean hasRunPureFunctionIdentifier(AbstractCompiler compiler) {
-    return Boolean.TRUE.equals(compiler.getAnnotation(HAS_RUN_PURE_FUNCTION_IDENTIFIER));
-  }
 
   /**
    * A compiler pass that constructs a reference graph and drives the PureFunctionIdentifier across
@@ -980,10 +971,6 @@ class PureFunctionIdentifier implements CompilerPass {
       // PureFunctionIdentifier passes will run redundantly inside of J2CL.
       if (checkJ2cl && J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
         return;
-      }
-
-      if (!hasRunPureFunctionIdentifier(compiler)) {
-        compiler.setAnnotation(HAS_RUN_PURE_FUNCTION_IDENTIFIER, Boolean.TRUE);
       }
 
       NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler, true);
