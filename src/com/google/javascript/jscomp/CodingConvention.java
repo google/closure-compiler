@@ -277,10 +277,11 @@ public interface CodingConvention extends Serializable {
   public String getDelegateSuperclassName();
 
   /**
-   * Checks for getprops that set the calling conventions on delegate methods.
+   * Checks for function calls that set the calling conventions on delegate
+   * methods.
    */
-  public void checkForCallingConventionDefinitions(
-      Node getPropNode, Map<String, String> delegateCallingConventions);
+  public void checkForCallingConventionDefiningCalls(
+      Node n, Map<String, String> delegateCallingConventions);
 
   /**
    * Defines the delegate proxy prototype properties. Their types depend on
