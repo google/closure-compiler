@@ -401,6 +401,10 @@ public final class RenamePropertiesTest extends CompilerTestCase {
         "Bar.prototype = {2: () => {}, a:    () => {}}; bar[2]();");
   }
 
+  public void testArrayDestructuring() {
+    testSame("var [first, second] = someArray");
+  }
+
   public void testDestructuredProperties() {
     // using destructuring shorthand
     test("var {   foo,   bar } = { foo: 1, bar: 2 }", "var { b:foo, a:bar } = {    b:1,    a:2 }");

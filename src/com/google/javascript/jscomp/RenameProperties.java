@@ -365,19 +365,21 @@ class RenameProperties implements CompilerPass {
           // Get the object pattern within the destructuring on the lhs
           n = n.getFirstChild();
 
-          // Iterate through all the nodes in the object pattern
-          for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
-            if (key.isComputedProp()) {
-              // We don't want to rename computed properties
-              continue;
-            } else if (key.isQuotedString()) {
-              // Ensure that we never rename some other property in a way
-              // that could conflict with this quoted key.
-              quotedNames.add(key.getString());
-            } else if (compiler.getCodingConvention().blockRenamingForProperty(key.getString())) {
-              externedNames.add(key.getString());
-            } else {
-              maybeMarkCandidate(key);
+          if (n.isObjectPattern()) {
+            // Iterate through all the nodes in the object pattern
+            for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
+              if (key.isComputedProp()) {
+                // We don't want to rename computed properties
+                continue;
+              } else if (key.isQuotedString()) {
+                // Ensure that we never rename some other property in a way
+                // that could conflict with this quoted key.
+                quotedNames.add(key.getString());
+              } else if (compiler.getCodingConvention().blockRenamingForProperty(key.getString())) {
+                externedNames.add(key.getString());
+              } else {
+                maybeMarkCandidate(key);
+              }
             }
           }
           break;
