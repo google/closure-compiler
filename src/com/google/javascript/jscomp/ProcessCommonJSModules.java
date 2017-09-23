@@ -79,18 +79,23 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
   public void process(Node externs, Node root, boolean forceModuleDetection) {
     checkState(root.isScript());
+
+    if (compiler.getOptions().getModuleResolutionMode() == ModuleLoader.ResolutionMode.WEBPACK) {
+      removeWebpackModuleShim(root);
+    }
+
     FindImportsAndExports finder = new FindImportsAndExports();
     NodeTraversal.traverseEs6(compiler, root, finder);
 
     ImmutableList.Builder<ExportInfo> exports = ImmutableList.builder();
-    if (finder.isCommonJsModule() || forceModuleDetection) {
+    boolean isCommonJsModule = finder.isCommonJsModule();
+    if (isCommonJsModule || forceModuleDetection) {
       finder.reportModuleErrors();
 
       if (!finder.umdPatterns.isEmpty()) {
         boolean needsRetraverse = finder.replaceUmdPatterns();
-
-        if (!needsRetraverse) {
-          needsRetraverse = removeIIFEWrapper(root);
+        if (removeIIFEWrapper(root)) {
+          needsRetraverse = true;
         }
 
         // Inlining functions rewrites vars. We need to re-traverse
@@ -120,9 +125,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
     NodeTraversal.traverseEs6(
         compiler,
         root,
-        new RewriteModule(finder.isCommonJsModule() || forceModuleDetection, exports.build()));
+        new RewriteModule(isCommonJsModule || forceModuleDetection, exports.build()));
 
-    if (finder.isCommonJsModule()) {
+    if (isCommonJsModule) {
       CompilerInput ci = compiler.getInput(root.getInputId());
       String es6ModuleName = ci.getPath().toModuleName();
       Node defaultProp = IR.stringKey("default", IR.name(getModuleName(ci)));
@@ -307,8 +312,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
         && call.getFirstFirstChild().getNext().getString().equals("call")) {
       fnc = call.getFirstFirstChild();
 
-      // We only support explicitly binding "this" to the parent "this"
-      if (!(call.getSecondChild() != null && call.getSecondChild().isThis())) {
+      // We only support explicitly binding "this" to the parent "this" or "exports"
+      if (!(call.getSecondChild() != null
+          && (call.getSecondChild().isThis() || call.getSecondChild().matchesQualifiedName(EXPORTS)))) {
         return false;
       }
     } else {
@@ -335,6 +341,96 @@ public final class ProcessCommonJSModules implements CompilerPass {
     compiler.reportChangeToEnclosingScope(root);
 
     return true;
+  }
+
+  /**
+   * For AMD wrappers, webpack adds a shim for the "module" variable. We need
+   * that to be a free var so we correct the reference.
+   */
+  private void removeWebpackModuleShim(Node root) {
+    checkState(root.isScript());
+    Node n = root.getFirstChild();
+
+    // Sometimes scripts start with a semicolon for easy concatenation.
+    // Skip any empty statements from those
+    while (n != null && n.isEmpty()) {
+      n = n.getNext();
+    }
+
+    // An IIFE wrapper must be the only non-empty statement in the script,
+    // and it must be an expression statement.
+    if (n == null || !n.isExprResult() || n.getNext() != null) {
+      return;
+    }
+
+    Node call = n.getFirstChild();
+    if (call == null || !call.isCall()) {
+      return;
+    }
+
+    // Find the IIFE call and function nodes
+    Node fnc;
+    if (call.getFirstChild().isFunction()) {
+      fnc = n.getFirstFirstChild();
+    } else if (call.getFirstChild().isGetProp()
+        && call.getFirstFirstChild().isFunction()
+        && call.getFirstFirstChild().getNext().isString()
+        && call.getFirstFirstChild().getNext().getString().equals("call")) {
+      fnc = call.getFirstFirstChild();
+    } else {
+      return;
+    }
+
+    Node params = NodeUtil.getFunctionParameters(fnc);
+    Node moduleParam = null;
+    Node param = params.getFirstChild();
+    int paramNumber = 0;
+    while(param != null) {
+      paramNumber++;
+      if (param.isName() && param.getString().equals(MODULE)) {
+        moduleParam = param;
+        break;
+      }
+      param = param.getNext();
+    }
+    if (moduleParam == null) {
+      return;
+    }
+
+    boolean isFreeCall = call.getBooleanProp(Node.FREE_CALL);
+    Node arg = call.getChildAtIndex(isFreeCall ? paramNumber : paramNumber + 1);
+    if (arg == null) {
+      return;
+    }
+
+    if (arg.isCall()
+        && arg.getFirstChild().isCall()
+        && isCommonJsImport(arg.getFirstChild(),
+            compiler.getOptions().getModuleResolutionMode())
+        && arg.getSecondChild().isName()
+        && arg.getSecondChild().getString().equals(MODULE)) {
+      String importPath = getCommonJsImportPath(arg.getFirstChild(),
+          compiler.getOptions().getModuleResolutionMode());
+
+      ModulePath modulePath =
+          compiler.getInput(root.getInputId())
+              .getPath()
+              .resolveJsModule(
+                  importPath,
+                  arg.getSourceFileName(),
+                  arg.getLineno(),
+                  arg.getCharno());
+      if (modulePath == null) {
+        // The module loader will issue an error
+        return;
+      }
+
+      if (modulePath.toString().contains("/buildin/module.js")) {
+        arg.detachFromParent();
+        param.detachFromParent();
+        compiler.reportChangeToEnclosingScope(call);
+      }
+    }
   }
 
   /**
@@ -454,6 +550,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
             }
           }
         }
+      } else if (n.isThis() && n.getParent().isGetProp() && t.inGlobalScope()) {
+        exports.add(new ExportInfo(n, t.getScope()));
       }
 
       if (n.isName()
@@ -768,20 +866,23 @@ public final class ProcessCommonJSModules implements CompilerPass {
               && newStatements.getFirstFirstChild().getFirstChild().isFunction()
               && newStatements.getSecondChild().isExprResult()) {
             Node inlinedFn = newStatements.getFirstFirstChild().getFirstChild();
-            String fnName = newStatements.getFirstFirstChild().getString();
             Node expr = newStatements.getSecondChild().getFirstChild();
             Node call = null;
+            String assignedName = null;
             if (expr.isAssign() && expr.getSecondChild().isCall()) {
               call = expr.getSecondChild();
+              assignedName = compiler.getUniqueNameIdSupplier().get();
             } else if (expr.isCall()) {
               call = expr;
             }
 
             if (call != null) {
-              newStatements = mutator.mutate(factoryLabel, inlinedFn, call, null, false, false);
-              if (expr.isAssign() && newStatements.hasOneChild() && newStatements.getFirstChild().isExprResult()) {
-                expr.replaceChild(expr.getSecondChild(), newStatements.getFirstFirstChild().detach());
-                newStatements = expr.getParent().detach();
+              Node newStatements2 = mutator.mutate(factoryLabel, inlinedFn, call, assignedName, false, false);
+              if (expr.isAssign() && assignedName != null) {
+                Node resultVar = IR.var(IR.name(assignedName)).useSourceInfoFromForTree(expr);
+                newStatements.replaceChild(newStatements.getFirstChild(), resultVar);
+                newStatements.addChildAfter(newStatements2, resultVar);
+                expr.replaceChild(expr.getSecondChild(), IR.name(assignedName).useSourceInfoFrom(expr));
               }
             }
           }
@@ -1660,8 +1761,14 @@ public final class ProcessCommonJSModules implements CompilerPass {
     private List<Node> splitMultipleDeclarations(Node var) {
       checkState(NodeUtil.isNameDeclaration(var));
       List<Node> vars = new ArrayList<>();
+      JSDocInfo info = var.getJSDocInfo();
       while (var.getSecondChild() != null) {
         Node newVar = new Node(var.getToken(), var.removeFirstChild());
+
+        if (info != null) {
+          newVar.setJSDocInfo(info.clone());
+        }
+
         newVar.useSourceInfoFrom(var);
         var.getParent().addChildBefore(newVar, var);
         vars.add(newVar);

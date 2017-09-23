@@ -2037,7 +2037,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private void forceInputToPathBasedModule(
       CompilerInput input, boolean supportEs6Modules, boolean supportCommonJSModules) {
 
-    if (supportEs6Modules) {
+    if (supportEs6Modules
+        && !(supportCommonJSModules
+            && getOptions().getModuleResolutionMode() == ModuleLoader.ResolutionMode.WEBPACK)) {
       FindModuleDependencies findDeps =
           new FindModuleDependencies(this, supportEs6Modules, supportCommonJSModules);
       findDeps.convertToEs6Module(input.getAstRoot(this));
