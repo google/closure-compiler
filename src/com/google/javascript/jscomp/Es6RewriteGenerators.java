@@ -1146,7 +1146,12 @@ public final class Es6RewriteGenerators
         decomposer.exposeExpression(n);
         t.reportCodeChange();
       } else {
-        compiler.report(JSError.make(n, Es6ToEs3Util.CANNOT_CONVERT, "Undecomposable expression"));
+        String link = "https://github.com/google/closure-compiler/wiki/FAQ"
+            + "#i-get-an-undecomposable-expression-error-for-my-yield-or-await-expression"
+            + "-what-do-i-do";
+        String suggestion = "Please rewrite the yield or await as a separate statement.";
+        String message = "Undecomposable expression: " + suggestion + "\nSee " + link;
+        compiler.report(JSError.make(n, Es6ToEs3Util.CANNOT_CONVERT, message));
       }
     }
 
