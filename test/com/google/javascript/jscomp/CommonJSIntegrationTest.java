@@ -319,6 +319,269 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
         });
   }
 
+  public void testCrossModuleEs6CtorCall() {
+    test(
+        createEs6CompilerOptions(),
+        new String[] {
+            LINE_JOINER.join("/** @constructor */ function Hello() {}", "export default Hello;"),
+            LINE_JOINER.join("var Hello = require('./i0').default;", "var hello = new Hello();")
+        },
+        new String[] {
+            LINE_JOINER.join(
+                "var module$i0 = {};",
+                "function Hello$$module$i0(){}",
+                "var $jscompDefaultExport$$module$i0=Hello$$module$i0;",
+                "module$i0.default=$jscompDefaultExport$$module$i0;",
+                "var cjs_module$i0 = module$i0;"),
+            LINE_JOINER.join(
+                "var Hello = module$i0.default;",
+                "var hello = new Hello();")
+        });
+  }
+
+  public void testCrossModuleEs6CtorCall2() {
+    test(
+        createEs6CompilerOptions(),
+        new String[] {
+            "/** @constructor */ function Hello() {} " +
+                "export default Hello;",
+
+            "var Hello = require('./i0').default;" +
+                "var hello = new Hello(1);"
+        },
+        TypeCheck.WRONG_ARGUMENT_COUNT);
+  }
+
+  public void testCrossModuleEs6TypeAnnotation() {
+    test(
+        createEs6CompilerOptions(),
+        LINE_JOINER.join(
+            "/** @constructor */ function Hello() {} ",
+            "/** @type {!Hello} */ var hello = new Hello();",
+            "export default Hello;"),
+        LINE_JOINER.join(
+            "var module$i0 = {};",
+            "function Hello$$module$i0(){}",
+            "var hello$$module$i0 = new Hello$$module$i0();",
+            "var $jscompDefaultExport$$module$i0 = Hello$$module$i0;",
+            "module$i0.default = $jscompDefaultExport$$module$i0;",
+            "var cjs_module$i0 = module$i0"));
+  }
+
+  public void testCrossModuleEs6TypeAnnotation2() {
+    test(
+        createEs6CompilerOptions(),
+        new String[] {
+            LINE_JOINER.join("/** @constructor */ function Hello() {}", "export default Hello;"),
+            LINE_JOINER.join(
+                "var Hello = require('./i0').default;",
+                "/** @type {!Hello} */ var hello = new Hello();")
+        },
+        new String[] {
+            LINE_JOINER.join(
+                "var module$i0 = {};",
+                "function Hello$$module$i0(){}",
+                "var $jscompDefaultExport$$module$i0 = Hello$$module$i0;",
+                "module$i0.default = $jscompDefaultExport$$module$i0;",
+                "var cjs_module$i0 = module$i0"),
+            LINE_JOINER.join(
+                "var Hello = module$i0.default;", "var hello = new Hello();")
+        });
+  }
+
+  public void testCrossModuleEs6TypeAnnotation3() {
+    test(
+        createEs6CompilerOptions(),
+        new String[] {
+            LINE_JOINER.join("/** @constructor */ function Hello() {}", "export default Hello;"),
+            LINE_JOINER.join("var Hello = require('./i0').default;", "/** @type {!Hello} */ var hello = 1;")
+        },
+        TypeValidator.TYPE_MISMATCH_WARNING);
+  }
+
+
+  public void testCrossModuleEs6Subclass1() {
+    test(
+        createEs6CompilerOptions(),
+        new String[] {
+            LINE_JOINER.join(
+                "/** @constructor */ function Hello() {}",
+                "export default Hello;"),
+            LINE_JOINER.join(
+                "var Hello = require('./i0').default;",
+                "var util = {inherits: function (x, y){}};",
+                "/**\n",
+                " * @constructor\n",
+                " * @extends {Hello}\n",
+                " */\n",
+                "var SubHello = function () {};",
+                "util.inherits(SubHello, Hello);")
+        },
+        new String[] {
+            LINE_JOINER.join(
+                "var module$i0 = {};",
+                "function Hello$$module$i0(){}",
+                "var $jscompDefaultExport$$module$i0=Hello$$module$i0;",
+                "module$i0.default=$jscompDefaultExport$$module$i0;",
+                "var cjs_module$i0 = module$i0;"),
+            LINE_JOINER.join(
+                "var Hello = module$i0.default;",
+                "var util = { inherits : function(x,y) {} };",
+                "var SubHello = function() {};",
+                "util.inherits(SubHello, Hello);")
+        });
+  }
+
+  public void testCrossModuleEs6Subclass2() {
+    test(
+        createEs6CompilerOptions(),
+        new String[] {
+            LINE_JOINER.join("/** @constructor */ function Hello() {}", "export default Hello;"),
+            LINE_JOINER.join(
+                "var Hello = require('./i0').default;",
+                "var util = {inherits: function (x, y){}};",
+                "/**",
+                " * @constructor",
+                " * @extends {Hello}",
+                " */",
+                "function SubHello() {}",
+                "util.inherits(SubHello, Hello);")
+        },
+        new String[] {
+            LINE_JOINER.join(
+                "var module$i0 = {};",
+                "function Hello$$module$i0(){}",
+                "var $jscompDefaultExport$$module$i0=Hello$$module$i0;",
+                "module$i0.default=$jscompDefaultExport$$module$i0;",
+                "var cjs_module$i0 = module$i0;"),
+            LINE_JOINER.join(
+                "var Hello = module$i0.default;",
+                "var util = { inherits : function(x,y) {} };",
+                "function SubHello(){}",
+                "util.inherits(SubHello, Hello);")
+        });
+  }
+
+  public void testCrossModuleEs6Subclass3() {
+    test(
+        createEs6CompilerOptions(),
+        new String[] {
+            LINE_JOINER.join("/** @constructor */ function Hello() {} ", "export default Hello;"),
+            LINE_JOINER.join(
+                "var Hello = require('./i0').default;",
+                "var util = {inherits: function (x, y){}};",
+                "/**",
+                " * @constructor",
+                " * @extends {Hello}",
+                " */",
+                "function SubHello() { Hello.call(this); }",
+                "util.inherits(SubHello, Hello);")
+        },
+        new String[] {
+            LINE_JOINER.join(
+                "var module$i0 = {};",
+                "function Hello$$module$i0(){}",
+                "var $jscompDefaultExport$$module$i0=Hello$$module$i0;",
+                "module$i0.default=$jscompDefaultExport$$module$i0;",
+                "var cjs_module$i0 = module$i0;"),
+            LINE_JOINER.join(
+                "var Hello = module$i0.default;",
+                "var util = { inherits : function(x,y) {} };",
+                "function SubHello(){ Hello.call(this); }",
+                "util.inherits(SubHello, Hello);")
+        });
+  }
+
+  public void testCrossModuleEs6Subclass4() {
+    test(
+        createEs6CompilerOptions(),
+        new String[] {
+            LINE_JOINER.join(
+                "/** @constructor */ function Hello() {} ", "export { Hello };"),
+            LINE_JOINER.join(
+                "var i0 = require('./i0');",
+                "var util = {inherits: function (x, y) {}};",
+                "/**",
+                " * @constructor",
+                " * @extends {i0.Hello}",
+                " */",
+                "function SubHello() { i0.Hello.call(this); }",
+                "util.inherits(SubHello, i0.Hello);")
+        },
+        new String[] {
+            LINE_JOINER.join(
+                "var module$i0 = {};",
+                "function Hello$$module$i0(){}",
+                "module$i0.Hello=Hello$$module$i0;",
+                "var cjs_module$i0 = module$i0;"),
+            LINE_JOINER.join(
+                "var i0 = module$i0;",
+                "var util = { inherits : function(x,y) {} };",
+                "function SubHello(){ module$i0.Hello.call(this); }",
+                "util.inherits(SubHello, module$i0.Hello);")
+        });
+  }
+
+  public void testCrossModuleEs6Subclass5() {
+    test(
+        createEs6CompilerOptions(),
+        new String[] {
+            LINE_JOINER.join("/** @constructor */ function Hello() {}", "export default Hello;"),
+            LINE_JOINER.join(
+                "var Hello = require('./i0').default;",
+                "var util = {inherits: function (x, y){}};",
+                "/**",
+                " * @constructor",
+                " * @extends {./i0}",
+                " */",
+                "function SubHello() { Hello.call(this); }",
+                "util.inherits(SubHello, Hello);")
+        },
+        new String[] {
+            LINE_JOINER.join(
+                "var module$i0 = {};",
+                "function Hello$$module$i0(){}",
+                "var $jscompDefaultExport$$module$i0=Hello$$module$i0;",
+                "module$i0.default=$jscompDefaultExport$$module$i0;",
+                "var cjs_module$i0 = module$i0;"),
+            LINE_JOINER.join(
+                "var Hello = module$i0.default;",
+                "var util = { inherits : function(x,y) {} };",
+                "function SubHello(){ Hello.call(this); }",
+                "util.inherits(SubHello, Hello);")
+        });
+  }
+
+  public void testCrossModuleEs6Subclass6() {
+    test(
+        createEs6CompilerOptions(),
+        new String[] {
+            LINE_JOINER.join(
+                "/** @constructor */ function Hello() {} ", "export { Hello };"),
+            LINE_JOINER.join(
+                "var i0 = require('./i0');",
+                "var util = {inherits: function (x, y){}};",
+                "/**",
+                " * @constructor",
+                " * @extends {./i0.Hello}",
+                " */",
+                "function SubHello() { i0.Hello.call(this); }",
+                "util.inherits(SubHello, i0.Hello);")
+        },
+        new String[] {
+            LINE_JOINER.join(
+                "var module$i0 = {};",
+                "function Hello$$module$i0(){}",
+                "module$i0.Hello=Hello$$module$i0;",
+                "var cjs_module$i0 = module$i0;"),
+            LINE_JOINER.join(
+                "var i0 = module$i0;",
+                "var util = {inherits:function(x,y){}};",
+                "function SubHello(){ module$i0.Hello.call(this); }",
+                "util.inherits(SubHello, module$i0.Hello);")
+        });
+  }
+
   @Override
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
@@ -327,6 +590,14 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
     options.setProcessCommonJSModules(true);
     options.setClosurePass(true);
     options.setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
+    return options;
+  }
+
+  protected CompilerOptions createEs6CompilerOptions() {
+    CompilerOptions options = createCompilerOptions();
+    options.setNewTypeInference(true);
+    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
     return options;
   }
 }
