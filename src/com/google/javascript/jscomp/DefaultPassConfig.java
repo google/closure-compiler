@@ -3341,6 +3341,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(final AbstractCompiler compiler) {
           return new J2clSourceFileChecker(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.latest();
+        }
       };
 
   private final PassFactory j2clChecksPass =
