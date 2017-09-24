@@ -140,6 +140,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   // The JS source inputs
   private List<CompilerInput> inputs;
 
+  // The JS source inputs
+  private Map<String, CompilerInput.ModuleType> moduleTypesByProvide;
+
   // error manager to which error management is delegated
   private ErrorManager errorManager;
 
@@ -300,6 +303,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   public Compiler(PrintStream outStream) {
     addChangeHandler(recentChange);
     this.outStream = outStream;
+    this.moduleTypesByProvide = new HashMap<>();
   }
 
   /**
@@ -1801,6 +1805,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
               input,
               options.getLanguageIn().toFeatureSet().has(Feature.MODULES),
               options.processCommonJSModules);
+          input.setJsModuleType(CompilerInput.ModuleType.IMPORTED_SCRIPT);
+          moduleTypesByProvide.put(input.getPath().toModuleName(), input.getJsModuleType());
         }
       }
 
@@ -1960,11 +1966,15 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     // TODO(ChadKillingsworth) Move this into the standard compilation passes
-    if (supportCommonJSModules) {
-      for (CompilerInput input : orderedInputs) {
-        new ProcessCommonJSModules(this,
+    for (CompilerInput input : orderedInputs) {
+      boolean forcedToModule = input.getJsModuleType() == CompilerInput.ModuleType.IMPORTED_SCRIPT;
+      if (supportCommonJSModules) {
+        new ProcessCommonJSModules(
+            this,
             this.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6_MODULES))
-            .process(null, input.getAstRoot(this), false);
+            .process(null, input.getAstRoot(this), forcedToModule);
+      } else if (forcedToModule) {
+        forceInputToPathBasedModule(input, supportEs6Modules, supportCommonJSModules);
       }
     }
   }
@@ -1985,7 +1995,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       // and a module in the same compilation. In these cases, it should
       // be forced to be a module.
       if (wasImportedByModule && input.getJsModuleType() == CompilerInput.ModuleType.NONE) {
-        forceInputToPathBasedModule(input, supportEs6Modules, supportCommonJSModules);
+        input.setJsModuleType(CompilerInput.ModuleType.IMPORTED_SCRIPT);
+        for (String provide : input.getProvides()) {
+          this.moduleTypesByProvide.put(provide, input.getJsModuleType());
+        }
       }
 
       return orderedInputs;
@@ -2002,7 +2015,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // If this input was imported by another module, it is itself a module
     // so we force it to be detected as such.
     if (wasImportedByModule && input.getJsModuleType() == CompilerInput.ModuleType.NONE) {
-      forceInputToPathBasedModule(input, supportEs6Modules, supportCommonJSModules);
+      input.setJsModuleType(CompilerInput.ModuleType.IMPORTED_SCRIPT);
+    }
+    for (String provide : input.getProvides()) {
+      this.moduleTypesByProvide.put(provide, input.getJsModuleType());
     }
 
     for (String requiredNamespace : input.getRequires()) {
@@ -2183,12 +2199,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * on the way.
    */
   void processAMDAndCommonJSModules() {
+    FindModuleDependencies findDeps = new FindModuleDependencies(this, false, true);
     for (CompilerInput input : inputs) {
       input.setCompiler(this);
       Node root = input.getAstRoot(this);
       if (root == null) {
         continue;
       }
+      findDeps.process(input.getAstRoot(this));
+      moduleTypesByProvide.put(input.getPath().toModuleName(), input.getJsModuleType());
+
       if (options.transformAMDToCJSModules) {
         new TransformAMDToCJSModule(this).process(null, root);
       }
@@ -3757,5 +3777,14 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         input.reset();
       }
     }
+  }
+
+  /**
+   * Returns the module type for the provided namespace.
+   */
+  @Override
+  @Nullable
+  CompilerInput.ModuleType getModuleTypeByProvide(String provide) {
+    return moduleTypesByProvide.get(provide);
   }
 }

@@ -103,7 +103,7 @@ public class TranspilationPasses {
       new HotSwapPassFactory("es6RewriteModule", true) {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new Es6RewriteModules(compiler, compiler.getOptions().processCommonJSModules);
+          return new Es6RewriteModules(compiler);
         }
 
         @Override

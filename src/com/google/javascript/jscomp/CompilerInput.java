@@ -513,6 +513,8 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     NONE,
     GOOG_MODULE,
     ES6,
-    COMMONJS
+    COMMONJS,
+    JSON,
+    IMPORTED_SCRIPT
   }
 }

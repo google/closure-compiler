@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.ModuleLoader.ModulePath;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -120,22 +121,22 @@ public final class ProcessCommonJSModules implements CompilerPass {
         root,
         new RewriteModule(isCommonJsModule || forceModuleDetection, exports.build()));
 
-    if (addESModuleAlias && isCommonJsModule) {
-      CompilerInput ci = compiler.getInput(root.getInputId());
-      String es6ModuleName = ci.getPath().toModuleName();
-      Node defaultProp = IR.stringKey("default", IR.name(getModuleName(ci)));
-      JSDocInfoBuilder info = new JSDocInfoBuilder(false);
-      info.recordConstancy();
-      defaultProp.setJSDocInfo(info.build());
-
-      Node es6Alias = IR.var(
-          IR.name(es6ModuleName),
-          IR.objectlit(defaultProp));
-      info = new JSDocInfoBuilder(false);
-      info.recordConstancy();
-      es6Alias.setJSDocInfo(info.build());
-      root.addChildToBack(es6Alias.useSourceInfoFromForTree(root));
-    }
+//    if (addESModuleAlias && isCommonJsModule) {
+//      CompilerInput ci = compiler.getInput(root.getInputId());
+//      String es6ModuleName = ci.getPath().toModuleName();
+//      Node defaultProp = IR.stringKey("default", IR.name(getModuleName(ci)));
+//      JSDocInfoBuilder info = new JSDocInfoBuilder(false);
+//      info.recordConstancy();
+//      defaultProp.setJSDocInfo(info.build());
+//
+//      Node es6Alias = IR.var(
+//          IR.name(es6ModuleName),
+//          IR.objectlit(defaultProp));
+//      info = new JSDocInfoBuilder(false);
+//      info.recordConstancy();
+//      es6Alias.setJSDocInfo(info.build());
+//      root.addChildToBack(es6Alias.useSourceInfoFromForTree(root));
+//    }
   }
 
   public static String getModuleName(CompilerInput input) {
@@ -148,7 +149,23 @@ public final class ProcessCommonJSModules implements CompilerPass {
   }
 
   public static String getModuleName(ModulePath input) {
-    return "cjs_" + input.toModuleName();
+    return input.toModuleName();
+  }
+
+  public String getBasePropertyImport(String moduleName) {
+    boolean supportsEsModules = compiler.getOptions().getLanguageIn().toFeatureSet()
+        .has(FeatureSet.Feature.MODULES);
+
+    if (!supportsEsModules) {
+      return moduleName;
+    }
+
+    if (compiler.getModuleTypeByProvide(moduleName) == CompilerInput.ModuleType.ES6
+        || compiler.getModuleTypeByProvide(moduleName) == CompilerInput.ModuleType.GOOG_MODULE) {
+      return moduleName;
+    }
+
+    return moduleName + ".default";
   }
 
   /**
@@ -518,49 +535,104 @@ public final class ProcessCommonJSModules implements CompilerPass {
         return;
       }
 
-      String moduleName = getModuleName(modulePath);
+      boolean initializeModule = compiler.getOptions().getLanguageIn().toFeatureSet()
+          .has(FeatureSet.Feature.MODULES);
+      boolean initializeAsConst = initializeModule;
 
-      int directAssignmentsAtTopLevel = 0;
-      int directAssignments = 0;
-      for (ExportInfo export : moduleExports) {
-        if (NodeUtil.getEnclosingScript(export.node) == null) {
-          continue;
-        }
+      if (!initializeModule) {
+        int directAssignmentsAtTopLevel = 0;
+        int directAssignments = 0;
+        for (ExportInfo export : moduleExports) {
+          if (NodeUtil.getEnclosingScript(export.node) == null) {
+            continue;
+          }
 
-        Node base = getBaseQualifiedNameNode(export.node);
-        if (base == export.node && export.node.getParent().isAssign()) {
-          Node rValue = NodeUtil.getRValueOfLValue(export.node);
-          if (rValue == null || !rValue.isObjectLit()) {
-            directAssignments++;
-            if (export.node.getParent().getParent().isExprResult()
-                && NodeUtil.isTopLevel(export.node.getParent().getParent().getParent())) {
-              directAssignmentsAtTopLevel++;
+          Node base = getBaseQualifiedNameNode(export.node);
+          if (base == export.node && export.node.getParent().isAssign()) {
+            Node rValue = NodeUtil.getRValueOfLValue(export.node);
+            if (rValue == null || !rValue.isObjectLit()) {
+              directAssignments++;
+              if (export.node.getParent().getParent().isExprResult()
+                  && NodeUtil.isTopLevel(export.node.getParent().getParent().getParent())) {
+                directAssignmentsAtTopLevel++;
+              }
             }
           }
         }
-      }
 
-      if (directAssignmentsAtTopLevel > 1
-          || (directAssignmentsAtTopLevel == 0 && directAssignments > 0)
-          || directAssignments == 0) {
-        int totalExportStatements = this.moduleExports.size() + this.exports.size();
-        Node initModule = IR.var(IR.name(moduleName));
-        if (directAssignments < totalExportStatements) {
-          initModule.getFirstChild().addChildToFront(IR.objectlit());
+        if (directAssignmentsAtTopLevel > 1
+            || (directAssignmentsAtTopLevel == 0 && directAssignments > 0)
+            || directAssignments == 0) {
+          int totalExportStatements = this.moduleExports.size() + this.exports.size();
+          if (directAssignments < totalExportStatements) {
+            initializeModule = true;
 
-          // If all the assignments are property exports, initialize the
-          // module as a namespace
-          if (directAssignments == 0) {
-            JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
-            builder.recordConstancy();
-            initModule.setJSDocInfo(builder.build());
+            // If all the assignments are property exports, initialize the
+            // module as a namespace
+            if (directAssignments == 0) {
+              initializeAsConst = true;
+            }
           }
+        } else {
+          return;
         }
-        initModule.useSourceInfoIfMissingFromForTree(this.script);
-
-        this.script.addChildToFront(initModule);
-        compiler.reportChangeToEnclosingScope(this.script);
       }
+
+      String moduleName = getModuleName(modulePath);
+      Node initModule = IR.var(IR.name(moduleName));
+      if (initializeModule) {
+        initModule.getFirstChild().addChildToFront(IR.objectlit());
+      }
+      if (initializeAsConst) {
+        JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
+        builder.recordConstancy();
+        initModule.setJSDocInfo(builder.build());
+      }
+      initModule.useSourceInfoIfMissingFromForTree(this.script);
+      this.script.addChildToFront(initModule);
+      compiler.reportChangeToEnclosingScope(this.script);
+
+//      int directAssignmentsAtTopLevel = 0;
+//      int directAssignments = 0;
+//      for (ExportInfo export : moduleExports) {
+//        if (NodeUtil.getEnclosingScript(export.node) == null) {
+//          continue;
+//        }
+//
+//        Node base = getBaseQualifiedNameNode(export.node);
+//        if (base == export.node && export.node.getParent().isAssign()) {
+//          Node rValue = NodeUtil.getRValueOfLValue(export.node);
+//          if (rValue == null || !rValue.isObjectLit()) {
+//            directAssignments++;
+//            if (export.node.getParent().getParent().isExprResult()
+//                && NodeUtil.isTopLevel(export.node.getParent().getParent().getParent())) {
+//              directAssignmentsAtTopLevel++;
+//            }
+//          }
+//        }
+//      }
+//
+//      if (directAssignmentsAtTopLevel > 1
+//          || (directAssignmentsAtTopLevel == 0 && directAssignments > 0)
+//          || directAssignments == 0) {
+//        int totalExportStatements = this.moduleExports.size() + this.exports.size();
+//        Node initModule = IR.var(IR.name(moduleName));
+//        if (directAssignments < totalExportStatements) {
+//          initModule.getFirstChild().addChildToFront(IR.objectlit());
+//
+//          // If all the assignments are property exports, initialize the
+//          // module as a namespace
+//          if (directAssignments == 0) {
+//            JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
+//            builder.recordConstancy();
+//            initModule.setJSDocInfo(builder.build());
+//          }
+//        }
+//        initModule.useSourceInfoIfMissingFromForTree(this.script);
+//
+//        this.script.addChildToFront(initModule);
+//        compiler.reportChangeToEnclosingScope(this.script);
+//      }
     }
 
     /** Find the outermost if node ancestor for a node without leaving the function scope */
@@ -785,7 +857,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
       }
 
       String moduleName = getModuleName(modulePath);
-      Node moduleRef = IR.name(moduleName).srcref(require);
+      Node moduleRef = NodeUtil.newQName(compiler, getBasePropertyImport(moduleName))
+          .useSourceInfoFromForTree(require);
       parent.replaceChild(require, moduleRef);
 
       t.reportCodeChange();
@@ -1170,7 +1243,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
         return n.getQualifiedName();
       }
 
-      String moduleName = getModuleName(t.getInput());
+      String baseExportName = getBasePropertyImport(getModuleName(t.getInput()));
 
       for (ExportInfo export : this.exports) {
         Node exportBase = getBaseQualifiedNameNode(export.node);
@@ -1232,17 +1305,17 @@ public final class ProcessCommonJSModules implements CompilerPass {
             key = key.getNext();
           }
           if (key != null && keyIsExport) {
-            return moduleName + "." + key.getString();
+            return baseExportName + "." + key.getString();
           }
         } else {
           if (var.getNameNode() == exportedName) {
             String exportPrefix = exportBaseQName.startsWith(MODULE) ? "module.exports" : EXPORTS;
 
             if (exportBaseQName.length() == exportPrefix.length()) {
-              return moduleName;
+              return baseExportName;
             }
 
-            return moduleName + exportBaseQName.substring(exportPrefix.length());
+            return baseExportName + exportBaseQName.substring(exportPrefix.length());
           }
         }
       }
@@ -1290,32 +1363,40 @@ public final class ProcessCommonJSModules implements CompilerPass {
         return null;
       }
 
-      if (rValue.isCall()) {
+      if (rValue.isCall() && ProcessCommonJSModules.isCommonJsImport(rValue)) {
         // var foo = require('bar');
-        if (ProcessCommonJSModules.isCommonJsImport(rValue)
-            && t.getScope().getVar(rValue.getFirstChild().getQualifiedName()) == null) {
-          String requireName = ProcessCommonJSModules.getCommonJsImportPath(rValue);
-          ModulePath modulePath =
-              t.getInput()
-                  .getPath()
-                  .resolveJsModule(
-                      requireName, n.getSourceFileName(), n.getLineno(), n.getCharno());
-          if (modulePath == null) {
-            return null;
-          }
-          return getModuleName(modulePath) + propSuffix;
+        String importName = rewriteImportName(t, rValue);
+        if (importName == null) {
+          return null;
         }
-        return null;
-
+        return importName + propSuffix;
       } else if (rValue.isGetProp()) {
         // var foo = require('bar').foo;
-        String moduleName = getModuleImportName(t, rValue.getFirstChild());
-        if (moduleName != null) {
-          return moduleName + "." + n.getSecondChild().getString() + propSuffix;
+        String importName = rewriteImportName(t, rValue.getFirstChild());
+        if (importName == null) {
+          return null;
         }
+
+        String suffix = rValue.getSecondChild().isGetProp() ?
+            rValue.getSecondChild().getQualifiedName() : rValue.getSecondChild().getString();
+
+        return importName + "." + suffix;
       }
 
       return null;
+    }
+
+    private String rewriteImportName(NodeTraversal t, Node call) {
+      String requireName = call.getSecondChild().getString();
+      ModulePath modulePath =
+          t.getInput()
+              .getPath()
+              .resolveJsModule(
+                  requireName, call.getSourceFileName(), call.getLineno(), call.getCharno());
+      if (modulePath == null) {
+        return null;
+      }
+      return getBasePropertyImport(modulePath.toModuleName());
     }
 
     /**
@@ -1350,8 +1431,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
           }
 
           String globalModuleName = getModuleName(modulePath);
+          String baseImportProperty = getBasePropertyImport(globalModuleName);
           typeNode.setString(
-              localTypeName == null ? globalModuleName : globalModuleName + localTypeName);
+              localTypeName == null ? baseImportProperty : baseImportProperty + localTypeName);
 
         } else {
           // A type node can be a getprop. Any portion of the getprop

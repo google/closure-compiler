@@ -616,6 +616,11 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract ModuleLoader getModuleLoader();
 
   /**
+   * Gets the module loader.
+   */
+  abstract CompilerInput.ModuleType getModuleTypeByProvide(String provide);
+
+  /**
    * Sets an annotation for the given key.
    *
    * @param key the annotation key
