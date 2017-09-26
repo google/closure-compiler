@@ -261,11 +261,12 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
         return;
       }
 
-      if (state.getOut().isLive(liveness.getVarIndex(var.name))) {
+      int index = liveness.getVarIndex(var.name);
+      if (state.getOut().isLive(index)) {
         return; // Variable not dead.
       }
 
-      if (state.getIn().isLive(liveness.getVarIndex(var.name))
+      if (state.getIn().isLive(index)
           && isVariableStillLiveWithinExpression(n, exprRoot, var.name)) {
         // The variable is killed here but it is also live before it.
         // This is possible if we have say:
