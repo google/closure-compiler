@@ -544,7 +544,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testConformance(declarations, "var c = new C(); c.p = 'boo';",
         CheckConformance.CONFORMANCE_VIOLATION);
 
-    // Accessing property through a super type is possibily a violation.
+    // Accessing property through a super type is possibly a violation.
     testConformance(declarations, "var sc = new SC(); sc.p = 'boo';",
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 

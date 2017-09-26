@@ -568,7 +568,7 @@ public final class NodeUtil {
     //    (in which case NOT here should return true)
     // 2) We care that expression is a side-effect free and can't
     //    be side-effected by other expressions.
-    // This should only be used to say the value is immuable and
+    // This should only be used to say the value is immutable and
     // hasSideEffects and canBeSideEffected should be used for the other case.
 
     switch (n.getToken()) {
@@ -4781,7 +4781,7 @@ public final class NodeUtil {
     return null;
   }
 
-  /** Gets the r-value (or intializer) of a node returned by getBestLValue. */
+  /** Gets the r-value (or initializer) of a node returned by getBestLValue. */
   static Node getRValueOfLValue(Node n) {
     Node parent = n.getParent();
     switch (parent.getToken()) {

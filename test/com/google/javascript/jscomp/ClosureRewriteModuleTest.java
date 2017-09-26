@@ -2078,7 +2078,7 @@ public final class ClosureRewriteModuleTest extends CompilerTestCase {
         });
   }
 
-  public void testRewriteGoogModuleAliasesWithPreservedPrimitivies() {
+  public void testRewriteGoogModuleAliasesWithPreservedPrimitives() {
     preserveClosurePrimitives = true;
     // Need to disable tree comparison because compiler adds MODULE_BODY token when parsing
     // expected output but it is not present in actual tree.

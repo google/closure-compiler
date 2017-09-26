@@ -1773,7 +1773,7 @@ public class CodeGenerator {
         case '\u2029': sb.append("\\u2029"); break;
 
         case '=':
-          // '=' is a syntactically signficant regexp character.
+          // '=' is a syntactically significant regexp character.
           if (trustedStrings || isRegexp) {
             sb.append(c);
           } else {

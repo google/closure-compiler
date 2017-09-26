@@ -168,7 +168,7 @@ public final class AccessControlUtils {
 
   /**
    * Returns the effective visibility of the given overridden property.
-   * An overridden propertiy inherits the visibility of the property it
+   * An overridden property inherits the visibility of the property it
    * overrides.
    */
   private static Visibility getEffectiveVisibilityForOverriddenProperty(

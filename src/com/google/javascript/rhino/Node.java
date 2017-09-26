@@ -1791,12 +1791,12 @@ public class Node implements Serializable {
     return isEquivalentTo(node, false, false, false, false);
   }
 
-  /** Returns true if this node is equivalent semantically to another including side efffects. */
+  /** Returns true if this node is equivalent semantically to another including side effects. */
   public final boolean isEquivalentWithSideEffectsTo(Node node) {
     return isEquivalentTo(node, false, true, false, true);
   }
 
-  /** Returns true if this node is equivalent semantically to another including side efffects. */
+  /** Returns true if this node is equivalent semantically to another including side effects. */
   public final boolean isEquivalentWithSideEffectsToShallow(Node node) {
     return isEquivalentTo(node, false, false, false, true);
   }
