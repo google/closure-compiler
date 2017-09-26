@@ -699,7 +699,9 @@ public class CodeGenerator {
         cc.maybeInsertSpace();
         add("(");
         add(first);
+        cc.maybeInsertSpace();
         add("of");
+        cc.maybeInsertSpace();
         add(first.getNext());
         add(")");
         addNonEmptyStatement(last, getContextForNonEmptyExpression(context), false);

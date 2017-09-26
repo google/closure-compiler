@@ -632,6 +632,15 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("for(var a of b)c");
   }
 
+  // In pretty-print mode, make sure there is a space before and after the 'of' in a for/of loop.
+  public void testForOfPretty() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+
+    assertPrettyPrintSame("for ([x, y] of b) {\n  c;\n}\n");
+    assertPrettyPrintSame("for (x of [[1, 2]]) {\n  c;\n}\n");
+    assertPrettyPrintSame("for ([x, y] of [[1, 2]]) {\n  c;\n}\n");
+  }
+
   public void testLetFor() {
     languageMode = LanguageMode.ECMASCRIPT_2015;
 
