@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import javax.annotation.Nullable;
 
 /**
  * Reuse variable names if possible.
@@ -375,15 +376,12 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
    * callback during the same traversal.  Both traversals must have the same
    * "shouldTraverse" conditions.
    */
-  private static class CombinedLiveRangeChecker
-      extends AbstractCfgNodeTraversalCallback {
+  private static class CombinedLiveRangeChecker extends AbstractCfgNodeTraversalCallback {
 
     private final LiveRangeChecker callback1;
     private final LiveRangeChecker callback2;
 
-    CombinedLiveRangeChecker(
-        LiveRangeChecker callback1,
-        LiveRangeChecker callback2) {
+    CombinedLiveRangeChecker(LiveRangeChecker callback1, LiveRangeChecker callback2) {
       this.callback1 = callback1;
       this.callback2 = callback2;
     }
@@ -398,8 +396,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
     boolean connectIfCrossed(UndiGraph<Var, Void> interferenceGraph) {
       if (callback1.crossed || callback2.crossed) {
-        Var v1 = callback1.getDef();
-        Var v2 = callback2.getDef();
+        Var v1 = callback1.def;
+        Var v2 = callback2.def;
         interferenceGraph.connectIfNotFound(v1, null, v2);
         return true;
       }
@@ -466,20 +464,18 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     }
   }
 
-  private static class LiveRangeChecker
-      extends AbstractCfgNodeTraversalCallback {
+  private static class LiveRangeChecker extends AbstractCfgNodeTraversalCallback {
     boolean defFound = false;
     boolean crossed = false;
+
     private final Var def;
+
+    @Nullable
     private final Var use;
 
     public LiveRangeChecker(Var def, Var use) {
-      this.def = def;
+      this.def = checkNotNull(def);
       this.use = use;
-    }
-
-    Var getDef() {
-      return def;
     }
 
     /**
@@ -515,15 +511,13 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       } else if (NodeUtil.isAssignmentOp(n)) {
         // Lastly, any assignmentOP is also an assign.
         Node name = n.getFirstChild();
-        return name != null && name.isName()
-            && var.getName().equals(name.getString());
+        return name.isName() && var.getName().equals(name.getString());
       }
       return false; // Definitely a read.
     }
 
     private static boolean isReadFrom(Var var, Node name) {
-      return name != null
-          && name.isName()
+      return name.isName()
           && var.getName().equals(name.getString())
           && !NodeUtil.isNameDeclOrSimpleAssignLhs(name, name.getParent());
     }
