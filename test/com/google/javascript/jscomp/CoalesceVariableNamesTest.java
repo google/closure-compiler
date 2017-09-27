@@ -510,6 +510,8 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "  this.load();"));
   }
 
+  // Parameter 'e' is never used, but if we coalesce 'command' with 'e' then the 'if (command)'
+  // check will produce an incorrect result if none of the 'case' statements is executed.
   public void testCannotReuseAnyParamsBug() {
     testSame(
         LINE_JOINER.join(
@@ -539,6 +541,38 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "",
             "  return false;",
             "};"));
+  }
+
+  // TODO(b/66919166): Fix this test and re-enable it.
+  // Same as above, but this time the parameter 'type' is part of a destructuring pattern.
+  public void disabled_testCannotReuseAnyParamsBugWithDestructuring() {
+    testSame(LINE_JOINER.join(
+        "function handleKeyboardShortcut({type: type}, key, isModifierPressed) {",
+        "  if (!isModifierPressed) {",
+        "    return false;",
+        "  }",
+        "  var command;",
+        "  switch (key) {",
+        "    case 'b': // Ctrl+B",
+        "      command = COMMAND.BOLD;",
+        "      break;",
+        "    case 'i': // Ctrl+I",
+        "      command = COMMAND.ITALIC;",
+        "      break;",
+        "    case 'u': // Ctrl+U",
+        "      command = COMMAND.UNDERLINE;",
+        "      break;",
+        "    case 's': // Ctrl+S",
+        "      return true;",
+        "  }",
+        "",
+        "  if (command) {",
+        "    this.fieldObject.execCommand(command);",
+        "    return true;",
+        "  }",
+        "",
+        "  return false;",
+        "};"));
   }
 
   public void testForInWithAssignment() {
