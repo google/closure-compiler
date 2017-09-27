@@ -419,6 +419,12 @@ public final class RenamePropertiesTest extends CompilerTestCase {
         "var foo = {   a: 1,   b: 2 }; var foo1 = foo.a;   var foo2 = foo.b;");
   }
 
+  public void testNestedDestructuringProperties() {
+    test(
+        "var {outer: {inner}} = {outer: {inner: 'value'}};",
+        "var {b: {a: inner}} = {b: {a: 'value'}};");
+  }
+
   public void testComputedPropertyNamesInObjectLit() {
     // TODO (simranarora) A restriction of this pass is that quoted and unquoted property
     // references cannot be mixed.
