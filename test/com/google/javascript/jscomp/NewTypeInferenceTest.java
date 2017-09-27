@@ -19409,6 +19409,74 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE);
   }
 
+  public void testAbstractMethodCallsWithGoogInerhits() {
+    String closureDefs = LINE_JOINER.join(
+        "/** @const */ var goog = {};",
+        "goog.inherits = function(child, parent){};");
+    // Converted from Closure style "goog.base" super call
+    typeCheck(
+        LINE_JOINER.join(
+            closureDefs,
+            "/** @const */ var ns = {};",
+            "/** @constructor @abstract */ ns.A = function() {};",
+            "/** @abstract */ ns.A.prototype.foo = function() {};",
+            "/** @constructor @extends {ns.A} */ ns.B = function() {};",
+            "goog.inherits(ns.B, ns.A);",
+            "/** @override */ ns.B.prototype.foo = function() {",
+            "  ns.B.superClass_.foo.call(this);",
+            "};"),
+        NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE);
+
+    typeCheck(
+        LINE_JOINER.join(
+            closureDefs,
+            "/** @const */ var ns = {};",
+            "/** @constructor @abstract */ ns.A = function() {};",
+            "/** @abstract */ ns.A.prototype.foo = function() {};",
+            "/** @constructor @extends {ns.A} */ ns.B = function() {};",
+            "goog.inherits(ns.B, ns.A);",
+            "/** @override */ ns.B.prototype.foo = function() {",
+            "  ns.B.superClass_.foo.apply(this);",
+            "};"),
+        NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE);
+
+    typeCheck(
+        LINE_JOINER.join(
+            closureDefs,
+            "/** @constructor @abstract */ var A = function() {};",
+            "/** @abstract */",
+            "A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ var B = function() {};",
+            "goog.inherits(B, A);",
+            "/** @override */ B.prototype.foo = function() { A.prototype.foo['call'](this); };"),
+        NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE);
+
+    typeCheck(
+        LINE_JOINER.join(
+            closureDefs,
+            "/** @struct @constructor */ var A = function() {};",
+            "A.prototype.foo = function() {};",
+            "/** @struct @constructor @extends {A} */ var B = function() {};",
+            "goog.inherits(B, A);",
+            "/** @override */ B.prototype.foo = function() {",
+            "  (function() {",
+            "    return A.prototype.foo.call($jscomp$this);",
+            "  })();",
+            "};"));
+
+    typeCheck(
+        LINE_JOINER.join(
+            closureDefs,
+            "/** @constructor @abstract */ function A() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @constructor @extends {A} */ function B() {};",
+            "goog.inherits(B, A);",
+            "/** @override */ B.prototype.foo = function() {};",
+            "var abstractMethod = A.prototype.foo;",
+            "abstractMethod.call(new B);"),
+        NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE);
+  }
+
   public void testDontRemoveLooseObjects() {
     typeCheck(LINE_JOINER.join(
         "function f(x) {",

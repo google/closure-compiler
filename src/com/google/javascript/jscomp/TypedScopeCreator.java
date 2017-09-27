@@ -71,9 +71,9 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.NominalTypeBuilderOti;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
-import com.google.javascript.rhino.jstype.PropertyDeclarer;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
@@ -149,8 +149,6 @@ final class TypedScopeCreator implements ScopeCreator {
       CONSTRUCTOR_EXPECTED,
       UNKNOWN_LENDS,
       LENDS_ON_NON_OBJECT);
-
-  private static final PropertyDeclarer PROPERTY_DECLARER = new PropertyDeclarer();
 
   private final AbstractCompiler compiler;
   private final ErrorReporter typeParsingErrorReporter;
@@ -1499,8 +1497,12 @@ final class TypedScopeCreator implements ScopeCreator {
           FunctionType superCtor = superClass.getConstructor();
           FunctionType subCtor = subClass.getConstructor();
           if (superCtor != null && subCtor != null) {
-            codingConvention.applySubclassRelationship(
-                PROPERTY_DECLARER, superCtor, subCtor, relationship.type);
+            try (NominalTypeBuilderOti.Factory factory = new NominalTypeBuilderOti.Factory()) {
+              codingConvention.applySubclassRelationship(
+                  factory.builder(superCtor, superClass),
+                  factory.builder(subCtor, subClass),
+                  relationship.type);
+            }
           }
         }
       }
@@ -1515,8 +1517,10 @@ final class TypedScopeCreator implements ScopeCreator {
 
           if (functionType != null) {
             FunctionType getterType = typeRegistry.createFunctionType(objectType);
-            codingConvention.applySingletonGetter(
-                PROPERTY_DECLARER, functionType, getterType, objectType);
+            try (NominalTypeBuilderOti.Factory factory = new NominalTypeBuilderOti.Factory()) {
+              codingConvention.applySingletonGetter(
+                  factory.builder(functionType, objectType), getterType);
+            }
           }
         }
       }

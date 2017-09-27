@@ -193,4 +193,8 @@ public final class FunctionTypeBuilder {
         requiredFormals, optionalFormals, restFormals, returnType,
         nominalType, receiverType, outerVars, typeParameters, loose, isAbstract);
   }
+
+  public JSType buildType() {
+    return this.commonTypes.fromFunctionType(buildFunction());
+  }
 }

@@ -176,10 +176,4 @@ public interface ObjectTypeI extends TypeI {
    * Returns a set of properties defined or inferred on this type or any of its supertypes.
    */
   Set<String> getPropertyNames();
-
-  /** Interface for declaring properties on object types while they are being built. */
-  interface PropertyDeclarer {
-    /** Declares the given property on the given object type. */
-    void declareProperty(ObjectTypeI object, String property, TypeI type, Node defSite);
-  }
 }

@@ -28,6 +28,7 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CodingConvention.Bind;
+import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.NewTypeInference.WarningReporter;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.jscomp.newtypes.Declaration;
@@ -42,8 +43,8 @@ import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc.FunctionAndS
 import com.google.javascript.jscomp.newtypes.JSTypes;
 import com.google.javascript.jscomp.newtypes.Namespace;
 import com.google.javascript.jscomp.newtypes.NominalType;
+import com.google.javascript.jscomp.newtypes.NominalTypeBuilderNti;
 import com.google.javascript.jscomp.newtypes.ObjectKind;
-import com.google.javascript.jscomp.newtypes.PropertyDeclarer;
 import com.google.javascript.jscomp.newtypes.QualifiedName;
 import com.google.javascript.jscomp.newtypes.RawNominalType;
 import com.google.javascript.jscomp.newtypes.Typedef;
@@ -55,6 +56,7 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -287,14 +289,15 @@ public class GlobalTypeInfoCollector implements CompilerPass {
   private static final String WINDOW_INSTANCE = "window";
   private static final String WINDOW_CLASS = "Window";
 
-  private static final PropertyDeclarer PROPERTY_DECLARER = new PropertyDeclarer();
-
   private DefaultNameGenerator funNameGen;
   // Only for original definitions, not for aliased constructors
   private Map<Node, RawNominalType> nominaltypesByNode = new LinkedHashMap<>();
   // Keyed on RawNominalTypes and property names
   private HashBasedTable<RawNominalType, String, PropertyDef> propertyDefs =
       HashBasedTable.create();
+  private final NominalTypeBuilderNti.LateProperties lateProps =
+      new NominalTypeBuilderNti.LateProperties();
+  private final Set<RawNominalType> inProgressFreezes = new HashSet<>();
   private final GlobalTypeInfo globalTypeInfo;
 
   public GlobalTypeInfoCollector(AbstractCompiler compiler) {
@@ -512,6 +515,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     if (rawType.isFrozen()) {
       return;
     }
+    checkState(inProgressFreezes.add(rawType),
+        "Cycle in freeze order: %s (%s)", rawType, inProgressFreezes);
     NominalType superClass = rawType.getSuperClass();
     Set<String> nonInheritedPropNames = rawType.getAllNonInheritedProps();
     if (superClass != null && !superClass.isFrozen()) {
@@ -522,6 +527,11 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         checkAndFreezeNominalType(superInterf.getRawNominalType());
       }
     }
+
+    for (RawNominalType prerequisite : lateProps.prerequisites(rawType)) {
+      checkAndFreezeNominalType(prerequisite);
+    }
+    lateProps.defineProperties(rawType);
 
     Multimap<String, DeclaredFunctionType> propMethodTypesToProcess = LinkedHashMultimap.create();
     Multimap<String, JSType> propTypesToProcess = LinkedHashMultimap.create();
@@ -636,7 +646,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     // Warn for a prop declared with @override that isn't overriding anything.
     for (String pname : nonInheritedPropNames) {
       PropertyDef propDef = propertyDefs.get(rawType, pname);
-      checkState(propDef != null || rawType.getName().equals(WINDOW_CLASS));
       if (propDef != null) {
         Node propDefsite = propDef.defSite;
         JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(propDefsite);
@@ -654,6 +663,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         literalObj.getRawNominalType().freeze();
       }
     }
+    inProgressFreezes.remove(rawType);
   }
 
   // TODO(dimvar): the finalization method and this one should be cleaned up;
@@ -1566,26 +1576,56 @@ public class GlobalTypeInfoCollector implements CompilerPass {
 
     private void visitCall(Node call) {
       // Check various coding conventions to see if any additional handling is needed.
+      SubclassRelationship relationship = convention.getClassesDefinedByCall(call);
+      if (relationship != null) {
+        applySubclassRelationship(relationship);
+      }
       String className = convention.getSingletonGetterClassName(call);
       if (className != null) {
         applySingletonGetter(className);
       }
     }
 
+    private void applySubclassRelationship(SubclassRelationship rel) {
+      if (rel.superclassName.equals(rel.subclassName)) {
+        // Note: this is a messed up situation, but it's dealt with elsewhere, so let it go here.
+        return;
+      }
+      RawNominalType superClass = findInScope(rel.superclassName);
+      RawNominalType subClass = findInScope(rel.subclassName);
+      if (superClass != null && superClass.getConstructorFunction() != null
+          && subClass != null && subClass.getConstructorFunction() != null) {
+        convention.applySubclassRelationship(
+            new NominalTypeBuilderNti(lateProps, superClass),
+            new NominalTypeBuilderNti(lateProps, subClass),
+            rel.type);
+      }
+    }
+
     private void applySingletonGetter(String className) {
-      QualifiedName qname = QualifiedName.fromQualifiedString(className);
-      RawNominalType rawType = currentScope.getNominalType(qname);
+      RawNominalType rawType = findInScope(className);
       if (rawType != null) {
         JSType instanceType = rawType.getInstanceAsJSType();
-        FunctionType getInstanceFunType =
-            new FunctionTypeBuilder(getCommonTypes()).addRetType(instanceType).buildFunction();
-        JSType getInstanceType = getCommonTypes().fromFunctionType(getInstanceFunType);
+        JSType getInstanceType =
+            new FunctionTypeBuilder(getCommonTypes()).addRetType(instanceType).buildType();
         convention.applySingletonGetter(
-            PROPERTY_DECLARER,
-            getCommonTypes().fromFunctionType(rawType.getConstructorFunction()),
-            getInstanceType,
-            instanceType);
+            new NominalTypeBuilderNti(lateProps, rawType), getInstanceType);
       }
+    }
+
+    private RawNominalType findInScope(String qname) {
+      return currentScope.getNominalType(QualifiedName.fromQualifiedString(qname));
+    }
+
+    /** Returns the type of the constructor for a raw type.  Null-safe. */
+    private JSType getConstructor(RawNominalType rawType) {
+      if (rawType != null) {
+        FunctionType ctor = rawType.getConstructorFunction();
+        if (ctor != null) {
+          return getCommonTypes().fromFunctionType(ctor);
+        }
+      }
+      return null;
     }
 
     private void visitPropertyDeclaration(Node getProp) {

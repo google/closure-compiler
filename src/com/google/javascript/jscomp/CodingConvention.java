@@ -21,8 +21,7 @@ import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ObjectTypeI;
-import com.google.javascript.rhino.ObjectTypeI.PropertyDeclarer;
+import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
@@ -215,10 +214,7 @@ public interface CodingConvention extends Serializable {
    * adds properties to the superclass and/or subclass.
    */
   public void applySubclassRelationship(
-      PropertyDeclarer declarer,
-      FunctionTypeI parentCtor,
-      FunctionTypeI childCtor,
-      SubclassType type);
+      NominalTypeBuilder parent, NominalTypeBuilder child, SubclassType type);
 
   /**
    * Function name for abstract methods. An abstract method can be assigned to
@@ -247,10 +243,7 @@ public interface CodingConvention extends Serializable {
    * adds properties to the class.
    */
   public void applySingletonGetter(
-      PropertyDeclarer declarer,
-      FunctionTypeI functionType,
-      FunctionTypeI getterType,
-      ObjectTypeI objectType);
+      NominalTypeBuilder classType, FunctionTypeI getterType);
 
   /**
    * @return Whether the function is inlinable by convention.

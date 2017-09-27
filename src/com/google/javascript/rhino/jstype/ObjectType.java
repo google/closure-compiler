@@ -48,7 +48,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
@@ -294,8 +293,8 @@ public abstract class ObjectType
   public abstract FunctionType getConstructor();
 
   @Override
-  public FunctionTypeI getSuperClassConstructor() {
-    ObjectTypeI iproto = getPrototypeObject();
+  public FunctionType getSuperClassConstructor() {
+    ObjectType iproto = getPrototypeObject();
     if (iproto == null) {
       return null;
     }
