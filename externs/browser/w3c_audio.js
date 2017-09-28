@@ -275,8 +275,29 @@ OfflineAudioCompletionEvent.prototype.renderedBuffer;
 
 /**
  * @constructor
+ * @implements {EventTarget}
+ * @see https://www.w3.org/TR/webaudio/#the-audionode-interface
  */
 function AudioNode() {}
+
+/**
+ * @override
+ */
+AudioNode.prototype.addEventListener = function(type, listener,
+    opt_useCapture) {};
+
+/**
+ * @override
+ */
+AudioNode.prototype.removeEventListener = function(type, listener,
+    opt_useCapture) {};
+
+/**
+ * @override
+ * @return {boolean}
+ */
+AudioNode.prototype.dispatchEvent = function(evt) {};
+
 /**
  * @param {!AudioNode|!AudioParam} destination
  * @param {number=} output
