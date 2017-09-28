@@ -65,8 +65,12 @@ class RemoveUnusedPrototypeProperties implements CompilerPass {
   @Override
   public void process(Node externRoot, Node root) {
     AnalyzePrototypeProperties analyzer =
-        new AnalyzePrototypeProperties(compiler,
-            null /* no module graph */, canModifyExterns, anchorUnusedVars);
+        new AnalyzePrototypeProperties(
+            compiler,
+            null /* no module graph */,
+            canModifyExterns,
+            anchorUnusedVars,
+            false /* rootScopeUsesAreGlobal */);
     analyzer.process(externRoot, root);
     // Remove all properties under a given name if the property name is
     // never referenced.

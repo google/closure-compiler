@@ -74,8 +74,9 @@ class CrossModuleMethodMotion implements CompilerPass {
     this.compiler = compiler;
     this.idGenerator = idGenerator;
     this.moduleGraph = compiler.getModuleGraph();
-    this.analyzer = new AnalyzePrototypeProperties(compiler, moduleGraph,
-        canModifyExterns, false);
+    this.analyzer =
+        new AnalyzePrototypeProperties(
+            compiler, moduleGraph, canModifyExterns, false /* anchorUnusedVars */, noStubFunctions);
     this.noStubFunctions = noStubFunctions;
   }
 
