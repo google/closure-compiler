@@ -3620,5 +3620,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         input.reset();
       }
     }
+    for (CompilerInput input : this.externs) {
+      input.reset();
+    }
   }
 }

@@ -73,7 +73,7 @@ public class PersistentInputStore {
     if (store.containsKey(source.getOriginalPath())) {
       CacheEntry cacheEntry = store.get(source.getOriginalPath());
       if (cacheEntry.input == null) {
-        cacheEntry.input = new CompilerInput(source);
+        cacheEntry.input = CompilerInput.makePersistentInput(source);
       }
       return cacheEntry.input;
     }

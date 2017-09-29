@@ -98,6 +98,14 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     this(new JsAst(file), isExtern);
   }
 
+  /**
+   * If makeRecoverable is true, makes a recoverable version of the ast.
+   */
+  public static CompilerInput makePersistentInput(SourceFile file) {
+    SourceAst ast = new RecoverableJsAst(new JsAst(file), true);
+    return new CompilerInput(ast, file.isExtern());
+  }
+
   /** Returns a name for this input. Must be unique across all inputs. */
   @Override
   public InputId getInputId() {
@@ -483,5 +491,6 @@ public class CompilerInput implements SourceAst, DependencyInfo {
    */
   public void reset() {
     this.module = null;
+    this.ast.clearAst();
   }
 }
