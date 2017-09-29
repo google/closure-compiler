@@ -19374,6 +19374,18 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
 
     typeCheck(
         LINE_JOINER.join(
+            "/** @struct @constructor @abstract */ var A = function() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @struct @constructor @extends {A} */ var B = function() {};",
+            "/** @override */ B.prototype.foo = function() {",
+            "  (function() {",
+            "    return A.prototype.foo.call($jscomp$this);",
+            "  })();",
+            "};"),
+        NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE);
+
+    typeCheck(
+        LINE_JOINER.join(
             "/** @struct @constructor */ var A = function() {};",
             "A.prototype.foo = function() {};",
             "/** @struct @constructor @extends {A} */ var B = function() {};",
@@ -19449,6 +19461,20 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "/** @constructor @extends {A} */ var B = function() {};",
             "goog.inherits(B, A);",
             "/** @override */ B.prototype.foo = function() { A.prototype.foo['call'](this); };"),
+        NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE);
+
+    typeCheck(
+        LINE_JOINER.join(
+            closureDefs,
+            "/** @struct @constructor @abstract */ var A = function() {};",
+            "/** @abstract */ A.prototype.foo = function() {};",
+            "/** @struct @constructor @extends {A} */ var B = function() {};",
+            "goog.inherits(B, A);",
+            "/** @override */ B.prototype.foo = function() {",
+            "  (function() {",
+            "    return A.prototype.foo.call($jscomp$this);",
+            "  })();",
+            "};"),
         NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE);
 
     typeCheck(
