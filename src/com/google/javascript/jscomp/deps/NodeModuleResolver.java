@@ -147,10 +147,9 @@ public class NodeModuleResolver extends ModuleResolver {
   public String resolveJsModule(
       String scriptAddress, String moduleAddress, String sourcename, int lineno, int colno) {
     String loadAddress;
-    if (ModuleLoader.isAbsoluteIdentifier(moduleAddress)
-        || ModuleLoader.isRelativeIdentifier(moduleAddress)) {
-      loadAddress = resolveJsModuleNodeFileOrDirectory(scriptAddress, moduleAddress);
-    } else {
+    // Try resolveJsModuleNodeFileOrDirectory first, if not resolved then try resolveJsModuleFromRegistry
+    loadAddress = resolveJsModuleNodeFileOrDirectory(scriptAddress, moduleAddress);
+    if (loadAddress == null) {
       loadAddress = resolveJsModuleFromRegistry(scriptAddress, moduleAddress);
     }
 
