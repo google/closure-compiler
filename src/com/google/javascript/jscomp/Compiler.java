@@ -1969,9 +1969,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     for (CompilerInput input : orderedInputs) {
       boolean forcedToModule = input.getJsModuleType() == CompilerInput.ModuleType.IMPORTED_SCRIPT;
       if (supportCommonJSModules) {
-        new ProcessCommonJSModules(
-            this,
-            this.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6_MODULES))
+        new ProcessCommonJSModules(this)
             .process(null, input.getAstRoot(this), forcedToModule);
       } else if (forcedToModule) {
         forceInputToPathBasedModule(input, supportEs6Modules, supportCommonJSModules);
@@ -2057,7 +2055,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       findDeps.convertToEs6Module(input.getAstRoot(this));
       input.setJsModuleType(CompilerInput.ModuleType.ES6);
     } else if (supportCommonJSModules) {
-      new ProcessCommonJSModules(this, supportEs6Modules).process(null, input.getAstRoot(this), true);
+      new ProcessCommonJSModules(this).process(null, input.getAstRoot(this), true);
       input.setJsModuleType(CompilerInput.ModuleType.COMMONJS);
     }
   }
@@ -2199,13 +2197,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
    * on the way.
    */
   void processAMDAndCommonJSModules() {
-    FindModuleDependencies findDeps = new FindModuleDependencies(this, false, true);
     for (CompilerInput input : inputs) {
       input.setCompiler(this);
       Node root = input.getAstRoot(this);
       if (root == null) {
         continue;
       }
+      FindModuleDependencies findDeps = new FindModuleDependencies(this, false, true);
       findDeps.process(input.getAstRoot(this));
       moduleTypesByProvide.put(input.getPath().toModuleName(), input.getJsModuleType());
 
@@ -2213,8 +2211,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         new TransformAMDToCJSModule(this).process(null, root);
       }
       if (options.processCommonJSModules) {
-        ProcessCommonJSModules cjs = new ProcessCommonJSModules(this,
-            this.getOptions().getLanguageIn().toFeatureSet().contains(FeatureSet.ES6_MODULES));
+        ProcessCommonJSModules cjs = new ProcessCommonJSModules(this);
         cjs.process(null, root);
       }
     }
