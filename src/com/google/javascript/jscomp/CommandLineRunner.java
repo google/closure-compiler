@@ -516,8 +516,10 @@ public class CommandLineRunner extends
     private String commonJsEntryModule;
 
     @Option(name = "--transform_amd_modules",
+        hidden = true,
         handler = BooleanOptionHandler.class,
-        usage = "Transform AMD to CommonJS modules.")
+        usage = "Deprecated: Transform AMD to CommonJS modules.")
+    @Deprecated
     private boolean transformAmdModules = false;
 
     @Option(name = "--process_closure_primitives",
@@ -845,7 +847,6 @@ public class CommandLineRunner extends
                     "js_module_root",
                     "module_resolution",
                     "process_common_js_modules",
-                    "transform_amd_modules",
                     "package_json_entry_names"))
             .putAll(
                 "Library and Framework Specific",
