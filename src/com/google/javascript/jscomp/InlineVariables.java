@@ -274,8 +274,7 @@ class InlineVariables implements CompilerPass {
       } else if (refCount == firstRefAfterInit) {
         // The variable likely only read once, try some more
         // complex inlining heuristics.
-        Reference reference = referenceInfo.references.get(
-            firstRefAfterInit - 1);
+        Reference reference = referenceInfo.references.get(firstRefAfterInit - 1);
         if (canInline(declaration, init, reference)) {
           inline(v, declaration, init, reference);
           staleVars.add(v);
@@ -588,8 +587,12 @@ class InlineVariables implements CompilerPass {
         }
       }
 
-      return canMoveAggressively(value) ||
-          canMoveModerately(initialization, reference);
+      if (initialization.getScope() != declaration.getScope()
+          || !initialization.getScope().contains(reference.getScope())) {
+        return false;
+      }
+
+      return canMoveAggressively(value) || canMoveModerately(initialization, reference);
     }
 
     /**

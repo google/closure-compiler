@@ -85,6 +85,20 @@ public class Scope implements StaticScope, Serializable {
   }
 
   /**
+   * @return True if this scope contains {@code other}, or is the same scope as {@code other}.
+   */
+  boolean contains(Scope other) {
+    Scope s = checkNotNull(other);
+    while (s != null) {
+      if (s == this) {
+        return true;
+      }
+      s = s.getParent();
+    }
+    return false;
+  }
+
+  /**
    * Gets the container node of the scope. This is typically the FUNCTION
    * node or the global BLOCK/SCRIPT node.
    */
