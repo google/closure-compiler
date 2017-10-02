@@ -80,6 +80,9 @@ public interface NominalTypeBuilder {
    */
   void beforeFreeze(Runnable task, NominalTypeBuilder... prerequisites);
 
+  /** Returns a nominal type builder for the super class. */
+  NominalTypeBuilder superClass();
+
   /** Returns the object builder for declaring properties on the constructor function. */
   ObjectBuilder constructor();
 

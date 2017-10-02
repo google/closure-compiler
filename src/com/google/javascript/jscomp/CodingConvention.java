@@ -22,12 +22,11 @@ import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NominalTypeBuilder;
+import com.google.javascript.rhino.ObjectTypeI;
 import com.google.javascript.rhino.StaticSourceFile;
-import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.StaticTypedScope;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -260,9 +259,11 @@ public interface CodingConvention extends Serializable {
    * also adds properties to the delegator and delegate base.
    */
   public void applyDelegateRelationship(
-      ObjectType delegateSuperclass, ObjectType delegateBase,
-      ObjectType delegator, FunctionType delegateProxy,
-      FunctionType findDelegate);
+      NominalTypeBuilder delegateSuperclass,
+      NominalTypeBuilder delegateBase,
+      NominalTypeBuilder delegator,
+      ObjectTypeI delegateProxy,
+      FunctionTypeI findDelegate);
 
   /**
    * @return the name of the delegate superclass.
@@ -279,12 +280,11 @@ public interface CodingConvention extends Serializable {
    * Defines the delegate proxy prototype properties. Their types depend on
    * properties of the delegate base methods.
    *
-   * @param delegateProxyPrototypes List of delegate proxy prototypes.
+   * @param delegateProxies List of delegate proxy types.
    */
   public void defineDelegateProxyPrototypeProperties(
-      JSTypeRegistry registry,
-      StaticTypedScope<com.google.javascript.rhino.jstype.JSType> scope,
-      List<ObjectType> delegateProxyPrototypes,
+      TypeIRegistry registry,
+      List<NominalTypeBuilder> delegateProxies,
       Map<String, String> delegateCallingConventions);
 
   /**

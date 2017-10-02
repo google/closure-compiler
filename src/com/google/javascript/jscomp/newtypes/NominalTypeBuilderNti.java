@@ -78,6 +78,12 @@ public final class NominalTypeBuilderNti implements NominalTypeBuilder {
   }
 
   @Override
+  public NominalTypeBuilder superClass() {
+    NominalType nt = raw.getSuperClass();
+    return nt != null ? new NominalTypeBuilderNti(props, nt.getRawNominalType()) : null;
+  }
+
+  @Override
   public ObjectBuilder constructor() {
     return new ObjectBuilderImpl(PropertySlot.CONSTRUCTOR);
   }

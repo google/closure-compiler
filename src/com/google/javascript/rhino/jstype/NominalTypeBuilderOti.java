@@ -110,6 +110,15 @@ public final class NominalTypeBuilderOti implements NominalTypeBuilder {
   }
 
   @Override
+  public NominalTypeBuilder superClass() {
+    FunctionType ctor = instance.object.getSuperClassConstructor();
+    if (ctor == null) {
+      return null;
+    }
+    return new NominalTypeBuilderOti(callbacks, ctor, ctor.getInstanceType());
+  }
+
+  @Override
   public ObjectBuilder constructor() {
     return constructor;
   }

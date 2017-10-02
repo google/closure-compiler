@@ -64,6 +64,7 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionParamBuilder;
@@ -155,7 +156,7 @@ final class TypedScopeCreator implements ScopeCreator {
   private final TypeValidator validator;
   private final CodingConvention codingConvention;
   private final JSTypeRegistry typeRegistry;
-  private final List<ObjectType> delegateProxyPrototypes = new ArrayList<>();
+  private final List<FunctionType> delegateProxyCtors = new ArrayList<>();
   private final Map<String, String> delegateCallingConventions = new HashMap<>();
   private final boolean runsAfterNTI;
 
@@ -255,9 +256,15 @@ final class TypedScopeCreator implements ScopeCreator {
     scopeBuilder.resolveStubDeclarations();
 
     if (typedParent == null) {
-      codingConvention.defineDelegateProxyPrototypeProperties(
-          typeRegistry, newScope, delegateProxyPrototypes,
-          delegateCallingConventions);
+      try (NominalTypeBuilderOti.Factory factory = new NominalTypeBuilderOti.Factory()) {
+        List<NominalTypeBuilder> delegateProxies = new ArrayList<>();
+        for (FunctionType delegateProxyCtor : delegateProxyCtors) {
+          delegateProxies.add(
+              factory.builder(delegateProxyCtor, delegateProxyCtor.getInstanceType()));
+        }
+        codingConvention.defineDelegateProxyPrototypeProperties(
+            typeRegistry, delegateProxies, delegateCallingConventions);
+      }
     }
 
     newScope.setTypeResolver(scopeBuilder);
@@ -1588,10 +1595,15 @@ final class TypedScopeCreator implements ScopeCreator {
                   false /* isAbstract */);
           delegateProxy.setPrototypeBasedOn(delegateBaseObject);
 
-          codingConvention.applyDelegateRelationship(
-              delegateSuperObject, delegateBaseObject, delegatorObject,
-              delegateProxy, findDelegate);
-          delegateProxyPrototypes.add(delegateProxy.getPrototype());
+          try (NominalTypeBuilderOti.Factory factory = new NominalTypeBuilderOti.Factory()) {
+            codingConvention.applyDelegateRelationship(
+                factory.builder(delegateSuperCtor, delegateSuperObject),
+                factory.builder(delegateBaseCtor, delegateBaseObject),
+                factory.builder(delegatorCtor, delegatorObject),
+                (ObjectType) delegateProxy.getTypeOfThis(),
+                findDelegate);
+            delegateProxyCtors.add(delegateProxy);
+          }
         }
       }
     }
