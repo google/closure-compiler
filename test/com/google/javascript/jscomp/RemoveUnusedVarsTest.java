@@ -305,8 +305,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
         "class Foo extends Bar { constructor(value = undefined) { super(); value; } }; new Foo;");
   }
 
-  // TODO(tbreisacher): Fix and enable.
-  public void disabled_testDefaultParamsInClassThatReferencesArguments() {
+  public void testDefaultParamsInClassThatReferencesArguments() {
     testSame(
         LINE_JOINER.join(
             "class Foo extends Bar {",
