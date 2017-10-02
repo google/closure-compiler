@@ -4569,8 +4569,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var a={a:9}; a=void 0===a?{a:5}:a;alert(3+a.a)");
   }
 
-  // TODO(tbreisacher): Enable this test when InlineVariables is re-enabled in non-transpile mode.
-  public void disabled_testDefaultParametersNonTranspiling() {
+  public void testDefaultParametersNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
@@ -4607,8 +4606,7 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}(1,1,1,1,1))"));
   }
 
-  // TODO(tbreisacher): Enable this test when InlineVariables is re-enabled in non-transpile mode.
-  public void disabled_testRestObjectPatternParametersNonTranspiling() {
+  public void testRestObjectPatternParametersNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
