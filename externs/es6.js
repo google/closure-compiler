@@ -1263,6 +1263,10 @@ Array.from = function(arrayLike, opt_mapFn, opt_this) {};
 Array.prototype.keys;
 
 
+/** @return {!IteratorIterable<T>} */
+Array.prototype.values;
+
+
 /**
  * @return {!IteratorIterable<!Array<number|T>>} Iterator of [key, value] pairs.
  */
