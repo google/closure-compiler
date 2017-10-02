@@ -99,7 +99,8 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   }
 
   /**
-   * If makeRecoverable is true, makes a recoverable version of the ast.
+   * Using the RecoverableJsAst, creates a CompilerInput that can be reset() to be safe to reuse
+   * in multiple compiler invocations.
    */
   public static CompilerInput makePersistentInput(SourceFile file) {
     SourceAst ast = new RecoverableJsAst(new JsAst(file), true);
