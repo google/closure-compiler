@@ -106,9 +106,13 @@ public abstract class CompilerBasedTransformer implements Source.Transformer {
           // impossible, and not a big deal even if it did happen.
         }
       }
-      boolean transformed = !result.transpiledFiles.isEmpty();
+      boolean transformed = transformed(result);
       return new CompileResult(
           source, result.errors, transformed, transformed ? sourceMap.toString() : "");
+    }
+
+    public boolean transformed(Result result) {
+      return !result.transpiledFiles.isEmpty();
     }
 
     public String runtime(String library) {
