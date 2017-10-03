@@ -3671,6 +3671,16 @@ public final class NodeUtil {
     }
   }
 
+  static int getLengthOfQname(Node qname) {
+    int result = 1;
+    while (qname.isGetProp() || qname.isGetElem()) {
+      result++;
+      qname = qname.getFirstChild();
+    }
+    checkState(qname.isName());
+    return result;
+  }
+
   /**
    * Sets the debug information (source file info and original name) on the given node.
    *

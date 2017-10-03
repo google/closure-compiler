@@ -25,7 +25,9 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CodingConvention.Bind;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
@@ -56,7 +58,7 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -297,8 +299,9 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       HashBasedTable.create();
   private final NominalTypeBuilderNti.LateProperties lateProps =
       new NominalTypeBuilderNti.LateProperties();
-  private final Set<RawNominalType> inProgressFreezes = new HashSet<>();
+  private final Set<RawNominalType> inProgressFreezes = new LinkedHashSet<>();
   private final GlobalTypeInfo globalTypeInfo;
+  private final OrderedExterns orderedExterns;
 
   public GlobalTypeInfoCollector(AbstractCompiler compiler) {
     this.warnings = new WarningReporter(compiler);
@@ -306,6 +309,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     this.funNameGen = new DefaultNameGenerator(ImmutableSet.<String>of(), "", null);
     this.globalTypeInfo = compiler.getGlobalTypeInfo();
     this.convention = compiler.getCodingConvention();
+    this.orderedExterns = new OrderedExterns();
   }
 
   @Override
@@ -323,9 +327,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     // (1) Find names of classes, interfaces, typedefs, enums, and namespaces
     //   defined in the global scope.
     CollectNamedTypes rootCnt = new CollectNamedTypes(getGlobalScope());
-    if (externs != null) {
-      NodeTraversal.traverseEs6(compiler, externs, rootCnt);
-    }
+    NodeTraversal.traverseEs6(this.compiler, externs, this.orderedExterns);
+    rootCnt.collectNamedTypesInExterns();
     NodeTraversal.traverseEs6(compiler, root, rootCnt);
     // (2) Determine the type represented by each typedef and each enum
     getGlobalScope().resolveTypedefs(getTypeParser());
@@ -764,9 +767,82 @@ public class GlobalTypeInfoCollector implements CompilerPass {
   }
 
   /**
+   * Each node in the iterable is either a function expression or a statement.
+   * The statement can be of: a function, a var, an expr_result containing an assignment,
+   * or an expr_result containing a getprop.
+   * The statement represents an externs definition of a qualified name.
+   * We iterate over qnames from shorter (ie, variables) to longer.
+   * For qnames with the same length, we visit them in the order in which they are defined
+   * in the source.
+   */
+  private class OrderedExterns extends AbstractShallowCallback implements Iterable<Node> {
+    /**
+     * treeKeys ensures that the iteration will be in increasing order of qname length:
+     * variables first, simple getprops second, and so on.
+     * arrayListValues ensures that for qnames of the same length, the order of iteration
+     * follows the order of the definitions in the source.
+     */
+    final ListMultimap<Integer, Node> orderedExternDefs =
+        MultimapBuilder.treeKeys().arrayListValues().build();
+
+    @Override
+    public void visit(NodeTraversal t, Node n, Node parent) {
+      switch (n.getToken()) {
+        case VAR:
+          addDefinition(n);
+          break;
+        case FUNCTION:
+          addDefinition(n);
+          break;
+        case EXPR_RESULT: {
+          Node expr = n.getFirstChild();
+          if (expr.isAssign() || expr.isGetProp()) {
+            addDefinition(n);
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    }
+
+    Node getDefinedQname(Node definition) {
+      switch (definition.getToken()) {
+        case VAR:
+          return definition.getFirstChild();
+        case FUNCTION: {
+          Node name = NodeUtil.getNameNode(definition);
+          // Return a non-null node for anonymous functions
+          return name == null ? definition.getFirstChild() : name;
+        }
+        case EXPR_RESULT: {
+          Node expr = definition.getFirstChild();
+          if (expr.isGetProp()) {
+            return expr;
+          }
+          checkState(expr.isAssign(), "Expected assignment, found %s", expr);
+          return expr.getFirstChild();
+        }
+        default:
+          throw new RuntimeException("Unexpected definition " + definition);
+      }
+    }
+
+    void addDefinition(Node definition) {
+      Node qname = getDefinedQname(definition);
+      int len = NodeUtil.getLengthOfQname(qname);
+      this.orderedExternDefs.put(len, definition);
+    }
+
+    @Override
+    public Iterator<Node> iterator() {
+      return orderedExternDefs.values().iterator();
+    }
+  }
+
+  /**
    * Collects names of classes, interfaces, namespaces, typedefs and enums.
-   * This way, if a type name appears before its declaration, we know what
-   * it refers to.
+   * This way, if a type name appears before its declaration, we know what it refers to.
    */
   private class CollectNamedTypes extends AbstractShallowCallback {
     private final NTIScope currentScope;
@@ -775,79 +851,100 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       this.currentScope = s;
     }
 
+    void collectNamedTypesInExterns() {
+      for (Node definition : orderedExterns) {
+        visitNode(definition);
+      }
+    }
+
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
+      visitNode(n);
+    }
+
+    public void visitNode(Node n) {
       switch (n.getToken()) {
-        case FUNCTION: {
+        case FUNCTION:
           visitFunctionEarly(n);
           break;
-        }
-        case VAR: {
-          Node nameNode = n.getFirstChild();
-          String varName = nameNode.getString();
-          if (NodeUtil.isNamespaceDecl(nameNode)) {
-            visitObjlitNamespace(nameNode);
-          } else if (NodeUtil.isTypedefDecl(nameNode)) {
-            visitTypedef(nameNode);
-          } else if (NodeUtil.isEnumDecl(nameNode)) {
-            visitEnum(nameNode);
-          } else if (isAliasedNamespaceDefinition(nameNode)) {
-            visitAliasedNamespace(nameNode);
-          } else if (varName.equals(WINDOW_INSTANCE) && nameNode.isFromExterns()) {
-            visitWindowVar(nameNode);
-          } else if (isCtorDefinedByCall(nameNode)) {
-            visitNewCtorDefinedByCall(nameNode);
-          } else if (isCtorWithoutFunctionLiteral(nameNode)) {
-            visitNewCtorWithoutFunctionLiteral(nameNode);
-          }
-          if (!n.isFromExterns()
-              && !this.currentScope.isDefinedLocally(varName, false)) {
-            // Add a dummy local to avoid shadowing errors, and to calculate
-            // escaped variables.
-            this.currentScope.addLocal(varName, getCommonTypes().UNKNOWN, false, false);
-          }
+        case VAR:
+          visitVar(n);
           break;
-        }
-        case NAME: {
-          if (this.currentScope.isFunction()) {
-            NTIScope.mayRecordEscapedVar(this.currentScope, n.getString());
-          }
+        case NAME:
+          visitName(n);
           break;
-        }
-        case EXPR_RESULT: {
-          Node expr = n.getFirstChild();
-          switch (expr.getToken()) {
-            case ASSIGN:
-              Node lhs = expr.getFirstChild();
-              if (isCtorDefinedByCall(lhs)) {
-                visitNewCtorDefinedByCall(lhs);
-                return;
-              }
-              if (!lhs.isGetProp()) {
-                return;
-              }
-              expr = lhs;
-              // fall through
-            case GETPROP:
-              if (isCtorWithoutFunctionLiteral(expr)) {
-                visitNewCtorWithoutFunctionLiteral(expr);
-                return;
-              }
-              if (isPrototypeProperty(expr)
-                  || NodeUtil.referencesThis(expr)
-                  || !expr.isQualifiedName()) {
-                // Class & prototype properties are handled in ProcessScope
-                return;
-              }
-              processQualifiedDefinition(expr);
-              break;
-            default:
-              break;
-          }
+        case EXPR_RESULT:
+          visitExprResult(n);
           break;
-        }
         default:
           break;
+      }
+    }
+
+    private void visitExprResult(Node n) {
+      checkArgument(n.isExprResult());
+      Node expr = n.getFirstChild();
+      switch (expr.getToken()) {
+        case ASSIGN:
+          Node lhs = expr.getFirstChild();
+          if (isCtorDefinedByCall(lhs)) {
+            visitNewCtorDefinedByCall(lhs);
+            return;
+          }
+          if (!lhs.isGetProp()) {
+            return;
+          }
+          expr = lhs;
+          // fall through
+        case GETPROP:
+          if (isCtorWithoutFunctionLiteral(expr)) {
+            visitNewCtorWithoutFunctionLiteral(expr);
+            return;
+          }
+          if (isPrototypeProperty(expr)
+              || NodeUtil.referencesThis(expr)
+              || !expr.isQualifiedName()) {
+            // Class & prototype properties are handled in ProcessScope
+            return;
+          }
+          processQualifiedDefinition(expr);
+          break;
+        default:
+          break;
+      }
+    }
+
+    private void visitName(Node n) {
+      checkArgument(n.isName());
+      if (this.currentScope.isFunction()) {
+        NTIScope.mayRecordEscapedVar(this.currentScope, n.getString());
+      }
+    }
+
+    private void visitVar(Node n) {
+      checkArgument(n.isVar());
+      Node nameNode = n.getFirstChild();
+      String varName = nameNode.getString();
+      if (NodeUtil.isNamespaceDecl(nameNode)) {
+        visitObjlitNamespace(nameNode);
+      } else if (NodeUtil.isTypedefDecl(nameNode)) {
+        visitTypedef(nameNode);
+      } else if (NodeUtil.isEnumDecl(nameNode)) {
+        visitEnum(nameNode);
+      } else if (isAliasedNamespaceDefinition(nameNode)) {
+        visitAliasedNamespace(nameNode);
+      } else if (varName.equals(WINDOW_INSTANCE) && nameNode.isFromExterns()) {
+        visitWindowVar(nameNode);
+      } else if (isCtorDefinedByCall(nameNode)) {
+        visitNewCtorDefinedByCall(nameNode);
+      } else if (isCtorWithoutFunctionLiteral(nameNode)) {
+        visitNewCtorWithoutFunctionLiteral(nameNode);
+      }
+      if (!n.isFromExterns()
+          && !this.currentScope.isDefinedLocally(varName, false)) {
+        // Add a dummy local to avoid shadowing errors, and to calculate
+        // escaped variables.
+        this.currentScope.addLocal(varName, getCommonTypes().UNKNOWN, false, false);
       }
     }
 

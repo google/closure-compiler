@@ -21728,4 +21728,53 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  x = y;",
         "}"));
   }
+
+  public void testOutOfOrderExterns() {
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @constructor */",
+            "ns.Foo = function() {};",
+            "/** @const */",
+            "var ns = {};"),
+        "var x = new ns.Foo;");
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @constructor */",
+            "ns.Foo = function() {};",
+            "/** @const */",
+            "var ns = {};"),
+        "var /** number */ n = new ns.Foo;",
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // If the root namespace is completely undefined, VarCheck warns. We don't register the type.
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @constructor */",
+            "ns.Foo = function() {};"),
+        "var /** number */ n = new ns.Foo;");
+
+    // Subnamespace is not defined. We warn for the missing property and don't register ns.Foo.Bar.
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @constructor */",
+            "ns.Foo.Bar = function() {};",
+            "/** @const */",
+            "var ns = {};"),
+        "var /** number */ n = new ns.Foo.Bar;",
+        NewTypeInference.INEXISTENT_PROPERTY);
+  }
+
+  public void testDontCrashOnUnusualExternsDefs() {
+    typeCheckCustomExterns(LINE_JOINER.join(
+        DEFAULT_EXTERNS,
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype['myprop'];"),
+        "");
+  }
 }
