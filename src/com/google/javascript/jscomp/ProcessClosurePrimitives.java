@@ -924,7 +924,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       // Record this provide created on a previous pass, and create a dummy
       // EXPR node as a placeholder to simulate an explicit provide.
       Node expr = new Node(Token.EXPR_RESULT);
-      expr.useSourceInfoWithoutLengthIfMissingFromForTree(parent);
+      expr.useSourceInfoIfMissingFromForTree(parent);
       parent.getParent().addChildBefore(expr, parent);
       /**
        * 'expr' has been newly added to the AST, but it might be removed again before this pass
@@ -1534,7 +1534,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       Node provideStringNode = getProvideStringNode();
       int offset = provideStringNode == null ? 0 : getSourceInfoOffset();
       Node sourceInfoNode = provideStringNode == null ? firstNode : provideStringNode;
-      newNode.useSourceInfoWithoutLengthIfMissingFromForTree(sourceInfoNode);
+      newNode.useSourceInfoIfMissingFromForTree(sourceInfoNode);
       if (offset != 0) {
         newNode.setSourceEncodedPositionForTree(
             sourceInfoNode.getSourcePosition() + offset);
