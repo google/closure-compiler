@@ -487,8 +487,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   }
 
   /**
-   * Resets the compiler input for reuse in another compile. TODO(tdeegan): Consider clearing the
-   * JsAst here in the future.
+   * Resets the compiler input for reuse in another compile.
    */
   public void reset() {
     this.module = null;
