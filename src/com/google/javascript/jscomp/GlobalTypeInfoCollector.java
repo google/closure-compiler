@@ -1714,17 +1714,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       return currentScope.getNominalType(QualifiedName.fromQualifiedString(qname));
     }
 
-    /** Returns the type of the constructor for a raw type.  Null-safe. */
-    private JSType getConstructor(RawNominalType rawType) {
-      if (rawType != null) {
-        FunctionType ctor = rawType.getConstructorFunction();
-        if (ctor != null) {
-          return getCommonTypes().fromFunctionType(ctor);
-        }
-      }
-      return null;
-    }
-
     private void visitPropertyDeclaration(Node getProp) {
       recordPropertyName(getProp.getLastChild());
       // Property declaration on THIS; most commonly a class property
@@ -2109,6 +2098,14 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       }
       JSType recvType = simpleInferExprType(recv);
       if (recvType == null) {
+        // Might still be worth recording a property, e.g. on a function.
+        PropertyDef def = findPropertyDef(recv);
+        if (def != null) {
+          JSType type = simpleInferExprType(getProp.getNext());
+          if (type != null) {
+            def.addProperty(recv.getNext().getString(), type);
+          }
+        }
         return;
       }
       recvType = recvType.removeType(getCommonTypes().NULL_OR_UNDEFINED);
@@ -2141,6 +2138,20 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       } else if (!rawType.mayHaveProp(pname)) {
         rawType.addPropertyWhichMayNotBeOnAllInstances(pname, null);
       }
+    }
+
+    /** Given a qualified name node, find a corresponding PropertyDef in propertyDefs. */
+    PropertyDef findPropertyDef(Node n) {
+      if (!isPrototypeProperty(n)) {
+        return null;
+      }
+      RawNominalType ownerType =
+          currentScope.getNominalType(QualifiedName.fromNode(n.getFirstFirstChild()));
+      if (ownerType == null) {
+        return null;
+      }
+      String propertyName = n.getLastChild().getString();
+      return propertyDefs.get(ownerType, propertyName);
     }
 
     boolean mayWarnAboutNoInit(Node constExpr) {
@@ -2710,7 +2721,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
           propDeclType = ft.getReturnType();
         }
       }
-      propertyDefs.put(rawType, pname, new PropertyDef(defSite, methodType, methodScope));
+      PropertyDef def = new PropertyDef(defSite, methodType, methodScope);
+      propertyDefs.put(rawType, pname, def);
 
       // Warn for abstract methods not in abstract classes
       if (methodType != null && methodType.isAbstract() && !rawType.isAbstractClass()) {
@@ -2730,6 +2742,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         if (propDeclType == null) {
           propDeclType = mayInferFromRhsIfConst(defSite);
         }
+        def.setter = new PropertySetter(rawType, pname, propDeclType, isConst);
         rawType.addProtoProperty(pname, defSite, propDeclType, isConst);
         if (defSite.isGetProp()) { // Don't bother saving for @lends
           defSite.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
@@ -2916,6 +2929,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     final Node defSite; // The getProp/objectLitKey of the property definition
     DeclaredFunctionType methodType; // null for non-method property decls
     final NTIScope methodScope; // null for decls without function on the RHS
+    PropertySetter setter; // optional extra information for updating the rawtype
 
     PropertyDef(
         Node defSite, DeclaredFunctionType methodType, NTIScope methodScope) {
@@ -2931,8 +2945,10 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       if (this.methodType == null) {
         return this;
       }
-      return new PropertyDef(
+      PropertyDef def = new PropertyDef(
           this.defSite, this.methodType.substituteNominalGenerics(nt), this.methodScope);
+      def.setter = this.setter;
+      return def;
     }
 
     void updateMethodType(DeclaredFunctionType updatedType) {
@@ -2942,9 +2958,29 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       }
     }
 
+    void addProperty(String name, JSType type) {
+      if (this.setter != null) {
+        setter.type = setter.type.withProperty(new QualifiedName(name), type);
+        setter.rawType.addProtoProperty(setter.name, defSite, setter.type, setter.isConstant);
+      }
+    }
+
     @Override
     public String toString() {
       return "PropertyDef(" + defSite + ", " + methodType + ")";
+    }
+  }
+
+  private static class PropertySetter {
+    final RawNominalType rawType;
+    final String name;
+    JSType type;
+    final boolean isConstant;
+    PropertySetter(RawNominalType rawType, String name, JSType type, boolean isConstant) {
+      this.rawType = rawType;
+      this.name = name;
+      this.type = type;
+      this.isConstant = isConstant;
     }
   }
 

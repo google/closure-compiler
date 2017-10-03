@@ -21777,4 +21777,29 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "Foo.prototype['myprop'];"),
         "");
   }
+
+  public void testPropertiesOnMethods() {
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() {}",
+            "Foo.prototype.bar = function() {};",
+            "Foo.prototype.bar.baz = 42;",
+            "var /** string */ qux = Foo.prototype.bar.baz;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() {}",
+            "Foo.prototype.bar = function() {};",
+            "Foo.prototype.bar.baz = 42;",
+            "var /** string */ qux = new Foo().bar.baz;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() {}",
+            "Foo.prototype.bar = function() {};",
+            "Foo.prototype.bar.baz = 42;",
+            "var /** number */ qux = new Foo().bar.baz;"));
+  }
 }
