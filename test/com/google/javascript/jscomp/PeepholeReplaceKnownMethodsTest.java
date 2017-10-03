@@ -304,6 +304,15 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
             "  ].join()"));
   }
 
+  // Fails with:
+  // java.lang.IllegalStateException: SPREAD node should not be the child of a ADD node.
+  // TODO(b/67381773): Fix and enable this test.
+  public void disabled_testJoinSpread() {
+    foldSame("var x = [...foo].join(',');");
+    foldSame("var x = [...foo].join('');");
+    foldSame("var x = [...someMap.keys()].join('');");
+  }
+
   public void testToUpper() {
     fold("'a'.toUpperCase()", "'A'");
     fold("'A'.toUpperCase()", "'A'");
