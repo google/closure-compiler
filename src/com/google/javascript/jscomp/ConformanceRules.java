@@ -350,7 +350,7 @@ public final class ConformanceRules {
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       JSDocInfo jsDoc = n.getJSDocInfo();
-      if (jsDoc != null && jsDoc.isConstant() && jsDoc.getType() == null) {
+      if (jsDoc != null && jsDoc.hasConstAnnotation() && jsDoc.getType() == null) {
         if (n.isAssign()) {
           n = n.getFirstChild();
         }
