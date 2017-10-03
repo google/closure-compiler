@@ -4603,6 +4603,7 @@ function CustomElementRegistry() {}
  * @param {string} tagName
  * @param {!function(new:HTMLElement)} klass
  * @param {{extends: string}=} options
+ * @return {undefined}
  */
 CustomElementRegistry.prototype.define = function (tagName, klass, options) {};
 
