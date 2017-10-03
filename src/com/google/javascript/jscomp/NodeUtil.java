@@ -474,7 +474,7 @@ public final class NodeUtil {
    * @return the node best representing the class's name
    */
   public static Node getNameNode(Node n) {
-    checkState(n.isFunction() || n.isClass());
+    checkState(n.isFunction() || n.isClass(), n);
     Node parent = n.getParent();
     switch (parent.getToken()) {
       case NAME:

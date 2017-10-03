@@ -102,12 +102,6 @@ class FindExportableNodes extends AbstractPostOrderCallback {
           }
           break;
 
-        case MEMBER_FUNCTION_DEF:
-          export = n.getString();
-          context = n;
-          mode = Mode.EXPORT;
-          break;
-
         case ASSIGN:
           Node grandparent = parent.getParent();
           if (parent.isExprResult() && !n.getLastChild().isAssign()) {
@@ -148,6 +142,15 @@ class FindExportableNodes extends AbstractPostOrderCallback {
           }
           break;
         }
+
+        case MEMBER_FUNCTION_DEF:
+          if (parent.getParent().isClass()) {
+            export = n.getString();
+            context = n;
+            mode = Mode.EXPORT;
+            break;
+          }
+          // fallthrough
 
         case STRING_KEY:
         case GETTER_DEF:
