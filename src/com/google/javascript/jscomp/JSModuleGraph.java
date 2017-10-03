@@ -175,6 +175,17 @@ public final class JSModuleGraph implements Serializable {
   }
 
   /**
+   * This only exists as a temprorary workaround.
+   * @deprecated Fix the tests that use this.
+   */
+  @Deprecated
+  public void breakThisGraphSoItsModulesCanBeReused() {
+    for (JSModule m : modules) {
+      m.resetThisModuleSoItCanBeReused();
+    }
+  }
+
+  /**
    * Gets an iterable over all modules in dependency order.
    */
   Iterable<JSModule> getAllModules() {
