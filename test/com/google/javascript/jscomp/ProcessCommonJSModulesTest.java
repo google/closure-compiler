@@ -643,6 +643,22 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "test.js",
         LINE_JOINER.join(
+            "!function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}}()"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {foo: 'bar'};"));
+
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
             ";;;(function(){",
             "var foobar = {foo: 'bar'};",
             "if (typeof module === 'object' && module.exports) {",
@@ -927,6 +943,65 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "var third$$module$test=3;",
             "var fourth$$module$test=4;",
             "var fifth$$module$test=5;"));
+  }
+
+  public void testTernaryUMDWrapper() {
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
+            "var foobar = {foo: 'bar'};",
+            "typeof module === 'object' && module.exports ? module.exports = foobar :",
+            "typeof define === 'function' && define.amd ? define([], function() {return foobar;}) :",
+            "this.foobar = foobar;"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {foo: 'bar'};"));
+  }
+
+  public void testLeafletUMDWrapper() {
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
+            "(function (global, factory) {",
+            "  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :",
+            "  typeof define === 'function' && define.amd ? define(['exports'], factory) :",
+            "  (factory((global.L = {})));",
+            "}(this, (function (exports) {",
+            "  'use strict';",
+            "  var webkit = userAgentContains('webkit');",
+            "  function userAgentContains(str) {",
+            "    return navigator.userAgent.toLowerCase().indexOf(str) >= 0;",
+            "  }",
+            "  exports.webkit = webkit",
+            "})));"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "/** @const */ var module$test={};",
+            "{",
+            "  var exports$jscomp$inline_3$$module$test=module$test;",
+            "  var userAgentContains$jscomp$inline_5$$module$test=function(str$jscomp$inline_6){",
+            "    return navigator.userAgent.toLowerCase().indexOf(str$jscomp$inline_6)>=0;",
+            "  };",
+            "  var webkit$jscomp$inline_4$$module$test=userAgentContains$jscomp$inline_5$$module$test('webkit');",
+            "  exports$jscomp$inline_3$$module$test.webkit=webkit$jscomp$inline_4$$module$test;",
+            "}"));
+  }
+
+  public void testBowserUMDWrapper() {
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
+            "!function (root, name, definition) {",
+            "  if (typeof module != 'undefined' && module.exports) module.exports = definition()",
+            "  else if (typeof define == 'function' && define.amd) define(name, definition)",
+            "  else root[name] = definition()",
+            "}(this, 'foobar', function () {",
+            "  return {foo: 'bar'};",
+            "});"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "/** @const */ var module$test={};",
+            "module$test.foo = 'bar';"));
   }
 
   public void testDontSplitVarsInFor() {
