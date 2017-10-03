@@ -516,8 +516,10 @@ public class CommandLineRunner extends
     private String commonJsEntryModule;
 
     @Option(name = "--transform_amd_modules",
+        hidden = true,
         handler = BooleanOptionHandler.class,
-        usage = "Transform AMD to CommonJS modules.")
+        usage = "Deprecated: Transform AMD to CommonJS modules.")
+    @Deprecated
     private boolean transformAmdModules = false;
 
     @Option(name = "--process_closure_primitives",
@@ -845,7 +847,6 @@ public class CommandLineRunner extends
                     "js_module_root",
                     "module_resolution",
                     "process_common_js_modules",
-                    "transform_amd_modules",
                     "package_json_entry_names"))
             .putAll(
                 "Library and Framework Specific",
@@ -1871,7 +1872,7 @@ public class CommandLineRunner extends
     // A map from normalized absolute paths to original paths. We need to return original paths to
     // support whitelist files that depend on them.
     Map<String, String> allJsInputs = sortAlphabetically
-        ? new TreeMap<String, String>() : new LinkedHashMap<String, String>();
+        ? new TreeMap<>() : new LinkedHashMap<>();
     Set<String> excludes = new HashSet<>();
     for (String pattern : patterns) {
       if (!pattern.contains("*") && !pattern.startsWith("!")) {
