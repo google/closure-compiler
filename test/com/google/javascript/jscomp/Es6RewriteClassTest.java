@@ -29,6 +29,8 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 
 public final class Es6RewriteClassTest extends CompilerTestCase {
 
+  private boolean shouldAddInheritsPolyfill;
+
   private static final String EXTERNS_BASE =
       LINE_JOINER.join(
           "/** @constructor @template T */",
@@ -72,6 +74,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableRunTypeCheckAfterProcessing();
+    shouldAddInheritsPolyfill = true;
   }
 
   protected final PassFactory makePassFactory(
@@ -95,10 +98,13 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     optimizer.addOneTimePass(
         makePassFactory("es6ConvertSuper", new Es6ConvertSuper(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", new Es6ExtractClasses(compiler)));
-    optimizer.addOneTimePass(makePassFactory("es6RewriteClass", new Es6RewriteClass(compiler)));
-    optimizer.addOneTimePass(
-        makePassFactory(
-            "Es6ConvertSuperConstructorCalls", new Es6ConvertSuperConstructorCalls(compiler)));
+    optimizer.addOneTimePass(makePassFactory("es6RewriteClass",
+        new Es6RewriteClass(compiler, shouldAddInheritsPolyfill)));
+    if (shouldAddInheritsPolyfill) {
+      optimizer.addOneTimePass(
+          makePassFactory(
+              "Es6ConvertSuperConstructorCalls", new Es6ConvertSuperConstructorCalls(compiler)));
+    }
     return optimizer;
   }
 
@@ -615,6 +621,19 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " */",
             "let C = function(var_args) {};"));
+  }
+
+  public void testExtendsWithoutInheritsPolyfill() {
+    shouldAddInheritsPolyfill = false;
+    test("class D {} class C extends D {}",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let D = function() {};",
+            "/** @constructor @struct",
+            " * @extends {D}",
+            " * @param {...?} var_args",
+            " */",
+            "let C = function(var_args) {super.apply(this,arguments); };"));
   }
 
   public void testExtendNonNativeError() {

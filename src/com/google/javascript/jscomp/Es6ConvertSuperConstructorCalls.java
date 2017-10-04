@@ -81,6 +81,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
   private void visitSuper(NodeTraversal t, ConstructorData constructorData) {
     // NOTE: When this pass runs:
     // -   ES6 classes have already been rewritten as ES5 functions.
+    // -   All subclasses have $jscomp.inherits() calls connecting them to their parent class.
     // -   All instances of super() that are not super constructor calls have been rewritten.
     // -   However, if the original call used spread (e.g. super(...list)), then spread
     //     transpilation will have turned that into something like

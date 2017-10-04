@@ -183,6 +183,10 @@ public class CompilerOptions implements Serializable {
     }
   }
 
+  public boolean inIncrementalCheckMode() {
+    return incrementalCheckMode != IncrementalCheckMode.OFF;
+  }
+
   public boolean shouldGenerateTypedExterns() {
     return incrementalCheckMode == IncrementalCheckMode.GENERATE_IJS;
   }

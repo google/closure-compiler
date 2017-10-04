@@ -427,7 +427,7 @@ public final class DefaultPassConfig extends PassConfig {
       addNonTranspilationCheckPasses(checks);
     }
 
-    if (options.needsTranspilationFrom(ES6)) {
+    if (options.needsTranspilationFrom(ES6) && !options.inIncrementalCheckMode()) {
       TranspilationPasses.addPostCheckPasses(checks);
     }
 
