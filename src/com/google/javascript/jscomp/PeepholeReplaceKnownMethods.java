@@ -18,6 +18,7 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Strings.isNullOrEmpty;
 
 import com.google.javascript.rhino.IR;
@@ -106,6 +107,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
             return tryFoldStringToLowerCase(subtree, stringNode);
           case "toUpperCase":
             return tryFoldStringToUpperCase(subtree, stringNode);
+          default: // fall out
         }
       } else {
         if (NodeUtil.isImmutableValue(firstArg)) {
@@ -122,6 +124,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
               return tryFoldStringCharAt(subtree, stringNode, firstArg);
             case "charCodeAt":
               return tryFoldStringCharCodeAt(subtree, stringNode, firstArg);
+            default: // fall out
           }
         }
       }
@@ -150,6 +153,8 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
                 if (end - start == 1) {
                   return replaceWithCharAt(subtree, callTarget, firstArg);
                 }
+                break;
+              default: // fall out
             }
           }
         }
@@ -407,6 +412,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
    * Try to fold an array join: ['a', 'b', 'c'].join('') -> 'abc';
    */
   private Node tryFoldArrayJoin(Node n) {
+    checkState(n.isCall(), n);
     Node callTarget = n.getFirstChild();
 
     if (callTarget == null || !callTarget.isGetProp()) {
@@ -423,13 +429,11 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     Node arrayNode = callTarget.getFirstChild();
     Node functionName = arrayNode.getNext();
 
-    if (!arrayNode.isArrayLit() ||
-        !functionName.getString().equals("join")) {
+    if (!arrayNode.isArrayLit() || !functionName.getString().equals("join")) {
       return n;
     }
 
-    if (right != null && right.isString()
-        && ",".equals(right.getString())) {
+    if (right != null && right.isString() && ",".equals(right.getString())) {
       // "," is the default, it doesn't need to be explicit
       n.removeChild(right);
       compiler.reportChangeToEnclosingScope(n);
@@ -485,7 +489,9 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
         return emptyStringNode;
       case 1:
         Node foldedStringNode = arrayFoldedChildren.remove(0);
-        if (foldedSize > originalSize) {
+        // The spread isn't valid outside any array literal (or would change meaning)
+        // so don't try to fold it.
+        if (foldedStringNode.isSpread() || foldedSize > originalSize) {
           return n;
         }
         arrayNode.detachChildren();
