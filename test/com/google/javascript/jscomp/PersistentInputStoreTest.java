@@ -52,4 +52,33 @@ public class PersistentInputStoreTest extends TestCase {
     // Stored CompilerInput was revoked from cache.
     assertThat(testStore.getCachedCompilerInput(file)).isNotSameAs(input);
   }
+
+  public void testCacheZipFiles() {
+    PersistentInputStore store = new PersistentInputStore();
+    store.addInput("path/to/a/zipfile.js.zip", "aaa");
+
+    SourceFile zipEntryA = SourceFile.fromFile("path/to/a/zipfile.js.zip!/relative/a.js");
+    SourceFile zipEntryB = SourceFile.fromFile("path/to/a/zipfile.js.zip!/relative/b.js");
+
+    CompilerInput inputA = store.getCachedCompilerInput(zipEntryA);
+    CompilerInput inputB = store.getCachedCompilerInput(zipEntryB);
+
+    // Returns same compiler input. Reused from last compile.
+    assertThat(inputA).isSameAs(store.getCachedCompilerInput(zipEntryA));
+    assertThat(inputB).isSameAs(store.getCachedCompilerInput(zipEntryB));
+
+    // New compile. Digest did not change.
+    store.addInput("path/to/a/zipfile.js.zip", "aaa");
+
+    // Returns same compiler input. Reused from last compile.
+    assertThat(inputA).isSameAs(store.getCachedCompilerInput(zipEntryA));
+    assertThat(inputB).isSameAs(store.getCachedCompilerInput(zipEntryB));
+
+    // New Compile. Digest CHANGES!
+    store.addInput("path/to/a/zipfile.js.zip", "bbb");
+
+    // All inputs from the zip are recomputed.
+    assertThat(inputA).isNotSameAs(store.getCachedCompilerInput(zipEntryA));
+    assertThat(inputB).isNotSameAs(store.getCachedCompilerInput(zipEntryB));
+  }
 }
