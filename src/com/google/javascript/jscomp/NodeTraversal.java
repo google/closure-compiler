@@ -687,6 +687,10 @@ public class NodeTraversal {
     t.traverseScopeRoot(scopeNode);
   }
 
+  /**
+   * @deprecated Use the ES6SyntacticScopeCreator instead.
+   */
+  @Deprecated
   public static void traverseTyped(AbstractCompiler compiler, Node root, Callback cb) {
     NodeTraversal t = new NodeTraversal(compiler, cb, SyntacticScopeCreator.makeTyped(compiler));
     t.traverse(root);
@@ -698,6 +702,10 @@ public class NodeTraversal {
     t.traverseRoots(externs, root);
   }
 
+  /**
+   * @deprecated Use the ES6SyntacticScopeCreator instead.
+   */
+  @Deprecated
   public static void traverseRootsTyped(
       AbstractCompiler compiler, Callback cb, Node externs, Node root) {
     NodeTraversal t = new NodeTraversal(compiler, cb, SyntacticScopeCreator.makeTyped(compiler));
