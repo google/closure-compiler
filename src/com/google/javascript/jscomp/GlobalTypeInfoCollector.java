@@ -2101,7 +2101,10 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         // Might still be worth recording a property, e.g. on a function.
         PropertyDef def = findPropertyDef(recv);
         if (def != null) {
-          JSType type = simpleInferExprType(getProp.getNext());
+          JSType type =
+              getProp.getNext() != null
+                  ? simpleInferExprType(getProp.getNext())
+                  : getCommonTypes().UNKNOWN;
           if (type != null) {
             def.addProperty(recv.getNext().getString(), type);
           }

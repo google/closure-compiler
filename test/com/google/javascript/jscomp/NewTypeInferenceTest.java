@@ -21801,5 +21801,12 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "Foo.prototype.bar = function() {};",
             "Foo.prototype.bar.baz = 42;",
             "var /** number */ qux = new Foo().bar.baz;"));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() {}",
+            "Foo.prototype.bar = function() {};",
+            "Foo.prototype.bar.baz;",
+            "var qux = new Foo().bar.baz;"));
   }
 }
