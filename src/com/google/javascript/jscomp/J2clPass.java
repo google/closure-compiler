@@ -255,6 +255,11 @@ public class J2clPass implements CompilerPass {
      * Inlines all Interface.$markImplementor(FooClass) metaclass calls so that FooClass and others
      * like it are not unnecessarily retained and so that static analysis of interface instanceof
      * calls becomes possible.
+     *
+     * Note that his pass should NOT be restricted to j2cl .java.js files because JavaScript code
+     * implementing Java interfaces (not recommended but widely used in xplat) needs calls to
+     * $markImplementor.
+     *
      */
     inlineFunctionsInFile(
         root, ALL_CLASS_FILE_NAMES, ImmutableSet.of("$markImplementor"), InliningMode.BLOCK);
