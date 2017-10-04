@@ -2242,14 +2242,13 @@ public class Node implements Serializable {
   }
 
   /**
-   * Copies source file and name information from the other
-   * node given to the current node. Used for maintaining
-   * debug information across node append and remove operations.
+   * Copies source file and name information from the other node to the
+   * entire tree rooted at this node.
    * @return this
    */
   // TODO(nicksantos): The semantics of this method are ill-defined. Delete it.
   @Deprecated
-  public final Node useSourceInfoWithoutLengthIfMissingFrom(Node other) {
+  public final Node useSourceInfoWithoutLengthIfMissingFromForTree(Node other) {
     if (getStaticSourceFile() == null) {
       setStaticSourceFileFrom(other);
       sourcePosition = other.sourcePosition;
@@ -2259,18 +2258,6 @@ public class Node implements Serializable {
       putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
     }
 
-    return this;
-  }
-
-  /**
-   * Copies source file and name information from the other node to the
-   * entire tree rooted at this node.
-   * @return this
-   */
-  // TODO(nicksantos): The semantics of this method are ill-defined. Delete it.
-  @Deprecated
-  public final Node useSourceInfoWithoutLengthIfMissingFromForTree(Node other) {
-    useSourceInfoWithoutLengthIfMissingFrom(other);
     for (Node child = first; child != null; child = child.next) {
       child.useSourceInfoWithoutLengthIfMissingFromForTree(other);
     }
