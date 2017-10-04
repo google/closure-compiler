@@ -1665,7 +1665,7 @@ public class CompilerOptions implements Serializable {
     inlineProperties = enable;
   }
 
-  boolean shouldInlineProperties() {
+  public boolean shouldInlineProperties() {
     return inlineProperties;
   }
 
@@ -1761,6 +1761,10 @@ public class CompilerOptions implements Serializable {
 
   public void setExportLocalPropertyDefinitions(boolean export) {
     this.exportLocalPropertyDefinitions = export;
+  }
+
+  public boolean shouldExportLocalPropertyDefinitions() {
+    return this.exportLocalPropertyDefinitions;
   }
 
   public void setAngularPass(boolean angularPass) {
@@ -2306,6 +2310,10 @@ public class CompilerOptions implements Serializable {
     this.useTypesForLocalOptimization = useTypesForLocalOptimization;
   }
 
+  public boolean shouldUseTypesForLocalOptimization() {
+    return this.useTypesForLocalOptimization;
+  }
+
   @Deprecated
   public void setUseTypesForOptimization(boolean useTypesForOptimization) {
     if (useTypesForOptimization) {
@@ -2342,6 +2350,10 @@ public class CompilerOptions implements Serializable {
 
   public void setPropertyRenaming(PropertyRenamingPolicy propertyRenaming) {
     this.propertyRenaming = propertyRenaming;
+  }
+
+  public PropertyRenamingPolicy getPropertyRenaming() {
+    return this.propertyRenaming;
   }
 
   public void setLabelRenaming(boolean labelRenaming) {
@@ -2407,7 +2419,7 @@ public class CompilerOptions implements Serializable {
     this.disambiguateProperties = disambiguateProperties;
   }
 
-  boolean shouldDisambiguateProperties() {
+  public boolean shouldDisambiguateProperties() {
     return this.disambiguateProperties;
   }
 
@@ -2415,7 +2427,7 @@ public class CompilerOptions implements Serializable {
     this.ambiguateProperties = ambiguateProperties;
   }
 
-  boolean shouldAmbiguateProperties() {
+  public boolean shouldAmbiguateProperties() {
     return this.ambiguateProperties;
   }
 
