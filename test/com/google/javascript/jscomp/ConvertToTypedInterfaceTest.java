@@ -1076,4 +1076,20 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "",
             "a.b.c.d.e.f.g.Foo = class {};"));
   }
+
+  public void testDescAnnotationCountsAsTyped() {
+    test(
+        LINE_JOINER.join(
+            "goog.module('a.b.c');",
+            "",
+            "/** @desc Some description */",
+            "exports.MSG_DESCRIPTION = goog.getMsg('Text');",
+            ""),
+        LINE_JOINER.join(
+            "goog.module('a.b.c');",
+            "",
+            "/** @const {string} @desc Some description */",
+            "exports.MSG_DESCRIPTION;",
+            ""));
+  }
 }

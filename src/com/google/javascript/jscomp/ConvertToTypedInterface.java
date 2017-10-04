@@ -365,13 +365,21 @@ class ConvertToTypedInterface implements CompilerPass {
       return NodeUtil.getBestJSDocInfo(lhs);
     }
 
+    /**
+     * Remove this "potential declaration" completely.
+     * Usually, this is because the same symbol has already been declared in this file.
+     */
     void remove(AbstractCompiler compiler) {
       Node statement = getStatement();
       NodeUtil.deleteNode(statement, compiler);
       statement.removeChildren();
     }
 
-    void maybeRemoveRhs(AbstractCompiler compiler) {
+    /**
+     * Simplify this declaration to only include what's necessary for typing.
+     * Usually, this means removing the RHS and leaving a type annotation.
+     */
+    void simplify(AbstractCompiler compiler) {
       Node nameNode = lhs;
       JSDocInfo jsdoc = getJsDoc();
       if (jsdoc != null && jsdoc.hasEnumParameterType()) {
@@ -503,7 +511,7 @@ class ConvertToTypedInterface implements CompilerPass {
           }
           break;
         case REMOVE_RHS:
-          decl.maybeRemoveRhs(compiler);
+          decl.simplify(compiler);
           break;
         case REMOVE_ALL:
           decl.remove(compiler);
@@ -748,6 +756,9 @@ class ConvertToTypedInterface implements CompilerPass {
     private static JSDocInfo pullJsdocTypeFromAst(
         AbstractCompiler compiler, JSDocInfo oldJSDoc, Node nameNode) {
       checkArgument(nameNode.isQualifiedName());
+      if (oldJSDoc != null && oldJSDoc.getDescription() != null) {
+        return getConstJSDoc(oldJSDoc, "string");
+      }
       if (!nameNode.isFromExterns() && !isPrivate(oldJSDoc)) {
         compiler.report(JSError.make(nameNode, CONSTANT_WITHOUT_EXPLICIT_TYPE));
       }
