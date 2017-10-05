@@ -214,6 +214,14 @@ public final class VarCheckTest extends CompilerTestCase {
         VarCheck.NAME_REFERENCE_IN_EXTERNS_ERROR);
   }
 
+  public void testDestructuringInExterns() {
+    testSame("function externalFunction({x, y}) {}", "");
+    testSame("function externalFunction({x, y:{z}}) {}", "");
+    testSame("function externalFunction({x:localName}) {}", "");
+    testSame("function externalFunction([a, b, c]) {}", "");
+    testSame("function externalFunction([[...a], b, c = 5, ...d]) {}", "");
+  }
+
   public void testVarReferenceInExterns_withEs6Modules() {
     // vars in ES6 modules are not in global scope, so foo is undefined.
     testError("foo;", "export var foo;", VarCheck.UNDEFINED_VAR_ERROR);

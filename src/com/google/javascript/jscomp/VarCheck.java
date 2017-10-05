@@ -301,7 +301,13 @@ class VarCheck extends AbstractPostOrderCallback implements
           case PARAM_LIST:
           case DEFAULT_VALUE:
           case REST:
+          case ARRAY_PATTERN:
             // These are okay.
+            return;
+          case STRING_KEY:
+            if (parent.getParent().isObjectPattern()) {
+              return;
+            }
             break;
           case GETPROP:
             if (n == parent.getFirstChild()) {
@@ -312,33 +318,37 @@ class VarCheck extends AbstractPostOrderCallback implements
                 varsToDeclareInExterns.add(n.getString());
               }
             }
-            break;
-         case ASSIGN:
+            return;
+          case ASSIGN:
             // Don't warn for the "window.foo = foo;" nodes added by
             // DeclaredGlobalExternsOnWindow, nor for alias declarations
             // of the form "/** @const */ ns.Foo = Bar;"
             if (n == parent.getLastChild() && n.isQualifiedName()
                 && parent.getFirstChild().isQualifiedName()) {
-              break;
-            }
-            // fall through
-          default:
-            if ((parent.isName() && NodeUtil.isNameDeclaration(parent.getParent()))
-                || (parent.isOr() && NodeUtil.isNamespaceDecl(parent.getParent()))) {
-              // Don't warn for:
-              // 1. Simple var assignments "/** @const */ var foo = bar;"
-              //    They are used to infer the types of namespace aliases.
-              // 2. Namespace declarations: "/** @const */ var ns = ns || {};"
-            } else {
-              t.report(n, NAME_REFERENCE_IN_EXTERNS_ERROR, n.getString());
-            }
-
-            Scope scope = t.getScope();
-            Var var = scope.getVar(n.getString());
-            if (var == null) {
-              varsToDeclareInExterns.add(n.getString());
+              return;
             }
             break;
+          case NAME:
+            // Don't warn for simple var assignments "/** @const */ var foo = bar;"
+            // They are used to infer the types of namespace aliases.
+            if (NodeUtil.isNameDeclaration(parent.getParent())) {
+              return;
+            }
+            break;
+          case OR:
+            // Don't warn for namespace declarations: "/** @const */ var ns = ns || {};"
+            if (NodeUtil.isNamespaceDecl(parent.getParent())) {
+              return;
+            }
+            break;
+          default:
+            break;
+        }
+        t.report(n, NAME_REFERENCE_IN_EXTERNS_ERROR, n.getString());
+        Scope scope = t.getScope();
+        Var var = scope.getVar(n.getString());
+        if (var == null) {
+          varsToDeclareInExterns.add(n.getString());
         }
       }
     }
