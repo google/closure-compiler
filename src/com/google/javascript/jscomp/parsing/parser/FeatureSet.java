@@ -43,8 +43,11 @@ import java.util.Set;
 public final class FeatureSet implements Serializable {
   private final ImmutableSet<Feature> features;
 
-  /** The bare minimum set of features in ES3. */
-  public static final FeatureSet ES3 = new FeatureSet(ImmutableSet.<Feature>of());
+  /** The bare minimum set of features. */
+  public static final FeatureSet BARE_MINIMUM = new FeatureSet(ImmutableSet.<Feature>of());
+
+  /** Features from ES3. */
+  public static final FeatureSet ES3 = BARE_MINIMUM.with(LangVersion.ES3.features());
 
   /** Features from ES5 only. */
   public static final FeatureSet ES5 = ES3.with(LangVersion.ES5.features());
@@ -65,8 +68,25 @@ public final class FeatureSet implements Serializable {
 
   public static final FeatureSet TYPESCRIPT = ES8_MODULES.with(LangVersion.TYPESCRIPT.features());
 
+  // TODO(b/64536685): Remove this FeatureSet once NTI supports all of ES6.
+  public static final FeatureSet NTI_SUPPORTED =
+      ES5.with(
+          ImmutableSet.<Feature>of(
+              Feature.COMPUTED_PROPERTIES,
+              Feature.EXPONENT_OP,
+              Feature.EXTENDED_OBJECT_LITERALS,
+              Feature.FOR_OF,
+              Feature.GENERATORS,
+              Feature.MEMBER_DECLARATIONS,
+              Feature.TEMPLATE_LITERALS));
+
   private enum LangVersion {
-    ES5, ES6, ES7, ES8, TYPESCRIPT;
+    ES3,
+    ES5,
+    ES6,
+    ES7,
+    ES8,
+    TYPESCRIPT;
 
     private Set<Feature> features() {
       Set<Feature> set = new HashSet<>();
@@ -81,6 +101,15 @@ public final class FeatureSet implements Serializable {
 
   /** Specific features that can be included in a FeatureSet. */
   public enum Feature {
+    // ES3 features
+    // Functions can be declared in the block scope for all ES versions. However, for ES3 and ES5,
+    // we want to hoist the functions from the block scope by redeclaring them as vars (i.e.
+    // { function f() {} } becomes { var f = function {} }. To prevent this feature from causing
+    // code to run additional transpilation passes beyond rewriting block scoped functions, we mark
+    // block scoped functions as an ES3 feature and then manually determine whether to rewrite
+    // functions inside the processTranspile method of TranspilationPasses.java
+    BLOCK_SCOPED_FUNCTION_DECLARATION("block function", LangVersion.ES3),
+
     // ES5 features
     ES3_KEYWORDS_AS_IDENTIFIERS("ES3 keywords as identifiers", LangVersion.ES5),
     GETTER("getters", LangVersion.ES5),
@@ -113,13 +142,15 @@ public final class FeatureSet implements Serializable {
     DEFAULT_PARAMETERS("default parameter", LangVersion.ES6),
     MODULES("modules", LangVersion.ES6),
 
-    // '**' operator
+    // ES 2016 only added one new feature:
     EXPONENT_OP("exponent operator (**)", LangVersion.ES7),
 
-    // http://tc39.github.io/ecmascript-asyncawait/
+    // ES 2017 features:
     ASYNC_FUNCTIONS("async function", LangVersion.ES8),
+    TRAILING_COMMA_IN_PARAM_LIST("trailing comma in param list", LangVersion.ES8),
 
     // ES6 typed features that are not at all implemented in browsers
+    ACCESSIBILITY_MODIFIER("accessibility modifier", LangVersion.TYPESCRIPT),
     AMBIENT_DECLARATION("ambient declaration", LangVersion.TYPESCRIPT),
     CALL_SIGNATURE("call signature", LangVersion.TYPESCRIPT),
     CONSTRUCTOR_SIGNATURE("constructor signature", LangVersion.TYPESCRIPT),
@@ -162,6 +193,9 @@ public final class FeatureSet implements Serializable {
     }
     if (ES6_MODULES.contains(this)) {
       return "es6";
+    }
+    if (NTI_SUPPORTED.contains(this)) {
+      return "ntiSupported";
     }
     if (ES7_MODULES.contains(this)) {
       return "es7";

@@ -20,6 +20,7 @@ import static com.google.javascript.jscomp.CheckJSDoc.ANNOTATION_DEPRECATED;
 import static com.google.javascript.jscomp.CheckJSDoc.ARROW_FUNCTION_AS_CONSTRUCTOR;
 import static com.google.javascript.jscomp.CheckJSDoc.DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL;
 import static com.google.javascript.jscomp.CheckJSDoc.DISALLOWED_MEMBER_JSDOC;
+import static com.google.javascript.jscomp.CheckJSDoc.INVALID_DEFINE_ON_LET;
 import static com.google.javascript.jscomp.CheckJSDoc.INVALID_MODIFIES_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.INVALID_NO_SIDE_EFFECT_ANNOTATION;
 import static com.google.javascript.jscomp.CheckJSDoc.MISPLACED_ANNOTATION;
@@ -44,14 +45,6 @@ public final class CheckJsDocTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
-  }
-
-  @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    options.setWarningLevel(
-        DiagnosticGroups.MISPLACED_TYPE_ANNOTATION, CheckLevel.WARNING);
-    return options;
   }
 
   public void testInlineJsDoc_ES6() {
@@ -546,30 +539,30 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   public void testArrowFuncAsConstructor() {
-    testWarning("/** @constructor */ var a = ()=>{}; var b = a();",
+    testError("/** @constructor */ var a = ()=>{}; var b = a();",
         ARROW_FUNCTION_AS_CONSTRUCTOR);
-    testWarning("var a = /** @constructor */ ()=>{}; var b = a();",
+    testError("var a = /** @constructor */ ()=>{}; var b = a();",
         ARROW_FUNCTION_AS_CONSTRUCTOR);
-    testWarning("/** @constructor */ let a = ()=>{}; var b = a();",
+    testError("/** @constructor */ let a = ()=>{}; var b = a();",
         ARROW_FUNCTION_AS_CONSTRUCTOR);
-    testWarning("/** @constructor */ const a = ()=>{}; var b = a();",
+    testError("/** @constructor */ const a = ()=>{}; var b = a();",
         ARROW_FUNCTION_AS_CONSTRUCTOR);
-    testWarning("var a; /** @constructor */ a = ()=>{}; var b = a();",
+    testError("var a; /** @constructor */ a = ()=>{}; var b = a();",
         ARROW_FUNCTION_AS_CONSTRUCTOR);
   }
 
   public void testArrowFuncAsConstructor_withES6Modules() {
-    testWarning(
+    testError(
         "export /** @constructor */ var a = ()=>{}; var b = a();", ARROW_FUNCTION_AS_CONSTRUCTOR);
   }
 
   public void testDefaultParam() {
-    testWarning("function f(/** number */ x=0) {}", DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL);
+    testError("function f(/** number */ x=0) {}", DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL);
     testSame("function f(/** number= */ x=0) {}");
   }
 
   public void testInvalidDefaultParam_withES6Modules() {
-    testWarning("export function f(/** number */ x=0) {}", DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL);
+    testError("export function f(/** number */ x=0) {}", DEFAULT_PARAM_MUST_BE_MARKED_OPTIONAL);
   }
 
   public void testValidDefaultParam_withES6Modules() {
@@ -651,40 +644,50 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   public void testInvalidAnnotation1() throws Exception {
-    testWarning("/** @nosideeffects */ function foo() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
+    testError("/** @nosideeffects */ function foo() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   public void testInvalidAnnotation2() throws Exception {
-    testWarning("var f = /** @nosideeffects */ function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
+    testError("var f = /** @nosideeffects */ function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   public void testInvalidAnnotation3() throws Exception {
-    testWarning("/** @nosideeffects */ var f = function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
+    testError("/** @nosideeffects */ var f = function() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   public void testInvalidAnnotation4() throws Exception {
-    testWarning(
+    testError(
         "var f = function() {};" + "/** @nosideeffects */ f.x = function() {}",
         INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   public void testInvalidAnnotation5() throws Exception {
-    testWarning(
+    testError(
         "var f = function() {};" + "f.x = /** @nosideeffects */ function() {}",
         INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   public void testInvalidAnnotation_withES6Modules() {
-    testWarning(
+    testError(
         "export /** @nosideeffects */ function foo() {}", INVALID_NO_SIDE_EFFECT_ANNOTATION);
   }
 
   public void testInvalidModifiesAnnotation() throws Exception {
-    testWarning("/** @modifies {this} */ var f = function() {};", INVALID_MODIFIES_ANNOTATION);
+    testError("/** @modifies {this} */ var f = function() {};", INVALID_MODIFIES_ANNOTATION);
   }
 
   public void testInvalidModifiesAnnotation_withES6Modules() {
-    testWarning(
+    testError(
         "export /** @modifies {this} */ var f = function() {};", INVALID_MODIFIES_ANNOTATION);
+  }
+
+  public void testInvalidDefinesVariableDeclaration() {
+    testError("/** @define {boolean} */ let DEF = true;", INVALID_DEFINE_ON_LET);
+    testError("/** @define {number} */ let DEF = 3;", INVALID_DEFINE_ON_LET);
+    testSame("/** @define {boolean} */ var DEF = true;");
+    testSame("/** @define {boolean} */ const DEF = true;");
+    testError("/** @define {boolean} */ let DEF;", INVALID_DEFINE_ON_LET);
+    testError("/** @define {boolean} */ let EXTERN_DEF;", INVALID_DEFINE_ON_LET);
+    testSame("let a = {}; /** @define {boolean} */ a.B = false;");
   }
 }

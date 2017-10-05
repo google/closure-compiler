@@ -23,6 +23,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    allowExternsChanges();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
   }
 
@@ -42,11 +43,6 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     test(
         "/** @constructor */ function Foo() { /** @const */ this.x = 5; }",
         "/** @constructor */ function Foo() {} \n /** @const {number} */ Foo.prototype.x;");
-  }
-
-  public void testAllExternsLibraryPrinted() {
-    allowExternsChanges();
-    test("/** @type {number} */ var x;", "", "/** @type {number} */ var x;");
   }
 
   public void testExternsDefinitionsRespected() {
@@ -96,7 +92,7 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "/** @constructor */ function Foo() {} \n /** @const {number} */ Foo.prototype.x;");
 
     test(
-        "/** @constructor */ function Foo() { this.x; }",
+        "/** @constructor */ function Foo() { this.x = undefined; }",
         "/** @constructor */ function Foo() {} \n /** @const {*} */ Foo.prototype.x;");
 
     test(
@@ -191,6 +187,15 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "  constructor(x) {}",
             "}",
             "/** @const {number} */ Foo.prototype.x;"));
+  }
+
+  public void testLegacyGoogModule() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('a.b.c');",
+            "goog.module.declareLegacyNamespace();",
+            "",
+            "exports = class {};"));
   }
 
   public void testConstructorAlias1() {
@@ -405,6 +410,12 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
     test(
         "class Foo { method(/** string */ s) { return s.split(','); } }",
+        "class Foo { method(/** string */ s) {} }");
+  }
+
+  public void testRemoveEmptyMembers() {
+    test(
+        "class Foo { ;; method(/** string */ s) {};; }",
         "class Foo { method(/** string */ s) {} }");
   }
 
@@ -864,6 +875,10 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
     testSame("/** @const */ var ns = {}; /** @return {number} */ ns.fun = function(x,y,z) {}");
 
     testSame("/** @const */ var ns = {}; ns.fun = function(x,y,z) {}");
+
+    test(
+        "/** @const */ var ns = ns || {}; ns.fun = function(x,y,z) {}",
+        "/** @const */ var ns = {}; ns.fun = function(x,y,z) {}");
   }
 
   public void testRemoveIgnoredProperties() {
@@ -873,6 +888,10 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
 
     test(
         "/** @constructor */ function Foo() {} Foo.prototype['fun'] = function(x,y,z) {}",
+        "/** @constructor */ function Foo() {}");
+
+    test(
+        "/** @constructor */ function Foo() {} /** @type {str} */ Foo['prototype'].method;",
         "/** @constructor */ function Foo() {}");
   }
 
@@ -1023,5 +1042,38 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "  }",
             "};"),
         ConvertToTypedInterface.CONSTANT_WITHOUT_EXPLICIT_TYPE);
+  }
+
+  public void testGoogScopeLeftoversAreRemoved() {
+    test(
+        LINE_JOINER.join(
+            "goog.provide('a.b.c.d.e.f.g');",
+            "",
+            "/** @const */ var $jscomp = $jscomp || {};",
+            "/** @const */ $jscomp.scope = {};",
+            "",
+            "$jscomp.scope.strayVariable = function() {};",
+            "",
+            "a.b.c.d.e.f.g.Foo = class {};"),
+        LINE_JOINER.join(
+            "goog.provide('a.b.c.d.e.f.g');",
+            "",
+            "a.b.c.d.e.f.g.Foo = class {};"));
+
+    test(
+        LINE_JOINER.join(
+            "goog.provide('a.b.c.d.e.f.g');",
+            "",
+            "/** @const */ var $jscomp = $jscomp || {};",
+            "/** @const */ $jscomp.scope = {};",
+            "",
+            "/** @constructor */",
+            "$jscomp.scope.strayCtor = function() { this.x = 5; };",
+            "",
+            "a.b.c.d.e.f.g.Foo = class {};"),
+        LINE_JOINER.join(
+            "goog.provide('a.b.c.d.e.f.g');",
+            "",
+            "a.b.c.d.e.f.g.Foo = class {};"));
   }
 }

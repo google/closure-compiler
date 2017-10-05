@@ -24,6 +24,8 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Table;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.Normalize.NormalizeStatements;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -108,8 +110,6 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
 
   @Override
   public void process(Node externs, Node root) {
-    // Since block-scoped function declarations can appear in any language mode, we need to run
-    // this pass unconditionally.
     NodeTraversal.traverseEs6(compiler, root, new CollectUndeclaredNames());
     NodeTraversal.traverseEs6(compiler, root, this);
     // Needed for let / const declarations in .d.ts externs.
@@ -119,9 +119,25 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     NodeTraversal.traverseEs6(compiler, root, transformer);
     transformer.transformLoopClosure();
     varify();
-    TranspilationPasses.processTranspile(
-        compiler, externs, new RewriteBlockScopedFunctionDeclaration());
-    NodeTraversal.traverseEs6(compiler, root, new RewriteBlockScopedFunctionDeclaration());
+
+    // Block scoped function declarations can occur in any language mode, however for
+    // transpilation to ES3 and ES5, we want to hoist the functions from the block-scope by
+    // redeclaring them in var assignments
+    //
+    // If block-scope-declared function is the only "ES6 feature" for which we want to transpile,
+    // then the transpilation process will not rewriteFunctions. Thus, we manually check whether
+    // we need to rewrite in that case.
+    if (compiler.getOptions().needsTranspilationFrom(FeatureSet.ES6)) {
+      RewriteBlockScopedFunctionDeclaration rewriteFunction =
+          new RewriteBlockScopedFunctionDeclaration();
+
+      for (Node singleRoot : root.children()) {
+        FeatureSet features = (FeatureSet) singleRoot.getProp(Node.FEATURE_SET);
+        if (features.has(Feature.BLOCK_SCOPED_FUNCTION_DECLARATION)) {
+          NodeTraversal.traverseEs6(compiler, singleRoot, rewriteFunction);
+        }
+      }
+    }
   }
 
   @Override

@@ -723,8 +723,9 @@ public class Scanner {
       return createToken(TokenType.ERROR, beginToken);
     }
 
-    if (Keywords.isKeyword(value)) {
-      return new Token(Keywords.getTokenType(value), getTokenRange(beginToken));
+    Keywords k = Keywords.get(value);
+    if (k != null) {
+      return new Token(k.type, getTokenRange(beginToken));
     }
 
     // Intern the value to avoid creating lots of copies of the same string.
@@ -857,7 +858,7 @@ public class Scanner {
 
   private boolean skipStringLiteralChar() {
     if (peek('\\')) {
-      return skipStringLiteralEscapeSequence();
+      return skipStringLiteralEscapeSequence(false);
     }
     nextChar();
     return true;
@@ -869,7 +870,7 @@ public class Scanner {
         case '`':
           return;
         case '\\':
-          skipStringLiteralEscapeSequence();
+          skipStringLiteralEscapeSequence(true);
           break;
         case '$':
           if (peekChar(1) == '{') {
@@ -883,7 +884,7 @@ public class Scanner {
   }
 
   @SuppressWarnings("IdentityBinaryExpression")
-  private boolean skipStringLiteralEscapeSequence() {
+  private boolean skipStringLiteralEscapeSequence(boolean templateLiteral) {
     nextChar();
     if (isAtEnd()) {
       reportError("Unterminated string literal escape sequence");
@@ -908,6 +909,18 @@ public class Scanner {
       case 'v':
       case '0':
         return true;
+      case '1':
+      case '2':
+      case '3':
+      case '4':
+      case '5':
+      case '6':
+      case '7':
+        if (templateLiteral) {
+          reportError("Invalid escape sequence");
+          return false;
+        }
+        break;
       case 'x':
         return skipHexDigit() && skipHexDigit();
       case 'u':
@@ -927,16 +940,18 @@ public class Scanner {
           return skipHexDigit() && skipHexDigit() && skipHexDigit() && skipHexDigit();
         }
       default:
-        if (next == '/') {
-          // Don't warn for '\/' (for now) since it's common in "<\/script>"
-        } else if (next == '$') {
-          // Don't warn for '\$' in template literal.
-          // TODO(tbreisacher): We should still warn for '\$' in a regular string literal.
-        } else {
-          reportWarning("Unnecessary escape: '\\%s' is equivalent to just '%s'", next, next);
-        }
-        return true;
+        break;
     }
+
+    if (next == '/') {
+      // Don't warn for '\/' (for now) since it's common in "<\/script>"
+    } else if (templateLiteral) {
+      // Don't warn in template literals since tagged template literals
+      // can access the raw string value.
+    } else {
+      reportWarning("Unnecessary escape: '\\%s' is equivalent to just '%s'", next, next);
+    }
+    return true;
   }
 
   private boolean skipHexDigit() {

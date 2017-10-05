@@ -34,6 +34,7 @@ import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeI.Nullability;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSType.SubtypingMode;
@@ -97,12 +98,6 @@ class TypeValidator implements Serializable {
   static final DiagnosticType INVALID_CAST =
       DiagnosticType.warning("JSC_INVALID_CAST",
           "invalid cast - must be a subtype or supertype\n" +
-          "from: {0}\n" +
-          "to  : {1}");
-
-  static final DiagnosticType UNNECESSARY_CAST =
-      DiagnosticType.disabled("JSC_UNNECESSARY_CAST",
-          "unnecessary cast\n" +
           "from: {0}\n" +
           "to  : {1}");
 
@@ -842,8 +837,8 @@ class TypeValidator implements Serializable {
     String foundStr = found.toString();
     String requiredStr = required.toString();
     if (foundStr.equals(requiredStr)) {
-      foundStr = found.toAnnotationString();
-      requiredStr = required.toAnnotationString();
+      foundStr = found.toAnnotationString(Nullability.IMPLICIT);
+      requiredStr = required.toAnnotationString(Nullability.IMPLICIT);
     }
     String missingStr = "";
     String mismatchStr = "";

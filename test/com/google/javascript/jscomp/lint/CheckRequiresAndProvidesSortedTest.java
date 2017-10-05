@@ -252,4 +252,16 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
   public void testEmptyRequire() {
     testSame("goog.require();");
   }
+
+  // Compiler doesn't sort ES6 modules yet, because semantics not yet finalized.
+  // Simple test to make sure compiler does not crash.
+  public void testES6Modules() {
+    testSame(
+        LINE_JOINER.join(
+            "import foo from 'bar';",
+            "import bar from 'foo';",
+            "import * as a from 'b';",
+            "import {a, b} from 'c';",
+            "import 'foobar';"));
+  }
 }

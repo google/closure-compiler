@@ -22,10 +22,12 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.javascript.jscomp.FunctionArgumentInjector.THIS_MARKER;
 
 import com.google.common.base.Supplier;
+import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.MakeDeclaredNamesUnique.InlineRenamer;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -109,6 +111,8 @@ class FunctionToBlockMutator {
       boolean isCallInLoop,
       boolean renameLocals) {
     Node newFnNode = fnNode.cloneTree();
+    // Wrap the clone in a script, in a root, so that makeLocalNamesUnique sees a coherent tree.
+    IR.root(IR.script(newFnNode));
 
     if (renameLocals) {
       // Now that parameter names have been replaced, make sure all the local
@@ -166,7 +170,7 @@ class FunctionToBlockMutator {
   /**
    * @param n The node to inspect
    */
-  private static void rewriteFunctionDeclarations(Node n) {
+  private static Node rewriteFunctionDeclarations(Node n) {
     if (n.isFunction()) {
       if (NodeUtil.isFunctionDeclaration(n)) {
         // Rewrite: function f() {} ==> var f = function() {}
@@ -180,14 +184,31 @@ class FunctionToBlockMutator {
         n.replaceWith(var);
         // readd the function as a function expression
         name.addChildToFront(n);
+
+        return var;
       }
-      return;
+      return null;
     }
 
+    // Keep track of any rewritten functions and hoist them to the top
+    // of the block they are defined in. This isn't fully compliant hoisting
+    // but it does address a large set of use cases.
+    List<Node> functionsToHoist = new ArrayList<>();
     for (Node c = n.getFirstChild(), next; c != null; c = next) {
       next = c.getNext(); // We may rewrite "c"
-      rewriteFunctionDeclarations(c);
+      Node fnVar = rewriteFunctionDeclarations(c);
+      if (fnVar != null) {
+        functionsToHoist.add(0, fnVar);
+      }
     }
+
+    for (Node fnVar : functionsToHoist) {
+      if (n.getFirstChild() != fnVar) {
+        n.addChildToFront(fnVar.detach());
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -225,13 +246,15 @@ class FunctionToBlockMutator {
   private void makeLocalNamesUnique(Node fnNode, boolean isCallInLoop) {
     Supplier<String> idSupplier = compiler.getUniqueNameIdSupplier();
     // Make variable names unique to this instance.
-    NodeTraversal.traverseEs6(
+    NodeTraversal.traverseEs6ScopeRoots(
         compiler,
-        fnNode,
+        null,
+        ImmutableList.of(fnNode),
         new MakeDeclaredNamesUnique(
             new InlineRenamer(
                 compiler.getCodingConvention(), idSupplier, "inline_", isCallInLoop, true, null),
-            false));
+            false),
+        true);
     // Make label names unique to this instance.
     new RenameLabels(compiler, new LabelNameSupplier(idSupplier), false, false)
         .process(null, fnNode);

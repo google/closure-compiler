@@ -42,7 +42,7 @@ package com.google.javascript.rhino.jstype;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
-
+import com.google.javascript.rhino.TypeI;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -87,37 +87,42 @@ public final class Property
   }
 
   @Override
-      public String getName() {
+  public String getName() {
     return name;
   }
 
   @Override
-      public Node getNode() {
+  public Node getNode() {
     return propertyNode;
   }
 
   @Override
-      public StaticSourceFile getSourceFile() {
+  public StaticSourceFile getSourceFile() {
     return propertyNode == null ? null : propertyNode.getStaticSourceFile();
   }
 
   @Override
-      public Property getSymbol() {
+  public Property getSymbol() {
     return this;
   }
 
   @Override
-      public Property getDeclaration() {
+  public Property getDeclaration() {
     return propertyNode == null ? null : this;
   }
 
   @Override
-      public JSType getType() {
+  public JSType getType() {
     return type;
   }
 
   @Override
-      public boolean isTypeInferred() {
+  public TypeI getTypeI() {
+    return type;
+  }
+
+  @Override
+  public boolean isTypeInferred() {
     return inferred;
   }
 

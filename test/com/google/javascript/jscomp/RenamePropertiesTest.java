@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * {@link RenameProperties} tests.
@@ -275,7 +276,6 @@ public final class RenamePropertiesTest extends CompilerTestCase {
                  compiler.toSource(module3));
   }
 
-
   public void testPropertyAffinityOff() {
     test("var foo={};foo.x=1;foo.y=2;foo.z=3;" +
          "function f1() { foo.z; foo.z; foo.z; foo.y}" +
@@ -392,6 +392,274 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     test(input1, expected1);
     prevUsedPropertyMap = renameProperties.getPropertyMap();
     test(input2, expected2);
+  }
+
+  // Test cases added for ES6 Features
+  public void testPrototypePropertyForArrowFunction() {
+    test(
+        "Bar.prototype = {2: () => {}, getA: () => {}}; bar[2]();",
+        "Bar.prototype = {2: () => {}, a:    () => {}}; bar[2]();");
+  }
+
+  public void testArrayDestructuring() {
+    testSame("var [first, second] = someArray");
+  }
+
+  public void testDestructuredProperties() {
+    // using destructuring shorthand
+    test("var {   foo,   bar } = { foo: 1, bar: 2 }", "var { b:foo, a:bar } = {    b:1,    a:2 }");
+
+    // without destructuring shorthand
+    test(
+        "var { foo:foo, bar:bar } = { foo:1, bar:2 }",
+        "var {   b:foo,   a:bar } = {   b:1,   a:2 }");
+
+    test(
+        "var foo = { bar: 1, baz: 2 }; var foo1 = foo.bar; var foo2 = foo.baz; ",
+        "var foo = {   a: 1,   b: 2 }; var foo1 = foo.a;   var foo2 = foo.b;");
+  }
+
+  public void testNestedDestructuringProperties() {
+    test(
+        "var {outer: {inner}} = {outer: {inner: 'value'}};",
+        "var {b: {a: inner}} = {b: {a: 'value'}};");
+  }
+
+  public void testComputedPropertyNamesInObjectLit() {
+    // TODO (simranarora) A restriction of this pass is that quoted and unquoted property
+    // references cannot be mixed.
+    test(
+        LINE_JOINER.join(
+            "var a = {",
+            "  ['val' + ++i]: i,",
+            "  ['val' + ++i]: i",
+            "};",
+            "a.val1;"),
+        LINE_JOINER.join(
+            "var a = {",
+            "  ['val' + ++i]: i,", // don't rename here
+            "  ['val' + ++i]: i",
+            "};",
+            "a.a;")); // rename here
+  }
+
+  public void testComputedMethodPropertyNamesInClass() {
+    // TODO (simranarora) A restriction of this pass is that quoted and unquoted property
+    // references cannot be mixed.
+
+    // Concatination for computed property
+    test(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  ['f'+'oo']() {",
+            "    return 1",
+            "  }",
+            "}",
+            "var bar = new Bar()",
+            "bar.foo();"),
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  ['f'+'oo']() {", //don't rename here
+            "    return 1",
+            "  }",
+            "}",
+            "var bar = new Bar()",
+            "bar.a();")); //rename here
+
+    // Without property concatination
+    test(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  ['foo']() {",
+            "    return 1",
+            "  }",
+            "}",
+            "var bar = new Bar()",
+            "bar.foo();"),
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  ['foo']() {", //don't rename here
+            "    return 1",
+            "  }",
+            "}",
+            "var bar = new Bar()",
+            "bar.a();")); //rename here
+  }
+
+  public void testClasses() {
+    // Call class method inside class scope - due to the scoping rules of javascript, the "getA()"
+    // call inside of getB() refers to a method getA() in the outer scope and not the getA() method
+    // inside the Bar class
+    test(
+        LINE_JOINER.join(
+            "function getA() {};",
+            "class Bar {",
+            "  constructor(){}",
+            "  getA() {",
+            "    return 1",
+            "  }",
+            "  getB(x) {",
+            "    getA();",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function getA() {};",
+            "class Bar {",
+            "  constructor(){}",
+            "  a() {",
+            "    return 1",
+            "  }",
+            "  b(x) {",
+            "    getA();",
+            "  }",
+            "}"));
+
+    // Call class method inside class scope - due to the scoping rules of javascript,
+    // the "this.getA()" call inside of getB() refers to a method getA() in the Bar class and
+    // not the getA() method in the outer scope
+    test(
+        LINE_JOINER.join(
+            "function getA() {};",
+            "class Bar {",
+            "  constructor(){}",
+            "  getA() {",
+            "    return 1",
+            "  }",
+            "  getB(x) {",
+            "    this.getA();",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function getA() {};",
+            "class Bar {",
+            "  constructor(){}",
+            "  a() {",
+            "    return 1",
+            "  }",
+            "  b(x) {",
+            "    this.a();",
+            "  }",
+            "}"));
+
+    // Call class method outside class scope
+    test(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  getB(x) {}",
+            "}",
+            "var too;",
+            "var too = new Bar();",
+            "too.getB(too);"),
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  a(x) {}",
+            "}",
+            "var too;",
+            "var too = new Bar();",
+            "too.a(too);"));
+  }
+
+  public void testGetSetInClass() {
+    test(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(foo){",
+            "    this.foo = foo;",
+            "  }",
+            "  get foo() {",
+            "    return this.foo;",
+            "  }",
+            "  set foo(x) {",
+            "    this.foo = x;",
+            "  }",
+            "}",
+            "var barObj = new Bar();",
+            "barObj.foo();",
+            "barObj.foo(1);"),
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(foo){",
+            "    this.a = foo;",
+            "  }",
+            "  get a() {",
+            "    return this.a;",
+            "  }",
+            "  set a(x) {",
+            "    this.a = x;",
+            "  }",
+            "}",
+            "var barObj = new Bar();",
+            "barObj.a();",
+            "barObj.a(1);"));
+  }
+
+  public void testStaticMethodInClass() {
+
+    test(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  static double(n) {",
+            "    return n*2",
+            "  }",
+            "}",
+            "Bar.double(1);"),
+        LINE_JOINER.join(
+            "class Bar {",
+            "  static a(n) {",
+            "    return n*2",
+            "  }",
+            "}",
+            "Bar.a(1);"));
+  }
+
+  public void testObjectMethodProperty() {
+    // ES5 version
+    setLanguage(LanguageMode.ECMASCRIPT3, LanguageMode.ECMASCRIPT3);
+    test(
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  bar: 1, ",
+            "  myFunc: function myFunc() {",
+            "    return this.bar",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  a: 1, ",
+            "  b: function myFunc() {",
+            "    return this.a",
+            "  }",
+            "};",
+            "foo.b();")
+        );
+
+    //ES6 version
+    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT_2015);
+    test(
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  bar: 1, ",
+            "  myFunc() {",
+            "    return this.bar",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  a: 1, ",
+            "  b() {",
+            "    return this.a",
+            "  }",
+            "};",
+            "foo.b();")
+        );
   }
 
   private Compiler compileModules(String externs, JSModule[] modules) {

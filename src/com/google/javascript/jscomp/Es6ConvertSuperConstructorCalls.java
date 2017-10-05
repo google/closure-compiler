@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
+import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 
 import com.google.javascript.jscomp.GlobalNamespace.Name;
 import com.google.javascript.jscomp.GlobalNamespace.Ref;
@@ -81,6 +81,7 @@ implements NodeTraversal.Callback, HotSwapCompilerPass {
   private void visitSuper(NodeTraversal t, ConstructorData constructorData) {
     // NOTE: When this pass runs:
     // -   ES6 classes have already been rewritten as ES5 functions.
+    // -   All subclasses have $jscomp.inherits() calls connecting them to their parent class.
     // -   All instances of super() that are not super constructor calls have been rewritten.
     // -   However, if the original call used spread (e.g. super(...list)), then spread
     //     transpilation will have turned that into something like

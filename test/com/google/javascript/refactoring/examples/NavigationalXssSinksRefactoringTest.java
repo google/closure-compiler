@@ -18,7 +18,6 @@ package com.google.javascript.refactoring.examples;
 import static com.google.javascript.refactoring.testing.RefasterJsTestUtils.assertFileRefactoring;
 
 import com.google.common.collect.ImmutableList;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -45,5 +44,15 @@ public class NavigationalXssSinksRefactoringTest {
         "navigational_xss_sinks_test_in.js",
         ImmutableList.of("goog_base.js"),
         "navigational_xss_sinks_test_out.js");
+  }
+
+  @Test
+  public void testModuleRefactoring() throws Exception {
+    assertFileRefactoring(
+        NAVIGATIONAL_XSS_SINKS_TEMPLATE,
+        TESTDATA_DIR,
+        "navigational_xss_sinks_test_module_in.js",
+        ImmutableList.of("goog_base.js", "goog_foo.js"),
+        "navigational_xss_sinks_test_module_out.js");
   }
 }

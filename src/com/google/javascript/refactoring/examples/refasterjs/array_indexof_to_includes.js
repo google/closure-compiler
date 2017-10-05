@@ -172,3 +172,21 @@ function before_indexOfLessThanZero(arr, elem) {
 function after_indexOfLessThanZero(arr, elem) {
   !arr.includes(elem);
 }
+
+/**
+ * @param {!Array} arr
+ * @param {*} elem
+ * @suppress {uselessCode}
+ */
+function before_bitwiseNot(arr, elem) {
+  ~arr.indexOf(elem);
+}
+
+/**
+ * @param {!Array} arr
+ * @param {*} elem
+ * @suppress {uselessCode}
+ */
+function after_bitwiseNot(arr, elem) {
+  arr.includes(elem);
+}

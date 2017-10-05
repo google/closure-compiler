@@ -20,10 +20,11 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.rhino.Node;
 
-public final class PolymerPassFindExternsTest extends CompilerTestCase {
+public final class PolymerPassFindExternsTest extends TypeICompilerTestCase {
 
   private static final String EXTERNS =
       LINE_JOINER.join(
+          MINIMAL_EXTERNS,
           "/** @constructor */",
           "var HTMLElement = function() {};",
           "/** @constructor @extends {HTMLElement} */",
@@ -75,7 +76,7 @@ public final class PolymerPassFindExternsTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     allowExternsChanges();
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     enableRunTypeCheckAfterProcessing();
     enableParseTypeInfo();
   }

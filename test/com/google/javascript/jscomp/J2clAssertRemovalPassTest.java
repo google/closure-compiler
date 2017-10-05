@@ -23,20 +23,18 @@ public class J2clAssertRemovalPassTest extends CompilerTestCase {
   }
 
   @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    options.setJ2clPass(CompilerOptions.J2clPassMode.ON);
-    return options;
+  protected Compiler createCompiler() {
+    Compiler compiler = super.createCompiler();
+    J2clSourceFileChecker.markToRunJ2clPasses(compiler);
+    return compiler;
   }
 
   public void testRemoveAssert() {
-    test(
-        LINE_JOINER.join("Asserts.$assert(true);", "Asserts.$assert(goo());"),
-        LINE_JOINER.join("void 0;", "void 0;"));
+    test(LINE_JOINER.join("Asserts.$assert(true);", "Asserts.$assert(goo());"), "");
   }
 
   public void testRemoveAssertWithMessage() {
-    test("Asserts.$assertWithMessage(true, goo());", "void 0;");
+    test("Asserts.$assertWithMessage(true, goo());", "");
   }
 
   public void testNotRemoveAssert() {

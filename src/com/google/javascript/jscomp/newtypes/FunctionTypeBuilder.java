@@ -20,7 +20,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
-import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,8 +52,7 @@ public final class FunctionTypeBuilder {
   private JSType nominalType;
   // Only used to build DeclaredFunctionType for prototype methods
   private JSType receiverType;
-  // Non-empty iff this function has an @template annotation
-  private ImmutableList<String> typeParameters = ImmutableList.of();
+  private TypeParameters typeParameters = TypeParameters.EMPTY;
 
   private final JSTypes commonTypes;
 
@@ -141,19 +139,23 @@ public final class FunctionTypeBuilder {
     return this;
   }
 
-  public FunctionTypeBuilder addTypeParameters(ImmutableList<String> typeParameters) {
+  public FunctionTypeBuilder addTypeParameters(TypeParameters typeParameters) {
     checkNotNull(typeParameters);
     checkState(this.typeParameters.isEmpty());
     this.typeParameters = typeParameters;
     return this;
   }
 
-  public FunctionTypeBuilder appendTypeParameters(ImmutableList<String> typeParameters) {
+  /**
+   * This method is used to handle functions with .call. For simplicity, if a TTL function
+   * is used with .call, the TTL variables will be treated as unknown.
+   */
+  public FunctionTypeBuilder appendTypeParameters(TypeParameters typeParameters) {
     checkNotNull(typeParameters);
-    ImmutableList.Builder<String> newTypeParams = ImmutableList.builder();
-    newTypeParams.addAll(this.typeParameters);
-    newTypeParams.addAll(typeParameters);
-    this.typeParameters = newTypeParams.build();
+    ArrayList<String> newTypeParams = new ArrayList<>();
+    newTypeParams.addAll(this.typeParameters.asList());
+    newTypeParams.addAll(typeParameters.asList());
+    this.typeParameters = TypeParameters.make(newTypeParams);
     return this;
   }
 
@@ -190,5 +192,9 @@ public final class FunctionTypeBuilder {
         this.commonTypes,
         requiredFormals, optionalFormals, restFormals, returnType,
         nominalType, receiverType, outerVars, typeParameters, loose, isAbstract);
+  }
+
+  public JSType buildType() {
+    return this.commonTypes.fromFunctionType(buildFunction());
   }
 }

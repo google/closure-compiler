@@ -65,8 +65,8 @@ public final class TestErrorReporter implements ErrorReporter {
   private int warningsIndex = 0;
 
   public TestErrorReporter(String[] errors, String[] warnings) {
-    this.errors = errors;
-    this.warnings = warnings;
+    this.errors = errors == null ? new String[] {} : errors;
+    this.warnings = warnings == null ? new String[] {} : warnings;
   }
 
   public static TestErrorReporter forNoExpectedReports() {
@@ -86,7 +86,7 @@ public final class TestErrorReporter implements ErrorReporter {
   @Override
   public void error(String message, String sourceName, int line,
       int lineOffset) {
-    if (errors != null && errorsIndex < errors.length) {
+    if (errorsIndex < errors.length) {
       assertThat(message).isEqualTo(errors[errorsIndex++]);
     } else {
       Assert.fail("extra error: " + message);
@@ -94,9 +94,8 @@ public final class TestErrorReporter implements ErrorReporter {
   }
 
   @Override
-  public void warning(String message, String sourceName, int line,
-      int lineOffset) {
-    if (warnings != null && warningsIndex < warnings.length) {
+  public void warning(String message, String sourceName, int line, int lineOffset) {
+    if (warningsIndex < warnings.length) {
       assertThat(message).isEqualTo(warnings[warningsIndex++]);
     } else {
       Assert.fail("extra warning: " + message);
@@ -104,19 +103,10 @@ public final class TestErrorReporter implements ErrorReporter {
   }
 
   public void assertHasEncounteredAllWarnings() {
-    if (warnings == null) {
-      assertThat(warningsIndex).isEqualTo(0);
-    } else {
-      assertThat(warnings).hasLength(warningsIndex);
-    }
+    assertThat(warnings).hasLength(warningsIndex);
   }
 
   public void assertHasEncounteredAllErrors() {
-    if (errors == null) {
-      assertThat(errorsIndex).isEqualTo(0);
-    } else {
-      assertThat(errors).hasLength(errorsIndex);
-    }
+    assertThat(errors).hasLength(errorsIndex);
   }
-
 }

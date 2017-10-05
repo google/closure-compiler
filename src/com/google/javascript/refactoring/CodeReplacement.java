@@ -17,6 +17,7 @@
 package com.google.javascript.refactoring;
 
 import com.google.auto.value.AutoValue;
+import com.google.auto.value.AutoValue.CopyAnnotations;
 import com.google.errorprone.annotations.Immutable;
 
 /**
@@ -24,8 +25,7 @@ import com.google.errorprone.annotations.Immutable;
  *
  * @author mknichel@google.com (Mark Knichel)
  */
-@AutoValue
-@Immutable
+@AutoValue @CopyAnnotations @Immutable
 public abstract class CodeReplacement {
 
   static CodeReplacement create(int startPosition, int length, String newContent) {

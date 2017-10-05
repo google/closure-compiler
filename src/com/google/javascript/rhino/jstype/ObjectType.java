@@ -48,7 +48,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.ObjectTypeI;
@@ -103,7 +102,7 @@ public abstract class ObjectType
 
   public Node getRootNode() { return null; }
 
-  public ObjectType getParentScope() {
+  public final ObjectType getParentScope() {
     return getImplicitPrototype();
   }
 
@@ -132,8 +131,10 @@ public abstract class ObjectType
 
   /**
    * Gets the declared default element type.
+   *
    * @see TemplatizedType
    */
+  @Override
   public ImmutableList<JSType> getTemplateTypes() {
     return null;
   }
@@ -252,14 +253,14 @@ public abstract class ObjectType
   }
 
   @Override
-  public final boolean isUnknownObject() {
+  public final boolean isAmbiguousObject() {
     return !hasReferenceName();
   }
 
   @Override
   public ObjectType getRawType() {
     TemplatizedType t = toMaybeTemplatizedType();
-    return t == null ? null : t.getReferencedType();
+    return t == null ? this : t.getReferencedType();
   }
 
   @Override
@@ -292,8 +293,8 @@ public abstract class ObjectType
   public abstract FunctionType getConstructor();
 
   @Override
-  public FunctionTypeI getSuperClassConstructor() {
-    ObjectTypeI iproto = getPrototypeObject();
+  public FunctionType getSuperClassConstructor() {
+    ObjectType iproto = getPrototypeObject();
     if (iproto == null) {
       return null;
     }
@@ -321,7 +322,7 @@ public abstract class ObjectType
   public abstract ObjectType getImplicitPrototype();
 
   @Override
-  public ObjectType getPrototypeObject() {
+  public final ObjectType getPrototypeObject() {
     return getImplicitPrototype();
   }
 
@@ -656,6 +657,7 @@ public abstract class ObjectType
    * Returns a list of properties defined or inferred on this type and any of
    * its supertypes.
    */
+  @Override
   public Set<String> getPropertyNames() {
     Set<String> props = new TreeSet<>();
     collectPropertyNames(props);

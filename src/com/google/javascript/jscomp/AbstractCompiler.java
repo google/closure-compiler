@@ -51,7 +51,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   static final DiagnosticType READ_ERROR = DiagnosticType.error(
       "JSC_READ_ERROR", "Cannot read file {0}: {1}");
 
-  private final Map<String, Object> annotationMap = new HashMap<>();
+  protected Map<String, Object> annotationMap = new HashMap<>();
 
   /** Will be called before each pass runs. */
   abstract void beforePass(String passName);
@@ -93,15 +93,52 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract List<CompilerInput> getInputsInOrder();
 
   /**
-   * Adds exported names to keep track.
+   * Gets the total number of inputs.
+   *
+   * <p>This can be useful as a guide for the initial allocated size for data structures.
    */
+  abstract int getNumberOfInputs();
+
+  //
+  // Intermediate state and results produced and needed by particular passes.
+  // TODO(rluble): move these into the general structure for keeping state between pass runs.
+  //
+  /** Adds exported names to keep track. */
   public abstract void addExportedNames(Set<String> exportedVariableNames);
 
-  /**
-   * Gets the names that have been exported so far.
-   */
+  /** Gets the names that have been exported. */
   public abstract Set<String> getExportedNames();
-  
+
+  /** Sets the variable renaming map */
+  public abstract void setVariableMap(VariableMap variableMap);
+
+  /** Sets the property renaming map */
+  public abstract void setPropertyMap(VariableMap propertyMap);
+
+  /** Sets the string replacement map */
+  public abstract void setStringMap(VariableMap stringMap);
+
+  /** Sets the fully qualified function name and globally unique id mapping. */
+  public abstract void setFunctionNames(FunctionNames functionNames);
+
+  /** Gets the fully qualified function name and globally unique id mapping. */
+  public abstract FunctionNames getFunctionNames();
+
+  /** Sets the css names found during compilation. */
+  public abstract void setCssNames(Map<String, Integer> newCssNames);
+
+  /** Sets the id generator for cross-module motion. */
+  public abstract void setIdGeneratorMap(String serializedIdMappings);
+
+  /** Gets the id generator for cross-module motion. */
+  public abstract IdGenerator getCrossModuleIdGenerator();
+
+  /** Sets the naming map for anonymous functions */
+  public abstract void setAnonymousFunctionNameMap(VariableMap functionMap);
+  //
+  // End of intermediate state needed by passes.
+  //
+
   static enum MostRecentTypechecker {
     NONE,
     OTI,
@@ -112,6 +149,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * Sets the type-checking pass that ran most recently.
    */
   abstract void setMostRecentTypechecker(MostRecentTypechecker mostRecent);
+
+  /** Gets the type-checking pass that ran most recently. */
+  abstract MostRecentTypechecker getMostRecentTypechecker();
 
   /**
    * Gets a central registry of type information from the compiled JS.
@@ -136,13 +176,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
   /**
    * Gets a memoized scope creator without type information, used by the checks and optimization
-   * passes to avoid continously recreating the entire scope.
+   * passes to avoid continuously recreating the entire scope.
    */
   abstract IncrementalScopeCreator getScopeCreator();
 
   /**
    * Stores a memoized scope creator without type information, used by the checks and optimization
-   * passes to avoid continously recreating the entire scope.
+   * passes to avoid continuously recreating the entire scope.
    */
   abstract void putScopeCreator(IncrementalScopeCreator creator);
 
@@ -154,7 +194,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Report an internal error.
    */
-  abstract void throwInternalError(String msg, Exception cause);
+  abstract void throwInternalError(String msg, Throwable cause);
 
   /**
    * Gets the current coding convention.
@@ -177,13 +217,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    * Passes that make modifications in a scope that is different than the Compiler.currentScope use
    * this (eg, InlineVariables and many others)
    */
-  abstract void reportChangeToEnclosingScope(Node n);
+  public abstract void reportChangeToEnclosingScope(Node n);
 
   /**
    * Mark modifications in a scope that is different than the Compiler.currentScope use this (eg,
    * InlineVariables and many others)
    */
-  abstract void reportChangeToChangeScope(Node changeScopeRoot);
+  public abstract void reportChangeToChangeScope(Node changeScopeRoot);
 
   /**
    * Mark a specific function node as known to be deleted. Is part of having accurate change
@@ -194,7 +234,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Logs a message under a central logger.
    */
-  abstract void addToDebugLog(String message);
+  abstract void addToDebugLog(String... message);
 
   /**
    * Sets the CssRenamingMap.
@@ -237,9 +277,9 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   abstract Iterable<TypeMismatch> getImplicitInterfaceUses();
 
   /**
-   * Used only by the new type inference
+   * Global type registry used by NTI.
    */
-  abstract CompilerPass getSymbolTable();
+  abstract <T extends TypeIRegistry> T getGlobalTypeInfo();
 
   /**
    * Used by three passes that run in sequence (optimize-returns,
@@ -325,7 +365,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract <T> T getIndex(Class<T> type);
 
-  /** Let the PhaseOptimizer know which scope a pass is currently analyzing */
+  @Deprecated
   abstract void setChangeScope(Node n);
 
   /** A monotonically increasing value to identify a change */
@@ -511,7 +551,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Sets the progress percentage as well as the name of the last pass that
    * ran (if available).
-   * @param progress A precentage expressed as a double in the range [0, 1].
+   * @param progress A percentage expressed as a double in the range [0, 1].
    *     Use -1 if you just want to set the last pass name.
    */
   abstract void setProgress(double progress, @Nullable String lastPassName);
@@ -560,13 +600,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
    /**
     * Stores a map of default @define values.  These values
-    * can be overriden by values specifically set in the CompilerOptions.
+    * can be overridden by values specifically set in the CompilerOptions.
     */
    abstract void setDefaultDefineValues(ImmutableMap<String, Node> values);
 
    /**
     * Gets a map of default @define values.  These values
-    * can be overriden by values specifically set in the CompilerOptions.
+    * can be overridden by values specifically set in the CompilerOptions.
     */
    abstract ImmutableMap<String, Node> getDefaultDefineValues();
 
@@ -597,5 +637,16 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   @Nullable
   Object getAnnotation(String key) {
     return annotationMap.get(key);
+  }
+
+  private @Nullable PersistentInputStore persistentInputStore;
+
+  void setPersistentInputStore(PersistentInputStore persistentInputStore) {
+    this.persistentInputStore = persistentInputStore;
+  }
+
+  @Nullable
+  PersistentInputStore getPersistentInputStore() {
+    return persistentInputStore;
   }
 }

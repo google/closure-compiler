@@ -20,12 +20,12 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.NodeTraversal.AbstractNodeTypePruningCallback;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
-import com.google.javascript.jscomp.NodeTraversal.FunctionCallback;
+import com.google.javascript.jscomp.NodeTraversal.ChangeScopeRootCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -136,19 +136,41 @@ public final class NodeTraversalTest extends TestCase {
         "  var b",
         "}");
     Node tree = parse(compiler, code);
-    NodeTraversal.traverseEs6(compiler, tree,
+    NodeTraversal.traverseEs6(
+        compiler,
+        tree,
         new NodeTraversal.ScopedCallback() {
 
           @Override
           public void enterScope(NodeTraversal t) {
             Node root1 = t.getScopeRoot();
-            Node root2 = t.getScope().getRootNode();
+            Scope scope2 = t.getScope();
+            Node root2 = scope2.getRootNode();
             assertNode(root2).isEqualTo(root1);
           }
 
           @Override
-          public void exitScope(NodeTraversal t) {
+          public void exitScope(NodeTraversal t) {}
+
+          @Override
+          public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+            return true;
           }
+
+          @Override
+          public void visit(NodeTraversal t, Node n, Node parent) {}
+        });
+  }
+
+  public void testGetHoistScopeRoot() {
+    Compiler compiler = new Compiler();
+    String code = LINE_JOINER.join(
+        "function foo() {",
+        "  if (true) { var XXX; }",
+        "}");
+    Node tree = parse(compiler, code);
+    NodeTraversal.traverseEs6(compiler, tree,
+        new NodeTraversal.Callback() {
 
           @Override
           public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
@@ -157,6 +179,15 @@ public final class NodeTraversalTest extends TestCase {
 
           @Override
           public void visit(NodeTraversal t, Node n, Node parent) {
+            if (n.isName() && n.getString().equals("XXX")) {
+              Node root = t.getClosestHoistScopeRoot();
+              assertThat(NodeUtil.isFunctionBlock(root)).isTrue();
+
+              t.getScope();  // force scope creation
+
+              root = t.getClosestHoistScopeRoot();
+              assertThat(NodeUtil.isFunctionBlock(root)).isTrue();
+            }
           }
         }
     );
@@ -267,23 +298,24 @@ public final class NodeTraversalTest extends TestCase {
     );
 
     // Note the char numbers are 0-indexed but the line numbers are 1-indexed.
-    String expectedResult = ""
-        + "visit NAME a [source_file: [testcode]] @1:4\n"
-        + "visit VAR [source_file: [testcode]] @1:0\n"
-        + "visit NAME foo [source_file: [testcode]] @2:9\n"
-        + "visit PARAM_LIST [source_file: [testcode]] @2:12\n"
-        + "visit NAME b [source_file: [testcode]] @3:6\n"
-        + "visit VAR [source_file: [testcode]] @3:2\n"
-        + "visit NAME a [source_file: [testcode]] @4:6\n"
-        + "visit NAME c [source_file: [testcode]] @4:15\n"
-        + "visit VAR [source_file: [testcode]] @4:11\n"
-        + "visit BLOCK [source_file: [testcode]] @4:9\n"
-        + "visit IF [source_file: [testcode]] @4:2\n"
-        + "visit BLOCK [source_file: [testcode]] @2:15\n"
-        + "visit FUNCTION foo [source_file: [testcode]] @2:0\n"
-        + "visit SCRIPT [source_file: [testcode]] "
-        + "[input_id: InputId: [testcode]] "
-        + "[feature_set: []] @1:0\n";
+    String expectedResult =
+        ""
+            + "visit NAME a [source_file: [testcode]] @1:4\n"
+            + "visit VAR [source_file: [testcode]] @1:0\n"
+            + "visit NAME foo [source_file: [testcode]] @2:9\n"
+            + "visit PARAM_LIST [source_file: [testcode]] @2:12\n"
+            + "visit NAME b [source_file: [testcode]] @3:6\n"
+            + "visit VAR [source_file: [testcode]] @3:2\n"
+            + "visit NAME a [source_file: [testcode]] @4:6\n"
+            + "visit NAME c [source_file: [testcode]] @4:15\n"
+            + "visit VAR [source_file: [testcode]] @4:11\n"
+            + "visit BLOCK [source_file: [testcode]] @4:9\n"
+            + "visit IF [source_file: [testcode]] @4:2\n"
+            + "visit BLOCK [source_file: [testcode]] @2:15\n"
+            + "visit FUNCTION foo [source_file: [testcode]] @2:0\n"
+            + "visit SCRIPT [source_file: [testcode]] "
+            + "[input_id: InputId: [testcode]] "
+            + "[feature_set: [block function]] @1:0\n";
 
     assertEquals(expectedResult, builder.toString());
   }
@@ -364,7 +396,11 @@ public final class NodeTraversalTest extends TestCase {
 
     String code =
         LINE_JOINER.join(
-            "function foo() {", "  var b = [0];", "  for (let a of b) {", "    let x;", "  }", "}");
+            "function foo() {",
+            "  var b = [0];",
+            "  for (let a of b) {",
+            "    let x;", "  }",
+            "}");
 
     Node tree = parse(compiler, code);
     Scope topScope = creator.createScope(tree, null);
@@ -446,6 +482,84 @@ public final class NodeTraversalTest extends TestCase {
     callback.assertEntered();
   }
 
+  public void testGetVarAccessible() {
+    Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    compiler.initOptions(options);
+    ScopeCreator creator = new Es6SyntacticScopeCreator(compiler);
+    AccessibleCallback callback = new AccessibleCallback();
+    NodeTraversal t = new NodeTraversal(compiler, callback, creator);
+
+    // variables are hoisted to their enclosing scope
+    String code =
+        LINE_JOINER.join(
+            "var varDefinedInScript;",
+            "var foo = function(param) {",
+            "  var varDefinedInFoo;",
+            "  var baz = function() {",
+            "    var varDefinedInBaz;",
+            "  }",
+            "}",
+            "var bar = function() {",
+            "  var varDefinedInBar;",
+            "}");
+
+    // the function scope should have access to all variables defined before and in the function
+    // scope
+    Node tree = parse(compiler, code);
+    Node fooNode =
+        tree // script
+        .getSecondChild() // var foo declaration (first child is var varDefinedInScript)
+        .getFirstFirstChild(); // child of the var foo declaration is the foo function
+    Scope topScope = creator.createScope(tree, null);
+    Scope fooScope = creator.createScope(fooNode, topScope);
+    callback.expect(4);
+    t.traverseAtScope(fooScope);
+    callback.assertAccessible(fooScope);
+
+    // the function block scope should have access to all variables defined in the global, function,
+    // and function block scopes
+    Node fooBlockNode = fooNode.getLastChild();
+    Scope fooBlockScope = creator.createScope(fooBlockNode, fooScope);
+    callback.expect(6);
+    t.traverseAtScope(fooBlockScope);
+    callback.assertAccessible(fooBlockScope);
+
+    // let and const variables are block scoped
+    code =
+        LINE_JOINER.join(
+            "var foo = function() {",
+            "  var varDefinedInFoo;",
+            "  var baz = function() {",
+            "    var varDefinedInBaz;",
+            "    let varDefinedInFoo;", // shadows parent scope
+            "  }",
+            "  let bar = 1;",
+            "}");
+
+    // the baz block scope has access to variables in its scope and parent scopes
+    tree = parse(compiler, code);
+    fooNode =
+        tree // script
+        .getFirstChild()// var foo declaration (first child is var varDefinedInScript)
+        .getFirstFirstChild(); // child of the var foo declaration is the foo function
+    fooBlockNode = fooNode.getLastChild(); // first child is param list of foo
+    Node bazNode = fooBlockNode.getSecondChild().getFirstFirstChild();
+    Node bazBlockNode = bazNode.getLastChild();
+
+    topScope = creator.createScope(tree, null);
+    fooScope = creator.createScope(fooNode, topScope);
+    fooBlockScope = creator.createScope(fooBlockNode, fooScope);
+    Scope bazScope = creator.createScope(bazNode, fooBlockScope);
+    Scope bazBlockScope = creator.createScope(bazBlockNode, bazScope);
+
+    // bar, baz, foo, varDefinedInFoo(in baz function), varDefinedInBaz
+    callback.expect(5);
+    t.traverseAtScope(bazBlockScope);
+    callback.assertAccessible(bazBlockScope);
+  }
+
   public void testTraverseEs6ScopeRoots_isLimitedToScope() {
     Compiler compiler = new Compiler();
     StringAccumulator callback = new StringAccumulator();
@@ -467,14 +581,14 @@ public final class NodeTraversalTest extends TestCase {
 
     // Traverse without entering nested scopes.
     NodeTraversal.traverseEs6ScopeRoots(
-        compiler, fooFunction, Lists.newArrayList(fooFunction), callback, false);
+        compiler, null, ImmutableList.of(fooFunction), callback, false);
     assertThat(callback.strings).containsExactly("string in foo");
 
     callback.strings.clear();
 
     // Traverse *with* entering nested scopes, now also sees "string nested in baz".
     NodeTraversal.traverseEs6ScopeRoots(
-        compiler, fooFunction, Lists.newArrayList(fooFunction), callback, true);
+        compiler, null, ImmutableList.of(fooFunction), callback, true);
     assertThat(callback.strings).containsExactly("string in foo", "string nested in baz");
   }
 
@@ -496,12 +610,11 @@ public final class NodeTraversalTest extends TestCase {
             "}");
 
     Node tree = parse(compiler, code);
-    IR.root(tree);
     Node fooFunction = tree.getSecondChild().getFirstFirstChild();
 
     // Traverse without entering nested scopes.
     NodeTraversal.traverseEs6ScopeRoots(
-        compiler, fooFunction, Lists.newArrayList(fooFunction), callback, false);
+        compiler, null, ImmutableList.of(fooFunction), callback, false);
     assertThat(callback.varNames)
         .containsExactly("varDefinedInScript", "foo", "bar", "varDefinedInFoo", "baz");
 
@@ -509,7 +622,7 @@ public final class NodeTraversalTest extends TestCase {
 
     // Traverse *with* entering nested scopes, now also sees "varDefinedInBaz".
     NodeTraversal.traverseEs6ScopeRoots(
-        compiler, fooFunction, Lists.newArrayList(fooFunction), callback, true);
+        compiler, null, ImmutableList.of(fooFunction), callback, true);
     assertThat(callback.varNames)
         .containsExactly(
             "varDefinedInScript", "foo", "bar", "varDefinedInFoo", "baz", "varDefinedInBaz");
@@ -531,16 +644,54 @@ public final class NodeTraversalTest extends TestCase {
 
     NodeTraversal.traverseEs6ScopeRoots(
         compiler,
-        fooFunction,
-        Lists.newArrayList(fooFunction, barFunction, bazFunction),
+        null,
+        ImmutableList.of(fooFunction, barFunction, bazFunction),
         callback,
         callback, // FunctionCallback
         false);
     assertThat(callback.enteredFunctions).containsExactly(fooFunction, barFunction, bazFunction);
   }
 
+  public void testTraverseEs6ScopeRoots_callsEnterScope() {
+    Compiler compiler = new Compiler();
+
+    List<Node> scopesEntered = new ArrayList<>();
+
+    NodeTraversal.Callback callback = new NodeTraversal.ScopedCallback() {
+      @Override
+      public void visit(NodeTraversal t, Node n, Node parent) {}
+
+      @Override
+      public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+        return true;
+      }
+
+      @Override
+      public void enterScope(NodeTraversal t) {
+        scopesEntered.add(t.getScopeRoot());
+      }
+
+      @Override
+      public void exitScope(NodeTraversal t) {}
+
+    };
+
+    String code = "function foo() { {} }";
+
+    Node tree = parse(compiler, code);
+    Node fooFunction = tree.getFirstChild();
+
+    NodeTraversal.traverseEs6ScopeRoots(
+        compiler,
+        null,
+        ImmutableList.of(fooFunction),
+        callback,
+        true);
+    assertThat(scopesEntered).hasSize(3);  // Function, function's body, and the block inside it.
+  }
+
   private static final class EnterFunctionAccumulator extends AbstractPostOrderCallback
-      implements FunctionCallback {
+      implements ChangeScopeRootCallback {
 
     List<Node> enteredFunctions = new ArrayList<>();
 
@@ -548,11 +699,12 @@ public final class NodeTraversalTest extends TestCase {
     public void visit(NodeTraversal t, Node n, Node parent) {}
 
     @Override
-    public void enterFunction(AbstractCompiler compiler, Node fnRoot) {
-      enteredFunctions.add(fnRoot);
+    public void enterChangeScopeRoot(AbstractCompiler compiler, Node root) {
+      enteredFunctions.add(root);
     }
   }
 
+  // Helper class used to collect all the vars from current scope and its parent scopes
   private static final class LexicallyScopedVarsAccumulator extends AbstractPostOrderCallback {
 
     final Set<String> varNames = new LinkedHashSet<>();
@@ -613,6 +765,32 @@ public final class NodeTraversalTest extends TestCase {
     }
 
     @Override
+    public void exitScope(NodeTraversal t) {}
+
+    @Override
+    public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+      return true;
+    }
+  }
+
+  // Helper class used to test accessible variables
+  private static class AccessibleCallback extends NodeTraversal.AbstractPreOrderCallback
+      implements NodeTraversal.ScopedCallback {
+    private int numAccessible;
+
+    private void expect(int accessible) {
+      this.numAccessible = accessible;
+    }
+
+    private void assertAccessible(Scope s) {
+      assertThat(s.getAllAccessibleVariables()).hasSize(numAccessible);
+    }
+
+    @Override
+    public void enterScope(NodeTraversal t) {
+    }
+
+    @Override
     public void exitScope(NodeTraversal t) {
     }
 
@@ -625,13 +803,15 @@ public final class NodeTraversalTest extends TestCase {
   private static Node parse(Compiler compiler, String js) {
     Node n = compiler.parseTestCode(js);
     assertThat(compiler.getErrors()).isEmpty();
+    IR.root(n);
     return n;
   }
 
   private static Node parseRoots(Compiler compiler, String externs, String js) {
-    Node extern = parse(compiler, externs);
-    Node main = parse(compiler, js);
+    Node extern = parse(compiler, externs).detach();
+    Node main = parse(compiler, js).detach();
 
     return IR.root(IR.root(extern), IR.root(main));
   }
 }
+

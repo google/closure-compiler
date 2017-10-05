@@ -86,8 +86,12 @@ public class Linter {
     // it contains some warnings we do want to report, such as JSDoc parse warnings.
     options.setWarningLevel(DiagnosticGroups.CHECK_TYPES, CheckLevel.WARNING);
 
+    options.setWarningLevel(DiagnosticGroups.JSDOC_MISSING_TYPE, CheckLevel.ERROR);
+    options.setWarningLevel(DiagnosticGroups.MISPLACED_MSG_ANNOTATION, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.UNNECESSARY_ESCAPE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.LINT_CHECKS, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.UNUSED_LOCAL_VARIABLE, CheckLevel.WARNING);
+    options.setWarningLevel(DiagnosticGroups.UNUSED_PRIVATE_PROPERTY, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.STRICT_MISSING_REQUIRE, CheckLevel.ERROR);
     options.setWarningLevel(DiagnosticGroups.EXTRA_REQUIRE, CheckLevel.ERROR);
     options.setWarningLevel(DiagnosticGroups.USE_OF_GOOG_BASE, CheckLevel.WARNING);

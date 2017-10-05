@@ -112,7 +112,7 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
             createFunctionWithReturn(ERROR_TYPE),
             ERROR_TYPE,
             createFunctionWithReturn(EVAL_ERROR_TYPE));
-    assertEquals("(Error|function (): Error)", union.toString());
+    assertEquals("(Error|function(): Error)", union.toString());
   }
 
   public void testRemovalOfDupes3() {
@@ -122,7 +122,7 @@ public class UnionTypeBuilderTest extends BaseJSTypeTestCase {
             createFunctionWithReturn(EVAL_ERROR_TYPE),
             EVAL_ERROR_TYPE,
             createFunctionWithReturn(ERROR_TYPE));
-    assertEquals("(Error|function (): Error)", union.toString());
+    assertEquals("(Error|function(): Error)", union.toString());
   }
 
   public void testRemovalOfDuplicateRecordTypes1() {

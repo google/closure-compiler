@@ -164,6 +164,10 @@ public final class JSTypes implements Serializable {
   private RawNominalType iObject;
   private RawNominalType iArrayLike;
   private RawNominalType iterable;
+  private RawNominalType iterator;
+  private RawNominalType iIterableResult;
+  private RawNominalType iTemplateArray;
+  private RawNominalType generator;
 
   final boolean allowMethodsAsFunctions;
   final boolean looseSubtypingForLooseObjects;
@@ -320,13 +324,31 @@ public final class JSTypes implements Serializable {
   public JSType getIArrayLikeInstance(JSType t) {
     return this.iArrayLike == null
         ? this.UNKNOWN
-        : this.iArrayLike.getInstanceAsJSType().instantiateGenerics(t);
+        : this.iArrayLike.getInstanceAsJSType().instantiateGenerics(ImmutableList.of(t));
   }
 
   public JSType getIterableInstance(JSType t) {
     return this.iterable == null
         ? this.UNKNOWN
-        : this.iterable.getInstanceAsJSType().instantiateGenerics(t);
+        : this.iterable.getInstanceAsJSType().instantiateGenerics(ImmutableList.of(t));
+  }
+
+  public JSType getIteratorInstance(JSType t) {
+    return this.iterator == null
+        ? this.UNKNOWN
+        : this.iterator.getInstanceAsJSType().instantiateGenerics(ImmutableList.of(t));
+  }
+
+  public JSType getIIterableResultInstance(JSType t) {
+    return this.iIterableResult == null
+        ? this.UNKNOWN
+        : this.iIterableResult.getInstanceAsJSType().instantiateGenerics(ImmutableList.of(t));
+  }
+
+  public JSType getGeneratorInstance(JSType t) {
+    return this.generator == null
+        ? this.UNKNOWN
+        : this.generator.getInstanceAsJSType().instantiateGenerics(ImmutableList.of(t));
   }
 
   public NominalType getObjectType() {
@@ -432,6 +454,10 @@ public final class JSTypes implements Serializable {
     return getArgumentsArrayType(this.UNKNOWN);
   }
 
+  public JSType getITemplateArrayType() {
+    return iTemplateArray != null ? iTemplateArray.getInstanceAsJSType() : UNKNOWN;
+  }
+
   public JSType getNativeType(JSTypeNative typeId) {
     // NOTE(aravindpg): not all JSTypeNative variants are handled here; add more as-needed.
     switch (typeId) {
@@ -445,6 +471,10 @@ public final class JSTypes implements Serializable {
         return UNDEFINED;
       case NULL_TYPE:
         return NULL;
+      case FALSE_TYPE:
+        return FALSE_TYPE;
+      case TRUE_TYPE:
+        return TRUE_TYPE;
       case BOOLEAN_TYPE:
         return BOOLEAN;
       case STRING_TYPE:
@@ -459,6 +489,8 @@ public final class JSTypes implements Serializable {
         return getArrayInstance();
       case OBJECT_TYPE:
         return getTopObject();
+      case EMPTY_OBJECT_LITERAL_TYPE:
+        return getEmptyObjectLiteral();
       case OBJECT_FUNCTION_TYPE:
         return fromFunctionType(getObjectType().getConstructorFunction());
       case TRUTHY:
@@ -476,6 +508,14 @@ public final class JSTypes implements Serializable {
         return getTopObject().getNominalTypeIfSingletonObj().getPrototypePropertyOfCtor();
       case GLOBAL_THIS:
         return getGlobalThis();
+      case I_ITERABLE_RESULT_TYPE:
+        return getIIterableResultInstance(UNKNOWN);
+      case I_TEMPLATE_ARRAY_TYPE:
+        return getITemplateArrayType();
+      case ITERATOR_TYPE:
+        return getIteratorInstance(UNKNOWN);
+      case GENERATOR_TYPE:
+        return getGeneratorInstance(UNKNOWN);
       default:
         throw new RuntimeException("Native type " + typeId.name() + " not found");
     }
@@ -524,6 +564,22 @@ public final class JSTypes implements Serializable {
 
   public void setIterableType(RawNominalType iterable) {
     this.iterable = iterable;
+  }
+
+  public void setIteratorType(RawNominalType iterator) {
+    this.iterator = iterator;
+  }
+
+  public void setIIterableResultType(RawNominalType iIterableResult) {
+    this.iIterableResult = iIterableResult;
+  }
+
+  public void setITemplateArrayType(RawNominalType iTemplateArray) {
+    this.iTemplateArray = iTemplateArray;
+  }
+
+  public void setGeneratorType(RawNominalType generator) {
+    this.generator = generator;
   }
 
   public void setRegexpInstance(JSType regexpInstance) {
@@ -591,5 +647,13 @@ public final class JSTypes implements Serializable {
   @SuppressWarnings("ReferenceEquality")
   boolean isBottomPropertyMap(PersistentMap<String, Property> map) {
     return map == BOTTOM_PROPERTY_MAP;
+  }
+
+  public String createGetterPropName(String originalPropName) {
+    return "%getter_fun" + originalPropName;
+  }
+
+  public String createSetterPropName(String originalPropName) {
+    return "%setter_fun" + originalPropName;
   }
 }

@@ -66,14 +66,14 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
                   new CheckMissingSemicolon(compiler),
                   new CheckMissingSuper(compiler),
                   new CheckPrimitiveAsObject(compiler),
+                  new ClosureCheckModule(compiler),
                   new CheckRequiresAndProvidesSorted(compiler),
-                  new CheckRequiresForConstructors(
-                      compiler, CheckRequiresForConstructors.Mode.SINGLE_FILE),
+                  new CheckMissingAndExtraRequires(
+                      compiler, CheckMissingAndExtraRequires.Mode.SINGLE_FILE),
                   new CheckSideEffects(
                       compiler, /* report */ true, /* protectSideEffectFreeCode */ false),
                   new CheckUnusedLabels(compiler),
                   new CheckUselessBlocks(compiler),
-                  new ClosureCheckModule(compiler),
                   new Es6SuperCheck(compiler)));
         }
 
@@ -97,7 +97,7 @@ class LintPassConfig extends PassConfig.PassConfigDelegate {
       };
 
   private final PassFactory closureRewriteClass =
-      new PassFactory("closureRewriteClass", true) {
+      new PassFactory(PassNames.CLOSURE_REWRITE_CLASS, true) {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
           return new ClosureRewriteClass(compiler);

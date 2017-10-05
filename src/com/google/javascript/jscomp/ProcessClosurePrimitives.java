@@ -230,6 +230,22 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     }
   }
 
+  private Node getAnyValueOfType(JSDocInfo jsdoc) {
+    checkArgument(jsdoc.hasType());
+    Node typeAst = jsdoc.getType().getRoot();
+    checkState(typeAst.isString());
+    switch (typeAst.getString()) {
+      case "boolean":
+        return IR.falseNode();
+      case "string":
+        return IR.string("");
+      case "number":
+        return IR.number(0);
+      default:
+        throw new RuntimeException(typeAst.getString());
+    }
+  }
+
   /**
    * @param n
    */
@@ -237,10 +253,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     Node parent = n.getParent();
     checkState(parent.isExprResult());
     String name = n.getSecondChild().getString();
-    Node value = n.isFromExterns() ? null : n.getChildAtIndex(2).detach();
+    JSDocInfo jsdoc = n.getJSDocInfo();
+    Node value =
+        n.isFromExterns() ? getAnyValueOfType(jsdoc).srcref(n) : n.getChildAtIndex(2).detach();
 
-    Node replacement = NodeUtil.newQNameDeclaration(
-        compiler, name, value, n.getJSDocInfo());
+    Node replacement = NodeUtil.newQNameDeclaration(compiler, name, value, jsdoc);
     replacement.useSourceInfoIfMissingFromForTree(parent);
     parent.replaceWith(replacement);
     compiler.reportChangeToEnclosingScope(replacement);
@@ -375,8 +392,11 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
 
   private boolean validPrimitiveCall(NodeTraversal t, Node n) {
     if (!n.getParent().isExprResult() || !t.inGlobalHoistScope()) {
-      compiler.report(t.makeError(n, INVALID_CLOSURE_CALL_ERROR));
-      return false;
+      // Ignore invalid primitives if we didn't strip module sugar.
+      if (!compiler.getOptions().shouldPreserveGoogModule()) {
+        compiler.report(t.makeError(n, INVALID_CLOSURE_CALL_ERROR));
+        return false;
+      }
     }
     return true;
   }
@@ -904,7 +924,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       // Record this provide created on a previous pass, and create a dummy
       // EXPR node as a placeholder to simulate an explicit provide.
       Node expr = new Node(Token.EXPR_RESULT);
-      expr.useSourceInfoWithoutLengthIfMissingFromForTree(parent);
+      expr.useSourceInfoIfMissingFromForTree(parent);
       parent.getParent().addChildBefore(expr, parent);
       /**
        * 'expr' has been newly added to the AST, but it might be removed again before this pass
@@ -1482,16 +1502,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       return decl;
     }
 
-    /**
-     * There are some special cases where clients of the compiler
-     * do not run TypedScopeCreator after running this pass.
-     * So always give the namespace literal a type.
-     */
     private Node createNamespaceLiteral() {
-      Node objlit = IR.objectlit();
-      objlit.setJSType(
-          compiler.getTypeRegistry().createAnonymousObjectType(null));
-      return objlit;
+      return IR.objectlit();
     }
 
     /**
@@ -1522,7 +1534,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       Node provideStringNode = getProvideStringNode();
       int offset = provideStringNode == null ? 0 : getSourceInfoOffset();
       Node sourceInfoNode = provideStringNode == null ? firstNode : provideStringNode;
-      newNode.useSourceInfoWithoutLengthIfMissingFromForTree(sourceInfoNode);
+      newNode.useSourceInfoIfMissingFromForTree(sourceInfoNode);
       if (offset != 0) {
         newNode.setSourceEncodedPositionForTree(
             sourceInfoNode.getSourcePosition() + offset);

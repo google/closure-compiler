@@ -28,7 +28,7 @@ import java.util.Set;
 
 /**
  * An optimization pass for J2CL-generated code to hoist some constant assignments out clinit method
- * to declaration phase so they could be used by other optimization passes for static evaliation.
+ * to declaration phase so they could be used by other optimization passes for static evaluation.
  */
 public class J2clConstantHoisterPass implements CompilerPass {
 

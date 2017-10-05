@@ -102,12 +102,6 @@ class FindExportableNodes extends AbstractPostOrderCallback {
           }
           break;
 
-        case MEMBER_FUNCTION_DEF:
-          export = n.getString();
-          context = n;
-          mode = Mode.EXPORT;
-          break;
-
         case ASSIGN:
           Node grandparent = parent.getParent();
           if (parent.isExprResult() && !n.getLastChild().isAssign()) {
@@ -137,12 +131,26 @@ class FindExportableNodes extends AbstractPostOrderCallback {
           }
           break;
 
-        case GETPROP:
+        case GETPROP: {
+          // TODO(b/63582201): currently, the IF body is executed even for code in the global
+          // scope, e.g., when the pass looks at code transpiled from ES6 that uses getters.
+          // This means that the top-level code we want to rewrite works by accident, only when
+          // allowLocalExports happens to be true.
           if (allowLocalExports && parent.isExprResult()) {
             export = n.getLastChild().getString();
             mode = Mode.EXTERN;
           }
           break;
+        }
+
+        case MEMBER_FUNCTION_DEF:
+          if (parent.getParent().isClass()) {
+            export = n.getString();
+            context = n;
+            mode = Mode.EXPORT;
+            break;
+          }
+          // fallthrough
 
         case STRING_KEY:
         case GETTER_DEF:
@@ -166,7 +174,12 @@ class FindExportableNodes extends AbstractPostOrderCallback {
           checkState(!export.isEmpty());
           localExports.add(export);
         }
-      } else {
+      }
+      // Silently ignore exports of the form:
+      // /** @export */ Foo.prototype.myprop;
+      // They are currently used on interfaces and records and have no effect.
+      // If we cleanup the code base in the future, we can warn again.
+      else if (!(n.isGetProp() && parent.isExprResult())) {
         // Don't produce extra warnings for functions values of object literals
         if (!n.isFunction() || !NodeUtil.isObjectLitKey(parent)) {
           if (allowLocalExports) {

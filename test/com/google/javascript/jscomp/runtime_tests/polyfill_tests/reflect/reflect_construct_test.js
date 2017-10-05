@@ -79,4 +79,13 @@ testSuite({
     assertEquals(23, x.y());
     assertUndefined(noCheck(x).x);
   },
+
+  testChakraBug3217() {
+    // Tests workaround for https://github.com/Microsoft/ChakraCore/issues/3217
+    class Base {}
+    class Derived {}
+    assertFalse(new Base() instanceof Derived);
+    Reflect.construct(Base, [], Derived);
+    assertFalse(new Base() instanceof Derived);
+  }
 });

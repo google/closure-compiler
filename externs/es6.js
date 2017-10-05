@@ -358,6 +358,26 @@ ArrayBufferView.prototype.byteLength;
 
 
 /**
+ * @param {number} length The length in bytes
+ * @constructor
+ * @throws {Error}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
+ */
+function SharedArrayBuffer(length) {}
+
+/** @type {number} */
+SharedArrayBuffer.prototype.byteLength;
+
+/**
+ * @param {number} begin
+ * @param {number=} opt_end
+ * @return {!SharedArrayBuffer}
+ * @nosideeffects
+ */
+SharedArrayBuffer.prototype.slice = function(begin, opt_end) {};
+
+
+/**
  * @typedef {!ArrayBuffer|!ArrayBufferView}
  */
 var BufferSource;
@@ -609,8 +629,8 @@ TypedArray.prototype.toString = function() {};
 TypedArray.prototype[Symbol.iterator] = function() {};
 
 /**
- * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
- *     or buffer
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
+ *     length or array or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -653,8 +673,8 @@ Int8Array.of = function(var_args) {};
 
 
 /**
- * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
- *     or buffer
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
+ *     length or array or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -687,8 +707,8 @@ Uint8Array.of = function(var_args) {};
 
 
 /**
- * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
- *     or buffer
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
+ *     length or array or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -730,8 +750,8 @@ var CanvasPixelArray;
 
 
 /**
- * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
- *     or buffer
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
+ *     length or array or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -764,8 +784,8 @@ Int16Array.of = function(var_args) {};
 
 
 /**
- * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
- *     or buffer
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
+ *     length or array or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -798,8 +818,8 @@ Uint16Array.of = function(var_args) {};
 
 
 /**
- * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
- *     or buffer
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
+ *     length or array or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -832,8 +852,8 @@ Int32Array.of = function(var_args) {};
 
 
 /**
- * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
- *     or buffer
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
+ *     length or array or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -866,8 +886,8 @@ Uint32Array.of = function(var_args) {};
 
 
 /**
- * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
- *     or buffer
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
+ *     length or array or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -900,8 +920,8 @@ Float32Array.of = function(var_args) {};
 
 
 /**
- * @param {number|ArrayBufferView|Array<number>|ArrayBuffer} length or array
- *     or buffer
+ * @param {number|ArrayBufferView|Array<number>|ArrayBuffer|SharedArrayBuffer}
+ *     length or array or buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_length
  * @constructor
@@ -934,7 +954,7 @@ Float64Array.of = function(var_args) {};
 
 
 /**
- * @param {ArrayBuffer} buffer
+ * @param {ArrayBuffer|SharedArrayBuffer} buffer
  * @param {number=} opt_byteOffset
  * @param {number=} opt_byteLength
  * @constructor
@@ -1468,7 +1488,7 @@ Reflect.construct = function(target, argList, opt_newTarget) {};
 /**
  * @param {!Object} target
  * @param {string} propertyKey
- * @param {!Object} attributes
+ * @param {!ObjectPropertyDescriptor} attributes
  * @return {boolean}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/defineProperty
  */
@@ -1558,3 +1578,106 @@ Reflect.set = function(target, propertyKey, value, opt_receiver) {};
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/setPrototypeOf
  */
 Reflect.setPrototypeOf = function(target, proto) {};
+
+
+/**
+ * @const
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Atomics
+ */
+var Atomics = {};
+
+/**
+ * @param {!TypedArray} typedArray
+ * @param {number} index
+ * @param {number} value
+ * @return {number}
+ */
+Atomics.add = function(typedArray, index, value) {}
+
+/**
+ * @param {!TypedArray} typedArray
+ * @param {number} index
+ * @param {number} value
+ * @return {number}
+ */
+Atomics.and = function(typedArray, index, value) {}
+
+/**
+ * @param {!TypedArray} typedArray
+ * @param {number} index
+ * @param {number} expectedValue
+ * @param {number} replacementValue
+ * @return {number}
+ */
+Atomics.compareExchange = function(typedArray, index, expectedValue,
+    replacementValue) {}
+
+/**
+ * @param {!TypedArray} typedArray
+ * @param {number} index
+ * @param {number} value
+ * @return {number}
+ */
+Atomics.exchange = function(typedArray, index, value) {}
+
+/**
+ * @param {number} size
+ * @return {boolean}
+ */
+Atomics.isLockFree = function(size) {}
+
+/**
+ * @param {!TypedArray} typedArray
+ * @param {number} index
+ * @return {number}
+ */
+Atomics.load = function(typedArray, index) {}
+
+/**
+ * @param {!TypedArray} typedArray
+ * @param {number} index
+ * @param {number} value
+ * @return {number}
+ */
+Atomics.or = function(typedArray, index, value) {}
+
+/**
+ * @param {!TypedArray} typedArray
+ * @param {number} index
+ * @param {number} value
+ * @return {number}
+ */
+Atomics.store = function(typedArray, index, value) {}
+
+/**
+ * @param {!TypedArray} typedArray
+ * @param {number} index
+ * @param {number} value
+ * @return {number}
+ */
+Atomics.sub = function(typedArray, index, value) {}
+
+/**
+ * @param {!Int32Array} typedArray
+ * @param {number} index
+ * @param {number} value
+ * @param {number=} timeout
+ * @return {String}
+ */
+Atomics.wait = function(typedArray, index, value, timeout) {}
+
+/**
+ * @param {!Int32Array} typedArray
+ * @param {number} index
+ * @param {number} count
+ * @return {number}
+ */
+Atomics.wake = function(typedArray, index, count) {}
+
+/**
+ * @param {!TypedArray} typedArray
+ * @param {number} index
+ * @param {number} value
+ * @return {number}
+ */
+Atomics.xor = function(typedArray, index, value) {}

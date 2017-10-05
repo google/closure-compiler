@@ -66,8 +66,8 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
         + "function String(opt_str) {}\n",
         "", FunctionTypeBuilder.TYPE_REDEFINITION,
         "attempted re-definition of type String\n"
-        + "found   : function (new:String, *=): number\n"
-        + "expected: function (new:String, *=): string");
+        + "found   : function(new:String, *=): number\n"
+        + "expected: function(new:String, *=): string");
   }
 
   public void testBuiltInTypeDifferentNumParams() throws Exception {
@@ -79,8 +79,8 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
         + "function String() {}\n",
         "", FunctionTypeBuilder.TYPE_REDEFINITION,
         "attempted re-definition of type String\n"
-        + "found   : function (new:String): string\n"
-        + "expected: function (new:String, *=): string");
+        + "found   : function(new:String): string\n"
+        + "expected: function(new:String, *=): string");
   }
 
   public void testBuiltInTypeDifferentNumParams2() throws Exception {
@@ -92,8 +92,8 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
         + "function String(opt_str, opt_nothing) {}\n",
         "", FunctionTypeBuilder.TYPE_REDEFINITION,
         "attempted re-definition of type String\n"
-        + "found   : function (new:String, ?=, ?=): string\n"
-        + "expected: function (new:String, *=): string");
+        + "found   : function(new:String, ?=, ?=): string\n"
+        + "expected: function(new:String, *=): string");
   }
 
   public void testBuiltInTypeDifferentParamType() throws Exception {
@@ -105,8 +105,8 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
         + "function String(opt_str) {}\n",
         "", FunctionTypeBuilder.TYPE_REDEFINITION,
         "attempted re-definition of type String\n"
-        + "found   : function (new:String, ?=): string\n"
-        + "expected: function (new:String, *=): string");
+        + "found   : function(new:String, ?=): string\n"
+        + "expected: function(new:String, *=): string");
   }
 
   public void testBadFunctionTypeDefinition() throws Exception {
@@ -114,8 +114,8 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
         "/** @constructor */function Function(opt_str) {}\n",
         "", FunctionTypeBuilder.TYPE_REDEFINITION,
         "attempted re-definition of type Function\n"
-        + "found   : function (new:Function, ?=): ?\n"
-        + "expected: function (new:Function, ...*): ?");
+        + "found   : function(new:Function, ?=): ?\n"
+        + "expected: function(new:Function, ...*): ?");
   }
 
   public void testInlineJsDoc() throws Exception {
@@ -144,7 +144,7 @@ public final class FunctionTypeBuilderTest extends CompilerTestCase {
     List<FunctionTypeI> subtypes =
         ImmutableList.copyOf(
             ((ObjectType) getLastCompiler().getTypeRegistry().getType("Error"))
-                .getConstructor().getSubTypes());
+                .getConstructor().getDirectSubTypes());
     for (FunctionTypeI type : subtypes) {
       String typeName = type.getInstanceType().toString();
       FunctionType typeInRegistry = ((ObjectType) getLastCompiler()

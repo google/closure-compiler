@@ -59,6 +59,19 @@ public final class DefinitionsRemoverTest extends CompilerTestCase {
 
   public void testRemoveFunctionExpressionName() {
     test("foo(function f(){})", "foo(function (){})");
+    test("var c = function() {}", "(function() {})");
+  }
+
+  public void testRemoveClass() {
+    test("class C {}", "");
+    test("f(class C {})", "f(class {})");
+    test("var c = class C {}", "(class{})");
+  }
+
+  public void testRemoveClassMemberFunctions() {
+    test("f(class {func(){}})", "f(class{})");
+    test("f(class {static func(){}})", "f(class{})");
+    testSame("f(class {[Symbol.iterator](){}})");
   }
 
   @Override

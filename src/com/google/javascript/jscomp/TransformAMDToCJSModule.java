@@ -259,7 +259,7 @@ public final class TransformAMDToCJSModule implements CompilerPass {
         script.addChildBefore(callbackBlock, before);
       }
       script.addChildToBack(callbackBlock);
-      NodeUtil.tryMergeBlock(callbackBlock);
+      NodeUtil.tryMergeBlock(callbackBlock, false);
     }
   }
 

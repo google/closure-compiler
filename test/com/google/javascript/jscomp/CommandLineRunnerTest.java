@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -327,7 +326,7 @@ public final class CommandLineRunnerTest extends TestCase {
     test(
         "/** @constructor */\n"
         + "function Foo() {}\n"
-        +"Foo.prototype.handle1 = function(x, y) { alert(y); };\n"
+        + "Foo.prototype.handle1 = function(x, y) { alert(y); };\n"
         + "/** @constructor */\n"
         + "function Bar() {}\n"
         + "Bar.prototype.handle1 = function(x, y) {};\n"
@@ -1043,10 +1042,9 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--source_map_location_mapping=foo/|http://bar");
     testSame("var x = 3;");
 
-    List<LocationMapping> mappings = lastCompiler.getOptions()
-        .sourceMapLocationMappings;
-    assertThat(ImmutableSet.copyOf(mappings).toString())
-        .isEqualTo(ImmutableSet.of(new LocationMapping("foo/", "http://bar")).toString());
+    List<LocationMapping> mappings = lastCompiler.getOptions().sourceMapLocationMappings;
+    assertThat(ImmutableSet.copyOf(mappings))
+        .containsExactly(new LocationMapping("foo/", "http://bar"));
   }
 
   public void testSourceMapLocationsTranslations2() {
@@ -1059,12 +1057,9 @@ public final class CommandLineRunnerTest extends TestCase {
 
     List<LocationMapping> mappings = lastCompiler.getOptions()
         .sourceMapLocationMappings;
-    assertThat(ImmutableSet.copyOf(mappings).toString())
-        .isEqualTo(
-            ImmutableSet.of(
-                    new LocationMapping("foo/", "http://bar"),
-                    new LocationMapping("xxx/", "http://yyy"))
-                .toString());
+    assertThat(ImmutableSet.copyOf(mappings))
+        .containsExactly(
+            new LocationMapping("foo/", "http://bar"), new LocationMapping("xxx/", "http://yyy"));
   }
 
   public void testSourceMapLocationsTranslations3() {
@@ -1111,8 +1106,7 @@ public final class CommandLineRunnerTest extends TestCase {
     FlagEntry<JsSourceType> zipFile2 =
         createZipFile(ImmutableMap.of("run.js", "console.log(\"Hello World\");"));
 
-    compileFilesError(
-        SourceFile.DUPLICATE_ZIP_CONTENTS, zipFile1, zipFile2);
+    compileFiles("console.log(\"Hello World\");", zipFile1, zipFile2);
   }
 
   public void testInputMultipleConflictingZips() throws IOException {
@@ -1831,7 +1825,8 @@ public final class CommandLineRunnerTest extends TestCase {
               "/** @constructor */ var module$foo = function(){};",
               "module$foo.prototype.bar=function(){console.log(\"bar\")};"),
           LINE_JOINER.join(
-              "var baz$$module$app = new module$foo();", "console.log(baz$$module$app.bar());")
+              "var module$app = {}, baz$$module$app = new module$foo();",
+              "console.log(baz$$module$app.bar());")
         });
   }
 
@@ -1851,7 +1846,33 @@ public final class CommandLineRunnerTest extends TestCase {
               "/** @const */ var module$foo={};",
               "function foo$$module$foo(){ alert('foo'); }",
               "foo$$module$foo();"),
-          "'use strict';"
+          "var module$app = {};"
+        });
+  }
+
+  public void testES6ImportOfFileWithImportsButNoExports() {
+    args.add("--dependency_mode=STRICT");
+    args.add("--entry_point='./app.js'");
+    args.add("--language_in=ECMASCRIPT6");
+    setFilename(0, "message.js");
+    setFilename(1, "foo.js");
+    setFilename(2, "app.js");
+    test(
+        new String[] {
+          "export default 'message';",
+          "import message from './message.js';\n  function foo() { alert(message); }\n  foo();",
+          "import './foo.js';"
+        },
+        new String[] {
+          CompilerTestCase.LINE_JOINER.join(
+              "/** @const */ var module$message={},",
+              "  $jscompDefaultExport$$module$message = 'message';",
+              "module$message.default = $jscompDefaultExport$$module$message;"),
+          CompilerTestCase.LINE_JOINER.join(
+              "/** @const */ var module$foo={};",
+              "function foo$$module$foo(){ alert(module$message.default); }",
+              "foo$$module$foo();"),
+          "var module$app = {};"
         });
   }
 
@@ -1874,6 +1895,38 @@ public final class CommandLineRunnerTest extends TestCase {
               "function foo$$module$foo(){ alert('foo'); }",
               "foo$$module$foo();"),
           CompilerTestCase.LINE_JOINER.join("'use strict';", "")
+        });
+  }
+
+  /** override the order of the entries that the module loader should look for */
+  public void testProcessCJSWithPackageJsonBrowserField() {
+    useStringComparison = true;
+    args.add("--process_common_js_modules");
+    args.add("--dependency_mode=STRICT");
+    args.add("--entry_point=app");
+    args.add("--module_resolution=NODE");
+    args.add("--package_json_entry_names=browser,main");
+    setFilename(0, "app.js");
+    setFilename(1, "node_modules/foo/package.json");
+    setFilename(2, "node_modules/foo/browser.js");
+
+    test(
+        new String[] {
+          "var Foo = require('foo');",
+          "{\"browser\":\"browser.js\",\"name\":\"foo\"}",
+          LINE_JOINER.join(
+              "function Foo() {}",
+              "Foo.prototype = {",
+              "  bar: function () {",
+              "    return 4 + 4;",
+              "  }",
+              "};",
+              "module.exports = Foo;")
+        },
+        new String[] {
+          "var module$node_modules$foo$browser=function(){};",
+          "module$node_modules$foo$browser.prototype={bar:function(){return 8}};",
+          "var Foo=module$node_modules$foo$browser;",
         });
   }
 
@@ -2333,12 +2386,9 @@ public final class CommandLineRunnerTest extends TestCase {
         Suppliers.ofInstance(externs),
         inputsSupplier,
         modulesSupplier,
-        new Function<Integer, Void>() {
-          @Override
-          public Void apply(Integer code) {
-            exitCodes.add(code);
-            return null;
-          }
+        (Integer code) -> {
+          exitCodes.add(code);
+          return null;
         });
     runner.run();
     lastCompiler = runner.getCompiler();

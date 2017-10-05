@@ -21,15 +21,51 @@
 
 'require util/objectcreate';
 
-$jscomp.construct =
-  (typeof Reflect != 'undefined' && Reflect.construct) ||
+/**
+ * Polyfill for Reflect.construct() method:
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/construct
+ *
+ * Calls a constructor as with the 'new' operator.
+ * TODO(sdh): how to type 'target' with (new: TARGET) if opt_newTarget missing?
+ *
+ * @param {function(new: ?, ...?)} target The constructor to call.
+ * @param {!Array} argList The arguments as a list.
+ * @param {function(new: TARGET, ...?)=} opt_newTarget The constructor to instantiate.
+ * @return {TARGET} The result of the function call.
+ * @template TARGET
+ */
+$jscomp.construct = /** @type {function(): !Function} */ (function() {
+
+  // Check for https://github.com/Microsoft/ChakraCore/issues/3217
+  /** @return {boolean} */
+  function reflectConstructWorks() {
+    /** @constructor */ function Base() {}
+    /** @constructor */ function Derived() {}
+    new Base();
+    Reflect.construct(Base, [], Derived);
+    return new Base() instanceof Base;
+  }
+
+  if (typeof Reflect != 'undefined' && Reflect.construct) {
+    if (reflectConstructWorks()) return Reflect.construct;
+    var brokenConstruct = Reflect.construct;
+    /**
+     * @param {function(new: ?, ...?)} target The constructor to call.
+     * @param {!Array} argList The arguments as a list.
+     * @param {function(new: TARGET, ...?)=} opt_newTarget The constructor to instantiate.
+     * @return {TARGET} The result of the function call.
+     * @template TARGET
+     * @suppress {reportUnknownTypes}
+     */
+    var patchedConstruct = function(target, argList, opt_newTarget) {
+      var out = brokenConstruct(target, argList);
+      if (opt_newTarget) Reflect.setPrototypeOf(out, opt_newTarget.prototype);
+      return out;
+    };
+    return patchedConstruct;
+  }
+
   /**
-   * Polyfill for Reflect.construct() method:
-   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/construct
-   *
-   * Calls a constructor as with the 'new' operator.
-   * TODO(sdh): how to type 'target' with (new: TARGET) if opt_newTarget missing?
-   *
    * @param {function(new: ?, ...?)} target The constructor to call.
    * @param {!Array} argList The arguments as a list.
    * @param {function(new: TARGET, ...?)=} opt_newTarget The constructor to instantiate.
@@ -37,14 +73,13 @@ $jscomp.construct =
    * @template TARGET
    * @suppress {reportUnknownTypes}
    */
-  function(target, argList, opt_newTarget) {
-      // if (arguments.length < 3 || opt_newTarget == target) {
-      //   return new target(...argList);
-      // }
-      if (opt_newTarget === undefined) opt_newTarget = target;
-      var proto = opt_newTarget.prototype || Object.prototype;
-      var obj = $jscomp.objectCreate(proto);
-      var apply = Function.prototype.apply;
-      var out = apply.call(target, obj, argList);
-      return out || obj;
-    };
+  function construct(target, argList, opt_newTarget) {
+    if (opt_newTarget === undefined) opt_newTarget = target;
+    var proto = opt_newTarget.prototype || Object.prototype;
+    var obj = $jscomp.objectCreate(proto);
+    var apply = Function.prototype.apply;
+    var out = apply.call(target, obj, argList);
+    return out || obj;
+  }
+  return construct;
+})();

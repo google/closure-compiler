@@ -117,27 +117,33 @@ public final class ParserRunner {
       Config config,
       ErrorReporter errorReporter) {
     // TODO(johnlenz): unify "SourceFile", "Es6ErrorReporter" and "Config"
-    SourceFile file = new SourceFile(sourceFile.getName(), sourceString);
-    boolean keepGoing = config.keepGoing == Config.RunMode.KEEP_GOING;
-    Es6ErrorReporter es6ErrorReporter = new Es6ErrorReporter(errorReporter, keepGoing);
-    com.google.javascript.jscomp.parsing.parser.Parser.Config es6config = newParserConfig(config);
-    Parser p = new Parser(es6config, es6ErrorReporter, file);
-    ProgramTree tree = p.parseProgram();
-    Node root = null;
-    List<Comment> comments = ImmutableList.of();
-    FeatureSet features = p.getFeatures();
-    if (tree != null && (!es6ErrorReporter.hadError() || keepGoing)) {
-      IRFactory factory =
-          IRFactory.transformTree(tree, sourceFile, sourceString, config, errorReporter);
-      root = factory.getResultNode();
-      features = features.union(factory.getFeatures());
-      root.putProp(Node.FEATURE_SET, features);
 
-      if (config.parseJsDocDocumentation.shouldParseDescriptions()) {
-        comments = p.getComments();
+    String sourceName = sourceFile.getName();
+    try {
+      SourceFile file = new SourceFile(sourceName, sourceString);
+      boolean keepGoing = config.keepGoing == Config.RunMode.KEEP_GOING;
+      Es6ErrorReporter es6ErrorReporter = new Es6ErrorReporter(errorReporter, keepGoing);
+      com.google.javascript.jscomp.parsing.parser.Parser.Config es6config = newParserConfig(config);
+      Parser p = new Parser(es6config, es6ErrorReporter, file);
+      ProgramTree tree = p.parseProgram();
+      Node root = null;
+      List<Comment> comments = ImmutableList.of();
+      FeatureSet features = p.getFeatures();
+      if (tree != null && (!es6ErrorReporter.hadError() || keepGoing)) {
+        IRFactory factory =
+            IRFactory.transformTree(tree, sourceFile, sourceString, config, errorReporter);
+        root = factory.getResultNode();
+        features = features.union(factory.getFeatures());
+        root.putProp(Node.FEATURE_SET, features);
+
+        if (config.parseJsDocDocumentation.shouldParseDescriptions()) {
+          comments = p.getComments();
+        }
       }
+      return new ParseResult(root, comments, features, p.getSourceMapURL());
+    } catch (Throwable t) {
+      throw new RuntimeException("Exception parsing \"" + sourceName + "\"", t);
     }
-    return new ParseResult(root, comments, features, p.getSourceMapURL());
   }
 
   private static com.google.javascript.jscomp.parsing.parser.Parser.Config newParserConfig(
@@ -159,9 +165,13 @@ public final class ParserRunner {
         break;
 
       case ECMASCRIPT6:
+        parserConfigLanguageMode = Mode.ES6;
+        break;
       case ECMASCRIPT7:
+        parserConfigLanguageMode = Mode.ES7;
+        break;
       case ECMASCRIPT8:
-        parserConfigLanguageMode = Mode.ES6_OR_GREATER;
+        parserConfigLanguageMode = Mode.ES8_OR_GREATER;
         break;
 
       default:

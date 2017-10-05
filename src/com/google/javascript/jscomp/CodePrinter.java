@@ -709,6 +709,7 @@ public final class CodePrinter {
     private boolean outputTypes = false;
     private SourceMap sourceMap = null;
     private boolean tagAsExterns;
+    private boolean tagAsTypeSummary;
     private boolean tagAsStrict;
     private TypeIRegistry registry;
     private CodeGeneratorFactory codeGeneratorFactory = new CodeGeneratorFactory() {
@@ -781,6 +782,12 @@ public final class CodePrinter {
       return this;
     }
 
+    /** Set whether the output should be tagged as an .i.js file. */
+    public Builder setTagAsTypeSummary(boolean tagAsTypeSummary) {
+      this.tagAsTypeSummary = tagAsTypeSummary;
+      return this;
+    }
+
     /**
      * Set whether the output should be tagged as @externs code.
      */
@@ -818,8 +825,16 @@ public final class CodePrinter {
             "Cannot build without root node being specified");
       }
 
-      return toSource(root, Format.fromOptions(options, outputTypes, prettyPrint), options,
-          sourceMap, tagAsExterns, tagAsStrict, lineBreak, codeGeneratorFactory);
+      return toSource(
+          root,
+          Format.fromOptions(options, outputTypes, prettyPrint),
+          options,
+          sourceMap,
+          tagAsTypeSummary,
+          tagAsExterns,
+          tagAsStrict,
+          lineBreak,
+          codeGeneratorFactory);
     }
   }
 
@@ -842,11 +857,16 @@ public final class CodePrinter {
     }
   }
 
-  /**
-   * Converts a tree to JS code
-   */
-  private static String toSource(Node root, Format outputFormat, CompilerOptions options,
-      SourceMap sourceMap, boolean tagAsExterns, boolean tagAsStrict, boolean lineBreak,
+  /** Converts a tree to JS code */
+  private static String toSource(
+      Node root,
+      Format outputFormat,
+      CompilerOptions options,
+      SourceMap sourceMap,
+      boolean tagAsTypeSummary,
+      boolean tagAsExterns,
+      boolean tagAsStrict,
+      boolean lineBreak,
       CodeGeneratorFactory codeGeneratorFactory) {
     checkState(options.sourceMapDetailLevel != null);
 
@@ -867,6 +887,9 @@ public final class CodePrinter {
 
     if (tagAsExterns) {
       cg.tagAsExterns();
+    }
+    if (tagAsTypeSummary) {
+      cg.tagAsTypeSummary();
     }
     if (tagAsStrict) {
       cg.tagAsStrict();

@@ -262,16 +262,19 @@ public final class JSModuleGraph implements Serializable {
   }
 
   /**
-   * Finds the module with the fewest transitive dependents on which all of the given modules
-   * depend.
+   * Finds the module with the fewest transitive dependents on which all of the given modules depend
+   * and that is a subtree of the given parent module tree.
+   *
+   * <p>If no such subtree can be found, the parent module is returned.
    *
    * <p>If multiple candidates have the same number of dependents, the module farthest down in the
    * total ordering of modules will be chosen.
    *
+   * @param parentTree module on which the result must depend
    * @param dependentModules indices of modules to consider
    * @return A module on which all of the argument modules depend
    */
-  public JSModule getSmallestCoveringDependency(BitSet dependentModules) {
+  public JSModule getSmallestCoveringSubtree(JSModule parentTree, BitSet dependentModules) {
     checkState(!dependentModules.isEmpty());
 
     // Candidate modules are those that all of the given dependent modules depend on, including
@@ -293,14 +296,21 @@ public final class JSModuleGraph implements Serializable {
     // Work backwards through the candidates starting with the dependent module with the smallest
     // index. For each candidate, we'll remove all of the modules it depends on from consideration,
     // since they must all have larger subtrees than the one we're considering.
-    int bestCandidateIndex = candidates.previousSetBit(minDependentModuleIndex);
-    for (int candidateIndex = bestCandidateIndex;
+    int parentTreeIndex = parentTree.getIndex();
+    // default to parent tree if we don't find anything better
+    int bestCandidateIndex = parentTreeIndex;
+    for (int candidateIndex = candidates.previousSetBit(minDependentModuleIndex);
         candidateIndex >= 0;
         candidateIndex = candidates.previousSetBit(candidateIndex - 1)) {
-      candidates.andNot(selfPlusTransitiveDeps[candidateIndex]);
-      if (subtreeSize[candidateIndex] < subtreeSize[bestCandidateIndex]) {
-        bestCandidateIndex = candidateIndex;
-      }
+
+      BitSet candidatePlusTransitiveDeps = selfPlusTransitiveDeps[candidateIndex];
+      if (candidatePlusTransitiveDeps.get(parentTreeIndex)) {
+        // candidate is a subtree of parentTree
+        candidates.andNot(candidatePlusTransitiveDeps);
+        if (subtreeSize[candidateIndex] < subtreeSize[bestCandidateIndex]) {
+          bestCandidateIndex = candidateIndex;
+        }
+      } // eliminate candidates that are not a subtree of parentTree
     }
     return modules[bestCandidateIndex];
   }

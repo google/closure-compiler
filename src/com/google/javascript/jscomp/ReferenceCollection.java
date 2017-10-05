@@ -23,6 +23,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * A collection of references. Can be subclassed to apply checks or store additional state when
@@ -174,7 +175,8 @@ public final class ReferenceCollection implements Iterable<Reference>, Serializa
    * @return The one and only assignment. Returns null if the number of assignments is not exactly
    *     one.
    */
-  private Reference getOneAndOnlyAssignment() {
+  @Nullable
+  Reference getOneAndOnlyAssignment() {
     Reference assignment = null;
     int size = references.size();
     for (int i = 0; i < size; i++) {

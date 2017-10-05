@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.javascript.jscomp.CollapseProperties.NAMESPACE_REDEFINED_WARNING;
 import static com.google.javascript.jscomp.CollapseProperties.UNSAFE_NAMESPACE_WARNING;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests {@link CollapseProperties}.
@@ -404,35 +405,41 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testAliasCreatedForClassDepth2_1() {
-    test(LINE_JOINER.join(
-    "var a = {};",
-    "a.b = {};",
-    "/** @constructor */",
-    "a.b.c = function(){};",
-    "var d = 1;",
-    "d = a.b;",
-    "a.b.c != d.c;"), LINE_JOINER.join(
-    "var a$b = {}; ",
-    "/** @constructor */",
-    "var a$b$c = function(){};",
-    "var d = 1;",
-    "d = a$b;",
-    "a$b$c != d.c;"), warning(UNSAFE_NAMESPACE_WARNING));
+    test(
+        LINE_JOINER.join(
+            "var a = {};",
+            "a.b = {};",
+            "/** @constructor */",
+            "a.b.c = function(){};",
+            "var d = 1;",
+            "d = a.b;",
+            "a.b.c != d.c;"),
+        LINE_JOINER.join(
+            "var a$b = {}; ",
+            "/** @constructor */",
+            "var a$b$c = function(){};",
+            "var d = 1;",
+            "d = a$b;",
+            "a$b$c != d.c;"),
+        warning(UNSAFE_NAMESPACE_WARNING));
 
-    test(LINE_JOINER.join(
-    "var a = {};",
-    "a.b = {};",
-    " /** @constructor @nocollapse */",
-    " a.b.c = function(){}; ",
-    "var d = 1;",
-    " d = a.b; ",
-    "a.b.c == d.c;"), LINE_JOINER.join(
-    "var a$b = {};",
-    "/** @constructor @nocollapse */",
-    "a$b.c = function(){};",
-    "var d = 1; ",
-    "d = a$b;",
-    "a$b.c == d.c;"), warning(UNSAFE_NAMESPACE_WARNING));
+    test(
+        LINE_JOINER.join(
+            "var a = {};",
+            "a.b = {};",
+            " /** @constructor @nocollapse */",
+            " a.b.c = function(){}; ",
+            "var d = 1;",
+            " d = a.b; ",
+            "a.b.c == d.c;"),
+        LINE_JOINER.join(
+            "var a$b = {};",
+            "/** @constructor @nocollapse */",
+            "a$b.c = function(){};",
+            "var d = 1; ",
+            "d = a$b;",
+            "a$b.c == d.c;"),
+        warning(UNSAFE_NAMESPACE_WARNING));
   }
 
   public void testAliasCreatedForClassDepth2_2() {
@@ -518,6 +525,25 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test(
         "var a = {}; a.b = {c: 0, /** @nocollapse */ 'd': 1}; var e = a.b['d'];",
         "var a$b = {c: 0, /** @nocollapse */ 'd': 1}; var e = a$b['d'];");
+  }
+
+  public void testObjLitWithQuotedKeyThatDoesNotGetReadComputed() {
+    //quoted/computed does not get read
+    test(
+        "var a = {}; a.b = {c: 0, ['d']: 1}; var e = 1; e = a.b.c;",
+        //"var a = {}; a.b = {c: 0, ['d']: 1}; var e = 1; e = a.b.c;"
+        "var a$b$c = 0; var e = 1; e = a$b$c"); //incorrect
+
+    // quoted/computed gets read
+    test(
+        "var a = {}; a.b = {c: 0, ['d']: 1}; var e = a.b['d'];",
+        "var a$b = {c: 0, ['d']: 1}; var e = a$b['d'];");
+
+    // key collision
+    test(
+        "var a = {}; a.b = {c: 0, ['c']: 1}; var e = a.b.c;",
+        //"var a$b = {c: 0, ['c']: 1}; var e = a$b.c;");
+        "var a$b$c = 0; var e = a$b$c;"); //incorrect
   }
 
   public void testFunctionWithQuotedPropertyThatDoesNotGetRead() {
@@ -680,7 +706,6 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     testSame("var a = {}; /** @constructor @nocollapse */ a.b = function() {}; a = a || {};");
   }
-
 
   public void testNamespaceResetInGlobalScope4() {
     test("var a = {}; /** @constructor */ a.b = function() {}; var a = a || {};",
@@ -1587,5 +1612,295 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
 
     test("var ns$x = {}; ns$x.y = 1; var ns = {}; ns.x$ = {}; ns.x$.y = 2; ns.x = {}; ns.x.y = 3;",
          "var ns$x$y = 1; var ns$x$0$y = 2; var ns$x$1$y = 3;");
+  }
+
+  // New Es6 Feature Tests - Some do not pass yet.
+  public void testArrowFunctionProperties() {
+    // Add property to arrow function in local scope
+    test(
+        "function a() {} () => { a.c = 5; return a.c; }",
+        "function a() {} var a$c; () => { a$c = 5; return a$c; }");
+    ;
+
+    // Reassign function property
+    test(
+        "function a() {}; a.c = 1; () => { a.c = 5; }",
+        "function a() {}; var a$c = 1; () => { a$c = 5; }");
+
+    // Arrow function assignment
+    test(
+        "var a = () => {}; function f() { a.c = 5; }",
+        "var a = () => {}; var a$c; function f() { a$c = 5; }");
+  }
+
+  public void testDestructuredProperiesObjectLit() {
+    // Using destructuring shorthand
+    test(
+        "var { a, b } = { a: {}, b: {} }; a.a = 5; var c = a.a; ",
+        //"var { a, b } = { a: {}, b: {} }; a$a = 5; var c = a$a; ");
+        "var {a:a,b:b}={a:{},b:{}};a.a=5;var c=a.a");
+
+    // Without destructuring shorthand
+    test(
+        "var { a:a, b:b } = { a: {}, b: {} }; a.a = 5; var c = a.a; ",
+        //"var { a:a, b:b } = { a: {}, b: {} }; a$a = 5; var c = a$a; ");
+        "var {a:a,b:b}={a:{},b:{}};a.a=5;var c=a.a");
+
+    // Test with greater depth
+    test(
+        "var { a, b } = { a: {}, b: {} }; a.a.a = 5; var c = a.a; var d = c.a;",
+        //"var { a, b } = { a: {}, b: {} }; a$a$a = 5; var c = a$a; var d = c$a;");
+        "var {a:a,b:b}={a:{},b:{}};a.a.a=5;var c=a.a;var d=c.a");
+  }
+
+  public void testComputedPropertyNames() {
+    // Computed property in object literal. This following test code is bad style - it does not
+    // follow the assumptions of the pass and thus produces the following output.
+
+    test(
+        LINE_JOINER.join(
+            "var a = {",
+            "  ['val' + ++i]: i,",
+            "  ['val' + ++i]: i",
+            "};",
+            "a.val1;"),
+        LINE_JOINER.join(
+            "var a = {",
+            "  ['val' + ++i]: i,",
+            "  ['val' + ++i]: i",
+            "};",
+            "var a$val1;"));
+
+    test(
+        "var a = { ['val']: i, ['val']: i }; a.val;",
+        "var a = { ['val']: i, ['val']: i }; var a$val;");
+
+    // Computed property method name in class
+    testSame(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  ['f'+'oo']() {",
+            "    return 1",
+            "  }",
+            "}",
+            "var bar = new Bar()",
+            "bar.foo();"));
+
+    // Computed property method name in class - no concatination
+    testSame(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  ['foo']() {",
+            "    return 1",
+            "  }",
+            "}",
+            "var bar = new Bar()",
+            "bar.foo();"));
+  }
+
+  public void testClassGetSetMembers() {
+    // Get and set methods
+    testSame(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(x) {",
+            "    this.x = x;",
+            "  }",
+            "  get foo() {",
+            "    return this.x;",
+            "  }",
+            "  set foo(xIn) {",
+            "    x = xIn;",
+            "  }",
+            "}",
+            "var barObj = new Bar(1);",
+            "bar.foo();",
+            "bar.foo(2);"));
+  }
+
+  public void testClassNonStaticMembers() {
+    // Call class method inside class scope
+    testSame(
+        LINE_JOINER.join(
+            "function getA() {};",
+            "class Bar {",
+            "  constructor(){}",
+            "  getA() {",
+            "    return 1;",
+            "  }",
+            "  getB(x) {",
+            "    this.getA();",
+            "  }",
+            "}"));
+
+    // Call class method outside class scope
+    testSame(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(){}",
+            "  getB(x) {}",
+            "}",
+            "var too;",
+            "var too = new Bar();",
+            "too.getB(too);"));
+
+    // Non-static method
+    testSame(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  constructor(x){",
+            "    this.x = x;",
+            "  }",
+            "  double() {",
+            "    return x*2;",
+            "  }",
+            "}",
+            "var too;",
+            "var too = new Bar();",
+            "too.double(1);"));
+  }
+
+  public void testClassStaticMembers() {
+    // TODO (simranarora) Make the pass collapse for static methods. Currently we have backed off
+    // because we will need to handle super and this occurrences within the method.
+    testSame(
+        LINE_JOINER.join(
+            "class Bar {",
+            "  static double(n) {",
+            "    return n*2",
+            "  }",
+            "}",
+            "Bar.double(1);"));
+  }
+
+  public void testSuperExtern() {
+    testSame(
+        LINE_JOINER.join(
+            "class Foo {",
+            "  constructor(){",
+            "    this.x = x; ",
+            "  }",
+            "  getX() {",
+            "    return this.x;",
+            "  }",
+            "}",
+            "class Bar extends Foo {",
+            "  constructor(x, y) {",
+            "    super(x);",
+            "    this.y = y;",
+            "  }",
+            "  getX() {",
+            "    return super.getX() + this.y;",
+            "  }",
+            "}",
+            "let too = new Bar();",
+            "too.getX();"));
+
+  }
+
+  public void testPropertyMethodAssignment_unsafeThis() {
+    // ES5 version
+    setLanguage(LanguageMode.ECMASCRIPT3, LanguageMode.ECMASCRIPT3);
+    test(
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  bar: 1, ",
+            "  myFunc: function myFunc() {",
+            "    return this.bar",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        LINE_JOINER.join(
+            "var foo$bar = 1;",
+            "var foo$myFunc = function myFunc() {",
+            "  return this.bar",
+            "};",
+            "foo$myFunc();"),
+        warning(CollapseProperties.UNSAFE_THIS));
+
+    // ES6 version
+    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT_2015);
+    test(
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  bar: 1, ",
+            "  myFunc() {",
+            "    return this.bar;",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        LINE_JOINER.join(
+            "var foo$bar = 1;",
+            "var foo$myFunc = function() {",
+            "  return this.bar",
+            "};",
+            "foo$myFunc();"),
+        warning(CollapseProperties.UNSAFE_THIS));
+  }
+
+  public void testPropertyMethodAssignment_noThis() {
+    // ES5 Version
+    setLanguage(LanguageMode.ECMASCRIPT3, LanguageMode.ECMASCRIPT3);
+    test(
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  bar: 1, ",
+            "  myFunc: function myFunc() {",
+            "    return 5",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        LINE_JOINER.join(
+            "var foo$bar = 1;",
+            "var foo$myFunc = function myFunc() {",
+            "    return 5;",
+            "};",
+            "foo$myFunc();"));
+
+    // ES6 version
+    setLanguage(LanguageMode.ECMASCRIPT_2015, LanguageMode.ECMASCRIPT_2015);
+    test(
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  bar: 1, ",
+            "  myFunc() {",
+            "    return 5;",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        LINE_JOINER.join(
+            "var foo$bar = 1;",
+            "var foo$myFunc = function() {",
+            "    return 5;",
+            "};",
+            "foo$myFunc();"));
+  }
+
+  public void testLetConstObjectAssignmentProperties() {
+    // All qualified names - even for variables that are initially declared as LETS and CONSTS -
+    // are being declared as VAR statements, but this is correct because we are only
+    // collapsing for global names.
+
+    test(
+        "let a = {}; a.b = {}; a.b.c = {}; let d = 1; d = a.b.c;",
+        "var a$b$c = {}; let d = 1; d = a$b$c;");
+
+    test("let a = {}; if(1)  { a.b = 1; }",
+         "if(1) { var a$b = 1; }");
+
+    testSame("if(1) { let a = {}; a.b = 1; }");
+
+    test(
+        "var a = {}; a.b = 1; if(1) { let a = {}; a.b = 2; }",
+        "var a$b = 1; if(1) { let a$jscomp$1 = {}; a$jscomp$1.b = 2; }");
+  }
+
+  public void testTemplateStrings() {
+    testSame(
+        LINE_JOINER.join(
+            "const name = 'foo';",
+            "function f() { return `Hi ${name}!`; }"));
   }
 }

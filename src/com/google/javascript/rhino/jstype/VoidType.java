@@ -92,6 +92,11 @@ public class VoidType extends ValueType {
   }
 
   @Override
+  public boolean isVoidable() {
+    return true;
+  }
+
+  @Override
   public boolean isExplicitlyVoidable() {
     return true;
   }

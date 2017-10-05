@@ -17,8 +17,8 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -37,6 +37,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.StringWriter;
@@ -109,6 +110,17 @@ public final class CompilerTest extends TestCase {
     assertEquals(3, jsRoot.getChildCount());
   }
 
+  public void testPrintExterns() {
+    List<SourceFile> externs =
+        ImmutableList.of(SourceFile.fromCode("extern", "function alert(x) {}"));
+    CompilerOptions options = new CompilerOptions();
+    options.setPrintExterns(true);
+    Compiler compiler = new Compiler();
+    compiler.init(externs, ImmutableList.<SourceFile>of(), options);
+    compiler.parseInputs();
+    assertThat(compiler.toSource()).isEqualTo("/** @externs */\nfunction alert(x){};");
+  }
+
   public void testLocalUndefined() throws Exception {
     // Some JavaScript libraries like to create a local instance of "undefined",
     // to ensure that other libraries don't try to overwrite it.
@@ -135,9 +147,9 @@ public final class CompilerTest extends TestCase {
         inputs, ImmutableList.of(ModuleIdentifier.forFile("/gin")));
 
     ErrorManager manager = compiler.getErrorManager();
-    JSError[] warnings = manager.getWarnings();
-    assertThat(warnings).hasLength(1);
-    String error = warnings[0].toString();
+    JSError[] errors = manager.getErrors();
+    assertThat(errors).hasLength(1);
+    String error = errors[0].toString();
     assertThat(error).contains("Failed to load module \"missing\" at /gin.js");
   }
 
@@ -217,14 +229,14 @@ public final class CompilerTest extends TestCase {
     File tempDir = Files.createTempDir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=foo.js.map";
     File jsFile = new File(tempDir, "foo.js");
-    Files.write(code, jsFile, Charsets.UTF_8);
+    Files.asCharSink(jsFile, UTF_8).write(code);
     File sourceMapFile = new File(tempDir, "foo.js.map");
-    Files.write(SOURCE_MAP, sourceMapFile, Charsets.UTF_8);
+    Files.asCharSink(sourceMapFile, UTF_8).write(SOURCE_MAP);
 
     CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
     input.getAstRoot(compiler);
     // The source map is still
-    assertThat(compiler.inputSourceMaps.size()).isEqualTo(1);
+    assertThat(compiler.inputSourceMaps).hasSize(1);
 
     for (SourceMapInput inputSourceMap : compiler.inputSourceMaps.values()) {
       SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
@@ -241,14 +253,14 @@ public final class CompilerTest extends TestCase {
     relativedir.mkdir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=relativedir/foo.js.map";
     File jsFile = new File(tempDir, "foo.js");
-    Files.write(code, jsFile, Charsets.UTF_8);
+    Files.asCharSink(jsFile, UTF_8).write(code);
     File sourceMapFile = new File(relativedir, "foo.js.map");
-    Files.write(SOURCE_MAP, sourceMapFile, Charsets.UTF_8);
+    Files.asCharSink(sourceMapFile, UTF_8).write(SOURCE_MAP);
 
     CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
     input.getAstRoot(compiler);
     // The source map is still
-    assertThat(compiler.inputSourceMaps.size()).isEqualTo(1);
+    assertThat(compiler.inputSourceMaps).hasSize(1);
 
     for (SourceMapInput inputSourceMap : compiler.inputSourceMaps.values()) {
       SourceMapConsumerV3 sourceMap = inputSourceMap.getSourceMap(null);
@@ -262,11 +274,11 @@ public final class CompilerTest extends TestCase {
     File tempDir = Files.createTempDir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=foo-does-not-exist.js.map";
     File jsFile = new File(tempDir, "foo2.js");
-    Files.write(code, jsFile, Charsets.UTF_8);
+    Files.asCharSink(jsFile, UTF_8).write(code);
 
     CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
     input.getAstRoot(compiler);
-    assertThat(compiler.inputSourceMaps.size()).isEqualTo(1);
+    assertThat(compiler.inputSourceMaps).hasSize(1);
 
     TestErrorManager errorManager = new TestErrorManager();
     for (SourceMapInput inputSourceMap : compiler.inputSourceMaps.values()) {
@@ -285,12 +297,12 @@ public final class CompilerTest extends TestCase {
     File tempDir = Files.createTempDir();
     String code = SOURCE_MAP_TEST_CODE + "\n//# sourceMappingURL=/some/missing/path/foo.js.map";
     File jsFile = new File(tempDir, "foo.js");
-    Files.write(code, jsFile, Charsets.UTF_8);
+    Files.asCharSink(jsFile, UTF_8).write(code);
 
     CompilerInput input = new CompilerInput(SourceFile.fromFile(jsFile.getAbsolutePath()));
     input.getAstRoot(compiler);
     // The source map is still
-    assertThat(compiler.inputSourceMaps.size()).isEqualTo(0);
+    assertThat(compiler.inputSourceMaps).isEmpty();
 
     // No warnings for unresolved absolute paths.
     assertEquals(0, errorManager.getWarningCount());
@@ -1034,15 +1046,18 @@ public final class CompilerTest extends TestCase {
     CompilerInput input = new CompilerInput(SourceFile.fromCode(
           "tmp", "function foo() {}"));
     Node ast = input.getAstRoot(compiler);
-    CompilerInput newInput = (CompilerInput) deserialize(serialize(input));
+    CompilerInput newInput = (CompilerInput) deserialize(compiler, serialize(input));
     assertTrue(ast.isEquivalentTo(newInput.getAstRoot(compiler)));
   }
 
   public void testExternsDependencySorting() {
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("leaf", "/** @externs */ goog.require('beer');"),
-        SourceFile.fromCode("beer", "/** @externs */ goog.provide('beer');\ngoog.require('hops');"),
-        SourceFile.fromCode("hops", "/** @externs */ goog.provide('hops');"));
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("leaf", "/** @fileoverview @typeSummary */ goog.require('beer');"),
+            SourceFile.fromCode(
+                "beer",
+                "/** @fileoverview @typeSummary */ goog.provide('beer');\ngoog.require('hops');"),
+            SourceFile.fromCode("hops", "/** @fileoverview @typeSummary */ goog.provide('hops');"));
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.setIncrementalChecks(CompilerOptions.IncrementalCheckMode.CHECK_IJS);
@@ -1109,10 +1124,14 @@ public final class CompilerTest extends TestCase {
   }
 
   public void testExternsDependencyPruning() {
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("unused", "/** @externs */ goog.provide('unused');"),
-        SourceFile.fromCode("moocher", "/** @externs */ goog.require('something');"),
-        SourceFile.fromCode("something", "/** @externs */ goog.provide('something');"));
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode(
+                "unused", "/** @fileoverview @typeSummary */ goog.provide('unused');"),
+            SourceFile.fromCode(
+                "moocher", "/** @fileoverview @typeSummary */ goog.require('something');"),
+            SourceFile.fromCode(
+                "something", "/** @fileoverview @typeSummary */ goog.provide('something');"));
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.dependencyOptions.setDependencyPruning(true);
@@ -1134,10 +1153,8 @@ public final class CompilerTest extends TestCase {
 
   public void testEs6ModuleEntryPoint() throws Exception {
     List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode(
-            "/index.js", "import foo from './foo'; foo('hello');"),
-        SourceFile.fromCode("/foo.js",
-            "export default (foo) => { alert(foo); }"));
+        SourceFile.fromCode("/index.js", "import foo from './foo.js'; foo('hello');"),
+        SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
 
     List<ModuleIdentifier> entryPoints = ImmutableList.of(
         ModuleIdentifier.forFile("/index"));
@@ -1156,22 +1173,23 @@ public final class CompilerTest extends TestCase {
     compiler.compile(externs, inputs, options);
 
     Result result = compiler.getResult();
+    assertThat(result.warnings).isEmpty();
     assertThat(result.errors).isEmpty();
   }
 
   public void testEs6ModulePathWithOddCharacters() throws Exception {
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode(
-            "/index[0].js", "import foo from './foo'; foo('hello');"),
-        SourceFile.fromCode("/foo.js",
-            "export default (foo) => { alert(foo); }"));
+    // Note that this is not yet compatible with transpilation, since the generated goog.provide
+    // statements are not valid identifiers.
+    List<SourceFile> inputs =
+        ImmutableList.of(
+            SourceFile.fromCode("/index[0].js", "import foo from './foo'; foo('hello');"),
+            SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
 
     List<ModuleIdentifier> entryPoints = ImmutableList.of(
-        ModuleIdentifier.forFile("/index[0]"));
+        ModuleIdentifier.forFile("/index[0].js"));
 
     CompilerOptions options = createNewFlagBasedOptions();
-    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
-    options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5);
+    options.setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
     options.dependencyOptions.setDependencyPruning(true);
     options.dependencyOptions.setDependencySorting(true);
     options.dependencyOptions.setEntryPoints(entryPoints);
@@ -1411,12 +1429,42 @@ public final class CompilerTest extends TestCase {
     return baos.toByteArray();
   }
 
-  private static Object deserialize(byte[] bytes)
+  private static Object deserialize(final Compiler compiler, byte[] bytes)
       throws IOException, ClassNotFoundException {
-    ObjectInputStream in =
-        new ObjectInputStream(new ByteArrayInputStream(bytes));
+
+    class CompilerObjectInputStream extends ObjectInputStream implements HasCompiler {
+      public CompilerObjectInputStream(InputStream in) throws IOException {
+        super(in);
+      }
+
+      @Override
+      public AbstractCompiler getCompiler() {
+        return compiler;
+      }
+    }
+
+    ObjectInputStream in = new CompilerObjectInputStream(new ByteArrayInputStream(bytes));
     Object obj = in.readObject();
     in.close();
     return obj;
+  }
+
+  public void testCompilerInputFromPersistentStore() {
+    List<SourceFile> sources =
+        ImmutableList.of(
+            SourceFile.fromFile("path/to/file.js"), SourceFile.fromFile("path/to/file2.js"));
+    final CompilerInput input = new CompilerInput(sources.get(0));
+    PersistentInputStore store =
+        new PersistentInputStore() {
+          @Override
+          public CompilerInput getCachedCompilerInput(SourceFile source) {
+            return input;
+          }
+        };
+    CompilerOptions options = new CompilerOptions();
+    Compiler compiler = new Compiler();
+    compiler.setPersistentInputStore(store);
+    compiler.init(ImmutableList.<SourceFile>of(), sources, options);
+    assertThat(compiler.getModules().get(0).getInputs()).contains(input);
   }
 }

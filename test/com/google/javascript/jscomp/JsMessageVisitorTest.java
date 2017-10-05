@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.JsMessage.Style.CLOSURE;
 import static com.google.javascript.jscomp.JsMessage.Style.LEGACY;
 import static com.google.javascript.jscomp.JsMessage.Style.RELAX;
+import static com.google.javascript.jscomp.JsMessageVisitor.MESSAGE_TREE_MALFORMED;
 import static com.google.javascript.jscomp.JsMessageVisitor.isLowerCamelCaseWithNumericSuffixes;
 import static com.google.javascript.jscomp.JsMessageVisitor.toLowerCamelCaseWithNumericSuffixes;
 import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
@@ -171,6 +172,35 @@ public final class JsMessageVisitorTest extends TestCase {
     JsMessage msg = messages.get(0);
     assertEquals("MSG_MENU", msg.getKey());
     assertEquals("a", msg.getDesc());
+  }
+
+  public void testMsgInEnum() {
+    extractMessages(
+        LINE_JOINER.join(
+            "/**",
+            " * @enum {number}",
+            " */",
+            "var MyEnum = {",
+            "  MSG_ONE: 0",
+            "};"));
+    assertThat(compiler.getErrors()).hasLength(1);
+    assertError(compiler.getErrors()[0]).hasType(MESSAGE_TREE_MALFORMED);
+  }
+
+  public void testMsgInEnumWithSuppression() {
+    extractMessagesSafely(
+        LINE_JOINER.join(
+            "/** @fileoverview",
+            " * @suppress {messageConventions}",
+            " */",
+            "",
+            "/**",
+            " * @enum {number}",
+            " */",
+            "var MyEnum = {",
+            "  MSG_ONE: 0",
+            "};"));
+    assertThat(compiler.getWarnings()).isEmpty();
   }
 
   public void testJsMessageOnObjLit() {

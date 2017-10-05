@@ -24,6 +24,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import com.google.javascript.jscomp.bundle.TranspilationException;
 import java.nio.file.Path;
 import java.util.Objects;
 
@@ -59,11 +60,11 @@ public final class CachingTranspiler implements Transpiler {
     try {
       return cache.getUnchecked(new Key(path, code));
     } catch (UncheckedExecutionException e) {
-      if (e.getCause() instanceof IllegalStateException) {
+      if (e.getCause() instanceof TranspilationException) {
         // If transpilation fails due to a parse error we can get an UncheckedExecutionException.
-        // This is because BaseTranspiler wraps the parse error as an IllegalStateException.
-        // TODO(joeltine): This would probably better as its own checked exception.
-        throw new IllegalStateException(e);
+        // This is because BaseTranspiler wraps the parse error as an TranspilationException.
+        // TODO(joeltine): This might better as a checked exception?
+        throw new TranspilationException(e);
       } else {
         throw e;
       }

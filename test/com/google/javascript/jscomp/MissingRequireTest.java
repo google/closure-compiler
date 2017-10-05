@@ -17,27 +17,27 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_FOR_GOOG_SCOPE;
-import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_STRICT_WARNING;
-import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_WARNING;
+import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE;
+import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.MISSING_REQUIRE_STRICT_WARNING;
+import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.MISSING_REQUIRE_WARNING;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import java.util.List;
 
 /**
- * Tests for the "missing requires" check in {@link CheckRequiresForConstructors}.
+ * Tests for the "missing requires" check in {@link CheckMissingAndExtraRequires}.
  *
  */
 
 public final class MissingRequireTest extends CompilerTestCase {
-  private CheckRequiresForConstructors.Mode mode;
+  private CheckMissingAndExtraRequires.Mode mode;
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
-    mode = CheckRequiresForConstructors.Mode.FULL_COMPILE;
+    mode = CheckMissingAndExtraRequires.Mode.FULL_COMPILE;
   }
 
   @Override
@@ -48,7 +48,7 @@ public final class MissingRequireTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    return new CheckRequiresForConstructors(compiler, mode);
+    return new CheckMissingAndExtraRequires(compiler, mode);
   }
 
   private void testMissingRequireStrict(String js, String warningText) {
@@ -72,6 +72,11 @@ public final class MissingRequireTest extends CompilerTestCase {
     testSame(js);
   }
 
+  public void testPassWithNoNewNodes_withES6Modules() {
+    String js = "export var str = 'g4'; /* does not use new */";
+    testSame(js);
+  }
+
   public void testPassWithOneNew() {
     String js =
         LINE_JOINER.join(
@@ -84,9 +89,15 @@ public final class MissingRequireTest extends CompilerTestCase {
     testSame("class C {}; var c = new C();");
   }
 
+  public void testPassWithNewDeclaredClass_withES6Modules() {
+    testSame("export class C {}; var c = new C();");
+  }
+
   public void testClassRecognizedAsConstructor() {
-    testSame("/** @constructor */ module$test.A = function() {};"
-                + "class C extends module$test.A {}");
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */ module$test.A = function() {};",
+            "class C extends module$test.A {}"));
     testSame("module$test.A = class {}; class C extends module$test.A {}");
   }
 
@@ -208,6 +219,23 @@ public final class MissingRequireTest extends CompilerTestCase {
         "missing require: 'goog.dom'");
   }
 
+  public void testWarnES6Module_noRewriting() {
+    testMissingRequireStrict(
+        LINE_JOINER.join(
+            "import 'example';",
+            "",
+            "/**",
+            " * @param {Array<string>} ids",
+            " * @return {Array<HTMLElement>}",
+            " */",
+            "function getElems(ids) {",
+            "  return ids.map(function(id) { return goog.dom.getElement(id); });",
+            "}",
+            "",
+            "export default getElems();"),
+        "missing require: 'goog.dom'");
+  }
+
   public void testPassForwardDeclare() {
     testSame(
         LINE_JOINER.join(
@@ -319,6 +347,24 @@ public final class MissingRequireTest extends CompilerTestCase {
             "}",
             "",
             "exports = getElems;"));
+  }
+
+  public void testPassES6Module_noRewriting() {
+    testSame(
+        LINE_JOINER.join(
+            "import 'example';",
+            "",
+            "import dom from 'goog.dom';",
+            "",
+            "/**",
+            " * @param {Array<string>} ids",
+            " * @return {Array<HTMLElement>}",
+            " */",
+            "function getElems(ids) {",
+            "  return ids.map(id => dom.getElement(id));",
+            "}",
+            "",
+            "export default getElems();"));
   }
 
   public void testGoogModuleGet() {
@@ -470,7 +516,7 @@ public final class MissingRequireTest extends CompilerTestCase {
   }
 
   public void testFailConstant() {
-    mode = CheckRequiresForConstructors.Mode.SINGLE_FILE;
+    mode = CheckMissingAndExtraRequires.Mode.SINGLE_FILE;
     testMissingRequireStrict(
         "goog.require('example.Class'); alert(example.Constants.FOO);",
         "missing require: 'example.Constants'");
@@ -480,7 +526,7 @@ public final class MissingRequireTest extends CompilerTestCase {
   }
 
   public void testFailGoogArray() {
-    mode = CheckRequiresForConstructors.Mode.SINGLE_FILE;
+    mode = CheckMissingAndExtraRequires.Mode.SINGLE_FILE;
     testMissingRequireStrict(
         "console.log(goog.array.contains([1, 2, 3], 4));",
         "missing require: 'goog.array'");

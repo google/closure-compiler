@@ -15,14 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.javascript.jscomp.CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING;
-import static com.google.javascript.jscomp.CheckRequiresForConstructors.MISSING_REQUIRE_WARNING;
+import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.EXTRA_REQUIRE_WARNING;
+import static com.google.javascript.jscomp.CheckMissingAndExtraRequires.MISSING_REQUIRE_WARNING;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
-/**
- * Tests for {@link CheckRequiresForConstructors} in single-file mode.
- */
+/** Tests for {@link CheckMissingAndExtraRequires} in single-file mode. */
 public final class SingleFileCheckRequiresTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
@@ -39,8 +37,8 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
-    return new CheckRequiresForConstructors(compiler,
-        CheckRequiresForConstructors.Mode.SINGLE_FILE);
+    return new CheckMissingAndExtraRequires(
+        compiler, CheckMissingAndExtraRequires.Mode.SINGLE_FILE);
   }
 
   public void testReferenceToSingleName() {
@@ -55,10 +53,22 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
     testSame("/** @constructor @extends {Array} */ function MyArray() {}");
   }
 
+  public void testCtorExtendsSingleName_withES6Modules() {
+    testSame("export /** @constructor @extends {Foo} */ function MyFoo() {}");
+    testSame("export /** @constructor @extends {Error} */ function MyError() {}");
+    testSame("export /** @constructor @extends {Array} */ function MyArray() {}");
+  }
+
   public void testClassExtendsSingleName() {
     testSame("class MyFoo extends Foo {}");
     testSame("class MyError extends Error {}");
     testSame("class MyArray extends Array {}");
+  }
+
+  public void testClassExtendsSingleName_withES6Modules() {
+    testSame("export class MyFoo extends Foo {}");
+    testSame("export class MyError extends Error {}");
+    testSame("export class MyArray extends Array {}");
   }
 
   public void testReferenceToQualifiedName() {
@@ -114,6 +124,10 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
     testError("goog.require('foo.Bar');", EXTRA_REQUIRE_WARNING);
   }
 
+  public void testExtraImport() {
+    testError("import z from 'x.y';", EXTRA_REQUIRE_WARNING);
+  }
+
   public void testUnqualifiedRequireUsedInJSDoc() {
     testSame("goog.require('Bar'); /** @type {Bar} */ var x;");
   }
@@ -126,12 +140,24 @@ public final class SingleFileCheckRequiresTest extends CompilerTestCase {
     testSame("goog.require('Foo'); new Foo();");
   }
 
+  public void testReferenceToSingleNameWithImport() {
+    testSame("import 'Foo'; new Foo();");
+  }
+
   public void testReferenceInDefaultParam() {
     testSame("function func( a = new Bar() ){}; func();");
   }
 
+  public void testReferenceInDefaultParam_withES6Modules() {
+    testSame("export function func( a = new Bar() ){}; func();");
+  }
+
   public void testReferenceInDestructuringParam() {
     testSame("var {a = new Bar()} = b;");
+  }
+
+  public void testReferenceInDestructuringParam_withES6Modules() {
+    testSame("export var {a = new Bar()} = b;");
   }
 
   public void testPassForwardDeclareInModule() {

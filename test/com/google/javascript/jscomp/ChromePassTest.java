@@ -253,6 +253,70 @@ public class ChromePassTest extends CompilerTestCase {
             + "});");
   }
 
+  public void testCrDefineConstEnum() {
+    test(
+        LINE_JOINER.join(
+            "cr.define('foo', function() {",
+            "  /** ",
+            "   * @enum {string}",
+            "   */",
+            "  const DangerType = {",
+            "    NOT_DANGEROUS: 'NOT_DANGEROUS',",
+            "    DANGEROUS: 'DANGEROUS',",
+            "  };",
+            "",
+            "  return {",
+            "    DangerType: DangerType,",
+            "  };",
+            "});"),
+        LINE_JOINER.join(
+            "var foo = foo || {};",
+            "cr.define('foo', function() {",
+            "  /** @enum {string} */",
+            "  foo.DangerType = {",
+            "    NOT_DANGEROUS:'NOT_DANGEROUS',",
+            "    DANGEROUS:'DANGEROUS',",
+            "  };",
+            "",
+            "  return {",
+            "    DangerType: foo.DangerType",
+            "  }",
+            "})",
+            ""));
+  }
+
+  public void testCrDefineLetEnum() {
+    test(
+        LINE_JOINER.join(
+            "cr.define('foo', function() {",
+            "  /** ",
+            "   * @enum {string}",
+            "   */",
+            "  let DangerType = {",
+            "    NOT_DANGEROUS: 'NOT_DANGEROUS',",
+            "    DANGEROUS: 'DANGEROUS',",
+            "  };",
+            "",
+            "  return {",
+            "    DangerType: DangerType,",
+            "  };",
+            "});"),
+        LINE_JOINER.join(
+            "var foo = foo || {};",
+            "cr.define('foo', function() {",
+            "  /** @enum {string} */",
+            "  foo.DangerType = {",
+            "    NOT_DANGEROUS:'NOT_DANGEROUS',",
+            "    DANGEROUS:'DANGEROUS',",
+            "  };",
+            "",
+            "  return {",
+            "    DangerType: foo.DangerType",
+            "  }",
+            "})",
+            ""));
+  }
+
   public void testCrDefineWrongNumberOfArguments() throws Exception {
     testError(
         "cr.define('namespace', function() { return {}; }, 'invalid argument')\n",
@@ -304,6 +368,48 @@ public class ChromePassTest extends CompilerTestCase {
         "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.JS);\n"
             + "/** @type {?} */\n"
             + "a.prototype.c;");
+  }
+
+  public void testCrDefinePropertyDefinesUnquotedPropertyWithTypeInfoForPropertyKindJs()
+      throws Exception {
+    test(
+        LINE_JOINER.join(
+            // @type starts here.
+            "/** @type {!Object} */",
+            "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.JS);"),
+        LINE_JOINER.join(
+            "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.JS);",
+            // But gets moved here.
+            "/** @type {!Object} */",
+            "a.prototype.c;"));
+  }
+
+  public void testCrDefinePropertyDefinesUnquotedPropertyIgnoringJsDocWhenBoolAttrIsPresent()
+      throws Exception {
+    test(
+        LINE_JOINER.join(
+            // PropertyKind is used at runtime and is canonical. When it's specified, ignore @type.
+            "/** @type {!Object} */",
+            "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.BOOL_ATTR);"),
+        LINE_JOINER.join(
+            "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.BOOL_ATTR);",
+            // @type is now {boolean}. Earlier, manually-specified @type is ignored.
+            "/** @type {boolean} */",
+            "a.prototype.c;"));
+  }
+
+  public void testCrDefinePropertyDefinesUnquotedPropertyIgnoringJsDocWhenAttrIsPresent()
+      throws Exception {
+    test(
+        LINE_JOINER.join(
+            // PropertyKind is used at runtime and is canonical. When it's specified, ignore @type.
+            "/** @type {!Array} */",
+            "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.ATTR);"),
+        LINE_JOINER.join(
+            "cr.defineProperty(a.prototype, 'c', cr.PropertyKind.ATTR);",
+            // @type is now {string}. Earlier, manually-specified @type is ignored.
+            "/** @type {string} */",
+            "a.prototype.c;"));
   }
 
   public void testCrDefinePropertyCalledWithouthThirdArgumentMeansCrPropertyKindJs()

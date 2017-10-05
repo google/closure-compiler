@@ -20,14 +20,16 @@ import static com.google.javascript.jscomp.Es6ConvertSuper.INVALID_SUPER_CALL;
 import static com.google.javascript.jscomp.Es6RewriteClass.CLASS_REASSIGNMENT;
 import static com.google.javascript.jscomp.Es6RewriteClass.CONFLICTING_GETTER_SETTER_TYPE;
 import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
+import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
+import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES6_MODULES;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 
 public final class Es6RewriteClassTest extends CompilerTestCase {
+
+  private boolean shouldAddInheritsPolyfill;
 
   private static final String EXTERNS_BASE =
       LINE_JOINER.join(
@@ -72,6 +74,7 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     setLanguageOut(LanguageMode.ECMASCRIPT3);
     enableRunTypeCheckAfterProcessing();
+    shouldAddInheritsPolyfill = true;
   }
 
   protected final PassFactory makePassFactory(
@@ -95,10 +98,13 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
     optimizer.addOneTimePass(
         makePassFactory("es6ConvertSuper", new Es6ConvertSuper(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", new Es6ExtractClasses(compiler)));
-    optimizer.addOneTimePass(makePassFactory("es6RewriteClass", new Es6RewriteClass(compiler)));
-    optimizer.addOneTimePass(
-        makePassFactory(
-            "Es6ConvertSuperConstructorCalls", new Es6ConvertSuperConstructorCalls(compiler)));
+    optimizer.addOneTimePass(makePassFactory("es6RewriteClass",
+        new Es6RewriteClass(compiler, shouldAddInheritsPolyfill)));
+    if (shouldAddInheritsPolyfill) {
+      optimizer.addOneTimePass(
+          makePassFactory(
+              "Es6ConvertSuperConstructorCalls", new Es6ConvertSuperConstructorCalls(compiler)));
+    }
     return optimizer;
   }
 
@@ -615,6 +621,19 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             " * @param {...?} var_args",
             " */",
             "let C = function(var_args) {};"));
+  }
+
+  public void testExtendsWithoutInheritsPolyfill() {
+    shouldAddInheritsPolyfill = false;
+    test("class D {} class C extends D {}",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let D = function() {};",
+            "/** @constructor @struct",
+            " * @extends {D}",
+            " * @param {...?} var_args",
+            " */",
+            "let C = function(var_args) {super.apply(this,arguments); };"));
   }
 
   public void testExtendNonNativeError() {
@@ -1933,9 +1952,15 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "    [foo]: {",
             "      configurable:true,",
             "      enumerable:true,",
-            "      /** @this {C} */",
+            "      /**",
+            "       * @this {C}",
+            "       * @return {boolean}",
+            "       */",
             "      get: function() {},",
-            "      /** @this {C} */",
+            "      /**",
+            "       * @this {C}",
+            "       * @param {boolean} val",
+            "       */",
             "      set: function(val) {},",
             "    },",
             "  });"));
@@ -1966,6 +1991,32 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "/** @constructor @struct */",
             "let C = function() {};",
             "C[foo] = function() { alert(2); };"));
+  }
+
+  public void testComputedPropGeneratorMethods() {
+    test(
+        "class C { *[foo]() { yield 1; } }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let C = function() {};",
+            "C.prototype[foo] = function*() { yield 1; };"));
+
+    test(
+        "class C { static *[foo]() { yield 2; } }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let C = function() {};",
+            "C[foo] = function*() { yield 2; };"));
+  }
+
+  public void testClassGenerator() {
+    test(
+        "class C { *foo() { yield 1; } }",
+        LINE_JOINER.join(
+            "/** @constructor @struct */",
+            "let C = function() {};",
+            "C.prototype.foo = function*() { yield 1;};"));
+    assertThat(getLastCompiler().injected).isEmpty();
   }
 
   @Override

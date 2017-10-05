@@ -400,6 +400,20 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "var {foo, bar} = goog.require('abc');",
             "var foo = goog.require('def.foo');"),
         DUPLICATE_NAME_SHORT_REQUIRE);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "const localName = goog.require(namespace.without.the.quotes);"),
+        ProcessClosurePrimitives.INVALID_ARGUMENT_ERROR);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('xyz');",
+            "",
+            "goog.require(namespace.without.the.quotes);"),
+        ProcessClosurePrimitives.INVALID_ARGUMENT_ERROR);
   }
 
   public void testIllegalShortImportReferencedByLongName() {
@@ -475,7 +489,16 @@ public final class ClosureCheckModuleTest extends CompilerTestCase {
             "var {doThing} = goog.require('foo.utils');",
             "",
             "exports = function() { return foo.utils.doThing(''); };"),
-        REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME);
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
+
+    testError(
+        LINE_JOINER.join(
+            "goog.module('x.y.z');",
+            "",
+            "var {doThing: fooDoThing} = goog.require('foo.utils');",
+            "",
+            "exports = function() { return foo.utils.doThing(''); };"),
+        REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME);
   }
 
   public void testIllegalImportNoAlias() {

@@ -199,8 +199,7 @@ class FunctionInjector {
     // last until explicitly cleared.
     if (containsFunctions) {
       if (!assumeMinimumCapture && !ref.scope.isGlobal()) {
-        // TODO(johnlenz): Allow inlining into any scope without local names or
-        // inner functions.
+        // TODO(johnlenz): Allow inlining into any scope without local names or inner functions.
         return CanInlineResult.NO;
       } else if (NodeUtil.isWithinLoop(callNode)) {
         // An inner closure maybe relying on a local value holding a value for a
@@ -430,7 +429,7 @@ class FunctionInjector {
       // This is a simple call?  Example: "foo();".
       return CallSiteType.SIMPLE_CALL;
     } else if (NodeUtil.isExprAssign(grandParent)
-        && !NodeUtil.isVarOrSimpleAssignLhs(callNode, parent)
+        && !NodeUtil.isNameDeclOrSimpleAssignLhs(callNode, parent)
         && parent.getFirstChild().isName()
         // TODO(nicksantos): Remove this once everyone is using
         // the CONSTANT_VAR annotation. We know how to remove that.
@@ -486,8 +485,7 @@ class FunctionInjector {
    * canInlineReferenceAsStatementBlock into the call site, replacing the
    * parent expression.
    */
-  private Node inlineFunction(
-      Reference ref, Node fnNode, String fnName) {
+  private Node inlineFunction(Reference ref, Node fnNode, String fnName) {
     Node callNode = ref.callNode;
     Node parent = callNode.getParent();
     Node grandParent = parent.getParent();
@@ -530,8 +528,7 @@ class FunctionInjector {
         throw new IllegalStateException("Unexpected call site type.");
     }
 
-    FunctionToBlockMutator mutator = new FunctionToBlockMutator(
-        compiler, this.safeNameIdSupplier);
+    FunctionToBlockMutator mutator = new FunctionToBlockMutator(compiler, this.safeNameIdSupplier);
 
     boolean isCallInLoop = NodeUtil.isWithinLoop(callNode);
     Node newBlock = mutator.mutate(
@@ -802,8 +799,7 @@ class FunctionInjector {
 
       // Check if any of the references cross the module boundaries.
       if (checkModules && ref.module != null) {
-        if (ref.module != fnModule &&
-            !moduleGraph.dependsOn(ref.module, fnModule)) {
+        if (ref.module != fnModule && !moduleGraph.dependsOn(ref.module, fnModule)) {
           // Calculate the cost as if the function were non-removable,
           // if it still lowers the cost inline it.
           isRemovable = false;
@@ -812,8 +808,7 @@ class FunctionInjector {
       }
     }
 
-    int referencesUsingDirectInlining = referenceCount -
-        referencesUsingBlockInlining;
+    int referencesUsingDirectInlining = referenceCount - referencesUsingBlockInlining;
 
     // Don't bother calculating the cost of function for simple functions where
     // possible.
@@ -821,8 +816,7 @@ class FunctionInjector {
     // larger than the original function if there are many returns (resulting
     // in additional assignments) or many parameters that need to be aliased
     // so use the cost estimating.
-    if (referenceCount == 1 && isRemovable &&
-        referencesUsingDirectInlining == 1) {
+    if (referenceCount == 1 && isRemovable && referencesUsingDirectInlining == 1) {
       return true;
     }
 
@@ -904,8 +898,8 @@ class FunctionInjector {
     //    "function xx(xx,xx){}" (15 + (param count * 3) -1;
     int paramCount = NodeUtil.getFunctionParameters(fnNode).getChildCount();
     int commaCount = (paramCount > 1) ? paramCount - 1 : 0;
-    int costDeltaFunctionOverhead = 15 + commaCount +
-        (paramCount * InlineCostEstimator.ESTIMATED_IDENTIFIER_COST);
+    int costDeltaFunctionOverhead =
+        15 + commaCount + (paramCount * InlineCostEstimator.ESTIMATED_IDENTIFIER_COST);
 
     Node block = fnNode.getLastChild();
     if (!block.hasChildren()) {
@@ -934,9 +928,8 @@ class FunctionInjector {
       final int perReturnResultOverhead = 3; // "XX="
       final int perAliasOverhead = 3; // "XX="
 
-      // TODO(johnlenz): Counting the number of returns is relatively expensive
-      //   this information should be determined during the traversal and
-      //   cached.
+      // TODO(johnlenz): Counting the number of returns is relatively expensive.
+      //   This information should be determined during the traversal and cached.
       int returnCount = NodeUtil.getNodeTypeReferenceCount(
           block, Token.RETURN, new NodeUtil.MatchShallowStatement());
       int resultCount = (returnCount > 0) ? returnCount - 1 : 0;

@@ -24,3 +24,6 @@ goog.provide = function(name) {};
 
 /** @param {string} name */
 goog.require = function(name) {};
+
+/** @param {string} name */
+goog.module = function(name) {};

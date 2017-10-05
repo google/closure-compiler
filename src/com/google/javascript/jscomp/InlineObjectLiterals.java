@@ -183,7 +183,7 @@ class InlineObjectLiterals implements CompilerPass {
           // isn't a perfect algorithm, but it should catch most cases.
           String propName = parent.getLastChild().getString();
           if (!validProperties.contains(propName)) {
-            if (NodeUtil.isVarOrSimpleAssignLhs(parent, grandparent)) {
+            if (NodeUtil.isNameDeclOrSimpleAssignLhs(parent, grandparent)) {
               validProperties.add(propName);
             } else {
               return false;

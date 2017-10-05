@@ -28,7 +28,8 @@ import com.google.javascript.rhino.Node;
  */
 public final class CheckEmptyStatements extends AbstractPostOrderCallback implements CompilerPass {
   public static final DiagnosticType USELESS_EMPTY_STATEMENT = DiagnosticType.disabled(
-      "JSC_USELESS_EMPTY_STATEMENT", "Useless empty statement. Remove semicolon.");
+      "JSC_USELESS_EMPTY_STATEMENT",
+      "Useless empty statement. Remove semicolon.");
 
   private final AbstractCompiler compiler;
 
@@ -48,4 +49,3 @@ public final class CheckEmptyStatements extends AbstractPostOrderCallback implem
     }
   }
 }
-

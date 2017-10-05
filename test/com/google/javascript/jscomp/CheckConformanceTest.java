@@ -350,6 +350,15 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
             "var ns = {};",
             "/** @const */",
             "ns.subns = ns.subns || {};"));
+
+    // We only check @const nodes, not @final nodes.
+    testNoWarning(
+        LINE_JOINER.join(
+            "/** @constructor @suppress {newCheckTypes} */",
+            "function f() {",
+            "  /** @final */ this.foo = unknown;",
+            "}",
+            "var x = new f();"));
   }
 
   public void testBannedCodePattern1() {
@@ -544,7 +553,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testConformance(declarations, "var c = new C(); c.p = 'boo';",
         CheckConformance.CONFORMANCE_VIOLATION);
 
-    // Accessing property through a super type is possibily a violation.
+    // Accessing property through a super type is possibly a violation.
     testConformance(declarations, "var sc = new SC(); sc.p = 'boo';",
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 
@@ -1309,19 +1318,10 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         " /** @param {ObjectWithNoProps} a */",
         "function f(a) { alert(a.foobar); };");
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testWarning(
         js,
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: My rule message\nThe property \"foobar\" on type \"(ObjectWithNoProps|null)\"");
-
-    // TODO(aravindpg): Only difference is we don't add parens at the ends of our union type
-    // string reprs in NTI. Fix them to be the same if possible.
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testWarning(
-        js,
-        CheckConformance.CONFORMANCE_VIOLATION,
-        "Violation: My rule message\nThe property \"foobar\" on type \"ObjectWithNoProps|null\"");
   }
 
   public void testCustomBanUnknownProp3() {
@@ -1549,8 +1549,10 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     compiler.setErrorManager(errorManager);
     ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();
     builder.addRequirementBuilder().addWhitelist("x").addWhitelist("x");
-    CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
-    assertEquals(1, errorManager.getErrorCount());
+    List<Requirement> requirements =
+        CheckConformance.mergeRequirements(compiler, ImmutableList.of(builder.build()));
+    assertEquals(1, requirements.get(0).getWhitelistCount());
+    assertEquals(0, errorManager.getErrorCount());
   }
 
   public void testCustomBanNullDeref1() {
@@ -1720,7 +1722,18 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanCreateDom Message");
 
-    // TODO(jakubvrana): Add a test for goog.dom.DomHelper.
+    String externs =
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @const */ var goog = {};",
+            "/** @const */ goog.dom = {};",
+            "/** @constructor */ goog.dom.DomHelper = function() {};");
+
+    testWarning(
+        externs,
+        "new goog.dom.DomHelper().createDom('iframe', {'src': src});",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateDom Message");
 
     testWarning(
         "goog.dom.createDom(tag, {'src': src});",
@@ -1792,7 +1805,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
             DEFAULT_EXTERNS,
             "/** @const */ var goog = {};",
             "/** @const */ goog.dom = {};",
-            "/** @constructor @template T */ goog.dom.TagName = function() {}",
+            "/** @constructor @template T */ goog.dom.TagName = function() {};",
             "/** @type {!goog.dom.TagName<!HTMLDivElement>} */",
             "goog.dom.TagName.DIV = new goog.dom.TagName();",
             "/** @constructor */ function HTMLDivElement() {}\n");

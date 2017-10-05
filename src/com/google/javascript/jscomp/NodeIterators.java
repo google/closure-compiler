@@ -250,7 +250,7 @@ class NodeIterators {
             || (nextNode.isGetProp() || nextNode.isGetElem())) {
 
           // If this is a simple assign, we'll be ok.
-          if (nextParent == null || !NodeUtil.isVarOrSimpleAssignLhs(nextNode, nextParent)) {
+          if (nextParent == null || !NodeUtil.isNameDeclOrSimpleAssignLhs(nextNode, nextParent)) {
             readsState = true;
           }
 

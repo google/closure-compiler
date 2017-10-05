@@ -46,7 +46,7 @@ import java.util.List;
  * @author blickly@google.com (Ben Lickly)
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
-public interface FunctionTypeI extends TypeI {
+public interface FunctionTypeI extends ObjectTypeI {
   /**
    * Creates a new function type B based on the original function type A.
    * Takes the receiver type (this type) of A and makes it the first
@@ -80,12 +80,12 @@ public interface FunctionTypeI extends TypeI {
    * This is only valid for constructors and interfaces, and will not be
    * null. This allows a downward traversal of the subtype graph.
    */
-  // TODO(sdh): change the name to getDirectSubTypes()
-  Iterable<FunctionTypeI> getSubTypes();
+  Iterable<FunctionTypeI> getDirectSubTypes();
 
   /** Gets the type of {@code this} in this function. */
   TypeI getTypeOfThis();
 
+  /** Whether this function type has any properties (not counting "prototype"). */
   boolean hasProperties();
 
   void setSource(Node n);
@@ -105,6 +105,21 @@ public interface FunctionTypeI extends TypeI {
   /** Returns the maximum number of allowed arguments, or Integer.MAX_VALUE if variadic. */
   int getMaxArity();
 
-  /** Returns the names of all type parameters. */
-  Collection<String> getTypeParameters();
+  /** Returns a Builder instance initialized to this function. */
+  Builder toBuilder();
+
+  /** Interface for building FunctionTypeI instances. */
+  interface Builder {
+    /** Returns a builder with unknown return type. */
+    Builder withUnknownReturnType();
+
+    /** Returns a builder with the given return type. */
+    Builder withReturnType(TypeI returnType);
+
+    /** Returns a builder with an empty parameter list. */
+    Builder withNoParameters();
+
+    /** Builds a new FunctionTypeI. */
+    FunctionTypeI build();
+  }
 }

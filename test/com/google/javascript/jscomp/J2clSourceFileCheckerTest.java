@@ -22,12 +22,6 @@ import com.google.javascript.jscomp.CompilerOptions.J2clPassMode;
 
 /** Tests for {@link J2clSourceFileChecker}. */
 public class J2clSourceFileCheckerTest extends CompilerTestCase {
-  private static final SourceFile NO_J2CL_SOURCE_FILE =
-      SourceFile.fromCode(
-          "noJ2cl.js", "goog.provide('noJ2cl'); /** @constructor */ function noJ2cl(){};");
-  private static final SourceFile NO_J2CL_SOURCE_FILE2 =
-      SourceFile.fromCode(
-          "noJ2cl2.js", "goog.provide('noJ2cl2'); /** @constructor */ function noJ2cl2(){};");
   private static final SourceFile J2CL_SOURCE_FILE =
       SourceFile.fromCode(
           "jar:file://foo.js.zip!foo/bar.impl.java.js",
@@ -48,26 +42,14 @@ public class J2clSourceFileCheckerTest extends CompilerTestCase {
     return checkContainingJ2cl;
   }
 
-  public void testHasJ2cl() {
-    testSame(ImmutableList.of(NO_J2CL_SOURCE_FILE, J2CL_SOURCE_FILE, NO_J2CL_SOURCE_FILE2));
-    assertThat(compiler.getAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY))
-        .isEqualTo(Boolean.TRUE);
-  }
-
-  public void testHasNoJ2cl() {
-    testSame(ImmutableList.of(NO_J2CL_SOURCE_FILE, NO_J2CL_SOURCE_FILE2));
-    assertThat(compiler.getAnnotation(J2clSourceFileChecker.HAS_J2CL_ANNOTATION_KEY))
-        .isEqualTo(Boolean.FALSE);
-  }
-
   public void testShouldRunJ2clPassesWithoutJ2clSources() {
     testSame("");
     assertThat(J2clSourceFileChecker.shouldRunJ2clPasses(compiler)).isFalse();
 
     compiler.getOptions().setJ2clPass(J2clPassMode.ON);
-    assertThat(J2clSourceFileChecker.shouldRunJ2clPasses(compiler)).isTrue();
+    assertThat(J2clSourceFileChecker.shouldRunJ2clPasses(compiler)).isFalse();
     compiler.getOptions().setJ2clPass(J2clPassMode.TRUE);
-    assertThat(J2clSourceFileChecker.shouldRunJ2clPasses(compiler)).isTrue();
+    assertThat(J2clSourceFileChecker.shouldRunJ2clPasses(compiler)).isFalse();
     compiler.getOptions().setJ2clPass(J2clPassMode.AUTO);
     assertThat(J2clSourceFileChecker.shouldRunJ2clPasses(compiler)).isFalse();
   }

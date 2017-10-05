@@ -24,11 +24,16 @@
  * @author dbk@google.com (David Barrett-Kahn)
  */
 
+/** @record */
+function BlobPropertyBag() {};
+
+/** @type {(string|undefined)} */
+BlobPropertyBag.prototype.type;
 
 /**
  * @see http://dev.w3.org/2006/webapi/FileAPI/#dfn-Blob
  * @param {Array<ArrayBuffer|ArrayBufferView|Blob|string>=} opt_blobParts
- * @param {Object=} opt_options
+ * @param {BlobPropertyBag=} opt_options
  * @constructor
  * @nosideeffects
  */

@@ -42,40 +42,78 @@ var YT = {};
 YT.Player = function(container, opts) {};
 
 
-/**
- * @param {string} videoId
- * @param {number=} startSeconds
- * @param {string=} suggestedQuality
- */
-YT.Player.prototype.cueVideoById =
-    function(videoId, startSeconds, suggestedQuality) {};
+/** @typedef {!{
+ *    videoId: string,
+ *    startSeconds: (number|undefined),
+ *    endSeconds: (number|undefined),
+ *    suggestedQuality: (string|undefined),
+ *  }} */
+YT.Player.VideoIdParams;
 
 
 /**
- * @param {string} videoId
- * @param {number=} startSeconds
- * @param {string=} suggestedQuality
+ * Loads the specified video's thumbnail and prepares the player to play the
+ * video.
+ * @param {!YT.Player.VideoIdParams|string} videoIdOrObject YouTube Video ID or
+ *     parameters object.
+ * @param {number=} opt_startSeconds Float/integer that specifies the time
+ *     from which the video should start playing.
+ * @param {string=} opt_suggestedQuality The suggested playback quality for
+ *     the video.
  */
-YT.Player.prototype.loadVideoById =
-    function(videoId, startSeconds, suggestedQuality) {};
+YT.Player.prototype.cueVideoById = function(
+    videoIdOrObject, opt_startSeconds, opt_suggestedQuality) {};
 
 
 /**
- * @param {string} mediaContentUrl
- * @param {number} startSeconds
- * @param {string=} suggestedQuality
+ * Loads and plays the specified video.
+ * @param {!YT.Player.VideoIdParams|string} videoIdOrObject YouTube Video ID or
+ *     parameters object.
+ * @param {number=} opt_startSeconds Float/integer that specifies the time
+ *     from which the video should start playing.
+ * @param {string=} opt_suggestedQuality The suggested playback quality for
+ *     the video.
  */
-YT.Player.prototype.cueVideoByUrl =
-    function(mediaContentUrl, startSeconds, suggestedQuality) {};
+YT.Player.prototype.loadVideoById = function(
+    videoIdOrObject, opt_startSeconds, opt_suggestedQuality) {};
+
+
+/** @typedef {!{
+ *    mediaContentUrl: string,
+ *    startSeconds: (number|undefined),
+ *    endSeconds: (number|undefined),
+ *    suggestedQuality: (string|undefined),
+ *  }} */
+YT.Player.MediaContentUrlParams;
 
 
 /**
- * @param {string} mediaContentUrl
- * @param {number} startSeconds
- * @param {string=} suggestedQuality
+ * Loads the specified video's thumbnail and prepares the player to play the
+ * video.
+ * @param {!YT.Player.MediaContentUrlParams|string} mediaContentUrlOrObject
+ *     YouTube player URL in the format http://www.youtube.com/v/VIDEO_ID or
+ *     parameters object.
+ * @param {number=} opt_startSeconds Float/integer that specifies the time
+ *     from which the video should start playing.
+ * @param {string=} opt_suggestedQuality The suggested playback quality for
+ *     the video.
  */
-YT.Player.prototype.loadVideoByUrl =
-    function(mediaContentUrl, startSeconds, suggestedQuality) {};
+YT.Player.prototype.cueVideoByUrl = function(
+    mediaContentUrlOrObject, opt_startSeconds, opt_suggestedQuality) {};
+
+
+/**
+ * Loads and plays the specified video.
+ * @param {!YT.Player.MediaContentUrlParams|string} mediaContentUrlOrObject
+ *     YouTube player URL in the format http://www.youtube.com/v/VIDEO_ID or
+ *     parameters object.
+ * @param {number=} opt_startSeconds Float/integer that specifies the time
+ *     from which the video should start playing.
+ * @param {string=} opt_suggestedQuality The suggested playback quality for
+ *     the video.
+ */
+YT.Player.prototype.loadVideoByUrl = function(
+    mediaContentUrlOrObject, opt_startSeconds, opt_suggestedQuality) {};
 
 
 /**
@@ -280,6 +318,13 @@ YT.Player.prototype.addEventListener = function(eventName, listenerName) {};
 
 /** Destroys the player reference. */
 YT.Player.prototype.destroy = function() {};
+
+
+/**
+ * @return {HTMLIFrameElement} The DOM node for the embedded iframe.
+ * @nosideeffects
+ */
+YT.Player.prototype.getIframe = function() {};
 
 
 /**

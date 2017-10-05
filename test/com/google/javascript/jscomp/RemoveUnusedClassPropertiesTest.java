@@ -21,20 +21,58 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 /**
  * @author johnlenz@google.com (John Lenz)
  */
-public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
+public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase {
 
   private static final String EXTERNS = LINE_JOINER.join(
+      "/**",
+      " * @constructor",
+      " * @param {*=} opt_value",
+      " * @return {!Object}",
+      " */",
+      "function Object(opt_value) {}",
+      "/**",
+      " * @constructor",
+      " * @param {...*} var_args",
+      " */",
+      "function Function(var_args) {}",
+      "/**",
+      " * @constructor",
+      " * @param {*=} arg",
+      " * @return {string}",
+      " */",
+      "function String(arg) {}",
+      "/**",
+      " * @record",
+      " * @template VALUE",
+      " */",
+      "/**",
+      " * @template T",
+      " * @constructor ",
+      " * @param {...*} var_args",
+      " * @return {!Array<?>}",
+      " */",
+      "function Array(var_args) {}",
       "var window;",
       "function alert(a) {}",
       "var EXT = {};",
       "EXT.ext;",
-      "var Object;",
-      "Object.defineProperties;",
-      "var foo");
+      "var foo",
+      "/** @type {Function} */",
+      "Object.defineProperties = function() {};",
+      "/** @type {Function} */",
+      "Object.prototype.constructor = function() {};",
+      // NOTE: The following are needed to prevent NTI inexistent property warnings.
+      "var $jscomp = {};",
+      "$jscomp.global = {}",
+      "/** @type {?} */",
+      "$jscomp.global.Object");
+
 
   public RemoveUnusedClassPropertiesTest() {
     super(EXTERNS);
   }
+
+  @Override void checkMinimalExterns(Iterable<SourceFile> externs) {}
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -44,8 +82,10 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableNormalize();
     enableGatherExternProperties();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT5);
+    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
+    this.mode = TypeInferenceMode.NEITHER;
   }
 
   public void testSimple1() {
@@ -232,7 +272,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testConstructorProperty1() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     test(
         "/** @constructor */ function C() {} C.prop = 1;",
@@ -240,7 +280,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testConstructorProperty2() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     testSame(
         "/** @constructor */ function C() {} "
@@ -250,7 +290,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testObjectDefineProperties1() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     testSame(
         LINE_JOINER.join(
@@ -261,7 +301,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testObjectDefineProperties2() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     test(
         LINE_JOINER.join(
@@ -273,7 +313,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testObjectDefineProperties3() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     test(
         LINE_JOINER.join(
@@ -290,7 +330,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
 
   // side-effect in definition retains property
   public void testObjectDefineProperties4() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     testSame(
         LINE_JOINER.join(
@@ -300,7 +340,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
 
   // quoted properties retains property
   public void testObjectDefineProperties5() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     testSame(
         LINE_JOINER.join(
@@ -309,7 +349,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testObjectDefineProperties6() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     // an unknown destination object doesn't prevent removal.
     test(
@@ -318,7 +358,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testObjectDefineProperties7() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     test(
         LINE_JOINER.join(
@@ -330,7 +370,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testObjectDefineProperties8() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     test(
         LINE_JOINER.join(
@@ -343,7 +383,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
 
   public void testObjectDefineProperties_used_setter_removed() {
     // TODO: Either remove, fix this, or document it as a limitation of advanced mode optimizations.
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
 
     test(
         LINE_JOINER.join(
@@ -356,18 +396,15 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testEs6GettersWithoutTranspilation() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     test("class C { get value() { return 0; } }", "class C {}");
     testSame("class C { get value() { return 0; } } const x = (new C()).value");
   }
 
   public void testES6ClassComputedProperty() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame("class C { ['test' + 3]() { return 0; } }");
   }
 
   public void testEs6SettersWithoutTranspilation() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     test("class C { set value(val) { this.internalVal = val; } }", "class C {}");
 
     test(
@@ -391,7 +428,6 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   // All object literal fields are not removed, but the following
   // tests assert that the pass does not fail.
   public void testEs6EnhancedObjLiteralsComputedValuesNotRemoved() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(
         LINE_JOINER.join(
             "function getCar(make, model, value) {",
@@ -402,7 +438,6 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testEs6EnhancedObjLiteralsMethodShortHandNotRemoved() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame(
         LINE_JOINER.join(
             "function getCar(make, model, value) {",
@@ -415,12 +450,11 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testEs6EnhancedObjLiteralsPropertyShorthand() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     testSame("function getCar(make, model, value) { return {model}; }");
   }
 
   public void testEs6GettersRemoval() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     test(
         // This is the output of ES6->ES5 class getter converter.
         // See Es6ToEs3ConverterTest.testEs5GettersAndSettersClasses test method.
@@ -446,7 +480,7 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
   }
 
   public void testEs6SettersRemoval() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     test(
         // This is the output of ES6->ES5 class setter converter.
         // See Es6ToEs3ConverterTest.testEs5GettersAndSettersClasses test method.
@@ -472,5 +506,193 @@ public final class RemoveUnusedClassPropertiesTest extends CompilerTestCase {
             "0;",
             "0;",
             "$jscomp.global.Object.defineProperties(C.prototype, {});"));
+  }
+
+  public void testEs6ArrowFunction() {
+    test("() => this.a = 1", "() => 1");
+    testSame("() => ({a: 2})");
+    testSame("() => {y.a = 2; this.a = 2;}");
+    test(
+        LINE_JOINER.join(
+            "var A = () => {this.foo = 1;}",
+            "A.prototype.foo = 0;",
+            "A.prototype.method = () => {this.foo++};",
+            "new A().method()"),
+        LINE_JOINER.join(
+            "var A = () => {1;}",
+            "0;",
+            "A.prototype.method = () => {0;};",
+            "new A().method()"));
+  }
+
+  public void testEs6ForOf() {
+    test("this.y = 1;for (var a of x) { alert(x[a]) }", "1; for (var a of x) { alert(x[a]) }");
+    testSame("var obj = {}; obj.a = 1; for (var a of obj) { alert(obj[a]) }");
+    testSame("this.y = {};for (var a of this.y) { alert(this.y[a]) }");
+  }
+
+  public void testEs6TemplateLiterals() {
+    test(
+        LINE_JOINER.join(
+            "function tag(strings, x) { this.a = x; }",
+            "tag`tag ${0} function`"),
+        LINE_JOINER.join(
+            "function tag(strings, x) { x; }",
+            "tag`tag ${0} function`"));
+  }
+
+  public void testEs6Generator() {
+    test("function* gen() { yield this.a = 1; }", "function* gen() { yield 1; }");
+    testSame("function* gen() { yield this.a = 1; yield this.a; }");
+  }
+
+  public void testEs6Destructuring() {
+    // Test normal destructuring removal
+    test("[this.x, this.y] = [1, 2]", "[, , ] = [1, 2]");
+
+    // Test normal destructuring, assignment prevent removal
+    test(
+        LINE_JOINER.join(
+            "[this.x, this.y] = [1, 2]",
+            "var p = this.x;"),
+        LINE_JOINER.join(
+            "[this.x, , ] = [1, 2]",
+            "var p = this.x;"));
+
+    // Test rest destructuring removal
+    test("[this.x, ...this.z] = [1, 2, 3]", "[, , ] = [1, 2, 3]");
+
+    // Test rest destructuring with normal variable
+    test("[this.x, ...z] = [1, 2]", "[, ...z] = [1, 2]");
+
+    // Test rest destructuring, assignment prevent removal
+    test(
+        LINE_JOINER.join(
+            "[this.x, ...this.y] = [1, 2];",
+            "var p = this.y;"),
+        LINE_JOINER.join(
+            "[, ...this.y] = [1, 2];",
+            "var p = this.y;"));
+
+    // Test destructuring rhs prevent removal
+    testSame(
+        LINE_JOINER.join(
+            "this.x = 1;",
+            "this.y = 2;",
+            "[...a] = [this.x, this.y];"));
+
+    // Test nested destructuring
+    test("[this.x, [this.y, ...z]] = [1, [2]]", "[, [, ...z]] = [1, [2]]");
+
+    // Test normal object destructuring full removal
+    test("({a: this.x, b: this.y} = {a: 1, b: 2})", "({} = {a: 1, b: 2})");
+
+    // Test normal object destructuring partial removal
+    test("({a: this.x, b: y} = {a: 1, b: 2})", "({b: y} = {a: 1, b: 2})");
+
+    // Test obj destructuring prevent removal
+    test(
+        LINE_JOINER.join(
+            "({a: this.x, b: this.y} = {a: 1, b: 2});",
+            "var p = this.x;"),
+        LINE_JOINER.join(
+            "({a: this.x} = {a: 1, b: 2});",
+            "var p = this.x;"));
+
+    // Test obj destructuring with old style class
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */ function C () {",
+            "  this.a = 1;",
+            "}",
+            "({a: x} = new C());"));
+
+    // Test obj destructuring with new style class
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "     this.a = 1;",
+            "  }",
+            "}",
+            "({a: x} = new C());"));
+
+    // Test let destructuring
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "     this.a = 1;",
+            "  }",
+            "}",
+            "let {a: x} = new C();"));
+
+    // Test obj created at a different location and later used in destructuring
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "     this.a = 1;",
+            "  }",
+            "}",
+            "var obj = new C()",
+            "({a: x} = obj);"));
+
+    // Test obj destructuring with default value
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "     this.a = 1;",
+            "  }",
+            "}",
+            "({a = 2} = new C());"));
+
+    // Test obj nested destructuring
+    testSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor() {",
+            "     this.a = 1;",
+            "  }",
+            "}",
+            "var obj = new C()",
+            "({x: {a}} = {x: obj});"));
+
+    // No support for Computed Properties yet
+    test("({['a']:0}); this.a = 1;", "({['a']:0}); 1;");
+  }
+
+  public void testEs6DefaultParameter() {
+    test("function foo(x, y = this.a = 1) {}", "function foo(x, y = 1) {}");
+    testSame("this.a = 1; function foo(x, y = this.a) {}");
+  }
+
+  public void testEs8AsyncFunction() {
+    test(
+        LINE_JOINER.join(
+            "async function foo(promise) {",
+            "   this.x = 1;",
+            "   return await promise;",
+            "}"),
+        LINE_JOINER.join(
+            "async function foo(promise) {",
+            "   1;",
+            "   return await promise;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "async function foo() {",
+            "   this.x = 1;",
+            "   return await this.x;",
+            "}"));
+
+    testSame(
+        LINE_JOINER.join(
+            "this.x = 1;",
+            "async function foo() {",
+            "   return await this.x;",
+            "}"));
   }
 }

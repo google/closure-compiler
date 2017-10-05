@@ -279,7 +279,7 @@ class LiveVariablesAnalysis extends
   private void addToSetIfLocal(Node node, BitSet set) {
     checkState(node.isName());
     String name = node.getString();
-    if (!jsScope.isDeclaredSloppy(name, false)) {
+    if (!jsScope.isDeclared(name, false)) {
       return;
     }
     Var var = jsScope.getVar(name);
@@ -301,6 +301,6 @@ class LiveVariablesAnalysis extends
 
   private boolean isArgumentsName(Node n) {
     return n.isName() && n.getString().equals(ARGUMENT_ARRAY_ALIAS)
-        && !jsScope.isDeclaredSloppy(ARGUMENT_ARRAY_ALIAS, false);
+        && !jsScope.isDeclared(ARGUMENT_ARRAY_ALIAS, false);
   }
 }

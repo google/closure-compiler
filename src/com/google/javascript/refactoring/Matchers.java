@@ -221,12 +221,16 @@ public final class Matchers {
     };
   }
 
+  public static Matcher googModule() {
+    return functionCall("goog.module");
+  }
+
   public static Matcher googRequire() {
     return functionCall("goog.require");
   }
 
   public static Matcher googModuleOrProvide() {
-    return anyOf(functionCall("goog.module"), functionCall("goog.provide"));
+    return anyOf(googModule(), functionCall("goog.provide"));
   }
 
   /**

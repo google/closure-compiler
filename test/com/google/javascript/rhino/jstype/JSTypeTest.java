@@ -1195,8 +1195,8 @@ public class JSTypeTest extends BaseJSTypeTestCase {
     assertTrue(ALL_TYPE.canTestForShallowEqualityWith(VOID_TYPE));
 
     // isNullable
-    assertFalse(ALL_TYPE.isNullable());
-    assertFalse(ALL_TYPE.isVoidable());
+    assertTrue(ALL_TYPE.isNullable());
+    assertTrue(ALL_TYPE.isVoidable());
 
     // getLeastSupertype
     assertTypeEquals(ALL_TYPE,
@@ -3117,28 +3117,28 @@ public class JSTypeTest extends BaseJSTypeTestCase {
    * Tests the representation of function types.
    */
   public void testFunctionTypeRepresentation() {
-    assertEquals("function (number, string): boolean",
+    assertEquals("function(number, string): boolean",
         registry.createFunctionType(BOOLEAN_TYPE, NUMBER_TYPE, STRING_TYPE).toString());
 
-    assertEquals("function (new:Array, ...*): Array",
+    assertEquals("function(new:Array, ...*): Array",
         ARRAY_FUNCTION_TYPE.toString());
 
-    assertEquals("function (new:Boolean, *=): boolean",
+    assertEquals("function(new:Boolean, *=): boolean",
         BOOLEAN_OBJECT_FUNCTION_TYPE.toString());
 
-    assertEquals("function (new:Number, *=): number",
+    assertEquals("function(new:Number, *=): number",
         NUMBER_OBJECT_FUNCTION_TYPE.toString());
 
-    assertEquals("function (new:String, *=): string",
+    assertEquals("function(new:String, *=): string",
         STRING_OBJECT_FUNCTION_TYPE.toString());
 
-    assertEquals("function (...number): boolean",
+    assertEquals("function(...number): boolean",
         registry.createFunctionTypeWithVarArgs(BOOLEAN_TYPE, NUMBER_TYPE).toString());
 
-    assertEquals("function (number, ...string): boolean",
+    assertEquals("function(number, ...string): boolean",
         registry.createFunctionTypeWithVarArgs(BOOLEAN_TYPE, NUMBER_TYPE, STRING_TYPE).toString());
 
-    assertEquals("function (this:Date, number): (boolean|number|string)",
+    assertEquals("function(this:Date, number): (boolean|number|string)",
         new FunctionBuilder(registry)
             .withParamsNode(registry.createParameters(NUMBER_TYPE))
             .withReturnType(NUMBER_STRING_BOOLEAN)
@@ -4850,7 +4850,7 @@ public class JSTypeTest extends BaseJSTypeTestCase {
         unresolvedNamedType.getLeastSupertype(U2U_FUNCTION_TYPE));
     assertTypeEquals(expected,
         U2U_FUNCTION_TYPE.getLeastSupertype(unresolvedNamedType));
-    assertEquals("(function (...?): ?|not.resolved.named.type)",
+    assertEquals("(function(...?): ?|not.resolved.named.type)",
         expected.toString());
   }
 
@@ -6186,19 +6186,19 @@ public class JSTypeTest extends BaseJSTypeTestCase {
   public void testObjectGetSubTypes() throws Exception {
     assertTrue(
         containsType(
-            OBJECT_FUNCTION_TYPE.getSubTypes(), googBar));
+            OBJECT_FUNCTION_TYPE.getDirectSubTypes(), googBar));
     assertTrue(
         containsType(
-            googBar.getSubTypes(), googSubBar));
+            googBar.getDirectSubTypes(), googSubBar));
     assertFalse(
         containsType(
-            googBar.getSubTypes(), googSubSubBar));
+            googBar.getDirectSubTypes(), googSubSubBar));
     assertFalse(
         containsType(
-            googSubBar.getSubTypes(), googSubBar));
+            googSubBar.getDirectSubTypes(), googSubBar));
     assertTrue(
         containsType(
-            googSubBar.getSubTypes(), googSubSubBar));
+            googSubBar.getDirectSubTypes(), googSubSubBar));
   }
 
   public void testImplementingType() throws Exception {

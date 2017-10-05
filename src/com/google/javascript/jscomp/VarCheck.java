@@ -74,7 +74,7 @@ class VarCheck extends AbstractPostOrderCallback implements
   static final DiagnosticType VAR_MULTIPLY_DECLARED_ERROR =
       DiagnosticType.error(
           "JSC_VAR_MULTIPLY_DECLARED_ERROR",
-          "Variable {0} declared more than once. First occurence: {1}");
+          "Variable {0} declared more than once. First occurrence: {1}");
 
   static final DiagnosticType VAR_ARGUMENTS_SHADOWED_ERROR =
     DiagnosticType.error(
@@ -204,6 +204,10 @@ class VarCheck extends AbstractPostOrderCallback implements
           }
 
           if (sanityCheck) {
+            // When the code is initially traversed, any undeclared variables are treated as
+            // externs. During this sanity check, we ensure that all variables have either been
+            // declared or marked as an extern. A failure at this point means that we have created
+            // some variable/generated some code with an undefined reference.
             throw new IllegalStateException("Unexpected variable " + varName);
           } else {
             createSynthesizedExternVar(varName);
@@ -319,10 +323,13 @@ class VarCheck extends AbstractPostOrderCallback implements
             }
             // fall through
           default:
-            // Don't warn for simple var assignments "/** @const */ var foo = bar;"
-            // They are used to infer the types of namespace aliases.
-            if (!parent.isName()
-                || !NodeUtil.isNameDeclaration(parent.getParent())) {
+            if ((parent.isName() && NodeUtil.isNameDeclaration(parent.getParent()))
+                || (parent.isOr() && NodeUtil.isNamespaceDecl(parent.getParent()))) {
+              // Don't warn for:
+              // 1. Simple var assignments "/** @const */ var foo = bar;"
+              //    They are used to infer the types of namespace aliases.
+              // 2. Namespace declarations: "/** @const */ var ns = ns || {};"
+            } else {
               t.report(n, NAME_REFERENCE_IN_EXTERNS_ERROR, n.getString());
             }
 
@@ -345,7 +352,7 @@ class VarCheck extends AbstractPostOrderCallback implements
    *     for the given node.
    */
   static boolean hasDuplicateDeclarationSuppression(Node n, Var origVar) {
-    checkState(n.isName() || n.isRest() || n.isStringKey(), n);
+    checkState(n.isName() || n.isRest() || n.isStringKey() || n.isImportStar(), n);
     Node parent = n.getParent();
     Node origParent = origVar.getParentNode();
 
@@ -409,7 +416,8 @@ class VarCheck extends AbstractPostOrderCallback implements
                             ? origVar.input.getName()
                             : "??")));
         }
-      } else if (name.equals(ARGUMENTS) && !NodeUtil.isVarDeclaration(n)) {
+      } else if (name.equals(ARGUMENTS)
+          && !(NodeUtil.isNameDeclaration(n.getParent()) && n.isName())) {
         // Disallow shadowing "arguments" as we can't handle with our current
         // scope modeling.
         compiler.report(

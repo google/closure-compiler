@@ -135,6 +135,23 @@ refactoring_testcase.less_than_zero = function(arr, elem) {
 };
 
 /**
+ * @param {!Array} arr The array.
+ * @param {string} elem The element to check.
+ * @return {number|boolean} Whether the element is in the array.
+ *     Returns true/truthy if the value is found, false/falsy otherwise.
+ */
+refactoring_testcase.bitwise_not = function(arr, elem) {
+  const arrA = [3];
+  const foundA = arrA.includes(1);
+
+  const arrB = [];
+  arrB.push('str');
+  const foundB = arrB.includes('s');
+
+  return arr.includes(elem);
+};
+
+/**
  * The refactoring should ignore calls to indexOf on non-array objects.
  * @param {string} str A string.
  * @param {string} subStr The substring to check.

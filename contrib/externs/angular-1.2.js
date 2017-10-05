@@ -1522,7 +1522,8 @@ angular.$location.protocol = function() {};
 angular.$location.replace = function() {};
 
 /**
- * @param {(string|Object.<string, string>)=} opt_search
+ * @param {(string|Object.<string, string>|Object.<string, Array.<string>>)=}
+ *     opt_search
  * @param {?(string|Array.<string>|boolean)=} opt_paramValue
  * @return {(!Object|angular.$location)}
  */

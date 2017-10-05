@@ -182,7 +182,7 @@ public class Parser {
   private final Config config;
   private final CommentRecorder commentRecorder = new CommentRecorder();
   private final ArrayDeque<FunctionFlavor> functionContextStack = new ArrayDeque<>();
-  private FeatureSet features = FeatureSet.ES3;
+  private FeatureSet features = FeatureSet.BARE_MINIMUM;
   private SourcePosition lastSourcePosition;
   @Nullable private String sourceMapURL;
 
@@ -212,7 +212,9 @@ public class Parser {
     public static enum Mode {
       ES3,
       ES5,
-      ES6_OR_GREATER,
+      ES6,
+      ES7,
+      ES8_OR_GREATER,
       TYPESCRIPT,
     }
 
@@ -223,12 +225,18 @@ public class Parser {
     //     this is false.
     private final boolean parseTypeSyntax;
     private final boolean atLeast6;
+    private final boolean atLeast8;
     private final boolean isStrictMode;
     private final boolean warnTrailingCommas;
+
+    public Config() {
+      this(Mode.ES8_OR_GREATER, /* isStrictMode */ false);
+    }
 
     public Config(Mode mode, boolean isStrictMode) {
       parseTypeSyntax = mode == Mode.TYPESCRIPT;
       atLeast6 = !(mode == Mode.ES3 || mode == Mode.ES5);
+      atLeast8 = mode == Mode.ES8_OR_GREATER;
       this.isStrictMode = isStrictMode;
 
       // Generally, we allow everything that is valid in any mode
@@ -948,7 +956,6 @@ public class Parser {
   }
 
   private ParseTree parseAsyncMethod(PartialClassElement partial) {
-    features = features.with(Feature.ASYNC_FUNCTIONS);
     eatPredefinedString(ASYNC);
     if (peekIdOrKeyword()) {
       IdentifierToken name = eatIdOrKeywordAsId();
@@ -1148,7 +1155,6 @@ public class Parser {
          || peek(1, TokenType.ENUM)
          || peek(1, TokenType.MODULE)
          || peek(1, TokenType.NAMESPACE));
-
   }
 
   private boolean peekAmbientNamespaceElement() {
@@ -1214,7 +1220,6 @@ public class Parser {
 
   private ParseTree parseAsyncFunctionDeclaration() {
     SourcePosition start = getTreeStartLocation();
-    features = features.with(Feature.ASYNC_FUNCTIONS);
     eatAsyncFunctionStart();
 
     if (peek(TokenType.STAR)) {
@@ -1234,7 +1239,6 @@ public class Parser {
 
   private ParseTree parseAsyncFunctionExpression() {
     SourcePosition start = getTreeStartLocation();
-    features = features.with(Feature.ASYNC_FUNCTIONS);
     eatAsyncFunctionStart();
 
     if (peek(TokenType.STAR)) {
@@ -1314,7 +1318,6 @@ public class Parser {
     if (context == ParamContext.IMPLEMENTATION
         && !parameter.isRestParameter()
         && peek(TokenType.EQUAL)) {
-      features = features.with(Feature.DEFAULT_PARAMETERS);
       eat(TokenType.EQUAL);
       ParseTree defaultValue = parseAssignmentExpression();
       parameter = new DefaultParameterTree(getTreeLocation(start), parameter, defaultValue);
@@ -1329,7 +1332,6 @@ public class Parser {
   }
 
   private ParseTree parseRestParameter() {
-    features = features.with(Feature.REST_PARAMETERS);
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.SPREAD);
     return new RestParameterTree(
@@ -1348,7 +1350,10 @@ public class Parser {
       if (!peek(TokenType.CLOSE_PAREN)) {
         Token comma = eat(TokenType.COMMA);
         if (peek(TokenType.CLOSE_PAREN)) {
-          reportError(comma, "Invalid trailing comma in formal parameter list");
+          features = features.with(Feature.TRAILING_COMMA_IN_PARAM_LIST);
+          if (!config.atLeast8) {
+            reportError(comma, "Invalid trailing comma in formal parameter list");
+          }
         }
       }
     }
@@ -1709,17 +1714,11 @@ public class Parser {
     TokenType token = peekType();
 
     switch (token) {
-    case CONST:
-      features = features.with(Feature.CONST_DECLARATIONS);
-      eat(token);
-      break;
-    case LET:
-      features = features.with(Feature.LET_DECLARATIONS);
-      eat(token);
-      break;
-    case VAR:
-      eat(token);
-      break;
+      case CONST:
+      case LET:
+      case VAR:
+        eat(token);
+        break;
     default:
       reportError(peekToken(), "expected declaration");
       return null;
@@ -1926,10 +1925,8 @@ public class Parser {
   /** Reports if declaration requires an initializer, assuming initializer is absent. */
   private void maybeReportNoInitializer(TokenType token, ParseTree lvalue) {
     if (token == TokenType.CONST) {
-      features = features.with(Feature.CONST_DECLARATIONS);
       reportError("const variables must have an initializer");
     } else if (lvalue.isPattern()) {
-      features = features.with(Feature.DESTRUCTURING);
       reportError("destructuring must have an initializer");
     }
   }
@@ -2828,9 +2825,6 @@ public class Parser {
         reportError("invalid assignment target");
       }
       Token operator = nextToken();
-      if (TokenType.STAR_STAR_EQUAL.equals(operator.type)) {
-        features = features.with(Feature.EXPONENT_OP);
-      }
       ParseTree right = parseAssignment(expressionIn);
       return new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
     }
@@ -2877,7 +2871,6 @@ public class Parser {
 
   private ParseTree completeArrowFunctionParseAtArrow(
       ParseTree leftOfArrow, Expression expressionIn) {
-    features = features.with(Feature.ARROW_FUNCTIONS);
     FormalParameterListTree arrowFormalParameters = transformToArrowFormalParameters(leftOfArrow);
     if (peekImplicitSemiColon()) {
       reportError("No newline allowed before '=>'");
@@ -2939,7 +2932,6 @@ public class Parser {
 
   private ParseTree parseAsyncArrowFunction(Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
-    features = features.with(Feature.ARROW_FUNCTIONS, Feature.ASYNC_FUNCTIONS);
     eatPredefinedString(ASYNC);
     if (peekImplicitSemiColon()) {
       reportError("No newline allowed between `async` and arrow function parameter list");
@@ -3053,18 +3045,18 @@ public class Parser {
   private ParseTree parseYield(Expression expressionIn) {
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.YIELD);
-    boolean isYieldFor = false;
+    boolean isYieldAll = false;
     ParseTree expression = null;
     if (!peekImplicitSemiColon()) {
-      isYieldFor = eatOpt(TokenType.STAR) != null;
+      isYieldAll = eatOpt(TokenType.STAR) != null;
       if (peekAssignmentExpression()) {
         expression = parseAssignment(expressionIn);
-      } else if (isYieldFor) {
+      } else if (isYieldAll) {
         reportError("yield* requires an expression");
       }
     }
     return new YieldExpressionTree(
-        getTreeLocation(start), isYieldFor, expression);
+        getTreeLocation(start), isYieldAll, expression);
   }
 
   // 11.12 Conditional Expression
@@ -3275,7 +3267,6 @@ public class Parser {
             "Unary operator '%s' requires parentheses before '**'",
             left.asUnaryExpression().operator);
       }
-      features = features.with(Feature.EXPONENT_OP);
       Token operator = nextToken();
       ParseTree right = parseExponentiationExpression();
       return new BinaryOperatorTree(getTreeLocation(start), left, operator, right);
@@ -3471,7 +3462,6 @@ public class Parser {
 
   private ParseTree parseNewDotSomething() {
     // currently only "target" is valid after "new."
-    features = features.with(Feature.NEW_TARGET);
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.NEW);
     eat(TokenType.PERIOD);
@@ -3496,9 +3486,12 @@ public class Parser {
       arguments.add(parseAssignmentOrSpread());
 
       if (!peek(TokenType.CLOSE_PAREN)) {
-        eat(TokenType.COMMA);
+        Token comma = eat(TokenType.COMMA);
         if (peek(TokenType.CLOSE_PAREN)) {
-          reportError("Invalid trailing comma in arguments list");
+          features = features.with(Feature.TRAILING_COMMA_IN_PARAM_LIST);
+          if (!config.atLeast8) {
+            reportError(comma, "Invalid trailing comma in arguments list");
+          }
         }
       }
     }
@@ -3540,7 +3533,6 @@ public class Parser {
   }
 
   private ParseTree parsePattern(PatternKind kind) {
-    features = features.with(Feature.DESTRUCTURING);
     switch (peekType()) {
       case OPEN_SQUARE:
         return parseArrayPattern(kind);
@@ -3566,7 +3558,6 @@ public class Parser {
   }
 
   private ParseTree parseArrayPatternRest(PatternKind patternKind) {
-    features = features.with(Feature.ARRAY_PATTERN_REST);
     SourcePosition start = getTreeStartLocation();
     eat(TokenType.SPREAD);
     ParseTree patternAssignmentTarget = parseRestAssignmentTarget(patternKind);
@@ -3583,7 +3574,6 @@ public class Parser {
 
   // Pattern ::= ... | "[" Element? ("," Element?)* "]"
   private ParseTree parseArrayPattern(PatternKind kind) {
-    features = features.with(Feature.DESTRUCTURING);
     SourcePosition start = getTreeStartLocation();
     ImmutableList.Builder<ParseTree> elements = ImmutableList.builder();
     eat(TokenType.OPEN_SQUARE);
@@ -3613,7 +3603,6 @@ public class Parser {
 
   // Pattern ::= "{" (Field ("," Field)* ","?)? "}" | ...
   private ParseTree parseObjectPattern(PatternKind kind) {
-    features = features.with(Feature.DESTRUCTURING);
     SourcePosition start = getTreeStartLocation();
     ImmutableList.Builder<ParseTree> fields = ImmutableList.builder();
     eat(TokenType.OPEN_CURLY);
@@ -3873,7 +3862,6 @@ public class Parser {
 
   private TokenType maybeParseAccessibilityModifier() {
     if (config.parseTypeSyntax && peekAccessibilityModifier()) {
-      features = features.union(FeatureSet.TYPESCRIPT);
       return nextToken().type;
     } else {
       return null;

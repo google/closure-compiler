@@ -18,7 +18,7 @@ package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
-public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
+public final class DeclaredGlobalExternsOnWindowTest extends TypeICompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
@@ -30,7 +30,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2017);
     allowExternsChanges();
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     enableRunTypeCheckAfterProcessing();
   }
 
@@ -101,7 +101,7 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
             "/** @suppress {const,duplicate} @const */ window.ns = ns;"));
   }
 
-  public void testNamespaceAliasing() {
+  public void testNameAliasing() {
     testExternChanges(
         LINE_JOINER.join(
             "var window;",
@@ -120,6 +120,31 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
             "window.ns = ns;",
             "/** @suppress {const,duplicate} @const */",
             "window.ns2 = ns;"));
+  }
+
+  public void testQualifiedNameAliasing() {
+    testExternChanges(
+        LINE_JOINER.join(
+            "var window;",
+            "/** @const */",
+            "var ns = {};",
+            "/** @type {number} A very important constant */",
+            "ns.THE_NUMBER;",
+            "/** @const */",
+            "var num = ns.THE_NUMBER;"),
+        "",
+        LINE_JOINER.join(
+            "var window;",
+            "/** @const */",
+            "var ns = {};",
+            "/** @type {number} A very important constant */",
+            "ns.THE_NUMBER;",
+            "/** @const */",
+            "var num = ns.THE_NUMBER;",
+            "/** @suppress {const,duplicate} @const */",
+            "window.ns=ns;",
+            "/** @suppress {const,duplicate} @const */",
+            "window.num = ns.THE_NUMBER;"));
   }
 
   public void testWindowProperty8() {
@@ -144,21 +169,28 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
    */
   public void testWindowPropertyWithJsDoc() {
     testSame(
-        "var window;\n/** @type {string} */ var x;",
-        LINE_JOINER.join(
+        externs(lines(
+            MINIMAL_EXTERNS,
+            "var window;",
+            "/** @type {string} */ var x;")),
+        srcs(lines(
             "/** @param {number} n*/",
             "function f(n) {}",
-            "f(window.x);"),
-        TypeValidator.TYPE_MISMATCH_WARNING);
+            "f(window.x);")),
+        warningOtiNti(TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.INVALID_ARGUMENT_TYPE));
   }
 
   public void testEnum() {
+    // TODO(sdh): figure out why NTI doesn't recognize props if 'window' not explicitly declared
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(
-        "/** @enum {string} */ var Enum = {FOO: 'foo', BAR: 'bar'};",
-        LINE_JOINER.join(
+        externs(lines(
+            MINIMAL_EXTERNS,
+            "/** @enum {string} */ var Enum = {FOO: 'foo', BAR: 'bar'};")),
+        srcs(lines(
             "/** @param {Enum} e*/",
             "function f(e) {}",
-            "f(window.Enum.FOO);"));
+            "f(window.Enum.FOO);")));
   }
 
   /**
@@ -167,17 +199,24 @@ public final class DeclaredGlobalExternsOnWindowTest extends CompilerTestCase {
    */
   public void testConstructorIsSameType() {
     testSame(
-        "var window;\n/** @constructor */ function Foo() {}\n",
-        LINE_JOINER.join(
+        externs(lines(
+            MINIMAL_EXTERNS,
+            "var window;",
+            "/** @constructor */ function Foo() {}")),
+        srcs(lines(
             "/** @param {!window.Foo} f*/",
             "function bar(f) {}",
-            "bar(new Foo());"));
+            "bar(new Foo());")));
 
+    // TODO(sdh): figure out why NTI doesn't recognize props if 'window' not explicitly declared
+    this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(
-        "/** @constructor */ function Foo() {}\n",
-        LINE_JOINER.join(
+        externs(lines(
+            MINIMAL_EXTERNS,
+            "/** @constructor */ function Foo() {}")),
+        srcs(lines(
             "/** @param {!Foo} f*/",
             "function bar(f) {}",
-            "bar(new window.Foo());"));
+            "bar(new window.Foo());")));
   }
 }

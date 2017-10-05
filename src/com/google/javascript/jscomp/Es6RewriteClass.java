@@ -17,8 +17,8 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT;
-import static com.google.javascript.jscomp.Es6ToEs3Converter.CANNOT_CONVERT_YET;
+import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
+import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT_YET;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
@@ -41,6 +41,9 @@ import javax.annotation.Nullable;
 public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
 
+  // Whether to add $jscomp.inherits(Parent, Child) for each subclass.
+  private final boolean shouldAddInheritsPolyfill;
+
   static final DiagnosticType DYNAMIC_EXTENDS_TYPE = DiagnosticType.error(
       "JSC_DYNAMIC_EXTENDS_TYPE",
       "The class in an extends clause must be a qualified name.");
@@ -57,7 +60,12 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
   static final String INHERITS = "$jscomp.inherits";
 
   public Es6RewriteClass(AbstractCompiler compiler) {
+    this(compiler, true);
+  }
+
+  public Es6RewriteClass(AbstractCompiler compiler, boolean shouldAddInheritsPolyfill) {
     this.compiler = compiler;
+    this.shouldAddInheritsPolyfill = shouldAddInheritsPolyfill;
   }
 
   @Override
@@ -206,11 +214,14 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
             IR.string(superClassString)),
             metadata.superClassNameNode.getSourceFileName()));
       } else {
-        if (!classNode.isFromExterns()) {
+        if (shouldAddInheritsPolyfill && !classNode.isFromExterns()) {
+          Node classNameNode = NodeUtil.newQName(compiler, metadata.fullClassName)
+             .useSourceInfoIfMissingFrom(metadata.classNameNode);
+          Node superClassNameNode = NodeUtil.newQName(compiler, superClassString)
+              .useSourceInfoIfMissingFrom(metadata.superClassNameNode);
+
           Node inherits = IR.call(
-              NodeUtil.newQName(compiler, INHERITS),
-              NodeUtil.newQName(compiler, metadata.fullClassName),
-              NodeUtil.newQName(compiler, superClassString));
+              NodeUtil.newQName(compiler, INHERITS), classNameNode, superClassNameNode);
           Node inheritsCall = IR.exprResult(inherits);
           compiler.ensureLibraryInjected("es6/util/inherits", false);
 
@@ -617,6 +628,9 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
         }
         return new ClassDeclarationMetadata(parent.getParent(), fullClassName, true, classNameNode,
             superClassNameNode);
+      } else if (parent.isExport()) {
+        return new ClassDeclarationMetadata(
+            classNode, classNameNode.getString(), false, classNameNode, superClassNameNode);
       } else if (parent.isName()) {
         // Add members after the 'var' statement.
         // var C = class {}; C.prototype.foo = function() {};

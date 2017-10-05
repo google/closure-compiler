@@ -65,20 +65,20 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
           "goog.abstractMethod = function(){};",
           "goog.asserts;",
           "goog.asserts.assertInstanceOf;",
+          "/**",
+          " * @param {string} str",
+          " * @param {Object<string, string>=} opt_values",
+          " * @return {string}",
+          " */",
           "goog.getMsg;",
           "goog.addSingletonGetter;",
           "goog.reflect;",
           "goog.reflect.object;",
           "Object.prototype.superClass_;");
 
+  @SuppressWarnings("hiding")
   protected static final String DEFAULT_EXTERNS =
       CompilerTypeTestCase.DEFAULT_EXTERNS + LINE_JOINER.join(
-          "/**",
-          " * @param {Object} proto",
-          " * @param {Object=} opt_properties",
-          " * @return {!Object}",
-          " */",
-          "Object.create = function(proto, opt_properties) {};",
           "/** @const {undefined} */",
           "var undefined;",
           "/**",
@@ -176,7 +176,8 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
           " * @return {string}",
           " */",
           "String.raw = function(template, var_args) {};",
-          "");
+          "/** @return {?} */",
+          "function any() {}");
 
   @Override
   protected void setUp() throws Exception {
@@ -232,6 +233,11 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     // Create common parent of externs and ast; needed by Es6RewriteBlockScopedDeclaration.
     Node block = IR.root(externsRoot, astRoot);
 
+    // TODO(dimvar): clean this up and use parseInputs instead of setting the jsRoot directly.
+    compiler.jsRoot = astRoot;
+    compiler.externsRoot = externsRoot;
+    compiler.externAndJsRoot = block;
+
     // Run ASTValidator
     (new AstValidator(compiler)).validateRoot(block);
 
@@ -248,11 +254,12 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     }
     if (compilerOptions.needsTranspilationFrom(FeatureSet.ES6)) {
       TranspilationPasses.addEs2017Passes(passes);
+      TranspilationPasses.addEs2016Passes(passes);
       TranspilationPasses.addEs6EarlyPasses(passes);
       TranspilationPasses.addEs6LatePasses(passes);
       TranspilationPasses.addRewritePolyfillPass(passes);
     }
-    passes.add(makePassFactory("GlobalTypeInfo", compiler.getSymbolTable()));
+    passes.add(makePassFactory("GlobalTypeInfo", new GlobalTypeInfoCollector(compiler)));
     passes.add(makePassFactory("NewTypeInference", new NewTypeInference(compiler)));
 
     PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);

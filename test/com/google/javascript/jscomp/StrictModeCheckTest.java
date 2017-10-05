@@ -131,6 +131,11 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
     testSame("var o = {arguments: 3};");
   }
 
+  public void testArguments6() {
+    this.mode = TypeInferenceMode.NEITHER;
+    testSame("(() => arguments)();");
+  }
+
   public void testArgumentsCallee() {
     testWarning("function foo() {arguments.callee}", StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN);
   }
@@ -201,12 +206,13 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
          StrictModeCheck.DUPLICATE_OBJECT_KEY);
 
     testSame(
-        "'use strict';\n" +
-        "/** @constructor */ function App() {}\n" +
-        "App.prototype = {\n" +
-        "  get appData() { return this.appData_; },\n" +
-        "  set appData(data) { this.appData_ = data; }\n" +
-        "};");
+        LINE_JOINER.join(
+            "'use strict';",
+            "/** @constructor */ function App() {}",
+            "App.prototype = {",
+            "  get appData() { return this.appData_; },",
+            "  set appData(data) { this.appData_ = data; }",
+            "};"));
 
     this.mode = TypeInferenceMode.NEITHER;
     testError("var x = {a: 2, a(){}}", StrictModeCheck.DUPLICATE_OBJECT_KEY);
@@ -226,15 +232,9 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
 
     testSame("{var g = function () {}}");
     testSame("{(function g() {})()}");
-    testError("{function g() {}}", StrictModeCheck.BAD_FUNCTION_DECLARATION);
 
     testSame("var x;if (x) {var g = function () {}}");
     testSame("var x;if (x) {(function g() {})()}");
-    testError("var x;if (x) { function g(){} }", StrictModeCheck.BAD_FUNCTION_DECLARATION);
-  }
-
-  public void testFunctionDecl2() {
-    testError("{function g() {}}", StrictModeCheck.BAD_FUNCTION_DECLARATION);
   }
 
   public void testClass() {
@@ -256,16 +256,6 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
         StrictModeCheck.DUPLICATE_CLASS_METHODS);
 
     // Function declaration / call test.
-    testError(
-        LINE_JOINER.join(
-            "class A {",
-            "  method() {",
-            "    for(;;) {",
-            "      function a(){}",
-            "    }",
-            "  }",
-            "}"),
-        StrictModeCheck.BAD_FUNCTION_DECLARATION);
     // The two following tests should have reported FUNCTION_CALLER_FORBIDDEN and
     // FUNCTION_ARGUMENTS_PROP_FORBIDDEN. Typecheck needed for them to work.
     // TODO(user): Add tests for these after typecheck supports class.
@@ -341,6 +331,51 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
         "class A {",
         "  method() {arguments.caller}",
         "}"), StrictModeCheck.ARGUMENTS_CALLER_FORBIDDEN);
+  }
+
+  public void testComputedPropInClass() {
+    this.mode = TypeInferenceMode.NEITHER;
+    testSame(
+        LINE_JOINER.join(
+            "class Example {",
+            "  [computed()]() {}",
+            "  [computed()]() {}",
+            "}"));
+  }
+
+  public void testStaticAndNonstaticMethodWithSameName() {
+    this.mode = TypeInferenceMode.NEITHER;
+    testSame(
+        LINE_JOINER.join(
+            "class Example {",
+            "  foo() {}",
+            "  static foo() {}",
+            "}"));
+  }
+
+  public void testStaticAndNonstaticGetterWithSameName() {
+    this.mode = TypeInferenceMode.NEITHER;
+    testSame(
+        LINE_JOINER.join(
+            "class Example {",
+            "  get foo() {}",
+            "  static get foo() {}",
+            "}"));
+  }
+
+  public void testStaticAndNonstaticSetterWithSameName() {
+    this.mode = TypeInferenceMode.NEITHER;
+    testSame(
+        LINE_JOINER.join(
+            "class Example {",
+            "  set foo(x) {}",
+            "  static set foo(x) {}",
+            "}"));
+  }
+
+  public void testClassWithEmptyMembers() {
+    this.mode = TypeInferenceMode.NEITHER;
+    testError("class Foo { dup() {}; dup() {}; }", StrictModeCheck.DUPLICATE_CLASS_METHODS);
   }
 
   /**

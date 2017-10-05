@@ -18,16 +18,53 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 
 /**
  * Test case for {@link GatherExternProperties}.
  */
-public final class GatherExternPropertiesTest extends CompilerTestCase {
+public final class GatherExternPropertiesTest extends TypeICompilerTestCase {
+
+  private static final String EXTERNS = LINE_JOINER.join(
+      "/**",
+      " * @constructor",
+      " * @param {*=} opt_value",
+      " * @return {!Object}",
+      " */",
+      "function Object(opt_value) {}",
+      "/**",
+      " * @constructor",
+      " * @param {...*} var_args",
+      " */",
+      "function Function(var_args) {}",
+      "/**",
+      " * @constructor",
+      " * @param {*=} arg",
+      " * @return {string}",
+      " */",
+      "function String(arg) {}",
+      "/**",
+      " * @record",
+      " * @template VALUE",
+      " */",
+      "/**",
+      " * @template T",
+      " * @constructor ",
+      " * @param {...*} var_args",
+      " * @return {!Array<?>}",
+      " */",
+      "function Array(var_args) {}");
+
+  public GatherExternPropertiesTest() {
+    super(EXTERNS);
+  }
+
+  @Override void checkMinimalExterns(Iterable<SourceFile> externs) {}
+
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
   }
 
   @Override
@@ -106,7 +143,7 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
 
     // Record types as template arguments.
     assertExternProperties(
-        "/** @type {Array.<{bar: string, baz: string}>} */ var foo;",
+        "/** @type {Array<{bar: string, baz: string}>} */ var foo;",
         "bar", "baz");
 
     // Record types in implemented interfaces.
@@ -115,10 +152,10 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
         " * @interface",
         " * @template T",
         " */",
-        "var Foo;",
+        "var Foo = function() {};",
         "/**",
         " * @constructor",
-        " * @implements {Foo.<{bar: string, baz: string}>}",
+        " * @implements {Foo<{bar: string, baz: string}>}",
         " */",
         "var Bar;"),
         "bar", "baz");
@@ -132,7 +169,7 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
         "var Foo = function() {};",
         "/**",
         " * @constructor",
-        " * @extends {Foo.<{bar: string, baz: string}>}",
+        " * @extends {Foo<{bar: string, baz: string}>}",
         " */",
         "var Bar = function() {};"),
         "bar", "baz");
@@ -150,7 +187,24 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
         "/** @type {{bar: string, baz: {foobar: string}}} */ var foo;",
         "bar", "baz", "foobar");
 
-    // Recursive types.
+    // Recursive @record types.
+    assertExternProperties(LINE_JOINER.join(
+        "/** @record */",
+        "function D1() { /** @type {D2} */ this.a; }",
+        "",
+        "/** @record */",
+        "function D2() { /** @type {D1} */ this.b; }"),
+        "a", "b");
+    assertExternProperties(LINE_JOINER.join(
+        "/** @record */",
+        "function D1() { /** @type {function(D2)} */ this.a; }",
+        "",
+        "/** @record */",
+        "function D2() { /** @type {D1} */ this.b; }"),
+        "a", "b");
+
+    // Recursive types
+    ignoreWarnings(JSTypeCreatorFromJSDoc.CIRCULAR_TYPEDEF_ENUM);
     assertExternProperties(LINE_JOINER.join(
         "/** @typedef {{a: D2}} */",
         "var D1;",
@@ -169,16 +223,14 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
     // Record types defined in normal code and referenced in externs should
     // not bleed-through.
     testSame(
-        // Externs.
-        "/** @type {NonExternType} */ var foo;",
-        // Normal code.
-        "/** @typedef {{bar: string, baz: string}} */ var NonExternType;");
-    // Check that no properties were found.
-    assertThat(getLastCompiler().getExternProperties()).isEmpty();
+        externs(EXTERNS + "/** @type {NonExternType} */ var foo;"),
+        srcs("/** @typedef {{bar: string, baz: string}} */ var NonExternType;"),
+        // Check that no properties were found.
+        expectExterns());
   }
 
   public void testExternClassNoTypeCheck() {
-    disableTypeCheck();
+    this.mode = TypeInferenceMode.NEITHER;
     assertExternProperties(
         LINE_JOINER.join(
             "class Foo {",
@@ -192,7 +244,6 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
   }
 
   public void testExternClassWithTypeCheck() {
-    enableTypeCheck();
     allowExternsChanges();
     enableTranspile();
     assertExternProperties(
@@ -207,8 +258,18 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
         "prototype", "bar");
   }
 
+  public void testExternWithMethod() {
+    this.mode = TypeInferenceMode.NEITHER;
+    assertExternProperties(
+        LINE_JOINER.join(
+            "foo = {",
+            "  method() {}",
+            "}"),
+        "method");
+  }
+
   public void testExternAsyncFunction() {
-    disableTypeCheck();
+    this.mode = TypeInferenceMode.NEITHER;
     assertExternProperties(
         LINE_JOINER.join(
             "function *gen() {",
@@ -220,9 +281,15 @@ public final class GatherExternPropertiesTest extends CompilerTestCase {
         "next", "value");
   }
 
+  private static Postcondition expectExterns(final String... properties) {
+    return new Postcondition() {
+      @Override void verify(Compiler compiler) {
+        assertThat(compiler.getExternProperties()).containsExactly((Object[]) properties);
+      }
+    };
+  }
+
   private void assertExternProperties(String externs, String... properties) {
-    testSame(externs, "");
-    assertEquals(ImmutableSet.copyOf(properties),
-        getLastCompiler().getExternProperties());
+    testSame(externs(EXTERNS + externs), srcs(""), expectExterns(properties));
   }
 }

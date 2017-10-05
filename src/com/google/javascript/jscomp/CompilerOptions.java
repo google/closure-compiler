@@ -183,6 +183,10 @@ public class CompilerOptions implements Serializable {
     }
   }
 
+  public boolean inIncrementalCheckMode() {
+    return incrementalCheckMode != IncrementalCheckMode.OFF;
+  }
+
   public boolean shouldGenerateTypedExterns() {
     return incrementalCheckMode == IncrementalCheckMode.GENERATE_IJS;
   }
@@ -197,12 +201,31 @@ public class CompilerOptions implements Serializable {
 
   private Config.JsDocParsing parseJsDocDocumentation = Config.JsDocParsing.TYPES_ONLY;
 
+  private boolean printExterns;
+
+  void setPrintExterns(boolean printExterns) {
+    this.printExterns = printExterns;
+  }
+
+  boolean shouldPrintExterns() {
+    return this.printExterns || incrementalCheckMode == IncrementalCheckMode.GENERATE_IJS;
+  }
+
   /**
    * Even if checkTypes is disabled, clients such as IDEs might want to still infer types.
    */
   boolean inferTypes;
 
   private boolean useNewTypeInference;
+
+  /**
+   * Several passes after type checking use type information. Some of these passes do not work
+   * yet with the new type inference. For this reason, we run the old type checker after NTI,
+   * so that the subsequent passes can use the old types.
+   * Turning this option off allows us to debug NTI-only builds; with the goal to eventually
+   * stop running OTI after NTI.
+   */
+  private boolean runOTIafterNTI = true;
 
   /**
    * Relevant only when {@link #useNewTypeInference} is true, where we normally disable OTI errors.
@@ -212,6 +235,15 @@ public class CompilerOptions implements Serializable {
    * This will be removed when NTI entirely replaces OTI.
    */
   boolean reportOTIErrorsUnderNTI = false;
+
+  /**
+   * Run type checking natively on the subset of ES6 features that we are able to typecheck
+   * natively, and then transpile them after NTI.
+   * Doing this currently causes reordering of {@link LateEs6ToEs3Converter} pass
+   * and {@link Es6RewriteBlockScopedDeclaration} pass, which has the potential to break builds.
+   * This option should eventually be turned on by default and removed.
+   */
+  private boolean typeCheckEs6Natively = false;
 
   /**
    * Configures the compiler to skip as many passes as possible.
@@ -318,9 +350,8 @@ public class CompilerOptions implements Serializable {
    */
   Set<String> extraAnnotationNames;
 
-  /**
-   * Policies to determine the disposal checking level.
-   */
+  /** @deprecated No longer has any effect. */
+  @Deprecated
   public enum DisposalCheckingPolicy {
     /**
      * Don't check any disposal.
@@ -338,22 +369,14 @@ public class CompilerOptions implements Serializable {
     AGGRESSIVE,
   }
 
-  /**
-   * Check for patterns that are known to cause memory leaks.
-   */
-  DisposalCheckingPolicy checkEventfulObjectDisposalPolicy;
+  /** @deprecated No longer has any effect. */
+  @Deprecated
+  public void setCheckEventfulObjectDisposalPolicy(DisposalCheckingPolicy policy) {}
 
-  public void setCheckEventfulObjectDisposalPolicy(DisposalCheckingPolicy policy) {
-    this.checkEventfulObjectDisposalPolicy = policy;
-
-    // The CheckEventfulObjectDisposal pass requires types so enable inferring types if
-    // this pass is enabled.
-    if (policy != DisposalCheckingPolicy.OFF) {
-      this.inferTypes = true;
-    }
-  }
+  /** @deprecated No longer has any effect. */
+  @Deprecated
   public DisposalCheckingPolicy getCheckEventfulObjectDisposalPolicy() {
-    return checkEventfulObjectDisposalPolicy;
+    return DisposalCheckingPolicy.OFF;
   }
 
   /**
@@ -755,7 +778,7 @@ public class CompilerOptions implements Serializable {
   public boolean closurePass;
 
   /** Do not strip goog.provide()/goog.require() calls from the code. */
-  private boolean preserveGoogProvidesAndRequires;
+  private boolean preserveClosurePrimitives;
 
   /** Processes AngularJS-specific annotations */
   boolean angularPass;
@@ -974,14 +997,14 @@ public class CompilerOptions implements Serializable {
   boolean printSourceAfterEachPass;
   // Used to narrow down the printed source when overall input size is large. If this is empty,
   // the entire source is printed.
-  List<String> filesToPrintAfterEachPass = ImmutableList.of();
+  List<String> filesToPrintAfterEachPassRegexList = ImmutableList.of();
 
   public void setPrintSourceAfterEachPass(boolean printSource) {
     this.printSourceAfterEachPass = printSource;
   }
 
-  public void setFilesToPrintAfterEachPass(List<String> filenames) {
-    this.filesToPrintAfterEachPass = filenames;
+  public void setFilesToPrintAfterEachPassRegexList(List<String> filePathRegexList) {
+    this.filesToPrintAfterEachPassRegexList = filePathRegexList;
   }
 
   String reportPath;
@@ -997,6 +1020,7 @@ public class CompilerOptions implements Serializable {
     return tracer;
   }
 
+  // NOTE: Timing information will not be printed if compiler.disableThreads() is called!
   public void setTracerMode(TracerMode mode) {
     this.tracer = mode;
   }
@@ -1065,6 +1089,12 @@ public class CompilerOptions implements Serializable {
    * input files that have source maps applied to them.
    */
   boolean applyInputSourceMaps = false;
+
+  /**
+   * Whether to resolve source mapping annotations. Cannot do this in an appengine or js environment
+   * since we don't have access to the filesystem.
+   */
+  boolean resolveSourceMapAnnotations = true;
 
   public List<SourceMap.LocationMapping> sourceMapLocationMappings =
       Collections.emptyList();
@@ -1155,6 +1185,9 @@ public class CompilerOptions implements Serializable {
   /** Which algorithm to use for locating ES6 and CommonJS modules */
   ModuleLoader.ResolutionMode moduleResolutionMode;
 
+  /** Which entries to look for in package.json files when processing modules */
+  List<String> packageJsonEntryNames;
+
   /**
    * Should the compiler print its configuration options to stderr when they are initialized?
    *
@@ -1180,6 +1213,7 @@ public class CompilerOptions implements Serializable {
 
     // Modules
     moduleResolutionMode = ModuleLoader.ResolutionMode.BROWSER;
+    packageJsonEntryNames = ImmutableList.of("browser", "module", "main");
 
     // Checks
     skipNonTranspilationPasses = false;
@@ -1196,7 +1230,6 @@ public class CompilerOptions implements Serializable {
     computeFunctionSideEffects = false;
     chainCalls = false;
     extraAnnotationNames = null;
-    checkEventfulObjectDisposalPolicy = DisposalCheckingPolicy.OFF;
 
     // Optimizations
     foldConstants = false;
@@ -1263,11 +1296,11 @@ public class CompilerOptions implements Serializable {
     locale = null;
     markAsCompiled = false;
     closurePass = false;
-    preserveGoogProvidesAndRequires = false;
+    preserveClosurePrimitives = false;
     angularPass = false;
     polymerVersion = null;
     dartPass = false;
-    j2clPassMode = J2clPassMode.OFF;
+    j2clPassMode = J2clPassMode.AUTO;
     removeAbstractMethods = false;
     removeSuperMethods = false;
     removeClosureAsserts = false;
@@ -1636,7 +1669,7 @@ public class CompilerOptions implements Serializable {
     inlineProperties = enable;
   }
 
-  boolean shouldInlineProperties() {
+  public boolean shouldInlineProperties() {
     return inlineProperties;
   }
 
@@ -1734,6 +1767,10 @@ public class CompilerOptions implements Serializable {
     this.exportLocalPropertyDefinitions = export;
   }
 
+  public boolean shouldExportLocalPropertyDefinitions() {
+    return this.exportLocalPropertyDefinitions;
+  }
+
   public void setAngularPass(boolean angularPass) {
     this.angularPass = angularPass;
   }
@@ -1763,9 +1800,6 @@ public class CompilerOptions implements Serializable {
 
   public void setJ2clPass(J2clPassMode j2clPassMode) {
     this.j2clPassMode = j2clPassMode;
-    if (j2clPassMode.isExplicitlyOn()) {
-      setWarningLevel(DiagnosticGroup.forType(SourceFile.DUPLICATE_ZIP_CONTENTS), CheckLevel.OFF);
-    }
   }
 
   public void setCodingConvention(CodingConvention codingConvention) {
@@ -1981,9 +2015,25 @@ public class CompilerOptions implements Serializable {
     this.useNewTypeInference = enable;
   }
 
+  public boolean getRunOTIafterNTI() {
+    return this.runOTIafterNTI;
+  }
+
+  public void setRunOTIafterNTI(boolean enable) {
+    this.runOTIafterNTI = enable;
+  }
+
   // Not dead code; used by the open-source users of the compiler.
   public void setReportOTIErrorsUnderNTI(boolean enable) {
     this.reportOTIErrorsUnderNTI = enable;
+  }
+
+  public boolean getTypeCheckEs6Natively() {
+    return this.typeCheckEs6Natively;
+  }
+
+  public void setTypeCheckEs6Natively(boolean enable) {
+    this.typeCheckEs6Natively = enable;
   }
 
 /**
@@ -2264,6 +2314,10 @@ public class CompilerOptions implements Serializable {
     this.useTypesForLocalOptimization = useTypesForLocalOptimization;
   }
 
+  public boolean shouldUseTypesForLocalOptimization() {
+    return this.useTypesForLocalOptimization;
+  }
+
   @Deprecated
   public void setUseTypesForOptimization(boolean useTypesForOptimization) {
     if (useTypesForOptimization) {
@@ -2300,6 +2354,10 @@ public class CompilerOptions implements Serializable {
 
   public void setPropertyRenaming(PropertyRenamingPolicy propertyRenaming) {
     this.propertyRenaming = propertyRenaming;
+  }
+
+  public PropertyRenamingPolicy getPropertyRenaming() {
+    return this.propertyRenaming;
   }
 
   public void setLabelRenaming(boolean labelRenaming) {
@@ -2365,7 +2423,7 @@ public class CompilerOptions implements Serializable {
     this.disambiguateProperties = disambiguateProperties;
   }
 
-  boolean shouldDisambiguateProperties() {
+  public boolean shouldDisambiguateProperties() {
     return this.disambiguateProperties;
   }
 
@@ -2373,7 +2431,7 @@ public class CompilerOptions implements Serializable {
     this.ambiguateProperties = ambiguateProperties;
   }
 
-  boolean shouldAmbiguateProperties() {
+  public boolean shouldAmbiguateProperties() {
     return this.ambiguateProperties;
   }
 
@@ -2426,12 +2484,27 @@ public class CompilerOptions implements Serializable {
     this.closurePass = closurePass;
   }
 
+  /** Preserve closure primitives.
+   *
+   * For now, this only preserves goog.provide(), goog.require() and goog.module() calls.
+   */
+  public void setPreserveClosurePrimitives(boolean preserveClosurePrimitives) {
+    this.preserveClosurePrimitives = preserveClosurePrimitives;
+  }
+
+  // TODO(bangert): Delete this alias once it has been deprecated for 3 months.
+  /** Preserve goog.provide(), goog.require() and goog.module() calls. */
+  @Deprecated
   public void setPreserveGoogProvidesAndRequires(boolean preserveGoogProvidesAndRequires) {
-    this.preserveGoogProvidesAndRequires = preserveGoogProvidesAndRequires;
+     setPreserveClosurePrimitives(preserveGoogProvidesAndRequires);
   }
 
   public boolean shouldPreservesGoogProvidesAndRequires() {
-    return this.preserveGoogProvidesAndRequires || this.shouldGenerateTypedExterns();
+    return this.preserveClosurePrimitives || this.shouldGenerateTypedExterns();
+  }
+
+  public boolean shouldPreserveGoogModule() {
+    return this.preserveClosurePrimitives;
   }
 
   public void setPreserveTypeAnnotations(boolean preserveTypeAnnotations) {
@@ -2607,6 +2680,10 @@ public class CompilerOptions implements Serializable {
     this.applyInputSourceMaps = applyInputSourceMaps;
   }
 
+  public void setResolveSourceMapAnnotations(boolean resolveSourceMapAnnotations) {
+    this.resolveSourceMapAnnotations = resolveSourceMapAnnotations;
+  }
+
   public void setSourceMapIncludeSourcesContent(boolean sourceMapIncludeSourcesContent) {
     this.sourceMapIncludeSourcesContent = sourceMapIncludeSourcesContent;
   }
@@ -2733,6 +2810,14 @@ public class CompilerOptions implements Serializable {
     this.moduleResolutionMode = mode;
   }
 
+  public List<String> getPackageJsonEntryNames() {
+    return this.packageJsonEntryNames;
+  }
+
+  public void setPackageJsonEntryNames(List<String> names) {
+    this.packageJsonEntryNames = names;
+  }
+
   /** Serializes compiler options to a stream. */
   @GwtIncompatible("ObjectOutputStream")
   public void serialize(OutputStream objectOutputStream) throws IOException {
@@ -2766,7 +2851,6 @@ public class CompilerOptions implements Serializable {
             .add("brokenClosureRequiresLevel", brokenClosureRequiresLevel)
             .add("chainCalls", chainCalls)
             .add("checkDeterminism", getCheckDeterminism())
-            .add("checkEventfulObjectDisposalPolicy", checkEventfulObjectDisposalPolicy)
             .add("checkGlobalNamesLevel", checkGlobalNamesLevel)
             .add("checkGlobalThisLevel", checkGlobalThisLevel)
             .add("checkMissingGetCssNameBlacklist", checkMissingGetCssNameBlacklist)
@@ -2874,7 +2958,7 @@ public class CompilerOptions implements Serializable {
             .add("preferSingleQuotes", preferSingleQuotes)
             .add("preferStableNames", preferStableNames)
             .add("preserveDetailedSourceInfo", preservesDetailedSourceInfo())
-            .add("preserveGoogProvidesAndRequires", preserveGoogProvidesAndRequires)
+            .add("preserveGoogProvidesAndRequires", preserveClosurePrimitives)
             .add("preserveTypeAnnotations", preserveTypeAnnotations)
             .add("prettyPrint", prettyPrint)
             .add("preventLibraryInjection", preventLibraryInjection)
@@ -2990,7 +3074,7 @@ public class CompilerOptions implements Serializable {
      */
     ECMASCRIPT_2016,
 
-    /** ECMAScript standard approved in 2017. Adds async/await. */
+    /** ECMAScript standard approved in 2017. Adds async/await and other syntax */
     ECMASCRIPT_2017,
 
     /** ECMAScript latest draft standard. */
@@ -3062,7 +3146,7 @@ public class CompilerOptions implements Serializable {
   }
 
   /** When to do the extra sanity checks */
-  static enum DevMode {
+  public static enum DevMode {
     /**
      * Don't do any extra sanity checks.
      */
@@ -3285,10 +3369,6 @@ public class CompilerOptions implements Serializable {
 
     boolean shouldAddJ2clPasses() {
       return this == TRUE || this == ON || this == AUTO;
-    }
-
-    boolean isExplicitlyOn() {
-      return this == TRUE || this == ON;
     }
   }
 

@@ -697,7 +697,7 @@ public class IR {
    * It isn't possible to always determine if a detached node is a expression,
    * so make a best guess.
    */
-  private static boolean mayBeStatement(Node n) {
+  public static boolean mayBeStatement(Node n) {
     if (!mayBeStatementNoReturn(n)) {
       return n.isReturn();
     }

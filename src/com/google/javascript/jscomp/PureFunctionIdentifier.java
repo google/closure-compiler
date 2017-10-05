@@ -266,8 +266,13 @@ class PureFunctionIdentifier implements CompilerPass {
       }
 
       String name = NameBasedDefinitionProvider.getSimplifiedName(expression);
-      if (name != null && functionInfoByName.containsKey(name)) {
-        results.add(functionInfoByName.get(name));
+      FunctionInformation info = null;
+      if (name != null) {
+        info = functionInfoByName.get(name);
+      }
+
+      if (info != null) {
+        results.add(info);
       } else {
         return null;
       }
@@ -304,10 +309,11 @@ class PureFunctionIdentifier implements CompilerPass {
         } else {
           // Unsupported function definition. Mark a global side effect here since we don't
           // actually know anything about what's being defined.
-          if (functionInfoByName.containsKey(name)) {
-            functionInfoByName.get(name).setTaintsGlobalState();
-            functionInfoByName.get(name).setFunctionThrows();
-            functionInfoByName.get(name).setTaintsReturn();
+          FunctionInformation info = functionInfoByName.get(name);
+          if (info != null) {
+            info.setTaintsGlobalState();
+            info.setFunctionThrows();
+            info.setTaintsReturn();
           } else {
             functionInfoByName.put(name, unknownDefinitionFunction);
           }
@@ -323,12 +329,10 @@ class PureFunctionIdentifier implements CompilerPass {
    */
   private void addSupportedDefinition(DefinitionSite definitionSite, String name) {
     for (Node function : unwrapCallableExpression(definitionSite.definition.getRValue())) {
-      FunctionInformation functionInfo;
-      if (functionInfoByName.containsKey(name)) {
-        // This is a function name with multiple definitions!
-        // Here we link this function definition to the existing FunctionInfo node.
-        functionInfo = functionInfoByName.get(name);
-      } else {
+      // A function may have multiple definitions.
+      // Link this function definition to the existing FunctionInfo node.
+      FunctionInformation functionInfo = functionInfoByName.get(name);
+      if (functionInfo == null) {
         // Need to create a function info node.
         functionInfo = new FunctionInformation();
         functionInfo.graphNode = sideEffectGraph.createNode(functionInfo);
@@ -950,6 +954,7 @@ class PureFunctionIdentifier implements CompilerPass {
     return subtype.isBottom();
   }
 
+
   /**
    * A compiler pass that constructs a reference graph and drives the PureFunctionIdentifier across
    * it.
@@ -957,6 +962,7 @@ class PureFunctionIdentifier implements CompilerPass {
   static class Driver implements CompilerPass {
     private final AbstractCompiler compiler;
     private final String reportPath;
+    protected boolean checkJ2cl = true;
 
     Driver(AbstractCompiler compiler, String reportPath) {
       this.compiler = compiler;
@@ -965,6 +971,12 @@ class PureFunctionIdentifier implements CompilerPass {
 
     @Override
     public void process(Node externs, Node root) {
+      // Don't run the independent PureFunctionIdentifier pass if J2CL is enabled, since nested
+      // PureFunctionIdentifier passes will run redundantly inside of J2CL.
+      if (checkJ2cl && J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
+        return;
+      }
+
       NameBasedDefinitionProvider defFinder = new NameBasedDefinitionProvider(compiler, true);
       defFinder.process(externs, root);
 
@@ -979,6 +991,15 @@ class PureFunctionIdentifier implements CompilerPass {
           throw new RuntimeException(e);
         }
       }
+    }
+  }
+
+  /** A driver that will run even when J2CL is enabled. */
+  static class DriverInJ2cl extends Driver {
+
+    DriverInJ2cl(AbstractCompiler compiler, String reportPath) {
+      super(compiler, reportPath);
+      checkJ2cl = false;
     }
   }
 }

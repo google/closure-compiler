@@ -124,6 +124,13 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
             + "google_exportSymbol('testBar',testBar)");
   }
 
+  // https://github.com/google/closure-compiler/issues/2563
+  public void testFunctionExpressionsInAssignAreExported() {
+    test(
+        "testBar = function() {};",
+        "testBar = function() {}; google_exportSymbol('testBar',testBar)");
+  }
+
   public void testFunctionExpressionsByLetAreExported() {
     testSame("let Foo = function() {var testA = function() {}}");
     test(
@@ -244,6 +251,40 @@ public final class ExportTestFunctionsTest extends CompilerTestCase {
             + "google_exportProperty(MyTest.prototype, 'tearDown', MyTest.prototype.tearDown);"
             + "google_exportProperty(MyTest.prototype, 'setUp', MyTest.prototype.setUp);"
             + "google_exportProperty(MyTest.prototype, 'testFoo', MyTest.prototype.testFoo);"
+            + "goog.testing.testSuite(new MyTest());");
+  }
+
+  // https://github.com/google/closure-compiler/issues/2563
+  public void testES6ClassAssignmentsAreExported() {
+    testSame("Foo = class {bar() {}}");
+
+    test(
+        "Foo = class {testBar() {}}",
+        "Foo = class {testBar() {}}; "
+            + "google_exportProperty(Foo.prototype, 'testBar', Foo.prototype.testBar);");
+  }
+
+  public void testEs6Class_testClassExpressionMethod() {
+    test(
+        "var MyTest=class{testFoo() {}}; goog.testing.testSuite(new MyTest());",
+        "var MyTest=class{testFoo() {}}; "
+            + "google_exportProperty(MyTest.prototype, 'testFoo', MyTest.prototype.testFoo); "
+            + "goog.testing.testSuite(new MyTest());");
+  }
+
+  public void testEs6Class_testClassExpressionByLetMethod() {
+    test(
+        "let MyTest=class{testFoo() {}}; goog.testing.testSuite(new MyTest());",
+        "let MyTest=class{testFoo() {}}; "
+            + "google_exportProperty(MyTest.prototype, 'testFoo', MyTest.prototype.testFoo); "
+            + "goog.testing.testSuite(new MyTest());");
+  }
+
+  public void testEs6Class_testClassExpressionByConstMethod() {
+    test(
+        "const MyTest=class{testFoo() {}}; goog.testing.testSuite(new MyTest());",
+        "const MyTest=class{testFoo() {}}; "
+            + "google_exportProperty(MyTest.prototype, 'testFoo', MyTest.prototype.testFoo); "
             + "goog.testing.testSuite(new MyTest());");
   }
 }

@@ -101,11 +101,10 @@ public class DiagnosticGroups {
   // be listed on the command-line as an available option.
   //
   // If a group is suppressible on a per-file basis, it should be added
-  // to parser/ParserConfig.properties
+  // to parsing/ParserConfig.properties
   static final String DIAGNOSTIC_GROUP_NAMES =
       "accessControls, "
           + "ambiguousFunctionDecl, "
-          + "checkEventfulObjectDisposal, "
           + "checkRegExp, "
           + "checkTypes, "
           + "checkVars, "
@@ -200,9 +199,6 @@ public class DiagnosticGroups {
           NewTypeInference.INVALID_CAST);
 
   @Deprecated
-  public static final DiagnosticGroup INFERRED_CONST_CHECKS =
-      DiagnosticGroups.registerDeprecatedGroup("inferredConstCheck");
-
   public static final DiagnosticGroup FILEOVERVIEW_JSDOC =
       DiagnosticGroups.registerDeprecatedGroup("fileoverviewTags");
 
@@ -290,13 +286,13 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup NEW_CHECK_TYPES_COMPATIBILITY_MODE =
       DiagnosticGroups.registerGroup("newCheckTypesCompatibility",  // undocumented
           JSTypeCreatorFromJSDoc.COMPATIBLE_DIAGNOSTICS,
-          GlobalTypeInfo.COMPATIBLE_DIAGNOSTICS,
+          GlobalTypeInfoCollector.COMPATIBLE_DIAGNOSTICS,
           NewTypeInference.COMPATIBLE_DIAGNOSTICS);
 
   public static final DiagnosticGroup NEW_CHECK_TYPES_EXTRA_CHECKS =
       DiagnosticGroups.registerGroup("newCheckTypesExtraChecks",  // undocumented
           JSTypeCreatorFromJSDoc.NEW_DIAGNOSTICS,
-          GlobalTypeInfo.NEW_DIAGNOSTICS,
+          GlobalTypeInfoCollector.NEW_DIAGNOSTICS,
           NewTypeInference.NEW_DIAGNOSTICS);
 
   // Part of the new type inference
@@ -325,30 +321,30 @@ public class DiagnosticGroups {
           JSTypeCreatorFromJSDoc.IMPLEMENTS_WITHOUT_CONSTRUCTOR,
           JSTypeCreatorFromJSDoc.INHERITANCE_CYCLE,
           JSTypeCreatorFromJSDoc.UNION_IS_UNINHABITABLE,
-          GlobalTypeInfo.ABSTRACT_METHOD_IN_CONCRETE_CLASS,
-          GlobalTypeInfo.ANONYMOUS_NOMINAL_TYPE,
-          GlobalTypeInfo.CANNOT_INIT_TYPEDEF,
-          GlobalTypeInfo.CANNOT_OVERRIDE_FINAL_METHOD,
-          GlobalTypeInfo.CONST_WITHOUT_INITIALIZER,
+          GlobalTypeInfoCollector.ABSTRACT_METHOD_IN_CONCRETE_CLASS,
+          GlobalTypeInfoCollector.ANONYMOUS_NOMINAL_TYPE,
+          GlobalTypeInfoCollector.CANNOT_INIT_TYPEDEF,
+          GlobalTypeInfoCollector.CANNOT_OVERRIDE_FINAL_METHOD,
+          GlobalTypeInfoCollector.CONST_WITHOUT_INITIALIZER,
 //           GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE,
-          GlobalTypeInfo.CTOR_IN_DIFFERENT_SCOPE,
-          GlobalTypeInfo.DICT_WITHOUT_CTOR,
-          GlobalTypeInfo.DUPLICATE_JSDOC,
-          GlobalTypeInfo.DUPLICATE_PROP_IN_ENUM,
-          GlobalTypeInfo.EXPECTED_CONSTRUCTOR,
-          GlobalTypeInfo.EXPECTED_INTERFACE,
-          GlobalTypeInfo.INEXISTENT_PARAM,
-          GlobalTypeInfo.INTERFACE_METHOD_NOT_IMPLEMENTED,
+          GlobalTypeInfoCollector.CTOR_IN_DIFFERENT_SCOPE,
+          GlobalTypeInfoCollector.DICT_WITHOUT_CTOR,
+          GlobalTypeInfoCollector.DUPLICATE_JSDOC,
+          GlobalTypeInfoCollector.DUPLICATE_PROP_IN_ENUM,
+          GlobalTypeInfoCollector.EXPECTED_CONSTRUCTOR,
+          GlobalTypeInfoCollector.EXPECTED_INTERFACE,
+          GlobalTypeInfoCollector.INEXISTENT_PARAM,
+          GlobalTypeInfoCollector.INTERFACE_METHOD_NOT_IMPLEMENTED,
 //           GlobalTypeInfo.INVALID_PROP_OVERRIDE,
-          GlobalTypeInfo.LENDS_ON_BAD_TYPE,
-          GlobalTypeInfo.MALFORMED_ENUM,
-          GlobalTypeInfo.MISPLACED_CONST_ANNOTATION,
-          GlobalTypeInfo.ONE_TYPE_FOR_MANY_VARS,
+          GlobalTypeInfoCollector.LENDS_ON_BAD_TYPE,
+          GlobalTypeInfoCollector.MALFORMED_ENUM,
+          GlobalTypeInfoCollector.MISPLACED_CONST_ANNOTATION,
+          GlobalTypeInfoCollector.ONE_TYPE_FOR_MANY_VARS,
 //           GlobalTypeInfo.REDECLARED_PROPERTY,
-          GlobalTypeInfo.STRUCT_WITHOUT_CTOR_OR_INTERF,
-          GlobalTypeInfo.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
-          GlobalTypeInfo.UNKNOWN_OVERRIDE,
-          GlobalTypeInfo.UNRECOGNIZED_TYPE_NAME,
+          GlobalTypeInfoCollector.STRUCT_WITHOUT_CTOR_OR_INTERF,
+          GlobalTypeInfoCollector.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
+          GlobalTypeInfoCollector.UNKNOWN_OVERRIDE,
+          GlobalTypeInfoCollector.UNRECOGNIZED_TYPE_NAME,
           NewTypeInference.ABSTRACT_SUPER_METHOD_NOT_CALLABLE,
           NewTypeInference.ASSERT_FALSE,
           NewTypeInference.CANNOT_BIND_CTOR,
@@ -389,12 +385,9 @@ public class DiagnosticGroups {
       DiagnosticGroups.registerGroup("tooManyTypeParams",
           RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
 
+  @Deprecated
   public static final DiagnosticGroup CHECK_EVENTFUL_OBJECT_DISPOSAL =
-      DiagnosticGroups.registerGroup("checkEventfulObjectDisposal",
-          CheckEventfulObjectDisposal.EVENTFUL_OBJECT_NOT_DISPOSED,
-          CheckEventfulObjectDisposal.EVENTFUL_OBJECT_PURELY_LOCAL,
-          CheckEventfulObjectDisposal.OVERWRITE_PRIVATE_EVENTFUL_OBJECT,
-          CheckEventfulObjectDisposal.UNLISTEN_WITH_ANONBOUND);
+      DiagnosticGroups.registerDeprecatedGroup("checkEventfulObjectDisposal");
 
   public static final DiagnosticGroup OLD_REPORT_UNKNOWN_TYPES =
       DiagnosticGroups.registerGroup("oldReportUnknownTypes", // undocumented
@@ -445,19 +438,24 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup DUPLICATE_VARS =
       DiagnosticGroups.registerGroup("duplicate",
+          CollapseProperties.NAMESPACE_REDEFINED_WARNING,
           VarCheck.VAR_MULTIPLY_DECLARED_ERROR,
           TypeValidator.DUP_VAR_DECLARATION,
           TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH,
           VariableReferenceCheck.REDECLARED_VARIABLE,
-          GlobalTypeInfo.REDECLARED_PROPERTY);
+          GlobalTypeInfoCollector.REDECLARED_PROPERTY);
 
   public static final DiagnosticGroup ES3 =
       DiagnosticGroups.registerGroup("es3",
           RhinoErrorReporter.INVALID_ES3_PROP_NAME,
           RhinoErrorReporter.TRAILING_COMMA);
 
+  // In the conversion from ES5 to ES6, we remove the strict check that asserts functions
+  // must be declared at the top of a new scope or immediately within the declaration of another
+  // function
   static final DiagnosticGroup ES5_STRICT_UNCOMMON =
-      DiagnosticGroups.registerGroup("es5StrictUncommon",
+      DiagnosticGroups.registerGroup(
+          "es5StrictUncommon",
           RhinoErrorReporter.INVALID_OCTAL_LITERAL,
           RhinoErrorReporter.DUPLICATE_PARAM,
           StrictModeCheck.USE_OF_WITH,
@@ -466,8 +464,7 @@ public class DiagnosticGroups {
           StrictModeCheck.ARGUMENTS_DECLARATION,
           StrictModeCheck.ARGUMENTS_ASSIGNMENT,
           StrictModeCheck.DELETE_VARIABLE,
-          StrictModeCheck.DUPLICATE_OBJECT_KEY,
-          StrictModeCheck.BAD_FUNCTION_DECLARATION);
+          StrictModeCheck.DUPLICATE_OBJECT_KEY);
 
   static final DiagnosticGroup ES5_STRICT_REFLECTION =
       DiagnosticGroups.registerGroup("es5StrictReflection",
@@ -487,8 +484,8 @@ public class DiagnosticGroups {
           ClosureRewriteModule.MISSING_MODULE_OR_PROVIDE);
 
   public static final DiagnosticGroup MISSING_REQUIRE =
-      DiagnosticGroups.registerGroup("missingRequire",
-          CheckRequiresForConstructors.MISSING_REQUIRE_WARNING);
+      DiagnosticGroups.registerGroup(
+          "missingRequire", CheckMissingAndExtraRequires.MISSING_REQUIRE_WARNING);
 
   /**
    * A set of diagnostics expected when parsing and type checking partial programs. Useful for clutz
@@ -511,19 +508,21 @@ public class DiagnosticGroups {
           DiagnosticGroup.forType(Es6ExternsCheck.MISSING_ES6_EXTERNS));
 
   public static final DiagnosticGroup STRICT_MISSING_REQUIRE =
-      DiagnosticGroups.registerGroup("strictMissingRequire",
-          CheckRequiresForConstructors.MISSING_REQUIRE_WARNING,
-          CheckRequiresForConstructors.MISSING_REQUIRE_FOR_GOOG_SCOPE,
-          CheckRequiresForConstructors.MISSING_REQUIRE_STRICT_WARNING);
+      DiagnosticGroups.registerGroup(
+          "strictMissingRequire",
+          CheckMissingAndExtraRequires.MISSING_REQUIRE_WARNING,
+          CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE,
+          CheckMissingAndExtraRequires.MISSING_REQUIRE_STRICT_WARNING);
 
   public static final DiagnosticGroup STRICT_REQUIRES =
-      DiagnosticGroups.registerGroup("legacyGoogScopeRequire",
-          CheckRequiresForConstructors.MISSING_REQUIRE_FOR_GOOG_SCOPE,
-          CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING);
+      DiagnosticGroups.registerGroup(
+          "legacyGoogScopeRequire",
+          CheckMissingAndExtraRequires.MISSING_REQUIRE_FOR_GOOG_SCOPE,
+          CheckMissingAndExtraRequires.EXTRA_REQUIRE_WARNING);
 
   public static final DiagnosticGroup EXTRA_REQUIRE =
-      DiagnosticGroups.registerGroup("extraRequire",
-          CheckRequiresForConstructors.EXTRA_REQUIRE_WARNING);
+      DiagnosticGroups.registerGroup(
+          "extraRequire", CheckMissingAndExtraRequires.EXTRA_REQUIRE_WARNING);
 
   @GwtIncompatible("java.util.regex")
   public static final DiagnosticGroup MISSING_GETCSSNAME =
@@ -565,6 +564,10 @@ public class DiagnosticGroups {
           CheckJSDoc.MISPLACED_ANNOTATION,
           CheckJSDoc.MISPLACED_MSG_ANNOTATION);
 
+  public static final DiagnosticGroup MISPLACED_MSG_ANNOTATION =
+      DiagnosticGroups.registerGroup("misplacedMsgAnnotation",
+          CheckJSDoc.MISPLACED_MSG_ANNOTATION);
+
   public static final DiagnosticGroup SUSPICIOUS_CODE =
       DiagnosticGroups.registerGroup(
           "suspiciousCode",
@@ -594,6 +597,13 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup UNUSED_LOCAL_VARIABLE =
       DiagnosticGroups.registerGroup("unusedLocalVariables",
           VariableReferenceCheck.UNUSED_LOCAL_ASSIGNMENT);
+
+  public static final DiagnosticGroup JSDOC_MISSING_TYPE =
+      DiagnosticGroups.registerGroup("jsdocMissingType",
+              RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING);
+
+  public static final DiagnosticGroup UNNECESSARY_ESCAPE =
+      DiagnosticGroups.registerGroup("unnecessaryEscape", RhinoErrorReporter.UNNECESSARY_ESCAPE);
 
   // Warnings reported by the linter. If you enable these as errors in your build targets,
   // the JS Compiler team will break your build and not rollback.
@@ -629,9 +639,7 @@ public class DiagnosticGroups {
               ClosureCheckModule.REFERENCE_TO_FULLY_QUALIFIED_IMPORT_NAME,
               ClosureCheckModule.REFERENCE_TO_SHORT_IMPORT_BY_LONG_NAME_INCLUDING_SHORT_NAME,
               ClosureRewriteModule.USELESS_USE_STRICT_DIRECTIVE,
-              RhinoErrorReporter.UNNECESSARY_ESCAPE,
-              RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING,
-              RhinoErrorReporter.JSDOC_MISSING_TYPE_WARNING));
+              RhinoErrorReporter.JSDOC_MISSING_BRACES_WARNING));
 
   static final DiagnosticGroup STRICT_MODULE_CHECKS =
       DiagnosticGroups.registerGroup(
@@ -713,10 +721,7 @@ public class DiagnosticGroups {
     DiagnosticGroups.registerGroup("es6Typed",
         RhinoErrorReporter.MISPLACED_TYPE_SYNTAX);
 
-    DiagnosticGroups.registerGroup("duplicateZipContents",
-        SourceFile.DUPLICATE_ZIP_CONTENTS);
-
-    DiagnosticGroups.registerDeprecatedGroup("unnecessaryCasts");
+    DiagnosticGroups.registerDeprecatedGroup("duplicateZipContents");
   }
 
   /**

@@ -16,8 +16,8 @@
 
 package com.google.javascript.jscomp.newtypes;
 
-import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Uses a counter to create unique names for functions, variables, type
@@ -40,7 +40,7 @@ public class UniqueNameGenerator implements Serializable {
     return name + "#" + getNextNumber();
   }
 
-  public static String findGeneratedName(String name, ImmutableList<String> names) {
+  public static String findGeneratedName(String name, List<String> names) {
     if (name.contains("#")) {
       return names.contains(name) ? name : null;
     }

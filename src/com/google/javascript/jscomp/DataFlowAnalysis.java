@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -29,12 +30,14 @@ import com.google.javascript.jscomp.parsing.parser.util.format.SimpleFormat;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
-import javax.annotation.Nullable;
 
 /**
  * A framework to help writing static program analysis. A subclass of
@@ -122,8 +125,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
   DataFlowAnalysis(ControlFlowGraph<N> targetCfg, JoinOp<L> joinOp) {
     this.cfg = targetCfg;
     this.joinOp = joinOp;
-    Comparator<DiGraphNode<N, Branch>> nodeComparator =
-      cfg.getOptionalNodeComparator(isForward());
+    Comparator<DiGraphNode<N, Branch>> nodeComparator = cfg.getOptionalNodeComparator(isForward());
     if (nodeComparator != null) {
       this.orderedWorkSet = new TreeSet<>(nodeComparator);
     } else {
@@ -206,7 +208,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
     while (!orderedWorkSet.isEmpty()) {
       if (step > maxSteps) {
         throw new MaxIterationsExceededException(
-          "Analysis did not terminate after " + maxSteps + " iterations");
+            "Analysis did not terminate after " + maxSteps + " iterations");
       }
       DiGraphNode<N, Branch> curNode = orderedWorkSet.iterator().next();
       orderedWorkSet.remove(curNode);
@@ -418,8 +420,7 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
       }
     }
 
-    BranchedForwardDataFlowAnalysis(ControlFlowGraph<N> targetCfg,
-                                    JoinOp<L> joinOp) {
+    BranchedForwardDataFlowAnalysis(ControlFlowGraph<N> targetCfg, JoinOp<L> joinOp) {
       super(targetCfg, joinOp);
     }
 
@@ -592,28 +593,29 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
   }
 
   /**
-   * Alternate implementation of compute escaped that accepts the child scope and the current
-   * jsScope to help us access both the function and function body scopes.
+   * Alternate implementation of compute escaped for ES6.
    *
-   * @param jsScopeChild If jsScope is a function scope, jsScopeChild is the scope for the body of
-   *     that function. If not, jsScopeChild is null.
+   * It should only be run when the jsScope is a function scope.
+   *
+   * The definition of escaped are
+   *   1. Exported variables as they can be needed after the script terminates.
+   *   2. Names of named functions because in JavaScript, function foo(){} does not kill
+   *       foo in the dataflow.
    */
-  static void computeEscaped(
+  static void computeEscapedEs6(
       final Scope jsScope,
-      @Nullable final Scope jsScopeChild,
       final Set<Var> escaped,
       AbstractCompiler compiler,
       Es6SyntacticScopeCreator scopeCreator) {
+
+    checkArgument(jsScope.isFunctionScope());
 
     AbstractPostOrderCallback finder =
         new AbstractPostOrderCallback() {
           @Override
           public void visit(NodeTraversal t, Node n, Node parent) {
 
-            Node enclosingBlock = NodeUtil.getEnclosingScopeRoot(n);
-            if (jsScope.isFunctionScope()) {
-              enclosingBlock = NodeUtil.getEnclosingFunction(n);
-            }
+            Node enclosingBlock = NodeUtil.getEnclosingFunction(n);
             if (jsScope.getRootNode() == enclosingBlock || !n.isName() || parent.isFunction()) {
               return;
             }
@@ -621,10 +623,8 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
             String name = n.getString();
             Var var = t.getScope().getVar(name);
             if (var != null) {
-              Node enclosingScopeNode = NodeUtil.getEnclosingScopeRoot(var.getNode());
-              if (jsScope.isFunctionScope()) {
-                enclosingScopeNode = NodeUtil.getEnclosingFunction(var.getNode());
-              }
+              Node enclosingScopeNode = NodeUtil.getEnclosingFunction(var.getNode());
+
               if (enclosingScopeNode == jsScope.getRootNode()) {
                 escaped.add(var);
               }
@@ -632,20 +632,19 @@ abstract class DataFlowAnalysis<N, L extends LatticeElement> {
           }
         };
 
+    Map<String, Var> allVarsInFn = new HashMap<>();
+    List<Var> orderedVars = new LinkedList<>();
+    NodeUtil.getAllVarsDeclaredInFunction(
+        allVarsInFn, orderedVars, compiler, scopeCreator, jsScope);
     NodeTraversal t = new NodeTraversal(compiler, finder, scopeCreator);
     t.traverseAtScope(jsScope);
 
-    for (Var var : jsScope.getVarIterable()) {
-      if (compiler.getCodingConvention().isExported(var.getName())) {
+    // TODO (simranarora) catch variables should not be considered escaped in ES6. Getting rid of
+    // the catch check is causing breakages however
+    for (Var var : allVarsInFn.values()) {
+      if (var.getParentNode().isCatch()
+          || compiler.getCodingConvention().isExported(var.getName())) {
         escaped.add(var);
-      }
-    }
-
-    if (jsScopeChild != null) {
-      for (Var var : jsScopeChild.getVarIterable()) {
-        if (compiler.getCodingConvention().isExported(var.getName())) {
-          escaped.add(var);
-        }
       }
     }
   }

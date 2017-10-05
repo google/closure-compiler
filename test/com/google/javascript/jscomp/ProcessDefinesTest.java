@@ -27,19 +27,21 @@ import java.util.Map;
 /**
  * @author nicksantos@google.com (Nick Santos)
  */
-public final class ProcessDefinesTest extends TypeICompilerTestCase {
+public final class ProcessDefinesTest extends CompilerTestCase {
 
   public ProcessDefinesTest() {
     super(DEFAULT_EXTERNS + "var externMethod;");
   }
 
-  private Map<String, Node> overrides = new HashMap<>();
+  private final Map<String, Node> overrides = new HashMap<>();
   private GlobalNamespace namespace;
+  private boolean doReplacements;
 
   @Override
   protected void setUp() throws Exception {
     super.setUp();
     overrides.clear();
+    doReplacements = true;
 
     // ProcessDefines emits warnings if the user tries to re-define a constant,
     // but the constant is not defined anywhere in the binary.
@@ -82,6 +84,17 @@ public final class ProcessDefinesTest extends TypeICompilerTestCase {
     testError("/** @define {Object} */ var DEF = {}", ProcessDefines.INVALID_DEFINE_TYPE_ERROR);
   }
 
+  public void testChecksOnlyProducesErrors() {
+    doReplacements = false;
+    testError("/** @define {Object} */ var DEF = {}", ProcessDefines.INVALID_DEFINE_TYPE_ERROR);
+  }
+
+  public void testChecksOnlyProducesUnknownDefineWarning() {
+    doReplacements = false;
+    overrides.put("a.B", new Node(Token.TRUE));
+    test("var a = {};", "var a = {};", warning(ProcessDefines.UNKNOWN_DEFINE_WARNING));
+  }
+
   public void testDefineWithBadValue1() {
     testError("/** @define {boolean} */ var DEF = new Boolean(true);",
         ProcessDefines.INVALID_DEFINE_INIT_ERROR);
@@ -90,6 +103,31 @@ public final class ProcessDefinesTest extends TypeICompilerTestCase {
   public void testDefineWithBadValue2() {
     testError("/** @define {string} */ var DEF = 'x' + y;",
         ProcessDefines.INVALID_DEFINE_INIT_ERROR);
+  }
+
+  public void testDefineInExterns() {
+    testSame(
+        DEFAULT_EXTERNS + "/** @define {boolean} */ var EXTERN_DEF;",
+        "");
+  }
+
+  public void testDefineInExternsPlusUsage() {
+    testSame(
+        DEFAULT_EXTERNS + "/** @define {boolean} */ var EXTERN_DEF;",
+        "/** @define {boolean} */ var DEF = EXTERN_DEF");
+  }
+
+  public void testNonDefineInExternsPlusUsage() {
+    testError(
+        DEFAULT_EXTERNS + "/** @const {boolean} */ var EXTERN_NON_DEF;",
+        "/** @define {boolean} */ var DEF = EXTERN_NON_DEF",
+        ProcessDefines.INVALID_DEFINE_INIT_ERROR);
+  }
+
+  public void testDefineCompiledInExterns() {
+    testSame(
+        DEFAULT_EXTERNS + "/** @define {boolean} */ var COMPILED;",
+        "");
   }
 
   public void testDefineWithDependentValue() {
@@ -353,6 +391,48 @@ public final class ProcessDefinesTest extends TypeICompilerTestCase {
         ProcessDefines.DEFINE_NOT_ASSIGNABLE_ERROR);
   }
 
+  public void testBasicConstDeclaration() {
+    test("/** @define {boolean} */ const DEF = true", "/** @define {boolean} */ const DEF=true");
+    test("/** @define {string} */ const DEF = 'a'", "/** @define {string} */ const DEF=\"a\"");
+    test("/** @define {number} */ const DEF = 0", "/** @define {number} */ const DEF=0");
+  }
+
+  public void testConstOverriding1() {
+    overrides.put("DEF_OVERRIDE_TO_TRUE", new Node(Token.TRUE));
+    test(
+        "/** @define {boolean} */ const DEF_OVERRIDE_TO_TRUE = false;",
+        "/** @define {boolean} */ const DEF_OVERRIDE_TO_TRUE = true;");
+  }
+
+  public void testConstOverriding2() {
+    test(
+        "/** @define {string} */ const DEF_OVERRIDE_STRING = 'x';",
+        "/** @define {string} */ const DEF_OVERRIDE_STRING=\"x\"");
+  }
+
+  public void testConstProducesUnknownDefineWarning() {
+    doReplacements = false;
+    overrides.put("a.B", new Node(Token.TRUE));
+    test("const a = {};", "const a = {};", warning(ProcessDefines.UNKNOWN_DEFINE_WARNING));
+  }
+
+  public void testAssignBeforeConstDeclaration() {
+    testError("DEF=false;const b=false,/** @define {boolean} */DEF=true,c=false",
+        ProcessDefines.INVALID_DEFINE_INIT_ERROR);
+  }
+
+  public void testSimpleConstReassign() {
+    test(
+        LINE_JOINER.join(
+            "/** @fileoverview @suppress {newCheckTypes} */",
+            "/** @define {boolean} */ const DEF = false;",
+            "DEF = true;"),
+        LINE_JOINER.join(
+            "/** @fileoverview @suppress {newCheckTypes} */",
+            "/** @define {boolean} */ const DEF=true;",
+            "true"));
+  }
+
   private class ProcessDefinesWithInjectedNamespace implements CompilerPass {
     private final Compiler compiler;
 
@@ -362,8 +442,8 @@ public final class ProcessDefinesTest extends TypeICompilerTestCase {
 
     @Override
     public void process(Node externs, Node js) {
-      namespace = new GlobalNamespace(compiler, js);
-      new ProcessDefines(compiler, overrides)
+      namespace = new GlobalNamespace(compiler, externs, js);
+      new ProcessDefines(compiler, overrides, doReplacements)
           .injectNamespace(namespace)
           .process(externs, js);
     }

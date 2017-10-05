@@ -40,6 +40,7 @@
 package com.google.javascript.rhino;
 
 import com.google.common.collect.ImmutableList;
+import java.util.Set;
 
 /**
  * @author blickly@google.com (Ben Lickly)
@@ -60,9 +61,15 @@ public interface ObjectTypeI extends TypeI {
    */
   ObjectTypeI getPrototypeObject();
 
-  // TODO(aravindpg): might be better to define a PropertyI interface and
-  // then have a more general-purpose getProperty method here.
-
+  /**
+   * TODO(dimvar): rename methods in this file that use the phrase OwnProp to NonInheritedProp,
+   * to avoid ambiguity with the built-in methods such as hasOwnProperty, which have
+   * different semantics. The built-in methods also look at properties directly on the instance
+   * that have been copied from a super type, while we care only about non-inherited properties.
+   *
+   * The methods here have many uses, including in code outside the compiler codebase, which is
+   * why I'm deferring the renaming.
+   */
   JSDocInfo getOwnPropertyJSDocInfo(String propertyName);
 
   JSDocInfo getPropertyJSDocInfo(String propertyName);
@@ -77,6 +84,10 @@ public interface ObjectTypeI extends TypeI {
   // true for "classy" objects only?
   boolean isInstanceType();
 
+  /**
+   * If this type is not generic, return as is. If it is an instantiated generic type, drop the
+   * type arguments.
+   */
   ObjectTypeI getRawType();
 
   /**
@@ -101,6 +112,10 @@ public interface ObjectTypeI extends TypeI {
 
   boolean hasOwnProperty(String propertyName);
 
+  /**
+   * Return the names of all non-inherited properties of this type, including prototype properties.
+   * If this type represents an object literal, do not include Object.prototype properties.
+   */
   Iterable<String> getOwnPropertyNames();
 
   /**
@@ -115,10 +130,11 @@ public interface ObjectTypeI extends TypeI {
   ObjectTypeI normalizeObjectForCheckAccessControls();
 
   /**
-   * Returns true if this object is an anonymous object type (i.e. the builtin Object type, or an
-   * object literal). Everything else has a named reference type and returns false.
+   * Returns true if this object is an anonymous object or function type (i.e. the builtin Object
+   * or Function type, or a record or function literal). These types are ambiguous and should not
+   * participate in property renaming. Everything else has a named reference type and returns false.
    */
-  boolean isUnknownObject();
+  boolean isAmbiguousObject();
 
   /**
    * The old type checker uses NamedType to wrap types (e.g., defined by typedefs), and to represent
@@ -155,4 +171,9 @@ public interface ObjectTypeI extends TypeI {
    * Otherwise returns null.
    */
   TypeI getEnumeratedTypeOfEnumObject();
+
+  /**
+   * Returns a set of properties defined or inferred on this type or any of its supertypes.
+   */
+  Set<String> getPropertyNames();
 }

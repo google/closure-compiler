@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.base.Throwables.throwIfUnchecked;
 
+import com.google.common.annotations.GwtIncompatible;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -29,28 +30,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /** Run the compiler in a separate thread with a larger stack */
-final class CompilerExecutor {
+class CompilerExecutor {
   // We use many recursive algorithms that use O(d) memory in the depth
   // of the tree.
-  private static final long COMPILER_STACK_SIZE = (1 << 24); // About 16MB
-
-  /**
-   * Under JRE 1.6, the JS Compiler overflows the stack when running on some
-   * large or complex JS code. When threads are available, we run all compile
-   * jobs on a separate thread with a larger stack.
-   *
-   * That way, we don't have to increase the stack size for *every* thread
-   * (which is what -Xss does).
-   */
-  private static final ExecutorService compilerExecutor =
-      Executors.newCachedThreadPool(new ThreadFactory() {
-        @Override
-        public Thread newThread(Runnable r) {
-          Thread t = new Thread(null, r, "jscompiler", COMPILER_STACK_SIZE);
-          t.setDaemon(true);  // Do not prevent the JVM from exiting.
-          return t;
-        }
-    });
+  static final long COMPILER_STACK_SIZE = (1 << 25); // About 32MB
 
   /**
    * Use a dedicated compiler thread per Compiler instance.
@@ -62,6 +45,30 @@ final class CompilerExecutor {
 
   private int timeout = 0;
 
+  /**
+   * Under JRE 1.6, the JS Compiler overflows the stack when running on some
+   * large or complex JS code. When threads are available, we run all compile
+   * jobs on a separate thread with a larger stack.
+   *
+   * That way, we don't have to increase the stack size for *every* thread
+   * (which is what -Xss does).
+   */
+  @GwtIncompatible("java.util.concurrent.ExecutorService")
+  ExecutorService getExecutorService() {
+    return getDefaultExecutorService();
+  }
+
+  static ExecutorService getDefaultExecutorService() {
+    return Executors.newSingleThreadExecutor(new ThreadFactory() {
+      @Override
+      public Thread newThread(Runnable r) {
+        Thread t = new Thread(null, r, "jscompiler", COMPILER_STACK_SIZE);
+        t.setDaemon(true);  // Do not prevent the JVM from exiting.
+        return t;
+      }
+    });
+  }
+
   void disableThreads() {
     useThreads = false;
   }
@@ -72,6 +79,7 @@ final class CompilerExecutor {
 
   @SuppressWarnings("unchecked")
   <T> T runInCompilerThread(final Callable<T> callable, final boolean dumpTraceReport) {
+    ExecutorService executor = getExecutorService();
     T result = null;
     final Throwable[] exception = new Throwable[1];
 
@@ -104,7 +112,7 @@ final class CompilerExecutor {
           }
         };
 
-        Future<T> future = compilerExecutor.submit(bootCompilerThread);
+        Future<T> future = executor.submit(bootCompilerThread);
         if (timeout > 0) {
           result = future.get(timeout, TimeUnit.SECONDS);
         } else {
@@ -112,14 +120,14 @@ final class CompilerExecutor {
         }
       } catch (InterruptedException | TimeoutException | ExecutionException e) {
         throw new RuntimeException(e);
+      } finally {
+        executor.shutdown();
       }
     } else {
       try {
         result = callable.call();
       } catch (Exception e) {
         exception[0] = e;
-      } finally {
-        Tracer.clearCurrentThreadTrace();
       }
     }
 

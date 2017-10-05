@@ -21,8 +21,8 @@ import com.google.common.base.Predicates;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,8 +36,7 @@ import java.util.Map;
  */
 public final class LinkedUndirectedGraph<N, E>
     extends UndiGraph<N, E> implements GraphvizGraph {
-  protected final Map<N, LinkedUndirectedGraphNode<N, E>> nodes =
-       new HashMap<>();
+  protected final Map<N, LinkedUndirectedGraphNode<N, E>> nodes = new LinkedHashMap<>();
 
   @Override
   public SubGraph<N, E> newSubGraph() {

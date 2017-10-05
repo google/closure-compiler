@@ -1378,6 +1378,9 @@ WorkerGlobalScope.prototype.onoffline;
  */
 WorkerGlobalScope.prototype.ononline;
 
+/** @type {!WorkerPerformance} */
+WorkerGlobalScope.prototype.performance;
+
 /**
  * @see http://dev.w3.org/html5/workers/
  * @interface
@@ -2040,12 +2043,96 @@ TextTrackCue.prototype.endTime;
 TextTrackCue.prototype.text;
 
 
+
+/**
+ * @see https://w3c.github.io/webvtt/#vttregion
+ * @constructor
+ */
+function VTTRegion() {}
+
+/** @type {string} */
+VTTRegion.prototype.id;
+
+/** @type {number} */
+VTTRegion.prototype.width;
+
+/** @type {number} */
+VTTRegion.prototype.lines;
+
+/** @type {number} */
+VTTRegion.prototype.regionAnchorX;
+
+/** @type {number} */
+VTTRegion.prototype.regionAnchorY;
+
+/** @type {number} */
+VTTRegion.prototype.viewportAnchorX;
+
+/** @type {number} */
+VTTRegion.prototype.viewportAnchorY;
+
+/**
+ * @see https://w3c.github.io/webvtt/#enumdef-scrollsetting
+ * @type {string}
+ */
+VTTRegion.prototype.scroll;
+
+
+
 /**
  * @see http://dev.w3.org/html5/webvtt/#the-vttcue-interface
  * @constructor
  * @extends {TextTrackCue}
+ * @param {number} startTime
+ * @param {number} endTime
+ * @param {string} text
  */
 function VTTCue(startTime, endTime, text) {}
+
+/** @type {?VTTRegion} */
+VTTCue.prototype.region;
+
+/**
+ * @see https://w3c.github.io/webvtt/#enumdef-directionsetting
+ * @type {string}
+ */
+VTTCue.prototype.vertical;
+
+/** @type {boolean} */
+VTTCue.prototype.snapToLines;
+
+/** @type {(number|string)} */
+VTTCue.prototype.line;
+
+/**
+ * @see https://w3c.github.io/webvtt/#enumdef-linealignsetting
+ * @type {string}
+ */
+VTTCue.prototype.lineAlign;
+
+/** @type {(number|string)} */
+VTTCue.prototype.position;
+
+/**
+ * @see https://w3c.github.io/webvtt/#enumdef-positionalignsetting
+ * @type {string}
+ */
+VTTCue.prototype.positionAlign;
+
+/** @type {number} */
+VTTCue.prototype.size;
+
+/**
+ * @see https://w3c.github.io/webvtt/#enumdef-alignsetting
+ * @type {string}
+ */
+VTTCue.prototype.align;
+
+/** @type {string} */
+VTTCue.prototype.text;
+
+/** @return {!DocumentFragment} */
+VTTCue.prototype.getCueAsHTML = function() {};
 
 
 /**
@@ -2133,11 +2220,15 @@ HTMLVideoElement.prototype.getVideoPlaybackQuality = function() {};
 
 /**
  * @constructor
+ * @see https://html.spec.whatwg.org/multipage/media.html#error-codes
  */
 function MediaError() {}
 
 /** @type {number} */
 MediaError.prototype.code;
+
+/** @type {string} */
+MediaError.prototype.message;
 
 /**
  * The fetching process for the media resource was aborted by the user agent at
@@ -3113,6 +3204,14 @@ DOMTokenList.prototype.toggle = function(token, opt_force) {};
 DOMTokenList.prototype.toString = function() {};
 
 /**
+ * @return {!IteratorIterable<string>} An iterator to go through all values of
+ *     the key/value pairs contained in this object.
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/values
+ */
+DOMTokenList.prototype.values = function() {};
+
+/**
  * A better interface to CSS classes than className.
  * @type {!DOMTokenList}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Element/classList
@@ -3623,9 +3722,7 @@ Document.prototype.msHidden;
  * @see http://w3c.github.io/webcomponents/spec/custom/#extensions-to-document-interface-to-register
  * @param {string} type
  * @param {{extends: (string|undefined), prototype: (Object|undefined)}=} options
- * @return {!Function} a constructor for the new tag. A generic function is the best we
- *     can do here as it allows the return value to be annotated properly
- *     at the call site.
+ * @return {!function(new:Element, ...*)} a constructor for the new tag.
  */
 Document.prototype.registerElement = function(type, options) {};
 
@@ -4047,6 +4144,13 @@ HTMLTemplateElement.prototype.content;
  * @see http://www.w3.org/TR/html-imports/#interface-import
  */
 HTMLLinkElement.prototype.import;
+
+/**
+ * @type {string}
+ * @see https://html.spec.whatwg.org/#attr-link-as
+ * @see https://w3c.github.io/preload/#as-attribute
+ */
+HTMLLinkElement.prototype.as;
 
 
 /**
@@ -4499,6 +4603,7 @@ function CustomElementRegistry() {}
  * @param {string} tagName
  * @param {!function(new:HTMLElement)} klass
  * @param {{extends: string}=} options
+ * @return {undefined}
  */
 CustomElementRegistry.prototype.define = function (tagName, klass, options) {};
 

@@ -640,6 +640,15 @@ md.$mdThemingProvider.prototype.theme = function(name, opt_parentTheme) {};
 /** @param {string} nonce */
 md.$mdThemingProvider.prototype.setNonce = function(nonce) {};
 
+/** @param {string} styles */
+md.$mdThemingProvider.prototype.registerStyles = function(styles) {};
+
+/**
+ * @param {?Object=} options
+ * @return {!Function}
+ */
+md.$mdThemingProvider.prototype.enableBrowserColor = function(options) {};
+
 /******************************************************************************
  * $mdTheming service
  *****************************************************************************/
@@ -712,6 +721,24 @@ md.$mdThemingProvider.Theme.prototype.warnPalette =
  */
 md.$mdThemingProvider.Theme.prototype.dark = function(opt_isDark) {};
 
+/******************************************************************************
+ * $mdColors Service
+ *****************************************************************************/
+
+/** @interface */
+md.$mdColors = function() {};
+
+/**
+ * @param {!angular.JQLite} element
+ * @param {?Object} colorExpression
+ */
+md.$mdColors.prototype.applyThemeColors = function(element, colorExpression) {};
+
+/**
+ * @param {string} expression
+ * @return {string}
+ */
+md.$mdColors.prototype.getThemeColor = function(expression) {};
 
 /******************************************************************************
  * $mdIcon Service

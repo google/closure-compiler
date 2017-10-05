@@ -32,6 +32,7 @@ Number.isFinite es6 es3 es6/number/isfinite
 Number.isInteger es6 es3 es6/number/isinteger
 Number.isNaN es6 es3 es6/number/isnan
 Number.isSafeInteger es6 es3 es6/number/issafeinteger
+Number.parseInt es6 es3 es6/number/parseint
 Object.assign es6 es3 es6/object/assign
 Object.entries es8 es3 es6/object/entries
 Object.getOwnPropertyDescriptors es8 es5 es6/object/getownpropertydescriptors

@@ -22,6 +22,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeI;
 import com.google.javascript.rhino.TypeIEnv;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.ObjectType;
@@ -147,6 +148,11 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType>, TypeI
   }
 
   @Override
+  public final TypeI getTypeIOfThis() {
+    return getTypeOfThis();
+  }
+
+  @Override
   Var declare(String name, Node nameNode, CompilerInput input) {
     throw new IllegalStateException(
         "Method declare(untyped) cannot be called on typed scopes.");
@@ -201,13 +207,10 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType>, TypeI
     throw new IllegalStateException("Method getArgumentsVar cannot be called on typed scopes.");
   }
 
-  /**
-   * @deprecated use #isDeclared instead
-   */
-  @Deprecated
   @Override
-  public boolean isDeclaredSloppy(String name, boolean recurse) {
-    return isDeclared(name, false);
+  public boolean isDeclaredInFunctionBlockOrParameter(String name) {
+    throw new IllegalStateException(
+        "Method isDeclaredInFunctionBlockOrParameter cannot be called on typed scopes.");
   }
 
   @Override
@@ -292,7 +295,7 @@ public class TypedScope extends Scope implements StaticTypedScope<JSType>, TypeI
 
   @SuppressWarnings("unchecked")
   @Override
-  public JSType getType(String typeName) {
+  public JSType getNamespaceOrTypedefType(String typeName) {
     StaticTypedSlot<JSType> slot = getSlot(typeName);
     return slot == null ? null : slot.getType();
   }

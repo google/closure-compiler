@@ -29,6 +29,12 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   }
 
   @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableNormalize();
+  }
+
+  @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       @Override
@@ -159,6 +165,28 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         "var x; try{1;throw 1;x} finally{x=2}; x");
   }
 
+  public void testErrorHandling2() {
+    inFunction(LINE_JOINER.join(
+        "try {",
+        "} catch (e) {",
+        "  e = 1; ",
+        "  let g = e;",
+        "  print(g)",
+        "}"
+    ));
+
+    inFunction(LINE_JOINER.join(
+        "try {",
+        "} catch (e) {",
+        "    e = 1;",
+        "    {",
+        "      let g = e;",
+        "      print(g)",
+        "    }",
+        "}"
+    ));
+  }
+
   public void testDeadVarDeclarations1() {
     inFunction("var x=1; x=2; x", "var x; 1; x=2; x");
   }
@@ -166,9 +194,9 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
   public void testDeadVarDeclarations2() {
     inFunction("var x=1;");
     inFunction("var x=1; x=2; x", "var x; 1; x=2; x");
-    inFunction("var x=1, y=10; x=2; x", "var x, y; 1; 10; x=2; x");
+    inFunction("var x=1, y=10; x=2; x", "var x; 1; var y; 10; x=2; x");
     inFunction("var x=1, y=x; y");
-    inFunction("var x=1, y=x; x=2; x", "var x,y; 1; x; x=2; x");
+    inFunction("var x=1, y=x; x=2; x", "var x = 1; var y; x; x=2; x;");
   }
 
   public void testDeadVarDeclarations_forLoop() {
@@ -230,8 +258,8 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     inFunction("var x; for(;;x -= 1){}");
     inFunction("var x; for(;;x = 0){}", "var x; for(;;0){}");
 
-    inFunction("var x; for(--x;;){}", "var x; for(;;){}");
-    inFunction("var x; for(x--;;){}", "var x; for(;;){}");
+    inFunction("var x; for(--x;;){}", "var x; void 0; for(;;){}");
+    inFunction("var x; for(x--;;){}", "var x; void 0; for(;;){}");
     inFunction("var x; for(x -= 1;;){}", "var x; for(x - 1;;){}");
     inFunction("var x; for(x = 0;;){}", "var x; for(0;;){}");
   }
@@ -542,5 +570,183 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
     // TODO(user): If you look outside of just liveness, x = {} is dead.
     // That probably requires value numbering or SSA to detect that case.
     inFunction("var x, y, z; x = {}; z = {}; for (x in z) { x() }");
+  }
+
+  public void testArrowFunction() {
+    test("() => {var x; x = 1}",
+        "() => {var x; 1}");
+
+    test("(a) => {a = foo()}",
+        "(a) => {foo()}");
+  }
+
+  public void testClassMethods() {
+    test(
+        LINE_JOINER.join(
+            "class C{",
+            "  func() {",
+            "    var x;",
+            "    x = 1;",
+            "  }",
+            "}"
+        ),
+        LINE_JOINER.join(
+            "class C{",
+            "  func() {",
+            "    var x;",
+            "    1;",
+            "  }",
+            "}"));
+
+    test(
+        LINE_JOINER.join(
+            "class C{",
+            "  constructor(x, y) {",
+            "    this.x = x;",
+            "    this.y = y;",
+            "  }",
+            "  func() {",
+            "    var z;",
+            "    z = 1;",
+            "    this.x = 3",
+            "  }",
+            "}"
+        ),
+        LINE_JOINER.join(
+            "class C{",
+            "  constructor(x, y) {",
+            "    this.x = x;",
+            "    this.y = y;",
+            "  }",
+            "  func() {",
+            "    var z;",
+            "    1;",
+            "    this.x = 3",
+            "  }",
+            "}"));
+  }
+
+  public void testGenerators() {
+    test(
+        LINE_JOINER.join(
+            "function* f() {",
+            "  var x, y;",
+            "  x = 1; y = 2;",
+            "  yield y;",
+            "}"
+        ),
+        LINE_JOINER.join(
+            "function* f() {",
+            "  var x, y;",
+            "  1; y = 2;",
+            "  yield y;",
+            "}"));
+  }
+
+  public void testForOf() {
+    inFunction("var x = {}; for (var y of x) { y() }");
+
+    inFunction("var x, y, z; x = {}; z = {}; for (y of x = z) {}",
+        "var x, y, z;   ({}); z = {}; for (y of z)     {}");
+  }
+
+  public void testTemplateStrings() {
+    inFunction("var name; name = 'Foo'; `Hello ${name}`");
+
+    inFunction("var name; name = 'Foo'; name = 'Bar'; `Hello ${name}`",
+        "var name; 'Foo'; name = 'Bar'; `Hello ${name}`");
+  }
+
+  public void testDestructuring() {
+    inFunction("var a, b, c; [a, b, c] = [1, 2, 3];");
+
+    inFunction("var a, b, c; [a, b, c] = [1, 2, 3]; return a + c;");
+
+  }
+
+  public void testDefaultParameter() {
+    test(
+        LINE_JOINER.join(
+            "function f(x, y = 12) {",
+            "  var z;",
+            "  z = y;",
+            "}"
+        ),
+        LINE_JOINER.join(
+            "function f(x, y = 12) {",
+            "  var z;",
+            "  y;",
+            "}"));
+  }
+
+  public void testObjectLiterals() {
+    test(
+        LINE_JOINER.join(
+            "var obj = {",
+            "  f() {",
+            "  var x;",
+            "  x = 2;",
+            "  }",
+            "}"
+        ),
+        LINE_JOINER.join(
+            "var obj = {",
+            "  f() {",
+            "  var x;",
+            "  2;",
+            "  }",
+            "}"));
+  }
+
+  public void testLet() {
+    inFunction("let a; a = 2;",
+        "let a; 2;");
+
+    inFunction("let a; let b; a = foo(); b = 2; return b;",
+        "let a; let b; foo(); b = 2; return b;");
+  }
+
+  public void testConst() {
+    inFunction("const a = 1;");
+  }
+
+  public void testBlockScoping() {
+    inFunction(
+        LINE_JOINER.join(
+            "let x;",
+            "{",
+            "  let x;",
+            "  x = 1;",
+            "}",
+            "x = 2;",
+            "return x;"
+        ),
+        LINE_JOINER.join(
+            "let x;",
+            "{",
+            "  let x$jscomp$1;",
+            "  1;",
+            "}",
+            "x = 2;",
+            "return x;"));
+
+    inFunction(
+        LINE_JOINER.join(
+            "let x;",
+            "x = 2",
+            "{",
+            "  let x;",
+            "  x = 1;",
+            "}",
+            "print(x);"
+        ),
+        LINE_JOINER.join(
+            "let x;",
+            "x = 2;",
+            "{",
+            "  let x$jscomp$1;",
+            "  1;",
+            "}",
+            "print(x);"));
   }
 }

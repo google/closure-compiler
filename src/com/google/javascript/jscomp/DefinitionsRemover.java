@@ -33,7 +33,7 @@ import com.google.javascript.rhino.Token;
 class DefinitionsRemover {
 
   /**
-   * This logic must match {@link isDefinitionNode}.
+   * This logic must match {@link #isDefinitionNode(Node n)}.
    *
    * @return an {@link Definition} object if the node contains a definition or {@code null}
    *     otherwise.
@@ -45,7 +45,7 @@ class DefinitionsRemover {
       return null;
     }
 
-    if (NodeUtil.isVarDeclaration(n) && (isExtern || n.hasChildren())) {
+    if (NodeUtil.isNameDeclaration(parent) && n.isName() && (isExtern || n.hasChildren())) {
       return new VarDefinition(n, isExtern);
     } else if (parent.isFunction() && parent.getFirstChild() == n) {
       if (!NodeUtil.isFunctionExpression(parent)) {
@@ -53,6 +53,14 @@ class DefinitionsRemover {
       } else if (!n.getString().isEmpty()) {
         return new FunctionExpressionDefinition(parent, isExtern);
       }
+    } else if (parent.isClass() && parent.getFirstChild() == n) {
+      if (!NodeUtil.isClassExpression(parent)) {
+        return new NamedClassDefinition(parent, isExtern);
+      } else if (!n.isEmpty()) {
+        return new ClassExpressionDefinition(parent, isExtern);
+      }
+    } else if (n.isMemberFunctionDef() && parent.isClassMembers()) {
+      return new MemberFunctionDefinition(n, isExtern);
     } else if (parent.isAssign() && parent.getFirstChild() == n) {
       return new AssignmentDefinition(parent, isExtern);
     } else if (NodeUtil.isObjectLitKey(n)) {
@@ -73,7 +81,7 @@ class DefinitionsRemover {
   }
 
   /**
-   * This logic must match {@link getDefinition}.
+   * This logic must match {@link #getDefinition(Node, boolean)}.
    *
    * @return Whether a definition object can be created.
    */
@@ -83,7 +91,8 @@ class DefinitionsRemover {
       return false;
     }
 
-    if (NodeUtil.isVarDeclaration(n) && (n.isFromExterns() || n.hasChildren())) {
+    if (NodeUtil.isNameDeclaration(parent) && n.isName()
+        && (n.isFromExterns() || n.hasChildren())) {
       return true;
     } else if (parent.isFunction() && parent.getFirstChild() == n) {
       if (!NodeUtil.isFunctionExpression(parent)) {
@@ -91,6 +100,14 @@ class DefinitionsRemover {
       } else if (!n.getString().isEmpty()) {
         return true;
       }
+    } else if (parent.isClass() && parent.getFirstChild() == n) {
+      if (!NodeUtil.isClassExpression(parent)) {
+        return true;
+      } else if (!n.isEmpty()) {
+        return true;
+      }
+    } else if (n.isMemberFunctionDef() && parent.isClassMembers()) {
+      return true;
     } else if (parent.isAssign() && parent.getFirstChild() == n) {
       return true;
     } else if (NodeUtil.isObjectLitKey(n)) {
@@ -114,9 +131,11 @@ class DefinitionsRemover {
   abstract static class Definition {
 
     private final boolean isExtern;
+    private final String simplifiedName;
 
-    Definition(boolean isExtern) {
+    Definition(boolean isExtern, String simplifiedName) {
       this.isExtern = isExtern;
+      this.simplifiedName = simplifiedName;
     }
 
     /**
@@ -137,6 +156,10 @@ class DefinitionsRemover {
      * Subclasses should override to remove the definition from the AST.
      */
     protected abstract void performRemove(AbstractCompiler compiler);
+
+    public String getSimplifiedName() {
+      return simplifiedName;
+    }
 
     /**
      * Variable or property name represented by this definition.
@@ -178,7 +201,7 @@ class DefinitionsRemover {
     private final Node lValue;
 
     IncompleteDefinition(Node lValue, boolean inExterns) {
-      super(inExterns);
+      super(inExterns, NameBasedDefinitionProvider.getSimplifiedName(lValue));
       checkNotNull(lValue);
 
       Preconditions.checkArgument(
@@ -257,7 +280,7 @@ class DefinitionsRemover {
     protected final Node function;
 
     FunctionDefinition(Node node, boolean inExterns) {
-      super(inExterns);
+      super(inExterns, NameBasedDefinitionProvider.getSimplifiedName(node.getFirstChild()));
       checkArgument(node.isFunction());
       function = node;
     }
@@ -309,13 +332,96 @@ class DefinitionsRemover {
   }
 
   /**
+   * Represents a class member function.
+   */
+
+  static final class MemberFunctionDefinition extends FunctionDefinition {
+
+    protected final Node memberFunctionDef;
+
+    MemberFunctionDefinition(Node node, boolean inExterns) {
+      super(node.getFirstChild(), inExterns);
+      memberFunctionDef = node;
+    }
+
+    @Override
+    public void performRemove(AbstractCompiler compiler) {
+      NodeUtil.deleteNode(memberFunctionDef, compiler);
+    }
+
+    @Override
+    public Node getLValue() {
+      // As far as we know, only the property name matters so the target can be an object literal
+      return IR.getprop(IR.objectlit(), memberFunctionDef.getString());
+    }
+  }
+
+  /**
+   * Represents a class declaration or function expression.
+   */
+  abstract static class ClassDefinition extends Definition {
+
+    protected final Node c;
+
+    ClassDefinition(Node node, boolean inExterns) {
+      super(inExterns, NameBasedDefinitionProvider.getSimplifiedName(node.getFirstChild()));
+      Preconditions.checkArgument(node.isClass());
+      c = node;
+    }
+
+    @Override
+    public Node getLValue() {
+      return c.getFirstChild();
+    }
+
+    @Override
+    public Node getRValue() {
+      return c;
+    }
+  }
+
+  /**
+   * Represents a function declaration without assignment node such as
+   * {@code function foo()}.
+   */
+  static final class NamedClassDefinition extends ClassDefinition {
+    NamedClassDefinition(Node node, boolean inExterns) {
+      super(node, inExterns);
+    }
+
+    @Override
+    public void performRemove(AbstractCompiler compiler) {
+      NodeUtil.deleteNode(c, compiler);
+    }
+  }
+
+  /**
+   * Represents a class expression that acts as a RHS.  The defined
+   * name is only reachable from within the function.
+   */
+  static final class ClassExpressionDefinition extends ClassDefinition {
+    ClassExpressionDefinition(Node node, boolean inExterns) {
+      super(node, inExterns);
+      Preconditions.checkArgument(
+          NodeUtil.isClassExpression(node));
+    }
+
+    @Override
+    public void performRemove(AbstractCompiler compiler) {
+      // replace internal name with ""
+      c.replaceChild(c.getFirstChild(), IR.empty());
+      compiler.reportChangeToEnclosingScope(c.getFirstChild());
+    }
+  }
+
+  /**
    * Represents a declaration within an assignment.
    */
   static final class AssignmentDefinition extends Definition {
     private final Node assignment;
 
     AssignmentDefinition(Node node, boolean inExterns) {
-      super(inExterns);
+      super(inExterns, NameBasedDefinitionProvider.getSimplifiedName(node.getFirstChild()));
       checkArgument(node.isAssign());
       assignment = node;
     }
@@ -371,7 +477,7 @@ class DefinitionsRemover {
 
     ObjectLiteralPropertyDefinition(Node lit, Node name, Node value,
           boolean isExtern) {
-      super(isExtern);
+      super(isExtern, NameBasedDefinitionProvider.getSimplifiedName(getLValue(name)));
 
       this.literal = lit;
       this.name = name;
@@ -386,6 +492,10 @@ class DefinitionsRemover {
 
     @Override
     public Node getLValue() {
+      return getLValue(name);
+    }
+
+    private static Node getLValue(Node name) {
       // TODO(user) revisit: object literal definitions are an example
       // of definitions whose LHS doesn't correspond to a node that
       // exists in the AST.  We will have to change the return type of
@@ -401,7 +511,7 @@ class DefinitionsRemover {
               IR.objectlit(),
               IR.string(name.getString()));
         default:
-          throw new IllegalStateException("unexpected");
+          throw new IllegalStateException("Unexpected left Token: " + name.getToken());
       }
     }
 
@@ -417,8 +527,8 @@ class DefinitionsRemover {
   static final class VarDefinition extends Definition {
     private final Node name;
     VarDefinition(Node node, boolean inExterns) {
-      super(inExterns);
-      checkArgument(NodeUtil.isVarDeclaration(node));
+      super(inExterns, NameBasedDefinitionProvider.getSimplifiedName(node));
+      checkArgument(NodeUtil.isNameDeclaration(node.getParent()) && node.isName());
       Preconditions.checkArgument(inExterns || node.hasChildren(),
           "VAR Declaration of %s must be assigned a value.", node.getString());
       name = node;

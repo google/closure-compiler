@@ -187,10 +187,25 @@ BaseAudioContext.prototype.createIIRFilter = function(feedforward, feedback) {};
 BaseAudioContext.prototype.createSpatialPanner = function() {};
 
 /**
+ * @record
+ * @see https://webaudio.github.io/web-audio-api/#idl-def-AudioContextOptions
+ */
+function AudioContextOptions() {};
+
+/** @type {(undefined|string|number)} */
+AudioContextOptions.prototype.latencyHint;
+
+/** @type {(undefined|number)} */
+AudioContextOptions.prototype.sampleRate;
+
+/**
+ * Includes the non-standard contextOptions optional options parameter
+ * implemented by Chrome and Firefox.
+ * @param {!AudioContextOptions=} contextOptions
  * @constructor
  * @extends {BaseAudioContext}
  */
-function AudioContext() {}
+function AudioContext(contextOptions) {}
 
 /**
  * @param {!HTMLMediaElement} mediaElement
@@ -260,8 +275,29 @@ OfflineAudioCompletionEvent.prototype.renderedBuffer;
 
 /**
  * @constructor
+ * @implements {EventTarget}
+ * @see https://www.w3.org/TR/webaudio/#the-audionode-interface
  */
 function AudioNode() {}
+
+/**
+ * @override
+ */
+AudioNode.prototype.addEventListener = function(type, listener,
+    opt_useCapture) {};
+
+/**
+ * @override
+ */
+AudioNode.prototype.removeEventListener = function(type, listener,
+    opt_useCapture) {};
+
+/**
+ * @override
+ * @return {boolean}
+ */
+AudioNode.prototype.dispatchEvent = function(evt) {};
+
 /**
  * @param {!AudioNode|!AudioParam} destination
  * @param {number=} output

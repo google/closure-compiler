@@ -18,7 +18,6 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -136,8 +135,7 @@ public final class SourceFileTest extends TestCase {
     assertEquals(expectedContent, sourceFileFromFileCharset.getCode());
   }
 
-  private static void createZipWithContent(Path zipFile, String content)
-      throws IOException, FileNotFoundException {
+  private static void createZipWithContent(Path zipFile, String content) throws IOException {
     ZipOutputStream zos;
     if (zipFile.toFile().exists()) {
       zipFile.toFile().delete();

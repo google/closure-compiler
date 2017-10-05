@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
@@ -23,8 +24,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * This describes the Google-specific JavaScript coding conventions.
- * Within Google, variable names are semantically significant.
+ * This describes the Google-specific JavaScript coding conventions. Within Google, variable names
+ * are semantically significant.
  *
  */
 @Immutable
@@ -164,6 +165,7 @@ public class GoogleCodingConvention extends CodingConventions.Proxy {
    * to match the package of the generating file.
    */
   @Override
+  @GwtIncompatible // TODO(tdeegan): Remove use of Matcher#group to make this fully GWT compatible.
   public String getPackageName(StaticSourceFile source) {
     String name = source.getName();
     Matcher genfilesMatcher = GENFILES_DIR.matcher(name);

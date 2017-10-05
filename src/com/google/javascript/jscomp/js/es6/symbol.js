@@ -35,20 +35,24 @@ $jscomp.initSymbol = function() {
 };
 
 
-/** @private {number} */
-$jscomp.symbolCounter_ = 0;
-
-
 /**
  * Produces "symbols" (actually just unique strings).
  * @param {string=} opt_description
  * @return {symbol}
- * @suppress {reportUnknownTypes}
  */
-$jscomp.Symbol = function(opt_description) {
-  return /** @type {symbol} */ (
-      $jscomp.SYMBOL_PREFIX + (opt_description || '') + ($jscomp.symbolCounter_++));
-};
+$jscomp.Symbol = /** @type {function(): !Function} */ (function() {
+  var counter = 0;
+  /**
+   * @param {string=} opt_description
+   * @return {symbol}
+   * @suppress {reportUnknownTypes}
+   */
+  function Symbol(opt_description) {
+    return /** @type {symbol} */ (
+        $jscomp.SYMBOL_PREFIX + (opt_description || '') + (counter++));
+  }
+  return Symbol;
+})();
 
 
 /**

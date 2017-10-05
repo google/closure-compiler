@@ -34,6 +34,16 @@ import javax.annotation.Nullable;
  * class.
  */
 final class PolymerClassDefinition {
+  static enum DefinitionType {
+    ObjectLiteral,
+    ES6Class
+  }
+
+  /** The declaration style used for the Polymer definition */
+  final DefinitionType defType;
+
+  /** The Polymer call or class node which defines the Element. */
+  final Node definition;
 
   /** The target node (LHS) for the Polymer element definition. */
   final Node target;
@@ -45,18 +55,20 @@ final class PolymerClassDefinition {
   final MemberDefinition constructor;
 
   /** The name of the native HTML element which this element extends. */
-  final String nativeBaseElement;
+  @Nullable final String nativeBaseElement;
 
   /** Properties declared in the Polymer "properties" block. */
   final List<MemberDefinition> props;
 
   /** Flattened list of behavior definitions used by this element. */
-  final ImmutableList<BehaviorDefinition> behaviors;
+  @Nullable final ImmutableList<BehaviorDefinition> behaviors;
 
   /** Language features that should be carried over to the extraction destination. */
-  final FeatureSet features;
+  @Nullable final FeatureSet features;
 
   PolymerClassDefinition(
+      DefinitionType defType,
+      Node definition,
       Node target,
       Node descriptor,
       JSDocInfo classInfo,
@@ -65,8 +77,10 @@ final class PolymerClassDefinition {
       List<MemberDefinition> props,
       ImmutableList<BehaviorDefinition> behaviors,
       FeatureSet features) {
+    this.defType = defType;
+    this.definition = definition;
     this.target = target;
-    checkState(descriptor.isObjectLit());
+    checkState(descriptor == null || descriptor.isObjectLit());
     this.descriptor = descriptor;
     this.constructor = constructor;
     this.nativeBaseElement = nativeBaseElement;
@@ -100,15 +114,18 @@ final class PolymerClassDefinition {
       return null;
     }
 
-    String elNameString = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, elName.getString());
-    elNameString += "Element";
-
     Node target;
     if (NodeUtil.isNameDeclaration(callNode.getGrandparent())) {
       target = IR.name(callNode.getParent().getString());
     } else if (callNode.getParent().isAssign()) {
       target = callNode.getParent().getFirstChild().cloneTree();
     } else {
+      String elNameStringBase =
+          elName.isQualifiedName()
+              ? elName.getQualifiedName().replace('.', '$')
+              : elName.getString();
+      String elNameString = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, elNameStringBase);
+      elNameString += "Element";
       target = IR.name(elNameString);
     }
 
@@ -117,7 +134,7 @@ final class PolymerClassDefinition {
     JSDocInfo ctorInfo = null;
     Node constructor = NodeUtil.getFirstPropMatchingKey(descriptor, "factoryImpl");
     if (constructor == null) {
-      constructor = IR.function(IR.name(""), IR.paramList(), IR.block());
+      constructor = NodeUtil.emptyFunction();
       compiler.reportChangeToChangeScope(constructor);
       constructor.useSourceInfoFromForTree(callNode);
     } else {
@@ -136,7 +153,9 @@ final class PolymerClassDefinition {
       overwriteMembersIfPresent(allProperties, behavior.props);
     }
     overwriteMembersIfPresent(
-        allProperties, PolymerPassStaticUtils.extractProperties(descriptor, compiler));
+        allProperties,
+        PolymerPassStaticUtils.extractProperties(
+            descriptor, DefinitionType.ObjectLiteral, compiler));
 
     FeatureSet newFeatures = null;
     if (!behaviors.isEmpty()) {
@@ -147,6 +166,8 @@ final class PolymerClassDefinition {
     }
 
     return new PolymerClassDefinition(
+        DefinitionType.ObjectLiteral,
+        callNode,
         target,
         descriptor,
         classInfo,
@@ -155,6 +176,80 @@ final class PolymerClassDefinition {
         allProperties,
         behaviors,
         newFeatures);
+  }
+
+  /**
+   * Validates the class definition and if valid, extracts the class definition from the AST. As
+   * opposed to the Polymer 1 extraction, this operation is non-destructive.
+   */
+  @Nullable
+  static PolymerClassDefinition extractFromClassNode(
+      Node classNode, AbstractCompiler compiler, GlobalNamespace globalNames) {
+    checkState(classNode != null && classNode.isClass());
+
+    // The supported case is for the config getter to return an object literal descriptor.
+    Node propertiesDescriptor = null;
+    Node propertiesGetter =
+        NodeUtil.getFirstGetterMatchingKey(NodeUtil.getClassMembers(classNode), "properties");
+    if (propertiesGetter != null) {
+      if (!propertiesGetter.isStaticMember()) {
+        // report bad class definition
+        compiler.report(
+            JSError.make(classNode, PolymerPassErrors.POLYMER_CLASS_PROPERTIES_NOT_STATIC));
+      } else {
+        for (Node child : NodeUtil.getFunctionBody(propertiesGetter.getFirstChild()).children()) {
+          if (child.isReturn()) {
+            if (child.hasChildren() && child.getFirstChild().isObjectLit()) {
+              propertiesDescriptor = child.getFirstChild();
+              break;
+            } else {
+              compiler.report(
+                  JSError.make(
+                      propertiesGetter, PolymerPassErrors.POLYMER_CLASS_PROPERTIES_INVALID));
+            }
+          }
+        }
+      }
+    }
+
+    Node target;
+    if (NodeUtil.isNameDeclaration(classNode.getGrandparent())) {
+      target = IR.name(classNode.getParent().getString());
+    } else if (classNode.getParent().isAssign()
+        && classNode.getParent().getFirstChild().isQualifiedName()) {
+      target = classNode.getParent().getFirstChild();
+    } else if (!classNode.getFirstChild().isEmpty()) {
+      target = classNode.getFirstChild();
+    } else {
+      // issue error - no name found
+      compiler.report(JSError.make(classNode, PolymerPassErrors.POLYMER_CLASS_UNNAMED));
+      return null;
+    }
+
+    JSDocInfo classInfo = NodeUtil.getBestJSDocInfo(classNode);
+
+    JSDocInfo ctorInfo = null;
+    Node constructor =
+        NodeUtil.getFirstPropMatchingKey(NodeUtil.getClassMembers(classNode), "constructor");
+    if (constructor != null) {
+      ctorInfo = NodeUtil.getBestJSDocInfo(constructor);
+    }
+
+    List<MemberDefinition> allProperties =
+        PolymerPassStaticUtils.extractProperties(
+            propertiesDescriptor, DefinitionType.ES6Class, compiler);
+
+    return new PolymerClassDefinition(
+        DefinitionType.ES6Class,
+        classNode,
+        target,
+        propertiesDescriptor,
+        classInfo,
+        new MemberDefinition(ctorInfo, null, constructor),
+        null,
+        allProperties,
+        null,
+        null);
   }
 
   /**

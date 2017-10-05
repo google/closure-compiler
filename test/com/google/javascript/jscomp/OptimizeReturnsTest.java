@@ -40,12 +40,6 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
     return 1;
   }
 
-  @Override
-  protected void setUp() throws Exception {
-    super.setUp();
-    disableTypeCheck();
-  }
-
   /**
    * Combine source strings using '\n' as the separator.
    */
@@ -198,6 +192,17 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
         "function c() { return b() }",
         "c();");
     testSame(source);
+  }
+
+  public void testRewriteUnusedResult9() throws Exception {
+    // Proves that the deleted function scope is reported.
+    String source = newlineJoin(
+        "function a(){return function() {}}",
+        "a()");
+    String expected = newlineJoin(
+        "function a(){return}",
+        "a()");
+    test(source, expected);
   }
 
   public void testNoRewriteObjLit1() throws Exception {

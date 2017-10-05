@@ -14,32 +14,46 @@
  * limitations under the License.
  */
 
+/**
+ * @fileoverview
+ * @suppress {uselessCode}
+ */
 'require util/polyfill';
+'require es6/util/setprototypeof';
 
 
-$jscomp.polyfill('Reflect.setPrototypeOf', function(orig) {
-  if (orig) return orig;
-
-  // IE<11 has no way to polyfill this, so don't even try.
-  if (typeof ''.__proto__ != 'object') return null;
-
-  /**
-   * Polyfill for Reflect.setPrototypeOf() method:
-   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/setPrototypeOf
-   *
-   * Sets the prototype in a "standard" way.
-   *
-   * @param {!Object} target Target on which to get the property.
-   * @param {?Object} proto The new prototype.
-   * @return {boolean} Whether the prototype was successfully set.
-   */
-  var polyfill = function(target, proto) {
-    try {
-      target.__proto__ = proto;
-      return target.__proto__ === proto;
-    } catch (err) {
-      return false;
-    }
-  };
-  return polyfill;
-}, 'es6', 'es5');
+$jscomp.polyfill(
+    'Reflect.setPrototypeOf',
+    /**
+     * These annotations are intended to match the signature of
+     * $jscomp.polyfill(). Being more specific makes the compiler unhappy.
+     * @suppress {reportUnknownTypes}
+     * @param {?*} orig
+     * @return {*}
+     */
+    function(orig) {
+      if (orig) {
+        return orig;
+      } else if ($jscomp.setPrototypeOf) {
+        /** @const {!function(!Object,?Object):!Object} */
+        var setPrototypeOf = $jscomp.setPrototypeOf;
+        /**
+         * @param {!Object} target
+         * @param {?Object} proto
+         * @return {boolean}
+         */
+        var polyfill = function(target, proto) {
+          try {
+            setPrototypeOf(target, proto);
+            return true;
+          } catch (e) {
+            return false;
+          }
+        };
+        return polyfill;
+      } else {
+        // it isn't possible to implement this method
+        return null;
+      }
+    },
+    'es6', 'es5');

@@ -120,16 +120,16 @@ public class EnumElementType extends ObjectType {
     return primitiveType.testForEquality(that);
   }
 
-  /**
-   * This predicate determines whether objects of this type can have the null
-   * value, and therefore can appear in contexts where null is expected.
-   *
-   * @return true for everything but Number and Boolean types.
-   */
   @Override
   public boolean isNullable() {
     return primitiveType.isNullable();
   }
+
+  @Override
+  public boolean isVoidable() {
+    return primitiveType.isVoidable();
+  }
+
 
   @Override
   public boolean isNominalType() {

@@ -15,9 +15,10 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
+
 import com.google.common.base.Predicates;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.testing.NodeSubject;
 import com.google.javascript.rhino.Node;
 
 public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
@@ -80,6 +81,14 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
             "X = Polymer(/** @lends {X.prototype} */ {",
             "  is: 'x-element',",
             "});"));
+
+    setLanguageLevel(LanguageMode.ECMASCRIPT_2015);
+    testSame(
+        LINE_JOINER.join(
+            "var X = class extends Polymer.Element {",
+            "  static get is() { return 'x-element'; }",
+            "  static get properties { return { }; }",
+            "};"));
   }
 
   public void testDefaultTypeNameTarget() {
@@ -133,28 +142,47 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
   }
 
   private void test(String originalCode, String expectedResult) {
-    parseAndRewrite(originalCode);
+    parseAndRewrite(originalCode, 1);
     Node expectedNode = compiler.parseSyntheticCode(expectedResult);
-    NodeSubject.assertNode(expectedNode).isEqualTo(rootNode);
+    assertNode(expectedNode).isEqualTo(rootNode);
+
+    parseAndRewrite(originalCode, 2);
+    expectedNode = compiler.parseSyntheticCode(expectedResult);
+    assertNode(expectedNode).isEqualTo(rootNode);
   }
 
-  private void parseAndRewrite(String code) {
+  private void testSame(String originalCode) {
+    parseAndRewrite(originalCode, 1);
+    Node expectedNode = compiler.parseSyntheticCode(originalCode);
+    assertNode(expectedNode).isEqualTo(rootNode);
+
+    parseAndRewrite(originalCode, 2);
+    expectedNode = compiler.parseSyntheticCode(originalCode);
+    assertNode(expectedNode).isEqualTo(rootNode);
+  }
+
+  private void parseAndRewrite(String code, int version) {
     rootNode = compiler.parseTestCode(code);
     globalNamespace =  new GlobalNamespace(compiler, rootNode);
     PolymerPassFindExterns findExternsCallback = new PolymerPassFindExterns();
     Node externs = compiler.parseTestCode(EXTERNS);
     NodeTraversal.traverseEs6(compiler, externs, findExternsCallback);
 
-    rewriter = new PolymerClassRewriter(compiler, findExternsCallback.getPolymerElementExterns());
+    rewriter =
+        new PolymerClassRewriter(
+            compiler, findExternsCallback.getPolymerElementExterns(), version, true);
 
-    NodeUtil.visitPostOrder(rootNode, new NodeUtil.Visitor() {
-      @Override
-      public void visit(Node node) {
-        if (PolymerPass.isPolymerCall(node)) {
-          polymerCall = node;
-        }
-      }
-    }, Predicates.<Node>alwaysTrue());
+    NodeUtil.visitPostOrder(
+        rootNode,
+        new NodeUtil.Visitor() {
+          @Override
+          public void visit(Node node) {
+            if (PolymerPassStaticUtils.isPolymerCall(node)) {
+              polymerCall = node;
+            }
+          }
+        },
+        Predicates.<Node>alwaysTrue());
 
     assertNotNull(polymerCall);
     PolymerClassDefinition classDef =
@@ -163,9 +191,13 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
     Node parent = polymerCall.getParent();
     Node grandparent = parent.getParent();
     if (NodeUtil.isNameDeclaration(grandparent) || parent.isAssign()) {
-      rewriter.rewritePolymerClass(grandparent, classDef, true);
+      rewriter.rewritePolymerCall(grandparent, classDef, true);
     } else {
-      rewriter.rewritePolymerClass(parent, classDef, true);
+      rewriter.rewritePolymerCall(parent, classDef, true);
     }
+  }
+
+  private void setLanguageLevel(LanguageMode mode) {
+    compiler.getOptions().setLanguageIn(mode);
   }
 }

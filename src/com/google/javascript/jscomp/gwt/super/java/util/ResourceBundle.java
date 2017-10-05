@@ -16,8 +16,8 @@
 
 package java.util;
 
-import com.google.javascript.jscomp.GwtProperties;
-import com.google.javascript.jscomp.ResourceLoader;
+import com.google.javascript.jscomp.resources.GwtProperties;
+import com.google.javascript.jscomp.resources.ResourceLoader;
 
 /**
  * GWT compatible replacement for {@code ResourceBundle} that defers to {@link ResourceLoader} for

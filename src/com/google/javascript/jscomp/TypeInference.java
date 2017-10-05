@@ -53,6 +53,7 @@ import com.google.javascript.rhino.jstype.StaticTypedSlot;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
+import com.google.javascript.rhino.jstype.TemplatizedType;
 import com.google.javascript.rhino.jstype.UnionType;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -122,12 +123,13 @@ class TypeInference
   /**
    * Infers all of a function's arguments if their types aren't declared.
    */
+  @SuppressWarnings("ReferenceEquality") // unknownType is a singleton
   private void inferArguments(TypedScope functionScope) {
     Node functionNode = functionScope.getRootNode();
     Node astParameters = functionNode.getSecondChild();
     Node iifeArgumentNode = null;
 
-    if (NodeUtil.isCallOrNewTarget(functionNode)) {
+    if (NodeUtil.isInvocationTarget(functionNode)) {
       iifeArgumentNode = functionNode.getNext();
     }
 
@@ -1214,11 +1216,11 @@ class TypeInference
       JSType argType,
       Map<TemplateType, JSType> resolvedTypes, Set<JSType> seenTypes) {
     if (paramType.isTemplateType()) {
-      // @param {T}
+      // example: @param {T}
       resolvedTemplateType(
           resolvedTypes, paramType.toMaybeTemplateType(), argType);
     } else if (paramType.isUnionType()) {
-      // @param {Array.<T>|NodeList|Arguments|{length:number}}
+      // example: @param {Array.<T>|NodeList|Arguments|{length:number}}
       UnionType unionType = paramType.toMaybeUnionType();
       for (JSType alernative : unionType.getAlternates()) {
         maybeResolveTemplatedType(alernative, argType, resolvedTypes, seenTypes);
@@ -1244,7 +1246,7 @@ class TypeInference
             argFunctionType.getParameters(), resolvedTypes, seenTypes);
       }
     } else if (paramType.isRecordType() && !paramType.isNominalType()) {
-      // @param {{foo:T}}
+      // example: @param {{foo:T}}
       if (seenTypes.add(paramType)) {
         ObjectType paramRecordType = paramType.toObjectType();
         ObjectType argObjectType = argType.restrictByNotNullOrUndefined().toObjectType();
@@ -1261,25 +1263,31 @@ class TypeInference
         seenTypes.remove(paramType);
       }
     } else if (paramType.isTemplatizedType()) {
-      // @param {Array<T>}
-      ObjectType referencedParamType = paramType
-          .toMaybeTemplatizedType()
-          .getReferencedType();
-      JSType argObjectType = argType
-          .restrictByNotNullOrUndefined()
-          .collapseUnion();
+      // example: @param {Array<T>}
+      TemplatizedType templatizedParamType = paramType.toMaybeTemplatizedType();
+      int keyCount = templatizedParamType.getTemplateTypes().size();
+      // TODO(johnlenz): determine why we are creating TemplatizedTypes for
+      // types with no type arguments.
+      if (keyCount > 0) {
+        ObjectType referencedParamType = templatizedParamType.getReferencedType();
+        JSType argObjectType = argType
+            .restrictByNotNullOrUndefined()
+            .collapseUnion();
 
+        if (argObjectType.isSubtype(referencedParamType)) {
+          // If the argument type is a subtype of the parameter type, resolve any
+          // template types amongst their templatized types.
+          TemplateTypeMap paramTypeMap = paramType.getTemplateTypeMap();
 
-      if (argObjectType.isSubtype(referencedParamType)) {
-        // If the argument type is a subtype of the parameter type, resolve any
-        // template types amongst their templatized types.
-        TemplateTypeMap paramTypeMap = paramType.getTemplateTypeMap();
-        TemplateTypeMap argTypeMap = argObjectType.getTemplateTypeMap();
-        for (TemplateType key : paramTypeMap.getTemplateKeys()) {
-          maybeResolveTemplatedType(
-              paramTypeMap.getResolvedTemplateType(key),
-              argTypeMap.getResolvedTemplateType(key),
-              resolvedTypes, seenTypes);
+          ImmutableList<TemplateType> keys = paramTypeMap.getTemplateKeys();
+          TemplateTypeMap argTypeMap = argObjectType.getTemplateTypeMap();
+          for (int index = keys.size() - keyCount; index < keys.size(); index++) {
+            TemplateType key = keys.get(index);
+            maybeResolveTemplatedType(
+                paramTypeMap.getResolvedTemplateType(key),
+                argTypeMap.getResolvedTemplateType(key),
+                resolvedTypes, seenTypes);
+          }
         }
       }
     }
@@ -1401,14 +1409,13 @@ class TypeInference
   }
 
   /**
-   * For functions with function(this: T, ...) and T as parameters, type
-   * inference will set the type of this on a function literal argument to the
-   * the actual type of T.
+   * For functions that use template types, specialize the function type for
+   * the call target based on the call-site specific arguments.
+   * Specifically, this enables inference to set the type of any function
+   * literal parameters based on these inferred types.
    */
-  private boolean inferTemplatedTypesForCall(
-      Node n, FunctionType fnType) {
-    final ImmutableList<TemplateType> keys = fnType.getTemplateTypeMap()
-        .getTemplateKeys();
+  private boolean inferTemplatedTypesForCall(Node n, FunctionType fnType) {
+    ImmutableList<TemplateType> keys = fnType.getTemplateTypeMap().getTemplateKeys();
     if (keys.isEmpty()) {
       return false;
     }
@@ -1425,22 +1432,18 @@ class TypeInference
     }
 
     // Try to infer the template types using the type transformations
-    Map<TemplateType, JSType> typeTransformations =
-        evaluateTypeTransformations(keys, inferred);
+    Map<TemplateType, JSType> typeTransformations = evaluateTypeTransformations(keys, inferred);
     if (typeTransformations != null) {
       inferred.putAll(typeTransformations);
     }
 
     // Replace all template types. If we couldn't find a replacement, we
     // replace it with UNKNOWN.
-    TemplateTypeReplacer replacer = new TemplateTypeReplacer(
-        registry, inferred);
+    TemplateTypeReplacer replacer = new TemplateTypeReplacer(registry, inferred);
     Node callTarget = n.getFirstChild();
 
-    FunctionType replacementFnType = fnType.visit(replacer)
-        .toMaybeFunctionType();
+    FunctionType replacementFnType = fnType.visit(replacer).toMaybeFunctionType();
     checkNotNull(replacementFnType);
-
     callTarget.setJSType(replacementFnType);
     n.setJSType(replacementFnType.getReturnType());
 
@@ -1548,7 +1551,7 @@ class TypeInference
     if (n.isQualifiedName()) {
       JSType type = getJSType(n);
       JSType narrowed = type.restrictByNotNullOrUndefined();
-      if (type != narrowed) {
+      if (!type.equals(narrowed)) {
         scope = narrowScope(scope, n, narrowed);
       }
     }

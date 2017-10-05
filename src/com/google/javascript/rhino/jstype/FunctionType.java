@@ -70,7 +70,7 @@ import java.util.Set;
  * This derived type provides extended information about a function, including
  * its return type and argument types.<p>
  *
- * Note: the parameters list is the LP node that is the parent of the
+ * Note: the parameters list is the PARAM_LIST node that is the parent of the
  * actual NAME node containing the parsed argument list (annotated with
  * JSDOC_TYPE_PROP's for the compile-time type of each argument.
  */
@@ -323,7 +323,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     return types;
   }
 
-  /** Gets an LP node that contains all params. May be null. */
+  /** Gets a PARAM_LIST node that contains all params. May be null. */
   public Node getParametersNode() {
     return call.parameters;
   }
@@ -1031,7 +1031,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
 
     setPrettyPrint(false);
 
-    sb.append("function (");
+    sb.append("function(");
     int paramNum = call.parameters.getChildCount();
     boolean hasKnownTypeOfThis = !(typeOfThis instanceof UnknownType);
     if (hasKnownTypeOfThis) {
@@ -1264,7 +1264,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   }
 
   @Override
-  public Iterable<FunctionTypeI> getSubTypes() {
+  public Iterable<FunctionTypeI> getDirectSubTypes() {
     return Iterables.concat(
         subTypes != null ? subTypes : ImmutableList.<FunctionTypeI>of(),
         this.registry.getDirectImplementors(this));
@@ -1385,37 +1385,11 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
     }
   }
 
-  /** Create a new constructor with the parameters and return type stripped. */
-  public FunctionType forgetParameterAndReturnTypes() {
-    FunctionType result =
-        new FunctionType(
-            registry,
-            getReferenceName(),
-            source,
-            registry.createArrowType(null, null),
-            getInstanceType(),
-            null,
-            true,
-            false,
-            false);
-    result.setPrototypeBasedOn(getInstanceType());
-    return result;
-  }
-
   @Override
   public boolean hasAnyTemplateTypesInternal() {
     return getTemplateTypeMap().numUnfilledTemplateKeys() > 0
         || typeOfThis.hasAnyTemplateTypes()
         || call.hasAnyTemplateTypes();
-  }
-
-  @Override
-  public ImmutableSet<String> getTypeParameters() {
-    ImmutableSet.Builder<String> params = ImmutableSet.builder();
-    for (TemplateType type : getTemplateTypeMap().getTemplateKeys()) {
-      params.add(type.toString());
-    }
-    return params.build();
   }
 
   @Override
@@ -1434,9 +1408,6 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
 
   @Override
   public boolean hasProperties() {
-    if (prototypeSlot != null) {
-      return true;
-    }
     return !super.getOwnPropertyNames().isEmpty();
   }
 
@@ -1566,5 +1537,56 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
 
     int numArgs = argumentTypes.size();
     return this.getMinArity() <= numArgs && numArgs <= this.getMaxArity();
+  }
+
+  @Override
+  public Builder toBuilder() {
+    return new FunctionBuilderImpl();
+  }
+
+  /**
+   * Private implementation used by toBuilder.  Note: we do not preserve any
+   * properties that may have been defined on the original function.
+   */
+  private class FunctionBuilderImpl implements Builder {
+    ArrowType arrow = FunctionType.this.call;
+
+    @Override
+    public Builder withUnknownReturnType() {
+      arrow = new ArrowType(registry, arrow.parameters, null);
+      return this;
+    }
+
+    @Override
+    public Builder withReturnType(TypeI type) {
+      checkArgument(type instanceof JSType);
+      arrow = new ArrowType(registry, arrow.parameters, (JSType) type);
+      return this;
+    }
+
+    @Override
+    public Builder withNoParameters() {
+      arrow = new ArrowType(registry, null, arrow.returnType, arrow.returnTypeInferred);
+      return this;
+    }
+
+    @Override
+    public FunctionTypeI build() {
+      FunctionType result =
+          new FunctionType(
+              registry,
+              getReferenceName(),
+              source,
+              arrow,
+              typeOfThis,
+              templateTypeMap,
+              isConstructor(),
+              isNativeObjectType(),
+              isAbstract);
+      if (isConstructor()) {
+        result.setPrototypeBasedOn(getInstanceType());
+      }
+      return result;
+    }
   }
 }

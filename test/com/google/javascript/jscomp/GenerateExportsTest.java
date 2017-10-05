@@ -325,6 +325,13 @@ public final class GenerateExportsTest extends CompilerTestCase {
     testExternChanges(code, "Object.prototype.A;");
   }
 
+  public void testExportObjectLit5() {
+    allowExternsChanges();
+    String code = "var E = {/** @export */ A() {}, B:2};";
+    testSame(code);
+    testExternChanges(code, "Object.prototype.A;");
+  }
+
   public void testExportClassMember1() {
     allowExternsChanges();
     String code = "var E = function() { /** @export */ this.foo = 1; };";
@@ -350,5 +357,12 @@ public final class GenerateExportsTest extends CompilerTestCase {
     String code = "var E = function() { /** @export */ this.foo; };";
     testSame(code);
     testExternChanges(code, "Object.prototype.foo;");
+  }
+
+  public void testExportExprResultProperty() {
+    allowNonGlobalExports = false;
+    testSame(lines(
+        "/** @record */ function Foo() {}",
+        "/** @export {number} */ Foo.prototype.myprop;"));
   }
 }

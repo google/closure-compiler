@@ -37,30 +37,23 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  *  Find all Functions, VARs, and Exception names and make them
  *  unique.  Specifically, it will not modify object properties.
  *  @author johnlenz@google.com (John Lenz)
- *  TODO(johnlenz): Try to merge this with the ScopeCreator.
- *  TODO(moz): Handle more ES6 features, such as default parameters.
  */
-class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
+class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
 
   // Arguments is special cased to handle cases where a local name shadows
   // the arguments declaration.
   public static final String ARGUMENTS = "arguments";
 
-  // The name stack is similar to how we model scopes but handles some
-  // additional cases that are not handled by the current Scope object.
-  // Specifically, a Scope currently has only two concepts of scope (global,
-  // and function local).  But there are in reality a couple of additional
-  // case to worry about:
-  //   catch expressions
-  //   function expressions names
-  // Both belong to a scope by themselves.
-  // In addition, ES6 introduced block scopes, which we also need to handle.
-  private final Deque<Renamer> nameStack = new ArrayDeque<>();
+  // There is one renamer on the stack for each scope. This was added before any support for ES6 was
+  // in place, so it was necessary to maintain this separate stack, rather than just using the
+  // NodeTraversal's stack of scopes, in order to handle catch blocks and function names correctly.
+  private final Deque<Renamer> renamerStack = new ArrayDeque<>();
   private final Renamer rootRenamer;
   private final boolean markChanges;
 
@@ -83,79 +76,33 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
 
   @Override
   public void enterScope(NodeTraversal t) {
+    checkState(
+        t.getScopeCreator().hasBlockScope(),
+        "MakeDeclaredNamesUnique requires an ES6-compatible scope creator. %s is not compatible.",
+        t.getScopeCreator());
     Node declarationRoot = t.getScopeRoot();
-    // Function bodies are handled along with PARAM_LIST
-    if (NodeUtil.isFunctionBlock(declarationRoot)) {
-      return;
-    }
 
     Renamer renamer;
-    if (nameStack.isEmpty()) {
+    if (renamerStack.isEmpty()) {
       // If the contextual renamer is being used, the starting context can not
       // be a function.
       checkState(!declarationRoot.isFunction() || !(rootRenamer instanceof ContextualRenamer));
-      checkState(t.inGlobalScope());
       renamer = rootRenamer;
     } else {
-      renamer = nameStack.peek().createForChildScope(!NodeUtil.createsBlockScope(declarationRoot));
+      boolean hoist = !declarationRoot.isFunction() && !NodeUtil.createsBlockScope(declarationRoot);
+      renamer = renamerStack.peek().createForChildScope(t.getScopeRoot(), hoist);
     }
 
-    if (!declarationRoot.isFunction()) {
-      // Add the block declarations
-      findDeclaredNames(t, declarationRoot, renamer, false);
-    }
-    nameStack.push(renamer);
+    renamerStack.push(renamer);
+
+    findDeclaredNames(t, declarationRoot);
   }
 
   @Override
   public void exitScope(NodeTraversal t) {
-    // ES6 function blocks are handled along with PARAM_LIST
-    if (NodeUtil.isFunctionBlock(t.getScopeRoot())) {
-      return;
-    }
     if (!t.inGlobalScope()) {
-      nameStack.pop();
+      renamerStack.pop();
     }
-  }
-
-  @Override
-  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-    switch (n.getToken()) {
-      case FUNCTION: {
-        // Add recursive function name, if needed.
-        // NOTE: "enterScope" is called after we need to pick up this name.
-        Renamer renamer = nameStack.peek().createForChildScope(false);
-
-        // If needed, add the function recursive name.
-        String name = n.getFirstChild().getString();
-        if (!name.isEmpty() && parent != null && !NodeUtil.isFunctionDeclaration(n)) {
-          renamer.addDeclaredName(name, false);
-        }
-
-        nameStack.push(renamer);
-        break;
-      }
-
-      case PARAM_LIST: {
-        Renamer renamer = nameStack.peek().createForChildScope(true);
-
-        // Add the function parameters
-        for (Node lhs : NodeUtil.getLhsNodesOfDeclaration(n)) {
-          renamer.addDeclaredName(lhs.getString(), true);
-        }
-
-        Node functionBody = n.getNext();
-        findDeclaredNames(t, functionBody, renamer, false);
-
-        nameStack.push(renamer);
-        break;
-      }
-
-      default:
-        break;
-    }
-
-    return true;
   }
 
   @Override
@@ -175,28 +122,20 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
         break;
       }
 
-      case FUNCTION:
-        // Remove the function body scope
-        nameStack.pop();
-        // Remove function recursive name (if any).
-        nameStack.pop();
-        break;
-
-      case PARAM_LIST:
-        // Note: The parameters and function body variables live in the
-        // same scope, we introduce the scope when in the "shouldTraverse"
-        // visit of PARAM_LIST, but remove it when when we exit the function above.
-        break;
-
       default:
         break;
     }
   }
 
   private void visitName(NodeTraversal t, Node n, Node parent) {
+    // Don't rename the exported name foo in export {a as foo}; or import {foo as b};
+    if (parent != null && ((parent.isImportSpec() && parent.getFirstChild() == n)
+        || (parent.isExportSpec() && parent.getLastChild() == n))) {
+      return;
+    }
     String newName = getReplacementName(n.getString());
     if (newName != null) {
-      Renamer renamer = nameStack.peek();
+      Renamer renamer = renamerStack.peek();
       if (renamer.stripConstIfReplaced()) {
         // TODO(johnlenz): Do we need to do anything about the Javadoc?
         n.removeProp(Node.IS_CONSTANT_NAME);
@@ -212,13 +151,14 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
       }
     }
   }
+
   /**
    * Walks the stack of name maps and finds the replacement name for the
    * current scope.
    */
   private String getReplacementName(String oldName) {
-    for (Renamer names : nameStack) {
-      String newName = names.getReplacementName(oldName);
+    for (Renamer renamer : renamerStack) {
+      String newName = renamer.getReplacementName(oldName);
       if (newName != null) {
         return newName;
       }
@@ -227,37 +167,14 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
   }
 
   /**
-   * Traverses the current scope and collects declared names.
-   *
-   * @param recursive Whether this is being called recursively.
+   * Traverses the current scope and collects declared names by calling {@code addDeclaredName} on
+   * the {@code Renamer} that is at the top of the {@code renamerStack}.
    */
-  private void findDeclaredNames(NodeTraversal t, Node n, Renamer renamer, boolean recursive) {
-    Node parent = n.getParent();
+  private void findDeclaredNames(NodeTraversal t, Node n) {
+    checkState(NodeUtil.createsScope(n) || n.isScript(), n);
 
-    // Do a shallow traversal: Don't traverse into the function param list or body; just its name.
-    if (recursive && parent.isFunction() && n != parent.getFirstChild()) {
-      return;
-    }
-
-    if (NodeUtil.isVarDeclaration(n)) {
-      renamer.addDeclaredName(n.getString(), true);
-    } else if (NodeUtil.isBlockScopedDeclaration(n)) {
-      if (t.getScopeRoot() == NodeUtil.getEnclosingScopeRoot(n)) {
-        renamer.addDeclaredName(n.getString(), false);
-        // For functions, findDeclaredNames is called from enterScope when entering the function
-        // scope, rather than when entering the function body scope, so we need to check for that
-        // case as well.
-      } else if (t.getScopeRoot().isFunction()
-          && NodeUtil.getEnclosingScopeRoot(n) == NodeUtil.getFunctionBody(t.getScopeRoot())) {
-        renamer.addDeclaredName(n.getString(), false);
-      }
-    } else if (NodeUtil.isFunctionDeclaration(n)) {
-      Node nameNode = n.getFirstChild();
-      renamer.addDeclaredName(nameNode.getString(), true);
-    }
-
-    for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
-      findDeclaredNames(t, c, renamer, true);
+    for (Var v : t.getScope().getVarIterable()) {
+      renamerStack.peek().addDeclaredName(v.getName(), false);
     }
   }
 
@@ -268,6 +185,8 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
 
     /**
      * Called when a declared name is found in the local current scope.
+     * @param hoisted Whether this name should be declared in the nearest enclosing "hoist scope"
+     *     instead of the scope represented by this Renamer.
      */
     void addDeclaredName(String name, boolean hoisted);
 
@@ -283,9 +202,10 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     boolean stripConstIfReplaced();
 
     /**
+     * @param hoisted True if this is a "hoist" scope: A function, module, or global scope.
      * @return A Renamer for a scope within the scope of the current Renamer.
      */
-    Renamer createForChildScope(boolean hoisted);
+    Renamer createForChildScope(Node scopeRoot, boolean hoisted);
 
     /**
      * @return The closest hoisting target for var and function declarations.
@@ -296,8 +216,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
   /**
    * Inverts the transformation by {@link ContextualRenamer}, when possible.
    */
-  static class ContextualRenameInverter
-      implements ScopedCallback, CompilerPass {
+  static class ContextualRenameInverter implements ScopedCallback, CompilerPass {
     private final AbstractCompiler compiler;
 
     // The set of names referenced in the current scope.
@@ -381,7 +300,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
      * values.
      */
     void handleScopeVar(Var v) {
-      String name  = v.getName();
+      String name = v.getName();
       if (containsSeparator(name) && !getOriginalName(name).isEmpty()) {
         String newName = findReplacementName(name);
         referencedNames.remove(name);
@@ -467,6 +386,9 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
    * @see Normalize
    */
   static class ContextualRenamer implements Renamer {
+    @Nullable
+    private final Node scopeRoot;
+
     // This multiset is shared between this ContextualRenamer and its parent (and its parent's
     // parent, etc.) because it tracks counts of variables across the entire JS program.
     private final Multiset<String> nameUsage;
@@ -483,6 +405,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     @Override
     public String toString() {
       return toStringHelper(this)
+          .add("scopeRoot", scopeRoot)
           .add("nameUsage", nameUsage)
           .add("declarations", declarations)
           .add("global", global)
@@ -490,33 +413,39 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     }
 
     ContextualRenamer() {
+      scopeRoot = null;
       global = true;
       nameUsage = HashMultiset.create();
 
       hoistRenamer = this;
     }
 
-    /**
-     * Constructor for child scopes.
-     */
+    /** Constructor for child scopes. */
     private ContextualRenamer(
-        Multiset<String> nameUsage, boolean hoistingTargetScope, Renamer parent) {
+        Node scopeRoot, Multiset<String> nameUsage, boolean hoistingTargetScope, Renamer parent) {
+      checkState(NodeUtil.createsScope(scopeRoot), scopeRoot);
+
+      if (scopeRoot.isFunction()) {
+        checkState(!hoistingTargetScope, scopeRoot);
+      }
+
+      this.scopeRoot = scopeRoot;
       this.global = false;
       this.nameUsage = nameUsage;
 
       if (hoistingTargetScope) {
+        checkState(!NodeUtil.createsBlockScope(scopeRoot), scopeRoot);
         hoistRenamer = this;
       } else {
+        checkState(NodeUtil.createsBlockScope(scopeRoot) || scopeRoot.isFunction(), scopeRoot);
         hoistRenamer = parent.getHoistRenamer();
       }
     }
 
-    /**
-     * Create a ContextualRenamer
-     */
+    /** Create a ContextualRenamer */
     @Override
-    public Renamer createForChildScope(boolean hoistingTargetScope) {
-      return new ContextualRenamer(nameUsage, hoistingTargetScope, this);
+    public Renamer createForChildScope(Node scopeRoot, boolean hoistingTargetScope) {
+      return new ContextualRenamer(scopeRoot, nameUsage, hoistingTargetScope, this);
     }
 
     /**
@@ -647,8 +576,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
 
       // By using the same separator the id will be stripped if it isn't
       // needed when variable renaming is turned off.
-      return name + ContextualRenamer.UNIQUE_ID_SEPARATOR
-          + idPrefix + uniqueIdSupplier.get();
+      return name + ContextualRenamer.UNIQUE_ID_SEPARATOR + idPrefix + uniqueIdSupplier.get();
     }
 
     @Override
@@ -657,7 +585,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     }
 
     @Override
-    public Renamer createForChildScope(boolean hoistingTargetScope) {
+    public Renamer createForChildScope(Node scopeRoot, boolean hoistingTargetScope) {
       return new InlineRenamer(
           convention, uniqueIdSupplier, idPrefix, removeConstness, hoistingTargetScope, this);
     }
@@ -692,7 +620,7 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     }
 
     @Override
-    public Renamer createForChildScope(boolean hoisted) {
+    public Renamer createForChildScope(Node scopeRoot, boolean hoisted) {
       return new InlineRenamer(convention, uniqueIdSupplier, idPrefix, false, hoisted, this);
     }
   }
@@ -726,8 +654,9 @@ class MakeDeclaredNamesUnique implements NodeTraversal.ScopedCallback {
     }
 
     @Override
-    public Renamer createForChildScope(boolean hoistingTargetScope) {
-      return new WhitelistedRenamer(delegate.createForChildScope(hoistingTargetScope), whitelist);
+    public Renamer createForChildScope(Node scopeRoot, boolean hoistingTargetScope) {
+      return new WhitelistedRenamer(
+          delegate.createForChildScope(scopeRoot, hoistingTargetScope), whitelist);
     }
 
     @Override

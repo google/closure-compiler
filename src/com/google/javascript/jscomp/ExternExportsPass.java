@@ -241,8 +241,8 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
       }
       Node externFunction = IR.function(IR.name(""), paramList, IR.block());
 
-      if (exportedFunction.getJSType() != null) {
-        externFunction.setJSType(exportedFunction.getJSType());
+      if (exportedFunction.getTypeI() != null) {
+        externFunction.setTypeI(exportedFunction.getTypeI());
         // When this function is printed, it will have a regular jsdoc, so we
         // don't want inline jsdocs as well
         deleteInlineJsdocs(externFunction);
@@ -280,7 +280,7 @@ final class ExternExportsPass extends NodeTraversal.AbstractPostOrderCallback
      */
     private Node createExternObjectLit(Node exportedObjectLit) {
       Node lit = IR.objectlit();
-      lit.setJSType(exportedObjectLit.getJSType());
+      lit.setTypeI(exportedObjectLit.getTypeI());
 
       // This is an indirect way of telling the typed code generator
       // "print the type of this"

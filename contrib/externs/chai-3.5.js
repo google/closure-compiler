@@ -130,10 +130,11 @@ ExpectChain.prototype.below = function(value, opt_message) {};
 ExpectChain.prototype.most = function(value, opt_message) {};
 
 /**
- * @param {number} value
+ * @param {number} start
+ * @param {number} finish
  * @param {string=} opt_message
  */
-ExpectChain.prototype.within = function(value, opt_message) {};
+ExpectChain.prototype.within = function(start, finish, opt_message) {};
 
 /**
  * @param {function(new: Object)} constructor
@@ -274,6 +275,13 @@ assert.equal = function(actual, expected, opt_message) {};
  * @param {*} expected
  * @param {string=} opt_message
  */
+assert.strictEqual = function(actual, expected, opt_message) {};
+
+/**
+ * @param {*} actual
+ * @param {*} expected
+ * @param {string=} opt_message
+ */
 assert.notEqual = function(actual, expected, opt_message) {};
 
 /**
@@ -323,6 +331,12 @@ assert.isDefined = function(value, opt_message) {};
 
 /**
  * @param {*} value
+ * @param {string=} message
+ */
+assert.isNotNull = function(value, message) {}
+
+/**
+ * @param {*} value
  * @param {string=} opt_message
  */
 assert.isNull = function(value, opt_message) {};
@@ -340,6 +354,13 @@ assert.instanceOf = function(object, constructor, opt_message) {};
  * @param {string=} opt_message
  */
 assert.include = function(haystack, needle, opt_message) {};
+
+/**
+ * @param {*} collection
+ * @param {number} length
+ * @param {string=} message
+ */
+assert.lengthOf = function(collection, length, message) {};
 
 /**
  * @param {!Array<*>|string} haystack

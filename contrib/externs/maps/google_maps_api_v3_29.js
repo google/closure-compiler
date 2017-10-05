@@ -2957,7 +2957,7 @@ google.maps.MVCObject.prototype.notify = function(key) {};
 
 /**
  * @param {string} key
- * @param {*} value
+ * @param {?} value
  * @return {undefined}
  */
 google.maps.MVCObject.prototype.set = function(key, value) {};

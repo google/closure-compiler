@@ -66,10 +66,14 @@ final class PolymerBehaviorExtractor {
     for (Node behaviorName : behaviorArray.children()) {
       if (behaviorName.isObjectLit()) {
         PolymerPassStaticUtils.switchDollarSignPropsToBrackets(behaviorName, compiler);
-        PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(behaviorName);
+        PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(behaviorName, compiler);
+        if (NodeUtil.getFirstPropMatchingKey(behaviorName, "is") != null) {
+          compiler.report(JSError.make(behaviorName, PolymerPassErrors.POLYMER_INVALID_BEHAVIOR));
+        }
         behaviors.add(
             new BehaviorDefinition(
-                PolymerPassStaticUtils.extractProperties(behaviorName, compiler),
+                PolymerPassStaticUtils.extractProperties(
+                    behaviorName, PolymerClassDefinition.DefinitionType.ObjectLiteral, compiler),
                 getBehaviorFunctionsToCopy(behaviorName),
                 getNonPropertyMembersToCopy(behaviorName),
                 !NodeUtil.isInFunction(behaviorName),
@@ -119,10 +123,14 @@ final class PolymerBehaviorExtractor {
         behaviors.addAll(extractBehaviors(behaviorValue));
       } else if (behaviorValue.isObjectLit()) {
         PolymerPassStaticUtils.switchDollarSignPropsToBrackets(behaviorValue, compiler);
-        PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(behaviorValue);
+        PolymerPassStaticUtils.quoteListenerAndHostAttributeKeys(behaviorValue, compiler);
+        if (NodeUtil.getFirstPropMatchingKey(behaviorValue, "is") != null) {
+          compiler.report(JSError.make(behaviorValue, PolymerPassErrors.POLYMER_INVALID_BEHAVIOR));
+        }
         behaviors.add(
             new BehaviorDefinition(
-                PolymerPassStaticUtils.extractProperties(behaviorValue, compiler),
+                PolymerPassStaticUtils.extractProperties(
+                    behaviorValue, PolymerClassDefinition.DefinitionType.ObjectLiteral, compiler),
                 getBehaviorFunctionsToCopy(behaviorValue),
                 getNonPropertyMembersToCopy(behaviorValue),
                 isGlobalDeclaration,

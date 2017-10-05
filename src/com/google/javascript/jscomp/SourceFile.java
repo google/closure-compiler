@@ -84,9 +84,9 @@ public class SourceFile implements StaticSourceFile, Serializable {
   private String originalPath = null;
 
   // Source Line Information
-  private int[] lineOffsets = null;
+  private transient int[] lineOffsets = null;
 
-  private String code = null;
+  private transient String code = null;
 
   static final DiagnosticType DUPLICATE_ZIP_CONTENTS = DiagnosticType.warning(
       "JSC_DUPLICATE_ZIP_CONTENTS",
@@ -554,13 +554,11 @@ public class SourceFile implements StaticSourceFile, Serializable {
    * from the injected interface.
    */
   static class Generated extends SourceFile {
-    private static final long serialVersionUID = 1L;
     // Avoid serializing generator and remove the burden to make classes that implement
     // Generator serializable. There should be no need to obtain generated source in the
     // second stage of compilation. Making the generator transient relies on not clearing the
     // code cache for these classes up serialization which might be quite wasteful.
-    // TODO(rluble): Find a better solution to avoid serializing the code cache.
-    private final transient Generator generator;
+    private transient Generator generator;
 
     // Not private, so that LazyInput can extend it.
     Generated(String fileName, String originalPath, Generator generator) {
@@ -585,6 +583,12 @@ public class SourceFile implements StaticSourceFile, Serializable {
     @Override
     public void clearCachedSource() {
       super.setCode(null);
+    }
+
+    @Override
+    public void restoreFrom(SourceFile sourceFile) {
+      super.restoreFrom(sourceFile);
+      this.generator = ((Generated) sourceFile).generator;
     }
   }
 
@@ -612,8 +616,8 @@ public class SourceFile implements StaticSourceFile, Serializable {
       String cachedCode = super.getCode();
 
       if (cachedCode == null) {
-        try {
-          cachedCode = CharStreams.toString(getCodeReader());
+        try (Reader r = getCodeReader()) {
+          cachedCode = CharStreams.toString(r);
         } catch (java.nio.charset.MalformedInputException e) {
           throw new IOException("Failed to read: " + path + ", is this input UTF-8 encoded?", e);
         }
@@ -668,12 +672,11 @@ public class SourceFile implements StaticSourceFile, Serializable {
     @GwtIncompatible("ObjectOutputStream")
     private void writeObject(java.io.ObjectOutputStream out) throws Exception {
       // Clear the cached source.
-      clearCachedSource();
       out.defaultWriteObject();
       out.writeObject(inputCharset != null ? inputCharset.name() : null);
       out.writeObject(path != null ? path.toUri() : null);
     }
-
+    
     @GwtIncompatible("ObjectInputStream")
     private void readObject(java.io.ObjectInputStream in) throws Exception {
       in.defaultReadObject();
@@ -681,6 +684,9 @@ public class SourceFile implements StaticSourceFile, Serializable {
       inputCharset = inputCharsetName != null ? Charset.forName(inputCharsetName) : null;
       URI uri = (URI) in.readObject();
       path = uri != null ? Paths.get(uri) : null;
+
+      // Code will be reread or restored.
+      super.setCode(null);
     }
   }
 
@@ -771,11 +777,21 @@ public class SourceFile implements StaticSourceFile, Serializable {
       return Charset.forName(inputCharset);
     }
 
-    @GwtIncompatible("ObjectOutputStream")
-    private void writeObject(java.io.ObjectOutputStream out) throws Exception {
-      // Remove cached source before serializing.
-      clearCachedSource();
-      out.defaultWriteObject();
+    @GwtIncompatible("ObjectInputStream")
+    private void readObject(java.io.ObjectInputStream in) throws Exception {
+      in.defaultReadObject();
+      // Code will be reread or restored.
+      super.setCode(null);
     }
+  }
+
+  public void restoreFrom(SourceFile sourceFile) {
+    this.code = sourceFile.code;
+  }
+
+  @GwtIncompatible("ObjectInputStream")
+  private void readObject(java.io.ObjectInputStream in) throws Exception {
+    in.defaultReadObject();
+    code = "<UNAVAILABLE>";
   }
 }

@@ -58,10 +58,6 @@ final class CompilerOptionsPreprocessor {
 
     if (options.getNewTypeInference()) {
       options.checkGlobalThisLevel = CheckLevel.OFF;
-      if (options.checkEventfulObjectDisposalPolicy != CompilerOptions.DisposalCheckingPolicy.OFF) {
-        throw new InvalidOptionsException(
-            "check_eventful_object_disposal is not supported with the new type inference.");
-      }
     }
 
     if (options.dartPass) {

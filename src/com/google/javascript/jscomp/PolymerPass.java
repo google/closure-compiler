@@ -15,12 +15,12 @@
  */
 package com.google.javascript.jscomp;
 
-import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_DECLARATION;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_INVALID_EXTENDS;
 import static com.google.javascript.jscomp.PolymerPassErrors.POLYMER_MISSING_EXTERNS;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
@@ -49,21 +49,26 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
   private final AbstractCompiler compiler;
   private final Map<String, String> tagNameMap;
+  private final int polymerVersion;
+  private final boolean propertyRenamingEnabled;
 
   private Node polymerElementExterns;
+  private Node externsInsertionRef = null;
   private Set<String> nativeExternsAdded;
   private ImmutableList<Node> polymerElementProps;
   private GlobalNamespace globalNames;
+  private boolean warnedPolymer1ExternsMissing = false;
 
-  PolymerPass(AbstractCompiler compiler) {
+  PolymerPass(AbstractCompiler compiler, Integer polymerVersion, boolean propertyRenamingEnabled) {
+    checkArgument(
+        polymerVersion == null || polymerVersion == 1 || polymerVersion == 2,
+        "Invalid Polymer version:",
+        polymerVersion);
     this.compiler = compiler;
     tagNameMap = TagNameToType.getMap();
     nativeExternsAdded = new HashSet<>();
-
-    if (compiler.getOptions().polymerVersion != 1) {
-      throw new IllegalStateException("Polymer version not supported: "
-          + compiler.getOptions().polymerVersion);
-    }
+    this.polymerVersion = polymerVersion == null ? 1 : polymerVersion;
+    this.propertyRenamingEnabled = propertyRenamingEnabled;
   }
 
   @Override
@@ -73,9 +78,14 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     polymerElementExterns = externsCallback.getPolymerElementExterns();
     polymerElementProps = externsCallback.getPolymerElementProps();
 
-    if (polymerElementExterns == null) {
+    if (polymerVersion == 1 && polymerElementExterns == null) {
+      this.warnedPolymer1ExternsMissing = true;
       compiler.report(JSError.make(externs, POLYMER_MISSING_EXTERNS));
       return;
+    }
+
+    if (polymerVersion > 1 && propertyRenamingEnabled) {
+      compiler.ensureLibraryInjected("util/reflectobject", false);
     }
 
     globalNames = new GlobalNamespace(compiler, externs, root);
@@ -93,15 +103,22 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
   @Override
   public void visit(NodeTraversal traversal, Node node, Node parent) {
-    checkState(
-        polymerElementExterns != null && polymerElementProps != null && globalNames != null,
-        "Cannot call visit() before process()");
-    if (isPolymerCall(node)) {
-      rewriteClassDefinition(node, parent, traversal);
+    checkNotNull(globalNames, "Cannot call visit() before process()");
+
+    if (PolymerPassStaticUtils.isPolymerCall(node)) {
+      if (polymerElementExterns != null) {
+        rewritePolymer1ClassDefinition(node, parent, traversal);
+      } else if (!warnedPolymer1ExternsMissing) {
+        compiler.report(JSError.make(polymerElementExterns, POLYMER_MISSING_EXTERNS));
+        warnedPolymer1ExternsMissing = true;
+      }
+    } else if (PolymerPassStaticUtils.isPolymerClass(node)) {
+      rewritePolymer2ClassDefinition(node, traversal);
     }
   }
 
-  private void rewriteClassDefinition(Node node, Node parent, NodeTraversal traversal) {
+  /** Polymer 1.x and Polymer 2 Legacy Element Definitions */
+  private void rewritePolymer1ClassDefinition(Node node, Node parent, NodeTraversal traversal) {
     Node grandparent = parent.getParent();
     if (grandparent.isConst()) {
       compiler.report(JSError.make(node, POLYMER_INVALID_DECLARATION));
@@ -113,13 +130,39 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
       if (def.nativeBaseElement != null) {
         appendPolymerElementExterns(def);
       }
-      PolymerClassRewriter rewriter = new PolymerClassRewriter(compiler, polymerElementExterns);
+      PolymerClassRewriter rewriter =
+          new PolymerClassRewriter(
+              compiler, getExtensInsertionRef(), polymerVersion, this.propertyRenamingEnabled);
       if (NodeUtil.isNameDeclaration(grandparent) || parent.isAssign()) {
-        rewriter.rewritePolymerClass(grandparent, def, traversal.inGlobalScope());
+        rewriter.rewritePolymerCall(grandparent, def, traversal.inGlobalScope());
       } else {
-        rewriter.rewritePolymerClass(parent, def, traversal.inGlobalScope());
+        rewriter.rewritePolymerCall(parent, def, traversal.inGlobalScope());
       }
     }
+  }
+
+  /** Polymer 2.x Class Nodes */
+  private void rewritePolymer2ClassDefinition(Node node, NodeTraversal traversal) {
+    PolymerClassDefinition def =
+        PolymerClassDefinition.extractFromClassNode(node, compiler, globalNames);
+    if (def != null) {
+      PolymerClassRewriter rewriter =
+          new PolymerClassRewriter(
+              compiler, getExtensInsertionRef(), polymerVersion, this.propertyRenamingEnabled);
+      rewriter.rewritePolymerClassDeclaration(node, def, traversal.inGlobalScope());
+    }
+  }
+
+  private Node getExtensInsertionRef() {
+    if (this.polymerElementExterns != null) {
+      return this.polymerElementExterns;
+    }
+
+    if (this.externsInsertionRef == null) {
+      this.externsInsertionRef = compiler.getSynthesizedExternsInputAtEnd().getAstRoot(compiler);
+    }
+
+    return this.externsInsertionRef;
   }
 
   /**
@@ -167,17 +210,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
     compiler.reportChangeToEnclosingScope(stmts);
   }
 
-  /**
-   * @return Whether the call represents a call to the Polymer function.
-   */
-  @VisibleForTesting
-  public static boolean isPolymerCall(Node value) {
-    return value != null && value.isCall() && value.getFirstChild().matchesQualifiedName("Polymer");
-  }
-
-  /**
-   * Any member of a Polymer element or Behavior. These can be functions, properties, etc.
-   */
+  /** Any member of a Polymer element or Behavior. These can be functions, properties, etc. */
   static class MemberDefinition {
     /** Any {@link JSDocInfo} tied to this member. */
     final JSDocInfo info;

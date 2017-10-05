@@ -46,6 +46,12 @@ public final class CheckArrayWithGoogObjectTest extends TypeICompilerTestCase {
     return options;
   }
 
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableTranspile();
+  }
+
   public void testGoogObjectForEach1() {
     testGoogObjectWarning(LINE_JOINER.join(
         GOOG_OBJECT,

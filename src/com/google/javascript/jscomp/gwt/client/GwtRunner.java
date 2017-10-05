@@ -37,13 +37,13 @@ import com.google.javascript.jscomp.DependencyOptions;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.ModuleIdentifier;
-import com.google.javascript.jscomp.ResourceLoader;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMapInput;
 import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
+import com.google.javascript.jscomp.resources.ResourceLoader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -148,7 +148,7 @@ public final class GwtRunner implements EntryPoint {
     defaultFlags.externs = null;
     defaultFlags.createSourceMap = false;
     defaultFlags.tracerMode = "OFF";
-    defaultFlags.moduleResolutionMode = "LEGACY";
+    defaultFlags.moduleResolutionMode = "BROWSER";
   }
 
   @JsType(namespace = JsPackage.GLOBAL, name = "Object", isNative = true)
@@ -320,7 +320,7 @@ public final class GwtRunner implements EntryPoint {
   private static void applyDefaultOptions(CompilerOptions options) {
     CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     WarningLevel.DEFAULT.setOptionsForWarningLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
   }
 

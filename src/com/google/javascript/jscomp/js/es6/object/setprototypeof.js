@@ -14,31 +14,16 @@
  * limitations under the License.
  */
 
+/**
+ * @fileoverview
+ * @suppress {uselessCode}
+ */
 'require util/polyfill';
+'require es6/util/setprototypeof';
 
 
 $jscomp.polyfill('Object.setPrototypeOf', function(orig) {
-  if (orig) return orig;
-
-  // IE<11 has no way to polyfill this, so don't even try.
-  if (typeof ''.__proto__ != 'object') return null;
-
-  /**
-   * Polyfill for Object.setPrototypeOf() method:
-   * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/setPrototypeOf
-   *
-   * Sets the prototype in a "standard" way.
-   *
-   * @param {!Object} target Target on which to get the property.
-   * @param {?Object} proto The new prototype.
-   * @return {!Object}
-   */
-  var polyfill = function(target, proto) {
-    target.__proto__ = proto;
-    if (target.__proto__ !== proto) {
-      throw new TypeError(target + ' is not extensible');
-    }
-    return target;
-  };
-  return polyfill;
+  // Note that $jscomp.setPrototypeOf will be `null` if it isn't possible to
+  // implement this method.
+  return orig || $jscomp.setPrototypeOf;
 }, 'es6', 'es5');

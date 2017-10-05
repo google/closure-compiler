@@ -46,9 +46,9 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
 
   private static final DiagnosticGroup NTI_CONST =
       new DiagnosticGroup(
-          GlobalTypeInfo.CONST_WITHOUT_INITIALIZER,
-          GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE,
-          GlobalTypeInfo.MISPLACED_CONST_ANNOTATION,
+          GlobalTypeInfoCollector.CONST_WITHOUT_INITIALIZER,
+          GlobalTypeInfoCollector.COULD_NOT_INFER_CONST_TYPE,
+          GlobalTypeInfoCollector.MISPLACED_CONST_ANNOTATION,
           NewTypeInference.CONST_REASSIGNED,
           NewTypeInference.CONST_PROPERTY_REASSIGNED,
           NewTypeInference.CONST_PROPERTY_DELETED);

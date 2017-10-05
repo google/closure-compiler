@@ -85,8 +85,8 @@ public final class PhaseOptimizerTest extends TestCase {
     options.optimizationLoopMaxIterations = 1;
     optimizer = new PhaseOptimizer(compiler, tracker);
     Loop loop = optimizer.addFixedPointLoop();
-    addLoopedPass(loop, Compiler.PEEPHOLE_PASS_NAME, 2);
-    assertPasses(Compiler.PEEPHOLE_PASS_NAME);
+    addLoopedPass(loop, PassNames.PEEPHOLE_OPTIMIZATIONS, 2);
+    assertPasses(PassNames.PEEPHOLE_OPTIMIZATIONS);
   }
 
   public void testNotInfiniteLoop() {

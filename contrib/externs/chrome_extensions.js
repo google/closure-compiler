@@ -263,6 +263,10 @@ chrome.app.runtime.LaunchItem.prototype.type;
 
 
 /** @type {!ChromeObjectEvent} */
+chrome.app.runtime.onEmbedRequested;
+
+
+/** @type {!ChromeObjectEvent} */
 chrome.app.runtime.onLaunched;
 
 
@@ -1434,75 +1438,60 @@ chrome.bluetoothLowEnergy = {};
 
 
 /**
- * @constructor
+ * @typedef {?{
+ *   uuid: string,
+ *   isPrimary: boolean,
+ *   instanceId: (string|undefined),
+ *   deviceAddress: (string|undefined)
+ * }}
  * @see https://developer.chrome.com/apps/bluetoothLowEnergy#type-Service
  */
-chrome.bluetoothLowEnergy.Service = function() {};
-
-
-/** @type {string} */
-chrome.bluetoothLowEnergy.Service.prototype.uuid;
-
-
-/** @type {boolean} */
-chrome.bluetoothLowEnergy.Service.prototype.isPrimary;
-
-
-/** @type {string|undefined} */
-chrome.bluetoothLowEnergy.Service.prototype.instanceId;
-
-
-/** @type {string|undefined} */
-chrome.bluetoothLowEnergy.Service.prototype.deviceAddress;
+chrome.bluetoothLowEnergy.Service;
 
 
 /**
  * @constructor
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#type-Request
+ */
+chrome.bluetoothLowEnergy.Request = function() {};
+
+
+/** @type {number} */
+chrome.bluetoothLowEnergy.Request.prototype.requestId;
+
+
+/** @type {!Object} */
+chrome.bluetoothLowEnergy.Request.prototype.device;
+
+
+/** @type {!ArrayBuffer|undefined} */
+chrome.bluetoothLowEnergy.Request.prototype.value;
+
+
+/**
+ * @typedef {?{
+ *   uuid: string,
+ *   service: (!chrome.bluetoothLowEnergy.Service|undefined),
+ *   properties: !Array<string>,
+ *   instanceId: (string|undefined),
+ *   value: (!ArrayBuffer|undefined)
+ * }}
  * @see https://developer.chrome.com/apps/bluetoothLowEnergy#type-Characteristic
  */
-chrome.bluetoothLowEnergy.Characteristic = function() {};
-
-
-/** @type {string} */
-chrome.bluetoothLowEnergy.Characteristic.prototype.uuid;
-
-
-/** @type {!chrome.bluetoothLowEnergy.Service} */
-chrome.bluetoothLowEnergy.Characteristic.prototype.service;
-
-
-/** @type {!Array<string>} */
-chrome.bluetoothLowEnergy.Characteristic.prototype.properties;
-
-
-/** @type {string|undefined} */
-chrome.bluetoothLowEnergy.Characteristic.prototype.instanceId;
-
-
-/** @type {!ArrayBuffer|undefined} */
-chrome.bluetoothLowEnergy.Characteristic.prototype.value;
+chrome.bluetoothLowEnergy.Characteristic;
 
 
 /**
- * @constructor
+ * @typedef {?{
+ *   uuid: string,
+ *   characteristic: (!chrome.bluetoothLowEnergy.Characteristic|undefined),
+ *   permissions: !Array<string>,
+ *   instanceId: (string|undefined),
+ *   value: (!ArrayBuffer|undefined)
+ * }}
  * @see https://developer.chrome.com/apps/bluetoothLowEnergy#type-Descriptor
  */
-chrome.bluetoothLowEnergy.Descriptor = function() {};
-
-/** @type {string} */
-chrome.bluetoothLowEnergy.Descriptor.prototype.uuid;
-
-
-/** @type {!chrome.bluetoothLowEnergy.Characteristic} */
-chrome.bluetoothLowEnergy.Descriptor.prototype.characteristic;
-
-
-/** @type {string|undefined} */
-chrome.bluetoothLowEnergy.Descriptor.prototype.instanceId;
-
-
-/** @type {!ArrayBuffer|undefined} */
-chrome.bluetoothLowEnergy.Descriptor.prototype.value;
+chrome.bluetoothLowEnergy.Descriptor;
 
 
 /**
@@ -1543,6 +1532,15 @@ chrome.bluetoothLowEnergy.getService = function(serviceId, callback) {};
 
 
 /**
+ * @param {!chrome.bluetoothLowEnergy.Service} service
+ * @param {function(string)} callback
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-createService
+ * @return {undefined}
+ */
+chrome.bluetoothLowEnergy.createService = function(service, callback) {};
+
+
+/**
  * @param {string} deviceAddress
  * @param {function(!Array<!chrome.bluetoothLowEnergy.Service>)} callback
  * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-getServices
@@ -1559,6 +1557,17 @@ chrome.bluetoothLowEnergy.getServices = function(deviceAddress, callback) {};
  */
 chrome.bluetoothLowEnergy.getCharacteristic =
     function(characteristicId, callback) {};
+
+
+/**
+ * @param {!chrome.bluetoothLowEnergy.Characteristic} characteristic
+ * @param {string} serviceId
+ * @param {function(string)} callback
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-createCharacteristic
+ * @return {undefined}
+ */
+chrome.bluetoothLowEnergy.createCharacteristic = function(
+    characteristic, serviceId, callback) {};
 
 
 /**
@@ -1589,6 +1598,17 @@ chrome.bluetoothLowEnergy.getIncludedServices =
  * @return {undefined}
  */
 chrome.bluetoothLowEnergy.getDescriptor = function(descriptorId, callback) {};
+
+
+/**
+ * @param {!chrome.bluetoothLowEnergy.Descriptor} descriptor
+ * @param {string} characteristicId
+ * @param {function(string)} callback
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-createDescriptor
+ * @return {undefined}
+ */
+chrome.bluetoothLowEnergy.createDescriptor = function(
+    descriptor, characteristicId, callback) {};
 
 
 /**
@@ -1652,6 +1672,26 @@ chrome.bluetoothLowEnergy.stopCharacteristicNotifications =
 
 
 /**
+ * @typedef {?{
+ *   value: !ArrayBuffer,
+ *   shouldIndicate: (boolean|undefined)
+ * }}
+ */
+chrome.bluetoothLowEnergy.NotificationIndication;
+
+
+/**
+ * @param {string} characteristicId
+ * @param {!chrome.bluetoothLowEnergy.NotificationIndication} notification
+ * @param {function()} callback
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-notifyCharacteristicValueChanged
+ * @return {undefined}
+ */
+chrome.bluetoothLowEnergy.notifyCharacteristicValueChanged = function(
+    characteristicId, notification, callback) {};
+
+
+/**
  * @param {string} descriptorId
  * @param {function(!chrome.bluetoothLowEnergy.Descriptor)} callback
  * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-readDescriptorValue
@@ -1670,6 +1710,87 @@ chrome.bluetoothLowEnergy.readDescriptorValue =
  */
 chrome.bluetoothLowEnergy.writeDescriptorValue =
   function(descriptorId, value, callback) {};
+
+
+/**
+ * @param {string} serviceId
+ * @param {function()} callback
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-registerService
+ * @return {undefined}
+ */
+chrome.bluetoothLowEnergy.registerService = function(serviceId, callback) {};
+
+
+/**
+ * @param {string} serviceId
+ * @param {function()} callback
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-unregisterService
+ * @return {undefined}
+ */
+chrome.bluetoothLowEnergy.unregisterService = function(serviceId, callback) {};
+
+
+/**
+ * @param {string} serviceId
+ * @param {function()=} opt_callback
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-removeService
+ * @return {undefined}
+ */
+chrome.bluetoothLowEnergy.removeService = function(serviceId, opt_callback) {};
+
+
+/**
+ * @typedef {?{
+ *   type: string,
+ *   serviceUuids: (!Array<string>|undefined),
+ *   manufacturerData: (!Array<{id: number, data: !Array<number>}>|undefined),
+ *   solicitUuids: (!Array<string>|undefined),
+ *   serviceData: (!Array<{uuid: string, data: !Array<number>}>|undefined)
+ * }}
+ */
+chrome.bluetoothLowEnergy.Advertisement;
+
+
+/**
+ * @param {!chrome.bluetoothLowEnergy.Advertisement} advertisement
+ * @param {function(number)} callback
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-registerAdvertisement
+ */
+chrome.bluetoothLowEnergy.registerAdvertisement =
+    function(advertisement, callback) {};
+
+
+/**
+ * @param {number} advertisementId
+ * @param {function()} callback
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-unregisterAdvertisement
+ */
+chrome.bluetoothLowEnergy.unregisterAdvertisement =
+    function(advertisementId, callback) {};
+
+
+/**
+ * @param {number} minInterval
+ * @param {number} maxInterval
+ * @param {function()} callback
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-setAdvertisingInterval
+ */
+chrome.bluetoothLowEnergy.setAdvertisingInterval = function(
+    minInterval, maxInterval, callback) {};
+
+
+/**
+ * @typedef {?{
+ *   requestId: number,
+ *   isError: boolean,
+ *   value: (!ArrayBuffer|undefined)
+ * }}
+ */
+chrome.bluetoothLowEnergy.RequestResponse;
+
+
+/** @param {!chrome.bluetoothLowEnergy.RequestResponse} response */
+chrome.bluetoothLowEnergy.sendRequestResponse = function(response) {};
 
 
 /**
@@ -1774,7 +1895,7 @@ chrome.bluetoothLowEnergy.onCharacteristicValueChanged;
 
 
 /**
- * Event whose listeners take a Characteristic parameter.
+ * Event whose listeners take a Descriptor parameter.
  * @constructor
  */
 chrome.bluetoothLowEnergy.DescriptorEvent = function() {};
@@ -1819,33 +1940,69 @@ chrome.bluetoothLowEnergy.onDescriptorValueChanged;
 
 
 /**
- * @typedef {?{
- *   type: string,
- *   serviceUuids: (!Array<string>|undefined),
- *   manufacturerData: (!Array<{id: number, data: !Array<number>}>|undefined),
- *   solicitUuids: (!Array<string>|undefined),
- *   serviceData: (!Array<{uuid: string, data: !Array<number>}>|undefined)
- * }}
+ * Event whose listeners take a Request parameter.
+ * @constructor
  */
-chrome.bluetoothLowEnergy.Advertisement;
+chrome.bluetoothLowEnergy.RequestEvent = function() {};
 
 
 /**
- * @param {!chrome.bluetoothLowEnergy.Advertisement} advertisement
- * @param {function(number)} callback
- * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-registerAdvertisement
+ * @param {function(!chrome.bluetoothLowEnergy.Request, string): void}
+ *     callback
+ * @return {undefined}
  */
-chrome.bluetoothLowEnergy.registerAdvertisement =
-    function(advertisement, callback) {};
+chrome.bluetoothLowEnergy.RequestEvent.prototype.addListener = function(
+    callback) {};
 
 
 /**
- * @param {number} advertisementId
- * @param {function()} callback
- * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-unregisterAdvertisement
+ * @param {function(!chrome.bluetoothLowEnergy.Request, string): void}
+ *     callback
+ * @return {undefined}
  */
-chrome.bluetoothLowEnergy.unregisterAdvertisement =
-    function(advertisementId, callback) {};
+chrome.bluetoothLowEnergy.RequestEvent.prototype.removeListener = function(
+    callback) {};
+
+
+/**
+ * @param {function(!chrome.bluetoothLowEnergy.Request, string): void}
+ *     callback
+ * @return {boolean}
+ */
+chrome.bluetoothLowEnergy.RequestEvent.prototype.hasListener = function(
+    callback) {};
+
+
+/** @return {boolean} */
+chrome.bluetoothLowEnergy.RequestEvent.prototype.hasListeners = function() {};
+
+
+/**
+ * @type {!chrome.bluetoothLowEnergy.RequestEvent}
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#event-onCharacteristicReadRequest
+ */
+chrome.bluetoothLowEnergy.onCharacteristicReadRequest;
+
+
+/**
+ * @type {!chrome.bluetoothLowEnergy.RequestEvent}
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#event-onCharacteristicWriteRequest
+ */
+chrome.bluetoothLowEnergy.onCharacteristicWriteRequest;
+
+
+/**
+ * @type {!chrome.bluetoothLowEnergy.RequestEvent}
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#event-onDescriptorReadRequest
+ */
+chrome.bluetoothLowEnergy.onDescriptorReadRequest;
+
+
+/**
+ * @type {!chrome.bluetoothLowEnergy.RequestEvent}
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#event-onDescriptorWriteRequest
+ */
+chrome.bluetoothLowEnergy.onDescriptorWriteRequest;
 
 
 /**
@@ -2029,6 +2186,22 @@ chrome.copresence.onStatusUpdated;
  * @const
  */
 chrome.enterprise = {};
+
+
+/**
+ * @constructor
+ * deviceAttributes allows for reading device attributes.
+ * @see https://developer.chrome.com/extensions/enterprise_deviceAttributes.
+ */
+chrome.enterprise.deviceAttributes = function() {};
+
+
+/**
+ * @param {function(string): void} callback Called with the device identifier
+ *     of the directory API when received.
+ * @return {undefined}
+ */
+chrome.enterprise.deviceAttributes.getDirectoryDeviceId = function(callback) {};
 
 
 /**
@@ -2296,9 +2469,16 @@ chrome.runtime.openOptionsPage = function(opt_callback) {};
 
 /**
  * Manifest information returned from chrome.runtime.getManifest. See
- * http://developer.chrome.com/extensions/manifest.html. Note that there are
- * several other fields not included here. They should be added to these externs
- * as needed.
+ * https://developer.chrome.com/extensions/manifest.html and
+ * https://developer.chrome.com/apps/manifest.html
+ *
+ * Note that:
+ * 1) There are several other fields not included here. They should be
+ *    added to these externs as needed.
+ * 2) There are some distinct fields for app vs extension manifests. The
+ *    below manifest definition contains the union of all fields; unique
+ *    fields should be annotated as such (see e.g. kiosk_only property
+ *    below).
  * @constructor
  */
 chrome.runtime.Manifest = function() {};
@@ -2328,6 +2508,14 @@ chrome.runtime.Manifest.prototype.oauth2;
 chrome.runtime.Manifest.prototype.permissions;
 
 
+/**
+ * App-only manifest field.
+ * @see https://developer.chrome.com/apps/manifest
+ * @type {boolean|undefined}
+ */
+chrome.runtime.Manifest.prototype.kiosk_only;
+
+
 
 /**
  * Oauth2 info in the manifest.
@@ -2346,7 +2534,8 @@ chrome.runtime.Manifest.Oauth2.prototype.scopes;
 
 
 /**
- * http://developer.chrome.com/extensions/runtime.html#method-getManifest
+ * https://developer.chrome.com/extensions/runtime.html#method-getManifest
+ * https://developer.chrome.com/apps/runtime#method-getManifest
  * @return {!chrome.runtime.Manifest} The full manifest file of the app or
  *     extension.
  */
@@ -6421,12 +6610,9 @@ WebRequestOptionallySynchronousEvent.prototype.hasListener = function(
 
 
 /**
- * @param {function(!Object): (undefined|!BlockingResponse)} listener Listener
- *     function.
- * @return {undefined}
+ * @return {boolean}
  */
-WebRequestOptionallySynchronousEvent.prototype.hasListeners = function(
-    listener) {};
+WebRequestOptionallySynchronousEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -6944,11 +7130,11 @@ CookieStore.prototype.tabIds;
 function OnClickData() {}
 
 
-/** @type {number} */
+/** @type {number|string} */
 OnClickData.prototype.menuItemId;
 
 
-/** @type {number} */
+/** @type {number|string} */
 OnClickData.prototype.parentMenuItemId;
 
 
@@ -6972,12 +7158,24 @@ OnClickData.prototype.pageUrl;
 OnClickData.prototype.frameUrl;
 
 
+/** @type {number} */
+OnClickData.prototype.frameId;
+
+
 /** @type {string} */
 OnClickData.prototype.selectionText;
 
 
-/** @type {string} */
+/** @type {boolean} */
 OnClickData.prototype.editable;
+
+
+/** @type {boolean} */
+OnClickData.prototype.wasChecked;
+
+
+/** @type {boolean} */
+OnClickData.prototype.checked;
 
 
 
@@ -10655,7 +10853,7 @@ chrome.downloads.DownloadItem.prototype.incognito;
 
 
 /** @type {!chrome.downloads.DangerType|string} */
-chrome.downloads.DownloadItem.prototype.dangerType;
+chrome.downloads.DownloadItem.prototype.danger;
 
 
 /** @type {string} */

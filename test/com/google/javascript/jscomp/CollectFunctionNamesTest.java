@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -39,30 +38,36 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
   }
 
   public void testFunctionsNamesAndIds() {
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
-    final String jsSource = LINE_JOINER.join(
-        "goog.widget = function(str) {",
-        "  this.member_fn = function() {};",
-        "  local_fn = function() {};",
-        "  (function(a){})(1);",
-        "}",
-        "function foo() {",
-        "  function bar() {}",
-        "}",
-        "literal = {f1 : function(){}, f2 : function(){}};",
-        "goog.array.map(arr, function named(){});",
-        "goog.array.map(arr, function(){});",
-        "named_twice = function quax(){};",
-        "recliteral = {l1 : {l2 : function(){}}};",
-        "namedliteral = {n1 : function litnamed(){}};",
-        "namedrecliteral = {n1 : {n2 : function reclitnamed(){}}};",
-        "numliteral = {1 : function(){}};",
-        "recnumliteral = {1 : {a : function(){}}};",
-        "literalWithShorthand = {shorthandF1(){}, shorthandF2(){}};",
-        "class Klass{ constructor(){} method(){}}",
-        "KlassExpression = class{ constructor(){} method(){}}",
-        "var KlassExpressionToVar = class{ constructor(){} method(){}}",
-        "class KlassWithStaticMethod{ static staticMethod(){}}");
+    final String jsSource =
+        LINE_JOINER.join(
+            "goog.widget = function(str) {",
+            "  this.member_fn = function() {};",
+            "  local_fn = function() {};",
+            "  (function(a){})(1);",
+            "}",
+            "function foo() {",
+            "  function bar() {}",
+            "}",
+            "literal = {f1 : function(){}, f2 : function(){}};",
+            "goog.array.map(arr, function named(){});",
+            "goog.array.map(arr, function(){});",
+            "named_twice = function quax(){};",
+            "recliteral = {l1 : {l2 : function(){}}};",
+            "namedliteral = {n1 : function litnamed(){}};",
+            "namedrecliteral = {n1 : {n2 : function reclitnamed(){}}};",
+            "numliteral = {1 : function(){}};",
+            "recnumliteral = {1 : {a : function(){}}};",
+            "literalWithShorthand = {shorthandF1(){}, shorthandF2(){}};",
+            "class Klass{ constructor(){} method(){}}",
+            "KlassExpression = class{ constructor(){} method(){}}",
+            "var KlassExpressionToVar = class{ constructor(){} method(){}}",
+            "class KlassWithStaticMethod{ static staticMethod(){}}",
+            "() => {};",
+            "var arrowFn1 = () => {};",
+            "function foo1() {",
+            "  var arrowFn2 = () => {};",
+            "  () => {};",
+            "}");
 
     testSame(jsSource);
 
@@ -75,7 +80,7 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
       count++;
     }
 
-    assertEquals("Unexpected number of functions", 25, count);
+    assertEquals("Unexpected number of functions", 30, count);
 
     final Map<Integer, String> expectedMap = new LinkedHashMap<>();
 
@@ -104,6 +109,11 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
     expectedMap.put(22, "KlassExpressionToVar.constructor");
     expectedMap.put(23, "KlassExpressionToVar.method");
     expectedMap.put(24, "KlassWithStaticMethod.staticMethod");
+    expectedMap.put(25, "<anonymous>"); // arrow function in global scope
+    expectedMap.put(26, "arrowFn1"); // arrow function declared as variable
+    expectedMap.put(27, "foo1::arrowFn2"); // arrow function in inner scope
+    expectedMap.put(28, "foo1::<anonymous>"); // arrow function declared as variable in inner scope
+    expectedMap.put(29, "foo1");
     assertEquals("Function id/name mismatch",
                  expectedMap, idNameMap);
   }

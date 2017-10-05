@@ -586,6 +586,32 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testSortRequiresInGoogModule_withOtherStatements() {
+    // The requires after "const {Bar} = bar;" are not sorted.
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const foo = goog.require('foo');",
+            "const bar = goog.require('bar');",
+            "const {Bar} = bar;",
+            "const util = goog.require('util');",
+            "const {doCoolThings} = util;",
+            "",
+            "doCoolThings(foo, Bar);"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const bar = goog.require('bar');",
+            "const foo = goog.require('foo');",
+            "const {Bar} = bar;",
+            "const util = goog.require('util');",
+            "const {doCoolThings} = util;",
+            "",
+            "doCoolThings(foo, Bar);"));
+  }
+
+  @Test
   public void testSortRequiresAndForwardDeclares() {
     assertChanges(
         LINE_JOINER.join(
@@ -651,7 +677,7 @@ public class ErrorToFixMapperTest {
   @Test
   public void testMissingRequire_unsorted2() {
     // Both the fix for requires being unsorted, and the fix for the missing require, are applied.
-    // However, the end result is still out of order.
+    // The end result is ordered.
     assertChanges(
         LINE_JOINER.join(
             "goog.module('module');",
@@ -664,10 +690,10 @@ public class ErrorToFixMapperTest {
             "alert(new DomHelper());"),
         LINE_JOINER.join(
             "goog.module('module');",
-            "const Xray = goog.require('goog.rays.Xray');",
             "",
             "const Anteater = goog.require('goog.Anteater');",
             "const DomHelper = goog.require('goog.dom.DomHelper');",
+            "const Xray = goog.require('goog.rays.Xray');",
             "",
             "alert(new Anteater());",
             "alert(new Xray());",
@@ -1080,6 +1106,27 @@ public class ErrorToFixMapperTest {
   }
 
   @Test
+  public void testUnsortedAndMissingLhs() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('foo');",
+            "",
+            "goog.require('example.controller');",
+            "const Bar = goog.require('example.Bar');",
+            "",
+            "alert(example.controller.SOME_CONSTANT);",
+            "alert(Bar.doThings);"),
+        LINE_JOINER.join(
+            "goog.module('foo');",
+            "",
+            "const Bar = goog.require('example.Bar');",
+            "goog.require('example.controller');",
+            "",
+            "alert(example.controller.SOME_CONSTANT);",
+            "alert(Bar.doThings);"));
+  }
+
+  @Test
   public void testShortRequireInGoogModule1() {
     assertChanges(
         LINE_JOINER.join(
@@ -1179,6 +1226,40 @@ public class ErrorToFixMapperTest {
             "var GoogWidget = goog.require('goog.Widget');",
             "",
             "alert(new GoogWidget());"));
+  }
+
+  @Test
+  public void testBug65602711a() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {X} = goog.require('ns.abc.xyz');",
+            "",
+            "use(ns.abc.xyz.X);"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {X} = goog.require('ns.abc.xyz');",
+            "",
+            "use(X);"));
+  }
+
+  @Test
+  public void testBug65602711b() {
+    assertChanges(
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {X: X2} = goog.require('ns.abc.xyz');",
+            "",
+            "use(ns.abc.xyz.X);"),
+        LINE_JOINER.join(
+            "goog.module('x');",
+            "",
+            "const {X: X2} = goog.require('ns.abc.xyz');",
+            "",
+            "use(X2);"));
   }
 
   @Test

@@ -204,6 +204,13 @@ public class ChangeVerifier {
     if (thisNode.getChildCount() != thatNode.getChildCount()) {
       return false;
     }
+
+    if (thisNode.isFunction() && thatNode.isFunction()) {
+      if (NodeUtil.isFunctionDeclaration(thisNode) != NodeUtil.isFunctionDeclaration(thatNode)) {
+        return false;
+      }
+    }
+
     Node thisChild = thisNode.getFirstChild();
     Node thatChild = thatNode.getFirstChild();
     while (thisChild != null && thatChild != null) {
@@ -228,6 +235,7 @@ public class ChangeVerifier {
       thisChild = thisChild.getNext();
       thatChild = thatChild.getNext();
     }
+
     return true;
   }
 }

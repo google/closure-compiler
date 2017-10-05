@@ -25,7 +25,6 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.TextFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -171,39 +170,28 @@ public final class CheckConformance implements Callback, CompilerPass {
 
     List<Requirement> requirements = new ArrayList<>(builders.size());
     for (Requirement.Builder builder : builders) {
-      Requirement requirement = builder.build();
-      checkRequirementList(compiler, requirement, "whitelist");
-      checkRequirementList(compiler, requirement, "whitelist_regexp");
-      checkRequirementList(compiler, requirement, "only_apply_to");
-      checkRequirementList(compiler, requirement, "only_apply_to_regexp");
-      requirements.add(requirement);
+      removeDuplicates(builder);
+      requirements.add(builder.build());
     }
     return requirements;
   }
 
-  private static void checkRequirementList(AbstractCompiler compiler, Requirement requirement,
-      String field) {
-    Set<String> existing = new HashSet<>();
-    for (String value : getRequirementList(requirement, field)) {
-      if (!existing.add(value)) {
-        reportInvalidRequirement(compiler, requirement, "duplicate " + field + " value: " + value);
-      }
-    }
-  }
+  private static void removeDuplicates(Requirement.Builder requirement) {
+    final Set<String> list1 = ImmutableSet.copyOf(requirement.getWhitelistList());
+    requirement.clearWhitelist();
+    requirement.addAllWhitelist(list1);
 
-  private static List<String> getRequirementList(Requirement requirement, String field) {
-    switch (field) {
-      case "whitelist":
-        return requirement.getWhitelistList();
-      case "whitelist_regexp":
-        return requirement.getWhitelistRegexpList();
-      case "only_apply_to":
-        return requirement.getOnlyApplyToList();
-      case "only_apply_to_regexp":
-        return requirement.getOnlyApplyToRegexpList();
-      default:
-        throw new AssertionError("Unrecognized field: " + field);
-    }
+    final Set<String> list2 = ImmutableSet.copyOf(requirement.getWhitelistRegexpList());
+    requirement.clearWhitelistRegexp();
+    requirement.addAllWhitelistRegexp(list2);
+
+    final Set<String> list3 = ImmutableSet.copyOf(requirement.getOnlyApplyToList());
+    requirement.clearOnlyApplyTo();
+    requirement.addAllOnlyApplyTo(list3);
+
+    final Set<String> list4 = ImmutableSet.copyOf(requirement.getOnlyApplyToRegexpList());
+    requirement.clearOnlyApplyToRegexp();
+    requirement.addAllOnlyApplyToRegexp(list4);
   }
 
   private static Rule initRule(

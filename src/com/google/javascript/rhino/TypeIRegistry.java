@@ -69,6 +69,31 @@ public interface TypeIRegistry extends Serializable {
 
   String getReadableTypeName(Node n);
 
+  /**
+   * For NTI, this method returns an obfuscated name that represents the getter.
+   * For OTI, the property name is unchanged.
+   */
+  String createGetterPropName(String originalPropName);
+
+  /**
+   * For NTI, this method returns an obfuscated name that represents the setter.
+   * For OTI, the property name is unchanged.
+   *
+   * This method is a bit of a hack. In the future, NTI can handle getters/setters more
+   * gracefully by having a field in the Property class.
+   * See also: https://github.com/google/closure-compiler/issues/2545.
+   */
+  String createSetterPropName(String originalPropName);
+
+  /**
+   * Returns the type represented by typeName or null if not found.
+   *
+   * If you pass Foo to this method, and Foo can be an instance or a constructor,
+   * you get the Foo instance, in contrast to TypeIEnv#getNamespaceType,
+   * where you'd get the Foo constructor.
+   *
+   * If Foo is not a nominal type, returns the namespace type.
+   */
   <T extends TypeI> T getType(String typeName);
 
   TypeI createUnionType(List<? extends TypeI> variants);
@@ -78,6 +103,12 @@ public interface TypeIRegistry extends Serializable {
    */
   TypeI createRecordType(Map<String, ? extends TypeI> props);
 
+  /**
+   * Instantiates genericType using typeArgs.
+   * If genericType has fewer type variables than the number of typeArgs, we pad with unknown.
+   * If it has more, we drop the extra typeArgs.
+   * TODO(dimvar): fix the callers to pass the right number of typeArgs and throw here.
+   */
   TypeI instantiateGenericType(ObjectTypeI genericType, ImmutableList<? extends TypeI> typeArgs);
 
   TypeI evaluateTypeExpressionInGlobalScope(JSTypeExpression expr);

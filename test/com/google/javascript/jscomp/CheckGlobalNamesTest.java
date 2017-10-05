@@ -20,7 +20,6 @@ import static com.google.javascript.jscomp.CheckGlobalNames.NAME_DEFINED_LATE_WA
 import static com.google.javascript.jscomp.CheckGlobalNames.STRICT_MODULE_DEP_QNAME;
 import static com.google.javascript.jscomp.CheckGlobalNames.UNDEFINED_NAME_WARNING;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -69,7 +68,6 @@ public final class CheckGlobalNamesTest extends CompilerTestCase {
   protected void setUp() throws Exception {
     super.setUp();
     injectNamespace = false;
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
   }
 
   private static final String GET_NAMES =

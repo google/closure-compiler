@@ -386,15 +386,14 @@ public final class CompileTask
 
         if (this.outputWrapperFile != null) {
           try {
-            this.outputWrapper = Files.toString(this.outputWrapperFile, UTF_8);
+            this.outputWrapper = Files.asCharSource(this.outputWrapperFile, UTF_8).read();
           } catch (Exception e) {
             throw new BuildException("Invalid output_wrapper_file specified.");
           }
         }
 
         if (this.outputWrapper != null) {
-          int pos = -1;
-          pos = this.outputWrapper.indexOf(CommandLineRunner.OUTPUT_MARKER);
+          int pos = this.outputWrapper.indexOf(CommandLineRunner.OUTPUT_MARKER);
           if (pos > -1) {
             String prefix = this.outputWrapper.substring(0, pos);
             source.insert(0, prefix);
@@ -422,10 +421,8 @@ public final class CompileTask
   }
 
   private void flushSourceMap(SourceMap sourceMap) {
-    try {
-      FileWriter out = new FileWriter(sourceMapOutputFile);
+    try (FileWriter out = new FileWriter(sourceMapOutputFile)) {
       sourceMap.appendTo(out, outputFile.getName());
-      out.close();
     } catch (IOException e) {
       throw new BuildException("Cannot write sourcemap to file.", e);
     }
@@ -683,12 +680,9 @@ public final class CompileTask
           this.outputFile.getParentFile(), Project.MSG_DEBUG);
     }
 
-    try {
-      OutputStreamWriter out = new OutputStreamWriter(
-          new FileOutputStream(this.outputFile), outputEncoding);
+    try (OutputStreamWriter out =
+        new OutputStreamWriter(new FileOutputStream(this.outputFile), outputEncoding)) {
       out.append(source);
-      out.flush();
-      out.close();
     } catch (IOException e) {
       throw new BuildException(e);
     }

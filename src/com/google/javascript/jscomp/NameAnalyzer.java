@@ -40,6 +40,7 @@ import com.google.javascript.jscomp.graph.DiGraph.DiGraphNode;
 import com.google.javascript.jscomp.graph.LinkedDirectedGraph;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -323,6 +324,7 @@ final class NameAnalyzer implements CompilerPass {
           checkState(parent.hasOneChild());
           replaceWithRhs(containingNode, parent);
           break;
+        case CLASS:
         case FUNCTION:
           replaceWithRhs(containingNode, parent);
           break;
@@ -333,6 +335,19 @@ final class NameAnalyzer implements CompilerPass {
             replaceWithRhs(containingNode, parent);
           }
           break;
+        case STRING_KEY:
+          Node grandparent = parent.getParent();
+          NodeUtil.removeChild(/* parent= */ containingNode, /* node= */ parent);
+          compiler.reportChangeToEnclosingScope(grandparent);
+          if (!containingNode.hasChildren() && containingNode.getParent().isDestructuringLhs()) {
+            Node rhs = containingNode.getNext().detach();
+            Node newExp = new Node(Token.EXPR_RESULT, rhs);
+            containingNode.getGrandparent().replaceWith(newExp);
+          }
+          break;
+        case DEFAULT_VALUE:
+        case REST:
+        case ARRAY_PATTERN: // we don't know which child to remove
         case OBJECTLIT:
           // TODO(nicksantos): Come up with a way to remove this.
           // If we remove object lit keys, then we will need to also
@@ -517,8 +532,9 @@ final class NameAnalyzer implements CompilerPass {
         if (!NodeUtil.isImmutableResult(n.getLastChild())) {
           recordConsumers(t, n, n);
         }
-      } else if (NodeUtil.isVarDeclaration(n)
-          || (t.inGlobalScope() && n.isName() && NodeUtil.isNameDeclaration(parent))) {
+      } else if (n.isName()
+          && ((t.inGlobalScope() && NodeUtil.isNameDeclaration(parent))
+          || parent.isVar())) {
         NameInformation ns = createNameInformation(t, n);
         checkNotNull(ns, "createNameInformation returned null for: %s", n);
         recordDepScope(n, ns);
@@ -538,6 +554,15 @@ final class NameAnalyzer implements CompilerPass {
         NameInformation ns = createNameInformation(t, targetObject);
         checkNotNull(ns, "createNameInformation returned null for: %s", targetObject);
         recordDepScope(n, ns);
+      } else if (n.isDestructuringLhs()) {
+        for (Node child : NodeUtil.getLhsNodesOfDeclaration(n)) {
+          if (!child.getParent().isComputedProp()) {
+            checkState(child.isName());
+            NameInformation ns = createNameInformation(t, child);
+            checkNotNull(ns, "createNameInformation returned null for: %s", n);
+            recordDepScope(child, ns);
+          }
+        }
       }
     }
 
@@ -624,7 +649,7 @@ final class NameAnalyzer implements CompilerPass {
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
-      if (NodeUtil.isVarDeclaration(n)) {
+      if (n.isName() && parent.isVar()) {
         NameInformation ns = createNameInformation(t, n);
         checkNotNull(ns, "createNameInformation returned null for: %s", n);
         createName(ns.name);
@@ -652,12 +677,23 @@ final class NameAnalyzer implements CompilerPass {
 
       // Record global variable and function declarations
       if (t.inGlobalHoistScope()) {
-        if (NodeUtil.isVarDeclaration(n)
-            || (t.inGlobalScope() && n.isName() && NodeUtil.isNameDeclaration(parent))) {
+        if (n.isName()
+          && ((t.inGlobalScope() && NodeUtil.isNameDeclaration(parent))
+            || parent.isVar())) {
           NameInformation ns = createNameInformation(t, n);
           checkNotNull(ns, "createNameInformation returned null for: %s", n);
           recordSet(ns.name, n);
-        } else if (NodeUtil.isFunctionDeclaration(n) && t.inGlobalScope()) {
+        } else if (NodeUtil.isNameDeclaration(parent) && n.isDestructuringLhs()){
+          for (Node child : NodeUtil.getLhsNodesOfDeclaration(n)) {
+            if (!child.getParent().isComputedProp()) {
+              checkState(child.isName());
+              NameInformation ns = createNameInformation(t, child);
+              checkNotNull(ns, "createNameInformation returned null for: %s", n);
+              recordSet(ns.name, child);
+            }
+          }
+        } else if (t.inGlobalScope()
+            && (NodeUtil.isFunctionDeclaration(n) || NodeUtil.isClassDeclaration(n))) {
           Node nameNode = n.getFirstChild();
           NameInformation ns = createNameInformation(t, nameNode);
           if (ns != null) {
@@ -679,6 +715,7 @@ final class NameAnalyzer implements CompilerPass {
         NameInformation ns = createNameInformation(t, nameNode);
         if (ns != null) {
           if (ns.isPrototype) {
+
             recordPrototypeSet(ns.prototypeClass, ns.prototypeProperty, n);
           } else {
             recordSet(ns.name, nameNode);
@@ -780,8 +817,21 @@ final class NameAnalyzer implements CompilerPass {
       nodesToKeep = new HashSet<>();
     }
 
+    private boolean isInterestingNode(Node n) {
+      switch (n.getToken()) {
+        case NAME:
+        case GETPROP:
+        case GETELEM:
+          return true;
+        default:
+          return false;
+      }
+    }
+
     private void addAllChildren(Node n) {
-      nodesToKeep.add(n);
+      if (isInterestingNode(n)) {
+        nodesToKeep.add(n);
+      }
       for (Node child = n.getFirstChild();
            child != null;
            child = child.getNext()) {
@@ -795,7 +845,7 @@ final class NameAnalyzer implements CompilerPass {
     }
 
     private void addSimplifiedExpression(Node n, Node parent) {
-      if (parent.isVar()) {
+      if (NodeUtil.isNameDeclaration(parent)) {
         Node value = n.getFirstChild();
         if (value != null) {
           addSimplifiedChildren(value);
@@ -840,23 +890,27 @@ final class NameAnalyzer implements CompilerPass {
         addAllChildren(iter);
       }
 
-      if (parent.isVar() ||
-          parent.isExprResult() ||
-          parent.isReturn() ||
-          parent.isThrow()) {
+      if (NodeUtil.isNameDeclaration(parent)
+          || parent.isExprResult()
+          || parent.isReturn()
+          || parent.isThrow()) {
         addSimplifiedExpression(n, parent);
       }
 
-      if ((parent.isIf() ||
-           parent.isWhile() ||
-           parent.isWith() ||
-           parent.isSwitch() ||
-           parent.isCase()) &&
-          parent.getFirstChild() == n) {
+      if ((parent.isIf()
+          || parent.isWhile()
+          || parent.isWith()
+          || parent.isSwitch()
+          || parent.isCase())
+          && parent.getFirstChild() == n) {
         addAllChildren(n);
       }
 
       if (parent.isDo() && parent.getLastChild() == n) {
+        addAllChildren(n);
+      }
+
+      if (parent.isDestructuringLhs() && n.isCall()) {
         addAllChildren(n);
       }
 
@@ -960,7 +1014,7 @@ final class NameAnalyzer implements CompilerPass {
 
       // An assignment implies a reference from the enclosing dependency scope.
       // For example, foo references bar in: function foo() {bar=5}.
-      if (NodeUtil.isVarOrSimpleAssignLhs(n, parent)) {
+      if (NodeUtil.isNameDeclOrSimpleAssignLhs(n, parent)) {
         if (referring != null) {
           recordReference(referringName, name, RefType.REGULAR);
         }
@@ -1019,7 +1073,7 @@ final class NameAnalyzer implements CompilerPass {
      */
     private boolean maybeHiddenAlias(Node n) {
       Node parent = n.getParent();
-      if (NodeUtil.isVarOrSimpleAssignLhs(n, parent)) {
+      if (NodeUtil.isNameDeclOrSimpleAssignLhs(n, parent)) {
         Node rhs = (parent.isVar())
             ? n.getFirstChild() : parent.getLastChild();
         return (rhs != null && !NodeUtil.evaluatesToLocalValue(
@@ -1252,7 +1306,6 @@ final class NameAnalyzer implements CompilerPass {
       // Don't bother recording self-references.
       return;
     }
-
     JsName from = getName(fromName, true);
     JsName to = getName(toName, true);
     referenceGraph.connectIfNotConnectedInDirection(from, depType, to);
@@ -1567,7 +1620,7 @@ final class NameAnalyzer implements CompilerPass {
       }
     }
 
-    // Check whether this is a class-defining call. Classes may only be defined
+    // Check whether this is a class-defining call. Non Es6+ classes may only be defined
     // in the global scope.
     if (parent.isCall() && t.inGlobalHoistScope()) {
       CodingConvention convention = compiler.getCodingConvention();
@@ -1578,7 +1631,6 @@ final class NameAnalyzer implements CompilerPass {
         nameInfo.superclass = classes.superclassName;
         return nameInfo;
       }
-
       String singletonGetterClass =
           convention.getSingletonGetterClassName(parent);
       if (singletonGetterClass != null) {
@@ -1586,6 +1638,17 @@ final class NameAnalyzer implements CompilerPass {
         nameInfo.onlyAffectsClassDef = true;
         return nameInfo;
       }
+    }
+
+    // Check whether this is an ES6 class
+    if (parent.isClass() && n == parent.getFirstChild()) {
+      checkState(n.isName());
+      NameInformation nameInfo = new NameInformation(n.getString());
+      if (n.getNext().isName()) { // class it extends from
+        nameInfo.superclass = n.getNext().getString();
+        nameInfo.onlyAffectsClassDef = true;
+      }
+      return nameInfo;
     }
 
     switch (rootNameNode.getToken()) {
@@ -1878,6 +1941,7 @@ final class NameAnalyzer implements CompilerPass {
 
     switch (n.getToken()) {
       case EXPR_RESULT:
+      case CLASS:
       case FUNCTION:
       case VAR:
       case LET:
@@ -1988,6 +2052,7 @@ final class NameAnalyzer implements CompilerPass {
       case EXPR_RESULT:
         // process body
         return getRhsSubexpressions(n.getFirstChild());
+      case CLASS:
       case FUNCTION:
         // function nodes have no RHS
         return ImmutableList.of();
@@ -2008,6 +2073,7 @@ final class NameAnalyzer implements CompilerPass {
             return ImmutableList.of();
           }
         }
+      case DESTRUCTURING_LHS:
       case ASSIGN:
         {
           // add LHS and RHS expressions - LHS may be a complex expression

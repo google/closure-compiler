@@ -1,6 +1,5 @@
 language: java
 jdk:
-  - openjdk7
   - oraclejdk8
 
 cache:
@@ -15,7 +14,7 @@ script:
   # Builds the compiler and runs tests
   - mvn install --batch-mode
   # Checks for JavaDoc errors
-  - mvn javadoc:javadoc
+  - mvn -pl com.google.javascript:closure-compiler javadoc:javadoc
 
 # Causes the build to run on a VM instead of in a container, to avoid OOM errors.
 sudo: required

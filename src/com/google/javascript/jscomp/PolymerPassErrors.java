@@ -20,18 +20,22 @@ package com.google.javascript.jscomp;
  */
 final class PolymerPassErrors {
   // TODO(jlklein): Switch back to an error when everyone is upgraded to Polymer 1.0
-  static final DiagnosticType POLYMER_DESCRIPTOR_NOT_VALID = DiagnosticType.warning(
-      "JSC_POLYMER_DESCRIPTOR_NOT_VALID",
-      "The argument to Polymer() is not an obj lit (perhaps because this is a pre-Polymer-1.0 "
-      + "call). Ignoring this call.");
+  static final DiagnosticType POLYMER_DESCRIPTOR_NOT_VALID =
+      DiagnosticType.warning(
+          "JSC_POLYMER_DESCRIPTOR_NOT_VALID",
+          "The argument to Polymer() is not an obj lit or the Polymer 2 class does not have a"
+              + " static getter named 'config'. Ignoring this definition.");
 
   // Disallow 'const Foo = Polymer(...)' because the code the PolymerPass outputs will reassign
   // Foo which is not allowed for 'const' variables.
   static final DiagnosticType POLYMER_INVALID_DECLARATION = DiagnosticType.error(
-      "JSC_POLYMER_INVALID_DECLARATION", "A Polymer() declaration cannot use 'const'.");
+      "JSC_POLYMER_INVALID_DECLARATION", "A Polymer() declaration cannot use ''const''.");
+
+  static final DiagnosticType POLYMER_INVALID_BEHAVIOR = DiagnosticType.error(
+      "JSC_POLYMER_INVALID_BEHAVIOR", "A Polymer behavior may not include an ''is'' property.");
 
   static final DiagnosticType POLYMER_MISSING_IS = DiagnosticType.error("JSC_POLYMER_MISSING_IS",
-      "The class descriptor must include an 'is' property.");
+      "The class descriptor must include an ''is'' property.");
 
   static final DiagnosticType POLYMER_UNEXPECTED_PARAMS = DiagnosticType.error(
       "JSC_POLYMER_UNEXPECTED_PARAMS", "The class definition has too many arguments.");
@@ -63,6 +67,24 @@ final class PolymerPassErrors {
       DiagnosticType.error(
           "JSC_POLYMER_SHORTHAND_NOT_SUPPORTED",
           "Shorthand assignment in object literal is not allowed in Polymer call arguments");
+
+  static final DiagnosticType POLYMER_CLASS_PROPERTIES_INVALID =
+      DiagnosticType.error(
+          "JSC_POLYMER_CLASS_PROPERTIES_INVALID",
+          "The Polymer element class 'propertis' getter does not return an object literal. "
+              + "Ignoring this definition.");
+
+  static final DiagnosticType POLYMER_CLASS_PROPERTIES_NOT_STATIC =
+      DiagnosticType.error(
+          "JSC_POLYMER_CLASS_PROPERTIES_NOT_STATIC",
+          "The Polymer element class 'properties' getter is not declared static. "
+              + "Ignoring this definition.");
+
+  static final DiagnosticType POLYMER_CLASS_UNNAMED =
+      DiagnosticType.warning(
+          "JSC_POLYMER2_UNNAMED",
+          "Unable to locate a valid name for the Polymer element class."
+              + "Ignoring this definition.");
 
   private PolymerPassErrors() {}
 }

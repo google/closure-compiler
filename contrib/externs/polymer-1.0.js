@@ -160,6 +160,21 @@ PolymerElement.prototype.hostAttributes;
 PolymerElement.prototype.listeners;
 
 /**
+ * Force this element to distribute its children to its local dom.
+ * A user should call `distributeContent` if distribution has been
+ * invalidated due to changes to selectors on child elements that
+ * effect distribution that were not made via `Polymer.dom`.
+ * For example, if an element contains an insertion point with
+ * `<content select=".foo">` and a `foo` class is added to a child,
+ * then `distributeContent` must be called to update
+ * local dom distribution.
+ * @param {boolean} updateInsertionPoints Shady DOM does not detect
+ *   <content> insertion that is nested in a sub-tree being appended.
+ *   Set to true to distribute to newly added nested <content>'s.
+ */
+PolymerElement.prototype.distributeContent = function(updateInsertionPoints) {};
+
+/**
  * Return the element whose local dom within which this element is contained.
  * @type {?Element}
  */
@@ -474,7 +489,19 @@ PolymerElement.prototype.linkPaths = function(to, from) {}
  */
 PolymerElement.prototype.unlinkPaths = function(path) {}
 
-Polymer.Base;
+/**
+ * Copies own properties (including accessor descriptors) from a source
+ * object to a target object.
+ *
+ * @param {?Object} target Target object to copy properties to.
+ * @param {?Object} source Source object to copy properties from.
+ * @return {?Object} Target object that was passed as first argument or source
+ *     object if the target was null.
+ */
+PolymerElement.prototype.extend = function(target, source) {};
+
+/** @const */
+Polymer.Base = {};
 
 /**
  * Used by the promise-polyfill on its own.
@@ -484,6 +511,13 @@ Polymer.Base;
  * @return {number} A handle which can be used to cancel the job.
  */
 Polymer.Base.async = function(method, wait) {};
+
+/**
+ * @param {string} tag
+ * @param {!Object=} props
+ * @return {!Element}
+ */
+Polymer.Base.create = function(tag, props) {};
 
 /**
  * Copies own properties (including accessor descriptors) from a source
@@ -509,6 +543,15 @@ Polymer.Base.extend = function(target, source) {};
 Polymer.Base.getPropertyInfo = function(property) {};
 
 /**
+ * Dynamically imports an HTML document.
+ * @param {string} href
+ * @param {Function=} onload
+ * @param {Function=} onerror
+ * @param {boolean=} async
+ */
+Polymer.Base.importHref = function(href, onload, onerror, async) {};
+
+/**
  * Copies props from a source object to a target object.
  *
  * Note, this method uses a simple `for...in` strategy for enumerating
@@ -521,7 +564,59 @@ Polymer.Base.getPropertyInfo = function(property) {};
  */
 Polymer.Base.mixin = function(target, source) {};
 
-Polymer.Gestures;
+/**
+ * @param {string|!Array<string|number>} path
+ * @param {!Object=} root
+ * @return {*}
+ */
+Polymer.Base.get = function(path, root) {};
+
+/**
+ * @param {string} type
+ * @param {*=} detail
+ * @param {!Object=} options
+ * @return {!CustomEvent}
+ */
+Polymer.Base.fire = function(type, detail, options) {};
+
+/**
+ * For Polymer internal use only, except for
+ * github.com/Polymer/polymer/issues/4138
+ * @type {!function (!Node, ?string, *, ?Object)}
+ */
+Polymer.Base._computeFinalAnnotationValue;
+
+/**
+ * @param {...*} var_args
+ * For Polymer-internal use only.
+ */
+Polymer.Base._warn = function(var_args) {};
+
+/**
+ * @param {...*} var_args
+ * For Polymer-internal use only.
+ */
+Polymer.Base._error = function(var_args) {};
+
+/** @const */
+Polymer.Gestures = {};
+
+/**
+ * @param {!Node} node
+ * @param {string} evType
+ * @param {?Function} handler
+ * @return {boolean}
+ * @deprecated Use addListener.
+ */
+Polymer.Gestures.add = function(node, evType, handler) {};
+
+/**
+ * @param {!Node} node
+ * @param {string} evType
+ * @param {?Function} handler
+ * @return {boolean}
+ */
+Polymer.Gestures.addListener = function(node, evType, handler) {};
 
 /**
  * Gets the original target of the given event.
@@ -607,8 +702,9 @@ PolymerElement.prototype.translate3d = function(x, y, z, node) {};
  * @param {string} href
  * @param {Function=} onload
  * @param {Function=} onerror
+ * @param {boolean=} async
  */
-PolymerElement.prototype.importHref = function(href, onload, onerror) {};
+PolymerElement.prototype.importHref = function(href, onload, onerror, async) {};
 
 /**
  * Checks whether an element is in this element's light DOM tree.
@@ -929,7 +1025,8 @@ PolymerEventApi.prototype.path;
 PolymerEventApi.prototype.event;
 
 
-Polymer.Async;
+/** @const */
+Polymer.Async = {};
 
 /**
  * @param {function()} callback
@@ -988,7 +1085,8 @@ Polymer.dom.addDebouncer = function(debouncer) {};
 Polymer.isInstance = function(object) {};
 
 
-Polymer.CaseMap;
+/** @const */
+Polymer.CaseMap = {};
 
 /**
  * Convert a string from dash to camel-case.
@@ -1074,9 +1172,13 @@ Polymer.Collection.applySplices = function(userArray, splices) {};
 
 /**
  * Settings pulled from
- * https://github.com/Polymer/polymer/blob/master/src/lib/settings.html
+ * https://github.com/Polymer/polymer/blob/master/lib/utils/settings.html
+ * @const
  */
-Polymer.Settings;
+Polymer.Settings = {};
+
+/** @type {string} */
+Polymer.Settings.dom;
 
 /** @type {boolean} */
 Polymer.Settings.wantShadow;
@@ -1098,6 +1200,9 @@ Polymer.Settings.useNativeImports;
 
 /** @type {boolean} */
 Polymer.Settings.useNativeCustomElements;
+
+/** @type {boolean} */
+Polymer.Settings.useNativeCSSProperties;
 
 
 /**
@@ -1399,7 +1504,8 @@ Polymer.ResolveUrl.resolveAttrs = function(element, ownerDocument) {}
  */
 Polymer.ResolveUrl.resolveUrl = function(url, baseURI) {}
 
-Polymer.RenderStatus;
+/** @const */
+Polymer.RenderStatus = {};
 
 /**
  * Makes callback when first render occurs or immediately if render has occured.
@@ -1419,7 +1525,7 @@ Polymer.RenderStatus.afterNextRender = function(element, fn, args) {}
 
 /**
  * Static analysis for Polymer.
- * @type {!Object}
+ * @const
  */
 var hydrolysis = {};
 
@@ -1445,9 +1551,9 @@ hydrolysis.Analyzer.analyze = function(href, opt_options) {};
 /**
  * Contains information useful for debugging. Should not be used in production
  * code and the API may change on short notice.
- * @type {!Object}
+ * @const
  */
-Polymer.telemetry;
+Polymer.telemetry = {};
 
 /**
  * Number of elements instantiated so far.
@@ -1462,7 +1568,8 @@ Polymer.telemetry.instanceCount;
  */
 Polymer.telemetry.registrations;
 
-Polymer.AppLayout;
+/** @const */
+Polymer.AppLayout = {};
 
 /** @constructor */
 Polymer.AppLayout.LocalDomWithBackground = function(){};

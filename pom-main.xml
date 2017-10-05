@@ -40,7 +40,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.build.outputEncoding>UTF-8</project.build.outputEncoding>
-    <jdk.version>1.7</jdk.version>
+    <jdk.version>1.8</jdk.version>
     <!-- for substitution in ParserConfig.properties -->
     <compiler.date>${maven.build.timestamp}</compiler.date>
     <maven.build.timestamp.format>yyyy-MM-dd HH\:mm</maven.build.timestamp.format>
@@ -202,6 +202,20 @@
       </plugin>
 
       <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>target</directory>
+            </fileset>
+            <fileset>
+              <directory>gen/target</directory>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
+
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
 
@@ -236,6 +250,7 @@
           <excludes>
             <exclude>**/debugger/**</exclude>
             <exclude>**/gwt/**</exclude>
+            <exclude>**/super-gwt/**</exclude>
             <exclude>**/super/**</exclude>
             <exclude>**/testing/**</exclude>
             <exclude>**/webservice/**</exclude>
@@ -266,7 +281,7 @@
             <link>http://docs.oracle.com/javase/7/docs/api/</link>
           </links>
           <detectLinks>true</detectLinks>
-          <excludePackageNames>*.gwt.*:*.testing.*:*.debugger.*:*.webservice.*:*.debugging.*:*.ant.*</excludePackageNames>
+          <excludePackageNames>*.resources.*:*.gwt.*:*.testing.*:*.debugger.*:*.webservice.*:*.debugging.*:*.ant.*</excludePackageNames>
         </configuration>
       </plugin>
 

@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
 /**
  * @author johnlenz@google.com (John Lenz)
  */
@@ -46,7 +44,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
   protected void setUp() throws Exception {
     super.setUp();
     enableGatherExternProperties();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
+    enableTranspile();
   }
 
   @Override
@@ -210,6 +208,20 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
     used(LINE_JOINER.join(
         "/** @constructor */ function A() {/** @private */ this.foo = 1;}",
         "use(goog.reflect.object(A, {foo: 'foo'}));"));
+
+    // Verify reflection prevents warning.
+    used(
+        LINE_JOINER.join(
+            "/** @const */ var $jscomp = {};",
+            "/** @const */ $jscomp.scope = {};",
+            "/**",
+            " * @param {!Function} type",
+            " * @param {Object} object",
+            " * @return {Object}",
+            " */",
+            "$jscomp.reflectObject = function (type, object) { return object; };",
+            "/** @constructor */ function A() {/** @private */ this.foo = 1;}",
+            "use($jscomp.reflectObject(A, {foo: 'foo'}));"));
   }
 
   public void testObjectReflection2() {

@@ -24,9 +24,11 @@ import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * NodeTraversal allows an iteration through the nodes in the parse tree,
@@ -54,7 +56,7 @@ public class NodeTraversal {
    * A stack of scope roots. All scopes that have not been created
    * are represented in this Deque.
    */
-  private final ArrayDeque<Node> scopeRoots = new ArrayDeque<>();
+  private final ArrayList<Node> scopeRoots = new ArrayList<>();
 
   /**
    * Stack containing the control flow graphs (CFG) that have been created. There are fewer CFGs
@@ -78,9 +80,9 @@ public class NodeTraversal {
   /** Possible callback for scope entry and exist **/
   private ScopedCallback scopeCallback;
 
-  /** Callback for passes that iterate over a list of functions */
-  public interface FunctionCallback {
-    void enterFunction(AbstractCompiler compiler, Node fnRoot);
+  /** Callback for passes that iterate over a list of change scope roots (FUNCTIONs and SCRIPTs) */
+  public interface ChangeScopeRootCallback {
+    void enterChangeScopeRoot(AbstractCompiler compiler, Node root);
   }
 
   /**
@@ -131,8 +133,7 @@ public class NodeTraversal {
    */
   public abstract static class AbstractPostOrderCallback implements Callback {
     @Override
-    public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
-        Node parent) {
+    public final boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
       return true;
     }
   }
@@ -242,15 +243,13 @@ public class NodeTraversal {
      * @param nodeTypes the nodes to include/exclude in the traversal
      * @param include whether to include or exclude the nodes in the traversal
      */
-    public AbstractNodeTypePruningCallback(Set<Token> nodeTypes,
-          boolean include) {
+    public AbstractNodeTypePruningCallback(Set<Token> nodeTypes, boolean include) {
       this.nodeTypes = nodeTypes;
       this.include = include;
     }
 
     @Override
-    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n,
-        Node parent) {
+    public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
       return include == nodeTypes.contains(n.getToken());
     }
   }
@@ -259,8 +258,7 @@ public class NodeTraversal {
    * Creates a node traversal using the specified callback interface
    * and the scope creator.
    */
-  public NodeTraversal(AbstractCompiler compiler, Callback cb,
-      ScopeCreator scopeCreator) {
+  public NodeTraversal(AbstractCompiler compiler, Callback cb, ScopeCreator scopeCreator) {
     this.callback = cb;
     if (cb instanceof ScopedCallback) {
       this.scopeCallback = (ScopedCallback) cb;
@@ -270,7 +268,7 @@ public class NodeTraversal {
     this.useBlockScope = scopeCreator.hasBlockScope();
   }
 
-  private void throwUnexpectedException(Exception unexpectedException) {
+  private void throwUnexpectedException(Throwable unexpectedException) {
     // If there's an unexpected exception, try to get the
     // line number of the code that caused it.
     String message = unexpectedException.getMessage();
@@ -306,7 +304,7 @@ public class NodeTraversal {
       // null parent ensures that the shallow callbacks will traverse root
       traverseBranch(root, null);
       popScope();
-    } catch (Exception unexpectedException) {
+    } catch (Error | Exception unexpectedException) {
       throwUnexpectedException(unexpectedException);
     }
   }
@@ -325,7 +323,7 @@ public class NodeTraversal {
       traverseBranch(root, scopeRoot);
 
       popScope();
-    } catch (Exception unexpectedException) {
+    } catch (Error | Exception unexpectedException) {
       throwUnexpectedException(unexpectedException);
     }
   }
@@ -354,14 +352,14 @@ public class NodeTraversal {
    * {@link #traverseAtScope}.
    */
   void traverseWithScope(Node root, Scope s) {
-    checkState(s.isGlobal() || s.isModuleScope());
+    checkState(s.isGlobal() || s.isModuleScope(), s);
     try {
       initTraversal(root);
       curNode = root;
       pushScope(s);
       traverseBranch(root, null);
       popScope();
-    } catch (Exception unexpectedException) {
+    } catch (Error | Exception unexpectedException) {
       throwUnexpectedException(unexpectedException);
     }
   }
@@ -434,9 +432,8 @@ public class NodeTraversal {
       initTraversal(scopeRoot);
       curNode = scopeRoot;
       initScopeRoots(scopeRoot.getParent());
-      // null parent ensures that the shallow callbacks will traverse root
       traverseBranch(scopeRoot, scopeRoot.getParent());
-    } catch (Exception unexpectedException) {
+    } catch (Error | Exception unexpectedException) {
       throwUnexpectedException(unexpectedException);
     }
   }
@@ -445,11 +442,13 @@ public class NodeTraversal {
    * Traverses *just* the contents of provided scope nodes (and optionally scopes nested within
    * them) but will fall back on traversing the entire AST from root if a null scope nodes list is
    * provided.
+   * @param root If scopeNodes is null, this method will just traverse 'root' instead. If scopeNodes
+   *     is not null, this parameter is ignored.
    */
   public static void traverseEs6ScopeRoots(
       AbstractCompiler compiler,
-      Node root,
-      List<Node> scopeNodes,
+      @Nullable Node root,
+      @Nullable List<Node> scopeNodes,
       final Callback cb,
       final boolean traverseNested) {
     traverseEs6ScopeRoots(compiler, root, scopeNodes, cb, null, traverseNested);
@@ -460,13 +459,15 @@ public class NodeTraversal {
    * them) but will fall back on traversing the entire AST from root if a null scope nodes list is
    * provided. Also allows for a callback to notify when starting on one of the provided scope
    * nodes.
+   * @param root If scopeNodes is null, this method will just traverse 'root' instead. If scopeNodes
+   *     is not null, this parameter is ignored.
    */
   public static void traverseEs6ScopeRoots(
       AbstractCompiler compiler,
-      Node root,
-      List<Node> scopeNodes,
+      @Nullable Node root,
+      @Nullable List<Node> scopeNodes,
       final Callback cb,
-      final FunctionCallback fcb,
+      @Nullable final ChangeScopeRootCallback changeCallback,
       final boolean traverseNested) {
     if (scopeNodes == null) {
       NodeTraversal.traverseEs6(compiler, root, cb);
@@ -475,27 +476,59 @@ public class NodeTraversal {
           new MemoizedScopeCreator(new Es6SyntacticScopeCreator(compiler));
 
       for (final Node scopeNode : scopeNodes) {
-        if (fcb != null) {
-          fcb.enterFunction(compiler, scopeNode);
-        }
-
-        Callback scb =
-            new Callback() {
-              @Override
-              public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-                return (traverseNested || scopeNode == n || !NodeUtil.isChangeScopeRoot(n))
-                    && cb.shouldTraverse(t, n, parent);
-              }
-
-              @Override
-              public void visit(NodeTraversal t, Node n, Node parent) {
-                cb.visit(t, n, parent);
-              }
-            };
-
-        NodeTraversal.traverseEs6ScopeRoot(compiler, scopeNode, scb, scopeCreator);
+        traverseSingleEs6ScopeRoot(
+            compiler, cb, changeCallback, traverseNested, scopeCreator, scopeNode);
       }
     }
+  }
+
+  private static void traverseSingleEs6ScopeRoot(
+      AbstractCompiler compiler,
+      final Callback cb,
+      @Nullable ChangeScopeRootCallback changeCallback,
+      final boolean traverseNested,
+      MemoizedScopeCreator scopeCreator,
+      final Node scopeNode) {
+    if (changeCallback != null) {
+      changeCallback.enterChangeScopeRoot(compiler, scopeNode);
+    }
+
+    ScopedCallback scb = new ScopedCallback() {
+      boolean insideScopeNode = false;
+
+      @Override
+      public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+        if (scopeNode == n) {
+          insideScopeNode = true;
+        }
+        return (traverseNested || scopeNode == n || !NodeUtil.isChangeScopeRoot(n))
+            && cb.shouldTraverse(t, n, parent);
+      }
+
+      @Override
+      public void visit(NodeTraversal t, Node n, Node parent) {
+        if (scopeNode == n) {
+          insideScopeNode = false;
+        }
+        cb.visit(t, n, parent);
+      }
+
+      @Override
+      public void enterScope(NodeTraversal t) {
+        if (insideScopeNode && cb instanceof ScopedCallback) {
+          ((ScopedCallback) cb).enterScope(t);
+        }
+      }
+
+      @Override
+      public void exitScope(NodeTraversal t) {
+        if (insideScopeNode && cb instanceof ScopedCallback) {
+          ((ScopedCallback) cb).exitScope(t);
+        }
+      }
+    };
+
+    NodeTraversal.traverseEs6ScopeRoot(compiler, scopeNode, scb, scopeCreator);
   }
 
   /**
@@ -624,14 +657,14 @@ public class NodeTraversal {
    * Compiler.reportChangeToEnclosingScope(Node n).
    */
   public static void traverseChangedFunctions(
-      final AbstractCompiler compiler, final FunctionCallback callback) {
+      final AbstractCompiler compiler, final ChangeScopeRootCallback callback) {
     final Node jsRoot = compiler.getJsRoot();
     NodeTraversal.traverseEs6(compiler, jsRoot,
         new AbstractPreOrderCallback() {
           @Override
           public final boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
             if (NodeUtil.isChangeScopeRoot(n) && compiler.hasScopeChanged(n)) {
-              callback.enterFunction(compiler, n);
+              callback.enterChangeScopeRoot(compiler, n);
             }
             return true;
           }
@@ -714,9 +747,7 @@ public class NodeTraversal {
       return;
     }
 
-    if (type == Token.FUNCTION) {
-      traverseFunction(n, parent);
-    } else if (type == Token.CLASS) {
+    if (type == Token.CLASS) {
       traverseClass(n);
     } else if (type == Token.MODULE_BODY) {
       traverseModule(n);
@@ -733,8 +764,7 @@ public class NodeTraversal {
   /** Traverses a function. */
   private void traverseFunction(Node n, Node parent) {
     final Node fnName = n.getFirstChild();
-    boolean isFunctionExpression = (parent != null)
-        && NodeUtil.isFunctionExpression(n);
+    boolean isFunctionExpression = parent != null && NodeUtil.isFunctionExpression(n);
 
     if (!isFunctionExpression) {
       // Function declarations are in the scope containing the declaration.
@@ -835,9 +865,9 @@ public class NodeTraversal {
 
   /** Creates a new scope (e.g. when entering a function). */
   private void pushScope(Node node) {
-    checkState(curNode != null);
-    checkState(node != null);
-    scopeRoots.push(node);
+    checkNotNull(curNode);
+    checkNotNull(node);
+    scopeRoots.add(node);
     recordScopeRoot(node);
     if (scopeCallback != null) {
       scopeCallback.enterScope(this);
@@ -854,7 +884,7 @@ public class NodeTraversal {
    * @param quietly Don't fire an enterScope callback.
    */
   private void pushScope(Scope s, boolean quietly) {
-    checkState(curNode != null);
+    checkNotNull(curNode);
     scopes.push(s);
     recordScopeRoot(s.getRootNode());
     if (!quietly && scopeCallback != null) {
@@ -874,8 +904,11 @@ public class NodeTraversal {
     if (!quietly && scopeCallback != null) {
       scopeCallback.exitScope(this);
     }
-    Node scopeRoot = scopeRoots.pollFirst();
-    if (scopeRoot == null) {
+    Node scopeRoot;
+    int roots = scopeRoots.size();
+    if (roots > 0) {
+      scopeRoot = scopeRoots.remove(roots - 1);
+    } else {
       scopeRoot = scopes.pop().getRootNode();
     }
     if (NodeUtil.isValidCfgRoot(scopeRoot)) {
@@ -887,14 +920,30 @@ public class NodeTraversal {
   public Scope getScope() {
     Scope scope = scopes.peek();
 
-    Node root = null;
-    while ((root = scopeRoots.pollLast()) != null) {
-      scope = scopeCreator.createScope(root, scope);
+    for (int i = 0; i < scopeRoots.size(); i++) {
+      scope = scopeCreator.createScope(scopeRoots.get(i), scope);
       scopes.push(scope);
     }
+    scopeRoots.clear();
 
     // No need to call compiler.setScope; the top scopeRoot is now the top scope
     return scope;
+  }
+
+  public boolean isHoistScope() {
+    return Scope.isHoistScopeRootNode(getScopeRoot());
+  }
+
+  public Node getClosestHoistScopeRoot() {
+    int roots = scopeRoots.size();
+    for (int i = roots; i > 0; i--) {
+      Node rootNode = scopeRoots.get(i - 1);
+      if (Scope.isHoistScopeRootNode(rootNode)) {
+        return rootNode;
+      }
+    }
+
+    return scopes.peek().getClosestHoistScope().getRootNode();
   }
 
   public Scope getClosestHoistScope() {
@@ -929,12 +978,12 @@ public class NodeTraversal {
 
   /** Returns the current scope's root. */
   public Node getScopeRoot() {
-    Node root = scopeRoots.peek();
-    if (root == null) {
+    int roots = scopeRoots.size();
+    if (roots > 0) {
+      return scopeRoots.get(roots - 1);
+    } else {
       Scope s = scopes.peek();
       return s != null ? s.getRootNode() : null;
-    } else {
-      return root;
     }
   }
 
@@ -1017,7 +1066,8 @@ public class NodeTraversal {
 
   public void reportCodeChange() {
     Node changeScope = this.currentChangeScope;
-    checkState(changeScope != null && NodeUtil.isChangeScopeRoot(changeScope));
+    checkNotNull(changeScope);
+    checkState(NodeUtil.isChangeScopeRoot(changeScope), changeScope);
     compiler.reportChangeToChangeScope(changeScope);
   }
 
@@ -1035,9 +1085,6 @@ public class NodeTraversal {
    */
   private void setChangeScope(Node n) {
     this.currentChangeScope = n;
-    // TODO(johnlenz): the compiler is a bad place to store this value
-    // multiple traversals can interfer with each other
-    // (even on the same thread).
     compiler.setChangeScope(n);
   }
 

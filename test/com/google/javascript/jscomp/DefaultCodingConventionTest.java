@@ -22,14 +22,13 @@ import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.StaticSourceFile;
 import com.google.javascript.rhino.Token;
-
 import junit.framework.TestCase;
 
 /**
  * Test class for the default {@link CodingConvention}.
  */
 public final class DefaultCodingConventionTest extends TestCase {
-  private CodingConvention conv = CodingConventions.getDefault();
+  private final CodingConvention conv = CodingConventions.getDefault();
 
   public void testVarAndOptionalParams() {
     Node args = new Node(Token.PARAM_LIST,

@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Preconditions;
 import com.google.javascript.rhino.JSTypeExpression;
+import com.google.javascript.rhino.Node;
 import java.io.Serializable;
 
 /**
@@ -36,12 +37,14 @@ public final class Typedef implements Serializable {
     RESOLVED
   }
 
+  private final Node defSite;
   private State state;
   private JSTypeExpression typeExpr;
   private JSType type;
 
-  private Typedef(JSTypeExpression typeExpr) {
-    checkNotNull(typeExpr);
+  private Typedef(Node defSite, JSTypeExpression typeExpr) {
+    checkState(defSite.isQualifiedName(), defSite);
+    this.defSite = defSite;
     this.state = State.NOT_RESOLVED;
     // Non-null iff the typedef is resolved
     this.type = null;
@@ -49,8 +52,8 @@ public final class Typedef implements Serializable {
     this.typeExpr = typeExpr;
   }
 
-  public static Typedef make(JSTypeExpression typeExpr) {
-    return new Typedef(typeExpr);
+  public static Typedef make(Node defSite, JSTypeExpression typeExpr) {
+    return new Typedef(defSite, typeExpr);
   }
 
   public boolean isResolved() {
@@ -87,5 +90,10 @@ public final class Typedef implements Serializable {
     state = State.RESOLVED;
     typeExpr = null;
     type = t;
+  }
+
+  @Override
+  public String toString() {
+    return this.defSite.getQualifiedName();
   }
 }

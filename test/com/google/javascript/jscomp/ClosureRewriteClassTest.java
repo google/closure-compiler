@@ -34,12 +34,25 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  * Unit tests for ClosureRewriteGoogClass
  * @author johnlenz@google.com (John Lenz)
  */
-public final class ClosureRewriteClassTest extends CompilerTestCase {
-  private static final String EXTERNS =
-      "var goog = {};\n"
-      + "goog.inherits = function(a,b) {};\n"
-      + "goog.defineClass = function(a,b) {};\n"
-      + "var use\n";
+public final class ClosureRewriteClassTest extends TypeICompilerTestCase {
+  private static final String EXTERNS = lines(
+      MINIMAL_EXTERNS,
+      "/** @const */ var goog = {};",
+      "goog.inherits = function(a,b) {};",
+      "goog.defineClass = function(a,b) {};",
+      "var use;");
+
+  private static final Diagnostic INSTANTIATE_ABSTRACT_CLASS = warningOtiNti(
+      TypeCheck.INSTANTIATE_ABSTRACT_CLASS,
+      NewTypeInference.CANNOT_INSTANTIATE_ABSTRACT_CLASS);
+
+  private static final Diagnostic NOT_A_CONSTRUCTOR = warningOtiNti(
+      TypeCheck.NOT_A_CONSTRUCTOR,
+      NewTypeInference.NOT_A_CONSTRUCTOR);
+
+  private static final Diagnostic INEXISTENT_PROPERTY = warningOtiNti(
+      TypeCheck.INEXISTENT_PROPERTY,
+      NewTypeInference.INEXISTENT_PROPERTY);
 
   public ClosureRewriteClassTest() {
     super(EXTERNS);
@@ -53,7 +66,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    disableTypeCheck();
+    this.mode = TypeInferenceMode.NEITHER;
     enableRunTypeCheckAfterProcessing();
   }
 
@@ -83,12 +96,12 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   private void testRewriteWarning(String code, String expected,
-                                  DiagnosticType warning, LanguageMode lang) {
+                                  Diagnostic warning, LanguageMode lang) {
     setAcceptedLanguage(lang);
-    test(code, expected, warning(warning));
+    test(code, expected, warning);
   }
 
-  private void testRewriteWarning(String code, String expected, DiagnosticType warning) {
+  private void testRewriteWarning(String code, String expected, Diagnostic warning) {
     testRewriteWarning(code, expected, warning, LanguageMode.ECMASCRIPT3);
     testRewriteWarning(code, expected, warning, LanguageMode.ECMASCRIPT_2015);
   }
@@ -142,7 +155,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
 
   public void testAnnotations1() {
     // verify goog.defineClass values are constructible, by default
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     testRewrite(
         "var x = goog.defineClass(Object, {\n"
         + "  constructor: function(){}\n"
@@ -156,74 +169,79 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
 
   public void testAnnotations2a() {
     // @interface is preserved
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     testRewriteWarning(
-        "var x = goog.defineClass(null, {\n"
-        + "  /** @interface */\n"
-        + "  constructor: function(){}\n"
-        + "});"
-        + "new x();",
-
-        "/** @struct @interface */\n"
-        + "var x = function() {};"
-        + "new x();",
-        TypeCheck.NOT_A_CONSTRUCTOR);
+        lines(
+            "var x = goog.defineClass(null, {",
+            "  /** @interface */",
+            "  constructor: function(){}",
+            "});",
+            "new x();"),
+        lines(
+            "/** @struct @interface */",
+            "var x = function() {};",
+            "new x();"),
+        NOT_A_CONSTRUCTOR);
   }
 
   public void testAnnotations2b() {
     // @interface is preserved, at the class level too
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     testRewriteWarning(
-        "/** @interface */\n"
-        + "var x = goog.defineClass(null, {});"
-        + "new x();",
-
-        "/** @struct @interface */\n"
-        + "var x = function() {};"
-        + "new x();",
-        TypeCheck.NOT_A_CONSTRUCTOR);
+        lines(
+            "/** @interface */",
+            "var x = goog.defineClass(null, {});",
+            "new x();"),
+        lines(
+            "/** @struct @interface */",
+            "var x = function() {};",
+            "new x();"),
+        NOT_A_CONSTRUCTOR);
   }
 
   public void testAnnotations3a() {
     // verify goog.defineClass is a @struct by default
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     testRewriteWarning(
-        "var y = goog.defineClass(null, {\n"
-        + "  constructor: function(){}\n"
-        + "});\n"
-        + "var x = goog.defineClass(y, {\n"
-        + "  constructor: function(){this.a = 1}\n"
-        + "});\n"
-        + "use(new y().a);\n",
-
-        "/** @constructor @struct */"
-        + "var y = function () {};\n"
-        + "/** @constructor @struct @extends {y} */"
-        + "var x = function() {this.a = 1};\n"
-        + "goog.inherits(x,y);\n"
-        + "use(new y().a);\n",
-        TypeCheck.INEXISTENT_PROPERTY);
+        lines(
+            "var y = goog.defineClass(null, {",
+            "  constructor: function(){}",
+            "});",
+            "var x = goog.defineClass(y, {",
+            "  constructor: function(){this.a = 1}",
+            "});",
+            "use(new y().a);"),
+        lines(
+            "/** @constructor @struct */",
+            "var y = function () {};",
+            "/** @constructor @struct @extends {y} */",
+            "var x = function() {this.a = 1};",
+            "goog.inherits(x,y);",
+            "use(new y().a);"),
+        INEXISTENT_PROPERTY);
   }
 
   public void testAnnotations3b() {
-    // verify goog.defineClass is a @struct by default, but can be overridden
-    enableTypeCheck();
-    testRewrite(
-        "/** @unrestricted */"
-        + "var y = goog.defineClass(null, {\n"
-        + "  constructor: function(){}\n"
-        + "});\n"
-        + "var x = goog.defineClass(y, {\n"
-        + "  constructor: function(){this.a = 1}\n"
-        + "});\n"
-        + "use(new y().a);\n",
-
-        "/** @constructor @unrestricted */"
-        + "var y = function () {};\n"
-        + "/** @constructor @struct @extends {y} */"
-        + "var x = function() {this.a = 1};\n"
-        + "goog.inherits(x,y);\n"
-        + "use(new y().a);\n");
+    // verify goog.defineClass is a @struct by default, but can be overridden (only in OTI)
+    this.mode = TypeInferenceMode.BOTH;
+    testRewriteWarning(
+        lines(
+            "/** @unrestricted */",
+            "var y = goog.defineClass(null, {",
+            "  constructor: function(){}",
+            "});",
+            "var x = goog.defineClass(y, {",
+            "  constructor: function(){this.a = 1}",
+            "});",
+            "use(new y().a);"),
+        lines(
+            "/** @constructor @unrestricted */",
+            "var y = function () {};",
+            "/** @constructor @struct @extends {y} */",
+            "var x = function() {this.a = 1};",
+            "goog.inherits(x,y);",
+            "use(new y().a);"),
+        warningOtiNti(null, NewTypeInference.INEXISTENT_PROPERTY));
   }
 
   public void testRecordAnnotations() {
@@ -238,7 +256,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
   }
 
   public void testRecordAnnotations2() {
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     testRewrite(
         "/** @record */\n"
         + "var Rec = goog.defineClass(null, {f : function() {}});\n"
@@ -252,36 +270,36 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
 
   public void testAbstract1() {
     // @abstract is preserved
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     testRewriteWarning(
-        LINE_JOINER.join(
-        "var x = goog.defineClass(null, {",
-        "  /** @abstract */",
-        "  constructor: function() {}",
-        "});",
-        "new x();"),
-        LINE_JOINER.join(
-        "/** @abstract @struct @constructor */",
-        "var x = function() {};",
-        "new x();"),
-        TypeCheck.INSTANTIATE_ABSTRACT_CLASS);
+        lines(
+            "var x = goog.defineClass(null, {",
+            "  /** @abstract */",
+            "  constructor: function() {}",
+            "});",
+            "new x();"),
+        lines(
+            "/** @abstract @struct @constructor */",
+            "var x = function() {};",
+            "new x();"),
+        INSTANTIATE_ABSTRACT_CLASS);
   }
 
   public void testAbstract2() {
     // @abstract is preserved, at the class level too
-    enableTypeCheck();
+    this.mode = TypeInferenceMode.BOTH;
     testRewriteWarning(
-        LINE_JOINER.join(
-        "/** @abstract */",
-        "var x = goog.defineClass(null, {",
-        "  constructor: function() {}",
-        "});",
-        "new x();"),
-        LINE_JOINER.join(
-        "/** @abstract @struct @constructor */",
-        "var x = function() {};",
-        "new x();"),
-        TypeCheck.INSTANTIATE_ABSTRACT_CLASS);
+        lines(
+            "/** @abstract */",
+            "var x = goog.defineClass(null, {",
+            "  constructor: function() {}",
+            "});",
+            "new x();"),
+        lines(
+            "/** @abstract @struct @constructor */",
+            "var x = function() {};",
+            "new x();"),
+        INSTANTIATE_ABSTRACT_CLASS);
   }
 
   public void testInnerClass1() {
@@ -511,7 +529,7 @@ public final class ClosureRewriteClassTest extends CompilerTestCase {
         + "});",
         "/** @ngInject @constructor @struct */\n"
         + "var x = function(x, y) {};",
-        GOOG_CLASS_NG_INJECT_ON_CLASS);
+        warning(GOOG_CLASS_NG_INJECT_ON_CLASS));
   }
 
   // The two following tests are just to make sure that these functionalities in

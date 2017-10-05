@@ -126,6 +126,14 @@ public final class Reference implements StaticRef, Serializable {
       return isDeclarationHelper(parent);
     }
 
+    if (parent.isImport()) {
+      return true;
+    }
+
+    if (parent.isImportSpec() && node == parent.getLastChild()) {
+      return true;
+    }
+
     // Special case for arrow function
     if (parent.isArrowFunction()) {
       return node == parent.getFirstChild();
@@ -205,6 +213,7 @@ public final class Reference implements StaticRef, Serializable {
       case INC:
       case DEC:
       case CATCH:
+      case REST:
         return true;
       case FOR:
       case FOR_IN:

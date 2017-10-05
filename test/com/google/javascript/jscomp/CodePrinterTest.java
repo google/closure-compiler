@@ -16,6 +16,8 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
@@ -628,6 +630,15 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
     assertPrintSame("for(a of b)c");
     assertPrintSame("for(var a of b)c");
+  }
+
+  // In pretty-print mode, make sure there is a space before and after the 'of' in a for/of loop.
+  public void testForOfPretty() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+
+    assertPrettyPrintSame("for ([x, y] of b) {\n  c;\n}\n");
+    assertPrettyPrintSame("for (x of [[1, 2]]) {\n  c;\n}\n");
+    assertPrettyPrintSame("for ([x, y] of [[1, 2]]) {\n  c;\n}\n");
   }
 
   public void testLetFor() {
@@ -1448,19 +1459,6 @@ public final class CodePrinterTest extends CodePrinterTestBase {
             " * @param {(Object|null)} p0",
             " * @return {undefined}",
             " */",
-            "goog.removeHashCode = goog.removeUid;\n"),
-        LINE_JOINER.join(
-            "/** @const */ var goog = goog || {};",
-            "/**",
-            " * @param {!Object|null} obj",
-            " * @return {undefined}",
-            " */",
-            "goog.removeUid = function(obj) {",
-            "};",
-            "/**",
-            " * @param {!Object|null} p0",
-            " * @return {undefined}",
-            " */",
             "goog.removeHashCode = goog.removeUid;\n"));
   }
 
@@ -1940,7 +1938,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     languageMode = LanguageMode.ECMASCRIPT3;
 
     Node getter = Node.newString(Token.GETTER_DEF, "f");
-    getter.addChildToBack(IR.function(IR.name(""), IR.paramList(), IR.block()));
+    getter.addChildToBack(NodeUtil.emptyFunction());
     assertPrintNode("({get f(){}})",
         IR.exprResult(IR.objectlit(getter)));
   }
@@ -1973,8 +1971,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     languageMode = LanguageMode.ECMASCRIPT3;
 
     Node getter = Node.newString(Token.SETTER_DEF, "f");
-    getter.addChildToBack(IR.function(
-        IR.name(""), IR.paramList(IR.name("a")), IR.block()));
+    getter.addChildToBack(IR.function(IR.name(""), IR.paramList(IR.name("a")), IR.block()));
     assertPrintNode("({set f(a){}})",
         IR.exprResult(IR.objectlit(getter)));
   }
@@ -2010,6 +2007,22 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertEquals("'use strict';var x", result);
   }
 
+  public void testStrictPretty() {
+    String result =
+        defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY))
+            .setTagAsStrict(true)
+            .setPrettyPrint(true)
+            .build();
+    assertThat(result).isEqualTo("'use strict';\nvar x;\n");
+
+    result =
+        defaultBuilder(parse("var x", TypeInferenceMode.NTI_ONLY))
+            .setTagAsStrict(true)
+            .setPrettyPrint(true)
+            .build();
+    assertThat(result).isEqualTo("'use strict';\nvar x;\n");
+  }
+
   public void testExterns() {
     String result =
         defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY)).setTagAsExterns(true).build();
@@ -2018,6 +2031,20 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     result =
         defaultBuilder(parse("var x", TypeInferenceMode.NTI_ONLY)).setTagAsExterns(true).build();
     assertEquals("/** @externs */\nvar x", result);
+  }
+
+  public void testIjs() {
+    String result =
+        defaultBuilder(parse("var x", TypeInferenceMode.OTI_ONLY))
+            .setTagAsTypeSummary(true)
+            .build();
+    assertEquals("/** @fileoverview @typeSummary */\nvar x", result);
+
+    result =
+        defaultBuilder(parse("var x", TypeInferenceMode.NTI_ONLY))
+            .setTagAsTypeSummary(true)
+            .build();
+    assertEquals("/** @fileoverview @typeSummary */\nvar x", result);
   }
 
   public void testArrayLiteral() {
@@ -2670,6 +2697,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
         + "}\n"
         + "exports.fn = fn;\n";
     String expectedCode = ""
+        + "goog.module('foo.bar');\n"
         + "void 0;\n"
         + "var module$exports$foo$bar = {};\n"
         + "const STR = '3';\n"

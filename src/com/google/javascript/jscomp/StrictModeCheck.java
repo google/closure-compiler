@@ -19,7 +19,6 @@ import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -75,6 +74,11 @@ class StrictModeCheck extends AbstractPostOrderCallback
       "JSC_FUNCTION_ARGUMENTS_PROP_FORBIDDEN",
       "A function''s \"arguments\" property cannot be used in strict mode");
 
+  static final DiagnosticType BAD_FUNCTION_DECLARATION = DiagnosticType.warning(
+      "JSC_BAD_FUNCTION_DECLARATION",
+      "functions can only be declared at top level or immediately within"
+          + " another function in ES5 strict mode");
+
   static final DiagnosticType DELETE_VARIABLE = DiagnosticType.warning(
       "JSC_DELETE_VARIABLE",
       "variables, functions, and arguments cannot be deleted in strict mode");
@@ -85,12 +89,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
 
   static final DiagnosticType DUPLICATE_CLASS_METHODS = DiagnosticType.error(
       "JSC_DUPLICATE_CLASS_METHODS",
-      "Class contain duplicate method name \"{0}\"");
-
-  static final DiagnosticType BAD_FUNCTION_DECLARATION = DiagnosticType.error(
-      "JSC_BAD_FUNCTION_DECLARATION",
-      "functions can only be declared at top level or immediately within"
-      + " another function in strict mode");
+      "Class contains duplicate method name \"{0}\"");
 
   private final AbstractCompiler compiler;
 
@@ -104,9 +103,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
   }
 
   @Override public void visit(NodeTraversal t, Node n, Node parent) {
-    if (n.isFunction()) {
-      checkFunctionUse(t, n);
-    } else if (n.isAssign()) {
+    if (n.isAssign()) {
       checkAssignment(t, n);
     } else if (n.isDelProp()) {
       checkDelete(t, n);
@@ -129,13 +126,6 @@ class StrictModeCheck extends AbstractPostOrderCallback
     }
   }
 
-  /** Checks that the function is used legally. */
-  private static void checkFunctionUse(NodeTraversal t, Node n) {
-    if (NodeUtil.isFunctionDeclaration(n) && !NodeUtil.isHoistedFunctionDeclaration(n)) {
-      t.report(n, BAD_FUNCTION_DECLARATION);
-    }
-  }
-
   /**
    * Determines if the given name is a declaration, which can be a declaration
    * of a variable, function, or argument.
@@ -145,9 +135,10 @@ class StrictModeCheck extends AbstractPostOrderCallback
       case LET:
       case CONST:
       case VAR:
-      case FUNCTION:
       case CATCH:
         return true;
+      case FUNCTION:
+        return n == n.getParent().getFirstChild();
 
       case PARAM_LIST:
         return n.getGrandparent().isFunction();
@@ -184,13 +175,19 @@ class StrictModeCheck extends AbstractPostOrderCallback
   private static void checkObjectLiteralOrClass(NodeTraversal t, Node n) {
     Set<String> getters = new HashSet<>();
     Set<String> setters = new HashSet<>();
+    Set<String> staticGetters = new HashSet<>();
+    Set<String> staticSetters = new HashSet<>();
     for (Node key = n.getFirstChild();
          key != null;
          key = key.getNext()) {
+      if (key.isEmpty() || key.isComputedProp()) {
+        continue;
+      }
       String keyName = key.getString();
       if (!key.isSetterDef()) {
         // normal property and getter cases
-        if (!getters.add(keyName)) {
+        Set<String> set = key.isStaticMember() ? staticGetters : getters;
+        if (!set.add(keyName)) {
           if (n.isClassMembers()) {
             t.report(key, DUPLICATE_CLASS_METHODS, keyName);
           } else {
@@ -200,7 +197,8 @@ class StrictModeCheck extends AbstractPostOrderCallback
       }
       if (!key.isGetterDef()) {
         // normal property and setter cases
-        if (!setters.add(keyName)) {
+        Set<String> set = key.isStaticMember() ? staticSetters : setters;
+        if (!set.add(keyName)) {
           if (n.isClassMembers()) {
             t.report(key, DUPLICATE_CLASS_METHODS, keyName);
           } else {
@@ -214,7 +212,7 @@ class StrictModeCheck extends AbstractPostOrderCallback
   /** Checks that are performed on non-extern code only. */
   private static class NonExternChecks extends AbstractPostOrderCallback {
     @Override public void visit(NodeTraversal t, Node n, Node parent) {
-      if ((n.isName()) && isDeclaration(n)) {
+      if (n.isName() && isDeclaration(n)) {
         checkDeclaration(t, n);
       } else if (n.isGetProp()) {
         checkGetProp(t, n);

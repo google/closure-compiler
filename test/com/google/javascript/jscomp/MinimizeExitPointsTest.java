@@ -230,6 +230,19 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
          "for(x in y){if(a()){b();}else{c();}}");
     fold("for(x in y){if(a()){b();}else{c();continue;}}",
          "for(x in y){if(a()){b();}else{c();}}");
+
+    fold("for(x of y){if(x)continue; x=3; continue; }",
+        "for(x of y)if(x);else x=3");
+    foldSame("for(x of y){a();continue;b()}");
+    fold("for(x of y){if(true){a();continue;}else;b();}",
+        "for(x of y){if(true)a();else b();}");
+    fold("for(x of y){if(false){a();continue;}else;b();continue;}",
+        "for(x of y){if(false){a();}else{b()}}");
+    fold("for(x of y){if(a()){b();continue;}else;c();}",
+        "for(x of y){if(a()){b();}else{c();}}");
+    fold("for(x of y){if(a()){b();}else{c();continue;}}",
+        "for(x of y){if(a()){b();}else{c();}}");
+
     fold("for(x=0;x<y;x++){if(a()){b();continue;}else;}",
          "for(x=0;x<y;x++){if(a()){b();}else;}");
     fold("for(x=0;x<y;x++){if(a()){continue;}else{continue;} continue;}",

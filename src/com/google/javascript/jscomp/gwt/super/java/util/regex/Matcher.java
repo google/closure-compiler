@@ -16,8 +16,8 @@
 
 package java.util.regex;
 
-import com.google.gwt.regexp.shared.MatchResult;
-import com.google.gwt.regexp.shared.RegExp;
+import elemental2.core.JsString;
+import elemental2.core.RegExp;
 
 /**
  * GWT-compatible minimal replacement for {@code Matcher}
@@ -26,67 +26,42 @@ import com.google.gwt.regexp.shared.RegExp;
  */
 public class Matcher {
   private final RegExp regExp;
+  private final RegExp regExpGlobal;
   private String input;
-  private MatchResult result;
-  private boolean hasExecuted;
-  private int findFromIndex;
 
   Matcher(RegExp regExp, String input) {
     this.regExp = regExp;
+    this.regExpGlobal = new RegExp(regExp.source, "g");
     this.input = input;
-    this.result = null;
-    this.hasExecuted = false;
-    this.findFromIndex = 0;
   }
 
   public boolean matches() {
-    result = regExp.exec(input);
-    hasExecuted = true;
-    findFromIndex = 0;
+    String[] result = regExp.exec(input);
 
     if (result != null) {
-      String match = result.getGroup(0);
+      String match = result[0];
       if (match.equals(input)) {
         return true;
       }
-      result = null;  // matches() needs to match whole string, pretend we didn't match
     }
     return false;
   }
 
   public boolean find() {
-    result = regExp.exec(input.substring(findFromIndex));
-    hasExecuted = true;
-
-    if (result != null) {
-      findFromIndex += result.getGroup(0).length();
-      return true;
-    }
-    return false;
-  }
-
-  public String group(int index) {
-    if (!hasExecuted) {
-      throw new IllegalStateException("regex not executed yet");
-    } else if (result == null) {
-      throw new IllegalStateException("regex did not match");
-    } else {
-      return result.getGroup(index);
-    }
+    return regExpGlobal.exec(input) != null;
   }
 
   public static String quoteReplacement(String input) {
-    return RegExp.quote(input);
+    return Pattern.quote(input);
   }
 
   public String replaceAll(String replacement) {
-    return RegExp.compile(regExp.getSource(), "g").replace(input, replacement);
+    return new JsString(input).replace(new RegExp(regExp.source, "g"), replacement).toString();
   }
 
   public Matcher reset() {
-    result = null;
-    hasExecuted = false;
-    findFromIndex = 0;
+    regExp.lastIndex = 0;
+    regExpGlobal.lastIndex = 0;
     return this;
   }
 

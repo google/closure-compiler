@@ -26,8 +26,6 @@ public class Es6RewriteArrowFunctionTest extends CompilerTestCase {
     super.setUp();
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     languageOut = LanguageMode.ECMASCRIPT3;
-    disableTypeCheck();
-    enableRunTypeCheckAfterProcessing();
   }
 
   @Override

@@ -112,11 +112,12 @@ public abstract class PassFactory {
 
   /**
    * A pass-factory that is good for {@code HotSwapCompilerPass} passes.
+   * Every hotswap pass is expected to be a one-time pass.
    */
   public abstract static class HotSwapPassFactory extends PassFactory {
 
-    HotSwapPassFactory(String name, boolean isOneTimePass) {
-      super(name, isOneTimePass);
+    HotSwapPassFactory(String name) {
+      super(name, true);
     }
 
     @Override

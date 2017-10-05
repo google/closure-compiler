@@ -169,6 +169,9 @@ public final class RhinoErrorReporterTest extends TestCase {
       options.setWarningLevel(
           DiagnosticGroups.LINT_CHECKS,
           CheckLevel.WARNING);
+      options.setWarningLevel(
+          DiagnosticGroups.JSDOC_MISSING_TYPE,
+          CheckLevel.WARNING);
     }
 
     List<SourceFile> externs = ImmutableList.of();

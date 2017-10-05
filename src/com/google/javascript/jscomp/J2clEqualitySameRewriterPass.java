@@ -15,14 +15,11 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import java.util.List;
 
 /** An optimization pass to re-write J2CL Equality.$same. */
-public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
-    implements CompilerPass {
+public class J2clEqualitySameRewriterPass extends AbstractPeepholeOptimization {
 
   /** Whether to use "==" or "===". */
   private static enum Eq {
@@ -30,56 +27,55 @@ public class J2clEqualitySameRewriterPass extends AbstractPostOrderCallback
     TRIPLE
   }
 
-  private final AbstractCompiler compiler;
-  private final List<Node> changedScopeNodes;
+  private boolean shouldRunJ2clPasses = false;
 
-  J2clEqualitySameRewriterPass(AbstractCompiler compiler, List<Node> changedScopeNodes) {
-    this.compiler = compiler;
-    this.changedScopeNodes = changedScopeNodes;
+  @Override
+  void beginTraversal(AbstractCompiler compiler) {
+    super.beginTraversal(compiler);
+    shouldRunJ2clPasses = J2clSourceFileChecker.shouldRunJ2clPasses(compiler);
   }
 
   @Override
-  public void process(Node externs, Node root) {
-    if (!J2clSourceFileChecker.shouldRunJ2clPasses(compiler)) {
-      return;
+  Node optimizeSubtree(Node node) {
+    if (!shouldRunJ2clPasses) {
+      return node;
     }
 
-    NodeTraversal.traverseEs6ScopeRoots(compiler, root, changedScopeNodes, this, false);
-  }
-
-  @Override
-  public void visit(NodeTraversal t, Node node, Node parent) {
-    if (isEqualitySameCall(node)) {
-      trySubstituteEqualitySame(node);
+    if (!isEqualitySameCall(node)) {
+      return node;
     }
+
+    Node replacement = trySubstituteEqualitySame(node);
+    if (replacement != node) {
+      replacement = replacement.useSourceInfoIfMissingFrom(node);
+      node.replaceWith(replacement);
+      compiler.reportChangeToEnclosingScope(replacement);
+    }
+    return replacement;
   }
 
-  private void trySubstituteEqualitySame(Node callNode) {
+  private Node trySubstituteEqualitySame(Node callNode) {
     Node firstExpr = callNode.getSecondChild();
     Node secondExpr = callNode.getLastChild();
 
     if (NodeUtil.isNullOrUndefined(firstExpr) || NodeUtil.isNullOrUndefined(secondExpr)) {
       // At least one side is null or undefined so no coercion danger.
-      rewriteToEq(callNode, firstExpr, secondExpr, Eq.DOUBLE);
-      return;
+      return rewriteToEq(firstExpr, secondExpr, Eq.DOUBLE);
     }
 
     if (NodeUtil.isLiteralValue(firstExpr, true) || NodeUtil.isLiteralValue(secondExpr, true)) {
       // There is a coercion danger but since at least one side is not null, we can use === that
       // will not trigger any coercion.
-      rewriteToEq(callNode, firstExpr, secondExpr, Eq.TRIPLE);
-      return;
+      return rewriteToEq(firstExpr, secondExpr, Eq.TRIPLE);
     }
+
+    return callNode;
   }
 
-  private void rewriteToEq(Node callNode, Node firstExpr, Node secondExpr, Eq eq) {
-    Node parent = callNode.getParent();
+  private Node rewriteToEq(Node firstExpr, Node secondExpr, Eq eq) {
     firstExpr.detach();
     secondExpr.detach();
-    Node replacement =
-        eq == Eq.DOUBLE ? IR.eq(firstExpr, secondExpr) : IR.sheq(firstExpr, secondExpr);
-    parent.replaceChild(callNode, replacement.useSourceInfoIfMissingFrom(callNode));
-    compiler.reportChangeToEnclosingScope(parent);
+    return eq == Eq.DOUBLE ? IR.eq(firstExpr, secondExpr) : IR.sheq(firstExpr, secondExpr);
   }
 
   private static boolean isEqualitySameCall(Node node) {

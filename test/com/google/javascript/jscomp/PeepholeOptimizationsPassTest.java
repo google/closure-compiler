@@ -37,7 +37,7 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
   @Override
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new PeepholeOptimizationsPass(
-        compiler, currentPeepholePasses.toArray(new AbstractPeepholeOptimization[0]));
+        compiler, getName(), currentPeepholePasses.toArray(new AbstractPeepholeOptimization[0]));
   }
 
   @Override
@@ -133,8 +133,8 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
         }
 
         for (Node childToRemove : nodesToRemove) {
+          compiler.reportChangeToEnclosingScope(node);
           node.removeChild(childToRemove);
-          reportCodeChange();
         }
       }
 
@@ -151,8 +151,8 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
     @Override
     public Node optimizeSubtree(Node node) {
       if (node.isName() && "x".equals(node.getString())) {
-        node.getParent().removeChild(node);
-        reportCodeChange();
+        compiler.reportChangeToEnclosingScope(node);
+        node.detach();
 
         return null;
       }
@@ -172,8 +172,8 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
       if (node.isName() && "x".equals(node.getString())) {
         Node parent = node.getParent();
         if (parent.isVar()) {
-          parent.getParent().removeChild(parent);
-          reportCodeChange();
+          compiler.reportChangeToEnclosingScope(parent);
+          parent.detach();
           return null;
         }
       }
@@ -192,7 +192,7 @@ public final class PeepholeOptimizationsPassTest extends CompilerTestCase {
         Node replacement = Node.newString(Token.NAME, "x");
 
         node.replaceWith(replacement);
-        reportCodeChange();
+        compiler.reportChangeToEnclosingScope(replacement);
 
         return replacement;
       }
