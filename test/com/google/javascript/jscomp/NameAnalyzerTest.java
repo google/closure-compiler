@@ -814,8 +814,12 @@ public final class NameAnalyzerTest extends CompilerTestCase {
     test("var foo = {};while(e)foo.bar=function(){};", "while(e);");
   }
 
-  public void testFor() {
+  public void testForIn() {
     test("var foo = {};for(e in x)foo.bar=function(){};", "for(e in x);");
+  }
+
+  public void testForOf() {
+    test("var foo = {};for(e of x)foo.bar=function(){};", "for(e of x);");
   }
 
   public void testDo() {
@@ -938,6 +942,32 @@ public final class NameAnalyzerTest extends CompilerTestCase {
 
   public void testSetterInForIn6() {
     testSame("var foo = {};for(e in foo);");
+  }
+
+  public void testSetterInForOf1() {
+    test("var foo = {}; var bar; for(e of bar = foo.a);",
+         "var foo = {}; for(e of foo.a);");
+  }
+
+  public void testSetterInForOf2() {
+    testSame("var foo = {}; var bar; for(e of bar = foo.a); bar");
+  }
+
+  public void testSetterInForOf3() {
+    testSame("var foo = {}; var bar; for(e of bar = foo.a); bar.b = 3");
+  }
+
+  public void testSetterInForOf4() {
+    testSame("var foo = {}; var bar; for (e of bar = foo.a); bar.b = 3; foo.a");
+  }
+
+  public void testSetterInForOf5() {
+    test("var foo = {}; var bar; for (e of foo.a) { bar = e } bar.b = 3; foo.a",
+         "var foo={};for(e of foo.a);foo.a");
+  }
+
+  public void testSetterInForOf6() {
+    testSame("var foo = {};for(e of foo);");
   }
 
   public void testSetterInIfPredicate() {
