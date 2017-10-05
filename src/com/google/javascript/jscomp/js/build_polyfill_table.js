@@ -24,7 +24,7 @@ const fs = require('fs');
  * Provides an ordering to ensure lower-versioned polyfills don't
  * depend on higher versions.
  */
-const ORDER = ['es3', 'es5', 'es6'];
+const ORDER = ['es3', 'es5', 'es6', 'es7', 'es8'];
 
 /**
  * Prints to stderr and exits.
@@ -57,6 +57,16 @@ class PolyfillTable {
    */
   polyfill(lib) {
     return (polyfill, impl, fromLang, toLang) => {
+      if (!ORDER.includes(fromLang)) {
+        throw new Error(
+            `Unknown language version ${fromLang} for ${polyfill}`);
+      }
+
+      if (!ORDER.includes(toLang)) {
+        throw new Error(
+            `Unknown language version ${toLang} for ${polyfill}`);
+      }
+
       this.symbolToFile.set(polyfill, this.symbolToFile.get(polyfill) || []);
       this.symbolToFile.get(polyfill).push(lib);
       const row = [polyfill, fromLang, toLang];
