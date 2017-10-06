@@ -1984,6 +1984,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       boolean isConst = isConst(declNode);
       if (propDeclType != null || isConst) {
         JSType previousPropType = ns.getPropDeclaredType(pname);
+        declNode.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
         if (ns.hasSubnamespace(new QualifiedName(pname))
             || (ns.hasStaticProp(pname)
             && previousPropType != null
@@ -1997,7 +1998,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
           propDeclType = mayInferFromRhsIfConst(declNode);
         }
         ns.addProperty(pname, declNode, propDeclType, isConst);
-        declNode.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
         if (declNode.isGetProp() && isConst) {
           declNode.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
         }

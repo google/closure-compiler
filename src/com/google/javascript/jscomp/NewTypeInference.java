@@ -947,8 +947,10 @@ final class NewTypeInference implements CompilerPass {
           outEnv = inEnv;
           break;
         case CATCH:
-          String catchVarname = n.getFirstChild().getString();
+          Node catchVar = n.getFirstChild();
+          String catchVarname = catchVar.getString();
           outEnv = envPutType(inEnv, catchVarname, UNKNOWN);
+          maybeSetTypeI(catchVar, UNKNOWN);
           break;
         case EXPR_RESULT:
           println("\tsemi ", n.getFirstChild().getToken());
@@ -984,6 +986,7 @@ final class NewTypeInference implements CompilerPass {
         case VAR:
           outEnv = inEnv;
           if (NodeUtil.isTypedefDecl(n)) {
+            maybeSetTypeI(n.getFirstChild(), UNDEFINED);
             break;
           }
           for (Node nameNode : n.children()) {
@@ -1356,6 +1359,7 @@ final class NewTypeInference implements CompilerPass {
       Preconditions.checkNotNull(declType,
           "Can't skip var declaration with undeclared type at: %s", nameNode);
       maybeSetTypeI(nameNode, declType);
+      maybeSetTypeI(rhs, declType);
       return envPutType(inEnv, varName, declType);
     }
 
@@ -1387,6 +1391,14 @@ final class NewTypeInference implements CompilerPass {
     }
     maybeSetTypeI(nameNode, varType);
     return envPutType(outEnv, varName, varType);
+  }
+
+  /**
+   * Analyze the expression just to annotate its nodes with types, and give warnings;
+   * we don't need the result.
+   */
+  private void analyzeExprFwdIgnoreResult(Node expr, TypeEnv inEnv) {
+    analyzeExprFwd(expr, inEnv);
   }
 
   private EnvTypePair analyzeExprFwd(Node expr, TypeEnv inEnv) {
@@ -1791,6 +1803,7 @@ final class NewTypeInference implements CompilerPass {
       EnvTypePair pair = analyzeExprFwd(recv, inEnv);
       JSType recvType = pair.type;
       if (mayWarnAboutConstProp(ch, recvType, new QualifiedName(pname))) {
+        maybeSetTypeI(ch, recvType.getProp(new QualifiedName(pname)));
         pair.type = requiredType;
         return pair;
       }
@@ -2371,9 +2384,13 @@ final class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeAssertionCall(
       Node callNode, TypeEnv env, AssertionFunctionSpec assertionFunctionSpec) {
+    analyzeExprFwdIgnoreResult(callNode.getFirstChild(), env);
     Node firstParam = callNode.getSecondChild();
     if (firstParam == null) {
       return new EnvTypePair(env, UNKNOWN);
+    }
+    for (Node assertionArgument : firstParam.siblings()) {
+      analyzeExprFwdIgnoreResult(assertionArgument, env);
     }
     Node assertedNode = assertionFunctionSpec.getAssertedParam(firstParam);
     if (assertedNode == null) {
@@ -3088,6 +3105,7 @@ final class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeTypePredicate(
       Node call, String typeHint, TypeEnv inEnv, JSType specializedType) {
+    analyzeExprFwdIgnoreResult(call.getFirstChild(), inEnv);
     int numArgs = call.getChildCount() - 1;
     if (numArgs != 1) {
       warnings.add(JSError.make(call, WRONG_ARGUMENT_COUNT,
@@ -3106,6 +3124,7 @@ final class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzeGoogTypeof(
       Node typeof, Node typeString, TypeEnv inEnv, JSType specializedType) {
+    analyzeExprFwdIgnoreResult(typeString, inEnv);
     return analyzeTypePredicate(typeof,
         typeString.isString() ? typeString.getString() : "",
         inEnv, specializedType);
@@ -3113,6 +3132,7 @@ final class NewTypeInference implements CompilerPass {
 
   private EnvTypePair analyzePropertyTestCallFwd(
       Node call, TypeEnv inEnv, JSType specializedType) {
+    analyzeExprFwdIgnoreResult(call.getFirstChild(), inEnv);
     return analyzeTypePredicate(call,
         call.getFirstChild().getLastChild().getString(),
         inEnv, specializedType);
@@ -3821,8 +3841,7 @@ final class NewTypeInference implements CompilerPass {
       case ASSIGN_MOD:
       case ASSIGN_EXPONENT:
         return analyzeAssignNumericOpBwd(expr, outEnv);
-      case GETPROP:
-        {
+      case GETPROP: {
           checkState(!NodeUtil.isAssignmentOp(expr.getParent()) || !NodeUtil.isLValue(expr));
           if (expr.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
             return new EnvTypePair(outEnv, requiredType);
@@ -4278,16 +4297,25 @@ final class NewTypeInference implements CompilerPass {
         && this.convention.isPropertyTestFunction(expr);
   }
 
-  private boolean isFunctionBind(Node expr, TypeEnv env, boolean isFwd) {
-    if (NodeUtil.isFunctionBind(expr)) {
+  private boolean isFunctionBind(Node callee, TypeEnv env, boolean isFwd) {
+    if (NodeUtil.isFunctionBind(callee)) {
+      if (isFwd) {
+        analyzeExprFwdIgnoreResult(callee, env);
+      }
       return true;
     }
-    if (!expr.isGetProp() || !expr.isQualifiedName()
-        || !expr.getLastChild().getString().equals("bind")) {
+    if (!callee.isGetProp() || !callee.isQualifiedName()
+        || !callee.getLastChild().getString().equals("bind")) {
       return false;
     }
-    Node recv = expr.getFirstChild();
-    JSType recvType = isFwd ? analyzeExprFwd(recv, env).type : analyzeExprBwd(recv, env).type;
+    Node recv = callee.getFirstChild();
+    JSType recvType;
+    if (isFwd) {
+      recvType = analyzeExprFwd(recv, env).type;
+      maybeSetTypeI(callee, recvType.getProp(new QualifiedName("bind")));
+    } else {
+      recvType = analyzeExprBwd(recv, env).type;
+    }
     return !recvType.isUnknown() && recvType.isSubtypeOf(commonTypes.topFunction());
   }
 
@@ -4414,8 +4442,7 @@ final class NewTypeInference implements CompilerPass {
         }
 
         if (result == null) {
-          warnings.add(JSError.make(n, UNKNOWN_NAMESPACE_PROPERTY,
-                  n.getQualifiedName()));
+          warnings.add(JSError.make(n, UNKNOWN_NAMESPACE_PROPERTY, n.getQualifiedName()));
           return UNKNOWN;
         }
 
@@ -4512,10 +4539,11 @@ final class NewTypeInference implements CompilerPass {
       }
       case VAR: { // Can happen iff its parent is a for/in or for/of.
           checkState(expr.getParent().isForIn() || expr.getParent().isForOf());
-          Node vdecl = expr.getFirstChild();
-          String name = vdecl.getString();
+          Node nameNode = expr.getFirstChild();
+          String name = nameNode.getString();
           // For/in and for/of can never have rhs of its VAR
-          checkState(!vdecl.hasChildren());
+          checkState(!nameNode.hasChildren());
+          maybeSetTypeI(nameNode, requiredType);
           if (expr.getParent().isForIn()) {
             return new LValueResultFwd(inEnv, STRING, null, new QualifiedName(name));
           } else {
