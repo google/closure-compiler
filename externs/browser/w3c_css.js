@@ -2621,12 +2621,12 @@ FontFaceSet.prototype.delete = function(value) {};
 FontFaceSet.prototype.has = function(font) {};
 
 /**
- * @param {function(!FontFace, number, !FontFaceSet)} cb
+ * @param {function(!FontFace, number, !FontFaceSet)} callback
  * @param {Object|undefined=} opt_selfObj
  * see http://dev.w3.org/csswg/css-font-loading/#dom-fontfaceset-foreach
  * @return {undefined}
  */
-FontFaceSet.prototype.forEach = function(cb, opt_selfObj) {};
+FontFaceSet.prototype.forEach = function(callback, opt_selfObj) {};
 
 /**
  * @param {string} font

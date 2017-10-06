@@ -663,7 +663,7 @@ Array.prototype.slice = function(opt_begin, opt_end) {};
 /**
  * Sorts the elements of an array in place.
  *
- * @param {function(T,T):number=} opt_compareFunction Specifies a function that
+ * @param {function(T,T):number=} opt_compareFn Specifies a function that
  *     defines the sort order.
  * @this {IArrayLike<T>}
  * @template T
@@ -671,7 +671,7 @@ Array.prototype.slice = function(opt_begin, opt_end) {};
  * @return {!Array<T>}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
  */
-Array.prototype.sort = function(opt_compareFunction) {};
+Array.prototype.sort = function(opt_compareFn) {};
 
 /**
  * Changes the content of an array, adding new elements while removing old
@@ -1895,24 +1895,24 @@ String.prototype.quote = function() {};
  * This may have side-effects if the replacement function has side-effects.
  *
  * @this {String|string}
- * @param {RegExp|string} regex
- * @param {string|Function} str
+ * @param {RegExp|string} pattern
+ * @param {string|Function} replacement
  * @param {string=} opt_flags
  * @return {string}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace
  */
-String.prototype.replace = function(regex, str, opt_flags) {};
+String.prototype.replace = function(pattern, replacement, opt_flags) {};
 
 /**
  * Executes the search for a match between a regular expression and this String
  * object.
  *
  * @this {String|string}
- * @param {RegExp|string} regexp
+ * @param {RegExp|string} pattern
  * @return {number}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/search
  */
-String.prototype.search = function(regexp) {};
+String.prototype.search = function(pattern) {};
 
 /**
  * @this {String|string}

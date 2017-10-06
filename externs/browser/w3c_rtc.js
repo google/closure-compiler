@@ -1745,40 +1745,40 @@ RTCPeerConnection.prototype.dispatchEvent = function(evt) {};
 /**
  * @param {(!RTCSessionDescriptionCallback|!MediaConstraints)=}
  *    successCallbackOrConstraints
- * @param {!RTCPeerConnectionErrorCallback=} failureCallback
+ * @param {!RTCPeerConnectionErrorCallback=} errorCallback
  * @param {!MediaConstraints=} constraints
  * @return {!Promise<!RTCSessionDescription>|undefined}
  */
 RTCPeerConnection.prototype.createOffer = function(successCallbackOrConstraints,
-    failureCallback, constraints) {};
+    errorCallback, constraints) {};
 
 /**
  * @param {(!RTCSessionDescriptionCallback|!MediaConstraints)=}
  *    successCallbackOrConstraints
- * @param {!RTCPeerConnectionErrorCallback=} failureCallback
+ * @param {!RTCPeerConnectionErrorCallback=} errorCallback
  * @param {!MediaConstraints=} constraints
  * @return {!Promise<!RTCSessionDescription>|undefined}
  */
 RTCPeerConnection.prototype.createAnswer =
-    function(successCallbackOrConstraints, failureCallback, constraints) {};
+    function(successCallbackOrConstraints, errorCallback, constraints) {};
 
 /**
  * @param {!RTCSessionDescription} description
  * @param {!RTCVoidCallback=} successCallback
- * @param {!RTCPeerConnectionErrorCallback=} failureCallback
+ * @param {!RTCPeerConnectionErrorCallback=} errorCallback
  * @return {!Promise<!RTCSessionDescription>|undefined}
  */
 RTCPeerConnection.prototype.setLocalDescription = function(description,
-    successCallback, failureCallback) {};
+    successCallback, errorCallback) {};
 
 /**
  * @param {!RTCSessionDescription} description
  * @param {!RTCVoidCallback=} successCallback
- * @param {!RTCPeerConnectionErrorCallback=} failureCallback
+ * @param {!RTCPeerConnectionErrorCallback=} errorCallback
  * @return {!Promise<!RTCSessionDescription>|undefined}
  */
 RTCPeerConnection.prototype.setRemoteDescription = function(description,
-    successCallback, failureCallback) {};
+    successCallback, errorCallback) {};
 
 /**
  * @type {?RTCSessionDescription}
@@ -1809,10 +1809,10 @@ RTCPeerConnection.prototype.updateIce = function(configuration, constraints) {};
  * Void in Chrome for now, a promise that you can then/catch in Firefox.
  * @param {!RTCIceCandidate} candidate
  * @param {!RTCVoidCallback=} successCallback
- * @param {!function(DOMException)=} failureCallback
+ * @param {!function(DOMException)=} errorCallback
  * @return {!Promise|undefined}
  */
-RTCPeerConnection.prototype.addIceCandidate = function(candidate, successCallback, failureCallback) {};
+RTCPeerConnection.prototype.addIceCandidate = function(candidate, successCallback, errorCallback) {};
 
 /**
  * @type {!RTCIceGatheringState}
