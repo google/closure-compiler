@@ -257,6 +257,20 @@ public final class FunctionType implements Serializable {
             false));
     functions.put("TOP_FUNCTION", new FunctionType(commonTypes, false));
     functions.put("LOOSE_TOP_FUNCTION", new FunctionType(commonTypes, true));
+    functions.put(
+        "U2U_CONSTRUCTOR",
+        FunctionType.normalized(
+            commonTypes,
+            null /* requiredFormals */,
+            null /* optionalFormals */,
+            commonTypes.UNKNOWN /* restFormals */,
+            commonTypes.UNKNOWN /* retType */,
+            commonTypes.UNKNOWN /* nominalType */,
+            null /* receiverType */,
+            null /* outerVars */,
+            null /* typeParameters */,
+            true /* isLoose */,
+            false /* isAbstract */));
     return functions;
   }
 

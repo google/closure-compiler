@@ -119,6 +119,9 @@ public final class JSTypes implements Serializable {
   final FunctionType TOP_FUNCTION;
   @SuppressWarnings("ConstantField")
   final FunctionType LOOSE_TOP_FUNCTION;
+  // Constructor for unknown type.
+  @SuppressWarnings("ConstantField")
+  private final FunctionType U2U_CONSTRUCTOR;
 
   @SuppressWarnings("ConstantField")
   final Map<String, JSType> MAP_TO_UNKNOWN;
@@ -203,6 +206,7 @@ public final class JSTypes implements Serializable {
     this.BOTTOM_FUNCTION = checkNotNull(functions.get("BOTTOM_FUNCTION"));
     this.TOP_FUNCTION = checkNotNull(functions.get("TOP_FUNCTION"));
     this.LOOSE_TOP_FUNCTION = checkNotNull(functions.get("LOOSE_TOP_FUNCTION"));
+    this.U2U_CONSTRUCTOR = checkNotNull(functions.get("U2U_CONSTRUCTOR"));
     this.BOTTOM_PROPERTY_MAP = PersistentMap.of("_", Property.make(this.BOTTOM, this.BOTTOM));
 
     this.allowMethodsAsFunctions = inCompatibilityMode;
@@ -516,6 +520,8 @@ public final class JSTypes implements Serializable {
         return getIteratorInstance(UNKNOWN);
       case GENERATOR_TYPE:
         return getGeneratorInstance(UNKNOWN);
+      case U2U_CONSTRUCTOR_TYPE:
+        return fromFunctionType(U2U_CONSTRUCTOR);
       default:
         throw new RuntimeException("Native type " + typeId.name() + " not found");
     }
