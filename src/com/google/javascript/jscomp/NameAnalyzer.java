@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -186,7 +187,7 @@ final class NameAnalyzer implements CompilerPass {
    */
   private static class NameInformation {
     /** Fully qualified name */
-    String name;
+    final String name;
 
     /** Whether the name is guaranteed to be externally referenceable */
     boolean isExternallyReferenceable = false;
@@ -220,8 +221,12 @@ final class NameAnalyzer implements CompilerPass {
    * Struct to hold information about a fully qualified JS name
    */
   private static class JsName implements Comparable<JsName> {
+    JsName(String name) {
+      this.name = name;
+    }
+
     /** Fully qualified name */
-    String name;
+    final String name;
 
     /** Name of prototype functions attached to this name */
     List<String> prototypeNames = new ArrayList<>();
@@ -241,11 +246,8 @@ final class NameAnalyzer implements CompilerPass {
     /** Whether the name is directly set */
     boolean hasSetterReference = false;
 
-    /**
-     * Output the node as a string
-     *
-     * @return Node as a string
-     */
+    private static final Joiner joiner = Joiner.on(", ");
+
     @Override
     public String toString() {
       StringBuilder out = new StringBuilder();
@@ -254,13 +256,7 @@ final class NameAnalyzer implements CompilerPass {
       if (!prototypeNames.isEmpty()) {
         out.append(" (CLASS)\n");
         out.append(" - FUNCTIONS: ");
-        Iterator<String> pIter = prototypeNames.iterator();
-        while (pIter.hasNext()) {
-          out.append(pIter.next());
-          if (pIter.hasNext()) {
-            out.append(", ");
-          }
-        }
+        joiner.appendTo(out, prototypeNames);
       }
 
       return out.toString();
@@ -287,13 +283,13 @@ final class NameAnalyzer implements CompilerPass {
    */
   private class JsNameRefNode implements RefNode {
     /** JsName node for this reference */
-    JsName name;
+    final JsName name;
 
     /**
      * Parent node of the name access
      * (ASSIGN, VAR, FUNCTION, OBJECTLIT, or CALL)
      */
-    Node parent;
+    final Node parent;
 
 
     /**
@@ -397,10 +393,10 @@ final class NameAnalyzer implements CompilerPass {
    */
   private abstract static class SpecialReferenceNode implements RefNode {
     /** JsName node for the function */
-    JsName name;
+    final JsName name;
 
     /** The CALL node */
-    Node node;
+    final Node node;
 
     /**
      * Create a special reference node.
@@ -644,9 +640,7 @@ final class NameAnalyzer implements CompilerPass {
    * it is legal to refer to variable and function names before the
    * actual declaration.
    */
-  private class HoistVariableAndFunctionDeclarations
-      extends NodeTraversal.AbstractShallowCallback {
-
+  private class HoistVariableAndFunctionDeclarations extends NodeTraversal.AbstractShallowCallback {
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
       if (n.isName() && parent.isVar()) {
@@ -671,7 +665,6 @@ final class NameAnalyzer implements CompilerPass {
    * can perform modifications in traversal order.
    */
   private class FindDeclarationsAndSetters extends AbstractPostOrderCallback {
-
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
 
@@ -949,8 +942,7 @@ final class NameAnalyzer implements CompilerPass {
       }
 
       // instanceof checks are not handled like regular read references.
-      boolean isInstanceOfCheck = parent.isInstanceOf() &&
-          parent.getLastChild() == n;
+      boolean isInstanceOfCheck = parent.isInstanceOf() && parent.getLastChild() == n;
       if (isInstanceOfCheck) {
         JsName checkedClass = getName(nameInfo.name, true);
 
@@ -959,10 +951,10 @@ final class NameAnalyzer implements CompilerPass {
         // this as a special reference. It will be replaced with
         // false if there are no other references, because we
         // know the class can't be instantiated.
-        if (checkedClass.hasSetterReference &&
-            !nameInfo.isExternallyReferenceable &&
+        if (checkedClass.hasSetterReference
+            && !nameInfo.isExternallyReferenceable
             // Exclude GETELEMs.
-            n.isQualifiedName()) {
+            && n.isQualifiedName()) {
           refNodes.add(new InstanceOfCheckNode(checkedClass, n));
           checkedClass.hasInstanceOfReference = true;
           return;
@@ -989,9 +981,7 @@ final class NameAnalyzer implements CompilerPass {
         NameInformation nameInfo, @Nullable NameInformation referring) {
       String referringName = "";
       if (referring != null) {
-        referringName = referring.isPrototype
-                      ? referring.prototypeClass
-                      : referring.name;
+        referringName = referring.isPrototype ? referring.prototypeClass : referring.name;
       }
 
       String name = nameInfo.name;
@@ -1036,8 +1026,7 @@ final class NameAnalyzer implements CompilerPass {
         }
       } else if (referring != null) {
         if (!maybeRecordAlias(name, n, referring, referringName)) {
-          RefType depType = referring.onlyAffectsClassDef ?
-              RefType.INHERITANCE : RefType.REGULAR;
+          RefType depType = referring.onlyAffectsClassDef ? RefType.INHERITANCE : RefType.REGULAR;
           recordReference(referringName, name, depType);
         }
       } else {
@@ -1046,8 +1035,7 @@ final class NameAnalyzer implements CompilerPass {
         // or assignment with a complex lhs.  In those cases,
         // protect this node by creating a reference to WINDOW.
         for (Node ancestor : n.getAncestors()) {
-          if (NodeUtil.isAssignmentOp(ancestor) ||
-              ancestor.isFunction()) {
+          if (NodeUtil.isAssignmentOp(ancestor) || ancestor.isFunction()) {
             recordReference(WINDOW, name, RefType.REGULAR);
             break;
           }
@@ -1129,9 +1117,7 @@ final class NameAnalyzer implements CompilerPass {
      * Helper class that gathers the list of nodes that would be left
      * behind after simplification.
      */
-    private class NodeAccumulator
-        implements SideEffectAccumulator {
-
+    private class NodeAccumulator implements SideEffectAccumulator {
       @Override
       public boolean classDefiningCallsHaveSideEffects() {
         return false;
@@ -1460,8 +1446,7 @@ final class NameAnalyzer implements CompilerPass {
   private JsName createName(String name) {
     JsName jsn = allNames.get(name);
     if (jsn == null) {
-      jsn = new JsName();
-      jsn.name = name;
+      jsn = new JsName(name);
       allNames.put(name, jsn);
     }
     return jsn;
@@ -1640,7 +1625,7 @@ final class NameAnalyzer implements CompilerPass {
       }
     }
 
-    // Check whether this is an ES6 class
+    // Check whether this is the name node of an ES6 class
     if (parent.isClass() && n == parent.getFirstChild()) {
       checkState(n.isName());
       NameInformation nameInfo = new NameInformation(n.getString());
@@ -1696,8 +1681,7 @@ final class NameAnalyzer implements CompilerPass {
     String rootName = rootNameNode.getString();
     Var v = scope.getVar(rootName);
     boolean isExtern = (v == null && externalNames.contains(rootName));
-    boolean isGlobalRef = (v != null && v.isGlobal()) || isExtern ||
-        rootName.equals(WINDOW);
+    boolean isGlobalRef = (v != null && v.isGlobal()) || isExtern || rootName.equals(WINDOW);
     if (!isGlobalRef) {
       return null;
     }
