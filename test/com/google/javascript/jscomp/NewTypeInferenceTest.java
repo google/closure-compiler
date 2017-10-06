@@ -21836,4 +21836,16 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "Foo.prototype.bar.baz;",
             "var qux = new Foo().bar.baz;"));
   }
+
+  public void testAliasedNamespaceWithDotInTheName() {
+    typeCheck(LINE_JOINER.join(
+        "/** @const */ var foo = {};",
+        "/** @type {string} */ foo.prop = '';",
+        "/** @const */",
+        "var ns = {",
+        "  'a.b' : foo",
+        "};",
+        "var x = ns['a.b'].prop - 123;"),
+        NewTypeInference.INVALID_OPERAND_TYPE);
+  }
 }

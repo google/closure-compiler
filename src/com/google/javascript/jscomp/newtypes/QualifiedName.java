@@ -50,10 +50,11 @@ public final class QualifiedName {
     if (qnameNode == null || !qnameNode.isQualifiedName()) {
       return null;
     }
-    return qnameNode.isName()
-        ? new QualifiedName(qnameNode.getString())
-        : new QualifiedName(ImmutableList.copyOf(
-              Splitter.on('.').split(qnameNode.getQualifiedName())));
+    if (qnameNode.isGetProp()) {
+      String pname = qnameNode.getLastChild().getString();
+      return join(fromNode(qnameNode.getFirstChild()), new QualifiedName(pname));
+    }
+    return new QualifiedName(qnameNode.getQualifiedName());
   }
 
   public static QualifiedName fromQualifiedString(String qname) {
