@@ -1791,7 +1791,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public final JSType restrictByNotNullOrUndefined() {
+  public final TypeI restrictByNotNullOrUndefined() {
     return this.removeType(this.commonTypes.NULL_OR_UNDEFINED);
   }
 
