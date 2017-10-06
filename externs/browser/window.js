@@ -172,20 +172,22 @@ function prompt(message, opt_value) {}
 
 /**
  * @param {function()} callback
+ * @param {...?} var_args
  * @return {number}
  * @see https://developer.mozilla.org/en-US/docs/DOM/window.setImmediate
  * @see http://msdn.microsoft.com/en-us/library/ie/hh773176(v=vs.85).aspx
  */
-function setImmediate(callback) {}
+function setImmediate(callback, var_args) {}
 
 /**
  * @param {Function|string} callback
  * @param {number=} opt_delay
+ * @param {...?} var_args
  * @return {number}
  * @see https://developer.mozilla.org/en/DOM/window.setInterval
  * @see https://html.spec.whatwg.org/multipage/webappapis.html#timers
  */
-function setInterval(callback, opt_delay) {}
+function setInterval(callback, opt_delay, var_args) {}
 
 /**
  * @param {Function|string} callback
