@@ -3657,7 +3657,13 @@ public final class NodeUtil {
       AbstractCompiler compiler, String name, Node basisNode,
       String originalName) {
     Node node = newQName(compiler, name);
-    setDebugInformation(node, basisNode, originalName);
+    node.useSourceInfoWithoutLengthIfMissingFromForTree(basisNode);
+    if (!originalName.equals(node.getOriginalName())) {
+      // If basisNode already had the correct original name, then it will already be set correctly.
+      // Setting it again will force the QName node to have a different property list from all of
+      // its children, causing greater memory consumption.
+      node.setOriginalName(originalName);
+    }
     return node;
   }
 
@@ -3681,19 +3687,6 @@ public final class NodeUtil {
     }
     checkState(qname.isName());
     return result;
-  }
-
-  /**
-   * Sets the debug information (source file info and original name) on the given node.
-   *
-   * @param node The node on which to set the debug information.
-   * @param basisNode The basis node from which to copy the source file info.
-   * @param originalName The original name of the node.
-   */
-  @Deprecated
-  static void setDebugInformation(Node node, Node basisNode, String originalName) {
-    node.useSourceInfoWithoutLengthIfMissingFromForTree(basisNode);
-    node.setOriginalName(originalName);
   }
 
   private static Node newName(AbstractCompiler compiler, String name) {
