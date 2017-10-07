@@ -1112,7 +1112,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             if (NodeUtil.isFunctionExpression(parent)) {
               // Don't refactor if the parent is a named function expression.
               // e.g. var foo = function foo() {};
-              break;
+              return;
             }
             Node newNameRef = NodeUtil.newQName(compiler, newName, nameRef, originalName);
             Node grandparent = parent.getParent();
