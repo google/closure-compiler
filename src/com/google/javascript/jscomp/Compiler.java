@@ -1988,8 +1988,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // so we force it to be detected as such.
     if (wasImportedByModule && input.getJsModuleType() == CompilerInput.ModuleType.NONE) {
       input.setJsModuleType(CompilerInput.ModuleType.IMPORTED_SCRIPT);
-      this.moduleTypesByName.put(input.getPath().toModuleName(), input.getJsModuleType());
     }
+    this.moduleTypesByName.put(input.getPath().toModuleName(), input.getJsModuleType());
 
     for (String requiredNamespace : input.getRequires()) {
       CompilerInput requiredInput = null;
