@@ -16007,6 +16007,20 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}",
         "var /** string */ s = window.myprop;"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // Window is defined after "var window;", but that's fine.
+    typeCheckCustomExterns(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Object() {}",
+        "/** @constructor */",
+        "function Function(var_args) {}",
+        "/** @type {!Window} */",
+        "var window;",
+        "/** @type {!Window} */",
+        "var notWindow;",
+        "/** @constructor */",
+        "function Window() {}"),
+        "");
   }
 
   public void testInstantiateToTheSuperType() {

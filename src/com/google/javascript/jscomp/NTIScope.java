@@ -386,8 +386,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     }
     // When a function is a namespace, the parent scope has a better type.
     if (name.equals(this.name) && !parent.isFunctionNamespace(name)) {
-      return this.commonTypes
-          .fromFunctionType(getDeclaredFunctionType().toFunctionType());
+      return this.commonTypes.fromFunctionType(getDeclaredFunctionType().toFunctionType());
     }
     if (parent != null) {
       return parent.getDeclaredTypeOf(name);

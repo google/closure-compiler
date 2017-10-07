@@ -852,6 +852,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
    */
   private class CollectNamedTypes extends AbstractShallowCallback {
     private final NTIScope currentScope;
+    private Node nameNodeDefiningWindow = null;
 
     CollectNamedTypes(NTIScope s) {
       this.currentScope = s;
@@ -860,6 +861,10 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     void collectNamedTypesInExterns() {
       for (Node definition : orderedExterns) {
         visitNode(definition);
+      }
+      // Visit the definition of window last, to ensure that the Window type has been defined.
+      if (this.nameNodeDefiningWindow != null) {
+        visitWindowVar(nameNodeDefiningWindow);
       }
     }
 
@@ -940,7 +945,12 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       } else if (isAliasedNamespaceDefinition(nameNode)) {
         visitAliasedNamespace(nameNode);
       } else if (varName.equals(WINDOW_INSTANCE) && nameNode.isFromExterns()) {
-        visitWindowVar(nameNode);
+        this.nameNodeDefiningWindow = nameNode;
+        // We call visitWindowVar at the end, to ensure the Window type has been defined.
+        // Add a dummy extern here to define the variable as an extern.
+        // We don't have a unit test for this, but it is needed to avoid spuriously registering
+        // window as a non-extern typed ? in some builds.
+        this.currentScope.addLocal(WINDOW_INSTANCE, getCommonTypes().UNKNOWN, false, true);
       } else if (isCtorDefinedByCall(nameNode)) {
         visitNewCtorDefinedByCall(nameNode);
       } else if (isCtorWithoutFunctionLiteral(nameNode)) {
@@ -948,16 +958,16 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       }
       if (!n.isFromExterns()
           && !this.currentScope.isDefinedLocally(varName, false)) {
-        // Add a dummy local to avoid shadowing errors, and to calculate
-        // escaped variables.
+        // Add a dummy local to avoid shadowing errors, and to calculate escaped variables.
         this.currentScope.addLocal(varName, getCommonTypes().UNKNOWN, false, false);
       }
     }
 
     private void visitWindowVar(Node nameNode) {
-      JSType typeInJsdoc = getVarTypeFromAnnotation(nameNode, this.currentScope);
-      if (!this.currentScope.isDefinedLocally(WINDOW_INSTANCE, false)) {
-        this.currentScope.addLocal(WINDOW_INSTANCE, typeInJsdoc, false, true);
+      NTIScope scope = getGlobalScope();
+      JSType typeInJsdoc = getVarTypeFromAnnotation(nameNode, scope);
+      if (!scope.isDefinedLocally(WINDOW_INSTANCE, false)) {
+        scope.addLocal(WINDOW_INSTANCE, typeInJsdoc, false, true);
         return;
       }
       // The externs may contain multiple definitions of window, or they may add
@@ -967,7 +977,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       NominalType maybeWin = typeInJsdoc == null
           ? null : typeInJsdoc.getNominalTypeIfSingletonObj();
       if (maybeWin != null && maybeWin.getName().equals(WINDOW_CLASS)) {
-        this.currentScope.addLocal(WINDOW_INSTANCE, typeInJsdoc, false, true);
+        scope.addLocal(WINDOW_INSTANCE, typeInJsdoc, false, true);
       }
     }
 
