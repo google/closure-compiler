@@ -13931,12 +13931,18 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
   }
 
   public void testUndefinedFunctionCtorNoCrash() {
-    typeCheckCustomExterns("", "function f(x) {}",
-        GlobalTypeInfoCollector.FUNCTION_CONSTRUCTOR_NOT_DEFINED);
+    typeCheckCustomExterns(
+        "",
+        "function f(x) {}");
 
-    // Test that NTI is not run
-    typeCheckCustomExterns("", "function f(x) { 1 - 'asdf'; }",
-        GlobalTypeInfoCollector.FUNCTION_CONSTRUCTOR_NOT_DEFINED);
+    typeCheckCustomExterns(
+        "",
+        "function f(x) { 1 - 'asdf'; }",
+        NewTypeInference.INVALID_OPERAND_TYPE);
+
+    typeCheckCustomExterns(
+        "",
+        "/** @typedef {!Function} */ var myTypeDef;");
   }
 
   public void testTrickyPropertyJoins() {

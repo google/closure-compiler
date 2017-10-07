@@ -54,6 +54,7 @@ import com.google.javascript.jscomp.newtypes.UniqueNameGenerator;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.SimpleSourceFile;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -173,11 +174,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
           "May only lend properties to namespaces, constructors and their"
               + " prototypes. Found {0}.");
 
-  static final DiagnosticType FUNCTION_CONSTRUCTOR_NOT_DEFINED =
-      DiagnosticType.error(
-          "JSC_NTI_FUNCTION_CONSTRUCTOR_NOT_DEFINED",
-          "You must provide externs that define the built-in Function constructor.");
-
   static final DiagnosticType INVALID_INTERFACE_PROP_INITIALIZER =
       DiagnosticType.warning(
           "JSC_NTI_INVALID_INTERFACE_PROP_INITIALIZER",
@@ -249,7 +245,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       DUPLICATE_PROP_IN_ENUM,
       EXPECTED_CONSTRUCTOR,
       EXPECTED_INTERFACE,
-      FUNCTION_CONSTRUCTOR_NOT_DEFINED,
       INEXISTENT_PARAM,
       INTERFACE_METHOD_NOT_IMPLEMENTED,
       INTERFACE_METHOD_NOT_EMPTY,
@@ -329,6 +324,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     CollectNamedTypes rootCnt = new CollectNamedTypes(getGlobalScope());
     NodeTraversal.traverseEs6(this.compiler, externs, this.orderedExterns);
     rootCnt.collectNamedTypesInExterns();
+    defineObjectAndFunctionIfMissing();
     NodeTraversal.traverseEs6(compiler, root, rootCnt);
     // (2) Determine the type represented by each typedef and each enum
     getGlobalScope().resolveTypedefs(getTypeParser());
@@ -343,13 +339,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       if (NewTypeInference.measureMem) {
         NewTypeInference.updatePeakMem();
       }
-    }
-
-    // If the Function constructor isn't defined, we cannot create function
-    // types. Exit early.
-    if (getCommonTypes().getFunctionType() == null) {
-      warnings.add(JSError.make(root, FUNCTION_CONSTRUCTOR_NOT_DEFINED));
-      return;
     }
 
     // (4) The bulk of the global-scope processing happens here:
@@ -448,6 +437,23 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     Collections.reverse(getScopes());
 
     this.compiler.setExternProperties(ImmutableSet.copyOf(getExternPropertyNames()));
+  }
+
+  private RawNominalType dummyRawTypeForMissingExterns(String name) {
+    Node defSite = NodeUtil.emptyFunction();
+    defSite.setStaticSourceFile(new SimpleSourceFile("", true));
+    return RawNominalType.makeClass(
+        getCommonTypes(), defSite, name, ImmutableList.of(), ObjectKind.UNRESTRICTED, false);
+  }
+
+  private void defineObjectAndFunctionIfMissing() {
+    JSTypes commonTypes = getCommonTypes();
+    if (commonTypes.getObjectType() == null) {
+      commonTypes.setObjectType(dummyRawTypeForMissingExterns("Object"));
+    }
+    if (commonTypes.getFunctionType() == null) {
+      commonTypes.setFunctionType(dummyRawTypeForMissingExterns("Function"));
+    }
   }
 
   private JSType simpleInferDeclaration(Declaration decl) {
@@ -775,7 +781,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
    * For qnames with the same length, we visit them in the order in which they are defined
    * in the source.
    */
-  private class OrderedExterns extends AbstractShallowCallback implements Iterable<Node> {
+  private static class OrderedExterns extends AbstractShallowCallback implements Iterable<Node> {
     /**
      * treeKeys ensures that the iteration will be in increasing order of qname length:
      * variables first, simple getprops second, and so on.

@@ -181,8 +181,7 @@ public final class RawNominalType extends Namespace {
 
   private static boolean isBuiltinHelper(
       String nameToCheck, String builtinName, Node defSite) {
-    return defSite != null && defSite.isFromExterns()
-        && nameToCheck.equals(builtinName);
+    return defSite != null && defSite.isFromExterns() && nameToCheck.equals(builtinName);
   }
 
   boolean isBuiltinWithName(String s) {
