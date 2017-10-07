@@ -71,6 +71,7 @@ Map.prototype.has = function(key) {};
 
 /**
  * @return {!IteratorIterable<KEY>}
+ * @nosideeffects
  */
 Map.prototype.keys = function() {};
 
@@ -141,8 +142,6 @@ WeakMap.prototype.has = function(key) {};
  * @template THIS
  */
 WeakMap.prototype.set = function(key, value) {};
-
-
 
 /**
  * @constructor @struct
