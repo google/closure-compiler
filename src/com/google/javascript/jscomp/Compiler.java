@@ -1769,10 +1769,20 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
             options.processCommonJSModules);
       } else if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)
           || options.processCommonJSModules) {
-        if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)) {
+
+        if (options.processCommonJSModules) {
+          for (CompilerInput input : inputs) {
+            FindModuleDependencies findDeps =
+                new FindModuleDependencies(
+                    this,
+                    options.getLanguageIn().toFeatureSet().has(Feature.MODULES),
+                    true);
+            findDeps.process(input.getAstRoot(this));
+            this.moduleTypesByName.put(input.getPath().toModuleName(), input.getJsModuleType());
+          }
+        } else if (options.getLanguageIn().toFeatureSet().has(Feature.MODULES)) {
           parsePotentialModules(inputs);
         }
-
 
         // Build a map of module identifiers for any input which provides no namespace.
         // These files could be imported modules which have no exports, but do have side effects.
@@ -2146,6 +2156,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       input.setCompiler(this);
       // Call getRequires to force regex-based dependency parsing to happen.
       input.getRequires();
+      input.setJsModuleType(CompilerInput.ModuleType.ES6);
     }
     return filteredInputs;
   }

@@ -56,6 +56,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
               + " Did you actually intend to export something?");
 
   private final AbstractCompiler compiler;
+  private final String exportPropertyName;
 
   /**
    * Creates a new ProcessCommonJSModules instance which can be used to
@@ -65,6 +66,12 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
    */
   public ProcessCommonJSModules(AbstractCompiler compiler) {
     this.compiler = compiler;
+    if (compiler.getOptions().getLanguageIn().toFeatureSet().has(
+        FeatureSet.Feature.KEYWORDS_AS_PROPERTIES)) {
+      this.exportPropertyName = "default";
+    } else {
+      this.exportPropertyName = "cjs";
+    }
   }
 
   @Override
@@ -147,7 +154,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       return moduleName;
     }
 
-    return moduleName + ".default";
+    return moduleName + "." + exportPropertyName;
   }
 
   /**
@@ -551,7 +558,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       if (directAssignmentsAtTopLevel > 1
           || (directAssignmentsAtTopLevel == 0 && directAssignments > 0)
           || directAssignments == 0) {
-        Node defaultProp = IR.stringKey("default");
+        Node defaultProp = IR.stringKey(exportPropertyName);
         defaultProp.addChildrenToFront(IR.objectlit());
         initModule.getFirstFirstChild().addChildrenToFront(defaultProp);
         if (directAssignments == 0) {
@@ -869,7 +876,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         return;
       }
 
-      moduleName = moduleName + ".default";
+      moduleName = moduleName + "." + exportPropertyName;
 
       Node updatedExport =
           NodeUtil.newQName(compiler, moduleName, export.node, export.node.getQualifiedName());
@@ -954,13 +961,14 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           visitExport(t, newExport);
         } else {
           String moduleName = getModuleName(t.getInput());
-          Var moduleVar = t.getScope().getVar(moduleName + ".default");
+          Var moduleVar = t.getScope().getVar(moduleName + "." + exportPropertyName);
           Node defaultProp = null;
           if (moduleVar == null) {
             moduleVar = t.getScope().getVar(moduleName);
             if (moduleVar != null && moduleVar.getNode().getFirstChild() != null
                 && moduleVar.getNode().getFirstChild().isObjectLit()) {
-              defaultProp = NodeUtil.getFirstPropMatchingKey(moduleVar.getNode().getFirstChild(), "default");
+              defaultProp = NodeUtil.getFirstPropMatchingKey(moduleVar.getNode().getFirstChild(),
+                  exportPropertyName);
             }
           } else if (moduleVar.getNode().getFirstChild() != null
               && moduleVar.getNode().getFirstChild().isObjectLit()) {
