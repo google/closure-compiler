@@ -38,6 +38,7 @@ import com.google.javascript.jscomp.CoverageInstrumentationPass.InstrumentOption
 import com.google.javascript.jscomp.ExtractPrototypeMemberDeclarations.Pattern;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.PassFactory.HotSwapPassFactory;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
 import com.google.javascript.jscomp.lint.CheckDuplicateCase;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
@@ -154,6 +155,12 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(convertEs6TypedToEs6);
     }
 
+    if (options.processCommonJSModules) {
+      passes.add(rewriteCommonJsModules);
+    } else if (options.needsTranspilationOf(FeatureSet.Feature.MODULES)) {
+      passes.add(rewriteScriptsToEs6Modules);
+    }
+
     if (options.needsTranspilationOf(FeatureSet.Feature.MODULES)) {
       TranspilationPasses.addEs6ModulePass(passes);
     }
@@ -248,6 +255,12 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(createEmptyPass("beforeStandardChecks"));
+
+    if (options.processCommonJSModules) {
+      checks.add(rewriteCommonJsModules);
+    } else if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
+      checks.add(rewriteScriptsToEs6Modules);
+    }
 
     // Note: ChromePass can rewrite invalid @type annotations into valid ones, so should run before
     // JsDoc checks.
@@ -3394,6 +3407,32 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new RemoveSuperMethodsPass(compiler);
+        }
+      };
+
+  private final PassFactory rewriteCommonJsModules =
+      new PassFactory(PassNames.REWRITE_COMMON_JS_MODULES, true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new ProcessCommonJSModules(compiler);
+        }
+
+        @Override
+        public FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
+      };
+
+  private final PassFactory rewriteScriptsToEs6Modules =
+      new PassFactory(PassNames.REWRITE_SCRIPTS_TO_ES6_MODULES, true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new Es6RewriteScriptsToModules(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
         }
       };
 }
