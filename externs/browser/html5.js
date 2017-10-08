@@ -1545,6 +1545,13 @@ HTMLElement.prototype.attachedCallback;
  */
 HTMLElement.prototype.detachedCallback;
 
+/**
+ * Cryptographic nonce used by Content Security Policy.
+ * @see https://html.spec.whatwg.org/multipage/dom.html#elements-in-the-dom:noncedelement
+ * @type {?string}
+ */
+HTMLElement.prototype.nonce;
+
 /** @type {string} */
 HTMLAnchorElement.prototype.download;
 
