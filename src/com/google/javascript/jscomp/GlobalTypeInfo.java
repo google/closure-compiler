@@ -198,8 +198,8 @@ public class GlobalTypeInfo implements TypeIRegistry {
     }
     Node fnNameNode = NodeUtil.getNameNode(n);
     // We don't want to use qualified names here
-    checkState(fnNameNode != null);
-    checkState(fnNameNode.isName());
+    checkNotNull(fnNameNode);
+    checkState(fnNameNode.isName(), "Expected name, found: %s", fnNameNode);
     return fnNameNode.getString();
   }
 

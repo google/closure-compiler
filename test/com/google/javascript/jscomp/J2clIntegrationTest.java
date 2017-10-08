@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.J2clPassMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 
@@ -59,12 +58,17 @@ public final class J2clIntegrationTest extends IntegrationTestCase {
   }
 
   @Override
+  public void setUp() {
+    super.setUp();
+    inputFileNameSuffix = ".java.js";
+  }
+
+  @Override
   CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT6_TYPED);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.setJ2clPass(J2clPassMode.ON);
     return options;
   }
 }

@@ -64,6 +64,7 @@ import com.google.javascript.rhino.ErrorReporter;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.EnumType;
 import com.google.javascript.rhino.jstype.FunctionParamBuilder;
@@ -71,9 +72,9 @@ import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
+import com.google.javascript.rhino.jstype.NominalTypeBuilderOti;
 import com.google.javascript.rhino.jstype.ObjectType;
 import com.google.javascript.rhino.jstype.Property;
-import com.google.javascript.rhino.jstype.PropertyDeclarer;
 import com.google.javascript.rhino.jstype.TemplateType;
 import com.google.javascript.rhino.jstype.TemplateTypeMap;
 import com.google.javascript.rhino.jstype.TemplateTypeMapReplacer;
@@ -150,14 +151,12 @@ final class TypedScopeCreator implements ScopeCreator {
       UNKNOWN_LENDS,
       LENDS_ON_NON_OBJECT);
 
-  private static final PropertyDeclarer PROPERTY_DECLARER = new PropertyDeclarer();
-
   private final AbstractCompiler compiler;
   private final ErrorReporter typeParsingErrorReporter;
   private final TypeValidator validator;
   private final CodingConvention codingConvention;
   private final JSTypeRegistry typeRegistry;
-  private final List<ObjectType> delegateProxyPrototypes = new ArrayList<>();
+  private final List<FunctionType> delegateProxyCtors = new ArrayList<>();
   private final Map<String, String> delegateCallingConventions = new HashMap<>();
   private final boolean runsAfterNTI;
 
@@ -257,9 +256,15 @@ final class TypedScopeCreator implements ScopeCreator {
     scopeBuilder.resolveStubDeclarations();
 
     if (typedParent == null) {
-      codingConvention.defineDelegateProxyPrototypeProperties(
-          typeRegistry, newScope, delegateProxyPrototypes,
-          delegateCallingConventions);
+      try (NominalTypeBuilderOti.Factory factory = new NominalTypeBuilderOti.Factory()) {
+        List<NominalTypeBuilder> delegateProxies = new ArrayList<>();
+        for (FunctionType delegateProxyCtor : delegateProxyCtors) {
+          delegateProxies.add(
+              factory.builder(delegateProxyCtor, delegateProxyCtor.getInstanceType()));
+        }
+        codingConvention.defineDelegateProxyPrototypeProperties(
+            typeRegistry, delegateProxies, delegateCallingConventions);
+      }
     }
 
     newScope.setTypeResolver(scopeBuilder);
@@ -533,7 +538,6 @@ final class TypedScopeCreator implements ScopeCreator {
       switch (n.getToken()) {
         case CALL:
           checkForClassDefiningCalls(n);
-          checkForCallingConventionDefiningCalls(n, delegateCallingConventions);
           break;
 
         case FUNCTION:
@@ -566,6 +570,7 @@ final class TypedScopeCreator implements ScopeCreator {
           break;
 
         case GETPROP:
+          checkForCallingConventionDefinitions(n);
           // Handle stubbed properties.
           if (parent.isExprResult() &&
               n.isQualifiedName()) {
@@ -1473,12 +1478,10 @@ final class TypedScopeCreator implements ScopeCreator {
     }
 
     /**
-     * Look for calls that set a delegate method's calling convention.
+     * Look for expressions that set a delegate method's calling convention.
      */
-    private void checkForCallingConventionDefiningCalls(
-        Node n, Map<String, String> delegateCallingConventions) {
-      codingConvention.checkForCallingConventionDefiningCalls(n,
-          delegateCallingConventions);
+    private void checkForCallingConventionDefinitions(Node n) {
+      codingConvention.checkForCallingConventionDefinitions(n, delegateCallingConventions);
     }
 
     /**
@@ -1501,8 +1504,12 @@ final class TypedScopeCreator implements ScopeCreator {
           FunctionType superCtor = superClass.getConstructor();
           FunctionType subCtor = subClass.getConstructor();
           if (superCtor != null && subCtor != null) {
-            codingConvention.applySubclassRelationship(
-                PROPERTY_DECLARER, superCtor, subCtor, relationship.type);
+            try (NominalTypeBuilderOti.Factory factory = new NominalTypeBuilderOti.Factory()) {
+              codingConvention.applySubclassRelationship(
+                  factory.builder(superCtor, superClass),
+                  factory.builder(subCtor, subClass),
+                  relationship.type);
+            }
           }
         }
       }
@@ -1517,8 +1524,10 @@ final class TypedScopeCreator implements ScopeCreator {
 
           if (functionType != null) {
             FunctionType getterType = typeRegistry.createFunctionType(objectType);
-            codingConvention.applySingletonGetter(
-                PROPERTY_DECLARER, functionType, getterType, objectType);
+            try (NominalTypeBuilderOti.Factory factory = new NominalTypeBuilderOti.Factory()) {
+              codingConvention.applySingletonGetter(
+                  factory.builder(functionType, objectType), getterType);
+            }
           }
         }
       }
@@ -1578,18 +1587,23 @@ final class TypedScopeCreator implements ScopeCreator {
 
           FunctionType delegateProxy =
               typeRegistry.createConstructorType(
-                  delegateBaseObject.getReferenceName() + DELEGATE_PROXY_SUFFIX,
-                  null,
-                  null,
-                  null,
-                  null,
-                  false);
+                  delegateBaseObject.getReferenceName() + DELEGATE_PROXY_SUFFIX /* name */,
+                  null /* source */,
+                  null /* parameters */,
+                  null /* returnType */,
+                  null /* templateKeys */,
+                  false /* isAbstract */);
           delegateProxy.setPrototypeBasedOn(delegateBaseObject);
 
-          codingConvention.applyDelegateRelationship(
-              delegateSuperObject, delegateBaseObject, delegatorObject,
-              delegateProxy, findDelegate);
-          delegateProxyPrototypes.add(delegateProxy.getPrototype());
+          try (NominalTypeBuilderOti.Factory factory = new NominalTypeBuilderOti.Factory()) {
+            codingConvention.applyDelegateRelationship(
+                factory.builder(delegateSuperCtor, delegateSuperObject),
+                factory.builder(delegateBaseCtor, delegateBaseObject),
+                factory.builder(delegatorCtor, delegatorObject),
+                (ObjectType) delegateProxy.getTypeOfThis(),
+                findDelegate);
+            delegateProxyCtors.add(delegateProxy);
+          }
         }
       }
     }
@@ -1695,20 +1709,6 @@ final class TypedScopeCreator implements ScopeCreator {
         // If the property is already declared, the error will be
         // caught when we try to declare it in the current scope.
         defineSlot(n, parent, valueType, inferred);
-      } else if (rhsValue != null && rhsValue.isTrue()) {
-        // We declare these for delegate proxy method properties.
-        ObjectType ownerType = getObjectSlot(ownerName);
-        FunctionType ownerFnType = JSType.toMaybeFunctionType(ownerType);
-        if (ownerFnType != null) {
-          JSType ownerTypeOfThis = ownerFnType.getTypeOfThis();
-          String delegateName = codingConvention.getDelegateSuperclassName();
-          JSType delegateType = delegateName == null ?
-              null : typeRegistry.getType(delegateName);
-          if (delegateType != null &&
-              ownerTypeOfThis.isSubtype(delegateType)) {
-            defineSlot(n, parent, getNativeType(BOOLEAN_TYPE), true);
-          }
-        }
       }
     }
 

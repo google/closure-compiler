@@ -54,6 +54,8 @@ class AnalyzePrototypeProperties implements CompilerPass {
   private final AbstractCompiler compiler;
   private final boolean canModifyExterns;
   private final boolean anchorUnusedVars;
+  private final boolean rootScopeUsesAreGlobal;
+
   private final JSModuleGraph moduleGraph;
   private final JSModule firstModule;
 
@@ -99,21 +101,28 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
   /**
    * Creates a new pass for analyzing prototype properties.
+   *
    * @param compiler The compiler.
-   * @param moduleGraph The graph for resolving module dependencies. May be
-   *     null if we don't care about module dependencies.
-   * @param canModifyExterns If true, then we can move prototype
-   *     properties that are declared in the externs file.
-   * @param anchorUnusedVars If true, then we must mark all vars as referenced,
-   *     even if they are never used.
+   * @param moduleGraph The graph for resolving module dependencies. May be null if we don't care
+   *     about module dependencies.
+   * @param canModifyExterns If true, then we can move prototype properties that are declared in the
+   *     externs file.
+   * @param anchorUnusedVars If true, then we must mark all vars as referenced, even if they are
+   *     never used.
+   * @param rootScopeUsesAreGlobal If true, all uses in root level scope are treated as references
+   *     from '[global]', even if they are assignments to a property.
    */
-  AnalyzePrototypeProperties(AbstractCompiler compiler,
-      JSModuleGraph moduleGraph, boolean canModifyExterns,
-      boolean anchorUnusedVars) {
+  AnalyzePrototypeProperties(
+      AbstractCompiler compiler,
+      JSModuleGraph moduleGraph,
+      boolean canModifyExterns,
+      boolean anchorUnusedVars,
+      boolean rootScopeUsesAreGlobal) {
     this.compiler = compiler;
     this.moduleGraph = moduleGraph;
     this.canModifyExterns = canModifyExterns;
     this.anchorUnusedVars = anchorUnusedVars;
+      this.rootScopeUsesAreGlobal = rootScopeUsesAreGlobal;
 
     if (moduleGraph != null) {
       firstModule = moduleGraph.getRootModule();
@@ -239,12 +248,12 @@ class AnalyzePrototypeProperties implements CompilerPass {
 
     @Override
     public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
-      // Process prototype assignments to non-functions.
-      String propName = processNonFunctionPrototypeAssign(n, parent);
-      if (propName != null) {
-        symbolStack.push(
-            new NameContext(
-                getNameInfoForName(propName, PROPERTY), null));
+      if (!rootScopeUsesAreGlobal) {
+        // Process assignment of a non-function expression to a prototype property.
+        String propName = processNonFunctionPrototypeAssign(n, parent);
+        if (propName != null) {
+          symbolStack.push(new NameContext(getNameInfoForName(propName, PROPERTY), null));
+        }
       }
       return true;
     }
@@ -265,7 +274,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
               return;
             } else {
               // Do not mark prototype prop assigns as a 'use' in the global scope.
-              if (n.getParent().isAssign() && n.getNext() != null) {
+              if (parent.isAssign() && n == parent.getFirstChild()) {
                 String rValueName = getPrototypePropertyNameFromRValue(n);
                 if (rValueName != null) {
                   return;
@@ -353,7 +362,7 @@ class AnalyzePrototypeProperties implements CompilerPass {
           break;
         }
       // Process prototype assignments to non-functions.
-      if (processNonFunctionPrototypeAssign(n, parent) != null) {
+      if (!rootScopeUsesAreGlobal && processNonFunctionPrototypeAssign(n, parent) != null) {
         symbolStack.pop();
       }
     }

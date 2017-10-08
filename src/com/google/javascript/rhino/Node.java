@@ -812,7 +812,7 @@ public class Node implements Serializable {
 
   /** Detach a child from its parent and siblings. */
   public final void removeChild(Node child) {
-    checkState(child.parent == this);
+    checkState(child.parent == this, "%s is not the parent of %s", this, child);
     checkNotNull(child.previous);
 
     Node last = first.previous;
@@ -849,7 +849,7 @@ public class Node implements Serializable {
     checkArgument(newChild.next == null, "The new child node has next siblings.");
     checkArgument(newChild.previous == null, "The new child node has previous siblings.");
     checkArgument(newChild.parent == null, "The new child node already has a parent.");
-    checkState(child.parent == this, "", child, parent);
+    checkState(child.parent == this, "%s is not the parent of %s", this, child);
 
     // Copy over important information.
     newChild.useSourceInfoIfMissingFrom(child);
@@ -1791,12 +1791,12 @@ public class Node implements Serializable {
     return isEquivalentTo(node, false, false, false, false);
   }
 
-  /** Returns true if this node is equivalent semantically to another including side efffects. */
+  /** Returns true if this node is equivalent semantically to another including side effects. */
   public final boolean isEquivalentWithSideEffectsTo(Node node) {
     return isEquivalentTo(node, false, true, false, true);
   }
 
-  /** Returns true if this node is equivalent semantically to another including side efffects. */
+  /** Returns true if this node is equivalent semantically to another including side effects. */
   public final boolean isEquivalentWithSideEffectsToShallow(Node node) {
     return isEquivalentTo(node, false, false, false, true);
   }
@@ -2242,14 +2242,13 @@ public class Node implements Serializable {
   }
 
   /**
-   * Copies source file and name information from the other
-   * node given to the current node. Used for maintaining
-   * debug information across node append and remove operations.
+   * Copies source file and name information from the other node to the
+   * entire tree rooted at this node.
    * @return this
    */
   // TODO(nicksantos): The semantics of this method are ill-defined. Delete it.
   @Deprecated
-  public final Node useSourceInfoWithoutLengthIfMissingFrom(Node other) {
+  public final Node useSourceInfoWithoutLengthIfMissingFromForTree(Node other) {
     if (getStaticSourceFile() == null) {
       setStaticSourceFileFrom(other);
       sourcePosition = other.sourcePosition;
@@ -2259,18 +2258,6 @@ public class Node implements Serializable {
       putProp(ORIGINALNAME_PROP, other.getProp(ORIGINALNAME_PROP));
     }
 
-    return this;
-  }
-
-  /**
-   * Copies source file and name information from the other node to the
-   * entire tree rooted at this node.
-   * @return this
-   */
-  // TODO(nicksantos): The semantics of this method are ill-defined. Delete it.
-  @Deprecated
-  public final Node useSourceInfoWithoutLengthIfMissingFromForTree(Node other) {
-    useSourceInfoWithoutLengthIfMissingFrom(other);
     for (Node child = first; child != null; child = child.next) {
       child.useSourceInfoWithoutLengthIfMissingFromForTree(other);
     }
@@ -2997,12 +2984,6 @@ public class Node implements Serializable {
 
   public final boolean isFalse() {
     return this.token == Token.FALSE;
-  }
-
-  /** Use isVanillaFor, isForIn, or NodeUtil.isAnyFor instead */
-  @Deprecated
-  public final boolean isFor() {
-    return this.isVanillaFor() || this.isForIn();
   }
 
   public final boolean isVanillaFor() {

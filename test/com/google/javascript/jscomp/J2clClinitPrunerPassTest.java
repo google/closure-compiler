@@ -26,11 +26,12 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
   }
 
   @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    options.setJ2clPass(CompilerOptions.J2clPassMode.ON);
-    return options;
+  protected Compiler createCompiler() {
+    Compiler compiler = super.createCompiler();
+    J2clSourceFileChecker.markToRunJ2clPasses(compiler);
+    return compiler;
   }
+
   @Override
   protected int getNumRepetitions() {
     // A single run should be sufficient.
@@ -420,6 +421,37 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "var someChildClass = {};",
             "someChildClass.$clinit = function() {};",
             "someChildClass.someFunction = function() {};"));
+  }
+
+  public void testFoldClinit_classHierarchyNonEmpty() {
+    test(
+        LINE_JOINER.join(
+            "var someClass = {};",
+            "someClass.$clinit = function() {",
+            "  someClass.$clinit = function() {};",
+            "  somefn();",
+            "};",
+            "var someChildClass = {};",
+            "someChildClass.$clinit = function() {",
+            "  someChildClass.$clinit = function() {};",
+            "  someClass.$clinit();",
+            "};",
+            "someChildClass.someFunction = function() {",
+            "  someChildClass.$clinit();",
+            "};"),
+        LINE_JOINER.join(
+            "var someClass = {};",
+            "someClass.$clinit = function() {",
+            "  someClass.$clinit = function() {};",
+            "  somefn();",
+            "};",
+            "var someChildClass = {};",
+            "someChildClass.$clinit = function() {",
+            "  someClass.$clinit();",
+            "};",
+            "someChildClass.someFunction = function() {",
+            "  someClass.$clinit();",
+            "};"));
   }
 
   public void testFoldClinit_invalidCandidates() {

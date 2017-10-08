@@ -176,13 +176,13 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
   /**
    * Gets a memoized scope creator without type information, used by the checks and optimization
-   * passes to avoid continously recreating the entire scope.
+   * passes to avoid continuously recreating the entire scope.
    */
   abstract IncrementalScopeCreator getScopeCreator();
 
   /**
    * Stores a memoized scope creator without type information, used by the checks and optimization
-   * passes to avoid continously recreating the entire scope.
+   * passes to avoid continuously recreating the entire scope.
    */
   abstract void putScopeCreator(IncrementalScopeCreator creator);
 
@@ -365,7 +365,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
    */
   abstract <T> T getIndex(Class<T> type);
 
-  /** Let the PhaseOptimizer know which scope a pass is currently analyzing */
+  @Deprecated
   abstract void setChangeScope(Node n);
 
   /** A monotonically increasing value to identify a change */
@@ -551,7 +551,7 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
   /**
    * Sets the progress percentage as well as the name of the last pass that
    * ran (if available).
-   * @param progress A precentage expressed as a double in the range [0, 1].
+   * @param progress A percentage expressed as a double in the range [0, 1].
    *     Use -1 if you just want to set the last pass name.
    */
   abstract void setProgress(double progress, @Nullable String lastPassName);

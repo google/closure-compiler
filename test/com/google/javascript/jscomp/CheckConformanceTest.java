@@ -350,6 +350,15 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
             "var ns = {};",
             "/** @const */",
             "ns.subns = ns.subns || {};"));
+
+    // We only check @const nodes, not @final nodes.
+    testNoWarning(
+        LINE_JOINER.join(
+            "/** @constructor @suppress {newCheckTypes} */",
+            "function f() {",
+            "  /** @final */ this.foo = unknown;",
+            "}",
+            "var x = new f();"));
   }
 
   public void testBannedCodePattern1() {
@@ -544,7 +553,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testConformance(declarations, "var c = new C(); c.p = 'boo';",
         CheckConformance.CONFORMANCE_VIOLATION);
 
-    // Accessing property through a super type is possibily a violation.
+    // Accessing property through a super type is possibly a violation.
     testConformance(declarations, "var sc = new SC(); sc.p = 'boo';",
         CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION);
 

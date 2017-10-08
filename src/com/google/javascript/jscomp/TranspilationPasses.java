@@ -100,7 +100,7 @@ public class TranspilationPasses {
 
   /** Rewrites ES6 modules */
   private static final HotSwapPassFactory es6RewriteModule =
-      new HotSwapPassFactory("es6RewriteModule", true) {
+      new HotSwapPassFactory("es6RewriteModule") {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
           return new Es6RewriteModules(compiler);
@@ -152,7 +152,7 @@ public class TranspilationPasses {
       };
 
   static final HotSwapPassFactory es6ExtractClasses =
-      new HotSwapPassFactory(PassNames.ES6_EXTRACT_CLASSES, true) {
+      new HotSwapPassFactory(PassNames.ES6_EXTRACT_CLASSES) {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
           return new Es6ExtractClasses(compiler);
@@ -165,10 +165,10 @@ public class TranspilationPasses {
       };
 
   static final HotSwapPassFactory es6RewriteClass =
-      new HotSwapPassFactory("Es6RewriteClass", true) {
+      new HotSwapPassFactory("Es6RewriteClass") {
         @Override
         protected HotSwapCompilerPass create(AbstractCompiler compiler) {
-          return new Es6RewriteClass(compiler);
+          return new Es6RewriteClass(compiler, !compiler.getOptions().inIncrementalCheckMode());
         }
 
         @Override
@@ -178,7 +178,7 @@ public class TranspilationPasses {
       };
 
   static final HotSwapPassFactory es6RewriteDestructuring =
-      new HotSwapPassFactory("Es6RewriteDestructuring", true) {
+      new HotSwapPassFactory("Es6RewriteDestructuring") {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es6RewriteDestructuring(compiler);
@@ -191,7 +191,7 @@ public class TranspilationPasses {
       };
 
   static final HotSwapPassFactory es6RenameVariablesInParamLists =
-      new HotSwapPassFactory("Es6RenameVariablesInParamLists", true) {
+      new HotSwapPassFactory("Es6RenameVariablesInParamLists") {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es6RenameVariablesInParamLists(compiler);
@@ -204,7 +204,7 @@ public class TranspilationPasses {
       };
 
   static final HotSwapPassFactory es6RewriteArrowFunction =
-      new HotSwapPassFactory("Es6RewriteArrowFunction", true) {
+      new HotSwapPassFactory("Es6RewriteArrowFunction") {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es6RewriteArrowFunction(compiler);
@@ -217,7 +217,7 @@ public class TranspilationPasses {
       };
 
   static final HotSwapPassFactory rewritePolyfills =
-      new HotSwapPassFactory("RewritePolyfills", true) {
+      new HotSwapPassFactory("RewritePolyfills") {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new RewritePolyfills(compiler);
@@ -230,7 +230,7 @@ public class TranspilationPasses {
       };
 
   static final HotSwapPassFactory es6SplitVariableDeclarations =
-      new HotSwapPassFactory("Es6SplitVariableDeclarations", true) {
+      new HotSwapPassFactory("Es6SplitVariableDeclarations") {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es6SplitVariableDeclarations(compiler);
@@ -243,7 +243,7 @@ public class TranspilationPasses {
       };
 
   static final HotSwapPassFactory es6ConvertSuperConstructorCalls =
-      new HotSwapPassFactory("es6ConvertSuperConstructorCalls", true) {
+      new HotSwapPassFactory("es6ConvertSuperConstructorCalls") {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es6ConvertSuperConstructorCalls(compiler);
@@ -256,7 +256,7 @@ public class TranspilationPasses {
       };
 
   static final HotSwapPassFactory es6ConvertSuper =
-      new HotSwapPassFactory("es6ConvertSuper", true) {
+      new HotSwapPassFactory("es6ConvertSuper") {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es6ConvertSuper(compiler);
@@ -274,7 +274,7 @@ public class TranspilationPasses {
    * to convert constructs which are not converted by this pass.
    */
   static final HotSwapPassFactory earlyConvertEs6ToEs3 =
-      new HotSwapPassFactory("earlyConvertEs6", true) {
+      new HotSwapPassFactory("earlyConvertEs6") {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
       return new EarlyEs6ToEs3Converter(compiler);
@@ -293,7 +293,7 @@ public class TranspilationPasses {
    * This pass can run after NTI
    */
   static final HotSwapPassFactory lateConvertEs6ToEs3 =
-      new HotSwapPassFactory("lateConvertEs6", true) {
+      new HotSwapPassFactory("lateConvertEs6") {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
       return new LateEs6ToEs3Converter(compiler);
@@ -306,7 +306,7 @@ public class TranspilationPasses {
   };
 
   static final HotSwapPassFactory rewriteBlockScopedDeclaration =
-      new HotSwapPassFactory("Es6RewriteBlockScopedDeclaration", true) {
+      new HotSwapPassFactory("Es6RewriteBlockScopedDeclaration") {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
       return new Es6RewriteBlockScopedDeclaration(compiler);
@@ -319,7 +319,7 @@ public class TranspilationPasses {
   };
 
   static final HotSwapPassFactory rewriteGenerators =
-      new HotSwapPassFactory("rewriteGenerators", true) {
+      new HotSwapPassFactory("rewriteGenerators") {
     @Override
     protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
       return new Es6RewriteGenerators(compiler);

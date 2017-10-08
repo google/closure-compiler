@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
-import com.google.javascript.jscomp.CompilerOptions.J2clPassMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.testing.NodeSubject;
@@ -46,6 +45,108 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   private static final String CLOSURE_COMPILED =
       "var COMPILED = true; var goog$exportSymbol = function() {};";
+
+  public void testBug65688660() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    options.setCoalesceVariableNames(true);
+    test(
+        options,
+        LINE_JOINER.join(
+            "function f(param) {",
+            "  if (true) {",
+            "    const b1 = [];",
+            "    for (const [key, value] of []) {}",
+            "  }",
+            "  if (true) {",
+            "    const b2 = [];",
+            "    for (const kv of []) {",
+            "      const key2 = kv.key;",
+            "    }",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(param) {",
+            "  if (true) {",
+            "    param = [];",
+            "    for (const [key, value$jscomp$1] of []) {}",
+            "  }",
+            "  if (true) {",
+            "    param = [];",
+            "    for (const kv of []) {",
+            "      param = kv.key;",
+            "    }",
+            "  }",
+            "}"));
+  }
+
+  public void testBug65688660_pseudoNames() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    options.setGeneratePseudoNames(true);
+    options.setCoalesceVariableNames(true);
+    test(
+        options,
+        LINE_JOINER.join(
+            "function f(param) {",
+            "  if (true) {",
+            "    const b1 = [];",
+            "    for (const [key, value] of []) {}",
+            "  }",
+            "  if (true) {",
+            "    const b2 = [];",
+            "    for (const kv of []) {",
+            "      const key2 = kv.key;",
+            "    }",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(b1_b2_key2_param) {",
+            "  if (true) {",
+            "    b1_b2_key2_param = [];",
+            "    for (const [key, value$jscomp$1] of []) {}",
+            "  }",
+            "  if (true) {",
+            "    b1_b2_key2_param = [];",
+            "    for (const kv of []) {",
+            "      b1_b2_key2_param = kv.key;",
+            "    }",
+            "  }",
+            "}"));
+  }
+
+  public void testObjDestructuringConst() {
+    CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
+    options.setCoalesceVariableNames(true);
+    test(
+        options,
+        LINE_JOINER.join(
+            "function f(obj) {",
+            "  {",
+            "    const {foo} = obj;",
+            "    alert(foo);",
+            "  }",
+            "  {",
+            "    const {bar} = obj;",
+            "    alert(bar);",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(obj$jscomp$1) {",
+            "  {",
+            "    var {foo: obj$jscomp$1} = obj$jscomp$1;",
+            "    alert(obj$jscomp$1);",
+            "  }",
+            "  {",
+            "    var {bar: obj$jscomp$1} = obj$jscomp$1;",
+            "    alert(obj$jscomp$1);",
+            "  }",
+            "}"));
+  }
 
   public void testConstructorCycle() {
     CompilerOptions options = createCompilerOptions();
@@ -1971,7 +2072,6 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var x = /** @type {!Foo} */ (Arrays.$create()).myprop;");
 
     options.setCheckTypes(true);
-    options.setJ2clPass(J2clPassMode.TRUE);
     options.setDisambiguateProperties(true);
 
     test(options, code,

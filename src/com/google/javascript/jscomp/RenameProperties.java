@@ -361,10 +361,7 @@ class RenameProperties implements CompilerPass {
             }
           }
           break;
-        case DESTRUCTURING_LHS:
-          // Get the object pattern within the destructuring on the lhs
-          n = n.getFirstChild();
-
+        case OBJECT_PATTERN:
           // Iterate through all the nodes in the object pattern
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
             if (key.isComputedProp()) {

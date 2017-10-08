@@ -599,6 +599,22 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "test.js",
         LINE_JOINER.join(
+            "!function(){",
+            "var foobar = {foo: 'bar'};",
+            "if (typeof module === 'object' && module.exports) {",
+            "  module.exports = foobar;",
+            "} else if (typeof define === 'function' && define.amd) {",
+            "  define([], function() {return foobar;});",
+            "} else {",
+            "  this.foobar = foobar;",
+            "}}()"),
+        LINE_JOINER.join(
+            "goog.provide('module$test');",
+            "var module$test = {foo: 'bar'};"));
+
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
             ";;;(function(){",
             "var foobar = {foo: 'bar'};",
             "if (typeof module === 'object' && module.exports) {",
@@ -876,9 +892,11 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "test.js",
         LINE_JOINER.join(
             "var foobar = {foo: 'bar'};",
-            "typeof module === 'object' && module.exports ? module.exports = foobar :",
-            "typeof define === 'function' && define.amd ? define([], function() {return foobar;}) :",
-            "this.foobar = foobar;"),
+            "typeof module === 'object' && module.exports ?",
+            "   module.exports = foobar :",
+            "   typeof define === 'function' && define.amd ?",
+            "     define([], function() {return foobar;}) :",
+            "     this.foobar = foobar;"),
         "/** @const */ var module$test = {}; module$test.default = {foo: 'bar'};");
   }
 
@@ -887,9 +905,11 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "test.js",
         LINE_JOINER.join(
             "(function (global, factory) {",
-            "  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :",
-            "  typeof define === 'function' && define.amd ? define(['exports'], factory) :",
-            "  (factory((global.L = {})));",
+            "  typeof exports === 'object' && typeof module !== 'undefined' ?",
+            "    factory(exports) :",
+            "    typeof define === 'function' && define.amd ?",
+            "      define(['exports'], factory) :",
+            "      (factory((global.L = {})));",
             "}(this, (function (exports) {",
             "  'use strict';",
             "  var webkit = userAgentContains('webkit');",
@@ -902,11 +922,15 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "/** @const */ var module$test={/** @const */ default: {}};",
             "{",
             "  var exports$jscomp$inline_3$$module$test=module$test.default;",
-            "  var userAgentContains$jscomp$inline_5$$module$test=function(str$jscomp$inline_6){",
-            "    return navigator.userAgent.toLowerCase().indexOf(str$jscomp$inline_6)>=0;",
-            "  };",
-            "  var webkit$jscomp$inline_4$$module$test=userAgentContains$jscomp$inline_5$$module$test('webkit');",
-            "  exports$jscomp$inline_3$$module$test.webkit=webkit$jscomp$inline_4$$module$test;",
+            "  var userAgentContains$jscomp$inline_5$$module$test=",
+            "    function(str$jscomp$inline_6){",
+            "      return navigator.userAgent.toLowerCase().indexOf(",
+            "        str$jscomp$inline_6)>=0;",
+            "    };",
+            "  var webkit$jscomp$inline_4$$module$test=",
+            "    userAgentContains$jscomp$inline_5$$module$test('webkit');",
+            "  exports$jscomp$inline_3$$module$test.webkit=",
+            "    webkit$jscomp$inline_4$$module$test;",
             "}"));
   }
 
@@ -915,8 +939,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         "test.js",
         LINE_JOINER.join(
             "!function (root, name, definition) {",
-            "  if (typeof module != 'undefined' && module.exports) module.exports = definition()",
-            "  else if (typeof define == 'function' && define.amd) define(name, definition)",
+            "  if (typeof module != 'undefined' && module.exports)",
+            "    module.exports = definition()",
+            "  else if (typeof define == 'function' && define.amd)",
+            "    define(name, definition)",
             "  else root[name] = definition()",
             "}(this, 'foobar', function () {",
             "  return {foo: 'bar'};",

@@ -474,7 +474,7 @@ public final class NodeUtil {
    * @return the node best representing the class's name
    */
   public static Node getNameNode(Node n) {
-    checkState(n.isFunction() || n.isClass());
+    checkState(n.isFunction() || n.isClass(), n);
     Node parent = n.getParent();
     switch (parent.getToken()) {
       case NAME:
@@ -568,7 +568,7 @@ public final class NodeUtil {
     //    (in which case NOT here should return true)
     // 2) We care that expression is a side-effect free and can't
     //    be side-effected by other expressions.
-    // This should only be used to say the value is immuable and
+    // This should only be used to say the value is immutable and
     // hasSideEffects and canBeSideEffected should be used for the other case.
 
     switch (n.getToken()) {
@@ -2363,6 +2363,13 @@ public final class NodeUtil {
     return n != null && (n.isVar() || n.isLet() || n.isConst());
   }
 
+  static final Predicate<Node> isNameDeclaration = new Predicate<Node>() {
+    @Override
+    public boolean apply(Node n) {
+      return isNameDeclaration(n);
+    }
+  };
+
   /**
    * @param n The node
    * @return True if {@code n} is a VAR, LET or CONST that contains a
@@ -3664,6 +3671,16 @@ public final class NodeUtil {
     }
   }
 
+  static int getLengthOfQname(Node qname) {
+    int result = 1;
+    while (qname.isGetProp() || qname.isGetElem()) {
+      result++;
+      qname = qname.getFirstChild();
+    }
+    checkState(qname.isName());
+    return result;
+  }
+
   /**
    * Sets the debug information (source file info and original name) on the given node.
    *
@@ -4774,7 +4791,7 @@ public final class NodeUtil {
     return null;
   }
 
-  /** Gets the r-value (or intializer) of a node returned by getBestLValue. */
+  /** Gets the r-value (or initializer) of a node returned by getBestLValue. */
   static Node getRValueOfLValue(Node n) {
     Node parent = n.getParent();
     switch (parent.getToken()) {

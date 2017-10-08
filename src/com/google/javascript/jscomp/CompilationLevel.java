@@ -25,6 +25,8 @@ import com.google.javascript.jscomp.CompilerOptions.Reach;
  * @author bolinfest@google.com (Michael Bolin)
  */
 public enum CompilationLevel {
+  /** BUNDLE Simply orders and concatenates files to the output. */
+  BUNDLE,
 
   /**
    * WHITESPACE_ONLY removes comments and extra whitespace in the input JS.
@@ -53,6 +55,8 @@ public enum CompilationLevel {
       return null;
     }
     switch (value) {
+      case "BUNDLE":
+        return CompilationLevel.BUNDLE;
       case "WHITESPACE_ONLY":
       case "WHITESPACE":
         return CompilationLevel.WHITESPACE_ONLY;
@@ -62,14 +66,17 @@ public enum CompilationLevel {
       case "ADVANCED_OPTIMIZATIONS":
       case "ADVANCED":
         return CompilationLevel.ADVANCED_OPTIMIZATIONS;
+      default:
+        return null;
     }
-    return null;
   }
 
   private CompilationLevel() {}
 
   public void setOptionsForCompilationLevel(CompilerOptions options) {
     switch (this) {
+      case BUNDLE:
+        break;
       case WHITESPACE_ONLY:
         applyBasicCompilationOptions(options);
         break;
@@ -215,6 +222,7 @@ public enum CompilationLevel {
         break;
       case SIMPLE_OPTIMIZATIONS:
       case WHITESPACE_ONLY:
+      case BUNDLE:
         break;
     }
   }
@@ -241,6 +249,7 @@ public enum CompilationLevel {
         break;
       case ADVANCED_OPTIMIZATIONS:
       case WHITESPACE_ONLY:
+      case BUNDLE:
         break;
     }
   }

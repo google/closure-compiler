@@ -612,8 +612,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       } else {
         SourceFile firstSourceFile = sourceFilesByName.get(relativePath);
         if (firstSourceFile.getCode().equals(sourceFile.getCode())) {
-          errors.add(JSError.make(
-              SourceFile.DUPLICATE_ZIP_CONTENTS, firstSourceFile.getName(), sourceFile.getName()));
           fileIterator.remove();
           if (currentModule != null) {
             currentModule.numJsFiles--;
@@ -1752,7 +1750,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     if (!config.variableMapOutputFile.isEmpty()) {
       if (variableMapOutputPath != null) {
         throw new FlagUsageException("The flags variable_map_output_file and "
-            + "create_name_map_files cannot both be used simultaniously.");
+            + "create_name_map_files cannot both be used simultaneously.");
       }
 
       variableMapOutputPath = config.variableMapOutputFile;
@@ -1761,7 +1759,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     if (!config.propertyMapOutputFile.isEmpty()) {
       if (propertyMapOutputPath != null) {
         throw new FlagUsageException("The flags property_map_output_file and "
-            + "create_name_map_files cannot both be used simultaniously.");
+            + "create_name_map_files cannot both be used simultaneously.");
       }
 
       propertyMapOutputPath = config.propertyMapOutputFile;

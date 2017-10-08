@@ -507,10 +507,62 @@ var webkitMediaStream;
 
 
 /**
+ * @typedef {{tone: string}}
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcdtmftonechangeeventinit
+ */
+var RTCDTMFToneChangeEventInit;
+
+
+/**
+ * @param {string} type
+ * @param {!RTCDTMFToneChangeEventInit} eventInitDict
+ * @constructor
+ * @extends {Event}
+ * @see https://www.w3.org/TR/webrtc/#dom-rtcdtmftonechangeevent
+ */
+function RTCDTMFToneChangeEvent(type, eventInitDict) {}
+
+/**
+ * @const {string}
+ */
+RTCDTMFToneChangeEvent.prototype.tone;
+
+
+/**
+ * @interface
+ * @see https://www.w3.org/TR/webrtc/#rtcdtmfsender
+ */
+function RTCDTMFSender() {}
+
+/**
+ * @param {string} tones
+ * @param {number=} opt_duration
+ * @param {number=} opt_interToneGap
+ */
+RTCDTMFSender.prototype.insertDTMF =
+    function(tones, opt_duration, opt_interToneGap) {};
+
+/**
+ * @type {?function(!RTCDTMFToneChangeEvent)}
+ */
+RTCDTMFSender.prototype.ontonechange;
+
+/**
+ * @const {string}
+ */
+RTCDTMFSender.prototype.toneBuffer;
+
+
+/**
  * @interface
  * @see https://www.w3.org/TR/webrtc/#rtcrtpsender-interface
  */
 function RTCRtpSender() {}
+
+/**
+ * @const {!RTCDTMFSender}
+ */
+RTCRtpSender.prototype.dtmf;
 
 /**
  * @const {!MediaStreamTrack}

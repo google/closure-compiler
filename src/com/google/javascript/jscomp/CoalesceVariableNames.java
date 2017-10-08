@@ -21,7 +21,6 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.base.Joiner;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
-import com.google.javascript.jscomp.ControlFlowGraph.AbstractCfgNodeTraversalCallback;
 import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.DataFlowAnalysis.FlowState;
 import com.google.javascript.jscomp.LiveVariablesAnalysisEs6.LiveVariableLattice;
@@ -44,6 +43,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import javax.annotation.Nullable;
 
 /**
  * Reuse variable names if possible.
@@ -199,7 +199,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       n.setString(coalescedVar.name);
       compiler.reportChangeToEnclosingScope(n);
 
-      if (NodeUtil.isNameDeclaration(parent)) {
+      if (NodeUtil.isNameDeclaration(parent)
+          || NodeUtil.getEnclosingType(n, Token.DESTRUCTURING_LHS) != null) {
         makeDeclarationVar(coalescedVar);
         removeVarDeclaration(n);
       }
@@ -233,7 +234,9 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       n.setString(pseudoName);
       compiler.reportChangeToEnclosingScope(n);
 
-      if (!vNode.getValue().equals(coalescedVar) && NodeUtil.isNameDeclaration(parent)) {
+      if (!vNode.getValue().equals(coalescedVar)
+          && (NodeUtil.isNameDeclaration(parent)
+              || NodeUtil.getEnclosingType(n, Token.DESTRUCTURING_LHS) != null)) {
         makeDeclarationVar(coalescedVar);
         removeVarDeclaration(n);
       }
@@ -263,34 +266,43 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     List<Var> orderedVariables = liveness.getAllVariablesInOrder();
 
     for (Var v : orderedVariables) {
-      if (!escaped.contains(v)) {
+      if (escaped.contains(v)) {
+        continue;
+      }
 
-        // TODO(user): In theory, we CAN coalesce function names just like
-        // any variables. Our Liveness analysis captures this just like it as
-        // described in the specification. However, we saw some zipped and
-        // and unzipped size increase after this. We are not totally sure why
-        // that is but, for now, we will respect the dead functions and not play
-        // around with it.
-        if (!v.getParentNode().isFunction()) {
-          interferenceGraph.createNode(v);
+      // TODO(user): In theory, we CAN coalesce function names just like
+      // any variables. Our Liveness analysis captures this just like it as
+      // described in the specification. However, we saw some zipped and
+      // and unzipped size increase after this. We are not totally sure why
+      // that is but, for now, we will respect the dead functions and not play
+      // around with it.
+      if (v.getParentNode().isFunction()) {
+        continue;
+      }
+
+      // Skip lets and consts that have multiple variables declared in them, otherwise this produces
+      // incorrect semantics. See test case "testCapture".
+      if (v.isLet() || v.isConst()) {
+        Node nameDecl = NodeUtil.getEnclosingNode(v.getNode(), NodeUtil.isNameDeclaration);
+        if (NodeUtil.getLhsNodesOfDeclaration(nameDecl).size() > 1) {
+          continue;
         }
       }
+
+      interferenceGraph.createNode(v);
     }
 
     // Go through each variable and try to connect them.
+    int v1Index = -1;
     for (Var v1 : orderedVariables) {
+      v1Index++;
 
+      int v2Index = -1;
       NEXT_VAR_PAIR:
       for (Var v2 : orderedVariables) {
+        v2Index++;
         // Skip duplicate pairs.
-
-        // We use the liveness analysis to get the variable index rather than v1.index because
-        // v1.index represents the order in which v1 was declared within the scope it was declared
-        // in. For coalescing variables, we care about coalescing across all scopes of a function
-        // so we care about the order in which v1 was declared amongst all the function's inner
-        // scopes
-
-        if (liveness.getVarIndex(v1.getName()) > liveness.getVarIndex(v2.getName())) {
+        if (v1Index > v2Index) {
           continue;
         }
 
@@ -300,7 +312,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
           continue NEXT_VAR_PAIR;
         }
 
-        if (v1.getParentNode().isParamList() && v2.getParentNode().isParamList()) {
+        if (v1.isParam() && v2.isParam()) {
           interferenceGraph.connectIfNotFound(v1, null, v2);
           continue NEXT_VAR_PAIR;
         }
@@ -318,8 +330,6 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
 
           // Check the live states and add edge when possible.
 
-          int v1Index = liveness.getVarIndex(v1.getName());
-          int v2Index = liveness.getVarIndex(v2.getName());
           if ((state.getIn().isLive(v1Index) && state.getIn().isLive(v2Index))
               || (state.getOut().isLive(v1Index) && state.getOut().isLive(v2Index))) {
             interferenceGraph.connectIfNotFound(v1, null, v2);
@@ -337,15 +347,13 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
           }
 
           FlowState<LiveVariableLattice> state = cfgNode.getAnnotation();
-          int v1Index = liveness.getVarIndex(v1.getName());
-          int v2Index = liveness.getVarIndex(v2.getName());
-
           boolean v1OutLive = state.getOut().isLive(v1Index);
           boolean v2OutLive = state.getOut().isLive(v2Index);
           CombinedLiveRangeChecker checker = new CombinedLiveRangeChecker(
+              cfgNode.getValue(),
               new LiveRangeChecker(v1, v2OutLive ? null : v2),
               new LiveRangeChecker(v2, v1OutLive ? null : v1));
-          NodeTraversal.traverseEs6(compiler, cfgNode.getValue(), checker);
+          checker.check(cfgNode.getValue());
           if (checker.connectIfCrossed(interferenceGraph)) {
             continue NEXT_VAR_PAIR;
           }
@@ -356,35 +364,43 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
   }
 
   /**
-   * A simple wrapper calls to call two AbstractCfgNodeTraversalCallback
-   * callback during the same traversal.  Both traversals must have the same
-   * "shouldTraverse" conditions.
+   * A simple wrapper to call two LiveRangeChecker callbacks during the same traversal.
    */
-  private static class CombinedLiveRangeChecker
-      extends AbstractCfgNodeTraversalCallback {
+  private static class CombinedLiveRangeChecker {
 
+    private final Node root;
     private final LiveRangeChecker callback1;
     private final LiveRangeChecker callback2;
 
     CombinedLiveRangeChecker(
+        Node root,
         LiveRangeChecker callback1,
         LiveRangeChecker callback2) {
+      this.root = root;
       this.callback1 = callback1;
       this.callback2 = callback2;
     }
 
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
+    void check(Node n) {
+      if (n == root || !ControlFlowGraph.isEnteringNewCfgNode(n)) {
+        for (Node c = n.getFirstChild(); c != null; c = c.getNext()) {
+          check(c);
+        }
+        visit(n, n.getParent());
+      }
+    }
+
+    void visit(Node n, Node parent) {
       if (LiveRangeChecker.shouldVisit(n)) {
-        callback1.visit(t, n, parent);
-        callback2.visit(t, n, parent);
+        callback1.visit(n, parent);
+        callback2.visit(n, parent);
       }
     }
 
     boolean connectIfCrossed(UndiGraph<Var, Void> interferenceGraph) {
       if (callback1.crossed || callback2.crossed) {
-        Var v1 = callback1.getDef();
-        Var v2 = callback2.getDef();
+        Var v1 = callback1.def;
+        Var v2 = callback2.def;
         interferenceGraph.connectIfNotFound(v1, null, v2);
         return true;
       }
@@ -396,12 +412,12 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
    * Tries to remove variable declaration if the variable has been coalesced with another variable
    * that has already been declared. Any lets or consts are redeclared as vars because at this point
    * in the compilation, the code is normalized, so we can safely hoist variables without worrying
-   * about shaddowing.
+   * about shadowing.
    *
    * @param name name node of the variable being coalesced
    */
   private static void removeVarDeclaration(Node name) {
-    Node var = name.getParent();
+    Node var = NodeUtil.getEnclosingNode(name, NodeUtil.isNameDeclaration);
     Node parent = var.getParent();
 
     if (!var.isVar()) {
@@ -413,7 +429,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     if (NodeUtil.isEnhancedFor(parent)) {
       var.removeChild(name);
       parent.replaceChild(var, name);
-    } else if (var.hasOneChild()) {
+    } else if (var.hasOneChild() && var.getFirstChild() == name) {
       // The removal is easy when there is only one variable in the VAR node.
       if (name.hasChildren()) {
         Node value = name.removeFirstChild();
@@ -432,8 +448,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
         NodeUtil.removeChild(parent, var);
       }
     } else {
-      if (!name.hasChildren()) {
-        var.removeChild(name);
+      if (var.getFirstChild() == name && !name.hasChildren()) {
+        name.detach();
       }
       // We are going to leave duplicated declaration otherwise.
     }
@@ -443,28 +459,26 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
    * Because the code has already been normalized by the time this pass runs, we can safely
    * redeclare any let and const coalesced variables as vars
    */
-  public static void makeDeclarationVar(Var coalescedName) {
-    Node coalesceVarParent = coalescedName.getParentNode();
-    if (coalesceVarParent.isLet() || coalesceVarParent.isConst()) {
-      coalesceVarParent.setToken(Token.VAR);
-      checkState(coalesceVarParent.isVar());
+  private static void makeDeclarationVar(Var coalescedName) {
+    if (coalescedName.isLet() || coalescedName.isConst()) {
+      Node declNode =
+          NodeUtil.getEnclosingNode(coalescedName.getParentNode(), NodeUtil.isNameDeclaration);
+      declNode.setToken(Token.VAR);
     }
   }
 
-  private static class LiveRangeChecker
-      extends AbstractCfgNodeTraversalCallback {
+  private static class LiveRangeChecker {
     boolean defFound = false;
     boolean crossed = false;
+
     private final Var def;
+
+    @Nullable
     private final Var use;
 
     public LiveRangeChecker(Var def, Var use) {
-      this.def = def;
+      this.def = checkNotNull(def);
       this.use = use;
-    }
-
-    Var getDef() {
-      return def;
     }
 
     /**
@@ -474,8 +488,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       return (n.isName() || (n.hasChildren() && n.getFirstChild().isName()));
     }
 
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
+    void visit(Node n, Node parent) {
       if (!defFound && isAssignTo(def, n, parent)) {
         defFound = true;
       }
@@ -485,30 +498,26 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       }
     }
 
-    private static boolean isAssignTo(Var var, Node n, Node parent) {
+    static boolean isAssignTo(Var var, Node n, Node parent) {
       if (n.isName()) {
-        if (var.getName().equals(n.getString()) && parent != null) {
-          if (parent.isParamList()) {
-            // In a function declaration, the formal parameters are assigned.
-            return true;
-          } else if (NodeUtil.isNameDeclaration(parent)) {
-            // If this is a VAR declaration, if the name node has a child, we are
-            // assigning to that name.
-            return n.hasChildren();
-          }
+        if (parent.isParamList()) {
+          // In a function declaration, the formal parameters are assigned.
+          return var.getName().equals(n.getString());
+        } else if (NodeUtil.isNameDeclaration(parent) && n.hasChildren()) {
+          // If this is a VAR declaration, if the name node has a child, we are
+          // assigning to that name.
+          return var.getName().equals(n.getString());
         }
       } else if (NodeUtil.isAssignmentOp(n)) {
         // Lastly, any assignmentOP is also an assign.
         Node name = n.getFirstChild();
-        return name != null && name.isName()
-            && var.getName().equals(name.getString());
+        return name.isName() && var.getName().equals(name.getString());
       }
       return false; // Definitely a read.
     }
 
-    private static boolean isReadFrom(Var var, Node name) {
-      return name != null
-          && name.isName()
+    static boolean isReadFrom(Var var, Node name) {
+      return name.isName()
           && var.getName().equals(name.getString())
           && !NodeUtil.isNameDeclOrSimpleAssignLhs(name, name.getParent());
     }

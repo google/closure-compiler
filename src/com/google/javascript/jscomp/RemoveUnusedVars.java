@@ -363,8 +363,8 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
               && "arguments".equals(n.getString())
               && var.equals(scope.getArgumentsVar())) {
             Scope fnScope = var.getScope();
-            Node lp = fnScope.getRootNode().getSecondChild();
-            for (Node p = lp.getFirstChild(); p != null; p = p.getNext()) {
+            Node paramList = NodeUtil.getFunctionParameters(fnScope.getRootNode());
+            for (Node p : NodeUtil.getLhsNodesOfDeclaration(paramList)) {
               Var paramVar = fnScope.getOwnSlot(p.getString());
               checkNotNull(paramVar);
               markReferencedVar(paramVar);

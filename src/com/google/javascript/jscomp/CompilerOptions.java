@@ -183,6 +183,10 @@ public class CompilerOptions implements Serializable {
     }
   }
 
+  public boolean inIncrementalCheckMode() {
+    return incrementalCheckMode != IncrementalCheckMode.OFF;
+  }
+
   public boolean shouldGenerateTypedExterns() {
     return incrementalCheckMode == IncrementalCheckMode.GENERATE_IJS;
   }
@@ -1296,7 +1300,7 @@ public class CompilerOptions implements Serializable {
     angularPass = false;
     polymerVersion = null;
     dartPass = false;
-    j2clPassMode = J2clPassMode.OFF;
+    j2clPassMode = J2clPassMode.AUTO;
     removeAbstractMethods = false;
     removeSuperMethods = false;
     removeClosureAsserts = false;
@@ -1665,7 +1669,7 @@ public class CompilerOptions implements Serializable {
     inlineProperties = enable;
   }
 
-  boolean shouldInlineProperties() {
+  public boolean shouldInlineProperties() {
     return inlineProperties;
   }
 
@@ -1763,6 +1767,10 @@ public class CompilerOptions implements Serializable {
     this.exportLocalPropertyDefinitions = export;
   }
 
+  public boolean shouldExportLocalPropertyDefinitions() {
+    return this.exportLocalPropertyDefinitions;
+  }
+
   public void setAngularPass(boolean angularPass) {
     this.angularPass = angularPass;
   }
@@ -1792,9 +1800,6 @@ public class CompilerOptions implements Serializable {
 
   public void setJ2clPass(J2clPassMode j2clPassMode) {
     this.j2clPassMode = j2clPassMode;
-    if (j2clPassMode.isExplicitlyOn()) {
-      setWarningLevel(DiagnosticGroup.forType(SourceFile.DUPLICATE_ZIP_CONTENTS), CheckLevel.OFF);
-    }
   }
 
   public void setCodingConvention(CodingConvention codingConvention) {
@@ -2309,6 +2314,10 @@ public class CompilerOptions implements Serializable {
     this.useTypesForLocalOptimization = useTypesForLocalOptimization;
   }
 
+  public boolean shouldUseTypesForLocalOptimization() {
+    return this.useTypesForLocalOptimization;
+  }
+
   @Deprecated
   public void setUseTypesForOptimization(boolean useTypesForOptimization) {
     if (useTypesForOptimization) {
@@ -2345,6 +2354,10 @@ public class CompilerOptions implements Serializable {
 
   public void setPropertyRenaming(PropertyRenamingPolicy propertyRenaming) {
     this.propertyRenaming = propertyRenaming;
+  }
+
+  public PropertyRenamingPolicy getPropertyRenaming() {
+    return this.propertyRenaming;
   }
 
   public void setLabelRenaming(boolean labelRenaming) {
@@ -2410,7 +2423,7 @@ public class CompilerOptions implements Serializable {
     this.disambiguateProperties = disambiguateProperties;
   }
 
-  boolean shouldDisambiguateProperties() {
+  public boolean shouldDisambiguateProperties() {
     return this.disambiguateProperties;
   }
 
@@ -2418,7 +2431,7 @@ public class CompilerOptions implements Serializable {
     this.ambiguateProperties = ambiguateProperties;
   }
 
-  boolean shouldAmbiguateProperties() {
+  public boolean shouldAmbiguateProperties() {
     return this.ambiguateProperties;
   }
 
@@ -3356,10 +3369,6 @@ public class CompilerOptions implements Serializable {
 
     boolean shouldAddJ2clPasses() {
       return this == TRUE || this == ON || this == AUTO;
-    }
-
-    boolean isExplicitlyOn() {
-      return this == TRUE || this == ON;
     }
   }
 

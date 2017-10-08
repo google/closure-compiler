@@ -438,6 +438,7 @@ public class DiagnosticGroups {
 
   public static final DiagnosticGroup DUPLICATE_VARS =
       DiagnosticGroups.registerGroup("duplicate",
+          CollapseProperties.NAMESPACE_REDEFINED_WARNING,
           VarCheck.VAR_MULTIPLY_DECLARED_ERROR,
           TypeValidator.DUP_VAR_DECLARATION,
           TypeValidator.DUP_VAR_DECLARATION_TYPE_MISMATCH,
@@ -720,8 +721,7 @@ public class DiagnosticGroups {
     DiagnosticGroups.registerGroup("es6Typed",
         RhinoErrorReporter.MISPLACED_TYPE_SYNTAX);
 
-    DiagnosticGroups.registerGroup("duplicateZipContents",
-        SourceFile.DUPLICATE_ZIP_CONTENTS);
+    DiagnosticGroups.registerDeprecatedGroup("duplicateZipContents");
   }
 
   /**

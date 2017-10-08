@@ -401,6 +401,10 @@ public final class RenamePropertiesTest extends CompilerTestCase {
         "Bar.prototype = {2: () => {}, a:    () => {}}; bar[2]();");
   }
 
+  public void testArrayDestructuring() {
+    testSame("var [first, second] = someArray");
+  }
+
   public void testDestructuredProperties() {
     // using destructuring shorthand
     test("var {   foo,   bar } = { foo: 1, bar: 2 }", "var { b:foo, a:bar } = {    b:1,    a:2 }");
@@ -413,6 +417,12 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     test(
         "var foo = { bar: 1, baz: 2 }; var foo1 = foo.bar; var foo2 = foo.baz; ",
         "var foo = {   a: 1,   b: 2 }; var foo1 = foo.a;   var foo2 = foo.b;");
+  }
+
+  public void testNestedDestructuringProperties() {
+    test(
+        "var {outer: {inner}} = {outer: {inner: 'value'}};",
+        "var {b: {a: inner}} = {b: {a: 'value'}};");
   }
 
   public void testComputedPropertyNamesInObjectLit() {

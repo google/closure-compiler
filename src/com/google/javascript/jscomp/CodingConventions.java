@@ -22,13 +22,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.errorprone.annotations.Immutable;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.ObjectTypeI;
-import com.google.javascript.rhino.ObjectTypeI.PropertyDeclarer;
 import com.google.javascript.rhino.StaticSourceFile;
+import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.FunctionType;
-import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.StaticTypedScope;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -201,11 +199,8 @@ public final class CodingConventions {
 
     @Override
     public void applySubclassRelationship(
-        PropertyDeclarer declarer,
-        FunctionTypeI parentCtor,
-        FunctionTypeI childCtor,
-        SubclassType type) {
-      nextConvention.applySubclassRelationship(declarer, parentCtor, childCtor, type);
+        NominalTypeBuilder parent, NominalTypeBuilder child, SubclassType type) {
+      nextConvention.applySubclassRelationship(parent, child, type);
     }
 
     @Override
@@ -219,9 +214,9 @@ public final class CodingConventions {
     }
 
     @Override
-    public void applySingletonGetter(PropertyDeclarer declarer,
-        FunctionTypeI functionType, FunctionTypeI getterType, ObjectTypeI objectType) {
-      nextConvention.applySingletonGetter(declarer, functionType, getterType, objectType);
+    public void applySingletonGetter(
+        NominalTypeBuilder classType, FunctionTypeI getterType) {
+      nextConvention.applySingletonGetter(classType, getterType);
     }
 
     @Override
@@ -236,12 +231,13 @@ public final class CodingConventions {
 
     @Override
     public void applyDelegateRelationship(
-        ObjectType delegateSuperclass, ObjectType delegateBase,
-        ObjectType delegator, FunctionType delegateProxy,
-        FunctionType findDelegate) {
+        NominalTypeBuilder delegateSuperclass,
+        NominalTypeBuilder delegateBase,
+        NominalTypeBuilder delegator,
+        ObjectTypeI delegateProxy,
+        FunctionTypeI findDelegate) {
       nextConvention.applyDelegateRelationship(
-          delegateSuperclass, delegateBase, delegator,
-          delegateProxy, findDelegate);
+          delegateSuperclass, delegateBase, delegator, delegateProxy, findDelegate);
     }
 
     @Override
@@ -250,20 +246,19 @@ public final class CodingConventions {
     }
 
     @Override
-    public void checkForCallingConventionDefiningCalls(
+    public void checkForCallingConventionDefinitions(
         Node n, Map<String, String> delegateCallingConventions) {
-      nextConvention.checkForCallingConventionDefiningCalls(
+      nextConvention.checkForCallingConventionDefinitions(
           n, delegateCallingConventions);
     }
 
     @Override
     public void defineDelegateProxyPrototypeProperties(
-        JSTypeRegistry registry,
-        StaticTypedScope<com.google.javascript.rhino.jstype.JSType> scope,
-        List<ObjectType> delegateProxyPrototypes,
+        TypeIRegistry registry,
+        List<NominalTypeBuilder> delegateProxies,
         Map<String, String> delegateCallingConventions) {
       nextConvention.defineDelegateProxyPrototypeProperties(
-          registry, scope, delegateProxyPrototypes, delegateCallingConventions);
+          registry, delegateProxies, delegateCallingConventions);
     }
 
     @Override
@@ -461,10 +456,7 @@ public final class CodingConventions {
 
     @Override
     public void applySubclassRelationship(
-        PropertyDeclarer declarer,
-        FunctionTypeI parentCtor,
-        FunctionTypeI childCtor,
-        SubclassType type) {
+        NominalTypeBuilder parent, NominalTypeBuilder child, SubclassType type) {
       // do nothing
     }
 
@@ -480,8 +472,7 @@ public final class CodingConventions {
 
     @Override
     public void applySingletonGetter(
-        PropertyDeclarer declarer, FunctionTypeI functionType,
-        FunctionTypeI getterType, ObjectTypeI objectType) {
+        NominalTypeBuilder classType, FunctionTypeI getterType) {
       // do nothing.
     }
 
@@ -498,9 +489,11 @@ public final class CodingConventions {
 
     @Override
     public void applyDelegateRelationship(
-        ObjectType delegateSuperclass, ObjectType delegateBase,
-        ObjectType delegator, FunctionType delegateProxy,
-        FunctionType findDelegate) {
+        NominalTypeBuilder delegateSuperclass,
+        NominalTypeBuilder delegateBase,
+        NominalTypeBuilder delegator,
+        ObjectTypeI delegateProxy,
+        FunctionTypeI findDelegate) {
       // do nothing.
     }
 
@@ -510,16 +503,15 @@ public final class CodingConventions {
     }
 
     @Override
-    public void checkForCallingConventionDefiningCalls(Node n,
+    public void checkForCallingConventionDefinitions(Node n,
         Map<String, String> delegateCallingConventions) {
       // do nothing.
     }
 
     @Override
     public void defineDelegateProxyPrototypeProperties(
-        JSTypeRegistry registry,
-        StaticTypedScope<com.google.javascript.rhino.jstype.JSType> scope,
-        List<ObjectType> delegateProxyPrototypes,
+        TypeIRegistry registry,
+        List<NominalTypeBuilder> delegateProxies,
         Map<String, String> delegateCallingConventions) {
       // do nothing.
     }

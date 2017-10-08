@@ -82,7 +82,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   }
 
   public void testImport_missing() {
-    ModulesTestUtils.testModulesWarning(this, "import name from './does_not_exist';\n use(name);",
+    ModulesTestUtils.testModulesError(this, "import name from './does_not_exist';\n use(name);",
         ModuleLoader.LOAD_WARNING);
   }
 

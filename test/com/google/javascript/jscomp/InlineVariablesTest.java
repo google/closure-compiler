@@ -54,6 +54,56 @@ public final class InlineVariablesTest extends CompilerTestCase {
     inlineLocalsOnly = false;
   }
 
+  public void testPassDoesntProduceInvalidCode1() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(x = void 0) {",
+            "  var z;",
+            "  {",
+            "    const y = {};",
+            "    x && (y['x'] = x);",
+            "    z = y;",
+            "  }",
+            "  return z;",
+            "}"));
+  }
+
+  public void testPassDoesntProduceInvalidCode2() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(x = void 0) {",
+            "  {",
+            "    var z;",
+            "    const y = {};",
+            "    x && (y['x'] = x);",
+            "    z = y;",
+            "  }",
+            "  return z;",
+            "}"));
+  }
+
+  public void testPassDoesntProduceInvalidCode3() {
+   test(
+        LINE_JOINER.join(
+            "function f(x = void 0) {",
+            "  var z;",
+            "  const y = {};",
+            "  x && (y['x'] = x);",
+            "  z = y;",
+            "  {",
+            "    return z;",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(x = void 0) {",
+            "  const y = {};",
+            "  x && (y['x'] = x);",
+            "  {",
+            "    return y;",
+            "  }",
+            "}"));
+  }
+
   // Test respect for scopes and blocks
 
   public void testInlineGlobal() {
@@ -449,7 +499,6 @@ public final class InlineVariablesTest extends CompilerTestCase {
   }
 
   public void testInlineIntoNestedNonHoistedNamedFunctions() {
-    setAcceptedLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     test("f(); var x = false; if (false) function f() { alert(x); };",
          "f(); if (false) function f() { alert(false); };");
   }

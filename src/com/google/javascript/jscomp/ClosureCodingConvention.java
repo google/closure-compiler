@@ -28,8 +28,7 @@ import com.google.javascript.jscomp.newtypes.QualifiedName;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.ObjectTypeI;
-import com.google.javascript.rhino.ObjectTypeI.PropertyDeclarer;
+import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.jstype.FunctionType;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
@@ -74,24 +73,25 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
    */
   @Override
   public void applySubclassRelationship(
-      PropertyDeclarer declarer,
-      FunctionTypeI parentCtor,
-      FunctionTypeI childCtor,
-      SubclassType type) {
-    super.applySubclassRelationship(declarer, parentCtor, childCtor, type);
+      final NominalTypeBuilder parent, final NominalTypeBuilder child, SubclassType type) {
+    super.applySubclassRelationship(parent, child, type);
     if (type == SubclassType.INHERITS) {
-      declarer.declareProperty(childCtor, "superClass_",
-          parentCtor.getPrototypeProperty(), childCtor.getSource());
-      declarer.declareProperty(childCtor.getPrototypeProperty(), "constructor",
-          // Notice that constructor functions do not need to be covariant
-          // on the superclass.
-          // So if G extends F, new G() and new F() can accept completely
-          // different argument types, but G.prototype.constructor needs
-          // to be covariant on F.prototype.constructor.
-          // To get around this, we just turn off type-checking on arguments
-          // and return types of G.prototype.constructor.
-          childCtor.toBuilder().withUnknownReturnType().withNoParameters().build(),
-          childCtor.getSource());
+      final FunctionTypeI childCtor = (FunctionTypeI) child.constructor().toTypeI();
+      child.beforeFreeze(new Runnable() {
+        @Override
+        public void run() {
+          child.constructor().declareProperty(
+              "superClass_", parent.prototype().toTypeI(), childCtor.getSource());
+        }
+      }, parent);
+      // Notice that constructor functions do not need to be covariant on the superclass.
+      // So if G extends F, new G() and new F() can accept completely different argument
+      // types, but G.prototype.constructor needs to be covariant on F.prototype.constructor.
+      // To get around this, we just turn off type-checking on arguments and return types
+      // of G.prototype.constructor.
+      FunctionTypeI qmarkCtor =
+          childCtor.toBuilder().withUnknownReturnType().withNoParameters().build();
+      child.prototype().declareProperty("constructor", qmarkCtor, childCtor.getSource());
     }
   }
 
@@ -327,10 +327,10 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
   }
 
   @Override
-  public void applySingletonGetter(PropertyDeclarer declarer,
-      FunctionTypeI functionType, FunctionTypeI getterType, ObjectTypeI objectType) {
-    declarer.declareProperty(functionType, "getInstance", getterType, functionType.getSource());
-    declarer.declareProperty(functionType, "instance_", objectType, functionType.getSource());
+  public void applySingletonGetter(NominalTypeBuilder classType, FunctionTypeI getterType) {
+    Node defSite = ((FunctionTypeI) classType.constructor().toTypeI()).getSource();
+    classType.constructor().declareProperty("getInstance", getterType, defSite);
+    classType.constructor().declareProperty("instance_", classType.instance().toTypeI(), defSite);
   }
 
   @Override

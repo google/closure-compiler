@@ -33,21 +33,25 @@ final class J2clSourceFileChecker implements CompilerPass {
     this.compiler = compiler;
   }
 
-  private static Boolean hasJ2cl(Node root) {
+  private static boolean hasJ2cl(Node root) {
     for (Node script : root.children()) {
       checkState(script.isScript());
-      if (script.getSourceFileName() != null
-          && script.getSourceFileName().endsWith(".java.js")
-          && script.getSourceFileName().contains(".js.zip!")) {
-        return Boolean.TRUE;
+      if (script.getSourceFileName() != null && script.getSourceFileName().endsWith(".java.js")) {
+        return true;
       }
     }
-    return Boolean.FALSE;
+    return false;
   }
 
   @Override
   public void process(Node externs, Node root) {
-    compiler.setAnnotation(HAS_J2CL_ANNOTATION_KEY, hasJ2cl(root));
+    if (hasJ2cl(root)) {
+      markToRunJ2clPasses(compiler);
+    }
+  }
+
+  static void markToRunJ2clPasses(AbstractCompiler compiler) {
+    compiler.setAnnotation(HAS_J2CL_ANNOTATION_KEY, true);
   }
 
   /**
@@ -55,7 +59,6 @@ final class J2clSourceFileChecker implements CompilerPass {
    * example, if the compiler's HAS_J2CL annotation is false, it should.
    */
   static boolean shouldRunJ2clPasses(AbstractCompiler compiler) {
-    return compiler.getOptions().j2clPassMode.isExplicitlyOn()
-        || Boolean.TRUE.equals(compiler.getAnnotation(HAS_J2CL_ANNOTATION_KEY));
+    return Boolean.TRUE.equals(compiler.getAnnotation(HAS_J2CL_ANNOTATION_KEY));
   }
 }

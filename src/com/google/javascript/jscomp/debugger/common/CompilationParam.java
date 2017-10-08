@@ -111,6 +111,11 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setCheckSymbols(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.checkSymbols;
+    }
   },
 
   /** Checks missing return */
@@ -119,6 +124,11 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setWarningLevel(
           DiagnosticGroups.MISSING_RETURN, value ? CheckLevel.WARNING : CheckLevel.OFF);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return false;
     }
 
     @Override
@@ -133,6 +143,11 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setCheckSuspiciousCode(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.checkSuspiciousCode;
+    }
   },
 
   /** Checks types on expressions */
@@ -140,6 +155,11 @@ public enum CompilationParam {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setCheckTypes(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.checkTypes;
     }
   },
 
@@ -153,6 +173,11 @@ public enum CompilationParam {
     @Override
     public String getJavaInfo() {
       return "options.setNewTypeInference(true)";
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.getNewTypeInference();
     }
   },
 
@@ -299,6 +324,20 @@ public enum CompilationParam {
     }
   },
 
+  /** Checks for unreachable code */
+  CHECK_UNREACHABLE_CODE(ParamGroup.ERROR_CHECKING) {
+    @Override
+    public void apply(CompilerOptions options, boolean value) {
+      options.setWarningLevel(
+          DiagnosticGroups.CHECK_USELESS_CODE, value ? CheckLevel.WARNING : CheckLevel.OFF);
+    }
+
+    @Override
+    public String getJavaInfo() {
+      return diagGroupWarningInfo("CHECK_USELESS_CODE");
+    }
+  },
+
   // --------------------------------
   // Optimizations
   // --------------------------------
@@ -308,6 +347,11 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setComputeFunctionSideEffects(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.computeFunctionSideEffects;
+    }
   },
 
   /** Folds constants (e.g. (2 + 3) to 5) */
@@ -316,12 +360,22 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setFoldConstants(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.foldConstants;
+    }
   },
 
   DEAD_ASSIGNMENT_ELIMINATION(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setDeadAssignmentElimination(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.deadAssignmentElimination;
     }
   },
 
@@ -330,6 +384,11 @@ public enum CompilationParam {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setInlineConstantVars(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.inlineConstantVars;
     }
 
     @Override
@@ -347,6 +406,11 @@ public enum CompilationParam {
     }
 
     @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.inlineLocalFunctions && options.inlineFunctions;
+    }
+
+    @Override
     public String getJavaInfo() {
       return "options.setInlineFunctions(true) + options.setInlineLocalFunctions(true)";
     }
@@ -358,6 +422,11 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setCoalesceVariableNames(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.coalesceVariableNames;
+    }
   },
 
   /** Inlines variables */
@@ -365,6 +434,11 @@ public enum CompilationParam {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setInlineVariables(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.inlineVariables;
     }
   },
 
@@ -374,12 +448,22 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setFlowSensitiveInlineVariables(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.flowSensitiveInlineVariables;
+    }
   },
 
   INLINE_PROPERTIES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setInlineProperties(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.shouldInlineProperties();
     }
   },
 
@@ -389,6 +473,11 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setSmartNameRemoval(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.smartNameRemoval;
+    }
   },
 
   /** Removes code that will never execute */
@@ -397,19 +486,10 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setRemoveDeadCode(value);
     }
-  },
-
-  /** Checks for unreachable code */
-  CHECK_UNREACHABLE_CODE(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
-    @Override
-    public void apply(CompilerOptions options, boolean value) {
-      options.setWarningLevel(
-          DiagnosticGroups.CHECK_USELESS_CODE, value ? CheckLevel.WARNING : CheckLevel.OFF);
-    }
 
     @Override
-    public String getJavaInfo() {
-      return diagGroupWarningInfo("CHECK_USELESS_CODE");
+    public boolean isApplied(CompilerOptions options) {
+      return options.removeDeadCode;
     }
   },
 
@@ -440,6 +520,11 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setRemoveUnusedPrototypeProperties(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.removeUnusedPrototypeProperties;
+    }
   },
 
   /** Removes unused static class prototypes */
@@ -448,6 +533,11 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setRemoveUnusedClassProperties(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.removeUnusedClassProperties;
+    }
   },
 
   /** Tells AnalyzePrototypeProperties it can remove externed props. */
@@ -455,6 +545,11 @@ public enum CompilationParam {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setRemoveUnusedPrototypePropertiesInExterns(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.removeUnusedPrototypePropertiesInExterns;
     }
   },
 
@@ -468,6 +563,11 @@ public enum CompilationParam {
         options.setRemoveUnusedVariables(Reach.NONE);
       }
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.removeUnusedVars;
+    }
   },
 
   /** Collapses multiple variable declarations into one */
@@ -476,6 +576,11 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setCollapseVariableDeclarations(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.collapseVariableDeclarations;
+    }
   },
 
   /** Collapses anonymous function expressions into named function declarations */
@@ -483,6 +588,11 @@ public enum CompilationParam {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setCollapseAnonymousFunctions(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.collapseAnonymousFunctions;
     }
   },
 
@@ -494,6 +604,11 @@ public enum CompilationParam {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setAliasAllStrings(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.aliasAllStrings;
     }
   },
 
@@ -508,6 +623,11 @@ public enum CompilationParam {
     public String getJavaInfo() {
       return "options.setConvertToDottedProperties(true)";
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.convertToDottedProperties;
+    }
   },
 
   /** Enables a number of peephole optimizations */
@@ -515,6 +635,11 @@ public enum CompilationParam {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setUseTypesForLocalOptimization(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.shouldUseTypesForLocalOptimization();
     }
 
     @Override
@@ -533,6 +658,11 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setLabelRenaming(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.labelRenaming;
+    }
   },
 
   /** Generate pseudo names for properties (for debugging purposes) */
@@ -540,6 +670,11 @@ public enum CompilationParam {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setGeneratePseudoNames(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.generatePseudoNames;
     }
   },
 
@@ -549,12 +684,22 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setCollapseProperties(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.collapseProperties;
+    }
   },
 
   DEVIRTUALIZE_PROTOTYPE_METHODS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setDevirtualizePrototypeMethods(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.devirtualizePrototypeMethods;
     }
   },
 
@@ -563,6 +708,11 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setRewriteFunctionExpressions(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.rewriteFunctionExpressions;
+    }
   },
 
   DISAMBIGUATE_PROPERTIES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
@@ -570,12 +720,22 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setDisambiguateProperties(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.shouldDisambiguateProperties();
+    }
   },
 
   AMBIGUATE_PROPERTIES(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setAmbiguateProperties(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.shouldAmbiguateProperties();
     }
   },
 
@@ -586,6 +746,11 @@ public enum CompilationParam {
       if (value) {
         options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.UNMAPPED);
       }
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.anonymousFunctionNaming == AnonymousFunctionNamingPolicy.UNMAPPED;
     }
 
     @Override
@@ -604,6 +769,11 @@ public enum CompilationParam {
     }
 
     @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.anonymousFunctionNaming == AnonymousFunctionNamingPolicy.MAPPED;
+    }
+
+    @Override
     public String getJavaInfo() {
       return "options.setAnonymousFunctionNaming(AnonymousFunctionNamingPolicy.MAPPED)";
     }
@@ -614,6 +784,11 @@ public enum CompilationParam {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setVariableRenaming(value ? VariableRenamingPolicy.ALL : VariableRenamingPolicy.OFF);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.variableRenaming == VariableRenamingPolicy.ALL;
     }
 
     @Override
@@ -630,6 +805,11 @@ public enum CompilationParam {
     }
 
     @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.getPropertyRenaming() == PropertyRenamingPolicy.ALL_UNQUOTED;
+    }
+
+    @Override
     public String getJavaInfo() {
       return "options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED)";
     }
@@ -640,6 +820,11 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setOptimizeCalls(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.optimizeCalls;
+    }
   },
 
   OPTIMIZE_PARAMETERS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
@@ -647,12 +832,22 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setOptimizeParameters(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.optimizeParameters;
+    }
   },
 
   OPTIMIZE_RETURNS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setOptimizeReturns(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.optimizeReturns;
     }
   },
 
@@ -666,6 +861,11 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setClosurePass(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.closurePass;
+    }
   },
 
   /** Move top level function declarations to the top */
@@ -674,6 +874,11 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setMoveFunctionDeclarations(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.moveFunctionDeclarations;
+    }
   },
 
   GENERATE_EXPORTS {
@@ -681,12 +886,22 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setGenerateExports(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.generateExports;
+    }
   },
 
   ALLOW_LOCAL_EXPORTS {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setExportLocalPropertyDefinitions(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.shouldExportLocalPropertyDefinitions();
     }
 
     @Override
@@ -700,6 +915,11 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setMarkNoSideEffectCalls(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.markNoSideEffectCalls;
+    }
   },
 
   CROSS_MODULE_CODE_MOTION(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
@@ -707,12 +927,22 @@ public enum CompilationParam {
     public void apply(CompilerOptions options, boolean value) {
       options.setCrossModuleCodeMotion(value);
     }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.crossModuleCodeMotion;
+    }
   },
 
   CROSS_MODULE_METHOD_MOTION(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setCrossModuleMethodMotion(value);
+    }
+
+    @Override
+    public boolean isApplied(CompilerOptions options) {
+      return options.crossModuleMethodMotion;
     }
   },
 
@@ -872,4 +1102,11 @@ public enum CompilationParam {
 
   /** Applies a CGI parameter to the options. */
   public abstract void apply(CompilerOptions options, boolean value);
+
+  /**
+   * Only need to override this if the flag is affected by the presets (ADVANCED, WHITESPACE etc).
+   */
+  public boolean isApplied(CompilerOptions options) {
+    return false;
+  }
 }

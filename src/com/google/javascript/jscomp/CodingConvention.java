@@ -21,14 +21,12 @@ import com.google.javascript.jscomp.newtypes.DeclaredTypeRegistry;
 import com.google.javascript.jscomp.newtypes.JSType;
 import com.google.javascript.rhino.FunctionTypeI;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.ObjectTypeI;
-import com.google.javascript.rhino.ObjectTypeI.PropertyDeclarer;
 import com.google.javascript.rhino.StaticSourceFile;
-import com.google.javascript.rhino.jstype.FunctionType;
+import com.google.javascript.rhino.TypeIRegistry;
 import com.google.javascript.rhino.jstype.JSTypeNative;
 import com.google.javascript.rhino.jstype.JSTypeRegistry;
-import com.google.javascript.rhino.jstype.ObjectType;
-import com.google.javascript.rhino.jstype.StaticTypedScope;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -215,10 +213,7 @@ public interface CodingConvention extends Serializable {
    * adds properties to the superclass and/or subclass.
    */
   public void applySubclassRelationship(
-      PropertyDeclarer declarer,
-      FunctionTypeI parentCtor,
-      FunctionTypeI childCtor,
-      SubclassType type);
+      NominalTypeBuilder parent, NominalTypeBuilder child, SubclassType type);
 
   /**
    * Function name for abstract methods. An abstract method can be assigned to
@@ -247,10 +242,7 @@ public interface CodingConvention extends Serializable {
    * adds properties to the class.
    */
   public void applySingletonGetter(
-      PropertyDeclarer declarer,
-      FunctionTypeI functionType,
-      FunctionTypeI getterType,
-      ObjectTypeI objectType);
+      NominalTypeBuilder classType, FunctionTypeI getterType);
 
   /**
    * @return Whether the function is inlinable by convention.
@@ -267,9 +259,11 @@ public interface CodingConvention extends Serializable {
    * also adds properties to the delegator and delegate base.
    */
   public void applyDelegateRelationship(
-      ObjectType delegateSuperclass, ObjectType delegateBase,
-      ObjectType delegator, FunctionType delegateProxy,
-      FunctionType findDelegate);
+      NominalTypeBuilder delegateSuperclass,
+      NominalTypeBuilder delegateBase,
+      NominalTypeBuilder delegator,
+      ObjectTypeI delegateProxy,
+      FunctionTypeI findDelegate);
 
   /**
    * @return the name of the delegate superclass.
@@ -277,22 +271,20 @@ public interface CodingConvention extends Serializable {
   public String getDelegateSuperclassName();
 
   /**
-   * Checks for function calls that set the calling conventions on delegate
-   * methods.
+   * Checks for getprops that set the calling conventions on delegate methods.
    */
-  public void checkForCallingConventionDefiningCalls(
-      Node n, Map<String, String> delegateCallingConventions);
+  public void checkForCallingConventionDefinitions(
+      Node getPropNode, Map<String, String> delegateCallingConventions);
 
   /**
    * Defines the delegate proxy prototype properties. Their types depend on
    * properties of the delegate base methods.
    *
-   * @param delegateProxyPrototypes List of delegate proxy prototypes.
+   * @param delegateProxies List of delegate proxy types.
    */
   public void defineDelegateProxyPrototypeProperties(
-      JSTypeRegistry registry,
-      StaticTypedScope<com.google.javascript.rhino.jstype.JSType> scope,
-      List<ObjectType> delegateProxyPrototypes,
+      TypeIRegistry registry,
+      List<NominalTypeBuilder> delegateProxies,
       Map<String, String> delegateCallingConventions);
 
   /**

@@ -687,6 +687,10 @@ public class NodeTraversal {
     t.traverseScopeRoot(scopeNode);
   }
 
+  /**
+   * @deprecated Use the ES6SyntacticScopeCreator instead.
+   */
+  @Deprecated
   public static void traverseTyped(AbstractCompiler compiler, Node root, Callback cb) {
     NodeTraversal t = new NodeTraversal(compiler, cb, SyntacticScopeCreator.makeTyped(compiler));
     t.traverse(root);
@@ -698,6 +702,10 @@ public class NodeTraversal {
     t.traverseRoots(externs, root);
   }
 
+  /**
+   * @deprecated Use the ES6SyntacticScopeCreator instead.
+   */
+  @Deprecated
   public static void traverseRootsTyped(
       AbstractCompiler compiler, Callback cb, Node externs, Node root) {
     NodeTraversal t = new NodeTraversal(compiler, cb, SyntacticScopeCreator.makeTyped(compiler));
@@ -1066,7 +1074,8 @@ public class NodeTraversal {
 
   public void reportCodeChange() {
     Node changeScope = this.currentChangeScope;
-    checkState(changeScope != null && NodeUtil.isChangeScopeRoot(changeScope));
+    checkNotNull(changeScope);
+    checkState(NodeUtil.isChangeScopeRoot(changeScope), changeScope);
     compiler.reportChangeToChangeScope(changeScope);
   }
 
@@ -1084,9 +1093,6 @@ public class NodeTraversal {
    */
   private void setChangeScope(Node n) {
     this.currentChangeScope = n;
-    // TODO(johnlenz): the compiler is a bad place to store this value
-    // multiple traversals can interfer with each other
-    // (even on the same thread).
     compiler.setChangeScope(n);
   }
 

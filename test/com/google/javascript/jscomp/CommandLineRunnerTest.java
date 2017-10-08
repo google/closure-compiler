@@ -1105,8 +1105,7 @@ public final class CommandLineRunnerTest extends TestCase {
     FlagEntry<JsSourceType> zipFile2 =
         createZipFile(ImmutableMap.of("run.js", "console.log(\"Hello World\");"));
 
-    compileFilesError(
-        SourceFile.DUPLICATE_ZIP_CONTENTS, zipFile1, zipFile2);
+    compileFiles("console.log(\"Hello World\");", zipFile1, zipFile2);
   }
 
   public void testInputMultipleConflictingZips() throws IOException {

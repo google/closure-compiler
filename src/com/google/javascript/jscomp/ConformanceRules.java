@@ -220,10 +220,10 @@ public final class ConformanceRules {
       DiagnosticType msg = (result.level == ConformanceLevel.VIOLATION)
           ? CheckConformance.CONFORMANCE_VIOLATION
           : CheckConformance.CONFORMANCE_POSSIBLE_VIOLATION;
-      String seperator = (result.note.isEmpty())
+      String separator = (result.note.isEmpty())
           ? ""
           : "\n";
-      t.report(n, msg, message, seperator, result.note);
+      t.report(n, msg, message, separator, result.note);
     }
   }
 
@@ -350,7 +350,7 @@ public final class ConformanceRules {
     @Override
     protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
       JSDocInfo jsDoc = n.getJSDocInfo();
-      if (jsDoc != null && jsDoc.isConstant() && jsDoc.getType() == null) {
+      if (jsDoc != null && jsDoc.hasConstAnnotation() && jsDoc.getType() == null) {
         if (n.isAssign()) {
           n = n.getFirstChild();
         }

@@ -29,14 +29,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import javax.annotation.Nullable;
 
 /** An optimization pass to prune J2CL clinits. */
 public class J2clClinitPrunerPass implements CompilerPass {
 
-  private final Set<String> emptiedClinitMethods = new HashSet<>();
+  private final Map<String, Node> emptiedClinitMethods = new LinkedHashMap<>();
   private final AbstractCompiler compiler;
   private final List<Node> changedScopeNodes;
 
@@ -56,9 +59,6 @@ public class J2clClinitPrunerPass implements CompilerPass {
     pruneEmptyClinits(root, changedScopeNodes);
 
     if (emptiedClinitMethods.isEmpty()) {
-      if (!PureFunctionIdentifier.hasRunPureFunctionIdentifier(compiler)) {
-        new PureFunctionIdentifier.DriverInJ2cl(compiler, null).process(externs, root);
-      }
       // Since no clinits are pruned, we don't need look for more opportunities.
       return;
     }
@@ -93,6 +93,21 @@ public class J2clClinitPrunerPass implements CompilerPass {
     emptiedClinitMethods.clear();
     NodeTraversal.traverseEs6ScopeRoots(
         compiler, root, changedScopes, new EmptyClinitPruner(), false);
+
+    // Make sure replacements are to final destination instead of pointing intermediate ones.
+    for (Entry<String, Node> clinitReplacementEntry : emptiedClinitMethods.entrySet()) {
+      clinitReplacementEntry.setValue(resolveReplacement(clinitReplacementEntry.getValue()));
+    }
+  }
+
+  private Node resolveReplacement(Node node) {
+    if (node == null) {
+      return null;
+    }
+    String clinitName = getClinitMethodName(node);
+    return emptiedClinitMethods.containsKey(clinitName)
+        ? resolveReplacement(emptiedClinitMethods.get(clinitName))
+        : node;
   }
 
   private Multimap<String, Node> collectClinitReferences(Node root) {
@@ -103,7 +118,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
         new AbstractPostOrderCallback() {
           @Override
           public void visit(NodeTraversal t, Node node, Node parent) {
-            String clinitName = node.isCall() ? getClinitMethodName(node.getFirstChild()) : null;
+            String clinitName = getClinitMethodName(node);
             if (clinitName != null) {
               clinitReferences.put(clinitName, node);
             }
@@ -114,11 +129,23 @@ public class J2clClinitPrunerPass implements CompilerPass {
 
   private List<Node> cleanEmptyClinitReferences(Multimap<String, Node> clinitReferences) {
     final List<Node> newChangedScopes = new ArrayList<>();
-    for (String clinitName : emptiedClinitMethods) {
+    // resolveReplacement step above should not require any particular iteration order of the
+    // emptiedClinitMethods but we are using LinkedHashMap to be extra safe.
+    for (Entry<String, Node> clinitReplacementEntry : emptiedClinitMethods.entrySet()) {
+      String clinitName = clinitReplacementEntry.getKey();
+      Node replacement = clinitReplacementEntry.getValue();
+
       Collection<Node> references = clinitReferences.removeAll(clinitName);
       for (Node reference : references) {
         Node changedScope = NodeUtil.getEnclosingChangeScopeRoot(reference.getParent());
-        NodeUtil.deleteFunctionCall(reference, compiler);
+        if (replacement == null) {
+          NodeUtil.deleteFunctionCall(reference, compiler);
+        } else {
+          replacement = replacement.cloneTree();
+          reference.replaceWith(replacement);
+          compiler.reportChangeToChangeScope(changedScope);
+          clinitReferences.put(getClinitMethodName(replacement), replacement);
+        }
         newChangedScopes.add(changedScope);
       }
     }
@@ -181,7 +208,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
     }
 
     private void tryRemovingClinit(Node node) {
-      String clinitName = node.isCall() ? getClinitMethodName(node.getFirstChild()) : null;
+      String clinitName = getClinitMethodName(node);
       if (clinitName == null) {
         return;
       }
@@ -219,8 +246,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
       }
 
       // Find clinit calls.
-      String clinitName =
-          node.getFirstChild().isCall() ? getClinitMethodName(node.getFirstFirstChild()) : null;
+      String clinitName = getClinitMethodName(node.getFirstChild());
       if (clinitName == null) {
         return;
       }
@@ -310,8 +336,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
       Node child = fnNode.getLastChild().getFirstChild();
       return child != null
           && child.isExprResult()
-          && child.getFirstChild().isCall()
-          && clinitName.equals(getClinitMethodName(child.getFirstFirstChild()));
+          && clinitName.equals(getClinitMethodName(child.getFirstChild()));
     }
   }
 
@@ -341,18 +366,30 @@ public class J2clClinitPrunerPass implements CompilerPass {
         return;
       }
 
-      // Ensure that the first expression in the body is setting itself to the empty function and
-      // there are no other expressions.
+      // Ensure that the first expression in the body is setting itself to the empty function
       Node firstExpr = body.getFirstChild();
-      if (!isAssignToEmptyFn(firstExpr, fnQualifiedName) || firstExpr.getNext() != null) {
+      if (!isAssignToEmptyFn(firstExpr, fnQualifiedName)) {
         return;
       }
 
-      body.removeChild(firstExpr);
-      NodeUtil.markFunctionsDeleted(firstExpr, compiler);
-      compiler.reportChangeToEnclosingScope(body);
+      Node secondExpr = firstExpr.getNext();
+      Node replaceReferencesWith;
+      if (secondExpr == null) {
+        // There are no expressions in clinit so it is noop; remove all references.
+        replaceReferencesWith = null;
+      } else if (secondExpr.getNext() == null
+          && secondExpr.isExprResult()
+          && getClinitMethodName(secondExpr.getFirstChild()) != null) {
+        // Only expression in clinit is a call to another clinit. We can safely replace all
+        // references with the other clinit.
+        replaceReferencesWith = secondExpr.getFirstChild();
+      } else {
+        // Clinit is not empty.
+        return;
+      }
 
-      emptiedClinitMethods.add(fnQualifiedName);
+      emptiedClinitMethods.put(fnQualifiedName, replaceReferencesWith);
+      NodeUtil.deleteNode(firstExpr, compiler);
     }
 
     private boolean isAssignToEmptyFn(Node node, String enclosingFnName) {
@@ -370,9 +407,12 @@ public class J2clClinitPrunerPass implements CompilerPass {
     return node.isFunction() && isClinitMethodName(NodeUtil.getName(node));
   }
 
-  private static String getClinitMethodName(Node fnNode) {
-    String fnName = fnNode.getQualifiedName();
-    return isClinitMethodName(fnName) ? fnName : null;
+  private static String getClinitMethodName(Node node) {
+    if (node.isCall()) {
+      String fnName = node.getFirstChild().getQualifiedName();
+      return isClinitMethodName(fnName) ? fnName : null;
+    }
+    return null;
   }
 
   private static boolean isClinitMethodName(String fnName) {

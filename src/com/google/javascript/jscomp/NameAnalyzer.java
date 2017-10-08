@@ -883,7 +883,7 @@ final class NameAnalyzer implements CompilerPass {
         addSimplifiedExpression(decl, n);
         addSimplifiedExpression(pred, n);   // addAllChildren?
         addSimplifiedExpression(step, n);
-      } else if (n.isForIn()) {
+      } else if (NodeUtil.isEnhancedFor(n)) {
         Node decl = n.getFirstChild();
         Node iter = decl.getNext();
         addAllChildren(decl);
@@ -1964,7 +1964,7 @@ final class NameAnalyzer implements CompilerPass {
       replacements.addAll(getSideEffectNodes(rhs));
     }
 
-    if (parent.isVanillaFor() || parent.isForIn()) {
+    if (NodeUtil.isAnyFor(parent)) {
       // tweak replacements array s.t. it is a single expression node.
       if (replacements.isEmpty()) {
         replacements.add(IR.empty());

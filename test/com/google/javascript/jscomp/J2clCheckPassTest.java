@@ -36,10 +36,10 @@ public class J2clCheckPassTest extends TypeICompilerTestCase {
   }
 
   @Override
-  protected CompilerOptions getOptions() {
-    CompilerOptions options = super.getOptions();
-    options.setJ2clPass(CompilerOptions.J2clPassMode.ON);
-    return options;
+  protected Compiler createCompiler() {
+    Compiler compiler = super.createCompiler();
+    J2clSourceFileChecker.markToRunJ2clPasses(compiler);
+    return compiler;
   }
 
   public void testReferenceEquality_noWarning_other() {

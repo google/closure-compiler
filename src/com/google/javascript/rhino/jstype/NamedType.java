@@ -360,7 +360,8 @@ public class NamedType extends ProxyObjectType {
     boolean isForwardDeclared =
         ignoreForwardReferencedTypes && registry.isForwardDeclaredType(reference);
     if (!isForwardDeclared) {
-      warning(t, "Bad type annotation. Unknown type " + reference);
+      String msg = "Bad type annotation. Unknown type " + reference;
+      warning(t, msg);
     } else {
       setReferencedType(new NoResolvedType(registry, getReferenceName(), getTemplateTypes()));
       if (validator != null) {

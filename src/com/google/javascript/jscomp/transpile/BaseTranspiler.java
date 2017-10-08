@@ -25,13 +25,11 @@ import com.google.javascript.jscomp.CompilerOptions;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticType;
-import com.google.javascript.jscomp.ErrorFormat;
-import com.google.javascript.jscomp.JSError;
-import com.google.javascript.jscomp.MessageFormatter;
 import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.Result;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.VariableRenamingPolicy;
+import com.google.javascript.jscomp.bundle.TranspilationException;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -51,18 +49,6 @@ public final class BaseTranspiler implements Transpiler {
   @Override
   public TranspileResult transpile(Path path, String code) {
     CompileResult result = compilerSupplier.compile(path, code);
-    if (result.errors.length > 0) {
-      // TODO(sdh): how to handle this?  Currently we throw an ISE with the message,
-      // but this may not be the most appropriate option.  It might make sense to
-      // add console.log() statements to any JS that comes out, particularly for
-      // warnings.
-      MessageFormatter formatter = ErrorFormat.SOURCELESS.toFormatter(null, false);
-      StringBuilder message = new StringBuilder().append("Transpilation failed.\n");
-      for (JSError error : result.errors) {
-        message.append(formatter.formatError(error));
-      }
-      throw new IllegalStateException(message.toString());
-    }
     if (!result.transpiled) {
       return new TranspileResult(path, code, code, "");
     }
@@ -100,9 +86,11 @@ public final class BaseTranspiler implements Transpiler {
         }
       }
       boolean transpiled = !result.transpiledFiles.isEmpty();
+      if (result.errors.length > 0) {
+        throw new TranspilationException(compiler, result.errors, result.warnings);
+      }
       return new CompileResult(
           source,
-          result.errors,
           transpiled,
           transpiled ? sourceMap.toString() : "");
     }
@@ -160,12 +148,10 @@ public final class BaseTranspiler implements Transpiler {
    */
   public static class CompileResult {
     public final String source;
-    public final JSError[] errors;
     public final boolean transpiled;
     public final String sourceMap;
-    public CompileResult(String source, JSError[] errors, boolean transpiled, String sourceMap) {
+    public CompileResult(String source, boolean transpiled, String sourceMap) {
       this.source = checkNotNull(source);
-      this.errors = checkNotNull(errors);
       this.transpiled = transpiled;
       this.sourceMap = checkNotNull(sourceMap);
     }

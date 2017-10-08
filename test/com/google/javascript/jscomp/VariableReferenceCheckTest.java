@@ -164,6 +164,10 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
   public void testRedeclare_withES6Modules() {
     assertRedeclare("export function f() { var a = 2; var a = 3; }");
     assertNoWarning("export function f() { let f = 1; }");
+    // In an ES6 module vars are in the module scope, not global, so they are covered here.
+    assertRedeclare("export var a = 2; var a = 3;");
+    assertRedeclare("export var a = 2; if (a) var a = 3;");
+    assertRedeclare("function f() {} function f() {} export {f};");
   }
 
   public void testIssue166a() {

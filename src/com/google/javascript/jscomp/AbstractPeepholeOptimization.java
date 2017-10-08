@@ -55,14 +55,6 @@ abstract class AbstractPeepholeOptimization {
   }
 
   /**
-   * Helper method for telling the compiler that something has changed.
-   * Subclasses must call these if they have changed the AST.
-   */
-  protected void reportCodeChange() {
-    compiler.reportCodeChange();
-  }
-
-  /**
    * Are the nodes equal for the purpose of inlining?
    * If type aware optimizations are on, type equality is checked.
    */

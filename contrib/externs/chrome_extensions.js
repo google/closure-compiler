@@ -263,6 +263,10 @@ chrome.app.runtime.LaunchItem.prototype.type;
 
 
 /** @type {!ChromeObjectEvent} */
+chrome.app.runtime.onEmbedRequested;
+
+
+/** @type {!ChromeObjectEvent} */
 chrome.app.runtime.onLaunched;
 
 
@@ -10849,7 +10853,7 @@ chrome.downloads.DownloadItem.prototype.incognito;
 
 
 /** @type {!chrome.downloads.DangerType|string} */
-chrome.downloads.DownloadItem.prototype.dangerType;
+chrome.downloads.DownloadItem.prototype.danger;
 
 
 /** @type {string} */

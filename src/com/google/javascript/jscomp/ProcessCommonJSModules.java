@@ -279,8 +279,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     }
 
     // Function expression can be forced with !, just skip !
-    // FIXME: Expression could also be forced with: + - ~ void
-    // FIXME: ! ~ void can be repeated any number of times
+    // TODO(ChadKillingsworth):
+    //   Expression could also be forced with: + - ~ void
+    //   ! ~ void can be repeated any number of times
     if (n != null && n.getFirstChild() != null && n.getFirstChild().isNot()) {
       n = n.getFirstChild();
     }
@@ -718,7 +719,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             Node expr = export.node.getParent().getParent();
             if (expr.isExprResult()
                 && (NodeUtil.isTopLevel(expr.getParent())
-                    || (expr.getParent().isNormalBlock() && NodeUtil.isTopLevel(expr.getGrandparent())))) {
+                || (expr.getParent().isNormalBlock()
+                    && NodeUtil.isTopLevel(expr.getGrandparent())))) {
               directAssignmentsAtTopLevel++;
             }
           }
@@ -822,7 +824,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           if (enclosingScript == null) {
             continue;
           }
-          CompilerInput ci = compiler.getInput(NodeUtil.getEnclosingScript(enclosingFnCall).getInputId());
+          CompilerInput ci = compiler.getInput(
+              NodeUtil.getEnclosingScript(enclosingFnCall).getInputId());
           ModulePath modulePath = ci.getPath();
           if (modulePath == null) {
             continue;

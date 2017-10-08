@@ -468,14 +468,14 @@ public class NodeTest extends TestCase {
 
     Node lhs = assign.getFirstChild();
     lhs.setLength(21);
-    lhs.useSourceInfoWithoutLengthIfMissingFrom(assign);
+    lhs.useSourceInfoWithoutLengthIfMissingFromForTree(assign);
     assertEquals(99, lhs.getSourcePosition());
     assertEquals("foo.js", lhs.getSourceFileName());
     assertEquals(21, lhs.getLength());
 
     assign.setSourceEncodedPosition(101);
     assign.setSourceFileForTesting("bar.js");
-    lhs.useSourceInfoWithoutLengthIfMissingFrom(assign);
+    lhs.useSourceInfoWithoutLengthIfMissingFromForTree(assign);
     assertEquals(99, lhs.getSourcePosition());
     assertEquals("foo.js", lhs.getSourceFileName());
     assertEquals(21, lhs.getLength());

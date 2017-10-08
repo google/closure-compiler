@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
 /** An abstract representation of a source file. */
 @AutoValue
 @GwtIncompatible
-// TODO(sdh): @Immutable once error-prone merges CL 167879820
+@Immutable
 public abstract class Source {
 
   /** The path of this source. This may refer to a path on disk or a path on the HTTP server. */

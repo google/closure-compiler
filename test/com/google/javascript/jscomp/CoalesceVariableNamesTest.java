@@ -153,7 +153,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
         "var x=0;" + "for(;x<10;x++);" + "x=0;" + "for(;x<10;x++);" + "x=0;" + "for(;x<10;x++) {}");
 
     inFunction(
-        "for(var x = 0; x < 10; x++){z}" + "for(var y = 0, z = 0; y < 10; y++){z}",
+        "for(var x = 0; x < 10; x++){z} for(var y = 0, z = 0; y < 10; y++){z}",
         "var x=0;for(;x<10;x++)z;x=0;var z=0;for(;x<10;x++)z");
 
     inFunction("var x = 1; x; for (var y; y=1; ) {y}", "var x = 1; x; for ( ; x=1; ) {x}");
@@ -275,6 +275,36 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction("function x() {} var y = 1; y; x = 1; x");
   }
 
+  public void testBug65688660() {
+    test(
+        LINE_JOINER.join(
+            "function f(param) {",
+            "  if (true) {",
+            "    const b1 = [];",
+            "    for (const [key, value] of []) {}",
+            "  }",
+            "  if (true) {",
+            "    const b2 = [];",
+            "    for (const kv of []) {",
+            "      const key2 = kv.key;",
+            "    }",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(param) {",
+            "  if (true) {",
+            "    param = [];",
+            "    for (const [key, value] of []) {}",
+            "  }",
+            "  if (true) {",
+            "    param = [];",
+            "    for (const kv of []) {",
+            "      param = kv.key;",
+            "    }",
+            "  }",
+            "}"));
+  }
+
   public void testBug1401831() {
     // Verify that we don't wrongly merge "opt_a2" and "i" without considering
     // arguments[0] aliasing it.
@@ -284,11 +314,97 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "  var buffer;",
             "  if(opt_a2){",
             "    var i=0;",
-            "    for(;i<arguments.length;i++)buffer=buffer+arguments[i]",
+            "    for(;i<arguments.length;i++)",
+            "      buffer=buffer+arguments[i];",
             "  }",
-            "return buffer",
+            "  return buffer;",
             "}");
     testSame(src);
+  }
+
+  // Code inside a class is automatically in strict mode, so duplicated parameter names are not
+  // allowed.
+  public void testBug64898400() {
+    testSame("class C { f(a, b, c) {} }");
+    testSame("class C { f(a, b=0, c=0) {} }");
+  }
+
+  public void testObjDestructuringConst1() {
+    test(
+        LINE_JOINER.join(
+            "function f(obj) {",
+            "  {",
+            "    const {foo: foo} = obj;",
+            "    alert(foo);",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(obj) {",
+            "  {",
+            "    var {foo: obj} = obj;",
+            "    alert(obj);",
+            "  }",
+            "}"));
+  }
+
+  public void testObjDestructuringConst2() {
+    test(
+        LINE_JOINER.join(
+            "function f(obj) {",
+            "  {",
+            "    const {foo: foo} = obj;",
+            "    alert(foo);",
+            "  }",
+            "  {",
+            "    const {bar: bar} = obj;",
+            "    alert(bar);",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "function f(obj) {",
+            "  {",
+            "    var {foo: obj} = obj;",
+            "    alert(obj);",
+            "  }",
+            "  {",
+            "    var {bar: obj} = obj;",
+            "    alert(obj);",
+            "  }",
+            "}"));
+  }
+
+  public void testObjDestructuringConst3() {
+    testSame(
+        LINE_JOINER.join(
+            "function f() {",
+            "  const obj = {};",
+            "  const {prop1: foo, prop2: bar} = obj;",
+            "  alert(foo);",
+            "}"));
+  }
+
+  // We would normally coalesce 'key' with 'collidesWithKey', but in doing so we'd change the 'let'
+  // on line 2 to a 'var' which would cause the inner function to capture the wrong value of 'val'.
+  public void testCapture() {
+    testSame(
+        LINE_JOINER.join(
+            "function f(param) {",
+            "  for (let [key, val] of foo()) {",
+            "    param = (x) => { return val(x); };",
+            "  }",
+            "  let collideswithKey = 5;",
+            "  return param(collidesWithKey);",
+            "}"));
+  }
+
+  public void testDestructuring() {
+    testSame(
+        LINE_JOINER.join(
+            "function f() {",
+            "  const [x, y] = foo(5);",
+            "  let z = foo(x);",
+            "  return x;",
+            "}"));
   }
 
   public void testDeterministic() {
@@ -364,61 +480,99 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
   public void testBug1445366() {
     // An assignment might not be complete if the RHS throws an exception.
     inFunction(
-        " var iframe = getFrame();" +
-        " try {" +
-        "   var win = iframe.contentWindow;" +
-        " } catch (e) {" +
-        " } finally {" +
-        "   if (win)" +
-        "     this.setupWinUtil_();" +
-        "   else" +
-        "     this.load();" +
-        " }");
+        LINE_JOINER.join(
+            "var iframe = getFrame();",
+            "try {",
+            "  var win = iframe.contentWindow;",
+            "} catch (e) {",
+            "} finally {",
+            "  if (win)",
+            "    this.setupWinUtil_();",
+            "  else",
+            "    this.load();",
+            "}"));
 
     // Verify that we can still coalesce it if there are no handlers.
     inFunction(
-        " var iframe = getFrame();" +
-        " var win = iframe.contentWindow;" +
-        " if (win)" +
-        "   this.setupWinUtil_();" +
-        " else" +
-        "   this.load();",
-
-        " var iframe = getFrame();" +
-        " iframe = iframe.contentWindow;" +
-        " if (iframe)" +
-        "   this.setupWinUtil_();" +
-        " else" +
-        "   this.load();");
+        LINE_JOINER.join(
+            "var iframe = getFrame();",
+            "var win = iframe.contentWindow;",
+            "if (win)",
+            "  this.setupWinUtil_();",
+            "else",
+            "  this.load();"),
+        LINE_JOINER.join(
+            "var iframe = getFrame();",
+            "iframe = iframe.contentWindow;",
+            "if (iframe)",
+            "  this.setupWinUtil_();",
+            "else",
+            "  this.load();"));
   }
 
+  // Parameter 'e' is never used, but if we coalesce 'command' with 'e' then the 'if (command)'
+  // check will produce an incorrect result if none of the 'case' statements is executed.
   public void testCannotReuseAnyParamsBug() {
-    testSame("function handleKeyboardShortcut(e, key, isModifierPressed) {\n" +
-        "  if (!isModifierPressed) {\n" +
-        "    return false;\n" +
-        "  }\n" +
-        "  var command;\n" +
-        "  switch (key) {\n" +
-        "    case 'b': // Ctrl+B\n" +
-        "      command = COMMAND.BOLD;\n" +
-        "      break;\n" +
-        "    case 'i': // Ctrl+I\n" +
-        "      command = COMMAND.ITALIC;\n" +
-        "      break;\n" +
-        "    case 'u': // Ctrl+U\n" +
-        "      command = COMMAND.UNDERLINE;\n" +
-        "      break;\n" +
-        "    case 's': // Ctrl+S\n" +
-        "      return true;\n" +
-        "  }\n" +
-        "\n" +
-        "  if (command) {\n" +
-        "    this.fieldObject.execCommand(command);\n" +
-        "    return true;\n" +
-        "  }\n" +
-        "\n" +
-        "  return false;\n" +
-        "};");
+    testSame(
+        LINE_JOINER.join(
+            "function handleKeyboardShortcut(e, key, isModifierPressed) {",
+            "  if (!isModifierPressed) {",
+            "    return false;",
+            "  }",
+            "  var command;",
+            "  switch (key) {",
+            "    case 'b': // Ctrl+B",
+            "      command = COMMAND.BOLD;",
+            "      break;",
+            "    case 'i': // Ctrl+I",
+            "      command = COMMAND.ITALIC;",
+            "      break;",
+            "    case 'u': // Ctrl+U",
+            "      command = COMMAND.UNDERLINE;",
+            "      break;",
+            "    case 's': // Ctrl+S",
+            "      return true;",
+            "  }",
+            "",
+            "  if (command) {",
+            "    this.fieldObject.execCommand(command);",
+            "    return true;",
+            "  }",
+            "",
+            "  return false;",
+            "};"));
+  }
+
+  // TODO(b/66919166): Fix this test and re-enable it.
+  // Same as above, but this time the parameter 'type' is part of a destructuring pattern.
+  public void disabled_testCannotReuseAnyParamsBugWithDestructuring() {
+    testSame(LINE_JOINER.join(
+        "function handleKeyboardShortcut({type: type}, key, isModifierPressed) {",
+        "  if (!isModifierPressed) {",
+        "    return false;",
+        "  }",
+        "  var command;",
+        "  switch (key) {",
+        "    case 'b': // Ctrl+B",
+        "      command = COMMAND.BOLD;",
+        "      break;",
+        "    case 'i': // Ctrl+I",
+        "      command = COMMAND.ITALIC;",
+        "      break;",
+        "    case 'u': // Ctrl+U",
+        "      command = COMMAND.UNDERLINE;",
+        "      break;",
+        "    case 's': // Ctrl+S",
+        "      return true;",
+        "  }",
+        "",
+        "  if (command) {",
+        "    this.fieldObject.execCommand(command);",
+        "    return true;",
+        "  }",
+        "",
+        "  return false;",
+        "};"));
   }
 
   public void testForInWithAssignment() {
@@ -444,11 +598,9 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
     inFunction("var x   = 0; print(x  ); var   y = 1; print(  y)",
                "var x_y = 0; print(x_y);     x_y = 1; print(x_y)");
 
-    inFunction("var x_y = 1; var x   = 0; print(x  ); var     y = 1;" +
-               "print(  y); print(x_y);",
-
-               "var x_y = 1; var x_y$ = 0; print(x_y$);     x_y$ = 1;" + "" +
-               "print(x_y$); print(x_y);");
+    inFunction(
+        "var x_y = 1; var x    = 0; print(x   ); var     y = 1; print(   y); print(x_y);",
+        "var x_y = 1; var x_y$ = 0; print(x_y$);      x_y$ = 1; print(x_y$); print(x_y);");
 
     inFunction(
         LINE_JOINER.join(
@@ -462,11 +614,11 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
             "}"),
         LINE_JOINER.join(
             "function f(){",
-            "var x_y$=0;",
-            "print(x_y$);",
-            "x_y$=1;",
-            "print(x_y$);",
-            "print(x_y)",
+            "  var x_y$=0;",
+            "  print(x_y$);",
+            "  x_y$=1;",
+            "  print(x_y$);",
+            "  print(x_y)",
             "}",
             "var x_y=1"));
 
@@ -628,9 +780,7 @@ public final class CoalesceVariableNamesTest extends CompilerTestCase {
 
     // Here the variable y is redeclared because the variable z in the header of the for-loop has
     // not been declared before
-    inFunction(
-        "let y = 2; for (let x = 1, z = 3; (x + z) < 10; x ++) { x + z; }",
-        "var y = 2; for (var y = 1, z = 3; (y + z) < 10; y ++) { y + z; }");
+    inFunction("let y = 2; for (let x = 1, z = 3; (x + z) < 10; x ++) { x + z; }");
   }
 
   public void testArrowFunctions() {

@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,6 +46,29 @@ public class PersistentInputStore {
     CacheEntry(String digest) {
       this.digest = digest;
     }
+
+    private Map<String, CompilerInput> zipEntries = ImmutableMap.of();
+
+    CompilerInput getCachedZipEntry(SourceFile zipEntry) {
+      String originalPath = zipEntry.getOriginalPath();
+      // Avoid allocating a HashMap instance for arbitrary CompilerInputs.
+      if (zipEntries.isEmpty()) {
+        zipEntries = new HashMap<>();
+      }
+      if (!zipEntries.containsKey(originalPath)) {
+        zipEntries.put(originalPath, CompilerInput.makePersistentInput(zipEntry));
+      }
+      return zipEntries.get(originalPath);
+    }
+
+    void updateDigest(String newDigest) {
+      if (!newDigest.equals(digest)) {
+        this.input = null;
+        this.digest = newDigest;
+
+        zipEntries = ImmutableMap.of();
+      }
+    }
   }
 
   /**
@@ -53,11 +78,7 @@ public class PersistentInputStore {
   public void addInput(String path, String digest) {
     if (store.containsKey(path)) {
       CacheEntry dep = store.get(path);
-      if (!dep.digest.equals(digest)) {
-        // Invalidate cache since digest has changed.
-        dep.digest = digest;
-        dep.input = null;
-      }
+      dep.updateDigest(digest);
     } else {
       store.put(path, new CacheEntry(digest));
     }
@@ -70,10 +91,19 @@ public class PersistentInputStore {
    * <p>If a matching blaze input cannot be found, just create a new compiler input for scratch.
    */
   public CompilerInput getCachedCompilerInput(SourceFile source) {
-    if (store.containsKey(source.getOriginalPath())) {
-      CacheEntry cacheEntry = store.get(source.getOriginalPath());
+    String originalPath = source.getOriginalPath();
+    // For zip files.
+    if (originalPath.contains(".js.zip!/")) {
+      int indexOf = originalPath.indexOf(".js.zip!/");
+      String zipPath = originalPath.substring(0, indexOf + ".js.zip".length());
+      Preconditions.checkState(store.containsKey(zipPath));
+      return store.get(zipPath).getCachedZipEntry(source);
+    }
+    // For regular files.
+    if (store.containsKey(originalPath)) {
+      CacheEntry cacheEntry = store.get(originalPath);
       if (cacheEntry.input == null) {
-        cacheEntry.input = new CompilerInput(source);
+        cacheEntry.input = CompilerInput.makePersistentInput(source);
       }
       return cacheEntry.input;
     }

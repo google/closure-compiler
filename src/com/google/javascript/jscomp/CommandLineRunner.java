@@ -415,13 +415,18 @@ public class CommandLineRunner extends
                 + "accept UTF-8 as input and output US_ASCII")
     private String charset = "";
 
-    @Option(name = "--compilation_level",
-        aliases = {"-O"},
-        usage = "Specifies the compilation level to use. Options: "
-            + "WHITESPACE_ONLY, "
-            + "SIMPLE, "
-            + "ADVANCED")
+    @Option(
+      name = "--compilation_level",
+      aliases = {"-O"},
+      usage =
+          "Specifies the compilation level to use. Options: "
+              + "BUNDLE, "
+              + "WHITESPACE_ONLY, "
+              + "SIMPLE (default), "
+              + "ADVANCED"
+    )
     private String compilationLevel = "SIMPLE";
+
     private CompilationLevel compilationLevelParsed = null;
 
     @Option(name = "--checks_only",
@@ -511,8 +516,10 @@ public class CommandLineRunner extends
     private String commonJsEntryModule;
 
     @Option(name = "--transform_amd_modules",
+        hidden = true,
         handler = BooleanOptionHandler.class,
-        usage = "Transform AMD to CommonJS modules.")
+        usage = "Deprecated: Transform AMD to CommonJS modules.")
+    @Deprecated
     private boolean transformAmdModules = false;
 
     @Option(name = "--process_closure_primitives",
@@ -780,19 +787,6 @@ public class CommandLineRunner extends
     private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
 
-    private static final ImmutableMap<String, CompilationLevel> COMPILATION_LEVEL_MAP =
-        ImmutableMap.of(
-            "WHITESPACE_ONLY",
-            CompilationLevel.WHITESPACE_ONLY,
-            "SIMPLE",
-            CompilationLevel.SIMPLE_OPTIMIZATIONS,
-            "SIMPLE_OPTIMIZATIONS",
-            CompilationLevel.SIMPLE_OPTIMIZATIONS,
-            "ADVANCED",
-            CompilationLevel.ADVANCED_OPTIMIZATIONS,
-            "ADVANCED_OPTIMIZATIONS",
-            CompilationLevel.ADVANCED_OPTIMIZATIONS);
-
     Flags() {
       parser = new CmdLineParser(this);
     }
@@ -803,7 +797,7 @@ public class CommandLineRunner extends
     private void parse(List<String> args) throws CmdLineException {
       parser.parseArgument(args.toArray(new String[] {}));
 
-      compilationLevelParsed = COMPILATION_LEVEL_MAP.get(Ascii.toUpperCase(compilationLevel));
+      compilationLevelParsed = CompilationLevel.fromString(Ascii.toUpperCase(compilationLevel));
       if (compilationLevelParsed == null) {
         throw new CmdLineException(
             parser, "Bad value for --compilation_level: " + compilationLevel);
@@ -853,7 +847,6 @@ public class CommandLineRunner extends
                     "js_module_root",
                     "module_resolution",
                     "process_common_js_modules",
-                    "transform_amd_modules",
                     "package_json_entry_names"))
             .putAll(
                 "Library and Framework Specific",
@@ -1471,6 +1464,19 @@ public class CommandLineRunner extends
       flags.outputWrapper = "(function(){%output%}).call(this);";
     }
 
+    // Handle --compilation_level=BUNDLE
+    List<String> bundleFiles = ImmutableList.of();
+    boolean skipNormalOutputs = false;
+    if (flags.compilationLevelParsed == CompilationLevel.BUNDLE) {
+      if (flags.jsOutputFile.isEmpty()) {
+        reportError("--compilation_level=BUNDLE cannot be used without a --js_output_file.");
+      } else {
+        bundleFiles = ImmutableList.of(flags.jsOutputFile);
+        flags.jsOutputFile = "";
+        skipNormalOutputs = true;
+      }
+    }
+
     if (errors) {
       Flags.printShortUsageAfterErrors(errorStream);
     } else if (flags.displayHelp) {
@@ -1580,6 +1586,8 @@ public class CommandLineRunner extends
           .setDependencyMode(depMode)
           .setEntryPoints(entryPoints)
           .setOutputManifest(ImmutableList.of(flags.outputManifest))
+          .setOutputBundle(bundleFiles)
+          .setSkipNormalOutputs(skipNormalOutputs)
           .setOutputModuleDependencies(flags.outputModuleDependencies)
           .setProcessCommonJSModules(flags.processCommonJsModules)
           .setModuleRoots(moduleRoots)
@@ -1864,7 +1872,7 @@ public class CommandLineRunner extends
     // A map from normalized absolute paths to original paths. We need to return original paths to
     // support whitelist files that depend on them.
     Map<String, String> allJsInputs = sortAlphabetically
-        ? new TreeMap<String, String>() : new LinkedHashMap<String, String>();
+        ? new TreeMap<>() : new LinkedHashMap<>();
     Set<String> excludes = new HashSet<>();
     for (String pattern : patterns) {
       if (!pattern.contains("*") && !pattern.startsWith("!")) {

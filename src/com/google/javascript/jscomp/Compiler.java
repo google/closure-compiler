@@ -277,11 +277,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private static final Joiner pathJoiner = Joiner.on(File.separator);
 
-  // TODO(johnlenz): remove "currentScope".
   // Used as a shortcut for change tracking.  This is the current scope being
   // visited by the "current" NodeTraversal.  This can't be thread safe so
-  // we should move it into the NodeTraversal and require explicit changed
-  // nodes elsewhere so we aren't blocked from doing this elsewhere.
+  // we will remove it when we remove the reportCodeChange() method.
+  @Deprecated
   private Node currentChangeScope = null;
 
   // Starts at 0, increases as "interesting" things happen.
@@ -2668,6 +2667,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   @Override
+  @Deprecated
   void setChangeScope(Node newChangeScopeRoot) {
     currentChangeScope = newChangeScopeRoot;
   }
@@ -3739,6 +3739,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       for (CompilerInput input : module.getInputs()) {
         input.reset();
       }
+    }
+    for (CompilerInput input : this.externs) {
+      input.reset();
     }
   }
 

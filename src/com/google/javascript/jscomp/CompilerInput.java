@@ -101,6 +101,15 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     this(new JsAst(file), isExtern);
   }
 
+  /**
+   * Using the RecoverableJsAst, creates a CompilerInput that can be reset() to be safe to reuse
+   * in multiple compiler invocations.
+   */
+  public static CompilerInput makePersistentInput(SourceFile file) {
+    SourceAst ast = new RecoverableJsAst(new JsAst(file), true);
+    return new CompilerInput(ast, file.isExtern());
+  }
+
   /** Returns a name for this input. Must be unique across all inputs. */
   @Override
   public InputId getInputId() {
@@ -502,11 +511,11 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   }
 
   /**
-   * Resets the compiler input for reuse in another compile. TODO(tdeegan): Consider clearing the
-   * JsAst here in the future.
+   * Resets the compiler input for reuse in another compile.
    */
   public void reset() {
     this.module = null;
+    this.ast.clearAst();
   }
 
   public enum ModuleType {

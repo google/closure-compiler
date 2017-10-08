@@ -304,6 +304,26 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
             "  ].join()"));
   }
 
+  public void testJoinSpread1() {
+    foldSame("var x = [...foo].join('');");
+    foldSame("var x = [...someMap.keys()].join('');");
+    foldSame("var x = [foo, ...bar].join('');");
+    foldSame("var x = [...foo, bar].join('');");
+    foldSame("var x = [...foo, 'bar'].join('');");
+    foldSame("var x = ['1', ...'2', '3'].join('');");
+    foldSame("var x = ['1', ...['2'], '3'].join('');");
+  }
+
+  public void testJoinSpread2() {
+    fold("var x = [...foo].join(',');", "var x = [...foo].join();");
+    fold("var x = [...someMap.keys()].join(',');", "var x = [...someMap.keys()].join();");
+    fold("var x = [foo, ...bar].join(',');", "var x = [foo, ...bar].join();");
+    fold("var x = [...foo, bar].join(',');", "var x = [...foo, bar].join();");
+    fold("var x = [...foo, 'bar'].join(',');", "var x = [...foo, 'bar'].join();");
+    fold("var x = ['1', ...'2', '3'].join(',');", "var x = ['1', ...'2', '3'].join();");
+    fold("var x = ['1', ...['2'], '3'].join(',');", "var x = ['1', ...['2'], '3'].join();");
+  }
+
   public void testToUpper() {
     fold("'a'.toUpperCase()", "'A'");
     fold("'A'.toUpperCase()", "'A'");
