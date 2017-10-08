@@ -1179,7 +1179,10 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           }
           parent.getParent().replaceWith(exportName.useSourceInfoFromForTree(root.getParent()));
           changeScope = NodeUtil.getEnclosingChangeScopeRoot(parent);
-        } else if (root.getNext() != null && root.getNext().isName() && rValueVar.isGlobal()) {
+        } else if (root.getNext() != null
+            && root.getNext().isName()
+            && rValueVar != null
+            && rValueVar.isGlobal()) {
           // This is a where a module export assignment is used in a complex expression.
           // Before: `SOME_VALUE !== undefined && module.exports = SOME_VALUE`
           // After: `SOME_VALUE !== undefined && module$name`
@@ -1670,7 +1673,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     }
 
     private String rewriteImportName(NodeTraversal t, Node call) {
-      String requireName = call.getSecondChild().getString();
+      String requireName = getCommonJsImportPath(call);
       ModulePath modulePath =
           t.getInput()
               .getPath()
