@@ -58,7 +58,7 @@ public final class ModuleLoader {
       DiagnosticType.error(
           "JSC_INVALID_MODULE_PATH", "Invalid module path \"{0}\" for resolution mode \"{1}\"");
 
-  private final ErrorHandler errorHandler;
+  private ErrorHandler errorHandler;
 
   /** Root URIs to match module roots against. */
   private final ImmutableList<String> moduleRootPaths;
@@ -309,6 +309,18 @@ public final class ModuleLoader {
     }
     // Not underneath any of the roots.
     return path;
+  }
+
+  public void setErrorHandler(ErrorHandler errorHandler) {
+    if (errorHandler == null) {
+      this.errorHandler = new NoopErrorHandler();
+    } else {
+      this.errorHandler = errorHandler;
+    }
+  }
+
+  public ErrorHandler getErrorHandler() {
+    return this.errorHandler;
   }
 
   /** An enum indicating whether to absolutize paths. */

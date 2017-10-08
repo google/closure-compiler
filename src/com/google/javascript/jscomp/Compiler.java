@@ -1741,7 +1741,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
         this.moduleLoader =
             new ModuleLoader(
-                this,
+                null,
                 options.moduleRoots,
                 inputs,
                 ModuleLoader.PathResolver.RELATIVE,
@@ -1753,7 +1753,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           // so we redefine it afterwards with the package.json inputs
           this.moduleLoader =
               new ModuleLoader(
-                  this,
+                  null,
                   options.moduleRoots,
                   inputs,
                   ModuleLoader.PathResolver.RELATIVE,
@@ -1813,6 +1813,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           input.setJsModuleType(CompilerInput.ModuleType.IMPORTED_SCRIPT);
           moduleTypesByName.put(input.getPath().toModuleName(), input.getJsModuleType());
         }
+      }
+
+      if (this.moduleLoader != null) {
+        this.moduleLoader.setErrorHandler(this);
       }
 
       orderInputs();
