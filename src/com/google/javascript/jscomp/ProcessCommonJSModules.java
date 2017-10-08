@@ -1467,7 +1467,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
               getProp.setJSDocInfo(info);
               parent.replaceWith(IR.exprResult(getProp).useSourceInfoFrom(getProp));
             }
-          } else if (newNameDeclaration != null) {
+          } else if (newNameDeclaration != null && newNameDeclaration.getNameNode() != nameRef) {
             // Variable is already defined. Convert this to an assignment.
             // If the variable declaration has no initialization, we simply
             // remove the node. This can occur when the variable which is exported
