@@ -735,8 +735,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           || (directAssignmentsAtTopLevel == 0 && directAssignments > 0)
           || directAssignments == 0) {
         Node defaultProp = IR.stringKey(exportPropertyName);
-        defaultProp.addChildrenToFront(IR.objectlit());
-        initModule.getFirstFirstChild().addChildrenToFront(defaultProp);
+        defaultProp.addChildToFront(IR.objectlit());
+        initModule.getFirstFirstChild().addChildToFront(defaultProp);
         if (directAssignments == 0) {
           builder = new JSDocInfoBuilder(true);
           builder.recordConstancy();
