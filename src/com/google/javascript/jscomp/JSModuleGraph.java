@@ -445,6 +445,17 @@ public final class JSModuleGraph implements Serializable {
     Iterable<CompilerInput> entryPointInputs = createEntryPointInputs(
         depOptions, inputs, sorter);
 
+    HashMap<String, CompilerInput> inputsByProvide = new HashMap<>();
+    for (CompilerInput input : inputs) {
+      for (String provide : input.getKnownProvides()) {
+        inputsByProvide.put(provide, input);
+      }
+      String moduleName = input.getPath().toModuleName();
+      if (!inputsByProvide.containsKey(moduleName)) {
+        inputsByProvide.put(moduleName, input);
+      }
+    }
+
     // The order of inputs, sorted independently of modules.
     List<CompilerInput> absoluteOrder =
         sorter.getDependenciesOf(inputs, depOptions.shouldSortDependencies());
@@ -478,7 +489,8 @@ public final class JSModuleGraph implements Serializable {
         // We need the ful set of dependencies for each module, so start with the full input set
         Set<CompilerInput> inputsNotYetReached = new HashSet<>(inputs);
         for (CompilerInput entryPoint : entryPointInputsPerModule.get(module)) {
-          transitiveClosure.addAll(getDepthFirstDependenciesOf(entryPoint, inputsNotYetReached));
+          transitiveClosure.addAll(
+              getDepthFirstDependenciesOf(entryPoint, inputsNotYetReached, inputsByProvide));
         }
         // For any input we have not yet reached, add them to the ordered list
         for (CompilerInput orderedInput : transitiveClosure) {
@@ -532,35 +544,28 @@ public final class JSModuleGraph implements Serializable {
    * performing a recursive, depth-first traversal.
    */
   private List<CompilerInput> getDepthFirstDependenciesOf(
-      CompilerInput rootInput, Set<CompilerInput> unreachedInputs) {
+      CompilerInput rootInput,
+      Set<CompilerInput> unreachedInputs,
+      Map<String, CompilerInput> inputsByProvide) {
     List<CompilerInput> orderedInputs = new ArrayList<>();
     if (!unreachedInputs.remove(rootInput)) {
       return orderedInputs;
     }
 
     for (String importedNamespace : rootInput.getRequires()) {
-      CompilerInput dependency =
-          JSModuleGraph.findInputProviding(importedNamespace, unreachedInputs);
+      CompilerInput dependency = null;
+      if (inputsByProvide.containsKey(importedNamespace)
+          && unreachedInputs.contains(inputsByProvide.get(importedNamespace))) {
+        dependency = inputsByProvide.get(importedNamespace);
+      }
+
       if (dependency != null) {
-        orderedInputs.addAll(getDepthFirstDependenciesOf(dependency, unreachedInputs));
+        orderedInputs.addAll(getDepthFirstDependenciesOf(dependency, unreachedInputs, inputsByProvide));
       }
     }
 
     orderedInputs.add(rootInput);
     return orderedInputs;
-  }
-
-  private static CompilerInput findInputProviding(String namespace, Set<CompilerInput> inputs) {
-    for (CompilerInput input : inputs) {
-      if (namespace.startsWith("module$")) {
-        if (input.getPath().toModuleName().equals(namespace)) {
-          return input;
-        }
-      } else if (input.getProvides().contains(namespace)) {
-        return input;
-      }
-    }
-    return null;
   }
 
   private Collection<CompilerInput> createEntryPointInputs(

@@ -436,17 +436,6 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
     }
 
     exportMap.clear();
-
-    if (addCommonJsAlias) {
-      Node commonJsAlias = IR.var(
-          IR.name(ProcessCommonJSModules.getModuleName(t.getInput())),
-          IR.name(t.getInput().getPath().toModuleName()));
-      JSDocInfoBuilder info = new JSDocInfoBuilder(false);
-      info.recordConstancy();
-      commonJsAlias.setJSDocInfo(info.build());
-      script.addChildToBack(commonJsAlias.useSourceInfoFromForTree(script));
-    }
-
     t.reportCodeChange();
   }
 

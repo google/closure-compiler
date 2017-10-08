@@ -1635,7 +1635,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--process_common_js_modules");
     args.add("--entry_point=foo/bar");
     setFilename(0, "foo/bar.js");
-    String expected = "var module$foo$bar={test:1};";
+    String expected = "var module$foo$bar={default:{}};module$foo$bar.default.test=1;";
     test("exports.test = 1", expected);
     assertThat(outReader.toString()).isEqualTo(expected + "\n");
   }
@@ -1646,7 +1646,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--module=auto");
     setFilename(0, "foo/bar.js");
     test("exports.test = 1",
-        "var module$foo$bar={test:1};");
+        "var module$foo$bar={default: {}}; module$foo$bar.default.test = 1;");
     // With modules=auto no direct output is created.
     assertThat(outReader.toString()).isEmpty();
   }
@@ -1698,14 +1698,14 @@ public final class CommandLineRunnerTest extends TestCase {
               "goog.provide=function(a){};goog.require=function(a){};"),
           "goog.array={};",
           LINE_JOINER.join(
-              "var module$Baz = function (){};",
-              "module$Baz.prototype={",
+              "var module$Baz = {/** @constructor */ default: function (){} };",
+              "module$Baz.default.prototype={",
               "  baz:function(){return goog.array.last(['asdf','asd','baz'])},",
               "  bar:function(){return 8}",
               "};"),
           LINE_JOINER.join(
-              "var Baz = module$Baz,",
-              "    baz = new module$Baz();",
+              "var Baz = module$Baz.default,",
+              "    baz = new module$Baz.default();",
               "console.log(baz.baz());",
               "console.log(baz.bar());")
         });
@@ -1759,14 +1759,14 @@ public final class CommandLineRunnerTest extends TestCase {
               "goog.provide=function(a){};goog.require=function(a){};"),
           "goog.array={};",
           LINE_JOINER.join(
-              "var module$Baz = function (){};",
-              "module$Baz.prototype={",
+              "var module$Baz = {default: function (){}};",
+              "module$Baz.default.prototype={",
               "  baz:function(){return goog.array.last([\"asdf\",\"asd\",\"baz\"])},",
               "  bar:function(){return 8}",
               "};"),
           LINE_JOINER.join(
-              "var Baz = module$Baz,",
-              "    baz = new module$Baz();",
+              "var Baz = module$Baz.default,",
+              "    baz = new module$Baz.default();",
               "console.log(baz.baz());",
               "console.log(baz.bar());")
         });
@@ -1784,8 +1784,8 @@ public final class CommandLineRunnerTest extends TestCase {
         new String[] {
           LINE_JOINER.join("export default class Foo {", "  bar() { console.log('bar'); }", "}"),
           LINE_JOINER.join(
-              "var FooBar = require('./foo');",
-              "var baz = new FooBar.default();",
+              "var FooBar = require('./foo').default;",
+              "var baz = new FooBar();",
               "console.log(baz.bar());")
         },
         new String[] {
@@ -1795,7 +1795,7 @@ public final class CommandLineRunnerTest extends TestCase {
               "Foo$$module$foo.prototype.bar=function(){console.log(\"bar\")};",
               "module$foo.default=Foo$$module$foo;"),
           LINE_JOINER.join(
-              "var FooBar = module$foo,",
+              "var FooBar = module$foo.default,",
               "    baz = new module$foo.default();",
               "console.log(baz.bar());")
         });
@@ -1822,10 +1822,11 @@ public final class CommandLineRunnerTest extends TestCase {
         },
         new String[] {
           LINE_JOINER.join(
-              "/** @constructor */ var module$foo = function(){};",
-              "module$foo.prototype.bar=function(){console.log(\"bar\")};"),
+              "/** @const */ var module$foo = {/** @constructor */ default: function(){} };",
+              "module$foo.default.prototype.bar=function(){console.log('bar')};"),
           LINE_JOINER.join(
-              "var baz$$module$app = new module$foo();", "console.log(baz$$module$app.bar());")
+              "var baz$$module$app = new module$foo();",
+              "console.log(baz$$module$app.bar());")
         });
   }
 
@@ -1833,6 +1834,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--dependency_mode=STRICT");
     args.add("--entry_point='./app.js'");
     args.add("--language_in=ECMASCRIPT6");
+    args.add("--language_out=ECMASCRIPT5");
     setFilename(0, "foo.js");
     setFilename(1, "app.js");
     test(
@@ -1886,6 +1888,7 @@ public final class CommandLineRunnerTest extends TestCase {
         },
         new String[] {
           CompilerTestCase.LINE_JOINER.join(
+              "/** @const */ var module$foo = { /** @const */ default: {}};",
               "function foo$$module$foo(){ alert('foo'); }",
               "foo$$module$foo();"),
           CompilerTestCase.LINE_JOINER.join("'use strict';", "")
@@ -1918,9 +1921,9 @@ public final class CommandLineRunnerTest extends TestCase {
               "module.exports = Foo;")
         },
         new String[] {
-          "var module$node_modules$foo$browser=function(){};",
-          "module$node_modules$foo$browser.prototype={bar:function(){return 8}};",
-          "var Foo=module$node_modules$foo$browser;",
+          "var module$node_modules$foo$browser={default:function(){}};",
+          "module$node_modules$foo$browser.default.prototype={bar:function(){return 8}};",
+          "var Foo=module$node_modules$foo$browser.default;",
         });
   }
 
@@ -1939,7 +1942,9 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--entry_point=foo/bar");
     setFilename(0, "foo/bar.js");
     test("define({foo: 1})",
-        "var module$foo$bar={foo:1};");
+        LINE_JOINER.join(
+            "/** @const */ var module$foo$bar = {/** @const */ default: {}};",
+            "module$foo$bar.default.foo = 1;"));
   }
 
   public void testModuleJSON() {
@@ -1949,7 +1954,9 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--output_module_dependencies=test.json");
     setFilename(0, "foo/bar.js");
     test("define({foo: 1})",
-        "var module$foo$bar={foo:1};");
+        LINE_JOINER.join(
+          "/** @const */ var module$foo$bar = {/** @const */ default: {}};",
+          "module$foo$bar.default.foo = 1;"));
   }
 
   public void testOutputSameAsInput() {
