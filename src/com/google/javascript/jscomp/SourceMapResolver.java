@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import com.google.common.annotations.GwtIncompatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.BaseEncoding;
@@ -22,6 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import javax.annotation.Nullable;
 
 /** Utility class for resolving source maps and files referenced in source maps. */
@@ -69,8 +71,10 @@ public class SourceMapResolver {
    */
   @Nullable
   static SourceFile getRelativePath(String baseFilePath, String relativePath) {
-    return SourceFile.fromPath(
-        FileSystems.getDefault().getPath(baseFilePath).resolveSibling(relativePath).normalize(),
-        StandardCharsets.UTF_8);
+    Path sourceFilePath = FileSystems.getDefault().getPath(baseFilePath).resolveSibling(relativePath).normalize();
+    if (isNullOrEmpty(sourceFilePath.toString())) {
+      return null;
+    }
+    return SourceFile.fromPath(sourceFilePath, StandardCharsets.UTF_8);
   }
 }
