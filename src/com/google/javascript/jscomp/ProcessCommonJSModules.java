@@ -775,7 +775,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     boolean replaceUmdPatterns() {
       boolean needsRetraverse = false;
       Node changeScope;
-      int factoryCounter = 1;
       for (UmdPattern umdPattern : umdPatterns) {
         if (NodeUtil.getEnclosingScript(umdPattern.ifRoot) == null) {
           reportNestedScopesDeleted(umdPattern.ifRoot);
@@ -831,8 +830,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             continue;
           }
           needsRetraverse = true;
-          String factoryLabel = modulePath.toModuleName() + "_factory" + Integer.toString(factoryCounter);
-          factoryCounter++;
+          String factoryLabel = modulePath.toModuleName() + "_factory" + compiler.getUniqueNameIdSupplier().get();
 
           FunctionToBlockMutator mutator =
               new FunctionToBlockMutator(compiler, compiler.getUniqueNameIdSupplier());
@@ -857,22 +855,24 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             String assignedName = null;
             if (expr.isAssign() && expr.getSecondChild().isCall()) {
               call = expr.getSecondChild();
-              assignedName = compiler.getUniqueNameIdSupplier().get();
+              if (expr.getFirstChild().isQualifiedName()) {
+                assignedName = modulePath.toModuleName() + "_iife" + compiler.getUniqueNameIdSupplier().get();
+              } else {
+                assignedName = expr.getFirstChild().getString();
+              }
             } else if (expr.isCall()) {
               call = expr;
             }
 
             if (call != null) {
-              Node newStatements2 = mutator.mutate(
+              newStatements = mutator.mutate(
                   factoryLabel, inlinedFn, call, assignedName, false, false);
-              if (expr.isAssign() && assignedName != null) {
-                Node resultVar = IR.var(IR.name(assignedName)).useSourceInfoFromForTree(expr);
-                newStatements.replaceChild(newStatements.getFirstChild(), resultVar);
-                newStatements.addChildAfter(newStatements2, resultVar);
-                expr.replaceChild(expr.getSecondChild(), IR.name(assignedName)
-                    .useSourceInfoFrom(expr));
-              } else {
-                newStatements = newStatements2;
+              if (assignedName != null && expr.getFirstChild().isQualifiedName()) {
+                newStatements.addChildToFront(
+                    IR.var(IR.name(assignedName)).useSourceInfoFromForTree(fn));
+                expr.replaceChild(expr.getSecondChild(),
+                    IR.name(assignedName).useSourceInfoFromForTree(fn));
+                newStatements.addChildToBack(expr.getParent().detach());
               }
             }
           }

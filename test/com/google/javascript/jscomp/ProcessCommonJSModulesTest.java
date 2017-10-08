@@ -609,8 +609,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  this.foobar = foobar;",
             "}}()"),
         LINE_JOINER.join(
-            "goog.provide('module$test');",
-            "var module$test = {foo: 'bar'};"));
+            "/** @const */ var module$test = {};",
+            "module$test.default = {foo: 'bar'};"));
 
     testModules(
         "test.js",
@@ -921,16 +921,16 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @const */ var module$test={/** @const */ default: {}};",
             "{",
-            "  var exports$jscomp$inline_3$$module$test=module$test.default;",
-            "  var userAgentContains$jscomp$inline_5$$module$test=",
-            "    function(str$jscomp$inline_6){",
-            "      return navigator.userAgent.toLowerCase().indexOf(",
-            "        str$jscomp$inline_6)>=0;",
-            "    };",
-            "  var webkit$jscomp$inline_4$$module$test=",
-            "    userAgentContains$jscomp$inline_5$$module$test('webkit');",
-            "  exports$jscomp$inline_3$$module$test.webkit=",
-            "    webkit$jscomp$inline_4$$module$test;",
+            "  var exports$jscomp$inline_4$$module$test = module$test.default;",
+            "  var userAgentContains$jscomp$inline_6$$module$test =",
+            "      function(str$jscomp$inline_7){",
+            "        return navigator.userAgent.toLowerCase().indexOf(",
+            "            str$jscomp$inline_7) >= 0;",
+            "      };",
+            "  var webkit$jscomp$inline_5$$module$test =",
+            "      userAgentContains$jscomp$inline_6$$module$test('webkit');",
+            "  exports$jscomp$inline_4$$module$test.webkit =",
+            "      webkit$jscomp$inline_5$$module$test;",
             "}"));
   }
 
@@ -951,9 +951,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "/** @const */ var module$test={};",
             "{",
             "  module$test.default;",
-            "  {",
-            "    module$test.default = {foo: 'bar'};",
-            "  }",
+            "  module$test.default = {foo: 'bar'};",
             "}"));
   }
 
@@ -1013,5 +1011,28 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module$test.default.foo = function foo() {",
             "  return 1;",
             "};"));
+  }
+  
+  public void testOther() {
+    testModules(
+      "test.js",
+      LINE_JOINER.join(
+          "(function (global, factory) {",
+          "  true ? module.exports = factory(typeof angular === 'undefined' ? require('./other') : angular) :",
+          "  typeof define === 'function' && define.amd ? define('angular-cache', ['angular'], factory) :",
+          "  (global.angularCacheModuleName = factory(global.angular));",
+          "}(this, function (angular) { 'use strict';",
+          "  console.log(angular);",
+          "  return angular;",
+          "}));"),
+      LINE_JOINER.join(
+          "/** @const */ var module$test = {};",
+          "{",
+          "  module$test.default;",
+          "  var angular$jscomp$inline_5$$module$test = ",
+          "      typeof angular === 'undefined' ? module$other.default : angular;",
+          "  console.log(angular$jscomp$inline_5$$module$test);",
+          "  module$test.default = angular$jscomp$inline_5$$module$test;",
+          "}"));
   }
 }
