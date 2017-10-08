@@ -594,7 +594,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "} else {",
             "  this.foobar = foobar;",
             "}}()"),
-        "var module$test = {foo: 'bar'};");
+        "/** @const */ var module$test = {}; module$test.default = {foo: 'bar'};");
 
     testModules(
         "test.js",
@@ -644,7 +644,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @const */ var module$test = {};",
             "module$test.default = {foo: 'bar'};",
-            "this.foobar = module$test.default;"));
+            "module$test.default.foobar = module$test.default;"));
 
     testModules(
         "test.js",
@@ -662,7 +662,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @const */ var module$test = {};",
             "module$test.default = {foo: 'bar'};",
-            "this.foobar = module$test.default;"));
+            "module$test.default.foobar = module$test.default;"));
 
     // We can't remove IIFEs explict calls that don't use "this"
     testModules(
@@ -680,7 +680,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @const */ var module$test = {default: {}};",
             "(function(){",
-            "  module$test.default={foo:\"bar\"};",
+            "  module$test.default={foo:'bar'};",
             "}).call(window);"));
 
     // Can't remove IIFEs when there are sibling statements
@@ -749,7 +749,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  foo: 'bar',",
             "  log: function() { log$$module$test.apply(null,arguments); }",
             "};",
-            "this.foobar = module$test.default;"));
+            "module$test.default.foobar = module$test.default;"));
   }
 
   public void testParamShadow() {
@@ -879,7 +879,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "typeof module === 'object' && module.exports ? module.exports = foobar :",
             "typeof define === 'function' && define.amd ? define([], function() {return foobar;}) :",
             "this.foobar = foobar;"),
-        "var module$test = {foo: 'bar'};");
+        "/** @const */ var module$test = {}; module$test.default = {foo: 'bar'};");
   }
 
   public void testLeafletUMDWrapper() {
@@ -899,9 +899,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  exports.webkit = webkit",
             "})));"),
         LINE_JOINER.join(
-            "/** @const */ var module$test={};",
+            "/** @const */ var module$test={/** @const */ default: {}};",
             "{",
-            "  var exports$jscomp$inline_3$$module$test=module$test;",
+            "  var exports$jscomp$inline_3$$module$test=module$test.default;",
             "  var userAgentContains$jscomp$inline_5$$module$test=function(str$jscomp$inline_6){",
             "    return navigator.userAgent.toLowerCase().indexOf(str$jscomp$inline_6)>=0;",
             "  };",
@@ -923,7 +923,12 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "});"),
         LINE_JOINER.join(
             "/** @const */ var module$test={};",
-            "module$test.foo = 'bar';"));
+            "{",
+            "  module$test.default;",
+            "  {",
+            "    module$test.default = {foo: 'bar'};",
+            "  }",
+            "}"));
   }
 
   public void testDontSplitVarsInFor() {
@@ -937,7 +942,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
     testModules(
         "test.js",
         "exports = module.exports = {};",
-        "/** @const */ var module$test = {};");
+        "/** @const */ var module$test = {/** @const */ default: {}};");
   }
 
   public void testExportsPropertyHoisting() {
@@ -948,9 +953,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "Buffer.TYPED_ARRAY_SUPPORT = {};",
             "function Buffer() {}"),
         LINE_JOINER.join(
-            "/** @const */ var module$test = {};",
-            "module$test.Buffer = function() {};",
-            "module$test.Buffer.TYPED_ARRAY_SUPPORT = {};"));
+            "/** @const */ var module$test = {/** @const */ default: {}};",
+            "module$test.default.Buffer = function() {};",
+            "module$test.default.Buffer.TYPED_ARRAY_SUPPORT = {};"));
   }
 
   public void testExportNameInParamList() {
@@ -961,10 +966,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "function register(cb) { cb(tinymce); }",
             "register(function(tinymce) { module.exports = tinymce; });"),
         LINE_JOINER.join(
-            "var module$test;",
+            "/** @const */ var module$test = {default: {}};",
             "var tinymce$$module$test = { foo: 'bar' };",
             "function register$$module$test(cb) { cb(tinymce$$module$test); }",
-            "register$$module$test(function(tinymce) { module$test = tinymce; });"));
+            "register$$module$test(function(tinymce) { module$test.default = tinymce; });"));
   }
 
   public void testIssue2616() {

@@ -117,6 +117,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           }
         }
 
+        finder.initializeModule();
+
         //UMD pattern replacement can leave detached export references - don't include those
         for (ExportInfo export : finder.getModuleExports()) {
           if (NodeUtil.getEnclosingScript(export.node) != null) {
@@ -128,8 +130,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             exports.add(export);
           }
         }
-
-        finder.initializeModule();
       }
 
       NodeTraversal.traverseEs6(
@@ -773,6 +773,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     boolean replaceUmdPatterns() {
       boolean needsRetraverse = false;
       Node changeScope;
+      int factoryCounter = 1;
       for (UmdPattern umdPattern : umdPatterns) {
         if (NodeUtil.getEnclosingScript(umdPattern.ifRoot) == null) {
           reportNestedScopesDeleted(umdPattern.ifRoot);
@@ -793,13 +794,13 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         // Remove redundant block node. Not strictly necessary, but makes tests more legible.
         if (umdPattern.activeBranch.isNormalBlock()
             && umdPattern.activeBranch.getChildCount() == 1) {
-          newNode = umdPattern.activeBranch.getFirstChild();
-          umdPattern.activeBranch.detachChildren();
+          newNode = umdPattern.activeBranch.removeFirstChild();
         } else {
-          umdPattern.ifRoot.detachChildren();
+          newNode.getParent().removeChild(newNode);
         }
         needsRetraverse = true;
         parent.replaceChild(umdPattern.ifRoot, newNode);
+        reportNestedScopesDeleted(umdPattern.ifRoot);
         changeScope = NodeUtil.getEnclosingChangeScopeRoot(newNode);
         if (changeScope != null) {
           compiler.reportChangeToEnclosingScope(newNode);
@@ -827,7 +828,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             continue;
           }
           needsRetraverse = true;
-          String factoryLabel = modulePath.toModuleName() + "_factory";
+          String factoryLabel = modulePath.toModuleName() + "_factory" + Integer.toString(factoryCounter);
+          factoryCounter++;
 
           FunctionToBlockMutator mutator =
               new FunctionToBlockMutator(compiler, compiler.getUniqueNameIdSupplier());
@@ -858,12 +860,16 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             }
 
             if (call != null) {
-              Node newStatements2 = mutator.mutate(factoryLabel, inlinedFn, call, assignedName, false, false);
+              Node newStatements2 = mutator.mutate(
+                  factoryLabel, inlinedFn, call, assignedName, false, false);
               if (expr.isAssign() && assignedName != null) {
                 Node resultVar = IR.var(IR.name(assignedName)).useSourceInfoFromForTree(expr);
                 newStatements.replaceChild(newStatements.getFirstChild(), resultVar);
                 newStatements.addChildAfter(newStatements2, resultVar);
-                expr.replaceChild(expr.getSecondChild(), IR.name(assignedName).useSourceInfoFrom(expr));
+                expr.replaceChild(expr.getSecondChild(), IR.name(assignedName)
+                    .useSourceInfoFrom(expr));
+              } else {
+                newStatements = newStatements2;
               }
             }
           }
@@ -877,16 +883,13 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
             callRoot.detachChildren();
             callRoot.addChildToFront(newStatements);
-            changeScope = NodeUtil.getEnclosingChangeScopeRoot(callRoot);
-            if (changeScope != null) {
-              compiler.reportChangeToEnclosingScope(callRoot);
-            }
+            reportNestedScopesChanged(callRoot);
+            compiler.reportChangeToEnclosingScope(callRoot);
+            reportNestedScopesDeleted(enclosingFnCall);
           } else {
             parent.replaceChild(umdPattern.ifRoot, newNode);
-            changeScope = NodeUtil.getEnclosingChangeScopeRoot(newNode);
-            if (changeScope != null) {
-              compiler.reportChangeToEnclosingScope(newNode);
-            }
+            compiler.reportChangeToEnclosingScope(newNode);
+            reportNestedScopesDeleted(umdPattern.ifRoot);
           }
         }
       }
@@ -902,6 +905,20 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           public void visit(Node n) {
             if (n.isFunction()) {
               compiler.reportFunctionDeleted(n);
+            }
+          }
+        },
+        Predicates.<Node>alwaysTrue());
+  }
+
+  private void reportNestedScopesChanged(Node n) {
+    NodeUtil.visitPreOrder(
+        n,
+        new NodeUtil.Visitor() {
+          @Override
+          public void visit(Node n) {
+            if (n.isFunction()) {
+              compiler.reportChangeToChangeScope(n);
             }
           }
         },
@@ -1145,6 +1162,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
       Node updatedExport =
           NodeUtil.newQName(compiler, moduleName, export.node, export.node.getQualifiedName());
+      Node changeScope = null;
 
       if (root.matchesQualifiedName("module.exports")
           && rValue != null
@@ -1160,20 +1178,26 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             exportName = IR.var(updatedExport, rValue.detach());
           }
           parent.getParent().replaceWith(exportName.useSourceInfoFromForTree(root.getParent()));
+          changeScope = NodeUtil.getEnclosingChangeScopeRoot(parent);
         } else if (root.getNext() != null && root.getNext().isName() && rValueVar.isGlobal()) {
           // This is a where a module export assignment is used in a complex expression.
           // Before: `SOME_VALUE !== undefined && module.exports = SOME_VALUE`
           // After: `SOME_VALUE !== undefined && module$name`
           root.getParent().replaceWith(updatedExport);
+          changeScope = NodeUtil.getEnclosingChangeScopeRoot(root);
         } else {
           // Other references to "module.exports" are just replaced with the module name.
           export.node.replaceWith(updatedExport);
+          changeScope = NodeUtil.getEnclosingChangeScopeRoot(updatedExport);
         }
       } else {
         // Other references to "module.exports" are just replaced with the module name.
         export.node.replaceWith(updatedExport);
+        changeScope = NodeUtil.getEnclosingChangeScopeRoot(updatedExport);
       }
-      t.reportCodeChange();
+      if (changeScope != null) {
+        compiler.reportChangeToChangeScope(changeScope);
+      }
     }
 
     /**
