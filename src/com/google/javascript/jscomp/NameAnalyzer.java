@@ -134,9 +134,6 @@ final class NameAnalyzer implements CompilerPass {
   /** Names that refer to the global scope */
   private final Set<String> globalNames;
 
-  /** Ast change helper */
-  private final AstChangeProxy changeProxy;
-
   /** Names that are externally defined */
   private final Set<String> externalNames = new HashSet<>();
 
@@ -378,12 +375,13 @@ final class NameAnalyzer implements CompilerPass {
 
     @Override public void remove() {
       Node grandparent = parent.getParent();
+      compiler.reportChangeToEnclosingScope(grandparent);
       if (grandparent.isExprResult()) {
         // name.prototype.foo = function() { ... };
-        changeProxy.removeChild(grandparent.getParent(), grandparent);
+        NodeUtil.deleteNode(grandparent, compiler);
       } else {
         // ... name.prototype.foo = function() { ... } ...
-        changeProxy.replaceWith(grandparent, parent, parent.getLastChild().detach());
+        parent.replaceWith(parent.getLastChild().detach());
       }
     }
   }
@@ -443,10 +441,11 @@ final class NameAnalyzer implements CompilerPass {
     public void remove() {
       checkState(node.isCall());
       Node parent = getParent();
+      compiler.reportChangeToEnclosingScope(parent);
       if (parent.isExprResult()) {
-        changeProxy.removeChild(getGrandparent(), parent);
+        NodeUtil.deleteNode(parent, compiler);
       } else {
-        changeProxy.replaceWith(parent, node, IR.voidNode(IR.number(0)));
+        node.replaceWith(IR.voidNode(IR.number(0)));
       }
     }
   }
@@ -471,7 +470,8 @@ final class NameAnalyzer implements CompilerPass {
 
     @Override
     public void remove() {
-      changeProxy.replaceWith(getGrandparent(), getParent(), IR.falseNode());
+      compiler.reportChangeToEnclosingScope(getParent());
+      getParent().replaceWith(IR.falseNode());
     }
   }
 
@@ -1176,13 +1176,6 @@ final class NameAnalyzer implements CompilerPass {
     return parent;
   }
 
-  private class RemoveListener implements AstChangeProxy.ChangeListener {
-    @Override
-    public void nodeRemoved(Node n, Node parent) {
-      compiler.reportChangeToEnclosingScope(parent);
-    }
-  }
-
   /**
    * Creates a name analyzer, with option to remove unreferenced variables when
    * calling process().
@@ -1203,7 +1196,6 @@ final class NameAnalyzer implements CompilerPass {
     this.removeUnreferenced = removeUnreferenced;
     this.reportPath = reportPath;
     this.globalNames = DEFAULT_GLOBAL_NAMES;
-    this.changeProxy = new AstChangeProxy(compiler);
   }
 
   static void createEmptyReport(AbstractCompiler compiler, String reportPath) {
@@ -1318,17 +1310,12 @@ final class NameAnalyzer implements CompilerPass {
    * Removes all unreferenced variables.
    */
   void removeUnreferenced() {
-    RemoveListener listener = new RemoveListener();
-    changeProxy.registerListener(listener);
-
     for (RefNode refNode : refNodes) {
       JsName name = refNode.name();
       if (!name.referenced && !name.externallyDefined) {
         refNode.remove();
       }
     }
-
-    changeProxy.unregisterListener(listener);
   }
 
   /**
@@ -1878,6 +1865,7 @@ final class NameAnalyzer implements CompilerPass {
    * replace it with the subexpressions that have side effects.
    */
   private void replaceWithRhs(Node parent, Node n) {
+    compiler.reportChangeToEnclosingScope(n);
     if (valueConsumedByParent(n, parent)) {
       // parent reads from n directly; replace it with n's rhs + lhs
       // subexpressions with side effects.
@@ -1889,7 +1877,7 @@ final class NameAnalyzer implements CompilerPass {
       Node valueExpr = Iterables.getLast(replacements);
       valueExpr.detach();
       newReplacements.add(valueExpr);
-      changeProxy.replaceWith(parent, n, collapseReplacements(newReplacements));
+      n.replaceWith(collapseReplacements(newReplacements));
     } else if (n.isAssign() && !parent.isVanillaFor()) {
       // assignment appears in a RHS expression.  we have already
       // considered names in the assignment's RHS as being referenced;
@@ -1898,7 +1886,7 @@ final class NameAnalyzer implements CompilerPass {
       // this pass and RemoveConstantExpressions together in a loop.
       Node replacement = n.getLastChild();
       replacement.detach();
-      changeProxy.replaceWith(parent, n, replacement);
+      n.replaceWith(replacement);
     } else {
       replaceTopLevelExpressionWithRhs(parent, n);
     }
@@ -1942,24 +1930,27 @@ final class NameAnalyzer implements CompilerPass {
             "Unsupported node type in replaceWithRhs " + n.getToken());
     }
 
-    // gather replacements
-    List<Node> replacements = new ArrayList<>();
+    // Gather replacements in a temporary block node.
+    Node replacements = IR.block();
     for (Node rhs : getRhsSubexpressions(n)) {
-      replacements.addAll(getSideEffectNodes(rhs));
+      for (Node r : getSideEffectNodes(rhs)) {
+        replacements.addChildToBack(r);
+      }
     }
 
     if (NodeUtil.isAnyFor(parent)) {
       // tweak replacements array s.t. it is a single expression node.
-      if (replacements.isEmpty()) {
-        replacements.add(IR.empty());
+      if (!replacements.hasChildren()) {
+        replacements.addChildToBack(IR.empty().useSourceInfoFrom(n));
       } else {
-        Node expr = collapseReplacements(replacements);
-        replacements.clear();
-        replacements.add(expr);
+        Node expr = collapseReplacements(replacements.children());
+        replacements.removeChildren();
+        replacements.addChildToBack(expr);
       }
     }
 
-    changeProxy.replaceWith(parent, n, replacements);
+    parent.addChildrenAfter(replacements.removeChildren(), n);
+    NodeUtil.deleteNode(n, compiler);
   }
 
   /**
@@ -2010,7 +2001,7 @@ final class NameAnalyzer implements CompilerPass {
    * Merge a list of nodes into a single expression.  The value of the
    * new expression is determined by the last expression in the list.
    */
-  private static Node collapseReplacements(List<Node> replacements) {
+  private static Node collapseReplacements(Iterable<Node> replacements) {
     Node expr = null;
     for (Node rep : replacements) {
       if (rep.isExprResult()) {
@@ -2077,7 +2068,7 @@ final class NameAnalyzer implements CompilerPass {
           return nodes.build();
         }
       default:
-        throw new IllegalArgumentException("AstChangeProxy::getRhs " + n);
+        throw new IllegalArgumentException("getRhsSubexpressions " + n);
     }
   }
 
