@@ -218,15 +218,19 @@ public abstract class ObjectType
    * We construct these types by appending suffixes to the constructor name.
    *
    * The normalized reference name does not have these suffixes, and as such,
-   * recollapses these implicit types back to their real type.
+   * recollapses these implicit types back to their real type.  Note that
+   * suffixes such as ".prototype" can be added <i>after</i> the delegate
+   * suffix, so anything after the parentheses must still be retained.
    */
   @Nullable
-  public String getNormalizedReferenceName() {
+  public final String getNormalizedReferenceName() {
     String name = getReferenceName();
     if (name != null) {
-      int pos = name.indexOf('(');
-      if (pos != -1) {
-        return name.substring(0, pos);
+      int start = name.indexOf('(');
+      if (start != -1) {
+        int end = name.lastIndexOf(')');
+        String prefix = name.substring(0, start);
+        return end + 1 % name.length() == 0 ? prefix : prefix + name.substring(end + 1);
       }
     }
     return name;

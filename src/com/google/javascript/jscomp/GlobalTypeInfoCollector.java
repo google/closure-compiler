@@ -19,6 +19,7 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
@@ -30,6 +31,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
 import com.google.javascript.jscomp.CodingConvention.Bind;
+import com.google.javascript.jscomp.CodingConvention.DelegateRelationship;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
 import com.google.javascript.jscomp.NewTypeInference.WarningReporter;
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
@@ -54,11 +56,13 @@ import com.google.javascript.jscomp.newtypes.UniqueNameGenerator;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.SimpleSourceFile;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -1443,6 +1447,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
 
   private class ProcessScope extends AbstractShallowCallback {
     private final NTIScope currentScope;
+    private final List<NominalTypeBuilder> delegateProxies = new ArrayList<>();
+    private final Map<String, String> delegateCallingConventions = new HashMap<>();
     private Set<Node> lendsObjlits = new LinkedHashSet<>();
 
     ProcessScope(NTIScope currentScope) {
@@ -1454,6 +1460,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         processLendsNode(objlit);
       }
       lendsObjlits = null;
+      convention.defineDelegateProxyPrototypeProperties(
+          globalTypeInfo, delegateProxies, delegateCallingConventions);
     }
 
     /**
@@ -1580,6 +1588,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
           if (parent.isExprResult() && n.isQualifiedName()) {
             visitPropertyDeclaration(n);
           }
+          convention.checkForCallingConventionDefinitions(n, delegateCallingConventions);
           break;
         case ASSIGN: {
           Node lvalue = n.getFirstChild();
@@ -1697,6 +1706,10 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       if (className != null) {
         applySingletonGetter(className);
       }
+      DelegateRelationship delegateRelationship = convention.getDelegateRelationship(call);
+      if (delegateRelationship != null) {
+        applyDelegateRelationship(delegateRelationship);
+      }
     }
 
     private void applySubclassRelationship(SubclassRelationship rel) {
@@ -1723,6 +1736,43 @@ public class GlobalTypeInfoCollector implements CompilerPass {
             new FunctionTypeBuilder(getCommonTypes()).addRetType(instanceType).buildType();
         convention.applySingletonGetter(
             new NominalTypeBuilderNti(lateProps, rawType), getInstanceType);
+      }
+    }
+
+    private void applyDelegateRelationship(DelegateRelationship rel) {
+      RawNominalType delegateBase = findInScope(rel.delegateBase);
+      RawNominalType delegator = findInScope(rel.delegator);
+      RawNominalType delegateSuper = findInScope(convention.getDelegateSuperclassName());
+      if (delegator != null && delegateBase != null && delegateSuper != null) {
+        // Note: OTI also verified that getConstructor() was non-null on each of these, but since
+        // they're all coming from RawNominalTypes, there should be no way that can fail here.
+        JSType findDelegate =
+            new FunctionTypeBuilder(getCommonTypes())
+                .addReqFormal(getCommonTypes().getNativeType(U2U_CONSTRUCTOR_TYPE))
+                .addRetType(JSType.join(getCommonTypes().NULL, delegateBase.getInstanceAsJSType()))
+                .buildType();
+
+        RawNominalType delegateProxy = RawNominalType.makeClass(
+            getCommonTypes(),
+            delegateBase.getDefSite() /* defSite */,
+            delegateBase.getName() + "(Proxy)" /* name */,
+            null /* typeParameters */,
+            ObjectKind.UNRESTRICTED,
+            false /* isAbstract */);
+        nominaltypesByNode.put(new Node(null), delegateProxy);
+        delegateProxy.addSuperClass(delegateBase.getAsNominalType());
+        delegateProxy.setCtorFunction(
+            new FunctionTypeBuilder(getCommonTypes())
+                .addRetType(delegateProxy.getInstanceAsJSType())
+                .addNominalType(delegateProxy.getInstanceAsJSType())
+                .buildFunction());
+        convention.applyDelegateRelationship(
+            new NominalTypeBuilderNti(lateProps, delegateSuper),
+            new NominalTypeBuilderNti(lateProps, delegateBase),
+            new NominalTypeBuilderNti(lateProps, delegator),
+            delegateProxy.getInstanceAsJSType(),
+            findDelegate);
+        delegateProxies.add(new NominalTypeBuilderNti(lateProps, delegateProxy));
       }
     }
 
@@ -2490,6 +2540,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       JSType previousPropType = classType.getInstancePropDeclaredType(pname);
       if (classType.mayHaveNonInheritedProp(pname)
           && previousPropType != null
+          // TODO(sdh): Remove this special case once all explicit decls are removed b/67509620
+          && !previousPropType.toString().endsWith("(Proxy)")
           && !suppressDupPropWarning(jsdoc, typeInJsdoc, previousPropType)) {
         warnings.add(JSError.make(
             propCreationNode, REDECLARED_PROPERTY, pname, "type " + classType));

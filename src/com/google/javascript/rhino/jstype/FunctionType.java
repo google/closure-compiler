@@ -1026,7 +1026,7 @@ public class FunctionType extends PrototypeObjectType implements FunctionTypeI {
   StringBuilder appendTo(StringBuilder sb, boolean forAnnotations) {
     if (!isPrettyPrint() ||
         this == registry.getNativeType(JSTypeNative.FUNCTION_INSTANCE_TYPE)) {
-      return sb.append("Function");
+      return sb.append(forAnnotations ? "!Function" : "Function");
     }
 
     setPrettyPrint(false);

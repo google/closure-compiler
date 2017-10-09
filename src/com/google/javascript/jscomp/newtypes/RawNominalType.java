@@ -728,14 +728,21 @@ public final class RawNominalType extends Namespace {
     this.isFrozen = true;
   }
 
-  StringBuilder appendTo(StringBuilder builder) {
-    builder.append(name);
-    return builder;
+  StringBuilder appendTo(StringBuilder builder, ToStringContext ctx) {
+    if (ctx.forAnnotation()) {
+      // Note: some synthetic nominal types have a parenthesized segment in their name,
+      // which is not compatible with type annotations, so remove it if found.
+      int index = name.indexOf('(');
+      if (index >= 0) {
+        return builder.append(name, 0, index);
+      }
+    }
+    return builder.append(name);
   }
 
   @Override
   public String toString() {
-    return appendTo(new StringBuilder()).toString();
+    return appendTo(new StringBuilder(), ToStringContext.TO_STRING).toString();
   }
 
   @Override

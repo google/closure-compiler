@@ -1661,7 +1661,7 @@ final class ObjectType implements TypeWithProperties {
   StringBuilder appendTo(StringBuilder builder, ToStringContext ctx) {
     // "Foo.prototype" is a valid type when appropriate.
     if (isPrototypeObject()) {
-      return builder.append(getOwnerFunction().getThisType()).append(".prototype");
+      return builder.append(getOwnerFunction().getThisType().getDisplayName()).append(".prototype");
     }
     // Annotations need simpler output that can be re-parsed.
     if (ctx.forAnnotation()) {

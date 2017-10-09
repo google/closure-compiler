@@ -677,10 +677,10 @@ public final class NominalType implements Serializable {
     if (ctx.forAnnotation()) {
       builder.append("!");
     }
+    this.rawType.appendTo(builder, ctx);
     if (this.typeMap.isEmpty()) {
-      return this.rawType.appendTo(builder);
+      return builder;
     }
-    builder.append(this.rawType.name);
     ImmutableList<String> typeParams = this.rawType.getTypeParameters();
     checkState(this.typeMap.keySet().containsAll(typeParams));
     boolean firstIteration = true;
