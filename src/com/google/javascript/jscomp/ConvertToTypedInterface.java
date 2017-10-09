@@ -228,13 +228,7 @@ class ConvertToTypedInterface implements CompilerPass {
         case VAR:
         case LET:
         case CONST:
-          while (n.hasMoreThanOneChild()) {
-            Node nameToSplit = n.getLastChild().detach();
-            Node rhs = nameToSplit.hasChildren() ? nameToSplit.removeFirstChild() : null;
-            Node newDeclaration = IR.declaration(nameToSplit, rhs, n.getToken()).srcref(n);
-            parent.addChildAfter(newDeclaration, n);
-            t.reportCodeChange();
-          }
+          splitNameDeclarationsAndRemoveDestructuring(n, t);
           break;
         case BLOCK:
           if (!parent.isFunction()) {
@@ -245,6 +239,33 @@ class ConvertToTypedInterface implements CompilerPass {
           break;
         default:
           break;
+      }
+    }
+
+    /**
+     * Does two simplifications to const/let/var nodes.
+     * 1. Splits them so that each declaration is a separate statement.
+     * 2. Removes non-import destructuring statements, which we assume are not type declarations.
+     */
+    static void splitNameDeclarationsAndRemoveDestructuring(Node n, NodeTraversal t) {
+      checkArgument(NodeUtil.isNameDeclaration(n));
+      while (n.hasChildren()) {
+        Node lhsToSplit = n.getLastChild();
+        if (lhsToSplit.isDestructuringLhs() && !isImportRhs(lhsToSplit.getLastChild())) {
+          // Remove destructuring statements, which we assume are not type declarations
+          NodeUtil.markFunctionsDeleted(lhsToSplit, t.getCompiler());
+          NodeUtil.removeChild(n, lhsToSplit);
+          t.reportCodeChange();
+          continue;
+        }
+        if (n.hasOneChild()) {
+          return;
+        }
+        // A name declaration with more than one LHS is split into separate declarations.
+        Node rhs = lhsToSplit.hasChildren() ? lhsToSplit.removeFirstChild() : null;
+        Node newDeclaration = IR.declaration(lhsToSplit.detach(), rhs, n.getToken()).srcref(n);
+        n.getParent().addChildAfter(newDeclaration, n);
+        t.reportCodeChange();
       }
     }
   }
@@ -306,7 +327,7 @@ class ConvertToTypedInterface implements CompilerPass {
     void recordNameDeclaration(NodeTraversal t, Node decl) {
       checkArgument(NodeUtil.isNameDeclaration(decl));
       Node rhs = decl.getFirstChild().getLastChild();
-      boolean isImport = rhs != null && isImportRhs(rhs);
+      boolean isImport = isImportRhs(rhs);
       for (Node name : NodeUtil.getLhsNodesOfDeclaration(decl)) {
         if (isImport) {
           currentFile.recordImport(name.getString());
@@ -427,7 +448,7 @@ class ConvertToTypedInterface implements CompilerPass {
     private final List<PotentialDeclaration> declarations = new ArrayList<>();
 
     void recordDeclaration(Node qnameNode, Scope scope) {
-      checkArgument(qnameNode.isQualifiedName());
+      checkArgument(qnameNode.isQualifiedName(), qnameNode);
       declarations.add(PotentialDeclaration.from(qnameNode, scope));
     }
 
@@ -741,8 +762,8 @@ class ConvertToTypedInterface implements CompilerPass {
     return jsdoc != null && jsdoc.isConstructor();
   }
 
-  private static boolean isImportRhs(Node rhs) {
-    if (!rhs.isCall()) {
+  private static boolean isImportRhs(@Nullable Node rhs) {
+    if (rhs == null || !rhs.isCall()) {
       return false;
     }
     Node callee = rhs.getFirstChild();

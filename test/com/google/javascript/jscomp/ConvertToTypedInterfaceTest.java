@@ -1077,6 +1077,30 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
             "a.b.c.d.e.f.g.Foo = class {};"));
   }
 
+  public void testDestructuringDoesntCrash() {
+    test(
+        LINE_JOINER.join(
+            "goog.module('a.b.c');",
+            "",
+            "const Enum = goog.require('Enum');",
+            "const Foo = goog.require('Foo');",
+            "",
+            "const {A, B} = Enum;",
+            "",
+            "/** @type {Foo} */",
+            "exports.foo = use(A, B);",
+            ""),
+        LINE_JOINER.join(
+            "goog.module('a.b.c');",
+            "",
+            "const Enum = goog.require('Enum');",
+            "const Foo = goog.require('Foo');",
+            "",
+            "/** @type {Foo} */",
+            "exports.foo;",
+            ""));
+  }
+
   public void testDescAnnotationCountsAsTyped() {
     test(
         LINE_JOINER.join(
