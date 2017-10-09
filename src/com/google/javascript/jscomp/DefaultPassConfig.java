@@ -216,8 +216,10 @@ public final class DefaultPassConfig extends PassConfig {
     }
   }
 
-  private void addOldTypeCheckerPasses(
-      List<PassFactory> checks, CompilerOptions options) {
+  private void addOldTypeCheckerPasses(List<PassFactory> checks, CompilerOptions options) {
+    if (!options.allowsHotswapReplaceScript()) {
+      checks.add(inlineTypeAliases);
+    }
     if (options.checkTypes || options.inferTypes) {
       checks.add(resolveTypes);
       checks.add(inferTypes);
@@ -467,10 +469,6 @@ public final class DefaultPassConfig extends PassConfig {
 
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
       checks.add(j2clSourceFileChecker);
-    }
-
-    if (!options.allowsHotswapReplaceScript()) {
-      checks.add(inlineTypeAliases);
     }
 
     if (!options.getNewTypeInference()) {
@@ -1506,7 +1504,7 @@ public final class DefaultPassConfig extends PassConfig {
       };
 
   private final PassFactory inlineTypeAliases =
-      new PassFactory("inlineTypeAliases", true) {
+      new PassFactory(PassNames.INLINE_TYPE_ALIASES, true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new InlineAliases(compiler);

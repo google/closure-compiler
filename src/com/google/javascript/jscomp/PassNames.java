@@ -65,6 +65,7 @@ public final class PassNames {
   public static final String INFER_TYPES = "inferTypes";
   public static final String INLINE_FUNCTIONS = "inlineFunctions";
   public static final String INLINE_PROPERTIES = "inlineProperties";
+  public static final String INLINE_TYPE_ALIASES = "inlineTypeAliases";
   public static final String INLINE_VARIABLES = "inlineVariables";
   public static final String LINT_CHECKS = "lintChecks";
   public static final String MARK_NO_SIDE_EFFECT_CALLS = "markNoSideEffectCalls";
