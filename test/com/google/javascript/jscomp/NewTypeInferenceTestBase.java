@@ -24,9 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.InputId;
-import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -238,26 +235,12 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
         compilerOptions);
     compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
 
-    Node externsRoot = IR.root();
-    externsRoot.addChildToFront(
-        compiler.getInput(new InputId("[externs]")).getAstRoot(compiler));
-    Node astRoot = IR.root();
-    astRoot.addChildToFront(
-        compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler));
-
+    compiler.parseInputs();
     assertThat(compiler.getErrors()).named("parsing errors").isEmpty();
     assertThat(compiler.getWarnings()).named("parsing warnings").isEmpty();
 
-    // Create common parent of externs and ast; needed by Es6RewriteBlockScopedDeclaration.
-    Node block = IR.root(externsRoot, astRoot);
-
-    // TODO(dimvar): clean this up and use parseInputs instead of setting the jsRoot directly.
-    compiler.jsRoot = astRoot;
-    compiler.externsRoot = externsRoot;
-    compiler.externAndJsRoot = block;
-
     // Run ASTValidator
-    (new AstValidator(compiler)).validateRoot(block);
+    (new AstValidator(compiler)).validateRoot(compiler.getRoot());
 
     DeclaredGlobalExternsOnWindow rewriteExterns =
         new DeclaredGlobalExternsOnWindow(compiler);
@@ -282,7 +265,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
 
     PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);
     phaseopt.consume(passes);
-    phaseopt.process(externsRoot, astRoot);
+    phaseopt.process(compiler.getExternsRoot(), compiler.getJsRoot());
   }
 
   protected final void typeCheck(String js, DiagnosticType... warningKinds) {
