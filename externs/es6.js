@@ -656,13 +656,13 @@ Int8Array.BYTES_PER_ELEMENT;
 
 /**
  * @param {!Array<number>} source
- * @param {function(this:S, number): number=} opt_callback
+ * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
  * @return {!Int8Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
-Int8Array.from = function(source, opt_callback, opt_this) {};
+Int8Array.from = function(source, opt_mapFn, opt_this) {};
 
 /**
  * @param {...number} var_args
@@ -690,13 +690,13 @@ Uint8Array.BYTES_PER_ELEMENT;
 
 /**
  * @param {!Array<number>} source
- * @param {function(this:S, number): number=} opt_callback
+ * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
  * @return {!Uint8Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
-Uint8Array.from = function(source, opt_callback, opt_this) {};
+Uint8Array.from = function(source, opt_mapFn, opt_this) {};
 
 /**
  * @param {...number} var_args
@@ -724,13 +724,13 @@ Uint8ClampedArray.BYTES_PER_ELEMENT;
 
 /**
  * @param {!Array<number>} source
- * @param {function(this:S, number): number=} opt_callback
+ * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
  * @return {!Uint8ClampedArray}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
-Uint8ClampedArray.from = function(source, opt_callback, opt_this) {};
+Uint8ClampedArray.from = function(source, opt_mapFn, opt_this) {};
 
 /**
  * @param {...number} var_args
@@ -767,13 +767,13 @@ Int16Array.BYTES_PER_ELEMENT;
 
 /**
  * @param {!Array<number>} source
- * @param {function(this:S, number): number=} opt_callback
+ * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
  * @return {!Int16Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
-Int16Array.from = function(source, opt_callback, opt_this) {};
+Int16Array.from = function(source, opt_mapFn, opt_this) {};
 
 /**
  * @param {...number} var_args
@@ -801,13 +801,13 @@ Uint16Array.BYTES_PER_ELEMENT;
 
 /**
  * @param {!Array<number>} source
- * @param {function(this:S, number): number=} opt_callback
+ * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
  * @return {!Uint16Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
-Uint16Array.from = function(source, opt_callback, opt_this) {};
+Uint16Array.from = function(source, opt_mapFn, opt_this) {};
 
 /**
  * @param {...number} var_args
@@ -835,13 +835,13 @@ Int32Array.BYTES_PER_ELEMENT;
 
 /**
  * @param {!Array<number>} source
- * @param {function(this:S, number): number=} opt_callback
+ * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
  * @return {!Int32Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
-Int32Array.from = function(source, opt_callback, opt_this) {};
+Int32Array.from = function(source, opt_mapFn, opt_this) {};
 
 /**
  * @param {...number} var_args
@@ -869,13 +869,13 @@ Uint32Array.BYTES_PER_ELEMENT;
 
 /**
  * @param {!Array<number>} source
- * @param {function(this:S, number): number=} opt_callback
+ * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
  * @return {!Uint32Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
-Uint32Array.from = function(source, opt_callback, opt_this) {};
+Uint32Array.from = function(source, opt_mapFn, opt_this) {};
 
 /**
  * @param {...number} var_args
@@ -903,13 +903,13 @@ Float32Array.BYTES_PER_ELEMENT;
 
 /**
  * @param {!Array<number>} source
- * @param {function(this:S, number): number=} opt_callback
+ * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
  * @return {!Float32Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
-Float32Array.from = function(source, opt_callback, opt_this) {};
+Float32Array.from = function(source, opt_mapFn, opt_this) {};
 
 /**
  * @param {...number} var_args
@@ -937,13 +937,13 @@ Float64Array.BYTES_PER_ELEMENT;
 
 /**
  * @param {!Array<number>} source
- * @param {function(this:S, number): number=} opt_callback
+ * @param {function(this:S, number): number=} opt_mapFn
  * @param {S=} opt_this
  * @template S
  * @return {!Float64Array}
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray/from
  */
-Float64Array.from = function(source, opt_callback, opt_this) {};
+Float64Array.from = function(source, opt_mapFn, opt_this) {};
 
 /**
  * @param {...number} var_args
@@ -1251,12 +1251,12 @@ Array.of = function(var_args) {};
 /**
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/from
  * @param {string|!IArrayLike<T>|!Iterable<T>} arrayLike
- * @param {function(this:S, (string|T), number): R=} opt_callback
+ * @param {function(this:S, (string|T), number): R=} opt_mapFn
  * @param {S=} opt_this
  * @return {!Array<R>}
  * @template T,S,R
  */
-Array.from = function(arrayLike, opt_callback, opt_this) {};
+Array.from = function(arrayLike, opt_mapFn, opt_this) {};
 
 
 /** @return {!IteratorIterable<number>} */
