@@ -1304,6 +1304,8 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     testErrorExterns(jsdoc + "goog.define('name.2');", INVALID_DEFINE_NAME_ERROR);
     testErrorExterns(jsdoc + "goog.define();", NULL_ARGUMENT_ERROR);
     testErrorExterns(jsdoc + "goog.define(5);", INVALID_ARGUMENT_ERROR);
+
+    testErrorExterns("/** @define {!number} */ goog.define('name');");
   }
 
   private void testErrorExterns(String externs) {

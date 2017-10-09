@@ -233,7 +233,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   private Node getAnyValueOfType(JSDocInfo jsdoc) {
     checkArgument(jsdoc.hasType());
     Node typeAst = jsdoc.getType().getRoot();
-    checkState(typeAst.isString());
+    if (typeAst.getToken() == Token.BANG) {
+      typeAst = typeAst.getLastChild();
+    }
+    checkState(typeAst.isString(), typeAst);
     switch (typeAst.getString()) {
       case "boolean":
         return IR.falseNode();
