@@ -842,6 +842,13 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           //   jscomp$inline();
           // }
           //
+          // or
+          //
+          // {
+          //   var jscomp$inline = function() {};
+          //   module.exports = jscomp$inline();
+          // }
+          //
           // If so, inline again
           if (newStatements.isNormalBlock()
               && newStatements.hasTwoChildren()
@@ -855,11 +862,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             String assignedName = null;
             if (expr.isAssign() && expr.getSecondChild().isCall()) {
               call = expr.getSecondChild();
-              if (expr.getFirstChild().isQualifiedName()) {
-                assignedName = modulePath.toModuleName() + "_iife" + compiler.getUniqueNameIdSupplier().get();
-              } else {
-                assignedName = expr.getFirstChild().getString();
-              }
+              assignedName = modulePath.toModuleName() + "_iife" + compiler.getUniqueNameIdSupplier().get();
             } else if (expr.isCall()) {
               call = expr;
             }
@@ -867,11 +870,10 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             if (call != null) {
               newStatements = mutator.mutate(
                   factoryLabel, inlinedFn, call, assignedName, false, false);
-              if (assignedName != null && expr.getFirstChild().isQualifiedName()) {
-                newStatements.addChildToFront(
-                    IR.var(IR.name(assignedName)).useSourceInfoFromForTree(fn));
-                expr.replaceChild(expr.getSecondChild(),
-                    IR.name(assignedName).useSourceInfoFromForTree(fn));
+              if (assignedName != null) {
+                Node newName = NodeUtil.newName(compiler, assignedName, fn, expr.getFirstChild().getQualifiedName());
+                newStatements.addChildToFront(IR.var(newName).useSourceInfoFromForTree(fn));
+                expr.replaceChild(expr.getSecondChild(), newName.cloneNode());
                 newStatements.addChildToBack(expr.getParent().detach());
               }
             }
@@ -882,12 +884,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             callRoot = callRoot.getParent();
           }
           if (callRoot.isExprResult()) {
-            callRoot = callRoot.getParent();
-
-            callRoot.detachChildren();
-            callRoot.addChildToFront(newStatements);
-            reportNestedScopesChanged(callRoot);
-            compiler.reportChangeToEnclosingScope(callRoot);
+            callRoot.replaceWith(newStatements);
+            reportNestedScopesChanged(newStatements);
+            compiler.reportChangeToEnclosingScope(newStatements);
             reportNestedScopesDeleted(enclosingFnCall);
           } else {
             parent.replaceChild(umdPattern.ifRoot, newNode);
