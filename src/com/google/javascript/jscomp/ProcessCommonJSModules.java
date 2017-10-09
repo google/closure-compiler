@@ -1302,12 +1302,12 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       checkState(n.isName() || n.isGetProp());
       checkState(n.getParent() != null);
       String importedModuleName = getModuleImportName(t, var.getNode());
-      String originalName = n.getOriginalQualifiedName();
+      String name = n.getQualifiedName();
 
       // Check if the name refers to a alias for a require('foo') import.
       if (importedModuleName != null && n != var.getNode()) {
         // Reference the imported name directly, rather than the alias
-        updateNameReference(t, n, originalName, importedModuleName, false);
+        updateNameReference(t, n, name, importedModuleName, false);
 
       } else if (allowFullRewrite) {
         String exportedName = getExportedName(t, n, var);
@@ -1327,20 +1327,20 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         // Check if the name is used as an export
         if (importedModuleName == null
             && exportedName != null
-            && !exportedName.equals(originalName)
+            && !exportedName.equals(name)
             && !var.isParam()) {
-          updateNameReference(t, n, originalName, exportedName, true);
+          updateNameReference(t, n, name, exportedName, true);
 
           // If it's a global name, rename it to prevent conflicts with other scripts
         } else if (var.isGlobal()) {
           String currentModuleName = getModuleName(t.getInput());
 
-          if (currentModuleName.equals(originalName)) {
+          if (currentModuleName.equals(name)) {
             return;
           }
 
           // refs to 'exports' are handled separately.
-          if (EXPORTS.equals(originalName)) {
+          if (EXPORTS.equals(name)) {
             return;
           }
 
@@ -1349,8 +1349,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             return;
           }
 
-          String newName = originalName + "$$" + currentModuleName;
-          updateNameReference(t, n, originalName, newName, false);
+          String newName = name + "$$" + currentModuleName;
+          updateNameReference(t, n, name, newName, false);
         }
       }
     }
