@@ -1468,7 +1468,7 @@ var Reflect = {};
 /**
  * @param {function(this: THIS, ...?): RESULT} targetFn
  * @param {THIS} thisArg
- * @param {!Array} argList
+ * @param {!Array<?>} argList
  * @return {RESULT}
  * @template THIS, RESULT
  * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Reflect/apply
@@ -1477,7 +1477,7 @@ Reflect.apply = function(targetFn, thisArg, argList) {};
 
 /**
  * @param {function(new: ?, ...?)} targetConstructorFn
- * @param {!Array} argList
+ * @param {!Array<?>} argList
  * @param {function(new: TARGET, ...?)=} opt_newTargetConstructorFn
  * @return {TARGET}
  * @template TARGET
