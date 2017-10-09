@@ -54,7 +54,7 @@ Geolocation.prototype.clearWatch = function(watchId) {};
 
 
 /**
- * @constructor
+ * @record
  * @see http://www.w3.org/TR/geolocation-API/#coordinates
  */
 function GeolocationCoordinates() {}
@@ -75,7 +75,7 @@ GeolocationCoordinates.prototype.speed;
 
 
 /**
- * @constructor
+ * @record
  * @see http://www.w3.org/TR/geolocation-API/#position
  */
 function GeolocationPosition() {}
@@ -99,7 +99,7 @@ GeolocationPositionOptions.prototype.timeout;
 
 
 /**
- * @constructor
+ * @record
  * @see http://www.w3.org/TR/geolocation-API/#position-error
  */
 function GeolocationPositionError() {}
