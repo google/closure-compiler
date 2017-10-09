@@ -130,7 +130,7 @@ ChromeEvent.prototype.removeRules = function(ruleIdentifiers, callback) {};
 
 /**
  * @see https://developer.chrome.com/extensions/events#type-Rule
- * @constructor
+ * @record
  */
 function Rule() {}
 
@@ -157,7 +157,7 @@ Rule.prototype.priority;
 
 /**
  * @see https://developer.chrome.com/extensions/events#type-UrlFilter
- * @constructor
+ * @record
  */
 function UrlFilter() {}
 
