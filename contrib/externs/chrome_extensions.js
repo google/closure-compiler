@@ -11271,7 +11271,15 @@ chrome.declarativeContent.ShowPageAction = function() {};
  * }}
  * @see https://developer.chrome.com/extensions/declarativeContent#type-SetIcon
  */
-chrome.declarativeContent.SetIcon;
+chrome.declarativeContent.SetIconLiteral;
+
+
+/**
+ * @constructor
+ * @param {?chrome.declarativeContent.SetIconLiteral=} literalValue
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-SetIcon
+ */
+chrome.declarativeContent.SetIcon = function(literalValue) {};
 
 
 /**
@@ -11283,7 +11291,15 @@ chrome.declarativeContent.SetIcon;
  * }}
  * @see https://developer.chrome.com/extensions/declarativeContent#type-RequestContentScript
  */
-chrome.declarativeContent.RequestContentScript;
+chrome.declarativeContent.RequestContentScriptLiteral;
+
+
+/**
+ * @constructor
+ * @param {?chrome.declarativeContent.RequestContentScriptLiteral=} literalValue
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-RequestContentScript
+ */
+chrome.declarativeContent.RequestContentScript = function(literalValue) {};
 
 
 /**
