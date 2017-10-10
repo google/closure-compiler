@@ -1616,8 +1616,8 @@ final class NameAnalyzer implements CompilerPass {
     if (parent.isClass() && n == parent.getFirstChild()) {
       checkState(n.isName());
       NameInformation nameInfo = new NameInformation(n.getString());
-      if (n.getNext().isName()) { // class it extends from
-        nameInfo.superclass = n.getNext().getString();
+      if (n.getNext().isQualifiedName()) { // class it extends from
+        nameInfo.superclass = n.getNext().getQualifiedName();
         nameInfo.onlyAffectsClassDef = true;
       }
       return nameInfo;
@@ -2032,12 +2032,10 @@ final class NameAnalyzer implements CompilerPass {
         // function nodes have no RHS
         return ImmutableList.of();
       case CALL:
-        {
-          // In our analyzable case, only the last argument to Object.defineProperties
-          // (the object literal) can have side-effects
-          checkState(isAnalyzableObjectDefinePropertiesDefinition(n));
-          return ImmutableList.of(n.getLastChild());
-        }
+        // In our analyzable case, only the last argument to Object.defineProperties
+        // (the object literal) can have side-effects
+        checkState(isAnalyzableObjectDefinePropertiesDefinition(n));
+        return ImmutableList.of(n.getLastChild());
       case NAME:
         {
           // parent is a var node.  RHS is the first child

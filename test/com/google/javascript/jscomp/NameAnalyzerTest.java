@@ -531,6 +531,18 @@ public final class NameAnalyzerTest extends CompilerTestCase {
     test("class D {} class C extends D {}" , "");
   }
 
+  /** @bug 67430253 */
+  public void testEs6ClassExtendsQualifiedName1() {
+    testSame("var ns = {}; ns.Class1 = class {}; class Class2 extends ns.Class1 {}; use(Class2);");
+  }
+
+  /** @bug 67430253 */
+  public void testEs6ClassExtendsQualifiedName2() {
+    test(
+        "var ns = {}; ns.Class1 = class {}; use(ns.Class1); class Class2 extends ns.Class1 {}",
+        "var ns = {}; ns.Class1 = class {}; use(ns.Class1);");
+  }
+
   public void testAssignmentToThisPrototype() {
     testSame("Function.prototype.inherits = function(parentCtor) {" +
              "  function tempCtor() {};" +
