@@ -36,11 +36,12 @@ import com.google.javascript.rhino.Token;
  *
  * @author chadkillingsworth@gmail.com (Chad Killingsworth)
  */
-public class FindModuleDependencies implements NodeTraversal.Callback {
+public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
   private final AbstractCompiler compiler;
   private final boolean supportsEs6Modules;
   private final boolean supportsCommonJsModules;
   private ModuleType moduleType = ModuleType.NONE;
+  private Scope dynamicImportScope = null;
 
   FindModuleDependencies(
       AbstractCompiler compiler, boolean supportsEs6Modules, boolean supportsCommonJsModules) {
@@ -76,7 +77,16 @@ public class FindModuleDependencies implements NodeTraversal.Callback {
   }
 
   @Override
-  public boolean shouldTraverse(NodeTraversal nodeTraversal, Node n, Node parent) {
+  public boolean shouldTraverse(NodeTraversal t, Node n, Node parent) {
+    if (supportsCommonJsModules
+        && n.isFunction()
+        && ProcessCommonJSModules.isCommonJsDynamicImportCallback(n,
+            compiler.getOptions().moduleResolutionMode)) {
+      if (dynamicImportScope == null) {
+        dynamicImportScope = t.getScope();
+      }
+    }
+
     return true;
   }
 
@@ -124,7 +134,11 @@ public class FindModuleDependencies implements NodeTraversal.Callback {
                 .resolveJsModule(path, n.getSourceFileName(), n.getLineno(), n.getCharno());
 
         if (modulePath != null) {
-          t.getInput().addOrderedRequire(modulePath.toModuleName());
+          if (dynamicImportScope != null) {
+            t.getInput().addDynamicRequire(modulePath.toModuleName());
+          } else {
+            t.getInput().addOrderedRequire(modulePath.toModuleName());
+          }
         }
       }
 
@@ -142,6 +156,16 @@ public class FindModuleDependencies implements NodeTraversal.Callback {
         t.getInput().addOrderedRequire("goog");
       }
       t.getInput().addOrderedRequire(namespace);
+    }
+  }
+
+  @Override
+  public void enterScope(NodeTraversal t) {}
+
+  @Override
+  public void exitScope(NodeTraversal t) {
+    if (t.getScope() == dynamicImportScope) {
+      dynamicImportScope = null;
     }
   }
 

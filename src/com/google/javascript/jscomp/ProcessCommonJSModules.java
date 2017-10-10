@@ -224,6 +224,43 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     return false;
   }
 
+  public boolean isCommonJsDynamicImportCallback(Node fnc) {
+    return isCommonJsDynamicImportCallback(fnc, compiler.getOptions().getModuleResolutionMode());
+  }
+
+  /**
+   * Recognize if a node is a dynamic module import. We recognize two forms:
+   *
+   *  - require.ensure([deps], function(require) {});
+   *  - __webpack_require__.(4); // only when the module resolution is WEBPACK
+   */
+  public static boolean isCommonJsDynamicImportCallback(Node fnc, ModuleLoader.ResolutionMode resolutionMode) {
+    if (resolutionMode != ModuleLoader.ResolutionMode.WEBPACK || !fnc.isFunction()) {
+      return false;
+    }
+
+    Node fncParams = NodeUtil.getFunctionParameters(fnc);
+    if (!(fncParams.hasOneChild() && fncParams.getFirstChild().getString().equals("require"))) {
+      return false;
+    }
+
+    if (!(fnc.getParent().isGetProp()
+        && fnc.getGrandparent() != null
+        && fnc.getGrandparent().isCall())) {
+      return false;
+    }
+    Node call = fnc.getGrandparent();
+    if (call.getPrevious().isGetProp()
+        && call.getPrevious().getFirstChild().isCall()
+        && call.getPrevious().getFirstFirstChild().isGetProp()
+        && call.getPrevious().getFirstFirstChild().isQualifiedName()
+        && call.getPrevious().getFirstFirstChild().matchesQualifiedName("__webpack_require__.e")) {
+      return true;
+    }
+
+    return false;
+  }
+
   /**
    * Information on a Universal Module Definition A UMD is an IF statement and a reference to which
    * branch contains the commonjs export
