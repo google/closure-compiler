@@ -15,6 +15,7 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
@@ -99,12 +100,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
       boolean isCommonJsModule = finder.isCommonJsModule();
       ImmutableList.Builder<ExportInfo> exports = ImmutableList.builder();
+      boolean needsRetraverse = rewriteWebpackEsmDynamicImports(finder.getWebpackEsmDynamicImports());
       if (isCommonJsModule || forceModuleDetection) {
         finder.reportModuleErrors();
 
         if (!finder.umdPatterns.isEmpty()) {
-          boolean needsRetraverse = finder.replaceUmdPatterns();
-
           // Removing the IIFE rewrites vars. We need to re-traverse
           // to get the new references.
           if (removeIIFEWrapper(n)) {
@@ -130,6 +130,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             exports.add(export);
           }
         }
+      } else if (needsRetraverse) {
+        finder = new FindImportsAndExports();
+        NodeTraversal.traverseEs6(compiler, n, finder);
       }
 
       NodeTraversal.traverseEs6(
@@ -182,6 +185,14 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           && requireCall.getSecondChild().isString()) {
         return true;
       }
+    } else if (requireCall.isCall()
+        && requireCall.getChildCount() == 3
+        && resolutionMode == ModuleLoader.ResolutionMode.WEBPACK
+        && requireCall.getFirstChild().isQualifiedName()
+        && requireCall.getFirstChild().matchesQualifiedName(WEBPACK_REQUIRE + ".bind")
+        && requireCall.getSecondChild().isNull()
+        && requireCall.getChildAtIndex(2).isNumber()) {
+      return true;
     }
     return false;
   }
@@ -191,9 +202,12 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
   }
 
   public static String getCommonJsImportPath(Node requireCall, ModuleLoader.ResolutionMode resolutionMode) {
-    if (resolutionMode == ModuleLoader.ResolutionMode.WEBPACK
-        && requireCall.getSecondChild().isNumber()) {
-      return String.valueOf(Double.valueOf(requireCall.getSecondChild().getDouble()).intValue());
+    if (resolutionMode == ModuleLoader.ResolutionMode.WEBPACK) {
+      if (requireCall.getSecondChild().isNumber()) {
+        return String.valueOf(Double.valueOf(requireCall.getSecondChild().getDouble()).intValue());
+      } else if (requireCall.getChildAtIndex(2).isNumber()) {
+        return String.valueOf(Double.valueOf(requireCall.getChildAtIndex(2).getDouble()).intValue());
+      }
     }
 
     return requireCall.getSecondChild().getString();
@@ -224,21 +238,25 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     return false;
   }
 
-  public boolean isCommonJsDynamicImportCallback(Node fnc) {
-    return isCommonJsDynamicImportCallback(fnc, compiler.getOptions().getModuleResolutionMode());
-  }
-
   /**
    * Recognize if a node is a dynamic module import. We recognize two forms:
    *
    *  - require.ensure([deps], function(require) {});
    *  - __webpack_require__.(4); // only when the module resolution is WEBPACK
    */
-  public static boolean isCommonJsDynamicImportCallback(Node fnc, ModuleLoader.ResolutionMode resolutionMode) {
-    if (resolutionMode != ModuleLoader.ResolutionMode.WEBPACK || !fnc.isFunction()) {
+  public static boolean isCommonJsDynamicImportCallback(Node n, ModuleLoader.ResolutionMode resolutionMode) {
+    if (resolutionMode != ModuleLoader.ResolutionMode.WEBPACK) {
       return false;
     }
+    if (n.isFunction() && isWebpackRequireEnsureCallback(n)) {
+      return true;
+    }
 
+    return false;
+  }
+
+  private static boolean isWebpackRequireEnsureCallback(Node fnc) {
+    checkArgument(fnc.isFunction());
     Node fncParams = NodeUtil.getFunctionParameters(fnc);
     if (!(fncParams.hasOneChild() && fncParams.getFirstChild().getString().equals("require"))) {
       return false;
@@ -458,6 +476,59 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     }
   }
 
+  private boolean rewriteWebpackEsmDynamicImports(List<Node> calls) {
+    if (calls.size() == 0) {
+      return false;
+    }
+    for (Node call : calls) {
+      Node array = call.getSecondChild();
+      checkState(array.isArrayLit());
+      ArrayList<String> moduleImportPaths = new ArrayList<>();
+      for (Node promiseCall = array.getFirstChild(); promiseCall != null;
+           promiseCall = promiseCall.getNext()) {
+        moduleImportPaths.add(getCommonJsImportPath(promiseCall.getSecondChild()));
+        Node importCall = promiseCall.getFirstFirstChild().detach();
+        promiseCall.replaceWith(importCall);
+        reportNestedScopesDeleted(promiseCall);
+        promiseCall = importCall;
+      }
+
+      if (!(call.getParent().isGetProp()
+          && call.getParent().getNext() != null
+          && call.getParent().getNext().isFunction())) {
+        continue;
+      }
+
+      Node fncParams = NodeUtil.getFunctionParameters(call.getParent().getNext());
+      Node fncBody = NodeUtil.getFunctionBody(call.getParent().getNext());
+      Node script = NodeUtil.getEnclosingScript(call);
+      CompilerInput input = compiler.getInput(script.getInputId());
+      int currentModuleNameIndex = 0;
+      for (Node currentParam = fncParams.getLastChild();
+           currentParam != null && moduleImportPaths.size() > currentModuleNameIndex;
+           currentParam = currentParam.getParent().getFirstChild() == currentParam ?
+               null : currentParam.getPrevious(), currentModuleNameIndex++) {
+
+        // We avoid using the getModuleName helper method because
+        // ESM Dynamic imports always import the module export object - never the default property
+        ModulePath moduleImportPath =
+            input
+                .getPath()
+                .resolveJsModule(
+                    moduleImportPaths.get(currentModuleNameIndex),
+                    currentParam.getSourceFileName(),
+                    currentParam.getLineno(),
+                    currentParam.getCharno());
+        fncBody.addChildToFront(
+            IR.var(currentParam.cloneNode(), IR.name(moduleImportPath.toModuleName()))
+                .useSourceInfoIfMissingFrom(currentParam));
+      }
+      fncParams.detachChildren();
+      compiler.reportChangeToChangeScope(call.getParent().getNext());
+    }
+    return true;
+  }
+
   /**
    * Traverse the script. Find all references to CommonJS require (import) and module.exports or
    * export statements. Rewrites any require calls to reference the rewritten module name.
@@ -467,14 +538,13 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     private Node script = null;
 
     boolean isCommonJsModule() {
-      return (exports.size() > 0 || moduleExports.size() > 0 || webpackExports.size() > 0)
-          && !hasGoogProvideOrModule;
+      return (exports.size() > 0 || moduleExports.size() > 0) && !hasGoogProvideOrModule;
     }
 
     List<UmdPattern> umdPatterns = new ArrayList<>();
     List<ExportInfo> moduleExports = new ArrayList<>();
     List<ExportInfo> exports = new ArrayList<>();
-    List<ExportInfo> webpackExports = new ArrayList<>();
+    List<Node> webpackEsmDynamicImports = new ArrayList<>();
     List<JSError> errors = new ArrayList<>();
 
     public List<ExportInfo> getModuleExports() {
@@ -483,6 +553,10 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
     public List<ExportInfo> getExports() {
       return ImmutableList.copyOf(exports);
+    }
+
+    public List<Node> getWebpackEsmDynamicImports() {
+      return ImmutableList.copyOf(webpackEsmDynamicImports);
     }
 
     @Override
@@ -577,6 +651,40 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         }
       } else if (n.isThis() && n.getParent().isGetProp() && t.inGlobalScope()) {
         exports.add(new ExportInfo(n, t.getScope()));
+      }
+
+      // Look for the webpack esm dynamic import form
+      //
+      // Promise.all([__webpack_require.e(0).then(__webpack_require__.bind(null, path)])
+      //   .then(importObj => {})
+      if (n.isCall()
+          && compiler.getOptions().moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK
+          && n.getFirstChild().isGetProp()
+          && n.getFirstChild().matchesQualifiedName("Promise.all")
+          && n.getFirstChild().hasTwoChildren()
+          && n.getSecondChild().isArrayLit()) {
+        Node array = n.getSecondChild();
+        boolean isWebpackEsmDynamicImport = true;
+        for (Node promise = array.getFirstChild(); promise != null; promise = promise.getNext()) {
+          if (!(promise.isCall()
+              && promise.hasTwoChildren()
+              && promise.getFirstChild().isGetProp()
+              && promise.getFirstFirstChild().isCall()
+              && promise.getFirstFirstChild().getFirstChild().matchesQualifiedName(WEBPACK_REQUIRE + ".e")
+              && promise.getFirstChild().getSecondChild().isString()
+              && promise.getFirstChild().getSecondChild().getString().equals("then")
+              && promise.getSecondChild().isCall()
+              && promise.getSecondChild().getChildCount() == 3
+              && promise.getSecondChild().getFirstChild().matchesQualifiedName(WEBPACK_REQUIRE + ".bind")
+              && promise.getSecondChild().getSecondChild().isNull()
+              && promise.getSecondChild().getChildAtIndex(2).isNumber())) {
+            isWebpackEsmDynamicImport = false;
+            break;
+          }
+        }
+        if (isWebpackEsmDynamicImport) {
+          webpackEsmDynamicImports.add(n);
+        }
       }
 
       if (isCommonJsImport(n)) {
