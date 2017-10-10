@@ -251,17 +251,15 @@ public class PolymerPassTest extends TypeICompilerTestCase {
   }
 
   public void testPathAssignmentTarget() {
-    // TODO(sdh): Figure out why `x` is not a namespace in the root scope
-    this.mode = TypeInferenceMode.OTI_ONLY;
     test(
         LINE_JOINER.join(
-            "/** const */ var x = {};",
+            "/** @const */ var x = {};",
             "x.Z = Polymer({",
             "  is: 'x-element',",
             "});"),
 
         LINE_JOINER.join(
-            "/** const */ var x = {};",
+            "/** @const */ var x = {};",
             "/** @constructor @extends {PolymerElement} @implements {Polymerx_ZInterface} */",
             "x.Z = function() {};",
             "x.Z = Polymer(/** @lends {x.Z.prototype} */ {",
@@ -309,11 +307,9 @@ public class PolymerPassTest extends TypeICompilerTestCase {
    * type to the global namespace.
    */
   public void testIIFEExtractionInGlobalNamespace() {
-    // TODO(sdh): Figure out why `x` is not a namespace in the root scope
-    this.mode = TypeInferenceMode.OTI_ONLY;
     test(
         LINE_JOINER.join(
-            "/** const */ var x = {};",
+            "/** @const */ var x = {};",
             "(function() {",
             "  x.Z = Polymer({",
             "    is: 'x-element',",
@@ -322,7 +318,7 @@ public class PolymerPassTest extends TypeICompilerTestCase {
             "})()"),
 
         LINE_JOINER.join(
-            "/** const */ var x = {};",
+            "/** @const */ var x = {};",
             "(function() {",
             "  /** @constructor @extends {PolymerElement} @implements {Polymerx_ZInterface}*/",
             "  x.Z = function() {};",
