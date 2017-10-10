@@ -386,9 +386,13 @@ public final class DefaultPassConfig extends PassConfig {
       } else {
         TranspilationPasses.addEs6LatePasses(checks);
       }
-      if (options.rewritePolyfills) {
-        TranspilationPasses.addRewritePolyfillPass(checks);
-      }
+    }
+
+    if (options.rewritePolyfills) {
+      TranspilationPasses.addRewritePolyfillPass(checks);
+    }
+
+    if (options.needsTranspilationFrom(ES6)) {
       if (options.getTypeCheckEs6Natively()) {
         checks.add(setFeatureSet(FeatureSet.NTI_SUPPORTED));
       } else {
@@ -2566,6 +2570,11 @@ public final class DefaultPassConfig extends PassConfig {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
       return new RemoveUnusedPolyfills(compiler);
+    }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8_MODULES;
     }
   };
 

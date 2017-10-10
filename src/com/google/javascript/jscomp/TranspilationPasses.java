@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8;
+import static com.google.javascript.jscomp.parsing.parser.FeatureSet.ES8_MODULES;
 
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.PassFactory.HotSwapPassFactory;
@@ -225,7 +226,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8;
+          return ES8_MODULES;
         }
       };
 

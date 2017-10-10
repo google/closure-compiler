@@ -468,6 +468,22 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(createCompilerOptions(), "function f() { alert(x); for (var x in []) {} }");
   }
 
+  public void testArrayValuesIsPolyfilledForEs2015Out() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setTypeBasedOptimizationOptions(options);
+    options.setRewritePolyfills(true);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+    Compiler compiler = compile(
+        options,
+        "for (const x of [1, 2, 3].values()) { alert(x); }");
+    assertThat(compiler.getResult().errors).isEmpty();
+    assertThat(compiler.getResult().warnings).isEmpty();
+    assertThat(compiler.getResult().warnings).isEmpty();
+    assertThat(compiler.toSource()).contains("Array.prototype.values");
+  }
+
   public void testWindowIsTypedEs6() {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
