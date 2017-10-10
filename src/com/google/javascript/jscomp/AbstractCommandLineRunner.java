@@ -2095,7 +2095,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     private CompilerOptions.DevMode jscompDevMode = CompilerOptions.DevMode.OFF;
 
-    /** Turns on extra sanity checks */
+    /** Turns on extra validity checks */
     public CommandLineConfig setJscompDevMode(CompilerOptions.DevMode jscompDevMode) {
       this.jscompDevMode = jscompDevMode;
       return this;

@@ -125,8 +125,7 @@ public final class JsFunctionParser extends JsFileLineParser {
     boolean hasFunctions = false;
     boolean parseLine = false;
 
-    // Quick sanity check that will catch most cases. This is a performance
-    // win for people with a lot of JS.
+    // Quick check that will catch most cases. This is a performance win for teams with a lot of JS.
     for (String function : functionsToParse) {
       if (line.contains(function)) {
         parseLine = true;

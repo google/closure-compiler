@@ -334,9 +334,8 @@ public class CodeGenerator {
         {
           checkState(childCount == 1);
 
-          // It's important to our sanity checker that the code
-          // we print produces the same AST as the code we parse back.
-          // NEG is a weird case because Rhino parses "- -2" as "2".
+          // It's important to our validity checker that the code we print produces the same AST as
+          // the code we parse back. NEG is a weird case because Rhino parses "- -2" as "2".
           if (n.getFirstChild().isNumber()) {
             cc.addNumber(-n.getFirstChild().getDouble(), n.getFirstChild());
           } else {

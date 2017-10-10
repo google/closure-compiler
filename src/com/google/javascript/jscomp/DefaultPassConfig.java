@@ -940,8 +940,8 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Safety checks
-    passes.add(sanityCheckAst);
-    passes.add(sanityCheckVars);
+    passes.add(checkAstValidity);
+    passes.add(varCheckValidity);
 
     // Raise to ES6, if allowed
     if (options.getLanguageOut().toFeatureSet().contains(FeatureSet.ES6)) {
@@ -3140,9 +3140,8 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  /** Checks that all variables are defined. */
-  private final PassFactory sanityCheckAst =
-      new PassFactory("sanityCheckAst", true) {
+  private final PassFactory checkAstValidity =
+      new PassFactory("checkAstValidity", true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new AstValidator(compiler);
@@ -3155,8 +3154,8 @@ public final class DefaultPassConfig extends PassConfig {
       };
 
   /** Checks that all variables are defined. */
-  private final PassFactory sanityCheckVars =
-      new PassFactory("sanityCheckVars", true) {
+  private final PassFactory varCheckValidity =
+      new PassFactory("varCheckValidity", true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new VarCheck(compiler, true);

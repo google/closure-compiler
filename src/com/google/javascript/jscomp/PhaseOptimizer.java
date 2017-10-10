@@ -43,7 +43,7 @@ class PhaseOptimizer implements CompilerPass {
   private final PerformanceTracker tracker;
   private final List<CompilerPass> passes;
   private boolean inLoop;
-  private PassFactory sanityCheck;
+  private PassFactory validityCheck;
   private boolean printAstHashcodes = false;
 
   private double progress = 0.0;
@@ -64,7 +64,7 @@ class PhaseOptimizer implements CompilerPass {
 
   private final boolean useSizeHeuristicToStopOptimizationLoop;
 
-  // Used for sanity checking passes
+  // Checks that passes have reported code changes correctly.
   private ChangeVerifier changeVerifier;
 
   /**
@@ -191,10 +191,10 @@ class PhaseOptimizer implements CompilerPass {
   }
 
   /**
-   * Adds a sanity checker to be run after every pass. Intended for development.
+   * Adds a checker to be run after every pass. Intended for development.
    */
-  void setSanityCheck(PassFactory sanityCheck) {
-    this.sanityCheck = sanityCheck;
+  void setValidityCheck(PassFactory validityCheck) {
+    this.validityCheck = validityCheck;
     this.changeVerifier = new ChangeVerifier(compiler).snapshot(jsRoot);
   }
 
@@ -244,17 +244,17 @@ class PhaseOptimizer implements CompilerPass {
   }
 
   /**
-   * Runs the sanity check if it is available.
+   * Runs the validity check if it is available.
    */
-  private void maybeSanityCheck(String passName, Node externs, Node root) {
-    if (sanityCheck == null) {
+  private void maybeRunValidityCheck(String passName, Node externs, Node root) {
+    if (validityCheck == null) {
       return;
     }
     try {
-      sanityCheck.create(compiler).process(externs, root);
+      validityCheck.create(compiler).process(externs, root);
       changeVerifier.checkRecordedChanges(passName, jsRoot);
     } catch (Exception e) {
-      throw new IllegalStateException("Sanity check failed for pass: " + passName, e);
+      throw new IllegalStateException("Validity checks failed for pass: " + passName, e);
     }
   }
 
@@ -286,8 +286,8 @@ class PhaseOptimizer implements CompilerPass {
       }
 
       logger.fine("Running pass " + name);
-      if (sanityCheck != null) {
-        // Before running the pass, clone the AST so you can sanity-check the
+      if (validityCheck != null) {
+        // Before running the pass, clone the AST so you can check the
         // changed AST against the clone after the pass finishes.
         changeVerifier = new ChangeVerifier(compiler).snapshot(jsRoot);
       }
@@ -320,11 +320,11 @@ class PhaseOptimizer implements CompilerPass {
           tracker.recordPassStop(name, traceRuntime);
         }
         maybePrintAstHashcodes(name, root);
-        maybeSanityCheck(name, externs, root);
+        maybeRunValidityCheck(name, externs, root);
       } catch (IllegalStateException e) {
         // TODO(johnlenz): Remove this once the normalization checks report
         // errors instead of exceptions.
-        throw new RuntimeException("Sanity check failed for " + name, e);
+        throw new RuntimeException("Validity check failed for " + name, e);
       }
     }
 

@@ -853,7 +853,7 @@ class InlineFunctions implements CompilerPass {
     }
   }
 
-  /** Sanity check to verify, that expression rewriting didn't make a call inaccessible. */
+  /** Check to verify that expression rewriting didn't make a call inaccessible. */
   void verifyAllReferencesInlined(FunctionState functionState) {
     for (Reference ref : functionState.getReferences()) {
       if (!ref.inlined) {

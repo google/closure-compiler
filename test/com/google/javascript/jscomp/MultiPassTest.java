@@ -24,7 +24,7 @@ import java.util.List;
 
 /**
  * This file contains the only tests that use the infrastructure in
- * CompilerTestCase to run multiple passes and do sanity checks. The other files
+ * CompilerTestCase to run multiple passes and do validity checks. The other files
  * that use CompilerTestCase unit test a single pass.
  *
  * @author dimvar@google.com (Dimitris Vardoulakis)
@@ -45,11 +45,11 @@ public final class MultiPassTest extends CompilerTestCase {
   protected CompilerPass getProcessor(Compiler compiler) {
     PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);
     phaseopt.consume(passes);
-    phaseopt.setSanityCheck(
-        new PassFactory("sanityCheck", false) {
+    phaseopt.setValidityCheck(
+        new PassFactory("validityCheck", false) {
           @Override
           protected CompilerPass create(AbstractCompiler compiler) {
-            return new SanityCheck(compiler);
+            return new ValidityCheck(compiler);
           }
         });
     compiler.setPhaseOptimizer(phaseopt);

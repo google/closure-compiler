@@ -902,7 +902,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     if (options.devMode == DevMode.START_AND_END) {
-      runSanityCheck();
+      runValidityCheck();
     }
     setProgress(1.0, "recordFunctionInformation");
 
@@ -1055,7 +1055,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private PhaseOptimizer createPhaseOptimizer() {
     PhaseOptimizer phaseOptimizer = new PhaseOptimizer(this, tracker);
     if (options.devMode == DevMode.EVERY_PASS) {
-      phaseOptimizer.setSanityCheck(sanityCheck);
+      phaseOptimizer.setValidityCheck(validityCheck);
     }
     if (options.getCheckDeterminism()) {
       phaseOptimizer.setPrintAstHashcodes(true);
@@ -1090,22 +1090,21 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     p.process(externsRoot, jsRoot);
   }
 
-  private final PassFactory sanityCheck =
-      new PassFactory("sanityCheck", false) {
+  private final PassFactory validityCheck = new PassFactory("validityCheck", false) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      return new SanityCheck(compiler);
+      return new ValidityCheck(compiler);
     }
   };
 
-  private void maybeSanityCheck() {
+  private void maybeRunValidityCheck() {
     if (options.devMode == DevMode.EVERY_PASS) {
-      runSanityCheck();
+      runValidityCheck();
     }
   }
 
-  private void runSanityCheck() {
-    sanityCheck.create(this).process(externsRoot, jsRoot);
+  private void runValidityCheck() {
+    validityCheck.create(this).process(externsRoot, jsRoot);
   }
 
   /**
@@ -1147,7 +1146,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     currentPassName = null;
     currentTracer = null;
 
-    maybeSanityCheck();
+    maybeRunValidityCheck();
   }
 
   @Override
@@ -1811,7 +1810,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         }
 
         if (devMode) {
-          runSanityCheck();
+          runValidityCheck();
           if (hasErrors()) {
             return null;
           }

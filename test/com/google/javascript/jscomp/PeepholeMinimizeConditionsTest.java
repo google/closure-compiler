@@ -198,13 +198,13 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
     fold("function f(){if(x)y%=1;else y%=2;}", "function f(){y%=x?1:2}");
     fold("function f(){if(x)y|=1;else y|=2;}", "function f(){y|=x?1:2}");
 
-    // sanity check, don't fold if the 2 ops don't match
+    // Don't fold if the 2 ops don't match.
     foldSame("function f(){x ? y-=1 : y+=2}");
 
-    // sanity check, don't fold if the 2 LHS don't match
+    // Don't fold if the 2 LHS don't match.
     foldSame("function f(){x ? y-=1 : z-=1}");
 
-    // sanity check, don't fold if there are potential effects
+    // Don't fold if there are potential effects.
     foldSame("function f(){x ? y().a=3 : y().a=4}");
   }
 
@@ -407,7 +407,6 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
     // These test tryMinimizeCondition
     fold("for(;!!x;) foo()", "for(;x;) foo()");
 
-    // sanity check
     foldSame("for(a in b) foo()");
     foldSame("for(a in {}) foo()");
     foldSame("for(a in []) foo()");

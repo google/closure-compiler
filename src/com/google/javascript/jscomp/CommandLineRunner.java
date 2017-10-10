@@ -177,8 +177,7 @@ public class CommandLineRunner extends
         usage = "Assume input sources are to run in strict mode.")
     private boolean strictModeInput = true;
 
-    // Turn on (very slow) extra sanity checks for use when modifying the
-    // compiler.
+    // Turn on (very slow) extra validity checks for use when modifying the compiler.
     @Option(
       name = "--jscomp_dev_mode",
       hidden = true,

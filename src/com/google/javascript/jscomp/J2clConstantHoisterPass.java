@@ -138,7 +138,6 @@ public class J2clConstantHoisterPass implements CompilerPass {
     }
     declarationInClass.putBooleanProp(Node.IS_CONSTANT_VAR, true);
 
-    // Sanity check
     checkState(NodeUtil.isLiteralValue(declarationAssignedValue, false /* includeFunctions */));
   }
 

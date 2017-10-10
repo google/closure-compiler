@@ -1450,7 +1450,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   }
 
   // Currently this crashes the compiler because it erroneoursly removes var x
-  // and later a sanity check fails.
+  // and later a validity check fails.
   public void testAssignWithCall2() {
     test("var fun, x; (123, fun = function(){ x; })();",
         "(123, function(){ x; })();");

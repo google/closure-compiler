@@ -252,7 +252,7 @@ public class CompilerOptions implements Serializable {
   boolean skipNonTranspilationPasses;
 
   /**
-   * Configures the compiler to run expensive sanity checks after
+   * Configures the compiler to run expensive validity checks after
    * every pass. Only intended for internal development.
    */
   DevMode devMode;
@@ -3145,10 +3145,10 @@ public class CompilerOptions implements Serializable {
     }
   }
 
-  /** When to do the extra sanity checks */
+  /** When to do the extra validity checks */
   public static enum DevMode {
     /**
-     * Don't do any extra sanity checks.
+     * Don't do any extra checks.
      */
     OFF,
 

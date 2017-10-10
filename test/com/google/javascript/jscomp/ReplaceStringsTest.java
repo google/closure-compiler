@@ -140,7 +140,7 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
         new CollapseProperties(compiler).process(externs, js);
         if (runDisambiguateProperties) {
           SourceInformationAnnotator sia =
-              new SourceInformationAnnotator("test", false /* doSanityChecks */);
+              new SourceInformationAnnotator("test", false /* checkAnnotated */);
           NodeTraversal.traverseEs6(compiler, js, sia);
 
           new DisambiguateProperties(compiler, propertiesToErrorFor).process(externs, js);

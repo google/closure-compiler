@@ -25,7 +25,7 @@ import com.google.javascript.rhino.Token;
 /**
  * @author nicksantos@google.com (Nick Santos)
  */
-public final class SanityCheckTest extends CompilerTestCase {
+public final class ValidityCheckTest extends CompilerTestCase {
 
   private CompilerPass otherPass = null;
 
@@ -43,7 +43,7 @@ public final class SanityCheckTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override public void process(Node externs, Node root) {
         otherPass.process(externs, root);
-        (new SanityCheck(compiler)).process(externs, root);
+        (new ValidityCheck(compiler)).process(externs, root);
       }
     };
   }
