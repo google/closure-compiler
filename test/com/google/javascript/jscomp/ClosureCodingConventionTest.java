@@ -103,7 +103,7 @@ public final class ClosureCodingConventionTest extends TestCase {
   }
 
   public void testInheritanceDetection3() {
-    assertDefinesClasses("A.inherits(B);", "A", "B");
+    assertNotClassDefining("A.inherits(B);");
   }
 
   public void testInheritanceDetection4() {
@@ -111,7 +111,7 @@ public final class ClosureCodingConventionTest extends TestCase {
   }
 
   public void testInheritanceDetection5() {
-    assertDefinesClasses("goog.A.inherits(goog.B);", "goog.A", "goog.B");
+    assertNotClassDefining("goog.A.inherits(goog.B);");
   }
 
   public void testInheritanceDetection6() {
@@ -127,8 +127,7 @@ public final class ClosureCodingConventionTest extends TestCase {
   }
 
   public void testInheritanceDetection9() {
-    assertDefinesClasses("A.mixin(B.prototype);",
-        "A", "B");
+    assertNotClassDefining("A.mixin(B.prototype);");
   }
 
   public void testInheritanceDetection10() {

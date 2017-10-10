@@ -589,40 +589,30 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testInherits1() {
-    test("var a = {}; var b = {}; b.inherits(a)", "");
-  }
-
-  public void testInherits2() {
     test("var a = {}; var b = {}; var goog = {}; goog.inherits(b, a)", "");
   }
 
-  public void testInherits3() {
+  public void testInherits2() {
     testSame("var a = {}; this.b = {}; b.inherits(a);");
   }
 
-  public void testInherits4() {
+  public void testInherits3() {
     testSame("var a = {}; this.b = {}; var goog = {}; goog.inherits(b, a);");
   }
 
-  public void testInherits5() {
-    test("this.a = {}; var b = {}; b.inherits(a);",
-         "this.a = {}");
-  }
-
-  public void testInherits6() {
+  public void testInherits4() {
     test("this.a = {}; var b = {}; var goog = {}; goog.inherits(b, a);",
          "this.a = {}");
   }
 
-  public void testInherits7() {
-    testSame("var a = {}; this.b = {}; var goog = {};" +
-        " goog.inherits = function() {}; goog.inherits(b, a);");
-  }
-
-  public void testInherits8() {
-    // Make sure that exceptions aren't thrown if inherits() is used as
-    // an R-value
-    test("this.a = {}; var b = {}; var c = b.inherits(a);", "this.a = {};");
+  public void testInherits5() {
+    testSame(
+        LINE_JOINER.join(
+            "var a = {};",
+            "this.b = {};",
+            "var goog = {};",
+            "goog.inherits = function() {};",
+            "goog.inherits(b, a);"));
   }
 
   public void testMixin1() {

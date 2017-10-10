@@ -115,18 +115,12 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
       Node subclass = null;
       Node superclass = callNode.getLastChild();
 
-      // There are six possible syntaxes for a class-defining method:
-      // SubClass.inherits(SuperClass)
+      // There are four possible syntaxes for a class-defining method:
       // goog.inherits(SubClass, SuperClass)
       // goog$inherits(SubClass, SuperClass)
-      // SubClass.mixin(SuperClass.prototype)
       // goog.mixin(SubClass.prototype, SuperClass.prototype)
       // goog$mixin(SubClass.prototype, SuperClass.prototype)
-      boolean isDeprecatedCall = callNode.hasTwoChildren() && callName.isGetProp();
-      if (isDeprecatedCall) {
-        // SubClass.inherits(SuperClass)
-        subclass = callName.getFirstChild();
-      } else if (callNode.getChildCount() == 3) {
+      if (callNode.hasXChildren(3)) {
         // goog.inherits(SubClass, SuperClass)
         subclass = callName.getNext();
       } else {
@@ -139,13 +133,11 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
         if (!endsWithPrototype(superclass)) {
           return null;
         }
-        if (!isDeprecatedCall) {
-          if (!endsWithPrototype(subclass)) {
-            return null;
-          }
-          // Strip off the prototype from the name.
-          subclass = subclass.getFirstChild();
+        if (!endsWithPrototype(subclass)) {
+          return null;
         }
+        // Strip off the prototype from the name.
+        subclass = subclass.getFirstChild();
         superclass = superclass.getFirstChild();
       }
 
@@ -153,9 +145,9 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
       // isn't a real class name. This prevents us from
       // doing something weird in cases like:
       // goog.inherits(MySubClass, cond ? SuperClass1 : BaseClass2)
-      if (subclass != null &&
-          subclass.isUnscopedQualifiedName() &&
-          superclass.isUnscopedQualifiedName()) {
+      if (subclass != null
+          && subclass.isUnscopedQualifiedName()
+          && superclass.isUnscopedQualifiedName()) {
         return new SubclassRelationship(type, subclass, superclass);
       }
     }

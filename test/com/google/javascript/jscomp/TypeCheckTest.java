@@ -3716,16 +3716,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   public void testGoodExtends7() throws Exception {
-    testFunctionType(
-        "Function.prototype.inherits = function(x) {};" +
-        "/** @constructor */function base() {}\n" +
-        "/** @extends {base}\n * @constructor */function derived() {}\n" +
-        "derived.inherits(base);",
-        "(new derived).constructor",
-        "function(new:derived, ...?): ?");
-  }
-
-  public void testGoodExtends8() throws Exception {
     testTypes("/** @constructor \n @extends {Base} */ function Sub() {}" +
         "/** @return {number} */ function f() { return (new Sub()).foo; }" +
         "/** @constructor */ function Base() {}" +
@@ -3735,7 +3725,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
-  public void testGoodExtends9() throws Exception {
+  public void testGoodExtends8() throws Exception {
     testTypes(
         "/** @constructor */ function Super() {}" +
         "Super.prototype.foo = function() {};" +
@@ -3744,7 +3734,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @override */ Sub.prototype.foo = function() {};");
   }
 
-  public void testGoodExtends10() throws Exception {
+  public void testGoodExtends9() throws Exception {
     testTypes(
         "/** @constructor */ function Super() {}" +
         "/** @constructor \n * @extends {Super} */ function Sub() {}" +
@@ -3752,7 +3742,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "/** @return {Super} */ function foo() { return new Sub(); }");
   }
 
-  public void testGoodExtends11() throws Exception {
+  public void testGoodExtends10() throws Exception {
     testTypes(
         "/** @constructor */ function Super() {}" +
         "/** @param {boolean} x */ Super.prototype.foo = function(x) {};" +
@@ -3765,7 +3755,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "required: boolean");
   }
 
-  public void testGoodExtends12() throws Exception {
+  public void testGoodExtends11() throws Exception {
     testTypes(
         "/** @constructor \n * @extends {Super} */ function Sub() {}" +
         "/** @constructor \n * @extends {Sub} */ function Sub2() {}" +
@@ -3774,7 +3764,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "foo(new Sub2());");
   }
 
-  public void testGoodExtends13() throws Exception {
+  public void testGoodExtends12() throws Exception {
     testTypes(
         "/** @constructor \n * @extends {B}  */ function C() {}" +
         "/** @constructor \n * @extends {D}  */ function E() {}" +
@@ -3787,7 +3777,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "required: number");
   }
 
-  public void testGoodExtends14() throws Exception {
+  public void testGoodExtends13() throws Exception {
     testTypes(
         CLOSURE_DEFS +
         "/** @param {Function} f */ function g(f) {" +
@@ -3797,7 +3787,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "}");
   }
 
-  public void testGoodExtends15() throws Exception {
+  public void testGoodExtends14() throws Exception {
     testTypes(
         CLOSURE_DEFS +
         "/** @constructor */ function OldType() {}" +
@@ -3815,7 +3805,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Property foo never defined on OldType.prototype");
   }
 
-  public void testGoodExtends16() throws Exception {
+  public void testGoodExtends15() throws Exception {
     testTypes(
         CLOSURE_DEFS +
         "/** @param {Function} f */ function g(f) {" +
@@ -3825,18 +3815,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "}");
   }
 
-  public void testGoodExtends17() throws Exception {
-    testFunctionType(
-        "Function.prototype.inherits = function(x) {};" +
-        "/** @constructor */function base() {}\n" +
-        "/** @param {number} x */ base.prototype.bar = function(x) {};\n" +
-        "/** @extends {base}\n * @constructor */function derived() {}\n" +
-        "derived.inherits(base);",
-        "(new derived).constructor.prototype.bar",
-        "function(this:base, number): undefined");
-  }
-
-  public void testGoodExtends18() throws Exception {
+  public void testGoodExtends16() throws Exception {
     testTypes(
         CLOSURE_DEFS +
         "/** @constructor\n" +
@@ -3849,7 +3828,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "(new D())");
   }
 
-  public void testGoodExtends19() throws Exception {
+  public void testGoodExtends17() throws Exception {
     testTypes(
         CLOSURE_DEFS +
         "/** @constructor */\n" +
@@ -3878,7 +3857,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "required: string");
   }
 
-  public void testGoodExtends20() throws Exception {
+  public void testGoodExtends18() throws Exception {
     testTypes(""
         + "/** @interface */\n"
         + "var MyInterface = function() {};\n"
@@ -3894,7 +3873,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         + "}");
   }
 
-  public void testGoodExtends21() throws Exception {
+  public void testGoodExtends19() throws Exception {
     testTypes(""
         + "/** @constructor */\n"
         + "var MyType = function() {};\n"
@@ -4024,24 +4003,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Bar.mixin = function(y){};" +
         "Bar.inherits(Foo);\n" +
         "Bar.mixin(Baz);\n");
-  }
-
-  public void testSuperclassMismatch1() throws Exception {
-    compiler.getOptions().setCodingConvention(new GoogleCodingConvention());
-    testTypes("/** @constructor */ var Foo = function() {};\n" +
-        "/** @constructor \n @extends Object */ var Bar = function() {};\n" +
-        "Bar.inherits = function(x){};" +
-        "Bar.inherits(Foo);\n",
-        "Missing @extends tag on type Bar");
-  }
-
-  public void testSuperclassMismatch2() throws Exception {
-    compiler.getOptions().setCodingConvention(new GoogleCodingConvention());
-    testTypes("/** @constructor */ var Foo = function(){};\n" +
-        "/** @constructor */ var Bar = function(){};\n" +
-        "Bar.inherits = function(x){};" +
-        "Bar.inherits(Foo);",
-        "Missing @extends tag on type Bar");
   }
 
   public void testSuperClassDefinedAfterSubClass1() throws Exception {

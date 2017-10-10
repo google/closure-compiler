@@ -894,21 +894,13 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testRemoveInheritedClass8() {
-    test("/**@constructor*/function a(){}" +
-            "/**@constructor*/function b(){}" +
-            "/**@constructor*/function c(){}" +
-            "b.inherits(a);c.mixin(b.prototype)",
-        "");
-  }
-
-  public void testRemoveInheritedClass9() {
     testSame("/**@constructor*/function a(){}" +
         "/**@constructor*/function b(){}" +
         "/**@constructor*/function c(){}" +
         "b.inherits(a);c.mixin(b.prototype);new c");
   }
 
-  public void testRemoveInheritedClass10() {
+  public void testRemoveInheritedClass9() {
     test(
         LINE_JOINER.join(
             "function goog$inherits() {}",
@@ -924,7 +916,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
             "new a; new b"));
   }
 
-  public void testRemoveInheritedClass11() {
+  public void testRemoveInheritedClass10() {
     testSame("function goog$inherits(){}" +
         "function goog$mixin(a,b){goog$inherits(a,b)}" +
         "/**@constructor*/function a(){}" +
@@ -932,7 +924,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
         "goog$mixin(b.prototype,a.prototype);new b");
   }
 
-  public void testRemoveInheritedClass12() {
+  public void testRemoveInheritedClass11() {
     testSame("function goog$inherits(){}" +
         "/**@constructor*/function a(){}" +
         "var b = {};" +
