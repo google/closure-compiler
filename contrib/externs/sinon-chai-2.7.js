@@ -25,12 +25,11 @@
  */
 
 /** @type {!ExpectChain} */ ExpectChain.prototype.always;
-
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.called;
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.calledOnce;
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.calledTwice;
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.calledThrice;
-/** @type {!ExpectChainTerminal} */ ExpectChain.prototype.calledWithNew;
+/** @type {!ExpectChain} */ ExpectChain.prototype.called;
+/** @type {!ExpectChain} */ ExpectChain.prototype.calledOnce;
+/** @type {!ExpectChain} */ ExpectChain.prototype.calledTwice;
+/** @type {!ExpectChain} */ ExpectChain.prototype.calledThrice;
+/** @type {!ExpectChain} */ ExpectChain.prototype.calledWithNew;
 
 /**
  * @param {number} n
