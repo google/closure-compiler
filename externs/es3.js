@@ -1897,11 +1897,10 @@ String.prototype.quote = function() {};
  * @this {String|string}
  * @param {RegExp|string} pattern
  * @param {string|Function} replacement
- * @param {string=} opt_flags
  * @return {string}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace
  */
-String.prototype.replace = function(pattern, replacement, opt_flags) {};
+String.prototype.replace = function(pattern, replacement) {};
 
 /**
  * Executes the search for a match between a regular expression and this String
