@@ -482,28 +482,48 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     if (calls.size() == 0) {
       return false;
     }
+    Node finalThenTarget = null;
     for (Node call : calls) {
-      Node array = call.getSecondChild();
-      checkState(array.isArrayLit());
       ArrayList<String> moduleImportPaths = new ArrayList<>();
-      for (Node promiseCall = array.getFirstChild(); promiseCall != null;
-           promiseCall = promiseCall.getNext()) {
-        moduleImportPaths.add(getCommonJsImportPath(promiseCall.getSecondChild()));
-        Node importCall = promiseCall.getFirstFirstChild().detach();
-        promiseCall.replaceWith(importCall);
-        reportNestedScopesDeleted(promiseCall);
-        promiseCall = importCall;
+      if (call.getSecondChild().isArrayLit()) {
+        Node array = call.getSecondChild();
+        for (Node promiseCall = array.getFirstChild(); promiseCall != null;
+             promiseCall = promiseCall.getNext()) {
+          moduleImportPaths.add(getCommonJsImportPath(promiseCall.getSecondChild()));
+          Node importCall = promiseCall.getFirstFirstChild().detach();
+          promiseCall.replaceWith(importCall);
+          reportNestedScopesDeleted(promiseCall);
+          promiseCall = importCall;
+        }
+        if ((call.getParent().isGetProp()
+            && call.getParent().getNext() != null
+            && call.getParent().getNext().isFunction())) {
+          finalThenTarget = call.getParent().getNext();
+        }
+      } else {
+        moduleImportPaths.add(getCommonJsImportPath(call.getSecondChild()));
+        Node importCall = call.getFirstFirstChild().detach();
+        call.replaceWith(importCall);
+        reportNestedScopesDeleted(call);
+
+        if (importCall.getParent().isGetProp()
+            && importCall.getNext().isString()
+            && importCall.getNext().equals("then")
+            && importCall.getGrandparent() != null
+            && importCall.getGrandparent().isCall()
+            && importCall.getParent().getNext() != null
+            && importCall.getParent().getNext().isFunction()) {
+          finalThenTarget = call.getParent().getNext();
+        }
       }
 
-      if (!(call.getParent().isGetProp()
-          && call.getParent().getNext() != null
-          && call.getParent().getNext().isFunction())) {
+      if (finalThenTarget == null) {
         continue;
       }
 
-      Node fncParams = NodeUtil.getFunctionParameters(call.getParent().getNext());
-      Node fncBody = NodeUtil.getFunctionBody(call.getParent().getNext());
-      Node script = NodeUtil.getEnclosingScript(call);
+      Node fncParams = NodeUtil.getFunctionParameters(finalThenTarget);
+      Node fncBody = NodeUtil.getFunctionBody(finalThenTarget);
+      Node script = NodeUtil.getEnclosingScript(finalThenTarget);
       CompilerInput input = compiler.getInput(script.getInputId());
       int currentModuleNameIndex = 0;
       for (Node currentParam = fncParams.getLastChild();
@@ -525,8 +545,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             IR.var(currentParam.cloneNode(), IR.name(moduleImportPath.toModuleName()))
                 .useSourceInfoIfMissingFrom(currentParam));
       }
-      fncParams.detachChildren();
-      compiler.reportChangeToChangeScope(call.getParent().getNext());
+      if (fncParams.removeChildren() != null) {
+        compiler.reportChangeToChangeScope(call.getParent().getNext());
+      }
     }
     return true;
   }
@@ -659,6 +680,10 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       //
       // Promise.all([__webpack_require.e(0).then(__webpack_require__.bind(null, path)])
       //   .then(importObj => {})
+      //
+      // or
+      //
+      // __webpack_require.e(0).then(__webpack_require__.bind(null, path).then(importObj => {})
       if (n.isCall()
           && compiler.getOptions().moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK
           && n.getFirstChild().isGetProp()
@@ -687,6 +712,15 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         if (isWebpackEsmDynamicImport) {
           webpackEsmDynamicImports.add(n);
         }
+      } else if (n.isCall()
+          && n.getFirstChild().matchesQualifiedName(WEBPACK_REQUIRE + ".e")
+          && n.getNext() != null
+          && n.getNext().isString()
+          && n.getNext().getString().equals("then")
+          && isCommonJsImport(n.getParent().getNext())
+          && n.getGrandparent() != null
+          && n.getGrandparent().isCall()) {
+        webpackEsmDynamicImports.add(n.getGrandparent());
       }
 
       if (isCommonJsImport(n)) {
@@ -1116,6 +1150,17 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
           CompilerInput ci = compiler.getInput(n.getInputId());
           String moduleName = getModuleName(ci);
+
+          // If a function is the direct module export, move it to the top.
+          for (int i = 1; i < functionsToHoist.size(); i++) {
+            if (functionsToHoist.get(i).getFirstFirstChild()
+                .matchesQualifiedName(getBasePropertyImport(moduleName))) {
+              Node fncVar = functionsToHoist.get(i);
+              functionsToHoist.remove(i);
+              functionsToHoist.add(0, fncVar);
+              break;
+            }
+          }
 
           // Hoist functions in reverse order so that they maintain the same relative
           // order after hoisting.
