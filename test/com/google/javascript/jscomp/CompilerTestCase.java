@@ -120,7 +120,7 @@ public abstract class CompilerTestCase extends TestCase {
 
   private boolean polymerPass;
 
-  /** Whether the tranpilation passes runs before pass being tested. */
+  /** Whether the transpilation passes run before the pass being tested. */
   private boolean transpileEnabled;
 
   /** Whether we run InferConsts before checking. */

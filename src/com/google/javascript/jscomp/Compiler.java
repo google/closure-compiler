@@ -170,7 +170,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private transient IncrementalScopeCreator scopeCreator = null;
 
   /**
-   * Subclasses are responsible for loading soures that were not provided as explicit inputs to the
+   * Subclasses are responsible for loading sources that were not provided as explicit inputs to the
    * compiler. For example, looking up sources referenced within sourcemaps.
    */
   public static class ExternalSourceLoader {

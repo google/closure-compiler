@@ -498,12 +498,12 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
           LINE_JOINER.join(
               "goog.module('a.b.c');",
               "/** @constructor */ function Foo() {}",
-              "Foo.prototoype.display = function() {};",
+              "Foo.prototype.display = function() {};",
               "exports = Foo;"),
           LINE_JOINER.join(
               "goog.module('x.y.z');",
               "/** @constructor */ function Foo() {}",
-              "Foo.prototoype.display = function() {};",
+              "Foo.prototype.display = function() {};",
               "exports = Foo;"),
         });
 
@@ -511,11 +511,11 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         new String[] {
           LINE_JOINER.join(
               "/** @constructor */ function Foo() {}",
-              "Foo.prototoype.display = function() {};"),
+              "Foo.prototype.display = function() {};"),
           LINE_JOINER.join(
               "goog.module('x.y.z');",
               "/** @constructor */ function Foo() {}",
-              "Foo.prototoype.display = function() {};",
+              "Foo.prototype.display = function() {};",
               "exports = Foo;"),
         });
 

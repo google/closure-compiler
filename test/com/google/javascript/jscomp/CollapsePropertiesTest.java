@@ -1687,7 +1687,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "var bar = new Bar()",
             "bar.foo();"));
 
-    // Computed property method name in class - no concatination
+    // Computed property method name in class - no concatenation
     testSame(
         LINE_JOINER.join(
             "class Bar {",

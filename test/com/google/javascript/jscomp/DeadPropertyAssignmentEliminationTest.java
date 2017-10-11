@@ -662,7 +662,7 @@ public class DeadPropertyAssignmentEliminationTest extends CompilerTestCase {
             "}"));
   }
 
-  public void testEs6Constrcutor() {
+  public void testEs6Constructor() {
     testSame(
         LINE_JOINER.join(
             "class Foo {",
