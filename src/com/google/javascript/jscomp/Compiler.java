@@ -1778,7 +1778,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
                 new FindModuleDependencies(
                     this,
                     options.getLanguageIn().toFeatureSet().has(Feature.MODULES),
-                    true);
+                    true,
+                    inputPathByWebpackId);
             findDeps.process(input.getAstRoot(this));
             this.moduleTypesByName.put(input.getPath().toModuleName(), input.getJsModuleType());
           }
@@ -1998,7 +1999,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     FindModuleDependencies findDeps =
-        new FindModuleDependencies(this, supportEs6Modules, supportCommonJSModules);
+        new FindModuleDependencies(this, supportEs6Modules, supportCommonJSModules, inputPathByWebpackId);
     findDeps.process(input.getAstRoot(this));
 
     // If this input was imported by another module, it is itself a module
@@ -2008,7 +2009,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
     this.moduleTypesByName.put(input.getPath().toModuleName(), input.getJsModuleType());
 
-    for (String requiredNamespace : input.getRequires()) {
+    ArrayList<String> allDeps = new ArrayList<>();
+    allDeps.addAll(input.getRequires());
+    allDeps.addAll(input.getDynamicRequires());
+    for (String requiredNamespace : allDeps) {
       CompilerInput requiredInput = null;
       boolean requiredByModuleImport = false;
       if (inputsByProvide.containsKey(requiredNamespace)) {
