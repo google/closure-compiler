@@ -296,8 +296,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
   // Keyed on RawNominalTypes and property names
   private HashBasedTable<RawNominalType, String, PropertyDef> propertyDefs =
       HashBasedTable.create();
-  private final NominalTypeBuilderNti.LateProperties lateProps =
-      new NominalTypeBuilderNti.LateProperties();
   private final Set<RawNominalType> inProgressFreezes = new LinkedHashSet<>();
   private final GlobalTypeInfo globalTypeInfo;
   private final OrderedExterns orderedExterns;
@@ -540,11 +538,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         checkAndFreezeNominalType(superInterf.getRawNominalType());
       }
     }
-
-    for (RawNominalType prerequisite : lateProps.prerequisites(rawType)) {
-      checkAndFreezeNominalType(prerequisite);
-    }
-    lateProps.defineProperties(rawType);
 
     Multimap<String, DeclaredFunctionType> propMethodTypesToProcess = LinkedHashMultimap.create();
     Multimap<String, JSType> propTypesToProcess = LinkedHashMultimap.create();
@@ -1722,8 +1715,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       if (superClass != null && superClass.getConstructorFunction() != null
           && subClass != null && subClass.getConstructorFunction() != null) {
         convention.applySubclassRelationship(
-            new NominalTypeBuilderNti(lateProps, superClass),
-            new NominalTypeBuilderNti(lateProps, subClass),
+            new NominalTypeBuilderNti(superClass.getAsNominalType()),
+            new NominalTypeBuilderNti(subClass.getAsNominalType()),
             rel.type);
       }
     }
@@ -1735,7 +1728,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         JSType getInstanceType =
             new FunctionTypeBuilder(getCommonTypes()).addRetType(instanceType).buildType();
         convention.applySingletonGetter(
-            new NominalTypeBuilderNti(lateProps, rawType), getInstanceType);
+            new NominalTypeBuilderNti(rawType.getAsNominalType()), getInstanceType);
       }
     }
 
@@ -1767,12 +1760,12 @@ public class GlobalTypeInfoCollector implements CompilerPass {
                 .addNominalType(delegateProxy.getInstanceAsJSType())
                 .buildFunction());
         convention.applyDelegateRelationship(
-            new NominalTypeBuilderNti(lateProps, delegateSuper),
-            new NominalTypeBuilderNti(lateProps, delegateBase),
-            new NominalTypeBuilderNti(lateProps, delegator),
+            new NominalTypeBuilderNti(delegateSuper.getAsNominalType()),
+            new NominalTypeBuilderNti(delegateBase.getAsNominalType()),
+            new NominalTypeBuilderNti(delegator.getAsNominalType()),
             delegateProxy.getInstanceAsJSType(),
             findDelegate);
-        delegateProxies.add(new NominalTypeBuilderNti(lateProps, delegateProxy));
+        delegateProxies.add(new NominalTypeBuilderNti(delegateProxy.getAsNominalType()));
       }
     }
 
@@ -2163,18 +2156,18 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         return;
       }
       JSType recvType = simpleInferExprType(recv);
-      if (recvType == null) {
-        // Might still be worth recording a property, e.g. on a function.
-        PropertyDef def = findPropertyDef(recv);
-        if (def != null) {
-          JSType type =
-              getProp.getNext() != null
-                  ? simpleInferExprType(getProp.getNext())
-                  : getCommonTypes().UNKNOWN;
-          if (type != null) {
-            def.addProperty(recv.getNext().getString(), type);
-          }
+      // Might still be worth recording a property, e.g. on a function.
+      PropertyDef def = findPropertyDef(recv);
+      if (def != null) {
+        JSType type =
+            getProp.getNext() != null
+                ? simpleInferExprType(getProp.getNext())
+                : getCommonTypes().UNKNOWN;
+        if (type != null) {
+          def.addProperty(recv.getNext().getString(), type);
         }
+      }
+      if (recvType == null) {
         return;
       }
       recvType = recvType.removeType(getCommonTypes().NULL_OR_UNDEFINED);

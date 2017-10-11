@@ -40,96 +40,65 @@
 package com.google.javascript.rhino.jstype;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.NominalTypeBuilder;
 import com.google.javascript.rhino.TypeI;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * OTI implementation of NominalTypeBuilder
  */
 public final class NominalTypeBuilderOti implements NominalTypeBuilder {
 
-  /**
-   * Factory to create NominalTypeBuilders.  This is important so that beforeFreeze
-   * callbacks can be run asynchronously with the coding convention method.
-   */
-  public static class Factory implements AutoCloseable {
-    private final List<Runnable> callbacks = new ArrayList<>();
+  private final FunctionType constructor;
+  private final ObjectType instance;
+  private final ObjectType prototype;
 
-    /** Makes a NominalTypeBuilder whose callbacks will be called on close. */
-    public NominalTypeBuilder builder(FunctionType constructor, ObjectType instance) {
-      return new NominalTypeBuilderOti(callbacks, constructor, instance);
-    }
-
-    @Override
-    public void close() {
-      for (Runnable callback : callbacks) {
-        callback.run();
-      }
-    }
-  }
-
-  private static class ObjectBuilderImpl implements ObjectBuilder {
-    final ObjectType object;
-    ObjectBuilderImpl(ObjectType object) {
-      this.object = checkNotNull(object);
-    }
-
-    @Override
-    public void declareProperty(String property, TypeI type, Node defSite) {
-      checkArgument(type instanceof JSType);
-      object.defineDeclaredProperty(property, (JSType) type, defSite);
-    }
-
-    @Override
-    public TypeI toTypeI() {
-      return object;
-    }
-  }
-
-  private final List<Runnable> callbacks;
-  private final ObjectBuilderImpl constructor;
-  private final ObjectBuilderImpl instance;
-  private final ObjectBuilderImpl prototype;
-
-  private NominalTypeBuilderOti(
-      List<Runnable> callbacks, FunctionType constructor, ObjectType instance) {
-    this.callbacks = callbacks;
-    this.constructor = new ObjectBuilderImpl(constructor);
-    this.instance = new ObjectBuilderImpl(instance);
-    this.prototype = new ObjectBuilderImpl(constructor.getPrototypeProperty());
+  public NominalTypeBuilderOti(FunctionType constructor, ObjectType instance) {
+    this.constructor = constructor;
+    this.instance = instance;
+    this.prototype = constructor.getPrototypeProperty();
   }
 
   @Override
-  public void beforeFreeze(Runnable task, NominalTypeBuilder... prerequisites) {
-    callbacks.add(task);
+  public void declarePrototypeProperty(String name, TypeI type, Node defSite) {
+    checkArgument(type instanceof JSType);
+    prototype.defineDeclaredProperty(name, (JSType) type, defSite);
+  }
+
+  @Override
+  public void declareInstanceProperty(String name, TypeI type, Node defSite) {
+    checkArgument(type instanceof JSType);
+    instance.defineDeclaredProperty(name, (JSType) type, defSite);
+  }
+
+  @Override
+  public void declareConstructorProperty(String name, TypeI type, Node defSite) {
+    checkArgument(type instanceof JSType);
+    constructor.defineDeclaredProperty(name, (JSType) type, defSite);
   }
 
   @Override
   public NominalTypeBuilder superClass() {
-    FunctionType ctor = instance.object.getSuperClassConstructor();
+    FunctionType ctor = instance.getSuperClassConstructor();
     if (ctor == null) {
       return null;
     }
-    return new NominalTypeBuilderOti(callbacks, ctor, ctor.getInstanceType());
+    return new NominalTypeBuilderOti(ctor, ctor.getInstanceType());
   }
 
   @Override
-  public ObjectBuilder constructor() {
+  public FunctionType constructor() {
     return constructor;
   }
 
   @Override
-  public ObjectBuilder instance() {
+  public ObjectType instance() {
     return instance;
   }
 
   @Override
-  public ObjectBuilder prototype() {
+  public ObjectType prototypeOrInstance() {
     return prototype;
   }
 }

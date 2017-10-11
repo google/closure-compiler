@@ -346,7 +346,6 @@ public final class NominalType implements Serializable {
   }
 
   public NominalType getInstantiatedSuperclass() {
-    checkState(this.rawType.isFrozen());
     if (this.rawType.getSuperClass() == null) {
       return null;
     }

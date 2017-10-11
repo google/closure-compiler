@@ -54,44 +54,22 @@ package com.google.javascript.rhino;
  */
 public interface NominalTypeBuilder {
 
-  /** An individual object type that can have properties declared on it. */
-  interface ObjectBuilder {
-    /** Declares a property on this object type. */
-    void declareProperty(String name, TypeI type, Node defSite);
+  /** Declares a static property on the nominal type's constructor. */
+  void declareConstructorProperty(String name, TypeI type, Node defSite);
+  /** Declares an instance property on the nominal type. */
+  void declareInstanceProperty(String name, TypeI type, Node defSite);
+  /** Declares a property on the nominal type's prototype. */
+  void declarePrototypeProperty(String name, TypeI type, Node defSite);
 
-    /**
-     * Returns a TypeI referring to this object, if possible. This will succeed as long as the
-     * final object is just a pointer to a mutable type (i.e. constructors and instances). For
-     * prototypes, however, the final object is immutable and is only constructed at the last
-     * possible moment and is therefore not available any earlier. If this is a prototype object
-     * then toTypeI() will throw an IllegalStateException.
-     *
-     * Note also that the returned TypeI may not be frozen, and so certain functionality is very
-     * likely to be missing (e.g. getSuperClassConstructor does not work, among many others).
-     */
-    TypeI toTypeI();
-  }
-
-  /**
-   * Ensures that the given task will run before freezing this nominal type, but after any
-   * prerequisites have been frozen. Any types passed as prerequisites are safe to access
-   * via {@link ObjectBuilder#toTypeI} within the body of the runnable. The task will never
-   * run immediately, but may be run very soon after the coding convention call returns.
-   */
-  void beforeFreeze(Runnable task, NominalTypeBuilder... prerequisites);
-
-  /** Returns a nominal type builder for the super class. */
+  /** Returns a NominalTypeBuilder for this type's superclass. */
   NominalTypeBuilder superClass();
 
-  /** Returns the object builder for declaring properties on the constructor function. */
-  ObjectBuilder constructor();
+  /** Returns the constructor as a TypeI. */
+  FunctionTypeI constructor();
+  /** Returns the instance type as a TypeI. */
+  ObjectTypeI instance();
 
-  /** Returns the object builder for declaring properties on the instance type. */
-  ObjectBuilder instance();
-
-  /**
-   * Returns the object builder for declaring properties on the prototype object. The returned
-   * ObjectBuilder cannot be converted to a TypeI, since no TypeI is available yet.
-   */
-  ObjectBuilder prototype();
+  // TODO(sdh): See if we can just delete this entirely and use instance() instead?
+  /** Returns the type of the prototype object (OTI) or instance (NTI). */
+  ObjectTypeI prototypeOrInstance();
 }

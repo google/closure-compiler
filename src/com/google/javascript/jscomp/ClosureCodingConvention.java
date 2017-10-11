@@ -76,14 +76,9 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
       final NominalTypeBuilder parent, final NominalTypeBuilder child, SubclassType type) {
     super.applySubclassRelationship(parent, child, type);
     if (type == SubclassType.INHERITS) {
-      final FunctionTypeI childCtor = (FunctionTypeI) child.constructor().toTypeI();
-      child.beforeFreeze(new Runnable() {
-        @Override
-        public void run() {
-          child.constructor().declareProperty(
-              "superClass_", parent.prototype().toTypeI(), childCtor.getSource());
-        }
-      }, parent);
+      final FunctionTypeI childCtor = child.constructor();
+      child.declareConstructorProperty(
+          "superClass_", parent.prototypeOrInstance(), childCtor.getSource());
       // Notice that constructor functions do not need to be covariant on the superclass.
       // So if G extends F, new G() and new F() can accept completely different argument
       // types, but G.prototype.constructor needs to be covariant on F.prototype.constructor.
@@ -91,7 +86,7 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
       // of G.prototype.constructor.
       FunctionTypeI qmarkCtor =
           childCtor.toBuilder().withUnknownReturnType().withNoParameters().build();
-      child.prototype().declareProperty("constructor", qmarkCtor, childCtor.getSource());
+      child.declarePrototypeProperty("constructor", qmarkCtor, childCtor.getSource());
     }
   }
 
@@ -320,9 +315,9 @@ public final class ClosureCodingConvention extends CodingConventions.Proxy {
 
   @Override
   public void applySingletonGetter(NominalTypeBuilder classType, FunctionTypeI getterType) {
-    Node defSite = ((FunctionTypeI) classType.constructor().toTypeI()).getSource();
-    classType.constructor().declareProperty("getInstance", getterType, defSite);
-    classType.constructor().declareProperty("instance_", classType.instance().toTypeI(), defSite);
+    Node defSite = classType.constructor().getSource();
+    classType.declareConstructorProperty("getInstance", getterType, defSite);
+    classType.declareConstructorProperty("instance_", classType.instance(), defSite);
   }
 
   @Override

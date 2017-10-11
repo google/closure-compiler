@@ -532,6 +532,9 @@ public abstract class ObjectType
    */
   @Override
   public Set<String> getOwnPropertyNames() {
+    // TODO(sdh): ObjectTypeI specifies that this should include prototype properties,
+    // but currently it does not.  Check if this is a constructor and add them, but
+    // this could possibly break things so it should be done separately.
     return getPropertyMap().getOwnPropertyNames();
   }
 

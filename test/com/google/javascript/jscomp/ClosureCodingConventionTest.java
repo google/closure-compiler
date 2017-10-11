@@ -224,12 +224,10 @@ public final class ClosureCodingConventionTest extends TestCase {
     FunctionType ctorB =
         registry.createConstructorType("B", nodeB, new Node(Token.PARAM_LIST), null, null, false);
 
-    try (NominalTypeBuilderOti.Factory factory = new NominalTypeBuilderOti.Factory()) {
-      conv.applySubclassRelationship(
-          factory.builder(ctorA, ctorA.getInstanceType()),
-          factory.builder(ctorB, ctorB.getInstanceType()),
-          SubclassType.INHERITS);
-    }
+    conv.applySubclassRelationship(
+        new NominalTypeBuilderOti(ctorA, ctorA.getInstanceType()),
+        new NominalTypeBuilderOti(ctorB, ctorB.getInstanceType()),
+        SubclassType.INHERITS);
 
     assertTrue(ctorB.getPrototype().hasOwnProperty("constructor"));
     assertEquals(nodeB, ctorB.getPrototype().getPropertyNode("constructor"));

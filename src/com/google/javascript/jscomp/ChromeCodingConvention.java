@@ -54,9 +54,9 @@ public final class ChromeCodingConvention extends CodingConventions.Proxy {
 
   @Override
   public void applySingletonGetter(NominalTypeBuilder classType, FunctionTypeI getterType) {
-    Node defSite = ((FunctionTypeI) classType.constructor().toTypeI()).getSource();
-    classType.constructor().declareProperty("getInstance", getterType, defSite);
-    classType.constructor().declareProperty("instance_", classType.instance().toTypeI(), defSite);
+    Node defSite = classType.constructor().getSource();
+    classType.declareConstructorProperty("getInstance", getterType, defSite);
+    classType.declareConstructorProperty("instance_", classType.instance(), defSite);
   }
 
   @Override
