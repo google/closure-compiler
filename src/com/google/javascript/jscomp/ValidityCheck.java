@@ -76,9 +76,8 @@ class ValidityCheck implements CompilerPass {
   }
 
   /**
-   * Sanity checks code generation by performing it once, parsing the result,
-   * then generating code from the second parse tree to verify that it matches
-   * the code generated from the first parse tree.
+   * Checks code generation by performing it once, parsing the result, then generating code from the
+   * second parse tree to verify that it matches the code generated from the first parse tree.
    *
    * @return The regenerated parse tree. Null on error.
    */
@@ -95,26 +94,23 @@ class ValidityCheck implements CompilerPass {
       compiler.report(JSError.make(CANNOT_PARSE_GENERATED_CODE,
               Strings.truncateAtMaxLength(source, 100, true)));
 
-      // Throw an exception, so that the infrastructure will tell us
-      // which pass violated the sanity check.
-      throw new IllegalStateException("Sanity Check failed");
+      // Throw an exception, so that the infrastructure will tell us which pass violated the check.
+      throw new IllegalStateException("Validity Check failed");
     }
 
     String source2 = compiler.toSource(root2);
     if (!source.equals(source2)) {
       compiler.report(JSError.make(GENERATED_BAD_CODE, source, source2));
 
-      // Throw an exception, so that the infrastructure will tell us
-      // which pass violated the sanity check.
-      throw new IllegalStateException("Sanity Check failed");
+      // Throw an exception, so that the infrastructure will tell us which pass violated the check.
+      throw new IllegalStateException("Validity Check failed");
     }
 
     return root2;
   }
 
   /**
-   * Sanity checks the AST. This is by verifying the normalization passes do
-   * nothing.
+   * Verifies that the normalization pass does nothing on an already-normalized tree.
    */
   private void checkNormalization(Node externs, Node root) {
     // Verify nothing has inappropriately denormalize the AST.
@@ -151,10 +147,9 @@ class ValidityCheck implements CompilerPass {
               EXTERN_PROPERTIES_CHANGED,
               externProperties.toString(),
               compiler.getExternProperties().toString()));
-      // Throw an exception, so that the infrastructure will tell us
-      // which pass violated the sanity check.
+      // Throw an exception, so that the infrastructure will tell us which pass violated the check.
       throw new IllegalStateException(
-          "Sanity Check failed: Extern properties changed from:\n"
+          "Validity Check failed: Extern properties changed from:\n"
               + externProperties
               + "\nto:\n"
               + compiler.getExternProperties());

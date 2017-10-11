@@ -30,7 +30,7 @@ public final class VarCheckTest extends CompilerTestCase {
   private static final String EXTERNS = "var window; function alert() {}";
 
   private CheckLevel strictModuleDepErrorLevel;
-  private boolean sanityCheck = false;
+  private boolean validityCheck = false;
 
   private CheckLevel externValidationErrorLevel;
 
@@ -48,7 +48,7 @@ public final class VarCheckTest extends CompilerTestCase {
     allowExternsChanges();
     strictModuleDepErrorLevel = CheckLevel.OFF;
     externValidationErrorLevel = null;
-    sanityCheck = false;
+    validityCheck = false;
     declarationCheck = false;
   }
 
@@ -67,8 +67,8 @@ public final class VarCheckTest extends CompilerTestCase {
   protected CompilerPass getProcessor(final Compiler compiler) {
     return new CompilerPass() {
       @Override public void process(Node externs, Node root) {
-        new VarCheck(compiler, sanityCheck).process(externs, root);
-        if (!sanityCheck && !compiler.hasErrors()) {
+        new VarCheck(compiler, validityCheck).process(externs, root);
+        if (!validityCheck && !compiler.hasErrors()) {
           // If the original test turned off sanity check, make sure our synthesized
           // code passes it.
           new VarCheck(compiler, true).process(externs, root);
@@ -402,23 +402,23 @@ public final class VarCheckTest extends CompilerTestCase {
 
 
   public void testMissingModuleDependencySkipNonStrict() {
-    sanityCheck = true;
+    validityCheck = true;
     testIndependentModules("var x = 10;", "var y = x++;", null, null);
   }
 
   public void testViolatedModuleDependencySkipNonStrict() {
-    sanityCheck = true;
+    validityCheck = true;
     testDependentModules("var y = x++;", "var x = 10;", null);
   }
 
   public void testMissingModuleDependencySkipNonStrictNotPromoted() {
-    sanityCheck = true;
+    validityCheck = true;
     strictModuleDepErrorLevel = CheckLevel.ERROR;
     testIndependentModules("var x = 10;", "var y = x++;", null, null);
   }
 
   public void testViolatedModuleDependencyNonStrictNotPromoted() {
-    sanityCheck = true;
+    validityCheck = true;
     strictModuleDepErrorLevel = CheckLevel.ERROR;
     testDependentModules("var y = x++;", "var x = 10;", null);
   }
@@ -498,8 +498,8 @@ public final class VarCheckTest extends CompilerTestCase {
     checkSynthesizedExtern("var x", "");
   }
 
-  public void testSimpleSanityCheck() {
-    sanityCheck = true;
+  public void testSimpleValidityCheck() {
+    validityCheck = true;
     try {
       checkSynthesizedExtern("x", "");
       fail("Expected RuntimeException");
@@ -633,7 +633,7 @@ public final class VarCheckTest extends CompilerTestCase {
     testError("var f = function (arguments) {}", VarCheck.VAR_ARGUMENTS_SHADOWED_ERROR);
     testSame("function f() {try {} catch(arguments) {}}");
 
-    sanityCheck = true;
+    validityCheck = true;
     testSame("function f() {var arguments}");
   }
 
@@ -713,7 +713,7 @@ public final class VarCheckTest extends CompilerTestCase {
 
   public void checkSynthesizedExtern(
       String extern, String input, String expectedExtern) {
-    declarationCheck = !sanityCheck;
+    declarationCheck = !validityCheck;
     disableCompareAsTree();
     testExternChanges(extern, input, expectedExtern);
   }

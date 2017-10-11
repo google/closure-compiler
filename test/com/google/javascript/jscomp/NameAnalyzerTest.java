@@ -2157,8 +2157,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
       "if (y instanceof b) {}"));
   }
 
-  // We cannot leave x.a.prototype there because it will
-  // fail sanity var check.
+  // We cannot leave x.a.prototype there because it will fail ValidityCheck.checkVars.
   public void testBrokenNamespaceWithPrototypeAssignment() {
     test("var x = {}; x.a.prototype = 1", "");
   }

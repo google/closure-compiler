@@ -117,7 +117,7 @@ class VarCheck extends AbstractPostOrderCallback implements
   }
 
   /**
-   * Creates the scope creator used by this pass. If not in sanity check mode, use a {@link
+   * Creates the scope creator used by this pass. If not in validity check mode, use a {@link
    * RedeclarationCheckHandler} to check var redeclarations.
    */
   private ScopeCreator createScopeCreator() {
