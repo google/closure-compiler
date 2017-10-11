@@ -258,7 +258,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
   private static boolean isWebpackRequireEnsureCallback(Node fnc) {
     checkArgument(fnc.isFunction());
     Node fncParams = NodeUtil.getFunctionParameters(fnc);
-    if (!(fncParams.hasOneChild() && fncParams.getFirstChild().getString().equals("require"))) {
+    if (!(fncParams.hasOneChild()
+        && fncParams.getFirstChild().isName()
+        && fncParams.getFirstChild().getString().equals("require"))) {
       return false;
     }
 
