@@ -1338,4 +1338,8 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     testError("var CLOSURE_DEFINES = {'TEMPLATE': `template`};", CLOSURE_DEFINES_ERROR);
     testError("var CLOSURE_DEFINES = {'TEMPLATE': `${template}Sub`};", CLOSURE_DEFINES_ERROR);
   }
+
+  public void testOtherBaseCall() {
+    testSame("class Foo extends BaseFoo { method() { baz.base('arg'); } }");
+  }
 }
