@@ -2364,7 +2364,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
         "function f() {} var {x: y} = f(); g(y)");
 
     // complicated destructuring cases
-    // TODO (blickley): Look into adding a pass to completely remove empty destructuring patterns
+    // TODO(blickly): Look into adding a pass to completely remove empty destructuring patterns
     test(
         "var {a: a, b: [{c: d}]} = o;",
         "var {b: [{}]} = o; ");
