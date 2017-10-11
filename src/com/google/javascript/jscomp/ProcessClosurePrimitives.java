@@ -720,11 +720,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     // Most of the logic here is just to make sure the AST's
     // structure is what we expect it to be.
 
-    if (baseUsedInClass(n)){
-      reportBadGoogBaseUse(t, n, "goog.base in ES6 class is not allowed. Use super instead.");
-      return;
-    }
-
     Node callTarget = n.getFirstChild();
     Node baseContainerNode = callTarget.getFirstChild();
     if (!baseContainerNode.isUnscopedQualifiedName()) {
@@ -740,7 +735,20 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       if (knownClosureSubclasses.contains(baseContainer)) {
         reportBadBaseMethodUse(t, n, baseContainer,
             "Could not find enclosing method.");
+      } else if (baseUsedInClass(n)) {
+        Node clazz = NodeUtil.getEnclosingClass(n);
+        if ((clazz.getFirstChild().isName()
+                && clazz.getFirstChild().getString().equals(baseContainer))
+            || (clazz.getSecondChild().isName()
+            && clazz.getSecondChild().getString().equals(baseContainer))) {
+          reportBadGoogBaseUse(t, n, "goog.base in ES6 class is not allowed. Use super instead.");
+        }
       }
+      return;
+    }
+
+    if (baseUsedInClass(n)){
+      reportBadGoogBaseUse(t, n, "goog.base in ES6 class is not allowed. Use super instead.");
       return;
     }
 
