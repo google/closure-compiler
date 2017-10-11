@@ -240,6 +240,8 @@ public final class AstValidator implements CompilerPass {
 
       // Assignments
       case ASSIGN:
+        validateAssignmentExpression(n);
+        return;
       case ASSIGN_BITOR:
       case ASSIGN_BITXOR:
       case ASSIGN_BITAND:
@@ -252,7 +254,7 @@ public final class AstValidator implements CompilerPass {
       case ASSIGN_DIV:
       case ASSIGN_MOD:
       case ASSIGN_EXPONENT:
-        validateAssignmentExpression(n);
+        validateCompoundAssignmentExpression(n);
         return;
 
       case HOOK:
@@ -770,19 +772,11 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateDefaultValue(Token type, Node n) {
+  private void validateDefaultValue(Token contextType, Node n) {
     validateFeature(Feature.DEFAULT_PARAMETERS, n);
-    validateAssignmentExpression(n);
-    Node lhs = n.getFirstChild();
-
-    // LHS can only be a name or destructuring pattern.
-    if (lhs.isName()) {
-      validateName(lhs);
-    } else if (lhs.isArrayPattern()) {
-      validateArrayPattern(type, lhs);
-    } else {
-      validateObjectPattern(type, lhs);
-    }
+    validateChildCount(n);
+    validateLHS(contextType, n.getFirstChild());
+    validateExpression(n.getLastChild());
   }
 
   private void validateCall(Node n) {
@@ -1168,6 +1162,24 @@ public final class AstValidator implements CompilerPass {
   private void validateAssignmentExpression(Node n) {
     validateChildCount(n);
     validateLHS(n.getToken(), n.getFirstChild());
+    validateExpression(n.getLastChild());
+  }
+
+  private void validateCompoundAssignmentExpression(Node n) {
+    validateChildCount(n);
+    Token contextType = n.getToken();
+    Node lhs = n.getFirstChild();
+    switch (lhs.getToken()) {
+      case NAME:
+        validateName(lhs);
+        break;
+      case GETPROP:
+      case GETELEM:
+        validateGetPropGetElemInLHS(contextType, lhs);
+        break;
+      default:
+        violation("Invalid child for " + contextType + " node", lhs);
+    }
     validateExpression(n.getLastChild());
   }
 
