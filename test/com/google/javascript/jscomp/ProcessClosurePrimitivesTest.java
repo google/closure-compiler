@@ -1039,12 +1039,12 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
   public void testInvalidGoogBase14() {
     testError("class Foo extends BaseFoo { constructor() { Foo.base(this); } }",
-        GOOG_BASE_CLASS_ERROR);
+        BASE_CLASS_ERROR);
   }
 
   public void testInvalidGoogBase14b() {
     testError("class Foo extends BaseFoo { method() { Foo.base(this, 'method'); } }",
-        GOOG_BASE_CLASS_ERROR);
+        BASE_CLASS_ERROR);
   }
 
   public void testValidBase1() {

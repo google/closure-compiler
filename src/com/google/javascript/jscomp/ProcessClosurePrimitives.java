@@ -131,7 +131,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       "Invalid entries in css renaming map: {0}");
 
   static final DiagnosticType GOOG_BASE_CLASS_ERROR = DiagnosticType.error(
-      "JSC_BASE_CLASS_ERROR",
+      "JSC_GOOG_BASE_CLASS_ERROR",
       "incorrect use of goog.base: {0}");
 
   static final DiagnosticType BASE_CLASS_ERROR = DiagnosticType.error(
@@ -739,7 +739,8 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
                 && clazz.getFirstChild().getString().equals(baseContainer))
             || (clazz.getSecondChild().isName()
                 && clazz.getSecondChild().getString().equals(baseContainer))) {
-          reportBadGoogBaseUse(t, n, "goog.base in ES6 class is not allowed. Use super instead.");
+          reportBadBaseMethodUse(t, n, clazz.getFirstChild().getString(),
+              "base method is not allowed in ES6 class. Use super instead.");
         }
       }
       return;
