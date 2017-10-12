@@ -51,9 +51,9 @@ public class Util {
         case '\'': sb.append(singlequoteEscape); break;
         case '>':
           // Unicode-escape the '>' in '-->' and ']]>'
-          if (i >= 2 &&
-              ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-') ||
-               (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
+          if (i >= 2
+              && ((s.charAt(i - 1) == '-' && s.charAt(i - 2) == '-')
+                  || (s.charAt(i - 1) == ']' && s.charAt(i - 2) == ']'))) {
             sb.append("\\u003e");
           } else {
             sb.append(c);
@@ -92,11 +92,8 @@ public class Util {
     return sb.toString();
   }
 
-  /**
-   * @see #appendHexJavaScriptRepresentation(int, Appendable)
-   */
-  public static void appendHexJavaScriptRepresentation(
-      StringBuilder sb, char c) {
+  /** @see #appendHexJavaScriptRepresentation(int, Appendable) */
+  public static void appendHexJavaScriptRepresentation(StringBuilder sb, char c) {
     try {
       appendHexJavaScriptRepresentation(c, sb);
     } catch (IOException ex) {
