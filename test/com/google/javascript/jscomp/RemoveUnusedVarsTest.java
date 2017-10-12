@@ -212,7 +212,9 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     // Don't remove variables accessed by computed properties
     testSame("var {['a']:a, ['b']:b} = {a:1, b:2}; a; b;");
 
-    testSame("var {['a']:a, ['b']:b} = {a:1, b:2};");
+    test(
+        "var {['a']:a, ['b']:b} = {a:1, b:2};",
+        "var {} = {a:1, b:2};");
 
     testSame("var {[foo()]:a, [bar()]:b} = {a:1, b:2};");
 
@@ -243,6 +245,16 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     testSame("var f = (usedParam = 0) => { usedParam; }; f();");
 
     test("var f = (usedParam = 0) => {usedParam;};", "");
+  }
+
+  public void testFunctionArgRemoval_defaultValue6() {
+    // Parameters already encountered can be used by later parameters
+    testSame("var x = 2; function f(y = x) { use(y); }; f();");
+  }
+
+  public void testFunctionArgRemoval_defaultValue7() {
+    // Parameters already encountered can be used by later parameters
+    test("var x = 2; function f(y = x) {}; f();", "function f() {}; f();");
   }
 
   public void testDestructuringParams() {
@@ -286,7 +298,9 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     test("function f({a}, b, {c}) {use(a)}; f({}, {});", "function f({a}) {use(a)}; f({}, {});");
 
     // Default and traditional
-    testSame("function f(unusedParam = undefined, z) { z; }; f();");
+    test(
+        "function f(unusedParam = undefined, z) { z; }; f();",
+        "function f(unusedParam, z) { z; }; f();");
   }
 
   public void testDefaultParams() {
@@ -318,14 +332,43 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
             "new Foo;"));
   }
 
-  public void testDefaultParamsWithSideEffects() {
+  public void testDefaultParamsWithoutSideEffects0() {
+    test(
+        "function f({} = {}){}; f()",
+        "function f(){}; f()");
+  }
+
+  public void testDefaultParamsWithoutSideEffects1() {
+    test(
+        "function f(a = 1) {}; f();",
+        "function f() {}; f();");
+
+    test(
+        "function f({a:b = 1} = 1){}; f();",
+        "function f(){}; f();");
+
+    test(
+        "function f({a:b} = {}){}; f();",
+        "function f(){}; f();");
+  }
+
+  public void testDefaultParamsWithSideEffects1() {
     testSame("function f(a = alert('foo')) {}; f();");
 
     testSame("function f({} = alert('foo')){}; f()");
 
+    test("function f(){var x; var {a:b} = x()}; f();", "function f(){var x; var {} = x()}; f();");
+
+    test(
+        "function f(){var {a:b} = alert('foo')}; f();",
+        "function f(){var {} = alert('foo')}; f();");
     test("function f({a:b} = alert('foo')){}; f();", "function f({} = alert('foo')){}; f();");
 
     testSame("function f({a:b = alert('bar')} = alert('foo')){}; f();");
+  }
+
+  public void testDefaultParamsWithSideEffects2() {
+    test("function f({a:b} = alert('foo')){}; f();", "function f({} = alert('foo')){}; f();");
   }
 
   public void testArrayDestructuringParams() {
@@ -339,6 +382,17 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
     // Side effects
     test("function f([x] = [foo()]) {}; f();", "function f([] = [foo()]) {}; f();");
+  }
+
+  public void testRestPattern() {
+    test("var x; [...x] = y;", "[] = y");
+    test("var [...x] = y;", "var [] = y");
+    testSame("var x; [...x] = y; use(x);");
+    testSame("var [...x] = y; use(x);");
+    testSame("var x; [...x.y] = z;");
+    testSame("var x; [...x['y']] = z;");
+    testSame("var x; [...x().y] = z;");
+    testSame("var x; [...x()['y']] = z;");
   }
 
   public void testRestParams() {
@@ -1256,40 +1310,197 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     );
   }
 
-  public void testDestructuringArrayPattern() {
-    testSame(
-        LINE_JOINER.join(
+  public void testDestructuringArrayPattern0() {
+    test("function f(a) {} f();", "function f() {} f();");
+    test("function f([a]) {} f();", "function f() {} f();");
+    test("function f(...a) {} f();", "function f() {} f();");
+    test("function f(...[a]) {} f();", "function f() {} f();");
+    test("function f(...[...a]) {} f();", "function f() {} f();");
+    test("function f(...{length:a}) {} f();", "function f() {} f();");
+
+    test("function f(a) {} f();", "function f() {} f();");
+    test("function f([a] = 1) {} f();", "function f() {} f();");
+    test("function f([a] = g()) {} f();", "function f([] = g()) {} f();");
+
+    test("function f(a = 1) {} f();", "function f() {} f();");
+    test("function f([a = 1]) {} f();", "function f() {} f();");
+    test("function f(...[a = 1]) {} f();", "function f() {} f();");
+    test("function f(...{length:a = 1}) {} f();", "function f() {} f();");
+
+    testSame("function f(a = g()) {} f();");
+    testSame("function f([a = g()]) {} f();");
+    testSame("function f(...[a = g()]) {} f();");
+    testSame("function f(...{length:a = g()}) {} f();");
+
+    test("function f([a] = []) {} f();", "function f() {} f();");
+    test("function f([a]) {} f();", "function f() {} f();");
+    test("function f([a], b) {} f();", "function f() {} f();");
+    test("function f([a], ...b) {} f();", "function f() {} f();");
+    test("function f([...a]) {} f();", "function f() {} f();");
+    test("function f([[]]) {} f();", "function f([[]]) {} f();");
+    test("function f([[],...a]) {} f();", "function f([[]]) {} f();");
+
+    test("var [a] = [];", "var [] = [];");
+    test("var [...a] = [];", "var [] = [];");
+    test("var [...[...a]] = [];", "var [...[]] = [];");
+
+    test("var [a, b] = [];", "var [,] = [];");
+    test("var [a, ...b] = [];", "var [,] = [];");
+    test("var [a, ...[...b]] = [];", "var [,...[]] = [];");
+
+    test("var [a, b, c] = []; use(a, b);", "var [a,b  ] = []; use(a, b);");
+    test("var [a, b, c] = []; use(a, c);", "var [a, ,c] = []; use(a, c);");
+    test("var [a, b, c] = []; use(b, c);", "var [ ,b,c] = []; use(b, c);");
+
+    test("var [a, b, c] = []; use(a);", "var [a, , ] = []; use(a);");
+    test("var [a, b, c] = []; use(b);", "var [ ,b, ] = []; use(b);");
+    test("var [a, b, c] = []; use(c);", "var [ , ,c] = []; use(c);");
+
+    test("var a, b, c; [a, b, c] = []; use(a);", "var a; [a, , ] = []; use(a);");
+    test("var a, b, c; [a, b, c] = []; use(b);", "var b; [ ,b, ] = []; use(b);");
+    test("var a, b, c; [a, b, c] = []; use(c);", "var c; [ , ,c] = []; use(c);");
+
+    test("var a, b, c; [[a, b, c]] = []; use(a);", "var a; [[a, , ]] = []; use(a);");
+    test("var a, b, c; [{a, b, c}] = []; use(a);", "var a; [{a}] = []; use(a);");
+    test("var a, b, c; ({x:[a, b, c]} = []); use(a);", "var a; ({x:[a,,]} = []); use(a);");
+
+    test("var a, b, c; [[a, b, c]] = []; use(b);", "var b; [[ ,b, ]] = []; use(b);");
+    test("var a, b, c; [[a, b, c]] = []; use(c);", "var c; [[ , ,c]] = []; use(c);");
+
+    test("var a, b, c; [a, b, ...c] = []; use(a);", "var a; [a, , ] = []; use(a);");
+    test("var a, b, c; [a, b, ...c] = []; use(b);", "var b; [ ,b, ] = []; use(b);");
+    test("var a, b, c; [a, b, ...c] = []; use(c);", "var c; [ , ,...c] = []; use(c);");
+
+    test("var a, b, c; [a=1, b=2, c=3] = []; use(a);", "var a; [a=1,   , ] = []; use(a);");
+    test("var a, b, c; [a=1, b=2, c=3] = []; use(b);", "var b; [   ,b=2, ] = []; use(b);");
+    test("var a, b, c; [a=1, b=2, c=3] = []; use(c);", "var c; [   ,   ,c=3] = []; use(c);");
+
+    testSame("var a, b, c; [a.x, b.y, c.z] = []; use(a);"); // unnecessary retention of b,c
+    testSame("var a, b, c; [a.x, b.y, c.z] = []; use(b);"); // unnecessary retention of a,c
+    testSame("var a, b, c; [a.x, b.y, c.z] = []; use(c);"); // unnecessary retention of a,b
+
+    testSame("var a, b, c; [a().x, b().y, c().z] = []; use(a);");
+    testSame("var a, b, c; [a().x, b().y, c().z] = []; use(b);");
+    testSame("var a, b, c; [a().x, b().y, c().z] = []; use(c);");
+  }
+
+  public void testDestructuringArrayPattern1() {
+    test(
+        lines(
             "var a; var b",
-            "[a, b] = [1, 2]"));
+            "[a, b] = [1, 2]"),
+        lines(
+            "[,] = [1, 2]"));
 
     test(
-        LINE_JOINER.join(
+        lines(
+            "var b; var a",
+            "[a, b] = [1, 2]"),
+        lines(
+            "[] = [1, 2]"));
+
+    test(
+        lines(
             "var a; var b;",
             "[a] = [1]"),
-        LINE_JOINER.join(
-            "var a; ",
-            "[a] = [1]"
-        ));
+        lines(
+            "[] = [1]"));
 
     testSame("var [a, b] = [1, 2]; f(a); f(b);");
   }
 
-  public void testDestructuringObjectPattern() {
-    testSame("var a; var b; ({a, b} = {a:1, b:2})");
+  public void testDestructuringObjectPattern0() {
+    test("function f({a}) {} f();", "function f() {} f();");
+    test("function f({a:b}) {} f();", "function f() {} f();");
+    test("function f({[a]:b}) {} f();", "function f() {} f();");
+    test("function f({['a']:b}) {} f();", "function f() {} f();");
+    testSame("function f({[a()]:b}) {} f();");
+    test("function f({a} = {}) {} f();", "function f() {} f();");
+    test("function f({a:b} = {}) {} f();", "function f() {} f();");
+    testSame("function f({[a()]:b} = {}) {} f();");
+    test("function f({a} = g()) {} f();", "function f({} = g()) {} f();");
+    test("function f({a:b} = g()) {} f();", "function f({} = g()) {} f();");
+    testSame("function f({[a()]:b} = g()) {} f();");
+    test("function f({a = 1}) {} f();", "function f() {} f();");
+    test("function f({a:b = 1}) {} f();", "function f() {} f();");
+    test("function f({[a]:b = 1}) {} f();", "function f() {} f();");
+    test("function f({['a']:b = 1}) {} f();", "function f() {} f();");
+    testSame("function f({[a()]:b = 1}) {} f();");  // fix me, remove "= 1"
+    test("function f({a = 1}) {} f();", "function f() {} f();");
+    testSame("function f({a:b = g()}) {} f();");
+    testSame("function f({[a]:b = g()}) {} f();");
+    testSame("function f({['a']:b = g()}) {} f();");
+    testSame("function f({[a()]:b = g()}) {} f();");
 
-    test("var a; var b; ({a} = {a:1})", "var a; ({a} = {a:1})");
+    test("function f({a}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
+    test("function f({a:b}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
+    test("function f({[a]:b}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
+    test("function f({['a']:b}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
+    testSame("function f({[a()]:b}, c) {use(c)} f();");
+    test("function f({a} = {}, c) {use(c)} f();", "function f({} = {}, c) {use(c)} f();");
+    test("function f({a:b} = {}, c) {use(c)} f();", "function f({} = {}, c) {use(c)} f();");
+    testSame("function f({[a()]:b} = {}, c) {use(c)} f();");
+    test("function f({a} = g(), c) {use(c)} f();", "function f({} = g(), c) {use(c)} f();");
+    test("function f({a:b} = g(), c) {use(c)} f();", "function f({} = g(), c) {use(c)} f();");
+    testSame("function f({[a()]:b} = g(), c) {use(c)} f();");
+    test("function f({a = 1}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
+    test("function f({a:b = 1}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
+    test("function f({[a]:b = 1}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
+    test("function f({['a']:b = 1}, c) {use(c)} f();", "function f({}, c) {use(c)} f();");
+    testSame("function f({[a()]:b = 1}, c) {use(c)} f();");  // fix me, remove "= 1"
+
+    test("var {a} = {a:1};", "var {} = {a:1};");
+    test("var {a:a} = {a:1};", "var {} = {a:1};");
+    test("var {['a']:a} = {a:1};", "var {} = {a:1};");
+    test("var {['a']:a = 1} = {a:1};", "var {} = {a:1};");
+    testSame("var {[f()]:a = 1} = {a:1};");
+    test("var {a:a = 1} = {a:1};", "var {} = {a:1};");
+    testSame("var {a:a = f()} = {a:1};");
+
+    test("var a; ({a} = {a:1});", "({} = {a:1});");
+    test("var a; ({a:a} = {a:1});", "({} = {a:1});");
+    test("var a; ({['a']:a} = {a:1});", "({} = {a:1});");
+    test("var a; ({['a']:a = 1} = {a:1});", "({} = {a:1});");
+    testSame("var a; ({[f()]:a = 1} = {a:1});");
+    test("var a; ({a:a = 1} = {a:1});", "({} = {a:1});");
+    testSame("var a; ({a:a = f()} = {a:1});");
+
+    testSame("var a = {}; ({a:a.foo} = {a:1});");
+    testSame("var a = {}; ({['a']:a.foo} = {a:1});");
+    testSame("var a = {}; ({['a']:a.foo = 1} = {a:1});");
+    testSame("var a = {}; ({[f()]:a.foo = 1} = {a:1});");
+    testSame("var a = {}; ({a:a.foo = 1} = {a:1});");
+    testSame("var a = {}; ({a:a.foo = f()} = {a:1});");
+
+    testSame("var a = {}; ({a:a().foo} = {a:1});");
+    testSame("var a = {}; ({['a']:a().foo} = {a:1});");
+    testSame("var a = {}; ({['a']:a().foo = 1} = {a:1});");
+    testSame("var a = {}; ({[f()]:a().foo = 1} = {a:1});");
+    testSame("var a = {}; ({a:a().foo = 1} = {a:1});");
+    testSame("var a = {}; ({a:a().foo = f()} = {a:1});");
+  }
+
+  public void testDestructuringObjectPattern1() {
+    test("var a; var b; ({a, b} = {a:1, b:2})", "({} = {a:1, b:2});");
+    test("var a; var b; ({a:a, b:b} = {a:1, b:2})", "({} = {a:1, b:2});");
+    testSame("var a; var b; ({[next()]:a, [next()]:b} = {x:1, y:2})");
+
+    test("var a; var b; ({a} = {a:1})", "({} = {a:1})");
+    test("var a; var b; ({a:a.foo} = {a:1})", "var a; ({a:a.foo} = {a:1})");
 
     testSame("var {a, b} = {a:1, b:2}; f(a); f(b);");
 
     testSame("var {a} = {p:{}, q:{}}; a.q = 4;");
 
     // Nested Destructuring
-    testSame("const someObject = {a:{ b:1 }}; var {a: {b}} = someObject; someObject.a.b;");
+    test(
+        "const someObject = {a:{ b:1 }}; var {a: {b}} = someObject; someObject.a.b;",
+        "const someObject = {a:{ b:1 }}; var {a: {}} = someObject; someObject.a.b;");
 
     testSame("const someObject = {a:{ b:1 }}; var {a: {b}} = someObject; b;");
   }
 
-  public void testRemoveUnusedVarsDeclaredInDestructuring() {
+  public void testRemoveUnusedVarsDeclaredInDestructuring0() {
     // Array destructuring
     test("var [a, b] = [1, 2]; f(a);", "var [a] = [1, 2]; f(a);");
 
@@ -1299,13 +1510,19 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     test("var {a, b} = {a:1, b:2}; f(a);", "var {a,  } = {a:1, b:2}; f(a);");
 
     test("var {a, b} = {a:1, b:2};", "var { } = {a:1, b:2};");
+  }
 
+  public void testRemoveUnusedVarsDeclaredInDestructuring1() {
     // Nested pattern
-    testSame("var {a, b:{c}} = {a:1, b:{c:5}}; f(a);");
+    test(
+        "var {a, b:{c}} = {a:1, b:{c:5}}; f(a);",
+        "var {a, b:{}} = {a:1, b:{c:5}}; f(a);");
 
     testSame("var {a, b:{c}} = {a:1, b:{c:5}}; f(a, c);");
 
-    testSame("var {a, b:{c}} = obj;");
+    test(
+        "var {a, b:{c}} = obj;",
+        "var {b:{}} = obj;");
 
     // Value may have side effects
     test("var {a, b} = {a:foo(), b:bar()};", "var {    } = {a:foo(), b:bar()};");
