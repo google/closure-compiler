@@ -19,7 +19,6 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.javascript.rhino.jstype.JSTypeNative.U2U_CONSTRUCTOR_TYPE;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
@@ -1740,15 +1739,19 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       RawNominalType delegateBase = findInScope(rel.delegateBase);
       RawNominalType delegator = findInScope(rel.delegator);
       RawNominalType delegateSuper = findInScope(convention.getDelegateSuperclassName());
+      // Note: OTI also verified that getConstructor() was non-null on each of these, but since
+      // they're all coming from RawNominalTypes, there should be no way that can fail here.
       if (delegator != null && delegateBase != null && delegateSuper != null) {
-        // Note: OTI also verified that getConstructor() was non-null on each of these, but since
-        // they're all coming from RawNominalTypes, there should be no way that can fail here.
+        // A function that takes some constructor, and returns the corresponding delegate.
         JSType findDelegate =
             new FunctionTypeBuilder(getCommonTypes())
-                .addReqFormal(getCommonTypes().getNativeType(U2U_CONSTRUCTOR_TYPE))
+                .addReqFormal(getCommonTypes().qmarkFunction())
                 .addRetType(JSType.join(getCommonTypes().NULL, delegateBase.getInstanceAsJSType()))
                 .buildType();
 
+        // Normally, types are defined during CollectNamedTypes, but here we are defining a class
+        // during ProcessScope. (We do add it to nominaltypesByNode with a fake defSite.)
+        // The late creation doesn't seem to cause an issue, but worth noting.
         RawNominalType delegateProxy = RawNominalType.makeClass(
             getCommonTypes(),
             delegateBase.getDefSite() /* defSite */,
