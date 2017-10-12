@@ -39,7 +39,6 @@ import com.google.gson.stream.JsonWriter;
 import com.google.javascript.jscomp.CompilerOptions.JsonStreamMode;
 import com.google.javascript.jscomp.CompilerOptions.OutputJs;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
-import com.google.javascript.jscomp.deps.ClosureBundler;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
 import com.google.javascript.rhino.Node;
@@ -2006,7 +2005,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   @VisibleForTesting
   void printBundleTo(Iterable<CompilerInput> inputs, Appendable out)
       throws IOException {
-    ClosureBundler bundler = new ClosureBundler();
 
     for (CompilerInput input : inputs) {
       // Every module has an empty file in it. This makes it easier to implement
@@ -2034,7 +2032,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       out.append(displayName);
       out.append("\n");
 
-      bundler.appendTo(out, input, input.getSourceFile().getCode());
+      if (input.isModule()) {
+        // TODO(sdh): This is copied from ClosureBundler
+        out.append("goog.loadModule(function(exports) {'use strict';");
+        out.append(input.getSourceFile().getCode());
+        out.append("\n;return exports;});\n");
+      } else {
+        out.append(input.getSourceFile().getCode());
+      }
 
       out.append("\n");
     }
