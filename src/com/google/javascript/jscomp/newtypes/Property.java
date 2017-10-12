@@ -103,12 +103,17 @@ class Property implements Serializable {
 
   Property withOptional() {
     return isOptional() ? this
-        : new Property(defSite, inferredType, declaredType, Attribute.OPTIONAL);
+        : new Property(this.defSite, this.inferredType, this.declaredType, Attribute.OPTIONAL);
   }
 
   Property withRequired() {
     return isRequired() ? this
-        : new Property(defSite, inferredType, declaredType, Attribute.REQUIRED);
+        : new Property(this.defSite, this.inferredType, this.declaredType, Attribute.REQUIRED);
+  }
+
+  Property withNewType(JSType newType) {
+    return new Property(
+        this.defSite, newType, this.declaredType == null ? null : newType, this.attribute);
   }
 
   private static Attribute meetAttributes(Attribute a1, Attribute a2) {

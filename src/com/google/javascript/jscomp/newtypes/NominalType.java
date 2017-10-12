@@ -345,6 +345,10 @@ public final class NominalType implements Serializable {
     return this.rawType.getAllNonInheritedInstanceProps();
   }
 
+  /**
+   * Use with caution during GlobalTypeInfo; if some types are not known/resolved,
+   * the instantiation may be wrong.
+   */
   public NominalType getInstantiatedSuperclass() {
     if (this.rawType.getSuperClass() == null) {
       return null;

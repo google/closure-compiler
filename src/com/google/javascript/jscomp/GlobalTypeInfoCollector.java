@@ -293,7 +293,10 @@ public class GlobalTypeInfoCollector implements CompilerPass {
   private DefaultNameGenerator funNameGen;
   // Only for original definitions, not for aliased constructors
   private Map<Node, RawNominalType> nominaltypesByNode = new LinkedHashMap<>();
-  // Keyed on RawNominalTypes and property names
+  // propertyDefs collects places in the AST where properties are defined.
+  // For properties that are methods, PropertyDef includes some extra information.
+  // We use propertyDefs to handle inheritance issues, e.g., invalid property overrides.
+  // Keyed on RawNominalTypes and property names.
   private HashBasedTable<RawNominalType, String, PropertyDef> propertyDefs =
       HashBasedTable.create();
   private final Set<RawNominalType> inProgressFreezes = new LinkedHashSet<>();
@@ -715,8 +718,9 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       return;
     }
     PropertyDef localPropDef = propertyDefs.get(current, pname);
-    JSType localPropType = localPropDef == null
-        ? null : current.getInstancePropDeclaredType(pname);
+    // If the property is inherited, we want to drop the result of getInstancePropDeclaredType.
+    JSType localPropType =
+        localPropDef == null ? null : current.getInstancePropDeclaredType(pname);
     if (localPropDef != null && superType.isClass()
         && localPropType != null
         && localPropType.getFunType() != null
@@ -2155,18 +2159,11 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         getProp.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
         return;
       }
-      JSType recvType = simpleInferExprType(recv);
-      // Might still be worth recording a property, e.g. on a function.
-      PropertyDef def = findPropertyDef(recv);
-      if (def != null) {
-        JSType type =
-            getProp.getNext() != null
-                ? simpleInferExprType(getProp.getNext())
-                : getCommonTypes().UNKNOWN;
-        if (type != null) {
-          def.addProperty(recv.getNext().getString(), type);
-        }
+      if (isPrototypeProperty(getProp.getFirstChild())) {
+        mayAddPropertyToPrototypeMethod(getProp);
+        return;
       }
+      JSType recvType = simpleInferExprType(recv);
       if (recvType == null) {
         return;
       }
@@ -2202,18 +2199,46 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       }
     }
 
-    /** Given a qualified name node, find a corresponding PropertyDef in propertyDefs. */
-    PropertyDef findPropertyDef(Node n) {
-      if (!isPrototypeProperty(n)) {
-        return null;
+    /**
+     * Handle property declarations on prototype methods, such as:
+     *   Foo.prototype.f = function() {};
+     *   Foo.prototype.f.numprop = 123;
+     * We need to handle these definitions because some frameworks define such properties.
+     * Note that these declarations are still not as general as declarations on namespaces, e.g.,
+     * we don't handle definitions of new types on prototype methods.
+     */
+    void mayAddPropertyToPrototypeMethod(Node getProp) {
+      Node protoProp = getProp.getFirstChild();
+      if (!isPrototypeProperty(protoProp)) {
+        return;
       }
-      RawNominalType ownerType =
-          currentScope.getNominalType(QualifiedName.fromNode(n.getFirstFirstChild()));
+      String protoPropName = protoProp.getLastChild().getString();
+      QualifiedName rawtypeQname = QualifiedName.fromNode(protoProp.getFirstFirstChild());
+      RawNominalType ownerType = this.currentScope.getNominalType(rawtypeQname);
       if (ownerType == null) {
-        return null;
+        return;
       }
-      String propertyName = n.getLastChild().getString();
-      return propertyDefs.get(ownerType, propertyName);
+      PropertyDef def = propertyDefs.get(ownerType, protoPropName);
+      if (def == null || def.methodType == null) {
+        return;
+      }
+      Node rhs = NodeUtil.getRValueOfLValue(getProp);
+      JSType newPropType = rhs == null ? null : simpleInferExprType(rhs);
+      if (newPropType == null) {
+        newPropType = getCommonTypes().UNKNOWN;
+      }
+      if (newPropType.isConstructor() || newPropType.isInterfaceDefinition()) {
+        // A prototype property is not a namespace, so don't allow defining types on it.
+        return;
+      }
+      String newPropName = getProp.getLastChild().getString();
+      JSType protoPropType = ownerType.getProtoPropDeclaredType(protoPropName);
+      if (protoPropType == null) {
+        protoPropType = getCommonTypes().fromFunctionType(def.methodType.toFunctionType());
+      }
+      ownerType.updateProtoProperty(
+          protoPropName,
+          protoPropType.withProperty(new QualifiedName(newPropName), newPropType));
     }
 
     boolean mayWarnAboutNoInit(Node constExpr) {
@@ -2806,7 +2831,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         if (propDeclType == null) {
           propDeclType = mayInferFromRhsIfConst(defSite);
         }
-        def.setter = new PropertySetter(rawType, pname, propDeclType, isConst);
         rawType.addProtoProperty(pname, defSite, propDeclType, isConst);
         if (defSite.isGetProp()) { // Don't bother saving for @lends
           defSite.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
@@ -2993,7 +3017,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     final Node defSite; // The getProp/objectLitKey of the property definition
     DeclaredFunctionType methodType; // null for non-method property decls
     final NTIScope methodScope; // null for decls without function on the RHS
-    PropertySetter setter; // optional extra information for updating the rawtype
 
     PropertyDef(
         Node defSite, DeclaredFunctionType methodType, NTIScope methodScope) {
@@ -3011,7 +3034,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       }
       PropertyDef def = new PropertyDef(
           this.defSite, this.methodType.substituteNominalGenerics(nt), this.methodScope);
-      def.setter = this.setter;
       return def;
     }
 
@@ -3022,29 +3044,9 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       }
     }
 
-    void addProperty(String name, JSType type) {
-      if (this.setter != null) {
-        setter.type = setter.type.withProperty(new QualifiedName(name), type);
-        setter.rawType.addProtoProperty(setter.name, defSite, setter.type, setter.isConstant);
-      }
-    }
-
     @Override
     public String toString() {
       return "PropertyDef(" + defSite + ", " + methodType + ")";
-    }
-  }
-
-  private static class PropertySetter {
-    final RawNominalType rawType;
-    final String name;
-    JSType type;
-    final boolean isConstant;
-    PropertySetter(RawNominalType rawType, String name, JSType type, boolean isConstant) {
-      this.rawType = rawType;
-      this.name = name;
-      this.type = type;
-      this.isConstant = isConstant;
     }
   }
 

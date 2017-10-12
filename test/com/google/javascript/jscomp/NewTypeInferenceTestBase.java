@@ -56,6 +56,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
       LINE_JOINER.join(
           "/** @const */",
           "var goog = {};",
+          "goog.inherits = function(child, parent){};",
           "/** @return {void} */",
           "goog.nullFunction = function() {};",
           "/** @type {!Function} */",

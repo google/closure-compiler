@@ -19469,13 +19469,10 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
   }
 
   public void testAbstractMethodCallsWithGoogInerhits() {
-    String closureDefs = LINE_JOINER.join(
-        "/** @const */ var goog = {};",
-        "goog.inherits = function(child, parent){};");
     // Converted from Closure style "goog.base" super call
     typeCheck(
         LINE_JOINER.join(
-            closureDefs,
+            CLOSURE_BASE,
             "/** @const */ var ns = {};",
             "/** @constructor @abstract */ ns.A = function() {};",
             "/** @abstract */ ns.A.prototype.foo = function() {};",
@@ -19488,7 +19485,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
 
     typeCheck(
         LINE_JOINER.join(
-            closureDefs,
+            CLOSURE_BASE,
             "/** @const */ var ns = {};",
             "/** @constructor @abstract */ ns.A = function() {};",
             "/** @abstract */ ns.A.prototype.foo = function() {};",
@@ -19501,7 +19498,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
 
     typeCheck(
         LINE_JOINER.join(
-            closureDefs,
+            CLOSURE_BASE,
             "/** @constructor @abstract */ var A = function() {};",
             "/** @abstract */",
             "A.prototype.foo = function() {};",
@@ -19512,7 +19509,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
 
     typeCheck(
         LINE_JOINER.join(
-            closureDefs,
+            CLOSURE_BASE,
             "/** @struct @constructor @abstract */ var A = function() {};",
             "/** @abstract */ A.prototype.foo = function() {};",
             "/** @struct @constructor @extends {A} */ var B = function() {};",
@@ -19526,7 +19523,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
 
     typeCheck(
         LINE_JOINER.join(
-            closureDefs,
+            CLOSURE_BASE,
             "/** @struct @constructor */ var A = function() {};",
             "A.prototype.foo = function() {};",
             "/** @struct @constructor @extends {A} */ var B = function() {};",
@@ -19539,7 +19536,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
 
     typeCheck(
         LINE_JOINER.join(
-            closureDefs,
+            CLOSURE_BASE,
             "/** @constructor @abstract */ function A() {};",
             "/** @abstract */ A.prototype.foo = function() {};",
             "/** @constructor @extends {A} */ function B() {};",
@@ -21855,6 +21852,79 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "Foo.prototype.bar = function() {};",
             "Foo.prototype.bar.baz;",
             "var qux = new Foo().bar.baz;"));
+
+    // We register bar#p even though we can't infer the type of x.
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  /** @constructor */",
+        "  function Foo() {}",
+        "  Foo.prototype.bar = function() {};",
+        "  Foo.prototype.bar.p = x;",
+        "  var y = (new Foo).bar.p;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.bar = function() {};",
+        "Foo.prototype.bar.p1 = 123;",
+        "Foo.prototype.bar.p2 = 'asdf';",
+        "var /** number */ n = (new Foo).bar.p2;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // Property bar#p isn't inherited by Baz. A framework may copy such properties explicitly
+    // from the superclass to the subclass.
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.bar = function() {};",
+        "Foo.prototype.bar.p = 123;",
+        "/** @constructor @extends {Foo} */",
+        "function Baz() {}",
+        "Baz.prototype.bar = function() {};",
+        "var /** string */ s = (new Baz).bar.p;"),
+        NewTypeInference.INEXISTENT_PROPERTY);
+
+    // The properties declared on prototype methods are not declared (the type annotation is
+    // ignored). Not necessarily a good decision, but documenting with a test.
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() {}",
+            "/** @param {number} x */",
+            "Foo.prototype.bar = function(x) {};",
+            "/** @type {number} */",
+            "Foo.prototype.bar.baz = 42;",
+            "Foo.prototype.bar.baz = '';"));
+
+    // We only record the properties on methods, not on non-method prototype properties.
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() {}",
+            "Foo.prototype.bar = {};",
+            "Foo.prototype.bar.baz = 42;",
+            "var x = (new Foo).bar.baz;"),
+        NewTypeInference.INEXISTENT_PROPERTY);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.bar = function() {};",
+        "/** @constructor */",
+        "Foo.prototype.bar.Baz = function() {};",
+        "var /** !Foo.prototype.bar.Baz */ x = new (new Foo).bar.Baz();"),
+        GlobalTypeInfoCollector.UNRECOGNIZED_TYPE_NAME,
+        NewTypeInference.INEXISTENT_PROPERTY);
+
+    // Don't add a stray property to all functions
+    typeCheck(
+        LINE_JOINER.join(
+            "/** @constructor */ function Foo() {}",
+            "/** @param {number} x */",
+            "Foo.prototype.bar = function(x) {};",
+            "/** @type {number} */",
+            "Foo.prototype.bar.baz = 42;",
+            "var /** string */ s = (function() {}).baz;"),
+        NewTypeInference.INEXISTENT_PROPERTY);
   }
 
   public void testAliasedNamespaceWithDotInTheName() {

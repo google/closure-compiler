@@ -625,6 +625,16 @@ public final class RawNominalType extends Namespace {
     this.protoProps = this.protoProps.with(pname, newProp);
   }
 
+  /**
+   * Update the type of an existing prototype property. We use this when properties are defined
+   * on prototype methods.
+   */
+  public void updateProtoProperty(String pname, JSType type) {
+    checkState(this.protoProps.containsKey(pname));
+    Property newProp = this.protoProps.get(pname).withNewType(type);
+    this.protoProps = this.protoProps.with(pname, newProp);
+  }
+
   /** Add a new undeclared prototype property to this class */
   public void addUndeclaredProtoProperty(String pname, Node defSite, JSType inferredType) {
     checkState(!this.isFrozen);
