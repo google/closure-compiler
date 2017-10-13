@@ -16,6 +16,7 @@
 package com.google.javascript.refactoring.examples;
 
 import static com.google.javascript.refactoring.testing.RefasterJsTestUtils.assertFileRefactoring;
+import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
@@ -38,11 +39,6 @@ public class ChaiExpectToAssertTest {
 
   @Test
   public void test_refactorings() throws Exception {
-    assertFileRefactoring(
-        NAVIGATIONAL_XSS_SINKS_TEMPLATE,
-        TESTDATA_DIR,
-        "chai_expect_to_assert_in.js",
-        ImmutableList.of("chai-externs.js"),
-        "chai_expect_to_assert_out.js");
+    fail("just trying something");
   }
 }
