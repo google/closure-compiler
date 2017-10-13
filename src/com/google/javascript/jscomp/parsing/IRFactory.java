@@ -2861,10 +2861,68 @@ class IRFactory {
 
   String normalizeRegex(LiteralToken token) {
     String value = token.value;
-    int lastSlash = value.lastIndexOf('/');
-    return value.substring(1, lastSlash);
-  }
+    final int lastSlash = value.lastIndexOf('/');
+    int cur = value.indexOf('\\');
+    if (cur == -1) {
+      return value.substring(1, lastSlash);
+    }
 
+    StringBuilder result = new StringBuilder();
+    int start = 1;
+    while (cur != -1) {
+      result.append(value, start, cur);
+
+      cur++; // skip the escape char.
+      char c = value.charAt(cur);
+      switch (c) {
+        // Characters for which the backslash is semantically important.
+        case '^':
+        case '$':
+        case '\\':
+        case '/':
+        case '.':
+        case '*':
+        case '+':
+        case '?':
+        case '(':
+        case ')':
+        case '[':
+        case ']':
+        case '{':
+        case '}':
+        case '|':
+        case '-':
+        case 'b':
+        case 'B':
+        case 'c':
+        case 'd':
+        case 'D':
+        case 'f':
+        case 'n':
+        case 'r':
+        case 's':
+        case 'S':
+        case 't':
+        case 'u':
+        case 'v':
+        case 'w':
+        case 'W':
+        case 'x':
+        case '0': case '1': case '2': case '3': case '4':
+        case '5': case '6': case '7': case '8': case '9':
+          result.append('\\');
+          // fallthrough
+        default:
+          // For all other characters, the backslash has no effect, so just append the next char.
+          result.append(c);
+      }
+
+      start = cur + 1;
+      cur = value.indexOf('\\', start);
+    }
+    result.append(value, start, lastSlash);
+    return result.toString();
+  }
 
   String normalizeString(LiteralToken token, boolean templateLiteral) {
     String value = token.value;
@@ -2880,9 +2938,8 @@ class IRFactory {
     }
     StringBuilder result = new StringBuilder();
     while (cur != -1) {
-      if (cur - start > 0) {
-        result.append(value, start, cur);
-      }
+      result.append(value, start, cur);
+
       cur += 1; // skip the escape char.
       char c = value.charAt(cur);
       switch (c) {
@@ -2982,8 +3039,6 @@ class IRFactory {
           cur = escapeEnd - 1;
           break;
         default:
-          // TODO(tbreisacher): Add a warning because the user probably
-          // intended to type an escape sequence.
           result.append(c);
           break;
       }

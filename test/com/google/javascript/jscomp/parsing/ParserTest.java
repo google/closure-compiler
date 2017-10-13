@@ -2814,6 +2814,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNodeEquality(parse("/[\\]]/"), script(expr(regex("[\\]]"))));
   }
 
+  public void testRegExpError() {
+    parseError("/a\\/", "Expected '/' in regular expression literal");
+    parseError("/\\ca\\/", "Expected '/' in regular expression literal");
+    parseError("/\b.\\/", "Expected '/' in regular expression literal");
+  }
+
   public void testRegExpFlags() {
     // Various valid combinations.
     parse("/a/");

@@ -173,6 +173,7 @@ public class Scanner {
   }
 
   private boolean skipRegularExpressionBackslashSequence() {
+    // TODO(tbreisacher): Warn if this is an unnecessary escape, like we do for string literals.
     nextChar();
     if (isLineTerminator(peekChar())) {
       reportError("New line not allowed in regular expression literal");
@@ -883,7 +884,7 @@ public class Scanner {
     }
   }
 
-  @SuppressWarnings("IdentityBinaryExpression")
+  @SuppressWarnings("IdentityBinaryExpression") // for "skipHexDigit() && skipHexDigit()"
   private boolean skipStringLiteralEscapeSequence(boolean templateLiteral) {
     nextChar();
     if (isAtEnd()) {

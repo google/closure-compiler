@@ -2250,6 +2250,31 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("var x=/\\u2029/");
   }
 
+  public void testRegexp_escape() {
+    assertPrintSame("/\\bword\\b/");
+    assertPrintSame("/Java\\BScript/");
+    assertPrintSame("/\\ca/");
+    assertPrintSame("/\\cb/");
+    assertPrintSame("/\\cc/");
+    assertPrintSame("/\\cA/");
+    assertPrintSame("/\\cB/");
+    assertPrintSame("/\\cC/");
+    assertPrintSame("/\\d/");
+    assertPrintSame("/\\D/");
+    assertPrintSame("/\\0/");
+    assertPrintSame("/\\\\/");
+    assertPrintSame("/(.)\\1/");
+  }
+
+  public void testRegexp_unnecessaryEscape() {
+    assertPrint("/\\a/", "/a/");
+    assertPrint("/\\e/", "/e/");
+    assertPrint("/\\g/", "/g/");
+    assertPrint("/\\h/", "/h/");
+    assertPrint("/\\i/", "/i/");
+    assertPrint("/\\¡/", "/\\u00a1/");
+  }
+
   public void testKeywordProperties1() {
     languageMode = LanguageMode.ECMASCRIPT5;
     assertPrintSame("x.foo=2");
