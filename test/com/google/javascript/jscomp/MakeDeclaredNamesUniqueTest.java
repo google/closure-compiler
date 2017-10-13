@@ -80,6 +80,14 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     invert = false;
   }
 
+  private void testWithInversion(String[] original, String[] expected) {
+    invert = false;
+    test(original, expected);
+    invert = true;
+    test(expected, original);
+    invert = false;
+  }
+
   private void testSameWithInversion(String externs, String original) {
     invert = false;
     testSame(externs, original);
@@ -936,7 +944,21 @@ public final class MakeDeclaredNamesUniqueTest extends CompilerTestCase {
     // The eventual desired behavior is that none of the 'a's in the following test cases
     // are renamed to a$jscomp$1. Rewrite this test after that behavior is implemented.
     this.useDefaultRenamer = true;
-    testSame("var a; export {a as a};");
-    testSame("var a; import {a as a} from './bar.js'");
+    test(
+        new String[] {"var a;", "let a; export {a as a};"},
+        new String[] {"var a;", "let a$jscomp$1; export {a$jscomp$1 as a};"});
+
+    test(
+        new String[] {"var a;", "import {a as a} from './foo.js'; let b = a;"},
+        new String[] {"var a;", "import {a as a$jscomp$1} from './foo.js'; let b = a$jscomp$1;"});
+  }
+
+  public void testImportStarWithInversion() {
+    this.useDefaultRenamer = true;
+    testWithInversion(
+        new String[] {"let a = 5;", "import * as a from './a.js'; const TAU = 2 * a.PI;"},
+        new String[] {
+          "let a = 5;", "import * as a$jscomp$1 from './a.js'; const TAU = 2 * a$jscomp$1.PI"
+        });
   }
 }
