@@ -723,7 +723,7 @@ HTMLFormControlsCollection.prototype.namedItem = function(name) {};
 function HTMLFormElement() {}
 
 /**
- * @type {HTMLFormControlsCollection<!HTMLElement>}
+ * @type {!HTMLFormControlsCollection<!HTMLElement>}
  * @see http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/html.html#ID-76728479
  */
 HTMLFormElement.prototype.elements;
