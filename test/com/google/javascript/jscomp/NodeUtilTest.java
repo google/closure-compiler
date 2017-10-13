@@ -866,6 +866,61 @@ public final class NodeUtilTest extends TestCase {
     assertEquals(nodeNames, actualNames);
   }
 
+  public void testIsNonlocalModuleExportNameOnExports1() {
+    Node root = parse("export {localName as exportName};");
+    Node moduleBody = root.getFirstChild();
+    Node exportNode = moduleBody.getFirstChild();
+    Node exportSpecs = exportNode.getFirstChild();
+    Node exportSpec = exportSpecs.getFirstChild();
+
+    Node localName = exportSpec.getFirstChild();
+    Node exportName = exportSpec.getSecondChild();
+
+    assertFalse(NodeUtil.isNonlocalModuleExportName(localName));
+    assertTrue(NodeUtil.isNonlocalModuleExportName(exportName));
+
+  }
+
+  public void testIsNonlocalModuleExportNameOnExports2() {
+    Node root = parse("let bar; export {bar};");
+    Node moduleBody = root.getFirstChild();
+    Node exportNode = moduleBody.getSecondChild();
+    Node exportSpecs = exportNode.getFirstChild();
+    Node exportSpec = exportSpecs.getFirstChild();
+
+    Node name = exportSpec.getFirstChild();
+
+    // bar is defined locally, so isNonlocalModuleExportName is false.
+    assertFalse(NodeUtil.isNonlocalModuleExportName(name));
+  }
+
+  public void testIsNonlocalModuleExportNameOnImports1() {
+    Node root = parse("import {exportName as localName} from './foo.js';");
+    Node moduleBody = root.getFirstChild();
+    Node importNode = moduleBody.getFirstChild();
+    Node importSpecs = importNode.getSecondChild();
+    Node importSpec = importSpecs.getFirstChild();
+
+    Node exportName = importSpec.getFirstChild();
+    Node localName = importSpec.getSecondChild();
+
+    assertTrue(NodeUtil.isNonlocalModuleExportName(exportName));
+    assertFalse(NodeUtil.isNonlocalModuleExportName(localName));
+  }
+
+  public void testIsNonlocalModuleExportNameOnImports2() {
+    Node root = parse("import {bar} from './foo.js';");
+    Node moduleBody = root.getFirstChild();
+    Node importNode = moduleBody.getFirstChild();
+    Node importSpecs = importNode.getSecondChild();
+    Node importSpec = importSpecs.getFirstChild();
+
+    Node name = importSpec.getFirstChild();
+
+    // bar is defined locally so isNonlocalModuleExportName is false
+    assertFalse(NodeUtil.isNonlocalModuleExportName(name));
+  }
+
   public void testIsControlStructureCodeBlock() {
     Node root = parse("if (x) foo(); else boo();");
     Node ifNode = root.getFirstChild();

@@ -680,6 +680,22 @@ public final class VarCheckTest extends CompilerTestCase {
     testSame("import * as foo from './foo.js';");
   }
 
+  public void testExportAsAlias() {
+    testSame("let a = 1; export {a as b};");
+    testError("let a = 1; export {b as a};", VarCheck.UNDEFINED_VAR_ERROR);
+    testError("export {a as a};", VarCheck.UNDEFINED_VAR_ERROR);
+
+    // Make sure non-aliased exports still work correctly.
+    testSame("let a = 1; export {a}");
+    testError("let a = 1; export {b};", VarCheck.UNDEFINED_VAR_ERROR);
+  }
+
+  public void testImportAsAlias() {
+    testSame("import {b as a} from './foo.js'; let c = a;");
+    testError("import {b as a} from './foo.js'; let c = b;", VarCheck.UNDEFINED_VAR_ERROR);
+    testSame("import {a} from './foo.js'; let c = a;");
+  }
+
   private static final class VariableTestCheck implements CompilerPass {
 
     final AbstractCompiler compiler;

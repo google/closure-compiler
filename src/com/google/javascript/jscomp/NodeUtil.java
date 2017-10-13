@@ -2684,6 +2684,19 @@ public final class NodeUtil {
     return n.isName() && !n.getString().isEmpty();
   }
 
+  /**
+   * @return Whether the name in an import or export spec is not defined within the module, but is
+   *     an exported name from this or another module. e.g. nonlocal in "export {a as nonlocal}" or
+   *     "import {nonlocal as a} from './foo.js'"
+   */
+  static boolean isNonlocalModuleExportName(Node n) {
+    Node parent = n.getParent();
+    return (parent != null
+            && n.isName()
+            && ((parent.isExportSpec() && n != parent.getFirstChild())
+                || (parent.isImportSpec() && n != parent.getLastChild())));
+  }
+
   /** Whether the child node is the FINALLY block of a try. */
   static boolean isTryFinallyNode(Node parent, Node child) {
     return parent.isTry() && parent.hasXChildren(3)

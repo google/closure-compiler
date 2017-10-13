@@ -196,6 +196,9 @@ class VarCheck extends AbstractPostOrderCallback implements
             || (NodeUtil.isClassExpression(parent) && n == parent.getFirstChild())) {
           // e.g. [ function foo() {} ], it's okay if "foo" isn't defined in the
           // current scope.
+        } else if (NodeUtil.isNonlocalModuleExportName(n)) {
+          // e.g. "export {a as b}" or "import {b as a} from './foo.js'
+          // where b is defined in a module's export entries but not in any module scope.
         } else {
           boolean isArguments = scope.isFunctionScope() && ARGUMENTS.equals(varName);
           // The extern checks are stricter, don't report a second error.

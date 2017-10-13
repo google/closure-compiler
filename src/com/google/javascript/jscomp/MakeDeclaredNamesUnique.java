@@ -130,8 +130,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
 
   private void visitName(NodeTraversal t, Node n, Node parent) {
     // Don't rename the exported name foo in export {a as foo}; or import {foo as b};
-    if (parent != null && ((parent.isImportSpec() && parent.getFirstChild() == n)
-        || (parent.isExportSpec() && parent.getLastChild() == n))) {
+    if (NodeUtil.isNonlocalModuleExportName(n)) {
       return;
     }
     String newName = getReplacementName(n.getString());
