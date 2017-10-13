@@ -823,6 +823,10 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     if (!n.hasChildren()) {
       Node nameNode = IR.name(n.getString()).srcref(n);
       n.addChildToBack(nameNode);
+      Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(n);
+      if (changeScope != null) {
+        compiler.reportChangeToChangeScope(changeScope);
+      }
     }
   }
 
