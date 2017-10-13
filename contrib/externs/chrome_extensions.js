@@ -11223,20 +11223,40 @@ chrome.downloads.onDeterminingFilename;
 chrome.declarativeContent = {};
 
 
-/** @type {string} */
-chrome.declarativeContent.PageStateMatcherInstanceType;
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-PageStateMatcherInstanceType
+ */
+chrome.declarativeContent.PageStateMatcherInstanceType = {
+  DECLARATIVE_CONTENT_PAGE_STATE_MATCHER: ''
+};
 
 
-/** @type {string} */
-chrome.declarativeContent.ShowPageActionInstanceType;
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-ShowPageActionInstanceType
+ */
+chrome.declarativeContent.ShowPageActionInstanceType = {
+  DECLARATIVE_CONTENT_SHOW_PAGE_ACTION: ''
+};
 
 
-/** @type {string} */
-chrome.declarativeContent.SetIconInstanceType;
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-SetIconInstanceType
+ */
+chrome.declarativeContent.SetIconInstanceType = {
+  DECLARATIVE_CONTENT_SET_ICON: ''
+};
 
 
-/** @type {string} */
-chrome.declarativeContent.RequestContentScriptInstanceType;
+/**
+ * @enum {string}
+ * @see https://developer.chrome.com/extensions/declarativeContent#type-RequestContentScriptInstanceType
+ */
+chrome.declarativeContent.RequestContentScriptInstanceType = {
+  DECLARATIVE_CONTENT_REQUEST_CONTENT_SCRIPT: ''
+};
 
 
 /**
