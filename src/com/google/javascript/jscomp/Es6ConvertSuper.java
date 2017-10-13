@@ -35,11 +35,6 @@ import com.google.javascript.rhino.Token;
  */
 public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallback
     implements HotSwapCompilerPass {
-
-  static final DiagnosticType INVALID_SUPER_CALL =
-      DiagnosticType.error(
-          "JSC_INVALID_SUPER_CALL", "Calls to super cannot be used outside of a constructor.");
-
   private final AbstractCompiler compiler;
 
   public Es6ConvertSuper(AbstractCompiler compiler) {
@@ -159,8 +154,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
             "Only calls to super or to a method of super are supported."));
       }
     } else if (parent.isNew()) {
-      // new super(...)
-      compiler.report(JSError.make(node, INVALID_SUPER_CALL));
+      throw new IllegalStateException("This should never happen. Did Es6SuperCheck fail to run?");
     } else {
       // some other use of super we don't support yet
       compiler.report(JSError.make(node, CANNOT_CONVERT_YET,
@@ -197,8 +191,7 @@ public final class Es6ConvertSuper extends NodeTraversal.AbstractPostOrderCallba
       return;
     } else {
       // super can only be directly called in a constructor
-      compiler.report(JSError.make(node, INVALID_SUPER_CALL));
-      return;
+      throw new IllegalStateException("This should never happen. Did Es6SuperCheck fail to run?");
     }
   }
 

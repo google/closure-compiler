@@ -112,7 +112,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       "required entry point \"{0}\" never provided");
 
   static final DiagnosticType MISSING_MODULE_ERROR = DiagnosticType.error(
-      "JSC_MISSING_ENTRY_ERROR",
+      "JSC_MISSING_MODULE_ERROR",
       "unknown module \"{0}\" specified in entry point spec");
 
   static final DiagnosticType INCONSISTENT_MODULE_DEFINITIONS = DiagnosticType.error(
@@ -248,7 +248,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       "JSC_OPTIMIZE_LOOP_ERROR",
       "Exceeded max number of optimization iterations: {0}");
   public static final DiagnosticType MOTION_ITERATIONS_ERROR =
-      DiagnosticType.error("JSC_OPTIMIZE_LOOP_ERROR",
+      DiagnosticType.error("JSC_MOTION_ITERATIONS_ERROR",
           "Exceeded max number of code motion iterations: {0}");
 
   private final CompilerExecutor compilerExecutor = createCompilerExecutor();

@@ -704,8 +704,7 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup LATE_PROVIDE =
       DiagnosticGroups.registerGroup(
           "lateProvide", // undocumented
-          ProcessClosurePrimitives.LATE_PROVIDE_ERROR,
-          ClosureRewriteModule.LATE_PROVIDE_ERROR);
+          ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
 
   public static final DiagnosticGroup MISSING_POLYFILL =
       DiagnosticGroups.registerGroup(
