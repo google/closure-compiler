@@ -61,9 +61,6 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   private DependencyInfo dependencyInfo;
   private final List<String> extraRequires = new ArrayList<>();
   private final List<String> extraProvides = new ArrayList<>();
-  private final List<String> orderedRequires = new ArrayList<>();
-  private boolean hasFullParseDependencyInfo = false;
-  private ModuleType jsModuleType = ModuleType.NONE;
 
   // An AbstractCompiler for doing parsing.
   // We do not want to persist this across serialized state.
@@ -163,10 +160,6 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   /** Gets a list of types depended on by this input. */
   @Override
   public Collection<String> getRequires() {
-    if (hasFullParseDependencyInfo) {
-      return orderedRequires;
-    }
-
     return getDependencyInfo().getRequires();
   }
 
@@ -198,36 +191,19 @@ public class CompilerInput implements SourceAst, DependencyInfo {
         extraProvides);
   }
 
+  // TODO(nicksantos): Remove addProvide/addRequire/removeRequire once
+  // there is better support for discovering non-closure dependencies.
+
   /**
-   * Registers a type that this input defines. Includes both explicitly declared namespaces via
-   * goog.provide and goog.module calls as well as implicit namespaces provided by module rewriting.
+   * Registers a type that this input defines.
    */
   public void addProvide(String provide) {
     extraProvides.add(provide);
   }
 
-  /** Registers a type that this input depends on in the order seen in the file. */
-  public boolean addOrderedRequire(String require) {
-    if (!orderedRequires.contains(require)) {
-      orderedRequires.add(require);
-      return true;
-    }
-    return false;
-  }
-
-  public void setHasFullParseDependencyInfo(boolean hasFullParseDependencyInfo) {
-    this.hasFullParseDependencyInfo = hasFullParseDependencyInfo;
-  }
-
-  public ModuleType getJsModuleType() {
-    return jsModuleType;
-  }
-
-  public void setJsModuleType(ModuleType moduleType) {
-    jsModuleType = moduleType;
-  }
-
-  /** Registers a type that this input depends on. */
+  /**
+   * Registers a type that this input depends on.
+   */
   public void addRequire(String require) {
     extraRequires.add(require);
   }
@@ -516,12 +492,5 @@ public class CompilerInput implements SourceAst, DependencyInfo {
   public void reset() {
     this.module = null;
     this.ast.clearAst();
-  }
-
-  public enum ModuleType {
-    NONE,
-    GOOG_MODULE,
-    ES6,
-    COMMONJS
   }
 }

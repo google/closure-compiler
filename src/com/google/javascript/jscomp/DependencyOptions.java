@@ -20,7 +20,7 @@ import static com.google.common.base.MoreObjects.toStringHelper;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -43,7 +43,7 @@ public final class DependencyOptions implements Serializable {
   private boolean sortDependencies = false;
   private boolean pruneDependencies = false;
   private boolean dropMoochers = false;
-  private final Set<ModuleIdentifier> entryPoints = new LinkedHashSet<>();
+  private final Set<ModuleIdentifier> entryPoints = new HashSet<>();
 
   /**
    * Enables or disables dependency sorting mode.
