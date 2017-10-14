@@ -29,6 +29,9 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.Node;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -64,11 +67,12 @@ public final class RawNominalType extends Namespace {
   // If this type is generic, we don't record which instantiation A inherits from.
   // We don't store subclasses for Object because there are too many.
 
-  // TODO(rluble): Serialize this field. If this field is serialized naively, a cycle is introduced
-  // which results in NPE when attempting to deserialize an HashSet that contains object that are
-  // only partially deserialized.
+  // These two fields have handled by custom serialization to avoid deserialization NPEs due
+  // to the problematic interaction caused by cycles in the graph on objects that implement
+  // equals(), hashCode() and Sets.
   private transient Set<RawNominalType> subtypes = new LinkedHashSet<>();
-  private ImmutableSet<NominalType> interfaces = null;
+  private transient Collection<NominalType> interfaces = null;
+
   private final Kind kind;
   private final boolean isAbstractClass;
   // Used in GlobalTypeInfo to find type mismatches in the inheritance chain.
@@ -355,7 +359,7 @@ public final class RawNominalType extends Namespace {
     return this.superclass;
   }
 
-  public ImmutableSet<NominalType> getInterfaces() {
+  public Iterable<NominalType> getInterfaces() {
     return this.interfaces == null ? ImmutableSet.<NominalType>of() : this.interfaces;
   }
 
@@ -797,9 +801,17 @@ public final class RawNominalType extends Namespace {
   }
 
   @GwtIncompatible("ObjectInputStream")
+  @SuppressWarnings("unchecked")
   private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
     in.defaultReadObject();
     this.subtypes = new LinkedHashSet<>();
+    this.interfaces = (Collection<NominalType>) in.readObject();
+  }
+
+  @GwtIncompatible("ObjectOutputStream")
+  private void writeObject(ObjectOutputStream out) throws IOException {
+    out.defaultWriteObject();
+    out.writeObject(new ArrayList<>(this.interfaces));
   }
 
   // equals and hashCode default to reference equality, which is what we want
