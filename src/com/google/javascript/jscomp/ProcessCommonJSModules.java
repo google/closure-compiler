@@ -105,6 +105,9 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         finder.reportModuleErrors();
 
         if (!finder.umdPatterns.isEmpty()) {
+          if (finder.replaceUmdPatterns()) {
+            needsRetraverse = true;
+          }
           // Removing the IIFE rewrites vars. We need to re-traverse
           // to get the new references.
           if (removeIIFEWrapper(n)) {
@@ -205,7 +208,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     if (resolutionMode == ModuleLoader.ResolutionMode.WEBPACK) {
       if (requireCall.getSecondChild().isNumber()) {
         return String.valueOf(Double.valueOf(requireCall.getSecondChild().getDouble()).intValue());
-      } else if (requireCall.getChildAtIndex(2).isNumber()) {
+      } else if (requireCall.getChildCount() >= 3 && requireCall.getChildAtIndex(2).isNumber()) {
         return String.valueOf(Double.valueOf(requireCall.getChildAtIndex(2).getDouble()).intValue());
       }
     }
