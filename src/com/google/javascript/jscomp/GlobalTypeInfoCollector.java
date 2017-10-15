@@ -2412,6 +2412,16 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         String functionName, Node declNode, NTIScope parentScope) {
       Node parent = declNode.getParent();
 
+      if (parent.isCast()) {
+        JSDocInfo jsdoc = parent.getJSDocInfo();
+        JSType castType = getDeclaredTypeOfNode(jsdoc, parentScope);
+        FunctionType funType = castType.getFunType();
+        if (funType != null) {
+          return funType.toDeclaredFunctionType();
+        }
+        return null;
+      }
+
       JSType bindRecvType = getReceiverTypeOfBind(declNode);
       if (bindRecvType != null) {
         // Use typeParser for the formals, and only add the receiver type here.

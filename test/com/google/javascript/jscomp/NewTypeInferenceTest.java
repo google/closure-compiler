@@ -21938,4 +21938,18 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var x = ns['a.b'].prop - 123;"),
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
+
+  public void testGetDeclaredTypeForUnannotatedFunctionFromCast() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Bar() { this.b = 123; }",
+        "/** @constructor */",
+        "function Foo() { this.a = 123; }",
+        "var x = /** @type {function(!Foo)} */ (",
+        "  function(x) {",
+        "    var y = x.b;",
+        "  }",
+        ");"),
+        NewTypeInference.INEXISTENT_PROPERTY);
+  }
 }
