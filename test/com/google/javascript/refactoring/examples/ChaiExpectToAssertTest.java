@@ -42,7 +42,7 @@ public class ChaiExpectToAssertTest {
         NAVIGATIONAL_XSS_SINKS_TEMPLATE,
         TESTDATA_DIR,
         "chai_expect_to_assert_in.js",
-        ImmutableList.of("chai-externs.js"),
+        ImmutableList.of("../../../../../../../contrib/externs/chai-3.5.js"),
         "chai_expect_to_assert_out.js");
   }
 }
