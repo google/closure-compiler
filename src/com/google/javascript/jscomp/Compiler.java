@@ -356,10 +356,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // provided by the user.  This should be handled a different way.
 
     // Turn off type-based optimizations when type checking is off
-    if (!options.checkTypes) {
-      options.setDisambiguateProperties(false);
-      options.setAmbiguateProperties(false);
-      options.setInlineProperties(false);
+    if (!options.isTypecheckingEnabled()) {
       options.setUseTypesForLocalOptimization(false);
       options.setUseTypesForOptimization(false);
     }

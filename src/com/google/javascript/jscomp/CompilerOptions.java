@@ -2015,6 +2015,13 @@ public class CompilerOptions implements Serializable {
     this.useNewTypeInference = enable;
   }
 
+  /**
+   * @return true if either typechecker is ON.
+   */
+  public boolean isTypecheckingEnabled() {
+    return this.checkTypes || this.useNewTypeInference;
+  }
+
   public boolean getRunOTIafterNTI() {
     return this.runOTIafterNTI;
   }

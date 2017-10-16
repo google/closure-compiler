@@ -485,7 +485,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // CheckAccessControls only works if check types is on.
-    if (options.checkTypes
+    if (options.isTypecheckingEnabled()
         && (!options.disables(DiagnosticGroups.ACCESS_CONTROLS)
             || options.enables(DiagnosticGroups.CONSTANT_PROPERTY))) {
       checks.add(checkAccessControls);
@@ -497,7 +497,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Analyzer checks must be run after typechecking.
-    if (options.enables(DiagnosticGroups.ANALYZER_CHECKS) && options.checkTypes) {
+    if (options.enables(DiagnosticGroups.ANALYZER_CHECKS) && options.isTypecheckingEnabled()) {
       checks.add(analyzerChecks);
     }
 
@@ -690,7 +690,7 @@ public final class DefaultPassConfig extends PassConfig {
     // soon after type checking, both so that it can make use of type
     // information and so that other passes can take advantage of the renamed
     // properties.
-    if (options.shouldDisambiguateProperties()) {
+    if (options.shouldDisambiguateProperties() && options.isTypecheckingEnabled()) {
       passes.add(disambiguateProperties);
     }
 
@@ -836,7 +836,8 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.shouldAmbiguateProperties()
-        && options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED) {
+        && options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED
+        && options.isTypecheckingEnabled()) {
       passes.add(ambiguateProperties);
     }
 
@@ -965,7 +966,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(inlineFunctions);
     }
 
-    if (options.shouldInlineProperties()) {
+    if (options.shouldInlineProperties() && options.isTypecheckingEnabled()) {
       passes.add(inlineProperties);
     }
 
