@@ -2943,11 +2943,6 @@ class IRFactory {
       cur += 1; // skip the escape char.
       char c = value.charAt(cur);
       switch (c) {
-        case '\'':
-        case '"':
-        case '\\':
-          result.append(c);
-          break;
         case 'b':
           result.append('\b');
           break;
@@ -3038,6 +3033,9 @@ class IRFactory {
           result.append(Character.toChars(Integer.parseInt(hexDigits, 0x10)));
           cur = escapeEnd - 1;
           break;
+        case '\'':
+        case '"':
+        case '\\':
         default:
           result.append(c);
           break;
