@@ -788,7 +788,6 @@ final class NewTypeInference implements CompilerPass {
     // The size is > 1 when multiple files are compiled
     // Preconditions.checkState(cfg.getEntry().getOutEdges().size() == 1);
     NTIWorkset workset = NTIWorkset.create(this.cfg);
-    /* println("Workset: ", workset); */
     this.typeEnvFromDeclaredTypes = getTypeEnvFromDeclaredTypes();
     if (scope.isFunction() && scope.hasUndeclaredFormalsOrOuters()) {
       // Ideally, we would like to only set the in-edges of the implicit return
@@ -2164,7 +2163,7 @@ final class NewTypeInference implements CompilerPass {
       return analyzeInvocationArgsFwdWhenError(expr, envAfterCallee);
     }
 
-    FunctionType origFunType = funType; // save for later
+    FunctionType originalFunType = funType; // save for later
     if (funType.isGeneric()) {
       Node receiver = callee.isGetProp() ? callee.getFirstChild() : null;
       Node firstArg = expr.getSecondChild();
@@ -2187,10 +2186,9 @@ final class NewTypeInference implements CompilerPass {
         // exactly using their summaries, and don't need deferred checks
         if (this.currentScope.isLocalFunDef(calleeName)) {
           tmpEnv = collectTypesForEscapedVarsFwd(callee, tmpEnv);
-        } else if (!origFunType.isGeneric()) {
+        } else if (!originalFunType.isGeneric()) {
           JSType expectedRetType = requiredType;
-          println("Updating deferred check with ret: ", expectedRetType,
-              " and args: ", argTypes);
+          println("Updating deferred check with ret: ", expectedRetType, " and args: ", argTypes);
           DeferredCheck dc;
           if (isConstructorCall(expr)) {
             dc = new DeferredCheck(expr, null,
@@ -4212,10 +4210,8 @@ final class NewTypeInference implements CompilerPass {
         // No deferred check if the return type is declared
         expectedRetType = null;
       }
-      println("Putting deferred check of function: ", calleeName,
-          " with ret: ", expectedRetType);
-      DeferredCheck dc = new DeferredCheck(
-          expr, expectedRetType, currentScope, s);
+      println("Putting deferred check of function: ", calleeName, " with ret: ", expectedRetType);
+      DeferredCheck dc = new DeferredCheck(expr, expectedRetType, currentScope, s);
       deferredChecks.put(expr, dc);
     }
   }
@@ -4840,8 +4836,7 @@ final class NewTypeInference implements CompilerPass {
     final Node callSite;
     final NTIScope callerScope;
     final NTIScope calleeScope;
-    // Null types means that they were declared
-    // (and should have been checked during inference)
+    // Null types means that they were declared (and should have been checked during inference)
     JSType expectedRetType;
     List<JSType> argTypes;
 
@@ -4866,8 +4861,7 @@ final class NewTypeInference implements CompilerPass {
       this.argTypes = argTypes;
     }
 
-    private void runCheck(
-        Map<NTIScope, JSType> summaries, WarningReporter warnings) {
+    private void runCheck(Map<NTIScope, JSType> summaries, WarningReporter warnings) {
       FunctionType fnSummary = summaries.get(this.calleeScope).getFunType();
       println(
           "Running deferred check of function: ", calleeScope.getReadableName(),
@@ -4883,7 +4877,7 @@ final class NewTypeInference implements CompilerPass {
       int i = 0;
       Iterable<Node> args = NodeUtil.getInvocationArgsAsIterable(callSite);
       // this.argTypes can be null if in the fwd direction the analysis of the
-      // call return prematurely, eg, because of a WRONG_ARGUMENT_COUNT.
+      // call returned prematurely, e.g., because of a WRONG_ARGUMENT_COUNT.
       if (this.argTypes == null) {
         return;
       }

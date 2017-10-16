@@ -21952,4 +21952,18 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         ");"),
         NewTypeInference.INEXISTENT_PROPERTY);
   }
+
+  public void testDontRegisterFunctionExpressions() {
+    // The first line is a function expression, not a function statement, so it doesn't define
+    // a global variable f. Therefore the typechecker assumes the second line refers to a global
+    // 'f' which is defined externally. So there's no warning for passing the wrong number of args.
+    typeCheck(LINE_JOINER.join(
+        "(function f() {})();",
+        "f(234);"));
+
+    // The deferred check for the call should refer to the second f; don't crash.
+    typeCheck(LINE_JOINER.join(
+        "(function f() {})();",
+        "(function f(x) { f(234); })(123);"));
+  }
 }
