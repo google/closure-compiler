@@ -2772,18 +2772,23 @@ public final class CodePrinterTest extends CodePrinterTestBase {
 
   public void testEs6NewTargetBare() {
     languageMode = LanguageMode.ECMASCRIPT_2015;
-    assertPrintSame("new.target.prototype");
+    assertPrintSame("class C{constructor(){new.target.prototype}}");
   }
 
   public void testEs6NewTargetPrototype() {
     languageMode = LanguageMode.ECMASCRIPT_2015;
-    assertPrintSame("var callable=Object.setPrototypeOf(obj,new.target.prototype)");
+    assertPrintSame(
+        "class C{constructor(){var callable=Object.setPrototypeOf(obj,new.target.prototype)}}");
   }
 
   public void testEs6NewTargetConditional() {
     languageMode = LanguageMode.ECMASCRIPT_2015;
-    assertPrint("if (!new.target) throw 'Must be called with new!';",
-        "if(!new.target)throw\"Must be called with new!\";");
+    assertPrint(
+        LINE_JOINER.join(
+            "function f() {",
+            "  if (!new.target) throw 'Must be called with new!';",
+            "}"),
+        "function f(){if(!new.target)throw\"Must be called with new!\";}");
   }
 
   public void testGoogScope() {

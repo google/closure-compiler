@@ -222,11 +222,11 @@ class IRFactory {
 
   static final String UNEXPECTED_CONTINUE = "continue must be inside loop";
 
-  static final String UNEXPECTED_LABLED_CONTINUE =
+  static final String UNEXPECTED_LABELLED_CONTINUE =
       "continue can only use labeles of iteration statements";
 
   static final String UNEXPECTED_RETURN = "return must be inside function";
-
+  static final String UNEXPECTED_NEW_DOT_TARGET = "new.target must be inside a function";
   static final String UNDEFINED_LABEL = "undefined label \"%s\"";
 
   private final String sourceString;
@@ -433,6 +433,7 @@ class IRFactory {
     validateParameters(n);
     validateBreakContinue(n);
     validateReturn(n);
+    validateNewDotTarget(n);
     validateLabel(n);
   }
 
@@ -446,6 +447,18 @@ class IRFactory {
       }
       errorReporter.error(UNEXPECTED_RETURN,
           sourceName, n.getLineno(), n.getCharno());
+    }
+  }
+
+  private void validateNewDotTarget(Node n) {
+    if (n.getToken() == Token.NEW_TARGET) {
+      Node parent = n;
+      while ((parent = parent.getParent()) != null) {
+        if (parent.isFunction()) {
+          return;
+        }
+      }
+      errorReporter.error(UNEXPECTED_NEW_DOT_TARGET, sourceName, n.getLineno(), n.getCharno());
     }
   }
 
@@ -469,7 +482,7 @@ class IRFactory {
           if (n.isContinue() && !isContinueTarget(parent.getLastChild())) {
             // report invalid continue target
             errorReporter.error(
-                UNEXPECTED_LABLED_CONTINUE,
+                UNEXPECTED_LABELLED_CONTINUE,
                 sourceName,
                 n.getLineno(), n.getCharno());
           }

@@ -57,7 +57,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private static final String UNEXPECTED_RETURN =
       "return must be inside function";
 
-  private static final String UNEXPECTED_LABELED_CONTINUE =
+  private static final String UNEXPECTED_LABELLED_CONTINUE =
       "continue can only use labeles of iteration statements";
 
   private static final String UNDEFINED_LABEL = "undefined label";
@@ -220,7 +220,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testContinueToLabelSwitch() {
     parseError(
         "while(1) {a: switch(1) {case(1): continue a; }}",
-        UNEXPECTED_LABELED_CONTINUE);
+        UNEXPECTED_LABELLED_CONTINUE);
   }
 
   public void testContinueOutsideSwitch() {
@@ -3058,20 +3058,27 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
 
-    // TODO(bradfordcsmith): new.target in global scope should be a syntax error
-    parse("new.target;");
+    parseError("new.target;", "new.target must be inside a function");
 
     parse("function f() { new.target; };");
 
-    mode = LanguageMode.ECMASCRIPT5;
-    parseWarning(
-        "function f() { new.target; }",
-        getRequiresEs6Message(Feature.NEW_TARGET));
-
     mode = LanguageMode.ECMASCRIPT3;
     parseWarning(
-        "function f() { new.target; }",
+        "class C { f() { new.target; } }",
+        getRequiresEs6Message(Feature.CLASSES),
+        getRequiresEs6Message(Feature.MEMBER_DECLARATIONS),
         getRequiresEs6Message(Feature.NEW_TARGET));
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning(
+        "class C { f() { new.target; } }",
+        getRequiresEs6Message(Feature.CLASSES),
+        getRequiresEs6Message(Feature.MEMBER_DECLARATIONS),
+        getRequiresEs6Message(Feature.NEW_TARGET));
+
+    mode = LanguageMode.ECMASCRIPT6;
+    expectFeatures(Feature.CLASSES, Feature.MEMBER_DECLARATIONS, Feature.NEW_TARGET);
+    parse("class C { f() { new.target; } }");
   }
 
   public void testNewDotSomethingInvalid() {

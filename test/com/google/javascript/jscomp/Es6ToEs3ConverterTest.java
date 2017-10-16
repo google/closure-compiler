@@ -257,6 +257,7 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
 
   public void testNewTarget() {
     testError("function Foo() { new.target; }", CANNOT_CONVERT_YET);
+    testError("class Example { foo() { new.target; } }", CANNOT_CONVERT_YET);
   }
 
   public void testClassWithJsDoc() {
