@@ -632,12 +632,12 @@ public abstract class AbstractCompiler implements SourceExcerptProvider {
 
   private @Nullable PersistentInputStore persistentInputStore;
 
-  void setPersistentInputStore(PersistentInputStore persistentInputStore) {
+  public void setPersistentInputStore(PersistentInputStore persistentInputStore) {
     this.persistentInputStore = persistentInputStore;
   }
 
   @Nullable
-  PersistentInputStore getPersistentInputStore() {
+  public PersistentInputStore getPersistentInputStore() {
     return persistentInputStore;
   }
 }
