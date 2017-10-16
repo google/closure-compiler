@@ -16,6 +16,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.collect.ImmutableSet;
@@ -484,10 +485,12 @@ class ConvertToTypedInterface implements CompilerPass {
     }
 
     void markNameProcessed(String fullyQualifiedName) {
+      checkNotNull(fullyQualifiedName);
       seenNames.add(fullyQualifiedName);
     }
 
     void markProvided(String providedName) {
+      checkNotNull(providedName);
       providedNamespaces.add(providedName);
     }
   }
@@ -531,7 +534,7 @@ class ConvertToTypedInterface implements CompilerPass {
             processClass(decl.rhs);
           }
           break;
-        case REMOVE_RHS:
+        case SIMPLIFY_RHS:
           decl.simplify(compiler);
           break;
         case REMOVE_ALL:
@@ -618,7 +621,7 @@ class ConvertToTypedInterface implements CompilerPass {
 
     enum RemovalType {
       PRESERVE_ALL,
-      REMOVE_RHS,
+      SIMPLIFY_RHS,
       REMOVE_ALL,
     }
 
@@ -664,7 +667,7 @@ class ConvertToTypedInterface implements CompilerPass {
         }
         if (isDeclaration(nameNode) || currentFile.isPrefixProvided(fullyQualifiedName)) {
           jsdocNode.setJSDocInfo(JsdocUtil.getAllTypeJSDoc());
-          return RemovalType.REMOVE_RHS;
+          return RemovalType.SIMPLIFY_RHS;
         }
         return RemovalType.REMOVE_ALL;
       }
@@ -682,7 +685,7 @@ class ConvertToTypedInterface implements CompilerPass {
 
         jsdocNode.setJSDocInfo(JsdocUtil.pullJsdocTypeFromAst(compiler, jsdoc, nameNode));
       }
-      return RemovalType.REMOVE_RHS;
+      return RemovalType.SIMPLIFY_RHS;
     }
   }
 
