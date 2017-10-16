@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.Es6RewriteModules.FindGoogProvideOrGoogModul
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.rhino.Node;
-import com.google.javascript.rhino.Token;
 import java.util.Map;
 
 /**
@@ -101,7 +100,18 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
     ModuleLoader.ResolutionMode resolutionMode = compiler.getOptions().moduleResolutionMode;
-    if (supportsEs6Modules && n.isExport()) {
+    if (parent == null
+        || NodeUtil.isControlStructure(parent)
+        || NodeUtil.isStatementBlock(parent)) {
+      if (n.isExprResult()) {
+        Node maybeGetProp = n.getFirstFirstChild();
+        if (maybeGetProp != null
+            && (maybeGetProp.matchesQualifiedName("goog.provide")
+            || maybeGetProp.matchesQualifiedName("goog.module"))) {
+          moduleType = ModuleType.GOOG;
+        }
+      }
+    } else if (supportsEs6Modules && n.isExport()) {
       moduleType = ModuleType.ES6;
 
     } else if (supportsEs6Modules && n.isImport()) {
@@ -131,7 +141,8 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
       }
       t.getInput().addOrderedRequire(moduleName);
     } else if (supportsCommonJsModules) {
-      if (ProcessCommonJSModules.isCommonJsExport(t, n, resolutionMode)) {
+      if (moduleType != ModuleType.GOOG
+          && ProcessCommonJSModules.isCommonJsExport(t, n, resolutionMode)) {
         moduleType = ModuleType.COMMONJS;
       } else if (ProcessCommonJSModules.isCommonJsImport(n, resolutionMode)) {
         String path = ProcessCommonJSModules.getCommonJsImportPath(n, resolutionMode);

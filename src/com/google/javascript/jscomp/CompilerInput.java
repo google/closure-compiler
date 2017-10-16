@@ -543,7 +543,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
 
   public enum ModuleType {
     NONE,
-    GOOG_MODULE,
+    GOOG,
     ES6,
     COMMONJS,
     JSON,

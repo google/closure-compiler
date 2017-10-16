@@ -161,7 +161,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
   public String getBasePropertyImport(String moduleName) {
     if (compiler.getModuleTypeByName(moduleName) == CompilerInput.ModuleType.ES6
-        || compiler.getModuleTypeByName(moduleName) == CompilerInput.ModuleType.GOOG_MODULE) {
+        || compiler.getModuleTypeByName(moduleName) == CompilerInput.ModuleType.GOOG) {
       return moduleName;
     }
 
