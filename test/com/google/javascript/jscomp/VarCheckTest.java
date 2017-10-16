@@ -655,7 +655,6 @@ public final class VarCheckTest extends CompilerTestCase {
 
     CompilerOptions options = new CompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    ;
     options.setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
     options.dependencyOptions.setDependencyPruning(true);
     options.dependencyOptions.setDependencySorting(true);

@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Joiner;
@@ -682,30 +682,35 @@ public final class CompilerTest extends TestCase {
 
   // Make sure we concatenate licenses the same way.
   public void testMultipleLicenseDirectiveOutput() throws Exception {
-    test("/** @license Your favorite license goes here */\n" +
-        "/** @license Another license */\n" +
-        "var x;",
+    test(
+        LINE_JOINER.join(
+            "/** @license Your favorite license goes here */",
+            "/** @license Another license */",
+            "var x;"),
         "/*\n Another license  Your favorite license goes here */\n" ,
         null);
   }
 
   // Same thing, two @licenses in the same comment.
   public void testTwoLicenseInSameComment() throws Exception {
-    test("/** @license Your favorite license goes here \n" +
-        "  * @license Another license */\n" +
-        "var x;",
-        "/*\n Your favorite license goes here \n" +
-        " @license Another license */\n" ,
+    test(
+        LINE_JOINER.join(
+            "/** @license Your favorite license goes here ",
+            "  * @license Another license */",
+            "var x;"),
+        "/*\n Your favorite license goes here \n @license Another license */\n",
         null);
   }
 
   // Do we correctly handle the license if it's not at the top level, but
   // inside another declaration?
   public void testLicenseInTree() throws Exception {
-    test("var a = function() {\n +" +
-        "/** @license Your favorite license goes here */\n" +
-        " 1;};\n",
-        "/*\n Your favorite license goes here */\n" ,
+    test(
+        LINE_JOINER.join(
+            "var a = function() {",
+            "+ /** @license Your favorite license goes here */",
+            " 1;};"),
+        "/*\n Your favorite license goes here */\n",
         null);
   }
 
@@ -973,10 +978,22 @@ public final class CompilerTest extends TestCase {
       return warningCount;
     }
 
-    @Override public JSError[] getErrors() { return null; }
-    @Override public JSError[] getWarnings() { return null; }
+    @Override
+    public JSError[] getErrors() {
+      return null;
+    }
+
+    @Override
+    public JSError[] getWarnings() {
+      return null;
+    }
+
     @Override public void setTypedPercent(double typedPercent) {}
-    @Override public double getTypedPercent() { return 0.0; }
+
+    @Override
+    public double getTypedPercent() {
+      return 0.0;
+    }
   }
 
   private boolean hasOutput(
