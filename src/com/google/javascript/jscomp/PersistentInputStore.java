@@ -93,9 +93,9 @@ public class PersistentInputStore {
   public CompilerInput getCachedCompilerInput(SourceFile source) {
     String originalPath = source.getOriginalPath();
     // For zip files.
-    if (originalPath.contains(".js.zip!/")) {
-      int indexOf = originalPath.indexOf(".js.zip!/");
-      String zipPath = originalPath.substring(0, indexOf + ".js.zip".length());
+    if (originalPath.contains(".zip!/")) {
+      int indexOf = originalPath.indexOf(".zip!/");
+      String zipPath = originalPath.substring(0, indexOf + ".zip".length());
       Preconditions.checkState(store.containsKey(zipPath));
       return store.get(zipPath).getCachedZipEntry(source);
     }
