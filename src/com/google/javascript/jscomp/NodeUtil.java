@@ -1612,6 +1612,7 @@ public final class NodeUtil {
       case CALL:
       case GETELEM:
       case GETPROP:
+      case NEW_TARGET:
         // Data values
       case ARRAYLIT:
       case ARRAY_PATTERN:

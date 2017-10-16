@@ -2770,6 +2770,22 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     checkWithOriginalName(code, expectedCode, compilerOptions);
   }
 
+  public void testEs6NewTargetBare() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertPrintSame("new.target.prototype");
+  }
+
+  public void testEs6NewTargetPrototype() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertPrintSame("var callable=Object.setPrototypeOf(obj,new.target.prototype)");
+  }
+
+  public void testEs6NewTargetConditional() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertPrint("if (!new.target) throw 'Must be called with new!';",
+        "if(!new.target)throw\"Must be called with new!\";");
+  }
+
   public void testGoogScope() {
     // TODO(mknichel): Function declarations need to be rewritten to match the original source
     // instead of being assigned to a local variable with duplicate JS Doc.
