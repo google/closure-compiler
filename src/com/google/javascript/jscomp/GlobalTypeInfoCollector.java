@@ -406,6 +406,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     for (NTIScope s : getScopes()) {
       s.freezeScope();
     }
+    this.simpleInference.setScopesAreFrozen();
 
     // Traverse the externs and annotate them with types.
     // Only works for the top level, not inside function bodies.
@@ -416,7 +417,11 @@ public class GlobalTypeInfoCollector implements CompilerPass {
             if (n.isQualifiedName()) {
               Declaration d = getGlobalScope().getDeclaration(QualifiedName.fromNode(n), false);
               JSType type = simpleInferDeclaration(d);
-              n.setTypeI(type);
+              if (type == null) {
+                type = simpleInferExpr(n, getGlobalScope());
+              }
+              // Type-based passes expect the externs to be annotated, so use ? when type is null.
+              n.setTypeI(type != null ? type : getCommonTypes().UNKNOWN);
             }
           }
         });
@@ -2627,12 +2632,15 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         && recv.getLastChild().getString().equals("prototype");
   }
 
-  private static boolean isPrototypePropertyDeclaration(Node n) {
+  private boolean isPrototypePropertyDeclaration(Node n) {
     if (NodeUtil.isExprAssign(n)
         && isPrototypeProperty(n.getFirstFirstChild())
         // When the prototype property is not on a qualified name, we can't generally
         // find the name of the class, so we don't do anything.
         && n.getFirstFirstChild().isQualifiedName()) {
+      Node protoProp = n.getFirstFirstChild();
+      // record the "prototype" property
+      recordPropertyName(protoProp.getFirstChild().getLastChild());
       return true;
     }
     // We are looking for either an object literal being assigned to a

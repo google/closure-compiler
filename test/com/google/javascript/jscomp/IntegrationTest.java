@@ -1401,6 +1401,29 @@ public final class IntegrationTest extends IntegrationTestCase {
             "Bar.prototype.a=function(x){};"));
   }
 
+  public void testDisambiguatePropertiesWithNtiNoCrash() {
+    CompilerOptions options = createCompilerOptions();
+    options.setClosurePass(true);
+    options.setNewTypeInference(true);
+    options.setRunOTIafterNTI(false);
+    // TODO(dimvar): remove once cl/172116239 is submitted
+    options.setCheckTypes(true);
+    options.setDisambiguateProperties(true);
+    this.externs = ImmutableList.of(SourceFile.fromCode(
+        "externs",
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Object() {}",
+            "/** @constructor */",
+            "function Function() {}",
+            "/** @const */",
+            "var ns = {};",
+            "ns.subns = {};",
+            "ns.subns.prototype.f = function() {};")));
+
+    testSame(options, "");
+  }
+
   public void testMarkPureCalls() {
     String testCode = "function foo() {} foo();";
     CompilerOptions options = createCompilerOptions();

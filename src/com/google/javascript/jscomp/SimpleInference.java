@@ -49,10 +49,15 @@ final class SimpleInference {
 
   private final JSTypes commonTypes;
   private final GlobalTypeInfo gti;
+  private boolean scopesAreFrozen = false;
 
   SimpleInference(GlobalTypeInfo gti) {
     this.gti = gti;
     this.commonTypes = gti.getCommonTypes();
+  }
+
+  void setScopesAreFrozen() {
+    this.scopesAreFrozen = true;
   }
 
   JSType inferDeclaration(Declaration decl) {
@@ -70,8 +75,14 @@ final class SimpleInference {
       if (ctorFn == null) {
         return null;
       }
+      if (this.scopesAreFrozen) {
+        return this.commonTypes.fromFunctionType(ctorFn);
+      }
       return this.commonTypes.fromFunctionType(ctorFn)
           .withProperty(CONST_INFERENCE_MARKER, this.commonTypes.UNKNOWN);
+    }
+    if (decl.getNamespace() != null && this.scopesAreFrozen) {
+      return decl.getNamespace().toJSType();
     }
     if (decl.getTypeOfSimpleDecl() != null) {
       return decl.getTypeOfSimpleDecl();
