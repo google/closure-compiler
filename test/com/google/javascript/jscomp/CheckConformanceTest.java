@@ -1682,6 +1682,56 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "export var x = 2;");
   }
 
+  public void testBanCreateElement() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateElement'\n" +
+        "  error_message: 'BanCreateElement Message'\n" +
+        "  value: 'script'\n" +
+        "}";
+
+    testWarning(
+        "goog.dom.createElement('script');",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateElement Message");
+
+    testWarning(
+        "goog.dom.createDom('script', {});",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateElement Message");
+
+    String externs =
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @constructor */ function Document() {}",
+            "/** @const {!Document} */ var document;",
+            "/** @const */ var goog = {};",
+            "/** @const */ goog.dom = {};",
+            "/** @constructor */ goog.dom.DomHelper = function() {};");
+
+    testWarning(
+        externs,
+        "document.createElement('script');",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateElement Message");
+
+    testWarning(
+        externs,
+        "new goog.dom.DomHelper().createElement('script');",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateElement Message");
+
+    testWarning(
+        externs,
+        "function f(/** ?Document */ doc) { doc.createElement('script'); }",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateElement Message");
+
+    testNoWarning("goog.dom.createElement('iframe');");
+    testNoWarning("goog.dom.createElement(goog.dom.TagName.SCRIPT);");
+  }
+
   public void testBanCreateDom() {
     configuration =
         "requirement: {\n" +
