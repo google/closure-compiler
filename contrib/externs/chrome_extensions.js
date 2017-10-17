@@ -6085,6 +6085,214 @@ chrome.sockets.tcp.onReceiveError;
 
 
 /**
+ * @see https://developer.chrome.com/apps/sockets_udp
+ * @const
+ */
+chrome.sockets.udp = {};
+
+
+/**
+ * @typedef {?{
+ *   persistent: (boolean|undefined),
+ *   name: (string|undefined),
+ *   bufferSize: (number|undefined)
+ * }}
+ * @see https://developer.chrome.com/apps/sockets_udp#type-SocketProperties
+ */
+chrome.sockets.udp.SocketProperties;
+
+
+/**
+ * @constructor
+ * @see https://developer.chrome.com/apps/sockets_udp#type-SocketInfo
+ */
+chrome.sockets.udp.SocketInfo = function() {};
+
+
+/** @type {number} */
+chrome.sockets.udp.SocketInfo.prototype.socketId;
+
+
+/** @type {boolean} */
+chrome.sockets.udp.SocketInfo.prototype.persistent;
+
+
+/** @type {string|undefined} */
+chrome.sockets.udp.SocketInfo.prototype.name;
+
+
+/** @type {number|undefined} */
+chrome.sockets.udp.SocketInfo.prototype.bufferSize;
+
+
+/** @type {boolean} */
+chrome.sockets.udp.SocketInfo.prototype.paused;
+
+
+/** @type {string|undefined} */
+chrome.sockets.udp.SocketInfo.prototype.localAddress;
+
+
+/** @type {number|undefined} */
+chrome.sockets.udp.SocketInfo.prototype.localPort;
+
+
+/**
+ * @param {
+ *   (!chrome.sockets.udp.SocketProperties|function(!Object))
+ * } propertiesOrCallback
+ * @param {function(!Object)=} opt_callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_udp#method-create
+ */
+chrome.sockets.udp.create = function(propertiesOrCallback, opt_callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {!chrome.sockets.udp.SocketProperties} properties
+ * @param {function(): void=} opt_callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_udp#method-update
+ */
+chrome.sockets.udp.update = function(socketId, properties, opt_callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {boolean} paused
+ * @param {function(): void=} opt_callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_udp#method-setPaused
+ */
+chrome.sockets.udp.setPaused = function(socketId, paused, opt_callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {string} address
+ * @param {number} port
+ * @param {function(number): void} callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_udp#method-bind
+ */
+chrome.sockets.udp.bind = function(socketId, address, port, callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {!ArrayBuffer} data
+ * @param {string} address
+ * @param {number} port
+ * @param {function(!Object): void} callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_udp#method-send
+ */
+chrome.sockets.udp.send = function(socketId, data, address, port, callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {function()} callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_udp#method-close
+ */
+chrome.sockets.udp.close = function(socketId, callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {function(!chrome.sockets.udp.SocketInfo): void} callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_udp#method-getInfo
+ */
+chrome.sockets.udp.getInfo = function(socketId, callback) {};
+
+
+/**
+ * @param {function(!Array<!chrome.sockets.udp.SocketInfo>): void} callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_udp#method-getSockets
+ */
+chrome.sockets.udp.getSockets = function(callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {string} address
+ * @param {function(number): void} callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_udp#method-joinGroup
+ */
+chrome.sockets.udp.joinGroup = function(socketId, address, callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {string} address
+ * @param {function(number): void} callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_udp#method-leaveGroup
+ */
+chrome.sockets.udp.leaveGroup = function(socketId, address, callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {number} ttl
+ * @param {function(number): void} callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_udp#method-setMulticastTimeToLive
+ */
+chrome.sockets.udp.setMulticastTimeToLive =
+    function(socketId, ttl, callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {boolean} enabled
+ * @param {function(number): void} callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_udp#method-setMulticastLoopbackMode
+ */
+chrome.sockets.udp.setMulticastLoopbackMode =
+    function(socketId, enabled, callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {function(!Array<string>): void} callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_udp#method-getJoinedGroups
+ */
+chrome.sockets.udp.getJoinedGroups = function(socketId, callback) {};
+
+
+/**
+ * @param {number} socketId
+ * @param {boolean} enabled
+ * @param {function(number): void} callback
+ * @return {undefined}
+ * @see https://developer.chrome.com/apps/sockets_udp#method-send
+ */
+chrome.sockets.udp.setBroadcast = function(socketId, enabled, callback) {};
+
+
+/**
+ * @type {!ChromeObjectEvent}
+ * @see https://developer.chrome.com/apps/sockets_udp#event-onReceive
+ */
+chrome.sockets.udp.onReceive;
+
+
+/**
+ * @type {!ChromeObjectEvent}
+ * @see https://developer.chrome.com/apps/sockets_udp#event-onReceiveError
+ */
+chrome.sockets.udp.onReceiveError;
+
+
+/**
  * @const
  * @see https://developer.chrome.com/extensions/storage.html
  */
