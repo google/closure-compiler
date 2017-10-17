@@ -21966,4 +21966,31 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "(function f() {})();",
         "(function f(x) { f(234); })(123);"));
   }
+
+  public void testDontCrashWhenGlobalVarIsAccessedOnlyInSomePathThroughFunction() {
+    typeCheck(LINE_JOINER.join(
+        "function f(x) {",
+        "  if (x) {",
+        "    return;",
+        "  }",
+        "  globalvar = 123;",
+        "}"));
+
+    // var_args in the body of f is effectively global, because NTI doesn't declare a name
+    // var_args inside f.
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @param {!Object=} opt_thisObj,",
+        " * @param {...?} var_args",
+        " */",
+        "function f(opt_thisObj, var_args) {",
+        "  if (!opt_thisObj) {",
+        "    return;",
+        "  }",
+        "  var_args = Array.prototype.slice.call(arguments, 2);",
+        "  for (var i = 0; i < [1,2,3].length; i++) {",
+        "    (function() {}).apply({}, var_args);",
+        "  }",
+        "}"));
+  }
 }

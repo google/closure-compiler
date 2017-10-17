@@ -1951,7 +1951,9 @@ final class NewTypeInference implements CompilerPass {
     JSType declType = lvalue.declType;
     EnvTypePair rhsPair = analyzeExprFwd(rhs, lvalue.env, requiredType, specializedType);
     if (declType == null) {
-      rhsPair.env = updateLvalueTypeInEnv(rhsPair.env, lhs, lvalue.ptr, rhsPair.type);
+      if (!isGlobalVariable(lhs, inEnv)) {
+        rhsPair.env = updateLvalueTypeInEnv(rhsPair.env, lhs, lvalue.ptr, rhsPair.type);
+      }
     } else if (rhsPair.type.isSubtypeOf(declType)) {
       registerImplicitUses(expr, rhsPair.type, declType);
       rhsPair.env = updateLvalueTypeInEnv(rhsPair.env, lhs, lvalue.ptr, rhsPair.type);
@@ -4702,6 +4704,14 @@ final class NewTypeInference implements CompilerPass {
     return analyzeLValueBwd(expr, outEnv, type, doSlicing, false);
   }
 
+  /**
+   * We use this to avoid putting global variables in type environments, because that
+   * can cause crashes in TypeEnv#join.
+   */
+  private boolean isGlobalVariable(Node maybeName, TypeEnv env) {
+    return maybeName.isName() && envGetType(env, maybeName.getString()) == null;
+  }
+
   /** When {@code doSlicing} is set, remove the lvalue from the returned env */
   private LValueResultBwd analyzeLValueBwd(Node expr, TypeEnv outEnv,
       JSType type, boolean doSlicing, boolean insideQualifiedName) {
@@ -4711,7 +4721,7 @@ final class NewTypeInference implements CompilerPass {
         EnvTypePair pair = analyzeExprBwd(expr, outEnv, type);
         String name = expr.getQualifiedName();
         JSType declType = this.currentScope.getDeclaredTypeOf(name);
-        if (doSlicing) {
+        if (doSlicing && !isGlobalVariable(expr, outEnv)) {
           pair.env = envPutType(pair.env, name, firstNonNull(declType, UNKNOWN));
         }
         return new LValueResultBwd(pair.env, pair.type,
