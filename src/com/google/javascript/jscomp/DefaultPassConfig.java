@@ -2679,16 +2679,16 @@ public final class DefaultPassConfig extends PassConfig {
   /** Inlines simple methods, like getters */
   private final PassFactory inlineSimpleMethods =
       new PassFactory("inlineSimpleMethods", false) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new InlineSimpleMethods(compiler);
-    }
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new InlineSimpleMethods(compiler);
+        }
 
-    @Override
-    protected FeatureSet featureSet() {
-      return ES5;
-    }
-  };
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
+      };
 
   /** Kills dead assignments. */
   private final PassFactory deadAssignmentsElimination =
