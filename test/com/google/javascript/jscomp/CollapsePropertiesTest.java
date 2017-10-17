@@ -1838,6 +1838,21 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "};",
             "foo$myFunc();"),
         warning(CollapseProperties.UNSAFE_THIS));
+
+    // "this" is lexically scoped in arrow functions so collapsing is safe.
+    test(
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  myFunc: () => {",
+            "    return this;",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        LINE_JOINER.join(
+            "var foo$myFunc = () => {",
+            "  return this",
+            "};",
+            "foo$myFunc();"));
   }
 
   public void testPropertyMethodAssignment_noThis() {
