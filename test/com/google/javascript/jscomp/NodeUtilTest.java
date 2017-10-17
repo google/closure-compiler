@@ -2127,6 +2127,26 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(functionIsRValueOfAssign("x = y ? x : function() {};"));
   }
 
+  /**
+   * When the left side is a destructuring pattern, generally it's not possible to identify the
+   * RHS for a specific name on the LHS.
+   */
+  public void testGetRValueOfLValueDestructuring() {
+    assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var [x] = rhs;"), "x"))).isNull();
+    assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var [x, y] = rhs;"), "x"))).isNull();
+    assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var [y, x] = rhs;"), "x"))).isNull();
+    assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var {x: x} = rhs;"), "x"))).isNull();
+    assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var {y: x} = rhs;"), "x"))).isNull();
+
+    Node ast = parse("var {x} = rhs;");
+    Node x = ast.getFirstChild()   // VAR
+                .getFirstChild()   // DESTRUCTURING_LHS
+                .getFirstChild()   // OBJECT_PATTERN
+                .getFirstChild();  //STRING_KEY
+    checkState(x.isStringKey(), x);
+    assertThat(NodeUtil.getRValueOfLValue(x)).isNull();
+  }
+
   public void testIsNaN() {
     assertTrue(NodeUtil.isNaN(getNode("NaN")));
     assertFalse(NodeUtil.isNaN(getNode("Infinity")));
