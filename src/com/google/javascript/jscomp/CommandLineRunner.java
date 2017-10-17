@@ -310,7 +310,10 @@ public class CommandLineRunner extends
         usage = "An output wrapper for a JavaScript module (optional). "
         + "The format is <name>:<wrapper>. The module name must correspond "
         + "with a module specified using --module. The wrapper must "
-        + "contain %s as the code placeholder. The %basename% placeholder can "
+        + "contain %s as the code placeholder. "
+        + "Alternately, %output% can be used in place of %s. "
+        + "%n% can be used to represent a newline. "
+        + "The %basename% placeholder can "
         + "also be used to substitute the base name of the module output file.")
     private List<String> moduleWrapper = new ArrayList<>();
 
