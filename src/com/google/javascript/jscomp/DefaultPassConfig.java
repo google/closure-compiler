@@ -2892,6 +2892,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new FunctionRewriter(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.latest();
+        }
       };
 
   /** Collapses functions to not use the VAR keyword. */
