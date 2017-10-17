@@ -1295,7 +1295,7 @@ Array.prototype.findIndex = function(predicateFn, opt_this) {};
  * @param {T} value
  * @param {number=} opt_begin
  * @param {number=} opt_end
- * @return {!IArrayLike<T>}
+ * @return {!Array<T>}
  * @this {!IArrayLike<T>|string}
  * @template T
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.fill
@@ -1309,7 +1309,7 @@ Array.prototype.fill = function(value, opt_begin, opt_end) {};
  * @param {number=} opt_end
  * @see http://www.ecma-international.org/ecma-262/6.0/#sec-array.prototype.copywithin
  * @template T
- * @return {!IArrayLike<T>}
+ * @return {!Array<T>}
  */
 Array.prototype.copyWithin = function(target, start, opt_end) {};
 
