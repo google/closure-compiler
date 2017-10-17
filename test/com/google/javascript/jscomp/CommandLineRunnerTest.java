@@ -1305,6 +1305,21 @@ public final class CommandLineRunnerTest extends TestCase {
     assertThat(builder.toString()).isEqualTo("var x=3; // m0.js\n");
   }
 
+  public void testModuleWrapperExpansion() throws Exception {
+    useModules = ModulePattern.CHAIN;
+    args.add("--module_wrapper=m0:%output%%n%//# SourceMappingUrl=%basename%.map");
+    testSame(new String[] {
+      "var x = 3;",
+      "var y = 4;"
+    });
+
+    StringBuilder builder = new StringBuilder();
+    lastCommandLineRunner.writeModuleOutput(
+        builder,
+        lastCompiler.getModuleGraph().getRootModule());
+    assertThat(builder.toString()).isEqualTo("var x=3;\n//# SourceMappingUrl=m0.js.map\n");
+  }
+
   public void testMultistageCompilation() throws Exception {
     File saveFile = File.createTempFile("serialized", "state");
 

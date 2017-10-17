@@ -903,10 +903,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         throw new FlagUsageException("Unknown module: '" + name + "'");
       }
       String wrapper = spec.substring(pos + 1);
+      // Support for %n% and %output%
+      wrapper = wrapper.replace("%output%", "%s").replace("%n%", "\n");
       if (!wrapper.contains("%s")) {
         throw new FlagUsageException("No %s placeholder in module wrapper: '"
             + wrapper + "'");
       }
+
       wrappers.put(name, wrapper);
     }
     return wrappers;
