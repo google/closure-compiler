@@ -114,7 +114,7 @@ public class NameBasedDefinitionProvider implements DefinitionProvider, Compiler
    * same qualified name also exists and has type annotations.
    *
    * <p>TODO: This hack is mostly for the purpose of preventing untyped stubs from showing up in the
-   * {@link PureFunctionIdentifier} and causing unkown side effects from propagating everywhere.
+   * {@link PureFunctionIdentifier} and causing unknown side effects from propagating everywhere.
    * This should probably be solved in one of the following ways instead:
    *
    * <p>a) Have a pass earlier in the compiler that goes in and removes these stub definitions.

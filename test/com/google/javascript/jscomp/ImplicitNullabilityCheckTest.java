@@ -80,7 +80,7 @@ public final class ImplicitNullabilityCheckTest extends TypeICompilerTestCase {
     warnImplicitlyNullable("/** @typedef {?number} */ var Num; var /** Num */ x;");
   }
 
-  public void testUnkownTypenameDoesntWarn() {
+  public void testUnknownTypenameDoesntWarn() {
     // Different warnings in OTI and NTI
     this.mode = TypeInferenceMode.OTI_ONLY;
     testSame(
