@@ -1406,8 +1406,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setClosurePass(true);
     options.setNewTypeInference(true);
     options.setRunOTIafterNTI(false);
-    // TODO(dimvar): remove once cl/172116239 is submitted
-    options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
     this.externs = ImmutableList.of(SourceFile.fromCode(
         "externs",
