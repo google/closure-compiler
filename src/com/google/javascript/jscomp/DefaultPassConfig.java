@@ -2956,6 +2956,11 @@ public final class DefaultPassConfig extends PassConfig {
           options.aliasStringsBlacklist,
           options.outputJsStringUsage);
     }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return FeatureSet.ES8_MODULES;
+    }
   };
 
   /** Handling for the ObjectPropertyString primitive. */
