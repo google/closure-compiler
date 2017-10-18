@@ -21,6 +21,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.TypeI;
+import com.google.javascript.rhino.jstype.JSTypeNative;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -88,8 +90,10 @@ class GenerateExports implements CompilerPass {
   }
 
   private void addExtern(String export) {
-    Node propstmt = IR.exprResult(
-        IR.getprop(NodeUtil.newQName(compiler, "Object.prototype"), IR.string(export)));
+    Node objectPrototype = NodeUtil.newQName(compiler, "Object.prototype");
+    TypeI objCtor = compiler.getTypeIRegistry().getNativeType(JSTypeNative.OBJECT_FUNCTION_TYPE);
+    objectPrototype.getFirstChild().setTypeI(objCtor);
+    Node propstmt = IR.exprResult(IR.getprop(objectPrototype, IR.string(export)));
     propstmt.useSourceInfoFromForTree(getSynthesizedExternsRoot());
     propstmt.setOriginalName(export);
     getSynthesizedExternsRoot().addChildToBack(propstmt);

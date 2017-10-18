@@ -1422,6 +1422,30 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, "");
   }
 
+  public void testDisambiguatePropertiesWithNtiNoCrash2() {
+    CompilerOptions options = new CompilerOptions();
+    options.setClosurePass(true);
+    options.setNewTypeInference(true);
+    options.setRunOTIafterNTI(false);
+    options.setDisambiguateProperties(true);
+    options.setGenerateExports(true);
+    options.setExportLocalPropertyDefinitions(true);
+
+    test(options,
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @export */",
+            "  this.prop = 123;",
+            "}"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @export */",
+            "  this.Foo$prop = 123;",
+            "}"));
+  }
+
   public void testTurnOffConstChecksOfCheckAccessControlsWithNtiOn() {
     CompilerOptions options = new CompilerOptions();
     options.setClosurePass(true);
