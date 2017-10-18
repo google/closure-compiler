@@ -1422,6 +1422,34 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, "");
   }
 
+  public void testTurnOffConstChecksOfCheckAccessControlsWithNtiOn() {
+    CompilerOptions options = new CompilerOptions();
+    options.setClosurePass(true);
+    options.setNewTypeInference(true);
+    options.setRunOTIafterNTI(false);
+
+    testSame(
+        options,
+        LINE_JOINER.join(
+            "/** @constructor  */",
+            "var Foo = function() {};",
+            "/** @const {number|undefined} */",
+            "Foo.prototype.p;",
+            "/**",
+            " * @constructor",
+            " * @extends {Foo}",
+            " */",
+            "var Bar = function() {};",
+            "/** @const */",
+            "Bar.prototype.p = 123;",
+            "/**",
+            " * @constructor",
+            " * @extends {Foo}",
+            " */",
+            "var Baz = function() {};",
+            "Baz.prototype.p = 345;"));
+  }
+
   public void testMarkPureCalls() {
     String testCode = "function foo() {} foo();";
     CompilerOptions options = createCompilerOptions();

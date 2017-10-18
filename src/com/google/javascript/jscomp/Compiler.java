@@ -432,12 +432,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     } else if (ntiState == DiagnosticGroupState.OFF) {
       options.setNewTypeInference(false);
     }
+    if (options.getNewTypeInference()) {
+      // Suppress the const checks of CheckAccessControls; NTI performs these checks better.
+      options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS_CONST, CheckLevel.OFF);
+    }
     // When running OTI after NTI, turn off the warnings from OTI.
     if (options.getNewTypeInference() && options.getRunOTIafterNTI()) {
       options.checkTypes = true;
-      // Suppress warnings from the const checks of CheckAccessControls so as to avoid
-      // duplication.
-      options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS_CONST, CheckLevel.OFF);
       if (!options.reportOTIErrorsUnderNTI) {
         options.setWarningLevel(
             DiagnosticGroups.OLD_CHECK_TYPES,
