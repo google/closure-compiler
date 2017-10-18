@@ -1653,6 +1653,17 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         "var {a:a,b:b}={a:{},b:{}};a.a.a=5;var c=a.a;var d=c.a");
   }
 
+  public void testDestructuredArrays() {
+    testSame("var a, b = [{}, {}]; a.foo = 5; b.bar = 6;");
+
+    test("var a = {}; a.b = {}; [a.b.c, a.b.d] = [1, 2];",
+        "var a$b = {}; [a$b.c, a$b.d] = [1, 2];");
+
+    test(
+        "var a = {}; a.b = 5; var c, d = [6, a.b]",
+        "var a$b = 5; var c, d = [6, a$b];");
+  }
+
   public void testComputedPropertyNames() {
     // Computed property in object literal. This following test code is bad style - it does not
     // follow the assumptions of the pass and thus produces the following output.
@@ -1913,9 +1924,25 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testTemplateStrings() {
-    testSame(
+    test(
         LINE_JOINER.join(
-            "const name = 'foo';",
-            "function f() { return `Hi ${name}!`; }"));
+            "var a = {};",
+            "a.b = 'foo';",
+            "var c = `Hi ${a.b}`;"),
+        LINE_JOINER.join(
+            "var a$b = 'foo';",
+            "var c = `Hi ${a$b}`;"));
+  }
+
+  public void testDoesNotCollapseInEs6ModuleScope() {
+    testSame("var a = {}; a.b = {}; a.b.c = 5; export default function() {};");
+
+    test(new String[] {
+        "import * as a from './a.js'; let b = a.b;",
+        "var a = {}; a.b = 5;"
+    }, new String[] {
+        "import * as a$jscomp$1 from './a.js'; let b = a$jscomp$1.b;",
+        "var a$b = 5;"
+    });
   }
 }

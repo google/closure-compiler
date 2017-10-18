@@ -4090,7 +4090,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "Sub.called();"));
   }
 
-  public void failing_testES6StaticsAreRemoved2() {
+  public void testES6StaticsAreRemoved2() {
     testES6StaticsAreRemoved(LINE_JOINER.join(
         "class Base {",
         "  static calledInSubclassOnly() { alert('No one ever calls me'); }",
