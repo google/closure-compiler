@@ -11272,7 +11272,7 @@ chrome.declarativeContent.PageStateMatcherLiteral;
 
 /**
  * @constructor
- * @param {?chrome.declarativeContent.PageStateMatcherLiteral=} literalValue
+ * @param {!chrome.declarativeContent.PageStateMatcherLiteral=} literalValue
  * @see https://developer.chrome.com/extensions/declarativeContent#type-PageStateMatcher
  */
 chrome.declarativeContent.PageStateMatcher = function(literalValue) {};
@@ -11296,7 +11296,7 @@ chrome.declarativeContent.SetIconLiteral;
 
 /**
  * @constructor
- * @param {?chrome.declarativeContent.SetIconLiteral=} literalValue
+ * @param {!chrome.declarativeContent.SetIconLiteral=} literalValue
  * @see https://developer.chrome.com/extensions/declarativeContent#type-SetIcon
  */
 chrome.declarativeContent.SetIcon = function(literalValue) {};
@@ -11316,7 +11316,7 @@ chrome.declarativeContent.RequestContentScriptLiteral;
 
 /**
  * @constructor
- * @param {?chrome.declarativeContent.RequestContentScriptLiteral=} literalValue
+ * @param {!chrome.declarativeContent.RequestContentScriptLiteral=} literalValue
  * @see https://developer.chrome.com/extensions/declarativeContent#type-RequestContentScript
  */
 chrome.declarativeContent.RequestContentScript = function(literalValue) {};
