@@ -28,9 +28,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Rewrites a CommonJS module http://wiki.commonjs.org/wiki/Modules/1.1.1
@@ -44,6 +42,7 @@ import java.util.Set;
 public final class ProcessCommonJSModules implements CompilerPass {
   private static final String EXPORTS = "exports";
   private static final String MODULE = "module";
+  private static final String REQUIRE = "require";
 
   public static final DiagnosticType UNKNOWN_REQUIRE_ENSURE =
       DiagnosticType.warning(
@@ -56,7 +55,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
               + " Did you actually intend to export something?");
 
   private final Compiler compiler;
-  private final boolean reportDependencies;
 
   /**
    * Creates a new ProcessCommonJSModules instance which can be used to
@@ -65,23 +63,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
    * @param compiler The compiler
    */
   public ProcessCommonJSModules(Compiler compiler) {
-    this(compiler, true);
-  }
-
-  /**
-   * Creates a new ProcessCommonJSModules instance which can be used to
-   * rewrite CommonJS modules to a concatenable form.
-   *
-   * @param compiler The compiler
-   * @param reportDependencies Whether the rewriter should report dependency
-   *     information to the Closure dependency manager. This needs to be true
-   *     if we want to sort CommonJS module inputs correctly. Note that goog.provide
-   *     and goog.require calls will still be generated if this argument is
-   *     false.
-   */
-  public ProcessCommonJSModules(Compiler compiler, boolean reportDependencies) {
     this.compiler = compiler;
-    this.reportDependencies = reportDependencies;
   }
 
 
@@ -92,12 +74,16 @@ public final class ProcessCommonJSModules implements CompilerPass {
    */
   @Override
   public void process(Node externs, Node root) {
+    process(externs, root, false);
+  }
+
+  public void process(Node externs, Node root, boolean forceModuleDetection) {
     checkState(root.isScript());
     FindImportsAndExports finder = new FindImportsAndExports();
     NodeTraversal.traverseEs6(compiler, root, finder);
 
     ImmutableList.Builder<ExportInfo> exports = ImmutableList.builder();
-    if (finder.isCommonJsModule()) {
+    if (finder.isCommonJsModule() || forceModuleDetection) {
       finder.reportModuleErrors();
 
       if (!finder.umdPatterns.isEmpty()) {
@@ -131,9 +117,55 @@ public final class ProcessCommonJSModules implements CompilerPass {
     }
 
     NodeTraversal.traverseEs6(
-        compiler, root, new RewriteModule(finder.isCommonJsModule(), exports.build()));
+        compiler,
+        root,
+        new RewriteModule(finder.isCommonJsModule() || forceModuleDetection, exports.build()));
+  }
 
-    finder.addGoogProvideAndRequires();
+  /**
+   * Recognize if a node is a module import. We recognize two forms:
+   *
+   *  - require("something");
+   *  - __webpack_require__(4); // only when the module resolution is WEBPACK
+   */
+  public static boolean isCommonJsImport(Node requireCall) {
+    if (requireCall.isCall() && requireCall.hasTwoChildren()) {
+      if (requireCall.getFirstChild().matchesQualifiedName(REQUIRE)
+          && requireCall.getSecondChild().isString()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static String getCommonJsImportPath(Node requireCall) {
+    return requireCall.getSecondChild().getString();
+  }
+
+  /**
+   * Recognize if a node is a module export. We recognize several forms:
+   *
+   *  - module.exports = something;
+   *  - module.exports.something = something;
+   *  - exports.something = something;
+   *  - __webpack_exports__["something"] = something; // only when the module resolution is WEBPACK
+   *
+   * <p>In addition, we only recognize an export if the base export object is not defined or is
+   * defined in externs.
+   */
+  public static boolean isCommonJsExport(NodeTraversal t, Node export) {
+    if (export.matchesQualifiedName(MODULE + "." + EXPORTS)) {
+      Var v = t.getScope().getVar(MODULE);
+      if (v == null || v.isExtern()) {
+        return true;
+      }
+    } else if (export.isName() && EXPORTS.equals(export.getString())) {
+      Var v = t.getScope().getVar(export.getString());
+      if (v == null || v.isGlobal()) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -252,13 +284,13 @@ public final class ProcessCommonJSModules implements CompilerPass {
     private Node script = null;
 
     boolean isCommonJsModule() {
-      return (exports.size() > 0 || moduleExports.size() > 0) && !hasGoogProvideOrModule;
+      return (exports.size() > 0 || moduleExports.size() > 0)
+          && !hasGoogProvideOrModule;
     }
 
     List<UmdPattern> umdPatterns = new ArrayList<>();
     List<ExportInfo> moduleExports = new ArrayList<>();
     List<ExportInfo> exports = new ArrayList<>();
-    Set<String> imports = new HashSet<>();
     List<JSError> errors = new ArrayList<>();
 
     public List<ExportInfo> getModuleExports() {
@@ -301,12 +333,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
         visitRequireEnsureCall(t, n);
       }
 
-      if (n.matchesQualifiedName("module.exports")) {
-        Var v = t.getScope().getVar(MODULE);
-        // only rewrite "module.exports" if "module" is a free variable,
-        // meaning it is not defined in the current scope as a local
-        // variable or function parameter
-        if (v == null) {
+      if (n.matchesQualifiedName(MODULE + "." + EXPORTS)) {
+        if (ProcessCommonJSModules.isCommonJsExport(t, n)) {
           moduleExports.add(new ExportInfo(n, t.getScope()));
 
           // If the module.exports statement is nested in the then branch of an if statement,
@@ -355,17 +383,14 @@ public final class ProcessCommonJSModules implements CompilerPass {
         }
       }
 
-      if (n.isCall()
-          && n.hasTwoChildren()
-          && n.getFirstChild().matchesQualifiedName("require")
-          && n.getSecondChild().isString()) {
+      if (ProcessCommonJSModules.isCommonJsImport(n)) {
         visitRequireCall(t, n, parent);
       }
     }
 
-    /** Visit require calls. Emit corresponding goog.require call. */
+    /** Visit require calls.  */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
-      String requireName = require.getSecondChild().getString();
+      String requireName = ProcessCommonJSModules.getCommonJsImportPath(require);
       ModulePath modulePath =
           t.getInput()
               .getPath()
@@ -379,20 +404,15 @@ public final class ProcessCommonJSModules implements CompilerPass {
         return;
       }
 
-
-      String moduleName = modulePath.toModuleName();
-
       // When require("name") is used as a standalone statement (the result isn't used)
       // it indicates that a module is being loaded for the side effects it produces.
-      // In this case the require statement should just be removed as the goog.require
-      // call inserted will import the module.
+      // In this case the require statement should just be removed as the dependency
+      // sorting will insert the file for us.
       if (!NodeUtil.isExpressionResultUsed(require)
           && parent.isExprResult()
           && NodeUtil.isStatementBlock(parent.getParent())) {
         parent.detach();
       }
-
-      imports.add(moduleName);
     }
 
     /**
@@ -479,13 +499,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
       String moduleName = modulePath.toModuleName();
 
-      // The default declaration for the goog.provide is a constant so
-      // we need to declare the variable if we have more than one
-      // assignment to module.exports or those assignments are not
-      // at the top level.
-      //
-      // If we assign to the variable more than once or all the assignments
-      // are properties, initialize the variable as well.
       int directAssignmentsAtTopLevel = 0;
       int directAssignments = 0;
       for (ExportInfo export : moduleExports) {
@@ -528,48 +541,6 @@ public final class ProcessCommonJSModules implements CompilerPass {
         initModule.useSourceInfoIfMissingFromForTree(this.script);
 
         this.script.addChildToFront(initModule);
-        compiler.reportChangeToEnclosingScope(this.script);
-      }
-    }
-
-    /**
-     * Add goog.require statements for any require statements and a goog.provide statement for the
-     * module
-     */
-    void addGoogProvideAndRequires() {
-      CompilerInput ci = compiler.getInput(this.script.getInputId());
-      ModulePath modulePath = ci.getPath();
-      if (modulePath == null) {
-        return;
-      }
-
-      String moduleName = modulePath.toModuleName();
-
-      for (String importName : imports) {
-        // Add goog.provide calls.
-        if (reportDependencies) {
-          ci.addRequire(importName);
-        }
-
-        this.script.addChildToFront(
-            IR.exprResult(
-                    IR.call(
-                        IR.getprop(IR.name("goog"), IR.string("require")), IR.string(importName)))
-                .useSourceInfoIfMissingFromForTree(this.script));
-      }
-
-      if (isCommonJsModule()) {
-        // Add goog.provide calls.
-        if (reportDependencies) {
-          ci.addProvide(moduleName);
-        }
-        this.script.addChildToFront(
-            IR.exprResult(
-                    IR.call(
-                        IR.getprop(IR.name("goog"), IR.string("provide")), IR.string(moduleName)))
-                .useSourceInfoIfMissingFromForTree(this.script));
-        compiler.reportChangeToEnclosingScope(this.script);
-      } else if (imports.size() > 0) {
         compiler.reportChangeToEnclosingScope(this.script);
       }
     }
@@ -794,9 +765,7 @@ public final class ProcessCommonJSModules implements CompilerPass {
           break;
 
         case CALL:
-          if (n.hasTwoChildren()
-              && n.getFirstChild().matchesQualifiedName("require")
-              && n.getSecondChild().isString()) {
+          if (ProcessCommonJSModules.isCommonJsImport(n)) {
             imports.add(n);
           }
           break;
@@ -875,7 +844,8 @@ public final class ProcessCommonJSModules implements CompilerPass {
      * module. By this point all references to the import alias should have already been renamed.
      */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
-      String requireName = require.getSecondChild().getString();
+      String requireName = ProcessCommonJSModules.getCommonJsImportPath(require);
+
       ModulePath modulePath =
           t.getInput()
               .getPath()
@@ -1400,11 +1370,9 @@ public final class ProcessCommonJSModules implements CompilerPass {
 
       if (rValue.isCall()) {
         // var foo = require('bar');
-        if (rValue.hasTwoChildren()
-            && rValue.getFirstChild().matchesQualifiedName("require")
-            && rValue.getSecondChild().isString()
+        if (ProcessCommonJSModules.isCommonJsImport(rValue)
             && t.getScope().getVar(rValue.getFirstChild().getQualifiedName()) == null) {
-          String requireName = rValue.getSecondChild().getString();
+          String requireName = ProcessCommonJSModules.getCommonJsImportPath(rValue);
           ModulePath modulePath =
               t.getInput()
                   .getPath()
