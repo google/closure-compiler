@@ -733,28 +733,23 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourceSortingOn2() {
-    test(new String[] {
+    test(
+        new String[] {
           "goog.provide('a');",
-          "goog.require('a');\n" +
-          "var COMPILED = false;",
-         },
-         new String[] {
-           "var a={};",
-           "var COMPILED=!1"
-         });
+          "goog.require('a');\n/** This is base.js */\nvar COMPILED = false;",
+        },
+        new String[] {"var a={};", "var COMPILED=!1"});
   }
 
   public void testSourceSortingOn3() {
     args.add("--dependency_mode=LOOSE");
     args.add("--language_in=ECMASCRIPT5");
-    test(new String[] {
+    test(
+        new String[] {
           "goog.addDependency('sym', [], []);\nvar x = 3;",
-          "var COMPILED = false;",
-         },
-         new String[] {
-          "var COMPILED = !1;",
-          "var x = 3;"
-         });
+          "/** This is base.js */\nvar COMPILED = false;",
+        },
+        new String[] {"var COMPILED = !1;", "var x = 3;"});
   }
 
   public void testSourceSortingCircularDeps1() {
@@ -823,15 +818,13 @@ public final class CommandLineRunnerTest extends TestCase {
   public void testSourcePruningOn4() {
     args.add("--entry_point=goog:scotch");
     args.add("--entry_point=goog:beer");
-    test(new String[] {
+    test(
+        new String[] {
           "goog.provide('guinness');\ngoog.require('beer');",
           "goog.provide('beer');",
           "goog.provide('scotch'); var x = 3;"
-         },
-         new String[] {
-           "var beer = {};",
-           "var scotch = {}, x = 3;",
-         });
+        },
+        new String[] {"var scotch = {}, x = 3;", "var beer = {};"});
   }
 
   public void testSourcePruningOn5() {
@@ -846,26 +839,24 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testSourcePruningOn6() {
     args.add("--entry_point=goog:scotch");
-    test(new String[] {
-          "goog.require('beer');",
-          "goog.provide('beer');",
-          "goog.provide('scotch'); var x = 3;"
-         },
-         new String[] {
-           "var beer = {};",
-           "",
-           "var scotch = {}, x = 3;",
-         });
+    test(
+        new String[] {
+          "goog.require('beer');", "goog.provide('beer');", "goog.provide('scotch'); var x = 3;"
+        },
+        new String[] {"var beer = {};", "", "var scotch = {}, x = 3;"});
+    assertTrue(lastCompiler.getOptions().getDependencyOptions().shouldSortDependencies());
+    assertTrue(lastCompiler.getOptions().getDependencyOptions().shouldPruneDependencies());
   }
 
   public void testSourcePruningOn7() {
     args.add("--dependency_mode=LOOSE");
-    test(new String[] {
-          "var COMPILED = false;",
-         },
-         new String[] {
+    test(
+        new String[] {
+          "/** This is base.js */\nvar COMPILED = false;",
+        },
+        new String[] {
           "var COMPILED = !1;",
-         });
+        });
   }
 
   public void testSourcePruningOn8() {
@@ -1840,8 +1831,7 @@ public final class CommandLineRunnerTest extends TestCase {
               "/** @constructor */ var module$foo = function(){};",
               "module$foo.prototype.bar=function(){console.log(\"bar\")};"),
           LINE_JOINER.join(
-              "var module$app = {}, baz$$module$app = new module$foo();",
-              "console.log(baz$$module$app.bar());")
+              "var baz$$module$app = new module$foo();", "console.log(baz$$module$app.bar());")
         });
   }
 
@@ -1858,10 +1848,8 @@ public final class CommandLineRunnerTest extends TestCase {
         },
         new String[] {
           CompilerTestCase.LINE_JOINER.join(
-              "/** @const */ var module$foo={};",
-              "function foo$$module$foo(){ alert('foo'); }",
-              "foo$$module$foo();"),
-          "var module$app = {};"
+              "function foo$$module$foo(){ alert('foo'); }", "foo$$module$foo();"),
+          ""
         });
   }
 
@@ -1879,15 +1867,12 @@ public final class CommandLineRunnerTest extends TestCase {
           "import './foo.js';"
         },
         new String[] {
-          CompilerTestCase.LINE_JOINER.join(
+          LINE_JOINER.join(
               "/** @const */ var module$message={},",
               "  $jscompDefaultExport$$module$message = 'message';",
               "module$message.default = $jscompDefaultExport$$module$message;"),
-          CompilerTestCase.LINE_JOINER.join(
-              "/** @const */ var module$foo={};",
-              "function foo$$module$foo(){ alert(module$message.default); }",
-              "foo$$module$foo();"),
-          "var module$app = {};"
+          "function foo$$module$foo(){ alert(module$message.default); } foo$$module$foo();",
+          ""
         });
   }
 
@@ -1906,7 +1891,6 @@ public final class CommandLineRunnerTest extends TestCase {
         },
         new String[] {
           CompilerTestCase.LINE_JOINER.join(
-              "/** @const */ var module$foo={};",
               "function foo$$module$foo(){ alert('foo'); }",
               "foo$$module$foo();"),
           CompilerTestCase.LINE_JOINER.join("'use strict';", "")
