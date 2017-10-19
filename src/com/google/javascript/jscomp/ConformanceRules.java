@@ -1365,7 +1365,7 @@ public final class ConformanceRules {
       return ConformanceResult.CONFORMANCE;
     }
 
-    private boolean conforms(TypeI type) {
+    private static boolean conforms(TypeI type) {
       if (type.isUnionType()) {
         // unwrap union types which might contain unresolved type name
         // references for example {Foo|undefined}
@@ -1378,6 +1378,23 @@ public final class ConformanceRules {
       } else {
         return !type.isUnresolved();
       }
+    }
+  }
+
+  /** Ban any use of unresolved forward-declared types */
+  public static final class StrictBanUnresolvedType extends AbstractTypeRestrictionRule {
+    public StrictBanUnresolvedType(AbstractCompiler compiler, Requirement requirement)
+        throws InvalidRequirementSpec {
+      super(compiler, requirement);
+    }
+
+    @Override
+    protected ConformanceResult checkConformance(NodeTraversal t, Node n) {
+      TypeI type = n.getTypeI();
+      if (type != null && !BanUnresolvedType.conforms(type) && !isTypeImmediatelyTightened(n)) {
+        return ConformanceResult.VIOLATION;
+      }
+      return ConformanceResult.CONFORMANCE;
     }
   }
 

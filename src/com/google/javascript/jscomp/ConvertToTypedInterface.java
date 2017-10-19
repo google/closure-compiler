@@ -57,11 +57,12 @@ class ConvertToTypedInterface implements CompilerPass {
 
   private static final ImmutableSet<String> CALLS_TO_PRESERVE =
       ImmutableSet.of(
-          "goog.provide",
           "goog.define",
-          "goog.require",
+          "goog.forwardDeclare",
           "goog.module",
-          "goog.module.declareLegacyNamespace");
+          "goog.module.declareLegacyNamespace",
+          "goog.provide",
+          "goog.require");
 
   private final AbstractCompiler compiler;
 

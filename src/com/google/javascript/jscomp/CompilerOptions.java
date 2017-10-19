@@ -195,8 +195,8 @@ public class CompilerOptions implements Serializable {
     return incrementalCheckMode != IncrementalCheckMode.OFF;
   }
 
-  public boolean allowUnfulfilledForwardDeclarations() {
-    return incrementalCheckMode == IncrementalCheckMode.OFF;
+  public boolean dropForwardDeclarations() {
+    return incrementalCheckMode == IncrementalCheckMode.CHECK_IJS && useNewTypeInference;
   }
 
   private Config.JsDocParsing parseJsDocDocumentation = Config.JsDocParsing.TYPES_ONLY;

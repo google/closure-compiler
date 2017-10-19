@@ -1527,9 +1527,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   void forwardDeclareType(String typeName) {
-    if (options.allowUnfulfilledForwardDeclarations()) {
-      forwardDeclaredTypes.add(typeName);
+    if (options.dropForwardDeclarations()) {
+      return;
     }
+    forwardDeclaredTypes.add(typeName);
   }
 
   @Override

@@ -1530,6 +1530,40 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "}"));
   }
 
+  public void testCustomStrictBanUnresolvedType() {
+    configuration =
+        "requirement: {\n"
+        + "  type: CUSTOM\n"
+        + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$StrictBanUnresolvedType'\n"
+        + "  error_message: 'StrictBanUnresolvedType Message'\n"
+        + "}";
+
+    // NTI doesn't model unresolved types separately from unknown, so this check always results
+    // in conformance.
+    // TODO(b/67899666): Implement similar functionality in NTI for preventing uses of forward
+    // declared types by implementing support for resolving forward declarations to a new
+    // "unusable type" instead of to unknown.
+    this.mode = TypeInferenceMode.OTI_ONLY;
+    testWarning(
+        "goog.forwardDeclare('Foo'); /** @param {Foo} a */ var f = function(a) {}",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: StrictBanUnresolvedType Message");
+
+    testWarning(
+        new String[] {
+          "goog.forwardDeclare('Foo'); /** @param {!Foo} a */ var f;",
+           "f(5);",
+        },
+        TypeValidator.TYPE_MISMATCH_WARNING);
+
+    testWarning(
+        new String[] {
+          "goog.forwardDeclare('Foo'); /** @return {!Foo} */ var f;",
+          "f();",
+        },
+        CheckConformance.CONFORMANCE_VIOLATION);
+  }
+
   public void testMergeRequirements() {
     Compiler compiler = createCompiler();
     ConformanceConfig.Builder builder = ConformanceConfig.newBuilder();

@@ -954,9 +954,8 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
   }
 
   public void testDontPreserveUnknownTypeDeclarations() {
-    test(
-        "goog.forwardDeclare('MyType'); /** @type {MyType} */ var x;",
-        "/** @type {MyType} */ var x;");
+    testSame(
+        "goog.forwardDeclare('MyType'); /** @type {MyType} */ var x;");
 
     test(
         "goog.addDependency('zzz.js', ['MyType'], []); /** @type {MyType} */ var x;",
