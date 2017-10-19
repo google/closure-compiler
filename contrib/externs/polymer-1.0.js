@@ -1694,11 +1694,11 @@ Polymer.Debouncer.debounce;
 
 Polymer.Templatizer.mutableData;
 Polymer.Templatizer.parentModel;
-Polymer.Templatizer.instanceProps;
 Polymer.Templatizer.forwardHostProp;
 Polymer.Templatizer.notifyInstanceProp;
 Polymer.Templatizer._setPendingPropertyOrPath;
 Polymer.Templatizer._setPendingProperty;
+Polymer.Templatizer._instanceProps;
 
 /**
  * @param {number} index
