@@ -2914,6 +2914,47 @@ History.prototype.state;
 History.prototype.scrollRestoration;
 
 /**
+ * Returns the number of entries in the joint session history.
+ *
+ * @see http://w3c.github.io/html/browsers.html#dom-history-length
+ * @type {number}
+ */
+History.prototype.length;
+
+/**
+ * Goes back or forward the specified number of steps in the joint session history.
+ * A zero delta will reload the current page.
+ * If the delta is out of range, does nothing.
+ *
+ * @see http://w3c.github.io/html/browsers.html#dom-history-go
+ *
+ * @param {number=} opt_delta The delta to move forward (if delta > 0)
+ *        or bacward (if delta < 0) in history.
+ * @return {undefined}
+ */
+History.prototype.go = function(opt_delta) {};
+
+/**
+ * Goes back one step in the joint session history.
+ * If there is no previous page, does nothing.
+ *
+ * @see http://w3c.github.io/html/browsers.html#dom-history-back
+ *
+ * @return {undefined}
+ */
+History.prototype.back = function() {};
+
+/**
+ * Goes forward one step in the joint session history.
+ * If there is no next page, does nothing.
+ *
+ * @see http://w3c.github.io/html/browsers.html#dom-history-forward
+ *
+ * @return {undefined}
+ */
+History.prototype.forward = function() {};
+
+/**
  * Add history property to Window.
  *
  * @type {!History}
