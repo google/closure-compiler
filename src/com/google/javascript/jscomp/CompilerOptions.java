@@ -995,9 +995,11 @@ public class CompilerOptions implements Serializable {
 
   // Should only be used when debugging compiler bugs.
   boolean printSourceAfterEachPass;
-  // Used to narrow down the printed source when overall input size is large. If this is empty,
-  // the entire source is printed.
+
+  // Used to narrow down the printed source when overall input size is large. If these are both
+  // empty the entire source is printed.
   List<String> filesToPrintAfterEachPassRegexList = ImmutableList.of();
+  List<String> modulesToPrintAfterEachPassRegexList = ImmutableList.of();
 
   public void setPrintSourceAfterEachPass(boolean printSource) {
     this.printSourceAfterEachPass = printSource;
@@ -1005,6 +1007,10 @@ public class CompilerOptions implements Serializable {
 
   public void setFilesToPrintAfterEachPassRegexList(List<String> filePathRegexList) {
     this.filesToPrintAfterEachPassRegexList = filePathRegexList;
+  }
+
+  public void setModulesToPrintAfterEachPassRegexList(List<String> modulePathRegexList) {
+    this.modulesToPrintAfterEachPassRegexList = modulePathRegexList;
   }
 
   String reportPath;

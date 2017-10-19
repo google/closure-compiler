@@ -1168,10 +1168,10 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   final String getCurrentJsSource() {
     List<String> fileNameRegexList = options.filesToPrintAfterEachPassRegexList;
-    if (fileNameRegexList.isEmpty()) {
-      return toSource();
-    } else {
-      StringBuilder builder = new StringBuilder();
+    List<String> moduleNameRegexList = options.modulesToPrintAfterEachPassRegexList;
+    StringBuilder builder = new StringBuilder();
+
+    if (!fileNameRegexList.isEmpty()) {
       checkNotNull(jsRoot);
       for (Node fileNode : jsRoot.children()) {
         String fileName = fileNode.getSourceFileName();
@@ -1183,7 +1183,23 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           }
         }
       }
+    }
+    if (!moduleNameRegexList.isEmpty()) {
+      for (JSModule jsModule : modules) {
+        for (String regex : moduleNameRegexList) {
+          if (jsModule.getName().matches(regex)) {
+            String source = "// module '" + jsModule.getName() + "'\n" + toSource(jsModule);
+            builder.append(source);
+            break;
+          }
+        }
+      }
+    }
+
+    if (!builder.toString().isEmpty()) {
       return builder.toString();
+    } else {
+      return toSource();
     }
   }
 
