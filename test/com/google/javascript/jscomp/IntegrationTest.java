@@ -28,6 +28,7 @@ import com.google.common.primitives.Chars;
 import com.google.javascript.jscomp.CompilerOptions.DevMode;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
+import com.google.javascript.jscomp.CompilerTestCase.NoninjectingCompiler;
 import com.google.javascript.jscomp.testing.NodeSubject;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -475,13 +476,16 @@ public final class IntegrationTest extends IntegrationTestCase {
     options.setRewritePolyfills(true);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
-    Compiler compiler = compile(
+
+    NoninjectingCompiler compiler = new NoninjectingCompiler();
+    compile(
         options,
-        "for (const x of [1, 2, 3].values()) { alert(x); }");
+        new String[] {"for (const x of [1, 2, 3].values()) { alert(x); }"},
+        compiler);
+
     assertThat(compiler.getResult().errors).isEmpty();
     assertThat(compiler.getResult().warnings).isEmpty();
-    assertThat(compiler.getResult().warnings).isEmpty();
-    assertThat(compiler.toSource()).contains("Array.prototype.values");
+    assertThat(compiler.injected).containsExactly("es6/array/values");
   }
 
   public void testWindowIsTypedEs6() {
