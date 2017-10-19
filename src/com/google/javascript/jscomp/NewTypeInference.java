@@ -589,8 +589,18 @@ final class NewTypeInference implements CompilerPass {
   }
 
   private void registerMismatchAndWarn(JSError error, JSType found, JSType required) {
-    TypeMismatch.registerMismatch(
-        this.mismatches, this.implicitInterfaceUses, found, required, error);
+    // In the old type checker, a type variable is considered unknown, so other types can be
+    // used as type variables, and vice versa, without warning. NTI correctly warns.
+    // However, we don't want to block disambiguation in these cases. So, to avoid types getting
+    // invalidated, we don't register the mismatch. Otherwise, to get good disambiguation,
+    // we would have to add casts all over the code base.
+    // TODO(dimvar): this can be made safe in the distant future where we have bounded generics
+    // *and* we have switched all the unsafe uses of type variables in the code base to use
+    // bounded generics.
+    if (!found.isTypeVariable() && !required.isTypeVariable()) {
+      TypeMismatch.registerMismatch(
+          this.mismatches, this.implicitInterfaceUses, found, required, error);
+    }
     warnings.add(error);
   }
 

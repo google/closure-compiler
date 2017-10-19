@@ -1446,6 +1446,57 @@ public final class IntegrationTest extends IntegrationTestCase {
             "}"));
   }
 
+  // Test that NTI doesn't invalidate types involved in type mismatches with type variables.
+  // This behavior is generally unsafe (as in the code tested here), but also allows more
+  // disambiguation.
+  public void testNtiTypeVariableErrorsDontBlockDisambiguation() {
+    CompilerOptions options = new CompilerOptions();
+    options.setClosurePass(true);
+    options.setNewTypeInference(true);
+    options.setRunOTIafterNTI(false);
+    options.setDisambiguateProperties(true);
+
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.a = 1;",
+        "}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.a = 2;",
+        "}",
+        "/**",
+        " * @template T",
+        " * @return {T}",
+        " */",
+        "function f() {",
+        "  return new Foo;",
+        "}",
+        "var /** !Bar */ x = f();",
+        "var y = x.a;");
+
+    String output = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.Foo$a = 1;",
+        "}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.Bar$a = 2;",
+        "}",
+        "/**",
+        " * @template T",
+        " * @return {T}",
+        " */",
+        "function f() {",
+        "  return new Foo;",
+        "}",
+        "var /** !Bar */ x = f();",
+        "var y = x.Bar$a;");
+
+    test(options, js, output, NewTypeInference.RETURN_NONDECLARED_TYPE);
+  }
+
   public void testTurnOffConstChecksOfCheckAccessControlsWithNtiOn() {
     CompilerOptions options = new CompilerOptions();
     options.setClosurePass(true);
