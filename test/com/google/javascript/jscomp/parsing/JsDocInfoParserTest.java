@@ -3226,6 +3226,13 @@ public final class JsDocInfoParserTest extends BaseJSTypeTestCase {
         "Bad type annotation. @template tag missing type name." + BAD_TYPE_WIKI_LINK);
   }
 
+  /** This is unusual, but allowed. */
+  public void testParserWithLowercaseTemplateTypeName() {
+    parse("@template t */");
+    parse("@template s,t */");
+    parse("@template key,value */");
+  }
+
   public void testParserWithTypeTransformationNewline() {
     parse("@template R := \n 'string' =:*/");
   }
