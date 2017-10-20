@@ -279,7 +279,8 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup OLD_CHECK_TYPES =
       DiagnosticGroups.registerGroup("oldCheckTypes",  // undocumented
           TypeValidator.ALL_DIAGNOSTICS,
-          TypeCheck.ALL_DIAGNOSTICS);
+          TypeCheck.ALL_DIAGNOSTICS,
+          DiagnosticGroups.GLOBAL_THIS);
 
   // Run the new type inference, but omit many warnings that are not
   // found by the old type checker. This makes migration to NTI more manageable.
