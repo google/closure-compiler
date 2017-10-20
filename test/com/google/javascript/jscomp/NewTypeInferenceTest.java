@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.IncrementalCheckMode;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 
 /**
@@ -6417,7 +6418,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     // Don't warn for a forward-declared type; the same file can be included
     // in compilations that define the type as a generic type.
     typeCheck(LINE_JOINER.join(
-        FORWARD_DECLARATION_DEFINITIONS,
+        CLOSURE_BASE,
         "goog.forwardDeclare('Bar');",
         "/** @type {Bar<string>} */",
         "var x;"));
@@ -13099,46 +13100,41 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var x = e.prop;"));
   }
 
-  private static final String FORWARD_DECLARATION_DEFINITIONS = LINE_JOINER.join(
-        "/** @const */ var goog = {};",
-        "goog.addDependency = function(file, provides, requires){};",
-        "goog.forwardDeclare = function(name){};");
-
   // A forward declaration for a name A.B allows the name to appear only in
   // types, not in code. Also, only A.B may appear in the type, not A or A.B.C.
   public void testForwardDeclarations() {
-    typeCheck(LINE_JOINER.join(FORWARD_DECLARATION_DEFINITIONS,
+    typeCheck(LINE_JOINER.join(CLOSURE_BASE,
         "goog.addDependency('', ['Foo'], []);",
         "goog.forwardDeclare('Bar');",
         "function f(/** !Foo */ x) {}",
         "function g(/** !Bar */ y) {}"));
 
-    typeCheck(LINE_JOINER.join(FORWARD_DECLARATION_DEFINITIONS,
+    typeCheck(LINE_JOINER.join(CLOSURE_BASE,
         "/** @const */ var ns = {};",
         "goog.addDependency('', ['ns.Foo'], []);",
         "goog.forwardDeclare('ns.Bar');",
         "function f(/** !ns.Foo */ x) {}",
         "function g(/** !ns.Bar */ y) {}"));
 
-    typeCheck(LINE_JOINER.join(FORWARD_DECLARATION_DEFINITIONS,
+    typeCheck(LINE_JOINER.join(CLOSURE_BASE,
         "/** @const */ var ns = {};",
         "goog.forwardDeclare('ns.Bar');",
         "function f(/** !ns.Baz */ x) {}"),
         GlobalTypeInfoCollector.UNRECOGNIZED_TYPE_NAME);
 
-    typeCheck(LINE_JOINER.join(FORWARD_DECLARATION_DEFINITIONS,
+    typeCheck(LINE_JOINER.join(CLOSURE_BASE,
         "goog.forwardDeclare('num');",
         "/** @type {number} */ var num = 5;",
         "function f() { var /** null */ o = num; }"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    typeCheck(LINE_JOINER.join(FORWARD_DECLARATION_DEFINITIONS,
+    typeCheck(LINE_JOINER.join(CLOSURE_BASE,
         "goog.forwardDeclare('Foo');",
         "/** @constructor */ function Foo(){}",
         "function f(/** !Foo */ x) { var /** null */ n = x; }"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    typeCheck(LINE_JOINER.join(FORWARD_DECLARATION_DEFINITIONS,
+    typeCheck(LINE_JOINER.join(CLOSURE_BASE,
         "goog.forwardDeclare('ns.Foo');",
         "/** @const */ var ns = {};",
         "/** @constructor */ ns.Foo = function(){}",
@@ -13147,27 +13143,27 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
 
     // In the following cases the old type inference warned about arg type,
     // but we allow rather than create synthetic named type
-    typeCheck(LINE_JOINER.join(FORWARD_DECLARATION_DEFINITIONS,
+    typeCheck(LINE_JOINER.join(CLOSURE_BASE,
         "goog.forwardDeclare('Foo');",
         "function f(/** !Foo */ x) {}",
         "/** @constructor */ function Bar(){}",
         "f(new Bar);"));
 
-    typeCheck(LINE_JOINER.join(FORWARD_DECLARATION_DEFINITIONS,
+    typeCheck(LINE_JOINER.join(CLOSURE_BASE,
         "/** @const */ var ns = {};",
         "goog.forwardDeclare('ns.Foo');",
         "function f(/** !ns.Foo */ x) {}",
         "/** @constructor */ function Bar(){}",
         "f(new Bar);"));
 
-    typeCheck(LINE_JOINER.join(FORWARD_DECLARATION_DEFINITIONS,
+    typeCheck(LINE_JOINER.join(CLOSURE_BASE,
         "goog.forwardDeclare('ns.Foo');",
         "/** @const */",
         "var ns = {};",
         "/** @const */",
         "var c = ns;"));
 
-    typeCheck(LINE_JOINER.join(FORWARD_DECLARATION_DEFINITIONS,
+    typeCheck(LINE_JOINER.join(CLOSURE_BASE,
             "goog.forwardDeclare('ns.ns2.Foo');",
             "/** @const */",
             "var ns = {};",
@@ -13178,7 +13174,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "var x = new ns.ns2.Foo();"),
         NewTypeInference.INEXISTENT_PROPERTY);
 
-    typeCheck(LINE_JOINER.join(FORWARD_DECLARATION_DEFINITIONS,
+    typeCheck(LINE_JOINER.join(CLOSURE_BASE,
             "goog.forwardDeclare('Foo.Bar');",
             "/** @constructor */",
             "function Foo() {}",
@@ -21992,5 +21988,81 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "    (function() {}).apply({}, var_args);",
         "  }",
         "}"));
+  }
+
+  public void testUnresolvedTypes() {
+    compilerOptions.setIncrementalChecks(IncrementalCheckMode.CHECK_IJS);
+
+    typeCheck(LINE_JOINER.join(
+        CLOSURE_BASE,
+        "goog.forwardDeclare('Foo');",
+        "function f(/** !Foo */ x) {}"));
+
+    typeCheck(LINE_JOINER.join(
+        "goog.forwardDeclare('Foo');",
+        "function f(/** !Foo */ x) {}",
+        "f(123);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            CLOSURE_BASE,
+            "goog.forwardDeclare('Foo');",
+            "/** @return {!Foo} */",
+            "function f(x) {}"),
+        "var x = f(123);",
+        NewTypeInference.CANNOT_USE_UNRESOLVED_TYPE);
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            CLOSURE_BASE,
+            "goog.forwardDeclare('Foo');",
+            "/** @return {!Foo} */",
+            "function f(x) {}"),
+        "var /** ? */ x = f(123);",
+        NewTypeInference.CANNOT_USE_UNRESOLVED_TYPE);
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            CLOSURE_BASE,
+            "goog.forwardDeclare('Foo');",
+            "goog.forwardDeclare('Bar');",
+            "/** @return {!Foo} */",
+            "function f(x) {}"),
+        "var /** !Bar */ x = f(123);",
+        NewTypeInference.CANNOT_USE_UNRESOLVED_TYPE);
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            CLOSURE_BASE,
+            "goog.forwardDeclare('Foo');",
+            "var /** !Foo */ x;"),
+        "var y = x;",
+        NewTypeInference.CANNOT_USE_UNRESOLVED_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        CLOSURE_BASE,
+        "goog.forwardDeclare('Foo');",
+        "/** @return {!Foo} */",
+        "function f(x) {",
+        "  return x;",
+        "}"),
+        NewTypeInference.CANNOT_USE_UNRESOLVED_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "goog.forwardDeclare('Foo');",
+        "function f(/** (!Foo|number) */ x) {}",
+        "f(123);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
+
+    typeCheck(LINE_JOINER.join(
+        "goog.forwardDeclare('Foo');",
+        "function f(/** (number|!Foo) */ x) {}",
+        "f(123);"),
+        NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 }

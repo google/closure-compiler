@@ -1516,7 +1516,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     // addresses this use case.
     this.mode = TypeInferenceMode.OTI_ONLY;
     testWarning(
-        "goog.forwardDeclare('Foo');" + "/** @param {Foo} a */ function f(a) {a.foo()};",
+        "goog.forwardDeclare('Foo'); /** @param {Foo} a */ function f(a) {a.foo()};",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanUnresolvedType Message");
 

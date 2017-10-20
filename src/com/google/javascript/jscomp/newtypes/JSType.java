@@ -78,6 +78,14 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   private static final int TRUTHY_MASK = 0x200;
   private static final int FALSY_MASK = 0x400;
   // Room to grow.
+
+  /**
+   * The unresolved type is useful for per-library type checking. This type is neither a subtype
+   * nor a supertype of any other type. In effect, if you try to use it, you get a warning.
+   * To avoid flowing this type around and having to change all type operations to recognize it,
+   * if an expression evaluates to this type, we warn and return ? instead.
+   */
+  private static final int UNRESOLVED_MASK = 0x6fffffff;
   private static final int UNKNOWN_MASK = 0x7fffffff; // @type {?}
   private static final int TOP_MASK = 0xffffffff; // @type {*}
 
@@ -169,6 +177,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
         return commonTypes.FALSY;
       case UNKNOWN_MASK:
         return commonTypes.UNKNOWN;
+      case UNRESOLVED_MASK:
+        return commonTypes.UNRESOLVED;
       case TOP_MASK:
         return commonTypes.TOP;
       case BOOLEAN_MASK:
@@ -260,6 +270,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     types.put("TRUTHY", new MaskType(commonTypes, TRUTHY_MASK));
     types.put("UNDEFINED", new MaskType(commonTypes, UNDEFINED_MASK));
     types.put("UNKNOWN", new MaskType(commonTypes, UNKNOWN_MASK));
+    types.put("UNRESOLVED", new MaskType(commonTypes, UNRESOLVED_MASK));
 
     types.put("UNDEFINED_OR_BOOLEAN", new MaskType(commonTypes, UNDEFINED_OR_BOOLEAN_MASK));
     types.put("UNDEFINED_OR_NUMBER", new MaskType(commonTypes, UNDEFINED_OR_NUMBER_MASK));
@@ -611,11 +622,14 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     checkNotNull(lhs);
     checkNotNull(rhs);
     JSTypes commonTypes = lhs.commonTypes;
-    if (lhs.isTop() || rhs.isTop()) {
-      return commonTypes.TOP;
+    if (lhs.isUnresolved() || rhs.isUnresolved()) {
+      return commonTypes.UNRESOLVED;
     }
     if (lhs.isUnknown() || rhs.isUnknown()) {
       return commonTypes.UNKNOWN;
+    }
+    if (lhs.isTop() || rhs.isTop()) {
+      return commonTypes.TOP;
     }
     if (lhs.isBottom()) {
       return rhs;
@@ -1257,6 +1271,9 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     if (isUnknown() || other.isUnknown() || other.isTop()) {
       return true;
     }
+    if (other.isUnresolved()) {
+      return false;
+    }
     if (isTheTruthyType()) {
       return !other.makeTruthy().isBottom();
     }
@@ -1327,7 +1344,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
         !other.isTop() && !other.isUnknown()
         && (otherMask & TYPEVAR_MASK) == 0 && (otherMask & ENUM_MASK) == 0,
         "Requested invalid type to remove: %s", other);
-    if (isUnknown()) {
+    if (isUnknown() || isUnresolved()) {
       return this;
     }
     if (isTop()) {
@@ -1621,6 +1638,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
         return builder.append("*");
       case UNKNOWN_MASK:
         return builder.append("?");
+      case UNRESOLVED_MASK:
+        return builder.append("unresolved");
       default:
         if (isUnion) {
           builder.append("(");
@@ -1758,11 +1777,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
 
   @Override
   public final boolean isUnresolved() {
-    // TODO(aravindpg): This is purely a stub to ensure we never get into a codepath that
-    // depends on us being an unresolved type. We currently do not mark unresolved types as such
-    // in NTI since the main use-case (warning for unfulfilled forward declares) can be
-    // handled differently (by warning after GTI), so we don't want to change the type system.
-    return false;
+    return getMask() == UNRESOLVED_MASK;
   }
 
   @Override

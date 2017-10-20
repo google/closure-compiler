@@ -210,10 +210,13 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
   private final Set<JSError> warnings = new LinkedHashSet<>();
   // Unknown type names indexed by JSDoc AST node at which they were found.
   private final Map<Node, String> unknownTypeNames = new LinkedHashMap<>();
+  // If true, unresolved forward declares become UNRESOLVED, otherwise UNKNOWN.
+  private final boolean createUnresolvedTypes;
 
   public JSTypeCreatorFromJSDoc(JSTypes commonTypes,
       CodingConvention convention, UniqueNameGenerator nameGen,
-      Function<Node, Void> recordPropertyName) {
+      Function<Node, Void> recordPropertyName,
+      boolean createUnresolvedTypes) {
     checkNotNull(commonTypes);
     this.commonTypes = commonTypes;
     this.qmarkFunctionDeclared = new FunctionAndSlotType(
@@ -221,6 +224,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
     this.convention = convention;
     this.nameGen = nameGen;
     this.recordPropertyName = recordPropertyName;
+    this.createUnresolvedTypes = createUnresolvedTypes;
   }
 
   private final FunctionAndSlotType qmarkFunctionDeclared;
@@ -468,7 +472,7 @@ public final class JSTypeCreatorFromJSDoc implements Serializable {
       return getNominalTypeHelper(decl.getNominal(), n, registry, outerTypeParameters);
     }
     // Forward-declared type
-    return this.commonTypes.UNKNOWN;
+    return this.createUnresolvedTypes ? this.commonTypes.UNRESOLVED : this.commonTypes.UNKNOWN;
   }
 
   private JSType getTypedefType(Typedef td, DeclaredTypeRegistry registry) {

@@ -91,6 +91,8 @@ public final class JSTypes implements Serializable {
   public final JSType UNDEFINED;
   @SuppressWarnings("ConstantField")
   public final JSType UNKNOWN;
+  @SuppressWarnings("ConstantField")
+  public final JSType UNRESOLVED;
 
   private ObjectType topObjectType;
   @SuppressWarnings("ConstantField")
@@ -188,6 +190,7 @@ public final class JSTypes implements Serializable {
     this.TRUTHY = checkNotNull(types.get("TRUTHY"));
     this.UNDEFINED = checkNotNull(types.get("UNDEFINED"));
     this.UNKNOWN = checkNotNull(types.get("UNKNOWN"));
+    this.UNRESOLVED = checkNotNull(types.get("UNRESOLVED"));
 
     this.UNDEFINED_OR_BOOLEAN = checkNotNull(types.get("UNDEFINED_OR_BOOLEAN"));
     this.UNDEFINED_OR_NUMBER = checkNotNull(types.get("UNDEFINED_OR_NUMBER"));

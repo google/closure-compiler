@@ -350,6 +350,10 @@ final class NewTypeInference implements CompilerPass {
       "JSC_NTI_YIELD_ALL_EXPECTS_ITERABLE",
       "Expression yield* expects an iterable, found type {0}.");
 
+  static final DiagnosticType CANNOT_USE_UNRESOLVED_TYPE = DiagnosticType.warning(
+      "JSC_CANNOT_USE_UNRESOLVED_TYPE",
+      "Cannot use unresolved type {0}. Please include the type definition in your application.");
+
   static final DiagnosticGroup COMPATIBLE_DIAGNOSTICS = new DiagnosticGroup(
       ABSTRACT_SUPER_METHOD_NOT_CALLABLE,
       CANNOT_BIND_CTOR,
@@ -388,7 +392,7 @@ final class NewTypeInference implements CompilerPass {
       INVALID_DECLARED_RETURN_TYPE_OF_GENERATOR_FUNCTION);
 
   // TODO(dimvar): Check for which of these warnings it makes sense to keep
-  // going after warning, eg, for NOT_UNIQUE_INSTANTIATION, we must instantiate
+  // going after warning, e.g., for NOT_UNIQUE_INSTANTIATION, we must instantiate
   // to the join of the types.
   static final DiagnosticGroup NEW_DIAGNOSTICS =
       new DiagnosticGroup(
@@ -396,6 +400,7 @@ final class NewTypeInference implements CompilerPass {
           ASSERT_FALSE,
           BOTTOM_INDEX_TYPE,
           BOTTOM_PROP,
+          CANNOT_USE_UNRESOLVED_TYPE,
           CROSS_SCOPE_GOTCHA,
           FORIN_EXPECTS_OBJECT,
           INCOMPATIBLE_STRICT_COMPARISON,
@@ -457,6 +462,8 @@ final class NewTypeInference implements CompilerPass {
   private final boolean joinTypesWhenInstantiatingGenerics;
   private final boolean allowPropertyOnSubtypes;
   private final boolean areTypeVariablesUnknown;
+  // Used in per-library type checking
+  private final boolean warnForUnresolvedTypes;
 
   // Used only for development
   private static boolean showDebuggingPrints = false;
@@ -518,6 +525,7 @@ final class NewTypeInference implements CompilerPass {
     this.joinTypesWhenInstantiatingGenerics = inCompatibilityMode;
     this.allowPropertyOnSubtypes = inCompatibilityMode;
     this.areTypeVariablesUnknown = inCompatibilityMode;
+    this.warnForUnresolvedTypes = compiler.getOptions().inIncrementalCheckMode();
   }
 
   @VisibleForTesting // Only used from tests
@@ -1640,18 +1648,20 @@ final class NewTypeInference implements CompilerPass {
       default:
         throw new RuntimeException("Unhandled expression type: " + expr.getToken());
     }
-    mayWarnAboutUnknownType(expr, resultPair.type);
-    // TODO(dimvar): We attach the type to every expression because that's also
-    // what the old type inference does.
-    // But maybe most of these types are never looked at.
-    // See if the passes that use types only need types on a small subset of the
-    // nodes, and only store these types to save mem.
-    maybeSetTypeI(expr, resultPair.type);
+    JSType resultType = resultPair.type;
+    mayWarnAboutUnknownType(expr, resultType);
+    if (resultType.isUnresolved()) {
+      if (this.warnForUnresolvedTypes) {
+        warnings.add(JSError.make(expr, CANNOT_USE_UNRESOLVED_TYPE, resultType.toString()));
+      }
+      resultPair.type = UNKNOWN;
+    }
+    maybeSetTypeI(expr, resultType);
     if (this.currentScope.isFunction()) {
       // In global scope, the env is too big and produces too much output
       println("AnalyzeExprFWD: ", expr,
           " ::reqtype: ", requiredType, " ::spectype: ", specializedType,
-          " ::resulttype: ", resultPair.type);
+          " ::resulttype: ", resultType);
     }
     return resultPair;
   }

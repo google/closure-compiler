@@ -81,6 +81,8 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
           "goog.isNumber;",
           "goog.isBoolean;",
           "goog.typeOf;",
+          "goog.addDependency = function(file, provides, requires){};",
+          "goog.forwardDeclare = function(name){};",
           "/**",
           " * @param {string} str",
           " * @param {Object<string, string>=} opt_values",
