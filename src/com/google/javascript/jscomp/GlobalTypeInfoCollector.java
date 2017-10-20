@@ -68,6 +68,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * Populates GlobalTypeInfo.
@@ -743,6 +744,23 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     return (jsdoc.isOverride() || jsdoc.isExport()) && !jsdoc.containsFunctionDeclaration();
   }
 
+  private boolean isAliasedTypedef(Node lhsQnameNode, NTIScope s) {
+    return getAliasedTypedef(lhsQnameNode, s) != null;
+  }
+
+  /**
+   * If lhs represents the lhs of a typedef-aliasing statement, return that typedef.
+   */
+  @Nullable
+  private Typedef getAliasedTypedef(Node lhs, NTIScope s) {
+    if (!NodeUtil.isAliasedConstDefinition(lhs)) {
+      return null;
+    }
+    Node rhs = NodeUtil.getRValueOfLValue(lhs);
+    checkState(rhs != null && rhs.isQualifiedName());
+    return s.getTypedef(QualifiedName.fromNode(rhs));
+  }
+
   /**
    * Each node in the iterable is either a function expression or a statement.
    * The statement can be of: a function, a var, an expr_result containing an assignment,
@@ -913,6 +931,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         visitTypedef(nameNode);
       } else if (NodeUtil.isEnumDecl(nameNode)) {
         visitEnum(nameNode);
+      } else if (isAliasedTypedef(nameNode, this.currentScope)) {
+        visitAliasedTypedef(nameNode);
       } else if (isAliasedNamespaceDefinition(nameNode)) {
         visitAliasedNamespace(nameNode);
       } else if (varName.equals(WINDOW_INSTANCE) && nameNode.isFromExterns()) {
@@ -967,6 +987,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         visitTypedef(qnameNode);
       } else if (NodeUtil.isEnumDecl(qnameNode)) {
         visitEnum(qnameNode);
+      } else if (isAliasedTypedef(qnameNode, this.currentScope)) {
+        visitAliasedTypedef(qnameNode);
       } else if (isAliasedNamespaceDefinition(qnameNode)) {
         visitAliasedNamespace(qnameNode);
       } else if (isAliasingGlobalThis(qnameNode)) {
@@ -1390,6 +1412,15 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         lhs.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
         this.currentScope.addNamespace(lhs, ns);
       }
+    }
+
+    private void visitAliasedTypedef(Node lhs) {
+      if (this.currentScope.isDefined(lhs)) {
+        return;
+      }
+      lhs.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+      Typedef td = checkNotNull(getAliasedTypedef(lhs, this.currentScope));
+      this.currentScope.addTypedef(lhs, td);
     }
 
     private void maybeAddFunctionToNamespace(Node funQname) {
@@ -1989,7 +2020,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       checkArgument(getProp.isGetProp());
       mayVisitWeirdCtorDefinition(getProp);
       // Named types have already been crawled in CollectNamedTypes
-      if (isNamedType(getProp)) {
+      if (isNamedType(getProp) || isAliasedTypedef(getProp, this.currentScope)) {
         return;
       }
       Node recv = getProp.getFirstChild();
@@ -2243,8 +2274,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       return null;
     }
 
-    // If a @const doesn't have a declared type, we use the initializer to
-    // infer a type.
+    // If a @const doesn't have a declared type, we use the initializer to infer a type.
     // When we cannot infer the type of the initializer, we warn.
     // This way, people do not need to remember the cases where the compiler
     // can infer the type of a constant; we tell them if we cannot infer it.

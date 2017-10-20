@@ -954,6 +954,27 @@ public final class NodeUtil {
     }
   }
 
+  /**
+   * True for aliases defined with @const, not for aliases defined with @constructor/@interface.
+   */
+  static boolean isAliasedConstDefinition(Node lhs) {
+    JSDocInfo jsdoc = getBestJSDocInfo(lhs);
+    if (jsdoc == null && !lhs.isFromExterns()) {
+      return false;
+    }
+    if (jsdoc != null && !jsdoc.hasConstAnnotation()) {
+      return false;
+    }
+    Node rhs = getRValueOfLValue(lhs);
+    if (rhs == null || !rhs.isQualifiedName()) {
+      return false;
+    }
+    Node parent = lhs.getParent();
+    return (lhs.isName() && parent.isVar())
+        || (lhs.isGetProp() && lhs.isQualifiedName()
+            && parent.isAssign() && parent.getParent().isExprResult());
+  }
+
   static boolean isTypedefDecl(Node n) {
     if (n.isVar()
         || (n.isName() && n.getParent().isVar())
@@ -4381,6 +4402,8 @@ public final class NodeUtil {
    *
    * @param node A NAME or STRING node
    * @return True if a name node represents a constant variable
+   *
+   * TODO(dimvar): this method and the next two do similar but not quite identical things. Clean up
    */
   static boolean isConstantName(Node node) {
     return node.getBooleanProp(Node.IS_CONSTANT_NAME);

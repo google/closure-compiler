@@ -22065,4 +22065,24 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "f(123);"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
+
+  public void testHandleAliasedTypedefs() {
+    typeCheck(LINE_JOINER.join(
+        "/** @typedef {number} */",
+        "var A;",
+        "/** @const */",
+        "var B = A;",
+        "var /** B */ x = 'asdf';"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @typedef {number} */",
+        "ns.A;",
+        "/** @const */",
+        "ns.B = ns.A;",
+        "var /** ns.B */ x = 'asdf';"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+  }
 }

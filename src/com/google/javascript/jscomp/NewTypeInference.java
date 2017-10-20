@@ -1942,8 +1942,14 @@ final class NewTypeInference implements CompilerPass {
       Node expr, TypeEnv inEnv, JSType requiredType, JSType specializedType) {
     if (expr.getBooleanProp(Node.ANALYZED_DURING_GTI)) {
       expr.removeProp(Node.ANALYZED_DURING_GTI);
-      markAndGetTypeOfPreanalyzedNode(expr.getFirstChild(), inEnv, true);
-      markAndGetTypeOfPreanalyzedNode(expr.getLastChild(), inEnv, true);
+      // If the assignment is an aliasing of a typedef, markAndGetTypeOfPreanalyzedNode won't
+      // be able to find a type and we'll get a spurious warning.
+      // But during NTI we don't have typedef info anymore, so we back off for all aliasing
+      // definitions, not just ones defining typedefs.
+      if (!NodeUtil.isAliasedConstDefinition(expr.getFirstChild())) {
+        markAndGetTypeOfPreanalyzedNode(expr.getFirstChild(), inEnv, true);
+        markAndGetTypeOfPreanalyzedNode(expr.getLastChild(), inEnv, true);
+      }
       return new EnvTypePair(inEnv, requiredType);
     }
     mayWarnAboutConst(expr);
