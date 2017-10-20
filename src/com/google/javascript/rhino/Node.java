@@ -603,6 +603,11 @@ public class Node implements Serializable {
     return first != null;
   }
 
+  public final Node getOnlyChild() {
+    checkState(hasOneChild());
+    return first;
+  }
+
   @Nullable
   public final Node getFirstChild() {
     return first;
