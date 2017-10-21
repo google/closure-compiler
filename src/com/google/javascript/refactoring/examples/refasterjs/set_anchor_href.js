@@ -29,6 +29,13 @@
 
 goog.require('goog.dom.safe');
 
+/**
+ * @param {?} anchor
+ * @param {string} string_literal_url
+ */
+function do_not_change_stringLiteral(anchor, string_literal_url) {
+  anchor.href = string_literal_url;
+}
 
 /**
  * +require {goog.dom.safe}
