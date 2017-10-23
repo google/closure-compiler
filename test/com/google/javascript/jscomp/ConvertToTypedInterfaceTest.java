@@ -881,6 +881,29 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
         "/** @const */ var ns = {}; ns.fun = function(x,y,z) {}");
   }
 
+  public void testNonemptyNamespaces() {
+    testSame("/** @const */ var ns = {fun: function(x,y,z) {}}");
+
+    test(
+        "/** @const */ var ns = {/** @type {number} */ n: 5};",
+        "/** @const */ var ns = {/** @type {number} */ n: 0};");
+
+    // NOTE: This pattern typechecks when found in externs, but not for code.
+    // Since the goal of this pass is intended to be used as externs, this is acceptable.
+    test(
+        "/** @const */ var ns = {/** @type {string} */ s: 'str'};",
+        "/** @const */ var ns = {/** @type {string} */ s: 0};");
+
+    test(
+        "/** @const */ var ns = {/** @const */ s: 'blahblahblah'};",
+        "/** @const */ var ns = {/** @const {string} */ s: 0};");
+
+    test(
+        "/** @const */ var ns = {untyped: foo()};",
+        "/** @const */ var ns = {/** @const {*} */ untyped: 0};");
+
+  }
+
   public void testRemoveIgnoredProperties() {
     test(
         "/** @const */ var ns = {}; /** @return {number} */ ns['fun'] = function(x,y,z) {}",
