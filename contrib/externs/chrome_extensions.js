@@ -1770,6 +1770,13 @@ chrome.bluetoothLowEnergy.unregisterAdvertisement =
 
 
 /**
+ * @param {function()} callback
+ * @see https://developer.chrome.com/apps/bluetoothLowEnergy#method-resetAdvertising
+ */
+chrome.bluetoothLowEnergy.resetAdvertising = function(callback) {};
+
+
+/**
  * @param {number} minInterval
  * @param {number} maxInterval
  * @param {function()} callback
@@ -2514,6 +2521,13 @@ chrome.runtime.Manifest.prototype.permissions;
  * @type {boolean|undefined}
  */
 chrome.runtime.Manifest.prototype.kiosk_only;
+
+/**
+ * App-only manifest field.
+ * @see https://developer.chrome.com/apps/manifest
+ * @type {boolean|undefined}
+ */
+chrome.runtime.Manifest.prototype.kiosk_enabled;
 
 
 
