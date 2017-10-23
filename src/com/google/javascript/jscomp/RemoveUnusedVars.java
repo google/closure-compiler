@@ -939,6 +939,8 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
             Node value = var.getInitialValue();
             assignedToUnknownValue = value != null
                 && !NodeUtil.isLiteralValue(value, true);
+          } else if (NodeUtil.isFunctionDeclaration(var.getParentNode())) {
+            assignedToUnknownValue = false;
           } else {
             // This was initialized to a function arg or a catch param
             // or a for...in variable.

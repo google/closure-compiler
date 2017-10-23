@@ -625,6 +625,10 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     test("var x = function() {}; x.prototype.bar = function() {};", "");
   }
 
+  public void testUnusedPropAssign6b() {
+    test("function x() {} x.prototype.bar = function() {};", "");
+  }
+
   public void testUnusedPropAssign7() {
     test("var x = {}; x[x.foo] = x.bar;", "");
   }
