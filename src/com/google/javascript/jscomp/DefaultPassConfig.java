@@ -1723,7 +1723,7 @@ public final class DefaultPassConfig extends PassConfig {
     final boolean useTypesForOptimization = compiler.getOptions().useTypesForLocalOptimization;
     List<AbstractPeepholeOptimization> optimizations = new ArrayList<>();
     optimizations.add(new MinimizeExitPoints(compiler));
-    optimizations.add(new PeepholeMinimizeConditions(late, useTypesForOptimization));
+    optimizations.add(new PeepholeMinimizeConditions(late));
     optimizations.add(new PeepholeSubstituteAlternateSyntax(late));
     optimizations.add(new PeepholeReplaceKnownMethods(late, useTypesForOptimization));
     optimizations.add(new PeepholeRemoveDeadCode());
@@ -1775,7 +1775,7 @@ public final class DefaultPassConfig extends PassConfig {
               getName(),
               new StatementFusion(options.aggressiveFusion),
               new PeepholeRemoveDeadCode(),
-              new PeepholeMinimizeConditions(late, useTypesForOptimization),
+              new PeepholeMinimizeConditions(late),
               new PeepholeSubstituteAlternateSyntax(late),
               new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
               new PeepholeFoldConstants(late, useTypesForOptimization),

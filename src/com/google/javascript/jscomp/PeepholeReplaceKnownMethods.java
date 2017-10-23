@@ -135,10 +135,10 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
             || (stringNode.getTypeI() != null
                 && stringNode.getTypeI().isStringValueType()))) {
       if (subtree.hasXChildren(3)) {
-        Double maybeStart = NodeUtil.getNumberValue(firstArg, useTypes);
+        Double maybeStart = NodeUtil.getNumberValue(firstArg);
         if (maybeStart != null) {
           int start = maybeStart.intValue();
-          Double maybeLengthOrEnd = NodeUtil.getNumberValue(firstArg.getNext(), useTypes);
+          Double maybeLengthOrEnd = NodeUtil.getNumberValue(firstArg.getNext());
           if (maybeLengthOrEnd != null) {
             switch (functionNameString) {
               case "substr":
@@ -540,7 +540,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     int length;
     String stringAsString = stringNode.getString();
 
-    Double maybeStart = NodeUtil.getNumberValue(arg1, useTypes);
+    Double maybeStart = NodeUtil.getNumberValue(arg1);
     if (maybeStart != null) {
       start = maybeStart.intValue();
     } else {
@@ -549,7 +549,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     Node arg2 = arg1.getNext();
     if (arg2 != null) {
-      Double maybeLength = NodeUtil.getNumberValue(arg2, useTypes);
+      Double maybeLength = NodeUtil.getNumberValue(arg2);
       if (maybeLength != null) {
         length = maybeLength.intValue();
       } else {
@@ -596,7 +596,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     int end;
     String stringAsString = stringNode.getString();
 
-    Double maybeStart = NodeUtil.getNumberValue(arg1, useTypes);
+    Double maybeStart = NodeUtil.getNumberValue(arg1);
     if (maybeStart != null) {
       start = maybeStart.intValue();
     } else {
@@ -605,7 +605,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
 
     Node arg2 = arg1.getNext();
     if (arg2 != null) {
-      Double maybeEnd = NodeUtil.getNumberValue(arg2, useTypes);
+      Double maybeEnd = NodeUtil.getNumberValue(arg2);
       if (maybeEnd != null) {
         end = maybeEnd.intValue();
       } else {

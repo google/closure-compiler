@@ -298,10 +298,6 @@ public final class NodeUtil {
     return result.toString();
   }
 
-  public static Double getNumberValue(Node n) {
-    return getNumberValue(n, false);
-  }
-
   /**
    * Gets the value of a node as a Number, or null if it cannot be converted.
    * When it returns a non-null Double, this method effectively emulates the
@@ -311,7 +307,7 @@ public final class NodeUtil {
    * @param useType If true, return 0.0 if the type is null, and NaN if the type is undefined.
    * @return The value of a node as a Number, or null if it cannot be converted.
    */
-  static Double getNumberValue(Node n, boolean useType) {
+  static Double getNumberValue(Node n) {
     switch (n.getToken()) {
       case TRUE:
         return 1.0;
@@ -341,16 +337,6 @@ public final class NodeUtil {
         }
         if (name.equals("Infinity")) {
           return Double.POSITIVE_INFINITY;
-        }
-        if (useType) {
-          TypeI type = n.getTypeI();
-          if (type != null) {
-            if (type.isVoidType()) {
-              return Double.NaN;
-            } else if (type.isNullType()) {
-              return 0.0;
-            }
-          }
         }
         return null;
 

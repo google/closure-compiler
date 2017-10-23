@@ -24,7 +24,6 @@ package com.google.javascript.jscomp;
 public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase {
 
   private boolean late = true;
-  private boolean useTypes = true;
 
   public PeepholeMinimizeConditionsTest() {
     super(DEFAULT_EXTERNS);
@@ -34,7 +33,6 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
   protected void setUp() throws Exception {
     super.setUp();
     late = true;
-    useTypes = true;
     this.mode = TypeInferenceMode.NEITHER;
     // NTI warns about property accesses on *
     ignoreWarnings(DiagnosticGroups.NEW_CHECK_TYPES_EXTRA_CHECKS);
@@ -44,7 +42,7 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
   protected CompilerPass getProcessor(final Compiler compiler) {
     PeepholeOptimizationsPass peepholePass =
         new PeepholeOptimizationsPass(
-            compiler, getName(), new PeepholeMinimizeConditions(late, useTypes));
+            compiler, getName(), new PeepholeMinimizeConditions(late));
     peepholePass.setRetraverseOnChange(false);
     return peepholePass;
   }
@@ -772,7 +770,6 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
 
   public void testCoercionSubstitution_disabled() {
     this.mode = TypeInferenceMode.BOTH;
-    useTypes = false;
     testSame("var x = {}; if (x != null) throw 'a';");
     testSame("var x = {}; var y = x != null;");
 
@@ -782,12 +779,12 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
 
   public void testCoercionSubstitution_booleanResult0() {
     this.mode = TypeInferenceMode.BOTH;
-    test("var x = {}; var y = x != null;", "var x = {}; var y = !!x;");
+    testSame("var x = {}; var y = x != null;");
   }
 
   public void testCoercionSubstitution_booleanResult1() {
     this.mode = TypeInferenceMode.BOTH;
-    test("var x = {}; var y = x == null;", "var x = {}; var y = !x;");
+    testSame("var x = {}; var y = x == null;");
     testSame("var x = {}; var y = x !== null;");
     testSame("var x = undefined; var y = x !== null;");
     testSame("var x = {}; var y = x === null;");
@@ -801,12 +798,12 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
 
   public void testCoercionSubstitution_if() {
     this.mode = TypeInferenceMode.BOTH;
-    test("var x = {};\nif (x != null) throw 'a';\n", "var x = {};\nif (x) throw 'a';\n");
-    test("var x = {};\nif (x == null) throw 'a';\n", "var x = {};\nif (!x) throw 'a';\n");
+    test("var x = {};\nif (x != null) throw 'a';\n", "var x={}; if (x!=null) throw 'a'");
+    testSame("var x = {};\nif (x == null) throw 'a';\n");
     testSame("var x = {};\nif (x !== null) throw 'a';\n");
     testSame("var x = {};\nif (x === null) throw 'a';\n");
-    test("var x = {};\nif (null != x) throw 'a';\n", "var x = {};\nif (x) throw 'a';\n");
-    test("var x = {};\nif (null == x) throw 'a';\n", "var x = {};\nif (!x) throw 'a';\n");
+    testSame("var x = {};\nif (null != x) throw 'a';\n");
+    testSame("var x = {};\nif (null == x) throw 'a';\n");
     testSame("var x = {};\nif (null !== x) throw 'a';\n");
     testSame("var x = {};\nif (null === x) throw 'a';\n");
 
@@ -825,82 +822,34 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
 
   public void testCoercionSubstitution_expression() {
     this.mode = TypeInferenceMode.BOTH;
-    test(
-        "var x = {}; x != null && alert('b');",
-        "var x = {}; x && alert('b');");
+    testSame("var x = {}; x != null && alert('b');");
     testSame("var x = 1; x != 0 && alert('b');");
   }
 
   public void testCoercionSubstitution_hook() {
     this.mode = TypeInferenceMode.BOTH;
-    test("var x = {};\nvar y = x != null ? 1 : 2;\n", "var x = {};\nvar y = x ? 1 : 2;\n");
-    testSame("var x = 1;\nvar y = x != 0 ? 1 : 2;\n");
+    testSame(
+        lines(
+            "var x = {};",
+            "var y = x != null ? 1 : 2;"));
+    testSame(
+        lines(
+            "var x = 1;",
+            "var y = x != 0 ? 1 : 2;"));
   }
 
   public void testCoercionSubstitution_not() {
     this.mode = TypeInferenceMode.BOTH;
-    test("var x = {};\nvar y = !(x != null) ? 1 : 2;\n", "var x = {};\nvar y = x ? 2 : 1;\n");
+    test(
+        "var x = {};\nvar y = !(x != null) ? 1 : 2;\n",
+        "var x = {};\nvar y = (x == null) ? 1 : 2;\n");
     test("var x = 1;\nvar y = !(x != 0) ? 1 : 2;\n", "var x = 1;\nvar y = x == 0 ? 1 : 2;\n");
   }
 
   public void testCoercionSubstitution_while() {
     this.mode = TypeInferenceMode.BOTH;
-    test("var x = {};\nwhile (x != null) throw 'a'\n", "var x = {};\nwhile (x) throw 'a';\n");
-    testSame("var x = 1;\nwhile (x != 0) throw 'a'\n");
-  }
-
-  public void testCoercionSubstitution_nullableType() {
-    this.mode = TypeInferenceMode.BOTH;
-    test(
-        "var x = /** @type {?Object} */ ({}); if (x != null) throw 'a';",
-        "var x = /** @type {?Object} */ ({}); if (x) throw 'a';");
-    // We back off on strict comparison against null.
-    testSame("var x = /** @type {?Object} */ ({}); if (x !== null) throw 'a';");
-    test(
-        "var x = /** @type {?Object} */ ({}); if (x != undefined) throw 'a';",
-        "var x = /** @type {?Object} */ ({}); if (x) throw 'a';");
-    testSame("var x = /** @type {?Object} */ ({}); if (x !== undefined) throw 'a';");
-    test(
-        "var x = /** @type {!Object|undefined} */ ({}); if (x !== undefined) throw 'a';",
-        "var x = /** @type {!Object|undefined} */ ({}); if (x) throw 'a';");
-    testSame("var x = /** @type {!Object|undefined} */ ({}); if (x !== null) throw 'a';");
-    testSame("var x = /** @type {?number} */ (1); if (x != 0) throw 'a';");
-    testSame("var x = /** @type {?string} */ (''); if (x != null) throw 'a';");
-    testSame("var x = /** @type {?boolean} */ (true); if (x != null) throw 'a';");
-    testSame(LINE_JOINER.join(
-        "/** @enum {string} */",
-        "var E = { F: '1' };",
-        "/** @param {?E} x */",
-        "function f(x) {",
-        "  if (x != null) throw 'a';",
-        "}"));
-    testSame(LINE_JOINER.join(
-        "/** @enum {number} */",
-        "var E1 = { F: 1 };",
-        "/** @enum {number} */",
-        "var E2 = { F: 1 };",
-        "/** @param {?E1|?E2} x */",
-        "function f(x) {",
-        "  if (x != null) throw 'a';",
-        "}"));
-    test(LINE_JOINER.join(
-        "/** @enum {Object} */",
-        "var E = { F: {} };",
-        "/** @param {?E} x */",
-        "function f(x) {",
-        "  if (x != null) throw 'a';",
-        "}"),
-        LINE_JOINER.join(
-        "/** @enum {Object} */",
-        "var E = { F: {} };",
-        "/** @param {?E} x */",
-        "function f(x) {",
-        "  if (x) throw 'a';",
-        "}"));
-    test(
-        "if (/** @type {Array|undefined} */ (window['c']) == null) {}",
-        "if (!/** @type {Array|undefined} */ (window['c'])) {}");
-    testSame("if (/** @type {Array|undefined} */ (window['c']) === null) {}");
+    testSame("var x = {}; while (x != null) throw 'a';");
+    testSame("var x = 1; while (x != 0) throw 'a';");
   }
 
   public void testCoercionSubstitution_unknownType() {
@@ -936,14 +885,8 @@ public final class PeepholeMinimizeConditionsTest extends TypeICompilerTestCase 
 
   public void testCoercionSubstitution_boxedPrimitives() {
     this.mode = TypeInferenceMode.BOTH;
-    test(
-        "var x = new Number();\nif (x != null) throw 'a';\n",
-        "var x = new Number();\nif (x) throw 'a';\n");
-    test(
-        "var x = new String();\nif (x != null) throw 'a';\n",
-        "var x = new String();\nif (x) throw 'a';\n");
-    test(
-        "var x = new Boolean();\nif (x != null) throw 'a';\n",
-        "var x = new Boolean();\nif (x) throw 'a';\n");
+    testSame("var x = new Number(); if (x != null) throw 'a';");
+    testSame("var x = new String(); if (x != null) throw 'a';");
+    testSame("var x = new Boolean();\nif (x != null) throw 'a';");
   }
 }

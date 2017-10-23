@@ -362,11 +362,11 @@ public final class MultiPassTest extends CompilerTestCase {
             return new PeepholeOptimizationsPass(
                 compiler,
                 getName(),
-                new PeepholeMinimizeConditions(late, false /* useTypes */),
+                new PeepholeMinimizeConditions(late),
                 new PeepholeSubstituteAlternateSyntax(late),
-                new PeepholeReplaceKnownMethods(late, false),
+                new PeepholeReplaceKnownMethods(late, false /* useTypes */),
                 new PeepholeRemoveDeadCode(),
-                new PeepholeFoldConstants(late, false),
+                new PeepholeFoldConstants(late, false /* useTypes */),
                 new PeepholeCollectPropertyAssignments());
           }
         });
