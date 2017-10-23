@@ -154,7 +154,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(convertEs6TypedToEs6);
     }
 
-    if (options.needsTranspilationOf(FeatureSet.Feature.MODULES)) {
+    if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
       TranspilationPasses.addEs6ModulePass(passes);
     }
 
@@ -278,7 +278,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkRequires);
     }
 
-    if (options.needsTranspilationOf(FeatureSet.Feature.MODULES)) {
+    if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
       TranspilationPasses.addEs6ModulePass(checks);
     }
 

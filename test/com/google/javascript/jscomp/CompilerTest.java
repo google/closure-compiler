@@ -1199,11 +1199,10 @@ public final class CompilerTest extends TestCase {
     // statements are not valid identifiers.
     List<SourceFile> inputs =
         ImmutableList.of(
-            SourceFile.fromCode("/index[0].js", "import foo from './foo'; foo('hello');"),
+            SourceFile.fromCode("/index[0].js", "import foo from './foo.js'; foo('hello');"),
             SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
 
-    List<ModuleIdentifier> entryPoints = ImmutableList.of(
-        ModuleIdentifier.forFile("/index[0].js"));
+    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/index[0].js"));
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2017);

@@ -648,7 +648,7 @@ public final class VarCheckTest extends CompilerTestCase {
   public void testImportedNames() throws Exception {
     List<SourceFile> inputs =
         ImmutableList.of(
-            SourceFile.fromCode("/index[0].js", "import foo from './foo'; foo('hello');"),
+            SourceFile.fromCode("/index[0].js", "import foo from './foo.js'; foo('hello');"),
             SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
 
     List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/index[0].js"));

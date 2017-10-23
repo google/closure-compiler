@@ -1736,7 +1736,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         externsRoot.addChildToBack(n);
       }
 
-      if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)
+      if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)
           || options.transformAMDToCJSModules
           || options.processCommonJSModules) {
 
