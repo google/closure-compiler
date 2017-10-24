@@ -601,7 +601,6 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   public void testAbsoluteImportsWithModuleRoots() {
     moduleRoots = ImmutableList.of("/base");
-    disableCompareJsDoc();
     test(
         ImmutableList.of(
             SourceFile.fromCode(Compiler.joinPathParts("base", "mod", "name.js"), ""),
