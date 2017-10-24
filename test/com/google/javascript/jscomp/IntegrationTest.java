@@ -1310,7 +1310,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     testSame(options, code);
 
     options.optimizeReturns = true;
-    test(options, code, "function f(a) {a; return;} f(true);");
+    test(options, code, "function f(a) {return;} f(true);");
   }
 
   public void testRemoveAbstractMethods() {

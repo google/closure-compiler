@@ -3062,13 +3062,6 @@ public final class NodeUtil {
   }
 
   /**
-   * @return Whether the node is both a function expression and the function is named.
-   */
-  static boolean isNamedFunctionExpression(Node n) {
-    return NodeUtil.isFunctionExpression(n) && !n.getFirstChild().getString().isEmpty();
-  }
-
-  /**
    * see {@link #isFunctionExpression}
    *
    * @param n A node
@@ -3131,39 +3124,13 @@ public final class NodeUtil {
    * Determines if a function takes a variable number of arguments by
    * looking for references to the "arguments" var_args object.
    */
-  @Deprecated
-  static boolean isVarArgsFunction(Node fn) {
-    return doesFunctionReferenceOwnArgumentsObject(fn);
-  }
-
-  /**
-   * @return Whether a function has a reference to its own "arguments" object.
-   */
-  static boolean doesFunctionReferenceOwnArgumentsObject(Node fn) {
-    checkArgument(fn.isFunction());
-    if (fn.isArrowFunction()) {
-      return false;
-    }
-    return referencesArgumentsHelper(fn.getLastChild());
-  }
-
-  /** @return Whether the predicate is true for the node or any of its descendants. */
-  private static boolean referencesArgumentsHelper(Node node) {
-    if (node.isName() && node.getString().equals("arguments")) {
-      return true;
-    }
-
-    if (NodeUtil.isVanillaFunction(node)) {
-      return false;
-    }
-
-    for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
-      if (referencesArgumentsHelper(c)) {
-        return true;
-      }
-    }
-
-    return false;
+  static boolean isVarArgsFunction(Node function) {
+    // TODO(johnlenz): rename this function
+    checkArgument(function.isFunction());
+    return !function.isArrowFunction() && isNameReferenced(
+        function.getLastChild(),
+        "arguments",
+        MATCH_NOT_THIS_BINDING);
   }
 
   /**
@@ -4915,9 +4882,10 @@ public final class NodeUtil {
   }
 
   /**
-   * @return true iff the result of the expression is consumed.
+   * @return false iff the result of the expression is not consumed.
    */
   static boolean isExpressionResultUsed(Node expr) {
+    // TODO(johnlenz): consider sharing some code with trySimpleUnusedResult.
     Node parent = expr.getParent();
     switch (parent.getToken()) {
       case BLOCK:
@@ -4946,9 +4914,13 @@ public final class NodeUtil {
 
         return (expr == parent.getFirstChild()) ? false : isExpressionResultUsed(parent);
       case FOR:
-        // Only an expression whose result is in the condition part of the
-        // expression is used.
-        return (parent.getSecondChild() == expr);
+      case FOR_IN:
+        if (!parent.isForIn()) {
+          // Only an expression whose result is in the condition part of the
+          // expression is used.
+          return (parent.getSecondChild() == expr);
+        }
+        break;
       default:
         break;
     }

@@ -333,11 +333,11 @@ public final class CommandLineRunnerTest extends TestCase {
         + "new Foo().handle1(1, 2);\n"
         + "new Bar().handle1(1, 2);\n",
         "function a() {}\n"
-        + "a.prototype.a = function(c) { alert(c); };\n"
+        + "a.prototype.a = function(d, c) { alert(c); };\n"
         + "function b() {}\n"
         + "b.prototype.a = function() {};\n"
-        + "(new a).a(2);\n"
-        + "(new b).a(2);");
+        + "(new a).a(1, 2);\n"
+        + "(new b).a(1, 2);");
   }
 
   public void testTypeCheckingOnWithVerbose() {

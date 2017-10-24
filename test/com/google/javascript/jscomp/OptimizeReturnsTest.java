@@ -40,103 +40,110 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
     return 1;
   }
 
+  /**
+   * Combine source strings using '\n' as the separator.
+   */
+  private static String newlineJoin(String ... parts) {
+    return LINE_JOINER.join(parts);
+  }
+
   public void testNoRewriteUsedResult1() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "function a(){return 1}",
         "var x = a()");
     testSame(source);
   }
 
   public void testNoRewriteUsedResult2() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "var a = function(){return 1}",
         "a(); var b = a()");
     testSame(source);
   }
 
   public void testRewriteUnusedResult1() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "function a(){return 1}",
         "a()");
-    String expected = lines(
+    String expected = newlineJoin(
         "function a(){return}",
         "a()");
     test(source, expected);
   }
 
   public void testRewriteUnusedResult2() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "var a; a = function(){return 1}",
         "a()");
-    String expected = lines(
+    String expected = newlineJoin(
         "var a; a = function(){return}",
         "a()");
     test(source, expected);
   }
 
   public void testRewriteUnusedResult3() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "var a = function(){return 1}",
         "a()");
-    String expected = lines(
+    String expected = newlineJoin(
         "var a = function(){return}",
         "a()");
     test(source, expected);
   }
 
   public void testRewriteUnusedResult4a() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "var a = function(){return a()}",
         "a()");
     testSame(source);
   }
 
   public void testRewriteUnusedResult4b() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "var a = function b(){return b()}",
         "a()");
     testSame(source);
   }
 
   public void testRewriteUnusedResult4c() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "function a(){return a()}",
         "a()");
     testSame(source);
   }
 
   public void testRewriteUnusedResult5() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "function a(){}",
         "a.prototype.foo = function(args) {return args};",
         "var o = new a;",
         "o.foo()");
-    String expected = lines(
+    String expected = newlineJoin(
         "function a(){}",
-        "a.prototype.foo = function(args) {args;return};",
+        "a.prototype.foo = function(args) {return};",
         "var o = new a;",
         "o.foo()");
     test(source, expected);
   }
 
   public void testRewriteUnusedResult6() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "function a(){return (g = 1)}",
         "a()");
-    String expected = lines(
+    String expected = newlineJoin(
         "function a(){g = 1;return}",
         "a()");
     test(source, expected);
   }
 
   public void testRewriteUnusedResult7a() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "function a() { return 1 }",
         "function b() { return a() }",
         "function c() { return b() }",
         "c();");
 
-    String expected = lines(
+    String expected = newlineJoin(
         "function a() { return 1 }",
         "function b() { return a() }",
         "function c() { b(); return }",
@@ -145,14 +152,14 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
   }
 
   public void testRewriteUnusedResult7b() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "c();",
         "function c() { return b() }",
         "function b() { return a() }",
         "function a() { return 1 }");
 
     // Iteration 1.
-    String expected = lines(
+    String expected = newlineJoin(
         "c();",
         "function c() { b(); return }",
         "function b() { return a() }",
@@ -161,7 +168,7 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
 
     // Iteration 2.
     source = expected;
-    expected = lines(
+    expected = newlineJoin(
         "c();",
         "function c() { b(); return }",
         "function b() { a(); return }",
@@ -170,7 +177,7 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
 
     // Iteration 3.
     source = expected;
-    expected = lines(
+    expected = newlineJoin(
         "c();",
         "function c() { b(); return }",
         "function b() { a(); return }",
@@ -179,7 +186,7 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
   }
 
   public void testRewriteUnusedResult8() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "function a() { return c() }",
         "function b() { return a() }",
         "function c() { return b() }",
@@ -189,17 +196,17 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
 
   public void testRewriteUnusedResult9() throws Exception {
     // Proves that the deleted function scope is reported.
-    String source = lines(
-        "function a(){return function() {};}",
+    String source = newlineJoin(
+        "function a(){return function() {}}",
         "a()");
-    String expected = lines(
-        "function a(){(function() {}); return}",
+    String expected = newlineJoin(
+        "function a(){return}",
         "a()");
     test(source, expected);
   }
 
   public void testNoRewriteObjLit1() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "var a = {b:function(){return 1;}}",
         "for(c in a) (a[c])();",
         "a.b()");
@@ -207,7 +214,7 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
   }
 
   public void testNoRewriteObjLit2() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "var a = {b:function fn(){return 1;}}",
         "for(c in a) (a[c])();",
         "a.b()");
@@ -215,19 +222,19 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
   }
 
   public void testNoRewriteArrLit() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "var a = [function(){return 1;}]",
         "(a[0])();");
     testSame(source);
   }
 
   public void testPrototypeMethod1() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "function c(){}",
         "c.prototype.a = function(){return 1}",
         "var x = new c;",
         "x.a()");
-    String result = lines(
+    String result = newlineJoin(
         "function c(){}",
         "c.prototype.a = function(){return}",
         "var x = new c;",
@@ -236,7 +243,7 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
   }
 
   public void testPrototypeMethod2() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "function c(){}",
         "c.prototype.a = function(){return 1}",
         "goog.reflect.object({a: 'v'})",
@@ -246,7 +253,7 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
   }
 
   public void testPrototypeMethod3() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "function c(){}",
         "c.prototype.a = function(){return 1}",
         "var x = new c;",
@@ -256,7 +263,7 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
   }
 
   public void testPrototypeMethod4() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "function c(){}",
         "c.prototype.a = function(){return 1}",
         "var x = new c;",
@@ -265,33 +272,19 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
   }
 
   public void testCallOrApply() throws Exception {
-    // TODO(johnlenz): Add support for .apply
-    test(
-        "function a() {return 1}; a.call(new foo);",
-        "function a() {return  }; a.call(new foo);");
+    // TODO(johnlenz): Add support for .call and .apply
+    testSame("function a() {return 1}; a.call(new foo);");
 
     testSame("function a() {return 1}; a.apply(new foo);");
   }
 
   public void testRewriteUseSiteRemoval() throws Exception {
-    String source = lines(
+    String source = newlineJoin(
         "function a() { return {\"_id\" : 1} }",
         "a();");
-    String expected = lines(
-        "function a() { ({\"_id\" : 1}); return }",
+    String expected = newlineJoin(
+        "function a() { return }",
         "a();");
     test(source, expected);
-  }
-
-  public void testUnknownDefinitionAllowRemoval() throws Exception {
-    test(
-        lines(
-            "let x = functionFactory();",
-            "x(1, 2);",
-            "x = function(a,b) { return b; }"),
-        lines(
-            "let x = functionFactory();",
-            "x(1, 2);",
-            "x = function(a,b) { b; return }"));
   }
 }

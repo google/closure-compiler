@@ -227,6 +227,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   public PerformanceTracker tracker;
 
+  // Used by optimize-returns, optimize-parameters and remove-unused-variables
+  private DefinitionUseSiteFinder defFinder = null;
+
   // Types that have been forward declared
   private Set<String> forwardDeclaredTypes = new HashSet<>();
 
@@ -1683,6 +1686,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       this.globalTypeInfo = new GlobalTypeInfo(this, forwardDeclaredTypes);
     }
     return this.globalTypeInfo;
+  }
+
+  @Override
+  DefinitionUseSiteFinder getDefinitionFinder() {
+    return this.defFinder;
+  }
+
+  @Override
+  void setDefinitionFinder(DefinitionUseSiteFinder defFinder) {
+    this.defFinder = defFinder;
   }
 
   public void maybeSetTracker() {
