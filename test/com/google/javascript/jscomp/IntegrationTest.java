@@ -1544,6 +1544,60 @@ public final class IntegrationTest extends IntegrationTestCase {
     test(options, js, output, NewTypeInference.RETURN_NONDECLARED_TYPE);
   }
 
+  public void testNtiTypeVariableErrorsDontBlockDisambiguation2() {
+    CompilerOptions options = new CompilerOptions();
+    options.setClosurePass(true);
+    options.setNewTypeInference(true);
+    options.setRunOTIafterNTI(false);
+    options.setDisambiguateProperties(true);
+
+    String js = LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "function Foo() {",
+        "  /** @type {T} */",
+        "  this.p;",
+        "}",
+        "/** @return {!Bar} */",
+        "Foo.prototype.f = function() {",
+        "  return /** @type {!Bar} */ (this.p);",
+        "};",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.a = 1;",
+        "}",
+        "/** @constructor */",
+        "function Baz() {",
+        "  this.a = 1;",
+        "}");
+
+    String output = LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "function Foo() {",
+        "  /** @type {T} */",
+        "  this.p;",
+        "}",
+        "/** @return {!Bar} */",
+        "Foo.prototype.f = function() {",
+        "  return this.p;",
+        "};",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.Bar$a = 1;",
+        "}",
+        "/** @constructor */",
+        "function Baz() {",
+        "  this.Baz$a = 1;",
+        "}");
+
+    test(options, js, output);
+  }
+
   public void testTurnOffConstChecksOfCheckAccessControlsWithNtiOn() {
     CompilerOptions options = new CompilerOptions();
     options.setClosurePass(true);

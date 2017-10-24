@@ -2465,6 +2465,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
       out.writeObject(new ArrayList<>(this.enums));
     }
 
+    @SuppressWarnings("unchecked")
     @GwtIncompatible("ObjectInputStream")
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
       in.defaultReadObject();
@@ -2540,6 +2541,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
       out.writeObject(new ArrayList<>(this.objs));
     }
 
+    @SuppressWarnings("unchecked")
     @GwtIncompatible("ObjectInputStream")
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
       in.defaultReadObject();
@@ -2585,6 +2587,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
       out.writeObject(new ArrayList<>(this.objs));
     }
 
+    @SuppressWarnings("unchecked")
     @GwtIncompatible("ObjectInputStream")
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
       in.defaultReadObject();
