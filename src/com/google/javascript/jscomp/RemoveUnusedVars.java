@@ -96,7 +96,7 @@ class RemoveUnusedVars implements CompilerPass {
   /**
    * Keep track of variables that might be unreferenced.
    */
-  private final List<Var> maybeUnreferenced = new ArrayList<>();
+  private List<Var> maybeUnreferenced = new ArrayList<>();
 
   /**
    * Keep track of scopes that we've traversed.
@@ -617,11 +617,15 @@ class RemoveUnusedVars implements CompilerPass {
       // We can't use traditional iterators and iterables for this list,
       // because our lazily-evaluated continuations will modify it while
       // we traverse it.
+      int removedCount = 0;
       for (int current = 0; current < maybeUnreferenced.size(); current++) {
         Var var = maybeUnreferenced.get(current);
+        if (var == null) {
+          continue;
+        }
         if (referenced.contains(var)) {
-          maybeUnreferenced.remove(current);
-          current--;
+          maybeUnreferenced.set(current, null);
+          removedCount++;
         } else {
           boolean assignedToUnknownValue = false;
 
@@ -659,10 +663,24 @@ class RemoveUnusedVars implements CompilerPass {
 
           if ((assignedToUnknownValue || maybeEscaped) && hasPropertyAssign) {
             changes = markReferencedVar(var) || changes;
-            maybeUnreferenced.remove(current);
-            current--;
+            maybeUnreferenced.set(current, null);
+            removedCount++;
           }
         }
+      }
+
+      // Removing unused items from the middle of an array list is relatively expensive,
+      // so we batch them up and remove them all at the end.
+      if (removedCount > 0) {
+        int size = maybeUnreferenced.size();
+        ArrayList<Var> refreshed = new ArrayList<>(size - removedCount);
+        for (int i = 0; i < size; i++) {
+          Var var = maybeUnreferenced.get(i);
+          if (var != null) {
+            refreshed.add(var);
+          }
+        }
+        maybeUnreferenced = refreshed;
       }
     } while (changes);
   }
