@@ -1174,6 +1174,49 @@ public final class IntegrationTest extends IntegrationTestCase {
         "var goog = {};");
   }
 
+  public void testRemoveClosureAsserts2() {
+    CompilerOptions options = new CompilerOptions();
+    options.setClosurePass(true);
+    options.setNewTypeInference(true);
+    options.setRunOTIafterNTI(false);
+    options.setRemoveClosureAsserts(true);
+    options.setDisambiguateProperties(true);
+
+    String js = LINE_JOINER.join(
+        "/** @const */ var goog = {};",
+        "goog.asserts;",
+        "goog.asserts.assertInstanceof;",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.a = 1;",
+        "}",
+        "/** @constructor */",
+        "function Baz() {",
+        "  this.a = 1;",
+        "}",
+        "function f(x) {",
+        "  return (goog.asserts.assertInstanceof(x, Bar)).a;",
+        "}");
+
+    String output = LINE_JOINER.join(
+        "/** @const */ var goog = {};",
+        "goog.asserts;",
+        "goog.asserts.assertInstanceof;",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.Bar$a = 1;",
+        "}",
+        "/** @constructor */",
+        "function Baz() {",
+        "  this.Baz$a = 1;",
+        "}",
+        "function f(x) {",
+        "  return x.Bar$a;",
+        "}");
+
+    test(options, js, output);
+  }
+
   public void testDeprecation() {
     String code = "/** @deprecated */ function f() { } function g() { f(); }";
 
