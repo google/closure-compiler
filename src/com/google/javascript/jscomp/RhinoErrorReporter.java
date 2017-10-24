@@ -168,7 +168,7 @@ class RhinoErrorReporter {
             // Parse tree too deep.
             .put(Pattern.compile("Too deep recursion while parsing"), PARSE_TREE_TOO_DEEP)
 
-            // Octal literals
+            // Old-style octal literals
             .put(Pattern.compile("^Octal .*literal.*"), INVALID_OCTAL_LITERAL)
 
             .put(

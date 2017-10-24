@@ -2072,8 +2072,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.STRING_CONTINUATION);
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
-    Node n = parseError("'one\\\ntwo';",
-        "String continuations are not supported in this language mode.");
+    Node n = parseWarning(
+        "'one\\\ntwo';",
+        requiresLanguageModeMessage(LanguageMode.ECMASCRIPT5, Feature.STRING_CONTINUATION),
+        "String continuations are not recommended. See"
+                + " https://google.github.io/styleguide/javascriptguide.xml?showone=Multiline_string_literals#Multiline_string_literals");
     assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
 
     mode = LanguageMode.ECMASCRIPT5;
@@ -2226,11 +2229,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.BINARY_LITERALS);
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
-    parseWarning("0b0001;",
-        "Binary integer literals are not supported in this language mode.");
+    parseWarning("0b0001;", getRequiresEs6Message(Feature.BINARY_LITERALS));
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning("0b0001;",
-        "Binary integer literals are not supported in this language mode.");
+    parseWarning("0b0001;", getRequiresEs6Message(Feature.BINARY_LITERALS));
     mode = LanguageMode.ECMASCRIPT6;
     parse("0b0001;");
   }
@@ -2239,11 +2240,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.OCTAL_LITERALS);
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
-    parseWarning("0o0001;",
-        "Octal integer literals are not supported in this language mode.");
+    parseWarning("0o0001;", getRequiresEs6Message(Feature.OCTAL_LITERALS));
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning("0o0001;",
-        "Octal integer literals are not supported in this language mode.");
+    parseWarning("0o0001;", getRequiresEs6Message(Feature.OCTAL_LITERALS));
     mode = LanguageMode.ECMASCRIPT6;
     parse("0o0001;");
   }

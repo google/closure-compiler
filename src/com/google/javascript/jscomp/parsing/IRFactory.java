@@ -195,18 +195,9 @@ class IRFactory {
   static final String INVALID_OCTAL_DIGIT =
       "Invalid octal digit in octal literal.";
 
-  static final String STRING_CONTINUATION_ERROR =
-      "String continuations are not supported in this language mode.";
-
   static final String STRING_CONTINUATION_WARNING =
       "String continuations are not recommended. See"
       + " https://google.github.io/styleguide/javascriptguide.xml?showone=Multiline_string_literals#Multiline_string_literals";
-
-  static final String BINARY_NUMBER_LITERAL_WARNING =
-      "Binary integer literals are not supported in this language mode.";
-
-  static final String OCTAL_NUMBER_LITERAL_WARNING =
-      "Octal integer literals are not supported in this language mode.";
 
   static final String OCTAL_STRING_LITERAL_WARNING =
       "Octal literals in strings are not supported in this language mode.";
@@ -844,12 +835,19 @@ class IRFactory {
   }
 
   static int lineno(ParseTree node) {
-    // location lines start at zero, our AST starts at 1.
     return lineno(node.location.start);
   }
 
   static int charno(ParseTree node) {
     return charno(node.location.start);
+  }
+
+  static int lineno(com.google.javascript.jscomp.parsing.parser.Token token) {
+    return lineno(token.location.start);
+  }
+
+  static int charno(com.google.javascript.jscomp.parsing.parser.Token token) {
+    return charno(token.location.start);
   }
 
   static int lineno(SourcePosition location) {
@@ -859,6 +857,33 @@ class IRFactory {
 
   static int charno(SourcePosition location) {
     return location.column;
+  }
+
+  void maybeWarnForFeature(ParseTree node, Feature feature) {
+    features = features.with(feature);
+    if (!isSupportedForInputLanguageMode(feature)) {
+      errorReporter.warning(
+          "this language feature is only supported for "
+              + LanguageMode.minimumRequiredFor(feature)
+              + " mode or better: "
+              + feature,
+          sourceName,
+          lineno(node), charno(node));
+    }
+  }
+
+  void maybeWarnForFeature(
+      com.google.javascript.jscomp.parsing.parser.Token token, Feature feature) {
+    features = features.with(feature);
+    if (!isSupportedForInputLanguageMode(feature)) {
+      errorReporter.warning(
+          "this language feature is only supported for "
+              + LanguageMode.minimumRequiredFor(feature)
+              + " mode or better: "
+              + feature,
+          sourceName,
+          lineno(token), charno(token));
+    }
   }
 
   void setSourceInfo(Node node, Node ref) {
@@ -2588,20 +2613,6 @@ class IRFactory {
       }
     }
 
-    void maybeWarnForFeature(ParseTree node, Feature feature) {
-      features = features.with(feature);
-      if (!isSupportedForInputLanguageMode(feature)) {
-
-        errorReporter.warning(
-            "this language feature is only supported for "
-            + LanguageMode.minimumRequiredFor(feature)
-            + " mode or better: "
-            + feature,
-            sourceName,
-            lineno(node), charno(node));
-      }
-    }
-
     void maybeProcessAccessibilityModifier(ParseTree parseTree, Node n, @Nullable TokenType type) {
       if (type != null) {
         Visibility access;
@@ -2975,17 +2986,13 @@ class IRFactory {
           result.append('\u000B');
           break;
         case '\n':
-          features = features.with(Feature.STRING_CONTINUATION);
-          if (isEs5OrBetterMode()) {
-            errorReporter.warning(STRING_CONTINUATION_WARNING,
-                sourceName,
-                lineno(token.location.start), charno(token.location.start));
-          } else {
-            errorReporter.error(STRING_CONTINUATION_ERROR,
-                sourceName,
-                lineno(token.location.start), charno(token.location.start));
-          }
           // line continuation, skip the line break
+          maybeWarnForFeature(token, Feature.STRING_CONTINUATION);
+          errorReporter.warning(
+              STRING_CONTINUATION_WARNING,
+              sourceName,
+              lineno(token.location.start),
+              charno(token.location.start));
           break;
         case '0':
           if (cur + 1 >= value.length()) {
@@ -3092,12 +3099,7 @@ class IRFactory {
           return Double.valueOf(value);
         case 'b':
         case 'B': {
-          features = features.with(Feature.BINARY_LITERALS);
-          if (!isSupportedForInputLanguageMode(Feature.BINARY_LITERALS)) {
-            errorReporter.warning(BINARY_NUMBER_LITERAL_WARNING,
-                sourceName,
-                lineno(token.location.start), charno(token.location.start));
-          }
+          maybeWarnForFeature(token, Feature.BINARY_LITERALS);
           double v = 0;
           int c = 1;
           while (++c < length) {
@@ -3107,12 +3109,7 @@ class IRFactory {
         }
         case 'o':
         case 'O': {
-          features = features.with(Feature.OCTAL_LITERALS);
-          if (!isSupportedForInputLanguageMode(Feature.OCTAL_LITERALS)) {
-            errorReporter.warning(OCTAL_NUMBER_LITERAL_WARNING,
-                sourceName,
-                lineno(token.location.start), charno(token.location.start));
-          }
+          maybeWarnForFeature(token, Feature.OCTAL_LITERALS);
           double v = 0;
           int c = 1;
           while (++c < length) {
@@ -3138,13 +3135,8 @@ class IRFactory {
             if (isOctalDigit(digit)) {
               v = (v * 8) + octaldigit(digit);
             } else {
-              if (inStrictContext()) {
-                errorReporter.error(INVALID_ES5_STRICT_OCTAL, sourceName,
-                    lineno(location.start), charno(location.start));
-              } else {
-                errorReporter.error(INVALID_OCTAL_DIGIT, sourceName,
-                    lineno(location.start), charno(location.start));
-              }
+              errorReporter.error(INVALID_OCTAL_DIGIT, sourceName,
+                  lineno(location.start), charno(location.start));
               return 0;
             }
           }
