@@ -31,7 +31,6 @@ public final class ValidityCheckTest extends CompilerTestCase {
 
   @Override protected void setUp() throws Exception {
     super.setUp();
-    disableCompareAsTree();
     otherPass = null;
   }
 

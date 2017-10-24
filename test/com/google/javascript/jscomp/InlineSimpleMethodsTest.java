@@ -26,7 +26,6 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    disableCompareAsTree();
   }
 
   /**
@@ -176,10 +175,10 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   }
 
   public void testEmptyMethodInline() {
-    testWithPrefix("function Foo(){}" +
-        "Foo.prototype.bar=function(a){};",
-        "var x=new Foo; x.bar();",
-        "var x=new Foo");
+    testWithPrefix(
+        "function Foo(){} Foo.prototype.bar=function(a){};",
+        "var x = new Foo(); x.bar();",
+        "var x = new Foo();;");
   }
 
   public void testEmptyMethodInlineWithSideEffects() {
@@ -261,7 +260,7 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   }
 
   public void testObjectLit4() {
-    testSame("var key=\"bar\";"
+    testSame("var key='bar';"
         + "var blah={[key]:a};"
         + "(new Foo).bar");
   }
@@ -281,30 +280,30 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   public void testIssue2508576_1() {
     // Method defined by an extern should be left alone.
     String externs = "function alert(a) {}";
-    testSame(externs, "({a:alert,b:alert}).a(\"a\")");
+    testSame(externs, "({a:alert,b:alert}).a('a')");
   }
 
   public void testIssue2508576_2() {
     // Anonymous object definition with a side-effect should be left alone.
-    testSame("({a:function(){},b:x()}).a(\"a\")");
+    testSame("({a:function(){},b:x()}).a('a')");
   }
 
   public void testIssue2508576_3() {
     // Anonymous object definition without side-effect should be removed.
-    test("({a:function(){},b:alert}).a(\"a\")", "");
+    test("({a:function(){},b:alert}).a('a')", ";");
   }
 
   public void testAnonymousGet() {
     // Anonymous object definition without side-effect should be removed.
-    testSame("({get a(){return function(){}},b:alert}).a(\"a\")");
-    testSame("({get a(){},b:alert}).a(\"a\")");
+    testSame("({get a(){return function(){}},b:alert}).a('a')");
+    testSame("({get a(){},b:alert}).a('a')");
     testSame("({get a(){},b:alert}).a");
   }
 
   public void testAnonymousSet() {
     // Anonymous object definition without side-effect should be removed.
-    testSame("({set a(b){return function(){}},b:alert}).a(\"a\")");
-    testSame("({set a(b){},b:alert}).a(\"a\")");
+    testSame("({set a(b){return function(){}},b:alert}).a('a')");
+    testSame("({set a(b){},b:alert}).a('a')");
     testSame("({set a(b){},b:alert}).a");
   }
 
@@ -314,18 +313,21 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
     // escapes, because method definitions aren't commonly mutated.
     test(
         "var esc;",
-        "/** @constructor */"
-        + "function Foo() {"
-        + "  this.prop = 123;"
-        + "}"
-        + "Foo.prototype.m = function() {"
-        + "  return this.prop;"
-        + "}"
-        + "(new Foo).m();"
-        + "esc(Foo);",
-        "function Foo(){this.prop=123}"
-        + "Foo.prototype.m=function(){return this.prop}"
-        + "(new Foo).m();"
-        + "esc(Foo)");
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {",
+            "  this.prop = 123;",
+            "}",
+            "Foo.prototype.m = function() {",
+            "  return this.prop;",
+            "}",
+            "(new Foo).m();",
+            "esc(Foo);"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo(){this.prop=123}",
+            "Foo.prototype.m=function(){return this.prop}",
+            "(new Foo).m();",
+            "esc(Foo)"));
   }
 }

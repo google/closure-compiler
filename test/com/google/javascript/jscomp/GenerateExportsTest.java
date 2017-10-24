@@ -52,11 +52,6 @@ public final class GenerateExportsTest extends CompilerTestCase {
     this.allowNonGlobalExports  = true;
   }
 
-  @Override
-  protected void testExternChanges(String input, String expectedExtern) {
-    disableCompareAsTree();
-    super.testExternChanges(input, expectedExtern);
-  }
 
   public void testExportSymbol() {
     test(
