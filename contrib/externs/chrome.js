@@ -65,246 +65,114 @@ Port.prototype.disconnect = function() {};
 
 
 /**
+ * Base event type from which all others inherit.
+ *
+ * LISTENER must be a function type that returns void.
+ *
  * @see https://developer.chrome.com/extensions/events.html
- * @constructor
- * TODO(tbreisacher): Update *Listener methods to take {function()}
- * instead of {!Function}. See discussion at go/ChromeEvent-TODO
+ * @record
+ * @template LISTENER
+ */
+function ChromeBaseEvent() {}
+
+
+/**
+ * @param {LISTENER} callback
+ * @return {undefined}
+ */
+ChromeBaseEvent.prototype.addListener = function(callback) {};
+
+
+/**
+ * @param {LISTENER} callback
+ * @return {undefined}
+ */
+ChromeBaseEvent.prototype.removeListener = function(callback) {};
+
+
+/**
+ * @param {LISTENER} callback
+ * @return {boolean}
+ */
+ChromeBaseEvent.prototype.hasListener = function(callback) {};
+
+
+/** @return {boolean} */
+ChromeBaseEvent.prototype.hasListeners = function() {};
+
+
+// TODO(bradfordcsmith): Add the addRules, getRules, and removeRules methods?
+
+
+/**
+ * Event whose listeners take unspecified parameters.
+ *
+ * TODO(bradfordcsmith): Definitions using this type are failing to provide
+ *     information about the parameters that will actually be supplied to the
+ *     listener and should be updated to use a more specific event type.
+ * @see https://developer.chrome.com/extensions/events.html
+ * @record
+ * @extends {ChromeBaseEvent<!Function>}
  */
 function ChromeEvent() {}
 
 
 /**
- * @param {!Function} callback
- * @return {undefined}
+ * Event whose listeners take no parameters.
+ *
+ * @see https://developer.chrome.com/extensions/events.html
+ * @record
+ * @extends {ChromeBaseEvent<function()>}
  */
-ChromeEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {!Function} callback
- * @return {undefined}
- */
-ChromeEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {!Function} callback
- * @return {boolean}
- */
-ChromeEvent.prototype.hasListener = function(callback) {};
-
-
-/** @return {boolean} */
-ChromeEvent.prototype.hasListeners = function() {};
-
-// TODO(tbreisacher): Add the addRules, getRules, and removeRules methods?
-
+function ChromeVoidEvent() {}
 
 
 /**
  * Event whose listeners take a string parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(string)>}
  */
 function ChromeStringEvent() {}
 
 
 /**
- * @param {function(string): void} callback
- * @return {undefined}
- */
-ChromeStringEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(string): void} callback
- * @return {undefined}
- */
-ChromeStringEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(string): void} callback
- * @return {boolean}
- */
-ChromeStringEvent.prototype.hasListener = function(callback) {};
-
-
-/** @return {boolean} */
-ChromeStringEvent.prototype.hasListeners = function() {};
-
-
-
-/**
  * Event whose listeners take a boolean parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(boolean)>}
  */
-
 function ChromeBooleanEvent() {}
 
 
 /**
- * @param {function(boolean): void} callback
- * @return {undefined}
- */
-ChromeBooleanEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(boolean): void} callback
- * @return {undefined}
- */
-ChromeBooleanEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(boolean): void} callback
- * @return {boolean}
- */
-ChromeBooleanEvent.prototype.hasListener = function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-ChromeBooleanEvent.prototype.hasListeners = function() {};
-
-
-
-/**
  * Event whose listeners take a number parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(number)>}
  */
-
 function ChromeNumberEvent() {}
 
 
 /**
- * @param {function(number): void} callback
- * @return {undefined}
- */
-ChromeNumberEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(number): void} callback
- * @return {undefined}
- */
-ChromeNumberEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(number): void} callback
- * @return {boolean}
- */
-ChromeNumberEvent.prototype.hasListener = function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-ChromeNumberEvent.prototype.hasListeners = function() {};
-
-
-
-/**
  * Event whose listeners take an Object parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!Object)>}
  */
 function ChromeObjectEvent() {}
 
 
 /**
- * @param {function(!Object): void} callback Callback.
- * @return {undefined}
- */
-ChromeObjectEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(!Object): void} callback Callback.
- * @return {undefined}
- */
-ChromeObjectEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(!Object): void} callback Callback.
- * @return {boolean}
- */
-ChromeObjectEvent.prototype.hasListener = function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-ChromeObjectEvent.prototype.hasListeners = function() {};
-
-
-
-/**
  * Event whose listeners take a string array parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!Array<string>)>}
  */
 function ChromeStringArrayEvent() {}
 
 
 /**
- * @param {function(!Array<string>): void} callback
- * @return {undefined}
- */
-ChromeStringArrayEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(!Array<string>): void} callback
- * @return {undefined}
- */
-ChromeStringArrayEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(!Array<string>): void} callback
- * @return {boolean}
- */
-ChromeStringArrayEvent.prototype.hasListener = function(callback) {};
-
-
-/** @return {boolean} */
-ChromeStringArrayEvent.prototype.hasListeners = function() {};
-
-
-
-/**
  * Event whose listeners take two strings as parameters.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(string, string)>}
  */
 function ChromeStringStringEvent() {}
-
-
-/**
- * @param {function(string, string): void} callback
- * @return {undefined}
- */
-ChromeStringStringEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(string, string): void} callback
- * @return {undefined}
- */
-ChromeStringStringEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(string, string): void} callback
- * @return {boolean}
- */
-ChromeStringStringEvent.prototype.hasListener = function(callback) {};
-
-
-/** @return {boolean} */
-ChromeStringStringEvent.prototype.hasListeners = function() {};
-
 
 
 /**

@@ -129,23 +129,13 @@
  *
  * D. Events
  * Most packages define a set of events with the standard set of methods:
- * addListener, removeListener, hasListener and hasListeners.  ChromeEvent
+ * addListener, removeListener, hasListener and hasListeners.  ChromeVoidEvent
  * is the appropriate type when an event's listeners do not take any
- * parameters, however, many events take parameters specific to that event:
+ * parameters, however, many events take parameters specific to that event.
  *
- * 1. Create a pseudo-type for the event, for example,
- *    chrome.runtime.PortEvent and define the four methods on it.
- * 2. Fully describe the listener/callback's signature, for example,
- *
- *       * at-param {function(!chrome.runtime.Port): void} callback Callback.
- *      chrome.runtime.PortEvent.prototype.addListener =
- *          function(callback) {};
- *    or
- *
- *       * at-param {function(*, !chrome.runtime.MessageSender,
- *       *     function(*): void): (boolean|undefined)} callback Callback.
- *      chrome.runtime.MessageSenderEvent.prototype.addListener =
- *          function(callback) {};
+ * For those cases, create a record type for the event that extends
+ * ChromeBaseEvent with the correct listener function type filled in.
+ * See any of the Event type definitions below for an example.
  *
  * E. Nullability
  * We treat the Chrome Extension API pages as "the truth".  Not-null types
@@ -731,36 +721,11 @@ chrome.audioModem.receive = function(params, callback) {};
 chrome.audioModem.stopReceive = function(band, callback) {};
 
 
-/** @constructor */
+/**
+ * @record
+ * @extends {ChromeBaseEvent<function(!Array<!chrome.audioModem.ReceivedToken>)>}
+ */
 chrome.audioModem.ReceivedEvent = function() {};
-
-
-/**
- * @param {function(!Array<!chrome.audioModem.ReceivedToken>)} callback
- * @return {undefined}
- */
-chrome.audioModem.ReceivedEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(!Array<!chrome.audioModem.ReceivedToken>)} callback
- * @return {undefined}
- */
-chrome.audioModem.ReceivedEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!Array<!chrome.audioModem.ReceivedToken>)} callback
- * @return {boolean}
- */
-chrome.audioModem.ReceivedEvent.prototype.hasListener = function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.audioModem.ReceivedEvent.prototype.hasListeners = function() {};
 
 
 /** @type {!chrome.audioModem.ReceivedEvent} */
@@ -917,37 +882,10 @@ chrome.bluetooth.stopDiscovery = function(opt_callback) {};
 
 /**
  * Event whose listeners take an AdapaterState parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.bluetooth.AdapterState)>}
  */
 chrome.bluetooth.AdapterStateEvent = function() {};
-
-
-/**
- * @param {function(!chrome.bluetooth.AdapterState): void} callback
- * @return {undefined}
- */
-chrome.bluetooth.AdapterStateEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.bluetooth.AdapterState): void} callback
- * @return {undefined}
- */
-chrome.bluetooth.AdapterStateEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.bluetooth.AdapterState): void} callback
- * @return {boolean}
- */
-chrome.bluetooth.AdapterStateEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.bluetooth.AdapterStateEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -957,37 +895,12 @@ chrome.bluetooth.AdapterStateEvent.prototype.hasListeners = function() {};
 chrome.bluetooth.onAdapterStateChanged;
 
 
-
 /**
  * Event whose listeners take an Device parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.bluetooth.Device)>}
  */
 chrome.bluetooth.DeviceEvent = function() {};
-
-
-/**
- * @param {function(!chrome.bluetooth.Device): void} callback
- * @return {undefined}
- */
-chrome.bluetooth.DeviceEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(!chrome.bluetooth.Device): void} callback
- * @return {undefined}
- */
-chrome.bluetooth.DeviceEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(!chrome.bluetooth.Device): void} callback
- * @return {boolean}
- */
-chrome.bluetooth.DeviceEvent.prototype.hasListener = function(callback) {};
-
-
-/** @return {boolean} */
-chrome.bluetooth.DeviceEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -1209,37 +1122,10 @@ chrome.bluetoothSocket.AcceptEventData.prototype.clientSocketId;
 
 /**
  * Event whose listeners take a AcceptEventData parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.bluetoothSocket.AcceptEventData)>}
  */
 chrome.bluetoothSocket.AcceptEvent = function() {};
-
-
-/**
- * @param {function(!chrome.bluetoothSocket.AcceptEventData): void} callback
- * @return {undefined}
- */
-chrome.bluetoothSocket.AcceptEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.bluetoothSocket.AcceptEventData): void} callback
- * @return {undefined}
- */
-chrome.bluetoothSocket.AcceptEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.bluetoothSocket.AcceptEventData): void} callback
- * @return {boolean}
- */
-chrome.bluetoothSocket.AcceptEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.bluetoothSocket.AcceptEvent.prototype.hasListeners = function() {};
 
 
 /** @type {!chrome.bluetoothSocket.AcceptEvent} */
@@ -1269,41 +1155,10 @@ chrome.bluetoothSocket.AcceptErrorEventData.prototype.error;
 
 /**
  * Event whose listeners take a AcceptErrorEventData parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.bluetoothSocket.AcceptErrorEventData)>}
  */
 chrome.bluetoothSocket.AcceptErrorEvent = function() {};
-
-
-/**
- * @param {function(
- *     !chrome.bluetoothSocket.AcceptErrorEventData): void} callback
- * @return {undefined}
- */
-chrome.bluetoothSocket.AcceptErrorEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(
- *     !chrome.bluetoothSocket.AcceptErrorEventData): void} callback
- * @return {undefined}
- */
-chrome.bluetoothSocket.AcceptErrorEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(
- *     !chrome.bluetoothSocket.AcceptErrorEventData): void} callback
- * @return {boolean}
- */
-chrome.bluetoothSocket.AcceptErrorEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.bluetoothSocket.AcceptErrorEvent.prototype.hasListeners =
-    function() {};
 
 
 /** @type {!chrome.bluetoothSocket.AcceptErrorEvent} */
@@ -1329,37 +1184,11 @@ chrome.bluetoothSocket.ReceiveEventData.prototype.data;
 
 /**
  * Event whose listeners take a ReceiveEventData parameter.
- * @constructor
+ * @record
+ * @extends
+ *     {ChromeBaseEvent<function(!chrome.bluetoothSocket.ReceiveEventData)>}
  */
 chrome.bluetoothSocket.ReceiveEvent = function() {};
-
-
-/**
- * @param {function(!chrome.bluetoothSocket.ReceiveEventData): void} callback
- * @return {undefined}
- */
-chrome.bluetoothSocket.ReceiveEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.bluetoothSocket.ReceiveEventData): void} callback
- * @return {undefined}
- */
-chrome.bluetoothSocket.ReceiveEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.bluetoothSocket.ReceiveEventData): void} callback
- * @return {boolean}
- */
-chrome.bluetoothSocket.ReceiveEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.bluetoothSocket.ReceiveEvent.prototype.hasListeners = function() {};
 
 
 /** @type {!chrome.bluetoothSocket.ReceiveEvent} */
@@ -1389,41 +1218,11 @@ chrome.bluetoothSocket.ReceiveErrorEventData.prototype.error;
 
 /**
  * Event whose listeners take a ReceiveErrorEventData parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<
+ *     function(!chrome.bluetoothSocket.ReceiveErrorEventData)>}
  */
 chrome.bluetoothSocket.ReceiveErrorEvent = function() {};
-
-
-/**
- * @param {function(
- *     !chrome.bluetoothSocket.ReceiveErrorEventData): void} callback
- * @return {undefined}
- */
-chrome.bluetoothSocket.ReceiveErrorEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(
- *     !chrome.bluetoothSocket.ReceiveErrorEventData): void} callback
- * @return {undefined}
- */
-chrome.bluetoothSocket.ReceiveErrorEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(
- *     !chrome.bluetoothSocket.ReceiveErrorEventData): void} callback
- * @return {boolean}
- */
-chrome.bluetoothSocket.ReceiveErrorEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.bluetoothSocket.ReceiveErrorEvent.prototype.hasListeners =
-    function() {};
 
 
 /** @type {!chrome.bluetoothSocket.ReceiveErrorEvent} */
@@ -1802,37 +1601,11 @@ chrome.bluetoothLowEnergy.sendRequestResponse = function(response) {};
 
 /**
  * Event whose listeners take a Service parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.bluetoothLowEnergy.Service)>}
  */
 chrome.bluetoothLowEnergy.ServiceEvent = function() {};
 
-
-/**
- * @param {function(!chrome.bluetoothLowEnergy.Service): void} callback
- * @return {undefined}
- */
-chrome.bluetoothLowEnergy.ServiceEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.bluetoothLowEnergy.Service): void} callback
- * @return {undefined}
- */
-chrome.bluetoothLowEnergy.ServiceEvent.prototype.removeListener =
-    function(callback) {};
-
-/**
- * @param {function(!chrome.bluetoothLowEnergy.Service): void} callback
- * @return {boolean}
- */
-chrome.bluetoothLowEnergy.ServiceEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.bluetoothLowEnergy.ServiceEvent.prototype.hasListeners =
-    function() {};
 
 /**
   * @type {!chrome.bluetoothLowEnergy.ServiceEvent}
@@ -1857,41 +1630,10 @@ chrome.bluetoothLowEnergy.onServiceRemoved;
 
 /**
  * Event whose listeners take a Characteristic parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.bluetoothLowEnergy.Characteristic)>}
  */
 chrome.bluetoothLowEnergy.CharacteristicEvent = function() {};
-
-
-/**
- * @param {function(!chrome.bluetoothLowEnergy.Characteristic): void}
- *     callback
- * @return {undefined}
- */
-chrome.bluetoothLowEnergy.CharacteristicEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.bluetoothLowEnergy.Characteristic): void}
- *     callback
- * @return {undefined}
- */
-chrome.bluetoothLowEnergy.CharacteristicEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.bluetoothLowEnergy.Characteristic): void}
- *     callback
- * @return {boolean}
- */
-chrome.bluetoothLowEnergy.CharacteristicEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.bluetoothLowEnergy.CharacteristicEvent.prototype.hasListeners =
-    function() {};
 
 
 /**
@@ -1903,40 +1645,10 @@ chrome.bluetoothLowEnergy.onCharacteristicValueChanged;
 
 /**
  * Event whose listeners take a Descriptor parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.bluetoothLowEnergy.Descriptor)>}
  */
 chrome.bluetoothLowEnergy.DescriptorEvent = function() {};
-
-
-/**
- * @param {function(!chrome.bluetoothLowEnergy.Descriptor): void}
- *     callback
- * @return {undefined}
- */
-chrome.bluetoothLowEnergy.DescriptorEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.bluetoothLowEnergy.Descriptor): void}
- *     callback
- * @return {undefined}
- */
-chrome.bluetoothLowEnergy.DescriptorEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.bluetoothLowEnergy.Descriptor): void} callback
- * @return {boolean}
- */
-chrome.bluetoothLowEnergy.DescriptorEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.bluetoothLowEnergy.DescriptorEvent.prototype.hasListeners =
-    function() {};
 
 
 /**
@@ -1948,40 +1660,10 @@ chrome.bluetoothLowEnergy.onDescriptorValueChanged;
 
 /**
  * Event whose listeners take a Request parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.bluetoothLowEnergy.Request, string)>}
  */
 chrome.bluetoothLowEnergy.RequestEvent = function() {};
-
-
-/**
- * @param {function(!chrome.bluetoothLowEnergy.Request, string): void}
- *     callback
- * @return {undefined}
- */
-chrome.bluetoothLowEnergy.RequestEvent.prototype.addListener = function(
-    callback) {};
-
-
-/**
- * @param {function(!chrome.bluetoothLowEnergy.Request, string): void}
- *     callback
- * @return {undefined}
- */
-chrome.bluetoothLowEnergy.RequestEvent.prototype.removeListener = function(
-    callback) {};
-
-
-/**
- * @param {function(!chrome.bluetoothLowEnergy.Request, string): void}
- *     callback
- * @return {boolean}
- */
-chrome.bluetoothLowEnergy.RequestEvent.prototype.hasListener = function(
-    callback) {};
-
-
-/** @return {boolean} */
-chrome.bluetoothLowEnergy.RequestEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -2140,38 +1822,11 @@ chrome.copresence.execute = function(operations, callback) {};
 /**
  * Event whose listeners take a subscription id and received messages as a
  * parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(string, !Array<!chrome.copresence.Message>)>}
  * @see https://developer.chrome.com/apps/copresence#event-onMessagesReceived
  */
 chrome.copresence.MessagesReceivedEvent = function() {};
-
-
-/**
- * @param {function(string, !Array<!chrome.copresence.Message>): void} callback
- * @return {undefined}
- */
-chrome.copresence.MessagesReceivedEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(string, !Array<!chrome.copresence.Message>): void} callback
- * @return {undefined}
- */
-chrome.copresence.MessagesReceivedEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(string, !Array<!chrome.copresence.Message>): void} callback
- * @return {boolean}
- */
-chrome.copresence.MessagesReceivedEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.copresence.MessagesReceivedEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -2690,76 +2345,19 @@ chrome.runtime.onRestartRequired;
 
 /**
  * Event whose listeners take a Port parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!Port)>}
  */
 chrome.runtime.PortEvent = function() {};
 
 
 /**
- * @param {function(!Port): void} callback Callback.
- * @return {undefined}
- */
-chrome.runtime.PortEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(!Port): void} callback Callback.
- * @return {undefined}
- */
-chrome.runtime.PortEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(!Port): void} callback Callback.
- * @return {boolean}
- */
-chrome.runtime.PortEvent.prototype.hasListener = function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.runtime.PortEvent.prototype.hasListeners = function() {};
-
-
-
-/**
  * Event whose listeners take a MessageSender and additional parameters.
  * @see http://developer.chrome.com/dev/apps/runtime.html#event-onMessage
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(*, !MessageSender, function(*): void): (boolean|undefined)>}
  */
 chrome.runtime.MessageSenderEvent = function() {};
-
-
-/**
- * @param {function(*, !MessageSender, function(*): void): (boolean|undefined)}
- *     callback Callback.
- * @return {undefined}
- */
-chrome.runtime.MessageSenderEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(*, !MessageSender, function(*): void): (boolean|undefined)}
- *     callback Callback.
- * @return {undefined}
- */
-chrome.runtime.MessageSenderEvent.prototype.removeListener = function(callback)
-    {};
-
-
-/**
- * @param {function(*, !MessageSender, function(*): void): (boolean|undefined)}
- *     callback Callback.
- * @return {boolean}
- */
-chrome.runtime.MessageSenderEvent.prototype.hasListener = function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.runtime.MessageSenderEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -3605,38 +3203,10 @@ chrome.browserAction.disable = function(opt_tabId) {};
 
 
 /**
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!Tab)>}
  */
 chrome.browserAction.BrowserActionTabEvent = function() {};
-
-
-/**
- * @param {function(!Tab): void} callback
- * @return {undefined}
- */
-chrome.browserAction.BrowserActionTabEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!Tab): void} callback
- * @return {undefined}
- */
-chrome.browserAction.BrowserActionTabEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!Tab): void} callback
- * @return {boolean}
- */
-chrome.browserAction.BrowserActionTabEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.browserAction.BrowserActionTabEvent.prototype.hasListeners =
-    function() {};
 
 
 /**
@@ -3833,65 +3403,18 @@ chrome.omnibox = {};
 
 
 
-/** @constructor */
+/**
+ * @record
+ * @extends {ChromeBaseEvent<function(string, function(!Array<!SuggestResult>))>}
+ */
 chrome.omnibox.InputChangedEvent = function() {};
 
 
 /**
- * @param {function(string, function(!Array<!SuggestResult>)): void} callback
- * @return {undefined}
+ * @record
+ * @extends {ChromeBaseEvent<function(string, string)>}
  */
-chrome.omnibox.InputChangedEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(string, function(!Array<!SuggestResult>)): void} callback
- * @return {undefined}
- */
-chrome.omnibox.InputChangedEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(string, function(!Array<!SuggestResult>)): void} callback
- * @return {boolean}
- */
-chrome.omnibox.InputChangedEvent.prototype.hasListener = function(callback) {};
-
-
-/** @return {boolean} */
-chrome.omnibox.InputChangedEvent.prototype.hasListeners = function() {};
-
-
-
-/** @constructor */
 chrome.omnibox.InputEnteredEvent = function() {};
-
-
-/**
- * @param {function(string, string): void} callback
- * @return {undefined}
- */
-chrome.omnibox.InputEnteredEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(string, string): void} callback
- * @return {undefined}
- */
-chrome.omnibox.InputEnteredEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(string, string): void} callback
- * @return {boolean}
- */
-chrome.omnibox.InputEnteredEvent.prototype.hasListener = function(callback) {};
-
-
-/** @return {boolean} */
-chrome.omnibox.InputEnteredEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -3996,38 +3519,11 @@ chrome.contextMenus.removeAll = function(opt_callback) {};
 
 
 /**
- * @interface
+ * @record
+ * @extends {ChromeBaseEvent<function(!Object, !Tab=)>}
  * @see https://developer.chrome.com/extensions/contextMenus#event-onClicked
  */
 chrome.contextMenus.ClickedEvent = function() {};
-
-
-/**
- * @param {function(!Object, !Tab=)} callback
- * @return {undefined}
- */
-chrome.contextMenus.ClickedEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(!Object, !Tab=)} callback
- * @return {undefined}
- */
-chrome.contextMenus.ClickedEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!Object, !Tab=)} callback
- * @return {boolean}
- */
-chrome.contextMenus.ClickedEvent.prototype.hasListener = function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.contextMenus.ClickedEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -4470,40 +3966,11 @@ chrome.fileBrowserHandler.selectFile = function(selectionParams, callback) {};
 
 
 /**
- * @interface
+ * @record
+ * @extends {ChromeBaseEvent<function(string, !FileHandlerExecuteEventDetails)>}
  * @see https://developer.chrome.com/extensions/fileBrowserHandler#event-onExecute
  */
 chrome.fileBrowserHandler.ExecuteEvent = function() {};
-
-
-/**
- * @param {function(string, !FileHandlerExecuteEventDetails)} callback
- * @return {undefined}
- */
-chrome.fileBrowserHandler.ExecuteEvent.prototype.addListener = function(
-    callback) {};
-
-
-/**
- * @param {function(string, !FileHandlerExecuteEventDetails)} callback
- * @return {undefined}
- */
-chrome.fileBrowserHandler.ExecuteEvent.prototype.removeListener = function(
-    callback) {};
-
-
-/**
- * @param {function(string, !FileHandlerExecuteEventDetails)} callback
- * @return {boolean}
- */
-chrome.fileBrowserHandler.ExecuteEvent.prototype.hasListener = function(
-    callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.fileBrowserHandler.ExecuteEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -4600,70 +4067,17 @@ chrome.gcm.onSendError;
 
 
 /**
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!Object)>}
  */
 chrome.gcm.OnMessageEvent = function() {};
 
 
 /**
- * @param {function(!Object): void} callback Callback.
- * @return {undefined}
- */
-chrome.gcm.OnMessageEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(!Object): void} callback Callback.
- * @return {undefined}
- */
-chrome.gcm.OnMessageEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(!Object): void} callback Callback.
- * @return {boolean}
- */
-chrome.gcm.OnMessageEvent.prototype.hasListener = function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.gcm.OnMessageEvent.prototype.hasListeners = function() {};
-
-
-
-/**
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!Object)>}
  */
 chrome.gcm.OnSendErrorEvent = function() {};
-
-
-/**
- * @param {function(!Object): void} callback Callback.
- * @return {undefined}
- */
-chrome.gcm.OnSendErrorEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(!Object): void} callback Callback.
- * @return {undefined}
- */
-chrome.gcm.OnSendErrorEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(!Object): void} callback Callback.
- * @return {boolean}
- */
-chrome.gcm.OnSendErrorEvent.prototype.hasListener = function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.gcm.OnSendErrorEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -4800,37 +4214,11 @@ chrome.identity.getProfileUserInfo = function(callback) {};
 
 
 
-/** @constructor */
-chrome.identity.OnSignInChangedEvent = function() {}
-
-
 /**
- * @param {function(!chrome.identity.AccountInfo, boolean):void} callback
- * @return {undefined}
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.identity.AccountInfo, boolean)>}
  */
-chrome.identity.OnSignInChangedEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.identity.AccountInfo, boolean):void} callback
- * @return {undefined}
- */
-chrome.identity.OnSignInChangedEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.identity.AccountInfo, boolean):void} callback
- * @return {boolean}
- */
-chrome.identity.OnSignInChangedEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.identity.OnSignInChangedEvent.prototype.hasListeners =
-    function() {};
+chrome.identity.OnSignInChangedEvent = function() {};
 
 
 /** @type {!chrome.identity.OnSignInChangedEvent} */
@@ -4858,7 +4246,12 @@ chrome.input.ime = {};
 
 /**
  * The OnKeyEvent event takes an extra argument.
- * @constructor
+ *
+ * The addListener() method for this class takes more than one argument, so it
+ * isn't possible to just extend ChromeBaseEvent here.
+ * TODO(bradfordcsmith): These events won't automatically inherit new methods
+ *     added to `ChromeBaseEvent`.
+ * @record
  */
 function ChromeInputImeOnKeyEventEvent() {}
 
@@ -5209,7 +4602,8 @@ chrome.mediaGalleries.removeAllGalleryWatch = function() {};
 
 
 /**
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<!chrome.mediaGalleries.GalleryChangeCallback>}
  */
 chrome.mediaGalleries.GalleryChangeEvent = function() {};
 
@@ -5218,36 +4612,6 @@ chrome.mediaGalleries.GalleryChangeEvent = function() {};
  * @typedef {function({type: string, galleryId: string}): void}
  */
 chrome.mediaGalleries.GalleryChangeCallback;
-
-
-/**
- * @param {!chrome.mediaGalleries.GalleryChangeCallback} callback
- * @return {undefined}
- */
-chrome.mediaGalleries.GalleryChangeEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {!chrome.mediaGalleries.GalleryChangeCallback} callback
- * @return {undefined}
- */
-chrome.mediaGalleries.GalleryChangeEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {!chrome.mediaGalleries.GalleryChangeCallback} callback
- * @return {undefined}
- */
-chrome.mediaGalleries.GalleryChangeEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.mediaGalleries.GalleryChangeEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -5272,37 +4636,10 @@ chrome.mediaGalleries.OnScanProgressDetails;
 /**
  * Event whose listeners take a chrome.mediaGalleries.OnScanProgressDetails
  * parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.mediaGalleries.OnScanProgressDetails)>}
  */
 chrome.mediaGalleries.ScanProgressEvent = function() {};
-
-
-/**
- * @param {function(!chrome.mediaGalleries.OnScanProgressDetails)} callback
- * @return {undefined}
- */
-chrome.mediaGalleries.ScanProgressEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.mediaGalleries.OnScanProgressDetails)} callback
- * @return {undefined}
- */
-chrome.mediaGalleries.ScanProgressEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.mediaGalleries.OnScanProgressDetails)} callback
- * @return {boolean}
- */
-chrome.mediaGalleries.ScanProgressEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.mediaGalleries.ScanProgressEvent.prototype.hasListeners = function() {};
 
 
 /** @type {!chrome.mediaGalleries.ScanProgressEvent} */
@@ -6001,37 +5338,10 @@ chrome.sockets.tcp.ReceiveEventData.prototype.data;
 
 /**
  * Event whose listeners take a ReceiveEventData parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.sockets.tcp.ReceiveEventData)>}
  */
 chrome.sockets.tcp.ReceiveEvent = function() {};
-
-
-/**
- * @param {function(!chrome.sockets.tcp.ReceiveEventData): void} callback
- * @return {undefined}
- */
-chrome.sockets.tcp.ReceiveEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.sockets.tcp.ReceiveEventData): void} callback
- * @return {undefined}
- */
-chrome.sockets.tcp.ReceiveEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.sockets.tcp.ReceiveEventData): void} callback
- * @return {boolean}
- */
-chrome.sockets.tcp.ReceiveEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.sockets.tcp.ReceiveEvent.prototype.hasListeners = function() {};
 
 
 /** @type {!chrome.sockets.tcp.ReceiveEvent} */
@@ -6057,41 +5367,10 @@ chrome.sockets.tcp.ReceiveErrorEventData.prototype.resultCode;
 
 /**
  * Event whose listeners take a ReceiveErrorEventData parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.sockets.tcp.ReceiveErrorEventData)>}
  */
 chrome.sockets.tcp.ReceiveErrorEvent = function() {};
-
-
-/**
- * @param {function(
- *     !chrome.sockets.tcp.ReceiveErrorEventData): void} callback
- * @return {undefined}
- */
-chrome.sockets.tcp.ReceiveErrorEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(
- *     !chrome.sockets.tcp.ReceiveErrorEventData): void} callback
- * @return {undefined}
- */
-chrome.sockets.tcp.ReceiveErrorEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(
- *     !chrome.sockets.tcp.ReceiveErrorEventData): void} callback
- * @return {boolean}
- */
-chrome.sockets.tcp.ReceiveErrorEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.sockets.tcp.ReceiveErrorEvent.prototype.hasListeners =
-    function() {};
 
 
 /** @type {!chrome.sockets.tcp.ReceiveErrorEvent} */
@@ -6750,143 +6029,92 @@ chrome.webNavigation.onTabReplaced;
 chrome.webNavigation.onHistoryStateUpdated;
 
 
+/**
+ * Base event type for WebRequest-releated events.
+ *
+ * The `addListener()` methods for these take more than one argument, so they
+ * cannot just extend `ChromeBaseEvent`.
+ * TODO(bradfordcsmith): These events won't automatically inherit new methods
+ *     added to `ChromeBaseEvent`.
+ * @record
+ * @template LISTENER
+ */
+function WebRequestBaseEvent() {}
+
+
+/**
+ * @param {LISTENER} listener Listener function.
+ * @param {!RequestFilter} filter A set of filters that restrict
+ *     the events that will be sent to this listener.
+ * @param {!Array<string>=} opt_extraInfoSpec Array of extra information
+ *     that should be passed to the listener function.
+ * @return {undefined}
+ */
+WebRequestBaseEvent.prototype.addListener = function(
+    listener, filter, opt_extraInfoSpec) {};
+
+
+/**
+ * @param {LISTENER} listener Listener function.
+ * @return {undefined}
+ */
+WebRequestBaseEvent.prototype.removeListener = function(listener) {};
+
+
+/**
+ * @param {LISTENER} listener Listener function.
+ * @return {undefined}
+ */
+WebRequestBaseEvent.prototype.hasListener = function(listener) {};
+
+
+/**
+ * @param {LISTENER} listener Listener function.
+ * @return {undefined}
+ */
+WebRequestBaseEvent.prototype.hasListeners = function(listener) {};
+
 
 /**
  * Most event listeners for WebRequest take extra arguments.
  * @see https://developer.chrome.com/extensions/webRequest
- * @constructor
+ * @record
+ * @extends {WebRequestBaseEvent<function(!Object)>}
  */
 function WebRequestEvent() {}
 
 
 /**
- * @param {function(!Object): void} listener Listener function.
- * @param {!RequestFilter} filter A set of filters that restrict
- *     the events that will be sent to this listener.
- * @param {!Array<string>=} opt_extraInfoSpec Array of extra information
- *     that should be passed to the listener function.
- * @return {undefined}
- */
-WebRequestEvent.prototype.addListener =
-    function(listener, filter, opt_extraInfoSpec) {};
-
-
-/**
- * @param {function(!Object): void} listener Listener function.
- * @return {undefined}
- */
-WebRequestEvent.prototype.removeListener = function(listener) {};
-
-
-/**
- * @param {function(!Object): void} listener Listener function.
- * @return {undefined}
- */
-WebRequestEvent.prototype.hasListener = function(listener) {};
-
-
-/**
- * @param {function(!Object): void} listener Listener function.
- * @return {undefined}
- */
-WebRequestEvent.prototype.hasListeners = function(listener) {};
-
-
-/**
  * Some event listeners can be optionally synchronous.
  * @see https://developer.chrome.com/extensions/webRequest
- * @constructor
+ * @record
+ * @extends {WebRequestBaseEvent<function(!Object): (undefined|!BlockingResponse)>}
  */
 function WebRequestOptionallySynchronousEvent() {}
-
-
-/**
- * @param {function(!Object): (undefined|!BlockingResponse)} listener Listener
- *     function.
- * @param {!RequestFilter} filter A set of filters that restrict
- *     the events that will be sent to this listener.
- * @param {!Array<string>=} opt_extraInfoSpec Array of extra information
- *     that should be passed to the listener function.
- * @return {undefined}
- */
-WebRequestOptionallySynchronousEvent.prototype.addListener = function(
-    listener, filter, opt_extraInfoSpec) {};
-
-
-/**
- * @param {function(!Object): (undefined|!BlockingResponse)} listener Listener
- *     function.
- * @return {undefined}
- */
-WebRequestOptionallySynchronousEvent.prototype.removeListener = function(
-    listener) {};
-
-
-/**
- * @param {function(!Object): (undefined|!BlockingResponse)} listener Listener
- *     function.
- * @return {undefined}
- */
-WebRequestOptionallySynchronousEvent.prototype.hasListener = function(
-    listener) {};
-
-
-/**
- * @return {boolean}
- */
-WebRequestOptionallySynchronousEvent.prototype.hasListeners = function() {};
 
 
 /**
  * The onAuthRequired event listener can be optionally synchronous, and can also
  * optionally take a callback.
  * @see https://developer.chrome.com/extensions/webRequest
- * @constructor
+ * @record
+ * @extends {WebRequestBaseEvent<
+ *     function(
+ *         !Object,
+ *         function(!BlockingResponse)=): (undefined|!BlockingResponse)>}
  */
 function WebRequestOnAuthRequiredEvent() {}
 
 
 /**
- * @param {function(!Object, function(!BlockingResponse)=):
- *     (undefined|!BlockingResponse)} listener Listener function.
- * @param {!RequestFilter} filter A set of filters that restrict
- *     the events that will be sent to this listener.
- * @param {!Array<string>=} opt_extraInfoSpec Array of extra information
- *     that should be passed to the listener function.
- * @return {undefined}
- */
-WebRequestOnAuthRequiredEvent.prototype.addListener = function(
-    listener, filter, opt_extraInfoSpec) {};
-
-
-/**
- * @param {function(!Object): (undefined|!BlockingResponse)} listener Listener
- *     function.
- * @return {undefined}
- */
-WebRequestOnAuthRequiredEvent.prototype.removeListener = function(listener) {};
-
-
-/**
- * @param {function(!Object): (undefined|!BlockingResponse)} listener Listener
- *     function.
- * @return {undefined}
- */
-WebRequestOnAuthRequiredEvent.prototype.hasListener = function(listener) {};
-
-
-/**
- * @param {function(!Object): (undefined|!BlockingResponse)} listener Listener
- *     function.
- * @return {undefined}
- */
-WebRequestOnAuthRequiredEvent.prototype.hasListeners = function(listener) {};
-
-
-/**
  * The onErrorOccurred event takes one fewer parameter than the others.
+ *
+ * The `addListener()` methods for these take more than one argument, so they
+ * cannot just extend `ChromeBaseEvent`.
+ * TODO(bradfordcsmith): These events won't automatically inherit new methods
+ *     added to `ChromeBaseEvent`.
  * @see https://developer.chrome.com/extensions/webRequest
- * @constructor
+ * @record
  */
 function WebRequestOnErrorOccurredEvent() {}
 
@@ -7140,35 +6368,10 @@ ChromeWindow.prototype.alwaysOnTop;
 
 /**
  * Event whose listeners take an ExtensionInfo parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!ExtensionInfo)>}
  */
 function ChromeExtensionInfoEvent() {}
-
-
-/**
- * @param {function(!ExtensionInfo): void} callback
- * @return {undefined}
- */
-ChromeExtensionInfoEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(!ExtensionInfo): void} callback
- * @return {undefined}
- */
-ChromeExtensionInfoEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(!ExtensionInfo): void} callback
- * @return {boolean}
- */
-ChromeExtensionInfoEvent.prototype.hasListener = function(callback) {};
-
-
-/** @return {boolean} */
-ChromeExtensionInfoEvent.prototype.hasListeners = function() {};
-
 
 
 /**
@@ -7200,41 +6403,10 @@ chrome.pushMessaging.getChannelId =
 
 /**
  * Event whose listeners take a chrome.pushMessaging.Message parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.pushMessaging.Message)>}
  */
 chrome.pushMessaging.PushMessageEvent = function() {};
-
-
-/**
- * @param {function(!chrome.pushMessaging.Message): void} callback
- * @return {undefined}
- */
-chrome.pushMessaging.PushMessageEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.pushMessaging.Message): void} callback
- * @return {undefined}
- */
-chrome.pushMessaging.PushMessageEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.pushMessaging.Message): void} callback
- * @return {boolean}
- */
-chrome.pushMessaging.PushMessageEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.pushMessaging.PushMessageEvent.prototype.hasListeners = function() {};
-
-
 
 
 /**
@@ -7705,42 +6877,14 @@ ProxyConfig.prototype.mode;
  * The event listener for Storage receives an Object mapping each
  * key that changed to its corresponding StorageChange for that item.
  *
+ * Listener will receive an object that maps each key to its StorageChange,
+ * and the namespace ("sync" or "local") of the storage area the changes
+ * are for.
  * @see https://developer.chrome.com/extensions/storage.html
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!Object<string, !StorageChange>, string)>}
  */
 function StorageChangeEvent() {}
-
-
-/**
- * @param {function(!Object<string, !StorageChange>, string)} callback
- *    Listener will receive an object that maps each key to its StorageChange,
- *    and the namespace ("sync" or "local") of the storage area the changes
- *    are for.
- * @return {undefined}
- */
-StorageChangeEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(!Object<string, !StorageChange>, string)} callback
- * @return {undefined}
- */
-StorageChangeEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(!Object<string, !StorageChange>, string)} callback
- * @return {undefined}
- */
-StorageChangeEvent.prototype.hasListener = function(callback) {};
-
-
-/**
- * @param {function(!Object<string, !StorageChange>, string)} callback
- * @return {undefined}
- */
-StorageChangeEvent.prototype.hasListeners = function(callback) {};
-
 
 
 /**
@@ -8299,37 +7443,10 @@ chrome.alarms.onAlarm;
 
 
 /**
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.alarms.Alarm)>}
  */
 chrome.alarms.AlarmEvent = function() {};
-
-
-/**
- * @param {function(!chrome.alarms.Alarm): void} callback
- * @return {undefined}
- */
-chrome.alarms.AlarmEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(!chrome.alarms.Alarm): void} callback
- * @return {undefined}
- */
-chrome.alarms.AlarmEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(!chrome.alarms.Alarm): void} callback
- * @return {boolean}
- */
-chrome.alarms.AlarmEvent.prototype.hasListener = function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.alarms.AlarmEvent.prototype.hasListeners = function() {};
-
 
 
 /**
@@ -8648,37 +7765,10 @@ chrome.hid.sendFeatureReport =
 
 /**
  * Event whose listeners take an HidDeviceInfo parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.hid.HidDeviceInfo)>}
  */
 chrome.hid.DeviceAddedEvent = function() {};
-
-
-/**
- * @param {function(!chrome.hid.HidDeviceInfo): void} callback
- * @return {undefined}
- */
-chrome.hid.DeviceAddedEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.hid.HidDeviceInfo): void} callback
- * @return {undefined}
- */
-chrome.hid.DeviceAddedEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.hid.HidDeviceInfo): void} callback
- * @return {boolean}
- */
-chrome.hid.DeviceAddedEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.hid.DeviceAddedEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -8861,76 +7951,19 @@ chrome.notifications.onShowSettings;
 
 
 /**
- * @interface
+ * @record
+ * @extends {ChromeBaseEvent<!chrome.notifications.ClosedCallback>}
  * @see http://developer.chrome.com/extensions/notifications.html#event-onClosed
  */
 chrome.notifications.ClosedEvent = function() {};
 
 
 /**
- * @param {!chrome.notifications.ClosedCallback} callback
- * @return {undefined}
- */
-chrome.notifications.ClosedEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {!chrome.notifications.ClosedCallback} callback
- * @return {undefined}
- */
-chrome.notifications.ClosedEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {!chrome.notifications.ClosedCallback} callback
- * @return {boolean}
- */
-chrome.notifications.ClosedEvent.prototype.hasListener = function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.notifications.ClosedEvent.prototype.hasListeners = function() {};
-
-
-
-/**
- * @interface
+ * @record
+ * @extends {ChromeBaseEvent<!chrome.notifications.ButtonCallback>}
  * @see http://developer.chrome.com/extensions/notifications.html#event-onButtonClicked
  */
 chrome.notifications.ButtonClickedEvent = function() {};
-
-
-/**
- * @param {!chrome.notifications.ButtonCallback} callback
- * @return {undefined}
- */
-chrome.notifications.ButtonClickedEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {!chrome.notifications.ButtonCallback} callback
- * @return {undefined}
- */
-chrome.notifications.ButtonClickedEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {!chrome.notifications.ButtonCallback} callback
- * @return {boolean}
- */
-chrome.notifications.ButtonClickedEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.notifications.ButtonClickedEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -8964,38 +7997,10 @@ chrome.system.storage.StorageUnitInfo.capacity;
 
 /**
  * Event whose listeners take a StorageUnitInfoEvent parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.system.storage.StorageUnitInfo)>}
  */
 chrome.system.storage.StorageUnitInfoEvent = function() {};
-
-
-/**
- * @param {function(!chrome.system.storage.StorageUnitInfo): void} callback
- * @return {undefined}
- */
-chrome.system.storage.StorageUnitInfoEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.system.storage.StorageUnitInfo): void} callback
- * @return {undefined}
- */
-chrome.system.storage.StorageUnitInfoEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.system.storage.StorageUnitInfo): void} callback
- * @return {boolean}
- */
-chrome.system.storage.StorageUnitInfoEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.system.storage.StorageUnitInfoEvent.prototype.hasListeners =
-    function() {};
 
 
 /** @type {chrome.system.storage.StorageUnitInfoEvent} */
@@ -9512,34 +8517,10 @@ chrome.usb.resetDevice = function(handle, callback) {};
 
 /**
  * Event whose listeners take an chrome.usb.Device parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.usb.Device)>}
  */
 chrome.usb.DeviceEvent = function() {};
-
-
-/**
- * @param {function(!chrome.usb.Device): void} callback
- * @return {undefined}
- */
-chrome.usb.DeviceEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(!chrome.usb.Device): void} callback
- * @return {undefined}
- */
-chrome.usb.DeviceEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(!chrome.usb.Device): void} callback
- * @return {boolean}
- */
-chrome.usb.DeviceEvent.prototype.hasListener = function(callback) {};
-
-
-/** @return {boolean} */
-chrome.usb.DeviceEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -9862,83 +8843,18 @@ chrome.mediaGalleriesPrivate.onGalleryChanged;
 
 
 /**
- * @interface
+ * @record
+ * @extends {ChromeBaseEvent<!chrome.mediaGalleriesPrivate.DeviceCallback>}
  * @deprecated Use {chrome.system.storage.DeviceEvent}.
  */
 chrome.mediaGalleriesPrivate.DeviceEvent = function() {};
 
 
 /**
- * @param {!chrome.mediaGalleriesPrivate.DeviceCallback} callback
- * @deprecated Use {chrome.system.storage.DeviceEvent.addListener}.
- * @return {undefined}
- */
-chrome.mediaGalleriesPrivate.DeviceEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {!chrome.mediaGalleriesPrivate.DeviceCallback} callback
- * @deprecated Use {chrome.system.storage.DeviceEvent.removeListener}.
- * @return {undefined}
- */
-chrome.mediaGalleriesPrivate.DeviceEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {!chrome.mediaGalleriesPrivate.DeviceCallback} callback
- * @deprecated Use {chrome.system.storage.DeviceEvent.hasListener}.
- * @return {undefined}
- */
-chrome.mediaGalleriesPrivate.DeviceEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/**
- * @return {boolean}
- * @deprecated Use {chrome.system.storage.DeviceEvent.hasListener}
- */
-chrome.mediaGalleriesPrivate.DeviceEvent.prototype.hasListeners =
-    function(callback) {};
-
-
-
-/**
- * @interface
+ * @record
+ * @extends {ChromeBaseEvent<!chrome.mediaGalleriesPrivate.GalleryChangeCallback>}
  */
 chrome.mediaGalleriesPrivate.GalleryChangeEvent = function() {};
-
-
-/**
- * @param {!chrome.mediaGalleriesPrivate.GalleryChangeCallback} callback
- * @return {undefined}
- */
-chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {!chrome.mediaGalleriesPrivate.GalleryChangeCallback} callback
- * @return {undefined}
- */
-chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {!chrome.mediaGalleriesPrivate.GalleryChangeCallback} callback
- * @return {undefined}
- */
-chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/**
- * @return {boolean}
- */
-chrome.mediaGalleriesPrivate.GalleryChangeEvent.prototype.hasListeners =
-    function() {};
 
 
 /**
@@ -10422,7 +9338,12 @@ chrome.mdns.MdnsService.prototype.serviceData;
 
 /**
  * Event whose listeners take an array of MdnsService parameter.
- * @constructor
+ *
+ * The `addListener()` methods for these take more than one argument, so they
+ * cannot just extend `ChromeBaseEvent`.
+ * TODO(bradfordcsmith): These events won't automatically inherit new methods
+ *     added to `ChromeBaseEvent`.
+ * @record
  */
 chrome.mdns.ServiceListEvent = function() {};
 
@@ -10650,34 +9571,10 @@ chrome.gcdPrivate.getCommandsList = function(
 
 /**
  * Event whose listeners take a chrome.gcdPrivate.Device.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.gcdPrivate.Device)>}
  */
 chrome.gcdPrivate.DeviceEvent = function() {};
-
-
-/**
- * @param {function(!chrome.gcdPrivate.Device): void} callback
- * @return {undefined}
- */
-chrome.gcdPrivate.DeviceEvent.prototype.addListener = function(callback) {};
-
-
-/**
- * @param {function(!chrome.gcdPrivate.Device): void} callback
- * @return {undefined}
- */
-chrome.gcdPrivate.DeviceEvent.prototype.removeListener = function(callback) {};
-
-
-/**
- * @param {function(!chrome.gcdPrivate.Device): void} callback
- * @return {boolean}
- */
-chrome.gcdPrivate.DeviceEvent.prototype.hasListener = function(callback) {};
-
-
-/** @return {boolean} */
-chrome.gcdPrivate.DeviceEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -10803,38 +9700,10 @@ chrome.bluetoothPrivate.setDiscoveryFilter = function(discoveryFilter, callback)
 
 /**
  * Event whose listeners take a PairingEvent parameter.
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.bluetoothPrivate.PairingEvent)>}
  */
 chrome.bluetoothPrivate.PairingEventEvent = function() {};
-
-
-/**
- * @param {function(!chrome.bluetoothPrivate.PairingEvent): void} callback
- * @return {undefined}
- */
-chrome.bluetoothPrivate.PairingEventEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.bluetoothPrivate.PairingEvent): void} callback
- * @return {undefined}
- */
-chrome.bluetoothPrivate.PairingEventEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.bluetoothPrivate.PairingEvent): void} callback
- * @return {boolean}
- */
-chrome.bluetoothPrivate.PairingEventEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.bluetoothPrivate.PairingEventEvent.prototype.hasListeners =
-    function() {};
 
 
 /** @type {!chrome.bluetoothPrivate.PairingEventEvent} */
@@ -11336,30 +10205,11 @@ chrome.downloads.setShelfEnabled = function(enabled) {};
 
 
 /**
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<function(!chrome.downloads.DownloadItem)>}
  * @see https://developer.chrome.com/extensions/downloads#event-onCreated
  */
 chrome.downloads.CreatedEvent = function() {};
-
-
-/** @param {function(!chrome.downloads.DownloadItem)} callback */
-chrome.downloads.CreatedEvent.prototype.addListener = function(callback) {};
-
-
-/** @param {function(!chrome.downloads.DownloadItem)} callback */
-chrome.downloads.CreatedEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(!chrome.downloads.DownloadItem)} callback
- * @return {boolean}
- */
-chrome.downloads.CreatedEvent.prototype.hasListener = function(callback) {};
-
-
-/** @return {boolean} */
-chrome.downloads.CreatedEvent.prototype.hasListeners = function() {};
 
 
 /**
@@ -11394,41 +10244,14 @@ chrome.downloads.FilenameSuggestion;
 
 
 /**
- * @constructor
+ * @record
+ * @extends {ChromeBaseEvent<
+ *     function(
+ *         !chrome.downloads.DownloadItem,
+ *         function(!chrome.downloads.FilenameSuggestion=))>}
  * @see https://developer.chrome.com/extensions/downloads#event-onDeterminingFilename
  */
 chrome.downloads.DeterminingFilenameEvent = function() {};
-
-
-/**
- * @param {function(
- *     !chrome.downloads.DownloadItem,
- *     function(!chrome.downloads.FilenameSuggestion=))} callback */
-chrome.downloads.DeterminingFilenameEvent.prototype.addListener =
-    function(callback) {};
-
-
-/**
- * @param {function(
- *     !chrome.downloads.DownloadItem,
- *     function(!chrome.downloads.FilenameSuggestion=))} callback */
-chrome.downloads.DeterminingFilenameEvent.prototype.removeListener =
-    function(callback) {};
-
-
-/**
- * @param {function(
- *     !chrome.downloads.DownloadItem,
- *     function(!chrome.downloads.FilenameSuggestion=))} callback
- * @return {boolean}
- */
-chrome.downloads.DeterminingFilenameEvent.prototype.hasListener =
-    function(callback) {};
-
-
-/** @return {boolean} */
-chrome.downloads.DeterminingFilenameEvent.prototype.hasListeners =
-    function() {};
 
 
 /**
