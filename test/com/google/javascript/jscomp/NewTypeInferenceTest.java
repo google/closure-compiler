@@ -134,8 +134,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  var fun = (1 < 2) ? low : high;",
         "  var /** function(this:High) */ f2 = fun;",
         "  var /** function(this:Low) */ f3 = fun;",
-        "}"),
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        "}"));
 
     typeCheck(LINE_JOINER.join(
         "/** @constructor */",
@@ -147,8 +146,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  var fun = (1 < 2) ? low : high;",
         "  var /** function(function(this:High)) */ f2 = fun;",
         "  var /** function(function(this:Low)) */ f3 = fun;",
-        "}"),
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        "}"));
 
     typeCheck(LINE_JOINER.join(
         "/**",
@@ -4485,6 +4483,52 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function Baz() {}",
         "/** @param {number} x */",
         "Baz.prototype.method = function(x) {};"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.f = function() {};",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {}",
+        "/** @this {number} */",
+        "Bar.prototype.f = function() {};"),
+        GlobalTypeInfoCollector.INVALID_PROP_OVERRIDE);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.f = function() {};",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {}",
+        "/** @this {!Object} */",
+        "Bar.prototype.f = function() {};"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.f = function() {};",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {}",
+        "/** @this {!Bar|number} */",
+        "Bar.prototype.f = function() {};"));
+
+    typeCheck(LINE_JOINER.join(
+        "/**",
+        " * @this {*}",
+        " * @return {string}",
+        " */",
+        "Object.prototype.foobar = function() { return ''; };",
+        "/** @constructor */",
+        "function Bar() {}",
+        "/**",
+        " * @this {Bar}",
+        " * @return {string}",
+        " */",
+        "Bar.prototype.foobar = function() { return ''; };",
+        "/** @constructor @extends {Bar} */",
+        "function Baz() {}",
+        "var x = new Baz;",
+        "var /** !IObject<?,?> */ y = x;"));
   }
 
   public void testMultipleObjects() {

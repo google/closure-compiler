@@ -2187,7 +2187,9 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   // In function subtyping, the type of THIS should be contravariant, like the argument types.
-  // Because it's not, we get wrong disambiguation.
+  // But when overriding a method, it's covariant, and on top of that, we allow methods redefining
+  // it with @this.
+  // So we check THIS loosely for functions, and as a result, we get wrong disambiguation.
   // On top of that, this can happen in OTI when types are joined during generics instantiation.
   // Just documenting the behavior here.
   public void testUnsafeTypingOfThis() {
@@ -2231,16 +2233,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "}",
         "myArrayPrototypeMap(Foo.prototype.method, new Bar);");
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, output, "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}");
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testSets("", js, output,
-        "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}",
-        NewTypeInference.INVALID_ARGUMENT_TYPE,
-        LINE_JOINER.join(
-            "Invalid type for parameter 1 of function myArrayPrototypeMap.",
-            "Expected : function(this:(Bar|Foo)): ?",
-            "Found    : function(this:Foo): ?\n"));
 
     js = LINE_JOINER.join(
         "/** @constructor */",
@@ -2274,13 +2267,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "}",
         "f(Foo.prototype.method);");
 
-    testSets("", js, output,
-        "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}",
-        NewTypeInference.INVALID_ARGUMENT_TYPE,
-        LINE_JOINER.join(
-            "Invalid type for parameter 1 of function f.",
-            "Expected : function(this:(Bar|Foo)): ?",
-            "Found    : function(this:Foo): ?\n"));
+    testSets("", js, output, "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}");
   }
 
   public void testErrorOnProtectedProperty() {
