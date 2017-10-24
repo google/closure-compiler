@@ -475,12 +475,8 @@ public final class AstValidator implements CompilerPass {
     if (!n.hasChildren()) {
       return;
     }
-    int i = 0;
-    for (Node child = n.getFirstChild(); child != null; child = child.getNext(), i++) {
-      // If the first child is not a STRING, this is a tagged template.
-      if (i == 0 && !child.isString()) {
-        validateExpression(child);
-      } else if (child.isString()) {
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+      if (child.isString()) {
         validateString(child);
       } else {
         validateTemplateLitSub(child);
@@ -604,6 +600,7 @@ public final class AstValidator implements CompilerPass {
       case MEMBER_FUNCTION_DEF:
       case GETTER_DEF:
       case SETTER_DEF:
+        validateObjectLiteralKeyName(n);
         validateChildCount(n);
         Node function = n.getFirstChild();
         if (isAmbient) {

@@ -22,15 +22,13 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   private boolean removeGlobal;
   private boolean preserveFunctionExpressionNames;
-  private boolean modifyCallSites;
-
   public RemoveUnusedVarsTest() {
     super("function alert() {}");
   }
 
   @Override
   protected int getNumRepetitions() {
-    return modifyCallSites ? 2 : 1;
+    return 1;
   }
 
   @Override
@@ -39,7 +37,6 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     enableNormalize();
     removeGlobal = true;
     preserveFunctionExpressionNames = false;
-    modifyCallSites = false;
   }
 
   @Override
@@ -47,14 +44,8 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     return new CompilerPass() {
       @Override
       public void process(Node externs, Node root) {
-        if (modifyCallSites) {
-          DefinitionUseSiteFinder defFinder = new DefinitionUseSiteFinder(compiler);
-          defFinder.process(externs, root);
-          compiler.setDefinitionFinder(defFinder);
-        }
         new RemoveUnusedVars(
-            compiler, removeGlobal, preserveFunctionExpressionNames,
-            modifyCallSites).process(externs, root);
+            compiler, removeGlobal, preserveFunctionExpressionNames).process(externs, root);
       }
     };
   }
@@ -189,25 +180,6 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
         "var b=function(e,c,f,d){return c+d};b(1,2)");
   }
 
-  public void testFunctionArgRemovalFromCallSites() {
-    this.modifyCallSites = true;
-
-    // remove all function arguments
-    test("var b=function(c,d){return};b(1,2)",
-        "var b=function(){return};b()");
-
-    // remove no function arguments
-    testSame("var b=function(c,d){return c+d};b(1,2)");
-    test("var b=function(e,f,c,d){return c+d};b(1,2)",
-        "var b=function(c,d){return c+d};b()");
-
-    // remove some function arguments
-    test("var b=function(c,d,e,f){return c+d};b(1,2)",
-        "var b=function(c,d){return c+d};b(1,2)");
-    test("var b=function(e,c,f,d,g){return c+d};b(1,2)",
-        "var b=function(c,d){return c+d};b(2)");
-  }
-
   public void testComputedPropertyDestructuring() {
     // Don't remove variables accessed by computed properties
     testSame("var {['a']:a, ['b']:b} = {a:1, b:2}; a; b;");
@@ -234,18 +206,25 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   public void testFunctionArgRemoval_defaultValue3() {
     // Parameters already encountered can be used by later parameters
     test("function f(x, y = x + 0) {}; f();", "function f(            ) {}; f();");
-
-    testSame("function f(x, y = x + 0) { y; }; f();");
   }
 
   public void testFunctionArgRemoval_defaultValue4() {
+    // Parameters already encountered can be used by later parameters
+    testSame("function f(x, y = x + 0) { y; }; f();");
+  }
+
+
+
+  public void testFunctionArgRemoval_defaultValue5() {
     // Default value inside arrow function param list
-    test("var f = (unusedParam = 0) => {}; f();", "var f = (               ) => {}; f();");
+    test("var f = (unusedParam = 0) => {}; f();", "var f = () => {}; f();");
 
     testSame("var f = (usedParam = 0) => { usedParam; }; f();");
 
     test("var f = (usedParam = 0) => {usedParam;};", "");
   }
+
+
 
   public void testFunctionArgRemoval_defaultValue6() {
     // Parameters already encountered can be used by later parameters
@@ -723,9 +702,6 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   public void testLocalVarReferencesGlobalVar2() {
     test("var a=3;function f(b, c){b=a; alert(c);} f();",
         "function f(b, c) { alert(c); } f();");
-    this.modifyCallSites = true;
-    test("var a=3;function f(b, c){b=a; alert(c);} f();",
-        "function f(c) { alert(c); } f();");
   }
 
   public void testNestedAssign1() {
@@ -744,104 +720,55 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testCallSiteInteraction() {
-    this.modifyCallSites = true;
-
     testSame("var b=function(){return};b()");
     testSame("var b=function(c){return c};b(1)");
-    test("var b=function(c){};b.call(null, x)",
-        "var b=function(){};b.call(null)");
-    test("var b=function(c){};b.apply(null, x)",
-        "var b=function(){};b.apply(null, x)");
+    test(
+        "var b=function(c){return};b(1)",
+        "var b=function(){return};b(1)");
+    test(
+        "var b=function(c){};b.call(null, x)",
+        "var b=function( ){};b.call(null, x)");
+    test(
+        "var b=function(c){};b.apply(null, x)",
+        "var b=function( ){};b.apply(null, x)");
 
-    test("var b=function(c){return};b(1)",
-        "var b=function(){return};b()");
-    test("var b=function(c){return};b(1,2)",
-        "var b=function(){return};b()");
-    test("var b=function(c){return};b(1,2);b(3,4)",
-        "var b=function(){return};b();b()");
-
-    // Here there is a unknown reference to the function so we can't
-    // change the signature.
-    test("var b=function(c,d){return d};b(1,2);b(3,4);b.length",
-        "var b=function(c,d){return d};b(0,2);b(0,4);b.length");
-
-    test("var b=function(c){return};b(1,2);b(3,new x())",
-        "var b=function(){return};b();b(new x())");
-
-    test("var b=function(c){return};b(1,2);b(new x(),4)",
-        "var b=function(){return};b();b(new x())");
-
-    test("var b=function(c,d){return d};b(1,2);b(new x(),4)",
-        "var b=function(c,d){return d};b(0,2);b(new x(),4)");
-    test("var b=function(c,d,e){return d};b(1,2,3);b(new x(),4,new x())",
-        "var b=function(c,d){return d};b(0,2);b(new x(),4,new x())");
-
-    // Recursive calls are OK.
-    test("var b=function(c,d){b(1,2);return d};b(3,4);b(5,6)",
-        "var b=function(d){b(2);return d};b(4);b(6)");
+    // Recursive calls
+    testSame(
+        "var b=function(c,d){b(1, 2);return d};b(3,4);b(5,6)");
 
     testSame("var b=function(c){return arguments};b(1,2);b(3,4)");
-
-    // remove all function arguments
-    test("var b=function(c,d){return};b(1,2)",
-        "var b=function(){return};b()");
-
-    // remove no function arguments
-    testSame("var b=function(c,d){return c+d};b(1,2)");
-
-    // remove some function arguments
-    test("var b=function(e,f,c,d){return c+d};b(1,2)",
-        "var b=function(c,d){return c+d};b()");
-    test("var b=function(c,d,e,f){return c+d};b(1,2)",
-        "var b=function(c,d){return c+d};b(1,2)");
-    test("var b=function(e,c,f,d,g){return c+d};b(1,2)",
-        "var b=function(c,d){return c+d};b(2)");
-
-    // multiple definitions of "b", the parameters can be removed but
-    // the call sites are left unmodified for now.
-    test("var b=function(c,d){};var b=function(e,f){};b(1,2)",
-        "var b=function(){};var b=function(){};b(1,2)");
   }
 
   public void testCallSiteInteraction_constructors() {
-    this.modifyCallSites = true;
     // The third level tests that the functions which have already been looked
     // at get re-visited if they are changed by a call site removal.
-    test("var Ctor1=function(a,b){return a};" +
-            "var Ctor2=function(a,b){Ctor1.call(this,a,b)};" +
-            "goog$inherits(Ctor2, Ctor1);" +
-            "new Ctor2(1,2)",
-        "var Ctor1=function(a){return a};" +
-            "var Ctor2=function(a){Ctor1.call(this,a)};" +
-            "goog$inherits(Ctor2, Ctor1);" +
-            "new Ctor2(1)");
-  }
-
-  public void testFunctionArgRemovalCausingInconsistency() {
-    this.modifyCallSites = true;
-    // Test the case where an unused argument is removed and the argument
-    // contains a call site in its subtree (will cause the call site's parent
-    // pointer to be null).
-    test("var a=function(x,y){};" +
-            "var b=function(z){};" +
-            "a(new b, b)",
-        "var a=function(){};" +
-            "var b=function(){};" +
-            "a(new b)");
+    test(
+        lines(
+            "var Ctor1=function(a, b){return a};",
+            "var Ctor2=function(x, y){Ctor1.call(this, x, y)};",
+            "goog$inherits(Ctor2, Ctor1);",
+            "new Ctor2(1, 2)"),
+        lines(
+            "var Ctor1=function(a){return a};",
+            "var Ctor2=function(x, y){Ctor1.call(this, x, y)};",
+            "goog$inherits(Ctor2, Ctor1);",
+            "new Ctor2(1, 2)"));
   }
 
   public void testRemoveUnusedVarsPossibleNpeCase() {
-    this.modifyCallSites = true;
-    test("var a = [];" +
-            "var register = function(callback) {a[0] = callback};" +
-            "register(function(transformer) {});" +
+    test(
+        lines(
+            "var a = [];",
+            "var register = function(callback) {a[0] = callback};",
             "register(function(transformer) {});",
-        "var register=function(){};register();register()");
+            "register(function(transformer) {});"),
+        lines(
+            "var register = function() {};",
+            "register(function() {});",
+            "register(function() {});"));
   }
 
   public void testDoNotOptimizeJSCompiler_renameProperty() {
-    this.modifyCallSites = true;
-
     // Only the function definition can be modified, none of the call sites.
     test("function JSCompiler_renameProperty(a) {};" +
             "JSCompiler_renameProperty('a');",
@@ -850,7 +777,6 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testDoNotOptimizeJSCompiler_ObjectPropertyString() {
-    this.modifyCallSites = true;
     test("function JSCompiler_ObjectPropertyString(a, b) {};" +
             "JSCompiler_ObjectPropertyString(window,'b');",
         "function JSCompiler_ObjectPropertyString() {};" +
@@ -990,7 +916,6 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testReflectedMethods() {
-    this.modifyCallSites = true;
     testSame(
         "/** @constructor */" +
             "function Foo() {}" +
@@ -1537,3 +1462,4 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     test("var a, b = foo();", "foo();");
   }
 }
+

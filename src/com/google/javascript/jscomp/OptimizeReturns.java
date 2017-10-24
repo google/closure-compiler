@@ -19,25 +19,24 @@ package com.google.javascript.jscomp;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.javascript.jscomp.DefinitionsRemover.Definition;
+import com.google.javascript.jscomp.OptimizeCalls.ReferenceMap;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Map.Entry;
 
 /**
  * A compiler pass for optimize function return results.  Currently this
- * pass looks for results that are complete unused and rewrite then to be:
+ * pass looks for results that are complete unused and rewrite them to be:
  *   "return x()" -->"x(); return"
- * , but it can easily be
- * expanded to look for use context to avoid unneeded type coercion:
+ *
+ * Future work: expanded this to look for use context to avoid unneeded type coercion:
  *   - "return x.toString()" --> "return x"
  *   - "return !!x" --> "return x"
  * @author johnlenz@google.com (John Lenz)
  */
-class OptimizeReturns
-    implements OptimizeCalls.CallGraphCompilerPass, CompilerPass {
+class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPass {
 
   private AbstractCompiler compiler;
 
@@ -48,74 +47,128 @@ class OptimizeReturns
   @Override
   @VisibleForTesting
   public void process(Node externs, Node root) {
-    DefinitionUseSiteFinder defFinder = new DefinitionUseSiteFinder(compiler);
-    defFinder.process(externs, root);
-    process(externs, root, defFinder);
+    ReferenceMap refMap = OptimizeCalls.buildPropAndGlobalNameReferenceMap(
+        compiler, externs, root);
+    process(externs, root, refMap);
   }
 
   @Override
-  public void process(
-      Node externs, Node root, DefinitionUseSiteFinder definitions) {
+  public void process(Node externs, Node root, ReferenceMap definitions) {
     // Find all function nodes whose callers ignore the return values.
-    List<Node> toOptimize = new ArrayList<>();
-    for (DefinitionSite defSite : definitions.getDefinitionSites()) {
-      if (!defSite.inExterns && !callResultsMaybeUsed(definitions, defSite)) {
-        toOptimize.add(defSite.definition.getRValue());
+    List<ArrayList<Node>> toOptimize = new ArrayList<>();
+
+    // Find all the candidates before modifying the AST.
+    for (Entry<String, ArrayList<Node>> entry : definitions.getNameReferences()) {
+      String key = entry.getKey();
+      ArrayList<Node> refs = entry.getValue();
+      if (isCandidate(key, refs)) {
+        toOptimize.add(refs);
       }
     }
-    // Optimize the return statements.
-    for (Node node : toOptimize) {
-      rewriteReturns(definitions, node);
+
+    for (Entry<String, ArrayList<Node>> entry : definitions.getPropReferences()) {
+      String key = entry.getKey();
+      ArrayList<Node> refs = entry.getValue();
+      if (isCandidate(key, refs)) {
+        toOptimize.add(refs);
+      }
+    }
+
+    // Now modify the AST
+    for (ArrayList<Node> refs : toOptimize) {
+      for (Node fn : ReferenceMap.getFunctionNodes(refs)) {
+        rewriteReturns(fn);
+      }
     }
   }
 
   /**
-   * Determines if a function result might be used.  A result might be use if:
-   * - Function must is exported.
-   * - The definition is never accessed outside a function call context.
+   * This reference set is a candidate for return-value-removal if:
+   *  - if the all call sites are known (not aliased, not exported)
+   *  - if all call sites do not use the return value
+   *  - if there is at least one known function definition
+   *  - if there is at least one use
+   * NOTE: unknown definitions are allowed, as only known
+   *    definitions will be removed.
    */
-  private static boolean callResultsMaybeUsed(
-      DefinitionUseSiteFinder defFinder, DefinitionSite definitionSite) {
-
-    Definition definition = definitionSite.definition;
-
-    // Assume non-function definitions results are used.
-    Node rValue = definition.getRValue();
-    if (rValue == null || !rValue.isFunction()) {
-      return true;
+  private boolean isCandidate(String name, List<Node> refs) {
+    if (compiler.getCodingConvention().isExported(name)) {
+      return false;
     }
 
-    // Be conservative, don't try to optimize any declaration that isn't as
-    // simple function declaration or assignment.
-    if (!NodeUtil.isSimpleFunctionDeclaration(rValue)) {
-      return true;
+    // Avoid modifying a few special case functions.
+    if (name.equals(NodeUtil.JSC_PROPERTY_NAME_FN)
+        || name.equals(NodeUtil.EXTERN_OBJECT_PROPERTY_STRING)) {
+      return false;
     }
 
-    if (!defFinder.canModifyDefinition(definition)) {
-      return true;
-    }
+    boolean seenCandidateDefiniton = false;
+    boolean seenUse = false;
 
-    Collection<UseSite> useSites = defFinder.getUseSites(definition);
-    for (UseSite site : useSites) {
+    for (Node n : refs) {
       // Assume indirect definitions references use the result
-      Node useNodeParent = site.node.getParent();
-      if (isCall(site)) {
-        Node callNode = useNodeParent;
-        checkState(callNode.isCall());
+      if (ReferenceMap.isCallTarget(n)) {
+        Node callNode = ReferenceMap.getCallOrNewNodeForTarget(n);
         if (NodeUtil.isExpressionResultUsed(callNode)) {
-          return true;
+          // At least one call site uses the return value, this
+          // is not a candidate.
+          return false;
         }
+        seenUse = true;
+      } else if (ReferenceMap.isAliasingReference(n)) {
+        // The name is aliased, so we don't know anything about its uses, this is not
+        // a candidate
+        return false;
+      } else if (isCandidateDefinition(n)) {
+        // NOTE: While is is possible to optimize calls to functions for which we know
+        // only some of the definition are candidates but to keep things simple, only
+        // optimize if all of the definitions are known.
+        seenCandidateDefiniton = true;
       } else {
-        // Allow a standalone name reference.
-        //     var a;
-        if (!useNodeParent.isVar()) {
-          return true;
-        }
+        return false;
       }
     }
 
-    // No possible use of the definition result
+    return seenUse && seenCandidateDefiniton;
+  }
+
+  private boolean isCandidateDefinition(Node n) {
+    Node parent = n.getParent();
+    if (parent.isFunction() && NodeUtil.isFunctionDeclaration(parent)) {
+      return true;
+    } else if (ReferenceMap.isSimpleAssignmentTarget(n)) {
+      if (isCandidateFunction(parent.getLastChild())) {
+        return true;
+      }
+    } else if (n.isName()) {
+      if (n.hasChildren() && isCandidateFunction(n.getFirstChild())) {
+        return true;
+      } else if (NodeUtil.isNameDeclaration(n.getParent())) {
+        // allow "let x;"
+        return true;
+      }
+    }
+
     return false;
+  }
+
+  private static boolean isCandidateFunction(Node n) {
+    switch (n.getToken()) {
+      case FUNCTION:
+        // Named function expression can be recursive, this creates an alias of the name, meaning
+        // it might be used in an unexpected way.
+        return !NodeUtil.isNamedFunctionExpression(n);
+      case COMMA:
+      case CAST:
+        return isCandidateFunction(n.getLastChild());
+      case HOOK:
+        return isCandidateFunction(n.getSecondChild()) && isCandidateFunction(n.getLastChild());
+      case OR:
+      case AND:
+        return isCandidateFunction(n.getFirstChild()) && isCandidateFunction(n.getLastChild());
+      default:
+        return false;
+    }
   }
 
   /**
@@ -125,25 +178,20 @@ class OptimizeReturns
    *    foo(); return;
    * Useless return will be removed later by the peephole optimization passes.
    */
-  private void rewriteReturns(
-      final DefinitionUseSiteFinder defFinder, Node fnNode) {
+  private void rewriteReturns(Node fnNode) {
     checkState(fnNode.isFunction());
     final Node body = fnNode.getLastChild();
     NodeUtil.visitPostOrder(
       body,
       new NodeUtil.Visitor() {
         @Override
-        public void visit(Node node) {
-          if (node.isReturn() && node.hasOneChild()) {
-            boolean keepValue = NodeUtil.mayHaveSideEffects(
-                node.getFirstChild(), compiler);
-            if (!keepValue) {
-              defFinder.removeReferences(node.getFirstChild());
-            }
-            Node result = node.removeFirstChild();
+        public void visit(Node n) {
+          if (n.isReturn() && n.hasOneChild()) {
+            Node result = n.getFirstChild();
+            boolean keepValue = !isRemovableValue(result);
+            result.detach();
             if (keepValue) {
-              node.getParent().addChildBefore(
-                IR.exprResult(result).srcref(result), node);
+              n.getParent().addChildBefore(IR.exprResult(result).srcref(result), n);
             } else {
               NodeUtil.markFunctionsDeleted(result, compiler);
             }
@@ -154,12 +202,35 @@ class OptimizeReturns
       new NodeUtil.MatchShallowStatement());
   }
 
-  /**
-   * Determines if the name node acts as the function name in a call expression.
-   */
-  private static boolean isCall(UseSite site) {
-    Node node = site.node;
-    Node parent = node.getParent();
-    return (parent.getFirstChild() == node) && parent.isCall();
+  // Just remove objects that don't reference properties (object literals) or names (functions)
+  // So we don't need to update the graph.
+  private boolean isRemovableValue(Node n) {
+    switch (n.getToken()) {
+      case TEMPLATELIT:
+      case ARRAYLIT:
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+          if ((!child.isEmpty()) && !isRemovableValue(child)) {
+            return false;
+          }
+        }
+        return true;
+
+      case REGEXP:
+      case STRING:
+      case NUMBER:
+      case NULL:
+      case TRUE:
+      case FALSE:
+        return true;
+      case TEMPLATELIT_SUB:
+      case CAST:
+      case NOT:
+      case VOID:
+      case NEG:
+        return isRemovableValue(n.getFirstChild());
+
+      default:
+        return false;
+    }
   }
 }

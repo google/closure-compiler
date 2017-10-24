@@ -22,12 +22,10 @@ import static com.google.common.base.Preconditions.checkState;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.CodingConvention.SubclassRelationship;
-import com.google.javascript.jscomp.DefinitionsRemover.Definition;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -80,7 +78,7 @@ import java.util.Set;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerPass {
+class RemoveUnusedVars implements CompilerPass {
 
   private final AbstractCompiler compiler;
 
@@ -129,22 +127,16 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
   private final Multimap<Var, Continuation> continuations =
       ArrayListMultimap.create();
 
-  private boolean modifyCallSites;
-
-  private CallSiteOptimizer callSiteOptimizer;
-
   private final ScopeCreator scopeCreator;
 
   RemoveUnusedVars(
       AbstractCompiler compiler,
       boolean removeGlobals,
-      boolean preserveFunctionExpressionNames,
-      boolean modifyCallSites) {
+      boolean preserveFunctionExpressionNames) {
     this.compiler = compiler;
     this.codingConvention = compiler.getCodingConvention();
     this.removeGlobals = removeGlobals;
     this.preserveFunctionExpressionNames = preserveFunctionExpressionNames;
-    this.modifyCallSites = modifyCallSites;
     this.scopeCreator = new Es6SyntacticScopeCreator(compiler);
   }
 
@@ -155,39 +147,7 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
   @Override
   public void process(Node externs, Node root) {
     checkState(compiler.getLifeCycleStage().isNormalized());
-    boolean shouldResetModifyCallSites = false;
-    if (this.modifyCallSites) {
-      // When RemoveUnusedVars is run after OptimizeCalls, this.modifyCallSites
-      // is true. But if OptimizeCalls stops making changes, PhaseOptimizer
-      // stops running it, so we come to RemoveUnusedVars and the defFinder is
-      // null. In this case, we temporarily set this.modifyCallSites to false
-      // for this run, and then reset it back to true at the end, for
-      // subsequent runs.
-      if (compiler.getDefinitionFinder() == null) {
-        this.modifyCallSites = false;
-        shouldResetModifyCallSites = true;
-      }
-    }
-    process(externs, root, compiler.getDefinitionFinder());
-    // When doing OptimizeCalls, RemoveUnusedVars is the last pass in the
-    // sequence, so the def finder must not be used by any subsequent passes.
-    compiler.setDefinitionFinder(null);
-    if (shouldResetModifyCallSites) {
-      this.modifyCallSites = true;
-    }
-  }
-
-  @Override
-  public void process(
-      Node externs, Node root, DefinitionUseSiteFinder defFinder) {
-    if (modifyCallSites) {
-      checkNotNull(defFinder);
-      callSiteOptimizer = new CallSiteOptimizer(compiler, defFinder);
-    }
     traverseAndRemoveUnusedReferences(root);
-    if (callSiteOptimizer != null) {
-      callSiteOptimizer.applyChanges();
-    }
   }
 
   /**
@@ -547,13 +507,39 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
     }
 
     Node argList = NodeUtil.getFunctionParameters(function);
-    boolean modifyCallers = modifyCallSites
-        && callSiteOptimizer.canModifyCallers(function);
-    if (!modifyCallers) {
-      // Strip as many unreferenced args off the end of the function declaration as possible.
-      maybeRemoveUnusedTrailingParameters(argList, fparamScope);
-    } else {
-      callSiteOptimizer.optimize(fparamScope, referenced);
+    // Strip as many unreferenced args off the end of the function declaration as possible.
+    maybeRemoveUnusedTrailingParameters(argList, fparamScope);
+
+    // Mark any remaining unused parameters are unused to OptimizeParameters can try to remove
+    // them.
+    markUnusedParameters(argList, fparamScope);
+  }
+
+  /**
+   * Mark any remaining unused parameters as being unused so it can be used elsewhere.
+   *
+   * @param paramList list of function's parameters
+   * @param fparamScope
+   */
+  private void markUnusedParameters(Node paramList, Scope fparamScope) {
+    for (Node param = paramList.getFirstChild(); param != null; param = param.getNext()) {
+      if (!param.isUnusedParameter()) {
+        Node lValue = param;
+        if (lValue.isDefaultValue()) {
+          lValue = lValue.getFirstChild();
+        }
+        if (lValue.isRest()) {
+          lValue = lValue.getFirstChild();
+        }
+        if (lValue.isDestructuringPattern()) {
+          continue;
+        }
+        Var var = fparamScope.getVar(lValue.getString());
+        if (!referenced.contains(var)) {
+          param.setUnusedParameter(true);
+          compiler.reportChangeToEnclosingScope(paramList);
+        }
+      }
     }
   }
 
@@ -601,301 +587,6 @@ class RemoveUnusedVars implements CompilerPass, OptimizeCalls.CallGraphCompilerP
       } else {
         break;
       }
-    }
-  }
-
-  private static class CallSiteOptimizer {
-    private final AbstractCompiler compiler;
-    private final DefinitionUseSiteFinder defFinder;
-    private final List<Node> toRemove = new ArrayList<>();
-    private final List<Node> toReplaceWithZero = new ArrayList<>();
-
-    CallSiteOptimizer(
-        AbstractCompiler compiler,
-        DefinitionUseSiteFinder defFinder) {
-      this.compiler = compiler;
-      this.defFinder = defFinder;
-    }
-
-    public void optimize(Scope fparamScope, Set<Var> referenced) {
-      Node function = fparamScope.getRootNode();
-      checkState(function.isFunction());
-      Node argList = NodeUtil.getFunctionParameters(function);
-
-      // In this path we try to modify all the call sites to remove unused
-      // function parameters.
-      boolean changeCallSignature = canChangeSignature(function);
-      markUnreferencedFunctionArgs(
-          fparamScope, function, referenced,
-          argList.getFirstChild(), 0, changeCallSignature);
-    }
-
-    /**
-     * Applies optimizations to all previously marked nodes.
-     */
-    public void applyChanges() {
-      for (Node n : toRemove) {
-        // Don't remove any nodes twice since doing so would violate change reporting constraints.
-        if (alreadyRemoved(n)) {
-          continue;
-        }
-
-        compiler.reportChangeToEnclosingScope(n);
-        n.detach();
-        NodeUtil.markFunctionsDeleted(n, compiler);
-      }
-      for (Node n : toReplaceWithZero) {
-        // Don't remove any nodes twice since doing so would violate change reporting constraints.
-        if (alreadyRemoved(n)) {
-          continue;
-        }
-
-        compiler.reportChangeToEnclosingScope(n);
-        n.replaceWith(IR.number(0).srcref(n));
-        NodeUtil.markFunctionsDeleted(n, compiler);
-      }
-    }
-
-    /**
-     * For each unused function parameter, determine if it can be removed
-     * from all the call sites, if so, remove it from the function signature
-     * and the call sites otherwise replace the unused value where possible
-     * with a constant (0).
-     *
-     * @param scope The function scope
-     * @param function The function
-     * @param param The current parameter node in the parameter list.
-     * @param paramIndex The index of the current parameter
-     * @param canChangeSignature Whether function signature can be change.
-     * @return Whether there is a following function parameter.
-     */
-    private boolean markUnreferencedFunctionArgs(
-        Scope scope, Node function, Set<Var> referenced,
-        Node param, int paramIndex,
-        boolean canChangeSignature) {
-      if (param != null) {
-        // Take care of the following siblings first.
-        boolean hasFollowing = markUnreferencedFunctionArgs(
-            scope, function, referenced, param.getNext(), paramIndex + 1,
-            canChangeSignature);
-
-        Var var = scope.getVar(param.getString());
-        if (!referenced.contains(var)) {
-          checkNotNull(var);
-
-          // Remove call parameter if we can generally change the signature
-          // or if it is the last parameter in the parameter list.
-          boolean modifyAllCallSites = canChangeSignature || !hasFollowing;
-          if (modifyAllCallSites) {
-            modifyAllCallSites = canRemoveArgFromCallSites(
-                function, paramIndex);
-          }
-
-          tryRemoveArgFromCallSites(function, paramIndex, modifyAllCallSites);
-
-          // Remove an unused function parameter if all the call sites can
-          // be modified to remove it, or if it is the last parameter.
-          if (modifyAllCallSites || !hasFollowing) {
-            toRemove.add(param);
-            return hasFollowing;
-          }
-        }
-        return true;
-      } else {
-        // Anything past the last formal parameter can be removed from the call
-        // sites.
-        tryRemoveAllFollowingArgs(function, paramIndex - 1);
-        return false;
-      }
-    }
-
-    /**
-     * Remove all references to a parameter, otherwise simplify the known
-     * references.
-     * @return Whether all the references were removed.
-     */
-    private boolean canRemoveArgFromCallSites(Node function, int argIndex) {
-      Definition definition = getFunctionDefinition(function);
-
-      // Check all the call sites.
-      for (UseSite site : defFinder.getUseSites(definition)) {
-        if (isModifiableCallSite(site)) {
-          Node arg = getArgumentForCallOrNewOrDotCall(site, argIndex);
-          // TODO(johnlenz): try to remove parameters with side-effects by
-          // decomposing the call expression.
-          if (arg != null && NodeUtil.mayHaveSideEffects(arg, compiler)) {
-            return false;
-          }
-        } else {
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    /**
-     * Remove all references to a parameter if possible otherwise simplify the
-     * side-effect free parameters.
-     */
-    private void tryRemoveArgFromCallSites(
-        Node function, int argIndex, boolean canModifyAllSites) {
-      Definition definition = getFunctionDefinition(function);
-
-      for (UseSite site : defFinder.getUseSites(definition)) {
-        if (isModifiableCallSite(site)) {
-          Node arg = getArgumentForCallOrNewOrDotCall(site, argIndex);
-          if (arg != null) {
-            // Even if we can't change the signature in general we can always
-            // remove an unused value off the end of the parameter list.
-            if (canModifyAllSites
-                || (arg.getNext() == null && !NodeUtil.mayHaveSideEffects(arg, compiler))) {
-              toRemove.add(arg);
-            } else {
-              // replace the node in the arg with 0
-              if (!NodeUtil.mayHaveSideEffects(arg, compiler)
-                  && (!arg.isNumber() || arg.getDouble() != 0)) {
-                toReplaceWithZero.add(arg);
-              }
-            }
-          }
-        }
-      }
-    }
-
-    /**
-     * Remove all the following parameters without side-effects
-     */
-    private void tryRemoveAllFollowingArgs(Node function, final int argIndex) {
-      Definition definition = getFunctionDefinition(function);
-      for (UseSite site : defFinder.getUseSites(definition)) {
-        if (!isModifiableCallSite(site)) {
-          continue;
-        }
-        Node arg = getArgumentForCallOrNewOrDotCall(site, argIndex + 1);
-        while (arg != null) {
-          if (!NodeUtil.mayHaveSideEffects(arg)) {
-            toRemove.add(arg);
-          }
-          arg = arg.getNext();
-        }
-      }
-    }
-
-    /**
-     * Returns the nth argument node given a usage site for a direct function
-     * call or for a func.call() node.
-     */
-    private static Node getArgumentForCallOrNewOrDotCall(UseSite site,
-        final int argIndex) {
-      int adjustedArgIndex = argIndex;
-      Node parent = site.node.getParent();
-      if (NodeUtil.isFunctionObjectCall(parent)) {
-        adjustedArgIndex++;
-      }
-      return NodeUtil.getArgumentForCallOrNew(parent, adjustedArgIndex);
-    }
-
-    /**
-     * @param function
-     * @return Whether the callers to this function can be modified in any way.
-     */
-    boolean canModifyCallers(Node function) {
-      if (NodeUtil.isVarArgsFunction(function)) {
-        return false;
-      }
-
-      DefinitionSite defSite = defFinder.getDefinitionForFunction(function);
-      if (defSite == null) {
-        return false;
-      }
-
-      Definition definition = defSite.definition;
-
-      // Be conservative, don't try to optimize any declaration that isn't as
-      // simple function declaration or assignment.
-      if (!NodeUtil.isSimpleFunctionDeclaration(function)) {
-        return false;
-      }
-
-      return defFinder.canModifyDefinition(definition);
-    }
-
-    /**
-     * @param site The site to inspect
-     * @return Whether the call site is suitable for modification
-     */
-    private static boolean isModifiableCallSite(UseSite site) {
-      return DefinitionUseSiteFinder.isCallOrNewSite(site)
-          && !NodeUtil.isFunctionObjectApply(site.node.getParent());
-    }
-
-    /**
-     * @return Whether the definitionSite represents a function whose call
-     *      signature can be modified.
-     */
-    private boolean canChangeSignature(Node function) {
-      Definition definition = getFunctionDefinition(function);
-      CodingConvention convention = compiler.getCodingConvention();
-
-      checkState(!definition.isExtern());
-
-      Collection<UseSite> useSites = defFinder.getUseSites(definition);
-      for (UseSite site : useSites) {
-        Node parent = site.node.getParent();
-
-        // This was a use site removed by something else before we run.
-        // 1. By another pass before us which means the definition graph is
-        //    no updated properly.
-        // 2. By the continuations algorithm above.
-        if (parent == null) {
-          continue; // Ignore it.
-        }
-
-        // Ignore references within goog.inherits calls.
-        if (parent.isCall()
-            && convention.getClassesDefinedByCall(parent) != null) {
-          continue;
-        }
-
-        // Accessing the property directly prevents rewrite.
-        if (!DefinitionUseSiteFinder.isCallOrNewSite(site)) {
-          if (!(parent.isGetProp()
-              && NodeUtil.isFunctionObjectCall(parent.getParent()))) {
-            return false;
-          }
-        }
-
-        if (NodeUtil.isFunctionObjectApply(parent)) {
-          return false;
-        }
-
-        // TODO(johnlenz): support specialization
-
-        // Multiple definitions prevent rewrite.
-        // Attempt to validate the state of the simple definition finder.
-        Node nameNode = site.node;
-        Collection<Definition> singleSiteDefinitions =
-            defFinder.getDefinitionsReferencedAt(nameNode);
-        checkState(singleSiteDefinitions.size() == 1);
-        checkState(singleSiteDefinitions.contains(definition));
-      }
-
-      return true;
-    }
-
-    /**
-     * @param function
-     * @return the Definition object for the function.
-     */
-    private Definition getFunctionDefinition(Node function) {
-      DefinitionSite definitionSite = defFinder.getDefinitionForFunction(
-          function);
-      checkNotNull(definitionSite);
-      Definition definition = definitionSite.definition;
-      checkState(!definitionSite.inExterns);
-      checkState(definition.getRValue() == function);
-      return definition;
     }
   }
 

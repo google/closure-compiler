@@ -2882,9 +2882,32 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.isVarArgsFunction(getNode("() => arguments")));
   }
 
-  private boolean executedOnceTestCase(String code) {
+  /**
+   * When the left side is a destructuring pattern, generally it's not possible to identify the
+   * RHS for a specific name on the LHS.
+   */
+  public void testIsExpressionResultUsed() {
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x in y) z", "x"))).isTrue();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x in y) z", "y"))).isTrue();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x in y) z", "z"))).isFalse();
+
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x of y) z", "x"))).isTrue();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x of y) z", "y"))).isTrue();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x of y) z", "z"))).isFalse();
+
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x; y; z) a", "x"))).isFalse();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x; y; z) a", "y"))).isTrue();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x; y; z) a", "z"))).isFalse();
+  }
+
+  private Node getNameNodeFrom(String code, String name) {
     Node ast = parse(code);
-    Node nameNode = getNameNode(ast, "x");
+    Node nameNode = getNameNode(ast, name);
+    return nameNode;
+  }
+
+  private boolean executedOnceTestCase(String code) {
+    Node nameNode = getNameNodeFrom(code, "x");
     return NodeUtil.isExecutedExactlyOnce(nameNode);
   }
 
