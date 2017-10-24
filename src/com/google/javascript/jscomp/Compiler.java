@@ -1164,6 +1164,11 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   final String getCurrentJsSource() {
+    SourceMap sourceMap = getSourceMap();
+    if (sourceMap != null) {
+      sourceMap.reset();
+    }
+
     List<String> fileNameRegexList = options.filesToPrintAfterEachPassRegexList;
     List<String> moduleNameRegexList = options.modulesToPrintAfterEachPassRegexList;
     StringBuilder builder = new StringBuilder();
