@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 The Closure Compiler Authors.
+ * Copyright 2017 The Closure Compiler Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,8 @@
  * limitations under the License.
  */
 
-/**
- * @fileoverview Brings in all ES6 Number polyfills.
- */
-'require es6/number/constants';
-'require es6/number/isfinite';
-'require es6/number/isinteger';
-'require es6/number/isnan';
-'require es6/number/issafeinteger';
-'require es6/number/parsefloat';
-'require es6/number/parseint';
+'require util/polyfill';
+
+$jscomp.polyfill('Number.parseFloat', function(orig) {
+  return orig || parseFloat;
+}, 'es6', 'es3');
