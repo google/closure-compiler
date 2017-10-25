@@ -62,9 +62,6 @@ import junit.framework.TestCase;
 public abstract class CompilerTestCase extends TestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
-  // TODO(sdh): Remove this option if there's never a reason to turn it on.
-  private final boolean emitUseStrict = false;
-
   /** Externs for the test */
   final List<SourceFile> externsInputs;
 
@@ -508,7 +505,7 @@ public abstract class CompilerTestCase extends TestCase {
    */
   protected CompilerOptions getOptions(CompilerOptions options) {
     options.setLanguageIn(acceptedLanguage);
-    options.setEmitUseStrict(emitUseStrict);
+    options.setEmitUseStrict(false);
     options.setLanguageOut(languageOut);
     options.setModuleResolutionMode(moduleResolutionMode);
 
