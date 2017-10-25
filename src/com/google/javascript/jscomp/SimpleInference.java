@@ -64,6 +64,9 @@ final class SimpleInference {
     if (decl == null) {
       return null;
     }
+    if (decl.getNamespace() != null && this.scopesAreFrozen) {
+      return decl.getNamespace().toJSType();
+    }
     // Namespaces (literals, enums, constructors) get populated during ProcessScope,
     // so it's generally NOT safe to convert them to jstypes until after ProcessScope is done.
     // However, we've seen examples where it is useful to use the constructor type
@@ -80,9 +83,6 @@ final class SimpleInference {
       }
       return this.commonTypes.fromFunctionType(ctorFn)
           .withProperty(CONST_INFERENCE_MARKER, this.commonTypes.UNKNOWN);
-    }
-    if (decl.getNamespace() != null && this.scopesAreFrozen) {
-      return decl.getNamespace().toJSType();
     }
     if (decl.getTypeOfSimpleDecl() != null) {
       return decl.getTypeOfSimpleDecl();

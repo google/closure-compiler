@@ -2319,6 +2319,22 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     test(DEFAULT_EXTERNS + externs, "" , "");
   }
 
+  public void testDontRenameStaticPropertiesOnBuiltins() {
+    String externs = "Array.foobar = function() {};";
+
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.foobar = function() {};",
+        "var x = Array.foobar;");
+
+    test(
+        externs(DEFAULT_EXTERNS + externs),
+        srcs(js),
+        error(DisambiguateProperties.Warnings.INVALIDATION_ON_TYPE)
+            .withMessageContaining("foobar"));
+  }
+
   private void testSets(String js, String expected, final String fieldTypes) {
     test(srcs(js), expected(expected), new Postcondition() {
       @Override public void verify(Compiler unused) {
