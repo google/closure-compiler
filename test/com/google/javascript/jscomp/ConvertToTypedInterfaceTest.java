@@ -240,6 +240,60 @@ public final class ConvertToTypedInterfaceTest extends CompilerTestCase {
            "/** @constructor */ var FooAlias = Foo;"));
   }
 
+  public void testConstructorAlias6() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.provide('a.b.c.Foo');",
+            "goog.provide('FooAlias');",
+            "",
+            "/** @constructor */",
+            "a.b.c.Foo = function() {};",
+            "",
+            "/** @const */ var FooAlias = a.b.c.Foo;"));
+  }
+
+  public void testRequireAlias1() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.provide('FooAlias');",
+            "",
+            "goog.require('a.b.c.Foo');",
+            "",
+            "/** @const */ var FooAlias = a.b.c.Foo;"));
+  }
+
+  public void testRequireAlias2() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.provide('FooAlias');",
+            "goog.provide('BarAlias');",
+            "",
+            "goog.require('a.b.c');",
+            "",
+            "/** @const */ var FooAlias = a.b.c.Foo;",
+            "/** @const */ var BarAlias = a.b.c.Bar;"));
+  }
+
+  public void testRequireAlias3() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('FooAlias');",
+            "",
+            "const Foo = goog.require('a.b.c.Foo');",
+            "",
+            "exports = Foo;"));
+  }
+
+  public void testRequireAlias4() {
+    testSame(
+        LINE_JOINER.join(
+            "goog.module('FooAlias');",
+            "",
+            "const {Foo} = goog.require('a.b.c');",
+            "",
+            "exports = Foo;"));
+  }
+
   public void testConstPropagationPrivateProperties1() {
     test(
         LINE_JOINER.join(

@@ -492,17 +492,22 @@ class ConvertToTypedInterface implements CompilerPass {
       return seenNames.contains(fullyQualifiedName);
     }
 
-    boolean isPrefixProvided(String fullyQualifiedName) {
-      for (String prefix : Iterables.concat(seenNames, providedNamespaces)) {
-        if (fullyQualifiedName.startsWith(prefix)) {
+    static boolean containsPrefix(String fullyQualifiedName, Iterable<String> prefixNamespaces) {
+      for (String prefix : prefixNamespaces) {
+        if (fullyQualifiedName.equals(prefix) || fullyQualifiedName.startsWith(prefix + ".")) {
           return true;
         }
       }
       return false;
+
     }
 
-    boolean isRequiredName(String fullyQualifiedName) {
-      return requiredLocalNames.contains(fullyQualifiedName);
+    boolean isPrefixProvided(String fullyQualifiedName) {
+      return containsPrefix(fullyQualifiedName, Iterables.concat(seenNames, providedNamespaces));
+    }
+
+    boolean isPrefixRequired(String fullyQualifiedName) {
+      return containsPrefix(fullyQualifiedName, requiredLocalNames);
     }
 
     void markConstructorToProcess(Node ctorNode) {
@@ -695,7 +700,9 @@ class ConvertToTypedInterface implements CompilerPass {
         return RemovalType.REMOVE_ALL;
       }
       if (isConstToBeInferred(jsdoc, nameNode, isExport)) {
-        if (rhs.isQualifiedName() && currentFile.isRequiredName(rhs.getQualifiedName())) {
+        if (rhs.isQualifiedName()
+            && (currentFile.isPrefixRequired(rhs.getQualifiedName())
+                || currentFile.isNameProcessed(rhs.getQualifiedName()))) {
           return RemovalType.PRESERVE_ALL;
         }
 
