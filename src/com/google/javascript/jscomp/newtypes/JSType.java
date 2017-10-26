@@ -2041,7 +2041,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   @Override
   public final JSType getPrototypeObject() {
     checkState(this.isSingletonObj());
-    JSType proto = getNominalTypeIfSingletonObj().getPrototypePropertyOfCtor();
+    JSType proto = getNominalTypeIfSingletonObj().getPrototypeObject();
     if (this.equals(proto)) {
       // In JS's dynamic semantics, the only object without a __proto__ is
       // Object.prototype, but it's not representable in NTI.

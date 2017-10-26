@@ -312,7 +312,7 @@ public final class FunctionType implements Serializable {
     checkState(isUniqueConstructor());
     NominalType nt = getNominalTypeIfSingletonObj(this.nominalType);
     NominalType superClass = nt.getInstantiatedSuperclass();
-    return superClass == null ? null : superClass.getPrototypePropertyOfCtor();
+    return superClass == null ? null : superClass.getPrototypeObject();
   }
 
   /**

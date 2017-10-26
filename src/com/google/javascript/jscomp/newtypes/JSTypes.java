@@ -508,7 +508,7 @@ public final class JSTypes implements Serializable {
         return builtinFunction.toJSType();
       case OBJECT_PROTOTYPE:
       case TOP_LEVEL_PROTOTYPE:
-        return getTopObject().getNominalTypeIfSingletonObj().getPrototypePropertyOfCtor();
+        return getTopObject().getNominalTypeIfSingletonObj().getPrototypeObject();
       case GLOBAL_THIS:
         return getGlobalThis();
       case I_ITERABLE_RESULT_TYPE:

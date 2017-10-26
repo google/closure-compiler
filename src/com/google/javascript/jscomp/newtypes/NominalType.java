@@ -356,11 +356,6 @@ public final class NominalType implements Serializable {
     return this.rawType.getSuperClass().substituteGenerics(typeMap);
   }
 
-  public JSType getPrototypePropertyOfCtor() {
-    checkState(this.rawType.isFrozen());
-    return this.rawType.getCtorPropDeclaredType("prototype");
-  }
-
   // We require a frozen type for the interfaces here because the inheritance
   // chain of each type may not be correct until after the type is frozen.
   public ImmutableSet<NominalType> getInstantiatedInterfaces() {
