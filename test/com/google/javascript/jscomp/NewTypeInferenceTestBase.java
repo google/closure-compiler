@@ -260,7 +260,8 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
       TranspilationPasses.addEs2017Passes(passes);
       TranspilationPasses.addEs2016Passes(passes);
       TranspilationPasses.addEs6EarlyPasses(passes);
-      TranspilationPasses.addEs6LatePasses(passes);
+      TranspilationPasses.addEs6LatePassesBeforeNti(passes);
+      TranspilationPasses.addEs6LatePassesAfterNti(passes);
       TranspilationPasses.addRewritePolyfillPass(passes);
     }
     passes.add(makePassFactory("GlobalTypeInfo", new GlobalTypeInfoCollector(compiler)));

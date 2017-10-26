@@ -59,17 +59,6 @@ public class TranspilationPasses {
     passes.add(es6RewriteArrowFunction);
   }
 
-  /** Adds all the late ES6 transpilation passes, which go after the Dart pass */
-  public static void addEs6LatePasses(List<PassFactory> passes) {
-    // TODO(b/64811685): Delete this method and use addEs6PassesBeforeNTI and addEs6PassesAfterNTI.
-    passes.add(es6ExtractClasses);
-    passes.add(es6RewriteClass);
-    passes.add(earlyConvertEs6ToEs3);
-    passes.add(lateConvertEs6ToEs3);
-    passes.add(rewriteBlockScopedDeclaration);
-    passes.add(rewriteGenerators);
-  }
-
   /**
    * Adds all the late ES6 transpilation passes, which go after the Dart pass
    * and go before TypeChecking
@@ -79,7 +68,7 @@ public class TranspilationPasses {
    * transpilation later in the compilation, and eventually only transpiling
    * when the output is lower than ES6.
    */
-  public static void addEs6PassesBeforeNTI(List<PassFactory> passes) {
+  public static void addEs6LatePassesBeforeNti(List<PassFactory> passes) {
     passes.add(es6ExtractClasses);
     passes.add(es6RewriteClass);
     passes.add(earlyConvertEs6ToEs3);
@@ -87,7 +76,7 @@ public class TranspilationPasses {
   }
 
   /** Adds all transpilation passes that runs after NTI */
-  public static void addEs6PassesAfterNTI(List<PassFactory> passes) {
+  public static void addEs6LatePassesAfterNti(List<PassFactory> passes) {
     passes.add(lateConvertEs6ToEs3);
     passes.add(rewriteGenerators);
   }

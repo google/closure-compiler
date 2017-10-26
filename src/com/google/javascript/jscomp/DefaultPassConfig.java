@@ -183,7 +183,8 @@ public final class DefaultPassConfig extends PassConfig {
     // can be removed.
     if (options.needsTranspilationFrom(ES6) || options.needsTranspilationFrom(ES7)) {
       TranspilationPasses.addEs6EarlyPasses(passes);
-      TranspilationPasses.addEs6LatePasses(passes);
+      TranspilationPasses.addEs6LatePassesBeforeNti(passes);
+      TranspilationPasses.addEs6LatePassesAfterNti(passes);
       TranspilationPasses.addPostCheckPasses(passes);
       if (options.rewritePolyfills) {
         TranspilationPasses.addRewritePolyfillPass(passes);
@@ -381,10 +382,9 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.needsTranspilationFrom(ES6)) {
-      if (options.getTypeCheckEs6Natively()) {
-        TranspilationPasses.addEs6PassesBeforeNTI(checks);
-      } else {
-        TranspilationPasses.addEs6LatePasses(checks);
+      TranspilationPasses.addEs6LatePassesBeforeNti(checks);
+      if (!options.getTypeCheckEs6Natively()) {
+        TranspilationPasses.addEs6LatePassesAfterNti(checks);
       }
     }
 
@@ -424,7 +424,7 @@ public final class DefaultPassConfig extends PassConfig {
       }
 
       if (options.needsTranspilationFrom(ES6)) {
-        TranspilationPasses.addEs6PassesAfterNTI(checks);
+        TranspilationPasses.addEs6LatePassesAfterNti(checks);
         checks.add(setFeatureSet(options.getLanguageOut().toFeatureSet()));
       }
     }
