@@ -836,4 +836,11 @@ public abstract class ObjectType
   public TypeI getEnumeratedTypeOfEnumObject() {
     return null;
   }
+
+  @Override
+  public ObjectTypeI withoutStrayProperties() {
+    // OTI represents object types in a way that already exhibits the behavior of this method,
+    // so we don't need to change anything.
+    return this;
+  }
 }

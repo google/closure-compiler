@@ -176,4 +176,11 @@ public interface ObjectTypeI extends TypeI {
    * Returns a set of properties defined or inferred on this type or any of its supertypes.
    */
   Set<String> getPropertyNames();
+
+  /**
+   * Remove any properties that exist only on this specific instance: stray properties,
+   * or properties whose type has been specialized.
+   * Keep all instance, prototype, and namespace properties.
+   */
+  ObjectTypeI withoutStrayProperties();
 }

@@ -2390,6 +2390,14 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
+  public ObjectTypeI withoutStrayProperties() {
+    ObjectType obj = getObjTypeIfSingletonObj();
+    NominalType nt = getNominalTypeIfSingletonObj();
+    return nt.isLiteralObject() || obj.isPrototypeObject() || obj.isNamespace()
+        ? this : nt.getInstanceAsJSType();
+  }
+
+  @Override
   public TypeInference typeInference() {
     return TypeInference.NTI;
   }

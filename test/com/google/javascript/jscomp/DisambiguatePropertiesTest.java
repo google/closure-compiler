@@ -2270,6 +2270,47 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSets("", js, output, "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}");
   }
 
+  public void testIgnoreSpecializedProperties() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {?Array<number>} */",
+        "  this.a = null;",
+        "  this.b = 1;",
+        "}",
+        "Foo.prototype.f = function() {",
+        "  if (this.a == null) {",
+        "    this.a = [];",
+        "  }",
+        "};",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.a = 3;",
+        "  this.b = 2;",
+        "}");
+
+    String output = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {?Array<number>} */",
+        "  this.Foo$a = null;",
+        "  this.Foo$b = 1;",
+        "}",
+        "Foo.prototype.f = function() {",
+        "  if (this.Foo$a == null) {",
+        "    this.Foo$a = [];",
+        "  }",
+        "};",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.Bar$a = 3;",
+        "  this.Bar$b = 2;",
+        "}");
+
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSets("", js, output, "{a=[[Bar], [Foo]], b=[[Bar], [Foo]], f=[[Foo.prototype]]}");
+  }
+
   public void testErrorOnProtectedProperty() {
     test(
         srcs("function addSingletonGetter(foo) { foo.foobar = 'a'; };"),

@@ -614,7 +614,10 @@ class DisambiguateProperties implements CompilerPass {
       if (prop.skipRenaming || invalidatingTypes.isInvalidating(type)) {
         return null;
       }
-
+      ObjectTypeI maybeObj = type.toMaybeObjectType();
+      if (maybeObj != null) {
+        type = maybeObj.withoutStrayProperties();
+      }
       Iterable<? extends TypeI> alternatives = getTypeAlternatives(type);
       if (alternatives != null) {
         TypeI firstType = relatedType;
