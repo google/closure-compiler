@@ -4658,6 +4658,7 @@ public final class NodeUtil {
         return true;
       case CAST:
       case SPREAD:
+      case AWAIT:
         return evaluatesToLocalValue(value.getFirstChild(), locals);
       default:
         // Other op force a local value:

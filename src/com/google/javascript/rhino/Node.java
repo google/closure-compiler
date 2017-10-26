@@ -2895,6 +2895,10 @@ public class Node implements Serializable {
     return this.token == Token.ROOT;
   }
 
+  public final boolean isAwait() {
+    return this.token == Token.AWAIT;
+  }
+
   public final boolean isBreak() {
     return this.token == Token.BREAK;
   }

@@ -17,6 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.javascript.jscomp.DiagnosticGroups.ES5_STRICT;
@@ -70,6 +71,23 @@ public final class NodeUtilTest extends TestCase {
     Node expr = root.getFirstChild();
     Node var = expr.getFirstChild();
     return var.getFirstChild();
+  }
+
+  private static Node getAwaitNode(String js) {
+    return checkNotNull(getAwaitNode(parse(js)));
+  }
+
+  private static Node getAwaitNode(Node root) {
+    for (Node n : root.children()) {
+      if (n.isAwait()) {
+        return n;
+      }
+      Node awaitNode = getAwaitNode(n);
+      if (awaitNode != null) {
+        return awaitNode;
+      }
+    }
+    return null;
   }
 
   public void testGetNodeByLineCol_1() {
@@ -1588,6 +1606,14 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLocalValueSpread() {
     assertFalse(NodeUtil.evaluatesToLocalValue(getNode("[...x]")));
+  }
+
+  public void testLocalValueAwait() {
+    Node expr = getAwaitNode("async function f() { await someAsyncAction(); }");
+    assertFalse(NodeUtil.evaluatesToLocalValue(expr));
+
+    expr = getAwaitNode("async function f() { await 5; }");
+    assertTrue(NodeUtil.evaluatesToLocalValue(expr));
   }
 
   public void testCallSideEffects() {
