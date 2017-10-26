@@ -784,8 +784,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     public void visit(NodeTraversal t, Node n, Node parent) {
       switch (n.getToken()) {
         case VAR:
-          addDefinition(n);
-          break;
         case FUNCTION:
           addDefinition(n);
           break;
