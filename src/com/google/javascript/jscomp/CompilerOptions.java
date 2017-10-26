@@ -1795,11 +1795,6 @@ public class CompilerOptions implements Serializable {
     this.dartPass = dartPass;
   }
 
-  @Deprecated
-  public void setJ2clPass(boolean flag) {
-    setJ2clPass(flag ? J2clPassMode.ON : J2clPassMode.OFF);
-  }
-
   public void setJ2clPass(J2clPassMode j2clPassMode) {
     this.j2clPassMode = j2clPassMode;
   }
@@ -3366,18 +3361,12 @@ public class CompilerOptions implements Serializable {
    */
   public static enum J2clPassMode {
     /** J2clPass is disabled. */
-    FALSE,
-    /** J2clPass is enabled. */
-    TRUE,
-    /** J2clPass is disabled. */
     OFF,
-    /** J2clPass is enabled. */
-    ON,
     /** It auto-detects whether there are J2cl generated file. If yes, execute J2clPass. */
     AUTO;
 
     boolean shouldAddJ2clPasses() {
-      return this == TRUE || this == ON || this == AUTO;
+      return this == AUTO;
     }
   }
 

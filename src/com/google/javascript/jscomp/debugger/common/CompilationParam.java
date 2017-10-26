@@ -19,7 +19,6 @@ package com.google.javascript.jscomp.debugger.common;
 import com.google.javascript.jscomp.AnonymousFunctionNamingPolicy;
 import com.google.javascript.jscomp.CheckLevel;
 import com.google.javascript.jscomp.CompilerOptions;
-import com.google.javascript.jscomp.CompilerOptions.J2clPassMode;
 import com.google.javascript.jscomp.CompilerOptions.Reach;
 import com.google.javascript.jscomp.DiagnosticGroup;
 import com.google.javascript.jscomp.DiagnosticGroups;
@@ -984,13 +983,6 @@ public enum CompilationParam {
     @Override
     public void apply(CompilerOptions options, boolean value) {
       options.setChromePass(value);
-    }
-  },
-
-  J2CL_PASS(ParamGroup.SPECIAL_PASSES) {
-    @Override
-    public void apply(CompilerOptions options, boolean value) {
-      options.setJ2clPass(value ? J2clPassMode.ON : J2clPassMode.OFF);
     }
   },
 

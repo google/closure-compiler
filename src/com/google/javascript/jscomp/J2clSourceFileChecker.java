@@ -25,9 +25,9 @@ import com.google.javascript.rhino.Node;
  */
 final class J2clSourceFileChecker implements CompilerPass {
 
-  private AbstractCompiler compiler;
-  // The Annotation value type should be Boolean.
   static final String HAS_J2CL_ANNOTATION_KEY = "HAS_J2CL";
+
+  private final AbstractCompiler compiler;
 
   J2clSourceFileChecker(AbstractCompiler compiler) {
     this.compiler = compiler;
