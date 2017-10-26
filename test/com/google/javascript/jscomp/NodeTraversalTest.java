@@ -120,10 +120,9 @@ public final class NodeTraversalTest extends TestCase {
       NodeTraversal.traverseEs6(compiler, tree, cb);
       fail("Expected RuntimeException");
     } catch (RuntimeException e) {
-      assertThat(e.getMessage())
-          .startsWith("INTERNAL COMPILER ERROR.\n"
-              + "Please report this problem.\n\n"
-              + "test me");
+      assertThat(e)
+          .hasMessageThat()
+          .startsWith("INTERNAL COMPILER ERROR.\nPlease report this problem.\n\ntest me");
     }
   }
 

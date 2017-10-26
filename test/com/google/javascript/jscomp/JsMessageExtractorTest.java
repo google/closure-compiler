@@ -19,14 +19,12 @@ package com.google.javascript.jscomp;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Joiner;
-
-import junit.framework.TestCase;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import junit.framework.TestCase;
 
 /**
  * Unit test for {@link JsMessageExtractor}.
@@ -64,9 +62,9 @@ public final class JsMessageExtractorTest extends TestCase {
       extractMessage("if (true) {}}");
       fail("Expected exception");
     } catch (RuntimeException e) {
-      assertThat(e.getMessage()).contains("JSCompiler errors\n");
-      assertThat(e.getMessage()).contains("testcode:1: ERROR - Parse error");
-      assertThat(e.getMessage()).contains("if (true) {}}\n");
+      assertThat(e).hasMessageThat().contains("JSCompiler errors\n");
+      assertThat(e).hasMessageThat().contains("testcode:1: ERROR - Parse error");
+      assertThat(e).hasMessageThat().contains("if (true) {}}\n");
     }
   }
 
@@ -75,16 +73,9 @@ public final class JsMessageExtractorTest extends TestCase {
       extractMessage("", "if (true) {}}");
       fail("Expected exception");
     } catch (RuntimeException e) {
-      assertTrue(
-          e.getMessage(),
-          e.getMessage().contains("JSCompiler errors\n"));
-      assertTrue(
-          e.getMessage(),
-          e.getMessage().contains(
-              "testcode:2: ERROR - Parse error"));
-      assertTrue(
-          e.getMessage(),
-          e.getMessage().contains("if (true) {}}\n"));
+      assertThat(e).hasMessageThat().contains("JSCompiler errors\n");
+      assertThat(e).hasMessageThat().contains("testcode:2: ERROR - Parse error");
+      assertThat(e).hasMessageThat().contains("if (true) {}}\n");
     }
   }
 

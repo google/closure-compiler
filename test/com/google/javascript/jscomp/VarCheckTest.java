@@ -504,7 +504,7 @@ public final class VarCheckTest extends CompilerTestCase {
       checkSynthesizedExtern("x", "");
       fail("Expected RuntimeException");
     } catch (RuntimeException e) {
-      assertThat(e.getMessage()).contains("Unexpected variable x");
+      assertThat(e).hasMessageThat().contains("Unexpected variable x");
     }
   }
 

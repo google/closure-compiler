@@ -62,7 +62,7 @@ public final class ValidityCheckTest extends CompilerTestCase {
       test("var x = 3;", "var x=3;0;0");
       fail("Expected IllegalStateException");
     } catch (IllegalStateException e) {
-      assertThat(e.getMessage()).contains("Expected BLOCK but was EMPTY");
+      assertThat(e).hasMessageThat().contains("Expected BLOCK but was EMPTY");
     }
   }
 
@@ -77,7 +77,7 @@ public final class ValidityCheckTest extends CompilerTestCase {
       testSame("while(1){}");
       fail("Expected RuntimeException");
     } catch (RuntimeException e) {
-      assertThat(e.getMessage()).contains("Normalize constraints violated:\nWHILE node");
+      assertThat(e).hasMessageThat().contains("Normalize constraints violated:\nWHILE node");
     }
   }
 
@@ -98,7 +98,9 @@ public final class ValidityCheckTest extends CompilerTestCase {
       test("var x;", "var x; x;");
       fail("Expected RuntimeException");
     } catch (RuntimeException e) {
-      assertThat(e.getMessage()).contains("The name x is not consistently annotated as constant.");
+      assertThat(e)
+          .hasMessageThat()
+          .contains("The name x is not consistently annotated as constant.");
     }
   }
 }
