@@ -2376,6 +2376,40 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
             .withMessageContaining("foobar"));
   }
 
+  public void testAccessConstructorPropertyDontConfuseWithPrototypeObject() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.p = 1;",
+        "}",
+        "Foo.m = function(/** !Foo */ x) {",
+        "  if (x.constructor === Foo) {",
+        "    return x.p;",
+        "  }",
+        "};",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.p = 1;",
+        "}");
+
+    String output = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.Foo$p = 1;",
+        "}",
+        "Foo.m = function(/** !Foo */ x) {",
+        "  if (x.constructor === Foo) {",
+        "    return x.Foo$p;",
+        "  }",
+        "};",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.Bar$p = 1;",
+        "}");
+
+    test(js, output);
+  }
+
   private void testSets(String js, String expected, final String fieldTypes) {
     test(srcs(js), expected(expected), new Postcondition() {
       @Override public void verify(Compiler unused) {

@@ -447,6 +447,15 @@ public final class FunctionType implements Serializable {
   }
 
   /**
+   * If this type is a constructor, this method returns the prototype object of the
+   * new instances.
+   */
+  JSType getPrototypeOfNewInstances() {
+    checkState(isSomeConstructorOrInterface());
+    return this.nominalType.getPrototypeObject();
+  }
+
+  /**
    * Returns the 'this' type of the function, or the 'new' type for a
    * constructor.
    */

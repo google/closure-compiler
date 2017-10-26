@@ -490,8 +490,6 @@ final class NewTypeInference implements CompilerPass {
   @SuppressWarnings("ConstantField")
   private JSType STRING;
   @SuppressWarnings("ConstantField")
-  private JSType TOP;
-  @SuppressWarnings("ConstantField")
   private JSType TOP_OBJECT;
   @SuppressWarnings("ConstantField")
   private JSType TRUE_TYPE;
@@ -552,7 +550,6 @@ final class NewTypeInference implements CompilerPass {
       this.NUMBER = this.commonTypes.NUMBER;
       this.NUMBER_OR_STRING = this.commonTypes.NUMBER_OR_STRING;
       this.STRING = this.commonTypes.STRING;
-      this.TOP = this.commonTypes.TOP;
       this.TOP_OBJECT = this.commonTypes.getTopObject();
       this.TRUE_TYPE = this.commonTypes.TRUE_TYPE;
       this.TRUTHY = this.commonTypes.TRUTHY;
@@ -2608,12 +2605,10 @@ final class NewTypeInference implements CompilerPass {
 
     if ((comparisonOp == Token.SHEQ && specializedType.isTrueOrTruthy())
         || (comparisonOp == Token.SHNE && specializedType.isFalseOrFalsy())) {
-      lhsPair = analyzeExprFwd(lhs, preciseEnv,
-          UNKNOWN, lhsPair.type.specialize(rhsPair.type));
-      rhsPair = analyzeExprFwd(rhs, lhsPair.env,
-          UNKNOWN, rhsPair.type.specialize(lhsPair.type));
-    } else if ((comparisonOp == Token.SHEQ && specializedType.isFalseOrFalsy()) ||
-        (comparisonOp == Token.SHNE && specializedType.isTrueOrTruthy())) {
+      lhsPair = analyzeExprFwd(lhs, preciseEnv, UNKNOWN, lhsPair.type.specialize(rhsPair.type));
+      rhsPair = analyzeExprFwd(rhs, lhsPair.env, UNKNOWN, rhsPair.type.specialize(lhsPair.type));
+    } else if ((comparisonOp == Token.SHEQ && specializedType.isFalseOrFalsy())
+        || (comparisonOp == Token.SHNE && specializedType.isTrueOrTruthy())) {
       JSType lhsType = lhsPair.type;
       JSType rhsType = rhsPair.type;
       if (lhsType.isNullOrUndef()) {

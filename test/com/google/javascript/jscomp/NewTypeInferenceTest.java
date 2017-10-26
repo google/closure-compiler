@@ -22129,4 +22129,49 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var /** ns.B */ x = 'asdf';"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
+
+  public void testHeuristicThatDetectsPrototypeObjects() {
+    typeCheckMessageContents(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {}",
+            "Foo.prototype.someProp;",
+            "var obj = {};",
+            "obj.constructor = Foo.prototype.constructor;",
+            "var /** null */ x = obj;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS,
+        LINE_JOINER.join(
+            "The right side in the assignment is not a subtype of the left side.",
+            "Expected : null",
+            "Found    : {constructor: function(new:Foo): ?}",
+            ""));
+
+    typeCheckMessageContents(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {}",
+            "var obj = {};",
+            "obj.constructor = Foo.prototype.constructor;",
+            "var /** null */ x = obj;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS,
+        LINE_JOINER.join(
+            "The right side in the assignment is not a subtype of the left side.",
+            "Expected : null",
+            "Found    : {constructor: function(new:Foo): ?}",
+            ""));
+
+    typeCheckMessageContents(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {?number} */",
+        "Foo.prototype.a;",
+        "Foo.prototype.a = 123;",
+        "var /** null */ x = Foo.prototype;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS,
+        LINE_JOINER.join(
+            "The right side in the assignment is not a subtype of the left side.",
+            "Expected : null",
+            "Found    : Foo.prototype",
+            ""));
+  }
 }

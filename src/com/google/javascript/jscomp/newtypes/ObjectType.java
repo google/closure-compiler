@@ -214,15 +214,21 @@ final class ObjectType implements TypeWithProperties {
   }
 
   /**
-   * If this a prototype object (e.g. Foo.prototype), returns the
+   * If this a prototype object (e.g. Foo.prototype), this method returns the
    * associated constructor (e.g. Foo). Otherwise returns null.
+   *
+   * Note that we don't have a robust way of recognizing prototype objects, so we use a heuristic.
+   * It must have the "constructor" property, and the same nominal type as the stored prototype.
    */
   FunctionType getOwnerFunction() {
     JSType t = getProp(new QualifiedName("constructor"));
     if (t != null && t.isFunctionType()) {
       FunctionType maybeCtor = t.getFunTypeIfSingletonObj();
       if (maybeCtor.isSomeConstructorOrInterface()) {
-        return maybeCtor;
+        JSType proto = maybeCtor.getPrototypeOfNewInstances();
+        if (this.nominalType.equals(proto.getNominalTypeIfSingletonObj())) {
+          return maybeCtor;
+        }
       }
     }
     return null;
