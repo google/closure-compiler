@@ -2646,9 +2646,9 @@ public class Node implements Serializable {
    */
   public final void setSideEffectFlags(int flags) {
     checkArgument(
-        this.isCall() || this.isNew(),
-        "setIsNoSideEffectsCall only supports CALL and NEW nodes, got %s",
-        this.getToken());
+        this.isCall() || this.isNew() || this.isTaggedTemplateLit(),
+        "setIsNoSideEffectsCall only supports call-like nodes, got %s",
+        this);
 
     putIntProp(SIDE_EFFECT_FLAGS, flags);
   }

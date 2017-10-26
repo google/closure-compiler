@@ -1512,14 +1512,38 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.evaluatesToLocalValue(getNode("o.valueOf()")));
 
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("delete a.b")));
+  }
 
+  public void testLocalValueTemplateLit() {
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("`hello`")));
     assertFalse(NodeUtil.evaluatesToLocalValue(getNode("`hello ${name}`")));
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("`${'name'}`")));
-
   }
 
-  public void testLocalValue2() {
+  public void testLocalValueTaggedTemplateLit1() {
+    Node n = getNode("tag`simple string`");
+    assertFalse(NodeUtil.evaluatesToLocalValue(n));
+
+    Node.SideEffectFlags flags = new Node.SideEffectFlags();
+    flags.clearAllFlags();
+    n.setSideEffectFlags(flags);
+
+    assertTrue(NodeUtil.evaluatesToLocalValue(n));
+  }
+
+  public void testLocalValueTaggedTemplateLit2() {
+    // Here, replacement() may have side effects.
+    Node n = getNode("tag`string with ${replacement()}`");
+    assertFalse(NodeUtil.evaluatesToLocalValue(n));
+
+    Node.SideEffectFlags flags = new Node.SideEffectFlags();
+    flags.clearAllFlags();
+    n.setSideEffectFlags(flags);
+
+    assertFalse(NodeUtil.evaluatesToLocalValue(n));
+  }
+
+  public void testLocalValueNewExpr() {
     Node newExpr = getNode("new x()");
     assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
 
@@ -1527,44 +1551,43 @@ public final class NodeUtilTest extends TestCase {
     Node.SideEffectFlags flags = new Node.SideEffectFlags();
 
     flags.clearAllFlags();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
 
     assertTrue(NodeUtil.evaluatesToLocalValue(newExpr));
 
     flags.clearAllFlags();
     flags.setMutatesThis();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
 
     assertTrue(NodeUtil.evaluatesToLocalValue(newExpr));
 
     flags.clearAllFlags();
     flags.setReturnsTainted();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
 
     assertTrue(NodeUtil.evaluatesToLocalValue(newExpr));
 
     flags.clearAllFlags();
     flags.setThrows();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
 
     assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
 
     flags.clearAllFlags();
     flags.setMutatesArguments();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
 
     assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
 
     flags.clearAllFlags();
     flags.setMutatesGlobalState();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
 
     assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
   }
 
-  public void testLocalValue3() {
-    Node newExpr = getNode("[...x]");
-    assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
+  public void testLocalValueSpread() {
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("[...x]")));
   }
 
   public void testCallSideEffects() {
@@ -1577,9 +1600,9 @@ public final class NodeUtilTest extends TestCase {
 
     // No side effects, local result
     flags.clearAllFlags();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
     flags.clearAllFlags();
-    callExpr.setSideEffectFlags(flags.valueOf());
+    callExpr.setSideEffectFlags(flags);
 
     assertTrue(NodeUtil.evaluatesToLocalValue(callExpr));
     assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
@@ -1587,10 +1610,10 @@ public final class NodeUtilTest extends TestCase {
 
     // Modifies this, local result
     flags.clearAllFlags();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
     flags.clearAllFlags();
     flags.setMutatesThis();
-    callExpr.setSideEffectFlags(flags.valueOf());
+    callExpr.setSideEffectFlags(flags);
 
     assertTrue(NodeUtil.evaluatesToLocalValue(callExpr));
     assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
@@ -1598,11 +1621,11 @@ public final class NodeUtilTest extends TestCase {
 
     // Modifies this, non-local result
     flags.clearAllFlags();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
     flags.clearAllFlags();
     flags.setMutatesThis();
     flags.setReturnsTainted();
-    callExpr.setSideEffectFlags(flags.valueOf());
+    callExpr.setSideEffectFlags(flags);
 
     assertFalse(NodeUtil.evaluatesToLocalValue(callExpr));
     assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
@@ -1610,10 +1633,10 @@ public final class NodeUtilTest extends TestCase {
 
     // No modifications, non-local result
     flags.clearAllFlags();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
     flags.clearAllFlags();
     flags.setReturnsTainted();
-    callExpr.setSideEffectFlags(flags.valueOf());
+    callExpr.setSideEffectFlags(flags);
 
     assertFalse(NodeUtil.evaluatesToLocalValue(callExpr));
     assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
@@ -1623,9 +1646,9 @@ public final class NodeUtilTest extends TestCase {
     // This call could be removed, but not the new.
     flags.clearAllFlags();
     flags.setMutatesGlobalState();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
     flags.clearAllFlags();
-    callExpr.setSideEffectFlags(flags.valueOf());
+    callExpr.setSideEffectFlags(flags);
 
     assertTrue(NodeUtil.evaluatesToLocalValue(callExpr));
     assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));

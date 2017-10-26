@@ -1437,7 +1437,7 @@ public final class NodeUtil {
    * @return Whether the call has a local result.
    */
   static boolean callHasLocalResult(Node n) {
-    checkState(n.isCall(), n);
+    checkState(n.isCall() || n.isTaggedTemplateLit(), n);
     return (n.getSideEffectFlags() & Node.FLAG_LOCAL_RESULTS) > 0;
   }
 
@@ -4606,6 +4606,11 @@ public final class NodeUtil {
         return callHasLocalResult(value)
             || isToStringMethodCall(value)
             || locals.apply(value);
+      case TAGGED_TEMPLATELIT:
+        if (!callHasLocalResult(value)) {
+          return false;
+        }
+        return evaluatesToLocalValue(value.getLastChild());
       case NEW:
         return newHasLocalResult(value) || locals.apply(value);
       case DELPROP:
