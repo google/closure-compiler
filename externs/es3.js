@@ -2219,6 +2219,12 @@ RegExp.prototype.multiline;
  */
 RegExp.prototype.source;
 
+/**
+ * The flags the regex was created with.
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/flags
+ */
+RegExp.prototype.flags;
 
 /**
  * @constructor
