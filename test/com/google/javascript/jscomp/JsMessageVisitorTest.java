@@ -33,7 +33,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.JsMessage.Style;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import junit.framework.TestCase;
 
@@ -68,7 +68,7 @@ public final class JsMessageVisitorTest extends TestCase {
 
   @Override
   protected void setUp() throws Exception {
-    messages = new LinkedList<>();
+    messages = new ArrayList<>();
     mode = JsMessage.Style.LEGACY;
     compilerOptions = null;
     renameMessages = false;

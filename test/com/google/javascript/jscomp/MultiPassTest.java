@@ -19,7 +19,7 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.Node;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -69,7 +69,7 @@ public final class MultiPassTest extends CompilerTestCase {
   }
 
   public void testInlineVarsAndPeephole() {
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addInlineVariables();
     addPeephole();
     test("function f() { var x = 1; return x + 5; }",
@@ -77,7 +77,7 @@ public final class MultiPassTest extends CompilerTestCase {
   }
 
   public void testInlineFunctionsAndPeephole() {
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addInlineFunctions();
     addPeephole();
     test("function f() { return 1; }" +
@@ -87,7 +87,7 @@ public final class MultiPassTest extends CompilerTestCase {
   }
 
   public void testInlineVarsAndDeadCodeElim() {
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addDeadCodeElimination();
     addInlineVariables();
     test("function f() { var x = 1; return x; x = 3; }",
@@ -95,7 +95,7 @@ public final class MultiPassTest extends CompilerTestCase {
   }
 
   public void testCollapseObjectLiteralsScopeChange() {
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addCollapseObjectLiterals();
     test("function f() {" +
         "  var obj = { x: 1 };" +
@@ -110,7 +110,7 @@ public final class MultiPassTest extends CompilerTestCase {
   }
 
   public void testRemoveUnusedClassPropertiesScopeChange() {
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addRemoveUnusedClassProperties();
     test("/** @constructor */" +
         "function Foo() { this.a = 1; }" +
@@ -121,7 +121,7 @@ public final class MultiPassTest extends CompilerTestCase {
   }
 
   public void testRemoveUnusedVariablesScopeChange() {
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addRemoveUnusedVars();
     test("function f() { var x; }",
         "function f() {}");
@@ -132,14 +132,14 @@ public final class MultiPassTest extends CompilerTestCase {
   }
 
   public void testTopScopeChange() {
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addInlineVariables();
     addPeephole();
     test("var x = 1, y = x, z = x + y;", "var z = 2;");
   }
 
   public void testTwoOptimLoopsNoCrash() {
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addInlineVariables();
     addSmartNamePass();
     addInlineVariables();
@@ -151,7 +151,7 @@ public final class MultiPassTest extends CompilerTestCase {
     disableNormalize();
     allowExternsChanges();
 
-    passes = new LinkedList<>();
+    passes = new ArrayList<>();
     addRenameVariablesInParamListsPass();
     addSplitVariableDeclarationsPass();
     addDestructuringPass();
