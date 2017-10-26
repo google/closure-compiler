@@ -2199,6 +2199,13 @@ RegExp.prototype.ignoreCase;
 RegExp.prototype.lastIndex;
 
 /**
+ * Whether or not the regular expression uses lastIndex.
+ * @type {boolean}
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/sticky
+ */
+RegExp.prototype.sticky;
+
+/**
  * Whether or not to search in strings across multiple lines.
  * @type {boolean}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/multiline
