@@ -245,11 +245,11 @@ public class J2clPass implements CompilerPass {
      */
     inlineFunctionsInFile(
         root,
-        "vmbootstrap/Arrays.impl.java.js",
+        "Arrays.impl.java.js",
         ImmutableSet.of("$create", "$init", "$instanceIsOfType", "$castTo", "$stampType"),
         InliningMode.DIRECT);
     inlineFunctionsInFile(
-        root, "vmbootstrap/Casts.impl.java.js", ImmutableSet.of("$to"), InliningMode.DIRECT);
+        root, "Casts.impl.java.js", ImmutableSet.of("$to"), InliningMode.DIRECT);
 
     /*
      * Inlines all Interface.$markImplementor(FooClass) metaclass calls so that FooClass and others
@@ -269,7 +269,7 @@ public class J2clPass implements CompilerPass {
      */
     inlineFunctionsInFile(
         root,
-        "nativebootstrap/Util.impl.java.js",
+        "Util.impl.java.js",
         ImmutableSet.of(
             "$setClassMetadata",
             "$setClassMetadataForInterface",
