@@ -13970,7 +13970,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}"));
   }
 
-  public void testUndefinedFunctionCtorNoCrash() {
+  public void testMissingExternsNoCrash() {
     typeCheckCustomExterns(
         "",
         "function f(x) {}");
@@ -13983,6 +13983,14 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     typeCheckCustomExterns(
         "",
         "/** @typedef {!Function} */ var myTypeDef;");
+
+    typeCheckCustomExterns(
+        "",
+        LINE_JOINER.join(
+            "/** @const */",
+            "var ns = {};",
+            "/** @type {function(new:?)} */",
+            "ns.something;"));
   }
 
   public void testTrickyPropertyJoins() {

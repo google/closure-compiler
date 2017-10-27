@@ -459,6 +459,11 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     if (commonTypes.getObjectType() == null) {
       commonTypes.setObjectType(dummyRawTypeForMissingExterns("Object"));
     }
+    if (commonTypes.getLiteralObjNominalType() == null) {
+      RawNominalType objLitRawType = dummyRawTypeForMissingExterns(JSTypes.OBJLIT_CLASS_NAME);
+      objLitRawType.addSuperClass(commonTypes.getObjectType());
+      commonTypes.setLiteralObjNominalType(objLitRawType);
+    }
     if (commonTypes.getFunctionType() == null) {
       commonTypes.setFunctionType(dummyRawTypeForMissingExterns("Function"));
     }
