@@ -1607,12 +1607,15 @@ final class ObjectType implements TypeWithProperties {
     if (isEnumObject() || isPrototypeObject() || (this.ns != null && this.fn != null)) {
       return false;
     }
-    // All constructors have "Function" as their nominalType, so look at instance
-    // types instead for these cases.
-    NominalType nt =
-        (fn != null && fn.isSomeConstructorOrInterface())
-        ? fn.getInstanceTypeOfCtor().getObjTypeIfSingletonObj().nominalType
-        : this.nominalType;
+    NominalType nt;
+    if (fn != null && fn.isSomeConstructorOrInterface()) {
+      // All constructors have "Function" as their nominalType, so look at instance
+      // types instead for these cases.
+      ObjectType instance = fn.getInstanceTypeOfCtor().getObjTypeIfSingletonObj();
+      nt = instance != null ? instance.nominalType : getCommonTypes().getObjectType();
+    } else {
+      nt = this.nominalType;
+    }
     return nt.isFunction() || nt.isBuiltinObject() || nt.isLiteralObject();
   }
 

@@ -2410,6 +2410,20 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     test(js, output);
   }
 
+  public void testDontCrashWhenConstructingUnknownInstance() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.abc = 123;",
+        "}",
+        "/** @param {function(new:?)} ctor */",
+        "function f(ctor) {",
+        "  if (ctor.abc) { return ctor.abc; }",
+        "}");
+
+    testSame(js);
+  }
+
   private void testSets(String js, String expected, final String fieldTypes) {
     test(srcs(js), expected(expected), new Postcondition() {
       @Override public void verify(Compiler unused) {
