@@ -114,9 +114,9 @@ public class TranspilationPasses {
       };
 
   private static final PassFactory rewriteAsyncFunctions =
-      new PassFactory("rewriteAsyncFunctions", true) {
+      new HotSwapPassFactory("rewriteAsyncFunctions") {
         @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new RewriteAsyncFunctions(compiler);
         }
 
@@ -127,9 +127,9 @@ public class TranspilationPasses {
       };
 
   private static final PassFactory convertEs7ToEs6 =
-      new PassFactory("convertEs7ToEs6", true) {
+      new HotSwapPassFactory("convertEs7ToEs6") {
         @Override
-        protected CompilerPass create(final AbstractCompiler compiler) {
+        protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es7ToEs6Converter(compiler);
         }
 

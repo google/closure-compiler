@@ -2183,10 +2183,13 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "function(this:Date): ?");
   }
 
-  public void testFunctionInference21() throws Exception {
+  public void testFunctionInference21a() throws Exception {
     testTypes(
         "var f = function() { throw 'x' };" +
         "/** @return {boolean} */ var g = f;");
+  }
+
+  public void testFunctionInference21b() throws Exception {
     testFunctionType(
         "var f = function() { throw 'x' };",
         "f",
@@ -7523,13 +7526,19 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   /**
-   * Tests that undefined can be compared shallowly to a value of type
-   * (number,undefined) regardless of the side on which the undefined
-   * value is.
+   * Tests that undefined can be compared shallowly to a value of type (number,undefined) regardless
+   * of the side on which the undefined value is.
    */
-  public void testBug901455() throws Exception {
+  public void testBug901455a() throws Exception {
     testTypes("/** @return {(number|undefined)} */ function a() { return 3; }" +
         "var b = undefined === a()");
+  }
+
+  /**
+   * Tests that undefined can be compared shallowly to a value of type (number,undefined) regardless
+   * of the side on which the undefined value is.
+   */
+  public void testBug901455b() throws Exception {
     testTypes("/** @return {(number|undefined)} */ function a() { return 3; }" +
         "var b = a() === undefined");
   }
@@ -7553,15 +7562,21 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   /**
-   * Tests that assigning two untyped functions to a variable whose type is
-   * inferred and calling this variable is legal.
+   * Tests that assigning two untyped functions to a variable whose type is inferred and calling
+   * this variable is legal.
    */
-  public void testBug911118() throws Exception {
+  public void testBug911118a() throws Exception {
     // verifying the type assigned to function expressions assigned variables
     TypedScope s = parseAndTypeCheckWithScope("var a = function(){};").scope;
     JSType type = s.getVar("a").getType();
     assertEquals("function(): undefined", type.toString());
+  }
 
+  /**
+   * Tests that assigning two untyped functions to a variable whose type is inferred and calling
+   * this variable is legal.
+   */
+  public void testBug911118b() throws Exception {
     // verifying the bug example
     testTypes("function nullFunction() {};" +
         "var foo = nullFunction;" +
@@ -8986,9 +9001,6 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
     // Mostly verifying that rhino actually understands these JsDocs.
     testTypes("/** @constructor */ function Foo() {} \n" +
         "/** @type {Foo} */ var x = /** @type {Foo} */ (y)");
-
-    testTypes("/** @constructor */ function Foo() {} \n" +
-        "/** @type {Foo} */ var x = /** @type {Foo} */ (y)");
   }
 
   public void testCast17b() throws Exception {
@@ -9151,25 +9163,40 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "var y = /** @type {null|{length:number}} */(x);");
   }
 
-  public void testCast33() throws Exception {
+  public void testCast33a() throws Exception {
     // null and void should be assignable to any type that accepts one or the
     // other or both.
     testTypes(
         "/** @constructor */ function C() {}\n" +
         "/** @type {null|undefined} */ var x ;\n" +
         "var y = /** @type {string?|undefined} */(x);");
+  }
+
+  public void testCast33b() throws Exception {
+    // null and void should be assignable to any type that accepts one or the
+    // other or both.
     testTypes(
-        "/** @constructor */ function C() {}\n" +
-        "/** @type {null|undefined} */ var x ;\n" +
-        "var y = /** @type {string|undefined} */(x);");
+        "/** @constructor */ function C() {}\n"
+            + "/** @type {null|undefined} */ var x ;\n"
+            + "var y = /** @type {string|undefined} */(x);");
+  }
+
+  public void testCast33c() throws Exception {
+    // null and void should be assignable to any type that accepts one or the
+    // other or both.
     testTypes(
-        "/** @constructor */ function C() {}\n" +
-        "/** @type {null|undefined} */ var x ;\n" +
-        "var y = /** @type {string?} */(x);");
+        "/** @constructor */ function C() {}\n"
+            + "/** @type {null|undefined} */ var x ;\n"
+            + "var y = /** @type {string?} */(x);");
+  }
+
+  public void testCast33d() throws Exception {
+    // null and void should be assignable to any type that accepts one or the
+    // other or both.
     testTypes(
-        "/** @constructor */ function C() {}\n" +
-        "/** @type {null|undefined} */ var x ;\n" +
-        "var y = /** @type {null} */(x);");
+        "/** @constructor */ function C() {}\n"
+            + "/** @type {null|undefined} */ var x ;\n"
+            + "var y = /** @type {null} */(x);");
   }
 
   public void testCast34a() throws Exception {
@@ -11669,12 +11696,15 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "}", null);
   }
 
-  public void testMissingProperty28() throws Exception {
+  public void testMissingProperty28a() throws Exception {
     testTypes(
         "function f(obj) {" +
         "  /** @type {*} */ obj.foo;" +
         "  return obj.foo;" +
         "}");
+  }
+
+  public void testMissingProperty28b() throws Exception {
     testTypes(
         "function f(obj) {" +
         "  /** @type {*} */ obj.foo;" +
@@ -13431,7 +13461,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         + "function Int2() {};");
   }
 
-  public void testGenerics1() throws Exception {
+  public void testGenerics1a() throws Exception {
     String fnDecl = "/** \n" +
         " * @param {T} x \n" +
         " * @param {function(T):T} y \n" +
@@ -13445,24 +13475,23 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "var out;" +
         "/** @type {string} */" +
         "var result = f('hi', function(x){ out = x; return x; });");
+  }
+
+  public void testGenerics1b() throws Exception {
+    String fnDecl =
+        "/** \n"
+            + " * @param {T} x \n"
+            + " * @param {function(T):T} y \n"
+            + " * @template T\n"
+            + " */ \n"
+            + "function f(x,y) { return y(x); }\n";
 
     testTypes(
-        fnDecl +
-        "/** @type {string} */" +
-        "var out;" +
-        "var result = f(0, function(x){ out = x; return x; });",
-        "assignment\n" +
-        "found   : number\n" +
-        "required: string");
-
-    testTypes(
-        fnDecl +
-        "var out;" +
-        "/** @type {string} */" +
-        "var result = f(0, function(x){ out = x; return x; });",
-        "assignment\n" +
-        "found   : number\n" +
-        "required: string");
+        fnDecl
+            + "/** @type {string} */"
+            + "var out;"
+            + "var result = f(0, function(x){ out = x; return x; });",
+        "assignment\n" + "found   : number\n" + "required: string");
   }
 
   public void testFilter0() throws Exception {
@@ -14004,7 +14033,7 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "Property x never defined on Foo.prototype", false);
   }
 
-  public void testIssue1024() throws Exception {
+  public void testIssue1024a() throws Exception {
      testTypes(
         "/** @param {Object} a */\n" +
         "function f(a) {\n" +
@@ -14016,23 +14045,26 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         "function g(b) {\n" +
         "  return b.prototype\n" +
         "}\n");
-     /* TODO(blickly): Make this warning go away.
-      * This is old behavior, but it doesn't make sense to warn about since
-      * both assignments are inferred.
-      */
-     testTypes(
-        "/** @param {Object} a */\n" +
-        "function f(a) {\n" +
-        "  a.prototype = {foo:3};\n" +
-        "}\n" +
-        "/** @param {Object} b\n" +
-        " */\n" +
-        "function g(b) {\n" +
-        "  b.prototype = function(){};\n" +
-        "}\n",
-        "assignment to property prototype of Object\n" +
-        "found   : {foo: number}\n" +
-        "required: function(): undefined");
+  }
+
+  public void testIssue1024b() throws Exception {
+    /* TODO(blickly): Make this warning go away.
+     * This is old behavior, but it doesn't make sense to warn about since
+     * both assignments are inferred.
+     */
+    testTypes(
+        "/** @param {Object} a */\n"
+            + "function f(a) {\n"
+            + "  a.prototype = {foo:3};\n"
+            + "}\n"
+            + "/** @param {Object} b\n"
+            + " */\n"
+            + "function g(b) {\n"
+            + "  b.prototype = function(){};\n"
+            + "}\n",
+        "assignment to property prototype of Object\n"
+            + "found   : {foo: number}\n"
+            + "required: function(): undefined");
   }
 
   public void testBug12722936() throws Exception {
@@ -17609,26 +17641,32 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
         + "original definition at [testcode]:5 with type (null|rec<string>)");
   }
 
-  public void testModuloNullUndefThatWorkedWithoutSpecialSubtypingRules() throws Exception {
+  public void testModuloNullUndefThatWorkedWithoutSpecialSubtypingRules1() throws Exception {
     testTypes(LINE_JOINER.join(
         "/** @constructor */",
         "function Foo() {}",
         "function f(/** function(?Foo, !Foo) */ x) {",
         "  return /** @type {function(!Foo, ?Foo)} */ (x);",
         "}"));
+  }
 
+  public void testModuloNullUndefThatWorkedWithoutSpecialSubtypingRules2() throws Exception {
     testTypes(LINE_JOINER.join(
         "/** @constructor */",
         "function Foo() {}",
         "function f(/** !Array<!Foo> */ to, /** !Array<?Foo> */ from) {",
         "  to = from;",
         "}"));
+  }
 
+  public void testModuloNullUndefThatWorkedWithoutSpecialSubtypingRules3() throws Exception {
     testTypes(LINE_JOINER.join(
         "function f(/** ?Object */ x) {",
         "  return {} instanceof x;",
         "}"));
+  }
 
+  public void testModuloNullUndefThatWorkedWithoutSpecialSubtypingRules4() throws Exception {
     testTypes(LINE_JOINER.join(
         "function f(/** ?Function */ x) {",
         "  return x();",
@@ -17929,6 +17967,8 @@ public final class TypeCheckTest extends CompilerTypeTestCase {
   }
 
   private TypeCheckResult parseAndTypeCheckWithScope(String externs, String js) {
+    registry.clearNamedTypes();
+    registry.clearTemplateTypeNames();
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
         ImmutableList.of(SourceFile.fromCode("[testcode]", js)),

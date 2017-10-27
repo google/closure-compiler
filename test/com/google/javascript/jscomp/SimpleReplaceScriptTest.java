@@ -58,7 +58,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     List<SourceFile> inputs = ImmutableList.of(
         SourceFile.fromCode("in", ""));
 
-    Result result = compiler.compile(EXTERNS, inputs, options);
+    Result result = compiler.compile(EXTVAR_EXTERNS, inputs, options);
     assertTrue(result.success);
 
     CompilerInput oldInput = compiler.getInput(new InputId("in"));
@@ -83,7 +83,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         + "temp(10);\n";
     List<SourceFile> inputs = ImmutableList.of(
         SourceFile.fromCode("in", source));
-    Result result = compiler.compile(EXTERNS, inputs, options);
+    Result result = compiler.compile(EXTVAR_EXTERNS, inputs, options);
     assertTrue(result.success);
 
     // Now try to re-infer with a modified version of source
@@ -257,7 +257,7 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
     List<SourceFile> inputs = ImmutableList.of(
         SourceFile.fromCode("in", "bad!()"));
     try {
-      compiler.compile(EXTERNS, inputs, options);
+      compiler.compile(EXTVAR_EXTERNS, inputs, options);
     } catch (RuntimeException e) {
       fail("replaceScript threw a RuntimeException on a parse error.");
     }
@@ -989,6 +989,22 @@ public final class SimpleReplaceScriptTest extends BaseReplaceScriptTestCase {
         + "ns.Bar.bar = function() {};\n";
     Result result = this.runReplaceScript(options,
         ImmutableList.of(src0, src1), 0, 0, src1, 1, false).getResult();
+    assertTrue(result.success);
+
+    assertThat(result.errors).isEmpty();
+    assertThat(result.warnings).isEmpty();
+  }
+
+  /** Check async functionality on replaceScript */
+  public void testAsyncReplaceScript() {
+    CompilerOptions options = getOptions();
+    options.setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(CompilerOptions.LanguageMode.ECMASCRIPT5_STRICT);
+    // async functions require iterables and Symbols from the default externs
+    testExterns = DEFAULT_EXTERNS;
+    String src0 = "async function foo() {}";
+    Result result =
+        this.runReplaceScript(options, ImmutableList.of(src0), 0, 0, src0, 0, false).getResult();
     assertTrue(result.success);
 
     assertThat(result.errors).isEmpty();
