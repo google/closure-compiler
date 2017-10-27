@@ -122,15 +122,8 @@ public final class ReferenceCollectingCallback
    * Targets reference collection to a particular scope.
    */
   void processScope(Scope scope) {
-    boolean shouldAddToBlockStack = !scope.isHoistScope();
     this.narrowScope = scope;
-    if (shouldAddToBlockStack) {
-      blockStack.add(new BasicBlock(null, scope.getRootNode()));
-    }
     (new NodeTraversal(compiler, this, scopeCreator)).traverseAtScope(scope);
-    if (shouldAddToBlockStack) {
-      pop(blockStack);
-    }
     this.narrowScope = null;
   }
 
@@ -207,7 +200,7 @@ public final class ReferenceCollectingCallback
     Scope containingScope = v.getScope();
 
     // This is tricky to compute because of the weird traverseAtScope call for
-    // AggressiveInlineAliases.
+    // CollapseProperties.
     List<BasicBlock> newBlockStack = null;
     if (containingScope.isGlobal()) {
       newBlockStack = new ArrayList<>();
@@ -240,7 +233,7 @@ public final class ReferenceCollectingCallback
     BasicBlock parent = blockStack.isEmpty() ? null : peek(blockStack);
     // Don't add all ES6 scope roots to blockStack, only those that are also scopes according to
     // the ES5 scoping rules. Other nodes that ought to be considered the root of a BasicBlock
-    // are added in shouldTraverse() or processScope() and removed in visit().
+    // are added in shouldTraverse() and removed in visit().
     if (t.isHoistScope()) {
       blockStack.add(new BasicBlock(parent, n));
     }

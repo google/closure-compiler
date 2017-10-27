@@ -148,8 +148,7 @@ class AggressiveInlineAliases implements CompilerPass {
         // and try to inline them.
         List<Ref> refs = new ArrayList<>(name.getRefs());
         for (Ref ref : refs) {
-          Scope hoistScope = ref.scope.getClosestHoistScope();
-          if (ref.type == Type.ALIASING_GET && (hoistScope.isLocal() || !mayBeGlobalAlias(ref))) {
+          if (ref.type == Type.ALIASING_GET && ref.scope.isLocal()) {
             // {@code name} meets condition (c). Try to inline it.
             // TODO(johnlenz): consider picking up new aliases at the end
             // of the pass instead of immediately like we do for global
@@ -158,7 +157,7 @@ class AggressiveInlineAliases implements CompilerPass {
               name.removeRef(ref);
             }
           } else if (ref.type == Type.ALIASING_GET
-              && hoistScope.isGlobal()
+              && ref.scope.isGlobal()
               && ref.getTwin() == null) { // ignore aliases in chained assignments
             if (inlineGlobalAliasIfPossible(name, ref, namespace)) {
               name.removeRef(ref);
@@ -179,31 +178,11 @@ class AggressiveInlineAliases implements CompilerPass {
     }
   }
 
-  /**
-   * Returns true if the alias is possibly defined in the global scope, which we handle with more
-   * caution than with locally scoped variables. May return false positives.
-   *
-   * @param alias An aliasing get.
-   * @return If the alias is possibly defined in the global scope.
-   */
-  private boolean mayBeGlobalAlias(Ref alias) {
-    if (alias.scope.isGlobal()) {
-      return true;
-    }
-    Node aliasParent = alias.node.getParent();
-    if (aliasParent.isName()) {
-      if (aliasParent.getParent().isLet() || aliasParent.getParent().isConst()) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   private boolean inlineAliasIfPossible(Name name, Ref alias, GlobalNamespace namespace) {
     // Ensure that the alias is assigned to a local variable at that
     // variable's declaration. If the alias's parent is a NAME,
-    // then the NAME must be the child of a VAR, LET, or CONST node, and we must
-    // be in a VAR, LET, or CONST assignment.
+    // then the NAME must be the child of a VAR node, and we must
+    // be in a VAR assignment.
     Node aliasParent = alias.node.getParent();
     if (aliasParent.isName()) {
       // Ensure that the local variable is well defined and never reassigned.
@@ -290,7 +269,7 @@ class AggressiveInlineAliases implements CompilerPass {
         // We do this because constructor properties are always collapsed,
         // so we want to inline the aliases also to avoid breakages.
         // TODO(tbreisacher): Do we still need this special case?
-        || (aliasParent.isName() && name.isConstructor())) {
+        || aliasParent.isName() && name.isConstructor()) {
       Node lvalue = aliasParent.isName() ? aliasParent : aliasParent.getFirstChild();
       if (!lvalue.isQualifiedName()) {
         return false;

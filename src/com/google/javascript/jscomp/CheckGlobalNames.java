@@ -169,7 +169,7 @@ class CheckGlobalNames implements CompilerPass {
         reportBadModuleReference(name, ref);
       } else {
         // Check for late references.
-        if (ref.scope.getClosestHoistScope().isGlobal()) {
+        if (ref.scope.isGlobal()) {
           // Prototype references are special, because in our reference graph,
           // A.prototype counts as a reference to A.
           boolean isPrototypeGet = (ref.type == Ref.Type.PROTOTYPE_GET);

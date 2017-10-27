@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.collect.Iterables;
 import com.google.javascript.jscomp.ReferenceCollectingCallback.Behavior;
-import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 
 public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
@@ -419,39 +418,5 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
             }
           }
         });
-  }
-
-  public void testProcessScopeThatsNotABasicBlock() {
-    // Tests the case where the scope we pass in is not really a basic block, but we create a new
-    // basic block anyway because ReferenceCollectingCallback expects all nodes to be in a block.
-    Compiler compiler = createCompiler();
-    Es6SyntacticScopeCreator es6SyntacticScopeCreator = new Es6SyntacticScopeCreator(compiler);
-    ReferenceCollectingCallback referenceCollectingCallback =
-        new ReferenceCollectingCallback(
-            compiler,
-            new Behavior() {
-              @Override
-              public void afterExitScope(NodeTraversal t, ReferenceMap rm) {
-                ReferenceCollection y = rm.getReferences(t.getScope().getVar("y"));
-                assertThat(y.isWellDefined()).isTrue();
-                BasicBlock firstBasicBlock = y.references.get(0).getBasicBlock();
-                assertNode(firstBasicBlock.getRoot()).hasType(Token.BLOCK);
-                assertNode(firstBasicBlock.getRoot().getParent()).hasType(Token.SCRIPT);
-
-                // We do not create a new BasicBlock for the second { use(y); }
-                BasicBlock secondBasicBlock = y.references.get(1).getBasicBlock();
-                assertNode(secondBasicBlock.getRoot()).hasType(Token.BLOCK);
-                assertNode(secondBasicBlock.getRoot().getParent()).hasType(Token.IF);
-              }
-            },
-            es6SyntacticScopeCreator);
-
-    String js = "let x = 5; { let y = x + 1; if (true) { { use(y); } } }";
-    Node root = compiler.parseTestCode(js);
-    Node block = root.getSecondChild();
-
-    Scope globalScope = es6SyntacticScopeCreator.createScope(root, null);
-    Scope blockScope = es6SyntacticScopeCreator.createScope(block, globalScope);
-    referenceCollectingCallback.processScope(blockScope);
   }
 }

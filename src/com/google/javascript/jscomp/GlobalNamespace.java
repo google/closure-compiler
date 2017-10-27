@@ -435,12 +435,9 @@ class GlobalNamespace
         return;
       }
 
-
+      scope = scope.getClosestHoistScope();
       if (isSet) {
-        // Use the closest hoist scope to select handleSetFromGlobal or handleSetFromLocal
-        // because they use the term 'global' in an ES5, pre-block-scoping sense.
-        Scope hoistScope = scope.getClosestHoistScope();
-        if (hoistScope.isGlobal()) {
+        if (scope.isGlobal()) {
           handleSetFromGlobal(module, scope, n, parent, name, isPropAssign, type, shouldCreateProp);
         } else {
           handleSetFromLocal(module, scope, n, parent, name, shouldCreateProp);
@@ -582,9 +579,8 @@ class GlobalNamespace
     }
 
     /**
-     * Updates our representation of the global namespace to reflect an assignment to a global name
-     * in any scope where variables are hoisted to the global scope (i.e. the global scope in an ES5
-     * sense).
+     * Updates our representation of the global namespace to reflect an
+     * assignment to a global name in global scope.
      *
      * @param module the current module
      * @param scope the current scope
