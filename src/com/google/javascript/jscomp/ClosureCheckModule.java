@@ -287,8 +287,9 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           } else if (importLhs.isDestructuringLhs()) {
             if (parent.isGetProp()) {
               String shortName =
-                  parent.getQualifiedName().substring(
-                      parent.getQualifiedName().lastIndexOf(".") + 1);
+                  parent
+                      .getQualifiedName()
+                      .substring(parent.getQualifiedName().lastIndexOf('.') + 1);
               Node objPattern = importLhs.getFirstChild();
               checkState(objPattern.isObjectPattern(), objPattern);
               for (Node strKey : objPattern.children()) {
@@ -356,7 +357,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
                 }
               }
               if (type.contains(".")) {
-                type = type.substring(0, type.lastIndexOf("."));
+                type = type.substring(0, type.lastIndexOf('.'));
               } else {
                 return;
               }
