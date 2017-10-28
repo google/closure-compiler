@@ -57,10 +57,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testWithoutExports() {
     testModules(
         "test.js",
-        "var name = require('./other'); (0, name)()",
+        "var name = require('./other'); name()",
         LINE_JOINER.join(
-            "var name = module$other.default;",
-            "(0, module$other.default)();"));
+            "var name = module$other;",
+            "module$other();"));
     test(
         ImmutableList.of(
             SourceFile.fromCode(Compiler.joinPathParts("mod", "name.js"), ""),
@@ -86,7 +86,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "exports.foo = 1;"),
         LINE_JOINER.join(
             "/** @const */ var module$test = {/** @const */ default: {}};",
-            "var name$$module$test = module$other.default;",
+            "var name$$module$test = module$other;",
             "module$test.default.foo = 1;"));
 
     testModules(
@@ -96,7 +96,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module.exports = function() {};"),
         LINE_JOINER.join(
             "/** @const */ var module$test = {};",
-            "var name$$module$test = module$other.default;",
+            "var name$$module$test = module$other;",
             "module$test.default = function () {};"));
   }
 
@@ -109,7 +109,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "e = module.exports = function() {};"),
         LINE_JOINER.join(
             "/** @const */ var module$test = {default: {}};",
-            "var name$$module$test = module$other.default;",
+            "var name$$module$test = module$other;",
             "var e$$module$test;",
             "e$$module$test = module$test.default = function () {};"));
 
@@ -120,7 +120,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "var e = module.exports = function() {};"),
         LINE_JOINER.join(
             "/** @const */ var module$test = {default: {}};",
-            "var name$$module$test = module$other.default;",
+            "var name$$module$test = module$other;",
             "var e$$module$test = module$test.default = function () {};"));
 
     testModules(
@@ -130,7 +130,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "(module.exports = function() {})();"),
         LINE_JOINER.join(
             "/** @const */ var module$test = {default: {}};",
-            "var name$$module$test = module$other.default;",
+            "var name$$module$test = module$other;",
             "(module$test.default = function () {})();"));
   }
 
@@ -184,7 +184,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "exports.foo = 1;"),
         LINE_JOINER.join(
             "/** @const */ var module$test_test = {/** @const */ default: {}};",
-            "var name$$module$test_test=module$other.default",
+            "var name$$module$test_test=module$other",
             "module$test_test.default.foo = 1;"));
   }
 
@@ -196,7 +196,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "exports.bar = 1;"),
         LINE_JOINER.join(
             "/** @const */ var module$foo$index = {/** @const */ default: {}};",
-            "var name$$module$foo$index = module$other.default;",
+            "var name$$module$foo$index = module$other;",
             "module$foo$index.default.bar = 1;"));
   }
 
@@ -227,8 +227,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module.exports = name;"),
         LINE_JOINER.join(
             "/** @const */ var module$foo$bar = {};",
-            "var name$$module$foo$bar = module$other.default;",
-            "module$foo$bar.default = module$other.default;"));
+            "var name$$module$foo$bar = module$other;",
+            "module$foo$bar.default = module$other;"));
 
     test(
         ImmutableList.of(
@@ -376,8 +376,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module.exports = {a: a};"),
         LINE_JOINER.join(
             "/** @const */ var module$test = {/** @const */ default: {}};",
-            "var a$$module$test = module$other.default;",
-            "module$test.default.a = module$other.default;"));
+            "var a$$module$test = module$other;",
+            "module$test.default.a = module$other;"));
 
     testModules(
         "test.js",
@@ -386,8 +386,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module.exports = {a};"),
         LINE_JOINER.join(
             "/** @const */ var module$test = {/** @const */ default: {}};",
-            "var a$$module$test = module$other.default;",
-            "module$test.default.a = module$other.default;"));
+            "var a$$module$test = module$other;",
+            "module$test.default.a = module$other;"));
 
     testModules(
         "test.js",
@@ -424,8 +424,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "});"),
         LINE_JOINER.join(
             "(function() {",
-            "  var other=module$other.default;",
-            "  var bar = module$other.default;",
+            "  var other=module$other;",
+            "  var bar = module$other;",
             "})()"));
   }
 
@@ -546,8 +546,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "const {foo, bar} = require('./other');",
             "var baz = foo + bar;"),
         LINE_JOINER.join(
-            "const {foo, bar} = module$other.default;",
-            "var baz = module$other.default.foo + module$other.default.bar;"));
+            "const {foo, bar} = module$other;",
+            "var baz = module$other.foo + module$other.bar;"));
   }
 
   public void testAnnotationsCopied() {
@@ -1030,7 +1030,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
           "{",
           "  module$test.default;",
           "  var angular$jscomp$inline_5$$module$test = ",
-          "      typeof angular === 'undefined' ? module$other.default : angular;",
+          "      typeof angular === 'undefined' ? module$other : angular;",
           "  console.log(angular$jscomp$inline_5$$module$test);",
           "  module$test.default = angular$jscomp$inline_5$$module$test;",
           "}"));
