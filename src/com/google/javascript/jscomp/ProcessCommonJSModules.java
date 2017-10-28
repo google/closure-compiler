@@ -19,6 +19,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -626,8 +627,18 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           // This seems fragile but has worked well for a long time.
           // TODO(ChadKillingsworth): Discover if there is a better way to detect these.
           Node ifAncestor = getOutermostIfAncestor(parent);
-          if (ifAncestor != null && !umdPatternsContains(umdPatterns, ifAncestor)) {
-            umdPatterns.add(new UmdPattern(ifAncestor, ifAncestor.getSecondChild()));
+          if (ifAncestor != null) {
+            UmdPattern existingPattern = findUmdPattern(umdPatterns, ifAncestor);
+            if (existingPattern != null) {
+              umdPatterns.remove(existingPattern);
+            }
+            Node enclosingIf = NodeUtil.getEnclosingNode(n, new Predicate<Node>() {
+              @Override
+              public boolean apply(Node node) {
+                return node.isIf() || node.isHook();
+              }
+            });
+            umdPatterns.add(new UmdPattern(ifAncestor, enclosingIf.getSecondChild()));
           }
         }
       } else if (n.matchesQualifiedName("define.amd")) {
@@ -637,7 +648,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         // This seems fragile but has worked well for a long time.
         // TODO(ChadKillingsworth): Discover if there is a better way to detect these.
         Node ifAncestor = getOutermostIfAncestor(parent);
-        if (ifAncestor != null && !umdPatternsContains(umdPatterns, ifAncestor)) {
+        if (ifAncestor != null && findUmdPattern(umdPatterns, ifAncestor) == null) {
           umdPatterns.add(new UmdPattern(ifAncestor, ifAncestor.getChildAtIndex(2)));
         }
       }
@@ -670,7 +681,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             // This seems fragile but has worked well for a long time.
             // TODO(ChadKillingsworth): Discover if there is a better way to detect these.
             Node ifAncestor = getOutermostIfAncestor(parent);
-            if (ifAncestor != null && !umdPatternsContains(umdPatterns, ifAncestor)) {
+            if (ifAncestor != null && findUmdPattern(umdPatterns, ifAncestor) == null) {
               umdPatterns.add(new UmdPattern(ifAncestor, ifAncestor.getSecondChild()));
             }
           }
@@ -943,7 +954,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
       // When walking up ternary operations (hook), don't check if parent is the condition,
       // because one ternary operation can be then/else branch of another.
-      if ((parent.isIf() && parent.getFirstChild() == n) || parent.isHook()) {
+      if (parent.isIf() || parent.isHook()) {
         Node outerIf = getOutermostIfAncestor(parent);
         if (outerIf != null) {
           return outerIf;
@@ -981,12 +992,12 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             && umdPattern.activeBranch.getChildCount() == 1) {
           newNode = umdPattern.activeBranch.removeFirstChild();
         } else {
-          newNode.getParent().removeChild(newNode);
+          newNode.detachFromParent();
         }
         needsRetraverse = true;
         parent.replaceChild(umdPattern.ifRoot, newNode);
         reportNestedScopesDeleted(umdPattern.ifRoot);
-        changeScope = NodeUtil.getEnclosingChangeScopeRoot(newNode);
+        changeScope =  NodeUtil.getEnclosingChangeScopeRoot(newNode);
         if (changeScope != null) {
           compiler.reportChangeToEnclosingScope(newNode);
         }
@@ -1111,13 +1122,13 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         Predicates.<Node>alwaysTrue());
   }
 
-  private static boolean umdPatternsContains(List<UmdPattern> umdPatterns, Node n) {
+  private static UmdPattern findUmdPattern(List<UmdPattern> umdPatterns, Node n) {
     for (UmdPattern umd : umdPatterns) {
       if (umd.ifRoot == n) {
-        return true;
+        return umd;
       }
     }
-    return false;
+    return null;
   }
 
   /**

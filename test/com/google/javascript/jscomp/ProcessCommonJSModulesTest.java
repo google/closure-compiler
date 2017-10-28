@@ -335,6 +335,27 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @const */ var module$test = {};",
             "module$test.default = {foo: 'bar'};"));
+
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
+            "(function (global, factory) {",
+            "  true ? module.exports = factory(typeof angular === 'undefined' ? require('./other') : angular) :",
+            "  typeof define === 'function' && define.amd ? define('angular-cache', ['angular'], factory) :",
+            "  (global.angularCacheModuleName = factory(global.angular));",
+            "}(this, function (angular) { 'use strict';",
+            "  console.log(angular);",
+            "  return angular;",
+            "}));"),
+        LINE_JOINER.join(
+            "/** @const */ var module$test = {};",
+            "{",
+            "  module$test.default;",
+            "  var angular$jscomp$inline_5$$module$test = ",
+            "      typeof angular === 'undefined' ? module$other : angular;",
+            "  console.log(angular$jscomp$inline_5$$module$test);",
+            "  module$test.default = angular$jscomp$inline_5$$module$test;",
+            "}"));
   }
 
   public void testEs6ObjectShorthand() {
@@ -1012,27 +1033,23 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  return 1;",
             "};"));
   }
-  
-  public void testOther() {
+
+  public void testFingerprintUmd() {
     testModules(
       "test.js",
       LINE_JOINER.join(
-          "(function (global, factory) {",
-          "  true ? module.exports = factory(typeof angular === 'undefined' ? require('./other') : angular) :",
-          "  typeof define === 'function' && define.amd ? define('angular-cache', ['angular'], factory) :",
-          "  (global.angularCacheModuleName = factory(global.angular));",
-          "}(this, function (angular) { 'use strict';",
-          "  console.log(angular);",
-          "  return angular;",
-          "}));"),
+          "(function (name, context, definition) {",
+          "  'use strict';",
+          "  if (typeof define === 'function' && define.amd) { define(definition); }",
+          "  else if (typeof module !== 'undefined' && module.exports) { module.exports = definition(); }",
+          "  else if (context.exports) { context.exports = definition(); }",
+          "  else { context[name] = definition(); }",
+          "})('Fingerprint2', this, function() { return 'hi'; })"),
       LINE_JOINER.join(
-          "/** @const */ var module$test = {};",
+          "/** @const */ var module$test={};",
           "{",
           "  module$test.default;",
-          "  var angular$jscomp$inline_5$$module$test = ",
-          "      typeof angular === 'undefined' ? module$other : angular;",
-          "  console.log(angular$jscomp$inline_5$$module$test);",
-          "  module$test.default = angular$jscomp$inline_5$$module$test;",
+          "  module$test.default = 'hi';",
           "}"));
   }
 }
