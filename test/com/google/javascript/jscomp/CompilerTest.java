@@ -140,19 +140,6 @@ public final class CompilerTest extends TestCase {
     compiler.compile(externs, input, options);
   }
 
-  public void testCommonJSMissingRequire() throws Exception {
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("/gin.js", "require('missing')"));
-    Compiler compiler = initCompilerForCommonJS(
-        inputs, ImmutableList.of(ModuleIdentifier.forFile("/gin")));
-
-    ErrorManager manager = compiler.getErrorManager();
-    JSError[] errors = manager.getErrors();
-    assertThat(errors).hasLength(1);
-    String error = errors[0].toString();
-    assertThat(error).contains("Failed to load module \"missing\" at /gin.js");
-  }
-
   private static String normalize(String path) {
     return path.replace(File.separator, "/");
   }
