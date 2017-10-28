@@ -1052,4 +1052,18 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
           "  module$test.default = 'hi';",
           "}"));
   }
+
+  public void testTypeofModuleReference() {
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
+            "module.exports = 'foo';",
+            "console.log(typeof module);",
+            "console.log(typeof exports);"),
+        LINE_JOINER.join(
+            "/** @const */ var module$test={};",
+            "module$test.default = 'foo';",
+            "console.log('object');",
+            "console.log('object');"));
+  }
 }
