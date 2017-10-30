@@ -158,9 +158,11 @@ public class Node implements Serializable {
       IS_ES6_CLASS = 92,          // Indicates that a FUNCTION node is converted from an ES6 class
       TRANSPILED = 93,            // Indicates that a SCRIPT represents a transpiled file
       DELETED = 94,               // For passes that work only on deleted funs.
-      GOOG_MODULE_ALIAS = 95;     // Indicates that the node is an alias of goog.require'd module.
+      GOOG_MODULE_ALIAS = 95,     // Indicates that the node is an alias of goog.require'd module.
                                   // Aliases are desugared and inlined by compiler passes but we
                                   // need to preserve them for building index.
+      IS_UNUSED_PARAMETER = 96;   // Mark a parameter as unused. Used to defer work from
+                                  // RemovedUnusedVars to OptimizeParameters.
 
   private static final String propToString(byte propType) {
       switch (propType) {
@@ -222,6 +224,7 @@ public class Node implements Serializable {
         case TRANSPILED:         return "transpiled";
         case DELETED:            return "DELETED";
         case GOOG_MODULE_ALIAS:  return "goog_module_alias";
+        case IS_UNUSED_PARAMETER: return "is_unused_parameter";
         default:
           throw new IllegalStateException("unexpected prop id " + propType);
       }
@@ -1891,6 +1894,10 @@ public class Node implements Serializable {
       if (this.getSideEffectFlags() != node.getSideEffectFlags()) {
         return false;
       }
+
+      if (this.isUnusedParameter() != node.isUnusedParameter()) {
+        return false;
+      }
     }
 
     if (recurse) {
@@ -2407,6 +2414,17 @@ public class Node implements Serializable {
 
   public final boolean isDeleted() {
     return getBooleanProp(DELETED);
+  }
+
+  public final void setUnusedParameter(boolean unused) {
+    putBooleanProp(IS_UNUSED_PARAMETER, unused);
+  }
+
+  /**
+   * @return Whether a parameter was function to be unused. Set by RemoveUnusedVars
+   */
+  public final boolean isUnusedParameter() {
+    return getBooleanProp(IS_UNUSED_PARAMETER);
   }
 
   /**
