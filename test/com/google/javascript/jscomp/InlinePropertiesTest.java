@@ -174,6 +174,28 @@ public final class InlinePropertiesTest extends TypeICompilerTestCase {
         "new C().foo;\n"));
   }
 
+  public void testConstInstanceProp5() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @type {?number} */",
+            "  this.a = 1;",
+            "  /** @type {number} */",
+            "  this.b = 2;",
+            "}",
+            "var x = (new Foo).b;"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function Foo() {",
+            "  /** @type {?number} */",
+            "  this.a = 1;",
+            "  /** @type {number} */",
+            "  this.b = 2;",
+            "}",
+            "var x = (new Foo, 2);"));
+  }
+
 
   public void testConstClassProps1() {
     // Inline constant class properties,
