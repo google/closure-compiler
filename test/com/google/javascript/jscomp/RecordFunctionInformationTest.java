@@ -74,7 +74,8 @@ public final class RecordFunctionInformationTest extends TestCase {
     mainRoot.getFirstChild().removeChild(nodeG);
     mainRoot.getLastChild().addChildToBack(nodeG.cloneTree());
 
-    FunctionInformationMap.Builder expected = FunctionInformationMap.newBuilder();
+    FunctionInformationMap.Builder expected =
+      FunctionInformationMap.newBuilder();
     expected.addEntry(
         FunctionInformationMap.Entry.newBuilder()
         .setId(0)
@@ -100,11 +101,9 @@ public final class RecordFunctionInformationTest extends TestCase {
 
   private void test(String js, FunctionInformationMap expected) {
     Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    options.setEmitUseStrict(false);
     compiler.init(ImmutableList.of(SourceFile.fromCode("externs", "")),
                   ImmutableList.of(SourceFile.fromCode("testcode", js)),
-                  options);
+                  new CompilerOptions());
     test(compiler, expected);
   }
 
@@ -127,12 +126,10 @@ public final class RecordFunctionInformationTest extends TestCase {
 
   private Compiler compilerFor(JSModule[] modules) {
       Compiler compiler = new Compiler();
-      CompilerOptions options = new CompilerOptions();
-      options.setEmitUseStrict(false);
       compiler.initModules(
           ImmutableList.of(SourceFile.fromCode("externs", "")),
           ImmutableList.copyOf(modules),
-          options);
+          new CompilerOptions());
       return compiler;
   }
 

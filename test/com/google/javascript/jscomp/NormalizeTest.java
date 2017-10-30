@@ -735,12 +735,9 @@ public final class NormalizeTest extends CompilerTestCase {
 
   public void testNormalizeSyntheticCode() {
     Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    options.setEmitUseStrict(false);
     compiler.init(
         new ArrayList<SourceFile>(),
-        new ArrayList<SourceFile>(),
-        options);
+        new ArrayList<SourceFile>(), new CompilerOptions());
     String code = "function f(x) {} function g(x) {}";
     Node ast = compiler.parseSyntheticCode(code);
     Normalize.normalizeSyntheticCode(compiler, ast, "prefix_");

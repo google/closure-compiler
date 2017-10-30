@@ -233,17 +233,14 @@ public final class RenamePropertiesTest extends CompilerTestCase {
   }
 
   public void testModules() {
-    String module1Js =
-        "function Bar(){} Bar.prototype.getA=function(x){};"
-            + "var foo;foo.getA(foo);foo.doo=foo;foo.bloo=foo;";
+    String module1Js = "function Bar(){} Bar.prototype.getA=function(x){};" +
+                       "var foo;foo.getA(foo);foo.doo=foo;foo.bloo=foo;";
 
-    String module2Js =
-        "function Far(){} Far.prototype.getB=function(y){};"
-            + "var too;too.getB(too);too.woo=too;too.bloo=too;";
+    String module2Js = "function Far(){} Far.prototype.getB=function(x){};" +
+                       "var too;too.getB(too);too.woo=too;too.bloo=too;";
 
-    String module3Js =
-        "function Car(){} Car.prototype.getC=function(z){};"
-            + "var noo;noo.getC(noo);noo.zoo=noo;noo.cloo=noo;";
+    String module3Js = "function Car(){} Car.prototype.getC=function(x){};" +
+                       "var noo;noo.getC(noo);noo.zoo=noo;noo.cloo=noo;";
 
     JSModule module1 = new JSModule("m1");
     module1.add(SourceFile.fromCode("input1", module1Js));
@@ -260,13 +257,13 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     Result result = compiler.getResult();
     assertTrue(result.success);
 
-    assertEquals(
-        "function Bar(){}Bar.prototype.b=function(x){};var foo;foo.b(foo);foo.f=foo;foo.a=foo;",
-        compiler.toSource(module1));
+    assertEquals("function Bar(){}Bar.prototype.b=function(x){};" +
+                 "var foo;foo.b(foo);foo.f=foo;foo.a=foo;",
+                 compiler.toSource(module1));
 
-    assertEquals(
-        "function Far(){}Far.prototype.c=function(y){};var too;too.c(too);too.g=too;too.a=too;",
-        compiler.toSource(module2));
+    assertEquals("function Far(){}Far.prototype.c=function(x){};" +
+                 "var too;too.c(too);too.g=too;too.a=too;",
+                 compiler.toSource(module2));
 
     // Note that properties that occur most often globally get the earliest
     // names. The "getC" property, which doesn't occur until module 3, is
@@ -274,9 +271,9 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     // in module 2, because "getC" occurs more total times across all modules.
     // Might be better to give early modules the shortest names, but this is
     // how the pass currently works.
-    assertEquals(
-        "function Car(){}Car.prototype.d=function(z){};var noo;noo.d(noo);noo.h=noo;noo.e=noo;",
-        compiler.toSource(module3));
+    assertEquals("function Car(){}Car.prototype.d=function(x){};" +
+                 "var noo;noo.d(noo);noo.h=noo;noo.e=noo;",
+                 compiler.toSource(module3));
   }
 
   public void testPropertyAffinityOff() {
@@ -669,7 +666,6 @@ public final class RenamePropertiesTest extends CompilerTestCase {
     SourceFile externsInput = SourceFile.fromCode("externs", externs);
 
     CompilerOptions options = new CompilerOptions();
-    options.setEmitUseStrict(false);
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
 
     Compiler compiler = new Compiler();

@@ -1820,7 +1820,7 @@ public final class NodeUtilTest extends TestCase {
     assertNull(NodeUtil.getNumberValue(getNode("+1")));
   }
 
-  public void testIsNumericResult() {
+  public void testIsNumbericResult() {
     assertTrue(NodeUtil.isNumericResult(getNode("1")));
     assertFalse(NodeUtil.isNumericResult(getNode("true")));
     assertTrue(NodeUtil.isNumericResult(getNode("+true")));

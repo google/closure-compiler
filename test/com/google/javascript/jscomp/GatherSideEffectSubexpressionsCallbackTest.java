@@ -160,9 +160,6 @@ public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
   private void checkKeepSimplifiedShortCircuitExpr(Node root,
                                                    List<String> expected) {
     Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    options.setEmitUseStrict(false);
-    compiler.initOptions(options);
     List<Node> replacements = new ArrayList<>();
     GetReplacementSideEffectSubexpressions accumulator =
         new GetReplacementSideEffectSubexpressions(compiler, replacements);
@@ -180,9 +177,6 @@ public final class GatherSideEffectSubexpressionsCallbackTest extends TestCase {
                                            boolean elseHasSideEffects,
                                            List<String> expected) {
     Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    options.setEmitUseStrict(false);
-    compiler.initOptions(options);
     List<Node> replacements = new ArrayList<>();
     GetReplacementSideEffectSubexpressions accumulator =
         new GetReplacementSideEffectSubexpressions(compiler, replacements);

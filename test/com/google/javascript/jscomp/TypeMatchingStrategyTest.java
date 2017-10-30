@@ -23,7 +23,6 @@ import static com.google.javascript.jscomp.TypeMatchingStrategy.SUBTYPES;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.TypeMatchingStrategy.MatchResult;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.jstype.JSType;
@@ -129,7 +128,6 @@ public final class TypeMatchingStrategyTest extends TestCase {
     Compiler compiler = new Compiler();
     compiler.disableThreads();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
 
     compiler.compile(

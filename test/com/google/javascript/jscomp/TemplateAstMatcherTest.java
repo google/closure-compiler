@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.rhino.Node;
 import junit.framework.TestCase;
 
@@ -553,7 +552,6 @@ public final class TemplateAstMatcherTest extends TestCase {
     Compiler compiler = lastCompiler = new Compiler();
     compiler.disableThreads();
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
 
     Node templateNode = compiler.parse(SourceFile.fromCode("template", template));

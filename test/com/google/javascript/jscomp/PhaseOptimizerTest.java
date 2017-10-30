@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.TracerMode;
 import com.google.javascript.jscomp.PhaseOptimizer.Loop;
-import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -222,11 +221,6 @@ public final class PhaseOptimizerTest extends TestCase {
       @Override
       protected CompilerPass create(AbstractCompiler compiler) {
         return pass;
-      }
-
-      @Override
-      public FeatureSet featureSet() {
-        return FeatureSet.latest();
       }
     };
   }

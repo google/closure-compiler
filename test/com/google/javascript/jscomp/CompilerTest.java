@@ -114,7 +114,6 @@ public final class CompilerTest extends TestCase {
     List<SourceFile> externs =
         ImmutableList.of(SourceFile.fromCode("extern", "function alert(x) {}"));
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setPrintExterns(true);
     Compiler compiler = new Compiler();
     compiler.init(externs, ImmutableList.<SourceFile>of(), options);
@@ -132,7 +131,8 @@ public final class CompilerTest extends TestCase {
     //
     // This test is just to make sure that the compiler doesn't crash.
     CompilerOptions options = new CompilerOptions();
-    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(
+        options);
     Compiler compiler = new Compiler();
     SourceFile externs = SourceFile.fromCode("externs.js", "");
     SourceFile input = SourceFile.fromCode("input.js",
@@ -318,7 +318,6 @@ public final class CompilerTest extends TestCase {
             originalSourcePosition));
 
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.sourceMapOutputPath = "fake/source_map_path.js.map";
     options.inputSourceMaps = inputSourceMaps;
     options.applyInputSourceMaps = true;
@@ -875,9 +874,6 @@ public final class CompilerTest extends TestCase {
 
   public void testConsecutiveSemicolons() {
     Compiler compiler = new Compiler();
-    CompilerOptions options = new CompilerOptions();
-    options.setEmitUseStrict(false);
-    compiler.initOptions(options);
     String js = "if(a);";
     Node n = compiler.parseTestCode(js);
     Compiler.CodeBuilder cb = new Compiler.CodeBuilder();
@@ -918,7 +914,6 @@ public final class CompilerTest extends TestCase {
   public void testExportSymbolReservesNamesForRenameVars() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setEmitUseStrict(false);
     options.setClosurePass(true);
     options.setVariableRenaming(VariableRenamingPolicy.ALL);
 
@@ -928,13 +923,12 @@ public final class CompilerTest extends TestCase {
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertTrue(result.success);
-    assertThat(compiler.toSource()).isEqualTo("var b;var c;b.exportSymbol(\"a\",c);");
+    assertEquals("var b;var c;b.exportSymbol(\"a\",c);", compiler.toSource());
   }
 
   public void testGenerateExportsReservesNames() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
-    options.setEmitUseStrict(false);
     options.setClosurePass(true);
     options.setVariableRenaming(VariableRenamingPolicy.ALL);
     options.setGenerateExports(true);
@@ -945,7 +939,8 @@ public final class CompilerTest extends TestCase {
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertTrue(result.success);
-    assertThat(compiler.toSource()).isEqualTo("var b;var c={};b.exportSymbol(\"a\",c);");
+    assertEquals("var b;var c={};b.exportSymbol(\"a\",c);",
+        compiler.toSource());
   }
 
   private static final DiagnosticType TEST_ERROR =
@@ -1437,12 +1432,9 @@ public final class CompilerTest extends TestCase {
   }
 
   private static CompilerOptions createNewFlagBasedOptions() {
-    CompilerOptions options = new CompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
-    options.setEmitUseStrict(false);
-    return options;
+    CompilerOptions opt = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(opt);
+    return opt;
   }
 
   private static byte[] serialize(Object obj) throws IOException {

@@ -20,7 +20,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -108,7 +107,6 @@ public class GoldenFileComparer {
    */
   public static CompilerOptions options() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     // Instrumentation done
     options.setPrettyPrint(true);
     return options;

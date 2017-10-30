@@ -15,7 +15,6 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 
 /**
  * Tests that the property renaming primitive goog.reflect.objectProperty
@@ -146,8 +145,6 @@ public final class ClosurePrimitivesIntegrationTest extends IntegrationTestCase 
   @Override
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
-    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
-    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     if (useSimpleMode) {
       CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     } else {
