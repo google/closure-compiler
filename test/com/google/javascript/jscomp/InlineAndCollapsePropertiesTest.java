@@ -1064,4 +1064,80 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "  use(ns2.baz.foo);",
             "}"));
   }
+
+  public void testLocalAliasInsideClass() {
+    test(
+        "var a = {b: 5}; class A { fn() { var c = a; use(a.b); } }",
+        "var a$b = 5; class A { fn() { var c = null; use(a$b); } }");
+  }
+
+  public void testEs6ClassStaticProperties() {
+    // Collapsing static properties (A.foo in this case) is known to be unsafe.
+    test(
+        LINE_JOINER.join(
+            "class A {",
+            "  static useFoo() {",
+            "    alert(this.foo);",
+            "  }",
+            "}",
+            "A.foo = 'bar';",
+            "const B = A;",
+            "B.foo = 'baz';",
+            "B.useFoo();"),
+        LINE_JOINER.join(
+            "class A {",
+            "static useFoo() {",
+            "alert(this.foo);",
+            "}",
+            "}",
+            "var A$foo = 'bar';",
+            "const B = null;",
+            "A$foo = 'baz';",
+            "A.useFoo();"));
+
+    // Adding @nocollapse makes this safe.
+    test(
+        LINE_JOINER.join(
+            "class A {",
+            "  static useFoo() {",
+            "    alert(this.foo);",
+            "  }",
+            "}",
+            "/** @nocollapse */",
+            "A.foo = 'bar';",
+            "const B = A;",
+            "B.foo = 'baz';",
+            "B.useFoo();"),
+        LINE_JOINER.join(
+            "class A {",
+            "static useFoo() {",
+            "alert(this.foo);",
+            "}",
+            "}",
+            "/** @nocollapse */",
+            "A.foo = 'bar';",
+            "const B = null;",
+            "A.foo = 'baz';",
+            "A.useFoo();"));
+  }
+
+  public void testDestructuringAlias1() {
+    testSame("var a = { x: 5 }; var [b] = [a]; use(b.x);");
+  }
+
+  public void testDestructuringAlias2() {
+    testSame("var a = { x: 5 }; var {b} = {b: a}; use(b.x);");
+  }
+
+  public void testDefaultParamAlias1() {
+    test(
+        "var a = {b: 5}; var b = a; function f(x=b) { alert(x.b); }",
+        "var a = {b: 5}; var b = null; function f(x=a) { alert(x.b); }");
+  }
+
+  public void testDefaultParamAlias2() {
+    test(
+        "var a = {b: {c: 5}}; var b = a; function f(x=b.b) { alert(x.c); }",
+        "var a$b = {c: 5}; var b = null; function f(x=a$b) { alert(x.c); }");
+  }
 }

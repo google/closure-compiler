@@ -1786,6 +1786,27 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "Bar.double(1);"));
   }
 
+  public void testClassStaticProperties() {
+    test("class A {} A.foo = 'bar'; use(A.foo);",
+        "class A {} var A$foo = 'bar'; use(A$foo);");
+
+    // Collapsing A.foo is known to be unsafe.
+    test(
+        "class A { static useFoo() { alert(this.foo); } } A.foo = 'bar'; A.useFoo();",
+        "class A { static useFoo() { alert(this.foo); } } var A$foo = 'bar'; A.useFoo();");
+
+    testSame(
+        LINE_JOINER.join(
+            "class A {",
+            "  static useFoo() {",
+            "    alert(this.foo);",
+            "  }",
+            "};",
+            "/** @nocollapse */",
+            "A.foo = 'bar';",
+            "A.useFoo();"));
+  }
+
   public void testSuperExtern() {
     testSame(
         LINE_JOINER.join(
@@ -1944,5 +1965,17 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         "import * as a$jscomp$1 from './a.js'; let b = a$jscomp$1.b;",
         "var a$b = 5;"
     });
+  }
+
+  public void testDefaultParameters() {
+    testSame("var a = {b: 5}; function f(x=a) { alert(x.b); }");
+
+    test(
+        "var a = {b: {c: 5}}; function f(x=a.b) { alert(x.c); }",
+        "var a$b = {c: 5}; function f(x=a$b) { alert(x.c); }");
+
+    test(
+        "var a = {b: 5}; function f(x=a.b) { alert(x); }",
+        "var a$b = 5; function f(x=a$b) { alert(x); }");
   }
 }

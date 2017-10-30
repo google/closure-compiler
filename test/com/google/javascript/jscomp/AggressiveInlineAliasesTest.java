@@ -854,4 +854,43 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         "let ns = {a: 1}; { let y = ns; use(y.a); }",
         "let ns = {a: 1}; { let y = null; use(ns.a); }");
   }
+
+  public void testLocalAliasInsideClass() {
+    test(
+        "var a = {x: 5}; class A { fn() { var b = a; use(b.x); } }",
+        "var a = {x: 5}; class A { fn() { var b = null; use(a.x); } }");
+  }
+
+  public void testGlobalClassAlias1() {
+    test(
+        "class A {} A.foo = 5; const B = A; use(B.foo);",
+        "class A {} A.foo = 5; const B = null; use(A.foo)");
+  }
+
+  public void testGlobalClassAlias2() {
+    test(
+        "class A { static fn() {} } const B = A; B.fn();",
+        "class A { static fn() {} } const B = null; A.fn();");
+  }
+
+  public void testGlobalClassAlias3() {
+    test(
+        "class A {} const B = A; B.prototype.fn = () => 5;",
+        "class A {} const B = null; A.prototype.fn = () => 5;");
+  }
+
+  public void testDestructuringAlias1() {
+    // CollapseProperties backs off on destructuring, so it's okay not to inline here.
+    testSame("var a = {x: 5}; var [b] = [a]; use(b.x);");
+  }
+
+  public void testDestructuringAlias2() {
+    testSame("var a = {x: 5}; var {b} = {b: a}; use(b.x);");
+  }
+
+  public void testDefaultParamAlias() {
+    test(
+        "var a = {b: 5}; var b = a; function f(x=b) { alert(x.b); }",
+        "var a = {b: 5}; var b = null; function f(x=a) { alert(x.b); }");
+  }
 }
