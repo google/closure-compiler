@@ -562,11 +562,11 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     output = ""
         + "/** @constructor */ function Foo(){}"
         + "/** @constructor */ function Bar(){}"
-        + "Foo.Foo__function_new_Foo___undefined__$a = 0;"
-        + "Bar.Bar__function_new_Bar___undefined__$a = 0;";
+        + "Foo.$Foo$a = 0;"
+        + "Bar.$Bar$a = 0;";
 
     testSets(js, output,
-        "{a=[[Bar<|function(new:Bar): undefined|>], [Foo<|function(new:Foo): undefined|>]]}");
+        "{a=[[$Bar], [$Foo]]}");
   }
 
   public void testSupertypeWithSameField() {
@@ -1552,8 +1552,8 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         NewTypeInference.MISTYPED_ASSIGN_RHS,
         LINE_JOINER.join(
             "The right side in the assignment is not a subtype of the left side.",
-            "Expected : Bar<|function(new:Bar): ?|>",
-            "Found    : Foo<|function(new:Foo): undefined|>",
+            "Expected : $Bar",
+            "Found    : $Foo",
             "More details:",
             "Incompatible types for property prototype.",
             "Expected : Bar.prototype",

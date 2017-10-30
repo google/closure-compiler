@@ -1704,14 +1704,17 @@ final class ObjectType implements TypeWithProperties {
     } else if (isDict()) {
       builder.append("dict");
     } else if (this.ns != null) {
+      if (this.fn != null && (this.fn.isUniqueConstructor() || this.fn.isInterfaceDefinition())) {
+        // Add $ to distinguish a constructor namespace from an instance type with the same name
+        builder.append("$");
+      }
       builder.append(this.ns);
-    }
-    if (this.fn != null) {
+    } else if (this.fn != null) {
       builder.append("<|");
       fn.appendTo(builder, ctx);
       builder.append("|>");
     }
-    if (ns == null || !props.isEmpty()) {
+    if (ns == null) {
       appendPropsTo(builder, ctx);
     }
     if (isLoose) {
