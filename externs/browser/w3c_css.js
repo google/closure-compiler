@@ -1993,7 +1993,7 @@ CSSProperties.prototype.willChange;
 
 /**
  * @param {string} media_query_list
- * @return {MediaQueryList}
+ * @return {!MediaQueryList}
  * @see http://www.w3.org/TR/cssom-view/#dom-window-matchmedia
  */
 Window.prototype.matchMedia = function(media_query_list) {};
