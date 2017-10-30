@@ -132,6 +132,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("new (a.b())");
     assertPrint("new (a.b())()", "new (a.b())");
 
+
     // Operators: make sure we don't convert binary + and unary + into ++
     assertPrint("x + +y", "x+ +y");
     assertPrint("x - (-y)", "x- -y");
@@ -270,6 +271,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("if(x)if(y);", "if(x)if(y);");
     assertPrint("if(x){if(y);}", "if(x)if(y);");
     assertPrint("if(x){if(y){};;;}", "if(x)if(y);");
+  }
+
+  public void testPrintNewVoid() {
+    // Odd looking but valid. This, of course, will cause a runtime exception but
+    // should not cause a parse error as "new void 0" would.
+    assertPrintSame("new (void 0)");
   }
 
   public void testPrintComma1() {

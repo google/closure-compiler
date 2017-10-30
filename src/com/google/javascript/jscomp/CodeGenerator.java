@@ -944,6 +944,13 @@ public class CodeGenerator {
         add("new ");
         int precedence = NodeUtil.precedence(type);
 
+        // `new void 0` is a syntax error add parenthese in this case.  This is only particularly
+        // interesting for code in dead branches.
+        int precedenceOfFirst = NodeUtil.precedence(first.getToken());
+        if (precedenceOfFirst == precedence) {
+          precedence = precedence + 1;
+        }
+
         // If the first child contains a CALL, then claim higher precedence
         // to force parentheses. Otherwise, when parsed, NEW will bind to the
         // first viable parentheses (don't traverse into functions).
