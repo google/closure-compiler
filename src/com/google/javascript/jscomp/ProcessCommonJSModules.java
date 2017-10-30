@@ -1315,6 +1315,10 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           break;
       }
 
+      fixTypeAnnotationsForNode(t, n);
+    }
+
+    private void fixTypeAnnotationsForNode(NodeTraversal t, Node n) {
       JSDocInfo info = n.getJSDocInfo();
       if (info != null) {
         for (Node typeNode : info.getTypeNodes()) {
@@ -1340,7 +1344,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                   require.getCharno());
       if (modulePath == null) {
         // The module loader will issue an error
-        return;
+        if (compiler.getOptions().moduleResolutionMode === ModuleLoader.ResolutionMode.BROWSER) {
+          
+        } else {
+          return;
+        }
       }
 
       String moduleName = getModuleName(modulePath);
@@ -1647,18 +1655,19 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             Node grandparent = parent.getParent();
 
             Node expr;
-            JSDocInfoBuilder info = new JSDocInfoBuilder(false);
-            if (qualifiedNameIsConst) {
-              info.recordConstancy();
-            }
             if (!newNameIsQualified && newNameDeclaration == null) {
               expr = IR.let(newNameRef, IR.nullNode()).useSourceInfoIfMissingFromForTree(nameRef);
-              expr.setJSDocInfo(info.build());
             } else {
               expr =
                   IR.exprResult(IR.assign(newNameRef, IR.nullNode()))
                       .useSourceInfoIfMissingFromForTree(nameRef);
+              JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(parent.getJSDocInfo());
+              parent.setJSDocInfo(null);
+              if (qualifiedNameIsConst) {
+                info.recordConstancy();
+              }
               expr.getFirstChild().setJSDocInfo(info.build());
+              fixTypeAnnotationsForNode(t, expr.getFirstChild());
             }
             grandparent.replaceChild(parent, expr);
             if (expr.isLet()) {
@@ -1700,11 +1709,13 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
               expr.getFirstChild().replaceChild(expr.getFirstFirstChild(), parent);
             } else {
               expr.getFirstChild().replaceChild(expr.getFirstChild().getSecondChild(), parent);
+              JSDocInfoBuilder info = JSDocInfoBuilder.maybeCopyFrom(parent.getJSDocInfo());
+              parent.setJSDocInfo(null);
               if (qualifiedNameIsConst) {
-                JSDocInfoBuilder info = new JSDocInfoBuilder(false);
                 info.recordConstancy();
-                expr.getFirstChild().setJSDocInfo(info.build());
               }
+              expr.getFirstChild().setJSDocInfo(info.build());
+              fixTypeAnnotationsForNode(t, expr.getFirstChild());
             }
             functionsToHoist.add(expr);
           } else {
@@ -1733,11 +1744,13 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
               assign.setJSDocInfo(info);
               Node expr = IR.exprResult(assign).useSourceInfoIfMissingFromForTree(nameRef);
               parent.replaceWith(expr);
+              JSDocInfoBuilder infoBuilder = JSDocInfoBuilder.maybeCopyFrom(info);
+              parent.setJSDocInfo(null);
               if (qualifiedNameIsConst) {
-                JSDocInfoBuilder infoBuilder = JSDocInfoBuilder.maybeCopyFrom(info);
                 infoBuilder.recordConstancy();
-                assign.setJSDocInfo(infoBuilder.build());
               }
+              assign.setJSDocInfo(infoBuilder.build());
+              fixTypeAnnotationsForNode(t, assign);
             } else {
               getProp.setJSDocInfo(info);
               parent.replaceWith(IR.exprResult(getProp).useSourceInfoFrom(getProp));

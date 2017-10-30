@@ -801,7 +801,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module.exports = Foo;"),
         LINE_JOINER.join(
             "/** @const */ var module$test = {};",
-            "/** @const */ module$test.default = /** @constructor */ function () {};",
+            "/** @const @constructor */ module$test.default = function () {};",
             "/** @constructor */ function Bar$$module$test(Foo) { this.foo = new Foo(); }",
             "module$test.default.prototype.test = new Bar$$module$test(module$test.default);"));
   }
@@ -1061,5 +1061,18 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "/** @const */ module$test.default = 'foo';",
             "console.log('object');",
             "console.log('object');"));
+  }
+
+  public void testUpdateGenericTypeReferences() {
+    testModules(
+        "test.js",
+        LINE_JOINER.join(
+            "const Foo = require('./other');",
+            "/** @type {!Array<!Foo>} */ const bar = [];",
+            "module.exports = bar;"),
+        LINE_JOINER.join(
+            "/** @const */ var module$test={};",
+            "const Foo$$module$test = module$other;",
+            "/** @const  @type {!Array<!module$other>} */ module$test.default = [];"));
   }
 }

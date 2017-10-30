@@ -210,6 +210,9 @@ public final class DefaultPassConfig extends PassConfig {
   @Override
   protected List<PassFactory> getWhitespaceOnlyPasses() {
     List<PassFactory> passes = new ArrayList<>();
+    if (options.processCommonJSModules) {
+      passes.add(rewriteCommonJsModules);
+    }
     if (options.wrapGoogModulesForWhitespaceOnly) {
       passes.add(whitespaceWrapGoogModules);
     }
