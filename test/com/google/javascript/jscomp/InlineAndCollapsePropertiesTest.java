@@ -426,6 +426,11 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          "var a$b$c = 5; function f() { var x = null; f(a$b$c); }");
   }
 
+  public void testLocalAlias8() {
+    testSame(
+        "var a = { b: 3 }; function f() { if (true) { var x = a; f(x.b); } x = { b : 4}; }");
+  }
+
   public void testGlobalWriteToAncestor() {
     testSame("var a = {b: 3}; function f() { var x = a; f(a.b); } a = 5;");
   }
@@ -904,8 +909,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         "var ns$foo = 'bar'; function f() { let ns2 = null; use(ns$foo); }");
   }
 
-  // TODO(lharker): Fix these failing tests.
-  public void failing_testLocalAliasWithLet2() {
+  public void testLocalAliasWithLet2() {
     test(
         LINE_JOINER.join(
             "let ns = {};",
@@ -926,7 +930,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "}"));
   }
 
-  public void failing_testLocalAliasWithLet3() {
+  public void testLocalAliasWithLet3() {
     test(
         LINE_JOINER.join(
             "let ns = {};",
@@ -942,7 +946,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "  use(ns$foo);", "}"));
   }
 
-  public void failing_testLocalAliasWithLet4() {
+  public void testLocalAliasWithLet4() {
     test(
         LINE_JOINER.join(
             "let ns = {};",
@@ -992,8 +996,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "use(ns$foo);", "}"));
   }
 
-  // TODO(lharker): Fix these failing tests.
-  public void failing_testLocalAliasWithConst2() {
+  public void testLocalAliasWithConst2() {
     test(
         LINE_JOINER.join(
             "const ns = {};",
@@ -1014,7 +1017,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "}"));
   }
 
-  public void failing_testLocalAliasWithConst3() {
+  public void testLocalAliasWithConst3() {
     test(
         LINE_JOINER.join(
             "const ns = {};",
@@ -1031,7 +1034,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "}"));
   }
 
-  public void failing_testLocalAliasWithConst4() {
+  public void testLocalAliasWithConst4() {
     test(
         LINE_JOINER.join(
             "const ns = {};",

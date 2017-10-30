@@ -421,8 +421,7 @@ public final class ReferenceCollectingCallbackTest extends CompilerTestCase {
         });
   }
 
-  // TODO(lharker): Fix this test - currently fails with a NoSuchElementException.
-  public void failing_testProcessScopeThatsNotABasicBlock() {
+  public void testProcessScopeThatsNotABasicBlock() {
     // Tests the case where the scope we pass in is not really a basic block, but we create a new
     // basic block anyway because ReferenceCollectingCallback expects all nodes to be in a block.
     Compiler compiler = createCompiler();

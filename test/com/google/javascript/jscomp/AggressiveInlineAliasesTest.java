@@ -821,8 +821,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "}"));
   }
 
-  // TODO(lharker): Fix these three failing tests.
-  public void failing_testLocalAliasWithLet1() {
+  public void testLocalAliasWithLet1() {
     test(
         LINE_JOINER.join(
             "var a = {};",
@@ -844,13 +843,13 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "}"));
   }
 
-  public void failing_testLocalAliasWithLet2() {
+  public void testLocalAliasWithLet2() {
     test(
         "var a = {}; a.b = {}; if (true) { let c = a.b;  alert(c); }",
         "var a = {}; a.b = {}; if (true) { let c = null;  alert(a.b); }");
   }
 
-  public void failing_testLocalAliasWithLet3() {
+  public void testLocalAliasWithLet3() {
     test(
         "let ns = {a: 1}; { let y = ns; use(y.a); }",
         "let ns = {a: 1}; { let y = null; use(ns.a); }");
