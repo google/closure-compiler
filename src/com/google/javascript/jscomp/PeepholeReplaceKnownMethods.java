@@ -24,7 +24,6 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
@@ -440,7 +439,7 @@ class PeepholeReplaceKnownMethods extends AbstractPeepholeOptimization {
     }
 
     String joinString = (right == null) ? "," : NodeUtil.getStringValue(right);
-    List<Node> arrayFoldedChildren = new LinkedList<>();
+    List<Node> arrayFoldedChildren = new ArrayList<>();
     StringBuilder sb = null;
     int foldedSize = 0;
     Node prev = null;

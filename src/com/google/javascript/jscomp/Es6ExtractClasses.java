@@ -26,9 +26,9 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Set;
 
 /**
@@ -93,7 +93,7 @@ public final class Es6ExtractClasses
       }
     }
 
-    private Deque<ClassDescription> classStack = new LinkedList<>();
+    private final Deque<ClassDescription> classStack = new ArrayDeque<>();
 
     private boolean needsInnerNameRewriting(Node classNode, Node parent) {
       checkArgument(classNode.isClass());
