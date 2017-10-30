@@ -745,20 +745,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
     /** Visit require calls.  */
     private void visitRequireCall(NodeTraversal t, Node require, Node parent) {
-      String requireName = getCommonJsImportPath(require);
-      ModulePath modulePath =
-          t.getInput()
-              .getPath()
-              .resolveJsModule(
-                  requireName,
-                  require.getSourceFileName(),
-                  require.getLineno(),
-                  require.getCharno());
-      if (modulePath == null) {
-        // The module loader will issue an error
-        return;
-      }
-
       // When require("name") is used as a standalone statement (the result isn't used)
       // it indicates that a module is being loaded for the side effects it produces.
       // In this case the require statement should just be removed as the dependency
@@ -1342,16 +1328,15 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                   require.getSourceFileName(),
                   require.getLineno(),
                   require.getCharno());
+
+      String moduleName;
       if (modulePath == null) {
-        // The module loader will issue an error
-        if (compiler.getOptions().moduleResolutionMode === ModuleLoader.ResolutionMode.BROWSER) {
-          
-        } else {
-          return;
-        }
+        // The module loader will issue an error, but use a fallback
+        moduleName = ModuleIdentifier.forFile(requireName).getModuleName();
+      } else {
+        moduleName = modulePath.toModuleName();
       }
 
-      String moduleName = getModuleName(modulePath);
       Node moduleRef = NodeUtil.newQName(compiler, getBasePropertyImport(moduleName))
           .useSourceInfoFromForTree(require);
       parent.replaceChild(require, moduleRef);
@@ -2002,12 +1987,14 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                       typeNode.getSourceFileName(),
                       typeNode.getLineno(),
                       typeNode.getCharno());
-          if (modulePath == null) {
-            // The module loader will issue an error
-            return;
-          }
 
-          String globalModuleName = getModuleName(modulePath);
+          String globalModuleName;
+          if (modulePath == null) {
+            // The module loader will issue an error, but we fall back to a path-based name
+            globalModuleName = ModuleIdentifier.forFile(moduleName).getModuleName();
+          } else {
+            globalModuleName = modulePath.toModuleName();
+          }
           String baseImportProperty = getBasePropertyImport(globalModuleName);
           typeNode.setString(
               localTypeName == null ? baseImportProperty : baseImportProperty + localTypeName);
