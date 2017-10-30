@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 
 /**
@@ -314,6 +315,7 @@ public final class CommonJSIntegrationTest extends IntegrationTestCase {
   @Override
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCodingConvention(new GoogleCodingConvention());
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
     options.setProcessCommonJSModules(true);

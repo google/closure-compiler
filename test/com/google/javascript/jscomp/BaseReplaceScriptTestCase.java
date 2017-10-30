@@ -22,6 +22,7 @@ import static com.google.javascript.jscomp.testing.JSErrorSubject.assertError;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -67,6 +68,7 @@ public abstract class BaseReplaceScriptTestCase extends TestCase {
    */
   protected CompilerOptions getOptions(DiagnosticGroup... typesOfGuard) {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.declaredGlobalExternsOnWindow = false;
     options.setClosurePass(true);
     // These are the options that are always on in JsDev which is the only

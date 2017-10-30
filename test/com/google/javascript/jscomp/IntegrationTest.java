@@ -279,6 +279,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   @GwtIncompatible // b/63595345
   public void testUnresolvedDefine() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCheckTypes(true);
     DiagnosticType[] warnings = {
@@ -378,6 +379,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testAdvancedModeIncludesExtraSmartNameRemoval() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
@@ -957,6 +959,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testRenamingOfTypedefPropertiesWithNTI() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setNewTypeInference(true);
     options.setPropertyRenaming(PropertyRenamingPolicy.ALL_UNQUOTED);
 
@@ -1028,6 +1031,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testSilenceUnknownTypeWarningFromOTI() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
     options.setNewTypeInference(true);
 
@@ -1081,6 +1085,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testLegacyCompileOverridesStrict() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
     options.addWarningsGuard(new StrictWarningsGuard());
     options.setLegacyCodeCompile(true);
@@ -1091,6 +1096,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testLegacyCompileOverridesExplicitPromotionToError() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
     options.addWarningsGuard(new DiagnosticGroupWarningsGuard(
         DiagnosticGroups.CHECK_TYPES, CheckLevel.ERROR));
@@ -1176,6 +1182,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testRemoveClosureAsserts2() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setNewTypeInference(true);
     options.setRunOTIafterNTI(false);
@@ -1471,6 +1478,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testDisambiguatePropertiesWithNtiNoCrash2() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setNewTypeInference(true);
     options.setRunOTIafterNTI(false);
@@ -1498,6 +1506,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   // disambiguation.
   public void testNtiTypeVariableErrorsDontBlockDisambiguation() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setNewTypeInference(true);
     options.setRunOTIafterNTI(false);
@@ -1546,6 +1555,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testNtiTypeVariableErrorsDontBlockDisambiguation2() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setNewTypeInference(true);
     options.setRunOTIafterNTI(false);
@@ -1600,6 +1610,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testTurnOffConstChecksOfCheckAccessControlsWithNtiOn() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setNewTypeInference(true);
     options.setRunOTIafterNTI(false);
@@ -2301,7 +2312,6 @@ public final class IntegrationTest extends IntegrationTestCase {
     // looks for that exact suffix, and IntegrationTestCase adds an input
     // id number between prefix and suffix.
     inputFileNameSuffix = "vmbootstrap/Arrays.impl.java.js";
-    CompilerOptions options = new CompilerOptions();
     String code = LINE_JOINER.join(
         "/** @constructor */",
         "var Arrays = function() {};",
@@ -2312,6 +2322,8 @@ public final class IntegrationTest extends IntegrationTestCase {
         "function Bar() { this.myprop = 2; }",
         "var x = /** @type {!Foo} */ (Arrays.$create()).myprop;");
 
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
     options.setDisambiguateProperties(true);
 
@@ -2345,6 +2357,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "})()");
 
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
     options.setSmartNameRemoval(true);
     options.setFoldConstants(true);
@@ -2394,6 +2407,7 @@ public final class IntegrationTest extends IntegrationTestCase {
         "})()");
 
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setCheckTypes(true);
     options.setSmartNameRemoval(true);
     options.setFoldConstants(true);
@@ -3138,8 +3152,8 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testCheckStrictMode() {
     CompilerOptions options = createCompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS
-        .setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     WarningLevel.VERBOSE.setOptionsForWarningLevel(options);
 
     externs = ImmutableList.of(
@@ -3665,6 +3679,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testCheckProvidesWarning() {
     CompilerOptions options = createCompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setWarningLevel(DiagnosticGroups.MISSING_PROVIDE, CheckLevel.WARNING);
     options.setWarningLevel(DiagnosticGroups.ES5_STRICT, CheckLevel.OFF);
     test(options,
@@ -3915,6 +3930,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testGoogModuleOuterLegacyInner() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCodingConvention(new ClosureCodingConvention());
 
@@ -3960,6 +3976,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testLegacyGoogModuleExport() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setClosurePass(true);
     options.setCodingConvention(new ClosureCodingConvention());
     options.setGenerateExports(true);
@@ -4465,6 +4482,7 @@ public final class IntegrationTest extends IntegrationTestCase {
 
   public void testGatherExternPropsWithNTI() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setNewTypeInference(true);
     options.setGenerateExports(true);
     options.setExportLocalPropertyDefinitions(true);
@@ -4782,6 +4800,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   public void testInlineRestParamNonTranspiling() {
     CompilerOptions options = createCompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     test(
         options,
@@ -4814,6 +4833,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
 
     test(
         options,
@@ -4851,6 +4871,7 @@ public final class IntegrationTest extends IntegrationTestCase {
     CompilerOptions options = createCompilerOptions();
     CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2017);
     externs = DEFAULT_EXTERNS;
 
     test(
@@ -4867,6 +4888,7 @@ public final class IntegrationTest extends IntegrationTestCase {
   @Override
   protected CompilerOptions createCompilerOptions() {
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
     options.setDevMode(DevMode.EVERY_PASS);
     options.setCodingConvention(new GoogleCodingConvention());
     options.setRenamePrefixNamespaceAssumeCrossModuleNames(true);
