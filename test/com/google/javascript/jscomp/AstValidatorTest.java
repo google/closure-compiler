@@ -59,6 +59,35 @@ public final class AstValidatorTest extends CompilerTestCase {
     disableLineNumberCheck();
   }
 
+  public void testClass() {
+    valid(lines(
+        "class C {",
+        "  get m1() {return 1}",
+        "  set m1(a) {}",
+        "  m2(a) {}",
+        "  ['m2']() {}",
+        "  [m2]() {}",
+        "}"));
+
+    Node c = new Node(Token.CLASS, IR.name("C"), IR.empty());
+    Node members = new Node(Token.CLASS_MEMBERS);
+    c.addChildToBack(members);
+    expectValid(c, Check.STATEMENT);
+    Node method1 = new Node(
+        Token.MEMBER_FUNCTION_DEF, IR.function(IR.name(""), IR.paramList(), IR.block()));
+    members.addChildToBack(method1);
+    expectInvalid(c, Check.STATEMENT);
+
+    members.detachChildren();
+
+    // Invalid empty string
+    Node method2 = Node.newString(Token.MEMBER_FUNCTION_DEF, "");
+    method2.addChildToBack(IR.function(IR.name(""), IR.paramList(), IR.block()));
+    members.addChildToBack(method2);
+
+    expectInvalid(c, Check.STATEMENT);
+  }
+
   public void testForIn() {
     valid("for(var a in b);");
     valid("for(a in b);");
