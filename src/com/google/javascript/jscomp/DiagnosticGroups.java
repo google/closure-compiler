@@ -20,6 +20,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.lint.CheckArrayWithGoogObject;
 import com.google.javascript.jscomp.lint.CheckDuplicateCase;
 import com.google.javascript.jscomp.lint.CheckEmptyStatements;
@@ -108,7 +109,6 @@ public class DiagnosticGroups {
           + "checkRegExp, "
           + "checkTypes, "
           + "checkVars, "
-          + "commonJsModuleLoad, "
           + "conformanceViolations, "
           + "const, "
           + "constantProperty, "
@@ -131,6 +131,7 @@ public class DiagnosticGroups {
           + "missingProvide, "
           + "missingRequire, "
           + "missingReturn, "
+          + "moduleLoad, "
           + "msgDescriptions, "
           + "newCheckTypes, "
           + "nonStandardJsDocs, "
@@ -149,6 +150,13 @@ public class DiagnosticGroups {
           + "underscore, "
           + "visibility";
 
+  public static final DiagnosticGroup MODULE_LOAD =
+      DiagnosticGroups.registerGroup("moduleLoad",
+          ModuleLoader.LOAD_WARNING,
+          ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT,
+          ProcessCommonJSModules.UNKNOWN_REQUIRE_ENSURE);
+
+  // TODO(tbreisacher): Delete this after the next release.
   public static final DiagnosticGroup COMMON_JS_MODULE_LOAD =
       DiagnosticGroups.registerGroup("commonJsModuleLoad",
           ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT,
