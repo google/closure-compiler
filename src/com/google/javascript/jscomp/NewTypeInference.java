@@ -601,7 +601,11 @@ final class NewTypeInference implements CompilerPass {
 
   private void registerImplicitUses(Node src, JSType from, JSType to) {
     TypeMismatch.recordImplicitInterfaceUses(this.implicitInterfaceUses, src, from, to);
-    TypeMismatch.recordImplicitUseOfNativeObject(this.mismatches, src, from, to);
+    // Match the OTI behavior that trusts casts from Object, to avoid disambiguation regressions.
+    // TODO(dimvar): useful for the bodies of assertion functions, but unsafe. Make stricter?
+    if (!src.isCast()) {
+      TypeMismatch.recordImplicitUseOfNativeObject(this.mismatches, src, from, to);
+    }
   }
 
   private TypeEnv getInEnv(DiGraphNode<Node, ControlFlowGraph.Branch> dn) {

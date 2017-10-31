@@ -2424,6 +2424,36 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSame(js);
   }
 
+  public void testDontBackOffForCastsFromObject() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.a = 1;",
+        "}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.a = 1;",
+        "}",
+        "function f(/** !Object */ x) {",
+        "  return /** @type {!Foo} */ (x);",
+        "}");
+
+    String output = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.Foo$a = 1;",
+        "}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.Bar$a = 1;",
+        "}",
+        "function f(/** !Object */ x) {",
+        "  return /** @type {!Foo} */ (x);",
+        "}");
+
+    test(js, output);
+  }
+
   private void testSets(String js, String expected, final String fieldTypes) {
     test(srcs(js), expected(expected), new Postcondition() {
       @Override public void verify(Compiler unused) {
