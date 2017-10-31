@@ -970,10 +970,6 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(inlineProperties);
     }
 
-    boolean runOptimizeCalls = options.optimizeCalls
-        || options.optimizeParameters
-        || options.optimizeReturns;
-
     if (options.removeUnusedVars || options.removeUnusedLocalVars) {
       if (options.deadAssignmentElimination) {
         passes.add(deadAssignmentsElimination);
@@ -986,19 +982,14 @@ public final class DefaultPassConfig extends PassConfig {
           passes.add(deadPropertyAssignmentElimination);
         }
       }
-      if (!runOptimizeCalls) {
-        passes.add(getRemoveUnusedVars(PassNames.REMOVE_UNUSED_VARS, false));
-      }
     }
 
-    if (runOptimizeCalls) {
+    if (options.optimizeCalls || options.optimizeParameters || options.optimizeReturns) {
       passes.add(optimizeCalls);
-      // RemoveUnusedVars cleans up after optimizeCalls, so we run it here.
-      // It has a special name because otherwise PhaseOptimizer would change its
-      // position in the optimization loop.
-      if (options.optimizeCalls) {
-        passes.add(getRemoveUnusedVars("removeUnusedVars_afterOptimizeCalls", true));
-      }
+    }
+
+    if (options.removeUnusedVars || options.removeUnusedLocalVars) {
+      passes.add(getRemoveUnusedVars());
     }
 
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
@@ -2749,18 +2740,17 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  private PassFactory getRemoveUnusedVars(String name, final boolean modifyCallSites) {
-    return getRemoveUnusedVars(name, modifyCallSites, false /* isOneTimePass */);
+  private PassFactory getRemoveUnusedVars() {
+    return getRemoveUnusedVars(false /* isOneTimePass */);
   }
 
   private PassFactory lastRemoveUnusedVars() {
-    return getRemoveUnusedVars(PassNames.REMOVE_UNUSED_VARS, false, true /* isOneTimePass */);
+    return getRemoveUnusedVars(true /* isOneTimePass */);
   }
 
-  private PassFactory getRemoveUnusedVars(
-      String name, final boolean modifyCallSites, boolean isOneTimePass) {
+  private PassFactory getRemoveUnusedVars(boolean isOneTimePass) {
     /** Removes variables that are never used. */
-    return new PassFactory(name, isOneTimePass) {
+    return new PassFactory(PassNames.REMOVE_UNUSED_VARS, isOneTimePass) {
       @Override
       protected CompilerPass create(AbstractCompiler compiler) {
         boolean removeOnlyLocals = options.removeUnusedLocalVars && !options.removeUnusedVars;
@@ -2769,8 +2759,7 @@ public final class DefaultPassConfig extends PassConfig {
         return new RemoveUnusedVars(
             compiler,
             !removeOnlyLocals,
-            preserveAnonymousFunctionNames,
-            modifyCallSites);
+            preserveAnonymousFunctionNames);
       }
 
       @Override
