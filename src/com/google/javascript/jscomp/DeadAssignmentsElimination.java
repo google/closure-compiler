@@ -210,6 +210,11 @@ class DeadAssignmentsElimination extends AbstractScopedCallback implements Compi
 
     if (NodeUtil.isAssignmentOp(n) || n.isInc() || n.isDec() || isDeclarationNode) {
 
+      if (parent.isConst()) {
+        // Removing the RHS of a const produces as invalid AST.
+        return;
+      }
+
       Node lhs = isDeclarationNode ? n : n.getFirstChild();
       Node rhs = NodeUtil.getRValueOfLValue(lhs);
 

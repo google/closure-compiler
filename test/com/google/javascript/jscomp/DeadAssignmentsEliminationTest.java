@@ -706,8 +706,14 @@ public final class DeadAssignmentsEliminationTest extends CompilerTestCase {
         "let a; let b; foo(); b = 2; return b;");
   }
 
-  public void testConst() {
+  public void testConst1() {
     inFunction("const a = 1;");
+  }
+
+  public void testConst2() {
+    test(
+        "async function f(d) { if (d) { d = 5; } const a = 1; const b = 2; const [x, y] = b; }",
+        "async function f(d) { if (d) {     5; } const a = 1; const b = 2; const [x, y] = b; }");
   }
 
   public void testBlockScoping() {
