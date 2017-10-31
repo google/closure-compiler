@@ -1807,6 +1807,31 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "A.useFoo();"));
   }
 
+  public void testEs6ClassStaticInheritance() {
+    test("class A {} A.foo = 5; use(A.foo); class B extends A {}",
+        "class A {} var A$foo = 5; use(A$foo); class B extends A {}");
+
+    // We collapse unsafely when the subclass accesses a static property on its superclass.
+    // TODO(lharker): Make this collapsing safe by rewriting subclass accesses.
+    test(
+        "class A {}     A.foo = 5; use(A.foo); class B extends A {} use(B.foo);",
+        "class A {} var A$foo = 5; use(A$foo); class B extends A {} use(B.foo);");
+
+    test(
+        "class A {}     A.foo = 5; class B extends A {} use(B.foo);     B.foo = 6; use(B.foo);",
+        "class A {} var A$foo = 5; class B extends A {} use(B$foo); var B$foo = 6; use(B$foo);");
+
+    testSame(LINE_JOINER.join(
+        "class A {}",
+        "/** @nocollapse */",
+        "A.foo = 5;",
+    "class B extends A {}",
+        "use(B.foo);",
+        "/** @nocollapse */",
+        "B.foo = 6;",
+        "use(B.foo);"));
+  }
+
   public void testSuperExtern() {
     testSame(
         LINE_JOINER.join(
@@ -1921,6 +1946,24 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "var foo$bar = 1;",
             "var foo$myFunc = function() {",
             "    return 5;",
+            "};",
+            "foo$myFunc();"));
+  }
+
+  public void testMethodPropertyShorthand() {
+    test(
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  bar: 1, ",
+            "   myFunc() {",
+            "    return 2",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        LINE_JOINER.join(
+            "var foo$bar = 1;",
+            "var foo$myFunc = function() {",
+            "    return 2;",
             "};",
             "foo$myFunc();"));
   }

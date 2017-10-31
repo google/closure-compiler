@@ -893,4 +893,32 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         "var a = {b: 5}; var b = a; function f(x=b) { alert(x.b); }",
         "var a = {b: 5}; var b = null; function f(x=a) { alert(x.b); }");
   }
+
+  public void testComputedPropertyNames() {
+    // We don't support computed properties.
+    testSame(
+        LINE_JOINER.join(
+            "var foo = {['ba' + 'r']: {}};",
+            "var foobar = foo.bar;",
+            "foobar.baz = 5;",
+            "use(foo.bar.baz);"));
+  }
+
+  public void testAliasInTemplateString() {
+    test(
+        "const a = {b: 5}; const c = a; alert(`${c.b}`);",
+        "const a = {b: 5}; const c = null; alert(`${a.b}`);");
+  }
+
+  public void testClassStaticInheritance_method() {
+    test(
+        "class A { static s() {} } class B extends A {} const C = B; C.s();",
+        "class A { static s() {} } class B extends A {} const C = null; B.s();");
+  }
+
+  public void testClassStaticInheritance_property() {
+    test(
+        "class A {} A.staticProp = 5; class B extends A {} const C = B; C.staticProp = 6;",
+        "class A {} A.staticProp = 5; class B extends A {} const C = null; B.staticProp = 6;");
+  }
 }

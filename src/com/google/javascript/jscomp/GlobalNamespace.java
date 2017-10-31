@@ -380,8 +380,11 @@ class GlobalNamespace
               type = Name.Type.OTHER;
               break;
             case CLASS:
-              isSet = true;
-              type = Name.Type.CLASS;
+              // The first child is the class name, and the second child is the superclass name.
+              if (parent.getFirstChild() == n) {
+                isSet = true;
+                type = Name.Type.CLASS;
+              }
               break;
             case ARRAY_PATTERN:
               // Specific case to handle inlining with array destructuring
@@ -733,6 +736,10 @@ class GlobalNamespace
           break;
         case DELPROP:
           type = Ref.Type.DELETE_PROP;
+          break;
+        case CLASS:
+          // This node is the superclass in an extends clause.
+          type = Ref.Type.DIRECT_GET;
           break;
         default:
           type = Ref.Type.ALIASING_GET;
