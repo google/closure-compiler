@@ -1674,6 +1674,30 @@ function HTMLMediaElement() {}
  * @type {number}
  * @const
  */
+HTMLMediaElement.NETWORK_EMPTY;  // = 0
+
+/**
+ * @type {number}
+ * @const
+ */
+HTMLMediaElement.NETWORK_IDLE;  // = 1
+
+/**
+ * @type {number}
+ * @const
+ */
+HTMLMediaElement.NETWORK_LOADING;  // = 2
+
+/**
+ * @type {number}
+ * @const
+ */
+HTMLMediaElement.NETWORK_NO_SOURCE;  // = 3
+
+/**
+ * @type {number}
+ * @const
+ */
 HTMLMediaElement.HAVE_NOTHING;  // = 0
 
 /**
