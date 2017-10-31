@@ -2498,6 +2498,11 @@ public final class DefaultPassConfig extends PassConfig {
       return new PureFunctionIdentifier.Driver(
           compiler, options.debugFunctionSideEffectsPath);
     }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8_MODULES;
+    }
   };
 
   /** Look for function calls that have no side effects, and annotate them that way. */
