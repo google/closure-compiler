@@ -722,7 +722,7 @@ chrome.audioModem.stopReceive = function(band, callback) {};
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!Array<!chrome.audioModem.ReceivedToken>)>}
  */
 chrome.audioModem.ReceivedEvent = function() {};
@@ -882,7 +882,7 @@ chrome.bluetooth.stopDiscovery = function(opt_callback) {};
 
 /**
  * Event whose listeners take an AdapaterState parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.bluetooth.AdapterState)>}
  */
 chrome.bluetooth.AdapterStateEvent = function() {};
@@ -897,7 +897,7 @@ chrome.bluetooth.onAdapterStateChanged;
 
 /**
  * Event whose listeners take an Device parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.bluetooth.Device)>}
  */
 chrome.bluetooth.DeviceEvent = function() {};
@@ -1122,7 +1122,7 @@ chrome.bluetoothSocket.AcceptEventData.prototype.clientSocketId;
 
 /**
  * Event whose listeners take a AcceptEventData parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.bluetoothSocket.AcceptEventData)>}
  */
 chrome.bluetoothSocket.AcceptEvent = function() {};
@@ -1155,7 +1155,7 @@ chrome.bluetoothSocket.AcceptErrorEventData.prototype.error;
 
 /**
  * Event whose listeners take a AcceptErrorEventData parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.bluetoothSocket.AcceptErrorEventData)>}
  */
 chrome.bluetoothSocket.AcceptErrorEvent = function() {};
@@ -1184,7 +1184,7 @@ chrome.bluetoothSocket.ReceiveEventData.prototype.data;
 
 /**
  * Event whose listeners take a ReceiveEventData parameter.
- * @interface
+ * @record
  * @extends
  *     {ChromeBaseEvent<function(!chrome.bluetoothSocket.ReceiveEventData)>}
  */
@@ -1218,7 +1218,7 @@ chrome.bluetoothSocket.ReceiveErrorEventData.prototype.error;
 
 /**
  * Event whose listeners take a ReceiveErrorEventData parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<
  *     function(!chrome.bluetoothSocket.ReceiveErrorEventData)>}
  */
@@ -1601,7 +1601,7 @@ chrome.bluetoothLowEnergy.sendRequestResponse = function(response) {};
 
 /**
  * Event whose listeners take a Service parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.bluetoothLowEnergy.Service)>}
  */
 chrome.bluetoothLowEnergy.ServiceEvent = function() {};
@@ -1630,7 +1630,7 @@ chrome.bluetoothLowEnergy.onServiceRemoved;
 
 /**
  * Event whose listeners take a Characteristic parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.bluetoothLowEnergy.Characteristic)>}
  */
 chrome.bluetoothLowEnergy.CharacteristicEvent = function() {};
@@ -1645,7 +1645,7 @@ chrome.bluetoothLowEnergy.onCharacteristicValueChanged;
 
 /**
  * Event whose listeners take a Descriptor parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.bluetoothLowEnergy.Descriptor)>}
  */
 chrome.bluetoothLowEnergy.DescriptorEvent = function() {};
@@ -1660,7 +1660,7 @@ chrome.bluetoothLowEnergy.onDescriptorValueChanged;
 
 /**
  * Event whose listeners take a Request parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.bluetoothLowEnergy.Request, string)>}
  */
 chrome.bluetoothLowEnergy.RequestEvent = function() {};
@@ -1822,7 +1822,7 @@ chrome.copresence.execute = function(operations, callback) {};
 /**
  * Event whose listeners take a subscription id and received messages as a
  * parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(string, !Array<!chrome.copresence.Message>)>}
  * @see https://developer.chrome.com/apps/copresence#event-onMessagesReceived
  */
@@ -2345,7 +2345,7 @@ chrome.runtime.onRestartRequired;
 
 /**
  * Event whose listeners take a Port parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!Port)>}
  */
 chrome.runtime.PortEvent = function() {};
@@ -2354,7 +2354,7 @@ chrome.runtime.PortEvent = function() {};
 /**
  * Event whose listeners take a MessageSender and additional parameters.
  * @see http://developer.chrome.com/dev/apps/runtime.html#event-onMessage
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(*, !MessageSender, function(*): void): (boolean|undefined)>}
  */
 chrome.runtime.MessageSenderEvent = function() {};
@@ -3203,7 +3203,7 @@ chrome.browserAction.disable = function(opt_tabId) {};
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!Tab)>}
  */
 chrome.browserAction.BrowserActionTabEvent = function() {};
@@ -3404,14 +3404,14 @@ chrome.omnibox = {};
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(string, function(!Array<!SuggestResult>))>}
  */
 chrome.omnibox.InputChangedEvent = function() {};
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(string, string)>}
  */
 chrome.omnibox.InputEnteredEvent = function() {};
@@ -3519,7 +3519,7 @@ chrome.contextMenus.removeAll = function(opt_callback) {};
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!Object, !Tab=)>}
  * @see https://developer.chrome.com/extensions/contextMenus#event-onClicked
  */
@@ -3966,7 +3966,7 @@ chrome.fileBrowserHandler.selectFile = function(selectionParams, callback) {};
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(string, !FileHandlerExecuteEventDetails)>}
  * @see https://developer.chrome.com/extensions/fileBrowserHandler#event-onExecute
  */
@@ -4067,14 +4067,14 @@ chrome.gcm.onSendError;
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!Object)>}
  */
 chrome.gcm.OnMessageEvent = function() {};
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!Object)>}
  */
 chrome.gcm.OnSendErrorEvent = function() {};
@@ -4215,7 +4215,7 @@ chrome.identity.getProfileUserInfo = function(callback) {};
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.identity.AccountInfo, boolean)>}
  */
 chrome.identity.OnSignInChangedEvent = function() {};
@@ -4251,7 +4251,7 @@ chrome.input.ime = {};
  * isn't possible to just extend ChromeBaseEvent here.
  * TODO(bradfordcsmith): These events won't automatically inherit new methods
  *     added to `ChromeBaseEvent`.
- * @interface
+ * @record
  */
 function ChromeInputImeOnKeyEventEvent() {}
 
@@ -4602,7 +4602,7 @@ chrome.mediaGalleries.removeAllGalleryWatch = function() {};
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<!chrome.mediaGalleries.GalleryChangeCallback>}
  */
 chrome.mediaGalleries.GalleryChangeEvent = function() {};
@@ -4636,7 +4636,7 @@ chrome.mediaGalleries.OnScanProgressDetails;
 /**
  * Event whose listeners take a chrome.mediaGalleries.OnScanProgressDetails
  * parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.mediaGalleries.OnScanProgressDetails)>}
  */
 chrome.mediaGalleries.ScanProgressEvent = function() {};
@@ -5338,7 +5338,7 @@ chrome.sockets.tcp.ReceiveEventData.prototype.data;
 
 /**
  * Event whose listeners take a ReceiveEventData parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.sockets.tcp.ReceiveEventData)>}
  */
 chrome.sockets.tcp.ReceiveEvent = function() {};
@@ -5367,7 +5367,7 @@ chrome.sockets.tcp.ReceiveErrorEventData.prototype.resultCode;
 
 /**
  * Event whose listeners take a ReceiveErrorEventData parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.sockets.tcp.ReceiveErrorEventData)>}
  */
 chrome.sockets.tcp.ReceiveErrorEvent = function() {};
@@ -6036,7 +6036,7 @@ chrome.webNavigation.onHistoryStateUpdated;
  * cannot just extend `ChromeBaseEvent`.
  * TODO(bradfordcsmith): These events won't automatically inherit new methods
  *     added to `ChromeBaseEvent`.
- * @interface
+ * @record
  * @template LISTENER
  */
 function WebRequestBaseEvent() {}
@@ -6078,7 +6078,7 @@ WebRequestBaseEvent.prototype.hasListeners = function(listener) {};
 /**
  * Most event listeners for WebRequest take extra arguments.
  * @see https://developer.chrome.com/extensions/webRequest
- * @interface
+ * @record
  * @extends {WebRequestBaseEvent<function(!Object)>}
  */
 function WebRequestEvent() {}
@@ -6087,7 +6087,7 @@ function WebRequestEvent() {}
 /**
  * Some event listeners can be optionally synchronous.
  * @see https://developer.chrome.com/extensions/webRequest
- * @interface
+ * @record
  * @extends {WebRequestBaseEvent<function(!Object): (undefined|!BlockingResponse)>}
  */
 function WebRequestOptionallySynchronousEvent() {}
@@ -6097,7 +6097,7 @@ function WebRequestOptionallySynchronousEvent() {}
  * The onAuthRequired event listener can be optionally synchronous, and can also
  * optionally take a callback.
  * @see https://developer.chrome.com/extensions/webRequest
- * @interface
+ * @record
  * @extends {WebRequestBaseEvent<
  *     function(
  *         !Object,
@@ -6114,7 +6114,7 @@ function WebRequestOnAuthRequiredEvent() {}
  * TODO(bradfordcsmith): These events won't automatically inherit new methods
  *     added to `ChromeBaseEvent`.
  * @see https://developer.chrome.com/extensions/webRequest
- * @interface
+ * @record
  */
 function WebRequestOnErrorOccurredEvent() {}
 
@@ -6368,7 +6368,7 @@ ChromeWindow.prototype.alwaysOnTop;
 
 /**
  * Event whose listeners take an ExtensionInfo parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!ExtensionInfo)>}
  */
 function ChromeExtensionInfoEvent() {}
@@ -6403,7 +6403,7 @@ chrome.pushMessaging.getChannelId =
 
 /**
  * Event whose listeners take a chrome.pushMessaging.Message parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.pushMessaging.Message)>}
  */
 chrome.pushMessaging.PushMessageEvent = function() {};
@@ -6881,7 +6881,7 @@ ProxyConfig.prototype.mode;
  * and the namespace ("sync" or "local") of the storage area the changes
  * are for.
  * @see https://developer.chrome.com/extensions/storage.html
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!Object<string, !StorageChange>, string)>}
  */
 function StorageChangeEvent() {}
@@ -7443,7 +7443,7 @@ chrome.alarms.onAlarm;
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.alarms.Alarm)>}
  */
 chrome.alarms.AlarmEvent = function() {};
@@ -7765,7 +7765,7 @@ chrome.hid.sendFeatureReport =
 
 /**
  * Event whose listeners take an HidDeviceInfo parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.hid.HidDeviceInfo)>}
  */
 chrome.hid.DeviceAddedEvent = function() {};
@@ -7951,7 +7951,7 @@ chrome.notifications.onShowSettings;
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<!chrome.notifications.ClosedCallback>}
  * @see http://developer.chrome.com/extensions/notifications.html#event-onClosed
  */
@@ -7959,7 +7959,7 @@ chrome.notifications.ClosedEvent = function() {};
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<!chrome.notifications.ButtonCallback>}
  * @see http://developer.chrome.com/extensions/notifications.html#event-onButtonClicked
  */
@@ -7997,7 +7997,7 @@ chrome.system.storage.StorageUnitInfo.capacity;
 
 /**
  * Event whose listeners take a StorageUnitInfoEvent parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.system.storage.StorageUnitInfo)>}
  */
 chrome.system.storage.StorageUnitInfoEvent = function() {};
@@ -8517,7 +8517,7 @@ chrome.usb.resetDevice = function(handle, callback) {};
 
 /**
  * Event whose listeners take an chrome.usb.Device parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.usb.Device)>}
  */
 chrome.usb.DeviceEvent = function() {};
@@ -8843,7 +8843,7 @@ chrome.mediaGalleriesPrivate.onGalleryChanged;
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<!chrome.mediaGalleriesPrivate.DeviceCallback>}
  * @deprecated Use {chrome.system.storage.DeviceEvent}.
  */
@@ -8851,7 +8851,7 @@ chrome.mediaGalleriesPrivate.DeviceEvent = function() {};
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<!chrome.mediaGalleriesPrivate.GalleryChangeCallback>}
  */
 chrome.mediaGalleriesPrivate.GalleryChangeEvent = function() {};
@@ -9343,7 +9343,7 @@ chrome.mdns.MdnsService.prototype.serviceData;
  * cannot just extend `ChromeBaseEvent`.
  * TODO(bradfordcsmith): These events won't automatically inherit new methods
  *     added to `ChromeBaseEvent`.
- * @interface
+ * @record
  */
 chrome.mdns.ServiceListEvent = function() {};
 
@@ -9571,7 +9571,7 @@ chrome.gcdPrivate.getCommandsList = function(
 
 /**
  * Event whose listeners take a chrome.gcdPrivate.Device.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.gcdPrivate.Device)>}
  */
 chrome.gcdPrivate.DeviceEvent = function() {};
@@ -9700,7 +9700,7 @@ chrome.bluetoothPrivate.setDiscoveryFilter = function(discoveryFilter, callback)
 
 /**
  * Event whose listeners take a PairingEvent parameter.
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.bluetoothPrivate.PairingEvent)>}
  */
 chrome.bluetoothPrivate.PairingEventEvent = function() {};
@@ -10205,7 +10205,7 @@ chrome.downloads.setShelfEnabled = function(enabled) {};
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<function(!chrome.downloads.DownloadItem)>}
  * @see https://developer.chrome.com/extensions/downloads#event-onCreated
  */
@@ -10244,7 +10244,7 @@ chrome.downloads.FilenameSuggestion;
 
 
 /**
- * @interface
+ * @record
  * @extends {ChromeBaseEvent<
  *     function(
  *         !chrome.downloads.DownloadItem,
