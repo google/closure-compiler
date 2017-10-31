@@ -1041,4 +1041,38 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
         "function Bar() {}",
         "Bar.prototype.a;"));
   }
+
+  public void testGenericPrototypeObject() {
+    String js = LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "function Foo() {",
+        "  this.a = 1;",
+        "}",
+        "/** @constructor @extends {Foo<number>} */",
+        "function Bar() {}",
+        "/** @constructor */",
+        "function Baz() {",
+        "  this.b = 2;",
+        "}");
+
+    String output = LINE_JOINER.join(
+        "/**",
+        " * @constructor",
+        " * @template T",
+        " */",
+        "function Foo() {",
+        "  this.a = 1;",
+        "}",
+        "/** @constructor @extends {Foo<number>} */",
+        "function Bar() {}",
+        "/** @constructor */",
+        "function Baz() {",
+        "  this.a = 2;",
+        "}");
+
+    test(js, output);
+  }
 }

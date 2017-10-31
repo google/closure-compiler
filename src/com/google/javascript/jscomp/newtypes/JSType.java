@@ -2041,19 +2041,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   @Override
   public final JSType getPrototypeObject() {
     checkState(this.isSingletonObj());
-    JSType proto = getNominalTypeIfSingletonObj().getPrototypeObject();
-    if (this.equals(proto)) {
-      // In JS's dynamic semantics, the only object without a __proto__ is
-      // Object.prototype, but it's not representable in NTI.
-      // Object.prototype is the only case where we are equal to our own prototype.
-      // In this case, we should return null.
-      Preconditions.checkState(
-          isBuiltinObjectPrototype(),
-          "Failed to reach Object.prototype in prototype chain, unexpected self-link found at %s",
-          this);
-      return null;
-    }
-    return proto;
+    ObjectType proto = getObjTypeIfSingletonObj().getPrototypeObject();
+    return proto != null ? fromObjectType(proto) : null;
   }
 
   @Override
@@ -2099,11 +2088,6 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   public final boolean isAmbiguousObject() {
     ObjectType obj = getObjTypeIfSingletonObj();
     return obj != null && obj.isAmbiguousObject();
-  }
-
-  final boolean isBuiltinObjectPrototype() {
-    ObjectType obj = getObjTypeIfSingletonObj();
-    return obj != null && obj.getNominalType().isBuiltinObject() && obj.isPrototypeObject();
   }
 
   @Override

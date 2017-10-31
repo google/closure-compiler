@@ -197,6 +197,40 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSets(js, js, "{a=[[Foo.prototype]]}");
   }
 
+  public void testPrototypeAndInstance5() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.a = 1;",
+        "}",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {",
+        "  this.a = 2;",
+        "}",
+        "/** @constructor */",
+        "function Baz() {",
+        "  this.a = 3;",
+        "}",
+        "var x = (new Bar).a;");
+
+    String output = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.Foo$a = 1;",
+        "}",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {",
+        "  this.Foo$a = 2;",
+        "}",
+        "/** @constructor */",
+        "function Baz() {",
+        "  this.Baz$a = 3;",
+        "}",
+        "var x = (new Bar).Foo$a;");
+
+    test(js, output);
+  }
+
   public void testTwoTypes1() {
     String js = ""
         + "/** @constructor */ function Foo() {}\n"

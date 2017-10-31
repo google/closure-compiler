@@ -168,7 +168,7 @@ class AmbiguateProperties implements CompilerPass {
   private int getIntForType(TypeI type) {
     // Templatized types don't exist at runtime, so collapse to raw type
     if (type != null && type.isGenericObjectType()) {
-      type = type.toMaybeObjectType().getPrototypeObject().getOwnerFunction().getInstanceType();
+      type = type.toMaybeObjectType().getRawType();
     }
     if (intForType.containsKey(type)) {
       return intForType.get(type).intValue();

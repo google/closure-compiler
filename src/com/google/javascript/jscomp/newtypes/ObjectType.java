@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import javax.annotation.Nullable;
 
 /**
  * {@link JSType}s include a possibly-empty set of ObjectType instances,
@@ -207,6 +208,39 @@ final class ObjectType implements TypeWithProperties {
 
   boolean isNamespace() {
     return this.ns != null;
+  }
+
+  private boolean isBuiltinObjectPrototype() {
+    return this.nominalType.isBuiltinObject() && isPrototypeObject();
+  }
+
+  /**
+   * Returns the prototype of this object type. For Object.prototype it returns null.
+   * When Bar extends Foo, the prototype of Bar.prototype is the canonical Foo instance. (This is
+   * accomplished in OTI by using the special type PrototypeObjectType.)
+   * As a result, this method may return a type X for which isPrototypeObject is false, i.e.,
+   * a type that has no owner function.
+   */
+  @Nullable
+  ObjectType getPrototypeObject() {
+    ObjectType proto;
+    if (isPrototypeObject() && !isBuiltinObjectPrototype()) {
+      proto = this.nominalType.getInstanceAsObjectType();
+    } else {
+      proto = this.nominalType.getPrototypeObject().getObjTypeIfSingletonObj();
+    }
+    if (this.equals(proto)) {
+      // In JS's dynamic semantics, the only object without a __proto__ is
+      // Object.prototype, but it's not representable in NTI.
+      // Object.prototype is the only case where we are equal to our own prototype.
+      // In this case, we should return null.
+      Preconditions.checkState(
+          isBuiltinObjectPrototype(),
+          "Failed to reach Object.prototype in prototype chain, unexpected self-link found at %s",
+          this);
+      return null;
+    }
+    return proto;
   }
 
   boolean isPrototypeObject() {
