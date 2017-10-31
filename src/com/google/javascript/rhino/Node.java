@@ -317,6 +317,11 @@ public class Node implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    // Only for cloneNode
+    private StringNode(Token token) {
+      super(token);
+    }
+
     StringNode(Token token, String str) {
       super(token);
       setString(str);
@@ -379,7 +384,9 @@ public class Node implements Serializable {
 
     @Override
     public StringNode cloneNode(boolean cloneTypeExprs) {
-      return copyNodeFields(new StringNode(token, str), cloneTypeExprs);
+      StringNode clone = new StringNode(token);
+      clone.str = str;
+      return copyNodeFields(clone, cloneTypeExprs);
     }
 
     @GwtIncompatible("ObjectInputStream")
