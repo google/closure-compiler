@@ -153,9 +153,20 @@ public final class AstValidator implements CompilerPass {
       case IF:
         validateIf(n);
         return;
+      case CONST:
+        for (Node child : n.children()) {
+          if (child.isDestructuringLhs()) {
+            // Must have two children: First child of the DESTRUCTURING_LHS node is the pattern on
+            // the LHS, second is the RHS.
+            validateChildCount(child, 2);
+          } else {
+            // Must have a child, which is the RHS (unlike VAR and LET which may have no RHS).
+            validateChildCount(child, 1);
+          }
+        }
+        // fallthrough
       case VAR:
       case LET:
-      case CONST:
         validateNameDeclarationHelper(n.getToken(), n);
         return;
       case EXPR_RESULT:
