@@ -312,6 +312,23 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
             "var b = f();"));
   }
 
+  public void testEs6ClassMovement1() {
+    test(
+        createModuleStar(
+            // m1
+            "class f { bar() {} }",
+            // m2
+            "var a = new f();"),
+        new String[] {"", "class f { bar() {} } var a = new f();"});
+    test(
+        createModuleStar(
+            // m1
+            "var f = class { bar() {} };",
+            // m2
+            "var a = new f();"),
+        new String[] {"", "var f = class { bar() {} }; var a = new f();"});
+  }
+
   public void testClassMovement1() {
     test(
         createModuleStar(
@@ -320,6 +337,20 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
             // m2
             "var a = new f();"),
         new String[] {"", "function f(){} f.prototype.bar=function (){}; var a = new f();"});
+  }
+
+  public void testEs6ClassMovement_instanceof() {
+    parentModuleCanSeeSymbolsDeclaredInChildren = true;
+    test(
+        createModuleStar(
+            // m1
+            "class f { bar(){} } 1 instanceof f;",
+            // m2
+            "var a = new f();"),
+        new String[] {
+            "'undefined' != typeof f && 1 instanceof f;",
+            "class f { bar(){} } var a = new f();"
+        });
   }
 
   public void testClassMovement_instanceof() {
@@ -336,6 +367,16 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
         });
   }
 
+  public void testEs6ClassMovement_instanceofTurnedOff() {
+    parentModuleCanSeeSymbolsDeclaredInChildren = false;
+    testSame(
+        createModuleStar(
+            // m1
+            "class f { bar(){} } 1 instanceof f;",
+            // m2
+            "var a = new f();"));
+  }
+
   public void testClassMovement_instanceofTurnedOff() {
     parentModuleCanSeeSymbolsDeclaredInChildren = false;
     testSame(
@@ -344,6 +385,20 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
             "function f(){} f.prototype.bar=function (){}; 1 instanceof f;",
             // m2
             "var a = new f();"));
+  }
+
+  public void testEs6ClassMovement_instanceof2() {
+    parentModuleCanSeeSymbolsDeclaredInChildren = true;
+    test(
+        createModuleStar(
+            // m1
+            "class f { bar(){} } (true && 1 instanceof f);",
+            // m2
+            "var a = new f();"),
+        new String[] {
+          "(true && ('undefined' != typeof f && 1 instanceof f));",
+          "class f { bar(){} } var a = new f();"
+        });
   }
 
   public void testClassMovement_instanceof2() {
@@ -406,6 +461,35 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
             "1 instanceof f;",
             // m3
             "var a = new f();"));
+  }
+
+  public void testEs6ClassMovement2() {
+    test(
+        createModuleChain(
+            // m1
+            "class f {} f.prototype.bar=3; f.prototype.baz=5;",
+            // m2
+            "f.prototype.baq = 7;",
+            // m3
+            "f.prototype.baz = 9;",
+            // m4
+            "var a = new f();"),
+        new String[] {
+            // m1
+            "",
+            // m2
+            "",
+            // m3
+            "",
+            // m4
+            LINE_JOINER.join(
+                "class f {}",
+                "f.prototype.bar = 3;",
+                "f.prototype.baz = 5;",
+                "f.prototype.baq = 7;",
+                "f.prototype.baz = 9;",
+                "var a = new f();")
+        });
   }
 
   public void testClassMovement2() {
@@ -522,11 +606,35 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
         });
   }
 
+  public void testEs6ClassMovement6() {
+    test(
+        createModuleChain(
+            // m1
+            "class Foo{} class Bar extends Foo {} new Foo();",
+            // m2
+            "new Bar();"),
+        new String[] {
+          // m1
+          "class Foo {} new Foo();",
+          // m2
+          "class Bar extends Foo {} new Bar();"
+        });
+  }
+
   public void testClassMovement7() {
     testSame(
         createModuleChain(
             // m1
             "function Foo(){} function Bar(){} goog.inherits(Bar, Foo); new Bar();",
+            // m2
+            "new Foo();"));
+  }
+
+  public void testEs6ClassMovement7() {
+    testSame(
+        createModuleChain(
+            // m1
+            "class Foo {} class Bar extends Foo {} new Bar();",
             // m2
             "new Foo();"));
   }
