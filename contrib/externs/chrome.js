@@ -70,7 +70,7 @@ Port.prototype.disconnect = function() {};
  * LISTENER must be a function type that returns void.
  *
  * @see https://developer.chrome.com/extensions/events.html
- * @record
+ * @interface
  * @template LISTENER
  */
 function ChromeBaseEvent() {}
@@ -111,7 +111,7 @@ ChromeBaseEvent.prototype.hasListeners = function() {};
  *     information about the parameters that will actually be supplied to the
  *     listener and should be updated to use a more specific event type.
  * @see https://developer.chrome.com/extensions/events.html
- * @record
+ * @interface
  * @extends {ChromeBaseEvent<!Function>}
  */
 function ChromeEvent() {}
@@ -121,7 +121,7 @@ function ChromeEvent() {}
  * Event whose listeners take no parameters.
  *
  * @see https://developer.chrome.com/extensions/events.html
- * @record
+ * @interface
  * @extends {ChromeBaseEvent<function()>}
  */
 function ChromeVoidEvent() {}
@@ -129,7 +129,7 @@ function ChromeVoidEvent() {}
 
 /**
  * Event whose listeners take a string parameter.
- * @record
+ * @interface
  * @extends {ChromeBaseEvent<function(string)>}
  */
 function ChromeStringEvent() {}
@@ -137,7 +137,7 @@ function ChromeStringEvent() {}
 
 /**
  * Event whose listeners take a boolean parameter.
- * @record
+ * @interface
  * @extends {ChromeBaseEvent<function(boolean)>}
  */
 function ChromeBooleanEvent() {}
@@ -145,7 +145,7 @@ function ChromeBooleanEvent() {}
 
 /**
  * Event whose listeners take a number parameter.
- * @record
+ * @interface
  * @extends {ChromeBaseEvent<function(number)>}
  */
 function ChromeNumberEvent() {}
@@ -153,7 +153,7 @@ function ChromeNumberEvent() {}
 
 /**
  * Event whose listeners take an Object parameter.
- * @record
+ * @interface
  * @extends {ChromeBaseEvent<function(!Object)>}
  */
 function ChromeObjectEvent() {}
@@ -161,7 +161,7 @@ function ChromeObjectEvent() {}
 
 /**
  * Event whose listeners take a string array parameter.
- * @record
+ * @interface
  * @extends {ChromeBaseEvent<function(!Array<string>)>}
  */
 function ChromeStringArrayEvent() {}
@@ -169,7 +169,7 @@ function ChromeStringArrayEvent() {}
 
 /**
  * Event whose listeners take two strings as parameters.
- * @record
+ * @interface
  * @extends {ChromeBaseEvent<function(string, string)>}
  */
 function ChromeStringStringEvent() {}
