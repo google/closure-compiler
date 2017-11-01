@@ -871,9 +871,9 @@ Window.prototype.dispatchEvent = function(evt) {};
 /** @type {?function (Event)} */ Window.prototype.ondblclick;
 /** @type {?function (Event)} */ Window.prototype.ondragdrop;
 // onerror has a special signature.
-// See
-//  https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers/onerror
-/** @type {?function (string, string, number, number, Error)} */
+// See https://developer.mozilla.org/en/DOM/window.onerror
+// and http://msdn.microsoft.com/en-us/library/cc197053(VS.85).aspx
+/** @type {?function (string, string, number)} */
 Window.prototype.onerror;
 /** @type {?function (Event)} */ Window.prototype.onfocus;
 /** @type {?function (Event)} */ Window.prototype.onhashchange;
