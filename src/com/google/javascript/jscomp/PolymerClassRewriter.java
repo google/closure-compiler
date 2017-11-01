@@ -143,7 +143,7 @@ final class PolymerClassRewriter {
     if (this.polymerVersion == 1 && !isInGlobalScope && !cls.target.isGetProp()) {
       Node scriptNode = NodeUtil.getEnclosingScript(parent);
       scriptNode.addChildrenToFront(statements);
-      compiler.reportChangeToEnclosingScope(scriptNode);
+      compiler.reportChangeToChangeScope(scriptNode);
     } else {
       Node beforeRoot = exprRoot.getPrevious();
       if (beforeRoot == null) {
@@ -155,14 +155,16 @@ final class PolymerClassRewriter {
     }
     compiler.reportChangeToEnclosingScope(statements);
 
-    // Since behavior files might contain more language features than the class file, we need to
-    // update the feature sets.
-    FeatureSet newFeatures = cls.features;
-    if (newFeatures != null) {
+    // Since behavior files might contain language features that aren't present in the class file,
+    // we might need to update the FeatureSet.
+    if (cls.features != null) {
       Node scriptNode = NodeUtil.getEnclosingScript(parent);
       FeatureSet oldFeatures = (FeatureSet) scriptNode.getProp(Node.FEATURE_SET);
-      scriptNode.putProp(Node.FEATURE_SET, oldFeatures.union(newFeatures));
-      compiler.reportChangeToEnclosingScope(scriptNode);
+      FeatureSet newFeatures = oldFeatures.union(cls.features);
+      if (!newFeatures.equals(oldFeatures)) {
+        scriptNode.putProp(Node.FEATURE_SET, newFeatures);
+        compiler.reportChangeToChangeScope(scriptNode);
+      }
     }
 
     if (NodeUtil.isNameDeclaration(exprRoot)) {
