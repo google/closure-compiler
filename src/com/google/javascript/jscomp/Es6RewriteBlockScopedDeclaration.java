@@ -118,7 +118,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     LoopClosureTransformer transformer = new LoopClosureTransformer();
     NodeTraversal.traverseEs6(compiler, root, transformer);
     transformer.transformLoopClosure();
-    varify();
+    rewriteDeclsToVars();
 
     // Block scoped function declarations can occur in any language mode, however for
     // transpilation to ES3 and ES5, we want to hoist the functions from the block-scope by
@@ -148,7 +148,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     LoopClosureTransformer transformer = new LoopClosureTransformer();
     NodeTraversal.traverseEs6(compiler, scriptRoot, transformer);
     transformer.transformLoopClosure();
-    varify();
+    rewriteDeclsToVars();
     NodeTraversal.traverseEs6(compiler, scriptRoot, new RewriteBlockScopedFunctionDeclaration());
   }
 
@@ -213,7 +213,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     compiler.reportChangeToEnclosingScope(newNode);
   }
 
-  private void varify() {
+  private void rewriteDeclsToVars() {
     if (!letConsts.isEmpty()) {
       for (Node n : letConsts) {
         if (n.isConst()) {
