@@ -271,8 +271,8 @@ public abstract class Namespace implements Serializable {
       win.addProtoProperty(entry.getKey(), null, ns.toJSType(), true);
     }
     for (Map.Entry<String, Property> entry : this.otherProps.entrySet()) {
-      win.addProtoProperty(
-          entry.getKey(), null, entry.getValue().getType(), true);
+      Property p = entry.getValue();
+      win.addProtoProperty(entry.getKey(), null, p.getType(), p.isConstant());
     }
   }
 

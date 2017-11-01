@@ -247,7 +247,7 @@ public final class RawNominalType extends Namespace {
     this.ctorFn = ctorFn;
   }
 
-  boolean hasAncestorClass(RawNominalType ancestor) {
+  public boolean hasAncestorClass(RawNominalType ancestor) {
     checkState(ancestor.isClass());
     if (this == ancestor) {
       return true;

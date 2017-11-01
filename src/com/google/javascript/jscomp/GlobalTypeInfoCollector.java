@@ -299,6 +299,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
   private final GlobalTypeInfo globalTypeInfo;
   private final SimpleInference simpleInference;
   private final OrderedExterns orderedExterns;
+  private RawNominalType window;
 
   public GlobalTypeInfoCollector(AbstractCompiler compiler) {
     this.warnings = new WarningReporter(compiler);
@@ -368,30 +369,28 @@ public class GlobalTypeInfoCollector implements CompilerPass {
 
     // (7) Adjust types of properties based on inheritance information.
     //     Report errors in the inheritance chain. Do Window last.
-    RawNominalType win = null;
+    Collection<RawNominalType> windows = new ArrayList<>();
     for (Map.Entry<Node, RawNominalType> entry : nominaltypesByNode.entrySet()) {
       RawNominalType rawType = entry.getValue();
-      if (rawType.getName().equals(WINDOW_CLASS) && entry.getKey().isFromExterns()) {
-        win = rawType;
+      if (this.window != null && rawType.hasAncestorClass(this.window)) {
+        windows.add(rawType);
         continue;
       }
       checkAndFreezeNominalType(rawType);
     }
     JSType globalThisType;
-    if (win != null) {
+    if (this.window != null) {
       // Copy properties from window to Window.prototype, because sometimes
       // people pass window around rather than using it directly.
-      // Copying the properties is correct only when there is a single object
-      // of type Window in the program. But in very rare cases, people subclass Window.
-      // Then, win is frozen here and we don't copy the properties.
-      // Window has been subclassed iff it is already frozen here.
       Namespace winNs = getGlobalScope().getNamespace(WINDOW_INSTANCE);
-      if (winNs != null && !win.isFrozen()) {
-        winNs.copyWindowProperties(getCommonTypes(), win);
+      if (winNs != null) {
+        winNs.copyWindowProperties(getCommonTypes(), this.window);
       }
-      checkAndFreezeNominalType(win);
+      for (RawNominalType rawType : windows) {
+        checkAndFreezeNominalType(rawType);
+      }
       // Type the global THIS as window
-      globalThisType = win.getInstanceAsJSType();
+      globalThisType = this.window.getInstanceAsJSType();
     } else {
       // Type the global THIS as a loose object
       globalThisType = getCommonTypes().getTopObject().withLoose();
@@ -445,6 +444,14 @@ public class GlobalTypeInfoCollector implements CompilerPass {
     Collections.reverse(getScopes());
 
     this.compiler.setExternProperties(ImmutableSet.copyOf(getExternPropertyNames()));
+  }
+
+  private void setWindow(RawNominalType rawType) {
+    this.window = rawType;
+  }
+
+  private static boolean isWindowRawType(RawNominalType rawType) {
+    return rawType.getName().equals(WINDOW_CLASS) && rawType.getDefSite().isFromExterns();
   }
 
   private RawNominalType dummyRawTypeForMissingExterns(String name) {
@@ -1301,6 +1308,9 @@ public class GlobalTypeInfoCollector implements CompilerPass {
           checkState(fnDoc.isInterface());
           rawType = RawNominalType.makeNominalInterface(
               getCommonTypes(), defSite, qname, typeParameters, objKind);
+        }
+        if (isWindowRawType(rawType)) {
+          setWindow(rawType);
         }
         nominaltypesByNode.put(defSite, rawType);
         if (isRedeclaration) {

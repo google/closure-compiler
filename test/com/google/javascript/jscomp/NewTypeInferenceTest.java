@@ -20504,7 +20504,8 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "x(true, false);"));
   }
 
-  public void testExtendWindowDontCrash() {
+  public void testFakeWindows() {
+    // Only the globals in externs are copied over to Window.prototype
     typeCheck(LINE_JOINER.join(
         "/** @type {number} */",
         "var globalvar;",
@@ -20518,6 +20519,54 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}",
         "f(new FakeWindow);"),
         NewTypeInference.INEXISTENT_PROPERTY);
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @type {number} */",
+            "var foobar;"),
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @extends {Window}",
+            " */",
+            "function FakeWindow() {}",
+            "function f(/** !Window */ w) {",
+            "  var /** string */ s = w.foobar;",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @type {number} */",
+            "var foobar;"),
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @extends {Window}",
+            " */",
+            "function FakeWindow() {}",
+            "function f(/** !FakeWindow */ w) {",
+            "  var /** string */ s = w.foobar;",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @type {number} */",
+            "var foobar;"),
+        LINE_JOINER.join(
+            "/**",
+            " * @constructor",
+            " * @extends {Window}",
+            " */",
+            "function FakeWindow() {}",
+            "function f(/** !FakeWindow */ w) {",
+            "  w.foobar = 'asdf';",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testInferUndeclaredPrototypeProperty() {
