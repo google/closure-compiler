@@ -1670,58 +1670,31 @@ HTMLInputElement.prototype.stepUp = function(opt_n) {};
  */
 function HTMLMediaElement() {}
 
-/**
- * @type {number}
- * @const
- */
+/** @const {number} */
 HTMLMediaElement.NETWORK_EMPTY;  // = 0
 
-/**
- * @type {number}
- * @const
- */
+/** @const {number} */
 HTMLMediaElement.NETWORK_IDLE;  // = 1
 
-/**
- * @type {number}
- * @const
- */
+/** @const {number} */
 HTMLMediaElement.NETWORK_LOADING;  // = 2
 
-/**
- * @type {number}
- * @const
- */
+/** @const {number} */
 HTMLMediaElement.NETWORK_NO_SOURCE;  // = 3
 
-/**
- * @type {number}
- * @const
- */
+/** @const {number} */
 HTMLMediaElement.HAVE_NOTHING;  // = 0
 
-/**
- * @type {number}
- * @const
- */
+/** @const {number} */
 HTMLMediaElement.HAVE_METADATA;  // = 1
 
-/**
- * @type {number}
- * @const
- */
+/** @const {number} */
 HTMLMediaElement.HAVE_CURRENT_DATA;  // = 2
 
-/**
- * @type {number}
- * @const
- */
+/** @const {number} */
 HTMLMediaElement.HAVE_FUTURE_DATA;  // = 3
 
-/**
- * @type {number}
- * @const
- */
+/** @const {number} */
 HTMLMediaElement.HAVE_ENOUGH_DATA;  // = 4
 
 /** @type {MediaError} */
