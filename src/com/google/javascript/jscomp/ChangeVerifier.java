@@ -183,7 +183,7 @@ public class ChangeVerifier {
         if (fnName == null) {
           fnName = "anonymous@" + n.getLineno() + ":" + n.getCharno();
         }
-        return "FUNCTION: " + "" + " in " + sourceName;
+        return "FUNCTION: " + fnName + " in " + sourceName;
       default:
         throw new IllegalStateException("unexpected Node type");
     }
