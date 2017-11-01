@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Map.Entry;
+import javax.annotation.Nullable;
 
 /**
  * Optimize function calls and function signatures.
@@ -711,16 +712,15 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       if (p.shouldRemove()) {
         eliminateCallTargetArgAt(target, index);
 
-        if (mayMutateArgs && !mayMutateGlobalsOrThrow &&
+        if (mayMutateArgs && !mayMutateGlobalsOrThrow
             // We want to cover both global-state arguments, and
             // expressions that might throw exceptions.
             // We're deliberately conservative here b/c it's
             // difficult to test all the edge cases.
-            !NodeUtil.isImmutableValue(p.getArg())) {
+            && !NodeUtil.isImmutableValue(p.getArg())) {
           mayMutateGlobalsOrThrow = true;
           call.setSideEffectFlags(
-              new Node.SideEffectFlags(call.getSideEffectFlags())
-              .setMutatesGlobalState());
+              new Node.SideEffectFlags(call.getSideEffectFlags()).setMutatesGlobalState());
         }
       }
     }
@@ -776,7 +776,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
    * @param varName The name of the variable.
    * @param value The initial value of the variable.
    */
-  private void addVariableToFunction(Node function, Node varName, Node value) {
+  private void addVariableToFunction(Node function, @Nullable Node varName, Node value) {
     Preconditions.checkArgument(function.isFunction(), "Expected function, got: %s", function);
 
     Node block = NodeUtil.getFunctionBody(function);
@@ -823,6 +823,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
    * @param definitionFinder The definition and use sites index.
    * @return The Node of the argument removed.
    */
+  @Nullable
   private Node eliminateFunctionParamAt(Node function, int argIndex) {
     checkArgument(function.isFunction(), "Node must be a function.");
     Node formalParamNode = NodeUtil.getArgumentForFunction(function, argIndex);
