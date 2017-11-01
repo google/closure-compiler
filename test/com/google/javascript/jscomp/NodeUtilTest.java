@@ -1453,16 +1453,16 @@ public final class NodeUtilTest extends TestCase {
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("[]")));
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{}")));
 
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("[x]")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("{'a':x}")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("[x]")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{'a':x}")));
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{'a': {'b': 2}}")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("{'a': {'b': global}}")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{'a': {'b': global}}")));
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{get someGetter() { return 1; }}")));
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{get someGetter() { return global; }}")));
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{set someSetter(value) {}}")));
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: {}}")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: global}")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: {'a':x}}")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: global}")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: {'a':x}}")));
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("{[someComputedProperty]: {'a':1}}")));
 
     // increment/decrement results in primitive number, the previous value is
@@ -1534,14 +1534,17 @@ public final class NodeUtilTest extends TestCase {
 
   public void testLocalValueTemplateLit() {
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("`hello`")));
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("`hello ${name}`")));
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("`hello ${name}`")));
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("`${'name'}`")));
+    assertTrue(NodeUtil.isLiteralValue(getNode("`${'name'}`"), false));
+    assertTrue(NodeUtil.isImmutableValue(getNode("`${'name'}`")));
   }
 
   public void testLocalValueTaggedTemplateLit1() {
     Node n = getNode("tag`simple string`");
     assertFalse(NodeUtil.evaluatesToLocalValue(n));
 
+    // Set 'tag' function as producing a local result
     Node.SideEffectFlags flags = new Node.SideEffectFlags();
     flags.clearAllFlags();
     n.setSideEffectFlags(flags);
@@ -1554,11 +1557,12 @@ public final class NodeUtilTest extends TestCase {
     Node n = getNode("tag`string with ${replacement()}`");
     assertFalse(NodeUtil.evaluatesToLocalValue(n));
 
+    // Set 'tag' function as producing a local result
     Node.SideEffectFlags flags = new Node.SideEffectFlags();
     flags.clearAllFlags();
     n.setSideEffectFlags(flags);
 
-    assertFalse(NodeUtil.evaluatesToLocalValue(n));
+    assertTrue(NodeUtil.evaluatesToLocalValue(n));
   }
 
   public void testLocalValueNewExpr() {
@@ -1605,15 +1609,23 @@ public final class NodeUtilTest extends TestCase {
   }
 
   public void testLocalValueSpread() {
-    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("[...x]")));
+    // Array literals are always known local values.
+    assertTrue(NodeUtil.evaluatesToLocalValue(getNode("[...x]")));
+    assertFalse(NodeUtil.isLiteralValue(getNode("[...x]"), false));
+    assertFalse(NodeUtil.isImmutableValue(getNode("[...x]")));
   }
 
   public void testLocalValueAwait() {
-    Node expr = getAwaitNode("async function f() { await someAsyncAction(); }");
+    Node expr;
+    expr = getAwaitNode("async function f() { await someAsyncAction(); }");
     assertFalse(NodeUtil.evaluatesToLocalValue(expr));
 
+    expr = getAwaitNode("async function f() { await {then:function() { return p }}; }");
+    assertFalse(NodeUtil.evaluatesToLocalValue(expr));
+
+    // it isn't clear why someone would want to wait on a non-thenable value...
     expr = getAwaitNode("async function f() { await 5; }");
-    assertTrue(NodeUtil.evaluatesToLocalValue(expr));
+    assertFalse(NodeUtil.evaluatesToLocalValue(expr));
   }
 
   public void testCallSideEffects() {

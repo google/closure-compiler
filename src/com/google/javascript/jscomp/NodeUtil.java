@@ -574,6 +574,15 @@ public final class NodeUtil {
         // We assume here that programs don't change the value of the keyword
         // undefined to something other than the value undefined.
         return "undefined".equals(name) || "Infinity".equals(name) || "NaN".equals(name);
+      case TEMPLATELIT:
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+          if (child.isTemplateLitSub()) {
+            if (!isImmutableValue(child.getFirstChild())) {
+              return false;
+            }
+          }
+        }
+        return true;
       default:
         break;
     }
@@ -704,6 +713,16 @@ public final class NodeUtil {
 
       case FUNCTION:
         return includeFunctions && !NodeUtil.isFunctionDeclaration(n);
+
+      case TEMPLATELIT:
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+          if (child.isTemplateLitSub()) {
+            if (!isLiteralValue(child.getFirstChild(), includeFunctions)) {
+              return false;
+            }
+          }
+        }
+        return true;
 
       default:
         return isImmutableValue(n);
@@ -4618,7 +4637,7 @@ public final class NodeUtil {
    * if unescaped) or isImmutableValue (which can be safely aliased).
    *
    * The concept of "local values" allow for the containment of side-effect operations. For
-   * example, a setting a property on a local value does not produce a global side-effect.
+   * example, setting a property on a local value does not produce a global side-effect.
    *
    * Note that the concept of "local value" is not deep, it does not say anything
    * about the properties of the "local value" (all class instances have "constructor" properties
@@ -4658,10 +4677,7 @@ public final class NodeUtil {
             || isToStringMethodCall(value)
             || locals.apply(value);
       case TAGGED_TEMPLATELIT:
-        if (!callHasLocalResult(value)) {
-          return false;
-        }
-        return evaluatesToLocalValue(value.getLastChild());
+        return callHasLocalResult(value) || locals.apply(value);
       case NEW:
         return newHasLocalResult(value) || locals.apply(value);
       case DELPROP:
@@ -4673,47 +4689,21 @@ public final class NodeUtil {
       case FUNCTION:
       case REGEXP:
       case EMPTY:
-        return true;
       case ARRAYLIT:
-        for (Node entry : value.children()) {
-          if (!evaluatesToLocalValue(entry, locals)) {
-            return false;
-          }
-        }
-        return true;
       case OBJECTLIT:
-        for (Node key : value.children()) {
-          Preconditions.checkState(isObjLitProperty(key),
-              "Unexpected obj literal key:",
-              key);
-
-          if (key.isGetterDef() || key.isSetterDef()) {
-            continue;
-          }
-          if (key.isComputedProp() && !evaluatesToLocalValue(key.getSecondChild(), locals)) {
-            return false;
-          }
-          if (key.isStringKey() && !evaluatesToLocalValue(key.getFirstChild(), locals)) {
-            return false;
-          }
-        }
-        return true;
       case TEMPLATELIT:
-        for (Node child : value.children()) {
-          if (child.isTemplateLitSub()) {
-            if (!evaluatesToLocalValue(child.getFirstChild(), locals)) {
-              return false;
-            }
-          }
-        }
         return true;
       case CAST:
+        return evaluatesToLocalValue(value.getFirstChild(), locals);
       case SPREAD:
       case AWAIT:
-        return evaluatesToLocalValue(value.getFirstChild(), locals);
+        // TODO(johnlenz): we can do better for await if we use type information.  That is,
+        // if we know the promise being awaited on is a immutable value type (string, etc)
+        // we could return true here.
+        return false;
       default:
         // Other op force a local value:
-        //  x = '' + g (x is now an local string)
+        //  '' + g (a local string)
         //  x -= g (x is now an local number)
         if (isAssignmentOp(value)
             || isSimpleOperator(value)
