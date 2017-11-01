@@ -155,13 +155,7 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(convertEs6TypedToEs6);
     }
 
-    if (options.processCommonJSModules) {
-      passes.add(rewriteCommonJsModules);
-    } else if (options.needsTranspilationOf(FeatureSet.Feature.MODULES)) {
-      passes.add(rewriteScriptsToEs6Modules);
-    }
-
-    if (options.needsTranspilationOf(FeatureSet.Feature.MODULES)) {
+    if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
       TranspilationPasses.addEs6ModulePass(passes);
     }
 
@@ -226,8 +220,10 @@ public final class DefaultPassConfig extends PassConfig {
     }
   }
 
-  private void addOldTypeCheckerPasses(
-      List<PassFactory> checks, CompilerOptions options) {
+  private void addOldTypeCheckerPasses(List<PassFactory> checks, CompilerOptions options) {
+    if (!options.allowsHotswapReplaceScript()) {
+      checks.add(inlineTypeAliases);
+    }
     if (options.checkTypes || options.inferTypes) {
       checks.add(resolveTypes);
       checks.add(inferTypes);
@@ -292,7 +288,7 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(checkRequires);
     }
 
-    if (options.needsTranspilationOf(FeatureSet.Feature.MODULES)) {
+    if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
       TranspilationPasses.addEs6ModulePass(checks);
     }
 
@@ -400,9 +396,13 @@ public final class DefaultPassConfig extends PassConfig {
       } else {
         TranspilationPasses.addEs6LatePasses(checks);
       }
-      if (options.rewritePolyfills) {
-        TranspilationPasses.addRewritePolyfillPass(checks);
-      }
+    }
+
+    if (options.rewritePolyfills) {
+      TranspilationPasses.addRewritePolyfillPass(checks);
+    }
+
+    if (options.needsTranspilationFrom(ES6)) {
       if (options.getTypeCheckEs6Natively()) {
         checks.add(setFeatureSet(FeatureSet.NTI_SUPPORTED));
       } else {
@@ -485,10 +485,6 @@ public final class DefaultPassConfig extends PassConfig {
       checks.add(j2clSourceFileChecker);
     }
 
-    if (!options.allowsHotswapReplaceScript()) {
-      checks.add(inlineTypeAliases);
-    }
-
     if (!options.getNewTypeInference()) {
       addOldTypeCheckerPasses(checks, options);
     }
@@ -499,7 +495,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // CheckAccessControls only works if check types is on.
-    if (options.checkTypes
+    if (options.isTypecheckingEnabled()
         && (!options.disables(DiagnosticGroups.ACCESS_CONTROLS)
             || options.enables(DiagnosticGroups.CONSTANT_PROPERTY))) {
       checks.add(checkAccessControls);
@@ -511,7 +507,7 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Analyzer checks must be run after typechecking.
-    if (options.enables(DiagnosticGroups.ANALYZER_CHECKS) && options.checkTypes) {
+    if (options.enables(DiagnosticGroups.ANALYZER_CHECKS) && options.isTypecheckingEnabled()) {
       checks.add(analyzerChecks);
     }
 
@@ -704,7 +700,7 @@ public final class DefaultPassConfig extends PassConfig {
     // soon after type checking, both so that it can make use of type
     // information and so that other passes can take advantage of the renamed
     // properties.
-    if (options.shouldDisambiguateProperties()) {
+    if (options.shouldDisambiguateProperties() && options.isTypecheckingEnabled()) {
       passes.add(disambiguateProperties);
     }
 
@@ -850,7 +846,8 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     if (options.shouldAmbiguateProperties()
-        && options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED) {
+        && options.propertyRenaming == PropertyRenamingPolicy.ALL_UNQUOTED
+        && options.isTypecheckingEnabled()) {
       passes.add(ambiguateProperties);
     }
 
@@ -954,8 +951,8 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     // Safety checks
-    passes.add(sanityCheckAst);
-    passes.add(sanityCheckVars);
+    passes.add(checkAstValidity);
+    passes.add(varCheckValidity);
 
     // Raise to ES6, if allowed
     if (options.getLanguageOut().toFeatureSet().contains(FeatureSet.ES6)) {
@@ -979,13 +976,9 @@ public final class DefaultPassConfig extends PassConfig {
       passes.add(inlineFunctions);
     }
 
-    if (options.shouldInlineProperties()) {
+    if (options.shouldInlineProperties() && options.isTypecheckingEnabled()) {
       passes.add(inlineProperties);
     }
-
-    boolean runOptimizeCalls = options.optimizeCalls
-        || options.optimizeParameters
-        || options.optimizeReturns;
 
     if (options.removeUnusedVars || options.removeUnusedLocalVars) {
       if (options.deadAssignmentElimination) {
@@ -999,19 +992,14 @@ public final class DefaultPassConfig extends PassConfig {
           passes.add(deadPropertyAssignmentElimination);
         }
       }
-      if (!runOptimizeCalls) {
-        passes.add(getRemoveUnusedVars(PassNames.REMOVE_UNUSED_VARS, false));
-      }
     }
 
-    if (runOptimizeCalls) {
+    if (options.optimizeCalls || options.optimizeParameters || options.optimizeReturns) {
       passes.add(optimizeCalls);
-      // RemoveUnusedVars cleans up after optimizeCalls, so we run it here.
-      // It has a special name because otherwise PhaseOptimizer would change its
-      // position in the optimization loop.
-      if (options.optimizeCalls) {
-        passes.add(getRemoveUnusedVars("removeUnusedVars_afterOptimizeCalls", true));
-      }
+    }
+
+    if (options.removeUnusedVars || options.removeUnusedLocalVars) {
+      passes.add(getRemoveUnusedVars());
     }
 
     if (options.j2clPassMode.shouldAddJ2clPasses()) {
@@ -1450,6 +1438,11 @@ public final class DefaultPassConfig extends PassConfig {
               /* allow messages with goog.getMsg */
               JsMessage.Style.CLOSURE);
         }
+
+        @Override
+        public FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
       };
 
   /** Applies aliases and inlines goog.scope. */
@@ -1522,7 +1515,7 @@ public final class DefaultPassConfig extends PassConfig {
       };
 
   private final PassFactory inlineTypeAliases =
-      new PassFactory("inlineTypeAliases", true) {
+      new PassFactory(PassNames.INLINE_TYPE_ALIASES, true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new InlineAliases(compiler);
@@ -1731,7 +1724,7 @@ public final class DefaultPassConfig extends PassConfig {
     final boolean useTypesForOptimization = compiler.getOptions().useTypesForLocalOptimization;
     List<AbstractPeepholeOptimization> optimizations = new ArrayList<>();
     optimizations.add(new MinimizeExitPoints(compiler));
-    optimizations.add(new PeepholeMinimizeConditions(late, useTypesForOptimization));
+    optimizations.add(new PeepholeMinimizeConditions(late));
     optimizations.add(new PeepholeSubstituteAlternateSyntax(late));
     optimizations.add(new PeepholeReplaceKnownMethods(late, useTypesForOptimization));
     optimizations.add(new PeepholeRemoveDeadCode());
@@ -1783,7 +1776,7 @@ public final class DefaultPassConfig extends PassConfig {
               getName(),
               new StatementFusion(options.aggressiveFusion),
               new PeepholeRemoveDeadCode(),
-              new PeepholeMinimizeConditions(late, useTypesForOptimization),
+              new PeepholeMinimizeConditions(late),
               new PeepholeSubstituteAlternateSyntax(late),
               new PeepholeReplaceKnownMethods(late, useTypesForOptimization),
               new PeepholeFoldConstants(late, useTypesForOptimization),
@@ -2585,6 +2578,11 @@ public final class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(AbstractCompiler compiler) {
       return new RemoveUnusedPolyfills(compiler);
     }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8_MODULES;
+    }
   };
 
   /** Remove prototype properties that do not appear to be used. */
@@ -2682,16 +2680,16 @@ public final class DefaultPassConfig extends PassConfig {
   /** Inlines simple methods, like getters */
   private final PassFactory inlineSimpleMethods =
       new PassFactory("inlineSimpleMethods", false) {
-    @Override
-    protected CompilerPass create(AbstractCompiler compiler) {
-      return new InlineSimpleMethods(compiler);
-    }
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new InlineSimpleMethods(compiler);
+        }
 
-    @Override
-    protected FeatureSet featureSet() {
-      return ES5;
-    }
-  };
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
+      };
 
   /** Kills dead assignments. */
   private final PassFactory deadAssignmentsElimination =
@@ -2752,18 +2750,17 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  private PassFactory getRemoveUnusedVars(String name, final boolean modifyCallSites) {
-    return getRemoveUnusedVars(name, modifyCallSites, false /* isOneTimePass */);
+  private PassFactory getRemoveUnusedVars() {
+    return getRemoveUnusedVars(false /* isOneTimePass */);
   }
 
   private PassFactory lastRemoveUnusedVars() {
-    return getRemoveUnusedVars(PassNames.REMOVE_UNUSED_VARS, false, true /* isOneTimePass */);
+    return getRemoveUnusedVars(true /* isOneTimePass */);
   }
 
-  private PassFactory getRemoveUnusedVars(
-      String name, final boolean modifyCallSites, boolean isOneTimePass) {
+  private PassFactory getRemoveUnusedVars(boolean isOneTimePass) {
     /** Removes variables that are never used. */
-    return new PassFactory(name, isOneTimePass) {
+    return new PassFactory(PassNames.REMOVE_UNUSED_VARS, isOneTimePass) {
       @Override
       protected CompilerPass create(AbstractCompiler compiler) {
         boolean removeOnlyLocals = options.removeUnusedLocalVars && !options.removeUnusedVars;
@@ -2772,8 +2769,7 @@ public final class DefaultPassConfig extends PassConfig {
         return new RemoveUnusedVars(
             compiler,
             !removeOnlyLocals,
-            preserveAnonymousFunctionNames,
-            modifyCallSites);
+            preserveAnonymousFunctionNames);
       }
 
       @Override
@@ -2895,6 +2891,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new FunctionRewriter(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return FeatureSet.latest();
+        }
       };
 
   /** Collapses functions to not use the VAR keyword. */
@@ -2953,6 +2954,11 @@ public final class DefaultPassConfig extends PassConfig {
           options.aliasAllStrings ? null : options.aliasableStrings,
           options.aliasStringsBlacklist,
           options.outputJsStringUsage);
+    }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return FeatureSet.ES8_MODULES;
     }
   };
 
@@ -3149,9 +3155,8 @@ public final class DefaultPassConfig extends PassConfig {
         }
       };
 
-  /** Checks that all variables are defined. */
-  private final PassFactory sanityCheckAst =
-      new PassFactory("sanityCheckAst", true) {
+  private final PassFactory checkAstValidity =
+      new PassFactory("checkAstValidity", true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new AstValidator(compiler);
@@ -3164,8 +3169,8 @@ public final class DefaultPassConfig extends PassConfig {
       };
 
   /** Checks that all variables are defined. */
-  private final PassFactory sanityCheckVars =
-      new PassFactory("sanityCheckVars", true) {
+  private final PassFactory varCheckValidity =
+      new PassFactory("varCheckValidity", true) {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new VarCheck(compiler, true);

@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.base.Joiner;
@@ -114,6 +114,7 @@ public final class CompilerTest extends TestCase {
     List<SourceFile> externs =
         ImmutableList.of(SourceFile.fromCode("extern", "function alert(x) {}"));
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.setPrintExterns(true);
     Compiler compiler = new Compiler();
     compiler.init(externs, ImmutableList.<SourceFile>of(), options);
@@ -131,26 +132,12 @@ public final class CompilerTest extends TestCase {
     //
     // This test is just to make sure that the compiler doesn't crash.
     CompilerOptions options = new CompilerOptions();
-    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(
-        options);
+    CompilationLevel.SIMPLE_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
     Compiler compiler = new Compiler();
     SourceFile externs = SourceFile.fromCode("externs.js", "");
     SourceFile input = SourceFile.fromCode("input.js",
         "(function (undefined) { alert(undefined); })();");
     compiler.compile(externs, input, options);
-  }
-
-  public void testCommonJSMissingRequire() throws Exception {
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("/gin.js", "require('missing')"));
-    Compiler compiler = initCompilerForCommonJS(
-        inputs, ImmutableList.of(ModuleIdentifier.forFile("/gin")));
-
-    ErrorManager manager = compiler.getErrorManager();
-    JSError[] errors = manager.getErrors();
-    assertThat(errors).hasLength(1);
-    String error = errors[0].toString();
-    assertThat(error).contains("Failed to load module \"missing\" at /gin.js");
   }
 
   private static String normalize(String path) {
@@ -318,6 +305,7 @@ public final class CompilerTest extends TestCase {
             originalSourcePosition));
 
     CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
     options.sourceMapOutputPath = "fake/source_map_path.js.map";
     options.inputSourceMaps = inputSourceMaps;
     options.applyInputSourceMaps = true;
@@ -682,30 +670,35 @@ public final class CompilerTest extends TestCase {
 
   // Make sure we concatenate licenses the same way.
   public void testMultipleLicenseDirectiveOutput() throws Exception {
-    test("/** @license Your favorite license goes here */\n" +
-        "/** @license Another license */\n" +
-        "var x;",
+    test(
+        LINE_JOINER.join(
+            "/** @license Your favorite license goes here */",
+            "/** @license Another license */",
+            "var x;"),
         "/*\n Another license  Your favorite license goes here */\n" ,
         null);
   }
 
   // Same thing, two @licenses in the same comment.
   public void testTwoLicenseInSameComment() throws Exception {
-    test("/** @license Your favorite license goes here \n" +
-        "  * @license Another license */\n" +
-        "var x;",
-        "/*\n Your favorite license goes here \n" +
-        " @license Another license */\n" ,
+    test(
+        LINE_JOINER.join(
+            "/** @license Your favorite license goes here ",
+            "  * @license Another license */",
+            "var x;"),
+        "/*\n Your favorite license goes here \n @license Another license */\n",
         null);
   }
 
   // Do we correctly handle the license if it's not at the top level, but
   // inside another declaration?
   public void testLicenseInTree() throws Exception {
-    test("var a = function() {\n +" +
-        "/** @license Your favorite license goes here */\n" +
-        " 1;};\n",
-        "/*\n Your favorite license goes here */\n" ,
+    test(
+        LINE_JOINER.join(
+            "var a = function() {",
+            "+ /** @license Your favorite license goes here */",
+            " 1;};"),
+        "/*\n Your favorite license goes here */\n",
         null);
   }
 
@@ -869,6 +862,9 @@ public final class CompilerTest extends TestCase {
 
   public void testConsecutiveSemicolons() {
     Compiler compiler = new Compiler();
+    CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
+    compiler.initOptions(options);
     String js = "if(a);";
     Node n = compiler.parseTestCode(js);
     Compiler.CodeBuilder cb = new Compiler.CodeBuilder();
@@ -909,6 +905,7 @@ public final class CompilerTest extends TestCase {
   public void testExportSymbolReservesNamesForRenameVars() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
     options.setClosurePass(true);
     options.setVariableRenaming(VariableRenamingPolicy.ALL);
 
@@ -918,12 +915,13 @@ public final class CompilerTest extends TestCase {
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertTrue(result.success);
-    assertEquals("var b;var c;b.exportSymbol(\"a\",c);", compiler.toSource());
+    assertThat(compiler.toSource()).isEqualTo("var b;var c;b.exportSymbol(\"a\",c);");
   }
 
   public void testGenerateExportsReservesNames() {
     Compiler compiler = new Compiler();
     CompilerOptions options = new CompilerOptions();
+    options.setEmitUseStrict(false);
     options.setClosurePass(true);
     options.setVariableRenaming(VariableRenamingPolicy.ALL);
     options.setGenerateExports(true);
@@ -934,8 +932,7 @@ public final class CompilerTest extends TestCase {
     Result result = compiler.compile(EMPTY_EXTERNS, inputs, options);
 
     assertTrue(result.success);
-    assertEquals("var b;var c={};b.exportSymbol(\"a\",c);",
-        compiler.toSource());
+    assertThat(compiler.toSource()).isEqualTo("var b;var c={};b.exportSymbol(\"a\",c);");
   }
 
   private static final DiagnosticType TEST_ERROR =
@@ -973,10 +970,22 @@ public final class CompilerTest extends TestCase {
       return warningCount;
     }
 
-    @Override public JSError[] getErrors() { return null; }
-    @Override public JSError[] getWarnings() { return null; }
+    @Override
+    public JSError[] getErrors() {
+      return null;
+    }
+
+    @Override
+    public JSError[] getWarnings() {
+      return null;
+    }
+
     @Override public void setTypedPercent(double typedPercent) {}
-    @Override public double getTypedPercent() { return 0.0; }
+
+    @Override
+    public double getTypedPercent() {
+      return 0.0;
+    }
   }
 
   private boolean hasOutput(
@@ -1182,11 +1191,10 @@ public final class CompilerTest extends TestCase {
     // statements are not valid identifiers.
     List<SourceFile> inputs =
         ImmutableList.of(
-            SourceFile.fromCode("/index[0].js", "import foo from './foo'; foo('hello');"),
+            SourceFile.fromCode("/index[0].js", "import foo from './foo.js'; foo('hello');"),
             SourceFile.fromCode("/foo.js", "export default (foo) => { alert(foo); }"));
 
-    List<ModuleIdentifier> entryPoints = ImmutableList.of(
-        ModuleIdentifier.forFile("/index[0].js"));
+    List<ModuleIdentifier> entryPoints = ImmutableList.of(ModuleIdentifier.forFile("/index[0].js"));
 
     CompilerOptions options = createNewFlagBasedOptions();
     options.setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT_2017);
@@ -1416,9 +1424,12 @@ public final class CompilerTest extends TestCase {
   }
 
   private static CompilerOptions createNewFlagBasedOptions() {
-    CompilerOptions opt = new CompilerOptions();
-    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(opt);
-    return opt;
+    CompilerOptions options = new CompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT3);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT3);
+    options.setEmitUseStrict(false);
+    return options;
   }
 
   private static byte[] serialize(Object obj) throws IOException {
@@ -1470,41 +1481,45 @@ public final class CompilerTest extends TestCase {
 
   public void testProperEs6ModuleOrdering() throws Exception {
     List<SourceFile> sources = new ArrayList<>();
-    sources.add(SourceFile.fromCode(
-        "/entry.js",
-        CompilerTestCase.LINE_JOINER.join(
-          "import './b/b.js';",
-          "import './b/a.js';",
-          "import './important.js';",
-          "import './a/b.js';",
-          "import './a/a.js';")));
+    sources.add(
+        SourceFile.fromCode(
+            "/entry.js",
+            LINE_JOINER.join(
+                "import './b/b.js';",
+                "import './b/a.js';",
+                "import './important.js';",
+                "import './a/b.js';",
+                "import './a/a.js';")));
     sources.add(SourceFile.fromCode("/a/a.js", "window['D'] = true;"));
     sources.add(SourceFile.fromCode("/a/b.js", "window['C'] = true;"));
     sources.add(SourceFile.fromCode("/b/a.js", "window['B'] = true;"));
-    sources.add(SourceFile.fromCode(
-        "/b/b.js",
-        CompilerTestCase.LINE_JOINER.join(
-            "import foo from './c.js';",
-            "if (foo.settings.inUse) {",
-            "  window['E'] = true;",
-            "}",
-            "window['A'] = true;")));
-    sources.add(SourceFile.fromCode(
-        "/b/c.js",
-        CompilerTestCase.LINE_JOINER.join(
-            "window['BEFOREA'] = true;",
-            "",
-            "export default {",
-            "  settings: {",
-            "    inUse: Boolean(document.documentElement['attachShadow'])",
-            "  }",
-            "};")));
+    sources.add(
+        SourceFile.fromCode(
+            "/b/b.js",
+            LINE_JOINER.join(
+                "import foo from './c.js';",
+                "if (foo.settings.inUse) {",
+                "  window['E'] = true;",
+                "}",
+                "window['A'] = true;")));
+    sources.add(
+        SourceFile.fromCode(
+            "/b/c.js",
+            LINE_JOINER.join(
+                "window['BEFOREA'] = true;",
+                "",
+                "export default {",
+                "  settings: {",
+                "    inUse: Boolean(document.documentElement['attachShadow'])",
+                "  }",
+                "};")));
     sources.add(SourceFile.fromCode("/important.js", "window['E'] = false;"));
 
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.dependencyOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forFile("/entry.js")));
+    options.dependencyOptions.setEntryPoints(
+        ImmutableList.of(ModuleIdentifier.forFile("/entry.js")));
     options.dependencyOptions.setDependencySorting(true);
     options.dependencyOptions.setDependencyPruning(true);
     options.dependencyOptions.setMoocherDropping(true);
@@ -1520,7 +1535,8 @@ public final class CompilerTest extends TestCase {
     }
 
     assertThat(orderedInputs)
-        .containsExactly("/b/c.js", "/b/b.js", "/b/a.js", "/important.js", "/a/b.js", "/a/a.js", "/entry.js")
+        .containsExactly(
+            "/b/c.js", "/b/b.js", "/b/a.js", "/important.js", "/a/b.js", "/a/a.js", "/entry.js")
         .inOrder();
   }
 
@@ -1531,22 +1547,27 @@ public final class CompilerTest extends TestCase {
     sources.add(SourceFile.fromCode("c.js", "goog.provide('c');"));
     sources.add(SourceFile.fromCode("b.js", "goog.provide('b');"));
     sources.add(SourceFile.fromCode("a.js", "goog.provide('a');"));
-    sources.add(SourceFile.fromCode("base.js",
-        CompilerTestCase.LINE_JOINER.join(
-            "/** @provideGoog */",
-            "/** @const */ var goog = goog || {};",
-            "var COMPILED = false;")));
-    sources.add(SourceFile.fromCode("entry.js",
-        CompilerTestCase.LINE_JOINER.join(
-            "goog.require('a');",
-            "goog.require('b');",
-            "goog.require('c');",
-            "goog.require('d');")));
+    sources.add(
+        SourceFile.fromCode(
+            "base.js",
+            LINE_JOINER.join(
+                "/** @provideGoog */",
+                "/** @const */ var goog = goog || {};",
+                "var COMPILED = false;")));
+    sources.add(
+        SourceFile.fromCode(
+            "entry.js",
+            LINE_JOINER.join(
+                "goog.require('a');",
+                "goog.require('b');",
+                "goog.require('c');",
+                "goog.require('d');")));
 
     CompilerOptions options = new CompilerOptions();
     options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     options.setLanguageOut(LanguageMode.ECMASCRIPT5);
-    options.dependencyOptions.setEntryPoints(ImmutableList.of(ModuleIdentifier.forFile("entry.js")));
+    options.dependencyOptions.setEntryPoints(
+        ImmutableList.of(ModuleIdentifier.forFile("entry.js")));
     options.dependencyOptions.setDependencySorting(true);
     options.dependencyOptions.setDependencyPruning(true);
     options.dependencyOptions.setMoocherDropping(false);

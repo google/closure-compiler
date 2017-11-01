@@ -195,10 +195,6 @@ public class CompilerOptions implements Serializable {
     return incrementalCheckMode != IncrementalCheckMode.OFF;
   }
 
-  public boolean allowUnfulfilledForwardDeclarations() {
-    return incrementalCheckMode == IncrementalCheckMode.OFF;
-  }
-
   private Config.JsDocParsing parseJsDocDocumentation = Config.JsDocParsing.TYPES_ONLY;
 
   private boolean printExterns;
@@ -252,7 +248,7 @@ public class CompilerOptions implements Serializable {
   boolean skipNonTranspilationPasses;
 
   /**
-   * Configures the compiler to run expensive sanity checks after
+   * Configures the compiler to run expensive validity checks after
    * every pass. Only intended for internal development.
    */
   DevMode devMode;
@@ -995,9 +991,11 @@ public class CompilerOptions implements Serializable {
 
   // Should only be used when debugging compiler bugs.
   boolean printSourceAfterEachPass;
-  // Used to narrow down the printed source when overall input size is large. If this is empty,
-  // the entire source is printed.
+
+  // Used to narrow down the printed source when overall input size is large. If these are both
+  // empty the entire source is printed.
   List<String> filesToPrintAfterEachPassRegexList = ImmutableList.of();
+  List<String> modulesToPrintAfterEachPassRegexList = ImmutableList.of();
 
   public void setPrintSourceAfterEachPass(boolean printSource) {
     this.printSourceAfterEachPass = printSource;
@@ -1005,6 +1003,10 @@ public class CompilerOptions implements Serializable {
 
   public void setFilesToPrintAfterEachPassRegexList(List<String> filePathRegexList) {
     this.filesToPrintAfterEachPassRegexList = filePathRegexList;
+  }
+
+  public void setModulesToPrintAfterEachPassRegexList(List<String> modulePathRegexList) {
+    this.modulesToPrintAfterEachPassRegexList = modulePathRegexList;
   }
 
   String reportPath;
@@ -1793,11 +1795,6 @@ public class CompilerOptions implements Serializable {
     this.dartPass = dartPass;
   }
 
-  @Deprecated
-  public void setJ2clPass(boolean flag) {
-    setJ2clPass(flag ? J2clPassMode.ON : J2clPassMode.OFF);
-  }
-
   public void setJ2clPass(J2clPassMode j2clPassMode) {
     this.j2clPassMode = j2clPassMode;
   }
@@ -2013,6 +2010,13 @@ public class CompilerOptions implements Serializable {
 
   public void setNewTypeInference(boolean enable) {
     this.useNewTypeInference = enable;
+  }
+
+  /**
+   * @return true if either typechecker is ON.
+   */
+  public boolean isTypecheckingEnabled() {
+    return this.checkTypes || this.useNewTypeInference;
   }
 
   public boolean getRunOTIafterNTI() {
@@ -3145,10 +3149,10 @@ public class CompilerOptions implements Serializable {
     }
   }
 
-  /** When to do the extra sanity checks */
+  /** When to do the extra validity checks */
   public static enum DevMode {
     /**
-     * Don't do any extra sanity checks.
+     * Don't do any extra checks.
      */
     OFF,
 
@@ -3357,18 +3361,12 @@ public class CompilerOptions implements Serializable {
    */
   public static enum J2clPassMode {
     /** J2clPass is disabled. */
-    FALSE,
-    /** J2clPass is enabled. */
-    TRUE,
-    /** J2clPass is disabled. */
     OFF,
-    /** J2clPass is enabled. */
-    ON,
     /** It auto-detects whether there are J2cl generated file. If yes, execute J2clPass. */
     AUTO;
 
     boolean shouldAddJ2clPasses() {
-      return this == TRUE || this == ON || this == AUTO;
+      return this == AUTO;
     }
   }
 

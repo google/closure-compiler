@@ -16,8 +16,6 @@
 
 package com.google.javascript.jscomp;
 
-import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-
 /**
  * Tests for {@link ConvertToDottedProperties}.
  *
@@ -27,7 +25,6 @@ public final class ConvertToDottedPropertiesTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
-    setAcceptedLanguage(LanguageMode.ECMASCRIPT3);
   }
 
   @Override protected CompilerPass getProcessor(Compiler compiler) {

@@ -29,6 +29,22 @@
 
 goog.require('goog.dom.safe');
 
+/**
+ * @param {?} loc
+ * @param {string} string_literal_thing2
+ */
+function do_not_change_setHrefStringLiteral(loc, string_literal_thing2) {
+  loc.href = string_literal_thing2;
+}
+
+/**
+ * @param {?} thing1
+ * @param {string} string_literal_thing2
+ */
+function do_not_change_setLocationStringLiteral(thing1, string_literal_thing2) {
+  thing1.location = string_literal_thing2;
+}
+
 
 /**
  * Replaces writes to Location.property.href with a call to the corresponding

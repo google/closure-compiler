@@ -562,11 +562,11 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     output = ""
         + "/** @constructor */ function Foo(){}"
         + "/** @constructor */ function Bar(){}"
-        + "Foo.Foo__function_new_Foo___undefined__$a = 0;"
-        + "Bar.Bar__function_new_Bar___undefined__$a = 0;";
+        + "Foo.$Foo$a = 0;"
+        + "Bar.$Bar$a = 0;";
 
     testSets(js, output,
-        "{a=[[Bar<|function(new:Bar): undefined|>], [Foo<|function(new:Foo): undefined|>]]}");
+        "{a=[[$Bar], [$Foo]]}");
   }
 
   public void testSupertypeWithSameField() {
@@ -1552,8 +1552,8 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         NewTypeInference.MISTYPED_ASSIGN_RHS,
         LINE_JOINER.join(
             "The right side in the assignment is not a subtype of the left side.",
-            "Expected : Bar<|function(new:Bar): ?|>",
-            "Found    : Foo<|function(new:Foo): undefined|>",
+            "Expected : $Bar",
+            "Found    : $Foo",
             "More details:",
             "Incompatible types for property prototype.",
             "Expected : Bar.prototype",
@@ -2187,7 +2187,9 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   // In function subtyping, the type of THIS should be contravariant, like the argument types.
-  // Because it's not, we get wrong disambiguation.
+  // But when overriding a method, it's covariant, and on top of that, we allow methods redefining
+  // it with @this.
+  // So we check THIS loosely for functions, and as a result, we get wrong disambiguation.
   // On top of that, this can happen in OTI when types are joined during generics instantiation.
   // Just documenting the behavior here.
   public void testUnsafeTypingOfThis() {
@@ -2231,16 +2233,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "}",
         "myArrayPrototypeMap(Foo.prototype.method, new Bar);");
 
-    this.mode = TypeInferenceMode.OTI_ONLY;
     testSets(js, output, "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}");
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    testSets("", js, output,
-        "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}",
-        NewTypeInference.INVALID_ARGUMENT_TYPE,
-        LINE_JOINER.join(
-            "Invalid type for parameter 1 of function myArrayPrototypeMap.",
-            "Expected : function(this:(Bar|Foo)): ?",
-            "Found    : function(this:Foo): ?\n"));
 
     js = LINE_JOINER.join(
         "/** @constructor */",
@@ -2274,13 +2267,48 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "}",
         "f(Foo.prototype.method);");
 
-    testSets("", js, output,
-        "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}",
-        NewTypeInference.INVALID_ARGUMENT_TYPE,
-        LINE_JOINER.join(
-            "Invalid type for parameter 1 of function f.",
-            "Expected : function(this:(Bar|Foo)): ?",
-            "Found    : function(this:Foo): ?\n"));
+    testSets("", js, output, "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}");
+  }
+
+  public void testIgnoreSpecializedProperties() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {?Array<number>} */",
+        "  this.a = null;",
+        "  this.b = 1;",
+        "}",
+        "Foo.prototype.f = function() {",
+        "  if (this.a == null) {",
+        "    this.a = [];",
+        "  }",
+        "};",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.a = 3;",
+        "  this.b = 2;",
+        "}");
+
+    String output = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {?Array<number>} */",
+        "  this.Foo$a = null;",
+        "  this.Foo$b = 1;",
+        "}",
+        "Foo.prototype.f = function() {",
+        "  if (this.Foo$a == null) {",
+        "    this.Foo$a = [];",
+        "  }",
+        "};",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.Bar$a = 3;",
+        "  this.Bar$b = 2;",
+        "}");
+
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSets("", js, output, "{a=[[Bar], [Foo]], b=[[Bar], [Foo]], f=[[Foo.prototype]]}");
   }
 
   public void testErrorOnProtectedProperty() {
@@ -2330,6 +2358,100 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "f.prototype.method = function() {};");
 
     test(DEFAULT_EXTERNS + externs, "" , "");
+  }
+
+  public void testDontRenameStaticPropertiesOnBuiltins() {
+    String externs = "Array.foobar = function() {};";
+
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.foobar = function() {};",
+        "var x = Array.foobar;");
+
+    test(
+        externs(DEFAULT_EXTERNS + externs),
+        srcs(js),
+        error(DisambiguateProperties.Warnings.INVALIDATION_ON_TYPE)
+            .withMessageContaining("foobar"));
+  }
+
+  public void testAccessConstructorPropertyDontConfuseWithPrototypeObject() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.p = 1;",
+        "}",
+        "Foo.m = function(/** !Foo */ x) {",
+        "  if (x.constructor === Foo) {",
+        "    return x.p;",
+        "  }",
+        "};",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.p = 1;",
+        "}");
+
+    String output = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.Foo$p = 1;",
+        "}",
+        "Foo.m = function(/** !Foo */ x) {",
+        "  if (x.constructor === Foo) {",
+        "    return x.Foo$p;",
+        "  }",
+        "};",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.Bar$p = 1;",
+        "}");
+
+    test(js, output);
+  }
+
+  public void testDontCrashWhenConstructingUnknownInstance() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.abc = 123;",
+        "}",
+        "/** @param {function(new:?)} ctor */",
+        "function f(ctor) {",
+        "  if (ctor.abc) { return ctor.abc; }",
+        "}");
+
+    testSame(js);
+  }
+
+  public void testDontBackOffForCastsFromObject() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.a = 1;",
+        "}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.a = 1;",
+        "}",
+        "function f(/** !Object */ x) {",
+        "  return /** @type {!Foo} */ (x);",
+        "}");
+
+    String output = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.Foo$a = 1;",
+        "}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.Bar$a = 1;",
+        "}",
+        "function f(/** !Object */ x) {",
+        "  return /** @type {!Foo} */ (x);",
+        "}");
+
+    test(js, output);
   }
 
   private void testSets(String js, String expected, final String fieldTypes) {

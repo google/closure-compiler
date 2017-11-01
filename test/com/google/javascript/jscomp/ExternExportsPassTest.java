@@ -34,6 +34,7 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
 
   @Override
   public CompilerOptions getOptions(CompilerOptions options) {
+    super.getOptions(options);
     options.externExportsPath = "externs.js";
     // Check types so we can make sure our exported externs have type information.
     options.setCheckSymbols(true);
@@ -737,9 +738,7 @@ public final class ExternExportsPassTest extends TypeICompilerTestCase {
   }
 
   public void testExportLocalPropertyInConstructor2() throws Exception {
-    // TODO(sdh): NTI gives a (technically correct) INEXISTENT_PROPERTY warning on F.prototype.x,
-    // but we may want to loosen it in this situation? (alternatively, just use ignoreWarnings).
-    this.mode = TypeInferenceMode.OTI_ONLY;
+    ignoreWarnings(NewTypeInference.INEXISTENT_PROPERTY);
     compileAndCheck(
         LINE_JOINER.join(
             "/** @constructor */function F() { /** @export */ this.x = 5;}",

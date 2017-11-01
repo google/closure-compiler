@@ -595,8 +595,14 @@ public class IR {
     return stringKey;
   }
 
+  @Deprecated
   public static Node rest(String name) {
-    return new Node(Token.REST, name(name));
+    return rest(name(name));
+  }
+
+  public static Node rest(Node target) {
+    checkState(target.isValidAssignmentTarget(), target);
+    return new Node(Token.REST, target);
   }
 
   public static Node spread(Node expr) {

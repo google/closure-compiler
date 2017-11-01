@@ -16,8 +16,8 @@
 
 package java.util.regex;
 
-import elemental2.core.JsString;
 import elemental2.core.RegExp;
+import elemental2.core.JsString;
 
 /**
  * GWT-compatible minimal replacement for {@code Matcher}
@@ -25,8 +25,10 @@ import elemental2.core.RegExp;
  * @author moz@google.com (Michael Zhou)
  */
 public class Matcher {
+
   private final RegExp regExp;
   private final RegExp regExpGlobal;
+
   private String input;
 
   Matcher(RegExp regExp, String input) {

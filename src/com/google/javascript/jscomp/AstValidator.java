@@ -240,6 +240,8 @@ public final class AstValidator implements CompilerPass {
 
       // Assignments
       case ASSIGN:
+        validateAssignmentExpression(n);
+        return;
       case ASSIGN_BITOR:
       case ASSIGN_BITXOR:
       case ASSIGN_BITAND:
@@ -252,7 +254,7 @@ public final class AstValidator implements CompilerPass {
       case ASSIGN_DIV:
       case ASSIGN_MOD:
       case ASSIGN_EXPONENT:
-        validateAssignmentExpression(n);
+        validateCompoundAssignmentExpression(n);
         return;
 
       case HOOK:
@@ -473,12 +475,8 @@ public final class AstValidator implements CompilerPass {
     if (!n.hasChildren()) {
       return;
     }
-    int i = 0;
-    for (Node child = n.getFirstChild(); child != null; child = child.getNext(), i++) {
-      // If the first child is not a STRING, this is a tagged template.
-      if (i == 0 && !child.isString()) {
-        validateExpression(child);
-      } else if (child.isString()) {
+    for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+      if (child.isString()) {
         validateString(child);
       } else {
         validateTemplateLitSub(child);
@@ -602,6 +600,7 @@ public final class AstValidator implements CompilerPass {
       case MEMBER_FUNCTION_DEF:
       case GETTER_DEF:
       case SETTER_DEF:
+        validateObjectLiteralKeyName(n);
         validateChildCount(n);
         Node function = n.getFirstChild();
         if (isAmbient) {
@@ -665,23 +664,28 @@ public final class AstValidator implements CompilerPass {
   }
 
   private void validateNonEmptyString(Node n) {
-    validateNonNullString(n);
-    if (n.getString().isEmpty()) {
+    if (validateNonNullString(n) && n.getString().isEmpty()) {
       violation("Expected non-empty string.", n);
     }
   }
 
   private void validateEmptyString(Node n) {
-    validateNonNullString(n);
-    if (!n.getString().isEmpty()) {
+    if (validateNonNullString(n) && !n.getString().isEmpty()) {
       violation("Expected empty string.", n);
     }
   }
 
-  private void validateNonNullString(Node n) {
-    if (n.getString() == null) {
+  private boolean validateNonNullString(Node n) {
+    try {
+      if (n.getString() == null) {
+        violation("Expected non-null string.", n);
+        return false;
+      }
+    } catch (Exception e) {
       violation("Expected non-null string.", n);
+      return false;
     }
+    return true;
   }
 
   private void validateName(Node n) {
@@ -770,19 +774,11 @@ public final class AstValidator implements CompilerPass {
     }
   }
 
-  private void validateDefaultValue(Token type, Node n) {
+  private void validateDefaultValue(Token contextType, Node n) {
     validateFeature(Feature.DEFAULT_PARAMETERS, n);
-    validateAssignmentExpression(n);
-    Node lhs = n.getFirstChild();
-
-    // LHS can only be a name or destructuring pattern.
-    if (lhs.isName()) {
-      validateName(lhs);
-    } else if (lhs.isArrayPattern()) {
-      validateArrayPattern(type, lhs);
-    } else {
-      validateObjectPattern(type, lhs);
-    }
+    validateChildCount(n);
+    validateLHS(contextType, n.getFirstChild());
+    validateExpression(n.getLastChild());
   }
 
   private void validateCall(Node n) {
@@ -1168,6 +1164,24 @@ public final class AstValidator implements CompilerPass {
   private void validateAssignmentExpression(Node n) {
     validateChildCount(n);
     validateLHS(n.getToken(), n.getFirstChild());
+    validateExpression(n.getLastChild());
+  }
+
+  private void validateCompoundAssignmentExpression(Node n) {
+    validateChildCount(n);
+    Token contextType = n.getToken();
+    Node lhs = n.getFirstChild();
+    switch (lhs.getToken()) {
+      case NAME:
+        validateName(lhs);
+        break;
+      case GETPROP:
+      case GETELEM:
+        validateGetPropGetElemInLHS(contextType, lhs);
+        break;
+      default:
+        violation("Invalid child for " + contextType + " node", lhs);
+    }
     validateExpression(n.getLastChild());
   }
 

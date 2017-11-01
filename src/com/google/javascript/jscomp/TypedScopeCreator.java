@@ -256,15 +256,13 @@ final class TypedScopeCreator implements ScopeCreator {
     scopeBuilder.resolveStubDeclarations();
 
     if (typedParent == null) {
-      try (NominalTypeBuilderOti.Factory factory = new NominalTypeBuilderOti.Factory()) {
-        List<NominalTypeBuilder> delegateProxies = new ArrayList<>();
-        for (FunctionType delegateProxyCtor : delegateProxyCtors) {
-          delegateProxies.add(
-              factory.builder(delegateProxyCtor, delegateProxyCtor.getInstanceType()));
-        }
-        codingConvention.defineDelegateProxyPrototypeProperties(
-            typeRegistry, delegateProxies, delegateCallingConventions);
+      List<NominalTypeBuilder> delegateProxies = new ArrayList<>();
+      for (FunctionType delegateProxyCtor : delegateProxyCtors) {
+        delegateProxies.add(
+            new NominalTypeBuilderOti(delegateProxyCtor, delegateProxyCtor.getInstanceType()));
       }
+      codingConvention.defineDelegateProxyPrototypeProperties(
+          typeRegistry, delegateProxies, delegateCallingConventions);
     }
 
     newScope.setTypeResolver(scopeBuilder);
@@ -1504,12 +1502,10 @@ final class TypedScopeCreator implements ScopeCreator {
           FunctionType superCtor = superClass.getConstructor();
           FunctionType subCtor = subClass.getConstructor();
           if (superCtor != null && subCtor != null) {
-            try (NominalTypeBuilderOti.Factory factory = new NominalTypeBuilderOti.Factory()) {
-              codingConvention.applySubclassRelationship(
-                  factory.builder(superCtor, superClass),
-                  factory.builder(subCtor, subClass),
-                  relationship.type);
-            }
+            codingConvention.applySubclassRelationship(
+                new NominalTypeBuilderOti(superCtor, superClass),
+                new NominalTypeBuilderOti(subCtor, subClass),
+                relationship.type);
           }
         }
       }
@@ -1524,10 +1520,8 @@ final class TypedScopeCreator implements ScopeCreator {
 
           if (functionType != null) {
             FunctionType getterType = typeRegistry.createFunctionType(objectType);
-            try (NominalTypeBuilderOti.Factory factory = new NominalTypeBuilderOti.Factory()) {
-              codingConvention.applySingletonGetter(
-                  factory.builder(functionType, objectType), getterType);
-            }
+            codingConvention.applySingletonGetter(
+                new NominalTypeBuilderOti(functionType, objectType), getterType);
           }
         }
       }
@@ -1595,15 +1589,13 @@ final class TypedScopeCreator implements ScopeCreator {
                   false /* isAbstract */);
           delegateProxy.setPrototypeBasedOn(delegateBaseObject);
 
-          try (NominalTypeBuilderOti.Factory factory = new NominalTypeBuilderOti.Factory()) {
-            codingConvention.applyDelegateRelationship(
-                factory.builder(delegateSuperCtor, delegateSuperObject),
-                factory.builder(delegateBaseCtor, delegateBaseObject),
-                factory.builder(delegatorCtor, delegatorObject),
-                (ObjectType) delegateProxy.getTypeOfThis(),
-                findDelegate);
-            delegateProxyCtors.add(delegateProxy);
-          }
+          codingConvention.applyDelegateRelationship(
+              new NominalTypeBuilderOti(delegateSuperCtor, delegateSuperObject),
+              new NominalTypeBuilderOti(delegateBaseCtor, delegateBaseObject),
+              new NominalTypeBuilderOti(delegatorCtor, delegatorObject),
+              (ObjectType) delegateProxy.getTypeOfThis(),
+              findDelegate);
+          delegateProxyCtors.add(delegateProxy);
         }
       }
     }

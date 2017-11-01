@@ -94,11 +94,10 @@ public final class ControlFlowAnalysisTest extends TestCase {
     return edges;
   }
 
-  private static boolean isAncestor(Node n, Node maybeDescendent) {
+  private static boolean isAncestor(Node n, Node maybeDescendant) {
     for (Node current = n.getFirstChild(); current != null;
          current = current.getNext()) {
-      if (current == maybeDescendent ||
-          isAncestor(current, maybeDescendent)) {
+      if (current == maybeDescendant || isAncestor(current, maybeDescendant)) {
         return true;
       }
     }

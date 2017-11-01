@@ -57,7 +57,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   private static final String UNEXPECTED_RETURN =
       "return must be inside function";
 
-  private static final String UNEXPECTED_LABELED_CONTINUE =
+  private static final String UNEXPECTED_LABELLED_CONTINUE =
       "continue can only use labeles of iteration statements";
 
   private static final String UNDEFINED_LABEL = "undefined label";
@@ -220,7 +220,7 @@ public final class ParserTest extends BaseJSTypeTestCase {
   public void testContinueToLabelSwitch() {
     parseError(
         "while(1) {a: switch(1) {case(1): continue a; }}",
-        UNEXPECTED_LABELED_CONTINUE);
+        UNEXPECTED_LABELLED_CONTINUE);
   }
 
   public void testContinueOutsideSwitch() {
@@ -2072,8 +2072,11 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.STRING_CONTINUATION);
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
-    Node n = parseError("'one\\\ntwo';",
-        "String continuations are not supported in this language mode.");
+    Node n = parseWarning(
+        "'one\\\ntwo';",
+        requiresLanguageModeMessage(LanguageMode.ECMASCRIPT5, Feature.STRING_CONTINUATION),
+        "String continuations are not recommended. See"
+                + " https://google.github.io/styleguide/javascriptguide.xml?showone=Multiline_string_literals#Multiline_string_literals");
     assertThat(n.getFirstFirstChild().getString()).isEqualTo("onetwo");
 
     mode = LanguageMode.ECMASCRIPT5;
@@ -2226,11 +2229,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.BINARY_LITERALS);
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
-    parseWarning("0b0001;",
-        "Binary integer literals are not supported in this language mode.");
+    parseWarning("0b0001;", getRequiresEs6Message(Feature.BINARY_LITERALS));
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning("0b0001;",
-        "Binary integer literals are not supported in this language mode.");
+    parseWarning("0b0001;", getRequiresEs6Message(Feature.BINARY_LITERALS));
     mode = LanguageMode.ECMASCRIPT6;
     parse("0b0001;");
   }
@@ -2239,11 +2240,9 @@ public final class ParserTest extends BaseJSTypeTestCase {
     expectFeatures(Feature.OCTAL_LITERALS);
     mode = LanguageMode.ECMASCRIPT3;
     strictMode = SLOPPY;
-    parseWarning("0o0001;",
-        "Octal integer literals are not supported in this language mode.");
+    parseWarning("0o0001;", getRequiresEs6Message(Feature.OCTAL_LITERALS));
     mode = LanguageMode.ECMASCRIPT5;
-    parseWarning("0o0001;",
-        "Octal integer literals are not supported in this language mode.");
+    parseWarning("0o0001;", getRequiresEs6Message(Feature.OCTAL_LITERALS));
     mode = LanguageMode.ECMASCRIPT6;
     parse("0o0001;");
   }
@@ -2814,6 +2813,12 @@ public final class ParserTest extends BaseJSTypeTestCase {
     assertNodeEquality(parse("/[\\]]/"), script(expr(regex("[\\]]"))));
   }
 
+  public void testRegExpError() {
+    parseError("/a\\/", "Expected '/' in regular expression literal");
+    parseError("/\\ca\\/", "Expected '/' in regular expression literal");
+    parseError("/\b.\\/", "Expected '/' in regular expression literal");
+  }
+
   public void testRegExpFlags() {
     // Various valid combinations.
     parse("/a/");
@@ -3052,20 +3057,27 @@ public final class ParserTest extends BaseJSTypeTestCase {
     mode = LanguageMode.ECMASCRIPT6;
     strictMode = SLOPPY;
 
-    // TODO(bradfordcsmith): new.target in global scope should be a syntax error
-    parse("new.target;");
+    parseError("new.target;", "new.target must be inside a function");
 
     parse("function f() { new.target; };");
 
-    mode = LanguageMode.ECMASCRIPT5;
-    parseWarning(
-        "function f() { new.target; }",
-        getRequiresEs6Message(Feature.NEW_TARGET));
-
     mode = LanguageMode.ECMASCRIPT3;
     parseWarning(
-        "function f() { new.target; }",
+        "class C { f() { new.target; } }",
+        getRequiresEs6Message(Feature.CLASSES),
+        getRequiresEs6Message(Feature.MEMBER_DECLARATIONS),
         getRequiresEs6Message(Feature.NEW_TARGET));
+
+    mode = LanguageMode.ECMASCRIPT5;
+    parseWarning(
+        "class C { f() { new.target; } }",
+        getRequiresEs6Message(Feature.CLASSES),
+        getRequiresEs6Message(Feature.MEMBER_DECLARATIONS),
+        getRequiresEs6Message(Feature.NEW_TARGET));
+
+    mode = LanguageMode.ECMASCRIPT6;
+    expectFeatures(Feature.CLASSES, Feature.MEMBER_DECLARATIONS, Feature.NEW_TARGET);
+    parse("class C { f() { new.target; } }");
   }
 
   public void testNewDotSomethingInvalid() {

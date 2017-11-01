@@ -345,17 +345,15 @@ public final class NominalType implements Serializable {
     return this.rawType.getAllNonInheritedInstanceProps();
   }
 
+  /**
+   * Use with caution during GlobalTypeInfo; if some types are not known/resolved,
+   * the instantiation may be wrong.
+   */
   public NominalType getInstantiatedSuperclass() {
-    checkState(this.rawType.isFrozen());
     if (this.rawType.getSuperClass() == null) {
       return null;
     }
     return this.rawType.getSuperClass().substituteGenerics(typeMap);
-  }
-
-  public JSType getPrototypePropertyOfCtor() {
-    checkState(this.rawType.isFrozen());
-    return this.rawType.getCtorPropDeclaredType("prototype");
   }
 
   // We require a frozen type for the interfaces here because the inheritance
@@ -677,10 +675,10 @@ public final class NominalType implements Serializable {
     if (ctx.forAnnotation()) {
       builder.append("!");
     }
+    this.rawType.appendTo(builder, ctx);
     if (this.typeMap.isEmpty()) {
-      return this.rawType.appendTo(builder);
+      return builder;
     }
-    builder.append(this.rawType.name);
     ImmutableList<String> typeParams = this.rawType.getTypeParameters();
     checkState(this.typeMap.keySet().containsAll(typeParams));
     boolean firstIteration = true;

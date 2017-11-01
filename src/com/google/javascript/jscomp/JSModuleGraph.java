@@ -571,7 +571,8 @@ public final class JSModuleGraph implements Serializable {
       }
 
       if (dependency != null) {
-        orderedInputs.addAll(getDepthFirstDependenciesOf(dependency, unreachedInputs, inputsByProvide));
+        orderedInputs.addAll(
+            getDepthFirstDependenciesOf(dependency, unreachedInputs, inputsByProvide));
       }
     }
 

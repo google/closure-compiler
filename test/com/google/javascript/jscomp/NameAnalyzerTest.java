@@ -531,6 +531,18 @@ public final class NameAnalyzerTest extends CompilerTestCase {
     test("class D {} class C extends D {}" , "");
   }
 
+  /** @bug 67430253 */
+  public void testEs6ClassExtendsQualifiedName1() {
+    testSame("var ns = {}; ns.Class1 = class {}; class Class2 extends ns.Class1 {}; use(Class2);");
+  }
+
+  /** @bug 67430253 */
+  public void testEs6ClassExtendsQualifiedName2() {
+    test(
+        "var ns = {}; ns.Class1 = class {}; use(ns.Class1); class Class2 extends ns.Class1 {}",
+        "var ns = {}; ns.Class1 = class {}; use(ns.Class1);");
+  }
+
   public void testAssignmentToThisPrototype() {
     testSame("Function.prototype.inherits = function(parentCtor) {" +
              "  function tempCtor() {};" +
@@ -577,40 +589,30 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   }
 
   public void testInherits1() {
-    test("var a = {}; var b = {}; b.inherits(a)", "");
-  }
-
-  public void testInherits2() {
     test("var a = {}; var b = {}; var goog = {}; goog.inherits(b, a)", "");
   }
 
-  public void testInherits3() {
+  public void testInherits2() {
     testSame("var a = {}; this.b = {}; b.inherits(a);");
   }
 
-  public void testInherits4() {
+  public void testInherits3() {
     testSame("var a = {}; this.b = {}; var goog = {}; goog.inherits(b, a);");
   }
 
-  public void testInherits5() {
-    test("this.a = {}; var b = {}; b.inherits(a);",
-         "this.a = {}");
-  }
-
-  public void testInherits6() {
+  public void testInherits4() {
     test("this.a = {}; var b = {}; var goog = {}; goog.inherits(b, a);",
          "this.a = {}");
   }
 
-  public void testInherits7() {
-    testSame("var a = {}; this.b = {}; var goog = {};" +
-        " goog.inherits = function() {}; goog.inherits(b, a);");
-  }
-
-  public void testInherits8() {
-    // Make sure that exceptions aren't thrown if inherits() is used as
-    // an R-value
-    test("this.a = {}; var b = {}; var c = b.inherits(a);", "this.a = {};");
+  public void testInherits5() {
+    testSame(
+        LINE_JOINER.join(
+            "var a = {};",
+            "this.b = {};",
+            "var goog = {};",
+            "goog.inherits = function() {};",
+            "goog.inherits(b, a);"));
   }
 
   public void testMixin1() {
@@ -1448,7 +1450,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
   }
 
   // Currently this crashes the compiler because it erroneoursly removes var x
-  // and later a sanity check fails.
+  // and later a validity check fails.
   public void testAssignWithCall2() {
     test("var fun, x; (123, fun = function(){ x; })();",
         "(123, function(){ x; })();");
@@ -2155,8 +2157,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
       "if (y instanceof b) {}"));
   }
 
-  // We cannot leave x.a.prototype there because it will
-  // fail sanity var check.
+  // We cannot leave x.a.prototype there because it will fail ValidityCheck.checkVars.
   public void testBrokenNamespaceWithPrototypeAssignment() {
     test("var x = {}; x.a.prototype = 1", "");
   }
@@ -2363,7 +2364,7 @@ public final class NameAnalyzerTest extends CompilerTestCase {
         "function f() {} var {x: y} = f(); g(y)");
 
     // complicated destructuring cases
-    // TODO (blickley): Look into adding a pass to completely remove empty destructuring patterns
+    // TODO(blickly): Look into adding a pass to completely remove empty destructuring patterns
     test(
         "var {a: a, b: [{c: d}]} = o;",
         "var {b: [{}]} = o; ");

@@ -142,8 +142,9 @@ public class RewritePolyfills implements HotSwapCompilerPass {
 
     private static final Function<String, String> EXTRACT_SUFFIX =
         new Function<String, String>() {
-          @Override public String apply(String arg) {
-            return arg.substring(arg.lastIndexOf(".") + 1);
+          @Override
+          public String apply(String arg) {
+            return arg.substring(arg.lastIndexOf('.') + 1);
           }
         };
   }

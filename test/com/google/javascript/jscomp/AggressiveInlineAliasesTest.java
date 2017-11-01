@@ -535,6 +535,11 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
         "var a = { b: { c: 5 } };" + "function f() { var x = null;" + "f(a.b.c);" + "}");
   }
 
+  public void testLocalAlias8() {
+    testSame(
+        "var a = { b: 3 };" + "function f() { if (true) { var x = a; f(x.b); } x = { b : 4}; }");
+  }
+
   public void testLocalAliasOfEnumWithInstanceofCheck() {
     test(
         LINE_JOINER.join(
@@ -765,5 +770,127 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             + "/** @const */ var M = {};"
             + "/** @typedef { D.L } */ M.L = null;"
             + "use(D.L.A);");
+  }
+
+  public void testGlobalAliasWithConst() {
+    test("const a = {}; a.b = {}; const c = a.b;", "const a = {}; a.b = {}; const c = null");
+
+    test(
+        "const a = {}; a.b = {}; const c = a.b; use(c);",
+        "const a = {}; a.b = {}; const c = null; use(a.b)");
+
+    testSame("const a = {}; a.b;");
+  }
+
+  public void testGlobalAliasWithLet1() {
+    test("let a = {}; a.b = {}; let c = a.b;", "let a = {}; a.b = {}; let c = null");
+
+    test(
+        "let a = {}; a.b = {}; let c = a.b; use(c);",
+        "let a = {}; a.b = {}; let c = null; use(a.b)");
+
+    testSame("let a = {}; a.b;");
+
+    test(
+        "let a = {}; if (true) { a.b = 5; } let c = a.b; use(c);",
+        "let a = {}; if (true) { a.b = 5; } let c = null; use(a.b);");
+  }
+
+  public void testGlobalAliasWithLet2() {
+    // Inlining ns is unsafe because ns2 may or may not be equal to ns.
+    testSame(
+        LINE_JOINER.join(
+            "let ns = {};",
+            "ns.foo = 'bar';",
+            "let ns2;",
+            "if (true) {",
+            "  ns2 = ns;",
+            "}",
+            "use(ns2.foo);"));
+
+    // In this case, it would be safe to inline ns, as long as all subsequent references
+    // to ns2 are inside the if block, but the algorithm is not complex enough to know that.
+    testSame(
+        LINE_JOINER.join(
+            "let ns = {};",
+            "ns.foo = 'bar';",
+            "let ns2;",
+            "if (true) {",
+            "  ns2 = ns;",
+            "use(ns2.foo);",
+            "}"));
+  }
+
+  public void testLocalAliasWithLet1() {
+    test(
+        LINE_JOINER.join(
+            "var a = {};",
+            "a.b = {};",
+            "function f() {",
+            "  if (true) {",
+            "    let c = a.b;",
+            "    alert(c);",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "var a = {};",
+            "a.b = {};",
+            "function f() {",
+            "  if (true) {",
+            "    let c = null;",
+            "    alert(a.b);",
+            "  }",
+            "}"));
+  }
+
+  public void testLocalAliasWithLet2() {
+    test(
+        "var a = {}; a.b = {}; if (true) { let c = a.b;  alert(c); }",
+        "var a = {}; a.b = {}; if (true) { let c = null;  alert(a.b); }");
+  }
+
+  public void testLocalAliasWithLet3() {
+    test(
+        "let ns = {a: 1}; { let y = ns; use(y.a); }",
+        "let ns = {a: 1}; { let y = null; use(ns.a); }");
+  }
+
+  public void testLocalAliasInsideClass() {
+    test(
+        "var a = {x: 5}; class A { fn() { var b = a; use(b.x); } }",
+        "var a = {x: 5}; class A { fn() { var b = null; use(a.x); } }");
+  }
+
+  public void testGlobalClassAlias1() {
+    test(
+        "class A {} A.foo = 5; const B = A; use(B.foo);",
+        "class A {} A.foo = 5; const B = null; use(A.foo)");
+  }
+
+  public void testGlobalClassAlias2() {
+    test(
+        "class A { static fn() {} } const B = A; B.fn();",
+        "class A { static fn() {} } const B = null; A.fn();");
+  }
+
+  public void testGlobalClassAlias3() {
+    test(
+        "class A {} const B = A; B.prototype.fn = () => 5;",
+        "class A {} const B = null; A.prototype.fn = () => 5;");
+  }
+
+  public void testDestructuringAlias1() {
+    // CollapseProperties backs off on destructuring, so it's okay not to inline here.
+    testSame("var a = {x: 5}; var [b] = [a]; use(b.x);");
+  }
+
+  public void testDestructuringAlias2() {
+    testSame("var a = {x: 5}; var {b} = {b: a}; use(b.x);");
+  }
+
+  public void testDefaultParamAlias() {
+    test(
+        "var a = {b: 5}; var b = a; function f(x=b) { alert(x.b); }",
+        "var a = {b: 5}; var b = null; function f(x=a) { alert(x.b); }");
   }
 }

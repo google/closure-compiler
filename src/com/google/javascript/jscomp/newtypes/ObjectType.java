@@ -214,15 +214,21 @@ final class ObjectType implements TypeWithProperties {
   }
 
   /**
-   * If this a prototype object (e.g. Foo.prototype), returns the
+   * If this a prototype object (e.g. Foo.prototype), this method returns the
    * associated constructor (e.g. Foo). Otherwise returns null.
+   *
+   * Note that we don't have a robust way of recognizing prototype objects, so we use a heuristic.
+   * It must have the "constructor" property, and the same nominal type as the stored prototype.
    */
   FunctionType getOwnerFunction() {
     JSType t = getProp(new QualifiedName("constructor"));
     if (t != null && t.isFunctionType()) {
       FunctionType maybeCtor = t.getFunTypeIfSingletonObj();
       if (maybeCtor.isSomeConstructorOrInterface()) {
-        return maybeCtor;
+        JSType proto = maybeCtor.getPrototypeOfNewInstances();
+        if (this.nominalType.equals(proto.getNominalTypeIfSingletonObj())) {
+          return maybeCtor;
+        }
       }
     }
     return null;
@@ -1601,12 +1607,15 @@ final class ObjectType implements TypeWithProperties {
     if (isEnumObject() || isPrototypeObject() || (this.ns != null && this.fn != null)) {
       return false;
     }
-    // All constructors have "Function" as their nominalType, so look at instance
-    // types instead for these cases.
-    NominalType nt =
-        (fn != null && fn.isSomeConstructorOrInterface())
-        ? fn.getInstanceTypeOfCtor().getObjTypeIfSingletonObj().nominalType
-        : this.nominalType;
+    NominalType nt;
+    if (fn != null && fn.isSomeConstructorOrInterface()) {
+      // All constructors have "Function" as their nominalType, so look at instance
+      // types instead for these cases.
+      ObjectType instance = fn.getInstanceTypeOfCtor().getObjTypeIfSingletonObj();
+      nt = instance != null ? instance.nominalType : getCommonTypes().getObjectType();
+    } else {
+      nt = this.nominalType;
+    }
     return nt.isFunction() || nt.isBuiltinObject() || nt.isLiteralObject();
   }
 
@@ -1661,7 +1670,7 @@ final class ObjectType implements TypeWithProperties {
   StringBuilder appendTo(StringBuilder builder, ToStringContext ctx) {
     // "Foo.prototype" is a valid type when appropriate.
     if (isPrototypeObject()) {
-      return builder.append(getOwnerFunction().getThisType()).append(".prototype");
+      return builder.append(getOwnerFunction().getThisType().getDisplayName()).append(".prototype");
     }
     // Annotations need simpler output that can be re-parsed.
     if (ctx.forAnnotation()) {
@@ -1695,14 +1704,17 @@ final class ObjectType implements TypeWithProperties {
     } else if (isDict()) {
       builder.append("dict");
     } else if (this.ns != null) {
+      if (this.fn != null && (this.fn.isUniqueConstructor() || this.fn.isInterfaceDefinition())) {
+        // Add $ to distinguish a constructor namespace from an instance type with the same name
+        builder.append("$");
+      }
       builder.append(this.ns);
-    }
-    if (this.fn != null) {
+    } else if (this.fn != null) {
       builder.append("<|");
       fn.appendTo(builder, ctx);
       builder.append("|>");
     }
-    if (ns == null || !props.isEmpty()) {
+    if (ns == null) {
       appendPropsTo(builder, ctx);
     }
     if (isLoose) {

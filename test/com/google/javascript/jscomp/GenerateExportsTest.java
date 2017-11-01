@@ -52,11 +52,6 @@ public final class GenerateExportsTest extends CompilerTestCase {
     this.allowNonGlobalExports  = true;
   }
 
-  @Override
-  protected void testExternChanges(String input, String expectedExtern) {
-    disableCompareAsTree();
-    super.testExternChanges(input, expectedExtern);
-  }
 
   public void testExportSymbol() {
     test(
@@ -228,7 +223,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @export */ G = class {};",
             "google_exportSymbol('G', G);",
-            "/** @public @export */ G.foo = class {};",
+            "/** @export */ G.foo = class {};",
             "goog.exportProperty(G, 'foo', G.foo)"));
 
     test(
@@ -237,7 +232,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
             "/** @export */ G.prototype.foo = class {};"),
         LINE_JOINER.join(
             "G = class {};",
-            "/** @export @public */ G.prototype.foo = class {};",
+            "/** @export */ G.prototype.foo = class {};",
             "goog.exportProperty(G.prototype, 'foo', G.prototype.foo)"));
   }
 
@@ -249,7 +244,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
             "  /** @export */ method() {}",
             "}"),
         LINE_JOINER.join(
-            "/** @export @public */ class G { /** @export */ method() {} }",
+            "/** @export */ class G { /** @export */ method() {} }",
             "google_exportSymbol('G', G);",
             "goog.exportProperty(G.prototype, 'method', G.prototype.method);"));
 
@@ -260,7 +255,7 @@ public final class GenerateExportsTest extends CompilerTestCase {
             "  /** @export */ static method() {}",
             "}"),
         LINE_JOINER.join(
-            "/** @export @public */ class G { /** @export */ static method() {} }",
+            "/** @export */ class G { /** @export */ static method() {} }",
             "google_exportSymbol('G', G);",
             "goog.exportProperty(G, 'method', G.method);"));
   }

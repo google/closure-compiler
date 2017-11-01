@@ -25,7 +25,7 @@ import java.util.Set;
  *
  * @author nicksantos@google.com (Nick Santos)
  */
-class SanityCheck implements CompilerPass {
+class ValidityCheck implements CompilerPass {
 
   static final DiagnosticType CANNOT_PARSE_GENERATED_CODE =
       DiagnosticType.error("JSC_CANNOT_PARSE_GENERATED_CODE",
@@ -47,42 +47,41 @@ class SanityCheck implements CompilerPass {
   private final AbstractCompiler compiler;
   private final AstValidator astValidator;
 
-  SanityCheck(AbstractCompiler compiler) {
+  ValidityCheck(AbstractCompiler compiler) {
     this.compiler = compiler;
     this.astValidator = new AstValidator(compiler);
   }
 
   @Override
   public void process(Node externs, Node root) {
-    sanityCheckAst(externs, root);
-    sanityCheckNormalization(externs, root);
-    sanityCheckCodeGeneration(root);
-    sanityCheckVars(externs, root);
-    sanityCheckExternProperties(externs);
+    checkAst(externs, root);
+    checkNormalization(externs, root);
+    checkCodeGeneration(root);
+    checkVars(externs, root);
+    checkExternProperties(externs);
   }
 
   /**
-   * Sanity check the AST is structurally accurate.
+   * Check that the AST is structurally accurate.
    */
-  private void sanityCheckAst(Node externs, Node root) {
+  private void checkAst(Node externs, Node root) {
     astValidator.validateCodeRoot(externs);
     astValidator.validateCodeRoot(root);
   }
 
-  private void sanityCheckVars(Node externs, Node root) {
+  private void checkVars(Node externs, Node root) {
     if (compiler.getLifeCycleStage().isNormalized()) {
       (new VarCheck(compiler, true)).process(externs, root);
     }
   }
 
   /**
-   * Sanity checks code generation by performing it once, parsing the result,
-   * then generating code from the second parse tree to verify that it matches
-   * the code generated from the first parse tree.
+   * Checks code generation by performing it once, parsing the result, then generating code from the
+   * second parse tree to verify that it matches the code generated from the first parse tree.
    *
    * @return The regenerated parse tree. Null on error.
    */
-  private Node sanityCheckCodeGeneration(Node root) {
+  private Node checkCodeGeneration(Node root) {
     if (compiler.hasHaltingErrors()) {
       // Don't even bother checking code generation if we already know the
       // the code is bad.
@@ -90,33 +89,30 @@ class SanityCheck implements CompilerPass {
     }
 
     String source = compiler.toSource(root);
-    Node root2 = compiler.parseSyntheticCode("<SanityCheck.java>", source);
+    Node root2 = compiler.parseSyntheticCode("<ValidityCheck.java>", source);
     if (compiler.hasHaltingErrors()) {
       compiler.report(JSError.make(CANNOT_PARSE_GENERATED_CODE,
               Strings.truncateAtMaxLength(source, 100, true)));
 
-      // Throw an exception, so that the infrastructure will tell us
-      // which pass violated the sanity check.
-      throw new IllegalStateException("Sanity Check failed");
+      // Throw an exception, so that the infrastructure will tell us which pass violated the check.
+      throw new IllegalStateException("Validity Check failed");
     }
 
     String source2 = compiler.toSource(root2);
     if (!source.equals(source2)) {
       compiler.report(JSError.make(GENERATED_BAD_CODE, source, source2));
 
-      // Throw an exception, so that the infrastructure will tell us
-      // which pass violated the sanity check.
-      throw new IllegalStateException("Sanity Check failed");
+      // Throw an exception, so that the infrastructure will tell us which pass violated the check.
+      throw new IllegalStateException("Validity Check failed");
     }
 
     return root2;
   }
 
   /**
-   * Sanity checks the AST. This is by verifying the normalization passes do
-   * nothing.
+   * Verifies that the normalization pass does nothing on an already-normalized tree.
    */
-  private void sanityCheckNormalization(Node externs, Node root) {
+  private void checkNormalization(Node externs, Node root) {
     // Verify nothing has inappropriately denormalize the AST.
     CodeChangeHandler handler = new ForbiddenChange();
     compiler.addChangeHandler(handler);
@@ -138,7 +134,7 @@ class SanityCheck implements CompilerPass {
     compiler.removeChangeHandler(handler);
   }
 
-  private void sanityCheckExternProperties(Node externs) {
+  private void checkExternProperties(Node externs) {
     Set<String> externProperties = compiler.getExternProperties();
     if (externProperties == null) {
       // GatherExternProperties hasn't run yet. Don't report a violation.
@@ -151,10 +147,9 @@ class SanityCheck implements CompilerPass {
               EXTERN_PROPERTIES_CHANGED,
               externProperties.toString(),
               compiler.getExternProperties().toString()));
-      // Throw an exception, so that the infrastructure will tell us
-      // which pass violated the sanity check.
+      // Throw an exception, so that the infrastructure will tell us which pass violated the check.
       throw new IllegalStateException(
-          "Sanity Check failed: Extern properties changed from:\n"
+          "Validity Check failed: Extern properties changed from:\n"
               + externProperties
               + "\nto:\n"
               + compiler.getExternProperties());

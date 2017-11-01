@@ -35,6 +35,7 @@ import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
@@ -318,7 +319,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     String legacyNamespace; // "a.b.c"
     String contentsPrefix; // "module$contents$a$b$c_
     final Set<String> topLevelNames = new HashSet<>(); // For prefixed content renaming.
-    final Deque<ScriptDescription> childScripts = new LinkedList<>();
+    final Deque<ScriptDescription> childScripts = new ArrayDeque<>();
     final Map<String, String> namesToInlineByAlias = new HashMap<>(); // For alias inlining.
 
     /**
@@ -621,7 +622,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
       };
 
   // Per script state needed for rewriting.
-  private Deque<ScriptDescription> scriptStack = new LinkedList<>();
+  private final Deque<ScriptDescription> scriptStack = new ArrayDeque<>();
   private ScriptDescription currentScript = null;
 
   // Global state tracking an association between the dotted names of goog.module()s and whether
@@ -754,7 +755,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
 
   @Override
   public void process(Node externs, Node root) {
-    Deque<ScriptDescription> scriptDescriptions = new LinkedList<>();
+    Deque<ScriptDescription> scriptDescriptions = new ArrayDeque<>();
     processAllFiles(scriptDescriptions, externs);
     processAllFiles(scriptDescriptions, root);
   }
@@ -823,6 +824,10 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     if (!n.hasChildren()) {
       Node nameNode = IR.name(n.getString()).srcref(n);
       n.addChildToBack(nameNode);
+      Node changeScope = NodeUtil.getEnclosingChangeScopeRoot(n);
+      if (changeScope != null) {
+        compiler.reportChangeToChangeScope(changeScope);
+      }
     }
   }
 
@@ -1054,7 +1059,7 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   }
 
   private void recordTopLevelVarNames(Node varNode) {
-    for (Node lhs : NodeUtil.getLhsNodesOfDeclaration(varNode)) {
+    for (Node lhs : NodeUtil.findLhsNodesInNode(varNode)) {
       String name = lhs.getString();
       currentScript.topLevelNames.add(name);
     }

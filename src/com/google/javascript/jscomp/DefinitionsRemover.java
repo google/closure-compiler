@@ -64,7 +64,7 @@ class DefinitionsRemover {
     } else if (parent.isAssign() && parent.getFirstChild() == n) {
       return new AssignmentDefinition(parent, isExtern);
     } else if (NodeUtil.isObjectLitKey(n)) {
-      return new ObjectLiteralPropertyDefinition(parent, n, n.getFirstChild(), isExtern);
+      return new ObjectLiteralPropertyDefinition(n, n.getFirstChild(), isExtern);
     } else if (NodeUtil.getEnclosingType(n, Token.PARAM_LIST) != null && n.isName()) {
       Node paramList = NodeUtil.getEnclosingType(n, Token.PARAM_LIST);
       Node function = paramList.getParent();
@@ -470,24 +470,19 @@ class DefinitionsRemover {
    * Example: var x = { e : function() { } };
    */
   static final class ObjectLiteralPropertyDefinition extends Definition {
-
-    private final Node literal;
     private final Node name;
     private final Node value;
 
-    ObjectLiteralPropertyDefinition(Node lit, Node name, Node value,
-          boolean isExtern) {
+    ObjectLiteralPropertyDefinition(Node name, Node value, boolean isExtern) {
       super(isExtern, NameBasedDefinitionProvider.getSimplifiedName(getLValue(name)));
 
-      this.literal = lit;
       this.name = name;
       this.value = value;
     }
 
     @Override
     public void performRemove(AbstractCompiler compiler) {
-      literal.removeChild(name);
-      compiler.reportChangeToEnclosingScope(literal);
+      NodeUtil.deleteNode(name, compiler);
     }
 
     @Override
@@ -506,6 +501,7 @@ class DefinitionsRemover {
         case SETTER_DEF:
         case GETTER_DEF:
         case STRING_KEY:
+        case MEMBER_FUNCTION_DEF:
           // TODO(johnlenz): return a GETELEM for quoted strings.
           return IR.getprop(
               IR.objectlit(),

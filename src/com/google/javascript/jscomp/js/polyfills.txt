@@ -7,7 +7,7 @@ Array.prototype.find es6 es3 es6/array/find
 Array.prototype.findIndex es6 es3 es6/array/findindex
 Array.prototype.includes es7 es3 es6/array/includes
 Array.prototype.keys es6 es3 es6/array/keys
-Array.prototype.values es6 es3 es6/array/values
+Array.prototype.values es8 es3 es6/array/values
 Map es6 es3 es6/map
 Math.acosh es6 es3 es6/math/acosh
 Math.asinh es6 es3 es6/math/asinh
@@ -32,6 +32,7 @@ Number.isFinite es6 es3 es6/number/isfinite
 Number.isInteger es6 es3 es6/number/isinteger
 Number.isNaN es6 es3 es6/number/isnan
 Number.isSafeInteger es6 es3 es6/number/issafeinteger
+Number.parseFloat es6 es3 es6/number/parsefloat
 Number.parseInt es6 es3 es6/number/parseint
 Object.assign es6 es3 es6/object/assign
 Object.entries es8 es3 es6/object/entries

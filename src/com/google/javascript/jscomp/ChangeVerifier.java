@@ -211,6 +211,12 @@ public class ChangeVerifier {
       }
     }
 
+    if (thisNode.getParent() != null && thisNode.getParent().isParamList()) {
+      if (thisNode.isUnusedParameter() != thatNode.isUnusedParameter()) {
+        return false;
+      }
+    }
+
     Node thisChild = thisNode.getFirstChild();
     Node thatChild = thatNode.getFirstChild();
     while (thisChild != null && thatChild != null) {

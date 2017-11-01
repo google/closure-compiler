@@ -111,7 +111,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       "required entry point \"{0}\" never provided");
 
   static final DiagnosticType MISSING_MODULE_ERROR = DiagnosticType.error(
-      "JSC_MISSING_ENTRY_ERROR",
+      "JSC_MISSING_MODULE_ERROR",
       "unknown module \"{0}\" specified in entry point spec");
 
   static final DiagnosticType INCONSISTENT_MODULE_DEFINITIONS = DiagnosticType.error(
@@ -175,7 +175,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private ImmutableMap<String, String> inputPathByWebpackId;
 
   /**
-   * Subclasses are responsible for loading soures that were not provided as explicit inputs to the
+   * Subclasses are responsible for loading sources that were not provided as explicit inputs to the
    * compiler. For example, looking up sources referenced within sourcemaps.
    */
   public static class ExternalSourceLoader {
@@ -233,9 +233,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   public PerformanceTracker tracker;
 
-  // Used by optimize-returns, optimize-parameters and remove-unused-variables
-  private DefinitionUseSiteFinder defFinder = null;
-
   // Types that have been forward declared
   private Set<String> forwardDeclaredTypes = new HashSet<>();
 
@@ -253,7 +250,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       "JSC_OPTIMIZE_LOOP_ERROR",
       "Exceeded max number of optimization iterations: {0}");
   public static final DiagnosticType MOTION_ITERATIONS_ERROR =
-      DiagnosticType.error("JSC_OPTIMIZE_LOOP_ERROR",
+      DiagnosticType.error("JSC_MOTION_ITERATIONS_ERROR",
           "Exceeded max number of code motion iterations: {0}");
 
   private final CompilerExecutor compilerExecutor = createCompilerExecutor();
@@ -362,10 +359,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     // provided by the user.  This should be handled a different way.
 
     // Turn off type-based optimizations when type checking is off
-    if (!options.checkTypes) {
-      options.setDisambiguateProperties(false);
-      options.setAmbiguateProperties(false);
-      options.setInlineProperties(false);
+    if (!options.isTypecheckingEnabled()) {
       options.setUseTypesForLocalOptimization(false);
       options.setUseTypesForOptimization(false);
     }
@@ -441,12 +435,13 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     } else if (ntiState == DiagnosticGroupState.OFF) {
       options.setNewTypeInference(false);
     }
+    if (options.getNewTypeInference()) {
+      // Suppress the const checks of CheckAccessControls; NTI performs these checks better.
+      options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS_CONST, CheckLevel.OFF);
+    }
     // When running OTI after NTI, turn off the warnings from OTI.
     if (options.getNewTypeInference() && options.getRunOTIafterNTI()) {
       options.checkTypes = true;
-      // Suppress warnings from the const checks of CheckAccessControls so as to avoid
-      // duplication.
-      options.setWarningLevel(DiagnosticGroups.ACCESS_CONTROLS_CONST, CheckLevel.OFF);
       if (!options.reportOTIErrorsUnderNTI) {
         options.setWarningLevel(
             DiagnosticGroups.OLD_CHECK_TYPES,
@@ -908,7 +903,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     }
 
     if (options.devMode == DevMode.START_AND_END) {
-      runSanityCheck();
+      runValidityCheck();
     }
     setProgress(1.0, "recordFunctionInformation");
 
@@ -1061,7 +1056,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   private PhaseOptimizer createPhaseOptimizer() {
     PhaseOptimizer phaseOptimizer = new PhaseOptimizer(this, tracker);
     if (options.devMode == DevMode.EVERY_PASS) {
-      phaseOptimizer.setSanityCheck(sanityCheck);
+      phaseOptimizer.setValidityCheck(validityCheck);
     }
     if (options.getCheckDeterminism()) {
       phaseOptimizer.setPrintAstHashcodes(true);
@@ -1096,22 +1091,21 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     p.process(externsRoot, jsRoot);
   }
 
-  private final PassFactory sanityCheck =
-      new PassFactory("sanityCheck", false) {
+  private final PassFactory validityCheck = new PassFactory("validityCheck", false) {
     @Override
     protected CompilerPass create(AbstractCompiler compiler) {
-      return new SanityCheck(compiler);
+      return new ValidityCheck(compiler);
     }
   };
 
-  private void maybeSanityCheck() {
+  private void maybeRunValidityCheck() {
     if (options.devMode == DevMode.EVERY_PASS) {
-      runSanityCheck();
+      runValidityCheck();
     }
   }
 
-  private void runSanityCheck() {
-    sanityCheck.create(this).process(externsRoot, jsRoot);
+  private void runValidityCheck() {
+    validityCheck.create(this).process(externsRoot, jsRoot);
   }
 
   /**
@@ -1153,7 +1147,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     currentPassName = null;
     currentTracer = null;
 
-    maybeSanityCheck();
+    maybeRunValidityCheck();
   }
 
   @Override
@@ -1177,11 +1171,16 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   final String getCurrentJsSource() {
+    SourceMap sourceMap = getSourceMap();
+    if (sourceMap != null) {
+      sourceMap.reset();
+    }
+
     List<String> fileNameRegexList = options.filesToPrintAfterEachPassRegexList;
-    if (fileNameRegexList.isEmpty()) {
-      return toSource();
-    } else {
-      StringBuilder builder = new StringBuilder();
+    List<String> moduleNameRegexList = options.modulesToPrintAfterEachPassRegexList;
+    StringBuilder builder = new StringBuilder();
+
+    if (!fileNameRegexList.isEmpty()) {
       checkNotNull(jsRoot);
       for (Node fileNode : jsRoot.children()) {
         String fileName = fileNode.getSourceFileName();
@@ -1193,7 +1192,23 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           }
         }
       }
+    }
+    if (!moduleNameRegexList.isEmpty()) {
+      for (JSModule jsModule : modules) {
+        for (String regex : moduleNameRegexList) {
+          if (jsModule.getName().matches(regex)) {
+            String source = "// module '" + jsModule.getName() + "'\n" + toSource(jsModule);
+            builder.append(source);
+            break;
+          }
+        }
+      }
+    }
+
+    if (!builder.toString().isEmpty()) {
       return builder.toString();
+    } else {
+      return toSource();
     }
   }
 
@@ -1537,9 +1552,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   @Override
   void forwardDeclareType(String typeName) {
-    if (options.allowUnfulfilledForwardDeclarations()) {
-      forwardDeclaredTypes.add(typeName);
-    }
+    forwardDeclaredTypes.add(typeName);
   }
 
   @Override
@@ -1679,16 +1692,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     return this.globalTypeInfo;
   }
 
-  @Override
-  DefinitionUseSiteFinder getDefinitionFinder() {
-    return this.defFinder;
-  }
-
-  @Override
-  void setDefinitionFinder(DefinitionUseSiteFinder defFinder) {
-    this.defFinder = defFinder;
-  }
-
   public void maybeSetTracker() {
     if (options.getTracerMode().isOn()) {
       PrintStream tracerOutput =
@@ -1736,7 +1739,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         processAMDModules();
       }
 
-      if (options.needsTranspilationFrom(FeatureSet.ES6_MODULES)
+      if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)
           || options.processCommonJSModules) {
 
         this.moduleLoader =
@@ -1839,7 +1842,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
         }
 
         if (devMode) {
-          runSanityCheck();
+          runValidityCheck();
           if (hasErrors()) {
             return null;
           }
@@ -1966,7 +1969,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       orderedInputs.addAll(
           depthFirstDependenciesFromInput(
               entryPoint,
-              false,
+              /* wasImportedByModule = */ false,
               workingInputSet,
               inputsByIdentifier,
               inputsByProvide,
@@ -1976,7 +1979,7 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
   }
 
   /** For a given input, order it's dependencies in a depth first traversal */
-  List<CompilerInput> depthFirstDependenciesFromInput(
+  private List<CompilerInput> depthFirstDependenciesFromInput(
       CompilerInput input,
       boolean wasImportedByModule,
       Set<CompilerInput> inputs,
@@ -2455,7 +2458,8 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     builder.setCompilerOptions(options);
     builder.setSourceMap(sourceMap);
     builder.setTagAsExterns(firstOutput && n.isFromExterns());
-    builder.setTagAsTypeSummary(firstOutput && !n.isFromExterns() && options.shouldGenerateTypedExterns());
+    builder.setTagAsTypeSummary(
+        firstOutput && !n.isFromExterns() && options.shouldGenerateTypedExterns());
     builder.setTagAsStrict(firstOutput && options.shouldEmitUseStrict());
     return builder.build();
   }

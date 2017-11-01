@@ -57,9 +57,8 @@ class PrepareAst implements CompilerPass {
       normalizeNodeTypes(root);
     } else {
       // Don't perform "PrepareAnnotations" when doing checks as
-      // they currently aren't valid during sanity checks.  In particular,
-      // they DIRECT_EVAL shouldn't be applied after inlining has been
-      // performed.
+      // they currently aren't valid during validity checks.  In particular,
+      // they DIRECT_EVAL shouldn't be applied after inlining has been performed.
       if (externs != null) {
         NodeTraversal.traverseEs6(
             compiler, externs, new PrepareAnnotations());

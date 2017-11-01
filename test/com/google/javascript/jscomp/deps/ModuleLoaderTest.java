@@ -223,7 +223,7 @@ public final class ModuleLoaderTest extends TestCase {
           ModuleLoader.ResolutionMode.BROWSER);
       fail("Expected error");
     } catch (IllegalArgumentException e) {
-      assertThat(e.getMessage()).contains("Duplicate module path");
+      assertThat(e).hasMessageThat().contains("Duplicate module path");
     }
   }
 

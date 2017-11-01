@@ -386,8 +386,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     }
     // When a function is a namespace, the parent scope has a better type.
     if (name.equals(this.name) && !parent.isFunctionNamespace(name)) {
-      return this.commonTypes
-          .fromFunctionType(getDeclaredFunctionType().toFunctionType());
+      return this.commonTypes.fromFunctionType(getDeclaredFunctionType().toFunctionType());
     }
     if (parent != null) {
       return parent.getDeclaredTypeOf(name);
@@ -484,12 +483,16 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
   }
 
   Typedef getTypedef(String name) {
-    QualifiedName qname = QualifiedName.fromQualifiedString(name);
+    return getTypedef(QualifiedName.fromQualifiedString(name));
+  }
+
+  Typedef getTypedef(QualifiedName qname) {
     Declaration decl;
     if (qname.isIdentifier()) {
       decl = getDeclaration(qname, true);
     } else {
-      decl = getNamespace(qname.getLeftmostName()).getDeclaration(qname.getAllButLeftmost());
+      Namespace ns = getNamespace(qname.getLeftmostName());
+      decl = ns == null ? null : ns.getDeclaration(qname.getAllButLeftmost());
     }
     return decl == null ? null : decl.getTypedef();
   }

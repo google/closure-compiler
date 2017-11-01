@@ -23,13 +23,13 @@ import com.google.common.base.Objects;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.Serializable;
 import java.util.AbstractSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -50,7 +50,7 @@ import javax.annotation.Nullable;
 public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
 
   /** All values with the same root node are in the same equivalence set. */
-  private final Map<E, Node<E>> elmap = Maps.newLinkedHashMap();
+  private final Map<E, Node<E>> elmap = new LinkedHashMap<>();
 
   /** Creates an empty UnionFind structure. */
   public StandardUnionFind() {
@@ -120,7 +120,7 @@ public class StandardUnionFind<E> implements Serializable, UnionFind<E> {
 
   @Override
   public Collection<Set<E>> allEquivalenceClasses() {
-    Map<Node<E>, ImmutableSet.Builder<E>> groupsTmp = Maps.newLinkedHashMap();
+    Map<Node<E>, ImmutableSet.Builder<E>> groupsTmp = new LinkedHashMap<>();
     for (Node<E> elem : elmap.values()) {
       Node<E> root = findRoot(elem);
       ImmutableSet.Builder<E> builder = groupsTmp.get(root);

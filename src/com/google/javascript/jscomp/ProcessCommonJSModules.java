@@ -243,12 +243,16 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     return false;
   }
 
-  /**
-   * Recognize if a node is a dynamic module import. We recognize two forms:
-   *
-   *  - require.ensure([deps], function(require) {});
-   *  - __webpack_require__.(4); // only when the module resolution is WEBPACK
-   */
+  private boolean isCommonJsExport(NodeTraversal t, Node export) {
+    return ProcessCommonJSModules.isCommonJsExport(t, export, compiler.getOptions().getModuleResolutionMode());
+  }
+
+    /**
+     * Recognize if a node is a dynamic module import. We recognize two forms:
+     *
+     *  - require.ensure([deps], function(require) {});
+     *  - __webpack_require__.(4); // only when the module resolution is WEBPACK
+     */
   public static boolean isCommonJsDynamicImportCallback(Node n, ModuleLoader.ResolutionMode resolutionMode) {
     if (resolutionMode != ModuleLoader.ResolutionMode.WEBPACK) {
       return false;
@@ -620,7 +624,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       }
 
       if (n.matchesQualifiedName(MODULE + "." + EXPORTS)) {
-        if (ProcessCommonJSModules.isCommonJsExport(t, n, compiler.getOptions().moduleResolutionMode)) {
+        if (isCommonJsExport(t, n)) {
           moduleExports.add(new ExportInfo(n, t.getScope()));
 
           // If the module.exports statement is nested in the then branch of an if statement,

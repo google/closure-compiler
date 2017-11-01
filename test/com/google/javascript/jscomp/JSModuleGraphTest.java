@@ -27,6 +27,7 @@ import com.google.gson.JsonObject;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.HashMap;
 import junit.framework.TestCase;
@@ -37,6 +38,7 @@ import junit.framework.TestCase;
  */
 public final class JSModuleGraphTest extends TestCase {
 
+  // NOTE: These are not static. It would probably be clearer to initialize them in setUp()
   private final JSModule A = new JSModule("A");
   private final JSModule B = new JSModule("B");
   private final JSModule C = new JSModule("C");
@@ -356,7 +358,8 @@ public final class JSModuleGraphTest extends TestCase {
     sourceFiles.add(code("a4", provides("a4"), requires()));
     sourceFiles.add(code("a3", provides("a3"), requires()));
     sourceFiles.add(code("a2", provides("a2"), requires()));
-    sourceFiles.add(code("a1", provides("a1"), requires("a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9")));
+    sourceFiles.add(
+        code("a1", provides("a1"), requires("a2", "a3", "a4", "a5", "a6", "a7", "a8", "a9")));
     sourceFiles.add(code("base.js", BASEJS, provides(), requires()));
 
     DependencyOptions depOptions = new DependencyOptions();
@@ -398,17 +401,19 @@ public final class JSModuleGraphTest extends TestCase {
     sourceFiles.add(code("/important.js", provides(), requires()));
 
     HashMap<String, List<String>> orderedRequires = new HashMap<>();
-    orderedRequires.put("/entry.js", ImmutableList.of(
-        ModuleIdentifier.forFile("/b/b.js").toString(),
-        ModuleIdentifier.forFile("/b/a.js").toString(),
-        ModuleIdentifier.forFile("/important.js").toString(),
-        ModuleIdentifier.forFile("/a/b.js").toString(),
-        ModuleIdentifier.forFile("/a/a.js").toString()));
+    orderedRequires.put(
+        "/entry.js",
+        ImmutableList.of(
+            ModuleIdentifier.forFile("/b/b.js").toString(),
+            ModuleIdentifier.forFile("/b/a.js").toString(),
+            ModuleIdentifier.forFile("/important.js").toString(),
+            ModuleIdentifier.forFile("/a/b.js").toString(),
+            ModuleIdentifier.forFile("/a/a.js").toString()));
     orderedRequires.put("/a/a.js", ImmutableList.of());
     orderedRequires.put("/a/b.js", ImmutableList.of());
     orderedRequires.put("/b/a.js", ImmutableList.of());
-    orderedRequires.put("/b/b.js", ImmutableList.of(
-        ModuleIdentifier.forFile("/b/c.js").toString()));
+    orderedRequires.put(
+        "/b/b.js", ImmutableList.of(ModuleIdentifier.forFile("/b/c.js").toString()));
     orderedRequires.put("/b/c.js", ImmutableList.of());
     orderedRequires.put("/important.js", ImmutableList.of());
 
@@ -436,14 +441,15 @@ public final class JSModuleGraphTest extends TestCase {
       inputs.addAll(A.getInputs());
       List<CompilerInput> results = graph.manageDependencies(depOptions, inputs);
 
-      assertInputs(A, "/b/c.js", "/b/b.js", "/b/a.js", "/important.js", "/a/b.js", "/a/a.js", "/entry.js");
+      assertInputs(
+          A, "/b/c.js", "/b/b.js", "/b/a.js", "/important.js", "/a/b.js", "/a/a.js", "/entry.js");
 
       assertThat(sourceNames(results))
-          .containsExactly("/b/c.js", "/b/b.js", "/b/a.js", "/important.js", "/a/b.js", "/a/a.js", "/entry.js")
+          .containsExactly(
+              "/b/c.js", "/b/b.js", "/b/a.js", "/important.js", "/a/b.js", "/a/a.js", "/entry.js")
           .inOrder();
     }
   }
-
 
   private void assertInputs(JSModule module, String... sourceNames) {
     assertEquals(ImmutableList.copyOf(sourceNames), sourceNames(module.getInputs()));

@@ -32,7 +32,6 @@ public class InlineAliasesTest extends CompilerTestCase {
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
     options.setLanguage(LanguageMode.ECMASCRIPT_2015);
-    options.setJ2clPass(CompilerOptions.J2clPassMode.ON);
     return options;
   }
 

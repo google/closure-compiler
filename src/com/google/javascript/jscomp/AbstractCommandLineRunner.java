@@ -39,7 +39,6 @@ import com.google.gson.stream.JsonWriter;
 import com.google.javascript.jscomp.CompilerOptions.JsonStreamMode;
 import com.google.javascript.jscomp.CompilerOptions.OutputJs;
 import com.google.javascript.jscomp.CompilerOptions.TweakProcessing;
-import com.google.javascript.jscomp.deps.ClosureBundler;
 import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
 import com.google.javascript.rhino.Node;
@@ -904,10 +903,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
         throw new FlagUsageException("Unknown module: '" + name + "'");
       }
       String wrapper = spec.substring(pos + 1);
+      // Support for %n% and %output%
+      wrapper = wrapper.replace("%output%", "%s").replace("%n%", "\n");
       if (!wrapper.contains("%s")) {
         throw new FlagUsageException("No %s placeholder in module wrapper: '"
             + wrapper + "'");
       }
+
       wrappers.put(name, wrapper);
     }
     return wrappers;
@@ -2015,7 +2017,6 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
   @VisibleForTesting
   void printBundleTo(Iterable<CompilerInput> inputs, Appendable out)
       throws IOException {
-    ClosureBundler bundler = new ClosureBundler();
 
     for (CompilerInput input : inputs) {
       // Every module has an empty file in it. This makes it easier to implement
@@ -2043,7 +2044,14 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       out.append(displayName);
       out.append("\n");
 
-      bundler.appendTo(out, input, input.getSourceFile().getCode());
+      if (input.isModule()) {
+        // TODO(sdh): This is copied from ClosureBundler
+        out.append("goog.loadModule(function(exports) {'use strict';");
+        out.append(input.getSourceFile().getCode());
+        out.append("\n;return exports;});\n");
+      } else {
+        out.append(input.getSourceFile().getCode());
+      }
 
       out.append("\n");
     }
@@ -2104,7 +2112,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
 
     private CompilerOptions.DevMode jscompDevMode = CompilerOptions.DevMode.OFF;
 
-    /** Turns on extra sanity checks */
+    /** Turns on extra validity checks */
     public CommandLineConfig setJscompDevMode(CompilerOptions.DevMode jscompDevMode) {
       this.jscompDevMode = jscompDevMode;
       return this;

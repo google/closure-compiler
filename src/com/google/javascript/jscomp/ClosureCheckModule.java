@@ -46,7 +46,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
 
   static final DiagnosticType AT_EXPORT_IN_NON_LEGACY_GOOG_MODULE =
       DiagnosticType.error(
-          "JSC_AT_EXPORT_IN_GOOG_MODULE",
+          "JSC_AT_EXPORT_IN_NON_LEGACY_GOOG_MODULE",
           "@export is not allowed here in a non-legacy goog.module."
           + " Consider using goog.exportSymbol instead.");
 
@@ -287,8 +287,9 @@ public final class ClosureCheckModule extends AbstractModuleCallback
           } else if (importLhs.isDestructuringLhs()) {
             if (parent.isGetProp()) {
               String shortName =
-                  parent.getQualifiedName().substring(
-                      parent.getQualifiedName().lastIndexOf(".") + 1);
+                  parent
+                      .getQualifiedName()
+                      .substring(parent.getQualifiedName().lastIndexOf('.') + 1);
               Node objPattern = importLhs.getFirstChild();
               checkState(objPattern.isObjectPattern(), objPattern);
               for (Node strKey : objPattern.children()) {
@@ -356,7 +357,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
                 }
               }
               if (type.contains(".")) {
-                type = type.substring(0, type.lastIndexOf("."));
+                type = type.substring(0, type.lastIndexOf('.'));
               } else {
                 return;
               }
@@ -450,7 +451,7 @@ public final class ClosureCheckModule extends AbstractModuleCallback
       checkShortName(t, lhs, callNode.getLastChild().getString());
     }
     currentModule.importsByLongRequiredName.put(extractFirstArgumentName(callNode), lhs);
-    for (Node nameNode : NodeUtil.getLhsNodesOfDeclaration(declaration)) {
+    for (Node nameNode : NodeUtil.findLhsNodesInNode(declaration)) {
       String name = nameNode.getString();
       if (!currentModule.shortImportNames.add(name)) {
          t.report(nameNode, DUPLICATE_NAME_SHORT_REQUIRE, name);

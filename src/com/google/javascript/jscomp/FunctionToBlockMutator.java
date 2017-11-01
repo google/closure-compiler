@@ -31,7 +31,6 @@ import com.google.javascript.rhino.Token;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -319,7 +318,7 @@ class FunctionToBlockMutator {
 
       // Declare the alias in the same order as they
       // are declared.
-      List<Node> newVars = new LinkedList<>();
+      List<Node> newVars = new ArrayList<>();
       // NOTE: argMap is a linked map so we get the parameters in the
       // order that they were declared.
       for (Entry<String, Node> entry : argMap.entrySet()) {

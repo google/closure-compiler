@@ -62,9 +62,6 @@ import junit.framework.TestCase;
 public abstract class CompilerTestCase extends TestCase {
   protected static final Joiner LINE_JOINER = Joiner.on('\n');
 
-  // TODO(sdh): Remove this option if there's never a reason to turn it on.
-  private final boolean emitUseStrict = false;
-
   /** Externs for the test */
   final List<SourceFile> externsInputs;
 
@@ -120,7 +117,7 @@ public abstract class CompilerTestCase extends TestCase {
 
   private boolean polymerPass;
 
-  /** Whether the tranpilation passes runs before pass being tested. */
+  /** Whether the transpilation passes run before the pass being tested. */
   private boolean transpileEnabled;
 
   /** Whether we run InferConsts before checking. */
@@ -314,6 +311,11 @@ public abstract class CompilerTestCase extends TestCase {
           "function Boolean(arg) {}",
           "/** @type {number} */ Array.prototype.length;",
           "/**",
+          " * @param {*} arr",
+          " * @return {boolean}",
+          " */",
+          "Array.isArray = function(arr) {};",
+          "/**",
           " * @param {...T} var_args",
           " * @return {number} The new length of the array.",
           " * @this {IArrayLike<T>}",
@@ -418,6 +420,109 @@ public abstract class CompilerTestCase extends TestCase {
           " * @override",
           " */",
           "Generator.prototype.next = function(opt_value) {};",
+          "/**",
+          " * @typedef {{then: ?}}",
+          " */",
+          "var Thenable;",
+          "/**",
+          " * @interface",
+          " * @template TYPE",
+          " */",
+          "function IThenable() {}",
+          "/**",
+          " * @param {?(function(TYPE):VALUE)=} opt_onFulfilled",
+          " * @param {?(function(*): *)=} opt_onRejected",
+          " * @return {RESULT}",
+          " * @template VALUE",
+          " * @template RESULT := type('IThenable',",
+          " *     cond(isUnknown(VALUE), unknown(),",
+          " *       mapunion(VALUE, (V) =>",
+          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
+          " *           templateTypeOf(V, 0),",
+          " *           cond(sub(V, 'Thenable'),",
+          " *              unknown(),",
+          " *              V)))))",
+          " * =:",
+          " */",
+          "IThenable.prototype.then = function(opt_onFulfilled, opt_onRejected) {};",
+          "/**",
+          " * @param {function(",
+          " *             function((TYPE|IThenable<TYPE>|Thenable|null)=),",
+          " *             function(*=))} resolver",
+          " * @constructor",
+          " * @implements {IThenable<TYPE>}",
+          " * @template TYPE",
+          " */",
+          "function Promise(resolver) {}",
+          "/**",
+          " * @param {VALUE=} opt_value",
+          " * @return {RESULT}",
+          " * @template VALUE",
+          " * @template RESULT := type('Promise',",
+          " *     cond(isUnknown(VALUE), unknown(),",
+          " *       mapunion(VALUE, (V) =>",
+          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
+          " *           templateTypeOf(V, 0),",
+          " *           cond(sub(V, 'Thenable'),",
+          " *              unknown(),",
+          " *              V)))))",
+          " * =:",
+          " */",
+          "Promise.resolve = function(opt_value) {};",
+          "/**",
+          " * @param {*=} opt_error",
+          " * @return {!Promise<?>}",
+          " */",
+          "Promise.reject = function(opt_error) {};",
+          "/**",
+          " * @param {!Iterable<VALUE>} iterable",
+          " * @return {!Promise<!Array<RESULT>>}",
+          " * @template VALUE",
+          " * @template RESULT := mapunion(VALUE, (V) =>",
+          " *     cond(isUnknown(V),",
+          " *         unknown(),",
+          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
+          " *             templateTypeOf(V, 0),",
+          " *             cond(sub(V, 'Thenable'), unknown(), V))))",
+          " * =:",
+          " */",
+          "Promise.all = function(iterable) {};",
+          "/**",
+          " * @param {!Iterable<VALUE>} iterable",
+          " * @return {!Promise<RESULT>}",
+          " * @template VALUE",
+          " * @template RESULT := mapunion(VALUE, (V) =>",
+          " *     cond(isUnknown(V),",
+          " *         unknown(),",
+          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
+          " *             templateTypeOf(V, 0),",
+          " *             cond(sub(V, 'Thenable'), unknown(), V))))",
+          " * =:",
+          " */",
+          "Promise.race = function(iterable) {};",
+          "/**",
+          " * @param {?(function(this:void, TYPE):VALUE)=} opt_onFulfilled",
+          " * @param {?(function(this:void, *): *)=} opt_onRejected",
+          " * @return {RESULT}",
+          " * @template VALUE",
+          " * @template RESULT := type('Promise',",
+          " *     cond(isUnknown(VALUE), unknown(),",
+          " *       mapunion(VALUE, (V) =>",
+          " *         cond(isTemplatized(V) && sub(rawTypeOf(V), 'IThenable'),",
+          " *           templateTypeOf(V, 0),",
+          " *           cond(sub(V, 'Thenable'),",
+          " *              unknown(),",
+          " *              V)))))",
+          " * =:",
+          " * @override",
+          " */",
+          "Promise.prototype.then = function(opt_onFulfilled, opt_onRejected) {};",
+          "/**",
+          " * @param {function(*): RESULT} onRejected",
+          " * @return {!Promise<RESULT>}",
+          " * @template RESULT",
+          " */",
+          "Promise.prototype.catch = function(onRejected) {};",
           ACTIVE_X_OBJECT_DEF);
 
   /**
@@ -503,7 +608,7 @@ public abstract class CompilerTestCase extends TestCase {
    */
   protected CompilerOptions getOptions(CompilerOptions options) {
     options.setLanguageIn(acceptedLanguage);
-    options.setEmitUseStrict(emitUseStrict);
+    options.setEmitUseStrict(false);
     options.setLanguageOut(languageOut);
     options.setModuleResolutionMode(moduleResolutionMode);
 

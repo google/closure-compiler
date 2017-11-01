@@ -663,7 +663,7 @@ Array.prototype.slice = function(opt_begin, opt_end) {};
 /**
  * Sorts the elements of an array in place.
  *
- * @param {function(T,T):number=} opt_compareFunction Specifies a function that
+ * @param {function(T,T):number=} opt_compareFn Specifies a function that
  *     defines the sort order.
  * @this {IArrayLike<T>}
  * @template T
@@ -671,7 +671,7 @@ Array.prototype.slice = function(opt_begin, opt_end) {};
  * @return {!Array<T>}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
  */
-Array.prototype.sort = function(opt_compareFunction) {};
+Array.prototype.sort = function(opt_compareFn) {};
 
 /**
  * Changes the content of an array, adding new elements while removing old
@@ -1895,24 +1895,23 @@ String.prototype.quote = function() {};
  * This may have side-effects if the replacement function has side-effects.
  *
  * @this {String|string}
- * @param {RegExp|string} regex
- * @param {string|Function} str
- * @param {string=} opt_flags
+ * @param {RegExp|string} pattern
+ * @param {string|Function} replacement
  * @return {string}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace
  */
-String.prototype.replace = function(regex, str, opt_flags) {};
+String.prototype.replace = function(pattern, replacement) {};
 
 /**
  * Executes the search for a match between a regular expression and this String
  * object.
  *
  * @this {String|string}
- * @param {RegExp|string} regexp
+ * @param {RegExp|string} pattern
  * @return {number}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/search
  */
-String.prototype.search = function(regexp) {};
+String.prototype.search = function(pattern) {};
 
 /**
  * @this {String|string}
@@ -2200,6 +2199,13 @@ RegExp.prototype.ignoreCase;
 RegExp.prototype.lastIndex;
 
 /**
+ * Whether or not the regular expression uses lastIndex.
+ * @type {boolean}
+ * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/sticky
+ */
+RegExp.prototype.sticky;
+
+/**
  * Whether or not to search in strings across multiple lines.
  * @type {boolean}
  * @see http://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/multiline
@@ -2213,6 +2219,12 @@ RegExp.prototype.multiline;
  */
 RegExp.prototype.source;
 
+/**
+ * The flags the regex was created with.
+ * @type {string}
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp/flags
+ */
+RegExp.prototype.flags;
 
 /**
  * @constructor

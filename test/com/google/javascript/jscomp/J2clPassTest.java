@@ -320,7 +320,7 @@ public class J2clPassTest extends CompilerTestCase {
     testDoesntChange(
         Lists.newArrayList(
             SourceFile.fromCode(
-                "Arrays.impl.java.js",
+                "Arrays2.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var Arrays = function() {};",
@@ -338,7 +338,7 @@ public class J2clPassTest extends CompilerTestCase {
     testDoesntChange(
         Lists.newArrayList(
             SourceFile.fromCode(
-                "Casts.impl.java.js",
+                "Casts2.impl.java.js",
                 LINE_JOINER.join(
                     // Function definitions and calls are qualified globals.
                     "var Casts = function() {};",

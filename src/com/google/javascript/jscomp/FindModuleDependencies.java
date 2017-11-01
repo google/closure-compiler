@@ -18,18 +18,23 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.jscomp.Es6RewriteModules.FindGoogProvideOrGoogModule;
 import com.google.javascript.jscomp.deps.ModuleLoader;
-import com.google.javascript.jscomp.CompilerInput.ModuleType;
 import com.google.javascript.rhino.Node;
+import com.google.javascript.rhino.Token;
 import java.util.Map;
 
 /**
  * Find and update any direct dependencies of an input. Used to walk the dependency graph and
  * support a strict depth-first dependency ordering. Marks an input as providing its module name.
  *
- * <p>Discovers dependencies from: - goog.require calls - ES6 import statements - CommonJS require
- * statements
+ * <p>Discovers dependencies from:
+ * <ul>
+ *   <li> goog.require calls
+ *   <li> ES6 import statements
+ *   <li> CommonJS require statements
+ * </ul>
  *
  * <p>The order of dependency references is preserved so that a deterministic depth-first ordering
  * can be achieved.
@@ -109,9 +114,12 @@ public class FindModuleDependencies implements NodeTraversal.ScopedCallback {
             && (maybeGetProp.matchesQualifiedName("goog.provide")
             || maybeGetProp.matchesQualifiedName("goog.module"))) {
           moduleType = ModuleType.GOOG;
+          return;
         }
       }
-    } else if (supportsEs6Modules && n.isExport()) {
+    }
+
+    if (supportsEs6Modules && n.isExport()) {
       moduleType = ModuleType.ES6;
 
     } else if (supportsEs6Modules && n.isImport()) {

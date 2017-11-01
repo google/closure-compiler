@@ -17,8 +17,10 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.javascript.jscomp.DiagnosticGroups.ES5_STRICT;
 import static com.google.javascript.jscomp.testing.NodeSubject.assertNode;
 
 import com.google.common.base.Joiner;
@@ -33,11 +35,11 @@ import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
 import com.google.javascript.rhino.jstype.TernaryValue;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,10 +51,16 @@ import junit.framework.TestCase;
 public final class NodeUtilTest extends TestCase {
 
   private static Node parse(String js) {
+    CompilerOptions options = new CompilerOptions();
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
+
+    // To allow octal literals such as 0123 to be parsed.
+    options.setStrictModeInput(false);
+    options.setWarningLevel(ES5_STRICT, CheckLevel.OFF);
+
     Compiler compiler = new Compiler();
-    compiler.initCompilerOptionsIfTesting();
-    compiler.getOptions().setLanguageIn(LanguageMode.ECMASCRIPT_2015);
-    compiler.getOptions().setStrictModeInput(true);
+    compiler.initOptions(options);
+
     Node n = compiler.parseTestCode(js);
     assertThat(compiler.getErrors()).isEmpty();
     return n;
@@ -63,6 +71,23 @@ public final class NodeUtilTest extends TestCase {
     Node expr = root.getFirstChild();
     Node var = expr.getFirstChild();
     return var.getFirstChild();
+  }
+
+  private static Node getAwaitNode(String js) {
+    return checkNotNull(getAwaitNode(parse(js)));
+  }
+
+  private static Node getAwaitNode(Node root) {
+    for (Node n : root.children()) {
+      if (n.isAwait()) {
+        return n;
+      }
+      Node awaitNode = getAwaitNode(n);
+      if (awaitNode != null) {
+        return awaitNode;
+      }
+    }
+    return null;
   }
 
   public void testGetNodeByLineCol_1() {
@@ -866,6 +891,61 @@ public final class NodeUtilTest extends TestCase {
     assertEquals(nodeNames, actualNames);
   }
 
+  public void testIsNonlocalModuleExportNameOnExports1() {
+    Node root = parse("export {localName as exportName};");
+    Node moduleBody = root.getFirstChild();
+    Node exportNode = moduleBody.getFirstChild();
+    Node exportSpecs = exportNode.getFirstChild();
+    Node exportSpec = exportSpecs.getFirstChild();
+
+    Node localName = exportSpec.getFirstChild();
+    Node exportName = exportSpec.getSecondChild();
+
+    assertFalse(NodeUtil.isNonlocalModuleExportName(localName));
+    assertTrue(NodeUtil.isNonlocalModuleExportName(exportName));
+
+  }
+
+  public void testIsNonlocalModuleExportNameOnExports2() {
+    Node root = parse("let bar; export {bar};");
+    Node moduleBody = root.getFirstChild();
+    Node exportNode = moduleBody.getSecondChild();
+    Node exportSpecs = exportNode.getFirstChild();
+    Node exportSpec = exportSpecs.getFirstChild();
+
+    Node name = exportSpec.getFirstChild();
+
+    // bar is defined locally, so isNonlocalModuleExportName is false.
+    assertFalse(NodeUtil.isNonlocalModuleExportName(name));
+  }
+
+  public void testIsNonlocalModuleExportNameOnImports1() {
+    Node root = parse("import {exportName as localName} from './foo.js';");
+    Node moduleBody = root.getFirstChild();
+    Node importNode = moduleBody.getFirstChild();
+    Node importSpecs = importNode.getSecondChild();
+    Node importSpec = importSpecs.getFirstChild();
+
+    Node exportName = importSpec.getFirstChild();
+    Node localName = importSpec.getSecondChild();
+
+    assertTrue(NodeUtil.isNonlocalModuleExportName(exportName));
+    assertFalse(NodeUtil.isNonlocalModuleExportName(localName));
+  }
+
+  public void testIsNonlocalModuleExportNameOnImports2() {
+    Node root = parse("import {bar} from './foo.js';");
+    Node moduleBody = root.getFirstChild();
+    Node importNode = moduleBody.getFirstChild();
+    Node importSpecs = importNode.getSecondChild();
+    Node importSpec = importSpecs.getFirstChild();
+
+    Node name = importSpec.getFirstChild();
+
+    // bar is defined locally so isNonlocalModuleExportName is false
+    assertFalse(NodeUtil.isNonlocalModuleExportName(name));
+  }
+
   public void testIsControlStructureCodeBlock() {
     Node root = parse("if (x) foo(); else boo();");
     Node ifNode = root.getFirstChild();
@@ -1450,14 +1530,38 @@ public final class NodeUtilTest extends TestCase {
     assertFalse(NodeUtil.evaluatesToLocalValue(getNode("o.valueOf()")));
 
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("delete a.b")));
+  }
 
+  public void testLocalValueTemplateLit() {
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("`hello`")));
     assertFalse(NodeUtil.evaluatesToLocalValue(getNode("`hello ${name}`")));
     assertTrue(NodeUtil.evaluatesToLocalValue(getNode("`${'name'}`")));
-
   }
 
-  public void testLocalValue2() {
+  public void testLocalValueTaggedTemplateLit1() {
+    Node n = getNode("tag`simple string`");
+    assertFalse(NodeUtil.evaluatesToLocalValue(n));
+
+    Node.SideEffectFlags flags = new Node.SideEffectFlags();
+    flags.clearAllFlags();
+    n.setSideEffectFlags(flags);
+
+    assertTrue(NodeUtil.evaluatesToLocalValue(n));
+  }
+
+  public void testLocalValueTaggedTemplateLit2() {
+    // Here, replacement() may have side effects.
+    Node n = getNode("tag`string with ${replacement()}`");
+    assertFalse(NodeUtil.evaluatesToLocalValue(n));
+
+    Node.SideEffectFlags flags = new Node.SideEffectFlags();
+    flags.clearAllFlags();
+    n.setSideEffectFlags(flags);
+
+    assertFalse(NodeUtil.evaluatesToLocalValue(n));
+  }
+
+  public void testLocalValueNewExpr() {
     Node newExpr = getNode("new x()");
     assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
 
@@ -1465,44 +1569,51 @@ public final class NodeUtilTest extends TestCase {
     Node.SideEffectFlags flags = new Node.SideEffectFlags();
 
     flags.clearAllFlags();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
 
     assertTrue(NodeUtil.evaluatesToLocalValue(newExpr));
 
     flags.clearAllFlags();
     flags.setMutatesThis();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
 
     assertTrue(NodeUtil.evaluatesToLocalValue(newExpr));
 
     flags.clearAllFlags();
     flags.setReturnsTainted();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
 
     assertTrue(NodeUtil.evaluatesToLocalValue(newExpr));
 
     flags.clearAllFlags();
     flags.setThrows();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
 
     assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
 
     flags.clearAllFlags();
     flags.setMutatesArguments();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
 
     assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
 
     flags.clearAllFlags();
     flags.setMutatesGlobalState();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
 
     assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
   }
 
-  public void testLocalValue3() {
-    Node newExpr = getNode("[...x]");
-    assertFalse(NodeUtil.evaluatesToLocalValue(newExpr));
+  public void testLocalValueSpread() {
+    assertFalse(NodeUtil.evaluatesToLocalValue(getNode("[...x]")));
+  }
+
+  public void testLocalValueAwait() {
+    Node expr = getAwaitNode("async function f() { await someAsyncAction(); }");
+    assertFalse(NodeUtil.evaluatesToLocalValue(expr));
+
+    expr = getAwaitNode("async function f() { await 5; }");
+    assertTrue(NodeUtil.evaluatesToLocalValue(expr));
   }
 
   public void testCallSideEffects() {
@@ -1515,9 +1626,9 @@ public final class NodeUtilTest extends TestCase {
 
     // No side effects, local result
     flags.clearAllFlags();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
     flags.clearAllFlags();
-    callExpr.setSideEffectFlags(flags.valueOf());
+    callExpr.setSideEffectFlags(flags);
 
     assertTrue(NodeUtil.evaluatesToLocalValue(callExpr));
     assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
@@ -1525,10 +1636,10 @@ public final class NodeUtilTest extends TestCase {
 
     // Modifies this, local result
     flags.clearAllFlags();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
     flags.clearAllFlags();
     flags.setMutatesThis();
-    callExpr.setSideEffectFlags(flags.valueOf());
+    callExpr.setSideEffectFlags(flags);
 
     assertTrue(NodeUtil.evaluatesToLocalValue(callExpr));
     assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
@@ -1536,11 +1647,11 @@ public final class NodeUtilTest extends TestCase {
 
     // Modifies this, non-local result
     flags.clearAllFlags();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
     flags.clearAllFlags();
     flags.setMutatesThis();
     flags.setReturnsTainted();
-    callExpr.setSideEffectFlags(flags.valueOf());
+    callExpr.setSideEffectFlags(flags);
 
     assertFalse(NodeUtil.evaluatesToLocalValue(callExpr));
     assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
@@ -1548,10 +1659,10 @@ public final class NodeUtilTest extends TestCase {
 
     // No modifications, non-local result
     flags.clearAllFlags();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
     flags.clearAllFlags();
     flags.setReturnsTainted();
-    callExpr.setSideEffectFlags(flags.valueOf());
+    callExpr.setSideEffectFlags(flags);
 
     assertFalse(NodeUtil.evaluatesToLocalValue(callExpr));
     assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
@@ -1561,9 +1672,9 @@ public final class NodeUtilTest extends TestCase {
     // This call could be removed, but not the new.
     flags.clearAllFlags();
     flags.setMutatesGlobalState();
-    newExpr.setSideEffectFlags(flags.valueOf());
+    newExpr.setSideEffectFlags(flags);
     flags.clearAllFlags();
-    callExpr.setSideEffectFlags(flags.valueOf());
+    callExpr.setSideEffectFlags(flags);
 
     assertTrue(NodeUtil.evaluatesToLocalValue(callExpr));
     assertFalse(NodeUtil.functionCallHasSideEffects(callExpr));
@@ -1709,7 +1820,7 @@ public final class NodeUtilTest extends TestCase {
     assertNull(NodeUtil.getNumberValue(getNode("+1")));
   }
 
-  public void testIsNumbericResult() {
+  public void testIsNumericResult() {
     assertTrue(NodeUtil.isNumericResult(getNode("1")));
     assertFalse(NodeUtil.isNumericResult(getNode("true")));
     assertTrue(NodeUtil.isNumericResult(getNode("+true")));
@@ -2070,6 +2181,26 @@ public final class NodeUtilTest extends TestCase {
     assertTrue(functionIsRValueOfAssign("x >>= function() {};"));
     assertTrue(functionIsRValueOfAssign("x >>>= function() {};"));
     assertFalse(functionIsRValueOfAssign("x = y ? x : function() {};"));
+  }
+
+  /**
+   * When the left side is a destructuring pattern, generally it's not possible to identify the
+   * RHS for a specific name on the LHS.
+   */
+  public void testGetRValueOfLValueDestructuring() {
+    assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var [x] = rhs;"), "x"))).isNull();
+    assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var [x, y] = rhs;"), "x"))).isNull();
+    assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var [y, x] = rhs;"), "x"))).isNull();
+    assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var {x: x} = rhs;"), "x"))).isNull();
+    assertThat(NodeUtil.getRValueOfLValue(getNameNode(parse("var {y: x} = rhs;"), "x"))).isNull();
+
+    Node ast = parse("var {x} = rhs;");
+    Node x = ast.getFirstChild()   // VAR
+                .getFirstChild()   // DESTRUCTURING_LHS
+                .getFirstChild()   // OBJECT_PATTERN
+                .getFirstChild();  //STRING_KEY
+    checkState(x.isStringKey(), x);
+    assertThat(NodeUtil.getRValueOfLValue(x)).isNull();
   }
 
   public void testIsNaN() {
@@ -2671,17 +2802,17 @@ public final class NodeUtilTest extends TestCase {
     assertThat(typeExpr.getRoot().getFirstChild().getString()).isEqualTo("number");
   }
 
-  public void testGetLhsNodesOfDeclaration() {
-    assertThat(getLhsNodesOfDeclaration("var x;")).hasSize(1);
-    assertThat(getLhsNodesOfDeclaration("var x, y;")).hasSize(2);
-    assertThat(getLhsNodesOfDeclaration("var f = function(x, y, z) {};")).hasSize(1);
-    assertThat(getLhsNodesOfDeclaration("var [x=a => a, y = b=>b+1] = arr;")).hasSize(2);
-    assertThat(getLhsNodesOfDeclaration("var [x=a => a, y = b=>b+1, ...z] = arr;")).hasSize(3);
-    assertThat(getLhsNodesOfDeclaration("var [ , , , y = b=>b+1, ...z] = arr;")).hasSize(2);
-    assertThat(getLhsNodesOfDeclaration("var {x = a=>a, y = b=>b+1} = obj;")).hasSize(2);
-    assertThat(getLhsNodesOfDeclaration("var {p1: x = a=>a, p2: y = b=>b+1} = obj;")).hasSize(2);
-    assertThat(getLhsNodesOfDeclaration("var {[pname]: x = a=>a, [p2name]: y} = obj;")).hasSize(2);
-    assertThat(getLhsNodesOfDeclaration("var {lhs1 = a, p2: [lhs2, lhs3 = b] = [notlhs]} = obj;"))
+  public void testFindLhsNodesInNode() {
+    assertThat(findLhsNodesInNode("var x;")).hasSize(1);
+    assertThat(findLhsNodesInNode("var x, y;")).hasSize(2);
+    assertThat(findLhsNodesInNode("var f = function(x, y, z) {};")).hasSize(1);
+    assertThat(findLhsNodesInNode("var [x=a => a, y = b=>b+1] = arr;")).hasSize(2);
+    assertThat(findLhsNodesInNode("var [x=a => a, y = b=>b+1, ...z] = arr;")).hasSize(3);
+    assertThat(findLhsNodesInNode("var [ , , , y = b=>b+1, ...z] = arr;")).hasSize(2);
+    assertThat(findLhsNodesInNode("var {x = a=>a, y = b=>b+1} = obj;")).hasSize(2);
+    assertThat(findLhsNodesInNode("var {p1: x = a=>a, p2: y = b=>b+1} = obj;")).hasSize(2);
+    assertThat(findLhsNodesInNode("var {[pname]: x = a=>a, [p2name]: y} = obj;")).hasSize(2);
+    assertThat(findLhsNodesInNode("var {lhs1 = a, p2: [lhs2, lhs3 = b] = [notlhs]} = obj;"))
         .hasSize(3);
   }
 
@@ -2761,7 +2892,7 @@ public final class NodeUtilTest extends TestCase {
     Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
 
     Map<String, Var> allVariables = new HashMap<>();
-    List<Var> orderedVars = new LinkedList<>();
+    List<Var> orderedVars = new ArrayList<>();
     NodeUtil.getAllVarsDeclaredInFunction(
         allVariables, orderedVars, compiler, scopeCreator, functionScope);
     Set<String> keySet = new HashSet<>(Arrays.asList("a", "b", "c", "z", "x", "y"));
@@ -2788,7 +2919,7 @@ public final class NodeUtilTest extends TestCase {
     Scope functionScope = scopeCreator.createScope(functionNode, globalScope);
 
     Map<String, Var> allVariables = new HashMap<>();
-    List<Var> orderedVars = new LinkedList<>();
+    List<Var> orderedVars = new ArrayList<>();
     NodeUtil.getAllVarsDeclaredInFunction(
         allVariables, orderedVars, compiler, scopeCreator, functionScope);
     Set<String> keySet = new HashSet<>(Arrays.asList("x", "y", "z", "a", "b", "c"));
@@ -2796,13 +2927,38 @@ public final class NodeUtilTest extends TestCase {
   }
 
   public void testIsVarArgs() {
-    assertTrue(NodeUtil.isVarArgsFunction(getNode("function() {return () => arguments}")));
-    assertFalse(NodeUtil.isVarArgsFunction(getNode("() => arguments")));
+    assertTrue(NodeUtil.doesFunctionReferenceOwnArgumentsObject(
+        getNode("function() {return () => arguments}")));
+    assertFalse(NodeUtil.doesFunctionReferenceOwnArgumentsObject(
+        getNode("() => arguments")));
+  }
+
+  /**
+   * When the left side is a destructuring pattern, generally it's not possible to identify the
+   * RHS for a specific name on the LHS.
+   */
+  public void testIsExpressionResultUsed() {
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x in y) z", "x"))).isTrue();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x in y) z", "y"))).isTrue();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x in y) z", "z"))).isFalse();
+
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x of y) z", "x"))).isTrue();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x of y) z", "y"))).isTrue();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x of y) z", "z"))).isFalse();
+
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x; y; z) a", "x"))).isFalse();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x; y; z) a", "y"))).isTrue();
+    assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x; y; z) a", "z"))).isFalse();
+  }
+
+  private Node getNameNodeFrom(String code, String name) {
+    Node ast = parse(code);
+    Node nameNode = getNameNode(ast, name);
+    return nameNode;
   }
 
   private boolean executedOnceTestCase(String code) {
-    Node ast = parse(code);
-    Node nameNode = getNameNode(ast, "x");
+    Node nameNode = getNameNodeFrom(code, "x");
     return NodeUtil.isExecutedExactlyOnce(nameNode);
   }
 
@@ -2836,9 +2992,9 @@ public final class NodeUtilTest extends TestCase {
     return getClassNode(root);
   }
 
-  private static Iterable<Node> getLhsNodesOfDeclaration(String js) {
+  private static Iterable<Node> findLhsNodesInNode(String js) {
     Node root = parse(js);
-    return NodeUtil.getLhsNodesOfDeclaration(root.getFirstChild());
+    return NodeUtil.findLhsNodesInNode(root.getFirstChild());
   }
 
   private static Node getClassNode(Node n) {

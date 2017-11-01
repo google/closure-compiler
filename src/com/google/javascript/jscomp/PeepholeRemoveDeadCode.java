@@ -395,9 +395,7 @@ class PeepholeRemoveDeadCode extends AbstractPeepholeOptimization {
         for (cur = cond.getNext(); cur != null; cur = next) {
           next = cur.getNext();
           caseLabel = cur.getFirstChild();
-          // TODO(moz): Use type information if allowed.
-          caseMatches = PeepholeFoldConstants.evaluateComparison(
-              Token.SHEQ, cond, caseLabel, false);
+          caseMatches = PeepholeFoldConstants.evaluateComparison(Token.SHEQ, cond, caseLabel);
           if (caseMatches == TernaryValue.TRUE) {
             break;
           } else if (caseMatches == TernaryValue.UNKNOWN) {

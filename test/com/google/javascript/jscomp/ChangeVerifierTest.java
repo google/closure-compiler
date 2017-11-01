@@ -63,9 +63,7 @@ public final class ChangeVerifierTest extends TestCase {
       verifier.checkRecordedChanges("test2", script);
       fail("exception expected");
     } catch (IllegalStateException e) {
-      // TODO(johnlenz): use this when we upgrade Trush:
-      //    assertThat(e).hasMessageThat().contains("change scope not marked as changed");
-      assertThat(e.getMessage()).contains("changed scope not marked as changed");
+      assertThat(e).hasMessageThat().contains("changed scope not marked as changed");
     }
   }
 
@@ -90,7 +88,7 @@ public final class ChangeVerifierTest extends TestCase {
       verifier.checkRecordedChanges("test2", script);
       fail("exception expected");
     } catch (IllegalStateException e) {
-      assertThat(e.getMessage()).contains("deleted scope was not reported");
+      assertThat(e).hasMessageThat().contains("deleted scope was not reported");
     }
 
     // now try again after reporting the function deletion.
@@ -120,7 +118,7 @@ public final class ChangeVerifierTest extends TestCase {
       verifier.checkRecordedChanges("test2", script);
       fail("exception expected");
     } catch (IllegalStateException e) {
-      assertThat(e.getMessage()).contains("existing scope is improperly marked as deleted");
+      assertThat(e).hasMessageThat().contains("existing scope is improperly marked as deleted");
     }
   }
 

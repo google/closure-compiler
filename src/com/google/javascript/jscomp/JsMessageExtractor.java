@@ -20,8 +20,8 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -81,7 +81,7 @@ public final class JsMessageExtractor {
     // Take into account that messages with the same id could be present in the
     // result list. Message could have the same id only in case if they are
     // unnamed and have the same text but located in different source files.
-    private final List<JsMessage> messages = new LinkedList<>();
+    private final List<JsMessage> messages = new ArrayList<>();
 
     private ExtractMessagesVisitor(AbstractCompiler compiler) {
       super(compiler, true, style, idGenerator);

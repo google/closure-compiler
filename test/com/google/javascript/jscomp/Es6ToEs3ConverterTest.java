@@ -16,7 +16,6 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.javascript.jscomp.Es6ConvertSuper.INVALID_SUPER_CALL;
 import static com.google.javascript.jscomp.Es6RewriteClass.CLASS_REASSIGNMENT;
 import static com.google.javascript.jscomp.Es6RewriteClass.CONFLICTING_GETTER_SETTER_TYPE;
 import static com.google.javascript.jscomp.Es6RewriteClass.DYNAMIC_EXTENDS_TYPE;
@@ -258,6 +257,7 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
 
   public void testNewTarget() {
     testError("function Foo() { new.target; }", CANNOT_CONVERT_YET);
+    testError("class Example { foo() { new.target; } }", CANNOT_CONVERT_YET);
   }
 
   public void testClassWithJsDoc() {
@@ -845,9 +845,6 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
             "  }",
             "  $jscomp.inherits(D, C);",
             "};"));
-
-    testError(
-        "class D {} class C extends D { constructor() {} f() {super();} }", INVALID_SUPER_CALL);
   }
 
   public void testSuperKnownNotToChangeThis() {
@@ -1453,12 +1450,6 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
         CANNOT_CONVERT_YET);
   }
 
-  public void testSuperNew() {
-    testError("class D {} class C extends D { f() {var s = new super;} }", INVALID_SUPER_CALL);
-    testError(
-        "class D {} class C extends D { f(str) {var s = new super(str);} }", INVALID_SUPER_CALL);
-  }
-
   public void testSuperSpread() {
     test(
         LINE_JOINER.join(
@@ -1478,12 +1469,6 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
             "$jscomp.inherits(C,D);"));
     assertThat(getLastCompiler().injected)
         .containsExactly("es6/util/arrayfromiterable", "es6/util/inherits");
-  }
-
-  public void testSuperCallNonConstructor() {
-    testError("class S extends B { static f() { super(); } }", INVALID_SUPER_CALL);
-
-    testError("class S extends B { f() { super(); } }", INVALID_SUPER_CALL);
   }
 
   public void testStaticThis() {

@@ -520,26 +520,28 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     // have no side effects.
     boolean broken = true;
     if (broken) {
-      assertPureCallsMarked("var a; " +
-                       "if (true) {" +
-                       "  a = new externNsefConstructor()" +
-                       "} else {" +
-                       "  a = new externNsefConstructor2()" +
-                       "}" +
-                       "a.externShared()",
-                       ImmutableList.of("externNsefConstructor",
-                                        "externNsefConstructor2"));
+      assertPureCallsMarked(
+          LINE_JOINER.join(
+              "var a;",
+              "if (true) {",
+              "  a = new externNsefConstructor()",
+              "} else {",
+              "  a = new externNsefConstructor2()",
+              "}",
+              "a.externShared()"),
+          ImmutableList.of("externNsefConstructor", "externNsefConstructor2"));
     } else {
-      assertPureCallsMarked("var a; " +
-                       "if (true) {" +
-                       "  a = new externNsefConstructor()" +
-                       "} else {" +
-                       "  a = new externNsefConstructor2()" +
-                       "}" +
-                       "a.externShared()",
-                       ImmutableList.of("externNsefConstructor",
-                                        "externNsefConstructor2",
-                                        "a.externShared"));
+      assertPureCallsMarked(
+          LINE_JOINER.join(
+              "var a;",
+              "if (true) {",
+              "  a = new externNsefConstructor()",
+              "} else {",
+              "  a = new externNsefConstructor2()",
+              "}",
+              "a.externShared()"),
+          ImmutableList.of(
+              "externNsefConstructor", "externNsefConstructor2", "a.externShared"));
     }
   }
 
@@ -656,8 +658,8 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     assertPureCallsMarked(
         prefix + "return externObj" + suffix, expected);
     assertPureCallsMarked(
-        "function g(x) { x.foo = 3; }" /* to suppress missing property */ +
-        prefix + "return externObj.foo" + suffix, expected);
+        "function g(x) { x.foo = 3; }" /* to suppress missing property */
+        + prefix + "return externObj.foo" + suffix, expected);
   }
 
   public void testNoSideEffectsSimple2() throws Exception {
@@ -714,8 +716,8 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     // read from extern
     checkLocalityOfMarkedCalls(prefix + "return externObj" + suffix, ImmutableList.<String>of());
     checkLocalityOfMarkedCalls(
-        "function inner(x) { x.foo = 3; }" /* to suppress missing property */ +
-        prefix + "return externObj.foo" + suffix, ImmutableList.<String>of());
+        "function inner(x) { x.foo = 3; }" /* to suppress missing property */
+        + prefix + "return externObj.foo" + suffix, ImmutableList.<String>of());
   }
 
   public void testReturnLocalityTaintObjectLiteralWithGlobal() {
@@ -802,7 +804,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     );
     assertNoPureCalls(source);
 
-    // Not marked becuase the definition cannot be found so unknown side effects.
+    // Not marked because the definition cannot be found so unknown side effects.
     source = LINE_JOINER.join(
         "var pure = function() {};",
         "var dict = {'func': function() {}};",
@@ -811,7 +813,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     );
     assertNoPureCalls(source);
 
-    // Not marked becuase the definition cannot be found so unknown side effects.
+    // Not marked because the definition cannot be found so unknown side effects.
     source = LINE_JOINER.join(
         "var pure = function() {};"
             , "var dict = {'func': function() {}};"
@@ -851,8 +853,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testInference4() throws Exception {
     String source = LINE_JOINER.join(
-        "var a = 1;" +
-            "var f = function() {g()};",
+        "var a = 1; var f = function() {g()};",
         "var g = function() {a=2};",
         "f()"
     );
@@ -914,8 +915,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testLocalizedSideEffects4() throws Exception {
-    // An array is an local object, assigning a local array is not a global
-    // side-effect.
+    // An array is a local object, assigning a local array is not a global side-effect.
     String source = LINE_JOINER.join(
         "function f() {var x = []; x[0] = 1;}",
         "f()");
@@ -1024,10 +1024,50 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testLocalizedSideEffects12() throws Exception {
-    // An array is an local object, assigning a local array is not a global
+    // An array is a local object, assigning a local array is not a global
     // side-effect. This tests the behavior if the access is in a block scope.
     String source = LINE_JOINER.join(
         "function f() {var x = []; { x[0] = 1; } }",
+        "f()");
+    assertPureCallsMarked(source, ImmutableList.of("f"));
+  }
+
+  public void testLocalizedSideEffects13() {
+    this.mode = TypeInferenceMode.NEITHER;
+    String source = LINE_JOINER.join(
+        "function f() {var [x, y] = [3, 4]; }",
+        "f()");
+    assertPureCallsMarked(source, ImmutableList.of("f"));
+  }
+
+  public void testLocalizedSideEffects14() {
+    this.mode = TypeInferenceMode.NEITHER;
+    String source = LINE_JOINER.join(
+        "function f() {var x; if (true) { [x] = [5]; } }",
+        "f()");
+    assertPureCallsMarked(source, ImmutableList.of("f"));
+  }
+
+  public void testLocalizedSideEffects15() {
+    this.mode = TypeInferenceMode.NEITHER;
+    String source = LINE_JOINER.join(
+        "function f() {var {length} = 'a string'; }",
+        "f()");
+    assertPureCallsMarked(source, ImmutableList.of("f"));
+  }
+
+  public void testLocalizedSideEffects16() {
+    this.mode = TypeInferenceMode.NEITHER;
+    String source = LINE_JOINER.join(
+        "function f(someArray) {var [a, , b] = someArray; }",
+        "f()");
+    assertPureCallsMarked(source, ImmutableList.of("f"));
+  }
+
+  public void testLocalizedSideEffects17() {
+    this.mode = TypeInferenceMode.NEITHER;
+    String source = LINE_JOINER.join(
+        "function f(someObj) {var { very: { nested: { lhs: pattern }} } = someObj; }",
         "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
   }

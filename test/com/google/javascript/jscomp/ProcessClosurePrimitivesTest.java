@@ -1039,12 +1039,12 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
 
   public void testInvalidGoogBase14() {
     testError("class Foo extends BaseFoo { constructor() { Foo.base(this); } }",
-        GOOG_BASE_CLASS_ERROR);
+        BASE_CLASS_ERROR);
   }
 
   public void testInvalidGoogBase14b() {
     testError("class Foo extends BaseFoo { method() { Foo.base(this, 'method'); } }",
-        GOOG_BASE_CLASS_ERROR);
+        BASE_CLASS_ERROR);
   }
 
   public void testValidBase1() {
@@ -1304,6 +1304,8 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     testErrorExterns(jsdoc + "goog.define('name.2');", INVALID_DEFINE_NAME_ERROR);
     testErrorExterns(jsdoc + "goog.define();", NULL_ARGUMENT_ERROR);
     testErrorExterns(jsdoc + "goog.define(5);", INVALID_ARGUMENT_ERROR);
+
+    testErrorExterns("/** @define {!number} */ goog.define('name');");
   }
 
   private void testErrorExterns(String externs) {
@@ -1335,5 +1337,9 @@ public final class ProcessClosurePrimitivesTest extends CompilerTestCase {
     testError("var CLOSURE_DEFINES = {SHORTHAND};", CLOSURE_DEFINES_ERROR);
     testError("var CLOSURE_DEFINES = {'TEMPLATE': `template`};", CLOSURE_DEFINES_ERROR);
     testError("var CLOSURE_DEFINES = {'TEMPLATE': `${template}Sub`};", CLOSURE_DEFINES_ERROR);
+  }
+
+  public void testOtherBaseCall() {
+    testSame("class Foo extends BaseFoo { method() { baz.base('arg'); } }");
   }
 }

@@ -127,12 +127,12 @@ MediaKeyStatusMap.prototype.entries = function() {};
 
 /**
  * The function is called with each value.
- * @param {function(string, !BufferSource)} fn A callback function to run for
+ * @param {function(string, !BufferSource)} callback A callback function to run for
  *     each media key. The first parameter is the key status; the second
  *     parameter is the key ID.
  * @return {undefined}
  */
-MediaKeyStatusMap.prototype.forEach = function(fn) {};
+MediaKeyStatusMap.prototype.forEach = function(callback) {};
 
 
 /**

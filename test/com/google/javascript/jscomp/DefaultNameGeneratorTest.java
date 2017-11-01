@@ -45,7 +45,7 @@ public final class DefaultNameGeneratorTest extends TestCase {
           + "is invalid");
     } catch (IllegalArgumentException ex) {
       // The error messages should contain meaningful information.
-      assertThat(ex.getMessage()).contains("W, X, Y, Z, $]");
+      assertThat(ex).hasMessageThat().contains("W, X, Y, Z, $]");
     }
 
     try {
@@ -53,7 +53,7 @@ public final class DefaultNameGeneratorTest extends TestCase {
       fail("Constructor should throw exception when one of prefix characters "
           + "is invalid");
     } catch (IllegalArgumentException ex) {
-      assertThat(ex.getMessage()).contains("W, X, Y, Z, _, 0, 1");
+      assertThat(ex).hasMessageThat().contains("W, X, Y, Z, _, 0, 1");
     }
   }
 

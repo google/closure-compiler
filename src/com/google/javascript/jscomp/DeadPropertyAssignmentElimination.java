@@ -494,7 +494,7 @@ public class DeadPropertyAssignmentElimination implements CompilerPass {
         if (!n.getChildAtIndex(2).isString() && !n.getLastChild().isObjectLit()) {
           unknownGetterSetterPresent = true;
         } else if (!n.getLastChild().isObjectLit()) {
-          // If know the property name but not what it's being assigned to then we need to blackist
+          // If know the property name but not what it's being assigned to then we need to blacklist
           // the property name.
           propNames.add(n.getChildAtIndex(2).getString());
         }

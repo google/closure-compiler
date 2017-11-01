@@ -147,8 +147,7 @@ public final class DepsFileParser extends JsFileLineParser {
   protected boolean parseLine(String line) throws ParseException {
     boolean hasDependencies = false;
 
-    // Quick sanity check that will catch most cases. This is a performance
-    // win for people with a lot of JS.
+    // Quick check that will catch most cases. This is a performance win for teams with a lot of JS.
     if (line.contains("addDependency")) {
       depMatcher.reset(line);
       // See if the line looks like: goog.addDependency(...)

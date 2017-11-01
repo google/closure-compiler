@@ -15,12 +15,10 @@
  */
 package com.google.javascript.jscomp;
 
-import com.google.common.collect.Maps;
-
-import junit.framework.TestCase;
-
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import junit.framework.TestCase;
 
 /**
  * Unit test for {@link Xid}.
@@ -36,7 +34,7 @@ public class XidTest extends TestCase {
    * {@code Integer.MAX_VALUE}.
    */
   public void testUniqueness() throws Exception {
-    Map<String, Integer> map = Maps.newHashMap();
+    Map<String, Integer> map = new HashMap<>();
     helpTestUniqueness(map, -1000, 1000);
     helpTestUniqueness(map, Integer.MIN_VALUE, Integer.MIN_VALUE + 1000);
     helpTestUniqueness(map, Integer.MAX_VALUE, Integer.MAX_VALUE - 1000);

@@ -426,6 +426,11 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          "var a$b$c = 5; function f() { var x = null; f(a$b$c); }");
   }
 
+  public void testLocalAlias8() {
+    testSame(
+        "var a = { b: 3 }; function f() { if (true) { var x = a; f(x.b); } x = { b : 4}; }");
+  }
+
   public void testGlobalWriteToAncestor() {
     testSame("var a = {b: 3}; function f() { var x = a; f(a.b); } a = 5;");
   }
@@ -864,5 +869,275 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
         + "    })();\n"
         + "}",
         null);
+  }
+
+  public void testGlobalAliasWithLet() {
+    test(
+        "let ns = {}; ns.foo = 'bar'; let ns2 = ns; use(ns2.foo);",
+        "var ns$foo = 'bar'; let ns2 = null; use(ns$foo);");
+  }
+
+  public void testGlobalAliasForLet2() {
+    // We don't do any sort of branch prediction, so can't collapse here.
+    testSame(
+        LINE_JOINER.join(
+            "let ns = {};",
+            "ns.foo = 'bar';",
+            "let ns2;",
+            "if (true) {",
+            "  ns2 = ns;",
+            "}",
+            "use(ns2.foo);"));
+  }
+
+  public void testGlobalAliasWithLet3() {
+    // Back off since in general we don't check that ns2 is only ever accessed within the if block.
+    testSame(
+        LINE_JOINER.join(
+            "let ns = {};",
+            "ns.foo = 'bar';",
+            "let ns2;",
+            "if (true) {",
+            "  ns2 = ns;",
+            "  use(ns2.foo);",
+            "}"));
+  }
+
+  public void testLocalAliasWithLet1() {
+    test(
+        "let ns = {}; ns.foo = 'bar'; function f() { let ns2 = ns; use(ns2.foo); }",
+        "var ns$foo = 'bar'; function f() { let ns2 = null; use(ns$foo); }");
+  }
+
+  public void testLocalAliasWithLet2() {
+    test(
+        LINE_JOINER.join(
+            "let ns = {};",
+            "ns.foo = 'bar';",
+            "function f() {",
+            "  if (true) {",
+            "    let ns2 = ns;",
+            "    use(ns2.foo);",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "var ns$foo = 'bar';",
+            "function f() {",
+            "  if (true) {",
+            "    let ns2 = null;",
+            "    use(ns$foo);",
+            "  }",
+            "}"));
+  }
+
+  public void testLocalAliasWithLet3() {
+    test(
+        LINE_JOINER.join(
+            "let ns = {};",
+            "ns.foo = 'bar';",
+            "if (true) {",
+            "  let ns2 = ns;",
+            "  use(ns2.foo);",
+            "}"),
+        LINE_JOINER.join(
+            "var ns$foo = 'bar';",
+            "if (true) {",
+            "  let ns2 = null;",
+            "  use(ns$foo);", "}"));
+  }
+
+  public void testLocalAliasWithLet4() {
+    test(
+        LINE_JOINER.join(
+            "let ns = {};",
+            "ns.foo = 'bar';",
+            "if (true) {",
+            "  let baz = ns.foo;",
+            "  use(baz);",
+            "}"),
+        LINE_JOINER.join(
+            "var ns$foo = 'bar';",
+            "if (true) {",
+            "  let baz = null;",
+            "  use(ns$foo);", "}"));
+  }
+
+  public void testLocalAliasWithLet5() {
+    // For local variables (VAR, CONST, or LET) we only handle cases where the alias is a variable,
+    // not a property.
+    testSame(
+        LINE_JOINER.join(
+            "let ns = {};",
+            "ns.foo = 'bar';",
+            "if (true) {",
+            "  let ns2 = {};",
+            "  ns2.baz = ns;",
+            "  use(ns2.baz.foo);",
+            "}"));
+  }
+
+  public void testGlobalAliasWithConst() {
+    test(
+        "const ns = {}; ns.foo = 'bar'; const ns2 = ns; use(ns2.foo);",
+        "var ns$foo = 'bar'; const ns2 = null; use(ns$foo);");
+  }
+
+  public void testLocalAliasWithConst1() {
+    test(
+        LINE_JOINER.join(
+            "const ns = {};",
+            "ns.foo = 'bar';",
+            "function f() { const ns2 = ns;",
+            "use(ns2.foo); }"),
+        LINE_JOINER.join(
+            "var ns$foo = 'bar';",
+            "function f() {",
+            "const ns2 = null;",
+            "use(ns$foo);", "}"));
+  }
+
+  public void testLocalAliasWithConst2() {
+    test(
+        LINE_JOINER.join(
+            "const ns = {};",
+            "ns.foo = 'bar';",
+            "function f() {",
+            "  if (true) {",
+            "    const ns2 = ns;",
+            "    use(ns2.foo);",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "var ns$foo = 'bar';",
+            "function f() {",
+            "  if (true) {",
+            "    const ns2 = null;",
+            "    use(ns$foo);",
+            "  }",
+            "}"));
+  }
+
+  public void testLocalAliasWithConst3() {
+    test(
+        LINE_JOINER.join(
+            "const ns = {};",
+            "ns.foo = 'bar';",
+            "if (true) {",
+            "  const ns2 = ns;",
+            "  use(ns2.foo);",
+            "}"),
+        LINE_JOINER.join(
+            "var ns$foo = 'bar';",
+            "if (true) {",
+            "  const ns2 = null;",
+            "  use(ns$foo);",
+            "}"));
+  }
+
+  public void testLocalAliasWithConst4() {
+    test(
+        LINE_JOINER.join(
+            "const ns = {};",
+            "ns.foo = 'bar';",
+            "if (true) {",
+            "  const baz = ns.foo;",
+            "  use(baz);",
+            "}"),
+        LINE_JOINER.join(
+            "var ns$foo = 'bar';",
+            "if (true) {",
+            "  const baz = null;",
+            "  use(ns$foo);",
+            "}"));
+  }
+
+  public void testLocalAliasWithConst5() {
+    // For local variables (VAR, CONST, or LET) we only handle cases where the alias is a variable,
+    // not a property.
+    testSame(
+        LINE_JOINER.join(
+            "const ns = {};",
+            "ns.foo = 'bar';",
+            "if (true) {",
+            "  const ns2 = {};",
+            "  ns2.baz = ns;",
+            "  use(ns2.baz.foo);",
+            "}"));
+  }
+
+  public void testLocalAliasInsideClass() {
+    test(
+        "var a = {b: 5}; class A { fn() { var c = a; use(a.b); } }",
+        "var a$b = 5; class A { fn() { var c = null; use(a$b); } }");
+  }
+
+  public void testEs6ClassStaticProperties() {
+    // Collapsing static properties (A.foo in this case) is known to be unsafe.
+    test(
+        LINE_JOINER.join(
+            "class A {",
+            "  static useFoo() {",
+            "    alert(this.foo);",
+            "  }",
+            "}",
+            "A.foo = 'bar';",
+            "const B = A;",
+            "B.foo = 'baz';",
+            "B.useFoo();"),
+        LINE_JOINER.join(
+            "class A {",
+            "static useFoo() {",
+            "alert(this.foo);",
+            "}",
+            "}",
+            "var A$foo = 'bar';",
+            "const B = null;",
+            "A$foo = 'baz';",
+            "A.useFoo();"));
+
+    // Adding @nocollapse makes this safe.
+    test(
+        LINE_JOINER.join(
+            "class A {",
+            "  static useFoo() {",
+            "    alert(this.foo);",
+            "  }",
+            "}",
+            "/** @nocollapse */",
+            "A.foo = 'bar';",
+            "const B = A;",
+            "B.foo = 'baz';",
+            "B.useFoo();"),
+        LINE_JOINER.join(
+            "class A {",
+            "static useFoo() {",
+            "alert(this.foo);",
+            "}",
+            "}",
+            "/** @nocollapse */",
+            "A.foo = 'bar';",
+            "const B = null;",
+            "A.foo = 'baz';",
+            "A.useFoo();"));
+  }
+
+  public void testDestructuringAlias1() {
+    testSame("var a = { x: 5 }; var [b] = [a]; use(b.x);");
+  }
+
+  public void testDestructuringAlias2() {
+    testSame("var a = { x: 5 }; var {b} = {b: a}; use(b.x);");
+  }
+
+  public void testDefaultParamAlias1() {
+    test(
+        "var a = {b: 5}; var b = a; function f(x=b) { alert(x.b); }",
+        "var a = {b: 5}; var b = null; function f(x=a) { alert(x.b); }");
+  }
+
+  public void testDefaultParamAlias2() {
+    test(
+        "var a = {b: {c: 5}}; var b = a; function f(x=b.b) { alert(x.c); }",
+        "var a$b = {c: 5}; var b = null; function f(x=a$b) { alert(x.c); }");
   }
 }

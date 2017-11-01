@@ -1653,6 +1653,17 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
         "var {a:a,b:b}={a:{},b:{}};a.a.a=5;var c=a.a;var d=c.a");
   }
 
+  public void testDestructuredArrays() {
+    testSame("var a, b = [{}, {}]; a.foo = 5; b.bar = 6;");
+
+    test("var a = {}; a.b = {}; [a.b.c, a.b.d] = [1, 2];",
+        "var a$b = {}; [a$b.c, a$b.d] = [1, 2];");
+
+    test(
+        "var a = {}; a.b = 5; var c, d = [6, a.b]",
+        "var a$b = 5; var c, d = [6, a$b];");
+  }
+
   public void testComputedPropertyNames() {
     // Computed property in object literal. This following test code is bad style - it does not
     // follow the assumptions of the pass and thus produces the following output.
@@ -1687,7 +1698,7 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "var bar = new Bar()",
             "bar.foo();"));
 
-    // Computed property method name in class - no concatination
+    // Computed property method name in class - no concatenation
     testSame(
         LINE_JOINER.join(
             "class Bar {",
@@ -1775,6 +1786,27 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "Bar.double(1);"));
   }
 
+  public void testClassStaticProperties() {
+    test("class A {} A.foo = 'bar'; use(A.foo);",
+        "class A {} var A$foo = 'bar'; use(A$foo);");
+
+    // Collapsing A.foo is known to be unsafe.
+    test(
+        "class A { static useFoo() { alert(this.foo); } } A.foo = 'bar'; A.useFoo();",
+        "class A { static useFoo() { alert(this.foo); } } var A$foo = 'bar'; A.useFoo();");
+
+    testSame(
+        LINE_JOINER.join(
+            "class A {",
+            "  static useFoo() {",
+            "    alert(this.foo);",
+            "  }",
+            "};",
+            "/** @nocollapse */",
+            "A.foo = 'bar';",
+            "A.useFoo();"));
+  }
+
   public void testSuperExtern() {
     testSame(
         LINE_JOINER.join(
@@ -1838,6 +1870,21 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "};",
             "foo$myFunc();"),
         warning(CollapseProperties.UNSAFE_THIS));
+
+    // "this" is lexically scoped in arrow functions so collapsing is safe.
+    test(
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  myFunc: () => {",
+            "    return this;",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        LINE_JOINER.join(
+            "var foo$myFunc = () => {",
+            "  return this",
+            "};",
+            "foo$myFunc();"));
   }
 
   public void testPropertyMethodAssignment_noThis() {
@@ -1898,9 +1945,37 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
   }
 
   public void testTemplateStrings() {
-    testSame(
+    test(
         LINE_JOINER.join(
-            "const name = 'foo';",
-            "function f() { return `Hi ${name}!`; }"));
+            "var a = {};",
+            "a.b = 'foo';",
+            "var c = `Hi ${a.b}`;"),
+        LINE_JOINER.join(
+            "var a$b = 'foo';",
+            "var c = `Hi ${a$b}`;"));
+  }
+
+  public void testDoesNotCollapseInEs6ModuleScope() {
+    testSame("var a = {}; a.b = {}; a.b.c = 5; export default function() {};");
+
+    test(new String[] {
+        "import * as a from './a.js'; let b = a.b;",
+        "var a = {}; a.b = 5;"
+    }, new String[] {
+        "import * as a$jscomp$1 from './a.js'; let b = a$jscomp$1.b;",
+        "var a$b = 5;"
+    });
+  }
+
+  public void testDefaultParameters() {
+    testSame("var a = {b: 5}; function f(x=a) { alert(x.b); }");
+
+    test(
+        "var a = {b: {c: 5}}; function f(x=a.b) { alert(x.c); }",
+        "var a$b = {c: 5}; function f(x=a$b) { alert(x.c); }");
+
+    test(
+        "var a = {b: 5}; function f(x=a.b) { alert(x); }",
+        "var a$b = 5; function f(x=a$b) { alert(x); }");
   }
 }

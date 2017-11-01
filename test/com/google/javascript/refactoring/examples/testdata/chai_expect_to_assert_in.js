@@ -46,3 +46,17 @@ function negativeTest() {
   expect(someVar).to.not.be.undefined;
   expect('a string').to.not.be.ok;
 }
+
+/** Tests method (not property) expectations */
+function methodTests() {
+  expect(1 + 1).to.equal(2);
+  expect(1 + 1).to.not.equal(3);
+  expect(1 + 1).not.to.equal(3);
+  expect([1, 2]).to.deep.equal([1, 2]);
+  expect([1, 2]).to.not.deep.equal([2, 1]);
+  expect([]).is.an.instanceof(Array);
+  expect([]).to.be.an.instanceof(Array);
+  expect(1).to.be.oneOf([2, 1]);
+  expect([1, 2]).to.contain(1);
+  expect([1, 2]).to.have.lengthOf(2);
+}

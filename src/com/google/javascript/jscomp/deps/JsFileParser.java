@@ -227,8 +227,7 @@ public final class JsFileParser extends JsFileLineParser {
       setModuleType(ModuleType.WRAPPED_GOOG_MODULE);
     }
 
-    // Quick sanity check that will catch most cases. This is a performance
-    // win for people with a lot of JS.
+    // Quick check that will catch most cases. This is a performance win for teams with a lot of JS.
     if (line.contains("provide")
         || line.contains("require")
         || line.contains("module")

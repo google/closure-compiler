@@ -37,11 +37,11 @@ public class PeepholeIntegrationTest extends CompilerTestCase {
         new PeepholeOptimizationsPass(
             compiler,
             getName(),
-            new PeepholeMinimizeConditions(late, false /* useTypes */),
+            new PeepholeMinimizeConditions(late),
             new PeepholeSubstituteAlternateSyntax(late),
             new PeepholeRemoveDeadCode(),
-            new PeepholeFoldConstants(late, false),
-            new PeepholeReplaceKnownMethods(late, false));
+            new PeepholeFoldConstants(late, false /* useTypes */),
+            new PeepholeReplaceKnownMethods(late, false /* useTypes */));
 
     return peepholePass;
   }

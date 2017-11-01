@@ -24,9 +24,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
-import com.google.javascript.rhino.IR;
-import com.google.javascript.rhino.InputId;
-import com.google.javascript.rhino.Node;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,12 +56,33 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
       LINE_JOINER.join(
           "/** @const */",
           "var goog = {};",
+          "goog.inherits = function(child, parent){};",
           "/** @return {void} */",
           "goog.nullFunction = function() {};",
           "/** @type {!Function} */",
           "goog.abstractMethod = function(){};",
           "goog.asserts;",
-          "goog.asserts.assertInstanceOf;",
+          "goog.asserts.assert;",
+          "goog.asserts.assertArray;",
+          "goog.asserts.assertInstanceof;",
+          "goog.asserts.assertNumber;",
+          "goog.asserts.assertObject;",
+          "goog.asserts.assertString;",
+          "goog.partial;",
+          "goog.bind;",
+          "goog.isNull;",
+          "goog.isDef;",
+          "goog.isDefAndNotNull;",
+          "goog.isArray;",
+          "goog.isArrayLike;",
+          "goog.isFunction;",
+          "goog.isObject;",
+          "goog.isString;",
+          "goog.isNumber;",
+          "goog.isBoolean;",
+          "goog.typeOf;",
+          "goog.addDependency = function(file, provides, requires){};",
+          "goog.forwardDeclare = function(name){};",
           "/**",
           " * @param {string} str",
           " * @param {Object<string, string>=} opt_values",
@@ -117,27 +135,6 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
           " * @return {!Array.<?>}",
           " */",
           "Array.prototype.concat = function(var_args) {};",
-          "/** @interface */",
-          "function IThenable () {}",
-          "IThenable.prototype.then = function(onFulfilled) {};",
-          "/**",
-          " * @template T",
-          " * @constructor",
-          " * @implements {IThenable}",
-          " */",
-          "function Promise(resolver) {};",
-          "/**",
-          " * @param {VALUE} value",
-          " * @return {!Promise<VALUE>}",
-          " * @template VALUE",
-          " */",
-          "Promise.resolve = function(value) {};",
-          "/**",
-          " * @template RESULT",
-          " * @param {function(): RESULT} onFulfilled",
-          " * @return {RESULT}",
-          " */",
-          "Promise.prototype.then = function(onFulfilled) {};",
           "/**",
           " * @constructor",
           " * @param {*=} opt_message",
@@ -220,26 +217,12 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
         compilerOptions);
     compiler.setFeatureSet(compiler.getFeatureSet().without(Feature.MODULES));
 
-    Node externsRoot = IR.root();
-    externsRoot.addChildToFront(
-        compiler.getInput(new InputId("[externs]")).getAstRoot(compiler));
-    Node astRoot = IR.root();
-    astRoot.addChildToFront(
-        compiler.getInput(new InputId("[testcode]")).getAstRoot(compiler));
-
+    compiler.parseInputs();
     assertThat(compiler.getErrors()).named("parsing errors").isEmpty();
     assertThat(compiler.getWarnings()).named("parsing warnings").isEmpty();
 
-    // Create common parent of externs and ast; needed by Es6RewriteBlockScopedDeclaration.
-    Node block = IR.root(externsRoot, astRoot);
-
-    // TODO(dimvar): clean this up and use parseInputs instead of setting the jsRoot directly.
-    compiler.jsRoot = astRoot;
-    compiler.externsRoot = externsRoot;
-    compiler.externAndJsRoot = block;
-
     // Run ASTValidator
-    (new AstValidator(compiler)).validateRoot(block);
+    (new AstValidator(compiler)).validateRoot(compiler.getRoot());
 
     DeclaredGlobalExternsOnWindow rewriteExterns =
         new DeclaredGlobalExternsOnWindow(compiler);
@@ -264,7 +247,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
 
     PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);
     phaseopt.consume(passes);
-    phaseopt.process(externsRoot, astRoot);
+    phaseopt.process(compiler.getExternsRoot(), compiler.getJsRoot());
   }
 
   protected final void typeCheck(String js, DiagnosticType... warningKinds) {

@@ -92,10 +92,14 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
   protected void testExternChanges(String extern, String input, String expectedExtern,
       DiagnosticType... warnings) {
     if (this.mode.runsOTI()) {
-      testExternChangesOTI(extern, input, expectedExtern, warnings);
+      enableTypeCheck();
+      super.testExternChanges(extern, input, expectedExtern, warnings);
+      disableTypeCheck();
     }
     if (this.mode.runsNTI()) {
-      testExternChangesNTI(extern, input, expectedExtern, warnings);
+      enableNewTypeInference();
+      super.testExternChanges(extern, input, expectedExtern, warnings);
+      disableNewTypeInference();
     }
     if (this.mode.runsNeither()) {
       super.testExternChanges(extern, input, expectedExtern, warnings);
@@ -144,26 +148,6 @@ public abstract class TypeICompilerTestCase extends CompilerTestCase {
     Diagnostic nti =
         diagnostic instanceof OtiNtiDiagnostic ? ((OtiNtiDiagnostic) diagnostic).nti : diagnostic;
     super.testInternal(externs, js, expected, nti, postconditions);
-    disableNewTypeInference();
-    this.mode = saved;
-  }
-
-  private void testExternChangesOTI(String extern, String input, String expectedExtern,
-      DiagnosticType... warnings) {
-    TypeInferenceMode saved = this.mode;
-    this.mode = TypeInferenceMode.OTI_ONLY;
-    enableTypeCheck();
-    super.testExternChanges(extern, input, expectedExtern, warnings);
-    disableTypeCheck();
-    this.mode = saved;
-  }
-
-  private void testExternChangesNTI(String extern, String input, String expectedExtern,
-      DiagnosticType... warnings) {
-    TypeInferenceMode saved = this.mode;
-    this.mode = TypeInferenceMode.NTI_ONLY;
-    enableNewTypeInference();
-    super.testExternChanges(extern, input, expectedExtern, warnings);
     disableNewTypeInference();
     this.mode = saved;
   }

@@ -177,8 +177,7 @@ public class CommandLineRunner extends
         usage = "Assume input sources are to run in strict mode.")
     private boolean strictModeInput = true;
 
-    // Turn on (very slow) extra sanity checks for use when modifying the
-    // compiler.
+    // Turn on (very slow) extra validity checks for use when modifying the compiler.
     @Option(
       name = "--jscomp_dev_mode",
       hidden = true,
@@ -311,7 +310,10 @@ public class CommandLineRunner extends
         usage = "An output wrapper for a JavaScript module (optional). "
         + "The format is <name>:<wrapper>. The module name must correspond "
         + "with a module specified using --module. The wrapper must "
-        + "contain %s as the code placeholder. The %basename% placeholder can "
+        + "contain %s as the code placeholder. "
+        + "Alternately, %output% can be used in place of %s. "
+        + "%n% can be used to represent a newline. "
+        + "The %basename% placeholder can "
         + "also be used to substitute the base name of the module output file.")
     private List<String> moduleWrapper = new ArrayList<>();
 
@@ -606,7 +608,7 @@ public class CommandLineRunner extends
     @Option(
       name = "--language_in",
       usage =
-          "Sets what language spec that input sources conform. "
+          "Sets the language spec to which input sources should conform. "
               + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
               + "ECMASCRIPT6_TYPED (experimental), ECMASCRIPT_2015, ECMASCRIPT_2016, "
               + "ECMASCRIPT_2017, ECMASCRIPT_NEXT"
@@ -616,10 +618,10 @@ public class CommandLineRunner extends
     @Option(
       name = "--language_out",
       usage =
-          "Sets what language spec the output should conform to. "
+          "Sets the language spec to which output should conform. "
               + "Options: ECMASCRIPT3, ECMASCRIPT5, ECMASCRIPT5_STRICT, "
               + "ECMASCRIPT6_TYPED (experimental), ECMASCRIPT_2015, ECMASCRIPT_2016, "
-              + "ECMASCRIPT_2017, ECMASCRIPT_NEXT"
+              + "ECMASCRIPT_2017, ECMASCRIPT_NEXT, NO_TRANSPILE"
     )
     private String languageOut = "ECMASCRIPT5";
 

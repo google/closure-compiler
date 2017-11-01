@@ -298,10 +298,6 @@ public final class NodeUtil {
     return result.toString();
   }
 
-  public static Double getNumberValue(Node n) {
-    return getNumberValue(n, false);
-  }
-
   /**
    * Gets the value of a node as a Number, or null if it cannot be converted.
    * When it returns a non-null Double, this method effectively emulates the
@@ -311,7 +307,7 @@ public final class NodeUtil {
    * @param useType If true, return 0.0 if the type is null, and NaN if the type is undefined.
    * @return The value of a node as a Number, or null if it cannot be converted.
    */
-  static Double getNumberValue(Node n, boolean useType) {
+  static Double getNumberValue(Node n) {
     switch (n.getToken()) {
       case TRUE:
         return 1.0;
@@ -341,16 +337,6 @@ public final class NodeUtil {
         }
         if (name.equals("Infinity")) {
           return Double.POSITIVE_INFINITY;
-        }
-        if (useType) {
-          TypeI type = n.getTypeI();
-          if (type != null) {
-            if (type.isVoidType()) {
-              return Double.NaN;
-            } else if (type.isNullType()) {
-              return 0.0;
-            }
-          }
         }
         return null;
 
@@ -954,6 +940,27 @@ public final class NodeUtil {
     }
   }
 
+  /**
+   * True for aliases defined with @const, not for aliases defined with @constructor/@interface.
+   */
+  static boolean isAliasedConstDefinition(Node lhs) {
+    JSDocInfo jsdoc = getBestJSDocInfo(lhs);
+    if (jsdoc == null && !lhs.isFromExterns()) {
+      return false;
+    }
+    if (jsdoc != null && !jsdoc.hasConstAnnotation()) {
+      return false;
+    }
+    Node rhs = getRValueOfLValue(lhs);
+    if (rhs == null || !rhs.isQualifiedName()) {
+      return false;
+    }
+    Node parent = lhs.getParent();
+    return (lhs.isName() && parent.isVar())
+        || (lhs.isGetProp() && lhs.isQualifiedName()
+            && parent.isAssign() && parent.getParent().isExprResult());
+  }
+
   static boolean isTypedefDecl(Node n) {
     if (n.isVar()
         || (n.isName() && n.getParent().isVar())
@@ -1430,7 +1437,7 @@ public final class NodeUtil {
    * @return Whether the call has a local result.
    */
   static boolean callHasLocalResult(Node n) {
-    checkState(n.isCall(), n);
+    checkState(n.isCall() || n.isTaggedTemplateLit(), n);
     return (n.getSideEffectFlags() & Node.FLAG_LOCAL_RESULTS) > 0;
   }
 
@@ -1612,6 +1619,7 @@ public final class NodeUtil {
       case CALL:
       case GETELEM:
       case GETPROP:
+      case NEW_TARGET:
         // Data values
       case ARRAYLIT:
       case ARRAY_PATTERN:
@@ -2684,6 +2692,19 @@ public final class NodeUtil {
     return n.isName() && !n.getString().isEmpty();
   }
 
+  /**
+   * @return Whether the name in an import or export spec is not defined within the module, but is
+   *     an exported name from this or another module. e.g. nonlocal in "export {a as nonlocal}" or
+   *     "import {nonlocal as a} from './foo.js'"
+   */
+  static boolean isNonlocalModuleExportName(Node n) {
+    Node parent = n.getParent();
+    return (parent != null
+            && n.isName()
+            && ((parent.isExportSpec() && n != parent.getFirstChild())
+                || (parent.isImportSpec() && n != parent.getLastChild())));
+  }
+
   /** Whether the child node is the FINALLY block of a try. */
   static boolean isTryFinallyNode(Node parent, Node child) {
     return parent.isTry() && parent.hasXChildren(3)
@@ -3041,6 +3062,13 @@ public final class NodeUtil {
   }
 
   /**
+   * @return Whether the node is both a function expression and the function is named.
+   */
+  static boolean isNamedFunctionExpression(Node n) {
+    return NodeUtil.isFunctionExpression(n) && !n.getFirstChild().getString().isEmpty();
+  }
+
+  /**
    * see {@link #isFunctionExpression}
    *
    * @param n A node
@@ -3103,13 +3131,42 @@ public final class NodeUtil {
    * Determines if a function takes a variable number of arguments by
    * looking for references to the "arguments" var_args object.
    */
-  static boolean isVarArgsFunction(Node function) {
-    // TODO(johnlenz): rename this function
-    checkArgument(function.isFunction());
-    return !function.isArrowFunction() && isNameReferenced(
-        function.getLastChild(),
-        "arguments",
-        MATCH_NOT_THIS_BINDING);
+  @Deprecated
+  static boolean isVarArgsFunction(Node fn) {
+    return doesFunctionReferenceOwnArgumentsObject(fn);
+  }
+
+  /**
+   * @return Whether a function has a reference to its own "arguments" object.
+   */
+  static boolean doesFunctionReferenceOwnArgumentsObject(Node fn) {
+    checkArgument(fn.isFunction());
+    if (fn.isArrowFunction()) {
+      return false;
+    }
+    return referencesArgumentsHelper(fn.getLastChild());
+  }
+
+  /** @return Whether any child is a reference to the "arguments" object of the root. Effectively,
+   * this includes arrow method bodies (which don't have their own) and excludes other functions
+   * which shadow the "arguments" value with their own.
+   */
+  private static boolean referencesArgumentsHelper(Node node) {
+    if (node.isName() && node.getString().equals("arguments")) {
+      return true;
+    }
+
+    if (NodeUtil.isVanillaFunction(node)) {
+      return false;
+    }
+
+    for (Node c = node.getFirstChild(); c != null; c = c.getNext()) {
+      if (referencesArgumentsHelper(c)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -3158,8 +3215,10 @@ public final class NodeUtil {
     return n.isGetProp() && n.matchesQualifiedName("goog.partial");
   }
 
-  // Does not use type info. For example, it returns false for f.bind(...)
-  // because it cannot know whether f is a function.
+  /**
+   * Does not use type info. For example, it returns false for f.bind(...)
+   * because it cannot know whether f is a function.
+   */
   static boolean isFunctionBind(Node expr) {
     if (!expr.isGetProp()) {
       return false;
@@ -3655,7 +3714,13 @@ public final class NodeUtil {
       AbstractCompiler compiler, String name, Node basisNode,
       String originalName) {
     Node node = newQName(compiler, name);
-    setDebugInformation(node, basisNode, originalName);
+    node.useSourceInfoWithoutLengthIfMissingFromForTree(basisNode);
+    if (!originalName.equals(node.getOriginalName())) {
+      // If basisNode already had the correct original name, then it will already be set correctly.
+      // Setting it again will force the QName node to have a different property list from all of
+      // its children, causing greater memory consumption.
+      node.setOriginalName(originalName);
+    }
     return node;
   }
 
@@ -3679,19 +3744,6 @@ public final class NodeUtil {
     }
     checkState(qname.isName());
     return result;
-  }
-
-  /**
-   * Sets the debug information (source file info and original name) on the given node.
-   *
-   * @param node The node on which to set the debug information.
-   * @param basisNode The basis node from which to copy the source file info.
-   * @param originalName The original name of the node.
-   */
-  @Deprecated
-  static void setDebugInformation(Node node, Node basisNode, String originalName) {
-    node.useSourceInfoWithoutLengthIfMissingFromForTree(basisNode);
-    node.setOriginalName(originalName);
   }
 
   private static Node newName(AbstractCompiler compiler, String name) {
@@ -3859,6 +3911,7 @@ public final class NodeUtil {
       case DEFAULT_VALUE:
       case CATCH:
       case REST:
+      case ASSIGN:
         getLhsNodesHelper(n.getFirstChild(), lhsNodes);
         return;
       case IMPORT_SPEC:
@@ -3882,11 +3935,12 @@ public final class NodeUtil {
     }
   }
 
-  /** Retrieves lhs nodes declared in the current declaration. */
-  static List<Node> getLhsNodesOfDeclaration(Node declNode) {
+  /** Retrieves lhs nodes declared in the current declaration or ASSIGN statement. */
+  static List<Node> findLhsNodesInNode(Node declNode) {
     checkArgument(
         isNameDeclaration(declNode)
             || declNode.isParamList()
+            || declNode.isAssign()
             || declNode.isCatch()
             || declNode.isDestructuringLhs()
             || declNode.isDefaultValue()
@@ -4372,6 +4426,8 @@ public final class NodeUtil {
    *
    * @param node A NAME or STRING node
    * @return True if a name node represents a constant variable
+   *
+   * TODO(dimvar): this method and the next two do similar but not quite identical things. Clean up
    */
   static boolean isConstantName(Node node) {
     return node.getBooleanProp(Node.IS_CONSTANT_NAME);
@@ -4588,6 +4644,11 @@ public final class NodeUtil {
         return callHasLocalResult(value)
             || isToStringMethodCall(value)
             || locals.apply(value);
+      case TAGGED_TEMPLATELIT:
+        if (!callHasLocalResult(value)) {
+          return false;
+        }
+        return evaluatesToLocalValue(value.getLastChild());
       case NEW:
         return newHasLocalResult(value) || locals.apply(value);
       case DELPROP:
@@ -4635,6 +4696,7 @@ public final class NodeUtil {
         return true;
       case CAST:
       case SPREAD:
+      case AWAIT:
         return evaluatesToLocalValue(value.getFirstChild(), locals);
       default:
         // Other op force a local value:
@@ -4864,10 +4926,9 @@ public final class NodeUtil {
   }
 
   /**
-   * @return false iff the result of the expression is not consumed.
+   * @return true iff the result of the expression is consumed.
    */
   static boolean isExpressionResultUsed(Node expr) {
-    // TODO(johnlenz): consider sharing some code with trySimpleUnusedResult.
     Node parent = expr.getParent();
     switch (parent.getToken()) {
       case BLOCK:
@@ -4896,13 +4957,9 @@ public final class NodeUtil {
 
         return (expr == parent.getFirstChild()) ? false : isExpressionResultUsed(parent);
       case FOR:
-      case FOR_IN:
-        if (!parent.isForIn()) {
-          // Only an expression whose result is in the condition part of the
-          // expression is used.
-          return (parent.getSecondChild() == expr);
-        }
-        break;
+        // Only an expression whose result is in the condition part of the
+        // expression is used.
+        return (parent.getSecondChild() == expr);
       default:
         break;
     }

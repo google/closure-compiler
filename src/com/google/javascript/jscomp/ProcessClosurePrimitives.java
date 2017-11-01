@@ -131,7 +131,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
       "Invalid entries in css renaming map: {0}");
 
   static final DiagnosticType GOOG_BASE_CLASS_ERROR = DiagnosticType.error(
-      "JSC_BASE_CLASS_ERROR",
+      "JSC_GOOG_BASE_CLASS_ERROR",
       "incorrect use of goog.base: {0}");
 
   static final DiagnosticType BASE_CLASS_ERROR = DiagnosticType.error(
@@ -233,7 +233,10 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
   private Node getAnyValueOfType(JSDocInfo jsdoc) {
     checkArgument(jsdoc.hasType());
     Node typeAst = jsdoc.getType().getRoot();
-    checkState(typeAst.isString());
+    if (typeAst.getToken() == Token.BANG) {
+      typeAst = typeAst.getLastChild();
+    }
+    checkState(typeAst.isString(), typeAst);
     switch (typeAst.getString()) {
       case "boolean":
         return IR.falseNode();
@@ -717,11 +720,6 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     // Most of the logic here is just to make sure the AST's
     // structure is what we expect it to be.
 
-    if (baseUsedInClass(n)){
-      reportBadGoogBaseUse(t, n, "goog.base in ES6 class is not allowed. Use super instead.");
-      return;
-    }
-
     Node callTarget = n.getFirstChild();
     Node baseContainerNode = callTarget.getFirstChild();
     if (!baseContainerNode.isUnscopedQualifiedName()) {
@@ -731,13 +729,25 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
     String baseContainer = callTarget.getFirstChild().getQualifiedName();
 
     Node enclosingFnNameNode = getEnclosingDeclNameNode(n);
-    if (enclosingFnNameNode == null
-        || !enclosingFnNameNode.isUnscopedQualifiedName()) {
+    if (enclosingFnNameNode == null || !enclosingFnNameNode.isUnscopedQualifiedName()) {
       // some unknown container method.
       if (knownClosureSubclasses.contains(baseContainer)) {
-        reportBadBaseMethodUse(t, n, baseContainer,
-            "Could not find enclosing method.");
+        reportBadBaseMethodUse(t, n, baseContainer, "Could not find enclosing method.");
+      } else if (baseUsedInClass(n)) {
+        Node clazz = NodeUtil.getEnclosingClass(n);
+        if ((clazz.getFirstChild().isName()
+                && clazz.getFirstChild().getString().equals(baseContainer))
+            || (clazz.getSecondChild().isName()
+                && clazz.getSecondChild().getString().equals(baseContainer))) {
+          reportBadBaseMethodUse(t, n, clazz.getFirstChild().getString(),
+              "base method is not allowed in ES6 class. Use super instead.");
+        }
       }
+      return;
+    }
+
+    if (baseUsedInClass(n)) {
+      reportBadGoogBaseUse(t, n, "goog.base in ES6 class is not allowed. Use super instead.");
       return;
     }
 

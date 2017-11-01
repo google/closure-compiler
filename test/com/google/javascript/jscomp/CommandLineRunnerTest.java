@@ -333,11 +333,11 @@ public final class CommandLineRunnerTest extends TestCase {
         + "new Foo().handle1(1, 2);\n"
         + "new Bar().handle1(1, 2);\n",
         "function a() {}\n"
-        + "a.prototype.a = function(d, c) { alert(c); };\n"
+        + "a.prototype.a = function(c) { alert(c); };\n"
         + "function b() {}\n"
         + "b.prototype.a = function() {};\n"
-        + "(new a).a(1, 2);\n"
-        + "(new b).a(1, 2);");
+        + "(new a).a(2);\n"
+        + "(new b).a(2);");
   }
 
   public void testTypeCheckingOnWithVerbose() {
@@ -733,16 +733,12 @@ public final class CommandLineRunnerTest extends TestCase {
   }
 
   public void testSourceSortingOn2() {
-    test(new String[] {
+    test(
+        new String[] {
           "goog.provide('a');",
-          "goog.require('a');\n" +
-          "/** This is base.js */\n" +
-          "var COMPILED = false;",
-         },
-         new String[] {
-           "var a={};",
-           "var COMPILED=!1"
-         });
+          "goog.require('a');\n/** This is base.js */\nvar COMPILED = false;",
+        },
+        new String[] {"var a={};", "var COMPILED=!1"});
   }
 
   public void testSourceSortingOn3() {
@@ -843,23 +839,19 @@ public final class CommandLineRunnerTest extends TestCase {
 
   public void testSourcePruningOn6() {
     args.add("--entry_point=goog:scotch");
-    test(new String[] {
-          "goog.require('beer');",
-          "goog.provide('beer');",
-          "goog.provide('scotch'); var x = 3;"
-         },
-         new String[] {
-           "var beer = {};",
-           "",
-           "var scotch = {}, x = 3;"
-         });
+    test(
+        new String[] {
+          "goog.require('beer');", "goog.provide('beer');", "goog.provide('scotch'); var x = 3;"
+        },
+        new String[] {"var beer = {};", "", "var scotch = {}, x = 3;"});
     assertTrue(lastCompiler.getOptions().getDependencyOptions().shouldSortDependencies());
     assertTrue(lastCompiler.getOptions().getDependencyOptions().shouldPruneDependencies());
   }
 
   public void testSourcePruningOn7() {
     args.add("--dependency_mode=LOOSE");
-    test(new String[] {
+    test(
+        new String[] {
           "/** This is base.js */\nvar COMPILED = false;",
         },
         new String[] {
@@ -1302,6 +1294,21 @@ public final class CommandLineRunnerTest extends TestCase {
         builder,
         lastCompiler.getModuleGraph().getRootModule());
     assertThat(builder.toString()).isEqualTo("var x=3; // m0.js\n");
+  }
+
+  public void testModuleWrapperExpansion() throws Exception {
+    useModules = ModulePattern.CHAIN;
+    args.add("--module_wrapper=m0:%output%%n%//# SourceMappingUrl=%basename%.map");
+    testSame(new String[] {
+      "var x = 3;",
+      "var y = 4;"
+    });
+
+    StringBuilder builder = new StringBuilder();
+    lastCommandLineRunner.writeModuleOutput(
+        builder,
+        lastCompiler.getModuleGraph().getRootModule());
+    assertThat(builder.toString()).isEqualTo("var x=3;\n//# SourceMappingUrl=m0.js.map\n");
   }
 
   public void testMultistageCompilation() throws Exception {
@@ -1824,8 +1831,7 @@ public final class CommandLineRunnerTest extends TestCase {
               "/** @const */ var module$foo = {/** @constructor */ default: function(){} };",
               "module$foo.default.prototype.bar=function(){console.log('bar')};"),
           LINE_JOINER.join(
-              "var baz$$module$app = new module$foo();",
-              "console.log(baz$$module$app.bar());")
+              "var baz$$module$app = new module$foo();", "console.log(baz$$module$app.bar());")
         });
   }
 
@@ -1862,12 +1868,11 @@ public final class CommandLineRunnerTest extends TestCase {
           "import './foo.js';"
         },
         new String[] {
-          CompilerTestCase.LINE_JOINER.join(
+          LINE_JOINER.join(
               "/** @const */ var module$message={},",
               "  $jscompDefaultExport$$module$message = 'message';",
               "module$message.default = $jscompDefaultExport$$module$message;"),
-          CompilerTestCase.LINE_JOINER.join(
-              "function foo$$module$foo(){ alert(module$message.default); }", "foo$$module$foo();"),
+          "function foo$$module$foo(){ alert(module$message.default); } foo$$module$foo();",
           ""
         });
   }

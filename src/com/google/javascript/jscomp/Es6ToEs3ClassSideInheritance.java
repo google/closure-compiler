@@ -26,10 +26,10 @@ import com.google.javascript.rhino.JSDocInfoBuilder;
 import com.google.javascript.rhino.JSTypeExpression;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -279,7 +279,7 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
   }
 
   private class FindStaticMembers extends AbstractPostOrderCallback {
-    private final List<Node> inheritsCalls = new LinkedList<>();
+    private final List<Node> inheritsCalls = new ArrayList<>();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {

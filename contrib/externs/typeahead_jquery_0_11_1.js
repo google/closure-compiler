@@ -50,8 +50,11 @@ var TypeaheadOptions;
 
 /**
  * The typeahead "precompiled template". Usually takes an Object that includes
- * the query and produces an HTML string.
- * @typedef {function(?): string}
+ * the query and produces an HTML string. Expected to return a template string
+ * but works when an Element is returned. This behaviour is undocumented, a
+ * request for clarification is outstanding here:
+ *   https://github.com/twitter/typeahead.js/issues/1677
+ * @typedef {function(?): (string | Element)}
  */
 var TypeaheadTemplate;
 

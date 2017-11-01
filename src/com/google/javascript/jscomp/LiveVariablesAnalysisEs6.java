@@ -21,10 +21,10 @@ import com.google.javascript.jscomp.ControlFlowGraph.Branch;
 import com.google.javascript.jscomp.graph.DiGraph.DiGraphEdge;
 import com.google.javascript.jscomp.graph.LatticeElement;
 import com.google.javascript.rhino.Node;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -152,7 +152,7 @@ class LiveVariablesAnalysisEs6
     this.escaped = new HashSet<>();
     this.scopeVariables = new HashMap<>();
     this.allVarsInFn = new HashMap<>();
-    this.orderedVars = new LinkedList<>();
+    this.orderedVars = new ArrayList<>();
 
     computeEscapedEs6(jsScope, escaped, compiler, scopeCreator);
 
@@ -286,7 +286,7 @@ class LiveVariablesAnalysisEs6
                }
              }
            } else {
-             Iterable<Node> allVars = NodeUtil.getLhsNodesOfDeclaration(n);
+             Iterable<Node> allVars = NodeUtil.findLhsNodesInNode(n);
              for (Node child : allVars) {
                addToSetIfLocal(child, kill);
              }

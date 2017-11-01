@@ -156,6 +156,12 @@ public class DiagnosticGroups {
           ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT,
           ProcessCommonJSModules.UNKNOWN_REQUIRE_ENSURE);
 
+  // TODO(tbreisacher): Delete this after the next release.
+  public static final DiagnosticGroup COMMON_JS_MODULE_LOAD =
+      DiagnosticGroups.registerGroup("commonJsModuleLoad",
+          ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT,
+          ProcessCommonJSModules.UNKNOWN_REQUIRE_ENSURE);
+
   public static final DiagnosticGroup GLOBAL_THIS =
       DiagnosticGroups.registerGroup("globalThis",
           CheckGlobalThis.GLOBAL_THIS);
@@ -281,7 +287,8 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup OLD_CHECK_TYPES =
       DiagnosticGroups.registerGroup("oldCheckTypes",  // undocumented
           TypeValidator.ALL_DIAGNOSTICS,
-          TypeCheck.ALL_DIAGNOSTICS);
+          TypeCheck.ALL_DIAGNOSTICS,
+          DiagnosticGroups.GLOBAL_THIS);
 
   // Run the new type inference, but omit many warnings that are not
   // found by the old type checker. This makes migration to NTI more manageable.
@@ -328,7 +335,7 @@ public class DiagnosticGroups {
           GlobalTypeInfoCollector.CANNOT_INIT_TYPEDEF,
           GlobalTypeInfoCollector.CANNOT_OVERRIDE_FINAL_METHOD,
           GlobalTypeInfoCollector.CONST_WITHOUT_INITIALIZER,
-//           GlobalTypeInfo.COULD_NOT_INFER_CONST_TYPE,
+          GlobalTypeInfoCollector.COULD_NOT_INFER_CONST_TYPE,
           GlobalTypeInfoCollector.CTOR_IN_DIFFERENT_SCOPE,
           GlobalTypeInfoCollector.DICT_WITHOUT_CTOR,
           GlobalTypeInfoCollector.DUPLICATE_JSDOC,
@@ -337,12 +344,12 @@ public class DiagnosticGroups {
           GlobalTypeInfoCollector.EXPECTED_INTERFACE,
           GlobalTypeInfoCollector.INEXISTENT_PARAM,
           GlobalTypeInfoCollector.INTERFACE_METHOD_NOT_IMPLEMENTED,
-//           GlobalTypeInfo.INVALID_PROP_OVERRIDE,
+          // GlobalTypeInfoCollector.INVALID_PROP_OVERRIDE,
           GlobalTypeInfoCollector.LENDS_ON_BAD_TYPE,
           GlobalTypeInfoCollector.MALFORMED_ENUM,
           GlobalTypeInfoCollector.MISPLACED_CONST_ANNOTATION,
           GlobalTypeInfoCollector.ONE_TYPE_FOR_MANY_VARS,
-//           GlobalTypeInfo.REDECLARED_PROPERTY,
+          // GlobalTypeInfoCollector.REDECLARED_PROPERTY,
           GlobalTypeInfoCollector.STRUCT_WITHOUT_CTOR_OR_INTERF,
           GlobalTypeInfoCollector.SUPER_INTERFACES_HAVE_INCOMPATIBLE_PROPERTIES,
           GlobalTypeInfoCollector.UNKNOWN_OVERRIDE,
@@ -353,32 +360,31 @@ public class DiagnosticGroups {
           NewTypeInference.CONST_REASSIGNED,
           NewTypeInference.CONSTRUCTOR_NOT_CALLABLE,
           NewTypeInference.CROSS_SCOPE_GOTCHA,
-//           NewTypeInference.FAILED_TO_UNIFY,
-//           NewTypeInference.FORIN_EXPECTS_OBJECT,
+          // NewTypeInference.FORIN_EXPECTS_OBJECT,
           NewTypeInference.FORIN_EXPECTS_STRING_KEY,
-//           NewTypeInference.GLOBAL_THIS,
-//           NewTypeInference.GOOG_BIND_EXPECTS_FUNCTION,
+          // NewTypeInference.GLOBAL_THIS,
+          // NewTypeInference.GOOG_BIND_EXPECTS_FUNCTION,
           NewTypeInference.ILLEGAL_OBJLIT_KEY,
-//           NewTypeInference.ILLEGAL_PROPERTY_ACCESS,
-//           NewTypeInference.ILLEGAL_PROPERTY_CREATION,
+          NewTypeInference.ILLEGAL_PROPERTY_ACCESS,
+          NewTypeInference.ILLEGAL_PROPERTY_CREATION,
           NewTypeInference.IN_USED_WITH_STRUCT,
-//           NewTypeInference.INEXISTENT_PROPERTY,
-//           NewTypeInference.INVALID_ARGUMENT_TYPE,
-//           NewTypeInference.INVALID_CAST,
-//          NewTypeInference.INVALID_INDEX_TYPE,
+          // NewTypeInference.INEXISTENT_PROPERTY,
+          // NewTypeInference.INVALID_ARGUMENT_TYPE,
+          // NewTypeInference.INVALID_CAST,
+          // NewTypeInference.INVALID_INDEX_TYPE,
           NewTypeInference.INVALID_INFERRED_RETURN_TYPE,
           NewTypeInference.INVALID_OBJLIT_PROPERTY_TYPE,
-//           NewTypeInference.INVALID_OPERAND_TYPE,
+          // NewTypeInference.INVALID_OPERAND_TYPE,
           NewTypeInference.INVALID_THIS_TYPE_IN_BIND,
           NewTypeInference.MISSING_RETURN_STATEMENT,
-//           NewTypeInference.MISTYPED_ASSIGN_RHS,
-//           NewTypeInference.NOT_A_CONSTRUCTOR,
-//           NewTypeInference.NOT_CALLABLE,
-//           NewTypeInference.NOT_UNIQUE_INSTANTIATION,
-//           NewTypeInference.POSSIBLY_INEXISTENT_PROPERTY,
-//           NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT,
-//           NewTypeInference.RETURN_NONDECLARED_TYPE,
-//           NewTypeInference.WRONG_ARGUMENT_COUNT,
+          // NewTypeInference.MISTYPED_ASSIGN_RHS,
+          NewTypeInference.NOT_A_CONSTRUCTOR,
+          NewTypeInference.NOT_CALLABLE,
+          // NewTypeInference.NOT_UNIQUE_INSTANTIATION,
+          // NewTypeInference.POSSIBLY_INEXISTENT_PROPERTY,
+          // NewTypeInference.PROPERTY_ACCESS_ON_NONOBJECT,
+          // NewTypeInference.RETURN_NONDECLARED_TYPE,
+          // NewTypeInference.WRONG_ARGUMENT_COUNT,
           NewTypeInference.UNKNOWN_ASSERTION_TYPE,
           NewTypeInference.UNKNOWN_TYPEOF_VALUE);
   }
@@ -707,8 +713,7 @@ public class DiagnosticGroups {
   public static final DiagnosticGroup LATE_PROVIDE =
       DiagnosticGroups.registerGroup(
           "lateProvide", // undocumented
-          ProcessClosurePrimitives.LATE_PROVIDE_ERROR,
-          ClosureRewriteModule.LATE_PROVIDE_ERROR);
+          ProcessClosurePrimitives.LATE_PROVIDE_ERROR);
 
   public static final DiagnosticGroup MISSING_POLYFILL =
       DiagnosticGroups.registerGroup(

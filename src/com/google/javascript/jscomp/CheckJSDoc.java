@@ -168,11 +168,11 @@ final class CheckJSDoc extends AbstractPostOrderCallback implements HotSwapCompi
   private boolean isClassDecl(Node n) {
     return isClass(n)
         || (n.isAssign() && isClass(n.getLastChild()))
-        || (NodeUtil.isNameDeclaration(n) && isNameIntializeWithClass(n.getFirstChild()))
-        || isNameIntializeWithClass(n);
+        || (NodeUtil.isNameDeclaration(n) && isNameInitializeWithClass(n.getFirstChild()))
+        || isNameInitializeWithClass(n);
   }
 
-  private boolean isNameIntializeWithClass(Node n) {
+  private boolean isNameInitializeWithClass(Node n) {
     return n != null && n.isName() && n.hasChildren() && isClass(n.getFirstChild());
   }
 

@@ -132,6 +132,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("new (a.b())");
     assertPrint("new (a.b())()", "new (a.b())");
 
+
     // Operators: make sure we don't convert binary + and unary + into ++
     assertPrint("x + +y", "x+ +y");
     assertPrint("x - (-y)", "x- -y");
@@ -270,6 +271,12 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrint("if(x)if(y);", "if(x)if(y);");
     assertPrint("if(x){if(y);}", "if(x)if(y);");
     assertPrint("if(x){if(y){};;;}", "if(x)if(y);");
+  }
+
+  public void testPrintNewVoid() {
+    // Odd looking but valid. This, of course, will cause a runtime exception but
+    // should not cause a parse error as "new void 0" would.
+    assertPrintSame("new (void 0)");
   }
 
   public void testPrintComma1() {
@@ -2250,6 +2257,31 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     assertPrintSame("var x=/\\u2029/");
   }
 
+  public void testRegexp_escape() {
+    assertPrintSame("/\\bword\\b/");
+    assertPrintSame("/Java\\BScript/");
+    assertPrintSame("/\\ca/");
+    assertPrintSame("/\\cb/");
+    assertPrintSame("/\\cc/");
+    assertPrintSame("/\\cA/");
+    assertPrintSame("/\\cB/");
+    assertPrintSame("/\\cC/");
+    assertPrintSame("/\\d/");
+    assertPrintSame("/\\D/");
+    assertPrintSame("/\\0/");
+    assertPrintSame("/\\\\/");
+    assertPrintSame("/(.)\\1/");
+  }
+
+  public void testRegexp_unnecessaryEscape() {
+    assertPrint("/\\a/", "/a/");
+    assertPrint("/\\e/", "/e/");
+    assertPrint("/\\g/", "/g/");
+    assertPrint("/\\h/", "/h/");
+    assertPrint("/\\i/", "/i/");
+    assertPrint("/\\¡/", "/\\u00a1/");
+  }
+
   public void testKeywordProperties1() {
     languageMode = LanguageMode.ECMASCRIPT5;
     assertPrintSame("x.foo=2");
@@ -2743,6 +2775,27 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     compilerOptions.setLanguageIn(LanguageMode.ECMASCRIPT_2015);
     compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
     checkWithOriginalName(code, expectedCode, compilerOptions);
+  }
+
+  public void testEs6NewTargetBare() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertPrintSame("class C{constructor(){new.target.prototype}}");
+  }
+
+  public void testEs6NewTargetPrototype() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertPrintSame(
+        "class C{constructor(){var callable=Object.setPrototypeOf(obj,new.target.prototype)}}");
+  }
+
+  public void testEs6NewTargetConditional() {
+    languageMode = LanguageMode.ECMASCRIPT_2015;
+    assertPrint(
+        LINE_JOINER.join(
+            "function f() {",
+            "  if (!new.target) throw 'Must be called with new!';",
+            "}"),
+        "function f(){if(!new.target)throw\"Must be called with new!\";}");
   }
 
   public void testGoogScope() {

@@ -97,8 +97,8 @@ class VarCheck extends AbstractPostOrderCallback implements
 
   private final AbstractCompiler compiler;
 
-  // Whether this is the post-processing sanity check.
-  private final boolean sanityCheck;
+  // Whether this is the post-processing validity check.
+  private final boolean validityCheck;
 
   // Whether extern checks emit error.
   private final boolean strictExternCheck;
@@ -109,19 +109,19 @@ class VarCheck extends AbstractPostOrderCallback implements
     this(compiler, false);
   }
 
-  VarCheck(AbstractCompiler compiler, boolean sanityCheck) {
+  VarCheck(AbstractCompiler compiler, boolean validityCheck) {
     this.compiler = compiler;
     this.strictExternCheck = compiler.getErrorLevel(
         JSError.make("", 0, 0, UNDEFINED_EXTERN_VAR_ERROR)) == CheckLevel.ERROR;
-    this.sanityCheck = sanityCheck;
+    this.validityCheck = validityCheck;
   }
 
   /**
-   * Creates the scope creator used by this pass. If not in sanity check mode, use a {@link
+   * Creates the scope creator used by this pass. If not in validity check mode, use a {@link
    * RedeclarationCheckHandler} to check var redeclarations.
    */
   private ScopeCreator createScopeCreator() {
-    if (sanityCheck) {
+    if (validityCheck) {
       return new Es6SyntacticScopeCreator(compiler);
     } else {
       dupHandler = new RedeclarationCheckHandler();
@@ -135,7 +135,7 @@ class VarCheck extends AbstractPostOrderCallback implements
     // Don't run externs-checking in sanity check mode. Normalization will
     // remove duplicate VAR declarations, which will make
     // externs look like they have assigns.
-    if (!sanityCheck) {
+    if (!validityCheck) {
       NodeTraversal traversal = new NodeTraversal(
           compiler, new NameRefInExternsCheck(), scopeCreator);
       traversal.traverse(externs);
@@ -196,6 +196,9 @@ class VarCheck extends AbstractPostOrderCallback implements
             || (NodeUtil.isClassExpression(parent) && n == parent.getFirstChild())) {
           // e.g. [ function foo() {} ], it's okay if "foo" isn't defined in the
           // current scope.
+        } else if (NodeUtil.isNonlocalModuleExportName(n)) {
+          // e.g. "export {a as b}" or "import {b as a} from './foo.js'
+          // where b is defined in a module's export entries but not in any module scope.
         } else {
           boolean isArguments = scope.isFunctionScope() && ARGUMENTS.equals(varName);
           // The extern checks are stricter, don't report a second error.
@@ -203,7 +206,7 @@ class VarCheck extends AbstractPostOrderCallback implements
             t.report(n, UNDEFINED_VAR_ERROR, varName);
           }
 
-          if (sanityCheck) {
+          if (validityCheck) {
             // When the code is initially traversed, any undeclared variables are treated as
             // externs. During this sanity check, we ensure that all variables have either been
             // declared or marked as an extern. A failure at this point means that we have created
@@ -228,7 +231,7 @@ class VarCheck extends AbstractPostOrderCallback implements
       JSModule currModule = currInput.getModule();
       JSModule varModule = varInput.getModule();
       JSModuleGraph moduleGraph = compiler.getModuleGraph();
-      if (!sanityCheck && varModule != currModule && varModule != null && currModule != null) {
+      if (!validityCheck && varModule != currModule && varModule != null && currModule != null) {
         if (moduleGraph.dependsOn(currModule, varModule)) {
           // The module dependency was properly declared.
         } else {

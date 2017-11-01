@@ -58,8 +58,7 @@ import java.util.Collection;
  * </pre>
  *
  */
-class DevirtualizePrototypeMethods
-    implements OptimizeCalls.CallGraphCompilerPass, CompilerPass {
+class DevirtualizePrototypeMethods implements CompilerPass {
   private final AbstractCompiler compiler;
 
   DevirtualizePrototypeMethods(AbstractCompiler compiler) {
@@ -73,7 +72,6 @@ class DevirtualizePrototypeMethods
     process(externs, root, defFinder);
   }
 
-  @Override
   public void process(
       Node externs, Node root, DefinitionUseSiteFinder definitions) {
     for (DefinitionSite defSite : definitions.getDefinitionSites()) {

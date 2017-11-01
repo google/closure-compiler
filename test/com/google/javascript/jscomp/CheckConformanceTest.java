@@ -1516,7 +1516,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     // addresses this use case.
     this.mode = TypeInferenceMode.OTI_ONLY;
     testWarning(
-        "goog.forwardDeclare('Foo');" + "/** @param {Foo} a */ function f(a) {a.foo()};",
+        "goog.forwardDeclare('Foo'); /** @param {Foo} a */ function f(a) {a.foo()};",
         CheckConformance.CONFORMANCE_VIOLATION,
         "Violation: BanUnresolvedType Message");
 
@@ -1528,6 +1528,40 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "function foo(data) {",
         "  data['bar'].baz();",
         "}"));
+  }
+
+  public void testCustomStrictBanUnresolvedType() {
+    configuration =
+        "requirement: {\n"
+        + "  type: CUSTOM\n"
+        + "  java_class: 'com.google.javascript.jscomp.ConformanceRules$StrictBanUnresolvedType'\n"
+        + "  error_message: 'StrictBanUnresolvedType Message'\n"
+        + "}";
+
+    // NTI doesn't model unresolved types separately from unknown, so this check always results
+    // in conformance.
+    // TODO(b/67899666): Implement similar functionality in NTI for preventing uses of forward
+    // declared types by implementing support for resolving forward declarations to a new
+    // "unusable type" instead of to unknown.
+    this.mode = TypeInferenceMode.OTI_ONLY;
+    testWarning(
+        "goog.forwardDeclare('Foo'); /** @param {Foo} a */ var f = function(a) {}",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: StrictBanUnresolvedType Message");
+
+    testWarning(
+        new String[] {
+          "goog.forwardDeclare('Foo'); /** @param {!Foo} a */ var f;",
+           "f(5);",
+        },
+        TypeValidator.TYPE_MISMATCH_WARNING);
+
+    testWarning(
+        new String[] {
+          "goog.forwardDeclare('Foo'); /** @return {!Foo} */ var f;",
+          "f();",
+        },
+        CheckConformance.CONFORMANCE_VIOLATION);
   }
 
   public void testMergeRequirements() {
@@ -1680,6 +1714,56 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
 
     testNoWarning(
         "export var x = 2;");
+  }
+
+  public void testBanCreateElement() {
+    configuration =
+        "requirement: {\n" +
+        "  type: CUSTOM\n" +
+        "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateElement'\n" +
+        "  error_message: 'BanCreateElement Message'\n" +
+        "  value: 'script'\n" +
+        "}";
+
+    testWarning(
+        "goog.dom.createElement('script');",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateElement Message");
+
+    testWarning(
+        "goog.dom.createDom('script', {});",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateElement Message");
+
+    String externs =
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @constructor */ function Document() {}",
+            "/** @const {!Document} */ var document;",
+            "/** @const */ var goog = {};",
+            "/** @const */ goog.dom = {};",
+            "/** @constructor */ goog.dom.DomHelper = function() {};");
+
+    testWarning(
+        externs,
+        "document.createElement('script');",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateElement Message");
+
+    testWarning(
+        externs,
+        "new goog.dom.DomHelper().createElement('script');",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateElement Message");
+
+    testWarning(
+        externs,
+        "function f(/** ?Document */ doc) { doc.createElement('script'); }",
+        CheckConformance.CONFORMANCE_VIOLATION,
+        "Violation: BanCreateElement Message");
+
+    testNoWarning("goog.dom.createElement('iframe');");
+    testNoWarning("goog.dom.createElement(goog.dom.TagName.SCRIPT);");
   }
 
   public void testBanCreateDom() {

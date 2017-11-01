@@ -242,7 +242,7 @@ public final class CodePrinter {
 
     /**
      * Adjusts end position of a mapping. End position points to a column *after* the last character
-     * that is covered by a mapping. And if it's end of the line there are 2 possibilites: either
+     * that is covered by a mapping. And if it's end of the line there are 2 possibilities: either
      * point to the non-existent character after the last char on a line or point to the first
      * character on the next line. In some cases we end up with 2 mappings which should have the
      * same end position, but they use different styles as described above it leads to invalid

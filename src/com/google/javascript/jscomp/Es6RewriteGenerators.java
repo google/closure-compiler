@@ -905,7 +905,8 @@ public final class Es6RewriteGenerators
       guard = currentStatement.removeFirstChild();
     }
 
-    Node condition, prestatement;
+    Node condition;
+    Node prestatement;
 
     if (guard.isNormalBlock()) {
       prestatement = guard.removeFirstChild();
@@ -1375,7 +1376,7 @@ public final class Es6RewriteGenerators
    * If the skeleton is already preloaded, does not do anything, just returns the node.
    * reportChange tells the function whether to report a code change in the enclosing scope.
    *
-   * Because sanity checks happen between passes, we need to report the change if the generator
+   * Because validity checks happen between passes, we need to report the change if the generator
    * was preloaded in the {@link EarlyEs6ToEs3Converter} class.
    * However, if the generator was preloaded in this {@link Es6RewriteGenerators} class, we do not
    * want to report the change since it will be removed by {@link #cleanUpGeneratorSkeleton}

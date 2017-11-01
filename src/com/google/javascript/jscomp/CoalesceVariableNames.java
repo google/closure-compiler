@@ -35,10 +35,11 @@ import com.google.javascript.jscomp.graph.UndiGraph;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -89,8 +90,8 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     checkState(compiler.getLifeCycleStage().isNormalized());
 
     this.compiler = compiler;
-    colorings = new LinkedList<>();
-    liveAnalyses = new LinkedList<>();
+    colorings = new ArrayDeque<>();
+    liveAnalyses = new ArrayDeque<>();
     this.usePseudoNames = usePseudoNames;
   }
 
@@ -113,7 +114,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
     }
 
     Map<String, Var> allVarsInFn = new HashMap<>();
-    List<Var> orderedVars = new LinkedList<>();
+    List<Var> orderedVars = new ArrayList<>();
     NodeUtil.getAllVarsDeclaredInFunction(
         allVarsInFn, orderedVars, t.getCompiler(), t.getScopeCreator(), t.getScope());
 
@@ -284,7 +285,7 @@ class CoalesceVariableNames extends AbstractPostOrderCallback implements
       // incorrect semantics. See test case "testCapture".
       if (v.isLet() || v.isConst()) {
         Node nameDecl = NodeUtil.getEnclosingNode(v.getNode(), NodeUtil.isNameDeclaration);
-        if (NodeUtil.getLhsNodesOfDeclaration(nameDecl).size() > 1) {
+        if (NodeUtil.findLhsNodesInNode(nameDecl).size() > 1) {
           continue;
         }
       }
