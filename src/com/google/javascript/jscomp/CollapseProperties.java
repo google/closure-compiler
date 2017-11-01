@@ -81,7 +81,7 @@ class CollapseProperties implements CompilerPass {
 
   static final DiagnosticType UNSAFE_THIS = DiagnosticType.warning(
       "JSC_UNSAFE_THIS",
-      "dangerous use of 'this' in static method {0}");
+      "dangerous use of ''this'' in static method {0}");
 
   private AbstractCompiler compiler;
 
