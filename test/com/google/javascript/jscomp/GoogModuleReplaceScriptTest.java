@@ -17,7 +17,6 @@
 package com.google.javascript.jscomp;
 
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 
 /**
@@ -153,6 +152,6 @@ public final class GoogModuleReplaceScriptTest extends BaseReplaceScriptTestCase
         ImmutableList.of(source0 + source1),
         source1,
         0,
-        ProcessClosurePrimitives.MISSING_PROVIDE_ERROR);
+        ClosureRewriteModule.MISSING_MODULE_OR_PROVIDE);
   }
 }
