@@ -94,19 +94,19 @@ public final class DefaultPassConfig extends PassConfig {
   /**
    * A global namespace to share across checking passes.
    */
-  private GlobalNamespace namespaceForChecks = null;
+  private transient GlobalNamespace namespaceForChecks = null;
 
   /**
    * A symbol table for registering references that get removed during
    * preprocessing.
    */
-  private PreprocessorSymbolTable preprocessorSymbolTable = null;
+  private transient PreprocessorSymbolTable preprocessorSymbolTable = null;
 
   /**
    * Global state necessary for doing hotswap recompilation of files with references to
    * processed goog.modules.
    */
-  private ClosureRewriteModule.GlobalRewriteState moduleRewriteState = null;
+  private transient ClosureRewriteModule.GlobalRewriteState moduleRewriteState = null;
 
   /**
    * Whether to protect "hidden" side-effects.
