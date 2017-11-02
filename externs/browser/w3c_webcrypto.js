@@ -326,7 +326,7 @@ webCrypto.SubtleCrypto.prototype.verify = function(algorithm, key,
  * @param {!webCrypto.AlgorithmIdentifier} algorithm Supported
  *     values are: SHA-1, SHA-256, SHA-384, and SHA-512.
  * @param {!BufferSource} data Data to be hashed using the hashing algorithm.
- * @return {!Promise<ArrayBuffer>} returns the hash on success.
+ * @return {!Promise<!ArrayBuffer>} returns the hash on success.
  */
 webCrypto.SubtleCrypto.prototype.digest = function(algorithm, data) {};
 
@@ -389,7 +389,7 @@ webCrypto.SubtleCrypto.prototype.deriveBits = function(algorithm,
  * @param {!Array<string>} keyUsages Indication of new key options i.e.
  *     encrypt, decrypt, sign, verify, deriveKey, deriveBits, wrapKey,
  *     unwrapKey.
- * @return {!Promise<webCrypto.CryptoKey>} returns the generated key.
+ * @return {!Promise<!webCrypto.CryptoKey>} returns the generated key.
  */
 webCrypto.SubtleCrypto.prototype.importKey = function(format, keyData,
     algorithm, extractable, keyUsages) {};
