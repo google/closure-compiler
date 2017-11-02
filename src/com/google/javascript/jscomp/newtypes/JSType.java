@@ -617,7 +617,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return result;
   }
 
-  // When joining w/ TOP or UNKNOWN, avoid setting more fields on them, eg, obj.
+  // When joining w/ TOP or UNKNOWN, avoid setting more fields on them, e.g., obj.
   public static JSType join(JSType lhs, JSType rhs) {
     checkNotNull(lhs);
     checkNotNull(rhs);
@@ -652,15 +652,13 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
         ObjectType.joinSets(lhs.getObjs(), rhs.getObjs());
     String newTypevar =
         lhs.getTypeVar() != null ? lhs.getTypeVar() : rhs.getTypeVar();
-    ImmutableSet<EnumType> newEnums =
-        EnumType.union(lhs.getEnums(), rhs.getEnums());
+    ImmutableSet<EnumType> newEnums = EnumType.union(lhs.getEnums(), rhs.getEnums());
     if (newEnums.isEmpty()) {
       return makeType(commonTypes, newMask, newObjs, newTypevar, NO_ENUMS);
     }
-    JSType tmpJoin =
-        makeType(commonTypes, newMask & ~ENUM_MASK, newObjs, newTypevar, NO_ENUMS);
-    return makeType(commonTypes, newMask, newObjs,
-        newTypevar, EnumType.normalizeForJoin(newEnums, tmpJoin));
+    JSType tmpJoin = makeType(commonTypes, newMask & ~ENUM_MASK, newObjs, newTypevar, NO_ENUMS);
+    return makeType(
+        commonTypes, newMask, newObjs, newTypevar, EnumType.normalizeForJoin(newEnums, tmpJoin));
   }
 
   /**

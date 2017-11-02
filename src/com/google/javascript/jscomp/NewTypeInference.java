@@ -813,6 +813,14 @@ final class NewTypeInference implements CompilerPass {
       analyzeFunctionBwd(workset);
       // TODO(dimvar): Revisit what we throw away after the bwd analysis
       TypeEnv entryEnv = getEntryTypeEnv();
+      // Start undeclared outer variables at their inferred type if it exists.
+      // Gives better results than starting them at unknown.
+      for (String varName : scope.getOuterVars()) {
+        JSType inferred = scope.getInferredTypeOf(varName);
+        if (inferred != null) {
+          entryEnv = envPutType(entryEnv, varName, inferred);
+        }
+      }
       initEdgeEnvsFwd(entryEnv);
       if (measureMem) {
         updatePeakMem();

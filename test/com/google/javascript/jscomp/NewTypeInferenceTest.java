@@ -1240,7 +1240,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "}",
         "var x = 5;",
         "f()"),
-        NewTypeInference.CROSS_SCOPE_GOTCHA);
+        NewTypeInference.INVALID_OPERAND_TYPE);
 
     typeCheck(LINE_JOINER.join(
         "var x;",
@@ -1422,6 +1422,55 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  })(1);",
         "  return x - 5;",
         "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f() {",
+        "  var a = [1,2,3];",
+        "  function g() {",
+        "    var /** string */ s = a[0];",
+        "  }",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "var x = {};",
+        "function f() { x.foo(); }"),
+        NewTypeInference.INEXISTENT_PROPERTY);
+
+    typeCheck(LINE_JOINER.join(
+        "function f() {",
+        "  var x = {};",
+        "  x.prop = 123;",
+        "  function g() {",
+        "    return x.prop;",
+        "  }",
+        "}"));
+
+    // Checks that we don't type x as null in the innermost scope
+    typeCheck(LINE_JOINER.join(
+        "var x = null;",
+        "function f() {",
+        "  x = [1,2,3];",
+        "  (function() { var /** !Array<number> */ y = x; })();",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @enum {number} */",
+        "var Foo = { A: 1, B: 2 };",
+        "var x = Foo.A;",
+        "function g(/** !Foo */ x) {}",
+        "function f() {",
+        "  var y = x;",
+        "  g(y);",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "f();",
+        "var x = 0;",
+        "function f() {",
+        "  return x - 1;",
+        "}"),
+        NewTypeInference.CROSS_SCOPE_GOTCHA);
   }
 
   public void testTrickyUnknownBehavior() {
@@ -17953,13 +18002,10 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "Foo.prototype.toLowerCase = function() {};",
         "Foo.prototype.getProp = function() {};",
         "var foo = new Foo;",
-        "foo.f = function() {",
+        "function f() {",
         "  if (foo.toLowerCase() > 'asdf') { throw new Error; }",
         "  foo.getProp();",
-        "};"),
-        NewTypeInference.INEXISTENT_PROPERTY,
-        // spurious b/c foo is inferred as string in the inner scope
-        NewTypeInference.CROSS_SCOPE_GOTCHA);
+        "};"));
   }
 
   public void testFixCrashWhenUnannotatedPrototypeMethod() {

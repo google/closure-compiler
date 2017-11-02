@@ -951,7 +951,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         // Add a dummy extern here to define the variable as an extern.
         // We don't have a unit test for this, but it is needed to avoid spuriously registering
         // window as a non-extern typed ? in some builds.
-        this.currentScope.addLocal(WINDOW_INSTANCE, getCommonTypes().UNKNOWN, false, true);
+        this.currentScope.addDeclaredLocal(WINDOW_INSTANCE, getCommonTypes().UNKNOWN, false, true);
       } else if (isCtorDefinedByCall(nameNode)) {
         visitNewCtorDefinedByCall(nameNode);
       } else if (isCtorWithoutFunctionLiteral(nameNode)) {
@@ -960,7 +960,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       if (!n.isFromExterns()
           && !this.currentScope.isDefinedLocally(varName, false)) {
         // Add a dummy local to avoid shadowing errors, and to calculate escaped variables.
-        this.currentScope.addLocal(varName, getCommonTypes().UNKNOWN, false, false);
+        this.currentScope.addDeclaredLocal(varName, getCommonTypes().UNKNOWN, false, false);
       }
     }
 
@@ -968,7 +968,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       NTIScope scope = getGlobalScope();
       JSType typeInJsdoc = getVarTypeFromAnnotation(nameNode, scope);
       if (!scope.isDefinedLocally(WINDOW_INSTANCE, false)) {
-        scope.addLocal(WINDOW_INSTANCE, typeInJsdoc, false, true);
+        scope.addDeclaredLocal(WINDOW_INSTANCE, typeInJsdoc, false, true);
         return;
       }
       // The externs may contain multiple definitions of window, or they may add
@@ -978,7 +978,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       NominalType maybeWin = typeInJsdoc == null
           ? null : typeInJsdoc.getNominalTypeIfSingletonObj();
       if (maybeWin != null && maybeWin.getName().equals(WINDOW_CLASS)) {
-        scope.addLocal(WINDOW_INSTANCE, typeInJsdoc, false, true);
+        scope.addDeclaredLocal(WINDOW_INSTANCE, typeInJsdoc, false, true);
       }
     }
 
@@ -1608,8 +1608,11 @@ public class GlobalTypeInfoCollector implements CompilerPass {
           break;
         case ASSIGN: {
           Node lvalue = n.getFirstChild();
-          if (lvalue.isGetProp() && lvalue.isQualifiedName()) {
-            visitPropertyDeclaration(lvalue);
+          if (lvalue.isQualifiedName()) {
+            clearInferredTypeIfVar(NodeUtil.getRootOfQualifiedName(lvalue));
+            if (lvalue.isGetProp()) {
+              visitPropertyDeclaration(lvalue);
+            }
           }
           break;
         }
@@ -1625,6 +1628,17 @@ public class GlobalTypeInfoCollector implements CompilerPass {
           break;
         default:
           break;
+      }
+    }
+
+    /**
+     * When a local variable is assigned after its definition, don't try to infer its type.
+     * It's easy to have spurious warnings in that case.
+     */
+    private void clearInferredTypeIfVar(Node qnameRoot) {
+      if (qnameRoot.isName()) {
+        String name = qnameRoot.getString();
+        this.currentScope.clearInferredTypeOfVar(name);
       }
     }
 
@@ -1657,7 +1671,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       if (NodeUtil.isTypedefDecl(nameNode) || NodeUtil.isEnumDecl(nameNode)) {
         if (!isDefinedLocally) {
           // Malformed enum or typedef
-          this.currentScope.addLocal(
+          this.currentScope.addDeclaredLocal(
               name, getCommonTypes().UNKNOWN, false, nameNode.isFromExterns());
         }
         return;
@@ -1667,14 +1681,24 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         return;
       }
       if (parent.isCatch()) {
-        this.currentScope.addLocal(name, getCommonTypes().UNKNOWN, false, false);
+        this.currentScope.addDeclaredLocal(name, getCommonTypes().UNKNOWN, false, false);
       } else {
         boolean isConst = isConst(nameNode);
-        JSType declType = getVarTypeFromAnnotation(nameNode, this.currentScope);
-        if (declType == null) {
-          declType = mayInferFromRhsIfConst(nameNode);
+        boolean isDeclared = true;
+        JSType type = getVarTypeFromAnnotation(nameNode, this.currentScope);
+        if (type == null) {
+          if (isConst) {
+            type = mayInferFromRhsIfConst(nameNode);
+          } else if (initializer != null) {
+            isDeclared = false;
+            type = simpleInferExpr(initializer, this.currentScope);
+          }
         }
-        this.currentScope.addLocal(name, declType, isConst, nameNode.isFromExterns());
+        if (isDeclared) {
+          this.currentScope.addDeclaredLocal(name, type, isConst, nameNode.isFromExterns());
+        } else {
+          this.currentScope.addInferredLocal(name, type);
+        }
       }
     }
 
@@ -2399,8 +2423,8 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         qnameNode = NodeUtil.getBestLValue(declNode);
       }
       if (result.slotType != null && qnameNode != null && qnameNode.isName()) {
-        parentScope.addLocal(qnameNode.getString(),
-            result.slotType, false, qnameNode.isFromExterns());
+        parentScope.addDeclaredLocal(
+            qnameNode.getString(), result.slotType, false, qnameNode.isFromExterns());
       }
       if (ctorType != null) {
         FunctionType ft = result.functionType.toFunctionType();

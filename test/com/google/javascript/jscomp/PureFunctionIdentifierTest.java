@@ -799,7 +799,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     // Not marked because the definition cannot be found so unknown side effects.
     source = LINE_JOINER.join(
         "var dict = {'func': function() {}};",
-        "function f() { var s = dict['func'].apply();}",
+        "function f() { var s = dict['func'].apply(null); }",
         "f.apply(null)"
     );
     assertNoPureCalls(source);
