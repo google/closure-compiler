@@ -18,11 +18,16 @@ package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.google.javascript.rhino.IR;
+import com.google.javascript.rhino.Node;
+import javax.annotation.Nullable;
+
 /**
  * Tests for {@link RuntimeTypeCheck}.
  *
  */
 public final class RuntimeTypeCheckTest extends CompilerTestCase {
+  @Nullable private String logFunction = null;
 
   public RuntimeTypeCheckTest() {
     super("/** @const */ var undefined;");
@@ -313,6 +318,40 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
     testChecksSame("/** @type {!Function} */function f() {}");
   }
 
+  public void testInjectLogFunction_name() {
+    logFunction = "myLogFn";
+    Compiler compiler = createCompiler();
+    compiler.initOptions(getOptions());
+    Node testNode = IR.exprResult(IR.nullNode());
+    IR.script(testNode);
+    getProcessor(compiler).injectCustomLogFunction(testNode);
+    assertThat(compiler.toSource(testNode.getParent())).contains("$jscomp.typecheck.log=myLogFn");
+  }
+
+  public void testInjectLogFunction_qualifiedName() {
+    logFunction = "my.log.fn";
+    Compiler compiler = createCompiler();
+    compiler.initOptions(getOptions());
+    Node testNode = IR.exprResult(IR.nullNode());
+    IR.script(testNode);
+    getProcessor(compiler).injectCustomLogFunction(testNode);
+    assertThat(compiler.toSource(testNode.getParent())).contains("$jscomp.typecheck.log=my.log.fn");
+  }
+
+  public void testInvalidLogFunction() {
+    logFunction = "{}"; // Not a valid qualified name
+    Compiler compiler = createCompiler();
+    compiler.initOptions(getOptions());
+    Node testNode = IR.exprResult(IR.nullNode());
+    IR.script(testNode);
+    try {
+      getProcessor(compiler).injectCustomLogFunction(testNode);
+      fail("Expected an IllegalStateException");
+    } catch (IllegalStateException e) {
+      assertThat(e).hasMessageThat().contains("not a valid qualified name");
+    }
+  }
+
   private void testChecks(String js, String expected) {
     test(js, expected);
     assertThat(getLastCompiler().injected).containsExactly("runtime_type_check");
@@ -334,8 +373,8 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   }
 
   @Override
-  protected CompilerPass getProcessor(final Compiler compiler) {
-    return new RuntimeTypeCheck(compiler, null);
+  protected RuntimeTypeCheck getProcessor(final Compiler compiler) {
+    return new RuntimeTypeCheck(compiler, logFunction);
   }
 
   @Override
