@@ -1207,7 +1207,7 @@ public class CompilerOptions implements Serializable {
    */
   public CompilerOptions() {
     // Accepted language
-    languageIn = LanguageMode.ECMASCRIPT3;
+    languageIn = LanguageMode.ECMASCRIPT_2017;
     languageOut = LanguageMode.NO_TRANSPILE;
 
     // Which environment to use
