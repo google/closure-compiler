@@ -557,7 +557,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
 
     boolean anyMovable = false;
     boolean seenUnmovableSideEffects = false;
-    boolean seenUnmoveableSideEfffected = false;
+    boolean seenUnmoveableSideEffected = false;
     for (int i = parameters.size() - 1; i >= 0; i--) {
       Parameter current = parameters.get(i);
 
@@ -569,7 +569,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
 
       if (current.shouldRemove
           && ((seenUnmovableSideEffects && current.canBeSideEffected())
-          || (seenUnmoveableSideEfffected && current.hasSideEffects()))) {
+          || (seenUnmoveableSideEffected && current.hasSideEffects()))) {
         current.shouldRemove = false;
       }
 
@@ -577,7 +577,7 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
         anyMovable = true;
       } else {
         if (current.canBeSideEffected) {
-          seenUnmoveableSideEfffected = true;
+          seenUnmoveableSideEffected = true;
         }
 
         if (current.hasSideEffects) {
