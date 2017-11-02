@@ -1036,6 +1036,14 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
          "var x$y$z; var a = b = x$y$z = 0;");
   }
 
+  public void testChainedVarAssignments6() {
+    testSame("var a = x = 0; var x;");
+  }
+
+  public void testChainedVarAssignments7() {
+    testSame("x = {}; var a = x.y = 0; var x;");
+  }
+
   public void testPeerAndSubpropertyOfUncollapsibleProperty() {
     test("var x = {}; var a = x.y = 0; x.w = 1; x.y.z = 2;"
          + "b = x.w; c = x.y.z;",
