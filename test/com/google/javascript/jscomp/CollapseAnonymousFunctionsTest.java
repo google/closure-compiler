@@ -96,6 +96,16 @@ public final class CollapseAnonymousFunctionsTest extends CompilerTestCase {
     testSame("var x = 1; if (x) {var f = function(){return x}; f(); x--;}");
   }
 
+  // TODO(tbreisacher): We could collapse in this case, but we probably need to tweak Normalize.
+  public void testLetNotImmediatelyBelowScriptOrBlock1() {
+    testSame("if (x) let f = function() {};");
+  }
+
+  // TODO(tbreisacher): We could collapse in this case, but we probably need to tweak Normalize.
+  public void testLetNotImmediatelyBelowScriptOrBlock2() {
+    testSame("let x = 1; if (x) { let f = function() {return x}; f(); x--;}");
+  }
+
   public void testMultipleVar() {
     test("var f = function(){}; var g = f", "function f(){} var g = f");
   }
