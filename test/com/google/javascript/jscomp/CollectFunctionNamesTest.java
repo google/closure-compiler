@@ -110,8 +110,8 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
     expectedMap.put(23, "KlassExpressionToVar.method");
     expectedMap.put(24, "KlassWithStaticMethod.staticMethod");
     expectedMap.put(25, "<anonymous>"); // arrow function in global scope
-    expectedMap.put(26, "arrowFn1"); // arrow function declared as variable
-    expectedMap.put(27, "foo1::arrowFn2"); // arrow function in inner scope
+    expectedMap.put(26, "<anonymous>"); // arrow function declared as variable
+    expectedMap.put(27, "foo1::<anonymous>"); // arrow function in inner scope
     expectedMap.put(28, "foo1::<anonymous>"); // arrow function declared as variable in inner scope
     expectedMap.put(29, "foo1");
     assertEquals("Function id/name mismatch",

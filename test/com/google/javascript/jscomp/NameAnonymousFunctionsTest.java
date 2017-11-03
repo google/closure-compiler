@@ -128,4 +128,10 @@ public final class NameAnonymousFunctionsTest extends CompilerTestCase {
         "main();",
         "var main;(function(){main=function $main$(){return 5}})();main()");
   }
+
+  public void testIgnoreArrowFunctions() {
+    testSame("var a = () => 1");
+    testSame("var a = {b: () => 1};");
+    testSame("function A() {} A.prototype.foo = () => 5");
+  }
 }

@@ -75,7 +75,7 @@ class AnonymousFunctionNamingCallback
         // get the function name and see if it's empty
         Node functionNameNode = n.getFirstChild();
         String functionName = functionNameNode.getString();
-        if (functionName.isEmpty()) {
+        if (functionName.isEmpty() && !n.isArrowFunction()) {
           if (parent.isAssign()) {
             // this is an assignment to a property, generally either a
             // static function or a prototype function
@@ -134,7 +134,7 @@ class AnonymousFunctionNamingCallback
         String name = namer.getCombinedName(context, namer.getName(keyNode));
 
         Token type = valueNode.getToken();
-        if (type == Token.FUNCTION) {
+        if (type == Token.FUNCTION && !valueNode.isArrowFunction()) {
           // set name if function is anonymous
           Node functionNameNode = valueNode.getFirstChild();
           String functionName = functionNameNode.getString();

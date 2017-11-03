@@ -181,4 +181,10 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
          "var a = function $() { return 1; };a = function $() { return 2; }");
     assertMapping("$", "a");
   }
+
+  public void testIgnoreArrowFunctions() {
+    testSame("var a = () => 1");
+    testSame("var a = {b: () => 1};");
+    testSame("function A() {} A.prototype.foo = () => 5");
+  }
 }
