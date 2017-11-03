@@ -914,11 +914,115 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     test(
         "class A { static s() {} } class B extends A {} const C = B; C.s();",
         "class A { static s() {} } class B extends A {} const C = null; B.s();");
+
+    testSame("class A { static s() {} } class B extends A {} B.s();");
+    testSame("class A {} A.s = function() {}; class B extends A {} B.s();");
   }
 
-  public void testClassStaticInheritance_property() {
+  public void testClassStaticInheritance_propertyAlias() {
+    testSame("class A {} A.staticProp = 6; class B extends A {} let b = new B;");
+
     test(
-        "class A {} A.staticProp = 5; class B extends A {} const C = B; C.staticProp = 6;",
-        "class A {} A.staticProp = 5; class B extends A {} const C = null; B.staticProp = 6;");
+        "class A {} A.staticProp = 6; class B extends A {} use(B.staticProp);",
+        "class A {} A.staticProp = 6; class B extends A {} use(A.staticProp);");
+  }
+
+  public void testClassStaticInheritance_classExpression() {
+    test(
+        "var A = class {}; A.staticProp = 6; var B = class extends A {}; use(B.staticProp);",
+        "var A = class {}; A.staticProp = 6; var B = class extends A {}; use(A.staticProp);");
+
+    test(
+        "var A; A = class {}; A.staticProp = 6; var B = class extends A {}; use(B.staticProp);",
+        "var A; A = class {}; A.staticProp = 6; var B = class extends A {}; use(A.staticProp);");
+    test(
+        "let A = class {}; A.staticProp = 6; let B = class extends A {}; use(B.staticProp);",
+        "let A = class {}; A.staticProp = 6; let B = class extends A {}; use(A.staticProp);");
+
+    test(
+        "const A = class {}; A.staticProp = 6; const B = class extends A {}; use(B.staticProp);",
+        "const A = class {}; A.staticProp = 6; const B = class extends A {}; use(A.staticProp);");
+  }
+
+  public void testClassStaticInheritance_propertyWithSubproperty() {
+    test(
+        "class A {} A.ns = {foo: 'bar'}; class B extends A {} use(B.ns.foo);",
+        "class A {} A.ns = {foo: 'bar'}; class B extends A {} use(A.ns.foo);");
+
+    test(
+        "class A {} A.ns = {foo: 'bar'}; class B extends A {} B.ns.foo = 'baz'; use(B.ns.foo);",
+        "class A {} A.ns = {foo: 'bar'}; class B extends A {} A.ns.foo = 'baz'; use(A.ns.foo);");
+  }
+
+  public void testClassStaticInheritance_propertyWithShadowing() {
+    testSame("class A {} A.staticProp = 6; class B extends A {} B.staticProp = 7;");
+
+    // Here, B.staticProp is a different property from A.staticProp, so don't rewrite.
+    testSame(
+        "class A {} A.staticProp = 6; class B extends A {} B.staticProp = 7; use(B.staticProp);");
+
+    // At the time use() is called, B.staticProp is still the same as A.staticProp, so we
+    // *could* rewrite it. But instead we back off because of the shadowing afterwards.
+    testSame(
+        "class A {} A.staticProp = 6; class B extends A {} use(B.staticProp); B.staticProp = 7;");
+  }
+
+  public void testClassStaticInheritance_propertyMultiple() {
+    test(
+        "class A {} A.foo = 5; A.bar = 6; class B extends A {} use(B.foo); use(B.bar);",
+        "class A {} A.foo = 5; A.bar = 6; class B extends A {} use(A.foo); use(A.bar);");
+
+    testSame("class A {} A.foo = {bar: 5}; A.baz = 6; class B extends A {} B.baz = 7;");
+
+    test(
+        "class A {} A.foo = {}; A.baz = 6; class B extends A {}  B.foo.bar = 5; B.baz = 7;",
+        "class A {} A.foo = {}; A.baz = 6; class B extends A {} A.foo.bar = 5; B.baz = 7;");
+  }
+
+  public void testClassStaticInheritance_property_chainedSubclasses() {
+    test(
+        "class A {} A.foo = 5; class B extends A {} class C extends B {} use(C.foo);",
+        "class A {} A.foo = 5; class B extends A {} class C extends B {} use(A.foo);");
+  }
+
+  public void testClassStaticInheritance_namespacedClass() {
+    test(
+        LINE_JOINER.join(
+            "var ns1 = {}, ns2 = {};",
+            "ns1.A = class {};",
+            "ns1.A.staticProp = {foo: 'bar'};",
+            "ns2.B = class extends ns1.A {}",
+            "use(ns2.B.staticProp.bar);"),
+        LINE_JOINER.join(
+            "var ns1 = {}, ns2 = {};",
+            "ns1.A = class {};",
+            "ns1.A.staticProp = {foo: 'bar'};",
+            "ns2.B = class extends ns1.A {}",
+            "use(ns1.A.staticProp.bar);"));
+  }
+
+  public void testClassStaticInheritance_es5Class() {
+    // ES6 classes do not inherit static properties of ES5 class constructors.
+    testSame(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function A() {}",
+            "A.staticProp = 5;",
+            "class B extends A {}",
+            "use(B.staticProp);")); // undefined
+  }
+
+  public void testClassStaticInheritance_cantDetermineSuperclass() {
+    // Currently we only inline inherited properties when the extends clause contains a simple or
+    // qualified name.
+    testSame(
+        LINE_JOINER.join(
+            "class A {}",
+            "A.foo = 5;",
+            "class B {}",
+            "B.foo = 6;",
+            "function getSuperclass() { return A; }",
+            "class C extends getSuperclass() {}",
+            "use(C.foo);"));
   }
 }

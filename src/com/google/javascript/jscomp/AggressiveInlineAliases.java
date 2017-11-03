@@ -34,7 +34,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Inlines type aliases if they are explicitly or effectively const.
+ * Inlines type aliases if they are explicitly or effectively const. Also inlines inherited static
+ * property accesses for ES6 classes.
  *
  * <p>This frees subsequent optimization passes from the responsibility of having to reason about
  * alias chains and is a requirement for correct behavior in at least CollapseProperties and
@@ -63,35 +64,45 @@ class AggressiveInlineAliases implements CompilerPass {
         value,
         name.getFullName());
     for (Name prop : name.props) {
-      rewriteAliasProps(prop, value, depth + 1, newNodes);
-      List<Ref> refs = new ArrayList<>(prop.getRefs());
-      for (Ref ref : refs) {
-        Node target = ref.node;
-        for (int i = 0; i <= depth; i++) {
-          if (target.isGetProp()) {
-            target = target.getFirstChild();
-          } else if (NodeUtil.isObjectLitKey(target)) {
-            // Object literal key definitions are a little trickier, as we
-            // need to find the assignment target
-            Node gparent = target.getGrandparent();
-            if (gparent.isAssign()) {
-              target = gparent.getFirstChild();
-            } else {
-              checkState(NodeUtil.isObjectLitKey(gparent));
-              target = gparent;
-            }
+      rewriteAliasProp(value, depth, newNodes, prop);
+    }
+  }
+
+  /**
+   * @param value The value to use when rewriting.
+   * @param depth The chain depth.
+   * @param newNodes Expression nodes that have been updated.
+   * @param prop The property to rewrite with value.
+   */
+  private void rewriteAliasProp(Node value, int depth, Set<AstChange> newNodes, Name prop) {
+    rewriteAliasProps(prop, value, depth + 1, newNodes);
+    List<Ref> refs = new ArrayList<>(prop.getRefs());
+    for (Ref ref : refs) {
+      Node target = ref.node;
+      for (int i = 0; i <= depth; i++) {
+        if (target.isGetProp()) {
+          target = target.getFirstChild();
+        } else if (NodeUtil.isObjectLitKey(target)) {
+          // Object literal key definitions are a little trickier, as we
+          // need to find the assignment target
+          Node gparent = target.getGrandparent();
+          if (gparent.isAssign()) {
+            target = gparent.getFirstChild();
           } else {
-            throw new IllegalStateException("unexpected: " + target);
+            checkState(NodeUtil.isObjectLitKey(gparent));
+            target = gparent;
           }
+        } else {
+          throw new IllegalStateException("unexpected: " + target);
         }
-        checkState(target.isGetProp() || target.isName());
-        Node newValue = value.cloneTree();
-        target.replaceWith(newValue);
-        compiler.reportChangeToEnclosingScope(newValue);
-        prop.removeRef(ref);
-        // Rescan the expression root.
-        newNodes.add(new AstChange(ref.module, ref.scope, ref.node));
       }
+      checkState(target.isGetProp() || target.isName());
+      Node newValue = value.cloneTree();
+      target.replaceWith(newValue);
+      compiler.reportChangeToEnclosingScope(newValue);
+      prop.removeRef(ref);
+      // Rescan the expression root.
+      newNodes.add(new AstChange(ref.module, ref.scope, ref.node));
     }
   }
 
@@ -167,6 +178,17 @@ class AggressiveInlineAliases implements CompilerPass {
         }
       }
 
+      if (!name.inExterns && name.type == Name.Type.CLASS) {
+        List<Name> subclasses = name.subclasses;
+        if (subclasses != null && name.props != null) {
+          for (Name subclass : subclasses) {
+            for (Name prop : name.props) {
+              rewriteAllSubclassInheritedAccesses(name, subclass, prop, namespace);
+            }
+          }
+        }
+      }
+
       // Check if {@code name} has any aliases left after the
       // local-alias-inlining above.
       if ((name.type == Name.Type.OBJECTLIT || name.type == Name.Type.FUNCTION)
@@ -177,6 +199,65 @@ class AggressiveInlineAliases implements CompilerPass {
         workList.addAll(name.props);
       }
     }
+  }
+
+  /**
+   * Inline all references to inherited static superclass properties from the subclass or any
+   * descendant of the given subclass. Avoids inlining references to inherited methods when
+   * possible, since they may use this or super().
+   *
+   * @param superclassNameObj The Name of the superclass
+   * @param subclassNameObj The Name of the subclass
+   * @param prop The property on the superclass to rewrite, if any descendant accesses it.
+   * @param namespace The GlobalNamespace containing superclassNameObj
+   */
+  private boolean rewriteAllSubclassInheritedAccesses(
+      Name superclassNameObj, Name subclassNameObj, Name prop, GlobalNamespace namespace) {
+    Ref propDeclRef = prop.getDeclaration();
+    if (propDeclRef == null
+        || propDeclRef.node == null
+        || !propDeclRef.node.getParent().isAssign()) {
+      return false;
+    }
+    Node propRhs = propDeclRef.node.getParent().getLastChild();
+    if (propRhs.isFunction()) {
+      return false;
+    }
+
+    String subclassQualifiedPropName = subclassNameObj.getFullName() + "." + prop.getBaseName();
+    Name subclassPropNameObj = namespace.getOwnSlot(subclassQualifiedPropName);
+    // Don't rewrite if the subclass ever shadows the parent static property.
+    // This may also back off on cases where the subclass first accesses the parent property, then
+    // shadows it.
+    if (subclassPropNameObj != null
+        && (subclassPropNameObj.localSets > 0 || subclassPropNameObj.globalSets > 0)) {
+      return false;
+    }
+
+    // Recurse to find potential sub-subclass accesses of the superclass property.
+    if (subclassNameObj.subclasses != null) {
+      for (Name name : subclassNameObj.subclasses) {
+        rewriteAllSubclassInheritedAccesses(superclassNameObj, name, prop, namespace);
+      }
+    }
+
+    if (subclassPropNameObj != null) {
+      Set<AstChange> newNodes = new LinkedHashSet<>();
+
+      // Use this node as a template for rewriteAliasProp.
+      Node superclassNameNode = superclassNameObj.getDeclaration().node;
+      if (superclassNameNode.isName()) {
+        superclassNameNode = superclassNameNode.cloneNode();
+      } else if (superclassNameNode.isGetProp()) {
+        superclassNameNode = superclassNameNode.cloneTree();
+      } else {
+        return false;
+      }
+
+      rewriteAliasProp(superclassNameNode, 0, newNodes, subclassPropNameObj);
+      namespace.scanNewNodes(newNodes);
+    }
+    return true;
   }
 
   /**

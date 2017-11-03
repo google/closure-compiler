@@ -2418,7 +2418,7 @@ public final class NodeUtil {
    * @return The value node representing the new value.
    */
   public static Node getAssignedValue(Node n) {
-    checkState(n.isName(), n);
+    checkState(n.isName() || n.isGetProp(), n);
     Node parent = n.getParent();
     if (NodeUtil.isNameDeclaration(parent)) {
       return n.getFirstChild();

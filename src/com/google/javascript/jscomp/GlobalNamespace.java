@@ -607,6 +607,7 @@ class GlobalNamespace
 
       Name nameObj = getOrCreateName(name, shouldCreateProp);
       nameObj.type = type;
+      maybeRecordEs6Subclass(n, parent, nameObj);
 
       Ref set = new Ref(module, scope, n, nameObj, Ref.Type.SET_FROM_GLOBAL,
           currentPreOrderIndex++);
@@ -621,6 +622,46 @@ class GlobalNamespace
       } else if (isTypeDeclaration(n)) {
         // Names with a @constructor or @enum annotation are always collapsed
         nameObj.setDeclaredType();
+      }
+    }
+
+    /**
+     * Given a new node and its name that is an ES6 class, checks if it is an ES6 class with an ES6
+     * superclass. If the superclass is a simple or qualified names, adds itself to the parent's
+     * list of subclasses. Otherwise this does nothing.
+     *
+     * @param n The node being visited.
+     * @param parent {@code n}'s parent
+     * @param subclassNameObj The Name of the new node being visited.
+     */
+    private void maybeRecordEs6Subclass(Node n, Node parent, Name subclassNameObj) {
+      if (subclassNameObj.type != Name.Type.CLASS || parent == null) {
+        return;
+      }
+
+      Node superclass = null;
+      if (parent.isClass()) {
+        superclass = parent.getSecondChild();
+      } else {
+        Node classNode = NodeUtil.getAssignedValue(n);
+        if (classNode != null && classNode.isClass()) {
+          superclass = classNode.getSecondChild();
+        }
+      }
+      // If there's no superclass, or the superclass expression is more complicated than a simple
+      // or qualified name, return.
+      if (superclass == null
+          || superclass.isEmpty()
+          || !(superclass.isName() || superclass.isGetProp())) {
+        return;
+      }
+      String superclassName =
+          superclass.isName() ? superclass.getString() : superclass.getQualifiedName();
+
+      Name superclassNameObj = getOrCreateName(superclassName, false);
+      // If the superclass is an ES3/5 class we don't record its subclasses.
+      if (superclassNameObj != null && superclassNameObj.type == Name.Type.CLASS) {
+        superclassNameObj.addSubclass(subclassNameObj);
       }
     }
 
@@ -967,6 +1008,9 @@ class GlobalNamespace
     /** All references to a name. This must contain {@code declaration}. */
     private List<Ref> refs;
 
+    /** All Es6 subclasses of a name that is an Es6 class. Must be null if not an ES6 class. */
+    @Nullable List<Name> subclasses;
+
     Type type;
     private boolean declaredType = false;
     private boolean isDeclared = false;
@@ -997,6 +1041,15 @@ class GlobalNamespace
         props.add(node);
       }
       return node;
+    }
+
+    Name addSubclass(Name subclassName) {
+      checkArgument(this.type == Type.CLASS && subclassName.type == Type.CLASS);
+      if (subclasses == null) {
+        subclasses = new ArrayList<>();
+      }
+      subclasses.add(subclassName);
+      return subclassName;
     }
 
     String getBaseName() {
