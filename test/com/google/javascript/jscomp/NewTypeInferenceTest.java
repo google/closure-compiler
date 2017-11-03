@@ -22277,4 +22277,30 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "Found    : Foo.prototype",
             ""));
   }
+
+  public void testJoinPrototypeObjects() {
+    // Tests that the join is not Object, so the property "a" exists on the joined type.
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "Foo.prototype.a;",
+        "/** @constructor */",
+        "function Bar() {}",
+        "Bar.prototype.a;",
+        "var x = (1 < 2) ? Foo.prototype : Bar.prototype;",
+        "var y = x.a;"));
+
+    // Tests that the join is not Baz, so the property "a" exists on the joined type.
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Baz() {}",
+        "/** @constructor @extends {Baz} */",
+        "function Foo() {}",
+        "Foo.prototype.a;",
+        "/** @constructor @extends {Baz} */",
+        "function Bar() {}",
+        "Bar.prototype.a;",
+        "var x = (1 < 2) ? Foo.prototype : Bar.prototype;",
+        "var y = x.a;"));
+  }
 }

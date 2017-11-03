@@ -1198,13 +1198,15 @@ final class ObjectType implements TypeWithProperties {
   }
 
   private static boolean canMergeObjectsInJoin(ObjectType obj1, ObjectType obj2) {
-    if (obj1.isTopObject() || obj2.isTopObject()) {
+    if (obj1.isTopObject() || obj2.isTopObject() || obj1.equals(obj2)) {
       return true;
     }
     NominalType nt1 = obj1.nominalType;
     NominalType nt2 = obj2.nominalType;
     // In a union, there is at most one object whose nominal type is Object (or literal object).
-    if ((nt1.isBuiltinObject() || nt1.isLiteralObject())
+    if (!obj1.isPrototypeObject()
+        && (nt1.isBuiltinObject() || nt1.isLiteralObject())
+        && !obj2.isPrototypeObject()
         && (nt2.isBuiltinObject() || nt2.isLiteralObject())) {
       return true;
     }
@@ -1217,7 +1219,9 @@ final class ObjectType implements TypeWithProperties {
     if (nt2.isBuiltinObject()) {
       return obj2.isLoose && obj1.isSubtypeOf(obj2, SubtypeCache.create());
     }
-    return areRelatedNominalTypes(nt1, nt2) || NominalType.equalRawTypes(nt1, nt2);
+    return !obj1.isPrototypeObject()
+        && !obj2.isPrototypeObject()
+        && (areRelatedNominalTypes(nt1, nt2) || NominalType.equalRawTypes(nt1, nt2));
   }
 
   /**
