@@ -27,7 +27,7 @@ final class PolymerPassFindExterns extends AbstractPostOrderCallback {
   private static final String POLYMER_ELEMENT_NAME = "PolymerElement";
 
   private Node polymerElementExterns;
-  private ImmutableList.Builder<Node> polymerElementProps;
+  private final ImmutableList.Builder<Node> polymerElementProps;
 
   PolymerPassFindExterns() {
     polymerElementProps = ImmutableList.builder();

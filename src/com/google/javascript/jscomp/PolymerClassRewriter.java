@@ -45,7 +45,7 @@ final class PolymerClassRewriter {
   private final boolean propertyRenamingEnabled;
   static final String POLYMER_ELEMENT_PROP_CONFIG = "Polymer.ElementProperties";
 
-  private Node polymerElementExterns;
+  private final Node polymerElementExterns;
 
   PolymerClassRewriter(
       AbstractCompiler compiler,

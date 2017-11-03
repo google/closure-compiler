@@ -106,7 +106,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
   // the function has an entry in localFunDefs, and in locals or externs.
   private final Map<String, NTIScope> localFunDefs = new LinkedHashMap<>();
   private ImmutableSet<String> unknownTypeNames = ImmutableSet.of();
-  private Map<String, Typedef> localTypedefs = new LinkedHashMap<>();
+  private final Map<String, Typedef> localTypedefs = new LinkedHashMap<>();
   // Typedefs defined inside this scope, but on a namespace, not as local variables
   private Set<Typedef> namespaceTypedefs = new LinkedHashSet<>();
   private Map<String, Namespace> localNamespaces = new LinkedHashMap<>();

@@ -37,7 +37,7 @@ class ChainCalls implements CompilerPass {
   private final Set<Node> goodFunctionNodes = new HashSet<>();
   private final List<CallSite> callSites = new ArrayList<>();
   private NameBasedDefinitionProvider defFinder;
-  private GatherFunctions gatherFunctions = new GatherFunctions();
+  private final GatherFunctions gatherFunctions = new GatherFunctions();
 
   ChainCalls(AbstractCompiler compiler) {
     this.compiler = compiler;

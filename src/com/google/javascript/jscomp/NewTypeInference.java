@@ -466,7 +466,7 @@ final class NewTypeInference implements CompilerPass {
   private final boolean warnForUnresolvedTypes;
 
   // Used only for development
-  private static boolean showDebuggingPrints = false;
+  private static final boolean showDebuggingPrints = false;
   static boolean measureMem = false;
   private static long peakMem = 0;
 

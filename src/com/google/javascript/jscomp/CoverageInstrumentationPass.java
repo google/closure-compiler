@@ -33,7 +33,7 @@ import java.util.Map;
 class CoverageInstrumentationPass implements CompilerPass {
 
   final AbstractCompiler compiler;
-  private Map<String, FileInstrumentationData> instrumentationData;
+  private final Map<String, FileInstrumentationData> instrumentationData;
   private final CoverageReach reach;
   private final InstrumentOption instrumentOption;
 

@@ -914,8 +914,7 @@ final class FunctionTypeBuilder {
   }
 
   static class UnknownFunctionContents implements FunctionContents {
-    private static UnknownFunctionContents singleton =
-        new UnknownFunctionContents();
+    private static final UnknownFunctionContents singleton = new UnknownFunctionContents();
 
     static FunctionContents get() {
       return singleton;

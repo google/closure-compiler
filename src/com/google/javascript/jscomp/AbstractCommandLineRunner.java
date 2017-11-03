@@ -2426,7 +2426,7 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
-    private ArrayList<FlagEntry<CheckLevel>> warningGuards = new ArrayList<>();
+    private final ArrayList<FlagEntry<CheckLevel>> warningGuards = new ArrayList<>();
 
     /**
      * Add warning guards.

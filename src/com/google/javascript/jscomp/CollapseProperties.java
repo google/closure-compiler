@@ -83,7 +83,7 @@ class CollapseProperties implements CompilerPass {
       "JSC_UNSAFE_THIS",
       "dangerous use of ''this'' in static method {0}");
 
-  private AbstractCompiler compiler;
+  private final AbstractCompiler compiler;
 
   /** Global namespace tree */
   private List<Name> globalNames;

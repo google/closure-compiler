@@ -1775,7 +1775,7 @@ public abstract class JSType implements TypeI {
    * base cache data structure
    */
   private abstract static class MatchCache {
-    private boolean isStructuralTyping;
+    private final boolean isStructuralTyping;
 
     MatchCache(boolean isStructuralTyping) {
       this.isStructuralTyping = isStructuralTyping;

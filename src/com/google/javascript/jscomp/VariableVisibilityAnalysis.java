@@ -55,13 +55,10 @@ class VariableVisibilityAnalysis implements CompilerPass {
     GLOBAL
   }
 
-  private AbstractCompiler compiler;
+  private final AbstractCompiler compiler;
 
-  /**
-   * Maps the declaring name node for a variable to that variable's
-   * visibility.
-   */
-  private Map<Node, VariableVisibility> visibilityByDeclaringNameNode;
+  /** Maps the declaring name node for a variable to that variable's visibility. */
+  private final Map<Node, VariableVisibility> visibilityByDeclaringNameNode;
 
   public VariableVisibilityAnalysis(AbstractCompiler compiler) {
     this.compiler = compiler;

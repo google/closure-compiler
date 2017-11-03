@@ -112,11 +112,11 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
 
   private static class JavascriptClass {
     // All static members to the class including get set properties.
-    private Set<Node> staticMembers = new LinkedHashSet<>();
+    private final Set<Node> staticMembers = new LinkedHashSet<>();
     // Collect all the static field accesses to the class.
-    private Set<Node> staticFieldAccess = new LinkedHashSet<>();
+    private final Set<Node> staticFieldAccess = new LinkedHashSet<>();
     // Collect all get set properties as defined by Object.defineProperties(...)
-    private Set<String> definedProperties = new LinkedHashSet<>();
+    private final Set<String> definedProperties = new LinkedHashSet<>();
   }
 
   private final AbstractCompiler compiler;

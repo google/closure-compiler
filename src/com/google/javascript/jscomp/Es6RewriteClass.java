@@ -524,7 +524,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
   }
 
   private class CheckClassAssignments extends NodeTraversal.AbstractPostOrderCallback {
-    private Node className;
+    private final Node className;
 
     public CheckClassAssignments(Node className) {
       this.className = className;

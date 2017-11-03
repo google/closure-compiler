@@ -43,9 +43,8 @@ import java.util.Set;
  */
 class FunctionToBlockMutator {
 
-  private AbstractCompiler compiler;
-  private Supplier<String> safeNameIdSupplier;
-
+  private final AbstractCompiler compiler;
+  private final Supplier<String> safeNameIdSupplier;
 
   FunctionToBlockMutator(
       AbstractCompiler compiler, Supplier<String> safeNameIdSupplier) {

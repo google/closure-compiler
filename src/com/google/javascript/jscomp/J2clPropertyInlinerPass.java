@@ -74,8 +74,8 @@ public class J2clPropertyInlinerPass implements CompilerPass {
     }
 
     private class J2clProperty {
-      private Node getKey;
-      private Node setKey;
+      private final Node getKey;
+      private final Node setKey;
       private boolean isSafeToInline;
 
       public J2clProperty(Node getKey, Node setKey) {
@@ -180,7 +180,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
      * Object.defineProperties nodes.
      */
     private class GatherJ2CLClassGetterSetters extends AbstractPostOrderCallback {
-      private Map<String, J2clProperty> j2clPropertiesByName = new HashMap<>();
+      private final Map<String, J2clProperty> j2clPropertiesByName = new HashMap<>();
 
       private Map<String, J2clProperty> getResults() {
         return j2clPropertiesByName;
@@ -228,7 +228,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
     }
 
     private class DetermineInlinableProperties extends AbstractPostOrderCallback {
-      private Map<String, J2clProperty> propertiesByName;
+      private final Map<String, J2clProperty> propertiesByName;
 
       DetermineInlinableProperties(Map<String, J2clProperty> allGetterSetters) {
         this.propertiesByName = allGetterSetters;
@@ -253,7 +253,7 @@ public class J2clPropertyInlinerPass implements CompilerPass {
      * Look for accesses of j2cl properties and assignments to j2cl properties.
      */
     private class InlinePropertiesPass extends AbstractPostOrderCallback {
-      private Map<String, J2clProperty> propertiesByName;
+      private final Map<String, J2clProperty> propertiesByName;
 
       InlinePropertiesPass(Map<String, J2clProperty> allGetterSetters) {
         this.propertiesByName = allGetterSetters;

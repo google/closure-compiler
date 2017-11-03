@@ -95,7 +95,7 @@ class AggressiveInlineAliases implements CompilerPass {
     }
   }
 
-  private AbstractCompiler compiler;
+  private final AbstractCompiler compiler;
   private boolean codeChanged;
 
   AggressiveInlineAliases(AbstractCompiler compiler) {

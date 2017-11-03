@@ -85,7 +85,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
   // The name of variable that will temporary hold the pointer to the prototype
   // object. Of cause, we assume that it'll be renamed by RenameVars.
-  private String prototypeAlias = "JSCompiler_prototypeAlias";
+  private final String prototypeAlias = "JSCompiler_prototypeAlias";
 
   private final AbstractCompiler compiler;
 
@@ -248,7 +248,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
    */
   private class GatherExtractionInfo extends AbstractShallowCallback {
 
-    private List<ExtractionInstance> instances = new LinkedList<>();
+    private final List<ExtractionInstance> instances = new LinkedList<>();
     private int totalDelta = pattern.globalOverhead;
 
     @Override

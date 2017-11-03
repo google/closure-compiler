@@ -95,7 +95,7 @@ final class NameAnalyzer implements CompilerPass {
   private final Map<String, JsName> allNames = new HashMap<>();
 
   /** Reference dependency graph */
-  private LinkedDirectedGraph<JsName, RefType> referenceGraph =
+  private final LinkedDirectedGraph<JsName, RefType> referenceGraph =
       LinkedDirectedGraph.createWithoutAnnotations();
 
   /**

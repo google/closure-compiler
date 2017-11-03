@@ -147,7 +147,7 @@ class ReplaceIdGenerators implements CompilerPass {
   private static class ObfuscatedNameSupplier implements NameSupplier {
     private final NameGenerator generator;
     private final Map<String, String> previousMappings;
-    private RenameStrategy renameStrategy;
+    private final RenameStrategy renameStrategy;
 
     public ObfuscatedNameSupplier(
         RenameStrategy renameStrategy, BiMap<String, String> previousMappings) {
@@ -174,7 +174,7 @@ class ReplaceIdGenerators implements CompilerPass {
 
   private static class PseudoNameSupplier implements NameSupplier {
     private int counter = 0;
-    private RenameStrategy renameStrategy;
+    private final RenameStrategy renameStrategy;
 
     public PseudoNameSupplier(RenameStrategy renameStrategy) {
       this.renameStrategy = renameStrategy;

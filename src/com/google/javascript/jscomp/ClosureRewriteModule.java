@@ -630,12 +630,12 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
   // Allows for detecting duplicate goog.module()s and for rewriting fully qualified
   // JsDoc type references to goog.module() types in legacy scripts.
   static class GlobalRewriteState {
-    private Map<String, ScriptDescription> scriptDescriptionsByGoogModuleNamespace =
+    private final Map<String, ScriptDescription> scriptDescriptionsByGoogModuleNamespace =
         new HashMap<>();
     private final Map<String, String> modulePathsToNamespaces =
         new HashMap<>();
-    private Multimap<Node, String> legacyNamespacesByScriptNode = HashMultimap.create();
-    private Set<String> legacyScriptNamespaces = new HashSet<>();
+    private final Multimap<Node, String> legacyNamespacesByScriptNode = HashMultimap.create();
+    private final Set<String> legacyScriptNamespaces = new HashSet<>();
     private final Set<String> nonModulePaths = new HashSet<>();
 
     public static String resolve(String fromModulePath, String relativeToModulePath) {
@@ -712,9 +712,9 @@ final class ClosureRewriteModule implements HotSwapCompilerPass {
     }
   }
 
-  private GlobalRewriteState rewriteState;
-  private Set<String> legacyScriptNamespacesAndPrefixes = new HashSet<>();
-  private List<UnrecognizedRequire> unrecognizedRequires = new ArrayList<>();
+  private final GlobalRewriteState rewriteState;
+  private final Set<String> legacyScriptNamespacesAndPrefixes = new HashSet<>();
+  private final List<UnrecognizedRequire> unrecognizedRequires = new ArrayList<>();
 
   ClosureRewriteModule(
       AbstractCompiler compiler,

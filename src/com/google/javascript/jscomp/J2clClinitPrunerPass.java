@@ -425,7 +425,7 @@ public class J2clClinitPrunerPass implements CompilerPass {
    * any of its parents.
    */
   private static class HierarchicalSet<T> {
-    private Set<T> currentSet = new HashSet<>();
+    private final Set<T> currentSet = new HashSet<>();
     @Nullable private final HierarchicalSet<T> parent;
 
     public HierarchicalSet(@Nullable HierarchicalSet<T> parent) {

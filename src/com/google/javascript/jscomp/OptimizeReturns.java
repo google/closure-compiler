@@ -38,7 +38,7 @@ import java.util.Map.Entry;
  */
 class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPass {
 
-  private AbstractCompiler compiler;
+  private final AbstractCompiler compiler;
 
   OptimizeReturns(AbstractCompiler compiler) {
     this.compiler = compiler;
