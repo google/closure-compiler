@@ -2550,7 +2550,9 @@ final class NewTypeInference implements CompilerPass {
     if (!fromType.isInterfaceInstance()
         && !toType.isInterfaceInstance()
         && !JSType.haveCommonSubtype(fromType, toType)
-        && !fromType.hasTypeVariable()) {
+        && !fromType.hasTypeVariable()
+        // Allow casts from an empty object literal to any type
+        && (!insideCast.isObjectLit() || insideCast.hasChildren())) {
       JSError error = JSError.make(expr, INVALID_CAST, fromType.toString(), toType.toString());
       registerMismatchAndWarn(error, fromType, toType);
     } else {

@@ -22303,4 +22303,17 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "var x = (1 < 2) ? Foo.prototype : Bar.prototype;",
         "var y = x.a;"));
   }
+
+  public void testAllowCastFromObjectLiteralToWhateverType() {
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "var x = /** @type {!Foo} */ ({});"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "var x = /** @type {!Foo} */ ({ a: 1 });"),
+        NewTypeInference.INVALID_CAST);
+  }
 }
