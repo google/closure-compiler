@@ -1093,7 +1093,6 @@ public class NodeTraversal {
    */
   private void setChangeScope(Node n) {
     this.currentChangeScope = n;
-    compiler.setChangeScope(n);
   }
 
   private Node getEnclosingScript(Node n) {
