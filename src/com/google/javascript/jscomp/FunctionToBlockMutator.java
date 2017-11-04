@@ -73,19 +73,24 @@ class FunctionToBlockMutator {
   }
 
   /**
-   * Used when an IIFE wrapper is being removed
+   * Used in for rewriting where the inlining occurs into an isolated
+   * scope. Renaming is avoided since the associated JSDoc annotations
+   * are not updated.
    *
    * @param fnName The name to use when preparing human readable names.
    * @param fnNode The function to prepare.
    * @param callNode The call node that will be replaced.
-   * @return A clone of the function body mutated to be suitable for injection as a statement into a
-   *     script root
+   * @param resultName Function results should be assigned to this name.
+   * @param needsDefaultResult Whether the result value must be set.
+   * @param isCallInLoop Whether the function body must be prepared to be
+   *   injected into the body of a loop.
+   * @return A clone of the function body mutated to be suitable for injection
+   *   as a statement into another code block.
    */
-  Node unwrapIifeInModule(String fnName, Node fnNode, Node callNode) {
-    return mutateInternal(fnName, fnNode, callNode,
-        /* resultName */ null,
-        /* needsDefaultResult */ false,
-        /* isCallInLoop */ false,
+  Node mutateWithoutRenaming(String fnName, Node fnNode, Node callNode,
+              String resultName, boolean needsDefaultResult, boolean isCallInLoop) {
+    return mutateInternal(
+        fnName, fnNode, callNode, resultName, needsDefaultResult, isCallInLoop,
         /* renameLocals */ false);
   }
 

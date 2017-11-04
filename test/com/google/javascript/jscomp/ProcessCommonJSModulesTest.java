@@ -350,11 +350,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @const */ var module$test = {};",
             "{",
-            "  module$test.default;",
-            "  var angular$jscomp$inline_5$$module$test = ",
+            "  var angular$$module$test = ",
             "      typeof angular === 'undefined' ? module$other : angular;",
-            "  console.log(angular$jscomp$inline_5$$module$test);",
-            "  module$test.default = angular$jscomp$inline_5$$module$test;",
+            "  console.log(angular$$module$test);",
+            "  module$test.default = angular$$module$test;",
             "}"));
   }
 

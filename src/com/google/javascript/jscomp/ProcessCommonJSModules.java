@@ -390,7 +390,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
     FunctionToBlockMutator mutator =
         new FunctionToBlockMutator(compiler, compiler.getUniqueNameIdSupplier());
-    Node block = mutator.unwrapIifeInModule(iifeLabel, fnc, call);
+    Node block = mutator.mutateWithoutRenaming(iifeLabel, fnc, call, null, false, false);
     root.removeChildren();
     root.addChildrenToFront(block.removeChildren());
     reportNestedScopesDeleted(fnc);
@@ -1014,7 +1014,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
           FunctionToBlockMutator mutator =
               new FunctionToBlockMutator(compiler, compiler.getUniqueNameIdSupplier());
-          Node newStatements = mutator.mutate(factoryLabel, fn, enclosingFnCall, null, false, false);
+          Node newStatements = mutator.mutateWithoutRenaming(factoryLabel, fn, enclosingFnCall, null, false, false);
 
           // Check to see if the returned block is of the form:
           // {
@@ -1048,7 +1048,7 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             }
 
             if (call != null) {
-              newStatements = mutator.mutate(
+              newStatements = mutator.mutateWithoutRenaming(
                   factoryLabel, inlinedFn, call, assignedName, false, false);
               if (assignedName != null) {
                 Node newName = IR.var(NodeUtil.newName(compiler, assignedName, fn, expr.getFirstChild().getQualifiedName()))
@@ -1067,28 +1067,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                 newStatements.addChildToBack(expr.getParent().detach());
               }
             }
-          }
-
-          // Simplify a common inlined block of the form:
-          // {
-          //   var jscomp$inline = expr;
-          //   someOtherVar = jscomp$inline;
-          // }
-          //
-          // to
-          //
-          // someOtherVar = expr;
-          if (newStatements.isNormalBlock()
-              && newStatements.hasTwoChildren()
-              && newStatements.getFirstChild().isVar()
-              && newStatements.getSecondChild().isExprResult()
-              && newStatements.getSecondChild().getFirstChild().isAssign()
-              && newStatements.getSecondChild().getFirstChild().getSecondChild().isName()
-              && newStatements.getSecondChild().getFirstChild().getSecondChild().getString()
-                  .equals(newStatements.getFirstFirstChild().getString())) {
-            newStatements.getSecondChild().getFirstChild().getSecondChild().replaceWith(
-                newStatements.getFirstFirstChild().getFirstChild().detach());
-            newStatements = newStatements.getSecondChild().detach();
           }
 
           Node callRoot = enclosingFnCall.getParent();
@@ -1254,6 +1232,16 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
               for (Node var : vars) {
                 visit(t, var.getFirstChild(), var);
               }
+            }
+
+            // UMD Inlining can shadow global variables - these are just removed.
+            //
+            // var exports = exports;
+            if (n.getFirstChild().hasChildren() && n.getFirstFirstChild().isName()
+                && n.getFirstChild().getString().equals(n.getFirstFirstChild().getString())) {
+              n.detach();
+              t.reportCodeChange();
+              return;
             }
           }
           break;
