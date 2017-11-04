@@ -911,17 +911,15 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       JSDocInfoBuilder builder = new JSDocInfoBuilder(true);
       builder.recordConstancy();
       initModule.setJSDocInfo(builder.build());
-      this.script.addChildToFront(initModule.useSourceInfoFromForTree(this.script));
       if (directAssignments == 0) {
-        Node defaultProp = IR.exprResult(
-            IR.assign(
-                IR.getprop(IR.name(moduleName), IR.string(exportPropertyName)),
-                IR.objectlit())).useSourceInfoFromForTree(this.script);
+        Node defaultProp = IR.stringKey(exportPropertyName);
+        defaultProp.addChildToFront(IR.objectlit());
+        initModule.getFirstFirstChild().addChildToFront(defaultProp);
         builder = new JSDocInfoBuilder(true);
         builder.recordConstancy();
-        defaultProp.getFirstChild().setJSDocInfo(builder.build());
-        this.script.addChildAfter(defaultProp, initModule);
+        defaultProp.setJSDocInfo(builder.build());
       }
+      this.script.addChildToFront(initModule.useSourceInfoFromForTree(this.script));
       compiler.reportChangeToEnclosingScope(this.script);
 
       return directAssignments < 2;
@@ -1186,13 +1184,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
                 || !(insertionPoint.isVar()
                     && insertionPoint.getFirstChild().getString().equals(moduleName))) {
               insertionPoint = null;
-            } else if (insertionPoint != null
-                && insertionPoint.getNext().isExprResult()
-                && insertionPoint.getNext().getFirstChild().isAssign()
-                && insertionPoint.getNext().getFirstFirstChild().isQualifiedName()
-                && insertionPoint.getNext().getFirstFirstChild().matchesQualifiedName(
-                    moduleName + "." + exportPropertyName)) {
-              insertionPoint = insertionPoint.getNext();
             }
 
             if (insertionPoint == null) {
@@ -1223,15 +1214,13 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         case VAR:
         case LET:
         case CONST:
-          {
-            // Multiple declarations need split apart so that they can be refactored into
-            // property assignments or removed altogether.
-            if (n.hasMoreThanOneChild() && !NodeUtil.isAnyFor(parent)) {
-              List<Node> vars = splitMultipleDeclarations(n);
-              t.reportCodeChange();
-              for (Node var : vars) {
-                visit(t, var.getFirstChild(), var);
-              }
+          // Multiple declarations need split apart so that they can be refactored into
+          // property assignments or removed altogether.
+          if (n.hasMoreThanOneChild() && !NodeUtil.isAnyFor(parent)) {
+            List<Node> vars = splitMultipleDeclarations(n);
+            t.reportCodeChange();
+            for (Node var : vars) {
+              visit(t, var.getFirstChild(), var);
             }
 
             // UMD Inlining can shadow global variables - these are just removed.
@@ -1723,13 +1712,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           }
 
           if (newNameIsQualified) {
-            // Var declarations without initialization can simply
-            // be removed if they are being converted to a property.
-            if (!nameRef.hasChildren()) {
-              parent.detach();
-              break;
-            }
-
             // Refactor a var declaration to a getprop assignment
             Node getProp = NodeUtil.newQName(compiler, newName, nameRef, originalName);
             JSDocInfo info = parent.getJSDocInfo();
