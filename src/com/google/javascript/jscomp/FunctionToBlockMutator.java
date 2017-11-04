@@ -73,8 +73,8 @@ class FunctionToBlockMutator {
   }
 
   /**
-   * Used in for rewriting where the inlining occurs into an isolated
-   * scope. Renaming is avoided since the associated JSDoc annotations
+   * Used where the inlining occurs into an isolated scope such as a module.
+   * Renaming is avoided since the associated JSDoc annotations
    * are not updated.
    *
    * @param fnName The name to use when preparing human readable names.
