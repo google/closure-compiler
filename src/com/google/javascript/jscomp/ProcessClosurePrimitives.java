@@ -336,7 +336,7 @@ class ProcessClosurePrimitives extends AbstractPostOrderCallback
                 break;
               default: // fall out
             }
-          } else if (left.matchesQualifiedName("goog.base")) {
+          } else if (left.getLastChild().getString().equals("base")) {
             // maybe an "base" setup by goog.inherits
             maybeProcessClassBaseCall(t, n);
           }
