@@ -349,12 +349,10 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "}));"),
         LINE_JOINER.join(
             "/** @const */ var module$test = {};",
-            "{",
-            "  var angular$$module$test = ",
-            "      typeof angular === 'undefined' ? module$other : angular;",
-            "  console.log(angular$$module$test);",
-            "  module$test.default = angular$$module$test;",
-            "}"));
+            "var angular$$module$test = ",
+            "    typeof angular === 'undefined' ? module$other : angular;",
+            "console.log(angular$$module$test);",
+            "module$test.default = angular$$module$test;"));
   }
 
   public void testEs6ObjectShorthand() {
@@ -881,7 +879,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @const */ var module$test = {};",
             "var __WEBPACK_AMD_DEFINE_ARRAY__$$module$test;",
-            "module$test.default;",
             "!(__WEBPACK_AMD_DEFINE_ARRAY__$$module$test = ",
             "    [__webpack_require__(1), __webpack_require__(2)],",
             "    module$test.default = function(b,c){console.log(b,c.exportA,c.exportB)}",
@@ -942,17 +939,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "})));"),
         LINE_JOINER.join(
             "/** @const */ var module$test={/** @const */ default: {}};",
-            "{",
-            "  var exports$jscomp$inline_4$$module$test = module$test.default;",
-            "  var userAgentContains$jscomp$inline_6$$module$test =",
-            "      function(str$jscomp$inline_7){",
-            "        return navigator.userAgent.toLowerCase().indexOf(",
-            "            str$jscomp$inline_7) >= 0;",
-            "      };",
-            "  var webkit$jscomp$inline_5$$module$test =",
-            "      userAgentContains$jscomp$inline_6$$module$test('webkit');",
-            "  exports$jscomp$inline_4$$module$test.webkit =",
-            "      webkit$jscomp$inline_5$$module$test;",
+            "module$test.default.webkit=userAgentContains$$module$test('webkit');",
+            "function userAgentContains$$module$test(str) {",
+            "  return navigator.userAgent.toLowerCase().indexOf(str) >= 0;",
             "}"));
   }
 
@@ -970,8 +959,8 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  return {foo: 'bar'};",
             "});"),
         LINE_JOINER.join(
-            "/** @const */ var module$test={/** @const */ default: {}};",
-            "module$test.default.foo = 'bar';"));
+            "/** @const */ var module$test={};",
+            "/** @const */ module$test.default = {foo: 'bar'};"));
   }
 
   public void testDontSplitVarsInFor() {

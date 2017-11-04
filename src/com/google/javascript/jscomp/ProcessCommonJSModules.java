@@ -1072,9 +1072,11 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             callRoot = callRoot.getParent();
           }
           if (callRoot.isExprResult()) {
-            callRoot.replaceWith(newStatements);
-            reportNestedScopesChanged(newStatements);
-            compiler.reportChangeToEnclosingScope(newStatements);
+            Node callRootParent = callRoot.getParent();
+            callRootParent.addChildrenAfter(newStatements.removeChildren(), callRoot);
+            callRoot.detach();
+            reportNestedScopesChanged(callRootParent);
+            compiler.reportChangeToEnclosingScope(callRootParent);
             reportNestedScopesDeleted(enclosingFnCall);
           } else {
             parent.replaceChild(umdPattern.ifRoot, newNode);
@@ -1222,16 +1224,16 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             for (Node var : vars) {
               visit(t, var.getFirstChild(), var);
             }
+          }
 
-            // UMD Inlining can shadow global variables - these are just removed.
-            //
-            // var exports = exports;
-            if (n.getFirstChild().hasChildren() && n.getFirstFirstChild().isName()
-                && n.getFirstChild().getString().equals(n.getFirstFirstChild().getString())) {
-              n.detach();
-              t.reportCodeChange();
-              return;
-            }
+          // UMD Inlining can shadow global variables - these are just removed.
+          //
+          // var exports = exports;
+          if (n.getFirstChild().hasChildren() && n.getFirstFirstChild().isName()
+              && n.getFirstChild().getString().equals(n.getFirstFirstChild().getString())) {
+            n.detach();
+            t.reportCodeChange();
+            return;
           }
           break;
 
@@ -1251,7 +1253,20 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
             if (nameDeclaration != null
                 && nameDeclaration.getNode() != null
                 && nameDeclaration.getNode().getInputId() == n.getInputId()) {
-              maybeUpdateName(t, n, nameDeclaration);
+
+              // Avoid renaming a shadowed global
+              //
+              // var angular = angular;  // value is global ref
+              Node enclosingDeclaration = NodeUtil.getEnclosingNode(n, new Predicate<Node>() {
+                @Override
+                public boolean apply(Node node) {
+                  return node == nameDeclaration.getNameNode();
+                }
+              });
+
+              if (enclosingDeclaration == null || enclosingDeclaration == n) {
+                maybeUpdateName(t, n, nameDeclaration);
+              }
             }
             break;
           }
@@ -1712,6 +1727,13 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
           }
 
           if (newNameIsQualified) {
+            // Var declarations without initialization can simply
+            // be removed if they are being converted to a property.
+            if (!nameRef.hasChildren() && parent.getJSDocInfo() == null) {
+              parent.detach();
+              break;
+            }
+
             // Refactor a var declaration to a getprop assignment
             Node getProp = NodeUtil.newQName(compiler, newName, nameRef, originalName);
             JSDocInfo info = parent.getJSDocInfo();
