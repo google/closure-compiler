@@ -439,6 +439,12 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
     options.angularPass = config.angularPass;
     options.setNewTypeInference(config.useNewTypeInference);
     options.instrumentationTemplateFile = config.instrumentationTemplateFile;
+
+    if (config.errorFormat == CommandLineConfig.ErrorFormatOption.JSON) {
+      PrintStreamJSONErrorManager printer =
+          new PrintStreamJSONErrorManager(getErrorPrintStream(), compiler);
+      compiler.setErrorManager(printer);
+    }
   }
 
   protected final A getCompiler() {
@@ -2690,6 +2696,20 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
+    /**
+     * Set of options that can be used with the --formatting flag.
+     */
+    protected enum ErrorFormatOption {
+      STANDARD,
+      JSON
+    }
+
+    private ErrorFormatOption errorFormat = ErrorFormatOption.STANDARD;
+
+    public CommandLineConfig setErrorFormat(ErrorFormatOption errorFormat) {
+      this.errorFormat = errorFormat;
+      return this;
+    }
   }
 
   /**
