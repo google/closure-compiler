@@ -2900,6 +2900,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new CollapseAnonymousFunctions(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
       };
 
   /** Moves function declarations to the top, to simulate actual hoisting. */
