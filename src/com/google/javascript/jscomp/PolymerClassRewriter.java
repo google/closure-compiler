@@ -612,7 +612,7 @@ final class PolymerClassRewriter {
    * @return The name of the generated extern interface which the element implements.
    */
   private static String getInterfaceName(final PolymerClassDefinition cls) {
-    return "Polymer" + cls.target.getQualifiedName().replace(".", "_") + "Interface";
+    return "Polymer" + cls.target.getQualifiedName().replace('.', '_') + "Interface";
   }
 
   /**
