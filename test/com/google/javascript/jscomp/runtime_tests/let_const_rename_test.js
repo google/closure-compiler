@@ -312,3 +312,12 @@ function testLabeledLoop() {
   }
   assertArrayEquals([0, 1, 2], [arr[0](), arr[1](), arr[2]()]);
 }
+
+function testRenamingDoesNotBreakObjectShorthand() {
+  let x = 2;
+  {
+    let x = 4;
+    assertObjectEquals({x: 4}, {x});
+  }
+  assertObjectEquals({x: 2}, {x});
+}

@@ -51,6 +51,7 @@ public class TranspilationPasses {
    * transpile them, even if the output language is also ES6.
    */
   public static void addEs6EarlyPasses(List<PassFactory> passes) {
+    passes.add(es6NormalizeShorthandProperties);
     passes.add(es6SuperCheck);
     passes.add(es6ConvertSuper);
     passes.add(es6RenameVariablesInParamLists);
@@ -109,7 +110,7 @@ public class TranspilationPasses {
 
         @Override
         protected FeatureSet featureSet() {
-          return FeatureSet.ES8_MODULES;
+          return ES8_MODULES;
         }
       };
 
@@ -131,6 +132,19 @@ public class TranspilationPasses {
         @Override
         protected HotSwapCompilerPass create(final AbstractCompiler compiler) {
           return new Es7ToEs6Converter(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8;
+        }
+      };
+
+  private static final HotSwapPassFactory es6NormalizeShorthandProperties =
+      new HotSwapPassFactory("es6NormalizeShorthandProperties") {
+        @Override
+        protected HotSwapCompilerPass create(AbstractCompiler compiler) {
+          return new Es6NormalizeShorthandProperties(compiler);
         }
 
         @Override

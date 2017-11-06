@@ -41,10 +41,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Rewrite "let"s and "const"s as "var"s.
- * Rename block-scoped declarations and their references when necessary.
+ * Rewrite "let"s and "const"s as "var"s. Rename block-scoped declarations and their references when
+ * necessary.
  *
- * TODO(moz): Try to use MakeDeclaredNamesUnique
+ * <p>Note that this must run after Es6RewriteDestructuring, since it does not process destructuring
+ * let/const declarations at all.
+ *
+ * <p>TODO(moz): Try to use MakeDeclaredNamesUnique
  *
  * @author moz@google.com (Michael Zhou)
  */

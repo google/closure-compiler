@@ -1089,7 +1089,9 @@ public final class VariableReferenceCheckTest extends CompilerTestCase {
     assertEarlyReferenceError("function f(x=a) { var a; }");
     assertEarlyReferenceError("function f(x=a()) { function a() {} }");
     assertEarlyReferenceError("function f(x=[a]) { var a; }");
+    assertEarlyReferenceError("function f(x={a}) { let a; }");
     assertEarlyReferenceError("function f(x=y, y=2) {}");
+    assertEarlyReferenceError("function f(x={y}, y=2) {}");
     assertEarlyReferenceError("function f(x=x) {}");
     assertEarlyReferenceError("function f([x]=x) {}");
     // x within a function isn't referenced at the time the default value for x is evaluated.

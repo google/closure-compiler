@@ -2704,11 +2704,19 @@ public final class NodeUtil {
   }
 
   /**
-   * @return Whether the name is a reference to a variable, function or
-   *       function parameter (not a label or a empty function expression name).
+   * @return Whether the node is a reference to a variable, function or
+   *     function parameter (not a label or a empty function expression name).
+   *     This includes both NAME nodes and shorthand property STRING_KEYs.
    */
   static boolean isReferenceName(Node n) {
-    return n.isName() && !n.getString().isEmpty();
+    return (n.isName() && !n.getString().isEmpty()) || isShorthandProperty(n);
+  }
+
+  /**
+   * @return Whether the node is a shorthand property.
+   */
+  static boolean isShorthandProperty(Node n) {
+    return n.isStringKey() && !n.hasChildren();
   }
 
   /**
