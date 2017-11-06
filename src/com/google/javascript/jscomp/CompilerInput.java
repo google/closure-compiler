@@ -291,7 +291,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
         return SimpleDependencyInfo.EMPTY;
       }
 
-      finder.visitTree(getAstRoot(compiler));
+      finder.visitTree(root);
 
       // TODO(nicksantos|user): This caching behavior is a bit
       // odd, and only works if you assume the exact call flow that
@@ -404,6 +404,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
         case SCRIPT:
         case NAME:
         case DESTRUCTURING_LHS:
+        case LET:
           break;
 
         default:
