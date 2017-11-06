@@ -1792,6 +1792,23 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "  }",
             "}",
             "Bar.double(1);"));
+
+    // If we add a static function to the class after the class definition, we still collapse it, as
+    // we don't detect that it's specifically a static class function.
+    // TODO(b/68948902): Consider adding a warning for this kind of class static method declaration.
+    test(
+        LINE_JOINER.join(
+            "class Bar {}",
+            "Bar.double = function(n) {",
+            "  return n*2",
+            "}",
+            "Bar.double(1);"),
+        LINE_JOINER.join(
+            "class Bar {}",
+            "var Bar$double = function(n) {",
+            "  return n*2",
+            "}",
+            "Bar$double(1);"));
   }
 
   public void testClassStaticProperties() {
@@ -1819,8 +1836,9 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
     test("class A {} A.foo = 5; use(A.foo); class B extends A {}",
         "class A {} var A$foo = 5; use(A$foo); class B extends A {}");
 
-    // We collapse unsafely when the subclass accesses a static property on its superclass.
-    // TODO(lharker): Make this collapsing safe by rewriting subclass accesses.
+    // We potentially collapse unsafely when the subclass accesses a static property on its
+    // superclass. However, AggressiveInlineAliases tries to rewrite inherited accesses to make this
+    // collapsing safe. See InlineAndCollapsePropertiesTests for examples.
     test(
         "class A {}     A.foo = 5; use(A.foo); class B extends A {} use(B.foo);",
         "class A {} var A$foo = 5; use(A$foo); class B extends A {} use(B.foo);");

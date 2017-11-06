@@ -1025,4 +1025,16 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "class C extends getSuperclass() {}",
             "use(C.foo);"));
   }
+
+  public void testAliasInsideGenerator() {
+    test(
+        "const a = {b: 5}; const c = a;    function *f() { yield c.b; }",
+        "const a = {b: 5}; const c = null; function *f() { yield a.b; }");
+  }
+
+  public void testAliasInsideModuleScope() {
+    // CollapseProperties currently only handles global variables, so we don't handle aliasing in
+    // module bodies here.
+    testSame("const a = {b: 5}; const c = a; export default function() {};");
+  }
 }
