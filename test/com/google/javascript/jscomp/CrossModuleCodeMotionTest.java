@@ -786,6 +786,25 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
         });
   }
 
+  public void testLetConstMovement() {
+    // test moving a variable
+    JSModule[] modules =
+        createModuleStar(
+            // m1
+            "const a = 0;",
+            // m2
+            "let x = a;");
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          "",
+          // m2
+          "const a = 0; let x = a;",
+        });
+  }
+
   public void testVarMovement2() {
     // Test moving 1 variable out of the block
     JSModule[] modules =
@@ -802,6 +821,25 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           "var a = 0; var c = 2;",
           // m2
           "var b = 1; var x = b;"
+        });
+  }
+
+  public void testLetConstMovement2() {
+    // Test moving 1 variable out of the block
+    JSModule[] modules =
+        createModuleStar(
+            // m1
+            "const a = 0; const b = 1; const c = 2;",
+            // m2
+            "let x = b;");
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          "const a = 0; const c = 2;",
+          // m2
+          "const b = 1; let x = b;"
         });
   }
 
@@ -824,6 +862,25 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
         });
   }
 
+  public void testLetConstMovement3() {
+    // Test moving all variables out of the block
+    JSModule[] modules =
+        createModuleStar(
+            // m1
+            "const a = 0; const b = 1;",
+            // m2
+            "let x = a + b;");
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          "",
+          // m2
+          "const a = 0; const b = 1; let x = a + b;"
+        });
+  }
+
   public void testVarMovement4() {
     // Test moving a function
     JSModule[] modules =
@@ -843,6 +900,25 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
         });
   }
 
+  public void testLetConstMovement4() {
+    // Test moving a function
+    JSModule[] modules =
+        createModuleStar(
+            // m1
+            "const a = function(){alert(1)};",
+            // m2
+            "let x = a;");
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          "",
+          // m2
+          "const a = function(){alert(1)}; let x = a;"
+        });
+  }
+
   public void testVarMovement5() {
     // Don't move a function outside of scope
     testSame(
@@ -851,6 +927,16 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
             "var a = alert;",
             // m2
             "var x = a;"));
+  }
+
+  public void testLetConstMovement5() {
+    // Don't move a function outside of scope
+    testSame(
+        createModuleStar(
+            // m1
+            "const a = alert;",
+            // m2
+            "let x = a;"));
   }
 
   public void testVarMovement6() {
@@ -869,6 +955,25 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           "",
           // m2
           "var a; var x = a;"
+        });
+  }
+
+  public void testLetMovement6() {
+    // Test moving a let with no assigned value
+    JSModule[] modules =
+        createModuleStar(
+            // m1
+            "let a;",
+            // m2
+            "let x = a;");
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          "",
+          // m2
+          "let a; let x = a;"
         });
   }
 
@@ -908,6 +1013,32 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
         });
   }
 
+  public void testLetConstMovement8() {
+    JSModule[] modules =
+        createModuleBush(
+            // m1
+            "const a = 0;",
+            // m2 -> m1
+            "",
+            // m3 -> m2
+            "let x = a;",
+            // m4 -> m2
+            "let y = a;");
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          "",
+          // m2
+          "const a = 0;",
+          // m3
+          "let x = a;",
+          // m4
+          "let y = a;"
+        });
+  }
+
   public void testVarMovement9() {
     JSModule[] modules =
         createModuleTree(
@@ -935,6 +1066,44 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
           "var a = 0;",
           // m3
           "var b = 1;",
+          // m4
+          "a;",
+          // m5
+          "a;c;",
+          // m6
+          "b;",
+          // m7
+          "b;c;"
+        });
+  }
+
+  public void testConstMovement9() {
+    JSModule[] modules =
+        createModuleTree(
+            // m1
+            "const a = 0; const b = 1; const c = 3;",
+            // m2 -> m1
+            "",
+            // m3 -> m1
+            "",
+            // m4 -> m2
+            "a;",
+            // m5 -> m2
+            "a;c;",
+            // m6 -> m3
+            "b;",
+            // m7 -> m4
+            "b;c;");
+
+    test(
+        modules,
+        new String[] {
+          // m1
+          "const c = 3;",
+          // m2
+          "const a = 0;",
+          // m3
+          "const b = 1;",
           // m4
           "a;",
           // m5

@@ -186,9 +186,8 @@ public final class CrossModuleReferenceCollector implements ScopedCallback, Comp
         new TopLevelStatementDraft(statementCounter++, module, statementNode);
     // Determine whether this statement declares a name or not.
     // If so, save its name node and value node, if any.
-    if (statementNode.isVar()) {
+    if (NodeUtil.isNameDeclaration(statementNode)) {
       // variable declaration
-      // TODO(bradfordcsmith): handle LET and CONST
       draft.declaredNameNode = statementNode.getFirstChild();
       draft.declaredValueNode = statementNode.getFirstFirstChild();
     } else if (statementNode.isClass()) {
