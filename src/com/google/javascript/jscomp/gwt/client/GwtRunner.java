@@ -37,9 +37,11 @@ import com.google.javascript.jscomp.DependencyOptions;
 import com.google.javascript.jscomp.DiagnosticType;
 import com.google.javascript.jscomp.JSError;
 import com.google.javascript.jscomp.ModuleIdentifier;
+import com.google.javascript.jscomp.PropertyRenamingPolicy;
 import com.google.javascript.jscomp.SourceFile;
 import com.google.javascript.jscomp.SourceMap;
 import com.google.javascript.jscomp.SourceMapInput;
+import com.google.javascript.jscomp.VariableRenamingPolicy;
 import com.google.javascript.jscomp.WarningLevel;
 import com.google.javascript.jscomp.deps.ModuleLoader.ResolutionMode;
 import com.google.javascript.jscomp.deps.SourceCodeEscapers;
@@ -97,6 +99,7 @@ public final class GwtRunner implements EntryPoint {
     boolean preserveTypeAnnotations;
     boolean processClosurePrimitives;
     boolean processCommonJsModules;
+    boolean renaming;
     public String renamePrefixNamespace;
     boolean rewritePolyfills;
     String warningLevel;
@@ -141,6 +144,7 @@ public final class GwtRunner implements EntryPoint {
     defaultFlags.processClosurePrimitives = true;
     defaultFlags.processCommonJsModules = false;
     defaultFlags.renamePrefixNamespace = null;
+    defaultFlags.renaming = true;
     defaultFlags.rewritePolyfills = true;
     defaultFlags.warningLevel = "DEFAULT";
     defaultFlags.useTypesForOptimization = true;
@@ -332,6 +336,10 @@ public final class GwtRunner implements EntryPoint {
         throw new RuntimeException(
             "Bad value for compilationLevel: " + flags.compilationLevel);
       }
+      if (level == CompilationLevel.ADVANCED_OPTIMIZATIONS && !flags.renaming) {
+        throw new RuntimeException(
+            "renaming cannot be disabled when ADVANCED_OPTMIZATIONS is used");
+      }
     }
     level.setOptionsForCompilationLevel(options);
     if (flags.assumeFunctionWrapper) {
@@ -417,6 +425,10 @@ public final class GwtRunner implements EntryPoint {
     options.setClosurePass(flags.processClosurePrimitives);
     options.setProcessCommonJSModules(flags.processCommonJsModules);
     options.setRenamePrefixNamespace(flags.renamePrefixNamespace);
+    if (flags.renaming == false) {
+      options.setVariableRenaming(VariableRenamingPolicy.OFF);
+      options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
+    }
     options.setRewritePolyfills(flags.rewritePolyfills);
   }
 
