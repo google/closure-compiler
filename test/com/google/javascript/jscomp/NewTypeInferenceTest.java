@@ -5301,6 +5301,17 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
             "/** @type {number} */ ns.num;"),
         "var /** string */ s = ns.num;",
         NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheckCustomExterns(
+        LINE_JOINER.join(
+            DEFAULT_EXTERNS,
+            "/** @const */",
+            "var ns = {};"),
+        LINE_JOINER.join(
+            "function f() {",
+            "  /** @const */",
+            "  var ns2 = ns;",
+            "}"));
   }
 
   public void testSimpleInferNamespaces() {
@@ -5405,8 +5416,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
   }
 
   public void testNestedNamespaces() {
-    // In the previous type inference, ns.subns did not need a
-    // @const annotation, but we require it.
+    // In the old type checker, ns.subns did not need a @const annotation, but we require it.
     typeCheck(LINE_JOINER.join(
         "/** @const */",
         "var ns = {};",
@@ -12962,11 +12972,12 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function g() { ns.o.PROP - 5; }"),
         NewTypeInference.INVALID_OPERAND_TYPE);
 
-    // These declarations are not considered namespaces
+    // This declaration is not considered a namespace
     typeCheck(
         "(function(){ return {}; })().ns = { /** @const */ PROP: 5 };",
         GlobalTypeInfoCollector.MISPLACED_CONST_ANNOTATION);
 
+    // This declaration is not considered a namespace
     typeCheck(LINE_JOINER.join(
         "function f(/** { x : string } */ obj) {",
         "  obj.ns = { /** @const */ PROP: 5 };",

@@ -275,21 +275,22 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     return false;
   }
 
-  // For variables it is the same as isDefinedLocally; for properties it looks
-  // for a definition in any scope.
   boolean isDefined(Node qnameNode) {
     checkArgument(qnameNode.isQualifiedName());
-    if (qnameNode.isName()) {
-      return isDefinedLocally(qnameNode.getString(), false);
-    } else if (qnameNode.isThis()) {
-      return true;
-    }
-    QualifiedName qname = QualifiedName.fromNode(qnameNode);
+    return isDefined(QualifiedName.fromNode(qnameNode));
+  }
+
+  // For variables it is the same as isDefinedLocally; for properties it looks
+  // for a definition in any scope.
+  boolean isDefined(QualifiedName qname) {
     String leftmost = qname.getLeftmostName();
+    if (qname.isIdentifier()) {
+      return leftmost.equals("this") || isDefinedLocally(leftmost, false);
+    }
     if (isNamespace(leftmost)) {
       return getNamespace(leftmost).isDefined(qname.getAllButLeftmost());
     }
-    return parent == null ? false : parent.isDefined(qnameNode);
+    return parent == null ? false : parent.isDefined(qname);
   }
 
   boolean isNamespace(Node expr) {
@@ -580,9 +581,8 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     }
   }
 
-  void addNamespaceLit(Node qnameNode) {
-    addNamespace(qnameNode,
-        new NamespaceLit(this.commonTypes, qnameNode.getQualifiedName(), qnameNode));
+  void addNamespaceLit(QualifiedName qname, Node defSite) {
+    addNamespace(qname, defSite, new NamespaceLit(this.commonTypes, qname.toString(), defSite));
   }
 
   void updateType(String name, JSType newDeclType) {
@@ -591,8 +591,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     } else if (parent != null) {
       parent.updateType(name, newDeclType);
     } else {
-      throw new RuntimeException(
-          "Cannot update type of unknown variable: " + name);
+      throw new RuntimeException("Cannot update type of unknown variable: " + name);
     }
   }
 
@@ -614,23 +613,26 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
   }
 
   void addNamespace(Node qnameNode, Namespace ns) {
+    addNamespace(QualifiedName.fromNode(qnameNode), qnameNode, ns);
+  }
+
+  void addNamespace(QualifiedName qname, Node defSite, Namespace ns) {
     if (ns instanceof EnumType) {
       this.localEnums.add((EnumType) ns);
     }
-    if (qnameNode.isName()) {
-      String varName = qnameNode.getString();
+    if (qname.isIdentifier()) {
+      String varName = qname.getLeftmostName();
       Preconditions.checkState(!this.localNamespaces.containsKey(varName),
           "Namespace %s already defined.", varName);
       this.localNamespaces.put(varName, ns);
-      if (qnameNode.isFromExterns() && !this.externs.containsKey(varName)) {
+      if (defSite.isFromExterns() && !this.externs.containsKey(varName)) {
         // We don't know the full type of a namespace until after we see all
         // its properties. But we want to add it to the externs, otherwise it
         // is treated as a local and initialized to the wrong thing in NTI.
-        this.externs.put(qnameNode.getString(), null);
+        this.externs.put(varName, null);
       }
     } else {
-      checkState(!isDefined(qnameNode));
-      QualifiedName qname = QualifiedName.fromNode(qnameNode);
+      checkState(!isDefined(qname));
       Namespace rootns = getNamespace(qname.getLeftmostName());
       rootns.addNamespace(qname.getAllButLeftmost(), ns);
     }
