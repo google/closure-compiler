@@ -24,7 +24,7 @@
   <packaging>pom</packaging>
 
   <name>Closure Compiler Main</name>
-  <version>1.0-SNAPSHOT</version>
+  <version>v20171106.webpack-beta</version>
 
   <url>https://developers.google.com/closure/compiler/</url>
   <description>
