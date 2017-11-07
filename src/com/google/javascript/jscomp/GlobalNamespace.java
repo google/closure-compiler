@@ -655,8 +655,7 @@ class GlobalNamespace
           || !(superclass.isName() || superclass.isGetProp())) {
         return;
       }
-      String superclassName =
-          superclass.isName() ? superclass.getString() : superclass.getQualifiedName();
+      String superclassName = superclass.getQualifiedName();
 
       Name superclassNameObj = getOrCreateName(superclassName, false);
       // If the superclass is an ES3/5 class we don't record its subclasses.
