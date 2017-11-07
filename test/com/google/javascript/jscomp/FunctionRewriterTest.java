@@ -64,6 +64,34 @@ public final class FunctionRewriterTest extends CompilerTestCase {
     return 1;
   }
 
+  public void testEs6Class() {
+    // There is never any benefit to replacing ES6 class methods
+    checkCompilesToSame(
+        LINE_JOINER.join(
+            "class C {",
+            "  constructor(x = 1) {",  // looks like a setter
+            "    this.x_ = x;",
+            "  }",
+            "  get x() {",
+            "    return this.x_",
+            "  }",
+            "  getX() {",
+            "    return this.x_",
+            "  }",
+            "  set x(x) {",
+            "    this.x_ = x;",
+            "  }",
+            "  setX(x = 3) {",
+            "    this.x_ = x;",
+            "  }",
+            "  getConst() {",
+            "    return 1;",
+            "  }",
+            "  empty() {}",
+            "  identity(x) { return x; }",
+            "}"), 10);
+  }
+
   public void testReplaceReturnConst1() {
     String source = "a.prototype.foo = function() {return \"foobar\"}";
     checkCompilesToSame(source, 3);
@@ -106,6 +134,16 @@ public final class FunctionRewriterTest extends CompilerTestCase {
                     SET_HELPER,
                     "a.prototype.foo = JSCompiler_set(\"foo_\")",
                     5);
+  }
+
+  public void testReplaceSetterWithDefault() {
+    String source = "a.prototype.foo = function(v = 1) {this.foo_ = v}";
+    checkCompilesToSame(source, 10);
+  }
+
+  public void testReplaceSetterWithDestructuring() {
+    String source = "a.prototype.foo = function({v}) {this.foo_ = v}";
+    checkCompilesToSame(source, 10);
   }
 
   public void testReplaceSetter2() {
@@ -157,6 +195,14 @@ public final class FunctionRewriterTest extends CompilerTestCase {
                     IDENTITY_HELPER,
                     "a.prototype.foo = JSCompiler_identityFn()",
                     3);
+  }
+
+  public void testReplaceIdentityFunctionWithDefault() {
+    checkCompilesToSame("a.prototype.foo = function(a = 1) {return a}", 10);
+  }
+
+  public void testReplaceIdentityFunctionWithDestructuring() {
+    checkCompilesToSame("a.prototype.foo = function({a}) {return a}", 10);
   }
 
   public void testReplaceIdentityFunction2() {
