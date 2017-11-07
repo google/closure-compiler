@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
 
 public final class InlineSimpleMethodsTest extends CompilerTestCase {
@@ -26,6 +25,7 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   @Override
   protected void setUp() throws Exception {
     super.setUp();
+    enableNormalize();
   }
 
   /**

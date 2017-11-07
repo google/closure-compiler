@@ -15,6 +15,8 @@
  */
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
@@ -59,6 +61,12 @@ class InlineSimpleMethods extends MethodCompilerPass {
 
   InlineSimpleMethods(AbstractCompiler compiler) {
     super(compiler);
+  }
+
+  @Override
+  public void process(Node externs, Node root) {
+    checkState(compiler.getLifeCycleStage().isNormalized(), compiler.getLifeCycleStage());
+    super.process(externs, root);
   }
 
   /**
@@ -159,7 +167,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
    * by the method, given a FUNCTION node.
    */
   private static Node returnedExpression(Node fn) {
-    Node expectedBlock = getMethodBlock(fn);
+    Node expectedBlock = NodeUtil.getFunctionBody(fn);
     if (!expectedBlock.hasOneChild()) {
       return null;
     }
@@ -173,7 +181,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
       return null;
     }
 
-    return expectedReturn.getLastChild();
+    return expectedReturn.getOnlyChild();
   }
 
 
@@ -183,23 +191,7 @@ class InlineSimpleMethods extends MethodCompilerPass {
    * Must be private, or moved to NodeUtil.
    */
   private static boolean isEmptyMethod(Node fn) {
-    Node expectedBlock = getMethodBlock(fn);
-    return expectedBlock == null ? false : NodeUtil.isEmptyBlock(expectedBlock);
-  }
-
-  /**
-   * Return a BLOCK node if the given FUNCTION node is a valid method
-   * definition, null otherwise.
-   *
-   * Must be private, or moved to NodeUtil.
-   */
-  private static Node getMethodBlock(Node fn) {
-    if (fn.getChildCount() != 3) {
-      return null;
-    }
-
-    Node expectedBlock = fn.getLastChild();
-    return expectedBlock.isNormalBlock() ? expectedBlock : null;
+    return NodeUtil.isEmptyBlock(NodeUtil.getFunctionBody(fn));
   }
 
   /** Given a set of method definitions, verify they are the same. */
