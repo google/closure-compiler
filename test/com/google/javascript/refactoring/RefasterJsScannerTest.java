@@ -843,21 +843,22 @@ public class RefasterJsScannerTest {
     scanner.loadRefasterJsTemplateFromCode(refasterJsTemplate);
 
     RefactoringDriver driver =
-        new RefactoringDriver.Builder(scanner)
+        new RefactoringDriver.Builder()
             .addExternsFromCode("function Symbol() {};" + externs)
             .addInputsFromCode(originalCode)
             .addInputsFromCode(
-                Joiner.on('\n').join(
-                    "goog.module('goog.foo');",
-                    "/** Trivial function. \n",
-                    " * @return {string}",
-                    " */",
-                    "exports.f = function () { ",
-                    "  return 'str';",
-                    "};"),
+                Joiner.on('\n')
+                    .join(
+                        "goog.module('goog.foo');",
+                        "/** Trivial function. \n",
+                        " * @return {string}",
+                        " */",
+                        "exports.f = function () { ",
+                        "  return 'str';",
+                        "};"),
                 "foo.js")
             .build();
-    List<SuggestedFix> fixes = driver.drive();
+    List<SuggestedFix> fixes = driver.drive(scanner);
     String newCode = ApplySuggestedFixes.applySuggestedFixesToCode(
         fixes, ImmutableMap.of("input", originalCode)).get("input");
     assertEquals(expectedCode, newCode);
