@@ -21,7 +21,6 @@ import com.google.common.collect.Multimap;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.rhino.Node;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -31,7 +30,6 @@ import java.util.Set;
  *
  *
  */
-// TODO(tbreisacher): Make this handle method definitions in ES6 classes.
 abstract class MethodCompilerPass implements CompilerPass {
   /** List of methods defined in externs */
   final Set<String> externMethods = new HashSet<>();
@@ -138,9 +136,8 @@ abstract class MethodCompilerPass implements CompilerPass {
           //          name methods
           //          string setTimeout
           //      function
-          if (parent.isAssign() &&
-              parent.getFirstChild() == n &&
-              n.getNext().isFunction()) {
+          if (parent.isAssign() && parent.getFirstChild() == n && n.getNext().isFunction()) {
+
             addSignature(name, n.getNext(), t.getSourceName());
           } else {
             getSignatureStore().removeSignature(name);
@@ -148,14 +145,15 @@ abstract class MethodCompilerPass implements CompilerPass {
           }
 
           externMethods.add(name);
-        } break;
+        }
+        break;
 
+        case CLASS_MEMBERS:
         case OBJECTLIT: {
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
             Node value = key.getFirstChild();
             String name = key.getString();
-            if (key.isStringKey()
-                && value.isFunction()) {
+            if (key.isStringKey() && value.isFunction()) {
               addSignature(name, value, t.getSourceName());
             } else {
               getSignatureStore().removeSignature(name);
@@ -194,8 +192,7 @@ abstract class MethodCompilerPass implements CompilerPass {
               //          name Foo
               //          string bar
               //      function or name  <- n.getNext()
-              if (parent.isAssign() &&
-                  parent.getFirstChild() == n) {
+              if (parent.isAssign() && parent.getFirstChild() == n) {
                 addPossibleSignature(dest.getString(), n.getNext(), t);
               }
             }
@@ -203,6 +200,7 @@ abstract class MethodCompilerPass implements CompilerPass {
           break;
 
         case OBJECTLIT:
+        case CLASS_MEMBERS:
           for (Node key = n.getFirstChild(); key != null; key = key.getNext()) {
             switch (key.getToken()) {
               case MEMBER_FUNCTION_DEF:
@@ -216,8 +214,7 @@ abstract class MethodCompilerPass implements CompilerPass {
               case COMPUTED_PROP: // complicated
                 break;
               default:
-                throw new IllegalStateException(
-                    "unexpect OBJECTLIT key: " + key);
+                throw new IllegalStateException("unexpected OBJECTLIT key: " + key);
             }
           }
           break;
@@ -248,8 +245,7 @@ abstract class MethodCompilerPass implements CompilerPass {
           Node dest = n.getSecondChild();
           Node parent = n.getGrandparent();
 
-          if (dest.isString() &&
-              parent.isAssign()) {
+          if (dest.isString() && parent.isAssign()) {
             Node assignee = parent.getSecondChild();
 
             addPossibleSignature(dest.getString(), assignee, t);

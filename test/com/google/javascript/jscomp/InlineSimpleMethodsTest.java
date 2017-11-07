@@ -265,8 +265,18 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
         + "(new Foo).bar");
   }
 
-  public void testObjectLitExtern() {
+  public void testObjectLitExtern1() {
     String externs = "window.bridge={_sip:function(){}};";
+    testSame(externs, "window.bridge._sip()");
+  }
+
+  public void testObjectLitExtern2() {
+    String externs = "window.bridge={_sip(){}};";
+    testSame(externs, "window.bridge._sip()");
+  }
+
+  public void testClassExtern() {
+    String externs = "window.bridge= class { _sip() {} };";
     testSame(externs, "window.bridge._sip()");
   }
 
@@ -294,9 +304,10 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
   }
 
   // When there are two methods with the same name, one on an ES3-style class, and one on an
-  // ES6-style class, make sure the right one gets inlined into the right place.
-  public void disabled_testEs6Issue() {
-    test(
+  // ES6-style class, make sure the right one gets inlined into the right place, if inlining happens
+  // at all.
+  public void testEs6Issue1() {
+    testSame(
         LINE_JOINER.join(
             "/** @constructor */",
             "function OldClass() {}",
@@ -310,7 +321,11 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
             "var x = new OldClass;",
             "x.foo();",
             "x = new NewClass;",
-            "x.foo();"),
+            "x.foo();"));
+  }
+
+  public void testEs6Issue2() {
+    testSame(
         LINE_JOINER.join(
             "/** @constructor */",
             "function OldClass() {}",
@@ -322,10 +337,9 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
             "}",
             "",
             "var x = new OldClass;",
-            "x.oldbar;",
-            "x = new NewClass;",
-            // This currently fails here by outputting x.oldbar again.
-            "x.newbar;"));
+            "x.foo();",
+            "var y = new NewClass;",
+            "y.foo();"));
   }
 
   public void testAnonymousGet() {
