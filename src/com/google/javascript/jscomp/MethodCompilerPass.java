@@ -29,7 +29,9 @@ import java.util.Set;
  * Finds all method declarations and pulls them into data structures
  * for use during cleanups such as arity checks or inlining.
  *
+ *
  */
+// TODO(tbreisacher): Make this handle method definitions in ES6 classes.
 abstract class MethodCompilerPass implements CompilerPass {
   /** List of methods defined in externs */
   final Set<String> externMethods = new HashSet<>();
@@ -43,8 +45,7 @@ abstract class MethodCompilerPass implements CompilerPass {
   // Use a linked map here to keep the output deterministic.  Otherwise,
   // the choice of method bodies is random when multiple identical definitions
   // are found which causes problems in the source maps.
-  final Multimap<String, Node> methodDefinitions =
-      LinkedHashMultimap.create();
+  final Multimap<String, Node> methodDefinitions = LinkedHashMultimap.create();
 
   final AbstractCompiler compiler;
 

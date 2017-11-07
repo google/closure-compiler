@@ -293,6 +293,41 @@ public final class InlineSimpleMethodsTest extends CompilerTestCase {
     test("({a:function(){},b:alert}).a('a')", ";");
   }
 
+  // When there are two methods with the same name, one on an ES3-style class, and one on an
+  // ES6-style class, make sure the right one gets inlined into the right place.
+  public void disabled_testEs6Issue() {
+    test(
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function OldClass() {}",
+            "",
+            "OldClass.prototype.foo = function() { return this.oldbar; };",
+            "",
+            "class NewClass {",
+            "  foo() { return this.newbar; }",
+            "}",
+            "",
+            "var x = new OldClass;",
+            "x.foo();",
+            "x = new NewClass;",
+            "x.foo();"),
+        LINE_JOINER.join(
+            "/** @constructor */",
+            "function OldClass() {}",
+            "",
+            "OldClass.prototype.foo = function() { return this.oldbar; };",
+            "",
+            "class NewClass {",
+            "  foo() { return this.newbar; }",
+            "}",
+            "",
+            "var x = new OldClass;",
+            "x.oldbar;",
+            "x = new NewClass;",
+            // This currently fails here by outputting x.oldbar again.
+            "x.newbar;"));
+  }
+
   public void testAnonymousGet() {
     // Anonymous object definition without side-effect should be removed.
     testSame("({get a(){return function(){}},b:alert}).a('a')");
