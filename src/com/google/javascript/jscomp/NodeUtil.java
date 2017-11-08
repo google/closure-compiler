@@ -5468,7 +5468,7 @@ public final class NodeUtil {
     return n.isCall() && n.getFirstChild().matchesQualifiedName(qualifiedName);
   }
 
-  static Set<String> collectExternVariableNames(AbstractCompiler compiler, Node externs) {
+  static ImmutableSet<String> collectExternVariableNames(AbstractCompiler compiler, Node externs) {
     ReferenceCollectingCallback externsRefs =
         new ReferenceCollectingCallback(
             compiler,

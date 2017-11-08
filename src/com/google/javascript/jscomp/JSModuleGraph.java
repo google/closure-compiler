@@ -426,19 +426,16 @@ public final class JSModuleGraph implements Serializable {
   }
 
   /**
-   * Apply the dependency options to the list of sources, returning a new
-   * source list re-ordering and dropping files as necessary.
-   * This module graph will be updated to reflect the new list.
+   * Apply the dependency options to the list of sources, returning a new source list re-ordering
+   * and dropping files as necessary. This module graph will be updated to reflect the new list.
    *
-   * @param inputs The original list of sources. Used to ensure that the sort
-   *     is stable.
-   * @throws MissingProvideException if an entry point was not provided
-   *     by any of the inputs.
+   * @param inputs The original list of sources. Used to ensure that the sort is stable.
+   * @throws MissingProvideException if an entry point was not provided by any of the inputs.
    * @see DependencyOptions for more info on how this works.
    */
-  public List<CompilerInput> manageDependencies(
-      DependencyOptions depOptions,
-      List<CompilerInput> inputs) throws MissingProvideException, MissingModuleException {
+  public ImmutableList<CompilerInput> manageDependencies(
+      DependencyOptions depOptions, List<CompilerInput> inputs)
+      throws MissingProvideException, MissingModuleException {
 
     SortedDependencies<CompilerInput> sorter = new Es6SortedDependencies<>(inputs);
 

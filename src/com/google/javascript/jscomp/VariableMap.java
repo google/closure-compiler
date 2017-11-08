@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -76,17 +75,13 @@ public final class VariableMap {
     return map.inverse().get(newName);
   }
 
-  /**
-   * Returns an unmodifiable mapping from original names to new names.
-   */
-  public Map<String, String> getOriginalNameToNewNameMap() {
+  /** Returns an unmodifiable mapping from original names to new names. */
+  public ImmutableMap<String, String> getOriginalNameToNewNameMap() {
     return ImmutableSortedMap.copyOf(map);
   }
 
-  /**
-   * Returns an unmodifiable mapping from new names to original names.
-   */
-  public Map<String, String> getNewNameToOriginalNameMap() {
+  /** Returns an unmodifiable mapping from new names to original names. */
+  public ImmutableMap<String, String> getNewNameToOriginalNameMap() {
     return map.inverse();
   }
 
@@ -206,7 +201,7 @@ public final class VariableMap {
   }
 
   @VisibleForTesting
-  Map<String, String> toMap() {
+  ImmutableMap<String, String> toMap() {
     return map;
   }
 }

@@ -98,7 +98,7 @@ public final class NominalType implements Serializable {
     return this.rawType.getObjectKind();
   }
 
-  Map<String, JSType> getTypeMap() {
+  ImmutableMap<String, JSType> getTypeMap() {
     return typeMap;
   }
 

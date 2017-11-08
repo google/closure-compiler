@@ -1405,11 +1405,8 @@ public class CompilerOptions implements Serializable {
     return getReplacementsHelper(tweakReplacements);
   }
 
-  /**
-   * Creates a map of String->Node from a map of String->Number/String/Boolean.
-   */
-  private static Map<String, Node> getReplacementsHelper(
-      Map<String, Object> source) {
+  /** Creates a map of String->Node from a map of String->Number/String/Boolean. */
+  private static ImmutableMap<String, Node> getReplacementsHelper(Map<String, Object> source) {
     ImmutableMap.Builder<String, Node> map = ImmutableMap.builder();
     for (Map.Entry<String, Object> entry : source.entrySet()) {
       String name = entry.getKey();

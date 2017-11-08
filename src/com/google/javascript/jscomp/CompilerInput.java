@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -499,7 +498,7 @@ public class CompilerInput implements SourceAst, DependencyInfo {
     return "goog".equals(getLoadFlags().get("module"));
   }
 
-  private static <T> Set<T> concat(Iterable<T> first, Iterable<T> second) {
+  private static <T> ImmutableSet<T> concat(Iterable<T> first, Iterable<T> second) {
     return ImmutableSet.<T>builder().addAll(first).addAll(second).build();
   }
 

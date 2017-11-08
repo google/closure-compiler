@@ -81,12 +81,12 @@ public final class JSModule implements DependencyInfo, Serializable {
   }
 
   @Override
-  public List<String> getProvides() {
+  public ImmutableList<String> getProvides() {
     return ImmutableList.of(name);
   }
 
   @Override
-  public List<String> getRequires() {
+  public ImmutableList<String> getRequires() {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (JSModule m : deps) {
       builder.add(m.getName());

@@ -24,6 +24,7 @@ import com.google.common.annotations.GwtIncompatible;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -1874,7 +1875,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public final Collection<FunctionTypeI> getDirectSubTypes() {
+  public final ImmutableCollection<FunctionTypeI> getDirectSubTypes() {
     Preconditions.checkState(this.isConstructor() || this.isInterface());
     ImmutableList.Builder<FunctionTypeI> result = ImmutableList.builder();
     NominalType nt =
@@ -2105,7 +2106,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   }
 
   @Override
-  public final Iterable<JSType> getUnionMembers() {
+  public final ImmutableCollection<JSType> getUnionMembers() {
     if (!isUnion()) {
       return ImmutableList.of(this);
     }

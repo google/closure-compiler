@@ -42,11 +42,9 @@ public final class EmptyMessageBundle implements MessageBundle {
     return null;
   }
 
-  /**
-   * Returns an empty list of messages.
-   */
+  /** Returns an empty list of messages. */
   @Override
-  public Iterable<JsMessage> getAllMessages() {
+  public ImmutableList<JsMessage> getAllMessages() {
     return ImmutableList.of();
   }
 }
