@@ -3264,4 +3264,26 @@ public class InlineFunctionsTest extends CompilerTestCase {
             "}",
             "foo();"));
   }
+
+  public void testAsyncFunction() {
+    testSame(
+        LINE_JOINER.join(
+            "async function foo() {}",
+            "foo().then(result => { alert(result); } );"));
+
+    testSame(
+        LINE_JOINER.join(
+            "async function foo() {",
+            "  return 'Y';",
+            "}",
+            "foo().then(result => { alert(result); } );"));
+
+    // We could possibly inline here since the return statement already contains a promise.
+    testSame(
+        LINE_JOINER.join(
+            "async function foo() {",
+            " return new Promise((resolve, reject) => { resolve('Success'); } );",
+            "}",
+            "foo().then(result => { alert(result); } );"));
+  }
 }

@@ -344,6 +344,10 @@ class InlineFunctions implements CompilerPass {
       if (fnNode.isGeneratorFunction()) {
         functionState.setInline(false);
       }
+
+      if (fnNode.isAsyncFunction()) {
+        functionState.setInline(false);
+      }
     }
   }
 
