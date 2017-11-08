@@ -19,16 +19,17 @@ package com.google.javascript.jscomp;
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
 import com.google.javascript.rhino.Node;
 
+import com.google.javascript.rhino.Token;
 import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 
 /**
  * Extract a list of all function nodes defined in a JavaScript
  * program, assigns them globally unique ids and computes their fully
  * qualified names.  Function names are derived from the property they
- * are assigned to and the scope they are defined in.  For instance,
+ * are assigned to and the scope they are defined in, and are meant to be
+ * human-readable rather than valid Javascript identifiers.  For instance,
  * the following code
  *
  * goog.widget = function(str) {
@@ -45,8 +46,7 @@ import java.util.Map;
  *  goog.widget::&lt;anonymous&gt;
  *
  */
-
-class CollectFunctionNames implements CompilerPass {
+class CollectFunctionNames extends AbstractPostOrderCallback implements CompilerPass {
 
   private static class FunctionNamesMap implements FunctionNames {
     private int nextId = 0;
@@ -123,71 +123,118 @@ class CollectFunctionNames implements CompilerPass {
 
   private final transient AbstractCompiler compiler;
   private final FunctionNamesMap functionNames = new FunctionNamesMap();
-  private final transient FunctionListExtractor functionListExtractor;
+  private static final char DELIMITER = '.';
+  private static final NodeNameExtractor extractor = new NodeNameExtractor(DELIMITER);
 
   CollectFunctionNames(AbstractCompiler compiler) {
     this.compiler = compiler;
-    this.functionListExtractor = new FunctionListExtractor(functionNames);
   }
 
   @Override
   public void process(Node externs, Node root) {
-    NodeTraversal.traverseEs6(compiler, root, functionListExtractor);
-    FunctionExpressionNamer namer = new FunctionExpressionNamer(functionNames);
-    AnonymousFunctionNamingCallback namingCallback =
-        new AnonymousFunctionNamingCallback(namer);
-    NodeTraversal.traverseEs6(compiler, root, namingCallback);
+    NodeTraversal.traverseEs6(compiler, root, this);
   }
 
   public FunctionNames getFunctionNames() {
     return functionNames;
   }
 
-  private static class FunctionListExtractor extends AbstractPostOrderCallback {
-    private final FunctionNamesMap functionNames;
-
-    FunctionListExtractor(FunctionNamesMap functionNames) {
-      this.functionNames = functionNames;
-    }
-
-    @Override
-    public void visit(NodeTraversal t, Node n, Node parent) {
-      if (n.isFunction()) {
+  @Override
+  public void visit(NodeTraversal t, Node n, Node parent) {
+    switch (n.getToken()) {
+      case FUNCTION:
         Node functionNameNode = n.getFirstChild();
         String functionName = functionNameNode.getString();
+        if (functionName.isEmpty()) {
+          if (parent.isAssign()) {
+            Node lhs = parent.getFirstChild();
+            functionName = extractor.getName(lhs);
+          } else if (parent.isName()) {
+            functionName = extractor.getName(parent);
+          }
+        }
 
         Node enclosingFunction = t.getEnclosingFunction();
 
+        // Here functionName may still be empty. We handle certain cases of empty function names in
+        // collectObjectLiteralnames and collectClassMethodsNames. Other functions remain unnamed.
+        // (See unit tests for examples).
         functionNames.put(n, enclosingFunction, functionName);
+        break;
+      case ASSIGN:
+        Node lhs = n.getFirstChild();
+        Node rhs = lhs.getNext();
+        // We handle object literal methods starting from ASSIGN nodes instead of OBJECT_LIT because
+        // to avoid revisiting nested object literals.
+        if (rhs.isObjectLit()) {
+          collectObjectLiteralMethodsNames(rhs, extractor.getName(lhs));
+        }
+        break;
+      case CLASS:
+        collectClassMethodsNames(n, extractor.getName(n));
+        break;
+      default:
+        break;
+    }
+  }
+
+  /**
+   * Sets names in the functionNames map for unnamed functions inside object literals,
+   * and recursively visits nested object literals.
+   * @param objectLiteral The object literal node to visit.
+   * @param context Represents the qualified name "so far"
+   */
+  private void collectObjectLiteralMethodsNames(Node objectLiteral, String context) {
+    for (Node keyNode = objectLiteral.getFirstChild();
+        keyNode != null;
+        keyNode = keyNode.getNext()) {
+      Node valueNode = keyNode.getFirstChild();
+
+      // Object literal keys may be STRING_KEY, GETTER_DEF, SETTER_DEF,
+      // MEMBER_FUNCTION_DEF (Shorthand function definition) or COMPUTED_PROP.
+      // We currently skip Get, Set and CompProp keys.
+      // TODO(lharker): Find a way to name Get, Set, and CompProp keys.
+      if (keyNode.isStringKey() || keyNode.isMemberFunctionDef()) {
+        // concatenate the context and key name to get a new qualified name.
+        String name = combineNames(context, extractor.getName(keyNode));
+
+        Token type = valueNode.getToken();
+        if (type == Token.FUNCTION) {
+          Node functionNameNode = valueNode.getFirstChild();
+          String functionName = functionNameNode.getString();
+          if (functionName.isEmpty()) {
+            functionNames.setFunctionName(name, valueNode);
+          }
+        } else if (type == Token.OBJECTLIT) {
+          // process nested object literal
+          collectObjectLiteralMethodsNames(valueNode, name);
+        }
       }
     }
   }
 
-  private static class FunctionExpressionNamer
-      implements AnonymousFunctionNamingCallback.FunctionNamer {
-    private static final char DELIMITER = '.';
-    private static final NodeNameExtractor extractor =
-        new NodeNameExtractor(DELIMITER);
-    private final FunctionNamesMap functionNames;
+  /**
+   * Collects the names of class methods, which require special handling because
+   * method names are stored differently in the AST than regular function expression/declaration
+   * names. For example,
+   * class A {
+   *   method() {}
+   * }
+   * will set the name of "method" to be "A.method".
+   */
+  private void collectClassMethodsNames(Node classNode, String className) {
+    Node classMembersNode = classNode.getLastChild();
 
-    FunctionExpressionNamer(FunctionNamesMap functionNames) {
-      this.functionNames = functionNames;
+    for (Node methodNode : classMembersNode.children()) {
+      if (methodNode.isMemberFunctionDef()) {
+        Node functionNode = methodNode.getFirstChild();
+        String name = combineNames(className, extractor.getName(methodNode));
+        functionNames.setFunctionName(name, functionNode);
+      }
     }
+  }
 
-    @Override
-    public final String getName(Node node) {
-      return extractor.getName(node);
-    }
-
-    @Override
-    public final void setFunctionName(String name, Node fnNode) {
-      functionNames.setFunctionName(name, fnNode);
-    }
-
-    @Override
-    public final String getCombinedName(String lhs, String rhs) {
-      return lhs + DELIMITER + rhs;
-    }
-
+  private String combineNames(String lhs, String rhs) {
+    return lhs + DELIMITER + rhs;
   }
 }
