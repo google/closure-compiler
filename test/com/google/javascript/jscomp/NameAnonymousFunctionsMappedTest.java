@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
  *
  */
 public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
+
   private static final String EXTERNS = "var document;";
 
   private NameAnonymousFunctionsMapped pass;
@@ -186,5 +187,27 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     testSame("var a = () => 1");
     testSame("var a = {b: () => 1};");
     testSame("function A() {} A.prototype.foo = () => 5");
+  }
+
+  public void testComputedProperty() {
+    testSame("function A() {} A.prototype = {['foo']: function() {} };");
+  }
+
+  public void testGetter() {
+    testSame("function A() {} A.prototype = { get foo() { return 5; } }");
+  }
+
+  public void testSetter() {
+    testSame("function A() {} A.prototype = { set foo(bar) {} }");
+  }
+
+  public void testMethodDefinitionShorthand() {
+    testSame("var obj = { b() {}, c() {} }");
+    testSame("var obj; obj = { b() {}, c() {} }");
+  }
+
+  public void testClasses() {
+    testSame("class A { static foo() {} }");
+    testSame("class A { constructor() {} foo() {} }");
   }
 }
