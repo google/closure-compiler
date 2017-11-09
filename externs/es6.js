@@ -1394,34 +1394,34 @@ Number.parseInt = function(string, radix) {};
 Number.parseFloat = function(string) {};
 
 /**
- * @param {number} value
+ * @param {*} value
  * @return {boolean}
  * @nosideeffects
- * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isNaN
+ * @see https://www.ecma-international.org/ecma-262/6.0/#sec-number.isnan
  */
 Number.isNaN = function(value) {};
 
 /**
- * @param {number} value
+ * @param {*} value
  * @return {boolean}
  * @nosideeffects
- * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isFinite
+ * @see https://www.ecma-international.org/ecma-262/6.0/#sec-number.isfinite
  */
 Number.isFinite = function(value) {};
 
 /**
- * @param {number} value
+ * @param {*} value
  * @return {boolean}
  * @nosideeffects
- * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isInteger
+ * @see https://www.ecma-international.org/ecma-262/6.0/#sec-number.isinteger
  */
 Number.isInteger = function(value) {};
 
 /**
- * @param {number} value
+ * @param {*} value
  * @return {boolean}
  * @nosideeffects
- * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/isSafeInteger
+ * @see https://www.ecma-international.org/ecma-262/6.0/#sec-number.issafeinteger
  */
 Number.isSafeInteger = function(value) {};
 
