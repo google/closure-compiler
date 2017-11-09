@@ -87,6 +87,16 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertMapping("$a", "fn");
   }
 
+  public void testSimpleLetAssignment() {
+    test("let a = function() { return 1; }", "let a = function $() { return 1; }");
+    assertMapping("$", "a");
+  }
+
+  public void testSimpleConstAssignment() {
+    test("const a = function() { return 1; }", "const a = function $() { return 1; }");
+    assertMapping("$", "a");
+  }
+
   public void testAssignmentToProperty() {
     test("var a = {}; a.b = function() { return 1; }",
          "var a = {}; a.b = function $() { return 1; }");
@@ -163,6 +173,11 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
     assertMapping("$", "a.b[x()].d");
   }
 
+  public void testAssignmentToObjectLiteralOnDeclaration() {
+    testSame("var a = { b: function() {} }");
+    testSame("var a = { b: { c: function() {} } }");
+  }
+
   public void testAssignmentToGetElem() {
     test("function f() { win['x' + this.id] = function(a){}; }",
          "function f() { win['x' + this.id] = function $(a){}; }");
@@ -209,5 +224,29 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
   public void testClasses() {
     testSame("class A { static foo() {} }");
     testSame("class A { constructor() {} foo() {} }");
+  }
+
+  public void testExportedFunctions() {
+    // Don't provide a name in the first case, since it would declare the function in the module
+    // scope and potentially be unsafe.
+    testSame("export default function() {}");
+    // In this case, adding a name would be okay since this is a function expression.
+    testSame("export default (function() {})");
+    testSame("export default function foo() {}");
+  }
+
+  public void testDefaultParameters() {
+    // TODO(lharker): Consider naming this function.
+    testSame("function f(g = function() {}) {}");
+  }
+
+  public void testSimpleGeneratorAssignment() {
+    test("var a = function *() { yield 1; }",
+        "var a = function *$() { yield 1; }");
+  }
+
+  public void testDestructuring() {
+    // TODO(lharker): Consider naming this function.
+    testSame("var {a = function() {}} = {};");
   }
 }

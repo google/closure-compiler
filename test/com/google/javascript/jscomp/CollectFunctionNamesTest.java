@@ -69,7 +69,8 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
             "  var arrowFn2 = () => {};",
             "  () => {};",
             "}",
-            "var declaredLiteral = {f: function() {}};");
+            "var declaredLiteral = {f: function() {}};",
+            "computedPropLiteral = {['c1']: function() {}}");
 
     testSame(jsSource);
 
@@ -82,7 +83,7 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
       count++;
     }
 
-    assertEquals("Unexpected number of functions", 31, count);
+    assertEquals("Unexpected number of functions", 32, count);
 
     final Map<Integer, String> expectedMap = new LinkedHashMap<>();
 
@@ -117,6 +118,7 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
     expectedMap.put(28, "foo1::<anonymous>"); // arrow function declared as variable in inner scope
     expectedMap.put(29, "foo1");
     expectedMap.put(30, "<anonymous>"); // TODO(lharker): should we output an actual name?
+    expectedMap.put(31, "<anonymous>"); // function assigned to computed property
     assertEquals("Function id/name mismatch",
                  expectedMap, idNameMap);
   }
