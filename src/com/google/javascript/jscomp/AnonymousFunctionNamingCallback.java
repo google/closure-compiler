@@ -81,11 +81,13 @@ class AnonymousFunctionNamingCallback
         Node functionNameNode = n.getFirstChild();
         String functionName = functionNameNode.getString();
         if (functionName.isEmpty() && !n.isArrowFunction()) {
-          if (parent.isAssign()) {
+          if (parent.isAssign() || parent.isDefaultValue()) {
             // this is an assignment to a property, generally either a
-            // static function or a prototype function
-            // e.g. goog.string.htmlEscape = function() { } or
-            //      goog.structs.Map.prototype.getCount = function() { }
+            // static function or a prototype function, or a potential assignment of
+            // a default value
+            // e.g. goog.string.htmlEscape = function() { }
+            //      goog.structs.Map.prototype.getCount = function() { } or
+            //      function f(g = function() {}) { }
             Node lhs = parent.getFirstChild();
             String name = namer.getName(lhs);
             namer.setFunctionName(name, n);
@@ -118,17 +120,17 @@ class AnonymousFunctionNamingCallback
     for (Node keyNode = objectLiteral.getFirstChild();
          keyNode != null;
          keyNode = keyNode.getNext()) {
-      Node valueNode = keyNode.getFirstChild();
 
       // Object literal keys may be STRING_KEY, GETTER_DEF, SETTER_DEF,
       // MEMBER_FUNCTION_DEF (Shorthand function definition) or COMPUTED_PROP.
       // Getters, setters, and member function defs are skipped because their FUNCTION nodes must
-      // have empty NAME nodes (currently enforced by CodeGenerator). Computed properties
-      // are skipped because it's harder to find a consistent naming scheme for them... ?
-      // TODO(lharker): We should be able to name computed properties.
-      if (keyNode.isStringKey() || keyNode.isGetProp()) {
+      // have empty NAME nodes (currently enforced by CodeGenerator).
+      if (keyNode.isStringKey() || keyNode.isComputedProp()) {
         // concatenate the context and key name to get a new qualified name.
         String name = namer.getCombinedName(context, namer.getName(keyNode));
+
+        // computed property has 2 children -- index expression and value expression
+        Node valueNode = keyNode.isStringKey() ? keyNode.getOnlyChild() : keyNode.getLastChild();
 
         Token type = valueNode.getToken();
         if (type == Token.FUNCTION && !valueNode.isArrowFunction()) {

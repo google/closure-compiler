@@ -205,7 +205,15 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
   }
 
   public void testComputedProperty() {
-    testSame("function A() {} A.prototype = {['foo']: function() {} };");
+    test(
+        "function A() {} A.prototype = {['foo']: function() {} };",
+        "function A() {} A.prototype = {['foo']: function $() {} };");
+    assertMapping("$", "A.prototype.foo");
+
+    test(
+        "function A() {} A.prototype = {['foo' + bar()]: function() {} };",
+        "function A() {} A.prototype = {['foo' + bar()]: function $() {} };");
+    assertMapping("$", "A.prototype.\"foo\"+bar()");
   }
 
   public void testGetter() {
@@ -236,17 +244,18 @@ public final class NameAnonymousFunctionsMappedTest extends CompilerTestCase {
   }
 
   public void testDefaultParameters() {
-    // TODO(lharker): Consider naming this function.
-    testSame("function f(g = function() {}) {}");
+    test("function f(g = function() {}) {}", "function f(g = function $() {}) {}");
+    assertMapping("$", "g");
   }
 
   public void testSimpleGeneratorAssignment() {
     test("var a = function *() { yield 1; }",
         "var a = function *$() { yield 1; }");
+    assertMapping("$", "a");
   }
 
   public void testDestructuring() {
-    // TODO(lharker): Consider naming this function.
-    testSame("var {a = function() {}} = {};");
+    test("var {a = function() {}} = {};", "var {a = function $() {}} = {};");
+    assertMapping("$", "a");
   }
 }

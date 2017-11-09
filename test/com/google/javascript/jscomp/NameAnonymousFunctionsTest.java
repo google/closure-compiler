@@ -149,7 +149,13 @@ public final class NameAnonymousFunctionsTest extends CompilerTestCase {
   }
 
   public void testComputedProperty() {
-    testSame("function A() {} A.prototype = {['foo']: function() {} };");
+    test(
+        "function A() {} A.prototype = {['foo']: function() {} };",
+        "function A() {} A.prototype = {['foo']: function $A$$foo$() {} };");
+
+    test(
+        "function A() {} A.prototype = {[getName() + '_1']: function() {} };",
+        "function A() {} A.prototype = {[getName() + '_1']: function $A$$getName$_1$() {} };");
   }
 
   public void testGetter() {
@@ -180,8 +186,7 @@ public final class NameAnonymousFunctionsTest extends CompilerTestCase {
   }
 
   public void testDefaultParameters() {
-    // TODO(lharker): Consider naming this function.
-    testSame("function f(g = function() {}) {}");
+    test("function f(g = function() {}) {}", "function f(g = function $g$() {}) {}");
   }
 
   public void testSimpleGeneratorAssignment() {
@@ -190,7 +195,6 @@ public final class NameAnonymousFunctionsTest extends CompilerTestCase {
   }
 
   public void testDestructuring() {
-    // TODO(lharker): Consider naming this function.
-    testSame("var {a = function() {}} = {};");
+    test("var {a = function() {}} = {};", "var {a = function $a$() {}} = {};");
   }
 }
