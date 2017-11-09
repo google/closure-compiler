@@ -2688,9 +2688,7 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          // TODO(tbreisacher): Switch to ES8_MODULES when MethodCompilerPass understands ES6
-          // method definitions.
-          return ES5;
+          return ES8_MODULES;
         }
       };
 
