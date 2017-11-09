@@ -662,7 +662,9 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "var c = new C ",
             "c.foo()"
         ));
+  }
 
+  public void testEs6StaticMethodNotRemoved() {
     testSame(
         LINE_JOINER.join(
             "class C {",
@@ -672,7 +674,9 @@ public final class RemoveUnusedPrototypePropertiesTest extends CompilerTestCase 
             "  static foo() {}",
             "}"
         ));
+  }
 
+  public void testEs6ClassGetterSetter() {
     test(
         LINE_JOINER.join(
             "class C {",
