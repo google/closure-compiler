@@ -984,7 +984,7 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
-    if (options.optimizeCalls || options.optimizeParameters || options.optimizeReturns) {
+    if (options.optimizeCalls) {
       passes.add(optimizeCalls);
     }
 
@@ -2485,14 +2485,10 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           OptimizeCalls passes = new OptimizeCalls(compiler);
-          if (options.optimizeReturns) {
-            // Remove unused return values.
-            passes.addPass(new OptimizeReturns(compiler));
-          }
-          if (options.optimizeParameters) {
-            // Remove all parameters that are constants or unused.
-            passes.addPass(new OptimizeParameters(compiler));
-          }
+          // Remove unused return values.
+          passes.addPass(new OptimizeReturns(compiler));
+          // Remove all parameters that are constants or unused.
+          passes.addPass(new OptimizeParameters(compiler));
           return passes;
         }
       };
