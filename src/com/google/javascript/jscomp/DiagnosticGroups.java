@@ -156,12 +156,6 @@ public class DiagnosticGroups {
           ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT,
           ProcessCommonJSModules.UNKNOWN_REQUIRE_ENSURE);
 
-  // TODO(tbreisacher): Delete this after the next release.
-  public static final DiagnosticGroup COMMON_JS_MODULE_LOAD =
-      DiagnosticGroups.registerGroup("commonJsModuleLoad",
-          ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT,
-          ProcessCommonJSModules.UNKNOWN_REQUIRE_ENSURE);
-
   public static final DiagnosticGroup GLOBAL_THIS =
       DiagnosticGroups.registerGroup("globalThis",
           CheckGlobalThis.GLOBAL_THIS);
