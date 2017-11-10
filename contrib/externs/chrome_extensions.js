@@ -2930,7 +2930,7 @@ chrome.windows.remove = function(tabId, opt_callback) {};
  * @param {number} tabId Tab Id.
  * @param {Object} updateProperties An object which may have many keys for
  *     various options.
- * @param {function(): void=} opt_callback Callback.
+ * @param {function(!ChromeWindow): void=} opt_callback Callback.
  * @return {undefined}
  */
 chrome.windows.update = function(tabId, updateProperties, opt_callback) {};
