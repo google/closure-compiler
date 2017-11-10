@@ -216,7 +216,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       } else {
         if (shouldAddInheritsPolyfill && !classNode.isFromExterns()) {
           Node classNameNode = NodeUtil.newQName(compiler, metadata.fullClassName)
-             .useSourceInfoIfMissingFrom(metadata.classNameNode);
+              .useSourceInfoIfMissingFrom(metadata.classNameNode);
           Node superClassNameNode = NodeUtil.newQName(compiler, superClassString)
               .useSourceInfoIfMissingFrom(metadata.superClassNameNode);
 
@@ -412,7 +412,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
               ? metadata.classMembersToDeclare
               : metadata.prototypeMembersToDeclare;
       memberName = member.getString();
-      }
+    }
     JSDocInfo existingJSDoc = membersToDeclare.get(memberName);
     JSTypeExpression existingType = existingJSDoc == null ? null : existingJSDoc.getType();
     if (existingType != null && !existingType.equals(typeExpr)) {
@@ -428,7 +428,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
         jsDoc.recordNoCollapse();
       }
       membersToDeclare.put(memberName, jsDoc.build());
-      }
+    }
   }
 
   /**
