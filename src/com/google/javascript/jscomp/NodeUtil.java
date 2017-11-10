@@ -4704,6 +4704,7 @@ public final class NodeUtil {
       case CAST:
         return evaluatesToLocalValue(value.getFirstChild(), locals);
       case SPREAD:
+      case YIELD:
       case AWAIT:
         // TODO(johnlenz): we can do better for await if we use type information.  That is,
         // if we know the promise being awaited on is a immutable value type (string, etc)

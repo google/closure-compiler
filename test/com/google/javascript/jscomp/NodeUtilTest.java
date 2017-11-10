@@ -73,18 +73,30 @@ public final class NodeUtilTest extends TestCase {
     return var.getFirstChild();
   }
 
+  private static Node getYieldNode(String js) {
+    return checkNotNull(getYieldNode(parse(js)));
+  }
+
+  private static Node getYieldNode(Node root) {
+    return getNode(root, Token.YIELD);
+  }
+
   private static Node getAwaitNode(String js) {
     return checkNotNull(getAwaitNode(parse(js)));
   }
 
   private static Node getAwaitNode(Node root) {
+    return getNode(root, Token.AWAIT);
+  }
+
+  private static Node getNode(Node root, Token token) {
     for (Node n : root.children()) {
-      if (n.isAwait()) {
+      if (n.getToken() == token) {
         return n;
       }
-      Node awaitNode = getAwaitNode(n);
-      if (awaitNode != null) {
-        return awaitNode;
+      Node potentialMatch = getNode(n, token);
+      if (potentialMatch != null) {
+        return potentialMatch;
       }
     }
     return null;
@@ -1625,6 +1637,15 @@ public final class NodeUtilTest extends TestCase {
 
     // it isn't clear why someone would want to wait on a non-thenable value...
     expr = getAwaitNode("async function f() { await 5; }");
+    assertFalse(NodeUtil.evaluatesToLocalValue(expr));
+  }
+
+  public void testLocalValueYield() {
+    Node expr;
+    expr = getYieldNode("function *f() { yield; }");
+    assertFalse(NodeUtil.evaluatesToLocalValue(expr));
+
+    expr = getYieldNode("function *f() { yield 'something'; }");
     assertFalse(NodeUtil.evaluatesToLocalValue(expr));
   }
 
