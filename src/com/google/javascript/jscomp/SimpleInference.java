@@ -166,7 +166,7 @@ final class SimpleInference {
       case REGEXP:
         return this.commonTypes.getRegexpType();
       case CAST:
-        return this.gti.getCastTypes().get(n);
+        return (JSType) n.getTypeI();
       case ARRAYLIT: {
         if (!n.hasChildren()) {
           return this.commonTypes.getArrayInstance();

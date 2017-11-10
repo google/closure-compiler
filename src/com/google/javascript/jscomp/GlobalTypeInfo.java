@@ -70,9 +70,6 @@ public class GlobalTypeInfo implements TypeIRegistry {
   private final JSTypeCreatorFromJSDoc typeParser;
   private final Map<Node, String> anonFunNames = new LinkedHashMap<>();
   private final UniqueNameGenerator varNameGen;
-  // TODO(dimvar): Eventually attach these to nodes, like the current types.
-  private final Map<Node, JSType> castTypes = new LinkedHashMap<>();
-  private final Map<Node, JSType> declaredObjLitProps = new LinkedHashMap<>();
 
   private final JSTypes commonTypes;
   private final Set<String> unknownTypeNames;
@@ -133,14 +130,6 @@ public class GlobalTypeInfo implements TypeIRegistry {
     return this.externPropertyNames;
   }
 
-  Map<Node, JSType> getCastTypes() {
-    return this.castTypes;
-  }
-
-  Map<Node, JSType> getDeclaredObjLitProps() {
-    return this.declaredObjLitProps;
-  }
-
   public JSTypeCreatorFromJSDoc getTypeParser() {
     return this.typeParser;
   }
@@ -159,16 +148,6 @@ public class GlobalTypeInfo implements TypeIRegistry {
 
   List<TypeMismatch> getImplicitInterfaceUses() {
     return this.implicitInterfaceUses;
-  }
-
-  JSType getCastType(Node n) {
-    JSType t = castTypes.get(n);
-    checkNotNull(t);
-    return t;
-  }
-
-  JSType getPropDeclaredType(Node n) {
-    return declaredObjLitProps.get(n);
   }
 
   Collection<String> getAllPropertyNames() {

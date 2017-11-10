@@ -1122,6 +1122,12 @@ public class GlobalTypeInfoCollector implements CompilerPass {
         QualifiedName propQname = new QualifiedName(propNode.getString());
         if (isAliasedNamespaceDefinition(propNode)) {
           visitAliasedNamespace(QualifiedName.join(qname, propQname), propNode);
+        } else {
+          JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(propNode);
+          Node propVal = propNode.getLastChild();
+          if (jsdoc != null && jsdoc.hasConstAnnotation() && propVal.isObjectLit()) {
+            visitObjlitNamespace(QualifiedName.join(qname, propQname), propNode);
+          }
         }
       }
     }
@@ -1526,7 +1532,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       Namespace borrowerNamespace = currentScope.getNamespace(lendsQname);
       for (Node prop : objlit.children()) {
         String pname = NodeUtil.getObjectLitKeyName(prop);
-        JSType propDeclType = getDeclaredObjLitProps().get(prop);
+        JSType propDeclType = (JSType) prop.getTypeI();
         if (propDeclType != null) {
           borrowerNamespace.addProperty(pname, prop, propDeclType, false);
         } else {
@@ -1618,11 +1624,13 @@ public class GlobalTypeInfoCollector implements CompilerPass {
           break;
         }
         case CAST:
-          getCastTypes().put(n,
-              getDeclaredTypeOfNode(n.getJSDocInfo(), this.currentScope));
+          n.setTypeI(getDeclaredTypeOfNode(n.getJSDocInfo(), this.currentScope));
           break;
         case OBJECTLIT:
-          visitObjectLit(n, parent);
+          if (!NodeUtil.isObjectLitKey(parent)) {
+            Node lval = NodeUtil.getBestLValue(n);
+            visitObjectLit(n, QualifiedName.fromNode(lval));
+          }
           break;
         case CALL:
           visitCall(n);
@@ -1703,36 +1711,44 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       }
     }
 
-    private void visitObjectLit(Node objLitNode, Node parent) {
+    private void visitObjectLit(Node objLitNode, QualifiedName lvalueQname) {
+      Node parent = objLitNode.getParent();
       JSDocInfo jsdoc = objLitNode.getJSDocInfo();
       if (jsdoc != null && jsdoc.getLendsName() != null) {
         lendsObjlits.add(objLitNode);
       }
       Node maybeLvalue = parent.isAssign() ? parent.getFirstChild() : parent;
-      if (NodeUtil.isNamespaceDecl(maybeLvalue) && currentScope.isNamespace(maybeLvalue)) {
+      if (currentScope.isNamespace(lvalueQname)) {
         for (Node prop : objLitNode.children()) {
-          Node keyNode = NodeUtil.getObjectLitKeyNode(prop);
-          if (keyNode != null) {
-            recordPropertyName(keyNode);
-          }
           if (!prop.isComputedProp()) {
-            visitNamespacePropertyDeclaration(prop, maybeLvalue, prop.getString());
+            visitNamespacePropertyDeclaration(prop, lvalueQname, prop.getString());
           }
         }
       } else if (!NodeUtil.isEnumDecl(maybeLvalue)
           && !NodeUtil.isPrototypeAssignment(maybeLvalue)) {
+        // For object literals that are not "special" (namespaces, enums, etc),
+        // record their declared properties so we can typecheck them later.
         for (Node prop : objLitNode.children()) {
-          Node keyNode = NodeUtil.getObjectLitKeyNode(prop);
-          if (keyNode != null) {
-            recordPropertyName(keyNode);
-          }
           JSDocInfo propJsdoc = prop.getJSDocInfo();
           if (propJsdoc != null) {
-            getDeclaredObjLitProps().put(prop, getDeclaredTypeOfNode(propJsdoc, currentScope));
+            JSType propType = getDeclaredTypeOfNode(propJsdoc, currentScope);
+            prop.setTypeI(propType);
           }
           if (isAnnotatedAsConst(prop)) {
             warnings.add(JSError.make(prop, MISPLACED_CONST_ANNOTATION));
           }
+        }
+      }
+      // Record property names and recur to nested object literals.
+      for (Node prop : objLitNode.children()) {
+        Node keyNode = NodeUtil.getObjectLitKeyNode(prop);
+        if (keyNode != null) {
+          recordPropertyName(keyNode);
+        }
+        if (prop.hasChildren() && prop.getFirstChild().isObjectLit()) {
+          QualifiedName nestedQname = lvalueQname == null || keyNode == null
+              ? null : QualifiedName.join(lvalueQname, new QualifiedName(keyNode.getString()));
+          visitObjectLit(prop.getFirstChild(), nestedQname);
         }
       }
     }
@@ -2063,66 +2079,67 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       }
       Node recv = getProp.getFirstChild();
       String pname = getProp.getLastChild().getString();
-      visitNamespacePropertyDeclaration(getProp, recv, pname);
+      visitNamespacePropertyDeclaration(getProp, QualifiedName.fromNode(recv), pname);
     }
 
-    private void visitNamespacePropertyDeclaration(Node declNode, Node recv, String pname) {
-      checkArgument(
-          declNode.isGetProp() || NodeUtil.isObjLitProperty(declNode),
-          declNode);
-      QualifiedName recvQname = QualifiedName.fromNode(recv);
-      checkArgument(currentScope.isNamespace(recvQname));
-      if (declNode.isGetterDef()) {
+    private void visitNamespacePropertyDeclaration(
+        Node defSite, QualifiedName nsQname, String pname) {
+      checkArgument(defSite.isGetProp() || NodeUtil.isObjLitProperty(defSite), defSite);
+      checkArgument(currentScope.isNamespace(nsQname));
+      if (defSite.isGetterDef()) {
         pname = getCommonTypes().createGetterPropName(pname);
-      } else if (declNode.isSetterDef()) {
+      } else if (defSite.isSetterDef()) {
         pname = getCommonTypes().createSetterPropName(pname);
       }
-      // Named types have already been crawled in CollectNamedTypes
-      if (declNode.isStringKey() && currentScope.isNamespace(declNode.getFirstChild())) {
-        return;
+      if (defSite.isStringKey()) {
+        QualifiedName propQname = new QualifiedName(defSite.getString());
+        // Namespaces have already been crawled in CollectNamedTypes
+        if (currentScope.isNamespace(QualifiedName.join(nsQname, propQname))) {
+          return;
+        }
       }
-      EnumType et = currentScope.getEnum(QualifiedName.fromNode(recv));
+      EnumType et = currentScope.getEnum(nsQname);
       // If there is a reassignment to one of the enum's members, don't consider
       // that a definition of a new property.
       if (et != null && et.enumLiteralHasKey(pname)) {
         return;
       }
 
-      Namespace ns = currentScope.getNamespace(recvQname);
-      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(declNode);
-      PropertyType pt = getPropTypeHelper(jsdoc, declNode, null);
+      Namespace ns = currentScope.getNamespace(nsQname);
+      JSDocInfo jsdoc = NodeUtil.getBestJSDocInfo(defSite);
+      PropertyType pt = getPropTypeHelper(jsdoc, defSite, null);
       JSType propDeclType = pt.declType;
       JSType propInferredFunType = pt.inferredFunType;
-      boolean isConst = isConst(declNode);
+      boolean isConst = isConst(defSite);
       if (propDeclType != null || isConst) {
         JSType previousPropType = ns.getPropDeclaredType(pname);
-        declNode.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+        defSite.putBooleanProp(Node.ANALYZED_DURING_GTI, true);
         if (ns.hasSubnamespace(new QualifiedName(pname))
             || (ns.hasStaticProp(pname)
             && previousPropType != null
             && !suppressDupPropWarning(jsdoc, propDeclType, previousPropType))) {
           warnings.add(JSError.make(
-              declNode, REDECLARED_PROPERTY, pname, "namespace " + ns));
-          declNode.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
+              defSite, REDECLARED_PROPERTY, pname, "namespace " + ns));
+          defSite.getParent().putBooleanProp(Node.ANALYZED_DURING_GTI, true);
           return;
         }
         if (propDeclType == null) {
-          propDeclType = mayInferFromRhsIfConst(declNode);
+          propDeclType = mayInferFromRhsIfConst(defSite);
         }
-        ns.addProperty(pname, declNode, propDeclType, isConst);
-        if (declNode.isGetProp() && isConst) {
-          declNode.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
+        ns.addProperty(pname, defSite, propDeclType, isConst);
+        if (defSite.isGetProp() && isConst) {
+          defSite.putBooleanProp(Node.CONSTANT_PROPERTY_DEF, true);
         }
       } else if (propInferredFunType != null) {
-        ns.addUndeclaredProperty(pname, declNode, propInferredFunType, false);
+        ns.addUndeclaredProperty(pname, defSite, propInferredFunType, false);
       } else {
         // Try to infer the prop type, but don't say that the prop is declared.
-        Node initializer = NodeUtil.getRValueOfLValue(declNode);
+        Node initializer = NodeUtil.getRValueOfLValue(defSite);
         JSType t = initializer == null ? null : simpleInferExpr(initializer, this.currentScope);
         if (t == null) {
           t = getCommonTypes().UNKNOWN;
         }
-        ns.addUndeclaredProperty(pname, declNode, t, false);
+        ns.addUndeclaredProperty(pname, defSite, t, false);
       }
     }
 
@@ -2862,14 +2879,6 @@ public class GlobalTypeInfoCollector implements CompilerPass {
 
   private UniqueNameGenerator getVarNameGen() {
     return this.globalTypeInfo.getVarNameGen();
-  }
-
-  private Map<Node, JSType> getDeclaredObjLitProps() {
-    return this.globalTypeInfo.getDeclaredObjLitProps();
-  }
-
-  private Map<Node, JSType> getCastTypes() {
-    return this.globalTypeInfo.getCastTypes();
   }
 
   private void recordPropertyName(Node pnameNode) {

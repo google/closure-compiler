@@ -2546,7 +2546,7 @@ final class NewTypeInference implements CompilerPass {
     Node insideCast = expr.getFirstChild();
     EnvTypePair pair = analyzeExprFwd(insideCast, inEnv, this.commonTypes.UNKNOWN, newSpecType);
     JSType fromType = pair.type;
-    JSType toType = symbolTable.getCastType(expr);
+    JSType toType = (JSType) expr.getTypeI();
     if (!fromType.isInterfaceInstance()
         && !toType.isInterfaceInstance()
         && !JSType.haveCommonSubtype(fromType, toType)
@@ -3035,7 +3035,7 @@ final class NewTypeInference implements CompilerPass {
           continue;
         }
         QualifiedName qname = new QualifiedName(pnameNode.getString());
-        JSType jsdocType = symbolTable.getPropDeclaredType(prop);
+        JSType jsdocType = (JSType) prop.getTypeI();
         JSType reqPtype;
         JSType specPtype;
         if (jsdocType != null) {
@@ -3918,7 +3918,7 @@ final class NewTypeInference implements CompilerPass {
         return analyzeArrayLitBwd(expr, outEnv);
       case CAST: {
         EnvTypePair pair = analyzeExprBwd(expr.getFirstChild(), outEnv);
-        pair.type = symbolTable.getCastType(expr);
+        pair.type = (JSType) expr.getTypeI();
         return pair;
       }
       case TEMPLATELIT:
@@ -4275,7 +4275,7 @@ final class NewTypeInference implements CompilerPass {
         env = analyzeExprBwd(prop, env).env;
       } else {
         QualifiedName pname = new QualifiedName(NodeUtil.getObjectLitKeyName(prop));
-        JSType jsdocType = symbolTable.getPropDeclaredType(prop);
+        JSType jsdocType = (JSType) prop.getTypeI();
         JSType reqPtype;
         if (jsdocType != null) {
           reqPtype = jsdocType;

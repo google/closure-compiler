@@ -7289,8 +7289,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  var y = cond ? {prop: 'str'} : {prop: 5};",
         "  f({prop: x}, y);",
         "}",
-        "g({}, true);"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
+        "g({}, true);"));
 
     typeCheck(LINE_JOINER.join(
         "function g(x, cond) {",
@@ -12983,6 +12982,36 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  obj.ns = { /** @const */ PROP: 5 };",
         "}"),
         GlobalTypeInfoCollector.MISPLACED_CONST_ANNOTATION);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = { /** @const */ prop: {} };",
+        "/** @constructor */",
+        "ns.prop.Foo = function() {};",
+        "var /** !ns.prop.Foo */ x = new ns.prop.Foo();"));
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = { /** @const */ prop: {} };",
+        "/** @constructor */",
+        "ns.prop.Foo = function() {",
+        "  /** @type {number} */ this.a = 123; ",
+        "};",
+        "var /** string */ s = (new ns.prop.Foo()).a;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    typeCheck(LINE_JOINER.join(
+        "/** @const */",
+        "var ns = {};",
+        "/** @const */",
+        "ns.Constants = {",
+        "  /** @const */ Async: {",
+        "    FEATURE_ID:'feature_id'",
+        "  }",
+        "};",
+        "/** @const {number} */",
+        "var x = ns.Constants.Async.FEATURE_ID;"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
   }
 
   public void testNamespaceRedeclaredProps() {
