@@ -92,22 +92,14 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
    *    definitions will be removed.
    */
   private boolean isCandidate(String name, List<Node> refs) {
-    if (compiler.getCodingConvention().isExported(name)) {
-      return false;
-    }
-
-    // Avoid modifying a few special case functions.
-    if (name.equals(NodeUtil.JSC_PROPERTY_NAME_FN)
-        || name.equals(NodeUtil.EXTERN_OBJECT_PROPERTY_STRING)) {
+    if (!OptimizeCalls.mayBeOptimizableName(compiler, name)) {
       return false;
     }
 
     boolean seenCandidateDefiniton = false;
     boolean seenUse = false;
-
     for (Node n : refs) {
       // Assume indirect definitions references use the result
-      Node parent = n.getParent();
       if (ReferenceMap.isCallTarget(n)) {
         Node callNode = ReferenceMap.getCallOrNewNodeForTarget(n);
         if (NodeUtil.isExpressionResultUsed(callNode)) {
@@ -116,24 +108,17 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
           return false;
         }
         seenUse = true;
-      } else if (ReferenceMap.isAliasingReference(n)) {
-        // The name is aliased, so we don't know anything about its uses, this is not
-        // a candidate
-        return false;
-      } else if (parent.isInstanceOf() || parent.isTypeOf()) {
-        continue;
-      } else if (parent.isGetProp() || parent.isGetElem()) {
-        continue;
-      } else if (NodeUtil.isNameDeclaration(parent) && !n.hasChildren()) {
-        // allow "let x;"
-        continue;
       } else if (isCandidateDefinition(n)) {
         // NOTE: While is is possible to optimize calls to functions for which we know
         // only some of the definition are candidates but to keep things simple, only
         // optimize if all of the definitions are known.
         seenCandidateDefiniton = true;
       } else {
-        return false;
+        // If this isn't an non-aliasing reference (typeof, instanceof, etc)
+        // then there is nothing that can be done.
+        if (!OptimizeCalls.isAllowedReference(n)) {
+          return false;
+        }
       }
     }
 

@@ -338,27 +338,13 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
    *  - there is at least one definition
    */
   private boolean isCandidate(String name, ArrayList<Node> refs) {
-    if (compiler.getCodingConvention().isExported(name)) {
-      return false;
-    }
-
-    if (name.equals(NodeUtil.JSC_PROPERTY_NAME_FN)
-        || name.equals(NodeUtil.EXTERN_OBJECT_PROPERTY_STRING)) {
-      return false;
-    }
-
-    // We don't want to re-write $jscomp.inherits to not stop recognizing
-    // 'inherits' calls. (b/27244988)
-    if (name.equals("inherits")
-        || name.equals("$jscomp$inherits")
-        || name.equals("goog$inherits")) {
+    if (!OptimizeCalls.mayBeOptimizableName(compiler, name)) {
       return false;
     }
 
     boolean seenCandidateDefiniton = false;
     boolean seenCandidateUse = false;
     for (Node n : refs) {
-      Node parent = n.getParent();
       // TODO(johnlenz): Determine what to do about ".constructor" references.
       // Currently classes that are super classes or have superclasses aren't optimized
       //
@@ -369,23 +355,15 @@ class OptimizeParameters implements CompilerPass, OptimizeCalls.CallGraphCompile
       if (ReferenceMap.isCallOrNewTarget(n)) {
         // TODO(johnlenz): filter .apply when we support it
         seenCandidateUse = true;
-        continue;
-      } else if (ReferenceMap.isAliasingReference(n)) {
-        // The name is aliased, so we don't know anything about its uses, this is not
-        // a candidate
-        return false;
-      } else if (parent.isInstanceOf() || parent.isTypeOf()) {
-        continue;
-      } else if (parent.isGetProp() || parent.isGetElem()) {
-        continue;
-      } else if (NodeUtil.isNameDeclaration(parent) && !n.hasChildren()) {
-        // allow "let x;"
-        continue;
       } else if (isCandidateDefinition(n)) {
         seenCandidateDefiniton = true;
       } else {
-        // TODO(johnlenz): allow extends clauses.
-        return false;
+        // If this isn't an non-aliasing reference (typeof, instanceof, etc)
+        // then there is nothing that can be done.
+        if (!OptimizeCalls.isAllowedReference(n)) {
+          // TODO(johnlenz): allow extends clauses.
+          return false;
+        }
       }
     }
 
