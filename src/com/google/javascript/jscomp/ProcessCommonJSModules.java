@@ -491,71 +491,75 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
     if (calls.size() == 0) {
       return false;
     }
-    Node finalThenTarget = null;
     for (Node call : calls) {
       ArrayList<String> moduleImportPaths = new ArrayList<>();
-      if (call.getSecondChild().isArrayLit()) {
-        Node array = call.getSecondChild();
-        for (Node promiseCall = array.getFirstChild(); promiseCall != null;
-             promiseCall = promiseCall.getNext()) {
-          moduleImportPaths.add(getCommonJsImportPath(promiseCall.getSecondChild()));
-          Node importCall = promiseCall.getFirstFirstChild().detach();
-          promiseCall.replaceWith(importCall);
-          reportNestedScopesDeleted(promiseCall);
-          promiseCall = importCall;
+      moduleImportPaths.add(getCommonJsImportPath(call.getSecondChild()));
+      Node importCall = call.getFirstFirstChild();
+
+      if (importCall.getNext() != null
+          && importCall.getNext().isString()
+          && importCall.getNext().getString().equals("then")) {
+        // __webpack_require__.e(1).then(__webpack_require("2")).then(obj => {});
+        if (call.getNext() != null
+            && call.getNext().isString()
+            && call.getNext().getString().equals("then")) {
+          Node thenTarget = call.getParent().getNext();
+
+          call.replaceWith(importCall.detach());
+          reportNestedScopesDeleted(call);
+
+          Node fncParams = NodeUtil.getFunctionParameters(thenTarget);
+          Node fncBody = NodeUtil.getFunctionBody(thenTarget);
+          Node script = NodeUtil.getEnclosingScript(thenTarget);
+          CompilerInput input = compiler.getInput(script.getInputId());
+          int currentModuleNameIndex = 0;
+          if (fncParams.hasOneChild()) {
+            Node currentParam = fncParams.getFirstChild();
+
+            // We avoid using the getModuleName helper method because
+            // ESM Dynamic imports always import the module export object - never the default property
+            ModulePath moduleImportPath =
+                input
+                    .getPath()
+                    .resolveJsModule(
+                        moduleImportPaths.get(currentModuleNameIndex),
+                        currentParam.getSourceFileName(),
+                        currentParam.getLineno(),
+                        currentParam.getCharno());
+
+            if (!fncBody.isNormalBlock()) {
+              Node block = IR.block();
+              if (!NodeUtil.isStatement(fncBody)) {
+                block.addChildToFront(IR.exprResult(fncBody.detach()));
+              } else {
+                block.addChildToFront(fncBody.detach());
+              }
+              block.useSourceInfoFromForTree(fncBody);
+              thenTarget.addChildAfter(block, fncParams);
+              fncBody = block;
+            }
+
+            fncBody.addChildToFront(
+                IR.var(currentParam.detach(), IR.name(moduleImportPath.toModuleName()))
+                    .useSourceInfoIfMissingFrom(currentParam));
+
+            compiler.reportChangeToChangeScope(thenTarget);
+          }
+        } else if (call.getFirstChild().isGetProp()
+            && call.getFirstChild().getSecondChild().isString()
+            && call.getFirstChild().getSecondChild().getString().equals("then")
+            && isCommonJsImport(call.getSecondChild())) {
+          Node requireCall = call.getSecondChild();
+          Node fnc = IR.function(
+              IR.name(""),
+              IR.paramList(),
+              IR.block()).useSourceInfoIfMissingFromForTree(requireCall);
+
+          requireCall.replaceWith(fnc);
+
+          NodeUtil.getFunctionBody(fnc).addChildToFront(IR.returnNode(requireCall).useSourceInfoFrom(requireCall));
+          compiler.reportChangeToChangeScope(fnc);
         }
-        if ((call.getParent().isGetProp()
-            && call.getParent().getNext() != null
-            && call.getParent().getNext().isFunction())) {
-          finalThenTarget = call.getParent().getNext();
-        }
-      } else {
-        moduleImportPaths.add(getCommonJsImportPath(call.getSecondChild()));
-        Node importCall = call.getFirstFirstChild().detach();
-        call.replaceWith(importCall);
-        reportNestedScopesDeleted(call);
-
-        if (importCall.getParent().isGetProp()
-            && importCall.getNext().isString()
-            && importCall.getNext().equals("then")
-            && importCall.getGrandparent() != null
-            && importCall.getGrandparent().isCall()
-            && importCall.getParent().getNext() != null
-            && importCall.getParent().getNext().isFunction()) {
-          finalThenTarget = call.getParent().getNext();
-        }
-      }
-
-      if (finalThenTarget == null) {
-        continue;
-      }
-
-      Node fncParams = NodeUtil.getFunctionParameters(finalThenTarget);
-      Node fncBody = NodeUtil.getFunctionBody(finalThenTarget);
-      Node script = NodeUtil.getEnclosingScript(finalThenTarget);
-      CompilerInput input = compiler.getInput(script.getInputId());
-      int currentModuleNameIndex = 0;
-      for (Node currentParam = fncParams.getLastChild();
-           currentParam != null && moduleImportPaths.size() > currentModuleNameIndex;
-           currentParam = currentParam.getParent().getFirstChild() == currentParam ?
-               null : currentParam.getPrevious(), currentModuleNameIndex++) {
-
-        // We avoid using the getModuleName helper method because
-        // ESM Dynamic imports always import the module export object - never the default property
-        ModulePath moduleImportPath =
-            input
-                .getPath()
-                .resolveJsModule(
-                    moduleImportPaths.get(currentModuleNameIndex),
-                    currentParam.getSourceFileName(),
-                    currentParam.getLineno(),
-                    currentParam.getCharno());
-        fncBody.addChildToFront(
-            IR.var(currentParam.cloneNode(), IR.name(moduleImportPath.toModuleName()))
-                .useSourceInfoIfMissingFrom(currentParam));
-      }
-      if (fncParams.removeChildren() != null) {
-        compiler.reportChangeToChangeScope(call.getParent().getNext());
       }
     }
     return true;
@@ -697,41 +701,8 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
 
       // Look for the webpack esm dynamic import form
       //
-      // Promise.all([__webpack_require.e(0).then(__webpack_require__.bind(null, path)])
-      //   .then(importObj => {})
-      //
-      // or
-      //
       // __webpack_require.e(0).then(__webpack_require__.bind(null, path).then(importObj => {})
       if (n.isCall()
-          && compiler.getOptions().moduleResolutionMode == ModuleLoader.ResolutionMode.WEBPACK
-          && n.getFirstChild().isGetProp()
-          && n.getFirstChild().matchesQualifiedName("Promise.all")
-          && n.getFirstChild().hasTwoChildren()
-          && n.getSecondChild().isArrayLit()) {
-        Node array = n.getSecondChild();
-        boolean isWebpackEsmDynamicImport = true;
-        for (Node promise = array.getFirstChild(); promise != null; promise = promise.getNext()) {
-          if (!(promise.isCall()
-              && promise.hasTwoChildren()
-              && promise.getFirstChild().isGetProp()
-              && promise.getFirstFirstChild().isCall()
-              && promise.getFirstFirstChild().getFirstChild().matchesQualifiedName(WEBPACK_REQUIRE + ".e")
-              && promise.getFirstChild().getSecondChild().isString()
-              && promise.getFirstChild().getSecondChild().getString().equals("then")
-              && promise.getSecondChild().isCall()
-              && promise.getSecondChild().getChildCount() == 3
-              && promise.getSecondChild().getFirstChild().matchesQualifiedName(WEBPACK_REQUIRE + ".bind")
-              && promise.getSecondChild().getSecondChild().isNull()
-              && promise.getSecondChild().getChildAtIndex(2).isNumber())) {
-            isWebpackEsmDynamicImport = false;
-            break;
-          }
-        }
-        if (isWebpackEsmDynamicImport) {
-          webpackEsmDynamicImports.add(n);
-        }
-      } else if (n.isCall()
           && n.getFirstChild().matchesQualifiedName(WEBPACK_REQUIRE + ".e")
           && n.getNext() != null
           && n.getNext().isString()
