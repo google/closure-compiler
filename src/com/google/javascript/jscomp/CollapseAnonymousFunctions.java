@@ -25,12 +25,12 @@ import com.google.javascript.rhino.Node;
  * i.e. the following:
  *
  * <pre>
- * var f = function()
+ * var f = function() {}
  * <pre>
  *
  * becomes:
  *
- * <pre>function f()</pre>
+ * <pre>function f() {}</pre>
  *
  * This reduces the generated code size but changes the semantics because f
  * will be defined before its definition is reached.
@@ -53,7 +53,7 @@ class CollapseAnonymousFunctions extends AbstractPostOrderCallback implements Co
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    if (!n.isVar()) {
+    if (!(n.isVar() || n.isLet() || n.isConst())) {
       return;
     }
 
@@ -72,8 +72,17 @@ class CollapseAnonymousFunctions extends AbstractPostOrderCallback implements Co
     // Need to store the next name in case the current name is removed from
     // the linked list.
     Node name = n.getOnlyChild();
+
+    // Don't collapse if the lhs is a destructuring pattern.
+    if (!name.isName()) {
+      return;
+    }
+
     Node value = name.getFirstChild();
-    if (value != null && value.isFunction() && !isRecursiveFunction(value)) {
+    if (value != null
+        && value.isFunction()
+        && !value.isArrowFunction()
+        && !isRecursiveFunction(value)) {
       Node fnName = value.getFirstChild();
       fnName.setString(name.getString());
       NodeUtil.copyNameAnnotations(name, fnName);

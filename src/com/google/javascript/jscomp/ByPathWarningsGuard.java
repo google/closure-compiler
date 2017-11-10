@@ -44,7 +44,7 @@ public final class ByPathWarningsGuard extends WarningsGuard {
   private final List<String> paths;
   private final boolean include;
   private final int priority;
-  private CheckLevel level;
+  private final CheckLevel level;
 
   /**
    * Constructs a new instance. The priority is determined by the

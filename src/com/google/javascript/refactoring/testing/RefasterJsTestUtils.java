@@ -63,7 +63,7 @@ public final class RefasterJsTestUtils {
     final String expectedFilePath = testDataPathPrefix + File.separator + expectedFile;
 
     RefactoringDriver.Builder driverBuilder =
-        new RefactoringDriver.Builder(scanner)
+        new RefactoringDriver.Builder()
             .addExterns(CommandLineRunner.getBuiltinExterns(CompilerOptions.Environment.BROWSER));
 
     for (String additionalSource : additionalSourceFiles) {
@@ -71,7 +71,7 @@ public final class RefasterJsTestUtils {
     }
     RefactoringDriver driver = driverBuilder.addInputsFromFile(originalFilePath).build();
 
-    List<SuggestedFix> fixes = driver.drive();
+    List<SuggestedFix> fixes = driver.drive(scanner);
     assertThat(driver.getCompiler().getErrors()).isEmpty();
     assertThat(driver.getCompiler().getWarnings()).isEmpty();
 

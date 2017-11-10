@@ -16,6 +16,9 @@
 
 package com.google.javascript.jscomp;
 
+import static com.google.common.base.Preconditions.checkState;
+
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.javascript.rhino.IR;
@@ -371,19 +374,27 @@ class RuntimeTypeCheck implements CompilerPass {
 
   private void addBoilerplateCode() {
     Node newNode = compiler.ensureLibraryInjected("runtime_type_check", false);
-    if (newNode != null && logFunction != null) {
-      // Inject the custom log function.
-      Node logOverride = IR.exprResult(
-          IR.assign(
-              NodeUtil.newQName(
-                  compiler,
-                  "$jscomp.typecheck.log"),
-              NodeUtil.newQName(
-                  compiler,
-                  logFunction)));
-      newNode.getParent().addChildAfter(logOverride, newNode);
-      compiler.reportChangeToEnclosingScope(newNode);
+    if (newNode != null) {
+      injectCustomLogFunction(newNode);
     }
+  }
+
+  @VisibleForTesting
+  void injectCustomLogFunction(Node node) {
+    if (logFunction == null) {
+      return;
+    }
+    checkState(
+        NodeUtil.isValidQualifiedName(compiler.getFeatureSet(), logFunction),
+        "%s is not a valid qualified name", logFunction);
+    Node logOverride =
+        IR.exprResult(
+            IR.assign(
+                NodeUtil.newQName(compiler, "$jscomp.typecheck.log"),
+                NodeUtil.newQName(compiler, logFunction)));
+    checkState(node.getParent().isScript(), node.getParent());
+    node.getParent().addChildAfter(logOverride, node);
+    compiler.reportChangeToEnclosingScope(node);
   }
 
   private Node jsCode(String prop) {

@@ -95,19 +95,19 @@ public final class DefaultPassConfig extends PassConfig {
   /**
    * A global namespace to share across checking passes.
    */
-  private GlobalNamespace namespaceForChecks = null;
+  private transient GlobalNamespace namespaceForChecks = null;
 
   /**
    * A symbol table for registering references that get removed during
    * preprocessing.
    */
-  private PreprocessorSymbolTable preprocessorSymbolTable = null;
+  private transient PreprocessorSymbolTable preprocessorSymbolTable = null;
 
   /**
    * Global state necessary for doing hotswap recompilation of files with references to
    * processed goog.modules.
    */
-  private ClosureRewriteModule.GlobalRewriteState moduleRewriteState = null;
+  private transient ClosureRewriteModule.GlobalRewriteState moduleRewriteState = null;
 
   /**
    * Whether to protect "hidden" side-effects.
@@ -994,7 +994,7 @@ public final class DefaultPassConfig extends PassConfig {
       }
     }
 
-    if (options.optimizeCalls || options.optimizeParameters || options.optimizeReturns) {
+    if (options.optimizeCalls) {
       passes.add(optimizeCalls);
     }
 
@@ -1533,6 +1533,11 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new AggressiveInlineAliases(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
         }
       };
 
@@ -2424,6 +2429,11 @@ public final class DefaultPassConfig extends PassConfig {
         protected CompilerPass create(AbstractCompiler compiler) {
           return new CollapseProperties(compiler);
         }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
       };
 
   /** Rewrite properties as variables. */
@@ -2485,14 +2495,10 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           OptimizeCalls passes = new OptimizeCalls(compiler);
-          if (options.optimizeReturns) {
-            // Remove unused return values.
-            passes.addPass(new OptimizeReturns(compiler));
-          }
-          if (options.optimizeParameters) {
-            // Remove all parameters that are constants or unused.
-            passes.addPass(new OptimizeParameters(compiler));
-          }
+          // Remove unused return values.
+          passes.addPass(new OptimizeReturns(compiler));
+          // Remove all parameters that are constants or unused.
+          passes.addPass(new OptimizeParameters(compiler));
           return passes;
         }
       };
@@ -2507,6 +2513,11 @@ public final class DefaultPassConfig extends PassConfig {
     protected CompilerPass create(AbstractCompiler compiler) {
       return new PureFunctionIdentifier.Driver(
           compiler, options.debugFunctionSideEffectsPath);
+    }
+
+    @Override
+    protected FeatureSet featureSet() {
+      return ES8_MODULES;
     }
   };
 
@@ -2687,7 +2698,9 @@ public final class DefaultPassConfig extends PassConfig {
 
         @Override
         protected FeatureSet featureSet() {
-          return ES8_MODULES;
+          // TODO(tbreisacher): Switch to ES8_MODULES when MethodCompilerPass understands ES6
+          // method definitions.
+          return ES5;
         }
       };
 
@@ -2904,6 +2917,11 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new CollapseAnonymousFunctions(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
         }
       };
 

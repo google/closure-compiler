@@ -123,8 +123,11 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
   protected CompilerPass getProcessor(final Compiler compiler) {
     PhaseOptimizer optimizer = new PhaseOptimizer(compiler, null);
     optimizer.addOneTimePass(
-        makePassFactory("Es6RenameVariablesInParamLists",
-            new Es6RenameVariablesInParamLists(compiler)));
+        makePassFactory(
+            "Es6NormalizeShorthandProperties", new Es6NormalizeShorthandProperties(compiler)));
+    optimizer.addOneTimePass(
+        makePassFactory(
+            "Es6RenameVariablesInParamLists", new Es6RenameVariablesInParamLists(compiler)));
     optimizer.addOneTimePass(
         makePassFactory("es6ConvertSuper", new Es6ConvertSuper(compiler)));
     optimizer.addOneTimePass(makePassFactory("es6ExtractClasses", new Es6ExtractClasses(compiler)));
@@ -2774,6 +2777,53 @@ public final class Es6ToEs3ConverterTest extends TypeICompilerTestCase {
     test("var \\u{73} = \'\\u{2603}\'", "var s = \'\u2603\'");  // ☃
     test("var \\u{63} = \'\\u{1f42a}\'", "var c = \'\uD83D\uDC2A\'");  // 🐪
     test("var str = `begin\\u{2026}end`", "var str = 'begin\\u2026end'");
+  }
+
+  public void testObjectLiteralShorthand() {
+    test(
+        lines(
+            "function f() {",
+            "  var x = 1;",
+            "  if (a) {",
+            "    let x = 2;",
+            "    return {x};",
+            "  }",
+            "  return x;",
+            "}"),
+        lines(
+            "function f() {",
+            "  var x = 1;",
+            "  if (a) {",
+            "    var x$0 = 2;",
+            "    return {x: x$0};",
+            "  }",
+            "  return x;",
+            "}"));
+
+    test(
+        lines(
+            "function f(a) {",
+            "  var {x} = a;",
+            "  if (a) {",
+            "    let x = 2;",
+            "    return x;",
+            "  }",
+            "  return x;",
+            "}"),
+        lines(
+            "function f(a) {",
+            "  var {x: x} = a;",
+            "  if (a) {",
+            "    var x$0 = 2;",
+            "    return x$0;",
+            "  }",
+            "  return x;",
+            "}"));
+
+    // Note: if the inner `let` declaration is defined as a destructuring assignment
+    // then the test would fail because Es6RewriteBlockScopeDeclaration does not even
+    // look at destructuring declarations, expecting them to already have been
+    // rewritten, and this test does not include that pass.
   }
 
   @Override

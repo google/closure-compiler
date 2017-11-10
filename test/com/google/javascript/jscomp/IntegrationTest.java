@@ -1301,23 +1301,23 @@ public final class IntegrationTest extends IntegrationTestCase {
   }
 
   public void testOptimizeParameters() {
-    String code = "function f(a) { return a; } f(true);";
+    String code = "function f(a) {} f(true);";
 
     CompilerOptions options = createCompilerOptions();
     testSame(options, code);
 
-    options.optimizeParameters = true;
-    test(options, code, "function f() { var a = true; return a;} f();");
+    options.setOptimizeCalls(true);
+    test(options, code, "function f() { var a = true;} f();");
   }
 
   public void testOptimizeReturns() {
-    String code = "function f(a) { return a; } f(true);";
+    String code = "var x; function f() { return x; } f();";
 
     CompilerOptions options = createCompilerOptions();
     testSame(options, code);
 
-    options.optimizeReturns = true;
-    test(options, code, "function f(a) {a; return;} f(true);");
+    options.setOptimizeCalls(true);
+    test(options, code, "var x; function f() {x; return;} f();");
   }
 
   public void testRemoveAbstractMethods() {

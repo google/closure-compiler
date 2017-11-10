@@ -179,12 +179,12 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
     TopLevelStatement yEqualsX = topLevelStatements.get(1);
     assertThat(yEqualsX.getOriginalOrder()).isEqualTo(1);
     assertThat(yEqualsX.getNonDeclarationReferences())
-        .containsExactly(yReferences.get(0), xReferences.get(1));
+        .containsExactly(xReferences.get(1));
     // let z = x - y;
     TopLevelStatement zEqualsXMinusY = topLevelStatements.get(2);
     assertThat(zEqualsXMinusY.getOriginalOrder()).isEqualTo(2);
     assertThat(zEqualsXMinusY.getNonDeclarationReferences())
-        .containsExactly(zReferences.get(0), xReferences.get(2), yReferences.get(1));
+        .containsExactly(xReferences.get(2), yReferences.get(1));
     // function f(x, y) { return x + y + z; }
     TopLevelStatement functionDeclaration = topLevelStatements.get(3);
     assertThat(functionDeclaration.getOriginalOrder()).isEqualTo(3);

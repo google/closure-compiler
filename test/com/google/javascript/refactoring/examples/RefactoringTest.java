@@ -25,7 +25,6 @@ import com.google.javascript.refactoring.ApplySuggestedFixes;
 import com.google.javascript.refactoring.RefactoringDriver;
 import com.google.javascript.refactoring.Scanner;
 import com.google.javascript.refactoring.SuggestedFix;
-
 import java.util.List;
 
 abstract class RefactoringTest {
@@ -36,11 +35,12 @@ abstract class RefactoringTest {
   protected abstract String getExterns();
 
   private List<SuggestedFix> runRefactoring(String originalCode) {
-    return (new RefactoringDriver.Builder(getScanner())
+    return (new RefactoringDriver.Builder()
             .addExternsFromCode(getExterns())
             .addInputsFromCode(originalCode)
             .withCompilerOptions(getOptions())
-            .build()).drive();
+            .build())
+        .drive(getScanner());
   }
 
   protected CompilerOptions getOptions() {

@@ -194,8 +194,11 @@ final class SimpleInference {
       case OBJECTLIT: {
         JSType objLitType = this.commonTypes.getEmptyObjectLiteral();
         for (Node prop : n.children()) {
-          JSType propType = inferExprRecur(prop.getFirstChild(), scope);
-          if (propType == null) {
+          JSType propType = null;
+          if (prop.hasChildren()) {
+            propType = inferExprRecur(prop.getFirstChild(), scope);
+          }
+          if (propType == null || prop.isComputedProp()) {
             return null;
           }
           objLitType = objLitType.withProperty(
@@ -270,7 +273,7 @@ final class SimpleInference {
       if (decl != null) {
         EnumType et = decl.getEnum();
         if (et != null && et.enumLiteralHasKey(pname)) {
-          return et.getEnumeratedType();
+          return et.getPropType();
         }
         Namespace ns = decl.getNamespace();
         if (ns != null) {

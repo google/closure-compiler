@@ -390,7 +390,7 @@ class VarCheck extends AbstractPostOrderCallback implements
    * The handler for duplicate declarations.
    */
   private class RedeclarationCheckHandler implements RedeclarationHandler {
-    private ArrayList<Node> dupDeclNodes = new ArrayList<>();
+    private final ArrayList<Node> dupDeclNodes = new ArrayList<>();
 
     @Override
     public void onRedeclaration(

@@ -197,6 +197,40 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSets(js, js, "{a=[[Foo.prototype]]}");
   }
 
+  public void testPrototypeAndInstance5() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.a = 1;",
+        "}",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {",
+        "  this.a = 2;",
+        "}",
+        "/** @constructor */",
+        "function Baz() {",
+        "  this.a = 3;",
+        "}",
+        "var x = (new Bar).a;");
+
+    String output = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.Foo$a = 1;",
+        "}",
+        "/** @constructor @extends {Foo} */",
+        "function Bar() {",
+        "  this.Foo$a = 2;",
+        "}",
+        "/** @constructor */",
+        "function Baz() {",
+        "  this.Baz$a = 3;",
+        "}",
+        "var x = (new Bar).Foo$a;");
+
+    test(js, output);
+  }
+
   public void testTwoTypes1() {
     String js = ""
         + "/** @constructor */ function Foo() {}\n"
@@ -2452,6 +2486,93 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "}");
 
     test(js, output);
+  }
+
+  public void testAccessOnSupertypeWithOneSubtype() {
+    String externs = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo}",
+        " */",
+        "function Bar() {}",
+        "Bar.prototype.firstElementChild;");
+
+    String js = LINE_JOINER.join(
+        "function f(/** !Foo */ x) {",
+        "  if (x.firstElementChild) {",
+        "    return /** @type {!Bar} */ (x).firstElementChild;",
+        "  }",
+        "}",
+        "/** @constructor */",
+        "function Baz() {}",
+        "Baz.prototype.firstElementChild;");
+
+    String output = LINE_JOINER.join(
+        "function f(/** !Foo */ x) {",
+        "  if (x.firstElementChild) {",
+        "    return /** @type {!Bar} */ (x).firstElementChild;",
+        "  }",
+        "}",
+        "/** @constructor */",
+        "function Baz() {}",
+        "Baz.prototype.Baz_prototype$firstElementChild;");
+
+    test(DEFAULT_EXTERNS + externs, js, output);
+  }
+
+  public void testAccessOnSupertypeWithManySubtypes() {
+    String externs = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo}",
+        " */",
+        "function Bar() {}",
+        "Bar.prototype.firstElementChild;",
+        "/**",
+        " * @constructor",
+        " * @extends {Foo}",
+        " */",
+        "function Qux() {}",
+        "Qux.prototype.firstElementChild;");
+
+    String js = LINE_JOINER.join(
+        "function f(/** !Foo */ x) {",
+        "  if (x.firstElementChild) {",
+        "    return /** @type {!Bar} */ (x).firstElementChild;",
+        "  }",
+        "}",
+        "/** @constructor */",
+        "function Baz() {}",
+        "Baz.prototype.firstElementChild;");
+
+    testSame(DEFAULT_EXTERNS + externs, js);
+  }
+
+  public void testAccessOnObjectWithManySubtypes() {
+    String externs = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Bar() {}",
+        "Bar.prototype.firstElementChild;",
+        "/** @constructor */",
+        "function Qux() {}",
+        "Qux.prototype.firstElementChild;");
+
+    String js = LINE_JOINER.join(
+        "function f(/** !Object */ x) {",
+        "  if (x.firstElementChild) {",
+        "    return /** @type {!Bar} */ (x).firstElementChild;",
+        "  }",
+        "}",
+        "/** @constructor */",
+        "function Baz() {}",
+        "Baz.prototype.firstElementChild;");
+
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSame(DEFAULT_EXTERNS + externs, js);
   }
 
   private void testSets(String js, String expected, final String fieldTypes) {

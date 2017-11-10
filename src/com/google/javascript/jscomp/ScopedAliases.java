@@ -130,7 +130,7 @@ class ScopedAliases implements HotSwapCompilerPass {
       "JSC_GOOG_SCOPE_INVALID_VARIABLE",
       "The variable {0} cannot be declared in this scope");
 
-  private Multiset<String> scopedAliasNames = HashMultiset.create();
+  private final Multiset<String> scopedAliasNames = HashMultiset.create();
 
   ScopedAliases(AbstractCompiler compiler,
       @Nullable PreprocessorSymbolTable preprocessorSymbolTable,

@@ -466,7 +466,7 @@ final class NewTypeInference implements CompilerPass {
   private final boolean warnForUnresolvedTypes;
 
   // Used only for development
-  private static boolean showDebuggingPrints = false;
+  private static final boolean showDebuggingPrints = false;
   static boolean measureMem = false;
   private static long peakMem = 0;
 
@@ -813,6 +813,14 @@ final class NewTypeInference implements CompilerPass {
       analyzeFunctionBwd(workset);
       // TODO(dimvar): Revisit what we throw away after the bwd analysis
       TypeEnv entryEnv = getEntryTypeEnv();
+      // Start undeclared outer variables at their inferred type if it exists.
+      // Gives better results than starting them at unknown.
+      for (String varName : scope.getOuterVars()) {
+        JSType inferred = scope.getInferredTypeOf(varName);
+        if (inferred != null) {
+          entryEnv = envPutType(entryEnv, varName, inferred);
+        }
+      }
       initEdgeEnvsFwd(entryEnv);
       if (measureMem) {
         updatePeakMem();
@@ -2542,7 +2550,9 @@ final class NewTypeInference implements CompilerPass {
     if (!fromType.isInterfaceInstance()
         && !toType.isInterfaceInstance()
         && !JSType.haveCommonSubtype(fromType, toType)
-        && !fromType.hasTypeVariable()) {
+        && !fromType.hasTypeVariable()
+        // Allow casts from an empty object literal to any type
+        && (!insideCast.isObjectLit() || insideCast.hasChildren())) {
       JSError error = JSError.make(expr, INVALID_CAST, fromType.toString(), toType.toString());
       registerMismatchAndWarn(error, fromType, toType);
     } else {

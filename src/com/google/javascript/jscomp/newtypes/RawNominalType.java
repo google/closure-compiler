@@ -247,7 +247,7 @@ public final class RawNominalType extends Namespace {
     this.ctorFn = ctorFn;
   }
 
-  boolean hasAncestorClass(RawNominalType ancestor) {
+  public boolean hasAncestorClass(RawNominalType ancestor) {
     checkState(ancestor.isClass());
     if (this == ancestor) {
       return true;
@@ -281,9 +281,8 @@ public final class RawNominalType extends Namespace {
     if (mayHaveProp(pname)) {
       if (this.protoProps.containsKey(pname)) {
         return ImmutableSet.of(this.protoObject);
-      } else {
-        return ImmutableSet.of(getInstanceAsJSType());
       }
+      return ImmutableSet.of(getInstanceAsJSType());
     }
     HashSet<JSType> typesWithProp = new HashSet<>();
     for (RawNominalType subtype : this.subtypes) {

@@ -68,7 +68,7 @@ import java.util.Set;
     }
   };
 
-  private AbstractCompiler compiler;
+  private final AbstractCompiler compiler;
 
   /** The location abstraction used to calculate the effects of code */
   private LocationAbstraction locationAbstraction;
@@ -511,8 +511,8 @@ import java.util.Set;
    */
   private static class LocationSummary {
 
-    private EffectLocation modSet;
-    private EffectLocation refSet;
+    private final EffectLocation modSet;
+    private final EffectLocation refSet;
 
     public LocationSummary(EffectLocation modSet, EffectLocation refSet) {
       this.modSet = modSet;
@@ -933,7 +933,7 @@ import java.util.Set;
    */
   private static class VariableUseDeclarationMap {
 
-    private AbstractCompiler compiler;
+    private final AbstractCompiler compiler;
 
     // Maps a using name to its declaring name
     private Map<Node, Node> referencesByNameNode;

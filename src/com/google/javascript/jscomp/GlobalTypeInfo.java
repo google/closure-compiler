@@ -69,7 +69,7 @@ public class GlobalTypeInfo implements TypeIRegistry {
   private final List<TypeMismatch> implicitInterfaceUses;
   private final JSTypeCreatorFromJSDoc typeParser;
   private final Map<Node, String> anonFunNames = new LinkedHashMap<>();
-  private UniqueNameGenerator varNameGen;
+  private final UniqueNameGenerator varNameGen;
   // TODO(dimvar): Eventually attach these to nodes, like the current types.
   private final Map<Node, JSType> castTypes = new LinkedHashMap<>();
   private final Map<Node, JSType> declaredObjLitProps = new LinkedHashMap<>();

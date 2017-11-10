@@ -90,9 +90,20 @@ public final class AstValidatorTest extends CompilerTestCase {
 
   public void testForIn() {
     valid("for(var a in b);");
+    valid("for(let a in b);");
+    valid("for(const a in b);");
     valid("for(a in b);");
     valid("for(a in []);");
     valid("for(a in {});");
+  }
+
+  public void testForOf() {
+    valid("for(var a of b);");
+    valid("for(let a of b);");
+    valid("for(const a of b);");
+    valid("for(a of b);");
+    valid("for(a of []);");
+    valid("for(a of {});");
   }
 
   public void testQuestionableForIn() {
@@ -134,6 +145,29 @@ public final class AstValidatorTest extends CompilerTestCase {
     expectValid(n, Check.EXPRESSION);
     expectInvalid(n, Check.STATEMENT);
     expectInvalid(n, Check.SCRIPT);
+  }
+
+  public void testValidConst() {
+    valid("const x = r;");
+    valid("const [x] = r;");
+    valid("const {x} = r;");
+    valid("const x = r, y = r;");
+    valid("const {x} = r, y = r;");
+    valid("const x = r, {y} = r;");
+  }
+
+  public void testInvalidConst() {
+    Node n = new Node(Token.CONST);
+    expectInvalid(n, Check.STATEMENT);
+
+    n.addChildToBack(IR.name("x"));
+    expectInvalid(n, Check.STATEMENT);
+
+    n = new Node(Token.CONST);
+    n.addChildToBack(new Node(Token.DESTRUCTURING_LHS));
+    n.getFirstChild().addChildToBack(new Node(Token.OBJECT_PATTERN));
+
+    expectInvalid(n, Check.STATEMENT);
   }
 
   public void testNewTargetIsValidExpression() {

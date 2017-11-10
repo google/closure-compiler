@@ -1036,6 +1036,14 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
          "var x$y$z; var a = b = x$y$z = 0;");
   }
 
+  public void testChainedVarAssignments6() {
+    testSame("var a = x = 0; var x;");
+  }
+
+  public void testChainedVarAssignments7() {
+    testSame("x = {}; var a = x.y = 0; var x;");
+  }
+
   public void testPeerAndSubpropertyOfUncollapsibleProperty() {
     test("var x = {}; var a = x.y = 0; x.w = 1; x.y.z = 2;"
          + "b = x.w; c = x.y.z;",
@@ -1784,6 +1792,23 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "  }",
             "}",
             "Bar.double(1);"));
+
+    // If we add a static function to the class after the class definition, we still collapse it, as
+    // we don't detect that it's specifically a static class function.
+    // TODO(b/68948902): Consider adding a warning for this kind of class static method declaration.
+    test(
+        LINE_JOINER.join(
+            "class Bar {}",
+            "Bar.double = function(n) {",
+            "  return n*2",
+            "}",
+            "Bar.double(1);"),
+        LINE_JOINER.join(
+            "class Bar {}",
+            "var Bar$double = function(n) {",
+            "  return n*2",
+            "}",
+            "Bar$double(1);"));
   }
 
   public void testClassStaticProperties() {
@@ -1805,6 +1830,32 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "/** @nocollapse */",
             "A.foo = 'bar';",
             "A.useFoo();"));
+  }
+
+  public void testEs6ClassStaticInheritance() {
+    test("class A {} A.foo = 5; use(A.foo); class B extends A {}",
+        "class A {} var A$foo = 5; use(A$foo); class B extends A {}");
+
+    // We potentially collapse unsafely when the subclass accesses a static property on its
+    // superclass. However, AggressiveInlineAliases tries to rewrite inherited accesses to make this
+    // collapsing safe. See InlineAndCollapsePropertiesTests for examples.
+    test(
+        "class A {}     A.foo = 5; use(A.foo); class B extends A {} use(B.foo);",
+        "class A {} var A$foo = 5; use(A$foo); class B extends A {} use(B.foo);");
+
+    test(
+        "class A {}     A.foo = 5; class B extends A {} use(B.foo);     B.foo = 6; use(B.foo);",
+        "class A {} var A$foo = 5; class B extends A {} use(B$foo); var B$foo = 6; use(B$foo);");
+
+    testSame(LINE_JOINER.join(
+        "class A {}",
+        "/** @nocollapse */",
+        "A.foo = 5;",
+    "class B extends A {}",
+        "use(B.foo);",
+        "/** @nocollapse */",
+        "B.foo = 6;",
+        "use(B.foo);"));
   }
 
   public void testSuperExtern() {
@@ -1921,6 +1972,24 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "var foo$bar = 1;",
             "var foo$myFunc = function() {",
             "    return 5;",
+            "};",
+            "foo$myFunc();"));
+  }
+
+  public void testMethodPropertyShorthand() {
+    test(
+        LINE_JOINER.join(
+            "var foo = { ",
+            "  bar: 1, ",
+            "   myFunc() {",
+            "    return 2",
+            "  }",
+            "};",
+            "foo.myFunc();"),
+        LINE_JOINER.join(
+            "var foo$bar = 1;",
+            "var foo$myFunc = function() {",
+            "    return 2;",
             "};",
             "foo$myFunc();"));
   }

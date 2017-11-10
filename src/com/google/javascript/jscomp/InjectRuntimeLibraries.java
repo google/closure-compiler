@@ -23,7 +23,7 @@ import com.google.javascript.rhino.Node;
  * requested via the CompilerOptions#forceLibraryInjection field.
  */
 class InjectRuntimeLibraries implements CompilerPass {
-  private AbstractCompiler compiler;
+  private final AbstractCompiler compiler;
 
   public InjectRuntimeLibraries(AbstractCompiler compiler) {
     this.compiler = compiler;

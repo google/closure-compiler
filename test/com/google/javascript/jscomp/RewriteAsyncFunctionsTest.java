@@ -46,6 +46,54 @@ public class RewriteAsyncFunctionsTest extends CompilerTestCase {
     return (NoninjectingCompiler) super.getLastCompiler();
   }
 
+  public void testInnerArrowFunctionUsingThis() {
+    test(
+        LINE_JOINER.join(
+            "class X {",
+            "  async m() {",
+            "    return new Promise((resolve, reject) => {",
+            "      return this;",
+            "    });",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "class X {",
+            "  m() {",
+            "    const $jscomp$async$this=this;",
+            "    function* $jscomp$async$generator() {",
+            "      return new Promise((resolve,reject)=>{",
+            "        return $jscomp$async$this",
+            "      });",
+            "    }",
+            "    return $jscomp.executeAsyncGenerator($jscomp$async$generator())",
+            "  }",
+            "}"));
+  }
+
+  public void testInnerArrowFunctionUsingArguments() {
+    test(
+        LINE_JOINER.join(
+            "class X {",
+            "  async m() {",
+            "    return new Promise((resolve, reject) => {",
+            "      return arguments;",
+            "    });",
+            "  }",
+            "}"),
+        LINE_JOINER.join(
+            "class X {",
+            "  m() {",
+            "    const $jscomp$async$arguments=arguments;",
+            "    function* $jscomp$async$generator() {",
+            "      return new Promise((resolve,reject)=>{",
+            "        return $jscomp$async$arguments",
+            "      });",
+            "    }",
+            "    return $jscomp.executeAsyncGenerator($jscomp$async$generator())",
+            "  }",
+            "}"));
+  }
+
   public void testRequiredCodeInjected() {
     test(
         "async function foo() { return 1; }",

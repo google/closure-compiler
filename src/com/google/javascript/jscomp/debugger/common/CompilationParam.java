@@ -826,30 +826,6 @@ public enum CompilationParam {
     }
   },
 
-  OPTIMIZE_PARAMETERS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
-    @Override
-    public void apply(CompilerOptions options, boolean value) {
-      options.setOptimizeParameters(value);
-    }
-
-    @Override
-    public boolean isApplied(CompilerOptions options) {
-      return options.optimizeParameters;
-    }
-  },
-
-  OPTIMIZE_RETURNS(ParamGroup.TYPE_CHECKING_OPTIMIZATION) {
-    @Override
-    public void apply(CompilerOptions options, boolean value) {
-      options.setOptimizeReturns(value);
-    }
-
-    @Override
-    public boolean isApplied(CompilerOptions options) {
-      return options.optimizeReturns;
-    }
-  },
-
   // --------------------------------
   // Special-purpose alterations
   // --------------------------------

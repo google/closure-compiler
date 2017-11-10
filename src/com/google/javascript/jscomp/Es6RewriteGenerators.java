@@ -85,7 +85,7 @@ public final class Es6RewriteGenerators
 
   private static int generatorCaseCount;
 
-  private Supplier<String> generatorCounter;
+  private final Supplier<String> generatorCounter;
 
   // Current case statement onto which translated statements from the
   // body of a generator will be appended.

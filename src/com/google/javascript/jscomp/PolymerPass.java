@@ -54,7 +54,7 @@ final class PolymerPass extends AbstractPostOrderCallback implements HotSwapComp
 
   private Node polymerElementExterns;
   private Node externsInsertionRef = null;
-  private Set<String> nativeExternsAdded;
+  private final Set<String> nativeExternsAdded;
   private ImmutableList<Node> polymerElementProps;
   private GlobalNamespace globalNames;
   private boolean warnedPolymer1ExternsMissing = false;

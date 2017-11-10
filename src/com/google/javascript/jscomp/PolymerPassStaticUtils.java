@@ -91,8 +91,10 @@ final class PolymerPassStaticUtils {
         continue;
       }
       for (Node keyToQuote : keyNode.getFirstChild().children()) {
-        keyToQuote.setQuotedString();
-        compiler.reportChangeToEnclosingScope(keyToQuote);
+        if (!keyToQuote.isQuotedString()) {
+          keyToQuote.setQuotedString();
+          compiler.reportChangeToEnclosingScope(keyToQuote);
+        }
       }
     }
   }

@@ -53,7 +53,7 @@ class InlineCostEstimator {
    * shortened and all whitespace is stripped.
    */
   private static class CompiledSizeEstimator extends CodeConsumer {
-    private int maxCost;
+    private final int maxCost;
     private int cost = 0;
     private char last = '\0';
     private boolean continueProcessing = true;

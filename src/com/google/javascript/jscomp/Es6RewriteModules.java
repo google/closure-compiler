@@ -646,8 +646,8 @@ public final class Es6RewriteModules extends AbstractPostOrderCallback
   }
 
   private static class ModuleOriginalNamePair {
-    private String module;
-    private String originalName;
+    private final String module;
+    private final String originalName;
 
     private ModuleOriginalNamePair(String module, String originalName) {
       this.module = module;

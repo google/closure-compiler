@@ -202,8 +202,6 @@ public enum CompilationLevel {
 
     // Call optimizations
     options.setDevirtualizePrototypeMethods(true);
-    options.setOptimizeParameters(true);
-    options.setOptimizeReturns(true);
     options.setOptimizeCalls(true);
   }
 

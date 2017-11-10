@@ -274,12 +274,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
 
   private static final Joiner pathJoiner = Joiner.on(File.separator);
 
-  // Used as a shortcut for change tracking.  This is the current scope being
-  // visited by the "current" NodeTraversal.  This can't be thread safe so
-  // we will remove it when we remove the reportCodeChange() method.
-  @Deprecated
-  private Node currentChangeScope = null;
-
   // Starts at 0, increases as "interesting" things happen.
   // Nothing happens at time START_TIME, the first pass starts at time 1.
   // The correctness of scope-change tracking relies on Node/getIntProp
@@ -2678,12 +2672,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     changeStamp++;
   }
 
-  @Override
-  @Deprecated
-  void setChangeScope(Node newChangeScopeRoot) {
-    currentChangeScope = newChangeScopeRoot;
-  }
-
   private Node getChangeScopeForNode(Node n) {
     /**
      * Compiler change reporting usually occurs after the AST change has already occurred. In the
@@ -2726,23 +2714,6 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
       return true;
     }
     return phaseOptimizer.hasScopeChanged(n);
-  }
-
-  /**
-   * @deprecated
-   * Use #reportChangeToEnclosingScope or NodeTraversal#reportCodeChange instead
-   */
-  @Deprecated
-  @Override
-  public void reportCodeChange() {
-    // TODO(johnlenz): if this is called with a null scope we need to invalidate everything
-    // but this isn't done, so we need to make this illegal or record this as having
-    // invalidated everything.
-    if (currentChangeScope != null) {
-      checkState(currentChangeScope.isScript() || currentChangeScope.isFunction());
-      recordChange(currentChangeScope);
-    }
-    notifyChangeHandlers();
   }
 
   @Override

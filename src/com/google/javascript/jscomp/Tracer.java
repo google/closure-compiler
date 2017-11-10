@@ -173,8 +173,7 @@ final class Tracer {
    * a list of additional statistics that the user wants to keep track
    * of.
    */
-  private static List<TracingStatistic> extraTracingStatistics =
-      new CopyOnWriteArrayList<>();
+  private static final List<TracingStatistic> extraTracingStatistics = new CopyOnWriteArrayList<>();
 
   /** Values returned by extraTracingStatistics */
   private long[] extraTracingValues;
@@ -936,9 +935,8 @@ final class Tracer {
     }
   }
 
-  /** Holds the ThreadTrace for each thread.  */
-  private static ThreadLocal<ThreadTrace> traces =
-      new ThreadLocal<>();
+  /** Holds the ThreadTrace for each thread. */
+  private static final ThreadLocal<ThreadTrace> traces = new ThreadLocal<>();
 
   /**
    * Get the ThreadTrace for the current thread, creating one if necessary.

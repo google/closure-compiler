@@ -40,7 +40,6 @@
 package com.google.javascript.rhino.jstype;
 
 import com.google.common.base.Preconditions;
-
 import java.util.ArrayDeque;
 
 /**
@@ -53,7 +52,7 @@ import java.util.ArrayDeque;
  */
 public class TemplateTypeMapReplacer extends ModificationVisitor {
   private final TemplateTypeMap replacements;
-  private ArrayDeque<TemplateType> visitedTypes;
+  private final ArrayDeque<TemplateType> visitedTypes;
   private TemplateType keyType = null;
   private boolean replaceMissingTypesWithUnknown = false;
 

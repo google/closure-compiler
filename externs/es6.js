@@ -195,6 +195,15 @@ Object.is;
  */
 Number.prototype.toLocaleString = function(opt_locales, opt_options) {};
 
+/**
+ * Returns the wrapped primitive value of this Number object.
+ * @return {number}
+ * @nosideeffects
+ * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/valueOf
+ * @override
+ */
+Number.prototype.valueOf = function() {};
+
 
 /**
  * Pads the end of the string so that it reaches the given length.

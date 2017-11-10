@@ -159,6 +159,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
         if (context.mustReplaceThisAndArguments() && n.matchesQualifiedName("arguments")) {
           n.setString(ASYNC_ARGUMENTS);
           context.recordAsyncArgumentsReplacementWasDone();
+          compiler.reportChangeToChangeScope(context.function.get());
         }
         break;
 
@@ -166,6 +167,7 @@ public final class RewriteAsyncFunctions implements NodeTraversal.Callback, HotS
         if (context.mustReplaceThisAndArguments()) {
           parent.replaceChild(n, IR.name(ASYNC_THIS).useSourceInfoIfMissingFrom(n));
           context.recordAsyncThisReplacementWasDone();
+          compiler.reportChangeToChangeScope(context.function.get());
         }
         break;
 

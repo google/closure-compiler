@@ -43,7 +43,7 @@ public final class NameAnonymousFunctionsTest extends CompilerTestCase {
          "var a = {}; a.b = function $a$b$() { return 1; }");
   }
 
-  public void testAssignmentToPrototype() {
+  public void testAssignmentToPrototype1() {
     test("function a() {} a.prototype.b = function() { return 1; };",
          "function a() {} " +
          "a.prototype.b = function $a$$b$() { return 1; };");
@@ -127,5 +127,33 @@ public final class NameAnonymousFunctionsTest extends CompilerTestCase {
         "" +
         "main();",
         "var main;(function(){main=function $main$(){return 5}})();main()");
+  }
+
+  public void testIgnoreArrowFunctions() {
+    testSame("var a = () => 1");
+    testSame("var a = {b: () => 1};");
+    testSame("function A() {} A.prototype.foo = () => 5");
+  }
+
+  public void testComputedProperty() {
+    testSame("function A() {} A.prototype = {['foo']: function() {} };");
+  }
+
+  public void testGetter() {
+    testSame("function A() {} A.prototype = { get foo() { return 5; } }");
+  }
+
+  public void testSetter() {
+    testSame("function A() {} A.prototype = { set foo(bar) {} }");
+  }
+
+  public void testMethodDefinitionShorthand() {
+    testSame("var obj = { b() {}, c() {} }");
+    testSame("var obj; obj = { b() {}, c() {} }");
+  }
+
+  public void testClasses() {
+    testSame("class A { static foo() {} }");
+    testSame("class A { constructor() {} foo() {} }");
   }
 }

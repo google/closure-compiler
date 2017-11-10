@@ -275,7 +275,7 @@ class Normalize implements CompilerPass {
       NodeTraversal.traverseRootsEs6(compiler, this, externs, root);
     }
 
-    private Map<String, Boolean> constantMap = new HashMap<>();
+    private final Map<String, Boolean> constantMap = new HashMap<>();
 
     @Override
     public void visit(NodeTraversal t, Node n, Node parent) {
@@ -859,7 +859,7 @@ class Normalize implements CompilerPass {
   private final class DuplicateDeclarationHandler implements
       Es6SyntacticScopeCreator.RedeclarationHandler {
 
-    private Set<Var> hasOkDuplicateDeclaration = new HashSet<>();
+    private final Set<Var> hasOkDuplicateDeclaration = new HashSet<>();
 
     /**
      * Remove duplicate VAR declarations discovered during scope creation.

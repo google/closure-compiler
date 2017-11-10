@@ -118,9 +118,6 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
       case FOR_OF:
         visitForOf(t, n, parent);
         break;
-      case STRING_KEY:
-        visitStringKey(n);
-        break;
       case TAGGED_TEMPLATELIT:
         Es6TemplateLiterals.visitTaggedTemplateLiteral(t, n, addTypes);
         break;
@@ -146,19 +143,6 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
     parent.replaceChild(n, stringKey);
     stringKey.useSourceInfoFrom(nameNode);
     compiler.reportChangeToEnclosingScope(stringKey);
-  }
-
-  /**
-   * Converts extended object literal {a} to {a:a}.
-   */
-  // TODO(blickly): Separate this so it can be part of the normalization early transpilation passes.
-  private void visitStringKey(Node n) {
-    if (!n.hasChildren()) {
-      Node name = withType(IR.name(n.getString()), n.getTypeI());
-      name.useSourceInfoIfMissingFrom(n);
-      n.addChildToBack(name);
-      compiler.reportChangeToEnclosingScope(name);
-    }
   }
 
   private void visitForOf(NodeTraversal t, Node node, Node parent) {
@@ -367,4 +351,3 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
     return withType(n, unknownType);
   }
 }
-

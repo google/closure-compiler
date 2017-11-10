@@ -355,10 +355,11 @@ public class Node implements Serializable {
     }
 
     @Override
+    @SuppressWarnings("ReferenceEquality")
     public boolean isEquivalentTo(
         Node node, boolean compareType, boolean recur, boolean jsDoc, boolean sideEffect) {
       return (super.isEquivalentTo(node, compareType, recur, jsDoc, sideEffect)
-          && this.str.equals(((StringNode) node).str));
+          && this.str == (((StringNode) node).str));
     }
 
     /**
@@ -2070,18 +2071,21 @@ public class Node implements Serializable {
    * Returns whether a node matches a simple or a qualified name, such as <code>x</code> or <code>
    * a.b.c</code> or <code>this.a</code>.
    */
+  @SuppressWarnings("ReferenceEquality")
   public final boolean matchesQualifiedName(Node n) {
     if (n == null || n.token != token) {
       return false;
     }
     switch (token) {
       case NAME:
-        return !getString().isEmpty() && getString().equals(n.getString());
+        // ==, rather than equal as it is intern'd in setString
+        return !getString().isEmpty() && getString() == n.getString();
       case THIS:
       case SUPER:
         return true;
       case GETPROP:
-        return getLastChild().getString().equals(n.getLastChild().getString())
+        // ==, rather than equal as it is intern'd in setString
+        return getLastChild().getString() == n.getLastChild().getString()
             && getFirstChild().matchesQualifiedName(n.getFirstChild());
       default:
         return false;

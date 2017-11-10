@@ -727,12 +727,12 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
         "f();"
     );
     checkLocalityOfMarkedCalls(source, ImmutableList.of("f"));
-    // return obj literal with global taint.
+    // return obj literal with global property is still local.
     source = LINE_JOINER.join(
         "var global = new Object();",
         "function f() { return {'asdf': global} }",
         "f();");
-    checkLocalityOfMarkedCalls(source, ImmutableList.<String>of());
+    checkLocalityOfMarkedCalls(source, ImmutableList.<String>of("f"));
   }
 
   public void testReturnLocalityTaintArrayLiteralWithGlobal() {
@@ -743,13 +743,13 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
             "function g() { return [1, {}]; }",
             "g();");
     checkLocalityOfMarkedCalls(source, ImmutableList.of("f", "g"));
-    // return obj literal with global taint.
+    // return array literal with global value is still a local value.
     source =
         LINE_JOINER.join(
             "var global = new Object();",
             "function f() { return [2 ,global]; }",
             "f();");
-    checkLocalityOfMarkedCalls(source, ImmutableList.<String>of());
+    checkLocalityOfMarkedCalls(source, ImmutableList.<String>of("f"));
   }
 
   public void testReturnLocalityMultipleDefinitionsSameName() {
@@ -799,7 +799,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     // Not marked because the definition cannot be found so unknown side effects.
     source = LINE_JOINER.join(
         "var dict = {'func': function() {}};",
-        "function f() { var s = dict['func'].apply();}",
+        "function f() { var s = dict['func'].apply(null); }",
         "f.apply(null)"
     );
     assertNoPureCalls(source);

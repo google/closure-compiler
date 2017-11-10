@@ -86,7 +86,7 @@ class RemoveUnusedVars implements CompilerPass {
 
   private final boolean removeGlobals;
 
-  private boolean preserveFunctionExpressionNames;
+  private final boolean preserveFunctionExpressionNames;
 
   /**
    * Keep track of variables that we've referenced.

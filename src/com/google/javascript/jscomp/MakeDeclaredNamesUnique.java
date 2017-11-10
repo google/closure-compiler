@@ -223,7 +223,7 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
     private Set<String> referencedNames = ImmutableSet.of();
 
     // Stack reference sets.
-    private Deque<Set<String>> referenceStack = new ArrayDeque<>();
+    private final Deque<Set<String>> referenceStack = new ArrayDeque<>();
 
     // Name are globally unique initially, so we don't need a per-scope map.
     private final ListMultimap<String, Node> nameMap =
@@ -627,8 +627,8 @@ class MakeDeclaredNamesUnique extends NodeTraversal.AbstractScopedCallback {
 
   /** Only rename things that match the whitelist. Wraps another renamer. */
   static class WhitelistedRenamer implements Renamer {
-    private Renamer delegate;
-    private Set<String> whitelist;
+    private final Renamer delegate;
+    private final Set<String> whitelist;
 
     WhitelistedRenamer(Renamer delegate, Set<String> whitelist) {
       this.delegate = delegate;

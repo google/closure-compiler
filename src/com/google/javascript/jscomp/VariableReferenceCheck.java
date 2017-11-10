@@ -132,7 +132,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
    */
   private class ReferenceCheckingBehavior implements Behavior {
 
-    private Set<String> varsInFunctionBody;
+    private final Set<String> varsInFunctionBody;
 
     private ReferenceCheckingBehavior() {
       varsInFunctionBody = new HashSet<>();

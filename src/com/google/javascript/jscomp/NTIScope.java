@@ -53,6 +53,37 @@ import java.util.Set;
  * @author dimvar@google.com (Dimitris Vardoulakis)
  */
 final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JSType> {
+
+  /**
+   * Used for local variables.
+   */
+  static class TaggedType implements Serializable {
+    // When we don't know the type of a local variable, this field is null, not ?.
+    private final JSType type;
+    private final boolean isDeclared;
+
+    private TaggedType(JSType type, boolean isDeclared) {
+      this.type = type;
+      this.isDeclared = isDeclared;
+    }
+
+    static TaggedType makeDeclared(JSType t) {
+      return new TaggedType(t, true);
+    }
+
+    static TaggedType makeInferred(JSType t) {
+      return new TaggedType(t, false);
+    }
+
+    JSType getInferredType() {
+      return !isDeclared ? type : null;
+    }
+
+    JSType getDeclaredType() {
+      return isDeclared ? type : null;
+    }
+  }
+
   private final NTIScope parent;
   private final Node root;
   // Name on the function AST node; null for top scope & anonymous functions
@@ -61,8 +92,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
   // Becomes true after freezeScope is run; so it's true during NTI.
   private boolean isFrozen = false;
 
-  // A local w/out declared type is mapped to null, not to this.commonTypes.UNKNOWN.
-  private final Map<String, JSType> locals = new LinkedHashMap<>();
+  private final Map<String, TaggedType> locals = new LinkedHashMap<>();
   private final Map<String, JSType> externs;
   private final Set<String> constVars = new LinkedHashSet<>();
   private final List<String> formals;
@@ -76,7 +106,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
   // the function has an entry in localFunDefs, and in locals or externs.
   private final Map<String, NTIScope> localFunDefs = new LinkedHashMap<>();
   private ImmutableSet<String> unknownTypeNames = ImmutableSet.of();
-  private Map<String, Typedef> localTypedefs = new LinkedHashMap<>();
+  private final Map<String, Typedef> localTypedefs = new LinkedHashMap<>();
   // Typedefs defined inside this scope, but on a namespace, not as local variables
   private Set<Typedef> namespaceTypedefs = new LinkedHashSet<>();
   private Map<String, Namespace> localNamespaces = new LinkedHashMap<>();
@@ -245,21 +275,22 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     return false;
   }
 
-  // For variables it is the same as isDefinedLocally; for properties it looks
-  // for a definition in any scope.
   boolean isDefined(Node qnameNode) {
     checkArgument(qnameNode.isQualifiedName());
-    if (qnameNode.isName()) {
-      return isDefinedLocally(qnameNode.getString(), false);
-    } else if (qnameNode.isThis()) {
-      return true;
-    }
-    QualifiedName qname = QualifiedName.fromNode(qnameNode);
+    return isDefined(QualifiedName.fromNode(qnameNode));
+  }
+
+  // For variables it is the same as isDefinedLocally; for properties it looks
+  // for a definition in any scope.
+  boolean isDefined(QualifiedName qname) {
     String leftmost = qname.getLeftmostName();
+    if (qname.isIdentifier()) {
+      return leftmost.equals("this") || isDefinedLocally(leftmost, false);
+    }
     if (isNamespace(leftmost)) {
       return getNamespace(leftmost).isDefined(qname.getAllButLeftmost());
     }
-    return parent == null ? false : parent.isDefined(qnameNode);
+    return parent == null ? false : parent.isDefined(qname);
   }
 
   boolean isNamespace(Node expr) {
@@ -357,6 +388,17 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     return dft != null && dft.getThisType() != null;
   }
 
+  /**
+   * Returns the inferred type of {@code name}.
+   * Only for names declared with VAR (and let in the future), not for other kinds of bound names.
+   */
+  JSType getInferredTypeOf(String name) {
+    if (this.locals.containsKey(name)) {
+      return this.locals.get(name).getInferredType();
+    }
+    return parent == null ? null : parent.getInferredTypeOf(name);
+  }
+
   @Override
   public JSType getDeclaredTypeOf(String name) {
     checkArgument(!name.contains("."));
@@ -388,10 +430,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     if (name.equals(this.name) && !parent.isFunctionNamespace(name)) {
       return this.commonTypes.fromFunctionType(getDeclaredFunctionType().toFunctionType());
     }
-    if (parent != null) {
-      return parent.getDeclaredTypeOf(name);
-    }
-    return null;
+    return parent == null ? null : parent.getDeclaredTypeOf(name);
   }
 
   boolean hasUndeclaredFormalsOrOuters() {
@@ -452,15 +491,31 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
   // If a variable is declared many times in a scope, the last definition
   // overwrites the previous ones. For correctness, we rely on the fact that
   // the var-check passes run before type checking.
-  void addLocal(String name, JSType declType, boolean isConstant, boolean isFromExterns) {
+  void addDeclaredLocal(String name, JSType type, boolean isConstant, boolean isFromExterns) {
     checkArgument(!name.contains("."));
     if (isConstant) {
       constVars.add(name);
     }
     if (isFromExterns) {
-      externs.put(name, declType);
+      externs.put(name, type);
     } else {
-      locals.put(name, declType);
+      locals.put(name, TaggedType.makeDeclared(type));
+    }
+  }
+
+  void addInferredLocal(String name, JSType type) {
+    checkArgument(!name.contains("."));
+    locals.put(name, TaggedType.makeInferred(type));
+  }
+
+  void clearInferredTypeOfVar(String name) {
+    if (locals.containsKey(name)) {
+      TaggedType localType = locals.get(name);
+      if (localType.getInferredType() != null) {
+        locals.put(name, TaggedType.makeInferred(null));
+      }
+    } else if (!isDefinedLocally(name, false) && this.parent != null) {
+      this.parent.clearInferredTypeOfVar(name);
     }
   }
 
@@ -526,19 +581,17 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     }
   }
 
-  void addNamespaceLit(Node qnameNode) {
-    addNamespace(qnameNode,
-        new NamespaceLit(this.commonTypes, qnameNode.getQualifiedName(), qnameNode));
+  void addNamespaceLit(QualifiedName qname, Node defSite) {
+    addNamespace(qname, defSite, new NamespaceLit(this.commonTypes, qname.toString(), defSite));
   }
 
   void updateType(String name, JSType newDeclType) {
     if (isDefinedLocally(name, false)) {
-      locals.put(name, newDeclType);
+      locals.put(name, TaggedType.makeDeclared(newDeclType));
     } else if (parent != null) {
       parent.updateType(name, newDeclType);
     } else {
-      throw new RuntimeException(
-          "Cannot update type of unknown variable: " + name);
+      throw new RuntimeException("Cannot update type of unknown variable: " + name);
     }
   }
 
@@ -560,23 +613,26 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
   }
 
   void addNamespace(Node qnameNode, Namespace ns) {
+    addNamespace(QualifiedName.fromNode(qnameNode), qnameNode, ns);
+  }
+
+  void addNamespace(QualifiedName qname, Node defSite, Namespace ns) {
     if (ns instanceof EnumType) {
       this.localEnums.add((EnumType) ns);
     }
-    if (qnameNode.isName()) {
-      String varName = qnameNode.getString();
+    if (qname.isIdentifier()) {
+      String varName = qname.getLeftmostName();
       Preconditions.checkState(!this.localNamespaces.containsKey(varName),
           "Namespace %s already defined.", varName);
       this.localNamespaces.put(varName, ns);
-      if (qnameNode.isFromExterns() && !this.externs.containsKey(varName)) {
+      if (defSite.isFromExterns() && !this.externs.containsKey(varName)) {
         // We don't know the full type of a namespace until after we see all
         // its properties. But we want to add it to the externs, otherwise it
         // is treated as a local and initialized to the wrong thing in NTI.
-        this.externs.put(qnameNode.getString(), null);
+        this.externs.put(varName, null);
       }
     } else {
-      checkState(!isDefined(qnameNode));
-      QualifiedName qname = QualifiedName.fromNode(qnameNode);
+      checkState(!isDefined(qname));
       Namespace rootns = getNamespace(qname.getLeftmostName());
       rootns.addNamespace(qname.getAllButLeftmost(), ns);
     }
@@ -599,7 +655,7 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     if ("this".equals(name)) {
       type = getDeclaredTypeOf("this");
     } else if (locals.containsKey(name)) {
-      type = locals.get(name);
+      type = locals.get(name).getDeclaredType();
     } else if (formals.contains(name)) {
       int formalIndex = formals.indexOf(name);
       if (declaredType != null && formalIndex != -1) {
@@ -753,11 +809,11 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
       if (externs.containsKey(name)) {
         externs.put(name, t);
       } else {
-        locals.put(name, t);
+        locals.put(name, TaggedType.makeDeclared(t));
       }
     }
     for (String typedefName : localTypedefs.keySet()) {
-      locals.put(typedefName, this.commonTypes.UNDEFINED);
+      locals.put(typedefName, TaggedType.makeDeclared(this.commonTypes.UNDEFINED));
     }
     copyOuterVarsTransitively(this);
     preservedNamespaces = localNamespaces;

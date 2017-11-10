@@ -41,10 +41,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Rewrite "let"s and "const"s as "var"s.
- * Rename block-scoped declarations and their references when necessary.
+ * Rewrite "let"s and "const"s as "var"s. Rename block-scoped declarations and their references when
+ * necessary.
  *
- * TODO(moz): Try to use MakeDeclaredNamesUnique
+ * <p>Note that this must run after Es6RewriteDestructuring, since it does not process destructuring
+ * let/const declarations at all.
+ *
+ * <p>TODO(moz): Try to use MakeDeclaredNamesUnique
  *
  * @author moz@google.com (Michael Zhou)
  */
@@ -118,7 +121,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     LoopClosureTransformer transformer = new LoopClosureTransformer();
     NodeTraversal.traverseEs6(compiler, root, transformer);
     transformer.transformLoopClosure();
-    varify();
+    rewriteDeclsToVars();
 
     // Block scoped function declarations can occur in any language mode, however for
     // transpilation to ES3 and ES5, we want to hoist the functions from the block-scope by
@@ -148,7 +151,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     LoopClosureTransformer transformer = new LoopClosureTransformer();
     NodeTraversal.traverseEs6(compiler, scriptRoot, transformer);
     transformer.transformLoopClosure();
-    varify();
+    rewriteDeclsToVars();
     NodeTraversal.traverseEs6(compiler, scriptRoot, new RewriteBlockScopedFunctionDeclaration());
   }
 
@@ -213,7 +216,7 @@ public final class Es6RewriteBlockScopedDeclaration extends AbstractPostOrderCal
     compiler.reportChangeToEnclosingScope(newNode);
   }
 
-  private void varify() {
+  private void rewriteDeclsToVars() {
     if (!letConsts.isEmpty()) {
       for (Node n : letConsts) {
         if (n.isConst()) {

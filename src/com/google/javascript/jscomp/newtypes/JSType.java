@@ -617,7 +617,7 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
     return result;
   }
 
-  // When joining w/ TOP or UNKNOWN, avoid setting more fields on them, eg, obj.
+  // When joining w/ TOP or UNKNOWN, avoid setting more fields on them, e.g., obj.
   public static JSType join(JSType lhs, JSType rhs) {
     checkNotNull(lhs);
     checkNotNull(rhs);
@@ -652,15 +652,13 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
         ObjectType.joinSets(lhs.getObjs(), rhs.getObjs());
     String newTypevar =
         lhs.getTypeVar() != null ? lhs.getTypeVar() : rhs.getTypeVar();
-    ImmutableSet<EnumType> newEnums =
-        EnumType.union(lhs.getEnums(), rhs.getEnums());
+    ImmutableSet<EnumType> newEnums = EnumType.union(lhs.getEnums(), rhs.getEnums());
     if (newEnums.isEmpty()) {
       return makeType(commonTypes, newMask, newObjs, newTypevar, NO_ENUMS);
     }
-    JSType tmpJoin =
-        makeType(commonTypes, newMask & ~ENUM_MASK, newObjs, newTypevar, NO_ENUMS);
-    return makeType(commonTypes, newMask, newObjs,
-        newTypevar, EnumType.normalizeForJoin(newEnums, tmpJoin));
+    JSType tmpJoin = makeType(commonTypes, newMask & ~ENUM_MASK, newObjs, newTypevar, NO_ENUMS);
+    return makeType(
+        commonTypes, newMask, newObjs, newTypevar, EnumType.normalizeForJoin(newEnums, tmpJoin));
   }
 
   /**
@@ -2041,19 +2039,8 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   @Override
   public final JSType getPrototypeObject() {
     checkState(this.isSingletonObj());
-    JSType proto = getNominalTypeIfSingletonObj().getPrototypeObject();
-    if (this.equals(proto)) {
-      // In JS's dynamic semantics, the only object without a __proto__ is
-      // Object.prototype, but it's not representable in NTI.
-      // Object.prototype is the only case where we are equal to our own prototype.
-      // In this case, we should return null.
-      Preconditions.checkState(
-          isBuiltinObjectPrototype(),
-          "Failed to reach Object.prototype in prototype chain, unexpected self-link found at %s",
-          this);
-      return null;
-    }
-    return proto;
+    ObjectType proto = getObjTypeIfSingletonObj().getPrototypeObject();
+    return proto != null ? fromObjectType(proto) : null;
   }
 
   @Override
@@ -2099,11 +2086,6 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   public final boolean isAmbiguousObject() {
     ObjectType obj = getObjTypeIfSingletonObj();
     return obj != null && obj.isAmbiguousObject();
-  }
-
-  final boolean isBuiltinObjectPrototype() {
-    ObjectType obj = getObjTypeIfSingletonObj();
-    return obj != null && obj.getNominalType().isBuiltinObject() && obj.isPrototypeObject();
   }
 
   @Override

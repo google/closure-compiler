@@ -22,7 +22,6 @@ import com.google.javascript.jscomp.NodeTraversal;
 import com.google.javascript.jscomp.NodeTraversal.Callback;
 import com.google.javascript.jscomp.NodeUtil;
 import com.google.javascript.rhino.Node;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -51,7 +50,7 @@ public final class CheckUselessBlocks implements Callback, HotSwapCompilerPass {
       "JSC_USELESS_BLOCK", "Useless block.");
 
   private final AbstractCompiler compiler;
-  private Deque<Node> loneBlocks;
+  private final Deque<Node> loneBlocks;
 
   public CheckUselessBlocks(AbstractCompiler compiler) {
     this.compiler = compiler;

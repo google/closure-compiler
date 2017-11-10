@@ -81,9 +81,9 @@ class CollapseProperties implements CompilerPass {
 
   static final DiagnosticType UNSAFE_THIS = DiagnosticType.warning(
       "JSC_UNSAFE_THIS",
-      "dangerous use of 'this' in static method {0}");
+      "dangerous use of ''this'' in static method {0}");
 
-  private AbstractCompiler compiler;
+  private final AbstractCompiler compiler;
 
   /** Global namespace tree */
   private List<Name> globalNames;
@@ -400,103 +400,66 @@ class CollapseProperties implements CompilerPass {
 
     // Handle this name first so that nested object literals get unrolled.
     if (n.canCollapse()) {
-      updateObjLitOrFunctionDeclaration(n, alias, canCollapseChildNames);
+      updateGlobalNameDeclaration(n, alias, canCollapseChildNames);
     }
 
     if (n.props == null) {
       return;
     }
     for (Name p : n.props) {
-      // Recur first so that saved node ancestries are intact when needed.
-      collapseDeclarationOfNameAndDescendants(
-          p, appendPropForAlias(alias, p.getBaseName()));
-      if (!p.inExterns
-          && canCollapseChildNames
-          && p.getDeclaration() != null
-          && p.canCollapse()
-          && p.getDeclaration().node != null
-          && p.getDeclaration().node.getParent() != null
-          && p.getDeclaration().node.getParent().isAssign()) {
-        updateSimpleDeclaration(
-            appendPropForAlias(alias, p.getBaseName()), p, p.getDeclaration());
-      }
+      collapseDeclarationOfNameAndDescendants(p, appendPropForAlias(alias, p.getBaseName()));
     }
   }
 
   /**
    * Updates the initial assignment to a collapsible property at global scope
-   * by changing it to a variable declaration (e.g. a.b = 1 -> var a$b = 1).
-   * The property's value may either be a primitive or an object literal or
-   * function whose properties aren't collapsible.
+   * by adding a VAR stub and collapsing the property. e.g. c = a.b = 1; => var a$b; c = a$b = 1;
+   * This specifically handles "twinned" assignments, which are those where the assignment is also
+   * used as a reference and which need special handling.
    *
    * @param alias The flattened property name (e.g. "a$b")
    * @param refName The name for the reference being updated.
-   * @param ref An object containing information about the assignment getting
-   *     updated
+   * @param ref An object containing information about the assignment getting updated
    */
-  private void updateSimpleDeclaration(String alias, Name refName, Ref ref) {
+  private void updateTwinnedDeclaration(String alias, Name refName, Ref ref) {
+    checkNotNull(ref.getTwin());
+    // Don't handle declarations of an already flat name, just qualified names.
+    if (!ref.node.isGetProp()) {
+      return;
+    }
     Node rvalue = ref.node.getNext();
     Node parent = ref.node.getParent();
     Node grandparent = parent.getParent();
-    Node greatGrandparent = grandparent.getParent();
 
     if (rvalue != null && rvalue.isFunction()) {
       checkForHosedThisReferences(rvalue, refName.docInfo, refName);
     }
 
     // Create the new alias node.
-    Node nameNode = NodeUtil.newName(compiler, alias, grandparent.getFirstChild(),
-        refName.getFullName());
+    Node nameNode =
+        NodeUtil.newName(compiler, alias, grandparent.getFirstChild(), refName.getFullName());
     NodeUtil.copyNameAnnotations(ref.node.getLastChild(), nameNode);
 
-    if (grandparent.isExprResult()) {
-      // BEFORE: a.b.c = ...;
-      //   exprstmt
-      //     assign
-      //       getprop
-      //         getprop
-      //           name a
-      //           string b
-      //         string c
-      //       NODE
-      // AFTER: var a$b$c = ...;
-      //   var
-      //     name a$b$c
-      //       NODE
+    // BEFORE:
+    // ... (x.y = 3);
+    //
+    // AFTER:
+    // var x$y;
+    // ... (x$y = 3);
 
-      // Remove the r-value (NODE).
-      parent.removeChild(rvalue);
-      nameNode.addChildToFront(rvalue);
+    Node current = grandparent;
+    Node currentParent = grandparent.getParent();
+    for (;
+        !currentParent.isScript() && !currentParent.isNormalBlock();
+        current = currentParent, currentParent = currentParent.getParent()) {}
 
-      Node varNode = IR.var(nameNode);
-      greatGrandparent.replaceChild(grandparent, varNode);
-      compiler.reportChangeToEnclosingScope(varNode);
-    } else {
-      // This must be a complex assignment.
-      checkNotNull(ref.getTwin());
+    // Create a stub variable declaration right
+    // before the current statement.
+    Node stubVar = IR.var(nameNode.cloneTree()).useSourceInfoIfMissingFrom(nameNode);
+    currentParent.addChildBefore(stubVar, current);
 
-      // BEFORE:
-      // ... (x.y = 3);
-      //
-      // AFTER:
-      // var x$y;
-      // ... (x$y = 3);
-
-      Node current = grandparent;
-      Node currentParent = grandparent.getParent();
-      for (;
-          !currentParent.isScript() && !currentParent.isNormalBlock();
-          current = currentParent, currentParent = currentParent.getParent()) {}
-
-      // Create a stub variable declaration right
-      // before the current statement.
-      Node stubVar = IR.var(nameNode.cloneTree())
-          .useSourceInfoIfMissingFrom(nameNode);
-      currentParent.addChildBefore(stubVar, current);
-
-      parent.replaceChild(ref.node, nameNode);
-      compiler.reportChangeToEnclosingScope(nameNode);
-    }
+    parent.replaceChild(ref.node, nameNode);
+    compiler.reportChangeToEnclosingScope(nameNode);
   }
 
   /**
@@ -518,7 +481,7 @@ class CollapseProperties implements CompilerPass {
    *     this name. (This is mostly passed for convenience; it's equivalent to
    *     n.canCollapseChildNames()).
    */
-  private void updateObjLitOrFunctionDeclaration(
+  private void updateGlobalNameDeclaration(
       Name n, String alias, boolean canCollapseChildNames) {
     Ref decl = n.getDeclaration();
     if (decl == null) {
@@ -527,24 +490,18 @@ class CollapseProperties implements CompilerPass {
       return;
     }
 
-    if (decl.getTwin() != null) {
-      // Twin declarations will get handled when normal references
-      // are handled.
-      return;
-    }
-
     switch (decl.node.getParent().getToken()) {
       case ASSIGN:
-        updateObjLitOrFunctionDeclarationAtAssignNode(
+        updateGlobalNameDeclarationAtAssignNode(
             n, alias, canCollapseChildNames);
         break;
       case VAR:
       case LET:
       case CONST:
-        updateObjLitOrFunctionDeclarationAtVariableNode(n, canCollapseChildNames);
+        updateGlobalNameDeclarationAtVariableNode(n, canCollapseChildNames);
         break;
       case FUNCTION:
-        updateFunctionDeclarationAtFunctionNode(n, canCollapseChildNames);
+        updateGlobalNameDeclarationAtFunctionNode(n, canCollapseChildNames);
         break;
       default:
         break;
@@ -554,12 +511,12 @@ class CollapseProperties implements CompilerPass {
   /**
    * Updates the first initialization (a.k.a "declaration") of a global name
    * that occurs at an ASSIGN node. See comment for
-   * {@link #updateObjLitOrFunctionDeclaration}.
+   * {@link #updateGlobalNameDeclaration}.
    *
    * @param n An object representing a global name (e.g. "a", "a.b.c")
    * @param alias The flattened name for {@code n} (e.g. "a", "a$b$c")
    */
-  private void updateObjLitOrFunctionDeclarationAtAssignNode(
+  private void updateGlobalNameDeclarationAtAssignNode(
       Name n, String alias, boolean canCollapseChildNames) {
     // NOTE: It's important that we don't add additional nodes
     // (e.g. a var node before the exprstmt) because the exprstmt might be
@@ -570,6 +527,10 @@ class CollapseProperties implements CompilerPass {
     // we are only collapsing for global names.
     Ref ref = n.getDeclaration();
     Node rvalue = ref.node.getNext();
+    if (ref.getTwin() != null) {
+      updateTwinnedDeclaration(alias, ref.name, ref);
+      return;
+    }
     Node varNode = new Node(Token.VAR);
     Node varParent = ref.node.getAncestor(3);
     Node grandparent = ref.node.getAncestor(2);
@@ -656,11 +617,11 @@ class CollapseProperties implements CompilerPass {
 
   /**
    * Updates the first initialization (a.k.a "declaration") of a global name that occurs at a VAR
-   * node. See comment for {@link #updateObjLitOrFunctionDeclaration}.
+   * node. See comment for {@link #updateGlobalNameDeclaration}.
    *
    * @param n An object representing a global name (e.g. "a")
    */
-  private void updateObjLitOrFunctionDeclarationAtVariableNode(
+  private void updateGlobalNameDeclarationAtVariableNode(
       Name n, boolean canCollapseChildNames) {
     if (!canCollapseChildNames) {
       return;
@@ -697,11 +658,11 @@ class CollapseProperties implements CompilerPass {
   /**
    * Updates the first initialization (a.k.a "declaration") of a global name
    * that occurs at a FUNCTION node. See comment for
-   * {@link #updateObjLitOrFunctionDeclaration}.
+   * {@link #updateGlobalNameDeclaration}.
    *
    * @param n An object representing a global name (e.g. "a")
    */
-  private void updateFunctionDeclarationAtFunctionNode(
+  private void updateGlobalNameDeclarationAtFunctionNode(
       Name n, boolean canCollapseChildNames) {
     if (!canCollapseChildNames || !n.canCollapse()) {
       return;

@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import javax.annotation.Nullable;
 
 /**
  * {@link JSType}s include a possibly-empty set of ObjectType instances,
@@ -207,6 +208,39 @@ final class ObjectType implements TypeWithProperties {
 
   boolean isNamespace() {
     return this.ns != null;
+  }
+
+  private boolean isBuiltinObjectPrototype() {
+    return this.nominalType.isBuiltinObject() && isPrototypeObject();
+  }
+
+  /**
+   * Returns the prototype of this object type. For Object.prototype it returns null.
+   * When Bar extends Foo, the prototype of Bar.prototype is the canonical Foo instance. (This is
+   * accomplished in OTI by using the special type PrototypeObjectType.)
+   * As a result, this method may return a type X for which isPrototypeObject is false, i.e.,
+   * a type that has no owner function.
+   */
+  @Nullable
+  ObjectType getPrototypeObject() {
+    ObjectType proto;
+    if (isPrototypeObject() && !isBuiltinObjectPrototype()) {
+      proto = this.nominalType.getInstanceAsObjectType();
+    } else {
+      proto = this.nominalType.getPrototypeObject().getObjTypeIfSingletonObj();
+    }
+    if (this.equals(proto)) {
+      // In JS's dynamic semantics, the only object without a __proto__ is
+      // Object.prototype, but it's not representable in NTI.
+      // Object.prototype is the only case where we are equal to our own prototype.
+      // In this case, we should return null.
+      Preconditions.checkState(
+          isBuiltinObjectPrototype(),
+          "Failed to reach Object.prototype in prototype chain, unexpected self-link found at %s",
+          this);
+      return null;
+    }
+    return proto;
   }
 
   boolean isPrototypeObject() {
@@ -1164,13 +1198,15 @@ final class ObjectType implements TypeWithProperties {
   }
 
   private static boolean canMergeObjectsInJoin(ObjectType obj1, ObjectType obj2) {
-    if (obj1.isTopObject() || obj2.isTopObject()) {
+    if (obj1.isTopObject() || obj2.isTopObject() || obj1.equals(obj2)) {
       return true;
     }
     NominalType nt1 = obj1.nominalType;
     NominalType nt2 = obj2.nominalType;
     // In a union, there is at most one object whose nominal type is Object (or literal object).
-    if ((nt1.isBuiltinObject() || nt1.isLiteralObject())
+    if (!obj1.isPrototypeObject()
+        && (nt1.isBuiltinObject() || nt1.isLiteralObject())
+        && !obj2.isPrototypeObject()
         && (nt2.isBuiltinObject() || nt2.isLiteralObject())) {
       return true;
     }
@@ -1183,7 +1219,9 @@ final class ObjectType implements TypeWithProperties {
     if (nt2.isBuiltinObject()) {
       return obj2.isLoose && obj1.isSubtypeOf(obj2, SubtypeCache.create());
     }
-    return areRelatedNominalTypes(nt1, nt2) || NominalType.equalRawTypes(nt1, nt2);
+    return !obj1.isPrototypeObject()
+        && !obj2.isPrototypeObject()
+        && (areRelatedNominalTypes(nt1, nt2) || NominalType.equalRawTypes(nt1, nt2));
   }
 
   /**

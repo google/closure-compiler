@@ -124,8 +124,8 @@ public final class PeepholeReplaceKnownMethodsTest extends TypeICompilerTestCase
          "x = [\"a\",\"5\",\"c\"].join(\"a very very very long chain\")");
 
     // Template strings
-    foldSame("x = [`a`, `b`, `c`].join(``)");
-    foldSame("x = [`a`, `b`, `c`].join('')");
+    fold("x = [`a`, `b`, `c`].join(``)", "x = 'abc'");
+    fold("x = [`a`, `b`, `c`].join('')", "x = 'abc'");
 
     // TODO(user): Its possible to fold this better.
     foldSame("x = ['', foo].join('-')");

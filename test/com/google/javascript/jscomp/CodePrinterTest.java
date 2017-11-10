@@ -2843,7 +2843,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     compilerOptions.setChecksOnly(true);
     compilerOptions.setCheckTypes(true);
     compilerOptions.setContinueAfterErrors(true);
-    compilerOptions.setPreserveGoogProvidesAndRequires(true);
+    compilerOptions.setPreserveClosurePrimitives(true);
     Compiler compiler = new Compiler();
     compiler.disableThreads();
     compiler.compile(
@@ -2869,7 +2869,7 @@ public final class CodePrinterTest extends CodePrinterTestBase {
     compilerOptions.setCheckSymbols(true);
     compilerOptions.setCheckTypes(true);
     compilerOptions.setPreserveDetailedSourceInfo(true);
-    compilerOptions.setPreserveGoogProvidesAndRequires(true);
+    compilerOptions.setPreserveClosurePrimitives(true);
     compilerOptions.setClosurePass(true);
     Compiler compiler = new Compiler();
     compiler.disableThreads();

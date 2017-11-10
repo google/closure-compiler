@@ -556,16 +556,6 @@ public class CompilerOptions implements Serializable {
   public boolean rewriteFunctionExpressions;
 
   /**
-   * Remove unused and constant parameters.
-   */
-  public boolean optimizeParameters;
-
-  /**
-   * Remove unused return values.
-   */
-  public boolean optimizeReturns;
-
-  /**
    * Remove unused parameters from call sites.
    */
   public boolean optimizeCalls;
@@ -1207,7 +1197,7 @@ public class CompilerOptions implements Serializable {
    */
   public CompilerOptions() {
     // Accepted language
-    languageIn = LanguageMode.ECMASCRIPT3;
+    languageIn = LanguageMode.ECMASCRIPT_2017;
     languageOut = LanguageMode.NO_TRANSPILE;
 
     // Which environment to use
@@ -1269,8 +1259,6 @@ public class CompilerOptions implements Serializable {
     outputJsStringUsage = false;
     convertToDottedProperties = false;
     rewriteFunctionExpressions = false;
-    optimizeParameters = false;
-    optimizeReturns = false;
 
     // Renaming
     variableRenaming = VariableRenamingPolicy.OFF;
@@ -2336,12 +2324,12 @@ public class CompilerOptions implements Serializable {
     this.rewriteFunctionExpressions = rewriteFunctionExpressions;
   }
 
+  @Deprecated
   public void setOptimizeParameters(boolean optimizeParameters) {
-    this.optimizeParameters = optimizeParameters;
   }
 
+  @Deprecated
   public void setOptimizeReturns(boolean optimizeReturns) {
-    this.optimizeReturns = optimizeReturns;
   }
 
   public void setOptimizeCalls(boolean optimizeCalls) {
@@ -2948,8 +2936,6 @@ public class CompilerOptions implements Serializable {
             .add("nameGenerator", nameGenerator)
             .add("optimizeArgumentsArray", optimizeArgumentsArray)
             .add("optimizeCalls", optimizeCalls)
-            .add("optimizeParameters", optimizeParameters)
-            .add("optimizeReturns", optimizeReturns)
             .add("outputCharset", outputCharset)
             .add("outputJs", outputJs)
             .add("outputJsStringUsage", outputJsStringUsage)

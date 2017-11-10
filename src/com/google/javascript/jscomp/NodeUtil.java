@@ -574,6 +574,15 @@ public final class NodeUtil {
         // We assume here that programs don't change the value of the keyword
         // undefined to something other than the value undefined.
         return "undefined".equals(name) || "Infinity".equals(name) || "NaN".equals(name);
+      case TEMPLATELIT:
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+          if (child.isTemplateLitSub()) {
+            if (!isImmutableValue(child.getFirstChild())) {
+              return false;
+            }
+          }
+        }
+        return true;
       default:
         break;
     }
@@ -704,6 +713,16 @@ public final class NodeUtil {
 
       case FUNCTION:
         return includeFunctions && !NodeUtil.isFunctionDeclaration(n);
+
+      case TEMPLATELIT:
+        for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
+          if (child.isTemplateLitSub()) {
+            if (!isLiteralValue(child.getFirstChild(), includeFunctions)) {
+              return false;
+            }
+          }
+        }
+        return true;
 
       default:
         return isImmutableValue(n);
@@ -2399,7 +2418,7 @@ public final class NodeUtil {
    * @return The value node representing the new value.
    */
   public static Node getAssignedValue(Node n) {
-    checkState(n.isName(), n);
+    checkState(n.isName() || n.isGetProp(), n);
     Node parent = n.getParent();
     if (NodeUtil.isNameDeclaration(parent)) {
       return n.getFirstChild();
@@ -2685,11 +2704,19 @@ public final class NodeUtil {
   }
 
   /**
-   * @return Whether the name is a reference to a variable, function or
-   *       function parameter (not a label or a empty function expression name).
+   * @return Whether the node is a reference to a variable, function or
+   *     function parameter (not a label or a empty function expression name).
+   *     This includes both NAME nodes and shorthand property STRING_KEYs.
    */
   static boolean isReferenceName(Node n) {
-    return n.isName() && !n.getString().isEmpty();
+    return (n.isName() && !n.getString().isEmpty()) || isShorthandProperty(n);
+  }
+
+  /**
+   * @return Whether the node is a shorthand property.
+   */
+  static boolean isShorthandProperty(Node n) {
+    return n.isStringKey() && !n.hasChildren();
   }
 
   /**
@@ -4603,8 +4630,8 @@ public final class NodeUtil {
   }
 
   /**
-   * @return Whether the node is known to be a value that is not referenced
-   * elsewhere.
+   * @return Whether the result of the expression node is known to be a primitive value
+   * or an object that has not yet escaped.
    */
   static boolean evaluatesToLocalValue(Node value) {
     return evaluatesToLocalValue(value, Predicates.<Node>alwaysFalse());
@@ -4612,8 +4639,21 @@ public final class NodeUtil {
 
   /**
    * @param locals A predicate to apply to unknown local values.
-   * @return Whether the node is known to be a value that is not a reference
-   *     outside the expression scope.
+   * @return Whether the result of the expression node is known to be a primitive value
+   * or an object that has not yet escaped.  This guarantee is different
+   * than that provided by isLiteralValue (where literal values are immune to side-effects
+   * if unescaped) or isImmutableValue (which can be safely aliased).
+   *
+   * The concept of "local values" allow for the containment of side-effect operations. For
+   * example, setting a property on a local value does not produce a global side-effect.
+   *
+   * Note that the concept of "local value" is not deep, it does not say anything
+   * about the properties of the "local value" (all class instances have "constructor" properties
+   * that are not local values for instance).
+   *
+   * Note that this method only provides the starting state of the expression result,
+   * it does not guarantee that the value is forever a local value.  If the containing
+   * method has any non-local side-effect, "local values" may escape.
    */
   static boolean evaluatesToLocalValue(Node value, Predicate<Node> locals) {
     switch (value.getToken()) {
@@ -4645,10 +4685,7 @@ public final class NodeUtil {
             || isToStringMethodCall(value)
             || locals.apply(value);
       case TAGGED_TEMPLATELIT:
-        if (!callHasLocalResult(value)) {
-          return false;
-        }
-        return evaluatesToLocalValue(value.getLastChild());
+        return callHasLocalResult(value) || locals.apply(value);
       case NEW:
         return newHasLocalResult(value) || locals.apply(value);
       case DELPROP:
@@ -4660,47 +4697,21 @@ public final class NodeUtil {
       case FUNCTION:
       case REGEXP:
       case EMPTY:
-        return true;
       case ARRAYLIT:
-        for (Node entry : value.children()) {
-          if (!evaluatesToLocalValue(entry, locals)) {
-            return false;
-          }
-        }
-        return true;
       case OBJECTLIT:
-        for (Node key : value.children()) {
-          Preconditions.checkState(isObjLitProperty(key),
-              "Unexpected obj literal key:",
-              key);
-
-          if (key.isGetterDef() || key.isSetterDef()) {
-            continue;
-          }
-          if (key.isComputedProp() && !evaluatesToLocalValue(key.getSecondChild(), locals)) {
-            return false;
-          }
-          if (key.isStringKey() && !evaluatesToLocalValue(key.getFirstChild(), locals)) {
-            return false;
-          }
-        }
-        return true;
       case TEMPLATELIT:
-        for (Node child : value.children()) {
-          if (child.isTemplateLitSub()) {
-            if (!evaluatesToLocalValue(child.getFirstChild(), locals)) {
-              return false;
-            }
-          }
-        }
         return true;
       case CAST:
+        return evaluatesToLocalValue(value.getFirstChild(), locals);
       case SPREAD:
       case AWAIT:
-        return evaluatesToLocalValue(value.getFirstChild(), locals);
+        // TODO(johnlenz): we can do better for await if we use type information.  That is,
+        // if we know the promise being awaited on is a immutable value type (string, etc)
+        // we could return true here.
+        return false;
       default:
         // Other op force a local value:
-        //  x = '' + g (x is now an local string)
+        //  '' + g (a local string)
         //  x -= g (x is now an local number)
         if (isAssignmentOp(value)
             || isSimpleOperator(value)

@@ -34,7 +34,7 @@ public class ExportTestFunctions implements CompilerPass {
           "^(?:((\\w+\\.)+prototype\\.||window\\.)*"
               + "(setUpPage|setUp|shouldRunTests|tearDown|tearDownPage|test[\\w\\$]+))$");
 
-  private AbstractCompiler compiler;
+  private final AbstractCompiler compiler;
   private final String exportSymbolFunction;
   private final String exportPropertyFunction;
 

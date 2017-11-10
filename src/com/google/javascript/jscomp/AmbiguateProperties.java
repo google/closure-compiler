@@ -111,13 +111,10 @@ class AmbiguateProperties implements CompilerPass {
       };
 
   /** A map from TypeI to a unique representative Integer. */
-  private BiMap<TypeI, Integer> intForType = HashBiMap.create();
+  private final BiMap<TypeI, Integer> intForType = HashBiMap.create();
 
-  /**
-   * A map from TypeI to JSTypeBitSet representing the types related
-   * to the type.
-   */
-  private Map<TypeI, JSTypeBitSet> relatedBitsets = new HashMap<>();
+  /** A map from TypeI to JSTypeBitSet representing the types related to the type. */
+  private final Map<TypeI, JSTypeBitSet> relatedBitsets = new HashMap<>();
 
   /** A set of types that invalidate properties from ambiguation. */
   private final InvalidatingTypes invalidatingTypes;
@@ -168,7 +165,7 @@ class AmbiguateProperties implements CompilerPass {
   private int getIntForType(TypeI type) {
     // Templatized types don't exist at runtime, so collapse to raw type
     if (type != null && type.isGenericObjectType()) {
-      type = type.toMaybeObjectType().getPrototypeObject().getOwnerFunction().getInstanceType();
+      type = type.toMaybeObjectType().getRawType();
     }
     if (intForType.containsKey(type)) {
       return intForType.get(type).intValue();

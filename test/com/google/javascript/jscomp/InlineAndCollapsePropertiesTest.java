@@ -1121,6 +1121,65 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "A.useFoo();"));
   }
 
+  public void testClassStaticInheritance_method() {
+    test(
+        "class A { static s() {} } class B extends A {} const C = B;    C.s();",
+        "class A { static s() {} } class B extends A {} const C = null; B.s();");
+
+    testSame("class A { static s() {} } class B extends A {} B.s();");
+
+    // Currently we unsafely collapse A.s because we don't detect it is a class static method.
+    test(
+        "class A {}     A.s = function() {}; class B extends A {} B.s();",
+        "class A {} var A$s = function() {}; class B extends A {} B.s();");
+  }
+
+  public void testClassStaticInheritance_propertyAlias() {
+    test(
+        "class A {}     A.staticProp = 6; class B extends A {} let b = new B;",
+        "class A {} var A$staticProp = 6; class B extends A {} let b = new B;");
+
+    test(
+        "class A {}     A.staticProp = 6; class B extends A {} use(B.staticProp);",
+        "class A {} var A$staticProp = 6; class B extends A {} use(A$staticProp);");
+  }
+
+  public void testClassStaticInheritance_propertyWithSubproperty() {
+    test(
+        "class A {}     A.ns = {foo: 'bar'}; class B extends A {} use(B.ns.foo);",
+        "class A {} var A$ns$foo = 'bar'; class B extends A {} use(A$ns$foo);");
+
+    test(
+        "class A {} A.ns = {}; class B extends A {} B.ns.foo = 'baz'; use(B.ns.foo);",
+        "class A {} class B extends A {} var A$ns$foo = 'baz'; use(A$ns$foo);");
+  }
+
+  public void testClassStaticInheritance_propertyWithShadowing() {
+    test(
+        "class A {}     A.staticProp = 6; class B extends A {}     B.staticProp = 7;",
+        "class A {} var A$staticProp = 6; class B extends A {} var B$staticProp = 7;");
+
+    // At the time use() is called, B.staticProp is still the same as A.staticProp, but we back off
+    // rewriting it because of the shadowing afterwards. This makes CollapseProperties unsafely
+    // collapse in this case - the same issue occurs when transpiling down to ES5.
+    test(
+        "class A {}     A.foo = 6; class B extends A {} use(B.foo); B.foo = 7;",
+        "class A {} var A$foo = 6; class B extends A {} use(B$foo); var B$foo = 7;");
+  }
+
+  public void testClassStaticInheritance_cantDetermineSuperclass() {
+    // Here A.foo and B.foo are not collapsed because getSuperclass() creates an alias for them.
+    testSame(
+        LINE_JOINER.join(
+            "class A {}",
+            "A.foo = 5;",
+            "class B {}",
+            "B.foo = 6;",
+            "function getSuperclass() { return 1 < 2 ? A : B; }",
+            "class C extends getSuperclass() {}",
+            "use(C.foo);"));
+  }
+
   public void testDestructuringAlias1() {
     testSame("var a = { x: 5 }; var [b] = [a]; use(b.x);");
   }

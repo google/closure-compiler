@@ -36,7 +36,7 @@ public class J2clPass implements CompilerPass {
   private final Supplier<String> safeNameIdSupplier;
 
   private class GetDefineRewriter extends AbstractPostOrderCallback {
-    private Set<String> defines;
+    private final Set<String> defines;
 
     GetDefineRewriter(Set<String> defines) {
       this.defines = defines;

@@ -37,6 +37,7 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
     return pass;
   }
 
+  // TODO(lharker) Separate these out into multiple test cases.
   public void testFunctionsNamesAndIds() {
     final String jsSource =
         LINE_JOINER.join(
@@ -67,7 +68,8 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
             "function foo1() {",
             "  var arrowFn2 = () => {};",
             "  () => {};",
-            "}");
+            "}",
+            "var declaredLiteral = {f: function() {}};");
 
     testSame(jsSource);
 
@@ -80,7 +82,7 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
       count++;
     }
 
-    assertEquals("Unexpected number of functions", 30, count);
+    assertEquals("Unexpected number of functions", 31, count);
 
     final Map<Integer, String> expectedMap = new LinkedHashMap<>();
 
@@ -114,6 +116,7 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
     expectedMap.put(27, "foo1::arrowFn2"); // arrow function in inner scope
     expectedMap.put(28, "foo1::<anonymous>"); // arrow function declared as variable in inner scope
     expectedMap.put(29, "foo1");
+    expectedMap.put(30, "<anonymous>"); // TODO(lharker): should we output an actual name?
     assertEquals("Function id/name mismatch",
                  expectedMap, idNameMap);
   }
