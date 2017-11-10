@@ -662,8 +662,7 @@ public class DiagnosticGroups {
           CheckArrayWithGoogObject.ARRAY_PASSED_TO_GOOG_OBJECT,
           CheckNullableReturn.NULLABLE_RETURN,
           CheckNullableReturn.NULLABLE_RETURN_WITH_NAME,
-          ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC,
-          RhinoErrorReporter.TOO_MANY_TEMPLATE_PARAMS);
+          ImplicitNullabilityCheck.IMPLICITLY_NULLABLE_JSDOC);
 
   // Similar to the lintChecks group above, but includes things that cannot be done on a single
   // file at a time, for example because they require typechecking. If you enable these as errors
