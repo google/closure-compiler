@@ -16,6 +16,7 @@
 
 package com.google.javascript.jscomp;
 
+import com.google.common.annotations.GwtIncompatible;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.gson.stream.JsonWriter;
 import com.google.javascript.jscomp.LightweightMessageFormatter.LineNumberingFormatter;
@@ -54,6 +55,7 @@ public class PrintStreamJSONErrorManager extends BasicErrorManager {
   }
 
   @Override
+  @GwtIncompatible
   public void generateReport() {
     ByteArrayOutputStream bufferedStream = new ByteArrayOutputStream();
     List<ErrorWithLevel> list = new ArrayList<>();
