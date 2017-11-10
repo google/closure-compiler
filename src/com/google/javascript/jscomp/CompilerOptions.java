@@ -2324,14 +2324,6 @@ public class CompilerOptions implements Serializable {
     this.rewriteFunctionExpressions = rewriteFunctionExpressions;
   }
 
-  @Deprecated
-  public void setOptimizeParameters(boolean optimizeParameters) {
-  }
-
-  @Deprecated
-  public void setOptimizeReturns(boolean optimizeReturns) {
-  }
-
   public void setOptimizeCalls(boolean optimizeCalls) {
     this.optimizeCalls = optimizeCalls;
   }
