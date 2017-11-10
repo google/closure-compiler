@@ -328,6 +328,9 @@ public final class NodeUtilTest extends TestCase {
     assertEquals("Hello", NodeUtil.getStringValue(getNode("`Hello`")));
     assertEquals("Hello foo", NodeUtil.getStringValue(getNode("`Hello ${'foo'}`")));
     assertEquals(null, NodeUtil.getStringValue(getNode("`Hello ${name}`")));
+    assertEquals("4 bananas", NodeUtil.getStringValue(getNode("`${4} bananas`")));
+    assertEquals("This is true.", NodeUtil.getStringValue(getNode("`This is ${true}.`")));
+    assertEquals(null, NodeUtil.getStringValue(getNode("`${'hello'} ${name}`")));
   }
 
   public void testGetArrayStringValue() {

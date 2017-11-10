@@ -212,17 +212,19 @@ public final class NodeUtil {
         return n.getString();
 
       case TEMPLATELIT:
-        // If the string literal contains an expression we cannot convert it
+        // Only convert a template literal if all its expressions can be converted.
         String string = "";
         for (Node child = n.getFirstChild(); child != null; child = child.getNext()) {
           if (child.isString()) {
             string = string + child.getString();
           } else if (child.isTemplateLitSub()) {
-            if (child.getFirstChild().isString()) {
-              string = string + child.getFirstChild().getString();
-            } else {
+            Node expression = child.getFirstChild();
+            String expressionString = getStringValue(expression);
+            if (expressionString == null) {
+              // Cannot convert.
               return null;
             }
+            string = string + expressionString;
           }
         }
         return string;
