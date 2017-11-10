@@ -37,9 +37,16 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
     return pass;
   }
 
-  // TODO(lharker) Separate these out into multiple test cases.
-  public void testFunctionsNamesAndIds() {
-    final String jsSource =
+  public void testAnonymous1() {
+    testFunctionNamesAndIds("(function() {})", "<anonymous>");
+  }
+
+  public void testAnonymous2() {
+    testFunctionNamesAndIds("goog.array.map(arr, function(){});", "<anonymous>");
+  }
+
+  public void testNestedFunctions() {
+    testFunctionNamesAndIds(
         LINE_JOINER.join(
             "goog.widget = function(str) {",
             "  this.member_fn = function() {};",
@@ -48,78 +55,148 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
             "}",
             "function foo() {",
             "  function bar() {}",
-            "}",
-            "literal = {f1 : function(){}, f2 : function(){}};",
-            "goog.array.map(arr, function named(){});",
-            "goog.array.map(arr, function(){});",
-            "named_twice = function quax(){};",
+            "}"),
+        new String[] {
+          "goog.widget.member_fn",
+          "goog.widget::local_fn",
+          "goog.widget::<anonymous>",
+          "goog.widget",
+          "foo::bar",
+          "foo"
+        });
+  }
+
+  public void testObjectLiteral1() {
+    testFunctionNamesAndIds(
+        "literal = {f1 : function(){}, f2 : function(){}};",
+        new String[] {"literal.f1", "literal.f2"});
+  }
+
+  public void testObjectLiteral2() {
+    // TODO(lharker): should we output an actual name?
+    testFunctionNamesAndIds("var declaredLiteral = {f: function() {}};", "<anonymous>");
+  }
+
+  public void testNestedObjectLiteral() {
+    testFunctionNamesAndIds(
+        LINE_JOINER.join(
             "recliteral = {l1 : {l2 : function(){}}};",
             "namedliteral = {n1 : function litnamed(){}};",
-            "namedrecliteral = {n1 : {n2 : function reclitnamed(){}}};",
-            "numliteral = {1 : function(){}};",
-            "recnumliteral = {1 : {a : function(){}}};",
-            "literalWithShorthand = {shorthandF1(){}, shorthandF2(){}};",
-            "class Klass{ constructor(){} method(){}}",
-            "KlassExpression = class{ constructor(){} method(){}}",
-            "var KlassExpressionToVar = class{ constructor(){} method(){}}",
-            "class KlassWithStaticMethod{ static staticMethod(){}}",
-            "() => {};",
-            "var arrowFn1 = () => {};",
+            "namedrecliteral = {n1 : {n2 : function reclitnamed(){}}};"),
+        new String[] {
+          "recliteral.l1.l2", "litnamed", "reclitnamed",
+        });
+  }
+
+  public void testObjectLiteralWithNumericKey1() {
+    testFunctionNamesAndIds("numliteral = {1 : function(){}};", "numliteral.__0");
+  }
+
+  public void testObjectLiteralWithNumericKey2() {
+    testFunctionNamesAndIds(
+        LINE_JOINER.join(
+            "numliteral1 = {1 : function(){}};",
+            "numliteral2 = {67 : function(){}};",
+            "recnumliteral = {1 : {a : function(){}}};"),
+        new String[] {"numliteral1.__0", "numliteral2.__1", "recnumliteral.__2.a"});
+  }
+
+  public void testNamedFunctionExpression1() {
+    testFunctionNamesAndIds("goog.array.map(arr, function named(){});", "named");
+  }
+
+
+  public void testNamedFunctionExpression2() {
+    testFunctionNamesAndIds("named_twice = function quax(){};", "quax");
+  }
+
+  public void testComputedProperty() {
+    testFunctionNamesAndIds("computedPropLiteral = {['c1']: function() {}}", "<anonymous>");
+  }
+
+  public void testClassDeclaration() {
+    testFunctionNamesAndIds(
+        "class Klass{ constructor(){} method(){}}",
+        new String[] {"Klass.constructor", "Klass.method"});
+  }
+
+  public void testClassExpression1() {
+    testFunctionNamesAndIds(
+        "KlassExpression = class{ constructor(){} method(){} }",
+        new String[] {"KlassExpression.constructor", "KlassExpression.method"});
+  }
+
+  public void testClassExpression2() {
+    testFunctionNamesAndIds(
+        "var KlassExpressionToVar = class{ constructor(){} method(){} }",
+        new String[] {"KlassExpressionToVar.constructor", "KlassExpressionToVar.method"});
+  }
+
+  public void testClassWithStaticMethod() {
+    testFunctionNamesAndIds(
+        "class KlassWithStaticMethod{ static staticMethod(){} }",
+        "KlassWithStaticMethod.staticMethod");
+  }
+
+  public void testArrowFunctions1() {
+    testFunctionNamesAndIds("() => {};", "<anonymous>");
+  }
+
+  public void testArrowFunctions2() {
+    testFunctionNamesAndIds("var arrowFn1 = () => {};", "arrowFn1");
+  }
+
+  public void testArrowFunctions3() {
+    testFunctionNamesAndIds(
+        LINE_JOINER.join(
             "function foo1() {",
             "  var arrowFn2 = () => {};",
             "  () => {};",
-            "}",
-            "var declaredLiteral = {f: function() {}};",
-            "computedPropLiteral = {['c1']: function() {}}");
+            "}"),
+        new String[] {
+          "foo1::arrowFn2",
+          "foo1::<anonymous>",
+          "foo1"
+        });
+  }
 
+  public void testObjectLiteralWithMethodShorthand() {
+    // TODO(lharker) should we output an actual name?
+    testFunctionNamesAndIds(
+        "var literalWithShorthand = {shorthandF1(){}, shorthandF2(){}};",
+        new String[] {"<anonymous>", "<anonymous>"});
+
+    testFunctionNamesAndIds(
+        "literalWithShorthand = {shorthandF1(){}, shorthandF2(){}};",
+        new String[] {"literalWithShorthand.shorthandF1", "literalWithShorthand.shorthandF2"});
+  }
+
+  /**
+   * Runs CollectFunctionNames on the given source and tests that it outputs the correct
+   * id -> function name map.
+   *
+   * @param jsSource Javascript code.
+   * @param expectedFunctionNames List of expected function name output, ordered by expected id.
+   */
+  private void testFunctionNamesAndIds(String jsSource, String[] expectedFunctionNames) {
     testSame(jsSource);
 
     final Map<Integer, String> idNameMap = new LinkedHashMap<>();
-    int count = 0;
     for (Node f : functionNames.getFunctionNodeList()) {
       int id = functionNames.getFunctionId(f);
       String name = functionNames.getFunctionName(f);
       idNameMap.put(id, name);
-      count++;
     }
 
-    assertEquals("Unexpected number of functions", 32, count);
-
     final Map<Integer, String> expectedMap = new LinkedHashMap<>();
+    for (int id = 0; id < expectedFunctionNames.length; id++) {
+      expectedMap.put(id, expectedFunctionNames[id]);
+    }
 
-    expectedMap.put(0, "goog.widget.member_fn");
-    expectedMap.put(1, "goog.widget::local_fn");
-    expectedMap.put(2, "goog.widget::<anonymous>");
-    expectedMap.put(3, "goog.widget");
-    expectedMap.put(4, "foo::bar");
-    expectedMap.put(5, "foo");
-    expectedMap.put(6, "literal.f1");
-    expectedMap.put(7, "literal.f2");
-    expectedMap.put(8, "named");
-    expectedMap.put(9, "<anonymous>");
-    expectedMap.put(10, "quax");
-    expectedMap.put(11, "recliteral.l1.l2");
-    expectedMap.put(12, "litnamed");
-    expectedMap.put(13, "reclitnamed");
-    expectedMap.put(14, "numliteral.__2");
-    expectedMap.put(15, "recnumliteral.__3.a");
-    expectedMap.put(16, "literalWithShorthand.shorthandF1");
-    expectedMap.put(17, "literalWithShorthand.shorthandF2");
-    expectedMap.put(18, "Klass.constructor");
-    expectedMap.put(19, "Klass.method");
-    expectedMap.put(20, "KlassExpression.constructor");
-    expectedMap.put(21, "KlassExpression.method");
-    expectedMap.put(22, "KlassExpressionToVar.constructor");
-    expectedMap.put(23, "KlassExpressionToVar.method");
-    expectedMap.put(24, "KlassWithStaticMethod.staticMethod");
-    expectedMap.put(25, "<anonymous>"); // arrow function in global scope
-    expectedMap.put(26, "arrowFn1"); // arrow function declared as variable
-    expectedMap.put(27, "foo1::arrowFn2"); // arrow function in inner scope
-    expectedMap.put(28, "foo1::<anonymous>"); // arrow function declared as variable in inner scope
-    expectedMap.put(29, "foo1");
-    expectedMap.put(30, "<anonymous>"); // TODO(lharker): should we output an actual name?
-    expectedMap.put(31, "<anonymous>"); // function assigned to computed property
-    assertEquals("Function id/name mismatch",
-                 expectedMap, idNameMap);
+    assertEquals("Function id/name mismatch", expectedMap, idNameMap);
+  }
+
+  private void testFunctionNamesAndIds(String jsSource, String expectedFunctionName) {
+    testFunctionNamesAndIds(jsSource, new String[] {expectedFunctionName});
   }
 }

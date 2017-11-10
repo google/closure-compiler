@@ -124,7 +124,7 @@ class CollectFunctionNames extends AbstractPostOrderCallback implements Compiler
   private final transient AbstractCompiler compiler;
   private final FunctionNamesMap functionNames = new FunctionNamesMap();
   private static final char DELIMITER = '.';
-  private static final NodeNameExtractor extractor = new NodeNameExtractor(DELIMITER);
+  private final NodeNameExtractor extractor = new NodeNameExtractor(DELIMITER);
 
   CollectFunctionNames(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -164,7 +164,7 @@ class CollectFunctionNames extends AbstractPostOrderCallback implements Compiler
       case ASSIGN:
         Node lhs = n.getFirstChild();
         Node rhs = lhs.getNext();
-        // We handle object literal methods starting from ASSIGN nodes instead of OBJECT_LIT because
+        // We handle object literal methods starting from ASSIGN nodes instead of OBJECT_LIT
         // to avoid revisiting nested object literals.
         if (rhs.isObjectLit()) {
           collectObjectLiteralMethodsNames(rhs, extractor.getName(lhs));
