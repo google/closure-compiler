@@ -137,9 +137,15 @@ class OptimizeReturns implements OptimizeCalls.CallGraphCompilerPass, CompilerPa
       if (n.hasChildren() && isCandidateFunction(n.getFirstChild())) {
         return true;
       }
+    } else if (isClassMemberDefinition(n)) {
+      return true;
     }
 
     return false;
+  }
+
+  private boolean isClassMemberDefinition(Node n) {
+    return n.isMemberFunctionDef() && n.getParent().isClassMembers();
   }
 
   private static boolean isCandidateFunction(Node n) {

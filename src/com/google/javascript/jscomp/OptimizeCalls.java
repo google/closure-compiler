@@ -378,7 +378,9 @@ class OptimizeCalls implements CompilerPass {
         || name.equals(NodeUtil.EXTERN_OBJECT_PROPERTY_STRING)
         || name.equals("inherits")
         || name.equals("$jscomp$inherits")
-        || name.equals("goog$inherits")) {
+        || name.equals("goog$inherits")
+        // don't try to optimize the return value of method call "constructor"
+        || name.equals("constructor")) {
       return false;
     }
     return true;
@@ -390,8 +392,14 @@ class OptimizeCalls implements CompilerPass {
   static boolean isAllowedReference(Node n) {
     Node parent = n.getParent();
     switch (parent.getToken()) {
+      case FOR_IN:
+      case FOR_OF:
+        // inspecting the properties is allowed.
+        return parent.getSecondChild() == n;
       case INSTANCEOF:
       case TYPEOF:
+      case IN:
+        return true;
       case GETELEM:
       case GETPROP:
         // Calls escape the "this" value. a.foo() aliases "a" as "this" but general
