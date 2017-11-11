@@ -503,6 +503,9 @@ class CollapseProperties implements CompilerPass {
       case FUNCTION:
         updateGlobalNameDeclarationAtFunctionNode(n, canCollapseChildNames);
         break;
+      case CLASS:
+        updateGlobalNameDeclarationAtClassNode(n, canCollapseChildNames);
+        break;
       default:
         break;
     }
@@ -670,8 +673,24 @@ class CollapseProperties implements CompilerPass {
 
     Ref ref = n.getDeclaration();
     String fnName = ref.node.getString();
+    addStubsForUndeclaredProperties(n, fnName, ref.node.getAncestor(2), ref.node.getParent());
+  }
+
+  /**
+   * Updates the first initialization (a.k.a "declaration") of a global name that occurs at a CLASS
+   * node. See comment for {@link #updateGlobalNameDeclaration}.
+   *
+   * @param n An object representing a global name (e.g. "a")
+   */
+  private void updateGlobalNameDeclarationAtClassNode(Name n, boolean canCollapseChildNames) {
+    if (!canCollapseChildNames || !n.canCollapse()) {
+      return;
+    }
+
+    Ref ref = n.getDeclaration();
+    String className = ref.node.getString();
     addStubsForUndeclaredProperties(
-        n, fnName, ref.node.getAncestor(2), ref.node.getParent());
+        n, className, ref.node.getAncestor(2), ref.node.getParent());
   }
 
   /**

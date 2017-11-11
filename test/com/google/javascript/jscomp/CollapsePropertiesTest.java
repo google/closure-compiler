@@ -1832,6 +1832,48 @@ public final class CollapsePropertiesTest extends CompilerTestCase {
             "A.useFoo();"));
   }
 
+  public void testClassStaticProperties_locallyDeclared1() {
+    test(
+        LINE_JOINER.join(
+            "class A {}",
+            "function addStaticPropToA() {",
+            "  A.staticProp = 5;",
+            "}",
+            "if (A.staticProp) {",
+            "  use(A.staticProp);",
+            "}"),
+        LINE_JOINER.join(
+            "class A {}",
+            "var A$staticProp;",
+            "function addStaticPropToA() {",
+            "  A$staticProp = 5;",
+            "}",
+            "if (A$staticProp) {",
+            "  use(A$staticProp);",
+            "}"));
+  }
+
+  public void testClassStaticProperties_locallyDeclared2() {
+    test(
+        LINE_JOINER.join(
+            "const A = class {}",
+            "function addStaticPropToA() {",
+            "  A.staticProp = 5;",
+            "}",
+            "if (A.staticProp) {",
+            "  use(A.staticProp);",
+            "}"),
+        LINE_JOINER.join(
+            "const A = class {}",
+            "var A$staticProp;",
+            "function addStaticPropToA() {",
+            "  A$staticProp = 5;",
+            "}",
+            "if (A$staticProp) {",
+            "  use(A$staticProp);",
+            "}"));
+  }
+
   public void testEs6ClassStaticInheritance() {
     test("class A {} A.foo = 5; use(A.foo); class B extends A {}",
         "class A {} var A$foo = 5; use(A$foo); class B extends A {}");
