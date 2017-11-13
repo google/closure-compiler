@@ -192,6 +192,8 @@ public abstract class CompilerTestCase extends TestCase {
   /** A minimal set of externs, consisting of only those needed for NTI not to blow up. */
   protected static final String MINIMAL_EXTERNS =
       LINE_JOINER.join(
+          "/** @type {undefined} */",
+          "var undefined;",
           "/**",
           " * @constructor",
           " * @param {*=} opt_value",

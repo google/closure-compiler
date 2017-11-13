@@ -24,7 +24,7 @@ package com.google.javascript.jscomp;
 public final class OptimizeParametersTest extends CompilerTestCase {
 
   public OptimizeParametersTest() {
-    super(lines(DEFAULT_EXTERNS, "var undefined;"));
+    super(DEFAULT_EXTERNS);
   }
 
   @Override
