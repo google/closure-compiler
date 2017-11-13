@@ -1075,4 +1075,36 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
 
     test(js, output);
   }
+
+  public void testPropertiesWithTypesThatHaveBeenNarrowed() {
+    String js = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {?Object} */",
+        "  this.prop1 = {};",
+        "  /** @type {?Object} */",
+        "  this.prop2;",
+        "  this.headerObserver_;",
+        "}",
+        "Foo.prototype.m = function() {",
+        "  this.prop2 = {};",
+        "  return this.headerObserver_;",
+        "};");
+
+    String output = LINE_JOINER.join(
+        "/** @constructor */",
+        "function Foo() {",
+        "  /** @type {?Object} */",
+        "  this.d = {};",
+        "  /** @type {?Object} */",
+        "  this.b;",
+        "  this.a;",
+        "}",
+        "Foo.prototype.c = function() {",
+        "  this.b = {};",
+        "  return this.a;",
+        "};");
+
+    test(js, output);
+  }
 }
