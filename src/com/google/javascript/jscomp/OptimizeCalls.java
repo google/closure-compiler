@@ -378,9 +378,7 @@ class OptimizeCalls implements CompilerPass {
         || name.equals(NodeUtil.EXTERN_OBJECT_PROPERTY_STRING)
         || name.equals("inherits")
         || name.equals("$jscomp$inherits")
-        || name.equals("goog$inherits")
-        // don't try to optimize the return value of method call "constructor"
-        || name.equals("constructor")) {
+        || name.equals("goog$inherits")) {
       return false;
     }
     return true;

@@ -26,11 +26,16 @@ public final class OptimizeReturnsTest extends CompilerTestCase {
     return new OptimizeReturns(compiler);
   }
 
-  private static final String EXTERNAL_SYMBOLS =
-    "var extern;extern.externalMethod";
+  private static final String EXTERNAL_SYMBOLS = lines("var extern;", "extern.externalMethod");
 
   public OptimizeReturnsTest() {
-    super(EXTERNAL_SYMBOLS);
+    super(lines(DEFAULT_EXTERNS, EXTERNAL_SYMBOLS));
+  }
+
+  @Override
+  protected void setUp() throws Exception {
+    super.setUp();
+    enableGatherExternProperties();
   }
 
   @Override
