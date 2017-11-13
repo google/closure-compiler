@@ -1357,6 +1357,13 @@ public class Node implements Serializable {
     this.putBooleanProp(NON_INDEXABLE, true);
   }
 
+  public final void makeNonIndexableRecursive() {
+    this.makeNonIndexable();
+    for (Node child : children()) {
+      child.makeNonIndexableRecursive();
+    }
+  }
+
   public final boolean isFromExterns() {
     StaticSourceFile file = getStaticSourceFile();
     return file == null ? false : file.isExtern();
