@@ -90,9 +90,9 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
 
   public void testSkipParamOK() {
     testChecks(
-        LINE_JOINER.join(
+        lines(
             "/**", " * @param {*} i", " * @param {string} j", " */", "function f(i, j) {}"),
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @param {*} i",
             " * @param {string} j",
@@ -174,13 +174,13 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
 
   public void testQualifiedClass() {
     testChecks(
-        LINE_JOINER.join(
+        lines(
             "var goog = {};",
             "/** @constructor */",
             "goog.Foo = function() {};",
             "/** @param {!goog.Foo} x */ ",
             "function f(x) {}"),
-        LINE_JOINER.join(
+        lines(
             "var goog = {};",
             "/** @constructor */",
             "goog.Foo = function() {};",
@@ -218,11 +218,11 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
 
   public void testImplementedInterface() {
     testChecks(
-        LINE_JOINER.join(
+        lines(
             "/** @interface */ function I() {}",
             "/** @param {!I} i */ function f(i) {}",
             "/** @constructor\n@implements {I} */ function C() {}"),
-        LINE_JOINER.join(
+        lines(
             "/** @interface */ function I() {}",
             "/** @param {!I} i */ function f(i) {",
             "  $jscomp.typecheck.checkType(i, ",
@@ -235,12 +235,12 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
 
   public void testExtendedInterface() {
     testChecks(
-        LINE_JOINER.join(
+        lines(
             "/** @interface */ function I() {}",
             "/** @interface\n@extends {I} */ function J() {}",
             "/** @param {!I} i */function f(i) {}",
             "/** @constructor\n@implements {J} */function C() {}"),
-        LINE_JOINER.join(
+        lines(
             "/** @interface */ function I() {}",
             "/** @interface\n@extends {I} */ function J() {}",
             "/** @param {!I} i */ function f(i) {",
@@ -255,12 +255,12 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
 
   public void testImplementedInterfaceOrdering() {
     testChecks(
-        LINE_JOINER.join(
+        lines(
             "/** @interface */ function I() {}" ,
             "/** @param {!I} i */ function f(i) {}" ,
             "/** @constructor\n@implements {I} */ function C() {}" ,
             "C.prototype.f = function() {};"),
-        LINE_JOINER.join(
+        lines(
             "/** @interface */ function I() {}",
             "/** @param {!I} i */ function f(i) {",
             "  $jscomp.typecheck.checkType(i, ",
@@ -274,7 +274,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
 
   public void testImplementedInterfaceOrderingGoogInherits() {
     testChecks(
-        LINE_JOINER.join(
+        lines(
             "var goog = {};",
             "goog.inherits = function(x, y) {};",
             "/** @interface */function I() {}",
@@ -283,7 +283,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
             "/** @constructor\n@extends {B}\n@implements {I} */function C() {}",
             "goog.inherits(C, B);",
             "C.prototype.f = function() {};"),
-        LINE_JOINER.join(
+        lines(
             "var goog = {};",
             "goog.inherits = function(x, y) {};",
             "/** @interface */function I() {}",
@@ -303,7 +303,7 @@ public final class RuntimeTypeCheckTest extends CompilerTestCase {
   public void testInnerConstructor() {
     testChecks(
         "(function() { /** @constructor */ function C() {} })()",
-        LINE_JOINER.join(
+        lines(
             "(function() {",
             "  /** @constructor */ function C() {}",
             "  C.prototype['instance_of__C'] = true;",

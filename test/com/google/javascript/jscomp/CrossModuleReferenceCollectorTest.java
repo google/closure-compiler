@@ -55,7 +55,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   }
 
   public void testVarInBlock() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
             "  if (true) {",
             "    var y = x;",
             "    y;",
@@ -131,7 +131,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   }
 
   public void testBasicBlocks() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
             "var x = 0;",
             "switch (x) {",
             "  case 0:",
@@ -148,7 +148,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   }
 
   public void testTopLevelStatements() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "var x = 1;",
         "const y = x;",
         "let z = x - y;",
@@ -290,7 +290,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   }
 
   public void testFunctionCallsAreNotMovableExceptForMethodStubs() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "function Foo() {}",
         "Foo.prototype.stub = JSCompiler_stubMethod(x);",
         "Foo.prototype.unstub = JSCompiler_unstubMethod(x);",
@@ -342,7 +342,7 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
   }
 
   public void testObjectLiteralOfMovablesIsMovable() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "var wellDefinedName = 1;",
         "var o = { f: function(){}, one: 1, n: wellDefinedName, o: {}};"));
     assertThat(testedCollector.getTopLevelStatements().get(1).isMovableDeclaration()).isTrue();

@@ -236,7 +236,7 @@ public final class DefinitionUseSiteFinderTest extends CompilerTestCase {
 
   public void testDropStubDefinitions() {
     String externs =
-        LINE_JOINER.join(
+        lines(
             "obj.prototype.stub;",
             "/**",
             " * @param {string} s id.",
@@ -251,7 +251,7 @@ public final class DefinitionUseSiteFinderTest extends CompilerTestCase {
 
   public void testNoDropStub1() {
     String externs =
-        LINE_JOINER.join(
+        lines(
             "var name;",
             "/**",
             " * @param {string} s id.",
@@ -267,7 +267,7 @@ public final class DefinitionUseSiteFinderTest extends CompilerTestCase {
 
   public void testNoDropStub2() {
     String externs =
-        LINE_JOINER.join(
+        lines(
             "f().name;", // These are not recongnized as stub definitions
             "/**",
             " * @param {string} s id.",
@@ -378,7 +378,7 @@ public final class DefinitionUseSiteFinderTest extends CompilerTestCase {
   }
 
   public void testCallInExterns() {
-    String externs = LINE_JOINER.join(
+    String externs = lines(
             "var goog = {};",
             "/** @constructor */",
             "goog.Response = function() {};",
@@ -393,7 +393,7 @@ public final class DefinitionUseSiteFinderTest extends CompilerTestCase {
   }
 
   public void testDoubleNamedFunction() {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "A.f = function f_d() { f_d(); };",
         "A.f();");
     checkDefinitionsInJs(
@@ -412,7 +412,7 @@ public final class DefinitionUseSiteFinderTest extends CompilerTestCase {
 
     Node script =
         compiler.parseSyntheticCode(
-            LINE_JOINER.join(
+            lines(
                 "function foo() {",
                 "  foo.propOfFoo = 'asdf';",
                 "}",

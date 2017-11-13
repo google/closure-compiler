@@ -74,16 +74,16 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         warning(e));
     testSame("var a, b; a = (b = 7, 6)");
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function x(){}",
             "function f(a, b){}",
             "f(1,(x(), 2));"));
     test(
-        LINE_JOINER.join(
+        lines(
             "function x(){}",
             "function f(a, b){}",
             "f(1,(2, 3));"),
-        LINE_JOINER.join(
+        lines(
             "function x(){}",
             "function f(a, b){}",
             "f(1,(JSCOMPILER_PRESERVE(2), 3));"),
@@ -95,40 +95,40 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
         warning(e));
     test("`LoneTemplate`", "JSCOMPILER_PRESERVE(`LoneTemplate`)", warning(e));
     test(
-        LINE_JOINER.join("var name = 'Bad';", "`${name}Template`;"),
-        LINE_JOINER.join("var name = 'Bad';", "JSCOMPILER_PRESERVE(`${name}Template`)"),
+        lines("var name = 'Bad';", "`${name}Template`;"),
+        lines("var name = 'Bad';", "JSCOMPILER_PRESERVE(`${name}Template`)"),
         warning(e));
     test(
-        LINE_JOINER.join("var name = 'BadTail';", "`Template${name}`;"),
-        LINE_JOINER.join("var name = 'BadTail';", "JSCOMPILER_PRESERVE(`Template${name}`)"),
+        lines("var name = 'BadTail';", "`Template${name}`;"),
+        lines("var name = 'BadTail';", "JSCOMPILER_PRESERVE(`Template${name}`)"),
         warning(e));
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var name = 'Good';",
             "var templateString = `${name}Template`;"));
     testSame("var templateString = `Template`;");
     testSame("tagged`Template`;");
     testSame("tagged`${name}Template`;");
 
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "var obj = {",
         "  itm1: 1,",
         "  itm2: 2",
         "}",
         "var { itm1: de_item1, itm2: de_item2 } = obj;"));
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "var obj = {",
         "  itm1: 1,",
         "  itm2: 2",
         "}",
         "var { itm1, itm2 } = obj;"));
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "var arr = ['item1', 'item2', 'item3'];",
         "var [ itm1 = 1, itm2 = 2 ] = arr;"));
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "var arr = ['item1', 'item2', 'item3'];",
         "var [ itm1 = 1, itm2 = 2 ] = badArr;"));
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "var arr = ['item1', 'item2', 'item3'];",
         "function f(){}",
         "var [ itm1 = f(), itm2 = 2 ] = badArr;"));
@@ -199,7 +199,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
   }
 
   public void testExternFunctions() {
-    String externs = LINE_JOINER.join(
+    String externs = lines(
         "/** @return {boolean}",
         "  * @nosideeffects */",
         "function noSideEffectsExtern(){}",
@@ -233,7 +233,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
   }
 
   public void testExternPropertyFunctions() {
-    String externs = LINE_JOINER.join(
+    String externs = lines(
         "/** @const */ var foo = {};",
         "/** @return {boolean}",
         "  * @nosideeffects */",
@@ -250,7 +250,7 @@ public final class CheckSideEffectsTest extends CompilerTestCase {
     // Methods redefined in inner scopes should not trigger a warning
     testSame(
         externs(externs),
-        srcs(LINE_JOINER.join(
+        srcs(lines(
             "(function() {",
             "  var foo = {};",
             "  foo.noSideEffectsExtern = function() {};",

@@ -73,19 +73,19 @@ public final class CheckUselessBlocksTest extends CompilerTestCase {
     testWarning("{}", USELESS_BLOCK);
     testWarning("{ var f = function() {}; }", USELESS_BLOCK);
     testWarning("{ var x = 1; }", USELESS_BLOCK);
-    testWarning(LINE_JOINER.join(
+    testWarning(lines(
         "function f() {",
         "  return",
         "    {foo: 'bar'};",
         "}"), USELESS_BLOCK);
-    testWarning(LINE_JOINER.join(
+    testWarning(lines(
         "if (foo) {",
         "  bar();",
         "  {",
         "    baz();",
         "  }",
         "}"), USELESS_BLOCK);
-    testWarning(LINE_JOINER.join(
+    testWarning(lines(
         "if (foo) {",
         "  bar();",
         "} {",

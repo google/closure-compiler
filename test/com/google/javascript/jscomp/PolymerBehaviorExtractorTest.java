@@ -41,7 +41,7 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
 
   public void testArrayBehavior() {
     parseAndInitializeExtractor(
-        LINE_JOINER.join(
+        lines(
             "/** @polymerBehavior */",
             "var FunBehavior = {",
             "  properties: {",
@@ -85,7 +85,7 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
 
   public void testInlineLiteralBehavior() {
     parseAndInitializeExtractor(
-        LINE_JOINER.join(
+        lines(
             "/** @polymerBehavior */",
             "var FunBehavior = {",
             "  properties: {",
@@ -119,7 +119,7 @@ public class PolymerBehaviorExtractorTest extends CompilerTypeTestCase {
 
   public void testIsPropInBehavior() {
     parseAndInitializeExtractor(
-        LINE_JOINER.join(
+        lines(
             "/** @polymerBehavior */",
             "var FunBehavior = {",
             "  is: 'fun-behavior',",

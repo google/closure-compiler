@@ -38,7 +38,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   boolean regExpHaveSideEffects = true;
 
   private static final String TEST_EXTERNS =
-      CompilerTypeTestCase.DEFAULT_EXTERNS + LINE_JOINER.join(
+      CompilerTypeTestCase.DEFAULT_EXTERNS + lines(
           "var window; window.setTimeout;",
           "/**@nosideeffects*/ function externSENone(){}",
 
@@ -270,7 +270,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testIssue303() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "/** @constructor */ function F() {",
         "  var self = this;",
         "  window.setTimeout(function() {",
@@ -286,7 +286,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testIssue303b() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "/** @constructor */ function F() {",
         "  var self = this;",
         "  window.setTimeout(function() {",
@@ -337,7 +337,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     // TODO(johnlenz): "f" is side-effect free but we need
     // to propagate that "externObjSEThisMethod" is modifying
     // a local object.
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {",
         "  new externObjSEThis().externObjSEThisMethod('') ",
         "};",
@@ -352,7 +352,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     // While "externObjSEThisMethod" has modifies "this"
     // it does not have global side-effects with "this" is
     // a known local value.
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {",
         "  var x = new externObjSEThis(); ",
         "  x.externObjSEThisMethod('') ",
@@ -366,7 +366,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     // "externObjSEThisMethod" modifies "this", the 'this'
     // is not a known local value, so it must be assumed it is to
     // have global side-effects.
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(x) {",
         "  x.externObjSEThisMethod('') ",
         "};",
@@ -380,7 +380,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     // is not a known local value, so it must be assumed it is to
     // have global side-effects.  All possible values of "x" are considered
     // as no intraprocedural data flow is done.
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(x) {",
         "  x = new externObjSEThis(); ",
         "  x.externObjSEThisMethod('') ",
@@ -391,7 +391,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testAnnotationInExterns_new10() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {",
         "  new externObjSEThis().externObjSEThisMethod2('') ",
         "};",
@@ -459,21 +459,21 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testConstructorAnnotationInExterns2() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var a = new externSefConstructor();",
         "a.sefFnOfSefObj()");
     assertNoPureCalls(source);
   }
 
   public void testConstructorAnnotationInExterns3() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var a = new externSefConstructor();",
         "a.nsefFnOfSefObj()");
     assertPureCallsMarked(source, ImmutableList.of("a.nsefFnOfSefObj"));
   }
 
   public void testConstructorAnnotationInExterns4() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var a = new externSefConstructor();",
         "a.externShared()");
     assertNoPureCalls(source);
@@ -484,28 +484,28 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testConstructorAnnotationInExterns6() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var a = new externNsefConstructor();",
         "a.sefFnOfNsefObj()");
     assertPureCallsMarked(source, ImmutableList.of("externNsefConstructor"));
   }
 
   public void testConstructorAnnotationInExterns7() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var a = new externNsefConstructor();",
         "a.nsefFnOfNsefObj()");
     assertPureCallsMarked(source, ImmutableList.of("externNsefConstructor", "a.nsefFnOfNsefObj"));
   }
 
   public void testConstructorAnnotationInExterns8() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var a = new externNsefConstructor();",
         "a.externShared()");
     assertPureCallsMarked(source, ImmutableList.of("externNsefConstructor"));
   }
 
   public void testSharedFunctionName1() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "if (true) {",
         "  a = new externNsefConstructor()",
         "} else {",
@@ -521,7 +521,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     boolean broken = true;
     if (broken) {
       assertPureCallsMarked(
-          LINE_JOINER.join(
+          lines(
               "var a;",
               "if (true) {",
               "  a = new externNsefConstructor()",
@@ -532,7 +532,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
           ImmutableList.of("externNsefConstructor", "externNsefConstructor2"));
     } else {
       assertPureCallsMarked(
-          LINE_JOINER.join(
+          lines(
               "var a;",
               "if (true) {",
               "  a = new externNsefConstructor()",
@@ -567,7 +567,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   public void testAnnotationInExternStubs4() throws Exception {
     // An externs definition with a stub that differs from the declaration.
     // Verify our assumption is valid about this.
-    String externs = LINE_JOINER.join(
+    String externs = lines(
         "/**@constructor*/function externObj5(){}",
 
         "externObj5.prototype.propWithAnnotatedStubAfter = function(s) {};",
@@ -597,7 +597,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   public void testAnnotationInExternStubs5() throws Exception {
     // An externs definition with a stub that differs from the declaration.
     // Verify our assumption is valid about this.
-    String externs = LINE_JOINER.join(
+    String externs = lines(
         "/**@constructor*/function externObj5(){}",
 
         "/**",
@@ -664,7 +664,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testNoSideEffectsSimple2() throws Exception {
     regExpHaveSideEffects = false;
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {",
         "  return ''.replace(/xyz/g, '');",
         "}",
@@ -674,7 +674,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testNoSideEffectsSimple3() throws Exception {
     regExpHaveSideEffects = false;
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(/** string */ str) {",
         "  return str.replace(/xyz/g, '');",
         "}",
@@ -722,13 +722,13 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testReturnLocalityTaintObjectLiteralWithGlobal() {
     // return empty object literal.  This is completely local
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() { return {} }",
         "f();"
     );
     checkLocalityOfMarkedCalls(source, ImmutableList.of("f"));
     // return obj literal with global property is still local.
-    source = LINE_JOINER.join(
+    source = lines(
         "var global = new Object();",
         "function f() { return {'asdf': global} }",
         "f();");
@@ -737,7 +737,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testReturnLocalityTaintArrayLiteralWithGlobal() {
     String source =
-        LINE_JOINER.join(
+        lines(
             "function f() { return []; }",
             "f();",
             "function g() { return [1, {}]; }",
@@ -745,7 +745,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     checkLocalityOfMarkedCalls(source, ImmutableList.of("f", "g"));
     // return array literal with global value is still a local value.
     source =
-        LINE_JOINER.join(
+        lines(
             "var global = new Object();",
             "function f() { return [2 ,global]; }",
             "f();");
@@ -753,7 +753,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testReturnLocalityMultipleDefinitionsSameName() {
-    String source = LINE_JOINER.join(
+    String source = lines(
             "var global = new Object();",
             "A.func = function() {return global}", // return global (taintsReturn)
             "B.func = function() {return 1; }", // returns local
@@ -775,21 +775,21 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testApply() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {return 42}",
         "f.apply(null)");
     assertPureCallsMarked(source, ImmutableList.of("f.apply"));
   }
 
   public void testCall() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {return 42}",
         "f.call(null)");
     assertPureCallsMarked(source, ImmutableList.of("f.call"));
   }
 
   public void testApplyToUnknownDefinition() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var dict = {'func': function() {}};",
         "function f() { var s = dict['func'];}",
         "f.apply(null)"
@@ -797,7 +797,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     assertPureCallsMarked(source, ImmutableList.of("f.apply"));
 
     // Not marked because the definition cannot be found so unknown side effects.
-    source = LINE_JOINER.join(
+    source = lines(
         "var dict = {'func': function() {}};",
         "function f() { var s = dict['func'].apply(null); }",
         "f.apply(null)"
@@ -805,7 +805,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     assertNoPureCalls(source);
 
     // Not marked because the definition cannot be found so unknown side effects.
-    source = LINE_JOINER.join(
+    source = lines(
         "var pure = function() {};",
         "var dict = {'func': function() {}};",
         "function f() { var s = (dict['func'] || pure)();}",
@@ -814,7 +814,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     assertNoPureCalls(source);
 
     // Not marked because the definition cannot be found so unknown side effects.
-    source = LINE_JOINER.join(
+    source = lines(
         "var pure = function() {};"
             , "var dict = {'func': function() {}};"
             , "function f() { var s = (condition ? dict['func'] : pure)();}"
@@ -824,7 +824,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testInference1() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {return g()}",
         "function g() {return 42}",
         "f()"
@@ -833,7 +833,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testInference2() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var a = 1;",
         "function f() {g()}",
         "function g() {a=2}",
@@ -843,7 +843,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testInference3() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var f = function() {return g()};",
         "var g = function() {return 42};",
         "f()"
@@ -852,7 +852,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testInference4() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var a = 1; var f = function() {g()};",
         "var g = function() {a=2};",
         "f()"
@@ -861,7 +861,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testInference5() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "goog.f = function() {return goog.g()};",
         "goog.g = function() {return 42};",
         "goog.f()"
@@ -870,7 +870,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testInference6() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var a = 1;",
         "goog.f = function() {goog.g()};",
         "goog.g = function() {a=2};",
@@ -882,7 +882,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   public void testLocalizedSideEffects1() throws Exception {
     // Returning a function that contains a modification of a local
     // is not a global side-effect.
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {",
         "  var x = {foo : 0}; return function() {x.foo++};",
         "}",
@@ -894,7 +894,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   public void testLocalizedSideEffects2() throws Exception {
     // Calling a function that contains a modification of a local
     // is a global side-effect (the value has escaped).
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {",
         "  var x = {foo : 0}; (function() {x.foo++})();",
         "}",
@@ -906,7 +906,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   public void testLocalizedSideEffects3() throws Exception {
     // A local that might be assigned a global value and whose properties
     // are modified must be considered a global side-effect.
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var g = {foo:1};",
         "function f() {var x = g; x.foo++};",
         "f();"
@@ -916,7 +916,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testLocalizedSideEffects4() throws Exception {
     // An array is a local object, assigning a local array is not a global side-effect.
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {var x = []; x[0] = 1;}",
         "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
@@ -925,7 +925,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   public void testLocalizedSideEffects5() throws Exception {
     // Assigning a local alias of a global is a global
     // side-effect.
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var g = [];",
         "function f() {var x = g; x[0] = 1;};",
         "f()"
@@ -936,7 +936,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   public void testLocalizedSideEffects6() throws Exception {
     // Returning a local object that has been modified
     // is not a global side-effect.
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {",
         "  var x = {}; x.foo = 1; return x;",
         "}",
@@ -948,7 +948,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   public void testLocalizedSideEffects7() throws Exception {
     // Returning a local object that has been modified
     // is not a global side-effect.
-    String source = LINE_JOINER.join(
+    String source = lines(
         "/** @constructor A */ function A() {};",
         "function f() {",
         "  var a = []; a[1] = 1; return a;",
@@ -963,7 +963,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     // is not a global side-effect.
     // TODO(tdeegan): Not yet. Propagate local object information.
     String source =
-        LINE_JOINER.join(
+        lines(
             "/** @constructor A */ function A() {};",
             "function f() {",
             "  var a = new A; a.foo = 1; return a;",
@@ -976,7 +976,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     // Returning a local object that has been modified
     // is not a global side-effect.
     // TODO(johnlenz): Not yet. Propagate local object information.
-    String source = LINE_JOINER.join(
+    String source = lines(
         "/** @constructor A */ function A() {this.x = 1};",
         "function f() {",
         "  var a = new A; a.foo = 1; return a;",
@@ -989,7 +989,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   public void testLocalizedSideEffects10() throws Exception {
     // Returning a local object that has been modified
     // is not a global side-effect.
-    String source = LINE_JOINER.join(
+    String source = lines(
         "/** @constructor A */ function A() {};",
         "A.prototype.g = function() {this.x = 1};",
         "function f() {",
@@ -1004,7 +1004,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     // TODO(tdeegan): updateA is side effect free.
     // Calling a function of a local object that taints this.
     String source =
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function A() {}",
             "A.prototype.update = function() { this.x = 1; };",
@@ -1026,7 +1026,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   public void testLocalizedSideEffects12() throws Exception {
     // An array is a local object, assigning a local array is not a global
     // side-effect. This tests the behavior if the access is in a block scope.
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {var x = []; { x[0] = 1; } }",
         "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
@@ -1034,7 +1034,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testLocalizedSideEffects13() {
     this.mode = TypeInferenceMode.NEITHER;
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {var [x, y] = [3, 4]; }",
         "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
@@ -1042,7 +1042,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testLocalizedSideEffects14() {
     this.mode = TypeInferenceMode.NEITHER;
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {var x; if (true) { [x] = [5]; } }",
         "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
@@ -1050,7 +1050,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testLocalizedSideEffects15() {
     this.mode = TypeInferenceMode.NEITHER;
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {var {length} = 'a string'; }",
         "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
@@ -1058,7 +1058,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testLocalizedSideEffects16() {
     this.mode = TypeInferenceMode.NEITHER;
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(someArray) {var [a, , b] = someArray; }",
         "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
@@ -1066,21 +1066,21 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testLocalizedSideEffects17() {
     this.mode = TypeInferenceMode.NEITHER;
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(someObj) {var { very: { nested: { lhs: pattern }} } = someObj; }",
         "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
   }
 
   public void testUnaryOperators1() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {var x = 1; x++}",
         "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
   }
 
   public void testUnaryOperators2() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var x = 1;",
         "function f() {x++}",
         "f()");
@@ -1088,14 +1088,14 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testUnaryOperators3() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {var x = {foo : 0}; x.foo++}",
         "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
   }
 
   public void testUnaryOperators4() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var x = {foo : 0};",
         "function f() {x.foo++}",
         "f()");
@@ -1103,14 +1103,14 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testUnaryOperators5() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(x) {x.foo++}",
         "f({foo : 0})");
     assertPureCallsMarked(source, ImmutableList.of("f"));
   }
 
   public void testDeleteOperator1() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var x = {};",
         "function f() {delete x}",
         "f()");
@@ -1118,119 +1118,119 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testDeleteOperator2() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f() {var x = {}; delete x}",
         "f()");
     assertPureCallsMarked(source, ImmutableList.of("f"));
   }
 
   public void testOrOperator1() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var f = externNsef1 || externNsef2;",
         "f()");
     assertNoPureCalls(source);
   }
 
   public void testOrOperator2() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var f = function(){} || externNsef2;",
         "f()");
     assertNoPureCalls(source);
   }
 
   public void testOrOperator3() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var f = externNsef2 || function(){};",
         "f()");
     assertNoPureCalls(source);
   }
 
   public void testOrOperators4() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var f = function(){} || function(){};",
         "f()");
     assertNoPureCalls(source);
   }
 
   public void testAndOperator1() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var f = externNsef1 && externNsef2;",
         "f()");
     assertNoPureCalls(source);
   }
 
   public void testAndOperator2() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var f = function(){} && externNsef2;",
         "f()");
     assertNoPureCalls(source);
   }
 
   public void testAndOperator3() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var f = externNsef2 && function(){};",
         "f()");
     assertNoPureCalls(source);
   }
 
   public void testAndOperators4() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var f = function(){} && function(){};",
         "f()");
     assertNoPureCalls(source);
   }
 
   public void testHookOperator1() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var f = true ? externNsef1 : externNsef2;",
         "f()");
     assertNoPureCalls(source);
   }
 
   public void testHookOperator2() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var f = true ? function(){} : externNsef2;",
         "f()");
     assertNoPureCalls(source);
   }
 
   public void testHookOperator3() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var f = true ? externNsef2 : function(){};",
         "f()");
     assertNoPureCalls(source);
   }
 
   public void testHookOperators4() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var f = true ? function(){} : function(){};",
         "f()");
     assertPureCallsMarked(source, ImmutableList.<String>of("f"));
   }
 
   public void testHookOperators5() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var f = String.prototype.trim ? function(str){return str} : function(){};",
         "f()");
     assertPureCallsMarked(source, ImmutableList.<String>of("f"));
   }
 
   public void testHookOperators6() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var f = yyy ? function(str){return str} : xxx ? function() {} : function(){};",
         "f()");
     assertPureCallsMarked(source, ImmutableList.<String>of("f"));
   }
 
   public void testThrow1() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(){throw Error()};",
         "f()");
     assertPureCallsMarked(source, ImmutableList.<String>of("Error"));
   }
 
   public void testThrow2() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "/**@constructor*/function A(){throw Error()};",
         "function f(){return new A()}",
         "f()");
@@ -1238,7 +1238,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testAssignmentOverride() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "/**@constructor*/function A(){}",
         "A.prototype.foo = function(){};",
         "var a = new A;",
@@ -1246,7 +1246,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     assertPureCallsMarked(source, ImmutableList.of("A", "a.foo"));
 
     // Ideally inline aliases takes care of this.
-    String sourceOverride = LINE_JOINER.join(
+    String sourceOverride = lines(
         "/**@constructor*/ function A(){}",
         "A.prototype.foo = function(){};",
         "var x = 1",
@@ -1258,7 +1258,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testInheritance1() throws Exception {
-    String source = CompilerTypeTestCase.CLOSURE_DEFS + LINE_JOINER.join(
+    String source = CompilerTypeTestCase.CLOSURE_DEFS + lines(
         "/**@constructor*/function I(){}",
         "I.prototype.foo = function(){};",
         "I.prototype.bar = function(){this.foo()};",
@@ -1276,7 +1276,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testInheritance2() throws Exception {
-    String source = CompilerTypeTestCase.CLOSURE_DEFS + LINE_JOINER.join(
+    String source = CompilerTypeTestCase.CLOSURE_DEFS + lines(
         "/**@constructor*/function I(){}",
         "I.prototype.foo = function(){};",
         "I.prototype.bar = function(){this.foo()};",
@@ -1291,7 +1291,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testAmbiguousDefinitions() throws Exception {
-    String source = CompilerTypeTestCase.CLOSURE_DEFS + LINE_JOINER.join(
+    String source = CompilerTypeTestCase.CLOSURE_DEFS + lines(
         "var globalVar = 1;",
         "A.f = function() {globalVar = 2;};",
         "A.f = function() {};",
@@ -1303,7 +1303,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testAmbiguousDefinitionsCall() throws Exception {
-    String source = CompilerTypeTestCase.CLOSURE_DEFS + LINE_JOINER.join(
+    String source = CompilerTypeTestCase.CLOSURE_DEFS + lines(
         "var globalVar = 1;",
         "A.f = function() {globalVar = 2;};",
         "A.f = function() {};",
@@ -1315,7 +1315,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testAmbiguousDefinitionsAllPropagationTypes() throws Exception {
-    String source = CompilerTypeTestCase.CLOSURE_DEFS + LINE_JOINER.join(
+    String source = CompilerTypeTestCase.CLOSURE_DEFS + lines(
         "var globalVar = 1;",
         "/**@constructor*/A.f = function() { this.x = 5; };",
         "/**@constructor*/B.f = function() {};",
@@ -1327,7 +1327,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testAmbiguousDefinitionsCallWithThis() throws Exception {
-    String source = CompilerTypeTestCase.CLOSURE_DEFS + LINE_JOINER.join(
+    String source = CompilerTypeTestCase.CLOSURE_DEFS + lines(
         "var globalVar = 1;",
         "A.modifiesThis = function() { this.x = 5; };",
         "/**@constructor*/function Constructor() { Constructor.modifiesThis.call(this); };",
@@ -1342,7 +1342,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testAmbiguousDefinitionsBothCallThis() throws Exception {
     String source =
-        LINE_JOINER.join(
+        lines(
             "B.f = function() {",
             "  this.x = 1;",
             "}",
@@ -1358,7 +1358,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testAmbiguousDefinitionsAllCallThis() throws Exception {
     String source =
-        LINE_JOINER.join(
+        lines(
             "A.f = function() { this.y = 1 };",
             "C.f = function() { };",
             "var g = function() {D.f()};",
@@ -1373,7 +1373,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testAmbiguousDefinitionsMutatesGlobalArgument() throws Exception {
     String source =
-        LINE_JOINER.join(
+        lines(
             "// Mutates argument",
             "A.a = function(argument) {",
             "  argument.x = 2;",
@@ -1387,7 +1387,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testAmbiguousDefinitionsMutatesLocalArgument() throws Exception {
     String source =
-        LINE_JOINER.join(
+        lines(
             "// Mutates argument",
             "A.a = function(argument) {",
             "  argument.x = 2;",
@@ -1405,7 +1405,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     assertNoPureCalls("x.duplicateExternFunc()");
 
     // nsef1 is defined as no side effect in the externs.
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var global = 1;",
         // Overwrite the @nosideeffects with this side effect
         "A.nsef1 = function () {global = 2;};",
@@ -1420,7 +1420,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
    * linked to "a".
    */
   public void testAmbiguousDefinitionsDoubleDefinition() {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var global = 1;",
         "A.x = function a() { global++; }",
         "B.x = function() {}",
@@ -1430,7 +1430,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testAmbiguousDefinitionsDoubleDefinition2() {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var global = 1;",
         "A.x = function a() { global++; }",
         "a = function() {}",
@@ -1440,7 +1440,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testAmbiguousDefinitionsDoubleDefinition3() {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var global = 1;",
         "A.x = function a() {}",
         "a = function() { global++; }",
@@ -1450,7 +1450,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testAmbiguousDefinitionsDoubleDefinition4() {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var global = 1;",
         "A.x = function a() {}",
         "B.x = function() { global++; }",
@@ -1460,7 +1460,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testAmbiguousDefinitionsDoubleDefinition5() {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var global = 1;",
         "A.x = cond ? function a() { global++ } : function b() {}",
         "B.x = function() { global++; }",
@@ -1470,7 +1470,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testAmbiguousDefinitionsDoubleDefinition6() {
-    String source = LINE_JOINER.join(
+    String source = lines(
             "var SetCustomData1 = function SetCustomData2(element, dataName, dataValue) {",
             "    var x = element['_customData'];",
             "    x[dataName] = dataValue;",
@@ -1485,7 +1485,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testConstructorThatModifiesThis1() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "/**@constructor*/function A(){this.foo = 1}",
         "function f() {return new A}",
         "f()"
@@ -1494,7 +1494,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testConstructorThatModifiesThis2() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "/**@constructor*/function A(){this.foo()}",
         "A.prototype.foo = function(){this.data=24};",
         "function f() {return new A}",
@@ -1505,7 +1505,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testConstructorThatModifiesThis3() throws Exception {
     // test chained
-    String source = LINE_JOINER.join(
+    String source = lines(
         "/**@constructor*/function A(){this.foo()}",
         "A.prototype.foo = function(){this.bar()};",
         "A.prototype.bar = function(){this.data=24};",
@@ -1516,7 +1516,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testConstructorThatModifiesThis4() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "/**@constructor*/function A(){foo.call(this)}",
         "function foo(){this.data=24};",
         "function f() {return new A}",
@@ -1526,7 +1526,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testConstructorThatModifiesGlobal1() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var b = 0;",
         "/**@constructor*/function A(){b=1};",
         "function f() {return new A}",
@@ -1536,7 +1536,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testConstructorThatModifiesGlobal2() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "/**@constructor*/function A(){this.foo()}",
         "A.prototype.foo = function(){b=1};",
         "function f() {return new A}",
@@ -1546,7 +1546,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testCallFunctionThatModifiesThis() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "/**@constructor*/function A(){}" ,
             "A.prototype.foo = function(){this.data=24};" ,
             "function f(){var a = new A; return a}" ,
@@ -1557,14 +1557,14 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testMutatesArguments1() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(x) { x.y = 1; }",
         "f({});");
     assertPureCallsMarked(source, ImmutableList.of("f"));
   }
 
   public void testMutatesArguments2() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(x) { x.y = 1; }",
         "f(window);");
     assertNoPureCalls(source);
@@ -1572,7 +1572,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testMutatesArguments3() throws Exception {
     // We could do better here with better side-effect propagation.
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(x) { x.y = 1; }",
         "function g(x) { f(x); }",
         "g({});");
@@ -1580,7 +1580,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testMutatesArguments4() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(x) { x.y = 1; }",
         "function g(x) { f({}); x.y = 1; }",
         "g({});");
@@ -1588,7 +1588,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testMutatesArguments5() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(x) {",
         "  function g() {",
         "    x.prop = 5;",
@@ -1600,7 +1600,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testMutatesArgumentsArray1() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(x) { arguments[0] = 1; }",
         "f({});");
     assertPureCallsMarked(source, ImmutableList.<String>of("f"));
@@ -1608,14 +1608,14 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testMutatesArgumentsArray2() throws Exception {
     // We could be smarter here.
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(x) { arguments[0].y = 1; }",
         "f({});");
     assertNoPureCalls(source);
   }
 
   public void testMutatesArgumentsArray3() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(x) { arguments[0].y = 1; }",
         "f(x);");
     assertNoPureCalls(source);
@@ -1624,7 +1624,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   public void testCallGenerator1() {
     this.mode = TypeInferenceMode.NEITHER; // type check for yield not yet implemented
     String source =
-        LINE_JOINER.join(
+        lines(
             "var x = 0;",
             "function* f() {",
             "  x = 2",
@@ -1643,7 +1643,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   public void testCallGenerator2() {
     this.mode = TypeInferenceMode.NEITHER; // type check for yield not yet implemented
-    String source = LINE_JOINER.join(
+    String source = lines(
             "function* f() {",
             "  while (true) {",
             "    yield 1;",
@@ -1654,7 +1654,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testCallFunctionFOrG() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(){}",
         "function g(){}",
         "function h(){ (f || g)() }",
@@ -1664,7 +1664,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testCallFunctionFOrGViaHook() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(){}",
         "function g(){}",
         "function h(){ (false ? f : g)() }",
@@ -1674,7 +1674,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testCallFunctionForGorH() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "function f(){}",
         "function g(){}",
         "function h(){}",
@@ -1685,7 +1685,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testCallFunctionForGWithSideEffects() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var x = 0;",
         "function f(){x = 10}",
         "function g(){}",
@@ -1699,7 +1699,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testCallFunctionFOrGViaHookWithSideEffects() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var x = 0;",
         "function f(){x = 10}",
         "function g(){}",
@@ -1714,7 +1714,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testCallRegExpWithSideEffects() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var x = 0;",
         "function k(){(/a/).exec('')}",
         "k()"
@@ -1745,7 +1745,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
 
   // Indirect complex function definitions aren't yet supported.
   public void testAnonymousFunction4() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var a = (Error || function (){});",
         "a();"
     );
@@ -1755,7 +1755,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testFunctionProperties1() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "/** @constructor */",
         "function F() { this.bar; }",
         "function g() {",
@@ -1778,7 +1778,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testCallCache() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var valueFn = function() {};",
         "goog.reflect.cache(externObj, \"foo\", valueFn)"
     );
@@ -1793,7 +1793,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testCallCache_withKeyFn() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var valueFn = function(v) { return v };",
         "var keyFn = function(v) { return v };",
         "goog.reflect.cache(externObj, \"foo\", valueFn, keyFn)"
@@ -1821,7 +1821,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testCallCache_anonymousFn_hasSideEffects() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var x = 0;",
         "goog.reflect.cache(externObj, \"foo\", function(v) { return (x+=1) })"
     );
@@ -1836,7 +1836,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testCallCache_hasSideEffects() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var x = 0;",
         "var valueFn = function() { return (x+=1); };",
         "goog.reflect.cache(externObj, \"foo\", valueFn)"
@@ -1852,7 +1852,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testCallCache_withKeyFn_hasSideEffects() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var x = 0;",
         "var keyFn = function(v) { return (x+=1) };",
         "var valueFn = function(v) { return v };",
@@ -1869,7 +1869,7 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
   }
 
   public void testCallCache_propagatesSideEffects() throws Exception {
-    String source = LINE_JOINER.join(
+    String source = lines(
         "var valueFn = function(x) { return x * 2; };",
         "var helper = function(x) { return goog.reflect.cache(externObj, x, valueFn); };",
         "helper(10);"

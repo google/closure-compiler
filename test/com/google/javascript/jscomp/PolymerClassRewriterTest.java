@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Node;
 public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
 
   private static final String EXTERNS =
-      LINE_JOINER.join(
+      lines(
           "/** @constructor */",
           "var HTMLElement = function() {};",
           "/** @constructor @extends {HTMLElement} */",
@@ -71,11 +71,11 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
 
   public void testVarTarget() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var X = Polymer({",
             "  is: 'x-element',",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor @extends {PolymerElement} @implements {PolymerXInterface} */",
             "var X = function() {};",
             "X = Polymer(/** @lends {X.prototype} */ {",
@@ -84,7 +84,7 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
 
     setLanguageLevel(LanguageMode.ECMASCRIPT_2015);
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var X = class extends Polymer.Element {",
             "  static get is() { return 'x-element'; }",
             "  static get properties { return { }; }",
@@ -93,11 +93,11 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
 
   public void testDefaultTypeNameTarget() {
     test(
-        LINE_JOINER.join(
+        lines(
             "Polymer({",
             "  is: 'x',",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @implements {PolymerXElementInterface}",
             " * @constructor @extends {PolymerElement}",
@@ -110,12 +110,12 @@ public final class PolymerClassRewriterTest extends CompilerTypeTestCase {
 
   public void testPathAssignmentTarget() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var x = {};",
             "x.Z = Polymer({",
             "  is: 'x-element',",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "var x = {};",
             "/** @constructor @extends {PolymerElement} @implements {Polymerx_ZInterface} */",
             "x.Z = function() {};",

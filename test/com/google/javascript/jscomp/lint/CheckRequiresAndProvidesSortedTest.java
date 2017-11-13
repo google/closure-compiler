@@ -45,12 +45,12 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
   public void testNoWarning_require() {
     testSame("goog.require('a.b');\ngoog.require('a.c')");
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.require('namespace');",
             "goog.require('namespace.ExampleClass');",
             "goog.require('namespace.ExampleClass.ExampleInnerClass');"));
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.require('namespace.Example');",
             "goog.require('namespace.example');"));
   }
@@ -58,12 +58,12 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
   public void testNoWarning_provide() {
     testSame("goog.provide('a.b');\ngoog.provide('a.c')");
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.provide('namespace');",
             "goog.provide('namespace.ExampleClass');",
             "goog.provide('namespace.ExampleClass.ExampleInnerClass');"));
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.provide('namespace.Example');",
             "goog.provide('namespace.example');"));
   }
@@ -76,7 +76,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
 
   public void testWarning_requireWithJSDoc() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.require('a.c');",
             "/** @suppress {extraRequire} */",
             "goog.require('a.b')"),
@@ -94,7 +94,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
 
   public void testB3473189() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.provide('abc');",
             "if (typeof goog != 'undefined' && typeof goog.provide == 'function') {",
             "  goog.provide('MyLib.Base');",
@@ -103,7 +103,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
 
   public void testGoogModule_shorthandAndStandalone() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "goog.require('a.c');",
@@ -117,7 +117,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
 
   public void testGoogModule_destructuring() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "goog.require('z');",
@@ -131,7 +131,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
 
   public void testGoogModule_emptyDestructuring() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "const {FOO} = goog.require('example.constants');",
@@ -141,7 +141,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
         REQUIRES_NOT_SORTED);
 
     testNoWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "const {} = goog.require('just.forthe.side.effects');",
@@ -152,7 +152,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
 
   public void testGoogModule_allThreeStyles() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {extraRequire} */",
             "goog.module('m');",
             "",
@@ -166,7 +166,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
 
   public void testGoogModule_shorthand() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var d = goog.require('a.b.d');",
@@ -178,7 +178,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
 
   public void testGoogModule_shorthand_destructuring() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "var a = goog.require('a.b.d');",
@@ -191,7 +191,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
 
   public void testGoogModule_standalone() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.module('m');",
             "",
             "goog.require('a.c');",
@@ -204,7 +204,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
 
   public void testGoogModule_forwardDeclares() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.module('x');",
             "",
             "const s = goog.require('s');",
@@ -215,7 +215,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
 
   public void testForwardDeclares() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.provide('x');",
             "",
             "goog.require('s');",
@@ -226,7 +226,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
 
   public void testDuplicate() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.require('Bar');",
             "goog.require('Bar');"),
         DUPLICATE_REQUIRE);
@@ -234,7 +234,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
 
   public void testDuplicate_shorthand() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "const Bar1 = goog.require('Bar');",
             "const Bar2 = goog.require('Bar');"),
         DUPLICATE_REQUIRE);
@@ -242,7 +242,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
 
   public void testDuplicate_destructuring() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "const Bar = goog.require('Bar');",
             "const {Foo} = goog.require('Bar');"),
         DUPLICATE_REQUIRE);
@@ -257,7 +257,7 @@ public final class CheckRequiresAndProvidesSortedTest extends CompilerTestCase {
   // Simple test to make sure compiler does not crash.
   public void testES6Modules() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "import foo from 'bar';",
             "import bar from 'foo';",
             "import * as a from 'b';",

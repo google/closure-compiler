@@ -48,7 +48,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   public void test_b19179602() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "/** @constructor */ a.b = function() {};",
             "a.b.staticProp = 5;",
@@ -57,7 +57,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  while (true) { ",
             "    var b = a.b;",
             "    alert(b.staticProp); } }"),
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "/** @constructor */ a.b = function() {};",
             "a.b.staticProp = 5;",
@@ -136,7 +136,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   public void testAddPropertyToChildTypeOfUncollapsibleObjectInLocalScope() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "a.b = function () {};",
             "a.b.x = 0;",
@@ -144,7 +144,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "(function() { a.b.y = 1; })();",
             "a.b.x;",
             "a.b.y;"),
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "a.b = function() {};",
             "a.b.x = 0;",
@@ -291,7 +291,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   public void testCollapsePropertiesOfClass1() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ var namespace = function() {};",
             "goog.inherits(namespace, Object);",
             "namespace.includeExtraParam = true;",
@@ -304,7 +304,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "  log(namespace.Param.optParam);",
             "  log(Param.optParam);",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ var namespace = function() {};",
             "goog.inherits(namespace,Object);",
             "namespace.includeExtraParam = true;",
@@ -365,13 +365,13 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   public void testDontCrashCtorAliasWithEnum() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var ns = {};",
             "/** @constructor */ ns.Foo = function () {};",
             "var Bar = ns.Foo;",
             "/** @const @enum */",
             "Bar.prop = { A: 1 };"),
-        LINE_JOINER.join(
+        lines(
             "var ns = {};",
             "/** @constructor */ ns.Foo = function() {};",
             "var Bar = null;",
@@ -451,8 +451,8 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   public void testInlineCtorInObjLit() {
     test(
-        LINE_JOINER.join("function Foo() {}", "var Bar = Foo;", "var objlit = { 'prop' : Bar };"),
-        LINE_JOINER.join("function Foo() {}", "var Bar = null;", "var objlit = { 'prop': Foo };"));
+        lines("function Foo() {}", "var Bar = Foo;", "var objlit = { 'prop' : Bar };"),
+        lines("function Foo() {}", "var Bar = null;", "var objlit = { 'prop': Foo };"));
   }
 
   public void testLocalAlias1() {
@@ -542,7 +542,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   public void testLocalAliasOfEnumWithInstanceofCheck() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ var Enums = function() {};",
             "/** @enum { number } */",
             "Enums.Fruit = { APPLE: 1, BANANA: 2 };",
@@ -551,7 +551,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "var Fruit = Enums.Fruit;",
             "if (f == Fruit.APPLE) alert('apple');",
             "if (f == Fruit.BANANA) alert('banana'); }"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ var Enums = function() {};",
             "/** @enum { number } */",
             "Enums.Fruit = { APPLE: 1,BANANA: 2 };",
@@ -799,7 +799,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testGlobalAliasWithLet2() {
     // Inlining ns is unsafe because ns2 may or may not be equal to ns.
     testSame(
-        LINE_JOINER.join(
+        lines(
             "let ns = {};",
             "ns.foo = 'bar';",
             "let ns2;",
@@ -811,7 +811,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     // In this case, it would be safe to inline ns, as long as all subsequent references
     // to ns2 are inside the if block, but the algorithm is not complex enough to know that.
     testSame(
-        LINE_JOINER.join(
+        lines(
             "let ns = {};",
             "ns.foo = 'bar';",
             "let ns2;",
@@ -823,7 +823,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   public void testLocalAliasWithLet1() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "a.b = {};",
             "function f() {",
@@ -832,7 +832,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
             "    alert(c);",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "a.b = {};",
             "function f() {",
@@ -897,7 +897,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testComputedPropertyNames() {
     // We don't support computed properties.
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var foo = {['ba' + 'r']: {}};",
             "var foobar = foo.bar;",
             "foobar.baz = 5;",
@@ -987,13 +987,13 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
 
   public void testClassStaticInheritance_namespacedClass() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var ns1 = {}, ns2 = {};",
             "ns1.A = class {};",
             "ns1.A.staticProp = {foo: 'bar'};",
             "ns2.B = class extends ns1.A {}",
             "use(ns2.B.staticProp.bar);"),
-        LINE_JOINER.join(
+        lines(
             "var ns1 = {}, ns2 = {};",
             "ns1.A = class {};",
             "ns1.A.staticProp = {foo: 'bar'};",
@@ -1004,7 +1004,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
   public void testClassStaticInheritance_es5Class() {
     // ES6 classes do not inherit static properties of ES5 class constructors.
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function A() {}",
             "A.staticProp = 5;",
@@ -1016,7 +1016,7 @@ public class AggressiveInlineAliasesTest extends CompilerTestCase {
     // Currently we only inline inherited properties when the extends clause contains a simple or
     // qualified name.
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class A {}",
             "A.foo = 5;",
             "class B {}",

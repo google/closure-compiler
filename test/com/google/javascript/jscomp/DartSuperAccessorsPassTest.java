@@ -167,7 +167,7 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
 
 
   public void testExpressionsWithoutSuperAccessors() {
-    String body = LINE_JOINER.join(
+    String body = lines(
         "foo.bar;",
         "foo.bar();",
         "this.bar;",
@@ -181,7 +181,7 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
   }
 
   public void testSuperAccessorsOutsideInstanceMembers() {
-    String body = LINE_JOINER.join(
+    String body = lines(
         "super.x;",
         "super.x = y;");
 
@@ -207,7 +207,7 @@ public final class DartSuperAccessorsPassTest extends CompilerTestCase {
    * (can be static or not).
    */
   private String wrap(String memberSignature, String body) {
-    return LINE_JOINER.join(
+    return lines(
         "class X extends Y {",
         "  " + memberSignature + " {",
         "    " + body,

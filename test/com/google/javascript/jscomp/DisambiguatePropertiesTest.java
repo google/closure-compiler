@@ -198,7 +198,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testPrototypeAndInstance5() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @constructor */",
         "function Foo() {",
         "  this.a = 1;",
@@ -213,7 +213,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "}",
         "var x = (new Bar).a;");
 
-    String output = LINE_JOINER.join(
+    String output = lines(
         "/** @constructor */",
         "function Foo() {",
         "  this.Foo$a = 1;",
@@ -475,7 +475,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testIgnoreUnknownType1() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @constructor */",
         "function Foo() {}",
         "Foo.prototype.blah = 3;",
@@ -506,7 +506,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testIgnoreUnknownType3() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @constructor */",
         "function Foo() {}",
         "Foo.prototype.blah = 3;",
@@ -717,7 +717,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     this.mode = TypeInferenceMode.NTI_ONLY;
     testSets("", js, output, "{p1=[[Bar], [Foo]]}",
         NewTypeInference.MISTYPED_ASSIGN_RHS,
-        LINE_JOINER.join(
+        lines(
         "The right side in the assignment is not a subtype of the left side.",
         "Expected : Foo",
         "Found    : (Bar|Foo)",
@@ -992,7 +992,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testSubtypesWithSameField() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @constructor */",
         "function Top() {}",
         "/** @constructor @extends Top */",
@@ -1063,7 +1063,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testObjectLiteralBlocksPropertiesOnOtherTypes() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @constructor */",
         "function Foo() {",
         "  this.myprop = 123;",
@@ -1075,14 +1075,14 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
 
   public void testObjectLiteralDefineProperties() {
     String externs =
-        LINE_JOINER.join(
+        lines(
             "Object.defineProperties = function(typeRef, definitions) {}",
             "/** @constructor */ function FooBar() {}",
             "/** @type {string} */ FooBar.prototype.bar_;",
             "/** @type {string} */ FooBar.prototype.bar;");
 
     String js =
-        LINE_JOINER.join(
+        lines(
             "/** @struct @constructor */ var Foo = function() {",
             "  this.bar_ = 'bar';",
             "};",
@@ -1097,7 +1097,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
             "});");
 
     String result =
-        LINE_JOINER.join(
+        lines(
             "/** @struct @constructor */ var Foo = function() {",
             "  this.Foo$bar_ = 'bar';",
             "};",
@@ -1115,14 +1115,14 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
 
   public void testObjectLiteralDefinePropertiesQuoted() {
     String externs =
-        LINE_JOINER.join(
+        lines(
             "Object.defineProperties = function(typeRef, definitions) {}",
             "/** @constructor */ function FooBar() {}",
             "/** @type {string} */ FooBar.prototype.bar_;",
             "/** @type {string} */ FooBar.prototype.bar;");
 
     String js =
-        LINE_JOINER.join(
+        lines(
             "/** @struct @constructor */ var Foo = function() {",
             "  this.bar_ = 'bar';",
             "};",
@@ -1137,7 +1137,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
             "});");
 
     String result =
-        LINE_JOINER.join(
+        lines(
             "/** @struct @constructor */ var Foo = function() {",
             "  this.Foo$bar_ = 'bar';",
             "};",
@@ -1319,7 +1319,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testInterface_subInterfaceAndDirectImplementors() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @interface */ function I() {};",
         "I.prototype.a;",
         "/** @constructor @implements {I} */ function Foo() {};",
@@ -1344,7 +1344,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testInterfaceOfSuperclass2() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @const */ var goog = {};",
         "goog.abstractMethod = function(var_args) {};",
         "/** @interface */ function I() {}",
@@ -1433,7 +1433,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testSuperInterface2() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @interface */",
         "function High(){}",
         "High.prototype.prop = function() {};",
@@ -1455,7 +1455,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
 
   public void testSuperInterface3() {
     testSets(
-        LINE_JOINER.join(
+        lines(
             "/** @interface */",
             "function I0() {}",
             "I0.prototype.prop = function() {};",
@@ -1483,7 +1483,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
             " */",
             "function D() {}",
             "D.prototype.prop = function() {};"),
-        LINE_JOINER.join(
+        lines(
             "/** @interface */",
             "function I0() {}",
             "I0.prototype.I0_prototype$prop = function() {};",
@@ -1547,7 +1547,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testAliasedTypeIsNotDisambiguated() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @return {SecondAlias} */",
         "function f() { return new Second; }",
         "function g() { f().blah; }",
@@ -1563,7 +1563,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testConstructorsWithTypeErrorsAreNotDisambiguated() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @constructor */",
         "function Foo(){}",
         "Foo.prototype.alias = function() {};",
@@ -1584,7 +1584,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     this.mode = TypeInferenceMode.NTI_ONLY;
     testSets("", js, js, "{}",
         NewTypeInference.MISTYPED_ASSIGN_RHS,
-        LINE_JOINER.join(
+        lines(
             "The right side in the assignment is not a subtype of the left side.",
             "Expected : $Bar",
             "Found    : $Foo",
@@ -1595,7 +1595,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testStructuralTypingWithDisambiguatePropertyRenaming1() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @record */",
         "function I(){}",
         "/** @type {number} */",
@@ -1619,7 +1619,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     // will consider the two types distinct and disambiguate the properties
     // with different names.
 
-    String output = LINE_JOINER.join(
+    String output = lines(
         "/** @record */",
         "function I(){}/** @type {number} */I.prototype.Foo_prototype$x;",
         "/** @constructor @implements {I} */",
@@ -1632,7 +1632,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testStructuralTypingWithDisambiguatePropertyRenaming1_1() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @record */",
         "function I(){}",
         "/** @type {number} */",
@@ -1655,7 +1655,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testStructuralTypingWithDisambiguatePropertyRenaming1_2() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @record */",
         "function I(){}",
         "/** @type {number} */",
@@ -1673,7 +1673,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testStructuralTypingWithDisambiguatePropertyRenaming1_3() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @record */",
         "function I(){}",
         "/** @type {number} */",
@@ -1697,7 +1697,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testStructuralTypingWithDisambiguatePropertyRenaming1_4() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @record */",
         "function I(){}",
         "/** @type {number} */",
@@ -1720,7 +1720,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testStructuralTypingWithDisambiguatePropertyRenaming1_5() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @record */",
         "function I(){}",
         "/** @type {number} */",
@@ -1747,7 +1747,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
    * but not a regular mismatch.
    */
   public void testStructuralTypingWithDisambiguatePropertyRenaming1_6() throws Exception {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @record */ function I() {}",
         "/** @type {!Function} */ I.prototype.addEventListener;",
         "/** @constructor */ function C() {}",
@@ -1765,7 +1765,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
    * but not a regular mismatch.
    */
   public void testStructuralTypingWithDisambiguatePropertyRenaming1_7() throws Exception {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @record */ function I() {}",
         "/** @type {!Function} */ I.prototype.addEventListener;",
         "/** @constructor */ function C() {}",
@@ -1788,7 +1788,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testDisambiguatePropertiesClassCastedToUnrelatedInterface() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @interface */",
         "function Foo() {}",
         "Foo.prototype.prop1;",
@@ -1807,7 +1807,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testDontInvalidateForGenericsMismatch() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/**",
         " * @constructor",
         " * @template T",
@@ -1824,7 +1824,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "  this.prop = 123;",
         "}");
 
-    String output = LINE_JOINER.join(
+    String output = lines(
         "/**",
         " * @constructor",
         " * @template T",
@@ -1846,14 +1846,14 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     this.mode = TypeInferenceMode.NTI_ONLY;
     testSets("", js, output, "{prop=[[Bar], [Foo]]}",
         NewTypeInference.INVALID_CAST,
-        LINE_JOINER.join(
+        lines(
             "invalid cast - the types do not have a common subtype",
             "from: Foo<number>",
             "to  : Foo<string>"));
   }
 
   public void testStructuralTypingWithDisambiguatePropertyRenaming2() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @record */",
         "function I(){}",
         "/** @type {number} */",
@@ -1876,7 +1876,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testStructuralTypingWithDisambiguatePropertyRenaming3() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @record */",
         "function I(){}",
         "/** @type {number} */",
@@ -1895,7 +1895,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testStructuralTypingWithDisambiguatePropertyRenaming3_1() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @record */",
         "function I(){}",
         "/** @type {number} */",
@@ -1919,7 +1919,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testStructuralTypingWithDisambiguatePropertyRenaming4() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @record */",
         "function I(){}",
         "/** @type {number} */",
@@ -1938,7 +1938,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "/** @param {Foo|I} i */",
         "function f(i) { return i.x; }");
 
-    String output = LINE_JOINER.join(
+    String output = lines(
         "/** @record */",
         "function I(){}/** @type {number} */I.prototype.Foo_prototype$x;",
         "/** @constructor @implements {I} */",
@@ -1952,7 +1952,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testStructuralTypingWithDisambiguatePropertyRenaming5() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @record */",
         "function I(){}",
         "/** @type {number} */",
@@ -1970,7 +1970,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "",
         "function f(/** Bar */ i) { return i.x; }");
 
-    String output = LINE_JOINER.join(
+    String output = lines(
         "/** @record */",
         "function I(){}",
         "/** @type {number} */",
@@ -2004,14 +2004,14 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
 
     this.mode = TypeInferenceMode.OTI_ONLY;
     testSets("", js, js, "{}", TypeValidator.TYPE_MISMATCH_WARNING,
-        LINE_JOINER.join(
+        lines(
             "initializing variable",
             "found   : Bar",
             "required: (Foo|null)"));
 
     this.mode = TypeInferenceMode.NTI_ONLY;
     testSets("", js, js, "{}", NewTypeInference.MISTYPED_ASSIGN_RHS,
-        LINE_JOINER.join(
+        lines(
             "The right side in the assignment is not a subtype of the left side.",
             "Expected : (Foo|null)",
             "Found    : Bar\n"));
@@ -2120,14 +2120,14 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
 
   public void testStructuralInterfacesInExterns() {
     String externs =
-        LINE_JOINER.join(
+        lines(
             "/** @record */",
             "var I = function() {};",
             "/** @return {string} */",
             "I.prototype.baz = function() {};");
 
     String js =
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Bar() {}",
             "Bar.prototype.baz = function() { return ''; };",
@@ -2140,7 +2140,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testPropInParentInterface1() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @interface */",
         "function MyIterable() {}",
         "MyIterable.prototype.iterator = function() {};",
@@ -2162,7 +2162,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testPropInParentInterface2() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @interface */",
         "function MyIterable() {}",
         "MyIterable.prototype.iterator = function() {};",
@@ -2183,7 +2183,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testPropInParentInterface3() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @interface */",
         "function MyIterable() {}",
         "MyIterable.prototype.iterator = function() {};",
@@ -2200,7 +2200,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "/** @override */",
         "MyAbstractCollection.prototype.iterator = function() {};");
 
-    String output = LINE_JOINER.join(
+    String output = lines(
         "/** @interface */",
         "function MyIterable() {}",
         "MyIterable.prototype.MyAbstractCollection_prototype$iterator = function() {};",
@@ -2227,7 +2227,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   // On top of that, this can happen in OTI when types are joined during generics instantiation.
   // Just documenting the behavior here.
   public void testUnsafeTypingOfThis() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @constructor */",
         "function Foo() {",
         "  this.myprop = 123;",
@@ -2247,7 +2247,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "}",
         "myArrayPrototypeMap(Foo.prototype.method, new Bar);");
 
-    String output = LINE_JOINER.join(
+    String output = lines(
         "/** @constructor */",
         "function Foo() {",
         "  this.Foo$myprop = 123;",
@@ -2269,7 +2269,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
 
     testSets(js, output, "{method=[[Foo.prototype]], myprop=[[Bar], [Foo]]}");
 
-    js = LINE_JOINER.join(
+    js = lines(
         "/** @constructor */",
         "function Foo() {",
         "  this.myprop = 123;",
@@ -2285,7 +2285,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "}",
         "f(Foo.prototype.method);");
 
-    output = LINE_JOINER.join(
+    output = lines(
         "/** @constructor */",
         "function Foo() {",
         "  this.Foo$myprop = 123;",
@@ -2305,7 +2305,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testIgnoreSpecializedProperties() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @constructor */",
         "function Foo() {",
         "  /** @type {?Array<number>} */",
@@ -2323,7 +2323,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "  this.b = 2;",
         "}");
 
-    String output = LINE_JOINER.join(
+    String output = lines(
         "/** @constructor */",
         "function Foo() {",
         "  /** @type {?Array<number>} */",
@@ -2387,7 +2387,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testDontCrashOnNonConstructorsWithPrototype() {
-    String externs = LINE_JOINER.join(
+    String externs = lines(
         "function f(x) { return x; }",
         "f.prototype.method = function() {};");
 
@@ -2397,7 +2397,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   public void testDontRenameStaticPropertiesOnBuiltins() {
     String externs = "Array.foobar = function() {};";
 
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @constructor */",
         "function Foo() {}",
         "Foo.prototype.foobar = function() {};",
@@ -2411,7 +2411,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testAccessConstructorPropertyDontConfuseWithPrototypeObject() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @constructor */",
         "function Foo() {",
         "  this.p = 1;",
@@ -2426,7 +2426,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "  this.p = 1;",
         "}");
 
-    String output = LINE_JOINER.join(
+    String output = lines(
         "/** @constructor */",
         "function Foo() {",
         "  this.Foo$p = 1;",
@@ -2445,7 +2445,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testDontCrashWhenConstructingUnknownInstance() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @constructor */",
         "function Foo() {",
         "  this.abc = 123;",
@@ -2459,7 +2459,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testDontBackOffForCastsFromObject() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @constructor */",
         "function Foo() {",
         "  this.a = 1;",
@@ -2472,7 +2472,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "  return /** @type {!Foo} */ (x);",
         "}");
 
-    String output = LINE_JOINER.join(
+    String output = lines(
         "/** @constructor */",
         "function Foo() {",
         "  this.Foo$a = 1;",
@@ -2489,7 +2489,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testAccessOnSupertypeWithOneSubtype() {
-    String externs = LINE_JOINER.join(
+    String externs = lines(
         "/** @constructor */",
         "function Foo() {}",
         "/**",
@@ -2499,7 +2499,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "function Bar() {}",
         "Bar.prototype.firstElementChild;");
 
-    String js = LINE_JOINER.join(
+    String js = lines(
         "function f(/** !Foo */ x) {",
         "  if (x.firstElementChild) {",
         "    return /** @type {!Bar} */ (x).firstElementChild;",
@@ -2509,7 +2509,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "function Baz() {}",
         "Baz.prototype.firstElementChild;");
 
-    String output = LINE_JOINER.join(
+    String output = lines(
         "function f(/** !Foo */ x) {",
         "  if (x.firstElementChild) {",
         "    return /** @type {!Bar} */ (x).firstElementChild;",
@@ -2523,7 +2523,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testAccessOnSupertypeWithManySubtypes() {
-    String externs = LINE_JOINER.join(
+    String externs = lines(
         "/** @constructor */",
         "function Foo() {}",
         "/**",
@@ -2539,7 +2539,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "function Qux() {}",
         "Qux.prototype.firstElementChild;");
 
-    String js = LINE_JOINER.join(
+    String js = lines(
         "function f(/** !Foo */ x) {",
         "  if (x.firstElementChild) {",
         "    return /** @type {!Bar} */ (x).firstElementChild;",
@@ -2553,7 +2553,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testAccessOnObjectWithManySubtypes() {
-    String externs = LINE_JOINER.join(
+    String externs = lines(
         "/** @constructor */",
         "function Bar() {}",
         "Bar.prototype.firstElementChild;",
@@ -2561,7 +2561,7 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
         "function Qux() {}",
         "Qux.prototype.firstElementChild;");
 
-    String js = LINE_JOINER.join(
+    String js = lines(
         "function f(/** !Object */ x) {",
         "  if (x.firstElementChild) {",
         "    return /** @type {!Bar} */ (x).firstElementChild;",

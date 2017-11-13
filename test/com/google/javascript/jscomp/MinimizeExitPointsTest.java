@@ -99,7 +99,7 @@ public final class MinimizeExitPointsTest extends CompilerTestCase {
          "function f(){if(a()){}else{return;b()}}");
     fold(
         "function f(){ if (x) return; if (y) return; if (z) return; w(); }",
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  if (x) {} else { if (y) {} else { if (z) {} else w(); }}",
             "}"));

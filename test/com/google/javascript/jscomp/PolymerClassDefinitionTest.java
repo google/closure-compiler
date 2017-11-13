@@ -37,7 +37,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
   public void testSimpleBehavior() {
     PolymerClassDefinition def =
         parseAndExtractClassDefFromCall(
-            LINE_JOINER.join(
+            lines(
                 "/** @polymerBehavior */",
                 "var FunBehavior = {",
                 "  properties: {",
@@ -86,7 +86,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
     compiler.getOptions().setLanguageIn(CompilerOptions.LanguageMode.ECMASCRIPT_2015);
     PolymerClassDefinition def =
         parseAndExtractClassDefFromClass(
-            LINE_JOINER.join(
+            lines(
                 "class A extends Polymer.Element {",
                 "  static get is() { return 'x-element'; }",
                 "  static get properties() {",
@@ -113,7 +113,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
 
   public void testDynamicDescriptor() {
     PolymerClassDefinition def = parseAndExtractClassDefFromCall(
-        LINE_JOINER.join(
+        lines(
             "var A = Polymer({",
             "  is: x,",
             "});"));
@@ -123,7 +123,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
 
   public void testDynamicDescriptor1() {
     PolymerClassDefinition def = parseAndExtractClassDefFromCall(
-        LINE_JOINER.join(
+        lines(
             "Polymer({",
             "  is: x,",
             "});"));
@@ -133,7 +133,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
 
   public void testDynamicDescriptor2() {
     PolymerClassDefinition def = parseAndExtractClassDefFromCall(
-        LINE_JOINER.join(
+        lines(
             "Polymer({",
             "  is: foo.bar,",
             "});"));
@@ -143,7 +143,7 @@ public final class PolymerClassDefinitionTest extends CompilerTypeTestCase {
 
   public void testDynamicDescriptor3() {
     PolymerClassDefinition def = parseAndExtractClassDefFromCall(
-        LINE_JOINER.join(
+        lines(
             "Polymer({",
             "  is: this.bar,",
             "});"));

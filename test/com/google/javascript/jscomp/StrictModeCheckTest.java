@@ -206,7 +206,7 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
          StrictModeCheck.DUPLICATE_OBJECT_KEY);
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "'use strict';",
             "/** @constructor */ function App() {}",
             "App.prototype = {",
@@ -240,7 +240,7 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
   public void testClass() {
     this.mode = TypeInferenceMode.NEITHER;
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class A {",
             "  method1() {}",
             "  method2() {}",
@@ -248,7 +248,7 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
 
     // Duplicate class methods test
     testError(
-        LINE_JOINER.join(
+        lines(
             "class A {",
             "  method1() {}",
             "  method1() {}",
@@ -260,18 +260,18 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
     // FUNCTION_ARGUMENTS_PROP_FORBIDDEN. Typecheck needed for them to work.
     // TODO(user): Add tests for these after typecheck supports class.
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class A {",
             "  method() {this.method.caller}",
             "}"));
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class A {",
             "  method() {this.method.arguments}",
             "}"));
 
     // Duplicate obj literal key in classes
-    testError(LINE_JOINER.join(
+    testError(lines(
         "class A {",
         "  method() {",
         "    var obj = {a : 1, a : 2}",
@@ -279,7 +279,7 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
         "}"), StrictModeCheck.DUPLICATE_OBJECT_KEY);
 
     // Delete test. Class methods are configurable, thus deletable.
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "class A {",
         "  methodA() {}",
         "  methodB() {delete this.methodA}",
@@ -287,7 +287,7 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
 
     // Use of with test
     testError(
-        LINE_JOINER.join(
+        lines(
             "class A {",
             "  constructor() {this.x = 1;}",
             "  method() {",
@@ -297,37 +297,37 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
         StrictModeCheck.USE_OF_WITH);
 
     // Eval errors test
-    testError(LINE_JOINER.join(
+    testError(lines(
         "class A {",
         "  method(eval) {}",
         "}"), StrictModeCheck.EVAL_DECLARATION);
-    testError(LINE_JOINER.join(
+    testError(lines(
         "class A {",
         "  method() {var eval = 1;}",
         "}"), StrictModeCheck.EVAL_DECLARATION);
-    testError(LINE_JOINER.join(
+    testError(lines(
         "class A {",
         "  method() {eval = 1}",
         "}"), StrictModeCheck.EVAL_ASSIGNMENT);
 
     // Use of 'arguments'
-    testError(LINE_JOINER.join(
+    testError(lines(
         "class A {",
         "  method(arguments) {}",
         "}"), StrictModeCheck.ARGUMENTS_DECLARATION);
-    testError(LINE_JOINER.join(
+    testError(lines(
         "class A {",
         "  method() {var arguments = 1;}",
         "}"), StrictModeCheck.ARGUMENTS_DECLARATION);
-    testError(LINE_JOINER.join(
+    testError(lines(
         "class A {",
         "  method() {arguments = 1}",
         "}"), StrictModeCheck.ARGUMENTS_ASSIGNMENT);
-    testError(LINE_JOINER.join(
+    testError(lines(
         "class A {",
         "  method() {arguments.callee}",
         "}"), StrictModeCheck.ARGUMENTS_CALLEE_FORBIDDEN);
-    testError(LINE_JOINER.join(
+    testError(lines(
         "class A {",
         "  method() {arguments.caller}",
         "}"), StrictModeCheck.ARGUMENTS_CALLER_FORBIDDEN);
@@ -336,7 +336,7 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
   public void testComputedPropInClass() {
     this.mode = TypeInferenceMode.NEITHER;
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class Example {",
             "  [computed()]() {}",
             "  [computed()]() {}",
@@ -346,7 +346,7 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
   public void testStaticAndNonstaticMethodWithSameName() {
     this.mode = TypeInferenceMode.NEITHER;
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class Example {",
             "  foo() {}",
             "  static foo() {}",
@@ -356,7 +356,7 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
   public void testStaticAndNonstaticGetterWithSameName() {
     this.mode = TypeInferenceMode.NEITHER;
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class Example {",
             "  get foo() {}",
             "  static get foo() {}",
@@ -366,7 +366,7 @@ public final class StrictModeCheckTest extends TypeICompilerTestCase {
   public void testStaticAndNonstaticSetterWithSameName() {
     this.mode = TypeInferenceMode.NEITHER;
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class Example {",
             "  set foo(x) {}",
             "  static set foo(x) {}",

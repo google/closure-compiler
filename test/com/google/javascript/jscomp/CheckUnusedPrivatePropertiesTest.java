@@ -21,7 +21,7 @@ package com.google.javascript.jscomp;
  */
 public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCase {
 
-  private static final String EXTERNS = LINE_JOINER.join(
+  private static final String EXTERNS = lines(
       DEFAULT_EXTERNS,
       "/** @const */ var goog = {};",
       "/** @const */ goog.reflect = {};",
@@ -196,7 +196,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
   public void testForIn() {
     // This is the basic assumption that this pass makes:
     // that it can warn even if it is used indirectly in a for-in loop
-    unused(LINE_JOINER.join(
+    unused(lines(
         "/** @constructor */ var X = function() {",
         "  /** @private */ this.y = 1;",
         "}",
@@ -205,13 +205,13 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
 
   public void testObjectReflection1() {
     // Verify reflection prevents warning.
-    used(LINE_JOINER.join(
+    used(lines(
         "/** @constructor */ function A() {/** @private */ this.foo = 1;}",
         "use(goog.reflect.object(A, {foo: 'foo'}));"));
 
     // Verify reflection prevents warning.
     used(
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var $jscomp = {};",
             "/** @const */ $jscomp.scope = {};",
             "/**",
@@ -226,13 +226,13 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
 
   public void testObjectReflection2() {
     // Any object literal definition prevents warning.
-    used(LINE_JOINER.join(
+    used(lines(
         "/** @constructor */ function A() {/** @private */  this.foo = 1;}",
         "use({foo: 'foo'});"));
   }
 
   public void testPrototypeProps1() {
-    unused(LINE_JOINER.join(
+    unused(lines(
         "/** @constructor */ function A() {this.foo = 1;}",
         "/** @private */ A.prototype.foo = 0;",
         "A.prototype.method = function() {this.foo++};",
@@ -241,7 +241,7 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
 
   public void testPrototypeProps2() {
     // don't warn about properties that are exported by convention
-    used(LINE_JOINER.join(
+    used(lines(
         "/** @constructor */ function A() {this._foo = 1;}",
         "/** @private */ A.prototype._foo = 0;",
         "A.prototype.method = function() {this._foo++};",
@@ -249,13 +249,13 @@ public final class CheckUnusedPrivatePropertiesTest extends TypeICompilerTestCas
   }
 
   public void testTypedef() {
-    used(LINE_JOINER.join(
+    used(lines(
         "/** @constructor */ function A() {}",
         "/** @private @typedef {string} */ A.typedef_;"));
   }
 
   public void testInterface() {
-    used(LINE_JOINER.join(
+    used(lines(
         "/** @constructor */ function A() {}",
         "/**",
         " * @interface",

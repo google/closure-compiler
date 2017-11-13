@@ -1387,11 +1387,11 @@ public final class PeepholeFoldConstantsTest extends TypeICompilerTestCase {
         "function foo(x = (1 !== void 0), y) {return x+y;}",
         "function foo(x = true, y) {return x+y;}");
     test(
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  constructor() {this.x = null <= null;}",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class Foo {",
             "  constructor() {this.x = true;}",
             "}"));

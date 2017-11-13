@@ -42,7 +42,7 @@ public class J2clEqualitySameRewriterPassTest extends TypeICompilerTestCase {
 
   public void testRewriteEqualitySame() {
     test(
-        LINE_JOINER.join(
+        lines(
             "Equality.$same(0, '');",
             "var a = 'ABC';",
             "Equality.$same(a, 'ABC');",
@@ -51,7 +51,7 @@ public class J2clEqualitySameRewriterPassTest extends TypeICompilerTestCase {
             "Equality.$same(b, []);",
             "Equality.$same(b, null);",
             "Equality.$same(null, b);"),
-        LINE_JOINER.join(
+        lines(
             "0 === '';",
             "var a = 'ABC';",
             "a === 'ABC';",
@@ -64,7 +64,7 @@ public class J2clEqualitySameRewriterPassTest extends TypeICompilerTestCase {
 
   public void testNotRewriteEqualitySame() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "Equality.$same(c, d);",
             "/** @type {number} */",
             "var num = 5",
@@ -79,7 +79,7 @@ public class J2clEqualitySameRewriterPassTest extends TypeICompilerTestCase {
 
   public void testNotRewriteEqualitySame_sameTypes() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @type {number|undefined} */",
             "var num1 = 5;",
             "/** @type {?number} */",

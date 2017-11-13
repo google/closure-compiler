@@ -30,7 +30,7 @@ public class J2clAssertRemovalPassTest extends CompilerTestCase {
   }
 
   public void testRemoveAssert() {
-    test(LINE_JOINER.join("Asserts.$assert(true);", "Asserts.$assert(goo());"), "");
+    test(lines("Asserts.$assert(true);", "Asserts.$assert(goo());"), "");
   }
 
   public void testRemoveAssertWithMessage() {
@@ -38,6 +38,6 @@ public class J2clAssertRemovalPassTest extends CompilerTestCase {
   }
 
   public void testNotRemoveAssert() {
-    testSame(LINE_JOINER.join("Asserts.assert(true);", "$assert(goo());"));
+    testSame(lines("Asserts.assert(true);", "$assert(goo());"));
   }
 }

@@ -65,7 +65,7 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
 
     typeCheck("function f(): void { return undefined; }");
 
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "class Foo {}",
         "var x: Foo = new Foo;"));
 
@@ -82,29 +82,29 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
   }
 
   public void testSimpleFunctions() {
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "function f(x: number) {}",
         "f(123);"));
 
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "function f(x: number) {}",
         "f('asdf');"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
 
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "function f(x): string { return x; }",
         "f(123);"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testSimpleClasses() {
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "class Foo {}",
         // Nominal types are non-nullable by default
         "var x: Foo = null;"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "class Foo {}",
         "class Bar {}",
         "var x: Bar = new Foo;"),
@@ -112,21 +112,21 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
   }
 
   public void testClassPropertyDeclarations() {
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "class Foo {",
         "  prop: number;",
         "  constructor() { this.prop = 'asdf'; }",
         "}"),
         NewTypeInference.MISTYPED_ASSIGN_RHS);
 
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "class Foo {",
         "  prop: string;",
         "}",
         "(new Foo).prop - 5;"),
         NewTypeInference.INVALID_OPERAND_TYPE);
 
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "class Foo {",
         "  static prop: number;",
         "}",
@@ -135,7 +135,7 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
 
     // TODO(dimvar): up to ES5, prop decls use dot.
     // Should we start allowing [] for @unrestricted classes?
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "/** @unrestricted */ class Foo {",
         "  ['prop']: string;",
         "}",
@@ -144,22 +144,22 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
   }
 
   public void testOptionalParameter() {
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "function foo(p1?: string) {}",
         "foo(); foo('str');"));
 
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "function foo(p0, p1?: string) {}",
         "foo('2', 3)"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
   }
 
   public void testRestParameter() {
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "function foo(...p1: number[]) {}",
         "foo(); foo(3); foo(3, 4);"));
 
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "function foo(...p1: number[]) {}",
         "foo('3')"),
         NewTypeInference.INVALID_ARGUMENT_TYPE);
@@ -172,7 +172,7 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
   }
 
   public void testClass() {
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "class Foo {",
         "  prop: number;",
         "}",
@@ -188,12 +188,12 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
   }
 
   public void testInterface() {
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "interface Foo {}",
         "(new Foo);"),
         NewTypeInference.NOT_A_CONSTRUCTOR);
 
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "interface Foo {",
         "  prop: number;",
         "}",
@@ -201,7 +201,7 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
         "}"),
         GlobalTypeInfoCollector.INTERFACE_METHOD_NOT_IMPLEMENTED);
 
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "interface Foo {",
         "  prop: number;",
         "}",
@@ -212,7 +212,7 @@ public final class NewTypeInferenceWithTypeSyntaxTranspilationTest
     typeCheck("interface Foo extends Foo {}",
         JSTypeCreatorFromJSDoc.INHERITANCE_CYCLE);
 
-    typeCheck(LINE_JOINER.join(
+    typeCheck(lines(
         "interface Foo {",
         "  prop: number;",
         "}",

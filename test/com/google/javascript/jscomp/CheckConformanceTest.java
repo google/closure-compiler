@@ -37,7 +37,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   private String configuration;
 
   private static final String EXTERNS =
-      LINE_JOINER.join(
+      lines(
           DEFAULT_EXTERNS,
           "/** @constructor */ function Window() {};",
           "/** @type {Window} */ var window;",
@@ -56,7 +56,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
           "function eval() {}");
 
   private static final String DEFAULT_CONFORMANCE =
-      LINE_JOINER.join(
+      lines(
           "requirement: {",
           "  type: BANNED_NAME",
           "  value: 'eval'",
@@ -282,7 +282,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
 
   public void testInferredConstCheck() {
     configuration =
-        LINE_JOINER.join(
+        lines(
             "requirement: {",
             "  type: CUSTOM",
             "  java_class: 'com.google.javascript.jscomp.ConformanceRules$InferredConstCheck'",
@@ -294,7 +294,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     // We @suppress {newCheckTypes} to suppress NTI uninferred const and global this warnings.
 
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor @suppress {newCheckTypes} */",
             "function f() {",
             "  /** @const */ this.foo = unknown;",
@@ -303,7 +303,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION);
 
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function f() {}",
             "/** @this {f} @suppress {newCheckTypes} */",
@@ -314,7 +314,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION);
 
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function f() {}",
             "/** @suppress {newCheckTypes} */",
@@ -325,7 +325,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION);
 
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function f() {}",
             "/** @suppress {newCheckTypes} */",
@@ -336,7 +336,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         CheckConformance.CONFORMANCE_VIOLATION);
 
     testNoWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function f() {}",
             "f.prototype.init_f = function() {",
@@ -345,7 +345,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
             "var x = new f();"));
 
     testNoWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @const */",
             "var ns = {};",
             "/** @const */",
@@ -353,7 +353,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
 
     // We only check @const nodes, not @final nodes.
     testNoWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor @suppress {newCheckTypes} */",
             "function f() {",
             "  /** @final */ this.foo = unknown;",
@@ -417,7 +417,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
 
   public void testReportLooseTypeViolations() {
     configuration =
-        LINE_JOINER.join(
+        lines(
             "requirement: {",
             "  type: BANNED_PROPERTY_WRITE",
             "  value: 'HTMLScriptElement.prototype.textContent'",
@@ -426,7 +426,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
             "}");
 
     String externs =
-        LINE_JOINER.join(
+        lines(
             DEFAULT_EXTERNS,
             "/** @constructor */ function Element() {}",
             "/** @type {string} @implicitCast */",
@@ -450,7 +450,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
 
   public void testDontCrashOnNonConstructorWithPrototype() {
     configuration =
-        LINE_JOINER.join(
+        lines(
             "requirement: {",
             "  type: BANNED_PROPERTY_WRITE",
             "  value: 'Bar.prototype.method'",
@@ -459,11 +459,11 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
             "}");
 
     testNoWarning(
-        DEFAULT_EXTERNS + LINE_JOINER.join(
+        DEFAULT_EXTERNS + lines(
             "/** @constructor */",
             "function Bar() {}",
             "Bar.prototype.method = function() {};"),
-        LINE_JOINER.join(
+        lines(
             "function Foo() {}",
             "Foo.prototype.method = function() {};"));
   }
@@ -483,7 +483,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   }
 
   public void testBannedProperty0() {
-    configuration = LINE_JOINER.join(
+    configuration = lines(
         "requirement: {",
         "  type: BANNED_PROPERTY",
         "  value: 'C.prototype.p'",
@@ -491,13 +491,13 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  whitelist: 'SRC1'",
         "}");
 
-    String cDecl = LINE_JOINER.join(
+    String cDecl = lines(
         "/** @constructor */",
         "function C() {}",
         "/** @type {string} */",
         "C.prototype.p;");
 
-    String dDecl = LINE_JOINER.join(
+    String dDecl = lines(
         "/** @constructor */ function D() {}",
         "/** @type {string} */",
         "D.prototype.p;");
@@ -506,7 +506,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   }
 
   public void testBannedProperty1() {
-    configuration = LINE_JOINER.join(
+    configuration = lines(
         "requirement: {",
         "  type: BANNED_PROPERTY",
         "  value: 'C.prototype.p'",
@@ -514,13 +514,13 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  whitelist: 'SRC1'",
         "}");
 
-    String cDecl = LINE_JOINER.join(
+    String cDecl = lines(
         "/** @constructor */",
         "function C() {",
         "  this.p = 'str';",
         "}");
 
-    String dDecl = LINE_JOINER.join(
+    String dDecl = lines(
         "/** @constructor */",
         "function D() {",
         "  this.p = 'str';",
@@ -530,7 +530,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   }
 
   public void testBannedProperty2() {
-    configuration = LINE_JOINER.join(
+    configuration = lines(
         "requirement: {",
         "  type: BANNED_PROPERTY",
         "  value: 'C.prototype.p'",
@@ -538,7 +538,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  whitelist: 'SRC1'",
         "}");
 
-    String declarations = LINE_JOINER.join(
+    String declarations = lines(
         "/** @constructor */ function SC() {}",
         "/** @constructor @extends {SC} */",
         "function C() {}",
@@ -568,7 +568,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   }
 
   public void testBannedProperty3() {
-    configuration = LINE_JOINER.join(
+    configuration = lines(
         "requirement: {",
         "  type: BANNED_PROPERTY",
         "  value: 'C.prototype.p'",
@@ -576,13 +576,13 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  whitelist: 'SRC1'",
         "}");
 
-    String cdecl = LINE_JOINER.join(
+    String cdecl = lines(
         "/** @constructor */ function SC() {}",
         "/** @constructor @extends {SC} */",
         "function C() {}",
         "/** @type {string} */",
         "C.prototype.p;");
-    String ddecl = LINE_JOINER.join(
+    String ddecl = lines(
         "/** @constructor @template T */ function D() {}",
         "/** @suppress {newCheckTypes} @param {T} a */",
         "D.prototype.method = function(a) {",
@@ -594,7 +594,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   }
 
   public void testBannedProperty4() {
-    configuration = LINE_JOINER.join(
+    configuration = lines(
         "requirement: {",
         "  type: BANNED_PROPERTY",
         "  value: 'C.prototype.p'",
@@ -602,7 +602,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  whitelist: 'SRC1'",
         "}");
 
-    String cdecl = LINE_JOINER.join(
+    String cdecl = lines(
         "/** @constructor */ function SC() {}",
         "/** @constructor @extends {SC} */",
         "function C() {}",
@@ -624,7 +624,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  this.value = opt_value;",
         "};");
 
-    String ddecl = LINE_JOINER.join(
+    String ddecl = lines(
         "/** @constructor @template T */ function D() {}",
         "/** @param {T} a */",
         "D.prototype.method = function(a) {",
@@ -637,7 +637,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   }
 
   public void testBannedProperty5() {
-    configuration = LINE_JOINER.join(
+    configuration = lines(
         "requirement: {",
         "  type: BANNED_PROPERTY",
         "  value: 'Array.prototype.push'",
@@ -648,7 +648,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   }
 
   public void testBannedProperty_recordType() {
-    configuration = LINE_JOINER.join(
+    configuration = lines(
         "requirement: {",
         "  type: BANNED_PROPERTY",
         "  value: 'Logger.prototype.config'",
@@ -659,7 +659,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     String declaration = "class Logger { config() {} }";
 
     // Fine, because there is no explicit relationship between Logger & GoodRecord.
-    testConformance(declaration, LINE_JOINER.join(
+    testConformance(declaration, lines(
         "/** @record */",
         "class GoodRecord {",
         "  constructor() {",
@@ -668,7 +668,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "}"));
 
     // Bad, because there is a direct relationship.
-    testConformance("/** @implements {BadRecord} */ " + declaration, LINE_JOINER.join(
+    testConformance("/** @implements {BadRecord} */ " + declaration, lines(
         "/** @record */",
         "class BadRecord {",
         "  constructor() {",
@@ -679,7 +679,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
   }
 
   public void testBannedProperty_namespacedType() {
-    configuration = LINE_JOINER.join(
+    configuration = lines(
         "requirement: {",
         "  type: BANNED_PROPERTY",
         "  value: 'ns.C.prototype.p'",
@@ -687,7 +687,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  whitelist: 'SRC1'",
         "}");
 
-    String declarations = LINE_JOINER.join(
+    String declarations = lines(
         "/** @const */",
         "var ns = {};",
         "/** @constructor */ function SC() {}",
@@ -1182,7 +1182,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  error_message: 'BanThrowOfNonErrorTypes Message'\n" +
         "}";
 
-    testNoWarning(LINE_JOINER.join(
+    testNoWarning(lines(
         "/** @param {*} x */",
         "function f(x) {",
         "  throw x;",
@@ -1197,7 +1197,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "  error_message: 'BanThrowOfNonErrorTypes Message'\n" +
         "}";
 
-    testNoWarning(LINE_JOINER.join(
+    testNoWarning(lines(
         "/** @constructor @extends {Error} */",
         "function MyError() {}",
         "/** @param {*} x */",
@@ -1313,7 +1313,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
-    String js = LINE_JOINER.join(
+    String js = lines(
         "Object.prototype.foobar;",
         " /** @param {ObjectWithNoProps} a */",
         "function f(a) { alert(a.foobar); };");
@@ -1338,7 +1338,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     testNoWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function f() { /** @type {?} */ this.prop = null; };",
             "f.prototype.method = function() { alert(this.prop); }"));
   }
@@ -1348,7 +1348,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @typedef {?} */ var Unk;",
             "/** @constructor */ function f() { /** @type {?Unk} */ this.prop = null; };",
             "f.prototype.method = function() { alert(this.prop); }"),
@@ -1361,7 +1361,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "goog.module('example');",
             "/** @constructor */ function f() { this.prop; };",
             "f.prototype.method = function() { alert(this.prop); }"),
@@ -1374,7 +1374,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     configuration =
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
-    testNoWarning(LINE_JOINER.join(
+    testNoWarning(lines(
         "/** @constructor */",
         "function Foo() {",
         "  /** @type {!Object<number, number>} */",
@@ -1390,7 +1390,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     String js =
-        LINE_JOINER.join(
+        lines(
             "/** @interface */ function I() {}",
             "I.prototype.method = function() {};",
             "I.prototype.gak;",
@@ -1417,7 +1417,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         config(rule("BanUnknownTypedClassPropsReferences"), "My rule message", value("String"));
 
     testNoWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @interface */ function I() {}",
             "I.prototype.method = function() {};",
             "/** @param {I} a */ function f(a) {",
@@ -1521,7 +1521,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "Violation: BanUnresolvedType Message");
 
     this.mode = TypeInferenceMode.BOTH;
-    testNoWarning(LINE_JOINER.join(
+    testNoWarning(lines(
         "/** @suppress {newCheckTypes}",
         " *  @param {!Object<string, ?>} data",
         " */",
@@ -1665,7 +1665,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         config(rule("BanNullDeref"), "My rule message");
 
     // Test doesn't run without warnings in NTI because of the way it handles typedefs.
-    final String typedefExterns = LINE_JOINER.join(
+    final String typedefExterns = lines(
         EXTERNS,
         "/** @fileoverview @suppress {newCheckTypes} */",
         "/** @const */ var ns = {};",
@@ -1673,7 +1673,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "/** @typedef {{a:string}} */ ns.Type;",
         "");
 
-    final String code = LINE_JOINER.join(
+    final String code = lines(
         "/** @suppress {newCheckTypes} @return {void} n */",
         "function f() { alert(ns.Type.State.OPEN); }");
     testNoWarning(typedefExterns, code);
@@ -1684,7 +1684,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         config(rule("BanNullDeref"), "My rule message");
 
     testNoWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @suppress {newCheckTypes} @param {*} x */",
             "function f(x) {",
             "  return x.toString();",
@@ -1736,7 +1736,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "Violation: BanCreateElement Message");
 
     String externs =
-        LINE_JOINER.join(
+        lines(
             DEFAULT_EXTERNS,
             "/** @constructor */ function Document() {}",
             "/** @const {!Document} */ var document;",
@@ -1807,7 +1807,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "Violation: BanCreateDom Message");
 
     String externs =
-        LINE_JOINER.join(
+        lines(
             DEFAULT_EXTERNS,
             "/** @const */ var goog = {};",
             "/** @const */ goog.dom = {};",
@@ -1848,7 +1848,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
     testNoWarning("goog.dom.createDom('iframe', null);");
     testNoWarning("goog.dom.createDom('img', {'src': src});");
     testNoWarning("goog.dom.createDom('img', attrs);");
-    testNoWarning(LINE_JOINER.join("goog.dom.createDom(",
+    testNoWarning(lines("goog.dom.createDom(",
         "'iframe', /** @type {?string|!Array|undefined} */ (className));"));
     testNoWarning("goog.dom.createDom(tag, {});");
     testNoWarning(
@@ -1885,7 +1885,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
         "}";
 
     String externs =
-        LINE_JOINER.join(
+        lines(
             DEFAULT_EXTERNS,
             "/** @const */ var goog = {};",
             "/** @const */ goog.dom = {};",
@@ -1896,7 +1896,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
 
     testWarning(
         externs,
-        LINE_JOINER.join(
+        lines(
             "function f(/** !goog.dom.TagName<!HTMLDivElement> */ div) {",
             "  goog.dom.createDom(div, 'red');",
             "}"),
@@ -1905,7 +1905,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
 
     testWarning(
         externs,
-        LINE_JOINER.join(
+        lines(
             "const TagName = goog.dom.TagName;",
             "goog.dom.createDom(TagName.DIV, 'red');"),
         CheckConformance.CONFORMANCE_VIOLATION,
@@ -1914,7 +1914,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
 
   public void testBanCreateDomMultiType() {
     configuration =
-        LINE_JOINER.join(
+        lines(
             "requirement: {",
             "  type: CUSTOM",
             "  java_class: 'com.google.javascript.jscomp.ConformanceRules$BanCreateDom'",
@@ -1923,7 +1923,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
             "}");
 
     String externs =
-        LINE_JOINER.join(
+        lines(
             DEFAULT_EXTERNS,
             "/** @const */ var goog = {};",
             "/** @const */ goog.dom = {};",
@@ -1932,7 +1932,7 @@ public final class CheckConformanceTest extends TypeICompilerTestCase {
 
     testWarning(
         externs,
-        LINE_JOINER.join(
+        lines(
             "function f(/** !goog.dom.TagName<!HTMLHeadingElement> */ heading) {",
             "  goog.dom.createDom(heading, 'red');",
             "}"),

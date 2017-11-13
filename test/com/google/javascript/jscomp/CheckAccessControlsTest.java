@@ -399,13 +399,13 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
   public void testPrivateAccessForProperties5() {
     testError(
         srcs(new String[] {
-          LINE_JOINER.join(
+          lines(
               "/** @constructor */",
               "function Parent () {",
               "  /** @private */",
               "  this.prop = 'foo';",
               "};"),
-          LINE_JOINER.join(
+          lines(
               "/**",
               " * @constructor",
               " * @extends {Parent}",
@@ -424,7 +424,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
     testError(
         srcs(
             new String[] {
-              LINE_JOINER.join(
+              lines(
                   "goog.provide('x.y.z.Parent');",
                   "",
                   "/** @constructor */",
@@ -432,7 +432,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
                   "  /** @private */",
                   "  this.prop = 'foo';",
                   "};"),
-              LINE_JOINER.join(
+              lines(
                   "goog.require('x.y.z.Parent');",
                   "",
                   "/**",
@@ -451,12 +451,12 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
 
   public void testPrivateAccess_googModule() {
     String[] js = new String[] {
-          LINE_JOINER.join(
+          lines(
               "goog.module('example.One');",
               "/** @constructor */ function One() {}",
               "/** @private */ One.prototype.m = function() {};",
               "exports = One;"),
-          LINE_JOINER.join(
+          lines(
               "goog.module('example.two');",
               "var One = goog.require('example.One');",
               "(new One()).m();"),
@@ -714,13 +714,13 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         ImmutableList.of(
             SourceFile.fromCode(
                 "foo.js",
-                LINE_JOINER.join(
+                lines(
                     "goog.provide('Foo');",
                     "/** @interface */ Foo = function() {};",
                     "/** @protected */ Foo.prop = {};")),
             SourceFile.fromCode(
                 "bar.js",
-                LINE_JOINER.join(
+                lines(
                     "goog.require('Foo');",
                     "/** @constructor @implements {Foo} */",
                     "function Bar() { Foo.prop; };"))));
@@ -731,7 +731,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         ImmutableList.of(
             SourceFile.fromCode(
                 "a.js",
-                LINE_JOINER.join(
+                lines(
                     "goog.provide('A');",
                     "/** @constructor */",
                     "var A = function() {",
@@ -743,7 +743,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
                     "}")),
             SourceFile.fromCode(
                 "b.js",
-                LINE_JOINER.join(
+                lines(
                     "goog.require('A');",
                     "/**",
                     " * @constructor",
@@ -763,7 +763,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         ImmutableList.of(
             SourceFile.fromCode(
                 "a.js",
-                LINE_JOINER.join(
+                lines(
                     "goog.provide('A');",
                     "/** @constructor */",
                     "var A = function() {}",
@@ -771,7 +771,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
                     "A.prototype.method = function() {};")),
             SourceFile.fromCode(
                 "b1.js",
-                LINE_JOINER.join(
+                lines(
                     "goog.require('A');",
                     "goog.provide('B1');",
                     "/** @constructor @extends {A} */",
@@ -780,7 +780,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
                     "B1.prototype.method = function() {};")),
             SourceFile.fromCode(
                 "b2.js",
-                LINE_JOINER.join(
+                lines(
                     "goog.require('A');",
                     "goog.provide('B2');",
                     "/** @constructor @extends {A} */",
@@ -789,7 +789,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
                     "B2.prototype.method = function() {};")),
             SourceFile.fromCode(
                 "c.js",
-                LINE_JOINER.join(
+                lines(
                     "goog.require('B1');",
                     "goog.require('B2');",
                     "/**",
@@ -871,10 +871,10 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
 
   public void testNoProtectedAccessForPropertiesWithNoRhs() {
     testSame(new String[] {
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function Foo() {}",
             "/** @protected */ Foo.prototype.x;"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor @extends {Foo} */ function Bar() {}",
             "/** @protected */ Bar.prototype.x;")
     });
@@ -1244,7 +1244,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
             SourceFile.fromCode("foo.js", "goog.provide('foo');"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                LINE_JOINER.join(
+                lines(
                     "/**\n",
                     "  * @fileoverview\n",
                     "  * @package\n",
@@ -1255,7 +1255,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
             SourceFile.fromCode("foo.js", "/** @const */ var foo={};"),
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                LINE_JOINER.join(
+                lines(
                     "/**\n",
                     "  * @fileoverview\n",
                     "  * @package\n",
@@ -1269,7 +1269,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         ImmutableList.of(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                LINE_JOINER.join(
+                lines(
                     "/**",
                     " * @fileoverview",
                     " * @package",
@@ -1278,13 +1278,13 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
             SourceFile.fromCode("foo.js", "goog.provide('foo');"),
             SourceFile.fromCode(
                 "bar.js",
-                LINE_JOINER.join(
+                lines(
                     "goog.require('foo');",
                     "var x = foo;"))),
         ImmutableList.of(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                LINE_JOINER.join(
+                lines(
                     "/** @const */var foo={};",
                     "/**",
                     " * @fileoverview",
@@ -1300,7 +1300,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         ImmutableList.of(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                LINE_JOINER.join(
+                lines(
                     "/**",
                     " * @fileoverview",
                     " * @package",
@@ -1309,13 +1309,13 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
                     "one.two.three = function(){};")),
             SourceFile.fromCode(
                 "baz.js",
-                LINE_JOINER.join(
+                lines(
                     "goog.require('one.two');",
                     "var x = one.two;"))),
         ImmutableList.of(
             SourceFile.fromCode(
                 Compiler.joinPathParts("foo", "bar.js"),
-                LINE_JOINER.join(
+                lines(
                     "/** @const */ var one={};",
                     "/**",
                     " * @fileoverview",
@@ -1960,7 +1960,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
 
   public void testFinalClassCannotBeSubclassed() {
     testError(
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @constructor",
             " * @final",
@@ -1972,7 +1972,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         EXTEND_FINAL_CLASS);
 
     testError(
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @constructor",
             " * @final",
@@ -1984,7 +1984,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
         EXTEND_FINAL_CLASS);
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @constructor",
             " * @const",
@@ -2000,7 +2000,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
     //      WARNING - Cycle detected in inheritance chain of type Foo
     // This warning already has a test: TypeCheckTest::testPrototypeLoop.
     testError(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor @extends {Foo} */ function Foo() {}",
             "/** @const */ Foo.prop = 1;",
             "Foo.prop = 2;"),
@@ -2010,7 +2010,7 @@ public final class CheckAccessControlsTest extends TypeICompilerTestCase {
     this.mode = TypeInferenceMode.NTI_ONLY;
 
     testError(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function Foo() {}",
             "/** @type {!Foo} */ Foo.prototype = new Foo();",
             "/** @const */ Foo.prop = 1;",

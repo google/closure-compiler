@@ -132,18 +132,18 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   public void testDefineWithDependentValue() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @define {boolean} */ var BASE = false;",
             "/** @define {boolean} */ var DEF = !BASE;"),
-        LINE_JOINER.join(
+        lines(
             "/** @define {boolean} */ var BASE = false;",
             "/** @define {boolean} */ var DEF = !BASE"));
     test(
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "/** @define {boolean} */ a.BASE = false;",
             "/** @define {boolean} */ a.DEF = !a.BASE;"),
-        LINE_JOINER.join(
+        lines(
             "var a={};",
             "/** @define {boolean} */ a.BASE = false;",
             "/** @define {boolean} */ a.DEF = !a.BASE"));
@@ -225,11 +225,11 @@ public final class ProcessDefinesTest extends CompilerTestCase {
     // Here and in other tests where we reassign to @defined values, we @suppress newCheckTypes
     // to suppress NTI_CONST_REASSIGNED warnings.
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF = false;",
             "DEF = true;"),
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF=true;",
             "true"));
@@ -237,12 +237,12 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   public void testSimpleReassign2() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {number|boolean} */ var DEF=false;",
             "DEF=true;",
             "DEF=3"),
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {number|boolean} */ var DEF=3;",
             "true;3"));
@@ -255,12 +255,12 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   public void testSimpleReassign3() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF = false;",
             "var x;",
             "x = DEF = true;"),
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF = true;",
             "var x;",
@@ -301,12 +301,12 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   public void testReassignAfterNonGlobalRef() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF=true;",
             "var x=function(){var y=DEF};",
             "DEF=false"),
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ var DEF = false;",
             "var x = function(){var y = DEF; };",
@@ -423,11 +423,11 @@ public final class ProcessDefinesTest extends CompilerTestCase {
 
   public void testSimpleConstReassign() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ const DEF = false;",
             "DEF = true;"),
-        LINE_JOINER.join(
+        lines(
             "/** @fileoverview @suppress {newCheckTypes} */",
             "/** @define {boolean} */ const DEF=true;",
             "true"));

@@ -359,7 +359,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
     assumeCrossModuleNames = false;
 
     test(createModules(
-        LINE_JOINER.join(
+        lines(
             "Foo = function() { this.b = ns; };",
             "var f = function(a) {",
             "  if (a instanceof Foo && a.b === ns) {}",
@@ -368,7 +368,7 @@ public final class RescopeGlobalSymbolsTest extends CompilerTestCase {
             "g = function(a) { var b = new Foo; };"),
         "f; g;"),
         new String[] {
-            LINE_JOINER.join(
+            lines(
                 "var ns;",
                 "window.Foo = function() { this.b = ns; };",
                 "_.f = function(a) {",

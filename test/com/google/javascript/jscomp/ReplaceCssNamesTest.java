@@ -63,7 +63,7 @@ public final class ReplaceCssNamesTest extends TypeICompilerTestCase {
   Map<String, Integer> cssNames;
 
   public ReplaceCssNamesTest() {
-    super(LINE_JOINER.join(
+    super(lines(
         DEFAULT_EXTERNS,
         "Object.prototype.getClass;",
         "goog.getCssName;"));

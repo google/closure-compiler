@@ -47,7 +47,7 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
 
   public void testNestedFunctions() {
     testFunctionNamesAndIds(
-        LINE_JOINER.join(
+        lines(
             "goog.widget = function(str) {",
             "  this.member_fn = function() {};",
             "  local_fn = function() {};",
@@ -79,7 +79,7 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
 
   public void testNestedObjectLiteral() {
     testFunctionNamesAndIds(
-        LINE_JOINER.join(
+        lines(
             "recliteral = {l1 : {l2 : function(){}}};",
             "namedliteral = {n1 : function litnamed(){}};",
             "namedrecliteral = {n1 : {n2 : function reclitnamed(){}}};"),
@@ -94,7 +94,7 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
 
   public void testObjectLiteralWithNumericKey2() {
     testFunctionNamesAndIds(
-        LINE_JOINER.join(
+        lines(
             "numliteral1 = {1 : function(){}};",
             "numliteral2 = {67 : function(){}};",
             "recnumliteral = {1 : {a : function(){}}};"),
@@ -148,7 +148,7 @@ public final class CollectFunctionNamesTest extends CompilerTestCase {
 
   public void testArrowFunctions3() {
     testFunctionNamesAndIds(
-        LINE_JOINER.join(
+        lines(
             "function foo1() {",
             "  var arrowFn2 = () => {};",
             "  () => {};",

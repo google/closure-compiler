@@ -40,14 +40,14 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testRemoveDuplicates() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var someClass = {};",
             "someClass.$clinit = function() {}",
             "someClass.someOtherFunction = function() {",
             "  someClass.$clinit();",
             "  someClass.$clinit();",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "var someClass = {};",
             "someClass.$clinit = function() {}",
             "someClass.someOtherFunction = function() {",
@@ -57,14 +57,14 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testRemoveDuplicates_commaExpressions() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var someClass = {};",
             "someClass.$clinit = function() {}",
             "someClass.someOtherFunction = function() {",
             "  (someClass.$clinit(), true);",
             "  (someClass.$clinit(), true);",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "var someClass = {};",
             "someClass.$clinit = function() {}",
             "someClass.someOtherFunction = function() {",
@@ -75,7 +75,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testRemoveDuplicates_controlBlocks() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var someClass = {};",
             "someClass.$clinit = function() {}",
             "someClass.someOtherFunction = function() {",
@@ -94,7 +94,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "  [].forEach(function() { someClass.$clinit(); });",
             "  someClass.$clinit();",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "var someClass = {};",
             "someClass.$clinit = function() {}",
             "someClass.someOtherFunction = function() {",
@@ -113,15 +113,15 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testRemoveDuplicates_selfRemoval() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var someClass = {};",
             "someClass.$clinit = function() {",
             "  someClass.$clinit();",
             "};"),
-        LINE_JOINER.join("var someClass = {};", "someClass.$clinit = function() {}"));
+        lines("var someClass = {};", "someClass.$clinit = function() {}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "function someClass$$0clinit() {",
             "  someClass$$0clinit();",
             "}"),
@@ -130,7 +130,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testRemoveDuplicates_jumpFunctionDeclarations() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var someClass = {};",
             "someClass.$clinit = function() {}",
             "someClass.someOtherFunction = function() {",
@@ -141,7 +141,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "    someClass.$clinit();",
             "  }",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "var someClass = {};",
             "someClass.$clinit = function() {}",
             "someClass.someOtherFunction = function() {",
@@ -155,7 +155,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testRemoveDuplicates_avoidControlBlocks() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var someClass = {};",
             "someClass.$clinit = function() {}",
             "someClass.anotherMethod = function() {",
@@ -190,7 +190,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testRedundantClinit_returnCtor() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var Foo = function() {",
             "  Foo.$clinit();",
             "};",
@@ -198,7 +198,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "  Foo.$clinit();",
             "  return new Foo();",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "var Foo = function() {",
             "  Foo.$clinit();",
             "};",
@@ -209,7 +209,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testRedundantClinit_returnCall() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = function() {",
             "  Foo.$clinit();",
             "};",
@@ -217,7 +217,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "  Foo.$clinit();",
             "  return foo();",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "var foo = function() {",
             "  Foo.$clinit();",
             "};",
@@ -228,7 +228,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testRedundantClinit_exprResult() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = function() {",
             "  Foo.$clinit();",
             "};",
@@ -236,7 +236,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "  Foo.$clinit();",
             "  foo();",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "var foo = function() {",
             "  Foo.$clinit();",
             "};",
@@ -247,7 +247,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testRedundantClinit_var() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = function() {",
             "  Foo.$clinit();",
             "};",
@@ -255,7 +255,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "  Foo.$clinit();",
             "  var x = foo();",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "var foo = function() {",
             "  Foo.$clinit();",
             "};",
@@ -267,7 +267,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
   public void testRedundantClinit_let() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = function() {",
             "  Foo.$clinit();",
             "};",
@@ -275,7 +275,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "  Foo.$clinit();",
             "  let x = foo();",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "var foo = function() {",
             "  Foo.$clinit();",
             "};",
@@ -287,7 +287,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
   public void testRedundantClinit_const() {
     setAcceptedLanguage(LanguageMode.ECMASCRIPT_2015);
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = function() {",
             "  Foo.$clinit();",
             "};",
@@ -295,7 +295,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "  Foo.$clinit();",
             "  const x = foo();",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "var foo = function() {",
             "  Foo.$clinit();",
             "};",
@@ -306,7 +306,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testRedundantClinit_literalArgs() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var Foo = function(a) {",
             "  Foo.$clinit();",
             "};",
@@ -314,7 +314,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "  Foo.$clinit();",
             "  return new Foo(1);",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "var Foo = function(a) {",
             "  Foo.$clinit();",
             "};",
@@ -325,7 +325,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testRedundantClinit_paramArgs() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var Foo = function(a, b) {",
             "  Foo.$clinit();",
             "};",
@@ -333,7 +333,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "  Foo.$clinit();",
             "  return new Foo(a, 1);",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "var Foo = function(a, b) {",
             "  Foo.$clinit();",
             "};",
@@ -344,7 +344,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testRedundantClinit_unsafeArgs() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = function(a) {",
             "  Foo.$clinit();",
             "};",
@@ -357,7 +357,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testRedundantClinit_otherClinit() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = function() {",
             "  Foo1.$clinit();",
             "};",
@@ -369,7 +369,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testRedundantClinit_clinitNotFirstStatement() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var Foo = function() {",
             "  var x = 1;",
             "  Foo.$clinit();",
@@ -382,7 +382,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testRedundantClinit_recursiveCall() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var foo = function() {",
             "  Foo1.$clinit();",
             "  foo();",
@@ -391,17 +391,17 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testFoldClinit() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var someClass = {};",
             "someClass.$clinit = function() {",
             "  someClass.$clinit = function() {};",
             "};"),
-        LINE_JOINER.join("var someClass = {};", "someClass.$clinit = function() {};"));
+        lines("var someClass = {};", "someClass.$clinit = function() {};"));
   }
 
   public void testFoldClinit_classHierarchy() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var someClass = {};",
             "someClass.$clinit = function() {",
             "  someClass.$clinit = function() {};",
@@ -415,7 +415,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "  someChildClass.$clinit();",
             "  someClass.$clinit();",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "var someClass = {};",
             "someClass.$clinit = function() {};",
             "var someChildClass = {};",
@@ -425,7 +425,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testFoldClinit_classHierarchyNonEmpty() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var someClass = {};",
             "someClass.$clinit = function() {",
             "  someClass.$clinit = function() {};",
@@ -439,7 +439,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "someChildClass.someFunction = function() {",
             "  someChildClass.$clinit();",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "var someClass = {};",
             "someClass.$clinit = function() {",
             "  someClass.$clinit = function() {};",
@@ -456,7 +456,7 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
 
   public void testFoldClinit_invalidCandidates() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var someClass = /** @constructor */ function() {};",
             "someClass.foo = function() {};",
             "someClass.$clinit = function() {",
@@ -464,13 +464,13 @@ public class J2clClinitPrunerPassTest extends CompilerTestCase {
             "  someClass.foo();",
             "};"));
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var someClass = {}, otherClass = {};",
             "someClass.$clinit = function() {",
             "  otherClass.$clinit = function() {};",
             "};"));
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var someClass = {};",
             "someClass.$notClinit = function() {",
             "  someClass.$notClinit = function() {};",

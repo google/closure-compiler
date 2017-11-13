@@ -400,11 +400,11 @@ public final class AliasStringsTest extends CompilerTestCase {
         modules,
         new String[] {
           // m1
-          LINE_JOINER.join(
+          lines(
               "var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';",
               "function g() { alert($$S_ciaociaociaociaociao); }"),
           // m2
-          LINE_JOINER.join(
+          lines(
               "var $$S_hhhhhhhhhhhhhhhhhhh$3a = 'hhhhhhhhhhhhhhhhhhh:';",
               "function h(a) {"
                   + "  alert($$S_hhhhhhhhhhhhhhhhhhh$3a + a);"
@@ -439,7 +439,7 @@ public final class AliasStringsTest extends CompilerTestCase {
           // m0
           "",
           // m1
-          LINE_JOINER.join(
+          lines(
               "var $$S_ciaociaociaociaociao = 'ciaociaociaociaociao';",
               "function g() { alert($$S_ciaociaociaociaociao); }"),
           // m2

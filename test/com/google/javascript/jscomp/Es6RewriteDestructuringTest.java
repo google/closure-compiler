@@ -49,7 +49,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testObjectDestructuring() {
     test(
         "var {a: b, c: d} = foo();",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = foo();",
             "var b = $jscomp$destructuring$var0.a;",
             "var d = $jscomp$destructuring$var0.c;"));
@@ -57,28 +57,28 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "var {a,b} = foo();",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = foo();",
             "var a = $jscomp$destructuring$var0.a;",
             "var b = $jscomp$destructuring$var0.b;"));
 
     test(
         "let {a,b} = foo();",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = foo();",
             "let a = $jscomp$destructuring$var0.a;",
             "let b = $jscomp$destructuring$var0.b;"));
 
     test(
         "const {a,b} = foo();",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var $jscomp$destructuring$var0 = foo();",
             "const a = $jscomp$destructuring$var0.a;",
             "const b = $jscomp$destructuring$var0.b;"));
 
     test(
         "var x; ({a: x} = foo());",
-        LINE_JOINER.join(
+        lines(
             "var x;",
             "var $jscomp$destructuring$var0 = foo();",
             "x = $jscomp$destructuring$var0.a;"));
@@ -87,7 +87,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testObjectDestructuringWithInitializer() {
     test(
         "var {a : b = 'default'} = foo();",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = foo();",
             "var b = ($jscomp$destructuring$var0.a === undefined) ?",
             "    'default' :",
@@ -95,7 +95,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "var {a = 'default'} = foo();",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = foo();",
             "var a = ($jscomp$destructuring$var0.a === undefined) ?",
             "    'default' :",
@@ -105,7 +105,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testObjectDestructuringNested() {
     test(
         "var {a: {b}} = foo();",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = foo();",
             "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.a;",
             "var b = $jscomp$destructuring$var1.b"));
@@ -122,7 +122,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "var {[foo()]: x = 5} = {};",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = {};",
             "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0[foo()];",
             "var x = $jscomp$destructuring$var1 === undefined ?",
@@ -130,7 +130,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "function f({['KEY']: x}) {}",
-        LINE_JOINER.join(
+        lines(
             "function f($jscomp$destructuring$var0) {",
             "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
             "  var x = $jscomp$destructuring$var1['KEY']",
@@ -141,13 +141,13 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testGithubIssue2189() {
     setExpectParseWarningsThisTest();
     test(
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @param {string} a",
             " * @param {{b: ?<?>}} __1",
             " */",
             "function x(a, { b }) {}"),
-        LINE_JOINER.join(
+        lines(
             "/**",
             " * @param {string} a",
             " * @param {{b: ?<?>}} __1",
@@ -165,13 +165,13 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "var {0.1: b} = foo();",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = foo();",
             "var b = $jscomp$destructuring$var0['0.1']"));
 
     test(
         "var {'str': b} = foo();",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = foo();",
             "var b = $jscomp$destructuring$var0['str']"));
   }
@@ -179,7 +179,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testObjectDestructuringFunction() {
     test(
         "function f({a: b}) {}",
-        LINE_JOINER.join(
+        lines(
             "function f($jscomp$destructuring$var0) {",
             "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
             "  var b = $jscomp$destructuring$var1.a",
@@ -187,7 +187,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "function f({a}) {}",
-        LINE_JOINER.join(
+        lines(
             "function f($jscomp$destructuring$var0) {",
             "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
             "  var a = $jscomp$destructuring$var1.a",
@@ -195,7 +195,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "function f({k: {subkey : a}}) {}",
-        LINE_JOINER.join(
+        lines(
             "function f($jscomp$destructuring$var0) {",
             "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
             "  var $jscomp$destructuring$var2 = $jscomp$destructuring$var1.k;",
@@ -204,7 +204,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "function f({k: [x, y, z]}) {}",
-        LINE_JOINER.join(
+        lines(
             "function f($jscomp$destructuring$var0) {",
             "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
             "  var $jscomp$destructuring$var2 =",
@@ -217,7 +217,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "function f({key: x = 5}) {}",
-        LINE_JOINER.join(
+        lines(
             "function f($jscomp$destructuring$var0) {",
             "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
             "  var x = $jscomp$destructuring$var1.key === undefined ?",
@@ -226,7 +226,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "function f({[key]: x = 5}) {}",
-        LINE_JOINER.join(
+        lines(
             "function f($jscomp$destructuring$var0) {",
             "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
             "  var $jscomp$destructuring$var2 = $jscomp$destructuring$var1[key]",
@@ -236,7 +236,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "function f({x = 5}) {}",
-        LINE_JOINER.join(
+        lines(
             "function f($jscomp$destructuring$var0) {",
             "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0",
             "  var x = $jscomp$destructuring$var1.x === undefined ?",
@@ -247,7 +247,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testObjectDestructuringFunctionJsDoc() {
     test(
         "function f(/** {x: number, y: number} */ {x, y}) {}",
-        LINE_JOINER.join(
+        lines(
             "function f(/** {x: number, y: number} */ $jscomp$destructuring$var0) {",
             "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
             "  var x = $jscomp$destructuring$var1.x;",
@@ -258,7 +258,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testDefaultParametersDestructuring() {
     test(
         "function f({a,b} = foo()) {}",
-        LINE_JOINER.join(
+        lines(
             "function f($jscomp$destructuring$var0){",
             "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0===undefined ?",
             "    foo() : $jscomp$destructuring$var0;",
@@ -270,14 +270,14 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testArrayDestructuring() {
     test(
         "var [x,y] = z();",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = $jscomp.makeIterator(z());",
             "var x = $jscomp$destructuring$var0.next().value;",
             "var y = $jscomp$destructuring$var0.next().value;"));
 
     test(
         "var x,y;\n" + "[x,y] = z();",
-        LINE_JOINER.join(
+        lines(
             "var x,y;",
             "var $jscomp$destructuring$var0 = $jscomp.makeIterator(z());",
             "x = $jscomp$destructuring$var0.next().value;",
@@ -285,7 +285,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "var [a,b] = c();" + "var [x,y] = z();",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = $jscomp.makeIterator(c());",
             "var a = $jscomp$destructuring$var0.next().value;",
             "var b = $jscomp$destructuring$var0.next().value;",
@@ -297,7 +297,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testArrayDestructuringDefaultValues() {
     test(
         "var a; [a=1] = b();",
-        LINE_JOINER.join(
+        lines(
             "var a;",
             "var $jscomp$destructuring$var0 = $jscomp.makeIterator(b())",
             "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value",
@@ -307,7 +307,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "var [a=1] = b();",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = $jscomp.makeIterator(b())",
             "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value",
             "var a = ($jscomp$destructuring$var1 === undefined) ?",
@@ -316,7 +316,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "var [a, b=1, c] = d();",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0=$jscomp.makeIterator(d());",
             "var a = $jscomp$destructuring$var0.next().value;",
             "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;",
@@ -327,7 +327,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "var a; [[a] = ['b']] = [];",
-        LINE_JOINER.join(
+        lines(
             "var a;",
             "var $jscomp$destructuring$var0 = $jscomp.makeIterator([]);",
             "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;",
@@ -341,7 +341,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testArrayDestructuringParam() {
     test(
         "function f([x,y]) { use(x); use(y); }",
-        LINE_JOINER.join(
+        lines(
             "function f($jscomp$destructuring$var0) {",
             "  var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
             "  var x = $jscomp$destructuring$var1.next().value;",
@@ -352,7 +352,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "function f([x, , y]) { use(x); use(y); }",
-        LINE_JOINER.join(
+        lines(
             "function f($jscomp$destructuring$var0) {",
             "  var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
             "  var x = $jscomp$destructuring$var1.next().value;",
@@ -366,7 +366,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testArrayDestructuringRest() {
     test(
         "let [one, ...others] = f();",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = $jscomp.makeIterator(f());",
             "let one = $jscomp$destructuring$var0.next().value;",
             "let others = $jscomp.arrayFromIterator($jscomp$destructuring$var0);"));
@@ -375,7 +375,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "function f([first, ...rest]) {}",
-        LINE_JOINER.join(
+        lines(
             "function f($jscomp$destructuring$var0) {",
             "  var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
             "  var first = $jscomp$destructuring$var1.next().value;",
@@ -386,7 +386,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testRestParamDestructuring() {
     test(
         "function f(first, ...[re, st, ...{length: num_left}]) {}",
-        LINE_JOINER.join(
+        lines(
             "function f(first, ...$jscomp$destructuring$var0) {",
             "  var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
             "  var re = $jscomp$destructuring$var1.next().value;",
@@ -400,7 +400,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testArrayDestructuringMixedRest() {
     test(
         "let [first, ...[re, st, ...{length: num_left}]] = f();",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = $jscomp.makeIterator(f());",
             "let first = $jscomp$destructuring$var0.next().value;",
             "var $jscomp$destructuring$var1 = "
@@ -416,7 +416,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testArrayDestructuringArguments() {
     test(
     "function f() { var [x, y] = arguments; }",
-    LINE_JOINER.join(
+    lines(
         "function f() {",
         "  var $jscomp$destructuring$var0 = $jscomp.makeIterator(arguments);",
         "  var x = $jscomp$destructuring$var0.next().value;",
@@ -427,7 +427,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testMixedDestructuring() {
     test(
         "var [a,{b,c}] = foo();",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = $jscomp.makeIterator(foo());",
             "var a = $jscomp$destructuring$var0.next().value;",
             "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0.next().value;",
@@ -436,7 +436,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "var {a,b:[c,d]} = foo();",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = foo();",
             "var a = $jscomp$destructuring$var0.a;",
             "var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0.b);",
@@ -447,7 +447,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testDestructuringForOf() {
     test(
         "for ({x} of y) { console.log(x); }",
-        LINE_JOINER.join(
+        lines(
             "for (var $jscomp$destructuring$var0 of y) {",
             "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
             "   x = $jscomp$destructuring$var1.x;",
@@ -458,7 +458,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testDefaultValueInObjectPattern() {
     test(
         "function f({x = a()}, y = b()) {}",
-        LINE_JOINER.join(
+        lines(
             "function f($jscomp$destructuring$var0, y) {",
             "var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
             "var x = $jscomp$destructuring$var1.x === undefined",
@@ -471,7 +471,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
     this.mode = TypeInferenceMode.BOTH;
     test(
         "function f(/** ? */ zero, /** ?= */ one = 1, /** ?= */ two = 2) {}; f(1); f(1,2,3);",
-        LINE_JOINER.join(
+        lines(
             "function f(/** ? */ zero, /** ?= */ one, /** ?= */ two) {",
             "  one = (one === undefined) ? 1 : one;",
             "  two = (two === undefined) ? 2 : two;",
@@ -492,14 +492,14 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testDefaultAndRestParameters() {
     test(
         "function f(zero, one = 1, ...two) {}",
-        LINE_JOINER.join(
+        lines(
             "function f(zero, one, ...two) {",
             "  one = (one === undefined) ? 1 : one;",
             "}"));
 
     test(
         "function f(/** number= */ x = 5) {}",
-        LINE_JOINER.join(
+        lines(
             "function f(/** number= */ x) {",
             "  x = (x === undefined) ? 5 : x;",
             "}"));
@@ -528,7 +528,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testCatch() {
     test(
         "try {} catch ({message}) {}",
-        LINE_JOINER.join(
+        lines(
             "try {} catch($jscomp$destructuring$var0) {",
             "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
             "  let message = $jscomp$destructuring$var1.message",
@@ -540,7 +540,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "/** @param {{x: number}} obj */ function f({x}) {}",
-        LINE_JOINER.join(
+        lines(
             "/** @param {{x: number}} obj */",
             "function f(obj) {",
             "  var $jscomp$destructuring$var0 = obj;",
@@ -552,10 +552,10 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
         warningOtiNti(TypeValidator.TYPE_MISMATCH_WARNING, NewTypeInference.INVALID_ARGUMENT_TYPE));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @param {{x: number}} obj */",
             "var f = function({x}) {}"),
-        LINE_JOINER.join(
+        lines(
             "/** @param {{x: number}} obj */",
             "var f = function(obj) {",
             "  var $jscomp$destructuring$var0 = obj;",
@@ -563,10 +563,10 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @param {{x: number}} obj */",
             "f = function({x}) {}"),
-        LINE_JOINER.join(
+        lines(
             "/** @param {{x: number}} obj */",
             "f = function(obj) {",
             "  var $jscomp$destructuring$var0 = obj;",
@@ -574,10 +574,10 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @param {{x: number}} obj */",
             "ns.f = function({x}) {}"),
-        LINE_JOINER.join(
+        lines(
             "/** @param {{x: number}} obj */",
             "ns.f = function(obj) {",
             "  var $jscomp$destructuring$var0 = obj;",
@@ -586,7 +586,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "ns.f = function({x} = {x: 0}) {};",
-        LINE_JOINER.join(
+        lines(
             "ns.f = function($jscomp$destructuring$var0) {",
             "  var $jscomp$destructuring$var1 =",
             "      $jscomp$destructuring$var0 === undefined ? {x:0} : $jscomp$destructuring$var0;",
@@ -594,10 +594,10 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
             "};"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @param {{x: number}=} obj */",
             "ns.f = function({x} = {x: 0}) {};"),
-        LINE_JOINER.join(
+        lines(
             "/** @param {{x: number}=} obj */",
             "ns.f = function(obj) {",
             "  var $jscomp$destructuring$var0 = obj===undefined ? {x:0} : obj;",
@@ -627,7 +627,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "function f(/** {x: number} */ {x}) {}",
-        LINE_JOINER.join(
+        lines(
             "function f(/** {x: number} */ $jscomp$destructuring$var0) {",
             "  var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
             "  var x = $jscomp$destructuring$var1.x;",
@@ -640,8 +640,8 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
   public void testDestructuringArrayNotInExprResult() {
     test(
-        LINE_JOINER.join("var x, a, b;", "x = ([a,b] = [1,2])"),
-        LINE_JOINER.join(
+        lines("var x, a, b;", "x = ([a,b] = [1,2])"),
+        lines(
             "var x,a,b;",
             "x = (()=>{",
             "   let $jscomp$destructuring$var0 = [1,2];",
@@ -652,9 +652,9 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
             "})();"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var foo = function () {", "var x, a, b;", "x = ([a,b] = [1,2]);", "}", "foo();"),
-        LINE_JOINER.join(
+        lines(
             "var foo = function () {",
             " var x, a, b;",
             " x = (()=>{",
@@ -668,8 +668,8 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
             "foo();"));
 
     test(
-        LINE_JOINER.join("var prefix;", "for (;;[, prefix] = /\\.?([^.]+)$/.exec(prefix)){", "}"),
-        LINE_JOINER.join(
+        lines("var prefix;", "for (;;[, prefix] = /\\.?([^.]+)$/.exec(prefix)){", "}"),
+        lines(
             "var prefix;",
             "for (;;(() => {",
             "   let $jscomp$destructuring$var0 = /\\.?([^.]+)$/.exec(prefix)",
@@ -682,12 +682,12 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var prefix;",
             "for (;;[, prefix] = /\\.?([^.]+)$/.exec(prefix)){",
             "   console.log(prefix);",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var prefix;",
             "for (;;(() => {",
             "   let $jscomp$destructuring$var0 = /\\.?([^.]+)$/.exec(prefix)",
@@ -701,8 +701,8 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join("for (var x = 1; x < 3; [x,] = [3,4]){", "   console.log(x);", "}"),
-        LINE_JOINER.join(
+        lines("for (var x = 1; x < 3; [x,] = [3,4]){", "   console.log(x);", "}"),
+        lines(
             "for (var x = 1; x < 3; (()=>{",
             "   let $jscomp$destructuring$var0 = [3,4]",
             "   var $jscomp$destructuring$var1 = $jscomp.makeIterator($jscomp$destructuring$var0);",
@@ -716,7 +716,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testDestructuringObjectNotInExprResult() {
     test(
         "var x = ({a: b, c: d} = foo());",
-        LINE_JOINER.join(
+        lines(
             "var x = (()=>{",
             "   let $jscomp$destructuring$var0 = foo();",
             "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
@@ -727,7 +727,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "var x = ({a: b, c: d} = foo());",
-        LINE_JOINER.join(
+        lines(
             "var x = (()=>{",
             "   let $jscomp$destructuring$var0 = foo();",
             "   var $jscomp$destructuring$var1 = $jscomp$destructuring$var0;",
@@ -738,7 +738,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "var x; var y = ({a: x} = foo());",
-        LINE_JOINER.join(
+        lines(
             "var x;",
             "var y = (()=>{",
             "   let $jscomp$destructuring$var0 = foo();",
@@ -749,7 +749,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "var x; var y = (() => {return {a,b} = foo();})();",
-        LINE_JOINER.join(
+        lines(
             "var x;",
             "var y = (()=>{",
             "   return (()=>{",
@@ -765,7 +765,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
   public void testNestedDestructuring() {
     test(
         "var [[x]] = [[1]];",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = $jscomp.makeIterator([[1]]);",
             "var $jscomp$destructuring$var1 = ",
             "$jscomp.makeIterator($jscomp$destructuring$var0.next().value);",
@@ -773,7 +773,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "var [[x,y],[z]] = [[1,2],[3]];",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = $jscomp.makeIterator([[1,2],[3]]);",
             "var $jscomp$destructuring$var1 = ",
             "$jscomp.makeIterator($jscomp$destructuring$var0.next().value);",
@@ -785,7 +785,7 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
     test(
         "var [[x,y],z] = [[1,2],3];",
-        LINE_JOINER.join(
+        lines(
             "var $jscomp$destructuring$var0 = $jscomp.makeIterator([[1,2],3]);",
             "var $jscomp$destructuring$var1 = ",
             "$jscomp.makeIterator($jscomp$destructuring$var0.next().value);",
@@ -796,8 +796,8 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
 
   public void testTryCatch() {
     test(
-        LINE_JOINER.join("var x = 1;", "try {", "  throw [];", "} catch ([x]) {}"),
-        LINE_JOINER.join(
+        lines("var x = 1;", "try {", "  throw [];", "} catch ([x]) {}"),
+        lines(
             "var x = 1;",
             "try {",
             "  throw [];",
@@ -807,8 +807,8 @@ public class Es6RewriteDestructuringTest extends TypeICompilerTestCase {
             "}"));
 
     test(
-        LINE_JOINER.join("var x = 1;", "try {", "  throw [[]];", "} catch ([[x]]) {}"),
-        LINE_JOINER.join(
+        lines("var x = 1;", "try {", "  throw [[]];", "} catch ([[x]]) {}"),
+        lines(
             "var x = 1;",
             "try {",
             "  throw [[]];",

@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Node;
 public class PolymerPassSuppressBehaviorsTest extends TypeICompilerTestCase {
 
   private static final String EXTERNS =
-      LINE_JOINER.join(
+      lines(
           MINIMAL_EXTERNS,
           "/** @constructor */",
           "var HTMLElement = function() {};",
@@ -89,7 +89,7 @@ public class PolymerPassSuppressBehaviorsTest extends TypeICompilerTestCase {
 
   public void testPropertyTypeRemoval() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @polymerBehavior */",
             "var FunBehavior = {",
             "  properties: {",
@@ -109,7 +109,7 @@ public class PolymerPassSuppressBehaviorsTest extends TypeICompilerTestCase {
             "  },",
             "};"),
 
-        LINE_JOINER.join(
+        lines(
             "/** @polymerBehavior @nocollapse */",
             "var FunBehavior = {",
             "  properties: {",
@@ -129,7 +129,7 @@ public class PolymerPassSuppressBehaviorsTest extends TypeICompilerTestCase {
 
   public void testDefaultValueSuppression() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @polymerBehavior */",
             "var FunBehavior = {",
             "  properties: {",
@@ -148,7 +148,7 @@ public class PolymerPassSuppressBehaviorsTest extends TypeICompilerTestCase {
             "  },",
             "};"),
 
-        LINE_JOINER.join(
+        lines(
             "/** @polymerBehavior @nocollapse */",
             "var FunBehavior = {",
             "  properties: {",
@@ -173,12 +173,12 @@ public class PolymerPassSuppressBehaviorsTest extends TypeICompilerTestCase {
   public void testConstBehaviours() {
     this.mode = TypeInferenceMode.NEITHER;
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @polymerBehavior */",
             "const FunBehavior = {",
             "};"),
 
-        LINE_JOINER.join(
+        lines(
             "/** @polymerBehavior @nocollapse */",
             "const FunBehavior = {",
             "};"));
@@ -187,12 +187,12 @@ public class PolymerPassSuppressBehaviorsTest extends TypeICompilerTestCase {
   public void testLetBehaviours() {
     this.mode = TypeInferenceMode.NEITHER;
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @polymerBehavior */",
             "let FunBehavior = {",
             "};"),
 
-        LINE_JOINER.join(
+        lines(
             "/** @polymerBehavior @nocollapse */",
             "let FunBehavior = {",
             "};"));

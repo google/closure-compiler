@@ -80,21 +80,21 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
   public void testNoWarning_objlitShorthand() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('example.module');",
             "",
             "const X = goog.require('example.X');",
             "alert({X});"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.require('X');",
             "alert({X});"));
   }
 
   public void testNoWarning_objlitShorthand_withES6Modules() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "import 'example.module';",
             "",
             "import X from 'example.X';",
@@ -103,7 +103,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
   public void testNoWarning_InnerClassInExtends() {
     String js =
-        LINE_JOINER.join(
+        lines(
             "var goog = {};",
             "goog.require('goog.foo.Bar');",
             "",
@@ -115,11 +115,11 @@ public final class ExtraRequireTest extends CompilerTestCase {
   public void testWarning() {
     testError("goog.require('foo.bar');", EXTRA_REQUIRE_WARNING);
 
-    testError(LINE_JOINER.join(
+    testError(lines(
         "goog.require('Bar');",
         "function func( {a} ){}",
         "func( {a: 1} );"), EXTRA_REQUIRE_WARNING);
-    testError(LINE_JOINER.join(
+    testError(lines(
         "goog.require('Bar');",
         "function func( a = 1 ){}",
         "func(42);"), EXTRA_REQUIRE_WARNING);
@@ -135,22 +135,22 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
   public void testPassModule() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "import {Foo} from 'bar';",
             "new Foo();"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "import Bar from 'bar';",
             "new Bar();"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "import {CoolFeature as Foo} from 'bar';",
             "new Foo();"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "import Bar, {CoolFeature as Foo, OtherThing as Baz} from 'bar';",
             "new Foo(); new Bar(); new Baz();"));
   }
@@ -161,7 +161,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
         EXTRA_REQUIRE_WARNING);
 
     testError(
-        LINE_JOINER.join(
+        lines(
             "import {Foo} from 'bar';",
             "goog.require('example.ExtraRequire');",
             "new Foo;"),
@@ -170,7 +170,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
   public void testPassForwardDeclareInModule() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('example');",
             "",
             "var Event = goog.forwardDeclare('goog.events.Event');",
@@ -188,7 +188,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
   public void testUnusedForwardDeclareInModule() {
     // Reports extra require warning, but only in single-file mode.
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('example');",
             "",
             "var Event = goog.forwardDeclare('goog.events.Event');",
@@ -206,7 +206,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
   public void testPassForwardDeclare() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.forwardDeclare('goog.events.Event');",
             "",
             "/**",
@@ -220,7 +220,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
   public void testFailForwardDeclare() {
     // Reports extra require warning, but only in single-file mode.
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.forwardDeclare('goog.events.Event');",
             "goog.forwardDeclare('goog.events.Unused');",
             "",
@@ -234,7 +234,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
   public void testGoogModuleGet() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.provide('x.y');",
             "goog.require('foo.bar');",
             "",
@@ -246,7 +246,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
   public void testGoogModuleWithDestructuringRequire() {
     testError(
-        LINE_JOINER.join(
+        lines(
             "goog.module('example');",
             "",
             "var dom = goog.require('goog.dom');",
@@ -264,7 +264,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
         EXTRA_REQUIRE_WARNING);
 
      testSame(
-        LINE_JOINER.join(
+        lines(
             "goog.module('example');",
             "",
             "var {assert : googAssert} = goog.require('goog.asserts');",
@@ -274,7 +274,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
             "};"));
 
      testError(
-        LINE_JOINER.join(
+        lines(
             "goog.module('example');",
             "",
             "var {assert, fail} = goog.require('goog.asserts');",
@@ -285,7 +285,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
         EXTRA_REQUIRE_WARNING);
 
      testError(
-        LINE_JOINER.join(
+        lines(
             "goog.module('example');",
             "",
             "var {assert : googAssert} = goog.require('goog.asserts');",
@@ -296,7 +296,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
         EXTRA_REQUIRE_WARNING);
 
      testError(
-        LINE_JOINER.join(
+        lines(
             "goog.module('example');",
             "",
             "var {assert : googAssert} = goog.require('goog.asserts');",
@@ -309,7 +309,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
   public void testES6ModuleWithDestructuringRequire() {
     testError(
-        LINE_JOINER.join(
+        lines(
             "import 'example';",
             "",
             "import {assert, fail} from 'goog.asserts';",
@@ -322,7 +322,7 @@ public final class ExtraRequireTest extends CompilerTestCase {
 
   public void testGoogModuleWithEmptyDestructuringRequire() {
     testError(
-        LINE_JOINER.join(
+        lines(
             "goog.module('example');",
             "",
             "var {} = goog.require('goog.asserts');"),

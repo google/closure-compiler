@@ -39,7 +39,7 @@ public final class CheckMissingSuperTest extends CompilerTestCase {
 
   public void testMissingSuper_nestedClass() {
     // Note that super is only called for anonymous class "E", not C.
-    testError(LINE_JOINER.join(
+    testError(lines(
         "class C extends D {",
         "  constructor() { ",
         "    const E = class extends D { constructor() { super(); } };",

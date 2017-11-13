@@ -375,13 +375,13 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .appendStringPart("translated")
         .build());
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @desc d */",
             "var MSG_A = goog.getMsg('msg A');",
             "/** @desc d */",
             "var MSG_B = goog.getMsg('msg B');",
             "var x = goog.getMsgWithFallback(MSG_A, MSG_B);"),
-        LINE_JOINER.join(
+        lines(
             "/** @desc d */",
             "var MSG_A = 'msg A';",
             "/** @desc d */",
@@ -391,13 +391,13 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
 
   public void testFallbackEmptyBundle() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @desc d */",
             "var MSG_A = goog.getMsg('msg A');",
             "/** @desc d */",
             "var MSG_B = goog.getMsg('msg B');",
             "var x = goog.getMsgWithFallback(MSG_A, MSG_B);"),
-        LINE_JOINER.join(
+        lines(
             "/** @desc d */",
             "var MSG_A = 'msg A';",
             "/** @desc d */",
@@ -410,13 +410,13 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .appendStringPart("translated")
         .build());
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @desc d */",
             "var MSG_A = goog.getMsg('msg A');",
             "/** @desc d */",
             "var MSG_B = goog.getMsg('msg B');",
             "var x = goog.getMsgWithFallback(MSG_A, MSG_B);"),
-        LINE_JOINER.join(
+        lines(
             "/** @desc d */",
             "var MSG_A = 'translated';",
             "/** @desc d */",
@@ -429,13 +429,13 @@ public final class ReplaceMessagesTest extends CompilerTestCase {
         .appendStringPart("translated")
         .build());
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @desc d */",
             "var MSG_A = goog.getMsg('msg A');",
             "/** @desc d */",
             "var MSG_B = goog.getMsg('msg B');",
             "var x = goog.getMsgWithFallback(MSG_A, MSG_B);"),
-        LINE_JOINER.join(
+        lines(
             "/** @desc d */",
             "var MSG_A = 'msg A';",
             "/** @desc d */",

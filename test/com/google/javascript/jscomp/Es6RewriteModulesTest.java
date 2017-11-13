@@ -99,7 +99,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   public void testExport() {
     testModules(
         "export var a = 1, b = 2;",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "var a$$module$testcode = 1, b$$module$testcode = 2;",
             "module$testcode.a = a$$module$testcode;",
@@ -107,7 +107,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         "export var a;\nexport var b;",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "var a$$module$testcode; var b$$module$testcode;",
             "module$testcode.a = a$$module$testcode;",
@@ -115,22 +115,22 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         "export function f() {};",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "function f$$module$testcode() {}",
             "module$testcode.f = f$$module$testcode;"));
 
     testModules(
         "export function f() {};\nfunction g() { f(); }",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "function f$$module$testcode() {}",
             "function g$$module$testcode() { f$$module$testcode(); }",
             "module$testcode.f = f$$module$testcode;"));
 
     testModules(
-        LINE_JOINER.join("export function MyClass() {};", "MyClass.prototype.foo = function() {};"),
-        LINE_JOINER.join(
+        lines("export function MyClass() {};", "MyClass.prototype.foo = function() {};"),
+        lines(
             "/** @const */ var module$testcode={};",
             "function MyClass$$module$testcode() {}",
             "MyClass$$module$testcode.prototype.foo = function() {};",
@@ -138,7 +138,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         "var f = 1;\nvar b = 2;\nexport {f as foo, b as bar};",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "var f$$module$testcode = 1;",
             "var b$$module$testcode = 2;",
@@ -147,14 +147,14 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         "var f = 1;\nexport {f as default};",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "var f$$module$testcode = 1;",
             "module$testcode.default = f$$module$testcode;"));
 
     testModules(
         "var f = 1;\nexport {f as class};",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "var f$$module$testcode = 1;",
             "module$testcode.class = f$$module$testcode;"));
@@ -163,7 +163,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   public void testExportWithJsDoc() {
     testModules(
         "/** @constructor */\nexport function F() { return '';}",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "/** @constructor */",
             "function F$$module$testcode() { return ''; }",
@@ -171,7 +171,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         "/** @return {string} */\nexport function f() { return '';}",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "/** @return {string} */",
             "function f$$module$testcode() { return ''; }",
@@ -179,7 +179,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         "/** @return {string} */\nexport var f = function() { return '';}",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "/** @return {string} */",
             "var f$$module$testcode = function() { return ''; }",
@@ -187,7 +187,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         "/** @type {number} */\nexport var x = 3",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "/** @type {number} */",
             "var x$$module$testcode = 3;",
@@ -196,8 +196,8 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   public void testImportAndExport() {
     testModules(
-        LINE_JOINER.join("import {name as n} from './other.js';", "use(n);", "export {n as name};"),
-        LINE_JOINER.join(
+        lines("import {name as n} from './other.js';", "use(n);", "export {n as name};"),
+        lines(
             "/** @const */ var module$testcode={};",
             "use(module$other.name);",
             "module$testcode.name = module$other.name;"));
@@ -205,11 +205,11 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   public void testExportFrom() {
     testModules(
-        LINE_JOINER.join(
+        lines(
             "export {name} from './other.js';",
             "export {default} from './other.js';",
             "export {class} from './other.js';"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "module$testcode.name = module$other.name;",
             "module$testcode.default = module$other.default;",
@@ -217,7 +217,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         "export {a, b as c, d} from './other.js';",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "module$testcode.a = module$other.a;",
             "module$testcode.c = module$other.b;",
@@ -225,17 +225,17 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         "export {a as b, b as a} from './other.js';",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "module$testcode.b = module$other.a;",
             "module$testcode.a = module$other.b;"));
 
     testModules(
-        LINE_JOINER.join(
+        lines(
             "export {default as a} from './other.js';",
             "export {a as a2, default as b} from './other.js';",
             "export {class as switch} from './other.js';"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "module$testcode.a = module$other.default;",
             "module$testcode.a2 = module$other.a;",
@@ -246,14 +246,14 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   public void testExportDefault() {
     testModules(
         "export default 'someString';",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "var $jscompDefaultExport$$module$testcode = 'someString';",
             "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
 
     testModules(
         "var x = 5;\nexport default x;",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "var x$$module$testcode = 5;",
             "var $jscompDefaultExport$$module$testcode = x$$module$testcode;",
@@ -261,7 +261,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         "export default function f(){};\n var x = f();",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "function f$$module$testcode() {}",
             "var x$$module$testcode = f$$module$testcode();",
@@ -269,7 +269,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         "export default class Foo {};\n var x = new Foo;",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "class Foo$$module$testcode {}",
             "var x$$module$testcode = new Foo$$module$testcode;",
@@ -279,14 +279,14 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   public void testExportDefault_anonymous() {
     testModules(
         "export default class {};",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "var $jscompDefaultExport$$module$testcode = class {};",
             "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
 
     testModules(
         "export default function() {}",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "var $jscompDefaultExport$$module$testcode = function() {}",
             "module$testcode.default = $jscompDefaultExport$$module$testcode;"));
@@ -294,26 +294,26 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   public void testExtendImportedClass() {
     testModules(
-        LINE_JOINER.join(
+        lines(
             "import {Parent} from './other.js';",
             "class Child extends Parent {",
             "  /** @param {Parent} parent */",
             "  useParent(parent) {}",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class Child$$module$testcode extends module$other.Parent {",
             "  /** @param {Parent$$module$other} parent */",
             "  useParent(parent) {}",
             "}"));
 
     testModules(
-        LINE_JOINER.join(
+        lines(
             "import {Parent} from './other.js';",
             "export class Child extends Parent {",
             "  /** @param {Parent} parent */",
             "  useParent(parent) {}",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "class Child$$module$testcode extends module$other.Parent {",
             "  /** @param {Parent$$module$other} parent */",
@@ -324,9 +324,9 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   public void testFixTypeNode() {
     testModules(
-        LINE_JOINER.join(
+        lines(
             "export class Child {", "  /** @param {Child} child */", "  useChild(child) {}", "}"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "class Child$$module$testcode {",
             "  /** @param {Child$$module$testcode} child */",
@@ -335,12 +335,12 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.Child = Child$$module$testcode;"));
 
     testModules(
-        LINE_JOINER.join(
+        lines(
             "export class Child {",
             "  /** @param {Child.Foo.Bar.Baz} baz */",
             "  useBaz(baz) {}",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "class Child$$module$testcode {",
             "  /** @param {Child$$module$testcode.Foo.Bar.Baz} baz */",
@@ -352,9 +352,9 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   public void testReferenceToTypeFromOtherModule() {
     setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
     testModules(
-        LINE_JOINER.join(
+        lines(
             "export class Foo {", "  /** @param {./other.Baz} baz */", "  useBaz(baz) {}", "}"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "class Foo$$module$testcode {",
             "  /** @param {module$other.Baz} baz */",
@@ -363,9 +363,9 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.Foo = Foo$$module$testcode;"));
 
     testModules(
-        LINE_JOINER.join(
+        lines(
             "export class Foo {", "  /** @param {/other.Baz} baz */", "  useBaz(baz) {}", "}"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "class Foo$$module$testcode {",
             "  /** @param {module$other.Baz} baz */",
@@ -374,13 +374,13 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "/** @const */ module$testcode.Foo = Foo$$module$testcode;"));
 
     testModules(
-        LINE_JOINER.join(
+        lines(
             "import {Parent} from './other.js';",
             "class Child extends Parent {",
             "  /** @param {./other.Parent} parent */",
             "  useParent(parent) {}",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "class Child$$module$testcode extends module$other.Parent {",
             "  /** @param {module$other.Parent} parent */",
             "  useParent(parent) {}",
@@ -390,9 +390,9 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   public void testRenameTypedef() {
     testModules(
-        LINE_JOINER.join(
+        lines(
             "import './other.js';", "/** @typedef {string|!Object} */", "export var UnionType;"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "/** @typedef {string|!Object} */",
             "var UnionType$$module$testcode;",
@@ -402,14 +402,14 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   public void testNoInnerChange() {
     testModules(
-        LINE_JOINER.join(
+        lines(
             "var Foo = (function () {",
             "    /**  @param bar */",
             "    function Foo(bar) {}",
             "    return Foo;",
             "}());",
             "export { Foo };"),
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "var Foo$$module$testcode = function() {",
             "    /**  @param bar */",
@@ -421,7 +421,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   public void testRenameImportedReference() {
     testModules(
-        LINE_JOINER.join(
+        lines(
             "import {f} from './other.js';",
             "import {b as bar} from './other.js';",
             "f();",
@@ -433,7 +433,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "    { let f = 4; }",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "module$other.f();",
             "function g$$module$testcode() {",
             "  module$other.f();",
@@ -451,7 +451,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         "goog.require('foo.bar');\nexport var x;",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "goog.require('foo.bar');",
             "var x$$module$testcode;",
@@ -459,7 +459,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         "export var x;\n goog.require('foo.bar');",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "var x$$module$testcode;",
             "goog.require('foo.bar');",
@@ -475,7 +475,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   public void testGoogRequires_rewrite() {
     testModules(
         "const bar = goog.require('foo.bar')\nexport var x;",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "goog.require('foo.bar');",
             "const bar$$module$testcode = foo.bar;",
@@ -484,7 +484,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         "export var x\nconst bar = goog.require('foo.bar');",
-        LINE_JOINER.join(
+        lines(
             "/** @const */ var module$testcode={};",
             "var x$$module$testcode;",
             "goog.require('foo.bar');",
@@ -493,13 +493,13 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
     testModules(
         "import * as s from './other.js';\nconst bar = goog.require('foo.bar');",
-        LINE_JOINER.join(
+        lines(
             "goog.require('foo.bar');",
             "const bar$$module$testcode = foo.bar;"));
 
     testModules(
         "const bar = goog.require('foo.bar');\nimport * as s from './other.js';",
-        LINE_JOINER.join(
+        lines(
             "goog.require('foo.bar');",
             "const bar$$module$testcode = foo.bar;"));
   }
@@ -522,11 +522,11 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   public void testGoogRequiresDestructuring_rewrite() {
     testModules(
-        LINE_JOINER.join(
+        lines(
             "import * as s from './other.js';",
             "const {foo, bar} = goog.require('some.name.space');",
             "use(foo, bar);"),
-        LINE_JOINER.join(
+        lines(
             "goog.require('some.name.space');",
             "const {",
             "  foo: foo$$module$testcode,",
@@ -534,12 +534,12 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
             "} = some.name.space;",
             "use(foo$$module$testcode, bar$$module$testcode);"));
 
-    ModulesTestUtils.testModulesError(this, LINE_JOINER.join(
+    ModulesTestUtils.testModulesError(this, lines(
             "import * as s from './other.js';",
             "var {foo, bar} = goog.require('some.name.space');",
             "use(foo, bar);"), LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
 
-    ModulesTestUtils.testModulesError(this, LINE_JOINER.join(
+    ModulesTestUtils.testModulesError(this, lines(
             "import * as s from './other.js';",
             "let {foo, bar} = goog.require('some.name.space');",
             "use(foo, bar);"), LHS_OF_GOOG_REQUIRE_MUST_BE_CONST);
@@ -547,17 +547,17 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   public void testNamespaceImports() {
     testModules(
-        LINE_JOINER.join("import Foo from 'goog:other.Foo';", "use(Foo);"), "use(other.Foo)");
+        lines("import Foo from 'goog:other.Foo';", "use(Foo);"), "use(other.Foo)");
 
     testModules(
-        LINE_JOINER.join("import {x, y} from 'goog:other.Foo';", "use(x);", "use(y);"),
+        lines("import {x, y} from 'goog:other.Foo';", "use(x);", "use(y);"),
         "use(other.Foo.x);\n use(other.Foo.y);");
 
     testModules(
-        LINE_JOINER.join(
+        lines(
             "import Foo from 'goog:other.Foo';",
             "/** @type {Foo} */ var foo = new Foo();"),
-        LINE_JOINER.join(
+        lines(
             "/** @type {other.Foo} */",
             "var foo$$module$testcode = new other.Foo();"));
 
@@ -567,12 +567,12 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
 
   public void testObjectDestructuringAndObjLitShorthand() {
     testModules(
-        LINE_JOINER.join(
+        lines(
             "import {f} from './other.js';",
             "const foo = 1;",
             "const {a, b} = f({foo});",
             "use(a, b);"),
-        LINE_JOINER.join(
+        lines(
             "const foo$$module$testcode = 1;",
             "const {",
             "  a: a$$module$testcode,",
@@ -594,7 +594,7 @@ public final class Es6RewriteModulesTest extends CompilerTestCase {
   }
 
   public void testUseStrict_noWarning() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "'use strict';",
         "var x;"));
   }

@@ -68,7 +68,7 @@ public final class ClosureCodeRemovalTest extends CompilerTestCase {
 
   public void testRemoveAbstract_annotation() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function Foo() {};",
             "/** @abstract */",
             "Foo.prototype.doSomething = function() {};"),

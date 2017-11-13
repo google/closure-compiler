@@ -24,7 +24,7 @@ import com.google.javascript.rhino.Node;
  */
 public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends TypeICompilerTestCase {
 
-  private static final String EXTERNS = LINE_JOINER.join(
+  private static final String EXTERNS = lines(
       DEFAULT_EXTERNS,
       "var Polymer = function(descriptor) {};",
       "/** @constructor */",
@@ -71,7 +71,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Type
   public void testPolymerPropertyUsedAsObserver1() {
     allowExternsChanges();
     testNoWarning(
-        LINE_JOINER.join(
+        lines(
             "Polymer({",
             "  is: 'example-elem',",
             "  properties: {",
@@ -89,7 +89,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Type
   public void testPolymerPropertyUsedAsObserver2() {
     allowExternsChanges();
     testNoWarning(
-        LINE_JOINER.join(
+        lines(
             "Polymer({",
             "  is: 'example-elem',",
             "  properties: {",
@@ -108,7 +108,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Type
     allowExternsChanges();
     test(
         new String[] {
-            LINE_JOINER.join(
+            lines(
                 "/** @polymerBehavior */",
                 "var Behavior = {",
                 "  properties: {",
@@ -121,14 +121,14 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Type
                 "  /** @private */",
                 "  fooChanged_: function() {},",
                 "};"),
-            LINE_JOINER.join(
+            lines(
                 "Polymer({",
                 "  is: 'example-elem',",
                 "  behaviors: [Behavior],",
                 "});"),
         },
         new String[] {
-            LINE_JOINER.join(
+            lines(
                 "/** @polymerBehavior @nocollapse */",
                 "var Behavior = {",
                 "  properties: {",
@@ -141,7 +141,7 @@ public final class CheckUnusedPrivatePropertiesInPolymerElementTest extends Type
                 "  /** @suppress {checkTypes|globalThis|visibility} */",
                 "  fooChanged_: function() {},",
                 "};"),
-            LINE_JOINER.join(
+            lines(
                 "/**",
                 " * @constructor",
                 " * @extends {PolymerElement}",

@@ -106,12 +106,12 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   public void testMisplacedParamAnnotation() {
-    testWarning(LINE_JOINER.join(
+    testWarning(lines(
         "/** @param {string} x */ var Foo = goog.defineClass(null, {",
         "  constructor(x) {}",
         "});"), MISPLACED_ANNOTATION);
 
-    testWarning(LINE_JOINER.join(
+    testWarning(lines(
         "/** @param {string} x */ const Foo = class {",
         "  constructor(x) {}",
         "};"), MISPLACED_ANNOTATION);
@@ -119,7 +119,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
 
   public void testMisplacedParamAnnotation_withES6Modules() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "export /** @param {string} x */ var Foo = goog.defineClass(null, {",
             "  constructor(x) {}",
             "});"),
@@ -128,17 +128,17 @@ public final class CheckJsDocTest extends CompilerTestCase {
 
   public void testAbstract_method() {
     testSame("class Foo { /** @abstract */ doSomething() {}}");
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "/** @constructor */",
         "var Foo = function() {};",
         "/** @abstract */",
         "Foo.prototype.something = function() {}"));
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "/** @constructor */",
         "let Foo = function() {};",
         "/** @abstract */",
         "Foo.prototype.something = function() {}"));
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "/** @constructor */",
         "const Foo = function() {};",
         "/** @abstract */",
@@ -170,7 +170,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         "class Foo { /** @abstract */ doSomething() { return 0; }}",
         MISPLACED_ANNOTATION);
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "var Foo = function() {};",
             "/** @abstract */",
@@ -189,7 +189,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         "class Foo { /** @abstract */ static doSomething() {}}",
         MISPLACED_ANNOTATION);
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "var Foo = function() {};",
             "/** @abstract */",
@@ -219,20 +219,20 @@ public final class CheckJsDocTest extends CompilerTestCase {
     testSame("/** @abstract */ goog.defineClass(null, { constructor: function() {} });");
     testSame("/** @abstract */ var Foo = goog.defineClass(null, { constructor: function() {} });");
     testSame("/** @abstract */ ns.Foo = goog.defineClass(null, { constructor: function() {} });");
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "/** @abstract */ ns.Foo = goog.defineClass(null, {",
         "  /** @abstract */ foo: function() {}",
         "});"));
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "/** @abstract */ ns.Foo = goog.defineClass(null, {",
         "  /** @abstract */ foo() {}",
         "});"));
     testWarning("/** @abstract */ var Foo;", MISPLACED_ANNOTATION);
-    testWarning(LINE_JOINER.join(
+    testWarning(lines(
         "/** @abstract */ goog.defineClass(null, {",
         "  /** @abstract */ constructor: function() {}",
         "});"), MISPLACED_ANNOTATION);
-    testWarning(LINE_JOINER.join(
+    testWarning(lines(
         "/** @abstract */ goog.defineClass(null, {",
         "  /** @abstract */ constructor() {}",
         "});"), MISPLACED_ANNOTATION);
@@ -240,7 +240,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
 
   public void testValidAbstract_defineClass_withES6Modules() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "export /** @abstract */ var Foo = goog.defineClass(null, {",
             "constructor: function() {} });"));
   }
@@ -266,7 +266,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
 
   public void testValidAbstract_constructor_withES6Modules() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "export /** @constructor */ var C = foo();",
             "/** @abstract */ C.prototype.method = function() {};"));
   }
@@ -276,7 +276,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         "class Foo { constructor() { /** @abstract */ this.x = 1;}}",
         MISPLACED_ANNOTATION);
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "var Foo = function() {",
             "  /** @abstract */",
@@ -296,7 +296,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         "class Foo { constructor() {/** @abstract */ var x = 1;}}",
         MISPLACED_ANNOTATION);
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "var Foo = function() {",
             "  /** @abstract */",
@@ -316,7 +316,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         "class Foo { constructor() {/** @abstract */ var x = function() {};}}",
         MISPLACED_ANNOTATION);
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "var Foo = function() {",
             "  /** @abstract */",
@@ -400,7 +400,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
 
   public void testJSDocFunctionNodeAttachment_withES6Modules() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "export var a = /** @param {number} index */ 5;",
             "export /** @return boolean */ function f(index){}"),
         MISPLACED_ANNOTATION);
@@ -440,7 +440,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   public void testJSDocOnExports() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "goog.module('foo');",
         "/** @const {!Array<number>} */",
         "exports = [];"));
@@ -521,7 +521,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
 
   public void testMisplacedNocollapseAnnotation_withES6Modules() {
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "export /** @constructor */ function foo() {};",
             "/** @nocollapse */ foo.prototype.bar = function() {};"),
         MISPLACED_ANNOTATION);
@@ -597,7 +597,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
 
   public void testGoodTemplate_withES6Modules() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "export class C { /** @template T \n @param {T} a\n @param {T} b \n */ ",
             "constructor(a,b){} }"));
   }
@@ -607,7 +607,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
   }
 
   public void testBadTemplate2() {
-    testBadTemplate(LINE_JOINER.join(
+    testBadTemplate(lines(
         "x.y.z = goog.defineClass(null, {",
         "  /** @template T */ constructor: function() {}",
         "});"));
@@ -629,7 +629,7 @@ public final class CheckJsDocTest extends CompilerTestCase {
         MISPLACED_ANNOTATION);
 
     testWarning(
-        LINE_JOINER.join(
+        lines(
             "/** @typedef {{foo: string}} */",
             "var C = goog.defineClass(null, {",
             "  constructor: function() { this.foo = ''; }",

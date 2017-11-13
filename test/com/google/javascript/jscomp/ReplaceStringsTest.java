@@ -227,7 +227,7 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
 
   public void testThrowError4() {
     testDebugStrings(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "var A = function() {};",
             "A.prototype.m = function(child) {",
@@ -240,7 +240,7 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
             "  }",
             "  child.parentNode = this;",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "var A = function(){};",
             "A.prototype.m = function(child) {",
@@ -537,7 +537,7 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
     functionsToInspect = builder.build();
 
     testDebugStrings(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function A() {}",
             "/** @param {string} p",
@@ -559,7 +559,7 @@ public final class ReplaceStringsTest extends TypeICompilerTestCase {
             "var n = ab.f('not replaced');",
             "(new A).f('replaced with a');",
             "(new C).f('replaced with b');"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function A() {}",
             "/** @param {string} p",

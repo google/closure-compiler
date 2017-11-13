@@ -69,13 +69,13 @@ public final class MissingProvideTest extends CompilerTestCase {
 
   public void test_Legacy_Require_Module_DeclLeg_Pass() {
     String googModule =
-        LINE_JOINER.join(
+        lines(
             "goog.module('normal.goog.module.A');",
             "goog.module.declareLegacyNamespace();",
             "/** @constructor */ function A() {}",
             "exports = A;");
     String legacyScript =
-        LINE_JOINER.join(
+        lines(
             "goog.provide('legacy.script.B');",
             "goog.require('normal.goog.module.A');",
             "new normal.goog.module.A;");
@@ -85,12 +85,12 @@ public final class MissingProvideTest extends CompilerTestCase {
 
   public void test_Legacy_Require_Module_Normal_Pass() {
     String googModule =
-        LINE_JOINER.join(
+        lines(
             "goog.module('normal.goog.module.A');",
             "/** @constructor */ function A() {}",
             "exports = A;");
     String legacyScript =
-        LINE_JOINER.join(
+        lines(
             "goog.provide('legacy.script.B');",
             "goog.require('normal.goog.module.A');");
 
@@ -99,7 +99,7 @@ public final class MissingProvideTest extends CompilerTestCase {
 
   public void test_Legacy_Require_Module_Missing_Fail() {
     String legacyScript =
-        LINE_JOINER.join(
+        lines(
             "goog.provide('legacy.script.B');",
             "goog.scope(function() {",
             "  var A = goog.module.get('missing.goog.module.A');",
@@ -111,12 +111,12 @@ public final class MissingProvideTest extends CompilerTestCase {
 
   public void test_Legacy_ModuleGet_Module_Normal_Pass() {
     String googModule =
-        LINE_JOINER.join(
+        lines(
             "goog.module('normal.goog.module.A');",
             "/** @constructor */ function A() {}",
             "exports = A;");
     String legacyScript =
-        LINE_JOINER.join(
+        lines(
             "goog.provide('legacy.script.B');",
             "goog.scope(function() {",
             "  var A = goog.module.get('normal.goog.module.A');",
@@ -127,7 +127,7 @@ public final class MissingProvideTest extends CompilerTestCase {
 
   public void test_Legacy_ModuleGet_Module_Missing_Fail() {
     String legacyScript =
-        LINE_JOINER.join(
+        lines(
             "goog.provide('legacy.script.B');",
             "goog.scope(function() {",
             "  var A = goog.module.get('missing.goog.module.A');",
@@ -139,12 +139,12 @@ public final class MissingProvideTest extends CompilerTestCase {
 
   public void test_Module_Require_Module_Normal_Pass() {
     String googModule1 =
-        LINE_JOINER.join(
+        lines(
             "goog.module('normal.goog.module.A');",
             "/** @constructor */ function A() {}",
             "exports = A;");
     String googModule2 =
-        LINE_JOINER.join(
+        lines(
             "goog.module('normal.goog.module.B');",
             "var A = goog.require('normal.goog.module.A');",
             "/** @constructor */ function B() {}",
@@ -158,7 +158,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     // When something is goog.require()'d in a module and the referenced thing is missing it's not
     // really possible to know if the missing thing is a module or script.
     String googModule =
-        LINE_JOINER.join(
+        lines(
             "goog.module('normal.goog.module.B');",
             "var A = goog.require('missing.goog.module.A');",
             "/** @constructor */ function B() {}",
@@ -171,12 +171,12 @@ public final class MissingProvideTest extends CompilerTestCase {
 
   public void test_Module_ModuleGet_Module_Normal_Pass() {
     String googModule1 =
-        LINE_JOINER.join(
+        lines(
             "goog.module('normal.goog.module.A');",
             "/** @constructor */ function A() {}",
             "exports = A;");
     String googModule2 =
-        LINE_JOINER.join(
+        lines(
             "goog.module('normal.goog.module.B');",
             "var A = goog.forwardDeclare('normal.goog.module.A');",
             "/** @constructor */ function B() {}",
@@ -191,11 +191,11 @@ public final class MissingProvideTest extends CompilerTestCase {
 
   public void test_Module_Require_Legacy_Normal_Pass() {
     String legacyScript =
-        LINE_JOINER.join(
+        lines(
             "goog.provide('legacy.script.A');",
             "/** @constructor */ legacy.script.A = function () {}");
     String googModule =
-        LINE_JOINER.join(
+        lines(
             "goog.module('normal.goog.module.B');",
             "var A = goog.require('legacy.script.A');",
             "/** @constructor */ function B() {}",
@@ -209,7 +209,7 @@ public final class MissingProvideTest extends CompilerTestCase {
     // When something is goog.require()'d in a module and the referenced thing is missing it's not
     // really possible to know if the missing thing is a module or script.
     String googModule =
-        LINE_JOINER.join(
+        lines(
             "goog.module('normal.goog.module.B');",
             "var A = goog.require('legacy.script.A');",
             "/** @constructor */ function B() {}",
@@ -224,11 +224,11 @@ public final class MissingProvideTest extends CompilerTestCase {
     // goog.module.get inside of a goog.module() can reference legacy files, to be consistent with
     // goog.require() behavior in the same context.
     String legacyScript =
-        LINE_JOINER.join(
+        lines(
             "goog.provide('legacy.script.A');",
             "/** @constructor */ legacy.script.A = function () {}");
     String googModule =
-        LINE_JOINER.join(
+        lines(
             "goog.module('normal.goog.module.B');",
             "var A = goog.forwardDeclare('legacy.script.A');",
             "/** @constructor */ function B() {}",
@@ -244,7 +244,7 @@ public final class MissingProvideTest extends CompilerTestCase {
   public void test_Module_ModuleGet_Missing_Fail() {
     // goog.module.get inside of a goog.module() cannot reference files that do not exist.
     String googModule =
-        LINE_JOINER.join(
+        lines(
             "goog.module('normal.goog.module.B');",
             "function f() {",
             "  return goog.module.get('missing.legacy.script.A');",
@@ -258,7 +258,7 @@ public final class MissingProvideTest extends CompilerTestCase {
   public void test_Module_ForwardDeclare_Missing_Fail() {
     // Short goog.forwardDeclare inside a goog.module() cannot reference files that do not exist.
     String googModule =
-        LINE_JOINER.join(
+        lines(
             "goog.module('normal.goog.module.B');",
             "var A = goog.forwardDeclare('missing.legacy.script.A');",
             "/** @constructor */ function B() {}",
@@ -271,7 +271,7 @@ public final class MissingProvideTest extends CompilerTestCase {
   public void test_Legacy_ForwardDeclare_Missing_Pass() {
     // Legacy goog.forwardDeclare inside a goog.module() works the same as outside a module.
     String googModule =
-        LINE_JOINER.join(
+        lines(
             "goog.module('normal.goog.module.B');",
             "goog.forwardDeclare('missing.legacy.script.A');",
             "/** @constructor */ function B() {}",
@@ -282,11 +282,11 @@ public final class MissingProvideTest extends CompilerTestCase {
 
   public void test_Legacy_Require_Legacy_Normal_Pass() {
     String legacyScript =
-        LINE_JOINER.join(
+        lines(
             "goog.provide('legacy.script.A');",
             "/** @constructor */ legacy.script.A = function () {}");
     String legacyScript2 =
-        LINE_JOINER.join(
+        lines(
             "goog.provide('legacy.script.B');",
             "goog.require('legacy.script.A');",
             "new legacy.script.A;");
@@ -296,7 +296,7 @@ public final class MissingProvideTest extends CompilerTestCase {
 
   public void test_Legacy_Require_Legacy_Missing_Fail() {
     String legacyScript =
-        LINE_JOINER.join(
+        lines(
             "goog.provide('legacy.script.B');",
             "goog.require('legacy.script.A');",
             "new legacy.script.A;");
@@ -307,11 +307,11 @@ public final class MissingProvideTest extends CompilerTestCase {
 
   public void test_Legacy_ModuleGet_Legacy_Normal_Pass() {
     String legacyScript =
-        LINE_JOINER.join(
+        lines(
             "goog.provide('legacy.script.A');",
             "/** @constructor */ legacy.script.A = function () {}");
     String legacyScript2 =
-        LINE_JOINER.join(
+        lines(
             "goog.provide('legacy.script.B');",
             "/** @constructor */ legacy.script.B = function () {}",
             "B.prototype.createA = function() {",
@@ -324,7 +324,7 @@ public final class MissingProvideTest extends CompilerTestCase {
 
   public void test_Legacy_ModuleGet_Legacy_Missing_Fail() {
     String legacyScript =
-        LINE_JOINER.join(
+        lines(
             "goog.provide('legacy.script.B');",
             "/** @constructor */ legacy.script.B = function () {}",
             "B.prototype.createA = function() {",

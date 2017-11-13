@@ -25,7 +25,7 @@ import com.google.javascript.rhino.Node;
 
 public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
-  public static final String EXTERN_FUNCTIONS = LINE_JOINER.join(
+  public static final String EXTERN_FUNCTIONS = lines(
       "var print;",
       "/** @nosideeffects */ function noSFX() {}",
       "                      function hasSFX() {}");
@@ -577,7 +577,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
   // GitHub issue #250: https://github.com/google/closure-compiler/issues/250
   public void testInlineStringConcat() {
-    test(LINE_JOINER.join(
+    test(lines(
         "function f() {",
         "  var x = '';",
         "  x = x + '1';",
@@ -602,7 +602,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
   public void testInlineInClassMemberFunctions() {
     test(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  func() {",
             "    var x;",
@@ -611,7 +611,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
             "  }",
             "}"
         ),
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  func() {",
             "    var x;",
@@ -650,7 +650,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
   public void testBlockScoping() {
     inline(
-        LINE_JOINER.join(
+        lines(
             "let a = 1",
             "print(a + 1);",
             "{",
@@ -658,7 +658,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
             "  print(b + 1);",
             "}"
         ),
-        LINE_JOINER.join(
+        lines(
             "let a;",
             "print(1 + 1);",
             "{",
@@ -667,7 +667,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
             "}"));
 
     inline(
-        LINE_JOINER.join(
+        lines(
             "let a = 1",
             "{",
             "  let a = 2;",
@@ -675,7 +675,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
             "}",
             "print(a + 1);"
         ),
-        LINE_JOINER.join(
+        lines(
             "let a = 1",
             "{",
             "  let a;",
@@ -684,12 +684,12 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
             "print(a + 1);"));
 
     inline(
-        LINE_JOINER.join(
+        lines(
             "let a = 1;",
             "  {let b;}",
             "print(a)"
         ),
-        LINE_JOINER.join(
+        lines(
             "let a;",
             "  {let b;}",
             "print(1)"));
@@ -697,7 +697,7 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
     // This test fails to inline due to CheckPathsBetweenNodes analysis in the canInline function
     // in FlowSensitiveInlineVariables.
     noInline(
-        LINE_JOINER.join(
+        lines(
             "let a = 1;",
             "{",
             "  let b;",
@@ -708,13 +708,13 @@ public final class FlowSensitiveInlineVariablesTest extends CompilerTestCase  {
 
   public void testInlineInGenerators() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function* f() {",
             "  var x = 1;",
             "  return x + 1;",
             "}"
         ),
-        LINE_JOINER.join(
+        lines(
             "function* f() {",
             "  var x;",
             "  return 1 + 1;",

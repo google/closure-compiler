@@ -61,8 +61,8 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   public void testRemoveUnusedVarsFn1s() {
     // Test with function expressions in another function call
     test(
-        LINE_JOINER.join("function A(){}", "if(0){var B = function(){}}", "A();"),
-        LINE_JOINER.join("function A(){}", "if(0){}", "A();"));
+        lines("function A(){}", "if(0){var B = function(){}}", "A();"),
+        lines("function A(){}", "if(0){}", "A();"));
   }
 
   public void testRemoveUnusedVars1() {
@@ -300,7 +300,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testDefaultParamsInClassThatReferencesArguments() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class Foo extends Bar {",
             "  constructor(value = undefined) {",
             "    super();",
@@ -383,7 +383,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
     // Rest param in pattern
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function countArgs(x, ...{length}) {",
             "  return length;",
             "}",
@@ -796,13 +796,13 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testRemoveInheritedClass1() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function goog$inherits() {}",
             "/**@constructor*/ function a() {}",
             "/**@constructor*/ function b() {}",
             "goog$inherits(b, a);",
             "new a;"),
-        LINE_JOINER.join("/**@constructor*/ function a() {}", "new a;"));
+        lines("/**@constructor*/ function a() {}", "new a;"));
   }
 
   public void testRemoveInheritedClass2() {
@@ -833,14 +833,14 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testRemoveInheritedClass5() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function goog$inherits() {}",
             "/**@constructor*/ function a() {}",
             "/**@constructor*/ function b() {}",
             "goog$inherits(b,a);",
             "/**@constructor*/ function c() {}",
             "goog$inherits(c,b); new b"),
-        LINE_JOINER.join(
+        lines(
             "function goog$inherits(){}",
             "/**@constructor*/ function a(){}",
             "/**@constructor*/ function b(){}",
@@ -849,7 +849,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testRemoveInheritedClass6() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function goog$mixin(){}",
             "/** @constructor*/ function a(){}",
             "/** @constructor*/ function b(){}",
@@ -858,7 +858,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
             "goog$mixin(b.prototype,a.prototype);",
             "goog$mixin(c.prototype,a.prototype); new c;",
             "goog$mixin(d.prototype,a.prototype)"),
-        LINE_JOINER.join(
+        lines(
             "function goog$mixin(){}",
             "/** @constructor*/ function a(){}",
             "/** @constructor*/ function c(){}",
@@ -867,12 +867,12 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testRemoveInheritedClass7() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function goog$mixin(){}",
             "/**@constructor*/function a(){alert(goog$mixin(a, a))}",
             "/**@constructor*/function b(){}",
             "goog$mixin(b.prototype,a.prototype); new a"),
-        LINE_JOINER.join(
+        lines(
             "function goog$mixin(){}",
             "/**@constructor*/function a(){alert(goog$mixin(a, a))} new a"));
   }
@@ -886,13 +886,13 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testRemoveInheritedClass9() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function goog$inherits() {}",
             "/**@constructor*/ function a() {}",
             "/**@constructor*/ function b() {}",
             "goog$inherits(b,a); new a;",
             "var c = a; var d = a.g; new b"),
-        LINE_JOINER.join(
+        lines(
             "function goog$inherits(){}",
             "/**@constructor*/ function a(){}",
             "/**@constructor*/ function b(){}",
@@ -947,7 +947,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   public void testBug38457201() {
     this.removeGlobal = true;
     test(
-        LINE_JOINER.join(
+        lines(
             "var DOCUMENT_MODE = 1;",
             "var temp;",
             "false || (temp = (Number(DOCUMENT_MODE) >= 9));"),
@@ -968,12 +968,12 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     test("let x; x = 3;", "");
 
     test(
-        LINE_JOINER.join(
+        lines(
             " let x;",
             "  { let x;}",
             " f(x);"
         ),
-        LINE_JOINER.join(
+        lines(
             "let x;",
             "{}",
             "f(x);"
@@ -981,7 +981,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     );
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             " var x;",
             "  { var y = 1; ",
             "    f(y);}",
@@ -990,7 +990,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     );
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             " let x;",
             "  { let x = 1; ",
             "    f(x);}",
@@ -999,13 +999,13 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     );
 
     test(
-        LINE_JOINER.join(
+        lines(
             " let x;",
             "  { let x;}",
             " let y;",
             " f(x);"
         ),
-        LINE_JOINER.join(
+        lines(
             "let x;",
             "{}",
             "f(x);"
@@ -1013,7 +1013,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     );
 
     test(
-        LINE_JOINER.join(
+        lines(
             " let x;",
             "  { let g;",
             "     {const y = 1; f(y);}",
@@ -1021,7 +1021,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
             " let z;",
             " f(x);"
         ),
-        LINE_JOINER.join(
+        lines(
             "let x;",
             "{{const y = 1; f(y);}}",
             "f(x);"
@@ -1029,7 +1029,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     );
 
     test(
-        LINE_JOINER.join(
+        lines(
             " let x;",
             "  { let x = 1; ",
             "    {let y;}",
@@ -1037,7 +1037,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
             "  }",
             "f(x);"
         ),
-        LINE_JOINER.join(
+        lines(
             " let x;",
             "  { let x = 1; ",
             "    {}",
@@ -1048,14 +1048,14 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     );
 
     test(
-        LINE_JOINER.join(
+        lines(
             "let x;",
             "  {",
             "    let x;",
             "    f(x);",
             "  }"
         ),
-        LINE_JOINER.join(
+        lines(
             "{",
             "  let x$jscomp$1;",
             "  f(x$jscomp$1);",
@@ -1066,7 +1066,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testArrowFunctions() {
     test(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  g() {",
             "    var x;",
@@ -1075,7 +1075,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
             "new C"
         )
         ,
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  g() {",
             "  }",
@@ -1101,7 +1101,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     testSame("class C {}; new C;");
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C{",
             "  g() {",
             "    var x;",
@@ -1113,7 +1113,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     );
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C{",
             "  g() {",
             "    let x;",
@@ -1125,7 +1125,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     );
 
     test(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  g() {",
             "    let x;",
@@ -1134,7 +1134,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
             "new C"
         )
         ,
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  g() {",
             "  }",
@@ -1159,7 +1159,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testGenerators() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function* f() {",
             "  var x;",
             "  yield x;",
@@ -1168,7 +1168,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
         ""
     );
     test(
-        LINE_JOINER.join(
+        lines(
             "function* f() {",
             "  var x;",
             "  var y;",
@@ -1176,7 +1176,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
             "}",
             "f();"
         ),
-        LINE_JOINER.join(
+        lines(
             "function* f() {",
             "  var x;",
             "  yield x;",
@@ -1207,7 +1207,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     testSame("for(let item of items){}");
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var x;",
             "for (var n of i) {",
             "  if (x > n) {};",
@@ -1216,13 +1216,13 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     );
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var x;",
             "for (var n of i) {",
             "  if (n) {};",
             "}"
         ),
-        LINE_JOINER.join(
+        lines(
             "for (var n of i) {",
             "  if (n) {};",
             "}"
@@ -1232,7 +1232,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testTemplateStrings() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var name = 'foo';",
             "`Hello ${name}`"
         )

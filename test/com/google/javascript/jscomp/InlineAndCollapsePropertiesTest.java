@@ -229,10 +229,10 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
          "/** @constructor */ var a$b = function(){}; var c = null; a$b = 0; a$b != a$b;");
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var a = {}; /** @constructor @nocollapse */ a.b = function(){};",
             "var c = 1; c = a; c.b = 0; a.b == c.b;"),
-        LINE_JOINER.join(
+        lines(
             "var a = {}; /** @constructor @nocollapse */ a.b = function(){};",
             "var c = 1; c = a; c.b = 0; a.b == c.b;"),
         warning(UNSAFE_NAMESPACE_WARNING));
@@ -322,7 +322,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   public void testAddPropertyToChildTypeOfUncollapsibleObjectInLocalScope() {
     test(
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "/** @constructor */",
             "a.b = function (){};",
@@ -331,7 +331,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "(function() {a.b.y = 1;})();",
             "a.b.x;",
             "a.b.y;"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "var a$b = function (){};",
             "var a$b$y;",
@@ -342,7 +342,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "a$b$y;"));
 
     test(
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "/** @constructor */",
             "a.b = function (){};",
@@ -352,7 +352,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "a.b.x;",
             "a.b.y;",
             "use(c);"),
-        LINE_JOINER.join(
+        lines(
             "var a = {};",
             "/** @constructor */",
             "var a$b = function (){};",
@@ -780,7 +780,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   public void testCodeGeneratedByGoogModule() {
     // The static property is added to the exports object
     test(
-        LINE_JOINER.join(
+        lines(
             "var $jscomp = {};",
             "$jscomp.scope = {};",
             "/** @constructor */",
@@ -788,7 +788,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "var exports = $jscomp.scope.Foo;",
             "exports.staticprop = {A:1};",
             "var y = exports.staticprop.A;"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "var $jscomp$scope$Foo = function() {}",
             "var exports = null;",
@@ -797,7 +797,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
     // The static property is added to the constructor
     test(
-        LINE_JOINER.join(
+        lines(
             "var $jscomp = {};",
             "$jscomp.scope = {};",
             "/** @constructor */",
@@ -805,7 +805,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "$jscomp.scope.Foo.staticprop = {A:1};",
             "var exports = $jscomp.scope.Foo;",
             "var y = exports.staticprop.A;"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "var $jscomp$scope$Foo = function() {}",
             "var $jscomp$scope$Foo$staticprop$A = 1;",
@@ -815,7 +815,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   public void testInlineCtorInObjLit() {
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Foo() {}",
             "",
@@ -825,7 +825,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "var objlit = {",
             "  'prop' : Bar",
             "};"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */",
             "function Foo() {}",
             "/** @constructor */",
@@ -880,7 +880,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   public void testGlobalAliasForLet2() {
     // We don't do any sort of branch prediction, so can't collapse here.
     testSame(
-        LINE_JOINER.join(
+        lines(
             "let ns = {};",
             "ns.foo = 'bar';",
             "let ns2;",
@@ -893,7 +893,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   public void testGlobalAliasWithLet3() {
     // Back off since in general we don't check that ns2 is only ever accessed within the if block.
     testSame(
-        LINE_JOINER.join(
+        lines(
             "let ns = {};",
             "ns.foo = 'bar';",
             "let ns2;",
@@ -911,7 +911,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   public void testLocalAliasWithLet2() {
     test(
-        LINE_JOINER.join(
+        lines(
             "let ns = {};",
             "ns.foo = 'bar';",
             "function f() {",
@@ -920,7 +920,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "    use(ns2.foo);",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var ns$foo = 'bar';",
             "function f() {",
             "  if (true) {",
@@ -932,14 +932,14 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   public void testLocalAliasWithLet3() {
     test(
-        LINE_JOINER.join(
+        lines(
             "let ns = {};",
             "ns.foo = 'bar';",
             "if (true) {",
             "  let ns2 = ns;",
             "  use(ns2.foo);",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var ns$foo = 'bar';",
             "if (true) {",
             "  let ns2 = null;",
@@ -948,14 +948,14 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   public void testLocalAliasWithLet4() {
     test(
-        LINE_JOINER.join(
+        lines(
             "let ns = {};",
             "ns.foo = 'bar';",
             "if (true) {",
             "  let baz = ns.foo;",
             "  use(baz);",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var ns$foo = 'bar';",
             "if (true) {",
             "  let baz = null;",
@@ -966,7 +966,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
     // For local variables (VAR, CONST, or LET) we only handle cases where the alias is a variable,
     // not a property.
     testSame(
-        LINE_JOINER.join(
+        lines(
             "let ns = {};",
             "ns.foo = 'bar';",
             "if (true) {",
@@ -984,12 +984,12 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   public void testLocalAliasWithConst1() {
     test(
-        LINE_JOINER.join(
+        lines(
             "const ns = {};",
             "ns.foo = 'bar';",
             "function f() { const ns2 = ns;",
             "use(ns2.foo); }"),
-        LINE_JOINER.join(
+        lines(
             "var ns$foo = 'bar';",
             "function f() {",
             "const ns2 = null;",
@@ -998,7 +998,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   public void testLocalAliasWithConst2() {
     test(
-        LINE_JOINER.join(
+        lines(
             "const ns = {};",
             "ns.foo = 'bar';",
             "function f() {",
@@ -1007,7 +1007,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "    use(ns2.foo);",
             "  }",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var ns$foo = 'bar';",
             "function f() {",
             "  if (true) {",
@@ -1019,14 +1019,14 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   public void testLocalAliasWithConst3() {
     test(
-        LINE_JOINER.join(
+        lines(
             "const ns = {};",
             "ns.foo = 'bar';",
             "if (true) {",
             "  const ns2 = ns;",
             "  use(ns2.foo);",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var ns$foo = 'bar';",
             "if (true) {",
             "  const ns2 = null;",
@@ -1036,14 +1036,14 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
   public void testLocalAliasWithConst4() {
     test(
-        LINE_JOINER.join(
+        lines(
             "const ns = {};",
             "ns.foo = 'bar';",
             "if (true) {",
             "  const baz = ns.foo;",
             "  use(baz);",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "var ns$foo = 'bar';",
             "if (true) {",
             "  const baz = null;",
@@ -1055,7 +1055,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
     // For local variables (VAR, CONST, or LET) we only handle cases where the alias is a variable,
     // not a property.
     testSame(
-        LINE_JOINER.join(
+        lines(
             "const ns = {};",
             "ns.foo = 'bar';",
             "if (true) {",
@@ -1074,7 +1074,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   public void testEs6ClassStaticProperties() {
     // Collapsing static properties (A.foo in this case) is known to be unsafe.
     test(
-        LINE_JOINER.join(
+        lines(
             "class A {",
             "  static useFoo() {",
             "    alert(this.foo);",
@@ -1084,7 +1084,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "const B = A;",
             "B.foo = 'baz';",
             "B.useFoo();"),
-        LINE_JOINER.join(
+        lines(
             "class A {",
             "static useFoo() {",
             "alert(this.foo);",
@@ -1097,7 +1097,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
 
     // Adding @nocollapse makes this safe.
     test(
-        LINE_JOINER.join(
+        lines(
             "class A {",
             "  static useFoo() {",
             "    alert(this.foo);",
@@ -1108,7 +1108,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
             "const B = A;",
             "B.foo = 'baz';",
             "B.useFoo();"),
-        LINE_JOINER.join(
+        lines(
             "class A {",
             "static useFoo() {",
             "alert(this.foo);",
@@ -1170,7 +1170,7 @@ public final class InlineAndCollapsePropertiesTest extends CompilerTestCase {
   public void testClassStaticInheritance_cantDetermineSuperclass() {
     // Here A.foo and B.foo are not collapsed because getSuperclass() creates an alias for them.
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class A {}",
             "A.foo = 5;",
             "class B {}",

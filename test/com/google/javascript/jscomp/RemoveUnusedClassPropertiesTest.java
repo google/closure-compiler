@@ -23,7 +23,7 @@ import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
  */
 public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase {
 
-  private static final String EXTERNS = LINE_JOINER.join(
+  private static final String EXTERNS = lines(
       "/**",
       " * @constructor",
       " * @param {*=} opt_value",
@@ -293,7 +293,7 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
     this.mode = TypeInferenceMode.BOTH;
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {prop:{value:1}});",
             "function use(a) { alert(a.prop) };",
@@ -304,10 +304,10 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
     this.mode = TypeInferenceMode.BOTH;
 
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {prop:{value:1}});"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {});"));
   }
@@ -316,14 +316,14 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
     this.mode = TypeInferenceMode.BOTH;
 
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, ",
             "  {prop:{",
             "    get:function(){},",
             "    set:function(a){},",
             "}});"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {});"));
   }
@@ -333,7 +333,7 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
     this.mode = TypeInferenceMode.BOTH;
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {prop:alert('')});"));
   }
@@ -343,7 +343,7 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
     this.mode = TypeInferenceMode.BOTH;
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {'prop': {value: 1}});"));
   }
@@ -361,10 +361,10 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
     this.mode = TypeInferenceMode.BOTH;
 
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {prop:{get:function () {return new C}}});"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {});"));
   }
@@ -373,10 +373,10 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
     this.mode = TypeInferenceMode.BOTH;
 
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {prop:{set:function (a) {return alert(a)}}});"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {});"));
   }
@@ -386,11 +386,11 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
     this.mode = TypeInferenceMode.BOTH;
 
     test(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {prop:{set:function (a) {alert(2)}}});",
             "C.prop = 2;"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function C() {}",
             "Object.defineProperties(C, {});2"));
   }
@@ -411,7 +411,7 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
         "class C { set value(val) { this.internalVal = val; } } (new C()).value = 3;",
         "class C { set value(val) { val; } } (new C()).value = 3;");
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  set value(val) {",
             "    this.internalVal = val;",
@@ -429,7 +429,7 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
   // tests assert that the pass does not fail.
   public void testEs6EnhancedObjLiteralsComputedValuesNotRemoved() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function getCar(make, model, value) {",
             "  return {",
             "    ['make' + make] : true",
@@ -439,7 +439,7 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
 
   public void testEs6EnhancedObjLiteralsMethodShortHandNotRemoved() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function getCar(make, model, value) {",
             "  return {",
             "    getModel() {",
@@ -458,7 +458,7 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
     test(
         // This is the output of ES6->ES5 class getter converter.
         // See Es6ToEs3ConverterTest.testEs5GettersAndSettersClasses test method.
-        LINE_JOINER.join(
+        lines(
             "/** @constructor @struct */",
             "var C = function() {};",
             "/** @type {?} */",
@@ -473,7 +473,7 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
             "    }",
             "  }",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor @struct */var C=function(){};",
             "0;",
             "$jscomp.global.Object.defineProperties(C.prototype, {});"));
@@ -484,7 +484,7 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
     test(
         // This is the output of ES6->ES5 class setter converter.
         // See Es6ToEs3ConverterTest.testEs5GettersAndSettersClasses test method.
-        LINE_JOINER.join(
+        lines(
             "/** @constructor @struct */",
             "var C = function() {};",
             "/** @type {?} */",
@@ -501,7 +501,7 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
             "    }",
             "  }",
             "});"),
-        LINE_JOINER.join(
+        lines(
             "/** @constructor @struct */var C=function(){};",
             "0;",
             "0;",
@@ -513,12 +513,12 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
     testSame("() => ({a: 2})");
     testSame("() => {y.a = 2; this.a = 2;}");
     test(
-        LINE_JOINER.join(
+        lines(
             "var A = () => {this.foo = 1;}",
             "A.prototype.foo = 0;",
             "A.prototype.method = () => {this.foo++};",
             "new A().method()"),
-        LINE_JOINER.join(
+        lines(
             "var A = () => {1;}",
             "0;",
             "A.prototype.method = () => {0;};",
@@ -533,10 +533,10 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
 
   public void testEs6TemplateLiterals() {
     test(
-        LINE_JOINER.join(
+        lines(
             "function tag(strings, x) { this.a = x; }",
             "tag`tag ${0} function`"),
-        LINE_JOINER.join(
+        lines(
             "function tag(strings, x) { x; }",
             "tag`tag ${0} function`"));
   }
@@ -552,10 +552,10 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
 
     // Test normal destructuring, assignment prevent removal
     test(
-        LINE_JOINER.join(
+        lines(
             "[this.x, this.y] = [1, 2]",
             "var p = this.x;"),
-        LINE_JOINER.join(
+        lines(
             "[this.x, , ] = [1, 2]",
             "var p = this.x;"));
 
@@ -567,16 +567,16 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
 
     // Test rest destructuring, assignment prevent removal
     test(
-        LINE_JOINER.join(
+        lines(
             "[this.x, ...this.y] = [1, 2];",
             "var p = this.y;"),
-        LINE_JOINER.join(
+        lines(
             "[, ...this.y] = [1, 2];",
             "var p = this.y;"));
 
     // Test destructuring rhs prevent removal
     testSame(
-        LINE_JOINER.join(
+        lines(
             "this.x = 1;",
             "this.y = 2;",
             "[...a] = [this.x, this.y];"));
@@ -592,16 +592,16 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
 
     // Test obj destructuring prevent removal
     test(
-        LINE_JOINER.join(
+        lines(
             "({a: this.x, b: this.y} = {a: 1, b: 2});",
             "var p = this.x;"),
-        LINE_JOINER.join(
+        lines(
             "({a: this.x} = {a: 1, b: 2});",
             "var p = this.x;"));
 
     // Test obj destructuring with old style class
     testSame(
-        LINE_JOINER.join(
+        lines(
             "/** @constructor */ function C () {",
             "  this.a = 1;",
             "}",
@@ -609,7 +609,7 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
 
     // Test obj destructuring with new style class
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "     this.a = 1;",
@@ -619,7 +619,7 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
 
     // Test let destructuring
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "     this.a = 1;",
@@ -629,7 +629,7 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
 
     // Test obj created at a different location and later used in destructuring
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "     this.a = 1;",
@@ -640,7 +640,7 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
 
     // Test obj destructuring with default value
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "     this.a = 1;",
@@ -650,7 +650,7 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
 
     // Test obj nested destructuring
     testSame(
-        LINE_JOINER.join(
+        lines(
             "class C {",
             "  constructor() {",
             "     this.a = 1;",
@@ -670,26 +670,26 @@ public final class RemoveUnusedClassPropertiesTest extends TypeICompilerTestCase
 
   public void testEs8AsyncFunction() {
     test(
-        LINE_JOINER.join(
+        lines(
             "async function foo(promise) {",
             "   this.x = 1;",
             "   return await promise;",
             "}"),
-        LINE_JOINER.join(
+        lines(
             "async function foo(promise) {",
             "   1;",
             "   return await promise;",
             "}"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "async function foo() {",
             "   this.x = 1;",
             "   return await this.x;",
             "}"));
 
     testSame(
-        LINE_JOINER.join(
+        lines(
             "this.x = 1;",
             "async function foo() {",
             "   return await this.x;",

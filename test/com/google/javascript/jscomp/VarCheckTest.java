@@ -247,7 +247,7 @@ public final class VarCheckTest extends CompilerTestCase {
     testSame(
         "var Foo; var ns = {}; /** @const */ ns.FooAlias = Foo;", "");
     testSame(
-        LINE_JOINER.join(
+        lines(
             "var ns = {}; /** @constructor */ ns.Foo = function() {};",
             "var ns2 = {}; /** @const */ ns2.Bar = ns.Foo;"),
         "");
@@ -362,7 +362,7 @@ public final class VarCheckTest extends CompilerTestCase {
 
     // Arrow function nested
     testError(
-        LINE_JOINER.join("function FUNC() {", "  {", "    () => { var b = a; }", "  }", "}"),
+        lines("function FUNC() {", "  {", "    () => { var b = a; }", "  }", "}"),
         VarCheck.UNDEFINED_VAR_ERROR);
   }
 
@@ -584,7 +584,7 @@ public final class VarCheckTest extends CompilerTestCase {
 
   public void testDuplicateBlockScopedDeclarationInSwitch() {
     testError(
-        LINE_JOINER.join(
+        lines(
             "function f(x) {",
             "  switch (x) {",
             "    case 'a':",
@@ -598,7 +598,7 @@ public final class VarCheckTest extends CompilerTestCase {
         VarCheck.LET_CONST_CLASS_MULTIPLY_DECLARED_ERROR);
 
     testError(
-        LINE_JOINER.join(
+        lines(
             "function f(x) {",
             "  switch (x) {",
             "    case 'a':",
