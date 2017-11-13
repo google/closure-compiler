@@ -952,17 +952,9 @@ function testFinally() {
   checkThrows(uncaughtThrowInTry, 1);
 }
 
-function testGeneratorThrow() {
+function testGeneratorThrow_simple() {
   function *simple() {
     yield 1;
-  }
-
-  function *tryCatch() {
-    try {
-      yield 1;
-    } catch (e) {
-      yield e;
-    }
   }
 
   var iter = simple();
@@ -975,9 +967,19 @@ function testGeneratorThrow() {
   } catch (e) {
     assertEquals(42, e);
   }
+}
 
-  iter = tryCatch();
-  first = iter.next();
+function testGeneratorThrow_tryCatch() {
+  function *tryCatch() {
+    try {
+      yield 1;
+    } catch (e) {
+      yield e;
+    }
+  }
+
+  var iter = tryCatch();
+  var first = iter.next();
   assertEquals(1, first.value);
   assertFalse(first.done);
   var second = iter.throw(2);
