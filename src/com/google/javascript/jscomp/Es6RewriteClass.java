@@ -419,10 +419,14 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       compiler.report(JSError.make(member, CONFLICTING_GETTER_SETTER_TYPE, memberName));
     } else {
       JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
-      jsDoc.recordType(typeExpr);
       if (member.getJSDocInfo() != null && member.getJSDocInfo().isExport()) {
         jsDoc.recordExport();
         jsDoc.recordVisibility(Visibility.PUBLIC);
+      }
+      if (member.getJSDocInfo() != null && member.getJSDocInfo().isOverride()) {
+        jsDoc.recordOverride();
+      } else {
+        jsDoc.recordType(typeExpr);
       }
       if (member.isStaticMember() && !member.isComputedProp()) {
         jsDoc.recordNoCollapse();

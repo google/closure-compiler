@@ -1102,6 +1102,53 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "});"));
   }
 
+  public void testOverrideOfGetter() {
+    setLanguageOut(LanguageMode.ECMASCRIPT5);
+
+    test(
+        lines(
+            "/** @abstract */",
+            "class Base {",
+            "  /** @return {number} */",
+            "  get x() {}",
+            "}",
+            "",
+            "class Subclass extends Base {",
+            "  /** @override */",
+            "  get x() {",
+            "    return 5;",
+            "  }",
+            "}"),
+        lines(
+            "/** @abstract @constructor @struct */",
+            "let Base = function() {};",
+            "/** @type {number} */",
+            "Base.prototype.x;",
+            "$jscomp.global.Object.defineProperties(Base.prototype, {",
+            "  x: {",
+            "    configurable:true,",
+            "    enumerable:true,",
+            "    /** @this {Base} @return {number} */",
+            "    get: function() {},",
+            "  }",
+            "});",
+            "",
+            "/** @constructor @struct @extends {Base} @param {...?} var_args */",
+            "let Subclass = function(var_args) { Base.apply(this, arguments); };",
+            "",
+            "/** @override */",
+            "Subclass.prototype.x;",
+            "$jscomp.inherits(Subclass, Base);",
+            "$jscomp.global.Object.defineProperties(Subclass.prototype, {",
+            "  x: {",
+            "    configurable:true,",
+            "    enumerable:true,",
+            "    /** @this {Subclass} @override */",
+            "    get: function() { return 5; },",
+            "  }",
+            "});"));
+  }
+
   public void testSuperMethodInSetter() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
