@@ -2345,6 +2345,94 @@ public final class DisambiguatePropertiesTest extends TypeICompilerTestCase {
     testSets("", js, output, "{a=[[Bar], [Foo]], b=[[Bar], [Foo]], f=[[Foo.prototype]]}");
   }
 
+  public void testIgnoreSpecializedProperties2() {
+    String js = lines(
+        "/** @const */",
+        "var ns = function() {};",
+        "/** @type {?number} */",
+        "ns.num;",
+        "function f() {",
+        "  if (ns.num !== null) {",
+        "    return ns.num + 1;",
+        "  }",
+        "}",
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.num = 123;",
+        "}");
+
+    String otiOutput = lines(
+        "/** @const */",
+        "var ns = function() {};",
+        "/** @type {?number} */",
+        "ns.function____undefined$num;",
+        "function f() {",
+        "  if (ns.function____undefined$num !== null) {",
+        "    return ns.function____undefined$num + 1;",
+        "  }",
+        "}",
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.Foo$num = 123;",
+        "}");
+
+    this.mode = TypeInferenceMode.OTI_ONLY;
+    testSets("", js, otiOutput, "{num=[[Foo], [function(): undefined]]}");
+
+    String ntiOutput = lines(
+        "/** @const */",
+        "var ns = function() {};",
+        "/** @type {?number} */",
+        "ns.ns$num;",
+        "function f() {",
+        "  if (ns.ns$num !== null) {",
+        "    return ns.ns$num + 1;",
+        "  }",
+        "}",
+        "/** @constructor */",
+        "function Foo() {",
+        "  this.Foo$num = 123;",
+        "}");
+
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSets("", js, ntiOutput, "{num=[[Foo], [ns]]}");
+  }
+
+  public void testIgnoreSpecializedProperties3() {
+    String js = lines(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {?number} */",
+        "Foo.prototype.num;",
+        "function f() {",
+        "  if (Foo.prototype.num != null) {",
+        "    return Foo.prototype.num;",
+        "  }",
+        "}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.num = 123;",
+        "}");
+
+    String output = lines(
+        "/** @constructor */",
+        "function Foo() {}",
+        "/** @type {?number} */",
+        "Foo.prototype.Foo_prototype$num;",
+        "function f() {",
+        "  if (Foo.prototype.Foo_prototype$num != null) {",
+        "    return Foo.prototype.Foo_prototype$num;",
+        "  }",
+        "}",
+        "/** @constructor */",
+        "function Bar() {",
+        "  this.Bar$num = 123;",
+        "}");
+
+    this.mode = TypeInferenceMode.NTI_ONLY;
+    testSets("", js, output, "{num=[[Bar], [Foo.prototype]]}");
+  }
+
   public void testErrorOnProtectedProperty() {
     test(
         srcs("function addSingletonGetter(foo) { foo.foobar = 'a'; };"),

@@ -2355,8 +2355,17 @@ public abstract class JSType implements TypeI, FunctionTypeI, ObjectTypeI {
   public ObjectTypeI withoutStrayProperties() {
     ObjectType obj = getObjTypeIfSingletonObj();
     NominalType nt = getNominalTypeIfSingletonObj();
-    return nt.isLiteralObject() || obj.isPrototypeObject() || obj.isNamespace()
-        ? this : nt.getInstanceAsJSType();
+    if (nt.isLiteralObject()) {
+      return this;
+    }
+    if (obj.isPrototypeObject()) {
+      // The canonical prototype, without any specialized properties
+      return obj.getOwnerFunction().getInstanceTypeOfCtor().getPrototypeObject();
+    }
+    if (obj.isNamespace()) {
+      return obj.getNamespaceType();
+    }
+    return nt.getInstanceAsJSType();
   }
 
   @Override
