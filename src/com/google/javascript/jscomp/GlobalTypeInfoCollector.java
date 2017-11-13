@@ -1227,7 +1227,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       String internalName = null;
       // The name of a function expression isn't visible in the scope where the function expression
       // appears, so don't use it as the internalName.
-      if (nameNode == fn.getFirstChild() && NodeUtil.isFunctionExpression(fn)) {
+      if (nameNode == fn.getFirstChild() && !NodeUtil.isFunctionDeclaration(fn)) {
         nameNode = null;
       }
       if (nameNode == null || !nameNode.isName()

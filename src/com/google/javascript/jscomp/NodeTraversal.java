@@ -772,9 +772,9 @@ public class NodeTraversal {
   /** Traverses a function. */
   private void traverseFunction(Node n, Node parent) {
     final Node fnName = n.getFirstChild();
-    boolean isFunctionExpression = parent != null && NodeUtil.isFunctionExpression(n);
+    boolean isFunctionDeclaration = parent != null && NodeUtil.isFunctionDeclaration(n);
 
-    if (!isFunctionExpression) {
+    if (isFunctionDeclaration) {
       // Function declarations are in the scope containing the declaration.
       traverseBranch(fnName, n);
     }
@@ -782,7 +782,7 @@ public class NodeTraversal {
     curNode = n;
     pushScope(n);
 
-    if (isFunctionExpression) {
+    if (!isFunctionDeclaration) {
       // Function expression names are only accessible within the function
       // scope.
       traverseBranch(fnName, n);

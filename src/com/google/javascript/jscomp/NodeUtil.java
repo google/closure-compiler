@@ -1153,7 +1153,7 @@ public final class NodeUtil {
         // Function expressions don't have side-effects, but function
         // declarations change the namespace. Either way, we don't need to
         // check the children, since they aren't executed at declaration time.
-        return checkForNewObjects || !isFunctionExpression(n);
+        return checkForNewObjects || isFunctionDeclaration(n);
 
       case CLASS:
         return checkForNewObjects || isClassDeclaration(n)
@@ -1554,7 +1554,9 @@ public final class NodeUtil {
       case FUNCTION:
         // Function expression are not changed by side-effects,
         // and function declarations are not part of expressions.
-        Preconditions.checkState(isFunctionExpression(n));
+        // TODO(bradfordcsmith): Do we need to add a case for CLASS here?
+        //     This checkState currently does not exclude class methods.
+        Preconditions.checkState(!isFunctionDeclaration(n));
         return false;
       default:
         break;
@@ -3009,7 +3011,53 @@ public final class NodeUtil {
    * is not part of a expression; see {@link #isFunctionExpression}).
    */
   public static boolean isFunctionDeclaration(Node n) {
+    // Note: There is currently one case where an unnamed function has a declaration parent.
+    // `export default function() {...}`
+    // In this case we consider the function to be an expression.
     return n.isFunction() && isDeclarationParent(n.getParent()) && isNamedFunction(n);
+  }
+
+  /**
+   * Is this node a class or object literal member function?
+   *
+   * <p>examples:
+   *
+   * <pre><code>
+   *   class C {
+   *     f() {}
+   *     get x() { return this.x_; }
+   *     set x(v) { this.x_ = v; }
+   *     [someExpr]() {}
+   *   }
+   *   obj = {
+   *     f() {}
+   *     get x() { return this.x_; }
+   *     set x(v) { this.x_ = v; }
+   *     [someExpr]() {}
+   *   }
+   * </code></pre>
+   */
+  public static boolean isMethodDeclaration(Node n) {
+    if (n.isFunction()) {
+      Node parent = n.getParent();
+      switch (parent.getToken()) {
+        case GETTER_DEF:
+        case SETTER_DEF:
+        case MEMBER_FUNCTION_DEF:
+          // `({ get x() {} })`
+          // `({ set x(v) {} })`
+          // `({ f() {} })`
+          return true;
+        case COMPUTED_PROP:
+          // `({ [expression]() {} })`
+          // The first child is the expression, and could possibly be a function.
+          return parent.getLastChild() == n;
+        default:
+          return false;
+      }
+    } else {
+      return false;
+    }
   }
 
   /**
@@ -3063,31 +3111,56 @@ public final class NodeUtil {
   }
 
   /**
-   * Is a FUNCTION node a function expression? A function expression is one
-   * that has either no name or a name that is not added to the current scope.
+   * Is a FUNCTION node a function expression?
+   *
+   * <p>A function expression is a function that:
+   * <ul>
+   *   <li>has either no name or a name that is not added to the current scope
+   *   <li>AND can be manipulated as an expression
+   *       (assigned to variables, passed to functions, etc.)
+   *       i.e. It is not a method declaration on a class or object literal.
+   * </ul>
    *
    * <p>Some examples of function expressions:
+   *
    * <pre>
    * (function () {})
    * (function f() {})()
    * [ function f() {} ]
    * var f = function f() {};
    * for (function f() {};;) {}
+   * export default function() {}
+   * () => 1
    * </pre>
    *
    * <p>Some examples of functions that are <em>not</em> expressions:
+   *
    * <pre>
    * function f() {}
    * if (x); else function f() {}
    * for (;;) { function f() {} }
    * export default function f() {}
+   * ({
+   *   f() {},
+   *   set x(v) {},
+   *   get x() {},
+   *   [expr]() {}
+   * })
+   * class {
+   *   f() {}
+   *   set x(v) {}
+   *   get x() {}
+   *   [expr]() {}
+   * }
    * </pre>
    *
    * @param n A node
    * @return Whether n is a function used within an expression.
    */
   static boolean isFunctionExpression(Node n) {
-    return n.isFunction() && (!isNamedFunction(n) || !isDeclarationParent(n.getParent()));
+    return n.isFunction()
+        && !NodeUtil.isFunctionDeclaration(n)
+        && !NodeUtil.isMethodDeclaration(n);
   }
 
   /**

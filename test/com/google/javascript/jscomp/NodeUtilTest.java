@@ -431,6 +431,7 @@ public final class NodeUtilTest extends TestCase {
   public void testIsFunctionDeclaration() {
     assertTrue(NodeUtil.isFunctionDeclaration(getFunctionNode("function foo(){}")));
     assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("class C { constructor() {} }")));
+    assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("({ foo() {} })")));
     assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("var x = function(){}")));
     assertTrue(NodeUtil.isFunctionDeclaration(getFunctionNode("export function f() {}")));
     assertFalse(NodeUtil.isFunctionDeclaration(getFunctionNode("export default function() {}")));
@@ -438,6 +439,16 @@ public final class NodeUtilTest extends TestCase {
         NodeUtil.isFunctionDeclaration(getFunctionNode("export default function foo() {}")));
     assertFalse(
         NodeUtil.isFunctionDeclaration(getFunctionNode("export default (foo) => { alert(foo); }")));
+  }
+
+  public void testIsMethodDeclaration() {
+    assertTrue(
+        NodeUtil.isMethodDeclaration(getFunctionNode("class C { constructor() {} }")));
+    assertTrue(NodeUtil.isMethodDeclaration(getFunctionNode("class C { a() {} }")));
+    assertTrue(NodeUtil.isMethodDeclaration(getFunctionNode("class C { static a() {} }")));
+    assertTrue(NodeUtil.isMethodDeclaration(getFunctionNode("({ set foo(v) {} })")));
+    assertTrue(NodeUtil.isMethodDeclaration(getFunctionNode("({ get foo() {} })")));
+    assertTrue(NodeUtil.isMethodDeclaration(getFunctionNode("({ [foo]() {} })")));
   }
 
   public void testIsClassDeclaration() {
@@ -719,6 +730,9 @@ public final class NodeUtilTest extends TestCase {
     assertContainsAnonFunc(true, "export default function() {};");
     assertContainsAnonFunc(false, "export default function a() {};");
     assertContainsAnonFunc(false, "export function a() {};");
+    assertContainsAnonFunc(false, "class C { a() {} }");
+    assertContainsAnonFunc(false, "class C { static a() {} }");
+    assertContainsAnonFunc(false, "x = { a() {} }");
   }
 
   private void assertContainsAnonFunc(boolean expected, String js) {
