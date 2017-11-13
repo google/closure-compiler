@@ -601,33 +601,34 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
         LINE_JOINER.join(
             "function f(/** number */ y) {",
             "  for (var x of \"abc\") { y = x; }",
-            "}"));
-    // should be NewTypeInference.MISTYPED_ASSIGN_RHS
-
-    typeCheck(
-        LINE_JOINER.join(
-            "function f(/** Array<string> */ y) {",
-            "  for (var x of new Map([['a', 'b'], ['c', 'd']])) { y = x; }",
-            "}"));
+            "}"),
+        nativeEs6Only(NewTypeInference.MISTYPED_ASSIGN_RHS));
 
     typeCheck(
         LINE_JOINER.join(
             "function f(/** string */ y, /** number */ z) {",
-            "  for (var x of new Map([['a', 1], ['c', 1]])) { [y,z] = x; }",
+            "  for (var x of new Map([['a', 1], ['c', 1]])) { [y, z] = x; }",
             "}"));
 
-    // TODO: Need tuple types (heterogeneous arrays) to be able to catch this error.
+    // TODO(sdh): Need tuple types (heterogeneous arrays) to be able to catch this error.
     typeCheck(
         LINE_JOINER.join(
             "function f(/** string */ y, /** string */ z) {",
-            "  for (var x of new Map([['a', 1], ['c', 1]])) { [y,z] = x; }",
+            "  for (var x of new Map([['a', 1], ['c', 1]])) { [y, z] = x; }",
             "}"));
 
     typeCheck(
         LINE_JOINER.join(
-            "function f(/** number */ z) {",
+            "function f(/** number */ z, /** !Set<number> */ set) {",
             "  for (var x of new Set([1, 2, 3])) { z = x; }",
             "}"));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** string */ z) {",
+            "  for (var x of new Set([1, 2, 3])) { z = x; }",
+            "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
 
     typeCheck(
         LINE_JOINER.join(
@@ -645,11 +646,13 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "function f(/** string */ y) {",
             "  for (var x of { a: 1, b: 2 }) { y = x; }",
             "}"),
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
-    // should be NewTypeInference.FOROF_EXPECTS_ITERABLE);
+        fullyTranspiledOnly(NewTypeInference.INVALID_ARGUMENT_TYPE),
+        nativeEs6Only(NewTypeInference.FOROF_EXPECTS_ITERABLE));
 
-    typeCheck("for (var x of 123) ;", NewTypeInference.INVALID_ARGUMENT_TYPE);
-    // should be NewTypeInference.FOROF_EXPECTS_ITERABLE);
+    typeCheck(
+        "for (var x of 123);",
+        fullyTranspiledOnly(NewTypeInference.INVALID_ARGUMENT_TYPE),
+        nativeEs6Only(NewTypeInference.FOROF_EXPECTS_ITERABLE));
 
     typeCheck(
         LINE_JOINER.join(
@@ -671,8 +674,14 @@ public final class NewTypeInferenceWithTranspilationTest extends NewTypeInferenc
             "}"));
 
     typeCheck(
-        "function f(/** Array<number>? */ m) { for (var x of m); }",
-        NewTypeInference.INVALID_ARGUMENT_TYPE);
-    // should be NewTypeInference.NULLABLE_DEREFERENCE
+        "function f(/** ?Array<number> */ m) { for (var x of m); }",
+        fullyTranspiledOnly(NewTypeInference.INVALID_ARGUMENT_TYPE),
+        nativeEs6Only(NewTypeInference.NULLABLE_DEREFERENCE));
+
+    typeCheck(
+        LINE_JOINER.join(
+            "function f(/** ?Array<number> */ y, /** ? */ iter) {",
+            "  for (var x of iter) { y = x; }",
+            "}"));
   }
 }

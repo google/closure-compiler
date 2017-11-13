@@ -150,11 +150,16 @@ public final class LateEs6ToEs3Converter implements NodeTraversal.Callback, HotS
     Node iterable = node.removeFirstChild();
     Node body = node.removeFirstChild();
 
-    ObjectTypeI iterableType = null;
     TypeI typeParam = unknownType;
     if (addTypes) {
-       iterableType = iterable.getTypeI().autobox().toMaybeObjectType();
-       typeParam = iterableType.getTemplateTypes().get(0);
+      // TODO(sdh): This is going to be null if the iterable is nullable or unknown. We might want
+      // to consider some way of unifying rather than simply looking at the nominal type.
+      ObjectTypeI iterableType = iterable.getTypeI().autobox().toMaybeObjectType();
+      if (iterableType != null) {
+        TypeIRegistry registry = compiler.getTypeIRegistry();
+        TypeI iterableBaseType = registry.getNativeType(JSTypeNative.ITERABLE_TYPE);
+        typeParam = iterableType.getInstantiatedTypeArgument(iterableBaseType);
+      }
     }
     TypeI iteratorType = createGenericType(JSTypeNative.ITERATOR_TYPE, typeParam);
     TypeI iIterableResultType = createGenericType(JSTypeNative.I_ITERABLE_RESULT_TYPE, typeParam);

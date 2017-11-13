@@ -26,6 +26,7 @@ import com.google.javascript.jscomp.parsing.parser.FeatureSet;
 import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Use by the classes that test {@link NewTypeInference}.
@@ -96,7 +97,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
 
   @SuppressWarnings("hiding")
   protected static final String DEFAULT_EXTERNS =
-      CompilerTypeTestCase.DEFAULT_EXTERNS + LINE_JOINER.join(
+      CompilerTestCase.DEFAULT_EXTERNS + LINE_JOINER.join(
           "/** @const {undefined} */",
           "var undefined;",
           "/**",
@@ -173,6 +174,20 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
           " * @return {string}",
           " */",
           "String.raw = function(template, var_args) {};",
+          "/**",
+          " * @constructor",
+          " * @implements {Iterable<!Array<KEY|VALUE>>}",
+          " * @param {Iterable<!Array<KEY|VALUE>>=} opt_arg",
+          " * @template KEY, VALUE",
+          " */",
+          "function Map(opt_arg) {}",
+          "/**",
+          " * @constructor",
+          " * @implements {Iterable<VALUE>}",
+          " * @param {Iterable<VALUE>=} opt_arg",
+          " * @template VALUE",
+          " */",
+          "function Set(opt_arg) {}",
           "/** @return {?} */",
           "function any() {}");
 
@@ -209,7 +224,7 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     };
   }
 
-  private final void parseAndTypeCheck(String externs, String js) {
+  private void parseAndTypeCheck(String externs, String js) {
     initializeNewCompiler(compilerOptions);
     compiler.init(
         ImmutableList.of(SourceFile.fromCode("[externs]", externs)),
@@ -239,25 +254,43 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
       TranspilationPasses.addEs2017Passes(passes);
       TranspilationPasses.addEs2016Passes(passes);
       TranspilationPasses.addEs6EarlyPasses(passes);
-      TranspilationPasses.addEs6LatePasses(passes);
-      TranspilationPasses.addRewritePolyfillPass(passes);
+      TranspilationPasses.addEs6PassesBeforeNTI(passes);
+      if (!compilerOptions.getTypeCheckEs6Natively()) {
+        TranspilationPasses.addEs6PassesAfterNTI(passes);
+        TranspilationPasses.addRewritePolyfillPass(passes);
+      }
     }
     passes.add(makePassFactory("GlobalTypeInfo", new GlobalTypeInfoCollector(compiler)));
     passes.add(makePassFactory("NewTypeInference", new NewTypeInference(compiler)));
+    if (compilerOptions.needsTranspilationFrom(FeatureSet.ES6)
+        && compilerOptions.getTypeCheckEs6Natively()) {
+      TranspilationPasses.addEs6PassesAfterNTI(passes);
+      TranspilationPasses.addRewritePolyfillPass(passes);
+    }
 
     PhaseOptimizer phaseopt = new PhaseOptimizer(compiler, null);
     phaseopt.consume(passes);
     phaseopt.process(compiler.getExternsRoot(), compiler.getJsRoot());
   }
 
-  protected final void typeCheck(String js, DiagnosticType... warningKinds) {
+  // Note: firstWarningKind is necessary to disambiguate the zero-diagnostic case.
+  protected final void typeCheck(
+      String js, DiagnosticType firstWarningKind, DiagnosticType... warningKinds) {
+    typeCheck(js, Diagnostic.wrap(firstWarningKind, warningKinds));
+  }
+
+  protected final void typeCheck(String js, Diagnostic... diagnostics) {
     if (this.mode.checkNative()) {
       compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
-      typeCheck(DEFAULT_EXTERNS, js, warningKinds);
+      typeCheck(DEFAULT_EXTERNS, js, Diagnostic.unwrap(diagnostics, compilerOptions));
     }
     if (this.mode.checkTranspiled()) {
       compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
-      typeCheck(DEFAULT_EXTERNS, js, warningKinds);
+      // TODO(sdh): stop allowing this option to be false, then we can eliminate this extra check.
+      compilerOptions.setTypeCheckEs6Natively(false);
+      typeCheck(DEFAULT_EXTERNS, js, Diagnostic.unwrap(diagnostics, compilerOptions));
+      compilerOptions.setTypeCheckEs6Natively(true);
+      typeCheck(DEFAULT_EXTERNS, js, Diagnostic.unwrap(diagnostics, compilerOptions));
     }
   }
 
@@ -269,12 +302,15 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     }
     if (this.mode.checkTranspiled()) {
       compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
+      // TODO(sdh): stop allowing this option to be false, then we can eliminate this extra check.
+      compilerOptions.setTypeCheckEs6Natively(false);
+      typeCheck(externs, js, warningKinds);
+      compilerOptions.setTypeCheckEs6Natively(true);
       typeCheck(externs, js, warningKinds);
     }
   }
 
-  private final void typeCheck(
-      String externs, String js, DiagnosticType... warningKinds) {
+  private void typeCheck(String externs, String js, DiagnosticType... warningKinds) {
     parseAndTypeCheck(externs, js);
     JSError[] warnings = compiler.getWarnings();
     JSError[] errors = compiler.getErrors();
@@ -313,11 +349,15 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     }
     if (this.mode.checkTranspiled()) {
       compilerOptions.setLanguageOut(LanguageMode.ECMASCRIPT5);
+      // TODO(sdh): stop allowing this option to be false, then we can eliminate this extra check.
+      compilerOptions.setTypeCheckEs6Natively(false);
+      typeCheckMessageContentsHelper(js, warningKind, warningMsg);
+      compilerOptions.setTypeCheckEs6Natively(true);
       typeCheckMessageContentsHelper(js, warningKind, warningMsg);
     }
   }
 
-  private final void typeCheckMessageContentsHelper(
+  private void typeCheckMessageContentsHelper(
       String js, DiagnosticType warningKind, String warningMsg) {
     parseAndTypeCheck(DEFAULT_EXTERNS, js);
     JSError[] warnings = compiler.getWarnings();
@@ -327,5 +367,60 @@ public abstract class NewTypeInferenceTestBase extends CompilerTypeTestCase {
     JSError warning = warnings[0];
     assertError(warning).hasType(warningKind);
     assertError(warning).hasMessage(warningMsg);
+  }
+
+  /** Abstraction over DiagnosticType that allows warnings to be expected conditionally. */
+  protected abstract static class Diagnostic implements Function<CompilerOptions, DiagnosticType> {
+
+    protected static Diagnostic of(final DiagnosticType type) {
+      return new Diagnostic() {
+        @Override
+        public DiagnosticType apply(CompilerOptions unused) {
+          return type;
+        }
+      };
+    }
+
+    protected static Diagnostic[] wrap(DiagnosticType firstType, DiagnosticType[] types) {
+      Diagnostic[] out = new Diagnostic[types.length + 1];
+      out[0] = of(firstType);
+      for (int i = 0; i < types.length; i++) {
+        out[i + 1] = of(types[i]);
+      }
+      return out;
+    }
+
+    protected static DiagnosticType[] unwrap(Diagnostic[] diagnostics, CompilerOptions options) {
+      List<DiagnosticType> out = new ArrayList<>();
+      for (Diagnostic diagnostic : diagnostics) {
+        DiagnosticType unwrapped = diagnostic.apply(options);
+        if (unwrapped != null) {
+          out.add(unwrapped);
+        }
+      }
+      return out.toArray(new DiagnosticType[0]);
+    }
+  }
+
+  /** A warning that is only expected when type checking ES6 natively. */
+  protected static Diagnostic nativeEs6Only(final DiagnosticType type) {
+    return new Diagnostic() {
+      @Override
+      public DiagnosticType apply(CompilerOptions options) {
+        return options.needsTranspilationFrom(FeatureSet.ES6) && options.getTypeCheckEs6Natively()
+            ? type : null;
+      }
+    };
+  }
+
+  /** A warning that is only expected when not type checking ES6 natively. */
+  protected static Diagnostic fullyTranspiledOnly(final DiagnosticType type) {
+    return new Diagnostic() {
+      @Override
+      public DiagnosticType apply(CompilerOptions options) {
+        return options.needsTranspilationFrom(FeatureSet.ES6) && !options.getTypeCheckEs6Natively()
+            ? type : null;
+      }
+    };
   }
 }

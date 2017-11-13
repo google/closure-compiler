@@ -843,4 +843,9 @@ public abstract class ObjectType
     // so we don't need to change anything.
     return this;
   }
+
+  @Override
+  public TypeI getInstantiatedTypeArgument(TypeI supertype) {
+    throw new UnsupportedOperationException();
+  }
 }

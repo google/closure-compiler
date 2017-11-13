@@ -515,6 +515,8 @@ public final class JSTypes implements Serializable {
         return getIIterableResultInstance(UNKNOWN);
       case I_TEMPLATE_ARRAY_TYPE:
         return getITemplateArrayType();
+      case ITERABLE_TYPE:
+        return getIterableInstance(UNKNOWN);
       case ITERATOR_TYPE:
         return getIteratorInstance(UNKNOWN);
       case GENERATOR_TYPE:
