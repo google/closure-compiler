@@ -52,6 +52,52 @@ public class J2clConstantHoisterPassTest extends CompilerTestCase {
             "var someClass$buzz = function(){ return someClass$bar; };"));
   }
 
+  public void testHoistClinitConstantAssignments_assignmentAfterInit() {
+    test(
+        LINE_JOINER.join(
+            "var someClass = /** @constructor */ function() {};",
+            "var someClass$foo = false;",
+            "var someClass$bar = null;",
+            "var someClass$buzz = null;",
+            "someClass.$clinit = function() {",
+            "  someClass.$clinit = function() {};",
+            "  someClass$foo = true;",
+            "  someClass$bar = 'hey';",
+            "  someClass$buzz = function() { return someClass$bar; };",
+            "};"),
+        LINE_JOINER.join(
+            "var someClass = /** @constructor */ function() {};",
+            "var someClass$foo = true;",
+            "var someClass$bar = 'hey';",
+            "var someClass$buzz = function(){ return someClass$bar; };",
+            "someClass.$clinit = function() {",
+            "  someClass.$clinit = function() {};",
+            "};"));
+  }
+
+  public void testHoistClinitConstantAssignments_stubInit() {
+    test(
+        LINE_JOINER.join(
+            "var someClass = /** @constructor */ function() {};",
+            "someClass.$clinit = function() {",
+            "  someClass.$clinit = function() {};",
+            "  someClass$foo = true;",
+            "  someClass$bar = 'hey';",
+            "  someClass$buzz = function() { return someClass$bar; };",
+            "};",
+            "var someClass$foo = false;",
+            "var someClass$bar;",
+            "var someClass$buzz;"),
+        LINE_JOINER.join(
+            "var someClass = /** @constructor */ function() {};",
+            "someClass.$clinit = function() {",
+            "  someClass.$clinit = function() {};",
+            "};",
+            "var someClass$foo = true;",
+            "var someClass$bar = 'hey';",
+            "var someClass$buzz = function(){ return someClass$bar; };"));
+  }
+
   public void testHoistClinitConstantAssignments_avoidUnsafe() {
     testSame(
         lines(
