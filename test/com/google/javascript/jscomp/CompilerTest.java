@@ -28,7 +28,6 @@ import com.google.debugging.sourcemap.SourceMapConsumerV3;
 import com.google.debugging.sourcemap.SourceMapGeneratorV3;
 import com.google.debugging.sourcemap.proto.Mapping.OriginalMapping;
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
-import com.google.javascript.jscomp.deps.ModuleLoader;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.InputId;
 import com.google.javascript.rhino.Node;
@@ -138,19 +137,6 @@ public final class CompilerTest extends TestCase {
     SourceFile input = SourceFile.fromCode("input.js",
         "(function (undefined) { alert(undefined); })();");
     compiler.compile(externs, input, options);
-  }
-
-  public void testCommonJSMissingRequire() throws Exception {
-    List<SourceFile> inputs = ImmutableList.of(
-        SourceFile.fromCode("/gin.js", "require('missing')"));
-    Compiler compiler = initCompilerForCommonJS(
-        inputs, ImmutableList.of(ModuleIdentifier.forFile("/gin")));
-
-    ErrorManager manager = compiler.getErrorManager();
-    JSError[] errors = manager.getErrors();
-    assertThat(errors).hasLength(1);
-    String error = errors[0].toString();
-    assertThat(error).contains("Failed to load module \"missing\" at /gin.js");
   }
 
   private static String normalize(String path) {
@@ -340,21 +326,6 @@ public final class CompilerTest extends TestCase {
     assertThat(mapping.getIdentifier()).isEqualTo("testSymbolName");
   }
 
-  private Compiler initCompilerForCommonJS(
-      List<SourceFile> inputs, List<ModuleIdentifier> entryPoints)
-      throws Exception {
-    CompilerOptions options = new CompilerOptions();
-    options.setIdeMode(true);
-    options.dependencyOptions.setDependencyPruning(true);
-    options.dependencyOptions.setMoocherDropping(true);
-    options.dependencyOptions.setEntryPoints(entryPoints);
-    options.setProcessCommonJSModules(true);
-    options.setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
-    Compiler compiler = new Compiler();
-    compiler.init(new ArrayList<SourceFile>(), inputs, options);
-    compiler.parseInputs();
-    return compiler;
-  }
 
   private static final ImmutableList<SourceFile> EMPTY_EXTERNS =
       ImmutableList.of(SourceFile.fromCode("externs", ""));

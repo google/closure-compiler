@@ -55,7 +55,7 @@ public class FindModuleDependencies extends NodeTraversal.AbstractPostOrderCallb
 
   public void process(Node root) {
     checkArgument(root.isScript());
-    if (FindModuleDependencies.isEs6ModuleRoot(root)) {
+    if (Es6RewriteModules.isEs6ModuleRoot(root)) {
       moduleType = ModuleType.ES6;
     }
     CompilerInput input = compiler.getInput(root.getInputId());
@@ -81,9 +81,22 @@ public class FindModuleDependencies extends NodeTraversal.AbstractPostOrderCallb
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
+    if (parent == null
+        || NodeUtil.isControlStructure(parent)
+        || NodeUtil.isStatementBlock(parent)) {
+      if (n.isExprResult()) {
+        Node maybeGetProp = n.getFirstFirstChild();
+        if (maybeGetProp != null
+            && (maybeGetProp.matchesQualifiedName("goog.provide")
+                || maybeGetProp.matchesQualifiedName("goog.module"))) {
+          moduleType = ModuleType.GOOG;
+          return;
+        }
+      }
+    }
+
     if (supportsEs6Modules && n.isExport()) {
       moduleType = ModuleType.ES6;
-
     } else if (supportsEs6Modules && n.isImport()) {
       moduleType = ModuleType.ES6;
       String moduleName;
@@ -111,7 +124,7 @@ public class FindModuleDependencies extends NodeTraversal.AbstractPostOrderCallb
       }
       t.getInput().addOrderedRequire(moduleName);
     } else if (supportsCommonJsModules) {
-      if (ProcessCommonJSModules.isCommonJsExport(t, n)) {
+      if (moduleType != ModuleType.GOOG && ProcessCommonJSModules.isCommonJsExport(t, n)) {
         moduleType = ModuleType.COMMONJS;
       } else if (ProcessCommonJSModules.isCommonJsImport(n)) {
         String path = ProcessCommonJSModules.getCommonJsImportPath(n);
@@ -143,15 +156,6 @@ public class FindModuleDependencies extends NodeTraversal.AbstractPostOrderCallb
     }
   }
 
-  /** Return whether or not the given script node represents an ES6 module file. */
-  public static boolean isEs6ModuleRoot(Node scriptNode) {
-    checkArgument(scriptNode.isScript());
-    if (scriptNode.getBooleanProp(Node.GOOG_MODULE)) {
-      return false;
-    }
-    return scriptNode.hasChildren() && scriptNode.getFirstChild().isModuleBody();
-  }
-
   /**
    * Convert a script into a module by marking it's root node as a module body. This allows a script
    * which is imported as a module to be scoped as a module even without "import" or "export"
@@ -164,7 +168,7 @@ public class FindModuleDependencies extends NodeTraversal.AbstractPostOrderCallb
   }
 
   private boolean convertToEs6Module(Node root, boolean skipGoogProvideModuleCheck) {
-    if (isEs6ModuleRoot(root)) {
+    if (Es6RewriteModules.isEs6ModuleRoot(root)) {
       return true;
     }
     if (!skipGoogProvideModuleCheck) {

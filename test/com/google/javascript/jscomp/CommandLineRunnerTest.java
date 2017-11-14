@@ -1839,6 +1839,7 @@ public final class CommandLineRunnerTest extends TestCase {
     args.add("--dependency_mode=STRICT");
     args.add("--entry_point='./app.js'");
     args.add("--language_in=ECMASCRIPT6");
+    args.add("--language_out=ECMASCRIPT5");
     setFilename(0, "foo.js");
     setFilename(1, "app.js");
     test(
