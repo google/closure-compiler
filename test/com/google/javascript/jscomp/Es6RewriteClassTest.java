@@ -1102,49 +1102,47 @@ public final class Es6RewriteClassTest extends CompilerTestCase {
             "});"));
   }
 
-  public void testOverrideOfGetter() {
+  public void testOverrideOfGetterFromInterface() {
     setLanguageOut(LanguageMode.ECMASCRIPT5);
 
     test(
         lines(
-            "/** @abstract */",
-            "class Base {",
+            "/** @interface */",
+            "class Int {",
             "  /** @return {number} */",
             "  get x() {}",
             "}",
             "",
-            "class Subclass extends Base {",
-            "  /** @override */",
-            "  get x() {",
-            "    return 5;",
-            "  }",
+            "/** @implements {Int} */",
+            "class C {",
+            "  /** @override @return {number} */",
+            "  get x() {}",
             "}"),
         lines(
-            "/** @abstract @constructor @struct */",
-            "let Base = function() {};",
+            "/** @interface @struct */",
+            "let Int = function() {};",
             "/** @type {number} */",
-            "Base.prototype.x;",
-            "$jscomp.global.Object.defineProperties(Base.prototype, {",
+            "Int.prototype.x;",
+            "$jscomp.global.Object.defineProperties(Int.prototype, {",
             "  x: {",
             "    configurable:true,",
             "    enumerable:true,",
-            "    /** @this {Base} @return {number} */",
+            "    /** @this {Int} @return {number} */",
             "    get: function() {},",
             "  }",
             "});",
             "",
-            "/** @constructor @struct @extends {Base} @param {...?} var_args */",
-            "let Subclass = function(var_args) { Base.apply(this, arguments); };",
+            "/** @constructor @struct @implements {Int} */",
+            "let C = function() {};",
             "",
-            "/** @override */",
-            "Subclass.prototype.x;",
-            "$jscomp.inherits(Subclass, Base);",
-            "$jscomp.global.Object.defineProperties(Subclass.prototype, {",
+            "/** @override @type {number} */",
+            "C.prototype.x;",
+            "$jscomp.global.Object.defineProperties(C.prototype, {",
             "  x: {",
             "    configurable:true,",
             "    enumerable:true,",
-            "    /** @this {Subclass} @override */",
-            "    get: function() { return 5; },",
+            "    /** @this {C} @override @return {number}  */",
+            "    get: function() {},",
             "  }",
             "});"));
   }

@@ -322,6 +322,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
   /**
    * @param node A getter or setter node.
    */
+  @Nullable
   private JSTypeExpression getTypeFromGetterOrSetter(Node node) {
     JSDocInfo info = node.getJSDocInfo();
     if (info != null) {
@@ -340,7 +341,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       }
     }
 
-    return new JSTypeExpression(new Node(Token.QMARK), node.getSourceFileName());
+    return null;
   }
 
   /**
@@ -397,7 +398,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       return;
     }
 
-    JSTypeExpression typeExpr = getTypeFromGetterOrSetter(member).copy();
+    JSTypeExpression typeExpr = getTypeFromGetterOrSetter(member);
     addToDefinePropertiesObject(metadata, member);
 
     Map<String, JSDocInfo> membersToDeclare;
@@ -415,7 +416,7 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
     }
     JSDocInfo existingJSDoc = membersToDeclare.get(memberName);
     JSTypeExpression existingType = existingJSDoc == null ? null : existingJSDoc.getType();
-    if (existingType != null && !existingType.equals(typeExpr)) {
+    if (existingType != null && typeExpr != null && !existingType.equals(typeExpr)) {
       compiler.report(JSError.make(member, CONFLICTING_GETTER_SETTER_TYPE, memberName));
     } else {
       JSDocInfoBuilder jsDoc = new JSDocInfoBuilder(false);
@@ -425,8 +426,11 @@ public final class Es6RewriteClass implements NodeTraversal.Callback, HotSwapCom
       }
       if (member.getJSDocInfo() != null && member.getJSDocInfo().isOverride()) {
         jsDoc.recordOverride();
-      } else {
-        jsDoc.recordType(typeExpr);
+      } else if (typeExpr == null) {
+        typeExpr = new JSTypeExpression(new Node(Token.QMARK), member.getSourceFileName());
+      }
+      if (typeExpr != null) {
+        jsDoc.recordType(typeExpr.copy());
       }
       if (member.isStaticMember() && !member.isComputedProp()) {
         jsDoc.recordNoCollapse();
