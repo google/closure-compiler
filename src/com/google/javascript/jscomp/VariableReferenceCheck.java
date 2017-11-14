@@ -332,6 +332,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
     boolean shadowCatchVar = v.getParentNode().isCatch() && !isVarNodeSameAsReferenceNode;
     boolean shadowParam = v.isParam() && NodeUtil.isBlockScopedDeclaration(referenceNode)
         && v.getScope() == reference.getScope().getParent();
+    boolean shadowsImport = v.isImport();
     boolean shadowDetected = false;
     if (!allowDupe) {
       // Look through all the declarations we've found so far, and
@@ -342,7 +343,7 @@ class VariableReferenceCheck implements HotSwapCompilerPass {
           DiagnosticType diagnosticType;
           Node warningNode = referenceNode;
           if (v.isLet() || v.isConst() || v.isClass() || letConstShadowsVar || shadowCatchVar
-              || shadowParam) {
+              || shadowParam || shadowsImport) {
             // These cases are all hard errors that violate ES6 semantics
             diagnosticType = REDECLARED_VARIABLE_ERROR;
           } else if (reference.getNode().getParent().isCatch() || allowDupe) {
