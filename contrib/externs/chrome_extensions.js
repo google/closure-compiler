@@ -135,7 +135,14 @@
  *
  * For those cases, create a record type for the event that extends
  * ChromeBaseEvent with the correct listener function type filled in.
- * See any of the Event type definitions below for an example.
+ * See any of the Event type definitions below that extend ChromeBaseEvent for
+ * an example.
+ *
+ * In some cases the addListener method takes more than one argument, so
+ * inheritance from ChromeBaseEvent will not work. In those cases extend
+ * ChromeBaseEventNoListeners instead and add the listener interfaces
+ * explicitly. See any of the Event type definitions below that extend
+ * ChromeBaseEventNoListeners for an example.
  *
  * E. Nullability
  * We treat the Chrome Extension API pages as "the truth".  Not-null types
@@ -4249,9 +4256,8 @@ chrome.input.ime = {};
  *
  * The addListener() method for this class takes more than one argument, so it
  * isn't possible to just extend ChromeBaseEvent here.
- * TODO(bradfordcsmith): These events won't automatically inherit new methods
- *     added to `ChromeBaseEvent`.
  * @interface
+ * @extends {ChromeBaseEventNoListeners}
  */
 function ChromeInputImeOnKeyEventEvent() {}
 
@@ -6034,9 +6040,8 @@ chrome.webNavigation.onHistoryStateUpdated;
  *
  * The `addListener()` methods for these take more than one argument, so they
  * cannot just extend `ChromeBaseEvent`.
- * TODO(bradfordcsmith): These events won't automatically inherit new methods
- *     added to `ChromeBaseEvent`.
  * @interface
+ * @extends {ChromeBaseEventNoListeners}
  * @template LISTENER
  */
 function WebRequestBaseEvent() {}
@@ -6111,10 +6116,9 @@ function WebRequestOnAuthRequiredEvent() {}
  *
  * The `addListener()` methods for these take more than one argument, so they
  * cannot just extend `ChromeBaseEvent`.
- * TODO(bradfordcsmith): These events won't automatically inherit new methods
- *     added to `ChromeBaseEvent`.
  * @see https://developer.chrome.com/extensions/webRequest
  * @interface
+ * @extends {ChromeBaseEventNoListeners}
  */
 function WebRequestOnErrorOccurredEvent() {}
 
@@ -9341,9 +9345,8 @@ chrome.mdns.MdnsService.prototype.serviceData;
  *
  * The `addListener()` methods for these take more than one argument, so they
  * cannot just extend `ChromeBaseEvent`.
- * TODO(bradfordcsmith): These events won't automatically inherit new methods
- *     added to `ChromeBaseEvent`.
  * @interface
+ * @extends {ChromeBaseEventNoListeners}
  */
 chrome.mdns.ServiceListEvent = function() {};
 
