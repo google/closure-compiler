@@ -27,6 +27,11 @@ public final class Es6CheckModule extends AbstractPostOrderCallback implements H
       DiagnosticType.warning(
           "ES6_MODULE_REFERENCES_THIS", "The body of an ES6 module cannot reference 'this'.");
 
+  static final DiagnosticType IMPORT_CANNOT_BE_REASSIGNED =
+      DiagnosticType.error(
+          "JSC_IMPORT_CANNOT_BE_REASSIGNED",
+          "Assignment to constant variable \"{0}\".");
+
   private final AbstractCompiler compiler;
 
   public Es6CheckModule(AbstractCompiler compiler) {
@@ -45,14 +50,40 @@ public final class Es6CheckModule extends AbstractPostOrderCallback implements H
 
   @Override
   public void visit(NodeTraversal t, Node n, Node parent) {
-    switch (n.getToken()) {
-      case THIS:
-        if (t.inModuleHoistScope()) {
-          t.report(n, ES6_MODULE_REFERENCES_THIS);
+    if (n.isThis() && t.inModuleHoistScope()) {
+      t.report(n, ES6_MODULE_REFERENCES_THIS);
+    } else if (NodeUtil.isLValue(n) && !NodeUtil.isDeclaration(parent)) {
+      if (n.isGetProp()) {
+        if (n.getFirstChild().isName()) {
+          Var var = t.getScope().getVar(n.getFirstChild().getString());
+          if (var != null) {
+            Node nameNode = var.getNameNode();
+            if (nameNode.isImportStar()) {
+              // import * as M from '';
+              // M.x = 2;
+              compiler.report(t.makeError(n, IMPORT_CANNOT_BE_REASSIGNED, nameNode.getString()));
+            }
+          }
         }
-        break;
-      default:
-        break;
+      } else if (n.isName() && !parent.isArrayPattern()){
+        Var var = t.getScope().getVar(n.getString());
+        if (var != null) {
+          Node nameNode = var.getNameNode();
+          if (nameNode != n) {
+            if (NodeUtil.isImportedName(nameNode)) {
+              // import { x } from '';
+              // x = 2;
+              compiler.report(t.makeError(n, IMPORT_CANNOT_BE_REASSIGNED, nameNode.getString()));
+            } else if (NodeUtil.isExportedName(nameNode) && !t.getScope().isGlobal()) {
+              // TODO(johnplaisted) Implement mutable exports (issue #2710).
+              // Note that mutating exports top level currently works, not just in nested scopes.
+              // This is because if this is in a function scope then we do not know if this will
+              // be called later, which we don't handle right now.
+              compiler.report(JSError.make(n, Es6ToEs3Util.CANNOT_CONVERT_YET, "Mutable export."));
+            }
+          }
+        }
+      }
     }
   }
 }
