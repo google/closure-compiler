@@ -471,6 +471,25 @@ public final class InlineObjectLiteralsTest extends CompilerTestCase {
             "use(object[sym]);"));
   }
 
+  public void testQuotedKeyThatIsNotRead() {
+    testLocal("var obj = {'a.b.c': 'd'};", "var JSCompiler_object_inline_string_key_0 = 'd';");
+    testLocal("var obj = {'@': 5, '!': 4, 'foo': 3};",
+        lines(
+            "var JSCompiler_object_inline_string_key_0 = 5;",
+            "var JSCompiler_object_inline_string_key_1 = 4;",
+            "var JSCompiler_object_inline_foo_2 = 3;"
+        ));
+
+    testSameLocal("var obj = {}; obj['@'] = 3;");
+  }
+
+
+  public void testQuotedKeyThatIsRead() {
+    testSameLocal("var obj = {'a.b.c': 'd'}; use(obj['a.b.c']);");
+
+    testSameLocal("var obj = {}; obj['a'] = 3; use(obj['a']);");
+  }
+
   private static final String LOCAL_PREFIX = "function local(){";
   private static final String LOCAL_POSTFIX = "}";
 
