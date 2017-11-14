@@ -3339,6 +3339,11 @@ public final class NodeUtil {
     return parent.isImport() || (parent.isImportSpec() && parent.getLastChild() == n);
   }
 
+  public static boolean isExportedName(Node n) {
+    Node parent = n.getParent();
+    return parent.isExport() || (parent.isExportSpec() && parent.getFirstChild() == n);
+  }
+
   /**
    * Returns true if the node is a lhs value of a destructuring assignment
    * For example,
