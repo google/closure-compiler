@@ -1167,6 +1167,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
     List<String> moduleNameRegexList = options.modulesToPrintAfterEachPassRegexList;
     StringBuilder builder = new StringBuilder();
 
+    if (fileNameRegexList.isEmpty() && moduleNameRegexList.isEmpty()) {
+      return toSource();
+    }
     if (!fileNameRegexList.isEmpty()) {
       checkNotNull(jsRoot);
       for (Node fileNode : jsRoot.children()) {
@@ -1179,6 +1182,9 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           }
         }
       }
+      if (builder.toString().isEmpty()) {
+        throw new RuntimeException("No files matched any of: " + fileNameRegexList);
+      }
     }
     if (!moduleNameRegexList.isEmpty()) {
       for (JSModule jsModule : modules) {
@@ -1190,13 +1196,12 @@ public class Compiler extends AbstractCompiler implements ErrorHandler, SourceFi
           }
         }
       }
+      if (builder.toString().isEmpty()) {
+        throw new RuntimeException("No modules matched any of: " + moduleNameRegexList);
+      }
     }
+    return builder.toString();
 
-    if (!builder.toString().isEmpty()) {
-      return builder.toString();
-    } else {
-      return toSource();
-    }
   }
 
   @Override
