@@ -1786,7 +1786,8 @@ public abstract class CompilerTestCase extends TestCase {
     TranspilationPasses.addEs2017Passes(factories);
     TranspilationPasses.addEs2016Passes(factories);
     TranspilationPasses.addEs6EarlyPasses(factories);
-    TranspilationPasses.addEs6LatePasses(factories);
+    TranspilationPasses.addEs6LatePassesBeforeNti(factories);
+    TranspilationPasses.addEs6LatePassesAfterNti(factories);
     TranspilationPasses.addRewritePolyfillPass(factories);
     for (PassFactory factory : factories) {
       factory.create(compiler).process(externsRoot, codeRoot);
