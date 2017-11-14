@@ -3163,6 +3163,12 @@ public final class NodeUtil {
         && !NodeUtil.isMethodDeclaration(n);
   }
 
+  static boolean isUnannotatedCallback(Node n) {
+    JSDocInfo jsdoc = getBestJSDocInfo(n);
+    return n.isFunction() && n.getParent().isCall() && n != n.getParent().getFirstChild()
+        && jsdoc == null && !functionHasInlineJsdocs(n);
+  }
+
   /**
    * @return Whether the node is both a function expression and the function is named.
    */

@@ -59,10 +59,11 @@ import java.util.Set;
  */
 public class GlobalTypeInfo implements TypeIRegistry {
 
-  // An out-to-in list of the scopes, built during CollectNamedTypes
-  // This will be reversed at the end of GlobalTypeInfo to make sure
-  // that the scopes can be processed in-to-out in NewTypeInference.
-  private final List<NTIScope> scopes = new ArrayList<>();
+  // We collect function scopes during CollectNamedTypes, and put them in this list out-to-in
+  // (global scope first, then functions in global scope, etc).
+  // At the end of GlobalTypeInfo, we rearrange them in the order in which they will be
+  // processed during NewTypeInference. See GlobalTypeInfoCollector#reorderScopesForNTI.
+  private List<NTIScope> scopes;
   private NTIScope globalScope;
 
   private final List<TypeMismatch> mismatches;
@@ -112,10 +113,8 @@ public class GlobalTypeInfo implements TypeIRegistry {
     }
   }
 
-  void initGlobalTypeInfo(Node root) {
-    this.globalScope = new NTIScope(root, null, ImmutableList.<String>of(), this.getCommonTypes());
-    this.globalScope.addUnknownTypeNames(this.unknownTypeNames);
-    this.scopes.add(this.globalScope);
+  void setGlobalScope(NTIScope globalScope) {
+    this.globalScope = globalScope;
   }
 
   void recordPropertyName(Node pnameNode) {
@@ -162,8 +161,16 @@ public class GlobalTypeInfo implements TypeIRegistry {
     return this.scopes;
   }
 
+  void setScopes(List<NTIScope> scopes) {
+    this.scopes = scopes;
+  }
+
   NTIScope getGlobalScope() {
     return this.globalScope;
+  }
+
+  Set<String> getUnknownTypeNames() {
+    return this.unknownTypeNames;
   }
 
   JSTypes getCommonTypes() {

@@ -1233,7 +1233,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         NewTypeInference.INVALID_OPERAND_TYPE);
   }
 
-  public void testCrossScopeWarnings() {
+  public void testEscapedVariables() {
     typeCheck(LINE_JOINER.join(
         "function f() {",
         "  x < 'str';",
@@ -1247,8 +1247,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function f() {",
         "  return x - 1;",
         "}",
-        "f()"),
-        NewTypeInference.CROSS_SCOPE_GOTCHA);
+        "f()"));
 
     typeCheck(LINE_JOINER.join(
         "function f(y) {",
@@ -1471,6 +1470,52 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "  return x - 1;",
         "}"),
         NewTypeInference.CROSS_SCOPE_GOTCHA);
+  }
+
+  public void testEscapedVariablesAvoidFalsePositives() {
+    // x typed as unknown. We don't know whether the assignment in the inner scope will happen.
+    typeCheck(LINE_JOINER.join(
+        "function f(y) {",
+        "  var x;",
+        "  y(function() { x = 123; });",
+        "  var /** string */ s = x;",
+        "}"));
+
+    typeCheck(LINE_JOINER.join(
+        "function f(y) {",
+        "  var /** number */ x;",
+        "  y(function() { x = 123; });",
+        "  var /** string */ s = x;",
+        "}"),
+        NewTypeInference.MISTYPED_ASSIGN_RHS);
+
+    // Don't type x as false and then say that the assertion always fails.
+    typeCheck(LINE_JOINER.join(
+        CLOSURE_BASE,
+        "function f(y) {",
+        "  var x = false;",
+        "  y(function() { x = true; });",
+        "  goog.asserts.assert(x);",
+        "}"));
+
+    // Don't warn about nullable dereference.
+    typeCheck(LINE_JOINER.join(
+        "function f(y) {",
+        "  var x = null;",
+        "  y(function() { x.prop = 123; });",
+        "  var z = x.prop;",
+        "}"));
+
+    // Type c a number, not as (number|null) which we inferred during @const inference.
+    typeCheck(LINE_JOINER.join(
+        "function f(/** ?number */ n, fun) {",
+        "  if (n) {",
+        "    /** @const */",
+        "    var c = n;",
+        "    fun(function() { var x = c; });",
+        "    return c - 1;",
+        "  }",
+        "}"));
   }
 
   public void testTrickyUnknownBehavior() {
@@ -1901,8 +1946,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
     typeCheck(LINE_JOINER.join(
         "var foo;",
         "(function() { foo(); })();",
-        "foo();"),
-        NewTypeInference.NULLABLE_DEREFERENCE);
+        "foo();"));
   }
 
   public void testBackwardForwardPathologicalCase2() {
@@ -14825,7 +14869,7 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
         "function f(x) {}",
         "/** @constructor */",
         "function Foo() {}",
-        "f(/** @this{Foo} */ function () {});"));
+        "f(/** @this {Foo} */ function () {});"));
 
     typeCheck(LINE_JOINER.join(
         "/**",
