@@ -30,7 +30,6 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   @Override
   protected CompilerOptions getOptions() {
     CompilerOptions options = super.getOptions();
-    // Trigger module processing after parsing.
     options.setProcessCommonJSModules(true);
     options.setModuleResolutionMode(ModuleLoader.ResolutionMode.NODE);
 
@@ -43,9 +42,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
 
   @Override
   protected CompilerPass getProcessor(Compiler compiler) {
-    // CommonJS module handling is done directly after parsing, so not included here.
-    // It also depends on es6 module rewriting, however, so that must be explicitly included.
-    return new Es6RewriteModules(compiler);
+    return new ProcessCommonJSModules(compiler);
   }
 
   @Override
@@ -507,20 +504,27 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
   public void testMultipleAssignments() {
     setLanguage(
         CompilerOptions.LanguageMode.ECMASCRIPT_2015, CompilerOptions.LanguageMode.ECMASCRIPT5);
-    setExpectParseWarningsThisTest();
-    testModules(
-        "test.js",
-        LINE_JOINER.join(
-            "/** @constructor */ function Hello() {}",
-            "module.exports = Hello;",
-            "/** @constructor */ function Bar() {} ",
-            "Bar.prototype.foobar = function() { alert('foobar'); };",
-            "exports = Bar;"),
-        LINE_JOINER.join(
-            "var module$test = /** @constructor */ function(){};",
-            "/** @constructor */ function Bar$$module$test(){}",
-            "Bar$$module$test.prototype.foobar = function() { alert('foobar'); };",
-            "exports = Bar$$module$test;"));
+
+    JSModule module = new JSModule("out");
+    module.add(SourceFile.fromCode("other.js", "goog.provide('module$other');"));
+    module.add(SourceFile.fromCode("yet_another.js", "goog.provide('module$yet_another');"));
+    module.add(
+        SourceFile.fromCode(
+            "test",
+            LINE_JOINER.join(
+                "/** @constructor */ function Hello() {}",
+                "module.exports = Hello;",
+                "/** @constructor */ function Bar() {} ",
+                "Bar.prototype.foobar = function() { alert('foobar'); };",
+                "exports = Bar;")));
+    JSModule[] modules = {module};
+    test(
+        modules,
+        null,
+        new Diagnostic(
+            ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT.level,
+            ProcessCommonJSModules.SUSPICIOUS_EXPORTS_ASSIGNMENT,
+            null));
   }
 
   public void testDestructuringImports() {
@@ -656,7 +660,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  this.foobar = foobar;",
             "}}.call(window))"),
         LINE_JOINER.join(
-            "var module$test = {};",
+            "var module$test;",
             "(function(){",
             "  module$test={foo:\"bar\"};",
             "}).call(window);"));
@@ -676,7 +680,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "}})();",
             "alert('foo');"),
         LINE_JOINER.join(
-            "var module$test = {};",
+            "var module$test;",
             "(function(){",
             "  module$test={foo:\"bar\"};",
             "})();",
@@ -697,7 +701,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "  this.foobar = foobar;",
             "}})();"),
         LINE_JOINER.join(
-            "var module$test = {};",
+            "var module$test;",
             "alert('foo');",
             "(function(){",
             "  module$test={foo:\"bar\"};",
@@ -878,16 +882,16 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
         LINE_JOINER.join(
             "/** @const */ var module$test={};",
             "{",
-            "  var exports$jscomp$inline_3$$module$test=module$test;",
-            "  var userAgentContains$jscomp$inline_5$$module$test=",
-            "    function(str$jscomp$inline_6){",
+            "  var exports$jscomp$inline_4$$module$test=module$test;",
+            "  var userAgentContains$jscomp$inline_6$$module$test=",
+            "    function(str$jscomp$inline_7){",
             "      return navigator.userAgent.toLowerCase().indexOf(",
-            "        str$jscomp$inline_6)>=0;",
+            "        str$jscomp$inline_7)>=0;",
             "    };",
-            "  var webkit$jscomp$inline_4$$module$test=",
-            "    userAgentContains$jscomp$inline_5$$module$test('webkit');",
-            "  exports$jscomp$inline_3$$module$test.webkit=",
-            "    webkit$jscomp$inline_4$$module$test;",
+            "  var webkit$jscomp$inline_5$$module$test=",
+            "    userAgentContains$jscomp$inline_6$$module$test('webkit');",
+            "  exports$jscomp$inline_4$$module$test.webkit=",
+            "    webkit$jscomp$inline_5$$module$test;",
             "}"));
   }
 
@@ -904,9 +908,7 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "}(this, 'foobar', function () {",
             "  return {foo: 'bar'};",
             "});"),
-        LINE_JOINER.join(
-            "/** @const */ var module$test={};",
-            "module$test.foo = 'bar';"));
+        LINE_JOINER.join("{", "  var module$test;", "  module$test = {foo: 'bar'};", "}"));
   }
 
   public void testDontSplitVarsInFor() {
@@ -931,5 +933,9 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "module$test.foo = function foo() {",
             "  return 1;",
             "};"));
+  }
+
+  public void testMissingRequire() {
+    ModulesTestUtils.testModulesError(this, "require('missing');", ModuleLoader.LOAD_WARNING);
   }
 }

@@ -203,6 +203,13 @@ public final class DefaultPassConfig extends PassConfig {
   @Override
   protected List<PassFactory> getWhitespaceOnlyPasses() {
     List<PassFactory> passes = new ArrayList<>();
+
+    if (options.processCommonJSModules) {
+      passes.add(rewriteCommonJsModules);
+    } else if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
+      passes.add(rewriteScriptsToEs6Modules);
+    }
+
     if (options.wrapGoogModulesForWhitespaceOnly) {
       passes.add(whitespaceWrapGoogModules);
     }
@@ -250,6 +257,12 @@ public final class DefaultPassConfig extends PassConfig {
     }
 
     checks.add(createEmptyPass("beforeStandardChecks"));
+
+    if (options.processCommonJSModules) {
+      checks.add(rewriteCommonJsModules);
+    } else if (options.getLanguageIn().toFeatureSet().has(FeatureSet.Feature.MODULES)) {
+      checks.add(rewriteScriptsToEs6Modules);
+    }
 
     // Note: ChromePass can rewrite invalid @type annotations into valid ones, so should run before
     // JsDoc checks.
@@ -3430,6 +3443,32 @@ public final class DefaultPassConfig extends PassConfig {
         @Override
         protected CompilerPass create(AbstractCompiler compiler) {
           return new RemoveSuperMethodsPass(compiler);
+        }
+      };
+
+  private final PassFactory rewriteCommonJsModules =
+      new PassFactory(PassNames.REWRITE_COMMON_JS_MODULES, true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new ProcessCommonJSModules(compiler);
+        }
+
+        @Override
+        public FeatureSet featureSet() {
+          return ES8_MODULES;
+        }
+      };
+
+  private final PassFactory rewriteScriptsToEs6Modules =
+      new PassFactory(PassNames.REWRITE_SCRIPTS_TO_ES6_MODULES, true) {
+        @Override
+        protected CompilerPass create(AbstractCompiler compiler) {
+          return new Es6RewriteScriptsToModules(compiler);
+        }
+
+        @Override
+        protected FeatureSet featureSet() {
+          return ES8_MODULES;
         }
       };
 }
