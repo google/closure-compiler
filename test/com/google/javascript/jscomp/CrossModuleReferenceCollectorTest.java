@@ -276,7 +276,6 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
     assertThat(inheritsStatement.isMovableDeclaration()).isTrue();
   }
 
-  // TODO: add test cases for isMovableDeclarationStatement()
   public void testFunctionDeclarationOrAssignmentIsMovable() {
     testSame("function f() {}");
     assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isTrue();
@@ -350,6 +349,18 @@ public final class CrossModuleReferenceCollectorTest extends CompilerTestCase {
 
   public void testObjectLiteralWithImmovableIsImmovable() {
     testSame("var o = { v: unknownValue };");
+    assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isFalse();
+  }
+
+  public void testTemplateLiteralIsMovableIfSubstitutionsAreMovable() {
+    testSame(lines(
+        "var wellDefinedName = 1;",
+        "var t = `${wellDefinedName}`;"));
+    assertThat(testedCollector.getTopLevelStatements().get(1).isMovableDeclaration()).isTrue();
+  }
+
+  public void testTemplateLiteralIsImmovableIfSubstitutionsAreImmovable() {
+    testSame("var t = `${unknownValue}`");
     assertThat(testedCollector.getTopLevelStatements().get(0).isMovableDeclaration()).isFalse();
   }
 

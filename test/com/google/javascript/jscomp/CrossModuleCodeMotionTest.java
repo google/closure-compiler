@@ -767,6 +767,30 @@ public final class CrossModuleCodeMotionTest extends CompilerTestCase {
             "var h = f;"));
   }
 
+  public void testStringTemplateLiteralMovement1() {
+    test(
+        createModuleChain(
+            // m1
+            "var s = 'world'; var f = `hi ${s}`;",
+            // m2
+            "var h = f;"),
+        new String[] {
+          // m1
+          "",
+          // m2
+          "var s = 'world'; var f = `hi ${s}`; var h = f;"
+        });
+  }
+
+  public void testStringTemplateLiteralMovement2() {
+    testSame(
+        createModuleChain(
+            // m1
+            "var f = `hi ${goog.nullFunction()}`;",
+            // m2
+            "var h = f;"));
+  }
+
   public void testVarMovement1() {
     // test moving a variable
     JSModule[] modules =
