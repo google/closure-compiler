@@ -44,6 +44,7 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
   public void testSimple() {
     test(
         lines(
+            // Note: let statement is necessary so that input language is ES6; else pass is skipped.
             "let x = 1;",
             "/** @constructor */",
             "function Example() {}",
@@ -93,6 +94,43 @@ public class Es6ToEs3ClassSideInheritanceTest extends CompilerTestCase {
             "",
             "/** @return {string} @suppress {visibility} */",
             "Subclass.staticMethod = Example.staticMethod;"));
+  }
+
+
+  public void testNestedSubclass() {
+    test(
+        lines(
+            "let x = 1;",
+            "/** @constructor */",
+            "function A() {}",
+            "A.a = 19;",
+            "/** @constructor */",
+            "A.B = function() {};",
+            "/** @constructor @extends {A} */",
+            "A.C = function() {};",
+            "$jscomp.inherits(A.C, A);",
+            "/** @constructor */",
+            "A.D = function() {};",
+            "A.e = 42;"),
+        lines(
+            "let x = 1;",
+            "/** @constructor */",
+            "function A() {}",
+            "A.a = 19;",
+            "/** @constructor */",
+            "A.B = function() {}",
+            "/** @constructor @extends {A} */",
+            "A.C = function() {};",
+            "$jscomp.inherits(A.C, A);",
+            "/** @constructor @extends {A} @suppress {visibility} */",
+            "A.C.C = A.C;",
+            "/** @constructor @suppress {visibility} */",
+            "A.C.B = A.B;",
+            "/** @suppress {visibility} */",
+            "A.C.a = A.a;",
+            "/** @constructor */",
+            "A.D = function() {};",
+            "A.e = 42;"));
   }
 
   public void testOverride() {
