@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
+import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.common.collect.ImmutableList;
 import com.google.javascript.jscomp.AbstractCompiler.LifeCycleStage;
@@ -935,7 +935,7 @@ public final class FunctionInjectorTest extends TestCase {
     // This doesn't bring names into the global name space.
     helperInlineReferenceToFunction(
         "function foo(a){var b;return a;} function x() { foo(goo()); }",
-        LINE_JOINER.join(
+        lines(
             "function foo(a) {",
             "  var b;",
             "  return a;",
@@ -1055,7 +1055,7 @@ public final class FunctionInjectorTest extends TestCase {
     // Call with inner function expression.
     helperInlineReferenceToFunction(
         "function foo(){return function() {var a; return true;}}; foo();",
-        LINE_JOINER.join(
+        lines(
             "function foo(){return function() {var a; return true;}};",
             "{(function() {var a$jscomp$inline_0; return true;});}"),
         "foo", INLINE_BLOCK);
@@ -1065,7 +1065,7 @@ public final class FunctionInjectorTest extends TestCase {
     // Call with inner function statement.
     helperInlineReferenceToFunction(
         "function foo(){function x() {var a; return true;} return x} foo();",
-        LINE_JOINER.join(
+        lines(
             "function foo() {",
             "  function x() { var a; return true; }",
             "  return x;",

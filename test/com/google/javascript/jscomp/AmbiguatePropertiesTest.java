@@ -1077,7 +1077,7 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
   }
 
   public void testPropertiesWithTypesThatHaveBeenNarrowed() {
-    String js = LINE_JOINER.join(
+    String js = lines(
         "/** @constructor */",
         "function Foo() {",
         "  /** @type {?Object} */",
@@ -1091,7 +1091,7 @@ public final class AmbiguatePropertiesTest extends TypeICompilerTestCase {
         "  return this.headerObserver_;",
         "};");
 
-    String output = LINE_JOINER.join(
+    String output = lines(
         "/** @constructor */",
         "function Foo() {",
         "  /** @type {?Object} */",

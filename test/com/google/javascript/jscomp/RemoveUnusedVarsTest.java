@@ -80,7 +80,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
   }
 
   public void testReferenceInObjectLiteral() {
-    testSame(LINE_JOINER.join(
+    testSame(lines(
         "function f(a) {",
         "  return {a: a};",
         "}",
@@ -1011,7 +1011,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     // specially. These calls have no return values, so this restriction avoids false positives.
     // It also simplifies removal logic.
     testSame(
-        LINE_JOINER.join(
+        lines(
             "function goog$inherits(){}",
             "function a(){}",
             "function b(){}",
@@ -1021,7 +1021,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
     // converting an inherits call statement into the left side of a comma. We should still
     // remove this case.
     test(
-        LINE_JOINER.join(
+        lines(
             "function goog$inherits(){}",
             "function a(){}",
             "function b(){}",
@@ -1264,7 +1264,7 @@ public final class RemoveUnusedVarsTest extends CompilerTestCase {
 
   public void testReferencesInClasses() {
     testSame(
-        LINE_JOINER.join(
+        lines(
             "const A = 15;",
             "const C = class {",
             "  constructor() {",

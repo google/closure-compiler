@@ -51,8 +51,7 @@ public final class Es6RewriteScriptsToModulesTest extends CompilerTestCase {
             SourceFile.fromCode("/module.js", "import '/script.js';")),
         options);
     Node root = compiler.parseInputs();
-    String errorMsg = LINE_JOINER.join(compiler.getErrors());
-    assertThat(errorMsg).isEmpty();
+    assertThat(compiler.getErrors()).isEmpty();
     Node externsRoot = root.getFirstChild();
     Node mainRoot = externsRoot.getNext();
     getProcessor(compiler).process(externsRoot, mainRoot);

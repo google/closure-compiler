@@ -17,7 +17,7 @@
 package com.google.javascript.jscomp;
 
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.javascript.jscomp.CompilerTestCase.LINE_JOINER;
+import static com.google.javascript.jscomp.CompilerTestCase.lines;
 
 import com.google.javascript.jscomp.CompilerOptions.LanguageMode;
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
@@ -155,7 +155,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     // Verify calls to function expressions are movable.
     helperCanExposeFunctionExpression(
         DecompositionType.MOVABLE,
-        LINE_JOINER.join(
+        lines(
             "(function(map){descriptions_=map})(",
             "  function(){",
             "    var ret={};",
@@ -170,7 +170,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     // Can it be decompose?
     helperCanExposeExpression(
         DecompositionType.DECOMPOSABLE,
-        LINE_JOINER.join(
+        lines(
             "HangoutStarter.prototype.launchHangout = function() {",
             "  var self = a.b;",
             "  var myUrl = new goog.Uri(",
@@ -180,14 +180,14 @@ public final class ExpressionDecomposerTest extends TestCase {
 
     // Verify it is properly expose the target expression.
     helperExposeExpression(
-        LINE_JOINER.join(
+        lines(
             "HangoutStarter.prototype.launchHangout = function() {",
             "  var self = a.b;",
             "  var myUrl =",
             "      new goog.Uri(getDomServices_(self).getDomHelper().getWindow().location.href);",
             "};"),
         "getDomServices_",
-        LINE_JOINER.join(
+        lines(
             "HangoutStarter.prototype.launchHangout = function() {",
             "  var self = a.b;",
             "  var temp_const$jscomp$0 = goog.Uri;",
@@ -197,7 +197,7 @@ public final class ExpressionDecomposerTest extends TestCase {
 
     // Verify the results can be properly moved.
     helperMoveExpression(
-        LINE_JOINER.join(
+        lines(
             "HangoutStarter.prototype.launchHangout = function() {",
             "  var self = a.b;",
             "  var temp_const$jscomp$0 = goog.Uri;",
@@ -205,7 +205,7 @@ public final class ExpressionDecomposerTest extends TestCase {
             "      getDomServices_(self).getDomHelper().getWindow().location.href);",
             "}"),
         "getDomServices_",
-        LINE_JOINER.join(
+        lines(
             "HangoutStarter.prototype.launchHangout = function() {",
             "  var self=a.b;",
             "  var temp_const$jscomp$0=goog.Uri;",
@@ -379,7 +379,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(
         "if(goo() && foo());",
         "foo",
-        LINE_JOINER.join(
+        lines(
             "var temp$jscomp$0;",
             "if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();",
             "if(temp$jscomp$0);"));
@@ -389,7 +389,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(
         "switch(goo() && foo()){}",
         "foo",
-        LINE_JOINER.join(
+        lines(
             "var temp$jscomp$0;",
             "if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();",
             "switch(temp$jscomp$0){}"));
@@ -406,7 +406,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(
         "function f(){ return goo() && foo();}",
         "foo",
-        LINE_JOINER.join(
+        lines(
             "function f() {",
             "  var temp$jscomp$0; if (temp$jscomp$0 = goo()) temp$jscomp$0 = foo();",
             "  return temp$jscomp$0;",
@@ -419,7 +419,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(
         "if (goo(1, goo(2), (1 ? foo() : 0)));",
         "foo",
-        LINE_JOINER.join(
+        lines(
           "var temp_const$jscomp$1 = goo;",
           "var temp_const$jscomp$0 = goo(2);",
           "var temp$jscomp$2;",
@@ -452,7 +452,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperMoveExpression(
         "function *f() { return { a: yield 1, c: foo(yield 2, yield 3) }; }",
         "yield",
-        LINE_JOINER.join(
+        lines(
             "function *f() {",
             "  var result$jscomp$0 = yield 1;",
             "  return { a: result$jscomp$0, c: foo(yield 2, yield 3) };",
@@ -461,7 +461,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperMoveExpression(
         "function *f() { return { a: 0, c: foo(yield 2, yield 3) }; }",
         "yield",
-        LINE_JOINER.join(
+        lines(
             "function *f() {",
             "  var result$jscomp$0 = yield 2;",
             "  return { a: 0, c: foo(result$jscomp$0, yield 3) };",
@@ -470,7 +470,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperMoveExpression(
         "function *f() { return { a: 0, c: foo(1, yield 3) }; }",
         "yield",
-        LINE_JOINER.join(
+        lines(
             "function *f() {",
             "  var result$jscomp$0 = yield 3;",
             "  return { a: 0, c: foo(1, result$jscomp$0) };",
@@ -481,7 +481,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperMoveExpression(
         "function *f() { return (yield 1) || (yield 2); }",
         "yield",
-        LINE_JOINER.join(
+        lines(
             "function *f() {",
             "  var result$jscomp$0 = yield 1;",
             "  return result$jscomp$0 || (yield 2);",
@@ -490,7 +490,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(
         "function *f(x) { return x || (yield 2); }",
         "yield",
-        LINE_JOINER.join(
+        lines(
             "function *f(x) {",
             "  var temp$jscomp$0;",
             "  if (temp$jscomp$0=x); else temp$jscomp$0 = yield 2;",
@@ -516,7 +516,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(
         "var x = {}; x.a += foo() + 1",
         "foo",
-        LINE_JOINER.join(
+        lines(
             "var x = {}; var temp_const$jscomp$0 = x;",
             "var temp_const$jscomp$1 = temp_const$jscomp$0.a;",
             "temp_const$jscomp$0.a = temp_const$jscomp$1 + (foo() + 1);"));
@@ -524,7 +524,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(
         "var x = {}; y = (x.a += foo()) + x.a",
         "foo",
-        LINE_JOINER.join(
+        lines(
             "var x = {}; var temp_const$jscomp$0 = x;",
             "var temp_const$jscomp$1 = temp_const$jscomp$0.a;",
             "y = (temp_const$jscomp$0.a = temp_const$jscomp$1 + foo()) + x.a"));
@@ -550,7 +550,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(
         "var x = {}; goo().a += foo() + 1",
         "foo",
-        LINE_JOINER.join(
+        lines(
             "var x = {};",
             "var temp_const$jscomp$0 = goo();",
             "var temp_const$jscomp$1 = temp_const$jscomp$0.a;",
@@ -559,7 +559,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(
         "var x = {}; y = (goo().a += foo()) + goo().a",
         "foo",
-        LINE_JOINER.join(
+        lines(
             "var x = {};",
             "var temp_const$jscomp$0 = goo();",
             "var temp_const$jscomp$1 = temp_const$jscomp$0.a;",
@@ -571,7 +571,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(
         "var x = {}; goo().a.b += foo() + 1",
         "foo",
-        LINE_JOINER.join(
+        lines(
             "var x = {};",
             "var temp_const$jscomp$0 = goo().a;",
             "var temp_const$jscomp$1 = temp_const$jscomp$0.b;",
@@ -580,7 +580,7 @@ public final class ExpressionDecomposerTest extends TestCase {
     helperExposeExpression(
         "var x = {}; y = (goo().a.b += foo()) + goo().a",
         "foo",
-        LINE_JOINER.join(
+        lines(
             "var x = {};",
             "var temp_const$jscomp$0 = goo().a;",
             "var temp_const$jscomp$1 = temp_const$jscomp$0.b;",
