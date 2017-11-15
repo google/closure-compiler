@@ -3001,6 +3001,24 @@ public final class NodeUtilTest extends TestCase {
     assertThat(NodeUtil.isExpressionResultUsed(getNameNodeFrom("for (x; y; z) a", "z"))).isFalse();
   }
 
+  public void testIsSimpleOperator() {
+    assertTrue(NodeUtil.isSimpleOperator(parseExpr("!x")));
+    assertTrue(NodeUtil.isSimpleOperator(parseExpr("5 + x")));
+    assertTrue(NodeUtil.isSimpleOperator(parseExpr("typeof x")));
+    assertTrue(NodeUtil.isSimpleOperator(parseExpr("x instanceof y")));
+    // short curcuits aren't simple
+    assertFalse(NodeUtil.isSimpleOperator(parseExpr("5 && x")));
+    assertFalse(NodeUtil.isSimpleOperator(parseExpr("5 || x")));
+    // side-effects aren't simple
+    assertFalse(NodeUtil.isSimpleOperator(parseExpr("x = 5")));
+    assertFalse(NodeUtil.isSimpleOperator(parseExpr("x++")));
+    assertFalse(NodeUtil.isSimpleOperator(parseExpr("--y")));
+    // prop access are simple
+    assertTrue(NodeUtil.isSimpleOperator(parseExpr("y in x")));
+    assertTrue(NodeUtil.isSimpleOperator(parseExpr("x.y")));
+    assertTrue(NodeUtil.isSimpleOperator(parseExpr("x[y]")));
+  }
+
   private Node getNameNodeFrom(String code, String name) {
     Node ast = parse(code);
     Node nameNode = getNameNode(ast, name);

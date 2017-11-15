@@ -937,6 +937,7 @@ public final class NodeUtil {
       case GETELEM:
       case GETPROP:
       case GT:
+      case IN:
       case INSTANCEOF:
       case LE:
       case LSH:
@@ -1203,7 +1204,6 @@ public final class NodeUtil {
       case EXPR_RESULT:
       case HOOK:
       case IF:
-      case IN:
       case PARAM_LIST:
       case NUMBER:
       case OR:
@@ -4770,8 +4770,6 @@ public final class NodeUtil {
       case NEW:
         return newHasLocalResult(value) || locals.apply(value);
       case DELPROP:
-      case IN:
-        // TODO(johnlenz): should IN operator be included in #isSimpleOperator?
       case INC:
       case DEC:
       case CLASS:
