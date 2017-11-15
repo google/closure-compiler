@@ -449,8 +449,7 @@ class FunctionInjector {
     } else {
       Node expressionRoot = ExpressionDecomposer.findExpressionRoot(callNode);
       if (expressionRoot != null) {
-        // TODO(tbreisacher): Change this to compiler.getOptions().allowMethodCallDecomposing().
-        // Doing so currently causes a "DecomposeExpression depth exceeded" error.
+        // TODO(b/69375648): Change this to compiler.getOptions().allowMethodCallDecomposing()
         boolean allowMethodCallDecomposing = false;
 
         ExpressionDecomposer decomposer = new ExpressionDecomposer(
@@ -471,8 +470,7 @@ class FunctionInjector {
   }
 
   private ExpressionDecomposer getDecomposer(Scope scope) {
-    // TODO(tbreisacher): Change this to compiler.getOptions().allowMethodCallDecomposing().
-    // Doing so currently causes a "DecomposeExpression depth exceeded" error.
+    // TODO(b/69375648): Change this to compiler.getOptions().allowMethodCallDecomposing()
     boolean allowMethodCallDecomposing = false;
 
     return new ExpressionDecomposer(
