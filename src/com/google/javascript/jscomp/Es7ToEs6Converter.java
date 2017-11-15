@@ -21,6 +21,8 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.withType;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.javascript.jscomp.AbstractCompiler.MostRecentTypechecker;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.TypeI;
@@ -33,6 +35,8 @@ import com.google.javascript.rhino.jstype.JSTypeNative;
  */
 public final class Es7ToEs6Converter implements NodeTraversal.Callback, HotSwapCompilerPass {
   private final AbstractCompiler compiler;
+  private static final FeatureSet transpiledFeatures =
+      FeatureSet.BARE_MINIMUM.with(Feature.EXPONENT_OP);
   private final boolean addTypes;
   private final Supplier<Node> mathPow = Suppliers.memoize(new MathPowSupplier());
 
@@ -43,13 +47,13 @@ public final class Es7ToEs6Converter implements NodeTraversal.Callback, HotSwapC
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, externs, this);
-    TranspilationPasses.processTranspile(compiler, root, this);
+    TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, this);
+    TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, this);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, this);
+    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, transpiledFeatures, this);
   }
 
   @Override

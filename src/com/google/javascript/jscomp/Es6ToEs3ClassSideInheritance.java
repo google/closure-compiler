@@ -20,6 +20,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -122,6 +124,8 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
   }
 
   private final AbstractCompiler compiler;
+  private static final FeatureSet transpiledFeatures =
+      FeatureSet.BARE_MINIMUM.with(Feature.CLASSES);
 
   private final LinkedHashMap<String, JavascriptClass> classByAlias = new LinkedHashMap<>();
 
@@ -132,15 +136,16 @@ public final class Es6ToEs3ClassSideInheritance implements HotSwapCompilerPass {
   @Override
   public void process(Node externs, Node root) {
     FindStaticMembers findStaticMembers = new FindStaticMembers();
-    TranspilationPasses.processTranspile(compiler, externs, findStaticMembers);
-    TranspilationPasses.processTranspile(compiler, root, findStaticMembers);
+    TranspilationPasses.processTranspile(compiler, externs, transpiledFeatures, findStaticMembers);
+    TranspilationPasses.processTranspile(compiler, root, transpiledFeatures, findStaticMembers);
     processInherits(findStaticMembers);
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
     FindStaticMembers findStaticMembers = new FindStaticMembers();
-    TranspilationPasses.processTranspile(compiler, scriptRoot, findStaticMembers);
+    TranspilationPasses.processTranspile(
+        compiler, scriptRoot, transpiledFeatures, findStaticMembers);
     processInherits(findStaticMembers);
   }
 

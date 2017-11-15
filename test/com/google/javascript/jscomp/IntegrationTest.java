@@ -4884,6 +4884,16 @@ public final class IntegrationTest extends IntegrationTestCase {
         "alert(4);");
   }
 
+  public void testTranspilingEs2016ToEs2015() {
+    CompilerOptions options = createCompilerOptions();
+    CompilationLevel.ADVANCED_OPTIMIZATIONS.setOptionsForCompilationLevel(options);
+    options.setLanguageIn(LanguageMode.ECMASCRIPT_2017);
+    options.setLanguageOut(LanguageMode.ECMASCRIPT_2015);
+
+    test(options, "alert(2 ** 5);", "alert(Math.pow(2, 5));");
+    test(options, "const n = 2 ** 5;", "const a = Math.pow(2, 5);");
+  }
+
   /** Creates a CompilerOptions object with google coding conventions. */
   @Override
   protected CompilerOptions createCompilerOptions() {

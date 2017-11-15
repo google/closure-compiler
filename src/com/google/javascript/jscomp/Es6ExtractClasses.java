@@ -21,6 +21,8 @@ import static com.google.javascript.jscomp.Es6ToEs3Util.CANNOT_CONVERT;
 
 import com.google.javascript.jscomp.ExpressionDecomposer.DecompositionType;
 import com.google.javascript.jscomp.deps.ModuleNames;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.JSDocInfo;
 import com.google.javascript.rhino.JSDocInfoBuilder;
@@ -54,6 +56,7 @@ public final class Es6ExtractClasses
   private final AbstractCompiler compiler;
   private final ExpressionDecomposer expressionDecomposer;
   private int classDeclVarCounter = 0;
+  private static final FeatureSet features = FeatureSet.BARE_MINIMUM.with(Feature.CLASSES);
 
   Es6ExtractClasses(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -67,12 +70,14 @@ public final class Es6ExtractClasses
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processTranspile(compiler, root, this, new SelfReferenceRewriter());
+    TranspilationPasses.processTranspile(
+        compiler, root, features, this, new SelfReferenceRewriter());
   }
 
   @Override
   public void hotSwapScript(Node scriptRoot, Node originalRoot) {
-    TranspilationPasses.hotSwapTranspile(compiler, scriptRoot, this, new SelfReferenceRewriter());
+    TranspilationPasses.hotSwapTranspile(
+        compiler, scriptRoot, features, this, new SelfReferenceRewriter());
   }
 
   @Override

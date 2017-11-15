@@ -213,6 +213,10 @@ public final class FeatureSet implements Serializable {
     return new FeatureSet(Sets.difference(features, ImmutableSet.of(feature)));
   }
 
+  public FeatureSet without(FeatureSet other) {
+    return new FeatureSet(Sets.difference(features, other.features));
+  }
+
   public FeatureSet withoutTypes() {
     return new FeatureSet(Sets.difference(features, LangVersion.TYPESCRIPT.features()));
   }

@@ -16,6 +16,8 @@
 package com.google.javascript.jscomp;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractPostOrderCallback;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet;
+import com.google.javascript.jscomp.parsing.parser.FeatureSet.Feature;
 import com.google.javascript.rhino.Node;
 
 /**
@@ -31,6 +33,7 @@ final class Es6SuperCheck extends AbstractPostOrderCallback implements CompilerP
       "super() not allowed here. Did you mean super.{0}?");
 
   private final AbstractCompiler compiler;
+  private static final FeatureSet checkedFeatures = FeatureSet.BARE_MINIMUM.with(Feature.SUPER);
 
   Es6SuperCheck(AbstractCompiler compiler) {
     this.compiler = compiler;
@@ -38,7 +41,7 @@ final class Es6SuperCheck extends AbstractPostOrderCallback implements CompilerP
 
   @Override
   public void process(Node externs, Node root) {
-    TranspilationPasses.processCheck(compiler, root, this);
+    TranspilationPasses.processCheck(compiler, root, checkedFeatures, this);
   }
 
   @Override
