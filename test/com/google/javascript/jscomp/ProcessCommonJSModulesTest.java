@@ -1063,4 +1063,23 @@ public final class ProcessCommonJSModulesTest extends CompilerTestCase {
             "const Foo$$module$test = module$other.default;",
             "/** @const  @type {!Array<!module$other.default>} */ module$test.default = [];"));
   }
+
+  public void testMissingRequire() {
+    ModulesTestUtils.testModulesError(this, "require('missing');", ModuleLoader.LOAD_WARNING);
+
+    testModules(
+        "test.js",
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @suppress {moduleLoad}",
+            " */",
+            "var foo = require('missing');"),
+        lines(
+            "/**",
+            " * @fileoverview",
+            " * @suppress {moduleLoad}",
+            " */",
+            "var foo = module$missing;"));
+  }
 }

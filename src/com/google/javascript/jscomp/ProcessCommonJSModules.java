@@ -732,6 +732,15 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       if (!NodeUtil.isExpressionResultUsed(require)
           && parent.isExprResult()
           && NodeUtil.isStatementBlock(parent.getParent())) {
+
+        // Attempt to resolve the module so that load warnings are issued
+        t.getInput()
+            .getPath()
+            .resolveJsModule(
+                getCommonJsImportPath(require),
+                require.getSourceFileName(),
+                require.getLineno(),
+                require.getCharno());
         Node grandparent = parent.getParent();
         parent.detach();
         compiler.reportChangeToEnclosingScope(grandparent);
@@ -1325,7 +1334,6 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
       } else {
         moduleName = modulePath.toModuleName();
       }
-
       Node moduleRef = NodeUtil.newQName(compiler, getBasePropertyImport(moduleName))
           .useSourceInfoFromForTree(require);
       parent.replaceChild(require, moduleRef);
@@ -1926,6 +1934,22 @@ public final class ProcessCommonJSModules extends NodeTraversal.AbstractPreOrder
         String importName = rewriteImportName(t, rValue);
         if (importName == null) {
           return null;
+        }
+        if (isCommonJsImport(rValue)
+            && t.getScope().getVar(rValue.getFirstChild().getQualifiedName()) == null) {
+          String requireName = getCommonJsImportPath(rValue);
+          ModulePath modulePath =
+              t.getInput()
+                  .getPath()
+                  .resolveJsModule(
+                      requireName, n.getSourceFileName(), n.getLineno(), n.getCharno());
+          String moduleName;
+          if (modulePath == null) {
+            moduleName = ModuleIdentifier.forFile(requireName).getModuleName();
+          } else {
+            moduleName = modulePath.toModuleName();
+          }
+          return moduleName + propSuffix;
         }
         return importName + propSuffix;
       } else if (rValue.isGetProp() && isCommonJsImport(rValue.getFirstChild())) {
