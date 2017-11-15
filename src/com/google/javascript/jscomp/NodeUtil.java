@@ -4060,8 +4060,13 @@ public final class NodeUtil {
       case IMPORT_STAR:
         lhsNodes.add(n);
         return;
+      case GETPROP:
+      case GETELEM:
+        // Not valid in declarations but may appear in assignments.
+        lhsNodes.add(n);
+        return;
       default:
-        Preconditions.checkState(n.isEmpty(), "Invalid node in lhs of declaration: %s", n);
+        Preconditions.checkState(n.isEmpty(), "Invalid node in lhs: %s", n);
     }
   }
 

@@ -2864,6 +2864,12 @@ public final class NodeUtilTest extends TestCase {
     assertThat(findLhsNodesInNode("var {[pname]: x = a=>a, [p2name]: y} = obj;")).hasSize(2);
     assertThat(findLhsNodesInNode("var {lhs1 = a, p2: [lhs2, lhs3 = b] = [notlhs]} = obj;"))
         .hasSize(3);
+    assertThat(findLhsNodesInNode("[this.x] = rhs;")).hasSize(1);
+    assertThat(findLhsNodesInNode("[this.x, y] = rhs;")).hasSize(2);
+    assertThat(findLhsNodesInNode("[this.x, y, this.z] = rhs;")).hasSize(3);
+    assertThat(findLhsNodesInNode("[y, this.z] = rhs;")).hasSize(2);
+    assertThat(findLhsNodesInNode("[x[y]] = rhs;")).hasSize(1);
+    assertThat(findLhsNodesInNode("[x.y.z] = rhs;")).hasSize(1);
   }
 
   public void testIsConstructor() {
@@ -3060,9 +3066,20 @@ public final class NodeUtilTest extends TestCase {
     return getClassNode(root);
   }
 
+  /**
+   * @param js JavaScript node to be passed to {@code NodeUtil.findLhsNodesInNode}. Must be either
+   *     an EXPR_RESULT containing an ASSIGN, in which case the ASSIGN will be passed to 
+   *     {@code NodeUtil.findLhsNodesInNode}, or a VAR, LET, or CONST statement.
+   */
   private static Iterable<Node> findLhsNodesInNode(String js) {
     Node root = parse(js);
-    return NodeUtil.findLhsNodesInNode(root.getFirstChild());
+    checkState(root.isScript(), root);
+    root = root.getOnlyChild();
+    if (root.isExprResult()) {
+      root = root.getOnlyChild();
+      checkState(root.isAssign(), root);
+    }
+    return NodeUtil.findLhsNodesInNode(root);
   }
 
   private static Node getClassNode(Node n) {
