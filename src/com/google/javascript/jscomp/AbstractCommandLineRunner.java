@@ -2681,6 +2681,13 @@ public abstract class AbstractCommandLineRunner<A extends Compiler,
       return this;
     }
 
+    private boolean renaming = true;
+
+    /** Sets whether variable renaming should be allowed */
+    public CommandLineConfig setRenaming(boolean renaming) {
+      this.renaming = renaming;
+      return this;
+    }
   }
 
   /**

@@ -790,6 +790,11 @@ public class CommandLineRunner extends
     )
     private String packageJsonEntryNames = null;
 
+    @Option(name = "--renaming",
+        handler = BooleanOptionHandler.class,
+        usage = "Disables variable renaming. Cannot be used with ADVANCED optimizations.")
+    private boolean renaming = true;
+
     @Argument
     private List<String> arguments = new ArrayList<>();
     private final CmdLineParser parser;
@@ -1559,6 +1564,11 @@ public class CommandLineRunner extends
         }
       }
 
+      if (!flags.renaming && flags.compilationLevelParsed == CompilationLevel.ADVANCED_OPTIMIZATIONS) {
+        reportError("ERROR - renaming cannot be disabled when ADVANCED_OPTMIZATIONS is used.");
+        runCompiler = false;
+      }
+
       getCommandLineConfig()
           .setPrintTree(flags.printTree)
           .setPrintAst(flags.printAst)
@@ -1604,7 +1614,8 @@ public class CommandLineRunner extends
           .setAngularPass(flags.angularPass)
           .setInstrumentationTemplateFile(flags.instrumentationFile)
           .setNewTypeInference(flags.useNewTypeInference)
-          .setJsonStreamMode(flags.jsonStreamMode);
+          .setJsonStreamMode(flags.jsonStreamMode)
+          .setRenaming(flags.renaming);
     }
     errorStream = null;
   }
@@ -1798,6 +1809,11 @@ public class CommandLineRunner extends
       } catch (CmdLineException e) {
         reportError("ERROR - invalid package_json_entry_names format specified.");
       }
+    }
+
+    if (flags.renaming == false) {
+      options.setVariableRenaming(VariableRenamingPolicy.OFF);
+      options.setPropertyRenaming(PropertyRenamingPolicy.OFF);
     }
 
     return options;
