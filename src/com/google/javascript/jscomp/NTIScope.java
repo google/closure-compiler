@@ -800,18 +800,10 @@ final class NTIScope implements DeclaredTypeRegistry, Serializable, TypeIEnv<JST
     for (Map.Entry<String, Namespace> entry : localNamespaces.entrySet()) {
       String name = entry.getKey();
       Namespace ns = entry.getValue();
-      JSType t;
       if (ns instanceof NamespaceLit) {
         constVars.add(name);
-        NamespaceLit nslit = (NamespaceLit) ns;
-        // The argument to maybeSetWindowInstance should only be non-null for
-        // window, but we don't check here to avoid hard-coding the name.
-        // Enforced in GlobalTypeInfo.
-        nslit.maybeSetWindowInstance(externs.get(name));
-        t = nslit.toJSType();
-      } else {
-        t = ns.toJSType();
       }
+      JSType t = ns.toJSType();
       if (externs.containsKey(name)) {
         externs.put(name, t);
       } else {

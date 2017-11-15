@@ -1739,7 +1739,8 @@ final class ObjectType implements TypeWithProperties {
     // More thorough stringification when annotation support is not needed.
     if (!nominalType.isFunction()
         && !nominalType.isBuiltinObject()
-        && !nominalType.isLiteralObject()) {
+        && !nominalType.isLiteralObject()
+        && !isNamespace()) {
       nominalType.appendTo(builder, ctx);
     } else if (isStruct()) {
       builder.append("struct");

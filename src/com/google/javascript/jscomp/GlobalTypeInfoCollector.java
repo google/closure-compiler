@@ -45,6 +45,7 @@ import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc;
 import com.google.javascript.jscomp.newtypes.JSTypeCreatorFromJSDoc.FunctionAndSlotType;
 import com.google.javascript.jscomp.newtypes.JSTypes;
 import com.google.javascript.jscomp.newtypes.Namespace;
+import com.google.javascript.jscomp.newtypes.NamespaceLit;
 import com.google.javascript.jscomp.newtypes.NominalType;
 import com.google.javascript.jscomp.newtypes.NominalTypeBuilderNti;
 import com.google.javascript.jscomp.newtypes.ObjectKind;
@@ -385,7 +386,7 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       }
       checkAndFreezeNominalType(rawType);
     }
-    JSType globalThisType;
+    JSType globalThisType = null;
     if (this.window != null) {
       // Copy properties from window to Window.prototype, because sometimes
       // people pass window around rather than using it directly.
@@ -396,9 +397,13 @@ public class GlobalTypeInfoCollector implements CompilerPass {
       for (RawNominalType rawType : windows) {
         checkAndFreezeNominalType(rawType);
       }
-      // Type the global THIS as window
-      globalThisType = this.window.getInstanceAsJSType();
-    } else {
+      if (winNs != null) {
+        ((NamespaceLit) winNs).setWindowType(this.window.getAsNominalType());
+        // Type the global THIS as window
+        globalThisType = winNs.toJSType();
+      }
+    }
+    if (globalThisType == null) {
       // Type the global THIS as a loose object
       globalThisType = getCommonTypes().getTopObject().withLoose();
     }

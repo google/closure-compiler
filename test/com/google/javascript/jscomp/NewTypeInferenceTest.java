@@ -19299,9 +19299,14 @@ public final class NewTypeInferenceTest extends NewTypeInferenceTestBase {
   }
 
   public void testDontTypeGlobalThisAsUknown() {
-    typeCheck(
+    typeCheckMessageContents(
         "var /** null */ x = this;",
-        NewTypeInference.MISTYPED_ASSIGN_RHS);
+        NewTypeInference.MISTYPED_ASSIGN_RHS,
+        LINE_JOINER.join(
+            "The right side in the assignment is not a subtype of the left side.",
+            "Expected : null",
+            "Found    : window",
+            ""));
 
     typeCheck("var /** !Window */ x = this;");
 
