@@ -607,35 +607,34 @@ class PureFunctionIdentifier implements CompilerPass {
      */
     private void visitAssignmentOrUnaryOperator(
         FunctionInformation sideEffectInfo, Scope scope, Node op, Node enclosingFunction) {
-      Node lhs = op.getFirstChild();
-      if (NodeUtil.isGet(lhs)) { // a['elem'] or a.elem
-        if (lhs.getFirstChild().isThis()) {
-          sideEffectInfo.setTaintsThis();
-        } else {
-          Node objectNode = lhs.getFirstChild();
-          if (objectNode.isName()) {
-            Var var = scope.getVar(objectNode.getString());
-            if (isVarDeclaredInScope(var, scope)) {
-              // Maybe a local object modification.  We won't know for sure until
-              // we exit the scope and can validate the value of the local.
-              taintedVarsByFunction.put(enclosingFunction, var);
+      Iterable<Node> lhsNodes;
+      if (isIncDec(op) || op.isDelProp()) {
+        lhsNodes = ImmutableList.of(op.getOnlyChild());
+      } else {
+        lhsNodes = NodeUtil.findLhsNodesInNode(op);
+      }
+      for (Node lhs : lhsNodes) {
+        if (NodeUtil.isGet(lhs)) {
+          if (lhs.getFirstChild().isThis()) {
+            sideEffectInfo.setTaintsThis();
+          } else {
+            Node objectNode = lhs.getFirstChild();
+            if (objectNode.isName()) {
+              Var var = scope.getVar(objectNode.getString());
+              if (isVarDeclaredInScope(var, scope)) {
+                // Maybe a local object modification.  We won't know for sure until
+                // we exit the scope and can validate the value of the local.
+                taintedVarsByFunction.put(enclosingFunction, var);
+              } else {
+                sideEffectInfo.setTaintsGlobalState();
+              }
             } else {
+              // TODO(tdeegan): Perhaps handle multi level locals: local.prop.prop2++;
               sideEffectInfo.setTaintsGlobalState();
             }
-          } else {
-            // TODO(tdeegan): Perhaps handle multi level locals: local.prop.prop2++;
-            sideEffectInfo.setTaintsGlobalState();
           }
-        }
-      } else {
-        Iterable<Node> names;
-        if (lhs.isName()) {
-          names = ImmutableList.of(lhs);
         } else {
-          names = NodeUtil.findLhsNodesInNode(op);
-        }
-        for (Node name : names) {
-          Var var = scope.getVar(name.getString());
+          Var var = scope.getVar(lhs.getString());
           if (isVarDeclaredInScope(var, scope)) {
             // Assignment to local, if the value isn't a safe local value,
             // a literal or new object creation, add it to the local blacklist.
@@ -644,7 +643,7 @@ class PureFunctionIdentifier implements CompilerPass {
             // Note: other ops result in the name or prop being assigned a local
             // value (x++ results in a number, for instance)
             checkState(NodeUtil.isAssignmentOp(op) || isIncDec(op) || op.isDelProp());
-            Node rhs = NodeUtil.getRValueOfLValue(name);
+            Node rhs = NodeUtil.getRValueOfLValue(lhs);
             if (rhs != null && op.isAssign() && !NodeUtil.evaluatesToLocalValue(rhs)) {
               blacklistedVarsByFunction.put(enclosingFunction, var);
             }

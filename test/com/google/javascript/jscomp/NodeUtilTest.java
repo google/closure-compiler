@@ -2870,6 +2870,13 @@ public final class NodeUtilTest extends TestCase {
     assertThat(findLhsNodesInNode("[y, this.z] = rhs;")).hasSize(2);
     assertThat(findLhsNodesInNode("[x[y]] = rhs;")).hasSize(1);
     assertThat(findLhsNodesInNode("[x.y.z] = rhs;")).hasSize(1);
+
+    assertThat(findLhsNodesInNode("x += 1;")).hasSize(1);
+    assertThat(findLhsNodesInNode("x.y += 1;")).hasSize(1);
+    assertThat(findLhsNodesInNode("x -= 1;")).hasSize(1);
+    assertThat(findLhsNodesInNode("x.y -= 1;")).hasSize(1);
+    assertThat(findLhsNodesInNode("x *= 2;")).hasSize(1);
+    assertThat(findLhsNodesInNode("x.y *= 2;")).hasSize(1);
   }
 
   public void testIsConstructor() {
@@ -3068,8 +3075,10 @@ public final class NodeUtilTest extends TestCase {
 
   /**
    * @param js JavaScript node to be passed to {@code NodeUtil.findLhsNodesInNode}. Must be either
-   *     an EXPR_RESULT containing an ASSIGN, in which case the ASSIGN will be passed to 
-   *     {@code NodeUtil.findLhsNodesInNode}, or a VAR, LET, or CONST statement.
+   *     an EXPR_RESULT containing an assignment operation (e.g. =, +=, /=, etc)
+   *     in which case the assignment node will be passed to
+   *     {@code NodeUtil.findLhsNodesInNode}, or a VAR, LET, or CONST statement, in which case the
+   *     declaration statement will be passed.
    */
   private static Iterable<Node> findLhsNodesInNode(String js) {
     Node root = parse(js);
@@ -3077,7 +3086,7 @@ public final class NodeUtilTest extends TestCase {
     root = root.getOnlyChild();
     if (root.isExprResult()) {
       root = root.getOnlyChild();
-      checkState(root.isAssign(), root);
+      checkState(NodeUtil.isAssignmentOp(root), root);
     }
     return NodeUtil.findLhsNodesInNode(root);
   }

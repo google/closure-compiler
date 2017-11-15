@@ -1072,6 +1072,62 @@ public final class PureFunctionIdentifierTest extends TypeICompilerTestCase {
     assertPureCallsMarked(source, ImmutableList.of("f"));
   }
 
+  public void testLocalizedSideEffects18() {
+    this.mode = TypeInferenceMode.NEITHER;
+    String source = lines(
+        "function SomeCtor() { [this.x, this.y] = getCoordinates(); }",
+        "new SomeCtor()");
+    assertNoPureCalls(source);
+  }
+
+  public void testLocalizedSideEffects19() {
+    this.mode = TypeInferenceMode.NEITHER;
+    String source = lines(
+        "function SomeCtor() { [this.x, this.y] = [0, 1]; }",
+        "new SomeCtor()");
+    assertPureCallsMarked(source, ImmutableList.of("SomeCtor"));
+  }
+
+  public void testLocalizedSideEffects20() {
+    this.mode = TypeInferenceMode.NEITHER;
+    String source = lines(
+        "function SomeCtor() { this.x += 1; }",
+        "new SomeCtor()");
+    assertPureCallsMarked(source, ImmutableList.of("SomeCtor"));
+  }
+
+  public void testLocalizedSideEffects21() {
+    this.mode = TypeInferenceMode.NEITHER;
+    String source = lines(
+        "function f(values) { var x = {}; [x.y, x.z] = values; }",
+        "f()");
+    assertPureCallsMarked(source, ImmutableList.of("f"));
+  }
+
+  public void testLocalizedSideEffects22() {
+    this.mode = TypeInferenceMode.NEITHER;
+    String source = lines(
+        "var x = {}; function f(values) { [x.y, x.z] = values; }",
+        "f()");
+    assertNoPureCalls(source);
+  }
+
+  public void testLocalizedSideEffects23() {
+    this.mode = TypeInferenceMode.NEITHER;
+    String source = lines(
+        "function f(values) { var x = {}; [x.y, x.z = defaultNoSideEffects] = values; }",
+        "f()");
+    assertPureCallsMarked(source, ImmutableList.of("f"));
+  }
+
+  public void testLocalizedSideEffects24() {
+    this.mode = TypeInferenceMode.NEITHER;
+    String source = lines(
+        "function f(values) { var x = {}; [x.y, x.z = defaultWithSideEffects()] = values; }",
+        "f()");
+    assertNoPureCalls(source);
+  }
+
   public void testUnaryOperators1() throws Exception {
     String source = lines(
         "function f() {var x = 1; x++}",

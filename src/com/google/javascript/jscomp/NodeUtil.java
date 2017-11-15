@@ -4041,7 +4041,6 @@ public final class NodeUtil {
       case DEFAULT_VALUE:
       case CATCH:
       case REST:
-      case ASSIGN:
         getLhsNodesHelper(n.getFirstChild(), lhsNodes);
         return;
       case IMPORT_SPEC:
@@ -4065,8 +4064,14 @@ public final class NodeUtil {
         // Not valid in declarations but may appear in assignments.
         lhsNodes.add(n);
         return;
+      case EMPTY:
+        return;
       default:
-        Preconditions.checkState(n.isEmpty(), "Invalid node in lhs: %s", n);
+        if (isAssignmentOp(n)) {
+          getLhsNodesHelper(n.getFirstChild(), lhsNodes);
+        } else {
+          throw new IllegalStateException("Invalid node in lhs: " + n);
+        }
     }
   }
 
@@ -4075,7 +4080,7 @@ public final class NodeUtil {
     checkArgument(
         isNameDeclaration(declNode)
             || declNode.isParamList()
-            || declNode.isAssign()
+            || isAssignmentOp(declNode)
             || declNode.isCatch()
             || declNode.isDestructuringLhs()
             || declNode.isDefaultValue()
