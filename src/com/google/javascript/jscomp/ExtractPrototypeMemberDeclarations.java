@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.google.javascript.jscomp;
+
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.javascript.jscomp.NodeTraversal.AbstractShallowCallback;
 import com.google.javascript.rhino.IR;
 import com.google.javascript.rhino.Node;
 import java.util.LinkedList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * When there are multiple prototype member declarations to the same class,
@@ -85,7 +87,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
   // The name of variable that will temporary hold the pointer to the prototype
   // object. Of cause, we assume that it'll be renamed by RenameVars.
-  private final String prototypeAlias = "JSCompiler_prototypeAlias";
+  private static final String PROTOTYPE_ALIAS = "JSCompiler_prototypeAlias";
 
   private final AbstractCompiler compiler;
 
@@ -150,7 +152,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     if (pattern == Pattern.USE_GLOBAL_TEMP) {
       Node injectionPoint = compiler.getNodeForCodeInsertion(null);
 
-      Node var = NodeUtil.newVarNode(prototypeAlias, null)
+      Node var = NodeUtil.newVarNode(PROTOTYPE_ALIAS, null)
           .useSourceInfoIfMissingFromForTree(injectionPoint);
 
       injectionPoint.addChildToFront(var);
@@ -173,24 +175,23 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     if (pattern == Pattern.USE_GLOBAL_TEMP) {
       // Use the temp variable to hold the prototype.
       Node stmt =
-          new Node(
-                  first.node.getToken(),
-                  IR.assign(
-                      IR.name(prototypeAlias),
-                      NodeUtil.newQName(
-                          compiler,
-                          className + ".prototype",
-                          instance.parent,
-                          className + ".prototype")))
-              .useSourceInfoIfMissingFromForTree(first.node);
+          IR.exprResult(
+              IR.assign(
+                  IR.name(PROTOTYPE_ALIAS),
+                  NodeUtil.newQName(
+                      compiler,
+                      className + ".prototype",
+                      instance.parent,
+                      className + ".prototype")))
+          .useSourceInfoIfMissingFromForTree(first.node);
 
       instance.parent.addChildBefore(stmt, first.node);
       compiler.reportChangeToEnclosingScope(stmt);
-    } else if (pattern == Pattern.USE_IIFE){
+    } else if (pattern == Pattern.USE_IIFE) {
       Node block = IR.block();
       Node func = IR.function(
            IR.name(""),
-           IR.paramList(IR.name(prototypeAlias)),
+           IR.paramList(IR.name(PROTOTYPE_ALIAS)),
            block);
 
       Node call = IR.call(func,
@@ -199,7 +200,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
                instance.parent, className + ".prototype"));
       call.putIntProp(Node.FREE_CALL, 1);
 
-      Node stmt = new Node(first.node.getToken(), call);
+      Node stmt = IR.exprResult(call);
       stmt.useSourceInfoIfMissingFromForTree(first.node);
       instance.parent.addChildBefore(stmt, first.node);
       compiler.reportChangeToEnclosingScope(stmt);
@@ -208,7 +209,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
         block.addChildToBack(declar.node.detach());
       }
     }
-    // Go thought each member declaration and replace it with an assignment
+    // Go through each member declaration and replace it with an assignment
     // to the prototype variable.
     for (PrototypeMemberDeclaration declar : instance.declarations) {
       replacePrototypeMemberDeclaration(declar);
@@ -219,20 +220,17 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
    * Replaces a member declaration to an assignment to the temp prototype
    * object.
    */
-  private void replacePrototypeMemberDeclaration(
-      PrototypeMemberDeclaration declar) {
+  private void replacePrototypeMemberDeclaration(PrototypeMemberDeclaration declar) {
     // x.prototype.y = ...  ->  t.y = ...
     Node assignment = declar.node.getFirstChild();
     Node lhs = assignment.getFirstChild();
     Node name = NodeUtil.newQName(
         compiler,
-        prototypeAlias + "." + declar.memberName, declar.node,
+        PROTOTYPE_ALIAS + "." + declar.memberName, declar.node,
         declar.memberName);
 
-    // Save the full prototype path on the left hand side of the assignment
-    // for debugging purposes.
-    // declar.lhs = x.prototype.y so first child of the first child
-    // is 'x'.
+    // Save the full prototype path on the left hand side of the assignment for debugging purposes.
+    // declar.lhs = x.prototype.y so first child of the first child is 'x'.
     Node accessNode = declar.lhs.getFirstFirstChild();
     String originalName = accessNode.getOriginalName();
     String className = originalName != null ? originalName : "?";
@@ -267,12 +265,10 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
         // Found a good site here. The constructor will computes the chain of
         // declarations that is qualified for extraction.
-        ExtractionInstance instance =
-            new ExtractionInstance(prototypeMember, n);
+        ExtractionInstance instance = new ExtractionInstance(prototypeMember, n);
         cur = instance.declarations.getLast().node;
 
-        // Only add it to our work list if the extraction at this instance
-        // makes the code smaller.
+        // Only add it to our work list if the extraction at this instance makes the code smaller.
         if (instance.isFavorable()) {
           instances.add(instance);
           totalDelta += instance.delta;
@@ -281,7 +277,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     }
 
     /**
-     * @return <@code true> if the sum of all the extraction instance gain
+     * @return {@code true} if the sum of all the extraction instance gain
      * outweighs the overhead of the temp variable declaration.
      */
     private boolean shouldExtract() {
@@ -303,8 +299,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
 
         // We can skip over any named functions because they have no effect on
         // the control flow. In fact, they are lifted to the beginning of the
-        // block. This happens a lot when devirtualization breaks the whole
-        // chain.
+        // block. This happens a lot when devirtualization breaks the whole chain.
         if (cur.isFunction()) {
           continue;
         }
@@ -340,6 +335,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
     final Node lhs;
 
     private PrototypeMemberDeclaration(Node lhs, Node node) {
+      checkState(NodeUtil.isExprAssign(node), node);
       this.lhs = lhs;
       this.memberName = NodeUtil.getPrototypePropertyName(lhs);
       this.node = node;
@@ -383,6 +379,7 @@ class ExtractPrototypeMemberDeclarations implements CompilerPass {
      * @return A prototype member declaration representation if there is one
      * else it returns {@code null}.
      */
+    @Nullable
     private static PrototypeMemberDeclaration extractDeclaration(Node n) {
       if (!isPrototypePropertyDeclaration(n)) {
         return null;
