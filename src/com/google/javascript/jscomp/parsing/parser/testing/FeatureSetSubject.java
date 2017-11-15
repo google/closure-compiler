@@ -33,7 +33,7 @@ import javax.annotation.CheckReturnValue;
  */
 public class FeatureSetSubject extends Subject<FeatureSetSubject, FeatureSet> {
   private static final Subject.Factory<FeatureSetSubject, FeatureSet> FACTORY =
-      (FailureMetadata metadata, FeatureSet actual) -> new FeatureSetSubject(metadata, actual);
+    FeatureSetSubject::new;
 
   @CheckReturnValue
   public static FeatureSetSubject assertFS(FeatureSet fs) {
