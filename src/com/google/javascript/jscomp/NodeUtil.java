@@ -3822,7 +3822,7 @@ public final class NodeUtil {
       AbstractCompiler compiler, String name, Node basisNode,
       String originalName) {
     Node node = newQName(compiler, name);
-    node.useSourceInfoWithoutLengthIfMissingFromForTree(basisNode);
+    useSourceInfoForNewQName(node, basisNode);
     if (!originalName.equals(node.getOriginalName())) {
       // If basisNode already had the correct original name, then it will already be set correctly.
       // Setting it again will force the QName node to have a different property list from all of
@@ -3830,6 +3830,28 @@ public final class NodeUtil {
       node.setOriginalName(originalName);
     }
     return node;
+  }
+
+  /**
+   * Custom update new QName node with source info from another node.
+   *
+   * <p>This is very similar to {@link Node#useSourceInfoIfMissingFromForTree(Node)}, but it avoids
+   * overwriting the length field of the nodes.
+   * TODO(bradfordcsmith): Eliminate the need for this custom method.
+   */
+  private static void useSourceInfoForNewQName(Node newQName, Node basisNode) {
+    if (newQName.getStaticSourceFile() == null) {
+      newQName.setStaticSourceFileFrom(basisNode);
+      newQName.setSourceEncodedPosition(basisNode.getSourcePosition());
+    }
+
+    if (newQName.getProp(Node.ORIGINALNAME_PROP) == null) {
+      newQName.putProp(Node.ORIGINALNAME_PROP, basisNode.getProp(Node.ORIGINALNAME_PROP));
+    }
+
+    for (Node child = newQName.getFirstChild(); child != null; child = child.getNext()) {
+      useSourceInfoForNewQName(child, basisNode);
+    }
   }
 
   /**

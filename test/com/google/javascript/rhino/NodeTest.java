@@ -460,27 +460,6 @@ public class NodeTest extends TestCase {
     assertEquals(-1, assign.getIndexOfChild(assign));
   }
 
-  public void testUseSourceInfoWithoutLengthIfMissingFrom() {
-    Node assign = getAssignExpr("b", "c");
-    assign.setSourceEncodedPosition(99);
-    assign.setLength(5);
-    assign.setSourceFileForTesting("foo.js");
-
-    Node lhs = assign.getFirstChild();
-    lhs.setLength(21);
-    lhs.useSourceInfoWithoutLengthIfMissingFromForTree(assign);
-    assertEquals(99, lhs.getSourcePosition());
-    assertEquals("foo.js", lhs.getSourceFileName());
-    assertEquals(21, lhs.getLength());
-
-    assign.setSourceEncodedPosition(101);
-    assign.setSourceFileForTesting("bar.js");
-    lhs.useSourceInfoWithoutLengthIfMissingFromForTree(assign);
-    assertEquals(99, lhs.getSourcePosition());
-    assertEquals("foo.js", lhs.getSourceFileName());
-    assertEquals(21, lhs.getLength());
-  }
-
   public void testUseSourceInfoIfMissingFrom() {
     Node assign = getAssignExpr("b", "c");
     assign.setSourceEncodedPosition(99);
