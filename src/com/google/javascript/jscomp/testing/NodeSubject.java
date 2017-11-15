@@ -15,10 +15,10 @@
  */
 package com.google.javascript.jscomp.testing;
 
-import static com.google.common.truth.Truth.THROW_ASSERTION_ERROR;
+import static com.google.common.truth.Truth.assertAbout;
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.FailureMetadata;
 import com.google.common.truth.Subject;
 import com.google.javascript.rhino.Node;
 import com.google.javascript.rhino.Token;
@@ -36,11 +36,11 @@ import javax.annotation.CheckReturnValue;
 public final class NodeSubject extends Subject<NodeSubject, Node> {
   @CheckReturnValue
   public static NodeSubject assertNode(Node node) {
-    return new NodeSubject(THROW_ASSERTION_ERROR, node);
+    return assertAbout(NodeSubject::new).that(node);
   }
 
-  public NodeSubject(FailureStrategy fs, Node node) {
-    super(fs, node);
+  public NodeSubject(FailureMetadata failureMetadata, Node node) {
+    super(failureMetadata, node);
   }
 
   public void isEqualTo(Node node) {
